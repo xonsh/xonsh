@@ -909,7 +909,7 @@ Other than the regex matching, this functions in the same way as normal
 globbing.  For more information, please see the documentation for the ``re``
 module in the Python standard library.
 
-.. warning:: Backticks have very different meanings in Xonsh vs. Bash.  In
+.. warning:: In Xonsh, the meaning of backticks is very different from their meaning in Bash.  In
              Bash, backticks mean to run a captured subprocess ``$()``.
 
 
