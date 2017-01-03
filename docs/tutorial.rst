@@ -909,7 +909,7 @@ Other than the regex matching, this functions in the same way as normal
 globbing.  For more information, please see the documentation for the ``re``
 module in the Python standard library.
 
-.. warning:: This backtick syntax has very different from that of Bash.  In
+.. warning:: This backtick syntax has very different semantics from that of Bash.  In
              Bash, backticks mean to run a captured subprocess ``$()``.
 
 
