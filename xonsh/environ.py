@@ -420,6 +420,9 @@ def DEFAULT_DOCS():
         'or as a percentage for the ``cwd`` prompt variable. For example, '
         '"20" is a twenty character width and "10%" is ten percent of the '
         'number of columns available.'),
+    'DYNAMIC_CWD_ELISION_CHAR': VarDocs(
+        'The string used to show a shortened directory in a shortened cwd, '
+        'e.g. ``\'…\'``.'),
     'EXPAND_ENV_VARS': VarDocs(
         'Toggles whether environment variables are expanded inside of strings '
         'in subprocess mode.'),
