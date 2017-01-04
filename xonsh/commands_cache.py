@@ -9,10 +9,9 @@ True) or must be run the foreground (returns False).
 import os
 import builtins
 import argparse
-import collections
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, pathbasename
+from xonsh.platform import ON_WINDOWS, ON_POSIX, pathbasename
 from xonsh.tools import executables_in
 from xonsh.lazyasd import lazyobject
 
@@ -184,8 +183,61 @@ class CommandsCache(cabc.Mapping):
                 pre, ext = os.path.splitext(name)
                 if pre in predictors:
                     predictors[name] = predictors[pre]
+        if name not in predictors:
+            predictors[name] = self.default_predictor(name, cmd[0])
         predictor = predictors[name]
         return predictor(cmd[1:])
+
+    #
+    # Background Predictors (as methods)
+    #
+
+    def default_predictor(self, name, cmd0):
+        if ON_POSIX:
+            return self.default_predictor_readbin(name, cmd0,
+                                                  timeout=.1,
+                                                  failure=predict_true)
+        else:
+            return predict_true
+
+    def default_predictor_readbin(self, name, cmd0, timeout, failure):
+        """Make a defautt predictor by
+        analyzing the content of the binary. Should only works on POSIX.
+        Return failure if the analysis fails.
+        """
+
+        fname = cmd0 if os.path.isabs(cmd0) else self.locate_binary(name)
+        if fname is None:
+            return failure
+
+        try:
+            fd = os.open(fname, os.O_RDONLY | os.O_NONBLOCK)
+        except:
+            return failure  # opening error
+
+        search_for = {
+            (b'ncurses',): [False, ],
+            (b'isatty', b'tcgetattr', b'tcsetattr'): [False, False, False],
+        }
+        tstart = os.times()[4]
+        block = b''
+        while os.times()[4] < tstart + timeout:
+            previous_block = block
+            block = os.read(fd, 2048)
+            if len(block) == 0:
+                os.close(fd)
+                return predict_true  # no keys of search_for found
+            analyzed_block = previous_block + block
+            for k, v in search_for.items():
+                for i in range(len(k)):
+                    if k[i] in analyzed_block:
+                        v[i] = True
+                if all(v):
+                    os.close(fd)
+                    return predict_false  # use one key of search_for
+        os.close(fd)
+        return failure  # timeout
+
 
 #
 # Background Predictors
@@ -285,4 +337,4 @@ def default_threadable_predictors():
         'xonsh': predict_shell,
         'zsh': predict_shell,
     }
-    return collections.defaultdict(lambda: predict_true, predictors)
+    return predictors
