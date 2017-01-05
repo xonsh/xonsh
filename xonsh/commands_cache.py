@@ -224,7 +224,11 @@ class CommandsCache(cabc.Mapping):
         block = b''
         while time.time() < tstart + timeout:
             previous_block = block
-            block = os.read(fd, 2048)
+            try:
+                block = os.read(fd, 2048)
+            except:  # e.g. IsADirectoryError
+                os.close(fd)
+                return failure
             if len(block) == 0:
                 os.close(fd)
                 return predict_true  # no keys of search_for found
