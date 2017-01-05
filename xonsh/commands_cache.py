@@ -7,6 +7,7 @@ and returns whethere or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
 import os
+import time
 import builtins
 import argparse
 import collections.abc as cabc
@@ -206,7 +207,7 @@ class CommandsCache(cabc.Mapping):
         Return failure if the analysis fails.
         """
 
-        fname = cmd0 if os.path.isabs(cmd0) else self.locate_binary(name)
+        fname = cmd0 if os.path.isabs(cmd0) else self.lazy_locate_binary(name)
         if fname is None:
             return failure
 
@@ -219,9 +220,9 @@ class CommandsCache(cabc.Mapping):
             (b'ncurses',): [False, ],
             (b'isatty', b'tcgetattr', b'tcsetattr'): [False, False, False],
         }
-        tstart = os.times()[4]
+        tstart = time.time()
         block = b''
-        while os.times()[4] < tstart + timeout:
+        while time.time() < tstart + timeout:
             previous_block = block
             block = os.read(fd, 2048)
             if len(block) == 0:
@@ -230,6 +231,8 @@ class CommandsCache(cabc.Mapping):
             analyzed_block = previous_block + block
             for k, v in search_for.items():
                 for i in range(len(k)):
+                    if v[i]:
+                        continue
                     if k[i] in analyzed_block:
                         v[i] = True
                 if all(v):
