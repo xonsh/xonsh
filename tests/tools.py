@@ -84,9 +84,13 @@ class DummyHistory:
 
 
 class DummyEnv(MutableMapping):
+    DEFAULT = {
+        'XONSH_DEBUG': 1,
+    }
 
     def __init__(self, *args, **kwargs):
-        self._d = dict(*args, **kwargs)
+        self._d = self.DEFAULT.copy()
+        self._d.update(dict(*args, **kwargs))
 
     def detype(self):
         return {k: str(v) for k, v in self._d.items()}
@@ -105,6 +109,9 @@ class DummyEnv(MutableMapping):
 
     def __iter__(self):
         yield from self._d
+
+    def is_manually_set(self, key):
+        return False
 
 #
 # Execer tools

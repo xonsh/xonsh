@@ -55,7 +55,7 @@ _foobar = 3
     ctx = xontrib_context('spameggs')
     assert ctx == {'spam': 1, '_foobar': 3}
 
-def test_xshxontrib(tmpmod):
+def test_xshxontrib(tmpmod, xonsh_builtins):
     """
     Test that .xsh xontribs are loadable
     """

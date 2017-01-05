@@ -21,7 +21,6 @@ from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
-from xonsh.shell import transform_command
 
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
@@ -111,7 +110,6 @@ class PromptToolkitShell(BaseShell):
         if self.need_more_lines:
             return None, code
         src = ''.join(self.buffer)
-        src = transform_command(src)
         try:
             code = self.execer.compile(src,
                                        mode='single',

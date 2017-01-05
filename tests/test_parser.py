@@ -10,7 +10,7 @@ import pytest
 from xonsh.ast import AST, With, Pass
 from xonsh.parser import Parser
 
-from tools import VER_FULL, skip_if_py34, nodes_equal
+from tools import VER_FULL, skip_if_py34, nodes_equal, DummyEnv
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
@@ -42,6 +42,8 @@ def check_stmts(inp, run=True, mode='exec'):
 
 def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0,
                     return_obs=False):
+    if isinstance(xenv, dict):
+        xenv = DummyEnv(xenv)
     __tracebackhide__ = True
     builtins.__xonsh_env__ = xenv
     obs = PARSER.parse(inp, debug_level=debug_level)
