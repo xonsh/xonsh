@@ -23,7 +23,7 @@ def _ret_code():
         return_code = __xonsh_history__.rtns[-1]
         if return_code != 0:
             return '[{}]'.format(return_code)
-    return ''
+    return None
 
 
 $PROMPT = $PROMPT.replace('{prompt_end}{NO_COLOR}',
