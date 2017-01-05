@@ -1256,7 +1256,7 @@ as aliases, by wrapping them in ``@()``.  For example:
 
     >>> @(_banana)
     'My spoon is tooo big!'
-    >>> echo "hello" | @(lambda args, stdin=None: ' '.join([stdin.read().strip(), *args]) + '\n') world
+    >>> echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + ' ' + args[0] + '\n') world
     hello world
 
 
