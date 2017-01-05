@@ -4,6 +4,34 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.2
+====================
+
+**Added:**
+
+* Added ``weechat`` to default predictors
+* ``$DYNAMIC_CWD_ELISION_CHAR`` environment variable to control how a shortened
+  path is displayed.
+
+
+**Changed:**
+
+* ``_ret_code`` function of ``prompt_ret_code`` xontrib return now ``None`` when
+  return code is 0 instead of empty string allowing more customization of prompt
+  format.
+
+
+**Fixed:**
+
+* Minor Python completer token counting bug fix.
+* multiline syntax error in PTK shell due to buffer not being reset
+* Segfaults and other early exit signals are now reported correctly,
+  again.
+* ``tests/bin/{cat,pwd,wc}`` shebang changed to python3
+
+
+
+
 v0.5.1
 ====================
 
