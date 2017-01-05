@@ -333,6 +333,7 @@ def default_threadable_predictors():
         'view': predict_false,
         'vim': predict_false,
         'vimpager': predict_help_ver,
+        'weechat': predict_help_ver,
         'xo': predict_help_ver,
         'xonsh': predict_shell,
         'zsh': predict_shell,
