@@ -19,14 +19,14 @@ import xonsh.history.main as xhm
 
 
 events.doc('on_transform_command', """
-on_command_transform(cmd: str) -> str
+on_transform_command(cmd: str) -> str
 
 Fired to request xontribs to transform a command line. Return the transformed
 command, or the same command if no transformaiton occurs. Only done for
 interactive sessions.
 
 This may be fired multiple times per command, with other transformers input or 
-outpute, so design any handlers for this carefully.
+output, so design any handlers for this carefully.
 """)
 
 events.doc('on_precommand', """
