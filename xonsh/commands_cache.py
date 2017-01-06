@@ -208,12 +208,15 @@ class CommandsCache(cabc.Mapping):
         """
 
         fname = cmd0 if os.path.isabs(cmd0) else self.lazy_locate_binary(name)
+
         if fname is None:
+            return failure
+        if not os.path.isfile(fname):
             return failure
 
         try:
             fd = os.open(fname, os.O_RDONLY | os.O_NONBLOCK)
-        except:
+        except Exception:
             return failure  # opening error
 
         search_for = {
@@ -226,7 +229,9 @@ class CommandsCache(cabc.Mapping):
             previous_block = block
             try:
                 block = os.read(fd, 2048)
-            except:  # e.g. IsADirectoryError
+            except Exception:
+                # should not occur, except e.g. if a file is deleted a a dir is
+                # created with the same name between os.path.isfile and os.open
                 os.close(fd)
                 return failure
             if len(block) == 0:
