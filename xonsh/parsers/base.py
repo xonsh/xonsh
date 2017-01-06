@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
-import builtins
-import difflib
 import os
 import re
-import sys
 import time
 import textwrap
 from threading import Thread
@@ -22,53 +19,11 @@ from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath, StringPrefix
 from xonsh.lazyasd import LazyObject
 from xonsh.parsers.context_check import check_contexts
-from xonsh.events import events
-from xonsh.tools import print_exception
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
                            'RE_SEARCHPATH')
 RE_STRINGPREFIX = LazyObject(lambda: re.compile(StringPrefix), globals(),
                              'RE_STRINGPREFIX')
-
-
-events.doc('on_transform_command', """
-on_command_transform(cmd: str) -> str
-
-Fired to request xontribs to transform a command line. Return the transformed
-command, or the same command if no transformaiton occurs.
-
-This may be fired multiple times per command, so design any handlers for this
-carefully.
-""")
-
-
-def transform_command(src, show_diff=True):
-    """Returns the results of firing the precommand handles."""
-    i = 0
-    limit = sys.getrecursionlimit()
-    lst = ''
-    raw = src
-    while src != lst:
-        lst = src
-        srcs = events.on_transform_command.fire(src)
-        for s in srcs:
-            if s != lst:
-                src = s
-                break
-        i += 1
-        if i == limit:
-            print_exception('Modifcations to source input took more than '
-                            'the recursion limit number of interations to '
-                            'converge.')
-    debug_level = builtins.__xonsh_env__.get('XONSH_DEBUG')
-    if show_diff and debug_level > 1 and src != raw:
-        sys.stderr.writelines(difflib.unified_diff(
-            raw.splitlines(keepends=True),
-            src.splitlines(keepends=True),
-            fromfile='before precommand event',
-            tofile='after precommand event',
-        ))
-    return src
 
 
 class Location(object):
@@ -372,7 +327,6 @@ class BaseParser(object):
         -------
         tree : AST
         """
-        s = transform_command(s)
         self.reset()
         self.xonsh_code = s
         self.lexer.fname = filename

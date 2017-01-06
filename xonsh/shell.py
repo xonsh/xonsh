@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
 import os
+import sys
 import random
 import time
+import difflib
 import builtins
 import warnings
 
@@ -11,10 +13,20 @@ from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
                             ptk_version_is_supported)
-from xonsh.tools import XonshError, to_bool_or_int
+from xonsh.tools import XonshError, to_bool_or_int, print_exception
 from xonsh.events import events
 import xonsh.history.main as xhm
 
+
+events.doc('on_transform_command', """
+on_command_transform(cmd: str) -> str
+
+Fired to request xontribs to transform a command line. Return the transformed
+command, or the same command if no transformaiton occurs.
+
+This may be fired multiple times per command, so design any handlers for this
+carefully.
+""")
 
 events.doc('on_precommand', """
 on_precommand(cmd: str) -> None
@@ -27,6 +39,35 @@ on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 
 Fires just after a command is executed.
 """)
+
+
+def transform_command(src, show_diff=True):
+    """Returns the results of firing the precommand handles."""
+    i = 0
+    limit = sys.getrecursionlimit()
+    lst = ''
+    raw = src
+    while src != lst:
+        lst = src
+        srcs = events.on_transform_command.fire(src)
+        for s in srcs:
+            if s != lst:
+                src = s
+                break
+        i += 1
+        if i == limit:
+            print_exception('Modifcations to source input took more than '
+                            'the recursion limit number of interations to '
+                            'converge.')
+    debug_level = builtins.__xonsh_env__.get('XONSH_DEBUG')
+    if show_diff and debug_level > 1 and src != raw:
+        sys.stderr.writelines(difflib.unified_diff(
+            raw.splitlines(keepends=True),
+            src.splitlines(keepends=True),
+            fromfile='before precommand event',
+            tofile='after precommand event',
+        ))
+    return src
 
 
 class Shell(object):
