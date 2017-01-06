@@ -206,8 +206,9 @@ class CommandsCache(cabc.Mapping):
         analyzing the content of the binary. Should only works on POSIX.
         Return failure if the analysis fails.
         """
-
-        fname = cmd0 if os.path.isabs(cmd0) else self.lazy_locate_binary(name)
+        fname = cmd0 if os.path.isabs(cmd0) else None
+        fname = cmd0 if fname is None and os.sep in cmd0 else fname
+        fname = self.lazy_locate_binary(name) if fname is None else fname
 
         if fname is None:
             return failure
