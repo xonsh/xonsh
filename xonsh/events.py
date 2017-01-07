@@ -228,6 +228,11 @@ class EventManager:
         """
         type(getattr(self, name)).__doc__ = docstring
 
+    @staticmethod
+    def _mkevent(name, klass=Event, doc=None):
+        # (A little bit of magic to enable docstrings to work right)
+        return type(name, (klass,), {'__doc__': doc, '__module__': 'xonsh.events', '__qualname__': 'events.'+name})()
+
     def transmogrify(self, name, klass):
         """
         Converts an event from one species to another, preserving handlers and docstring.
@@ -248,7 +253,7 @@ class EventManager:
             raise ValueError("Invalid event class; must be a subclass of AbstractEvent")
 
         oldevent = getattr(self, name)
-        newevent = type(name, (klass,), {'__doc__': type(oldevent).__doc__})()
+        newevent = self._mkevent(name, klass, type(oldevent).__doc__)
         setattr(self, name, newevent)
 
         for handler in oldevent:
@@ -256,9 +261,10 @@ class EventManager:
 
     def __getattr__(self, name):
         """Get an event, if it doesn't already exist."""
+        if name.startswith('_'):
+            raise AttributeError
         # This is only called if the attribute doesn't exist, so create the Event...
-        # (A little bit of magic to enable docstrings to work right)
-        e = type(name, (Event,), {'__doc__': None})()
+        e = self._mkevent(name)
         # ... and save it.
         setattr(self, name, e)
         # Now it exists, and we won't be called again.
@@ -274,7 +280,7 @@ class EventManager:
         for name, oldevent in vars(self).items():
             # Heavily based on transmogrification
             klass = type(oldevent)
-            newevent = type(name, (klass,), {'__doc__': klass.__doc__})()
+            newevent = self._mkevent(name, klass, klass.__doc__)
             setattr(self, name, newevent)
 
 # Not lazy because:
