@@ -25,7 +25,7 @@ Fired to request xontribs to transform a command line. Return the transformed
 command, or the same command if no transformaiton occurs. Only done for
 interactive sessions.
 
-This may be fired multiple times per command, with other transformers input or 
+This may be fired multiple times per command, with other transformers input or
 output, so design any handlers for this carefully.
 """)
 
