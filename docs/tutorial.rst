@@ -504,7 +504,7 @@ result is automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
-    >>> echo "hello" | @(lambda a, s=None: s.strip() + " world\n")
+    >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
     hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
@@ -1256,7 +1256,7 @@ as aliases, by wrapping them in ``@()``.  For example:
 
     >>> @(_banana)
     'My spoon is tooo big!'
-    >>> echo "hello" | @(lambda args, stdin=None: stdin.strip() + args[0]) world
+    >>> echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + ' ' + args[0] + '\n') world
     hello world
 
 
