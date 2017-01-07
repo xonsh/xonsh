@@ -89,6 +89,7 @@ def xonsh_builtins():
     del builtins.aliases
     del builtins.events
     tasks.clear()  # must to this to enable resetting all_jobs
+    events.clean_between_tests()
 
 
 if ON_WINDOWS:

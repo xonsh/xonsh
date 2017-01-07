@@ -264,6 +264,18 @@ class EventManager:
         # Now it exists, and we won't be called again.
         return e
 
+    def clean_between_tests(self):
+        """
+        Reset state of events in preparation for a new test.
+
+        Implementation detail: This is done by replacing the events with new instances. Do not call
+        this outside of testing.
+        """
+        for name, oldevent in vars(self).items():
+            # Heavily based on transmogrification
+            klass = type(oldevent)
+            newevent = type(name, (klass,), {'__doc__': klass.__doc__})()
+            setattr(self, name, newevent)
 
 # Not lazy because:
 # 1. Initialization of EventManager can't be much cheaper
