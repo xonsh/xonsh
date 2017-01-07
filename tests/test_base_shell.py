@@ -4,6 +4,7 @@ import os
 
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
+from xonsh.shell import transform_command
 
 
 def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatch ):
@@ -24,3 +25,14 @@ def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatc
     assert os.path.abspath(cur_wd) == os.path.abspath(xonsh_builtins.__xonsh_env__['OLDPWD'])
 
 
+def test_transform(xonsh_builtins):
+    @xonsh_builtins.events.on_transform_command
+    def spam2egg(cmd):
+        if cmd == 'spam':
+            return 'egg'
+        else:
+            return cmd
+
+    assert transform_command('spam') == 'egg'
+    assert transform_command('egg') == 'egg'
+    assert transform_command('foo') == 'foo'
