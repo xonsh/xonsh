@@ -85,8 +85,13 @@ class DummyHistory:
 
 class DummyEnv(MutableMapping):
 
+    DEFAULTS = {
+        'XONSH_DEBUG': 1,
+    }
+
     def __init__(self, *args, **kwargs):
-        self._d = dict(*args, **kwargs)
+        self._d = self.DEFAULTS.copy()
+        self._d.update(dict(*args, **kwargs))
 
     def detype(self):
         return {k: str(v) for k, v in self._d.items()}
