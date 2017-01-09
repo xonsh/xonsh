@@ -3,12 +3,7 @@ os: Windows Server 2012 R2
 environment:
 
   matrix:
-
-    # For Python versions available on Appveyor, see
     # http://www.appveyor.com/docs/installed-software#python
-    # The list here is complete (excluding Python 2.6, which
-    # isn't covered by this document) at the time of writing.
-
     - PYTHON: "C:\\Python34"
     - PYTHON: "C:\\Python35"
     - PYTHON: "C:\\Python36"
@@ -16,8 +11,9 @@ environment:
       DISTUTILS_USE_SDK: "1"
     - PYTHON: "C:\\Python35-x64"
     - PYTHON: "C:\\Python36-x64"
+    # TODO: Miniconda
 install:
-- %PYTHON%\Scripts\pip install -r requirements-tests.txt
+- "%PYTHON%\Scripts\pip install -r requirements-tests.txt"
 build: off
 test_script:
-- %PYTHON%\Scripts\py.test
+- "%PYTHON%\Scripts\py.test"
