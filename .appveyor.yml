@@ -13,7 +13,7 @@ environment:
     - PYTHON: "C:\\Python36-x64"
     # TODO: Miniconda
 install:
-- "%PYTHON%\Scripts\pip install -r requirements-tests.txt"
+- "%PYTHON%\\Scripts\\pip install -r requirements-tests.txt"
 build: off
 test_script:
-- "%PYTHON%\Scripts\py.test"
+- "%PYTHON%\\Scripts\\py.test"
