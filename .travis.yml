@@ -5,13 +5,16 @@ env:
 matrix:
     include:
         - os: linux
-          python: 3.5
-          env:
+          python: 3.5 
+          env: 
+            - MINICONDA_OS="Linux"
+        - os: linux
+          python: 3.6
+          env: 
+            - MINICONDA_OS="Linux"
             - BUILD_DOCS=true
         - os: linux
           python: "nightly"
-        - os: linux
-          python: 3.6
         - os: osx
           language: generic
           env: PYTHON="3.4" MINICONDA_OS="MacOSX"
