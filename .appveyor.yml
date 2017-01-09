@@ -1,7 +1,23 @@
 version: 0.5.2.{build}
 os: Windows Server 2012 R2
+environment:
+
+  matrix:
+
+    # For Python versions available on Appveyor, see
+    # http://www.appveyor.com/docs/installed-software#python
+    # The list here is complete (excluding Python 2.6, which
+    # isn't covered by this document) at the time of writing.
+
+    - PYTHON: "C:\\Python34"
+    - PYTHON: "C:\\Python35"
+    - PYTHON: "C:\\Python36"
+    - PYTHON: "C:\\Python34-x64"
+      DISTUTILS_USE_SDK: "1"
+    - PYTHON: "C:\\Python35-x64"
+    - PYTHON: "C:\\Python36-x64"
 install:
-- C:\Python35\Scripts\pip install -r requirements-tests.txt
+- %PYTHON%\Scripts\pip install -r requirements-tests.txt
 build: off
 test_script:
-- C:\Python35\Scripts\py.test
+- %PYTHON%\Scripts\py.test

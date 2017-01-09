@@ -2,7 +2,7 @@ machine:
     environment:
         PATH: /home/ubuntu/miniconda/envs/test_env/bin:/home/ubuntu/miniconda/bin:$PATH
     post:
-        - pyenv global 3.4.4 3.5.1
+        - pyenv global 3.4.5 3.5.2 3.6.0
 
 dependencies:
     pre:
