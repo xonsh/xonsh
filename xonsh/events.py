@@ -230,6 +230,7 @@ class EventManager:
 
     @staticmethod
     def _mkevent(name, klass=Event, doc=None):
+        # NOTE: Also used in `xonsh_events` test fixture
         # (A little bit of magic to enable docstrings to work right)
         return type(name, (klass,), {'__doc__': doc, '__module__': 'xonsh.events', '__qualname__': 'events.'+name})()
 
@@ -270,18 +271,6 @@ class EventManager:
         # Now it exists, and we won't be called again.
         return e
 
-    def clean_between_tests(self):
-        """
-        Reset state of events in preparation for a new test.
-
-        Implementation detail: This is done by replacing the events with new instances. Do not call
-        this outside of testing.
-        """
-        for name, oldevent in vars(self).items():
-            # Heavily based on transmogrification
-            klass = type(oldevent)
-            newevent = self._mkevent(name, klass, klass.__doc__)
-            setattr(self, name, newevent)
 
 # Not lazy because:
 # 1. Initialization of EventManager can't be much cheaper

@@ -34,7 +34,17 @@ def xonsh_execer(monkeypatch):
 
 
 @pytest.yield_fixture
-def xonsh_builtins():
+def xonsh_events():
+    yield events
+    for name, oldevent in vars(events).items():
+        # Heavily based on transmogrification
+        klass = type(oldevent)
+        newevent = events._mkevent(name, klass, klass.__doc__)
+        setattr(events, name, newevent)
+
+
+@pytest.yield_fixture
+def xonsh_builtins(xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
     builtins.__xonsh_env__ = DummyEnv()
     if ON_WINDOWS:
@@ -63,7 +73,7 @@ def xonsh_builtins():
     builtins.aliases = {}
     # Unlike all the other stuff, this has to refer to the "real" one because all modules that would
     # be firing events on the global instance.
-    builtins.events = events
+    builtins.events = xonsh_events
     yield builtins
     del builtins.__xonsh_env__
     del builtins.__xonsh_ctx__
@@ -89,7 +99,6 @@ def xonsh_builtins():
     del builtins.aliases
     del builtins.events
     tasks.clear()  # must to this to enable resetting all_jobs
-    events.clean_between_tests()
 
 
 if ON_WINDOWS:
