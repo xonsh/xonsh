@@ -1,11 +1,8 @@
 machine:
     environment:
         PATH: /home/ubuntu/miniconda/envs/test_env/bin:/home/ubuntu/miniconda/bin:$PATH
-    # Until Circle produces a new 14.04 image
-    pre:                                                                                                                                                                   
-        - cd /opt/circleci/.pyenv; git pull                                                                                                                                  
     post:
-        - pyenv global 3.4.4 3.5.2 3.6.0
+        - pyenv global 3.4.4 3.5.2
 
 dependencies:
     pre:
