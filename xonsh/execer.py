@@ -4,7 +4,6 @@ import sys
 import types
 import inspect
 import builtins
-import warnings
 import collections.abc as cabc
 
 from xonsh.ast import CtxAwareTransformer
