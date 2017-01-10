@@ -792,9 +792,9 @@ def run_subproc(cmds, captured=False):
             'obj': proc,
             'bg': spec.background,
         })
-    #if _should_set_title(captured=captured):
+    if _should_set_title(captured=captured):
         # set title here to get currently executing command
-    #    pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
+        pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
     # create command or return if backgrounding.
     if spec.background:
         return
