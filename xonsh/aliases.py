@@ -259,8 +259,12 @@ def source_alias(args, stdin=None):
         fpath = fname
         if not os.path.isfile(fpath):
             fpath = locate_binary(fname)
-            if fpath is None and env.get('XONSH_DEBUG'):
-                print('source: {}: No such file'.format(fname), file=sys.stderr)
+            if fpath is None:
+                if env.get('XONSH_DEBUG'):
+                    print('source: {}: No such file'.format(fname), file=sys.stderr)
+                if i == 0:
+                    raise RuntimeError('must source at least one file, ' + fname +
+                                       'does not exist.')
                 break
         with open(fpath, 'r', encoding=encoding, errors=errors) as fp:
             src = fp.read()
