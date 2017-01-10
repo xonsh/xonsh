@@ -35,7 +35,7 @@ from xonsh.proc import (
     STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
-    XonshCalledProcessError, XonshBlockError
+    XonshCalledProcessError
 )
 from xonsh.lazyimps import pty
 from xonsh.commands_cache import CommandsCache
@@ -1147,7 +1147,6 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_path_literal__ = path_literal
     # public built-ins
     builtins.XonshError = XonshError
-    builtins.XonshBlockError = XonshBlockError
     builtins.XonshCalledProcessError = XonshCalledProcessError
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
@@ -1214,7 +1213,6 @@ def unload_builtins():
              '__xonsh_enter_macro__',
              '__xonsh_path_literal__',
              'XonshError',
-             'XonshBlockError',
              'XonshCalledProcessError',
              'evalx',
              'execx',
