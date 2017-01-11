@@ -1735,8 +1735,6 @@ class CommandPipeline:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
-            if ON_POSIX:
-                proc.send_signal(signal.SIGCONT)
             wait_for_active_job()
             proc.wait()
             self._endtime()
