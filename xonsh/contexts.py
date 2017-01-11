@@ -1,16 +1,16 @@
 """Context management tools for xonsh."""
 import sys
+import textwrap
 import builtins
 from collections.abc import Mapping
-
-from xonsh.tools import XonshBlockError
 
 
 class Block(object):
     """This is a context manager for obtaining a block of lines without actually
     executing the block. The lines are accessible as the 'lines' attribute.
+    This must be used as a macro.
     """
-    __xonsh_block__ = True
+    __xonsh_block__ = str
 
     def __init__(self):
         """
@@ -26,18 +26,18 @@ class Block(object):
         self.lines = self.glbs = self.locs = None
 
     def __enter__(self):
-        self.lines = self.glbs = self.locs = None  # make re-entrant
+        if not hasattr(self, 'macro_block'):
+            raise XonshError(self.__class__.__name__ +
+                             ' must be entered as a macro!')
+        self.lines = self.macro_block.splitlines()
+        self.glbs = self.macro_globals
+        if self.macro_locals is not self.macro_globals:
+            # leave locals as None when it is the same as globals
+            self.locs = self.macro_locals
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is not XonshBlockError:
-            return  # some other kind of error happened
-        self.lines = exc_value.lines
-        self.glbs = exc_value.glbs
-        if exc_value.locs is not self.glbs:
-            # leave locals as None when it is the same as globals
-            self.locs = exc_value.locs
-        return True
+        pass
 
 
 class Functor(Block):
@@ -75,14 +75,7 @@ class Functor(Block):
 
     def __enter__(self):
         super().__enter__()
-        self.func = None
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        res = super().__exit__(exc_type, exc_value, traceback)
-        if not res:
-            return res
-        body = '\n'.join(self.lines)
+        body = textwrap.indent(self.macro_block, '    ')
         uid = hash(body) + sys.maxsize  # should always be a positive int
         name = '__xonsh_functor_{uid}__'.format(uid=uid)
         # construct signature string
@@ -94,9 +87,7 @@ class Functor(Block):
         # construct return string
         rtn = str(self.rtn)
         if len(rtn) > 0:
-            line0 = self.lines[0]
-            ws = line0[:-len(line0.lstrip())]
-            rtn = ws + 'return ' + rtn + '\n'
+            rtn = '    return ' + rtn + '\n'
         # construct function string
         fstr = 'def {name}({sig}):\n{body}\n{rtn}'
         fstr = fstr.format(name=name, sig=sig, body=body, rtn=rtn)
@@ -109,11 +100,14 @@ class Functor(Block):
         elif name in glbs:
             func = glbs[name]
         else:
-            raise exc_value
+            raise ValueError('Functor block could not be found in context.')
         if len(self.kwargs) > 0:
             func.__defaults__ = tuple(v for _, v in self.kwargs)
         self.func = func
-        return res
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
     def __call__(self, *args, **kwargs):
         """Dispatches to func."""

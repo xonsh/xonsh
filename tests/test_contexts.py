@@ -1,4 +1,6 @@
 """Tests xonsh contexts."""
+from textwrap import dedent
+
 from tools import check_exec
 from xonsh.contexts import Block, Functor
 
@@ -14,12 +16,12 @@ def xonsh_execer_autouse(xonsh_builtins, xonsh_execer):
 #
 
 X1_WITH = ('x = 1\n'
-           'with Block() as b:\n')
-SIMPLE_WITH = 'with Block() as b:\n'
+           'with! Block() as b:\n')
+SIMPLE_WITH = 'with! Block() as b:\n'
 FUNC_WITH = ('x = 1\n'
              'def func():\n'
              '    y = 1\n'
-             '    with Block() as b:\n'
+             '    with! Block() as b:\n'
              '{body}'
              '    y += 1\n'
              '    return b\n'
@@ -30,13 +32,21 @@ FUNC_WITH = ('x = 1\n'
 FUNC_OBSG = {'x': 3}
 FUNC_OBSL = {'y': 1}
 
+
+def norm_body(body):
+    if not isinstance(body, str):
+        body = '\n'.join(body)
+    body = dedent(body)
+    body = body.splitlines()
+    return body
+
+
 def block_checks_glb(name, glbs, body, obs=None):
     block = glbs[name]
     obs = obs or {}
     for k, v in obs.items():
         assert v == glbs[k]
-    if isinstance(body, str):
-        body = body.splitlines()
+    body = norm_body(body)
     assert body == block.lines
     assert glbs is block.glbs
     assert block.locs is None
@@ -47,8 +57,7 @@ def block_checks_func(name, glbs, body, obsg=None, obsl=None):
     obsg = obsg or {}
     for k, v in obsg.items():
         assert v == glbs[k]
-    if isinstance(body, str):
-        body = body.splitlines()
+    body = norm_body(body)
     assert body == block.lines
     assert glbs is block.glbs
     # local context tests
@@ -65,7 +74,7 @@ def block_checks_func(name, glbs, body, obsg=None, obsl=None):
 
 def test_block_noexec():
     s = ('x = 1\n'
-         'with Block():\n'
+         'with! Block():\n'
          '    x += 42\n')
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
@@ -101,13 +110,13 @@ def test_block_leading_comment():
 
 
 def test_block_trailing_comment():
-    # trailing comments do not show up in block lines
+    # trailing comments show up in block lines
     body = ('    x += 42\n'
             '    # I am a trailing comment\n')
     s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
+    block_checks_glb('b', glbs, body, {'x': 1})
 
 
 def test_block_trailing_line_continuation():
@@ -181,14 +190,13 @@ def test_block_func_leading_comment():
 
 
 def test_block_func_trailing_comment():
-    # trailing comments do not show up in block lines
+    # trailing comments show up in block lines
     body = ('        x += 42\n'
             '        # I am a trailing comment\n')
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    block_checks_func('rtn', glbs, '        x += 42\n',
-                                 FUNC_OBSG, FUNC_OBSL)
+    block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
 def test_blockfunc__trailing_line_continuation():
@@ -237,7 +245,7 @@ def test_block_func_trailing_triple_string():
 #
 
 X2_WITH = ('{var} = 1\n'
-           'with Functor() as f:\n'
+           'with! Functor() as f:\n'
            '{body}'
            '{var} += 1\n'
            '{calls}\n'
@@ -274,7 +282,7 @@ def test_functor_oneline_onecall_both():
 
 
 XA_WITH = ('x = [1]\n'
-           'with Functor() as f:\n'
+           'with! Functor() as f:\n'
            '{body}'
            'x.append(2)\n'
            '{calls}\n'
@@ -290,9 +298,9 @@ def test_functor_oneline_append():
 
 
 def test_functor_return():
-    body = '    x = 42\n'
+    body = '    x = 42'
     t = ('res = 0\n'
-         'with Functor(rtn="x") as f:\n'
+         'with! Functor(rtn="x") as f:\n'
          '{body}\n'
          'res = f()\n')
     s = t.format(body=body)
@@ -302,9 +310,9 @@ def test_functor_return():
 
 
 def test_functor_args():
-    body = '    x = 42 + a\n'
+    body = '    x = 42 + a'
     t = ('res = 0\n'
-         'with Functor(args=("a",), rtn="x") as f:\n'
+         'with! Functor(args=("a",), rtn="x") as f:\n'
          '{body}\n'
          'res = f(2)\n')
     s = t.format(body=body)
@@ -314,9 +322,9 @@ def test_functor_args():
 
 
 def test_functor_kwargs():
-    body = '    x = 42 + a + b\n'
+    body = '    x = 42 + a + b'
     t = ('res = 0\n'
-         'with Functor(kwargs={{"a": 1, "b": 12}}, rtn="x") as f:\n'
+         'with! Functor(kwargs={{"a": 1, "b": 12}}, rtn="x") as f:\n'
          '{body}\n'
          'res = f(b=6)\n')
     s = t.format(body=body)
@@ -326,9 +334,9 @@ def test_functor_kwargs():
 
 
 def test_functor_fullsig():
-    body = '    x = 42 + a + b + c\n'
+    body = '    x = 42 + a + b + c'
     t = ('res = 0\n'
-         'with Functor(args=("c",), kwargs={{"a": 1, "b": 12}}, rtn="x") as f:\n'
+         'with! Functor(args=("c",), kwargs={{"a": 1, "b": 12}}, rtn="x") as f:\n'
          '{body}\n'
          'res = f(55)\n')
     s = t.format(body=body)

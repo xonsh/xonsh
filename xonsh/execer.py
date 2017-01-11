@@ -4,7 +4,6 @@ import sys
 import types
 import inspect
 import builtins
-import warnings
 import collections.abc as cabc
 
 from xonsh.ast import CtxAwareTransformer
@@ -103,13 +102,7 @@ class Execer(object):
                           transform=transform)
         if tree is None:
             return None  # handles comment only input
-        if transform:
-            with warnings.catch_warnings():
-                # we do some funky things with blocks that cause warnings
-                warnings.simplefilter('ignore', SyntaxWarning)
-                code = compile(tree, filename, mode)
-        else:
-            code = compile(tree, filename, mode)
+        code = compile(tree, filename, mode)
         return code
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2,

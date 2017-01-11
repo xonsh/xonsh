@@ -6,9 +6,8 @@ import pytest
 
 import xonsh.built_ins
 
-from xonsh.built_ins import ensure_list_of_strs
+from xonsh.built_ins import ensure_list_of_strs, enter_macro
 from xonsh.execer import Execer
-from xonsh.tools import XonshBlockError
 from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
@@ -55,8 +54,8 @@ def xonsh_builtins():
     builtins.__xonsh_commands_cache__ = DummyCommandsCache()
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_history__ = DummyHistory()
-    builtins.XonshBlockError = XonshBlockError
     builtins.__xonsh_subproc_captured_hiddenobject__ = sp
+    builtins.__xonsh_enter_macro__ = enter_macro
     builtins.evalx = eval
     builtins.execx = None
     builtins.compilex = None
@@ -82,7 +81,7 @@ def xonsh_builtins():
     del builtins.__xonsh_commands_cache__
     del builtins.__xonsh_all_jobs__
     del builtins.__xonsh_history__
-    del builtins.XonshBlockError
+    del builtins.__xonsh_enter_macro__
     del builtins.evalx
     del builtins.execx
     del builtins.compilex
