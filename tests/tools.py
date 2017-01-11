@@ -24,6 +24,7 @@ ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_CONDA = True in [conda in pytest.__file__ for conda
                     in ['anaconda', 'miniconda']]
+TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
 skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason="Py3.5+ only test")

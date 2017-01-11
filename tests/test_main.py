@@ -9,6 +9,7 @@ import sys
 
 import xonsh.main
 import pytest
+from tools import TEST_DIR
 
 
 def Shell(*args, **kwargs):
@@ -91,7 +92,7 @@ def test_xonsh_failback(shell, monkeypatch):
     assert failback_checker == ['/bin/xshell', '/bin/xshell']
 
 
-def test_xonsh_failback_non_interactive(shell, monkeypatch):
+def test_xonsh_failback_single(shell, monkeypatch):
     class FakeFailureError(Exception):
         pass
 
@@ -103,3 +104,17 @@ def test_xonsh_failback_non_interactive(shell, monkeypatch):
 
     with pytest.raises(FakeFailureError):
         xonsh.main.main()
+
+
+def test_xonsh_failback_script_from_file(shell, monkeypatch):
+    checker = []
+    def mocked_execlp(f, *args):
+        checker.append(f)
+    monkeypatch.setattr(os, 'execlp', mocked_execlp)
+
+    script = os.path.join(TEST_DIR, 'scripts', 'raise.xsh')
+    monkeypatch.setattr(sys, 'argv', ['xonsh', script])
+    monkeypatch.setattr(sys, 'stderr', open(os.devnull, 'w'))
+    with pytest.raises(Exception):
+        xonsh.main.main()
+    assert len(checker) == 0
