@@ -253,17 +253,11 @@ def premain(argv=None):
     return args
 
 
-def _failback_to_other_shells(argv, err):
-    args = None
-    try:
-        args = premain(argv)
-    except Exception:
-        pass
+def _failback_to_other_shells(args, err):
     # only failback for interactive shell; if we cannot tell, treat it
     # as an interactive one for safe.
     if hasattr(args, 'mode') and args.mode != XonshMode.interactive:
         raise err
-
     foreign_shell = None
     shells_file = '/etc/shells'
     if not os.path.exists(shells_file):
@@ -294,15 +288,16 @@ def _failback_to_other_shells(argv, err):
 
 
 def main(argv=None):
+    args = None
     try:
-        return main_xonsh(argv)
+        args = premain(argv)
+        return main_xonsh(args)
     except Exception as err:
-        _failback_to_other_shells(argv, err)
+        _failback_to_other_shells(args, err)
 
 
-def main_xonsh(argv=None):
+def main_xonsh(args):
     """Main entry point for xonsh cli."""
-    args = premain(argv)
     events.on_post_init.fire()
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
