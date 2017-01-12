@@ -1735,11 +1735,12 @@ class CommandPipeline:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
-            wait_for_active_job()
-            proc.wait()
-            self._endtime()
-            if self.captured == 'object':
-                self.end(tee_output=False)
+            task = wait_for_active_job()
+            if task is None or task['status'] != 'stopped':
+                proc.wait()
+                self._endtime()
+                if self.captured == 'object':
+                    self.end(tee_output=False)
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
