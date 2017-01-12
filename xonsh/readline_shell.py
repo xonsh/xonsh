@@ -29,6 +29,7 @@ from xonsh.lazyimps import pygments, pyghooks
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
+RL_COMPLETION_QUERY_ITEMS = None
 RL_CAN_RESIZE = False
 RL_DONE = None
 RL_VARIABLE_VALUE = None
@@ -40,7 +41,8 @@ _RL_PREV_CASE_SENSITIVE_COMPLETIONS = 'to-be-set'
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, \
+           readline, RL_COMPLETION_QUERY_ITEMS
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     for _rlmod_name in ('gnureadline', 'readline'):
@@ -72,6 +74,12 @@ def setup_readline():
         except ValueError:
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_SUPPRESS_APPEND = None
+        try:
+            RL_COMPLETION_QUERY_ITEMS = ctypes.c_int.in_dll(
+                lib, 'rl_completion_query_items')
+        except ValueError:
+            # not all versions of readline have this symbol, ie Macs sometimes
+            RL_COMPLETION_QUERY_ITEMS = None
         try:
             RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
         except Exception:
@@ -175,6 +183,18 @@ def rl_completion_suppress_append(val=1):
     RL_COMPLETION_SUPPRESS_APPEND.value = val
 
 
+def rl_completion_query_items(val=None):
+    """Sets the rl_completion_query_items varaiable, if possible.
+    A None value will set this to $COMPLETION_QUERY_LIMIT, otherwise any integer
+    is accepted.
+    """
+    if RL_COMPLETION_QUERY_ITEMS is None:
+        return
+    if val is None:
+        val = __xonsh_env__.get('COMPLETION_QUERY_LIMIT')
+    RL_COMPLETION_QUERY_ITEMS.value = val
+
+
 def rl_variable_dumper(readable=True):
     """Dumps the currently set readline variables. If readable is True, then this
     output may be used in an inputrc file.
@@ -255,6 +275,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             return []
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
+        rl_completion_query_items()
         _s, _e, _q = check_for_partial_string(line)
         if _s is not None:
             if _e is not None and ' ' in line[_e:]:

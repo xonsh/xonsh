@@ -110,6 +110,7 @@ def DEFAULT_ENSURERS():
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
+    'COMPLETION_QUERY_LIMIT': (is_int, int, str),
     'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
                           dynamic_cwd_tuple_to_str),
     'DYNAMIC_CWD_ELISION_CHAR': (is_string, ensure_string, ensure_string),
@@ -245,6 +246,7 @@ def DEFAULT_VALUES():
         'COMPLETIONS_CONFIRM': False,
         'COMPLETIONS_DISPLAY': 'multi',
         'COMPLETIONS_MENU_ROWS': 5,
+        'COMPLETION_QUERY_LIMIT': 100,
         'DIRSTACK_SIZE': 20,
         'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
         'DYNAMIC_CWD_ELISION_CHAR': '',
@@ -414,6 +416,9 @@ def DEFAULT_DOCS():
         'Number of rows to reserve for tab-completions menu if '
         "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
         'prompt-toolkit shell.'),
+    'COMPLETION_QUERY_LIMIT': VarDocs(
+        'The number of completions to display before the user is asked '
+        'for confirmation.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
     'DYNAMIC_CWD_WIDTH': VarDocs(
         'Maximum length in number of characters '
