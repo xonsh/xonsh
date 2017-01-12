@@ -265,6 +265,10 @@ _E2O_MAP = LazyObject(lambda: frozenset({'{}>{}'.format(e, o)
                                          for e in _REDIR_ERR
                                          for o in _REDIR_OUT
                                          if o != ''}), globals(), '_E2O_MAP')
+_O2E_MAP = LazyObject(lambda: frozenset({'{}>{}'.format(o, e)
+                                         for e in _REDIR_ERR
+                                         for o in _REDIR_OUT
+                                         if o != ''}), globals(), '_O2E_MAP')
 
 
 def _is_redirect(x):
@@ -323,9 +327,13 @@ def _parse_redirects(r):
 def _redirect_streams(r, loc=None):
     """Returns stdin, stdout, stderr tuple of redirections."""
     stdin = stdout = stderr = None
+    no_ampersand = r.replace('&', '')
     # special case of redirecting stderr to stdout
-    if r.replace('&', '') in _E2O_MAP:
+    if no_ampersand in _E2O_MAP:
         stderr = subprocess.STDOUT
+        return stdin, stdout, stderr
+    elif no_ampersand in _O2E_MAP:
+        stdout = 2  # using 2 as a flag, rather than using a file object
         return stdin, stdout, stderr
     # get streams
     orig, mode, dest = _parse_redirects(r)
@@ -718,6 +726,10 @@ def _update_last_spec(last):
         r, w = pty.openpty() if use_tty else os.pipe()
         last.stderr = safe_open(w, 'w')
         last.captured_stderr = safe_open(r, 'r')
+    # redirect stdout to stderr, if we should
+    if isinstance(last.stdout, int) and last.stdout == 2:
+        # need to use private interface to avoid duplication.
+        last._stdout = last.stderr
 
 
 def cmds_to_specs(cmds, captured=False):

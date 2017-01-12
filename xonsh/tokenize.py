@@ -227,10 +227,16 @@ SearchPath = r"((?:[rgp]+|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
 _redir_names = ('out', 'all', 'err', 'e', '2', 'a', '&', '1', 'o')
-_e2o_map = ('err>out', 'err>&1', '2>out', 'err>o', 'err>1', 'e>out', 'e>&1',
-            '2>&1', 'e>o', '2>o', 'e>1', '2>1')
-IORedirect = group(group(*_e2o_map), '{}>>?'.format(group(*_redir_names)))
-_redir_check = set(_e2o_map)
+_redir_map = (
+    # stderr to stdout
+    'err>out', 'err>&1', '2>out', 'err>o', 'err>1', 'e>out', 'e>&1',
+    '2>&1', 'e>o', '2>o', 'e>1', '2>1',
+    # stdout to stderr
+    'out>err', 'out>&2', '1>err', 'out>e', 'out>2', 'o>err', 'o>&2',
+    '1>&2', 'o>e', '1>e', 'o>2', '1>2',
+    )
+IORedirect = group(group(*_redir_map), '{}>>?'.format(group(*_redir_names)))
+_redir_check = set(_redir_map)
 _redir_check = {'{}>'.format(i) for i in _redir_names}.union(_redir_check)
 _redir_check = {'{}>>'.format(i) for i in _redir_names}.union(_redir_check)
 _redir_check = frozenset(_redir_check)

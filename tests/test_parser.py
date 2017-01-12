@@ -1816,8 +1816,8 @@ def test_redirect_all(case):
     assert check_xonsh_ast({}, '$[echo "test" {}> test.txt < input.txt]'.format(case), False)
 
 @pytest.mark.parametrize('r',
-    ['e>o', 'e>out', 'err>o', 'err>o',
-     ' 2>1', 'e>1', 'err>1', '2>out',
+    ['e>o', 'e>out', 'err>o',
+     '2>1', 'e>1', 'err>1', '2>out',
      '2>o', 'err>&1', 'e>&1', '2>&1'
 ])
 @pytest.mark.parametrize('o', ['', 'o', 'out', '1'])
@@ -1825,6 +1825,17 @@ def test_redirect_error_to_output(r, o):
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False)
+
+@pytest.mark.parametrize('r',
+    ['o>e', 'o>err', 'out>e',
+     '1>2', 'o>2', 'out>2', '1>err',
+     '1>e', 'out>&2', 'o>&2', '1>&2'
+])
+@pytest.mark.parametrize('e', ['e', 'err', '2'])
+def test_redirect_output_to_error(r, e):
+    assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt]'.format(r, e), False)
+    assert check_xonsh_ast({}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, e), False)
+    assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, e), False)
 
 def test_macro_call_empty():
     assert check_xonsh_ast({}, 'f!()', False)
