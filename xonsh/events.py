@@ -21,6 +21,14 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
 
     Note that ordering is never guaranteed.
     """
+
+    @property
+    def species(self):
+        """
+        The species (basically, class) of the event
+        """
+        return type(self).__bases__[0]  # events.on_chdir -> <class on_chdir> -> <class Event>
+
     def __call__(self, handler):
         """
         Registers a handler. It's suggested to use this as a decorator.
@@ -229,12 +237,12 @@ class EventManager:
         type(getattr(self, name)).__doc__ = docstring
 
     @staticmethod
-    def _mkevent(name, klass=Event, doc=None):
+    def _mkevent(name, species=Event, doc=None):
         # NOTE: Also used in `xonsh_events` test fixture
         # (A little bit of magic to enable docstrings to work right)
-        return type(name, (klass,), {'__doc__': doc, '__module__': 'xonsh.events', '__qualname__': 'events.'+name})()
+        return type(name, (species,), {'__doc__': doc, '__module__': 'xonsh.events', '__qualname__': 'events.'+name})()
 
-    def transmogrify(self, name, klass):
+    def transmogrify(self, name, species):
         """
         Converts an event from one species to another, preserving handlers and docstring.
 
@@ -244,17 +252,17 @@ class EventManager:
         ----------
         name : str
             The name of the event, eg "on_precommand"
-        klass : sublcass of AbstractEvent
+        species : sublcass of AbstractEvent
             The type to turn the event in to.
         """
-        if isinstance(klass, str):
-            klass = globals()[klass]
+        if isinstance(species, str):
+            species = globals()[species]
 
-        if not issubclass(klass, AbstractEvent):
+        if not issubclass(species, AbstractEvent):
             raise ValueError("Invalid event class; must be a subclass of AbstractEvent")
 
         oldevent = getattr(self, name)
-        newevent = self._mkevent(name, klass, type(oldevent).__doc__)
+        newevent = self._mkevent(name, species, type(oldevent).__doc__)
         setattr(self, name, newevent)
 
         for handler in oldevent:

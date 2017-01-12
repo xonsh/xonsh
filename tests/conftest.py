@@ -37,8 +37,8 @@ def xonsh_events():
     yield events
     for name, oldevent in vars(events).items():
         # Heavily based on transmogrification
-        klass = type(oldevent).__bases__[0]  # events.on_chdir -> <class on_chdir> -> <class Event>
-        newevent = events._mkevent(name, klass, klass.__doc__)
+        species = oldevent.species
+        newevent = events._mkevent(name, species, species.__doc__)
         setattr(events, name, newevent)
 
 
