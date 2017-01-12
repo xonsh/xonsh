@@ -58,12 +58,13 @@ def get_hg_branch(root=None):
     return None if not in a repo or subprocess.TimeoutExpired if timed out.
     """
     env = builtins.__xonsh_env__
+    hg_binary = env['VC_HG_BINARY']
     timeout = env['VC_BRANCH_TIMEOUT']
     try:
-        root = subprocess.check_output(['hg', 'root'], timeout=timeout,
+        root = subprocess.check_output([hg_binary, 'root'], timeout=timeout,
                                        stderr=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
-        return subprocess.TimeoutExpired(['hg'], timeout)
+        return subprocess.TimeoutExpired([hg_binary], timeout)
     except (subprocess.CalledProcessError, FileNotFoundError):
         # not in repo or command not in PATH
         return None
@@ -121,13 +122,15 @@ def current_branch():
     """
     branch = None
     cmds = builtins.__xonsh_commands_cache__
+    env = builtins.__xonsh_env__
+    hg_binary = env['VC_HG_BINARY']
     # check for binary only once
     if cmds.is_empty():
         has_git = bool(cmds.locate_binary('git'))
-        has_hg = bool(cmds.locate_binary('hg'))
+        has_hg = bool(cmds.locate_binary(hg_binary))
     else:
         has_git = bool(cmds.lazy_locate_binary('git'))
-        has_hg = bool(cmds.lazy_locate_binary('hg'))
+        has_hg = bool(cmds.lazy_locate_binary(hg_binary))
     if has_git:
         branch = get_git_branch()
     if not branch and has_hg:
@@ -177,10 +180,11 @@ def hg_dirty_working_directory():
     cwd = env['PWD']
     denv = env.detype()
     vcbt = env['VC_BRANCH_TIMEOUT']
+    hg_binary = env['VC_HG_BINARY']
     # Override user configurations settings and aliases
     denv['HGRCPATH'] = ''
     try:
-        s = subprocess.check_output(['hg', 'identify', '--id'],
+        s = subprocess.check_output([hg_binary, 'identify', '--id'],
                                     stderr=subprocess.PIPE, cwd=cwd,
                                     timeout=vcbt, universal_newlines=True,
                                     env=denv)
@@ -197,9 +201,11 @@ def dirty_working_directory():
     """
     dwd = None
     cmds = builtins.__xonsh_commands_cache__
+    env = builtins.__xonsh_env__
+    hg_binary = env['VC_HG_BINARY']
     if cmds.lazy_locate_binary('git'):
         dwd = git_dirty_working_directory()
-    if cmds.lazy_locate_binary('hg') and dwd is None:
+    if cmds.lazy_locate_binary(hg_binary) and dwd is None:
         dwd = hg_dirty_working_directory()
     return dwd
 
