@@ -23,7 +23,7 @@ from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import print_exception, check_for_partial_string
+from xonsh.tools import print_exception, check_for_partial_string, to_bool
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
@@ -191,7 +191,7 @@ def rl_completion_query_items(val=None):
     if RL_COMPLETION_QUERY_ITEMS is None:
         return
     if val is None:
-        val = __xonsh_env__.get('COMPLETION_QUERY_LIMIT')
+        val = builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT')
     RL_COMPLETION_QUERY_ITEMS.value = val
 
 
@@ -275,7 +275,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             return []
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
-        rl_completion_query_items()
+        rl_completion_query_items(val=999999999)
         _s, _e, _q = check_for_partial_string(line)
         if _s is not None:
             if _e is not None and ' ' in line[_e:]:
@@ -285,9 +285,25 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         else:
             mline = line.rpartition(' ')[2]
         offs = len(mline) - len(prefix)
-        return [i[offs:] for i in self.completer.complete(prefix, line,
-                                                          begidx, endidx,
-                                                          ctx=self.ctx)[0]]
+        completions = self.completer.complete(prefix, line,
+                                              begidx, endidx,
+                                              ctx=self.ctx)[0]
+        rtn_completions = [i[offs:] for i in completions]
+        show_completions = True
+        if os.path.commonprefix(rtn_completions):
+            pass
+        elif len(completions) > builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT'):
+            print('\nDisplay all {} possibilities? (y or n)'.format(len(completions)),
+                  end='', flush=True)
+            yn = 'x'
+            while yn not in 'yn':
+                yn = sys.stdin.read(1)
+            show_completions = to_bool(yn)
+            print()
+            #RL_LIB.rl_forced_update_display()
+            RL_LIB.rl_on_new_line()
+            show_completions = False
+        return rtn_completions if show_completions else []
 
     # tab complete on first index too
     completenames = completedefault
