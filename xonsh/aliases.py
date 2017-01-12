@@ -255,18 +255,23 @@ def source_alias(args, stdin=None):
     env = builtins.__xonsh_env__
     encoding = env.get('XONSH_ENCODING')
     errors = env.get('XONSH_ENCODING_ERRORS')
-    for fname in args:
+    for i, fname in enumerate(args):
         fpath = fname
         if not os.path.isfile(fpath):
             fpath = locate_binary(fname)
             if fpath is None:
-                print('source: {}: No such file'.format(fname), file=sys.stderr)
-                continue
+                if env.get('XONSH_DEBUG'):
+                    print('source: {}: No such file'.format(fname), file=sys.stderr)
+                if i == 0:
+                    raise RuntimeError('must source at least one file, ' + fname +
+                                       'does not exist.')
+                break
         with open(fpath, 'r', encoding=encoding, errors=errors) as fp:
             src = fp.read()
         if not src.endswith('\n'):
             src += '\n'
-        builtins.execx(src, 'exec', builtins.__xonsh_ctx__)
+        with env.swap(ARGS=args[i+1:]):
+            builtins.execx(src, 'exec', builtins.__xonsh_ctx__, filename=fpath)
 
 
 def source_cmd(args, stdin=None):
