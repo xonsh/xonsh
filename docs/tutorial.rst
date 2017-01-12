@@ -725,7 +725,7 @@ with the following syntax:
     >>> COMMAND err>o
     >>> COMMAND e>out
     >>> COMMAND e>o
-    >>> COMMAND 2>&1 # included for Bash compatibility
+    >>> COMMAND 2>&1  # included for Bash compatibility
 
 This merge can be combined with other redirections, including pipes (see the
 section on `Pipes`_ above):
@@ -736,6 +736,16 @@ section on `Pipes`_ above):
     >>> COMMAND e>o > combined.txt
 
 It is worth noting that this last example is equivalent to: ``COMMAND a> combined.txt``
+
+Similarly, you can also send stdout to stderr with the following syntax:
+
+.. code-block:: xonshcon
+
+    >>> COMMAND out>err
+    >>> COMMAND out>e
+    >>> COMMAND o>err
+    >>> COMMAND o>e
+    >>> COMMAND 1>&2  # included for Bash compatibility
 
 Redirecting ``stdin``
 ---------------------
@@ -1037,8 +1047,8 @@ regex globbing:
     def regexsearch(s):
         s = expand_path(s)
         return reglob(s)
-    
-    
+
+
     <function xonsh.built_ins.regexsearch>
 
 Note that both help and superhelp return the object that they are inspecting.
