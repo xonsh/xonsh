@@ -112,6 +112,7 @@ def DEFAULT_ENSURERS():
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
     'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
                           dynamic_cwd_tuple_to_str),
+    'DYNAMIC_CWD_ELISION_CHAR': (is_string, ensure_string, ensure_string),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
     'FOREIGN_ALIASES_OVERRIDE': (is_bool, to_bool, bool_to_str),
     'FUZZY_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
@@ -246,6 +247,7 @@ def DEFAULT_VALUES():
         'COMPLETIONS_MENU_ROWS': 5,
         'DIRSTACK_SIZE': 20,
         'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
+        'DYNAMIC_CWD_ELISION_CHAR': '',
         'EXPAND_ENV_VARS': True,
         'FORCE_POSIX_PATHS': False,
         'FOREIGN_ALIASES_OVERRIDE': False,
@@ -418,6 +420,9 @@ def DEFAULT_DOCS():
         'or as a percentage for the ``cwd`` prompt variable. For example, '
         '"20" is a twenty character width and "10%" is ten percent of the '
         'number of columns available.'),
+    'DYNAMIC_CWD_ELISION_CHAR': VarDocs(
+        'The string used to show a shortened directory in a shortened cwd, '
+        'e.g. ``\'…\'``.'),
     'EXPAND_ENV_VARS': VarDocs(
         'Toggles whether environment variables are expanded inside of strings '
         'in subprocess mode.'),

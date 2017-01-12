@@ -333,7 +333,7 @@ must be used to force xonsh to not interpret them.
     ${
 
 .. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\) in bash.
+             backslash (\\) in bash.
 
 
 Captured Subprocess with ``$()`` and ``!()``
@@ -504,7 +504,7 @@ result is automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
-    >>> echo "hello" | @(lambda a, s=None: s.strip() + " world\n")
+    >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
     hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
@@ -725,7 +725,7 @@ with the following syntax:
     >>> COMMAND err>o
     >>> COMMAND e>out
     >>> COMMAND e>o
-    >>> COMMAND 2>&1 # included for Bash compatibility
+    >>> COMMAND 2>&1  # included for Bash compatibility
 
 This merge can be combined with other redirections, including pipes (see the
 section on `Pipes`_ above):
@@ -736,6 +736,16 @@ section on `Pipes`_ above):
     >>> COMMAND e>o > combined.txt
 
 It is worth noting that this last example is equivalent to: ``COMMAND a> combined.txt``
+
+Similarly, you can also send stdout to stderr with the following syntax:
+
+.. code-block:: xonshcon
+
+    >>> COMMAND out>err
+    >>> COMMAND out>e
+    >>> COMMAND o>err
+    >>> COMMAND o>e
+    >>> COMMAND 1>&2  # included for Bash compatibility
 
 Redirecting ``stdin``
 ---------------------
@@ -909,8 +919,10 @@ Other than the regex matching, this functions in the same way as normal
 globbing.  For more information, please see the documentation for the ``re``
 module in the Python standard library.
 
-.. warning:: This backtick syntax has very different from that of Bash.  In
-             Bash, backticks mean to run a captured subprocess ``$()``.
+.. warning:: In Xonsh, the meaning of backticks is very different from their
+             meaning in Bash.
+             In Bash, backticks mean to run a captured subprocess
+	     (``$()`` in Xonsh).
 
 
 Normal Globbing
@@ -1026,19 +1038,18 @@ regex globbing:
 
 .. code-block:: xonshcon
 
-    >>> __xonsh_regexpath__??
-    Type:        function
-    String form: <function regexpath at 0x7fef91612950>
-    File:        /home/scopatz/.local/lib/python3.4/site-packages/xonsh-0.1-py3.4.egg/xonsh/built_ins.py
-    Definition:  (s)
+    >>> __xonsh_regexsearch__??
+    Type:         function
+    String form:  <function regexsearch at 0x7efc8b367d90>
+    File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
+    Definition:   (s)
     Source:
-    def regexpath(s):
-        """Takes a regular expression string and returns a list of file
-        paths that match the regex.
-        """
+    def regexsearch(s):
         s = expand_path(s)
         return reglob(s)
-    <function regexpath at 0x7fef91612950>
+
+
+    <function xonsh.built_ins.regexsearch>
 
 Note that both help and superhelp return the object that they are inspecting.
 This allows you to chain together help inside of other operations and
@@ -1255,7 +1266,7 @@ as aliases, by wrapping them in ``@()``.  For example:
 
     >>> @(_banana)
     'My spoon is tooo big!'
-    >>> echo "hello" | @(lambda args, stdin=None: stdin.strip() + args[0]) world
+    >>> echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + ' ' + args[0] + '\n') world
     hello world
 
 
@@ -1352,7 +1363,8 @@ By default, the following variables are available for use:
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
   * ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
-    set a maximum width for this variable.
+    set a maximum width for this variable and ``$DYNAMIC_CWD_ELISION_CHAR`` to
+    set the character used in shortened path.
   * ``short_cwd``: A shortened form of the current working directory; e.g.,
     ``/path/to/xonsh`` becomes ``/p/t/xonsh``
   * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in

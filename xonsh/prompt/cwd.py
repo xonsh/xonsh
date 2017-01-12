@@ -47,6 +47,7 @@ def _dynamically_collapsed_pwd():
     """
     originial_path = _replace_home_cwd()
     target_width, units = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
+    elision_char = builtins.__xonsh_env__['DYNAMIC_CWD_ELISION_CHAR']
     if target_width == float('inf'):
         return originial_path
     if (units == '%'):
@@ -64,16 +65,21 @@ def _dynamically_collapsed_pwd():
         part_len = int(min(len(part),
                            max(1, remaining_space_for_text // (len(pwd) - i))))
         remaining_space_for_text -= part_len
-        reduced_part = part[0:part_len]
-        parts.append(reduced_part)
+        if len(part) > part_len:
+            reduced_part = part[0:part_len-len(elision_char)] + elision_char
+            parts.append(reduced_part)
+        else:
+            parts.append(part)
     parts.append(last)
     full = sep.join(parts)
+    truncature_char = elision_char if elision_char else '...'
     # If even if displaying one letter per dir we are too long
     if (len(full) > target_width):
         # We truncate the left most part
-        full = "..." + full[int(-target_width) + 3:]
+        full = truncature_char + full[int(-target_width) + len(truncature_char):]
         # if there is not even a single separator we still
         # want to display at least the beginning of the directory
         if full.find(sep) == -1:
-            full = ("..." + sep + last)[0:int(target_width)]
+            full = (truncature_char + sep +
+                    last)[0:int(target_width) - len(truncature_char)] + truncature_char
     return full

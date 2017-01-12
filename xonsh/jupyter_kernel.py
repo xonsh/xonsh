@@ -21,7 +21,7 @@ class XonshKernel(Kernel):
     implementation_version = version
     language = 'xonsh'
     language_version = version
-    banner = 'Xonsh - the Python-ish, BASHwards-looking shell'
+    banner = 'Xonsh - Python-powered, cross-platform shell'
     language_info = {'name': 'xonsh',
                      'pygments_lexer': 'xonsh',
                      'codemirror_mode': 'shell',

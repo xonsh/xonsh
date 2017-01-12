@@ -263,85 +263,6 @@ class CtxAwareTransformer(NodeTransformer):
         return inscope
 
     #
-    # With Transformers
-    #
-    def insert_with_block_check(self, node):
-        """Modifies a with statement node in-place to add an initial check
-        for whether or not the block should be executed. If the block is
-        not executed it will raise a XonshBlockError containing the required
-        information.
-        """
-        nwith = self._nwith  # the nesting level of the current with-statement
-        lineno = get_lineno(node)
-        col = get_col(node, 0)
-        # Add or discover target names
-        targets = set()
-        i = 0  # index of unassigned items
-
-        def make_next_target():
-            nonlocal i
-            targ = '__xonsh_with_target_{}_{}__'.format(nwith, i)
-            n = Name(id=targ, ctx=Store(), lineno=lineno, col_offset=col)
-            targets.add(targ)
-            i += 1
-            return n
-        for item in node.items:
-            if item.optional_vars is None:
-                if has_elts(item.context_expr):
-                    targs = [make_next_target() for _ in item.context_expr.elts]
-                    optvars = Tuple(elts=targs, ctx=Store(), lineno=lineno,
-                                    col_offset=col)
-                else:
-                    optvars = make_next_target()
-                item.optional_vars = optvars
-            else:
-                targets.update(gather_names(item.optional_vars))
-        # Ok, now that targets have been found / created, make the actual check
-        # to see if we are in a non-executing block. This is equivalent to
-        # writing the following condition:
-        #
-        #     if getattr(targ0, '__xonsh_block__', False) or \
-        #        getattr(targ1, '__xonsh_block__', False) or ...:
-        #         raise XonshBlockError(lines, globals(), locals())
-        tests = [_getblockattr(t, lineno, col) for t in sorted(targets)]
-        if len(tests) == 1:
-            test = tests[0]
-        else:
-            test = BoolOp(op=Or(), values=tests, lineno=lineno, col_offset=col)
-        ldx, udx = self._find_with_block_line_idx(node)
-        lines = [Str(s=s, lineno=lineno, col_offset=col)
-                 for s in self.lines[ldx:udx]]
-        check = If(test=test, body=[
-            Raise(exc=xonsh_call('XonshBlockError',
-                                 args=[List(elts=lines, ctx=Load(),
-                                            lineno=lineno, col_offset=col),
-                                       xonsh_call('globals', args=[],
-                                                  lineno=lineno, col=col),
-                                       xonsh_call('locals', args=[],
-                                                  lineno=lineno, col=col)],
-                                 lineno=lineno, col=col),
-                  cause=None, lineno=lineno, col_offset=col)],
-                orelse=[], lineno=lineno, col_offset=col)
-        node.body.insert(0, check)
-
-    def _find_with_block_line_idx(self, node):
-        ldx = min_line(node.body[0]) - 1
-        udx = max_line(node.body[-1])
-        # now check if parsable, or add lines until it is or we run out of lines
-        nlines = len(self.lines)
-        lines = 'with __xonsh_dummy__:\n' + '\n'.join(self.lines[ldx:udx])
-        lines += '\n'
-        parsable = False
-        while not parsable and udx < nlines:
-            try:
-                self.parser.parse(lines, mode=self.mode)
-                parsable = True
-            except SyntaxError:
-                lines += self.lines[udx] + '\n'
-                udx += 1
-        return ldx, udx
-
-    #
     # Replacement visitors
     #
 
@@ -440,7 +361,6 @@ class CtxAwareTransformer(NodeTransformer):
         self._nwith += 1
         self.generic_visit(node)
         self._nwith -= 1
-        self.insert_with_block_check(node)
         return node
 
     def visit_For(self, node):

@@ -872,6 +872,16 @@ class PopenThread(threading.Thread):
         """Process return code."""
         return self.proc.returncode
 
+    @property
+    def signal(self):
+        """Process signal, or None."""
+        s = getattr(self.proc, "signal", None)
+        if s is None:
+            rtn = self.returncode
+            if rtn is not None and rtn != 0:
+                s = (-1*rtn, rtn < 0 if ON_WINDOWS else os.WCOREDUMP(rtn))
+        return s
+
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
         dt = 0.0
@@ -1725,11 +1735,12 @@ class CommandPipeline:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
-            wait_for_active_job()
-            proc.wait()
-            self._endtime()
-            if self.captured == 'object':
-                self.end(tee_output=False)
+            task = wait_for_active_job()
+            if task is None or task['status'] != 'stopped':
+                proc.wait()
+                self._endtime()
+                if self.captured == 'object':
+                    self.end(tee_output=False)
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
@@ -1982,7 +1993,8 @@ class CommandPipeline:
             if core:
                 sig_str += ' (core dumped)'
             print(sig_str, file=sys.stderr)
-            self.errors += sig_str + '\n'
+            if self.errors is not None:
+                self.errors += sig_str + '\n'
 
     def _apply_to_history(self):
         """Applies the results to the current history object."""

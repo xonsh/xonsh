@@ -157,6 +157,25 @@ def test_script(case):
     assert exp_rtn == rtn
 
 
+ALL_PLATFORMS_STDERR = [
+# test redirecting a function alias
+("""
+def _f(args, stdout):
+    print('Wow Mom!', file=stdout)
+
+aliases['f'] = _f
+f o>e
+""", "Wow Mom!\n", 0),
+]
+
+@pytest.mark.parametrize('case', ALL_PLATFORMS_STDERR)
+def test_script_stder(case):
+    script, exp_err, exp_rtn = case
+    out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
+    assert exp_err == err
+    assert exp_rtn == rtn
+
+
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, fmt, exp', [
     ('pwd', None, lambda: os.getcwd() + '\n'),

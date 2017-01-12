@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* ``tests/bin/{cat,pwd,wc}`` shebang changed to python3
+* Restored the ability to ^Z and ``fg`` processes on posix platforms.
 
 **Security:** None

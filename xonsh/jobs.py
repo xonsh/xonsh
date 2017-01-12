@@ -69,7 +69,7 @@ if ON_WINDOWS:
     def _set_pgrp(info):
         pass
 
-    def wait_for_active_job(signal_to_send=None):
+    def wait_for_active_job(last_task=None):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -78,7 +78,7 @@ if ON_WINDOWS:
         active_task = get_next_task()
         # Return when there are no foreground active task
         if active_task is None:
-            return
+            return last_task
         obj = active_task['obj']
         _continue(active_task)
         while obj.returncode is None:
@@ -88,7 +88,7 @@ if ON_WINDOWS:
                 pass
             except KeyboardInterrupt:
                 _kill(active_task)
-        return wait_for_active_job()
+        return wait_for_active_job(last_task=active_task)
 
 else:
     def _continue(job):
@@ -163,7 +163,7 @@ else:
                 os.tcsetpgrp(st, pgid)
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
-    def wait_for_active_job():
+    def wait_for_active_job(last_task=None):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -173,7 +173,7 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
-            return
+            return last_task
         pgrp = active_task.get('pgrp', None)
         obj = active_task['obj']
         # give the terminal over to the fg process
@@ -182,7 +182,7 @@ else:
         _continue(active_task)
         _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(wcode):
-            print()  # get a newline because ^Z will have been printed
+            print('^Z')  # get a newline because ^Z will have been printed
             active_task['status'] = "stopped"
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
@@ -191,7 +191,7 @@ else:
         else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
-        return wait_for_active_job()
+        return wait_for_active_job(last_task=active_task)
 
 
 def get_next_task():
@@ -277,8 +277,8 @@ def clean_jobs():
         if builtins.__xonsh_all_jobs__:
             global _last_exit_time
             hist = builtins.__xonsh_history__
-            if hist is not None and hist.buffer:
-                last_cmd_start = builtins.__xonsh_history__.buffer[-1]['ts'][0]
+            if hist is not None and len(hist.tss) > 0:
+                last_cmd_start = hist.tss[-1][0]
             else:
                 last_cmd_start = None
 
@@ -342,7 +342,6 @@ def fg(args, stdin=None):
     given as an argument, bring that job to the foreground. Additionally,
     specify "+" for the most recent job and "-" for the second most recent job.
     """
-
     _clear_dead_jobs()
     if len(tasks) == 0:
         return '', 'Cannot bring nonexistent job to foreground.\n'
@@ -373,6 +372,7 @@ def fg(args, stdin=None):
     job['bg'] = False
     job['status'] = "running"
     print_one_job(act)
+    wait_for_active_job()
 
 
 def bg(args, stdin=None):

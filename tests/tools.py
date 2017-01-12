@@ -7,6 +7,7 @@ import ast
 import builtins
 import platform
 import subprocess
+import contextlib
 from collections import defaultdict
 from collections.abc import MutableMapping
 
@@ -24,6 +25,7 @@ ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_CONDA = True in [conda in pytest.__file__ for conda
                     in ['anaconda', 'miniconda']]
+TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
 skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason="Py3.5+ only test")
@@ -110,6 +112,27 @@ class DummyEnv(MutableMapping):
 
     def __iter__(self):
         yield from self._d
+
+    @contextlib.contextmanager
+    def swap(self, other=None, **kwargs):
+        old = {}
+        # single positional argument should be a dict-like object
+        if other is not None:
+            for k, v in other.items():
+                old[k] = self.get(k, NotImplemented)
+                self[k] = v
+        # kwargs could also have been sent in
+        for k, v in kwargs.items():
+            old[k] = self.get(k, NotImplemented)
+            self[k] = v
+        yield self
+        # restore the values
+        for k, v in old.items():
+            if v is NotImplemented:
+                del self[k]
+            else:
+                self[k] = v
+
 
 #
 # Execer tools

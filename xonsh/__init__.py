@@ -1,4 +1,4 @@
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard pytest_plugin fs
@@ -11,6 +11,8 @@ else:
         from xonsh import __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completer'] = __amalgam__
+        contexts = __amalgam__
+        _sys.modules['xonsh.contexts'] = __amalgam__
         lazyasd = __amalgam__
         _sys.modules['xonsh.lazyasd'] = __amalgam__
         lazyjson = __amalgam__
@@ -39,8 +41,6 @@ else:
         _sys.modules['xonsh.ast'] = __amalgam__
         commands_cache = __amalgam__
         _sys.modules['xonsh.commands_cache'] = __amalgam__
-        contexts = __amalgam__
-        _sys.modules['xonsh.contexts'] = __amalgam__
         diff_history = __amalgam__
         _sys.modules['xonsh.diff_history'] = __amalgam__
         events = __amalgam__
