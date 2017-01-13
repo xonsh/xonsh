@@ -29,7 +29,6 @@ import itertools
 import os
 import pathlib
 import re
-import itertools
 import subprocess
 import sys
 import threading
@@ -1694,7 +1693,7 @@ def columnize(elems, width=80, newline='\n'):
     ncols = 1
     nrows = len(sizes)
     columns = [sizes]
-    last_longest_row = longest = max(sizes)
+    last_longest_row = max(sizes)
     while True:
         longest_row = sum(map(max, columns))
         if longest_row - 1 <= width:
@@ -1715,6 +1714,6 @@ def columnize(elems, width=80, newline='\n'):
     colwidths[-1] -= pad
     row_t = ''.join(['{{row[{i}]: <{{w[{i}]}}}}'.format(i=i) for i in range(ncols)])
     row_t += newline
-    lines = [row_t.format(row=row, w=colwidths) for row in \
+    lines = [row_t.format(row=row, w=colwidths) for row in
              itertools.zip_longest(*data, fillvalue='')]
     return lines

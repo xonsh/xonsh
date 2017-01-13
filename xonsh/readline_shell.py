@@ -23,10 +23,10 @@ import collections
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names,
-    ansi_color_style)
+                               ansi_color_style)
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
-    columnize)
+                         columnize)
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
@@ -45,7 +45,7 @@ _RL_PREV_CASE_SENSITIVE_COMPLETIONS = 'to-be-set'
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
     global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, \
-           readline, RL_COMPLETION_QUERY_ITEMS
+        readline, RL_COMPLETION_QUERY_ITEMS
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     for _rlmod_name in ('gnureadline', 'readline'):
