@@ -9,7 +9,7 @@ from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
 from xonsh.tools import ON_WINDOWS, check_for_partial_string
-from xonsh.shell import fire_precommand
+from xonsh.shell import transform_command
 
 env = builtins.__xonsh_env__
 DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
@@ -72,7 +72,7 @@ def _is_blank(l):
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
     src = src if src.endswith('\n') else src + '\n'
-    src = fire_precommand(src, show_diff=False)
+    src = transform_command(src, show_diff=False)
     src = src.lstrip()
     try:
         builtins.__xonsh_execer__.compile(src, mode='single', glbs=None,

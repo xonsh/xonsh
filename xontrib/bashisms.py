@@ -1,7 +1,7 @@
 """Bash-like interface extensions for xonsh."""
 
 
-@events.on_precommand
+@events.on_transform_command
 def bash_preproc(cmd):
     if not __xonsh_history__.inps:
         if cmd.strip() == '!!':

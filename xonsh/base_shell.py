@@ -15,7 +15,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
 from xonsh.completer import Completer
 from xonsh.prompt.base import multiline_prompt, PromptFormatter
 from xonsh.events import events
-from xonsh.shell import fire_precommand
+from xonsh.shell import transform_command
 
 if ON_WINDOWS:
     import ctypes
@@ -382,7 +382,7 @@ class BaseShell(object):
         if self.need_more_lines:
             return None, None
         src = ''.join(self.buffer)
-        src = fire_precommand(src)
+        src = transform_command(src)
         return self.compile(src)
 
     def compile(self, src):
