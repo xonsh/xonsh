@@ -1694,9 +1694,9 @@ def columize(elems, width=80, newline='\n'):
     ncols = 1
     nrows = len(sizes)
     columns = [sizes]
-    last_longest_row = max(sizes)
+    last_longest_row = longest = max(sizes)
     while True:
-        longest_row = max(map(sum, itertools.zip_longest(*columns, fillvalue=0)))
+        longest_row = sum(map(max, columns))
         if longest_row - 1 <= width:
             # we might be able to fit another column.
             ncols += 1

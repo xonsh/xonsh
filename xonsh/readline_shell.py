@@ -226,7 +226,7 @@ def rl_on_new_line():
     for name in names:
         func = getattr(RL_LIB, name, None)
         if func is not None:
-            return
+            break
     return func
 
 
@@ -282,9 +282,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Overridden to no-op."""
         return '', line, line
 
-    def _querycompletions(self, completions, rtn_completions):
+    def _querycompletions(self, completions, loc):
         """Returns whether or not we should show completions"""
-        if os.path.commonprefix(rtn_completions):
+        if os.path.commonprefix([c[loc:] for c in completions]):
             return True
         elif len(completions) <= builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT'):
             return True
@@ -296,20 +296,24 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             yn = sys.stdin.read(1)
         show_completions = to_bool(yn)
         print()
+        if not show_completions:
+            rl_on_new_line()
+            return False
         w, h = shutil.get_terminal_size()
         lines = columize(completions, width=w)
         more_msg = self.format_color('{YELLOW}==={NO_COLOR} more or '
-                                     '{PURPLE}q{NO_COLOR}uit '
+                                     '{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit '
                                      '{YELLOW}==={NO_COLOR}')
         while len(lines) > h - 1:
-            print(''.join(lines[:h-1]), file=sys.stderr)
+            print(''.join(lines[:h-1]), end='', flush=True, file=sys.stderr)
             lines = lines[h-1:]
             print(more_msg, end='', flush=True, file=sys.stderr)
             q = sys.stdin.read(1).lower()
+            print(flush=True, file=sys.stderr)
             if q == 'q':
                 rl_on_new_line()
                 return False
-        print(''.join(lines), file=sys.stderr)
+        print(''.join(lines), end='', flush=True, file=sys.stderr)
         rl_on_new_line()
         return False
 
@@ -333,7 +337,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                                               begidx, endidx,
                                               ctx=self.ctx)[0]
         rtn_completions = [i[offs:] for i in completions]
-        show_completions = self._querycompletions(completions, rtn_completions)
+        show_completions = self._querycompletions(completions, endidx - begidx)
         return rtn_completions if show_completions else []
 
     # tab complete on first index too
