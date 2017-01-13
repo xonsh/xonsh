@@ -14,14 +14,16 @@ import os
 import sys
 import cmd
 import select
+import shutil
 import builtins
 import importlib
 import threading
 import collections
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.base_shell import BaseShell
-from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
+from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names,
+    ansi_color_style)
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import print_exception, check_for_partial_string, to_bool
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
@@ -217,6 +219,17 @@ def rl_variable_value(variable):
     return rtn.decode(encoding=enc, errors=errors)
 
 
+@lazyobject
+def rl_on_new_line():
+    """Grabs one of a few possible redisplay functions in readline."""
+    names = ['rl_on_new_line', 'rl_forced_update_display', 'rl_redisplay']
+    for name in names:
+        func = getattr(RL_LIB, name, None)
+        if func is not None:
+            return
+    return func
+
+
 def _insert_text_func(s, readline):
     """Creates a function to insert text via readline."""
 
@@ -269,6 +282,37 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Overridden to no-op."""
         return '', line, line
 
+    def _querycompletions(self, completions, rtn_completions):
+        """Returns whether or not we should show completions"""
+        if os.path.commonprefix(rtn_completions):
+            return True
+        elif len(completions) <= builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT'):
+            return True
+        msg = '\nDisplay all {} possibilities? '.format(len(completions))
+        msg += '({GREEN}y{NO_COLOR} or {RED}n{NO_COLOR})'
+        self.print_color(msg, end='', flush=True, file=sys.stderr)
+        yn = 'x'
+        while yn not in 'yn':
+            yn = sys.stdin.read(1)
+        show_completions = to_bool(yn)
+        print()
+        w, h = shutil.get_terminal_size()
+        lines = columize(completions, width=w)
+        more_msg = self.format_color('{YELLOW}==={NO_COLOR} more or '
+                                     '{PURPLE}q{NO_COLOR}uit '
+                                     '{YELLOW}==={NO_COLOR}')
+        while len(lines) > h - 1:
+            print(''.join(lines[:h-1]), file=sys.stderr)
+            lines = lines[h-1:]
+            print(more_msg, end='', flush=True, file=sys.stderr)
+            q = sys.stdin.read(1).lower()
+            if q == 'q':
+                rl_on_new_line()
+                return False
+        print(''.join(lines), file=sys.stderr)
+        rl_on_new_line()
+        return False
+
     def completedefault(self, prefix, line, begidx, endidx):
         """Implements tab-completion for text."""
         if self.completer is None:
@@ -289,20 +333,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                                               begidx, endidx,
                                               ctx=self.ctx)[0]
         rtn_completions = [i[offs:] for i in completions]
-        show_completions = True
-        if os.path.commonprefix(rtn_completions):
-            pass
-        elif len(completions) > builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT'):
-            print('\nDisplay all {} possibilities? (y or n)'.format(len(completions)),
-                  end='', flush=True)
-            yn = 'x'
-            while yn not in 'yn':
-                yn = sys.stdin.read(1)
-            show_completions = to_bool(yn)
-            print()
-            #RL_LIB.rl_forced_update_display()
-            RL_LIB.rl_on_new_line()
-            show_completions = False
+        show_completions = self._querycompletions(completions, rtn_completions)
         return rtn_completions if show_completions else []
 
     # tab complete on first index too

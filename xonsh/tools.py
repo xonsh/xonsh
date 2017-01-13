@@ -29,6 +29,7 @@ import itertools
 import os
 import pathlib
 import re
+import itertools
 import subprocess
 import sys
 import threading
@@ -1681,3 +1682,39 @@ def format_datetime(dt):
     """Format datetime object to string base on $XONSH_DATETIME_FORMAT Env."""
     format_ = builtins.__xonsh_env__['XONSH_DATETIME_FORMAT']
     return dt.strftime(format_)
+
+
+def columize(elems, width=80, newline='\n'):
+    """Takes an iterable of strings and returns a list of lines with the
+    elements placed in columns. Each line will be at most *width* columns.
+    The newline character will be appended to the end of each line.
+    """
+    sizes = [len(e) + 1 for e in elems]
+    nelem = len(elems)
+    ncols = 1
+    nrows = len(sizes)
+    columns = [sizes]
+    last_longest_row = max(sizes)
+    while True:
+        longest_row = max(map(sum, itertools.zip_longest(*columns, fillvalue=0)))
+        if longest_row - 1 <= width:
+            # we might be able to fit another column.
+            ncols += 1
+            nrows = nelem // ncols
+            columns = [sizes[i*nrows:(i+1)*nrows] for i in range(ncols)]
+            last_longest_row = longest_row
+        else:
+            # we can't fit another column
+            ncols -= 1
+            nrows = nelem // ncols
+            break
+    pad = (width - last_longest_row + ncols) // ncols
+    pad = pad if pad > 1 else 1
+    data = [elems[i*nrows:(i+1)*nrows] for i in range(ncols)]
+    colwidths = [max(map(len, d)) + pad for d in data]
+    colwidths[-1] -= pad
+    row_t = ''.join(['{{row[{i}]: <{{w[{i}]}}}}'.format(i=i) for i in range(ncols)])
+    row_t += newline
+    lines = [row_t.format(row=row, w=colwidths) for row in \
+             itertools.zip_longest(*data, fillvalue='')]
+    return lines
