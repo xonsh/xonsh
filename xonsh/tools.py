@@ -1684,7 +1684,7 @@ def format_datetime(dt):
     return dt.strftime(format_)
 
 
-def columize(elems, width=80, newline='\n'):
+def columnize(elems, width=80, newline='\n'):
     """Takes an iterable of strings and returns a list of lines with the
     elements placed in columns. Each line will be at most *width* columns.
     The newline character will be appended to the end of each line.

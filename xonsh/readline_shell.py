@@ -25,7 +25,8 @@ from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names,
     ansi_color_style)
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import print_exception, check_for_partial_string, to_bool
+from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
+    columnize)
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
@@ -300,7 +301,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             rl_on_new_line()
             return False
         w, h = shutil.get_terminal_size()
-        lines = columize(completions, width=w)
+        lines = columnize(completions, width=w)
         more_msg = self.format_color('{YELLOW}==={NO_COLOR} more or '
                                      '{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit '
                                      '{YELLOW}==={NO_COLOR}')
