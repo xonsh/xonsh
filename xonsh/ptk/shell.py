@@ -48,7 +48,12 @@ class PromptToolkitShell(BaseShell):
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
         # This assumes that PromptToolkitShell is a singleton
-        events.on_ptk_create.fire(self.prompter, self.history, self.pt_completer, self.key_bindings_manager)
+        events.on_ptk_create.fire(
+            prompter=self.prompter,
+            history=self.history,
+            completer=self.pt_completer,
+            bindings=self.key_bindings_manager,
+        )
 
     def singleline(self, store_in_history=True, auto_suggest=None,
                    enable_history_search=True, multiline=True, **kwargs):
