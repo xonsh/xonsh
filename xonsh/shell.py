@@ -50,7 +50,7 @@ def transform_command(src, show_diff=True):
     raw = src
     while src != lst:
         lst = src
-        srcs = events.on_transform_command.fire(src)
+        srcs = events.on_transform_command.fire(cmd=src)
         for s in srcs:
             if s != lst:
                 src = s
