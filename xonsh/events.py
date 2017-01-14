@@ -16,7 +16,7 @@ from xonsh.tools import print_exception
 
 
 def has_kwargs(func):
-    return any(p.kind == inspect.VAR_KEYWORD for p in inspect.signature(func).parameters.values())
+    return any(p.kind == p.VAR_KEYWORD for p in inspect.signature(func).parameters.values())
 
 
 def debug_level():
