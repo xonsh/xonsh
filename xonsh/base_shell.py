@@ -372,7 +372,7 @@ class BaseShell(object):
             builtins.__xonsh_env__['PWD'] = cwd      # track it now
             if old is not None:
                 builtins.__xonsh_env__['OLDPWD'] = old  # and update $OLDPWD like dirstack.
-            events.on_chdir.fire(old, cwd)              # fire event after cwd actually changed.
+            events.on_chdir.fire(olddir=old, newdir=cwd)              # fire event after cwd actually changed.
 
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that

@@ -149,7 +149,7 @@ def _change_working_directory(newdir):
 
     # Fire event if the path actually changed
     if old != env['PWD']:
-        events.on_chdir.fire(old, env['PWD'])
+        events.on_chdir.fire(olddir=old, newdir=env['PWD'])
 
 
 def _try_cdpath(apath):
