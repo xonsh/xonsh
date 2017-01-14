@@ -355,10 +355,10 @@ class BaseShell(object):
         else:
             info['out'] = tee_out + '\n' + last_out
         events.on_postcommand.fire(
-            info['inp'],
-            info['rtn'],
-            info.get('out', None),
-            info['ts']
+            cmd=info['inp'],
+            rtn=info['rtn'],
+            out=info.get('out', None),
+            ts=info['ts']
             )
         if hist is not None:
             hist.append(info)
