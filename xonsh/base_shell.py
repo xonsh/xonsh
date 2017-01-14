@@ -308,6 +308,9 @@ class BaseShell(object):
         src, code = self.push(line)
         if code is None:
             return
+
+        events.on_precommand.fire(src)
+
         env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
