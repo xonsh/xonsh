@@ -17,7 +17,7 @@ def test_event_calling(events):
         nonlocal called
         called = spam
 
-    events.on_test.fire("eggs")
+    events.on_test.fire(spam="eggs")
 
     assert called == "eggs"
 
@@ -63,11 +63,11 @@ def test_validator(events):
         return False
 
     called = 0
-    events.on_test.fire('egg')
+    events.on_test.fire(n='egg')
     assert called == 1
 
     called = 0
-    events.on_test.fire('spam')
+    events.on_test.fire(n='spam')
     assert called == 2
 
 

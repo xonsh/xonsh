@@ -8,10 +8,23 @@ The best way to "declare" an event is something like::
     events.doc('on_spam', "Comes with eggs")
 """
 import abc
+import builtins
 import collections.abc
+import inspect
 
 from xonsh.tools import print_exception
 
+
+def has_kwargs(func):
+    return any(p.kind == inspect.VAR_KEYWORD for p in inspect.signature(func).parameters.values())
+
+
+def debug_level():
+    if hasattr(builtins, '__xonsh_env__'):
+        return builtins.__xonsh_env__.get('XONSH_DEBUG')
+    # FIXME: Under py.test, return 1(?)
+    else:
+        return 0  # Optimize for speed, not guarenteed correctness
 
 class AbstractEvent(collections.abc.MutableSet, abc.ABC):
     """
@@ -49,37 +62,41 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
         rtn : callable
             The handler
         """
-        #  Using Pythons "private" munging to minimize hypothetical collisions
+        #  Using Python's "private" munging to minimize hypothetical collisions
         handler.__validator = None
+        if debug_level():
+            if not has_kwargs(handler):
+                raise ValueError("Event handlers need a **kwargs for future proofing")
         self.add(handler)
 
         def validator(vfunc):
             """
             Adds a validator function to a handler to limit when it is considered.
             """
+            if debug_level():
+                if not has_kwargs(handler):
+                    raise ValueError("Event validators need a **kwargs for future proofing")
             handler.__validator = vfunc
         handler.validator = validator
 
         return handler
 
-    def _filterhandlers(self, handlers, *pargs, **kwargs):
+    def _filterhandlers(self, handlers, **kwargs):
         """
         Helper method for implementing classes. Generates the handlers that pass validation.
         """
         for handler in handlers:
-            if handler.__validator is not None and not handler.__validator(*pargs, **kwargs):
+            if handler.__validator is not None and not handler.__validator(**kwargs):
                 continue
             yield handler
 
     @abc.abstractmethod
-    def fire(self, *pargs, **kwargs):
+    def fire(self, **kwargs):
         """
         Fires an event, calling registered handlers with the given arguments.
 
         Parameters
         ----------
-        *pargs :
-            Positional arguments to pass to each handler
         **kwargs :
             Keyword arguments to pass to each handler
         """
@@ -118,7 +135,7 @@ class Event(AbstractEvent):
         """
         self._handlers.discard(item)
 
-    def fire(self, *pargs, **kwargs):
+    def fire(self, **kwargs):
         """
         Fires an event, calling registered handlers with the given arguments. A non-unique iterable
         of the results is returned.
@@ -127,8 +144,6 @@ class Event(AbstractEvent):
 
         Parameters
         ----------
-        *pargs :
-            Positional arguments to pass to each handler
         **kwargs :
             Keyword arguments to pass to each handler
 
@@ -139,9 +154,9 @@ class Event(AbstractEvent):
             appear multiple times.
         """
         vals = []
-        for handler in self._filterhandlers(self._handlers, *pargs, **kwargs):
+        for handler in self._filterhandlers(self._handlers, **kwargs):
             try:
-                rv = handler(*pargs, **kwargs)
+                rv = handler(**kwargs)
             except Exception:
                 print_exception("Exception raised in event handler; ignored.")
             else:
@@ -198,14 +213,13 @@ class LoadEvent(AbstractEvent):
 
     def _call(self, handler):
         try:
-            handler(*self._pargs, **self._kwargs)
+            handler(**self._kwargs)
         except Exception:
             print_exception("Exception raised in event handler; ignored.")
 
-    def fire(self, *pargs, **kwargs):
+    def fire(self, **kwargs):
         if self._hasfired:
             return
-        self._pargs = pargs
         self._kwargs = kwargs
         while self._unfired:
             handler = self._unfired.pop()
