@@ -26,6 +26,7 @@ def debug_level():
     else:
         return 0  # Optimize for speed, not guarenteed correctness
 
+
 class AbstractEvent(collections.abc.MutableSet, abc.ABC):
     """
     A given event that handlers can register against.
