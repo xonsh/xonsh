@@ -20,12 +20,12 @@ def test_crud(xonsh_builtins, tmpdir):
     last_event = None
 
     @xonsh_builtins.events.vox_on_create
-    def create(name):
+    def create(name, **_):
         nonlocal last_event
         last_event = 'create', name
 
     @xonsh_builtins.events.vox_on_delete
-    def delete(name):
+    def delete(name, **_):
         nonlocal last_event
         last_event = 'delete', name
 
@@ -59,12 +59,12 @@ def test_activate(xonsh_builtins, tmpdir):
     last_event = None
 
     @xonsh_builtins.events.vox_on_activate
-    def activate(name):
+    def activate(name, **_):
         nonlocal last_event
         last_event = 'activate', name
 
     @xonsh_builtins.events.vox_on_deactivate
-    def deactivate(name):
+    def deactivate(name, **_):
         nonlocal last_event
         last_event = 'deactivate', name
 
