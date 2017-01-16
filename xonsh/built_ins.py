@@ -34,7 +34,7 @@ from xonsh.proc import (
     pause_call_resume, CommandPipeline, HiddenCommandPipeline,
     STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
-    suggest_commands, expand_path, expandvars, globpath, XonshError,
+    suggest_commands, expand_path, globpath, XonshError,
     XonshCalledProcessError
 )
 from xonsh.lazyimps import pty
