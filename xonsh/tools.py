@@ -672,6 +672,7 @@ def is_writable_file(filepath):
     """
     Checks if a filepath is valid for writing.
     """
+    filepath = expand_path(filepath)
     # convert to absolute path if needed
     if not os.path.isabs(filepath):
         filepath = os.path.abspath(filepath)
