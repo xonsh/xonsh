@@ -14,21 +14,25 @@ import os
 import sys
 import cmd
 import select
+import shutil
 import builtins
 import importlib
 import threading
 import collections
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.base_shell import BaseShell
-from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
+from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names,
+                               ansi_color_style)
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import print_exception, check_for_partial_string
+from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
+                         columnize)
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
+RL_COMPLETION_QUERY_ITEMS = None
 RL_CAN_RESIZE = False
 RL_DONE = None
 RL_VARIABLE_VALUE = None
@@ -40,7 +44,8 @@ _RL_PREV_CASE_SENSITIVE_COMPLETIONS = 'to-be-set'
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, \
+        readline, RL_COMPLETION_QUERY_ITEMS
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     for _rlmod_name in ('gnureadline', 'readline'):
@@ -72,6 +77,12 @@ def setup_readline():
         except ValueError:
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_SUPPRESS_APPEND = None
+        try:
+            RL_COMPLETION_QUERY_ITEMS = ctypes.c_int.in_dll(
+                lib, 'rl_completion_query_items')
+        except ValueError:
+            # not all versions of readline have this symbol, ie Macs sometimes
+            RL_COMPLETION_QUERY_ITEMS = None
         try:
             RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
         except Exception:
@@ -175,6 +186,18 @@ def rl_completion_suppress_append(val=1):
     RL_COMPLETION_SUPPRESS_APPEND.value = val
 
 
+def rl_completion_query_items(val=None):
+    """Sets the rl_completion_query_items varaiable, if possible.
+    A None value will set this to $COMPLETION_QUERY_LIMIT, otherwise any integer
+    is accepted.
+    """
+    if RL_COMPLETION_QUERY_ITEMS is None:
+        return
+    if val is None:
+        val = builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT')
+    RL_COMPLETION_QUERY_ITEMS.value = val
+
+
 def rl_variable_dumper(readable=True):
     """Dumps the currently set readline variables. If readable is True, then this
     output may be used in an inputrc file.
@@ -195,6 +218,17 @@ def rl_variable_value(variable):
         variable = variable.encode(encoding=enc, errors=errors)
     rtn = RL_VARIABLE_VALUE(variable)
     return rtn.decode(encoding=enc, errors=errors)
+
+
+@lazyobject
+def rl_on_new_line():
+    """Grabs one of a few possible redisplay functions in readline."""
+    names = ['rl_on_new_line', 'rl_forced_update_display', 'rl_redisplay']
+    for name in names:
+        func = getattr(RL_LIB, name, None)
+        if func is not None:
+            break
+    return func
 
 
 def _insert_text_func(s, readline):
@@ -249,12 +283,48 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Overridden to no-op."""
         return '', line, line
 
+    def _querycompletions(self, completions, loc):
+        """Returns whether or not we should show completions"""
+        if os.path.commonprefix([c[loc:] for c in completions]):
+            return True
+        elif len(completions) <= builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT'):
+            return True
+        msg = '\nDisplay all {} possibilities? '.format(len(completions))
+        msg += '({GREEN}y{NO_COLOR} or {RED}n{NO_COLOR})'
+        self.print_color(msg, end='', flush=True, file=sys.stderr)
+        yn = 'x'
+        while yn not in 'yn':
+            yn = sys.stdin.read(1)
+        show_completions = to_bool(yn)
+        print()
+        if not show_completions:
+            rl_on_new_line()
+            return False
+        w, h = shutil.get_terminal_size()
+        lines = columnize(completions, width=w)
+        more_msg = self.format_color('{YELLOW}==={NO_COLOR} more or '
+                                     '{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit '
+                                     '{YELLOW}==={NO_COLOR}')
+        while len(lines) > h - 1:
+            print(''.join(lines[:h-1]), end='', flush=True, file=sys.stderr)
+            lines = lines[h-1:]
+            print(more_msg, end='', flush=True, file=sys.stderr)
+            q = sys.stdin.read(1).lower()
+            print(flush=True, file=sys.stderr)
+            if q == 'q':
+                rl_on_new_line()
+                return False
+        print(''.join(lines), end='', flush=True, file=sys.stderr)
+        rl_on_new_line()
+        return False
+
     def completedefault(self, prefix, line, begidx, endidx):
         """Implements tab-completion for text."""
         if self.completer is None:
             return []
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
+        rl_completion_query_items(val=999999999)
         _s, _e, _q = check_for_partial_string(line)
         if _s is not None:
             if _e is not None and ' ' in line[_e:]:
@@ -264,9 +334,12 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         else:
             mline = line.rpartition(' ')[2]
         offs = len(mline) - len(prefix)
-        return [i[offs:] for i in self.completer.complete(prefix, line,
-                                                          begidx, endidx,
-                                                          ctx=self.ctx)[0]]
+        completions = self.completer.complete(prefix, line,
+                                              begidx, endidx,
+                                              ctx=self.ctx)[0]
+        rtn_completions = [i[offs:] for i in completions]
+        show_completions = self._querycompletions(completions, endidx - begidx)
+        return rtn_completions if show_completions else []
 
     # tab complete on first index too
     completenames = completedefault
