@@ -1338,6 +1338,8 @@ completion for the commands themselves.
 xonsh also provides a means of modifying the behavior of the tab completer.  More
 detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
+.. _customprompt:
+
 Customizing the Prompt
 ======================
 Customizing the prompt by modifying ``$PROMPT`` is probably the most common
