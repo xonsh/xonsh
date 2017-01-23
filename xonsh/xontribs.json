@@ -160,13 +160,15 @@
    "url": "https://github.com/Granitosaurus/xonsh-vox-tabcomplete",
    "install": {
     "pip": "pip install xonsh-vox-tabcomplete"
-   },
+   }
+  },
   "xonsh-click-tabcomplete": {
    "license": "GPLv3",
    "url": "https://github.com/Granitosaurus/xonsh-click-tabcomplete",
    "install": {
     "pip": "pip install xonsh-click-tabcomplete"
-   },
+   }
+  },
   "xonsh-autoxsh": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-autoxsh",
