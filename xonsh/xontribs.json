@@ -71,6 +71,11 @@
   "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
   "description": ["Adds tabcomplete functionality to vox inside of xonsh."]
  },
+ {"name": "click_tabcomplete",
+  "package": "xonsh-click-tabcomplete",
+  "url": "https://github.com/Granitas/xonsh-click-tabcomplete",
+  "description": ["Adds tabcomplete functionality to click based python applications inside of xonsh."]
+ },
  {"name": "xo",
   "package": "exofrills",
   "url": "https://github.com/scopatz/xo",
