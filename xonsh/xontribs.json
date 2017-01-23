@@ -166,8 +166,7 @@
    "url": "https://github.com/Granitosaurus/xonsh-click-tabcomplete",
    "install": {
     "pip": "pip install xonsh-click-tabcomplete"
-   }
-  },
+   },
   "xonsh-autoxsh": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-autoxsh",
