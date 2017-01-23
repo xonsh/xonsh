@@ -1385,6 +1385,8 @@ By default, the following variables are available for use:
     current working directory on some linux terminals. This is not usually needed.
   * ``gitstatus``: Informative git status, like ``[master|MERGING|+1…2]``, you
     may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
+  * ``github``: Shows badge for the CI status of the current commit on Github, requires
+    the `hub` application to be installed, see `hub <http://github.com/github/hub>`_
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
