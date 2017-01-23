@@ -1,4 +1,4 @@
-**Added:** None
+**Added:** 
 
 * Tab completion xontrib for python applications based on click framework.
 
