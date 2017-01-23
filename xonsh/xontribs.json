@@ -68,13 +68,8 @@
   },
  {"name": "vox_tabcomplete",
   "package": "xonsh-vox-tabcomplete",
-  "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
+  "url": "https://github.com/Granitosaurus/xonsh-vox-tabcomplete",
   "description": ["Adds tabcomplete functionality to vox inside of xonsh."]
- },
- {"name": "click_tabcomplete",
-  "package": "xonsh-click-tabcomplete",
-  "url": "https://github.com/Granitas/xonsh-click-tabcomplete",
-  "description": ["Adds tabcomplete functionality to click based python applications inside of xonsh."]
  },
  {"name": "xo",
   "package": "exofrills",
@@ -108,6 +103,11 @@
   "package": "xontrib-prompt-vi-mode",
   "url": "https://github.com/t184256/xontrib-prompt-vi-mode",
   "description": ["vi-mode status formatter for xonsh prompt"]
+ },
+ {"name": "click_tabcomplete",
+  "package": "xonsh-click-tabcomplete",
+  "url": "https://github.com/Granitosaurus/xonsh-click-tabcomplete",
+  "description": ["Adds tabcomplete functionality to click based python applications inside of xonsh."]
  }
  ],
  "packages": {
@@ -157,9 +157,15 @@
    },
   "xonsh-vox-tabcomplete": {
    "license": "GPLv3",
-   "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
+   "url": "https://github.com/Granitosaurus/xonsh-vox-tabcomplete",
    "install": {
     "pip": "pip install xonsh-vox-tabcomplete"
+   },
+  "xonsh-click-tabcomplete": {
+   "license": "GPLv3",
+   "url": "https://github.com/Granitosaurus/xonsh-click-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-click-tabcomplete"
    }
   },
   "xonsh-autoxsh": {
