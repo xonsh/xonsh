@@ -8,22 +8,24 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle
-import pygments
-from pygments.styles import get_all_styles
-from pygments.token import Token
+#import pygments
+#from pygments.styles import get_all_styles
+#from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
-from xonsh.pyghooks import (XonshLexer, xonsh_style_proxy, XonshTerminal256Formatter)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
+from xonsh.platform import HAS_PYGMENTS
+from xonsh.style_tools import partial_color_tokenize, _TokenType
+from xonsh.lazyimps import pyghooks
+#from xonsh.pyghooks import (XonshLexer, xonsh_style_proxy, XonshTerminal256Formatter)
 
-from xonsh.style_tools import partial_color_tokenize
-
+Token = _TokenType()
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
 events.doc('on_ptk_create', """
@@ -67,7 +69,8 @@ class PromptToolkitShell(BaseShell):
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         multicolumn = (completions_display == 'multi')
-        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+        if HAS_PYGMENTS:
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
         if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
             prompt_tokens_cached = self.prompt_tokens(None)
@@ -88,7 +91,6 @@ class PromptToolkitShell(BaseShell):
                     'get_prompt_tokens': get_prompt_tokens,
                     'get_rprompt_tokens': get_rprompt_tokens,
                     'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
-                    'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
                     'completer': completer,
                     'multiline': multiline,
                     'get_continuation_tokens': self.continuation_tokens,
@@ -99,7 +101,8 @@ class PromptToolkitShell(BaseShell):
                     'display_completions_in_columns': multicolumn,
                     }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
-                prompt_args['lexer'] = PygmentsLexer(XonshLexer)
+                prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
+                prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
             line = self.prompter.prompt(**prompt_args)
         return line
 
@@ -230,8 +233,8 @@ class PromptToolkitShell(BaseShell):
         if force_string:
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-            proxy_style = xonsh_style_proxy(self.styler)
-            formatter = XonshTerminal256Formatter(style=proxy_style)
+            proxy_style = pyghooks.xonsh_style_proxy(self.styler)
+            formatter = pyghooks.XonshTerminal256Formatter(style=proxy_style)
             s = pygments.format(tokens, formatter)
             return s
         else:
