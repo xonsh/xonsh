@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """Base class of Xonsh History backends."""
 import uuid
+from collections import namedtuple
+
 import xonsh.tools as xt
+
+
+# represents a command in the history
+HistoryEntry = namedtuple('HistoryEntry', ['inp', 'out', 'rtn', 'ts'])
 
 
 class History:
@@ -11,31 +17,13 @@ class History:
 
     Indexing
     --------
-    History object acts like a sequence that can be indexed in a special
-    way that adds extra functionality. Note that the most recent command
-    is the last item in history.
+    History acts like a sequence that can be indexed to return
+    a HistoryEntry.
 
-    The index acts as a filter with two parts, command and argument,
-    separated by comma. Based on the type of each part different
-    filtering can be achieved,
+    HistoryEntry is a namedtuple with fields ('inp', 'out', 'rtn', 'ts')
+    that correspond to input, output, return code and timestamp respectively.
 
-        for the command part:
-
-            - an int returns the command in that position.
-            - a slice returns a list of commands.
-            - a string returns the most recent command containing the string.
-
-        for the argument part:
-
-            - an int returns the argument of the command in that position.
-            - a slice returns a part of the command based on the argument
-              position.
-
-    The argument part of the filter can be omitted but the command part is
-    required. Command arguments are separated by white space.
-
-    If the filtering produces only one result it is returned as a string
-    else a list of strings is returned.
+    Note that the most recent command is the last item in history.
 
     Attributes
     ----------
@@ -79,23 +67,22 @@ class History:
         return len(list(self.items()))
 
     def __getitem__(self, item):
-        """Retrieve history parts based on filtering rules,
-        see ``History`` docs for more info. Accepts one of
-        int, string, slice or tuple of length two.
-        """
-        if isinstance(item, tuple):
-            cmd_pat, arg_pat = item
+        """Retrieve history entries, see ``History`` docs for more info."""
+        if isinstance(item, int):
+            if item >= len(self):
+                raise IndexError('history index out of range')
+            return HistoryEntry(inp=self.inps[item], out=self.outs[item],
+                                rtn=self.rtns[item], ts=self.tss[item])
+        elif isinstance(item, slice):
+            inps = self.inps[item]
+            outs = self.outs[item]
+            rtns = self.rtns[item]
+            tss = self.tss[item]
+            return [HistoryEntry(i, o, r, t) for i, o, r, t in zip(inps, outs, rtns, tss)]
         else:
-            cmd_pat, arg_pat = item, None
-        cmds = [c['inp'] for c in self.items()]
-        cmds = self._cmd_filter(cmds, cmd_pat)
-        if arg_pat is not None:
-            cmds = self._args_filter(cmds, arg_pat)
-        cmds = list(cmds)
-        if len(cmds) == 1:
-            return cmds[0]
-        else:
-            return cmds
+            raise TypeError('history indices must be integers '
+                            'or slices, not {}'.format(type(item)))
+
 
     def __setitem__(self, *args):
         raise PermissionError('You cannot change history! '
@@ -145,27 +132,3 @@ class History:
             If set blocking, then wait until gc action finished.
         """
         pass
-
-    @staticmethod
-    def _cmd_filter(cmds, pat):
-        if isinstance(pat, (int, slice)):
-            s = xt.ensure_slice(pat)
-            yield from xt.get_portions(cmds, s)
-        elif xt.is_string(pat):
-            for command in reversed(list(cmds)):
-                if pat in command:
-                    yield command
-                    return
-        else:
-            raise TypeError('Command filter must be string, int or slice')
-
-    @staticmethod
-    def _args_filter(cmds, pat):
-        args = None
-        if isinstance(pat, (int, slice)):
-            s = xt.ensure_slice(pat)
-            for command in cmds:
-                yield ' '.join(command.split()[s])
-        else:
-            raise TypeError('Argument filter must be int or slice')
-        return args
