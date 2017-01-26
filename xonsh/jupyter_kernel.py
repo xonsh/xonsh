@@ -38,7 +38,6 @@ class XonshKernel(Kernel):
         if len(code.strip()) == 0:
             return {'status': 'ok', 'execution_count': self.execution_count,
                     'payload': [], 'user_expressions': {}}
-        env = builtins.__xonsh_env__
         shell = builtins.__xonsh_shell__
         hist = builtins.__xonsh_history__
         try:
