@@ -48,11 +48,7 @@ class XonshKernel(Kernel):
         err = SpooledTemporaryFile(max_size=MAX_SIZE, mode='w+t',
                                    encoding=enc, newline='\n')
         try:
-            with redirect_stdout(out), redirect_stderr(err), \
-                 swap(builtins, '__xonsh_stdout_uncaptured__', out), \
-                 swap(builtins, '__xonsh_stderr_uncaptured__', err), \
-                 env.swap({'XONSH_STORE_STDOUT': False}):
-                shell.default(code)
+            shell.default(code)
             interrupted = False
         except KeyboardInterrupt:
             interrupted = True
