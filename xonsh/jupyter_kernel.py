@@ -8,7 +8,6 @@ from ipykernel.kernelbase import Kernel
 
 from xonsh import __version__ as version
 from xonsh.main import main_context
-from xonsh.tools import redirect_stdout, redirect_stderr, swap
 from xonsh.completer import Completer
 
 
