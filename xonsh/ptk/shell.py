@@ -14,14 +14,15 @@ from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
-from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
-                            xonsh_style_proxy, XonshTerminal256Formatter)
+from xonsh.pyghooks import (XonshLexer, xonsh_style_proxy, XonshTerminal256Formatter)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
+
+from xonsh.style_tools import partial_color_tokenize
 
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
