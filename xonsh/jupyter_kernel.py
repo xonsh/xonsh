@@ -2,7 +2,6 @@
 """Hooks for Jupyter Xonsh Kernel."""
 import builtins
 from pprint import pformat
-from tempfile import SpooledTemporaryFile
 
 from ipykernel.kernelbase import Kernel
 
@@ -42,7 +41,6 @@ class XonshKernel(Kernel):
         env = builtins.__xonsh_env__
         shell = builtins.__xonsh_shell__
         hist = builtins.__xonsh_history__
-        enc = env.get('XONSH_ENCODING')
         try:
             shell.default(code)
             interrupted = False
