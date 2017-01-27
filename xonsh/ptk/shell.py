@@ -227,16 +227,19 @@ class PromptToolkitShell(BaseShell):
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
         a list of (Token, str) tuples. If force_string is set to true, though,
-        this will return a color fomtatted string.
+        this will return a color formatted string.
         """
         tokens = partial_color_tokenize(string)
-        if force_string:
+        if force_string and HAS_PYGMENTS:
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
             proxy_style = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=proxy_style)
             s = pygments.format(tokens, formatter)
             return s
+        elif force_string:
+            print("To force colorization of string, install Pygments")
+            return tokens
         else:
             return tokens
 
