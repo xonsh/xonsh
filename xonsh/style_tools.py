@@ -7,7 +7,8 @@ from xonsh.lazyasd import LazyObject
 
 class _TokenType(tuple):
     """
-    Forked from mainline PTK
+    This class was forked from the mainline prompt-toolkit repo.
+    Copyright (c) 2014, Jonathan Slenders, All rights reserved.
     """
     def __getattr__(self, val):
         if not val or not val[0].isupper():
