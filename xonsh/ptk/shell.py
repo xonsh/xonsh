@@ -7,10 +7,7 @@ from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import print_tokens
-from prompt_toolkit.styles import PygmentsStyle
-#import pygments
-#from pygments.styles import get_all_styles
-#from pygments.token import Token
+from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
@@ -21,9 +18,8 @@ from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
 from xonsh.platform import HAS_PYGMENTS
-from xonsh.style_tools import partial_color_tokenize, _TokenType
-from xonsh.lazyimps import pyghooks
-#from xonsh.pyghooks import (XonshLexer, xonsh_style_proxy, XonshTerminal256Formatter)
+from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
+from xonsh.lazyimps import pygments, pyghooks
 
 Token = _TokenType()
 
@@ -101,8 +97,12 @@ class PromptToolkitShell(BaseShell):
                     'display_completions_in_columns': multicolumn,
                     }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
-                prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
-                prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+                if HAS_PYGMENTS:
+                    prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
+                    prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+                else:
+                    prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
+
             line = self.prompter.prompt(**prompt_args)
         return line
 
@@ -242,22 +242,29 @@ class PromptToolkitShell(BaseShell):
 
     def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
-        env = builtins.__xonsh_env__
-        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         if isinstance(string, str):
             tokens = partial_color_tokenize(string + end)
         else:
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
-        proxy_style = PygmentsStyle(xonsh_style_proxy(self.styler))
+        if HAS_PYGMENTS:
+            env = builtins.__xonsh_env__
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            proxy_style = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+        else:
+            proxy_style = style_from_dict(DEFAULT_STYLE_DICT)
         print_tokens(tokens, style=proxy_style)
 
     def color_style_names(self):
         """Returns an iterable of all available style names."""
-        return get_all_styles()
+        if not HAS_PYGMENTS:
+            return ['For other xonsh styles, please install pygments']
+        return pygments.styles.get_all_styles()
 
     def color_style(self):
         """Returns the current color map."""
+        if not HAS_PYGMENTS:
+            return DEFAULT_STYLE_DICT
         env = builtins.__xonsh_env__
         self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         return self.styler.styles

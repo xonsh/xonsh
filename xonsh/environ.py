@@ -240,7 +240,7 @@ def DEFAULT_VALUES():
         'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
         'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
         'CDPATH': (),
-        'COLOR_INPUT': False,
+        'COLOR_INPUT': True,
         'COLOR_RESULTS': True,
         'COMPLETIONS_BRACKETS': True,
         'COMPLETIONS_CONFIRM': False,
