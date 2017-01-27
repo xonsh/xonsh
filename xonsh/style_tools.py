@@ -5,6 +5,7 @@ import string
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyObject
 
+
 class _TokenType(tuple):
     """
     This class was forked from the mainline prompt-toolkit repo.
@@ -26,6 +27,7 @@ RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
 
 Token = _TokenType()
 Color = Token.Color
+
 
 def partial_color_tokenize(template):
     """Tokenizes a template string containing colors. Will return a list
