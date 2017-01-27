@@ -218,7 +218,7 @@ KNOWN_COLORS = LazyObject(lambda: frozenset([
     'YELLOW',
     ]), globals(), 'KNOWN_COLORS')
 
-DEFAULT_STYLE_DICT = {Token: '',
+DEFAULT_STYLE_DICT = LazyObject(lambda: {Token: '',
                       Token.Aborted: '#ansidarkgray',
                       Token.AutoSuggestion: '#ansidarkgray',
                       Token.Color.BACKGROUND_BLACK: 'bg:#ansiblack',
@@ -384,4 +384,4 @@ DEFAULT_STYLE_DICT = {Token: '',
                       Token.Scrollbar.Arrow: 'bg:#ansiblack #ansiwhite bold',
                       Token.Scrollbar.Button: 'bg:#ansiblack',
                       Token.Text: '',
-                      Token.Text.Whitespace: '#ansilightgray'}
+                                           Token.Text.Whitespace: '#ansilightgray'}, globals(), 'DEFAULT_STYLE_DICT')
