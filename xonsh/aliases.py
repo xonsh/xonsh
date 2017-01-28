@@ -380,6 +380,23 @@ def showcmd(args, stdin=None):
         sys.displayhook(args)
 
 
+def detect_xip_alias():
+    """
+    Determines the correct invokation to get xonsh's pip
+    """
+    if not getattr(sys, 'executable', None):
+        return lambda args, stdin=None: ("", "Sorry, unable to run pip on your system (missing sys.executable)", 1)
+
+    try:
+        if not os.access(os.path.dirname(sys.executable), os.W_OK):
+            return ['sudo', sys.executable, '-m', 'pip']
+        else:
+            return [sys.executable, '-m', 'pip']
+    except Exception:
+        # Something freaky happened, return something that'll probably work
+        return [sys.executable, '-m', 'pip']
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -411,7 +428,7 @@ def make_default_aliases():
         'which': xxw.which,
         'xontrib': xontribs_main,
         'completer': xca.completer_alias,
-        'xip': [sys.executable, '-m', 'pip'],
+        'xip': detect_xip_alias(),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
