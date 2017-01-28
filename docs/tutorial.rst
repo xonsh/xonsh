@@ -351,7 +351,7 @@ For example,
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
 
 The ``!()`` syntax captured more information about the command, as an instance
-of a class called ``CompletedCommand``.  This object contains more information
+of a class called ``CommandPipeline``.  This object contains more information
 about the result of the given command, including the return code, the process
 id, the standard output and standard error streams, and information about how
 input and output were redirected.  For example:
@@ -359,7 +359,7 @@ input and output were redirected.  For example:
 .. code-block:: xonshcon
 
     >>> !(ls nonexistent_directory)
-    CompletedCommand(stdin=None, stdout='', stderr='/bin/ls: cannot access nonexistent_directory: No such file or directory\n', pid=1862, returncode=2, args=['ls', 'nonexistent_directory'], alias=['ls', '--color=auto'], stdin_redirect=None, stdout_redirect=None, stderr_redirect=None)
+    CommandPipeline(stdin=<_io.BytesIO object at 0x7f1948182bf8>, stdout=<_io.BytesIO object at 0x7f1948182af0>, stderr=<_io.BytesIO object at 0x7f19483a6200>, pid=26968, returncode=2, args=['ls', 'nonexistent_directory'], alias=['ls', '--color=auto', '-v'], stdin_redirect=['<stdin>', 'r'], stdout_redirect=[9, 'wb'], stderr_redirect=[11, 'w'], timestamps=[1485235484.5016758, None], executed_cmd=['ls', '--color=auto', '-v', 'nonexistent_directory'], input=None, output=, errors=None)
 
 This object will be "truthy" if its return code was 0, and it is equal (via
 ``==``) to its return code.  It also hashes to its return code.  This allows
@@ -382,7 +382,7 @@ example:
             sleep 1
 
 
-If you iterate over the ``CompletedCommand`` object, it will yield lines of its
+If you iterate over the ``CommandPipeline`` object, it will yield lines of its
 output.  Using this, you can quickly and cleanly process output from commands.
 Additionally, these objects expose a method ``itercheck``, which behaves the same
 as the built-in iterator but raises ``XonshCalledProcessError`` if the process
