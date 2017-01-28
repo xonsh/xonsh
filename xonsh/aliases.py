@@ -387,14 +387,18 @@ def detect_xip_alias():
     if not getattr(sys, 'executable', None):
         return lambda args, stdin=None: ("", "Sorry, unable to run pip on your system (missing sys.executable)", 1)
 
+    basecmd = [sys.executable, '-m', 'pip']
     try:
-        if not os.access(os.path.dirname(sys.executable), os.W_OK):
-            return ['sudo', sys.executable, '-m', 'pip']
+        if ON_WINDOWS:
+            # XXX: Does windows have an installation mode that requires UAC?
+            return basecmd
+        elif not os.access(os.path.dirname(sys.executable), os.W_OK):
+            return ['sudo', *basecmd]
         else:
-            return [sys.executable, '-m', 'pip']
+            return basecmd
     except Exception:
         # Something freaky happened, return something that'll probably work
-        return [sys.executable, '-m', 'pip']
+        return basecmd
 
 
 def make_default_aliases():
