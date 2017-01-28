@@ -309,7 +309,7 @@ class BaseShell(object):
         if code is None:
             return
 
-        events.on_precommand.fire(src)
+        events.on_precommand.fire(cmd=src)
 
         env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
@@ -358,10 +358,10 @@ class BaseShell(object):
         else:
             info['out'] = tee_out + '\n' + last_out
         events.on_postcommand.fire(
-            info['inp'],
-            info['rtn'],
-            info.get('out', None),
-            info['ts']
+            cmd=info['inp'],
+            rtn=info['rtn'],
+            out=info.get('out', None),
+            ts=info['ts']
             )
         if hist is not None:
             hist.append(info)
@@ -375,7 +375,7 @@ class BaseShell(object):
             builtins.__xonsh_env__['PWD'] = cwd      # track it now
             if old is not None:
                 builtins.__xonsh_env__['OLDPWD'] = old  # and update $OLDPWD like dirstack.
-            events.on_chdir.fire(old, cwd)              # fire event after cwd actually changed.
+            events.on_chdir.fire(olddir=old, newdir=cwd)              # fire event after cwd actually changed.
 
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that

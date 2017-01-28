@@ -13,11 +13,11 @@ def test_event_calling(events):
     called = False
 
     @events.on_test
-    def _(spam):
+    def _(spam, **_):
         nonlocal called
         called = spam
 
-    events.on_test.fire("eggs")
+    events.on_test.fire(spam="eggs")
 
     assert called == "eggs"
 
@@ -26,13 +26,13 @@ def test_event_returns(events):
     called = 0
 
     @events.on_test
-    def on_test():
+    def on_test(**_):
         nonlocal called
         called += 1
         return 1
 
     @events.on_test
-    def second():
+    def second(**_):
         nonlocal called
         called += 1
         return 2
@@ -47,7 +47,7 @@ def test_validator(events):
     called = None
 
     @events.on_test
-    def first(n):
+    def first(n, **_):
         nonlocal called
         called += 1
         return False
@@ -57,17 +57,17 @@ def test_validator(events):
         return n == 'spam'
 
     @events.on_test
-    def second(n):
+    def second(n, **_):
         nonlocal called
         called += 1
         return False
 
     called = 0
-    events.on_test.fire('egg')
+    events.on_test.fire(n='egg')
     assert called == 1
 
     called = 0
-    events.on_test.fire('spam')
+    events.on_test.fire(n='spam')
     assert called == 2
 
 
@@ -83,7 +83,7 @@ def test_transmogrify(events):
     events.doc('on_test', docstring)
 
     @events.on_test
-    def func():
+    def func(**_):
         pass
 
     assert isinstance(events.on_test, Event)
@@ -102,7 +102,7 @@ def test_transmogrify_by_string(events):
     events.doc('on_test', docstring)
 
     @events.on_test
-    def func():
+    def func(**_):
         pass
 
     assert isinstance(events.on_test, Event)
@@ -121,7 +121,7 @@ def test_load(events):
     called = 0
 
     @events.on_test
-    def on_test():
+    def on_test(**_):
         nonlocal called
         called += 1
 
@@ -131,7 +131,7 @@ def test_load(events):
     assert called == 1
 
     @events.on_test
-    def second():
+    def second(**_):
         nonlocal called
         called += 1
 
@@ -142,7 +142,7 @@ def test_load_2nd_call(events):
     called = 0
 
     @events.on_test
-    def on_test():
+    def on_test(**_):
         nonlocal called
         called += 1
 
