@@ -410,7 +410,8 @@ def make_default_aliases():
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'which': xxw.which,
         'xontrib': xontribs_main,
-        'completer': xca.completer_alias
+        'completer': xca.completer_alias,
+        'xip': [sys.executable, '-m', 'pip'],
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
