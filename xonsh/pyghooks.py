@@ -484,8 +484,8 @@ if hasattr(pygments.style, 'ansicolors'):
         Token.Scrollbar: 'bg:#ansidarkgray',
         Token.Scrollbar.Button: 'bg:#ansiblack',
         Token.Scrollbar.Arrow: 'bg:#ansiblack #ansiwhite bold',
-        Token.AutoSuggestion: '#ansidarkgray',
-        Token.Aborted: '#ansidarkgray',
+        Token.AutoSuggestion: '#ansilightgray',
+        Token.Aborted: '#ansilightgray',
     }
 else:
     PTK_STYLE = {
