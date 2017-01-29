@@ -282,8 +282,8 @@ class PromptToolkitShell(BaseShell):
         dependent on the shell backend. Also it is mostly optional since
         it only affects ^Z backgrounding behaviour.
         """
-        if not ON_POSIX:
-            return
+        # PTK does not seem to need any specialization here. However,
+        # if it does for some reason in the future...
         # The following writes an ANSI escape sequence that sends the cursor
         # to the end of the line. This has the effect of restoring ECHO mode.
         # See http://unix.stackexchange.com/a/108014/129048 for more details.
@@ -296,5 +296,7 @@ class PromptToolkitShell(BaseShell):
         # like Python in interactive mode. Also note that the sequences "\033M"
         # and "\033E" seem to work too, but these are techinally VT100 codes.
         # I used the more primitive ANSI sequence to maximize compatability.
-        # -scopatz 2017-20-28
-        sys.stdout.write('\033[9999999C\n')
+        # -scopatz 2017-01-28
+        #if not ON_POSIX:
+        #    return
+        #sys.stdout.write('\033[9999999C\n')

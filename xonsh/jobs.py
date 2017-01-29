@@ -70,7 +70,7 @@ if ON_WINDOWS:
     def _set_pgrp(info):
         pass
 
-    def wait_for_active_job(last_task=None):
+    def wait_for_active_job(last_task=None, bacgrounded=False):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -165,7 +165,7 @@ else:
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
 
-    def wait_for_active_job(last_task=None):
+    def wait_for_active_job(last_task=None, backgrounded=False):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -175,18 +175,25 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
+            if backgrounded:
+                # restoring sanity could probably be called whenever we return
+                # control to the shell. But it only seems to matter after a
+                # ^Z event. This *has* to be called after we give the terminal
+                # back to the shell.
+                builtins.__xonsh_shell__.shell.restore_tty_sanity()
             return last_task
         pgrp = active_task.get('pgrp', None)
         obj = active_task['obj']
+        backgrounded = False
         # give the terminal over to the fg process
         if pgrp is not None:
             _give_terminal_to(pgrp)
         _continue(active_task)
         _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(wcode):
-            print('^Z')  # get a newline because ^Z will have been printed
+            print('^Z')
             active_task['status'] = "stopped"
-            builtins.__xonsh_shell__.shell.restore_tty_sanity()
+            backgrounded = True
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
             obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
@@ -194,7 +201,8 @@ else:
         else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
-        return wait_for_active_job(last_task=active_task)
+        return wait_for_active_job(last_task=active_task,
+                                   backgrounded=backgrounded)
 
 
 def get_next_task():
