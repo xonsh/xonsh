@@ -1,6 +1,6 @@
 **Added:**
 
-* HistoryEntry, a namedtuple that represents a command in history.
+* HistoryEntry, a SimpleNamespace object that represents a command in history.
 
 **Changed:**
 

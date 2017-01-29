@@ -161,17 +161,3 @@ def test_histcontrol(hist, xonsh_builtins):
     assert '/bin/ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
     assert -1 == hist.rtns[-1]
-
-
-@pytest.mark.parametrize('index, exp', [
-    (-1, ('grep from me', None, 0, (5, 5))),
-    (1, ('cat hello kitty', None, 0, (1, 1))),
-    (slice(1, 3), [('cat hello kitty', None, 0, (1, 1)),
-                   ('abc', None, 0, (2, 2))]),
-])
-def test_history_getitem(index, exp, hist, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
-    for ts,cmd in enumerate(CMDS):  # populate the shell history
-        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts, ts), 'out': None})
-
-    assert hist[index] == exp

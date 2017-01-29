@@ -1,13 +1,33 @@
 # -*- coding: utf-8 -*-
 """Base class of Xonsh History backends."""
+import types
 import uuid
-from collections import namedtuple
 
 import xonsh.tools as xt
 
 
-# represents a command in the history
-HistoryEntry = namedtuple('HistoryEntry', ['inp', 'out', 'rtn', 'ts'])
+class HistoryEntry(types.SimpleNamespace):
+    """Represent a command in history.
+
+    Attributes
+    ----------
+    cmd: str
+        The command as typed by the user, including newlines
+    out: str
+        The output of the command, if xonsh is configured to save it
+    rtn: int
+        The return of the command (ie, 0 on success)
+    ts: two-tuple of floats
+        The timestamps of when the command started and finished, including
+        fractions.
+
+    """
+
+    def __init__(self, *, cmd, out, rtn, ts):
+        self.cmd = cmd
+        self.out = out
+        self.rtn = rtn
+        self.ts = ts
 
 
 class History:
@@ -18,10 +38,7 @@ class History:
     Indexing
     --------
     History acts like a sequence that can be indexed to return
-    a HistoryEntry.
-
-    HistoryEntry is a namedtuple with fields ('inp', 'out', 'rtn', 'ts')
-    that correspond to input, output, return code and timestamp respectively.
+    ``HistoryEntry`` objects.
 
     Note that the most recent command is the last item in history.
 
@@ -71,14 +88,15 @@ class History:
         if isinstance(item, int):
             if item >= len(self):
                 raise IndexError('history index out of range')
-            return HistoryEntry(inp=self.inps[item], out=self.outs[item],
+            return HistoryEntry(cmd=self.inps[item], out=self.outs[item],
                                 rtn=self.rtns[item], ts=self.tss[item])
         elif isinstance(item, slice):
-            inps = self.inps[item]
+            cmds = self.inps[item]
             outs = self.outs[item]
             rtns = self.rtns[item]
             tss = self.tss[item]
-            return [HistoryEntry(i, o, r, t) for i, o, r, t in zip(inps, outs, rtns, tss)]
+            return [HistoryEntry(cmd=c, out=o, rtn=r, ts=t)
+                    for c, o, r, t in zip(cmds, outs, rtns, tss)]
         else:
             raise TypeError('history indices must be integers '
                             'or slices, not {}'.format(type(item)))
