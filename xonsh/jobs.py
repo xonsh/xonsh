@@ -164,7 +164,6 @@ else:
                 os.tcsetpgrp(st, pgid)
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
-
     def wait_for_active_job(last_task=None, backgrounded=False):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be

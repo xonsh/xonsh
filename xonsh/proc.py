@@ -24,7 +24,7 @@ import subprocess
 import collections.abc as cabc
 
 from xonsh.platform import (ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW,
-                            IFLAG,OFLAG, CFLAG, LFLAG, ISPEED, OSPEED, CC)
+                            LFLAG, CC)
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
