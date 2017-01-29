@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Base class of Xonsh History backends."""
-import types
 import uuid
 
 
-class HistoryEntry(types.SimpleNamespace):
+class HistoryEntry:
     """Represent a command in history.
 
     Attributes
@@ -20,6 +19,8 @@ class HistoryEntry(types.SimpleNamespace):
         fractions.
 
     """
+
+    __slots__ = ('cmd', 'out', 'rtn', 'ts')
 
     def __init__(self, *, cmd, out, rtn, ts):
         self.cmd = cmd
@@ -103,7 +104,6 @@ class History:
         else:
             raise TypeError('history indices must be integers '
                             'or slices, not {}'.format(type(item)))
-
 
     def __setitem__(self, *args):
         raise PermissionError('You cannot change history! '
