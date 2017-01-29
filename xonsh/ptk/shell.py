@@ -297,6 +297,6 @@ class PromptToolkitShell(BaseShell):
         # and "\033E" seem to work too, but these are techinally VT100 codes.
         # I used the more primitive ANSI sequence to maximize compatability.
         # -scopatz 2017-01-28
-        #if not ON_POSIX:
-        #    return
-        #sys.stdout.write('\033[9999999C\n')
+        #   if not ON_POSIX:
+        #       return
+        #   sys.stdout.write('\033[9999999C\n')
