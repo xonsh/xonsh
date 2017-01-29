@@ -18,6 +18,7 @@ import shutil
 import builtins
 import importlib
 import threading
+import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -527,6 +528,19 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Returns the current color map."""
         style = style = builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
         return ansi_color_style(style=style)
+
+    def restore_tty_sanity(self):
+        """An interface for resetting the TTY stdin mode. This is highly
+        dependent on the shell backend. Also it is mostly optional since
+        it only affects ^Z backgrounding behaviour.
+        """
+        if not ON_POSIX:
+            return
+        stty, _ = builtins.__xonsh_commands_cache__.lazyget('stty', None)
+        if stty is None:
+            return
+        # this call should not throw even if stty fails
+        subprocess.call([stty, 'sane'], shell=True)
 
 
 class ReadlineHistoryAdder(threading.Thread):

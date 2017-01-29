@@ -262,3 +262,25 @@ class PromptToolkitShell(BaseShell):
         env = builtins.__xonsh_env__
         self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         return self.styler.styles
+
+    def restore_tty_sanity(self):
+        """An interface for resetting the TTY stdin mode. This is highly
+        dependent on the shell backend. Also it is mostly optional since
+        it only affects ^Z backgrounding behaviour.
+        """
+        if not ON_POSIX:
+            return
+        # The following writes an ANSI escape sequence that sends the cursor
+        # to the end of the line. This has the effect of restoring ECHO mode.
+        # See http://unix.stackexchange.com/a/108014/129048 for more details.
+        # This line can also be replaced by os.system("stty sane"), as per
+        # http://stackoverflow.com/questions/19777129/interactive-python-interpreter-run-in-background#comment29421919_19778355
+        # However, it is important to note that not termios-based solution
+        # seems to work. My guess is that this is because termios restoration
+        # needs to be performed by the subprocess itself. This fix is important
+        # when subprocesses don't properly restore the terminal attributes,
+        # like Python in interactive mode. Also note that the sequences "\033M"
+        # and "\033E" seem to work too, but these are techinally VT100 codes.
+        # I used the more primitive ANSI sequence to maximize compatability.
+        # -scopatz 2017-20-28
+        sys.stdout.write('\033[9999999C\n')

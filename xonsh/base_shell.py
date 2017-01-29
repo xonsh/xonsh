@@ -493,3 +493,10 @@ class BaseShell(object):
     def color_style(self):
         """Returns the current color map."""
         return {}
+
+    def restore_tty_sanity(self):
+        """An interface for resetting the TTY stdin mode. This is highly
+        dependent on the shell backend. Also it is mostly optional since
+        it only affects ^Z backgrounding behaviour.
+        """
+        pass

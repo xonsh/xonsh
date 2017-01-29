@@ -13,6 +13,7 @@ import collections
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN
 
+
 tasks = LazyObject(collections.deque, globals(), 'tasks')
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
@@ -163,6 +164,7 @@ else:
                 os.tcsetpgrp(st, pgid)
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
+
     def wait_for_active_job(last_task=None):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
@@ -184,6 +186,7 @@ else:
         if os.WIFSTOPPED(wcode):
             print('^Z')  # get a newline because ^Z will have been printed
             active_task['status'] = "stopped"
+            builtins.__xonsh_shell__.shell.restore_tty_sanity()
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
             obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
