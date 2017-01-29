@@ -2056,10 +2056,8 @@ class CommandPipeline:
     @property
     def returncode(self):
         """Process return code, waits until command is completed."""
-        proc = self.proc
-        if proc.poll() is None:
-            self.end()
-        return proc.returncode
+        self.end()
+        return self.proc.returncode
 
     rtn = returncode
 
