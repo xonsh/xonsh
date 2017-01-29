@@ -70,7 +70,7 @@ if ON_WINDOWS:
     def _set_pgrp(info):
         pass
 
-    def wait_for_active_job(last_task=None, bacgrounded=False):
+    def wait_for_active_job(last_task=None, backgrounded=False):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
