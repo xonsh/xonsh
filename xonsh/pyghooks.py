@@ -484,9 +484,20 @@ if hasattr(pygments.style, 'ansicolors'):
         Token.Scrollbar: 'bg:#ansidarkgray',
         Token.Scrollbar.Button: 'bg:#ansiblack',
         Token.Scrollbar.Arrow: 'bg:#ansiblack #ansiwhite bold',
-        Token.AutoSuggestion: '#ansilightgray',
-        Token.Aborted: '#ansilightgray',
+        Token.AutoSuggestion: '#ansidarkgray',
+        Token.Aborted: '#ansidarkgray',
     }
+    if not ON_WINDOWS:
+        # light / dark gray seem to be swapped on linux/posix for some reason
+        # windows apepars to be correct. The following should be removed if
+        # this is ever fixed.
+        PTK_STYLE.update({
+            Token.Menu.Completions: 'bg:#ansidarkgray #ansiblack',
+            Token.Menu.Completions.Completion.Current: 'bg:#ansilightgray #ansiwhite',
+            Token.Scrollbar: 'bg:#ansilightgray',
+            Token.AutoSuggestion: '#ansilightgray',
+            Token.Aborted: '#ansilightgray',
+            })
 else:
     PTK_STYLE = {
         Token.Menu.Completions: 'bg:#888888 #000000',
@@ -501,13 +512,13 @@ else:
 
 if hasattr(pygments.style, 'ansicolors'):
     XONSH_BASE_STYLE = LazyObject(lambda: {
-        Whitespace: '#ansilightgray',
+        Whitespace: '#ansilightgray' if ON_WINDOWS else '#ansidarkgray',
         Comment: 'underline #ansiteal',
         Comment.Preproc: 'underline #ansibrown',
         Keyword: 'bold #ansidarkgreen',
         Keyword.Pseudo: 'nobold',
         Keyword.Type: 'nobold #ansidarkred',
-        Operator: '#ansidarkgray',
+        Operator: '#ansidarkgray' if ON_WINDOWS else '#ansilightgray',
         Operator.Word: 'bold #ansipurple',
         Name.Builtin: '#ansidarkgreen',
         Name.Function: '#ansiblue',
@@ -517,7 +528,7 @@ if hasattr(pygments.style, 'ansicolors'):
         Name.Variable: '#ansidarkblue',
         Name.Constant: '#ansidarkred',
         Name.Label: '#ansiyellow',
-        Name.Entity: 'bold #ansilightgray',
+        Name.Entity: 'bold #ansilightgray' if ON_WINDOWS else 'bold #ansidarkgray',
         Name.Attribute: '#ansiyellow',
         Name.Tag: 'bold #ansidarkgreen',
         Name.Decorator: '#ansifuchsia',
@@ -528,7 +539,7 @@ if hasattr(pygments.style, 'ansicolors'):
         String.Regex: '#ansipurple',
         String.Symbol: '#ansibrown',
         String.Other: '#ansidarkgreen',
-        Number: '#ansidarkgray',
+        Number: '#ansidarkgray' if ON_WINDOWS else '#ansilightgray',
         Generic.Heading: 'bold #ansidarkblue',
         Generic.Subheading: 'bold #ansipurple',
         Generic.Deleted: '#ansidarkred',
@@ -715,7 +726,7 @@ def _default_style():
             Color.BLUE: '#ansidarkblue',
             Color.CYAN: '#ansiteal',
             Color.GREEN: '#ansidarkgreen',
-            Color.INTENSE_BLACK: '#ansidarkgray',
+            Color.INTENSE_BLACK: '#ansidarkgray' if ON_WINDOWS else '#ansilightgray',
             Color.INTENSE_BLUE: '#ansiblue',
             Color.INTENSE_CYAN: '#ansiturquoise',
             Color.INTENSE_GREEN: '#ansigreen',
@@ -726,7 +737,7 @@ def _default_style():
             Color.NO_COLOR: 'noinherit',
             Color.PURPLE: '#ansipurple',
             Color.RED: '#ansidarkred',
-            Color.WHITE: '#ansilightgray',
+            Color.WHITE: '#ansilightgray' if ON_WINDOWS else '#ansidarkgray',
             Color.YELLOW: '#ansibrown',
         }
     elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
