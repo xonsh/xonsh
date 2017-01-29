@@ -330,7 +330,8 @@ def main():
         }
         skw['cmdclass']['develop'] = xdevelop
         skw['extras_require'] = {
-            'ptk':  ['prompt-toolkit', 'pygments'],
+            'ptk':  ['prompt-toolkit'],
+            'pygments': ['pygments'],
             'win': ['win_unicode_console'],
             'mac': ['gnureadline'],
             'linux': ['distro'],

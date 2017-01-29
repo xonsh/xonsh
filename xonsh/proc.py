@@ -749,6 +749,8 @@ class PopenThread(threading.Thread):
         self.send_signal(signum)
         if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
+        if on_main_thread():
+            signal.pthread_kill(threading.get_ident(), signal.SIGINT)
 
     def _restore_sigint(self, frame=None):
         old = self.old_int_handler

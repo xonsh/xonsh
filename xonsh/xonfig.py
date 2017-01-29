@@ -413,7 +413,7 @@ def _str_colors(cmap, cols):
 
 
 def _tok_colors(cmap, cols):
-    from xonsh.pyghooks import Color
+    from xonsh.style_tools import Color
     nc = Color.NO_COLOR
     names_toks = {}
     for t in cmap.keys():
