@@ -341,6 +341,7 @@ def default_threadable_predictors():
         'startx': predict_false,
         'sudo': predict_help_ver,
         'tcsh': predict_shell,
+        'telnet': predict_false,
         'top': predict_help_ver,
         'vi': predict_false,
         'view': predict_false,
