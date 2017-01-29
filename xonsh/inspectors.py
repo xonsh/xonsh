@@ -24,6 +24,7 @@ from xonsh.tools import (cast_unicode, safe_hasattr, indent,
                          print_color, format_color)
 from xonsh.platform import HAS_PYGMENTS, PYTHON_VERSION_INFO
 from xonsh.lazyimps import pygments, pyghooks
+from xonsh.style_tools import partial_color_tokenize
 
 
 # builtin docstrings to ignore
@@ -466,7 +467,7 @@ class Inspector(object):
                 title += '\n'
             else:
                 title += " ".ljust(title_width - title_len)
-            out += pyghooks.partial_color_tokenize(title)
+            out += partial_color_tokenize(title)
             if isinstance(content, str):
                 out[-1] = (out[-1][0], out[-1][1] + content + '\n')
             else:

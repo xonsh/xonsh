@@ -143,7 +143,7 @@ class Vox(collections.abc.Mapping):
             env_path,
             system_site_packages=system_site_packages, symlinks=symlinks,
             with_pip=with_pip)
-        events.vox_on_create.fire(name)
+        events.vox_on_create.fire(name=name)
 
     def upgrade(self, name, *, symlinks=False, with_pip=True):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
@@ -288,7 +288,7 @@ class Vox(collections.abc.Mapping):
         if 'PYTHONHOME' in env:
             type(self).oldvars['PYTHONHOME'] = env.pop('PYTHONHOME')
 
-        events.vox_on_activate.fire(name)
+        events.vox_on_activate.fire(name=name)
 
     def deactivate(self):
         """
@@ -307,7 +307,7 @@ class Vox(collections.abc.Mapping):
 
         env.pop('VIRTUAL_ENV')
 
-        events.vox_on_deactivate.fire(env_name)
+        events.vox_on_deactivate.fire(name=env_name)
         return env_name
 
     def __delitem__(self, name):
@@ -328,4 +328,4 @@ class Vox(collections.abc.Mapping):
             pass
         shutil.rmtree(env_path)
 
-        events.vox_on_delete.fire(name)
+        events.vox_on_delete.fire(name=name)

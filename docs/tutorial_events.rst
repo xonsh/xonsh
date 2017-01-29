@@ -22,12 +22,15 @@ This will add a line to a file every time the current directory changes (due to 
 or several other commands)::
 
     @events.on_chdir
-    def add_to_file(newdir):
+    def add_to_file(olddir, newdir, **kw):
         with open(g`~/.dirhist`[0], 'a') as dh:
             print(newdir, file=dh)
 
 The exact arguments passed and returns expected vary from event to event; see the 
 `event list <events.html>`_ for the details.
+
+Note that the event system is keyword only. Event handlers must match argument names and must have a
+``**kw`` as protection against future changes.
 
 Can I use this, too?
 ====================

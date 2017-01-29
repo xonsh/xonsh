@@ -27,7 +27,7 @@ def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatc
 
 def test_transform(xonsh_builtins):
     @xonsh_builtins.events.on_transform_command
-    def spam2egg(cmd):
+    def spam2egg(cmd, **_):
         if cmd == 'spam':
             return 'egg'
         else:

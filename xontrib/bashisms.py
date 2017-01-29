@@ -2,7 +2,7 @@
 
 
 @events.on_transform_command
-def bash_preproc(cmd):
+def bash_preproc(cmd, **kw):
     if not __xonsh_history__.inps:
         if cmd.strip() == '!!':
             return ''
