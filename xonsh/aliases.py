@@ -393,7 +393,7 @@ def detect_xip_alias():
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
-            return ['sudo', *basecmd]
+            return ['sudo'] + basecmd
         else:
             return basecmd
     except Exception:
