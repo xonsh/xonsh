@@ -23,23 +23,14 @@ import threading
 import subprocess
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW
+from xonsh.platform import (ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW,
+                            LFLAG, CC)
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
-
-
-# termios tc(get|set)attr indexes.
-IFLAG = 0
-OFLAG = 1
-CFLAG = 2
-LFLAG = 3
-ISPEED = 4
-OSPEED = 5
-CC = 6
 
 
 @lazyobject

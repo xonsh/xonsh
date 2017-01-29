@@ -18,6 +18,7 @@ import shutil
 import builtins
 import importlib
 import threading
+import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -27,7 +28,7 @@ from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
                          columnize)
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN, ON_POSIX
 from xonsh.lazyimps import pygments, pyghooks
 
 readline = None
@@ -527,6 +528,26 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Returns the current color map."""
         style = style = builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
         return ansi_color_style(style=style)
+
+    def restore_tty_sanity(self):
+        """An interface for resetting the TTY stdin mode. This is highly
+        dependent on the shell backend. Also it is mostly optional since
+        it only affects ^Z backgrounding behaviour.
+        """
+        if not ON_POSIX:
+            return
+        stty, _ = builtins.__xonsh_commands_cache__.lazyget('stty', None)
+        if stty is None:
+            return
+        # If available, we should just call the stty utility. This call should
+        # not throw even if stty fails. It should also be noted that subprocess
+        # calls, like the following, seem to be ineffective:
+        #       subprocess.call([stty, 'sane'], shell=True)
+        # My guess is that this is because Popen does some crazy redirecting
+        # under the covers. This effectively hides the true TTY stdin handle
+        # from stty. To get around this we have to use the lower level
+        # os.system() function.
+        os.system(stty + ' sane')
 
 
 class ReadlineHistoryAdder(threading.Thread):

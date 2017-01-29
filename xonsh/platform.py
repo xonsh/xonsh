@@ -165,6 +165,15 @@ def pathbasename(p):
     """
     return pathsplit(p)[-1]
 
+# termios tc(get|set)attr indexes.
+IFLAG = 0
+OFLAG = 1
+CFLAG = 2
+LFLAG = 3
+ISPEED = 4
+OSPEED = 5
+CC = 6
+
 
 #
 # Dev release info
