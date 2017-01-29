@@ -323,6 +323,7 @@ def default_threadable_predictors():
         'cmd': predict_shell,
         'ex': predict_false,
         'fish': predict_shell,
+        'gvim': predict_help_ver,
         'htop': predict_help_ver,
         'ksh': predict_shell,
         'less': predict_help_ver,
