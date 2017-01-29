@@ -3,8 +3,6 @@
 import types
 import uuid
 
-import xonsh.tools as xt
-
 
 class HistoryEntry(types.SimpleNamespace):
     """Represent a command in history.
@@ -22,6 +20,7 @@ class HistoryEntry(types.SimpleNamespace):
         fractions.
 
     """
+    __slots__ = ('cmd', 'out', 'rtn', 'ts')
 
     def __init__(self, *, cmd, out, rtn, ts):
         self.cmd = cmd
