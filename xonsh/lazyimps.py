@@ -1,7 +1,7 @@
 """Lazy imports that may apply across the xonsh package."""
 import importlib
 
-from xonsh.platform import ON_WINDOWS
+from xonsh.platform import ON_WINDOWS, HAS_JEDI
 from xonsh.lazyasd import LazyObject, lazyobject
 
 pygments = LazyObject(lambda: importlib.import_module('pygments'),
@@ -72,3 +72,12 @@ def winutils():
 @lazyobject
 def terminal256():
     return importlib.import_module('pygments.formatters.terminal256')
+
+
+@lazyobject
+def jedi():
+    if HAS_JEDI:
+        import jedi as m
+    else:
+        m = None
+    return m

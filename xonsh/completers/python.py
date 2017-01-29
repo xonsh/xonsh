@@ -8,8 +8,10 @@ import collections.abc as cabc
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
+import xonsh.platform as xp
 
 from xonsh.completers.tools import get_filter_function
+from xonsh.completers.jedi import complete_jedi
 
 
 @xl.lazyobject
@@ -63,6 +65,7 @@ def _complete_python(prefix, line, start, end, ctx):
             rtn |= attr_complete(prefix, ctx, filt)
         rtn |= {s for s in ctx if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
+    rtn |= complete_jedi(prefix, line, start, end, ctx)
     return rtn
 
 
@@ -73,7 +76,7 @@ def complete_python_mode(prefix, line, start, end, ctx):
     if not (prefix.startswith('@(') or prefix.startswith('${')):
         return set()
     prefix_start = prefix[:2]
-    python_matches = complete_python(prefix[2:], line, start+2, end, ctx)
+    python_matches = complete_python(prefix[2:], line, start-2, end-2, ctx)
     if isinstance(python_matches, cabc.Sequence):
         python_matches = python_matches[0]
     return set(prefix_start + i for i in python_matches)

@@ -6,6 +6,7 @@ from xonsh.completers.man import complete_from_man
 from xonsh.completers.bash import complete_from_bash
 from xonsh.completers.base import complete_base
 from xonsh.completers.path import complete_path
+from xonsh.completers.jedi import complete_jedi
 from xonsh.completers.dirs import complete_cd, complete_rmdir
 from xonsh.completers.python import (complete_python, complete_import,
                                      complete_python_mode)
@@ -19,6 +20,7 @@ def default_completers():
     return collections.OrderedDict([
         ('python_mode', complete_python_mode),
         ('base', complete_base),
+        ('jedi', complete_jedi),
         ('completer', complete_completer),
         ('skip', complete_skipper),
         ('pip', complete_pip),

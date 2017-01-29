@@ -8,6 +8,8 @@ else:
         from xonsh.completers import __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completers.completer'] = __amalgam__
+        jedi = __amalgam__
+        _sys.modules['xonsh.completers.jedi'] = __amalgam__
         pip = __amalgam__
         _sys.modules['xonsh.completers.pip'] = __amalgam__
         tools = __amalgam__
