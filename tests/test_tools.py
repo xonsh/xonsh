@@ -16,7 +16,7 @@ from xonsh.tools import (
     bool_or_int_to_str, bool_to_str, check_for_partial_string,
     dynamic_cwd_tuple_to_str, ensure_slice, ensure_string,
     env_path_to_str, escape_windows_cmd_string, executables_in,
-    expand_case_matching, find_next_break, is_bool, is_bool_or_int,
+    expand_case_matching, expand_path, find_next_break, is_bool, is_bool_or_int,
     is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int, is_logfile_opt,
     is_string_or_callable, logfile_opt_to_str, str_to_env_path, is_string,
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
@@ -929,7 +929,7 @@ def test_escape_windows_cmd_string(st, esc):
 def test_argvquote(st, esc, forced):
     obs = argvquote(st)
     assert esc == obs
-    
+
     if forced is None:
         forced = esc
     obs = argvquote(st, force=True)
@@ -1069,3 +1069,30 @@ def test_ensure_timestamp(inp, fmt, exp, xonsh_builtins):
     xonsh_builtins.__xonsh_env__['XONSH_DATETIME_FORMAT'] = '%Y-%m-%d %H:%M'
     obs = ensure_timestamp(inp, fmt)
     assert exp == obs
+
+
+@pytest.mark.parametrize('expand_user', [True, False])
+@pytest.mark.parametrize('inp, expand_env_vars, exp_end', [
+    ('~/test.txt', True, '/test.txt'),
+    ('~/$foo', True, '/bar'),
+    ('~/test/$a_bool', True, '/test/True'),
+    ('~/test/$an_int', True, '/test/42'),
+    ('~/test/$none', True, '/test/None'),
+    ('~/$foo', False, '/$foo')
+])
+def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xonsh_builtins):
+    if os.sep != '/':
+        inp = inp.replace('/', os.sep)
+        exp_end = exp_end.replace('/', os.sep)
+
+    env = Env({'foo':'bar', 'a_bool': True, 'an_int': 42, 'none': None})
+    env['EXPAND_ENV_VARS'] = expand_env_vars
+    xonsh_builtins.__xonsh_env__ = env
+
+    path = expand_path(inp, expand_user=expand_user)
+
+    if expand_user:
+        home_path = os.path.expanduser('~')
+        assert path == home_path + exp_end
+    else:
+        assert path == '~' + exp_end
