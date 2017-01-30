@@ -2,13 +2,11 @@
 """Hooks for Jupyter Xonsh Kernel."""
 import builtins
 from pprint import pformat
-from tempfile import SpooledTemporaryFile
 
 from ipykernel.kernelbase import Kernel
 
 from xonsh import __version__ as version
 from xonsh.main import main_context
-from xonsh.tools import redirect_stdout, redirect_stderr, swap
 from xonsh.completer import Completer
 
 
@@ -23,6 +21,7 @@ class XonshKernel(Kernel):
     language_version = version
     banner = 'Xonsh - Python-powered, cross-platform shell'
     language_info = {'name': 'xonsh',
+                     'version': version,
                      'pygments_lexer': 'xonsh',
                      'codemirror_mode': 'shell',
                      'mimetype': 'text/x-sh',
@@ -39,40 +38,21 @@ class XonshKernel(Kernel):
         if len(code.strip()) == 0:
             return {'status': 'ok', 'execution_count': self.execution_count,
                     'payload': [], 'user_expressions': {}}
-        env = builtins.__xonsh_env__
         shell = builtins.__xonsh_shell__
         hist = builtins.__xonsh_history__
-        enc = env.get('XONSH_ENCODING')
-        out = SpooledTemporaryFile(max_size=MAX_SIZE, mode='w+t',
-                                   encoding=enc, newline='\n')
-        err = SpooledTemporaryFile(max_size=MAX_SIZE, mode='w+t',
-                                   encoding=enc, newline='\n')
         try:
-            with redirect_stdout(out), redirect_stderr(err), \
-                 swap(builtins, '__xonsh_stdout_uncaptured__', out), \
-                 swap(builtins, '__xonsh_stderr_uncaptured__', err), \
-                 env.swap({'XONSH_STORE_STDOUT': False}):
-                shell.default(code)
+            shell.default(code)
             interrupted = False
         except KeyboardInterrupt:
             interrupted = True
 
         if not silent:  # stdout response
-            if out.tell() > 0:
-                out.seek(0)
-                self._respond_in_chunks('stdout', out.read())
-            if err.tell() > 0:
-                err.seek(0)
-                self._respond_in_chunks('stderr', err.read())
             if hasattr(builtins, '_') and builtins._ is not None:
                 # rely on sys.displayhook functionality
                 self._respond_in_chunks('stdout', pformat(builtins._))
                 builtins._ = None
-            if hist is not None and len(hist) > 0 and out.tell() == 0 and err.tell() == 0:
+            if hist is not None and len(hist) > 0:
                 self._respond_in_chunks('stdout', hist.outs[-1])
-
-        out.close()
-        err.close()
 
         if interrupted:
             return {'status': 'abort', 'execution_count': self.execution_count}
@@ -95,7 +75,7 @@ class XonshKernel(Kernel):
         lower = range(0, n, chunksize)
         upper = range(chunksize, n+chunksize, chunksize)
         for l, u in zip(lower, upper):
-            response = {'name': name, 'text': s[l:u]}
+            response = {'name': name, 'text': s[l:u], }
             self.send_response(self.iopub_socket, 'stream', response)
 
     def do_complete(self, code, pos):

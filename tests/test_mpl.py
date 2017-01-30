@@ -7,6 +7,8 @@ plt = pytest.importorskip("matplotlib.pyplot")
 
 from xontrib import mplhooks
 
+skip_if_mpl2 = pytest.mark.skipif(matplotlib.__version__.startswith('2'),
+                                  reason='Bug in matplotlib v2')
 
 # some default settings that are temporarily changed by mpl
 FONT_SIZE    = 22
@@ -25,10 +27,12 @@ def create_figure():
     return f
 
 
+@skip_if_mpl2
 def test_mpl_preserve_font_size():
     """Make sure that matplotlib preserves font size settings"""
     f = create_figure()
     width, height = f.canvas.get_width_height()
+    print(width, height)
     s = mplhooks.figure_to_tight_array(f, 0.5*width, 0.5*height, True)
     exp = FONT_SIZE
     obs = matplotlib.rcParams['font.size']
@@ -36,6 +40,7 @@ def test_mpl_preserve_font_size():
     assert exp == obs
 
 
+@skip_if_mpl2
 def test_mpl_preserve_face_color():
     """Make sure that the figure preserves face color settings"""
     f = create_figure()
@@ -47,6 +52,7 @@ def test_mpl_preserve_face_color():
     assert exp == obs
 
 
+@skip_if_mpl2
 def test_mpl_preserve_width():
     """Make sure that the figure preserves width settings"""
     f = create_figure()
@@ -59,6 +65,7 @@ def test_mpl_preserve_width():
     assert exp == obs
 
 
+@skip_if_mpl2
 def test_mpl_preserve_height():
     """Make sure that the figure preserves height settings"""
     f = create_figure()
@@ -82,6 +89,7 @@ def test_mpl_preserve_dpi():
     assert exp == obs
 
 
+@skip_if_mpl2
 def test_mpl_preserve_image_tight():
     """Make sure that the figure preserves height settings"""
     f = create_figure()
