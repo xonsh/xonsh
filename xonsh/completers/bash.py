@@ -1,6 +1,6 @@
 import builtins
 
-import bash_completion
+from xonsh.completers import bash_completion
 
 
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
