@@ -42,11 +42,13 @@ from xonsh.tools import (
 )
 import xonsh.prompt.base as prompt
 
+
 events.doc('on_envvar', """
 on_envvar(name: str, oldvalue, newvalue) -> None
 
 Fires after an enviromental variable has changed.
 """)
+
 
 @lazyobject
 def HELP_TEMPLATE():
