@@ -155,4 +155,18 @@ def test_event_on_envvar(xonsh_builtins):
     env['TEST'] = 1
 
     assert share == ['TEST', 0, 1]
-    # assert len(share) > 0 
+
+
+def test_event_on_envvar_new(xonsh_builtins):
+    env = Env()
+    xonsh_builtins.__xonsh_env__ = env
+    share = []
+    # register
+    @xonsh_builtins.events.on_envvar
+    def handler(name, oldvalue, newvalue, **kwargs):
+        share.extend((name,oldvalue, newvalue))
+
+    # trigger
+    env['TEST'] = 1
+
+    assert share == ['TEST', None, 1]
