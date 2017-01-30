@@ -4,4 +4,5 @@ omit =
   tests/*
   xonsh/__amalgam__.py
   */parser*_table.py
+  xonsh/ply/*
   setup.py
