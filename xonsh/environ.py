@@ -18,6 +18,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
+from xonsh.events import events
 from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
@@ -41,6 +42,11 @@ from xonsh.tools import (
 )
 import xonsh.prompt.base as prompt
 
+events.doc('on_envvar', """
+on_envvar(name: str, oldvalue, newvalue) -> None
+
+Fires after an enviromental variable has changed.
+""")
 
 @lazyobject
 def HELP_TEMPLATE():
@@ -913,6 +919,7 @@ class Env(cabc.MutableMapping):
         ensurer = self.get_ensurer(key)
         if not ensurer.validate(val):
             val = ensurer.convert(val)
+        old_val = self._d.get(key)
         self._d[key] = val
         if self.detypeable(val):
             self._detyped = None
@@ -921,6 +928,7 @@ class Env(cabc.MutableMapping):
                     self.replace_env()
                 else:
                     os.environ[key] = ensurer.detype(val)
+        events.on_envvar.fire(name=key, oldvalue=old_val, newvalue=val)
 
     def __delitem__(self, key):
         val = self._d.pop(key)
