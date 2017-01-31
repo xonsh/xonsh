@@ -47,8 +47,8 @@ events.doc('on_envvar_new', """
 on_envvar_new(name: str, value: Any) -> None
 
 Fires after a new enviroment variable is created.
-Warning! if a handler tries to set an envvar
-you'll get a nice recursion until the limit.
+Note: Setting envvars inside the handler might
+cause a recursion until the limit.
 """)
 
 
@@ -56,8 +56,8 @@ events.doc('on_envvar_change', """
 on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
 
 Fires after an enviroment variable is changed.
-Warning! if a handler tries to set an envvar
-you'll get a nice recursion until the limit.
+Note: Setting envvars inside the handler might
+cause a recursion until the limit.
 """)
 
 
