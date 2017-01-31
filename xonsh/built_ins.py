@@ -99,6 +99,44 @@ def expand_path(s):
     return s
 
 
+braces_regex = re.compile('(.*?){(.*)}(.*)')
+def _split_braces(s, nesting=0):
+    matches = braces_regex.fullmatch(s)
+    prefix, middle, suffix = matches.groups()
+    if braces_regex.fullmatch(middle):
+        middles = _split_braces(middle, nesting + 1)
+    else:
+        middles = middle.split(',')
+    if not nesting:
+        return [prefix + middle + suffix for middle in middles]
+    else:
+        prefixes = prefix.split(',')
+        suffixes = suffix.split(',')
+        prefix, prefixes = prefixes[-1], prefixes[:-1]
+        suffix, suffixes = suffixes[0], suffixes[1:]
+        return (
+            prefixes +
+            [prefix + middle + suffix for middle in middles] +
+            suffixes
+        )
+
+
+def expand_braces(s):
+    # XXX: Doesn't handle escaping literal braces
+    """Takes a string and expands brace-enclosed comma-separated lists into
+    space-separated arguments.
+    """
+    if braces_regex.fullmatch(s):
+        return ' '.join(_split_braces(s))
+    return s
+
+
+def expand_braces_path(s):
+    s = expand_braces(s)
+    s = expand_path(s)
+    return s
+
+
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
     if parts is None:
@@ -1133,7 +1171,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_globsearch__ = globsearch
     builtins.__xonsh_regexsearch__ = regexsearch
     builtins.__xonsh_glob__ = globpath
-    builtins.__xonsh_expand_path__ = expand_path
+    builtins.__xonsh_expand_path__ = expand_braces_path
     builtins.__xonsh_exit__ = False
     builtins.__xonsh_stdout_uncaptured__ = None
     builtins.__xonsh_stderr_uncaptured__ = None
