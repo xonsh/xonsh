@@ -1,7 +1,9 @@
 [run]
 branch = true
+source =
+  xonsh/
 omit =
-  tests/*
-  xonsh/__amalgam__.py
-  */parser*_table.py
-  setup.py
+  */__amalgam__.py
+  xonsh/lazyasd.py
+  xonsh/parser_table.py
+  xonsh/ply/*
