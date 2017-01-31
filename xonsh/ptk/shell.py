@@ -7,22 +7,21 @@ from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import print_tokens
-from prompt_toolkit.styles import PygmentsStyle
-import pygments
-from pygments.styles import get_all_styles
-from pygments.token import Token
+from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
-from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
-                            xonsh_style_proxy, XonshTerminal256Formatter)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
+from xonsh.platform import HAS_PYGMENTS
+from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
+from xonsh.lazyimps import pygments, pyghooks
 
+Token = _TokenType()
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
 events.doc('on_ptk_create', """
@@ -48,7 +47,12 @@ class PromptToolkitShell(BaseShell):
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
         # This assumes that PromptToolkitShell is a singleton
-        events.on_ptk_create.fire(self.prompter, self.history, self.pt_completer, self.key_bindings_manager)
+        events.on_ptk_create.fire(
+            prompter=self.prompter,
+            history=self.history,
+            completer=self.pt_completer,
+            bindings=self.key_bindings_manager,
+        )
 
     def singleline(self, store_in_history=True, auto_suggest=None,
                    enable_history_search=True, multiline=True, **kwargs):
@@ -66,7 +70,8 @@ class PromptToolkitShell(BaseShell):
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         multicolumn = (completions_display == 'multi')
-        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+        if HAS_PYGMENTS:
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
         if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
             prompt_tokens_cached = self.prompt_tokens(None)
@@ -87,7 +92,6 @@ class PromptToolkitShell(BaseShell):
                     'get_prompt_tokens': get_prompt_tokens,
                     'get_rprompt_tokens': get_rprompt_tokens,
                     'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
-                    'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
                     'completer': completer,
                     'multiline': multiline,
                     'get_continuation_tokens': self.continuation_tokens,
@@ -98,7 +102,12 @@ class PromptToolkitShell(BaseShell):
                     'display_completions_in_columns': multicolumn,
                     }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
-                prompt_args['lexer'] = PygmentsLexer(XonshLexer)
+                if HAS_PYGMENTS:
+                    prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
+                    prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+                else:
+                    prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
+
             line = self.prompter.prompt(**prompt_args)
         return line
 
@@ -223,37 +232,71 @@ class PromptToolkitShell(BaseShell):
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
         a list of (Token, str) tuples. If force_string is set to true, though,
-        this will return a color fomtatted string.
+        this will return a color formatted string.
         """
         tokens = partial_color_tokenize(string)
-        if force_string:
+        if force_string and HAS_PYGMENTS:
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-            proxy_style = xonsh_style_proxy(self.styler)
-            formatter = XonshTerminal256Formatter(style=proxy_style)
+            proxy_style = pyghooks.xonsh_style_proxy(self.styler)
+            formatter = pyghooks.XonshTerminal256Formatter(style=proxy_style)
             s = pygments.format(tokens, formatter)
             return s
+        elif force_string:
+            print("To force colorization of string, install Pygments")
+            return tokens
         else:
             return tokens
 
     def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
-        env = builtins.__xonsh_env__
-        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         if isinstance(string, str):
             tokens = partial_color_tokenize(string + end)
         else:
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
-        proxy_style = PygmentsStyle(xonsh_style_proxy(self.styler))
+        if HAS_PYGMENTS:
+            env = builtins.__xonsh_env__
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            proxy_style = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+        else:
+            proxy_style = style_from_dict(DEFAULT_STYLE_DICT)
         print_tokens(tokens, style=proxy_style)
 
     def color_style_names(self):
         """Returns an iterable of all available style names."""
-        return get_all_styles()
+        if not HAS_PYGMENTS:
+            return ['For other xonsh styles, please install pygments']
+        return pygments.styles.get_all_styles()
 
     def color_style(self):
         """Returns the current color map."""
+        if not HAS_PYGMENTS:
+            return DEFAULT_STYLE_DICT
         env = builtins.__xonsh_env__
         self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         return self.styler.styles
+
+    def restore_tty_sanity(self):
+        """An interface for resetting the TTY stdin mode. This is highly
+        dependent on the shell backend. Also it is mostly optional since
+        it only affects ^Z backgrounding behaviour.
+        """
+        # PTK does not seem to need any specialization here. However,
+        # if it does for some reason in the future...
+        # The following writes an ANSI escape sequence that sends the cursor
+        # to the end of the line. This has the effect of restoring ECHO mode.
+        # See http://unix.stackexchange.com/a/108014/129048 for more details.
+        # This line can also be replaced by os.system("stty sane"), as per
+        # http://stackoverflow.com/questions/19777129/interactive-python-interpreter-run-in-background#comment29421919_19778355
+        # However, it is important to note that not termios-based solution
+        # seems to work. My guess is that this is because termios restoration
+        # needs to be performed by the subprocess itself. This fix is important
+        # when subprocesses don't properly restore the terminal attributes,
+        # like Python in interactive mode. Also note that the sequences "\033M"
+        # and "\033E" seem to work too, but these are techinally VT100 codes.
+        # I used the more primitive ANSI sequence to maximize compatability.
+        # -scopatz 2017-01-28
+        #   if not ON_POSIX:
+        #       return
+        #   sys.stdout.write('\033[9999999C\n')

@@ -75,9 +75,9 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
 
     ev = None
     @xonsh_builtins.events.on_chdir
-    def handler(old, new):
+    def handler(olddir, newdir, **kw):
         nonlocal ev
-        ev = old, new
+        ev = olddir, newdir
 
     old_dir = os.getcwd()
     try:

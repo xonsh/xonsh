@@ -23,23 +23,14 @@ import threading
 import subprocess
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW
+from xonsh.platform import (ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW,
+                            LFLAG, CC)
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
-
-
-# termios tc(get|set)attr indexes.
-IFLAG = 0
-OFLAG = 1
-CFLAG = 2
-LFLAG = 3
-ISPEED = 4
-OSPEED = 5
-CC = 6
 
 
 @lazyobject
@@ -758,6 +749,8 @@ class PopenThread(threading.Thread):
         self.send_signal(signum)
         if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
+        if on_main_thread():
+            signal.pthread_kill(threading.get_ident(), signal.SIGINT)
 
     def _restore_sigint(self, frame=None):
         old = self.old_int_handler
@@ -2063,10 +2056,8 @@ class CommandPipeline:
     @property
     def returncode(self):
         """Process return code, waits until command is completed."""
-        proc = self.proc
-        if proc.poll() is None:
-            self.end()
-        return proc.returncode
+        self.end()
+        return self.proc.returncode
 
     rtn = returncode
 

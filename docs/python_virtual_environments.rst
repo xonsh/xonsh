@@ -74,3 +74,16 @@ To see all available commands, run ``vox help``, ``vox --help``, or ``vox -h``::
 
         vox help (-h, --help)
             Show help
+
+
+``virtualenv`` like prompt
+--------------------------
+Although it's included in the default prompt, you can customize your prompt
+to automatically update in the same way as ``virtualenv``.
+
+Simply add the ``'{env_name}'`` variable to your ``$PROMPT``::
+
+    $PROMPT = '{env_name: {}}' + restofmyprompt
+
+Note that you do **not** need to load the ``vox`` xontrib for this to work.
+For more details see :ref:`customprompt`.
