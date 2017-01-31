@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Base class of Xonsh History backends."""
+import types
 import uuid
 
 
-class HistoryEntry:
+class HistoryEntry(types.SimpleNamespace):
     """Represent a command in history.
 
     Attributes
@@ -19,19 +20,6 @@ class HistoryEntry:
         fractions.
 
     """
-
-    __slots__ = ('cmd', 'out', 'rtn', 'ts')
-
-    def __init__(self, *, cmd, out, rtn, ts):
-        self.cmd = cmd
-        self.out = out
-        self.rtn = rtn
-        self.ts = ts
-
-    def __repr__(self):
-        temp = '{}(cmd={!r}, out={!r}, rtn={!r}, ts={!r})'
-        return temp.format(type(self).__name__, self.cmd, self.out,
-                           self.rtn, self.ts)
 
 
 class History:
