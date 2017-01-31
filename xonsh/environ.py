@@ -932,7 +932,7 @@ class Env(cabc.MutableMapping):
         ensurer = self.get_ensurer(key)
         if not ensurer.validate(val):
             val = ensurer.convert(val)
-        # existing envvars can have any value including None 
+        # existing envvars can have any value including None
         no_value = object()
         old_value = self._d[key] if key in self._d else no_value
         self._d[key] = val
