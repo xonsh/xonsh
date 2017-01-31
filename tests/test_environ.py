@@ -184,3 +184,20 @@ def test_event_on_envvar_change_from_none_value(xonsh_builtins):
     env['TEST'] = 1
 
     assert share == ['TEST', None, 1]
+
+
+@pytest.mark.parametrize('val', [1, None, True, 'ok'])
+def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
+    env = Env(TEST=val)
+    xonsh_builtins.__xonsh_env__ = env
+    share = []
+    # register
+    @xonsh_builtins.events.on_envvar_change
+    def handler(name, oldvalue, newvalue, **kwargs):
+        share.extend((name, oldvalue, newvalue))
+
+
+    # trigger
+    env['TEST'] = val
+
+    assert share == []

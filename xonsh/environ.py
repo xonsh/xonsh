@@ -945,7 +945,7 @@ class Env(cabc.MutableMapping):
                     os.environ[key] = ensurer.detype(val)
         if old_value is no_value:
             events.on_envvar_new.fire(name=key, value=val)
-        else:
+        elif old_value != val:
             events.on_envvar_change.fire(name=key,
                                          oldvalue=old_value,
                                          newvalue=val)
