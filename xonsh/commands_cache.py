@@ -14,7 +14,11 @@ import collections.abc as cabc
 
 from xonsh.platform import ON_WINDOWS, ON_POSIX, pathbasename
 from xonsh.tools import executables_in
-from xonsh.lazyasd import lazyobject
+from xonsh.lazyasd import lazyobject, LazyObject
+
+
+IGNORE_ALIAS_CMDS = LazyObject(lambda: frozenset(['git', 'hg']), globals(),
+                               'IGNORE_ALIAS_CMDS')
 
 
 class CommandsCache(cabc.Mapping):
@@ -104,6 +108,11 @@ class CommandsCache(cabc.Mapping):
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (cmd, True)
+        for key in IGNORE_ALIAS_CMDS:
+            if key in allcmds:
+                key = key.upper() if ON_WINDOWS else key
+                pathkey, _ = allcmds[key]
+                allcmds[key] = (pathkey, False)
         self._cmds_cache = allcmds
         return allcmds
 
