@@ -43,10 +43,21 @@ from xonsh.tools import (
 import xonsh.prompt.base as prompt
 
 
-events.doc('on_envvar', """
-on_envvar(name: str, oldvalue, newvalue) -> None
+events.doc('on_envvar_new', """
+on_envvar_new(name: str, value: Any) -> None
 
-Fires after an enviromental variable has changed.
+Fires after a new enviroment variable is created.
+Warning! if a handler tries to set an envvar
+you'll get a nice recursion until the limit.
+""")
+
+
+events.doc('on_envvar_change', """
+on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
+
+Fires after an enviroment variable is changed.
+Warning! if a handler tries to set an envvar
+you'll get a nice recursion until the limit.
 """)
 
 
@@ -921,7 +932,9 @@ class Env(cabc.MutableMapping):
         ensurer = self.get_ensurer(key)
         if not ensurer.validate(val):
             val = ensurer.convert(val)
-        old_val = self._d.get(key)
+        # existing envvars can have any value including None 
+        no_value = object()
+        old_value = self._d[key] if key in self._d else no_value
         self._d[key] = val
         if self.detypeable(val):
             self._detyped = None
@@ -930,7 +943,12 @@ class Env(cabc.MutableMapping):
                     self.replace_env()
                 else:
                     os.environ[key] = ensurer.detype(val)
-        events.on_envvar.fire(name=key, oldvalue=old_val, newvalue=val)
+        if old_value is no_value:
+            events.on_envvar_new.fire(name=key, value=val)
+        else:
+            events.on_envvar_change.fire(name=key,
+                                         oldvalue=old_value,
+                                         newvalue=val)
 
     def __delitem__(self, key):
         val = self._d.pop(key)

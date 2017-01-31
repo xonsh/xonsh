@@ -1,6 +1,7 @@
 **Added:**
 
-* new event ``on_envvar`` that fires after an enviroment variable has been changed.
+* ``on_envvar_new`` event that fires after a new envvar is created.
+* ``on_envvar_change`` event that fires after an envvar is changed.
 
 **Changed:** None
 

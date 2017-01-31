@@ -142,14 +142,14 @@ def test_locate_binary_on_windows(xonsh_builtins):
         assert locate_binary('file3') is None
 
 
-def test_event_on_envvar(xonsh_builtins):
+def test_event_on_envvar_change(xonsh_builtins):
     env = Env(TEST=0)
     xonsh_builtins.__xonsh_env__ = env
     share = []
     # register
-    @xonsh_builtins.events.on_envvar
+    @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
-        share.extend((name,oldvalue, newvalue))
+        share.extend((name, oldvalue, newvalue))
 
     # trigger
     env['TEST'] = 1
@@ -162,9 +162,23 @@ def test_event_on_envvar_new(xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = env
     share = []
     # register
-    @xonsh_builtins.events.on_envvar
+    @xonsh_builtins.events.on_envvar_new
+    def handler(name, value, **kwargs):
+        share.extend((name, value))
+
+    # trigger
+    env['TEST'] = 1
+
+    assert share == ['TEST', 1]
+
+def test_event_on_envvar_change_from_none_value(xonsh_builtins):
+    env = Env(TEST=None)
+    xonsh_builtins.__xonsh_env__ = env
+    share = []
+    # register
+    @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
-        share.extend((name,oldvalue, newvalue))
+        share.extend((name, oldvalue, newvalue))
 
     # trigger
     env['TEST'] = 1
