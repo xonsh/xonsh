@@ -768,6 +768,8 @@ class Env(cabc.MutableMapping):
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
+        # sentinel value for non existing envvars
+        self._no_value = object()
         self._orig_env = None
         self._ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
         self._defaults = DEFAULT_VALUES
@@ -933,8 +935,7 @@ class Env(cabc.MutableMapping):
         if not ensurer.validate(val):
             val = ensurer.convert(val)
         # existing envvars can have any value including None
-        no_value = object()
-        old_value = self._d[key] if key in self._d else no_value
+        old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
         if self.detypeable(val):
             self._detyped = None
@@ -943,7 +944,7 @@ class Env(cabc.MutableMapping):
                     self.replace_env()
                 else:
                     os.environ[key] = ensurer.detype(val)
-        if old_value is no_value:
+        if old_value is self._no_value:
             events.on_envvar_new.fire(name=key, value=val)
         elif old_value != val:
             events.on_envvar_change.fire(name=key,
