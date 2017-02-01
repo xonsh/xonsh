@@ -22,6 +22,9 @@ class _TokenType(tuple):
     def __repr__(self):
         return 'Token' + (self and '.' or '') + '.'.join(self)
 
+    def split(self):
+        return self
+
 RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
                            globals(), 'RE_BACKGROUND')
 
