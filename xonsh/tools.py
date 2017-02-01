@@ -81,14 +81,33 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
         self.completed_command = completed_command
 
 
-def expandpath(path):
-    """Performs environment variable / user expansion on a given path
-    if the relevant flag has been set.
-    """
+def expand_path(s, expand_user=True):
+    """Takes a string path and expands ~ to home if expand_user is set
+    and environment vars if EXPAND_ENV_VARS is set."""
     env = getattr(builtins, '__xonsh_env__', os.environ)
     if env.get('EXPAND_ENV_VARS', False):
-        path = os.path.expanduser(expandvars(path))
-    return path
+        s = expandvars(s)
+    if expand_user:
+        # expand ~ according to Bash unquoted rules "Each variable assignment is
+        # checked for unquoted tilde-prefixes immediately following a ':' or the
+        # first '='". See the following for more details.
+        # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
+        pre, char, post = s.partition('=')
+        if char:
+            s = os.path.expanduser(pre) + char
+            s += os.pathsep.join(map(os.path.expanduser, post.split(os.pathsep)))
+        else:
+            s = os.path.expanduser(s)
+    return s
+
+
+def _expandpath(path):
+    """Performs environment variable / user expansion on a given path
+    if EXPAND_ENV_VARS is set.
+    """
+    env = getattr(builtins, '__xonsh_env__', os.environ)
+    expand_user = env.get('EXPAND_ENV_VARS', False)
+    return expand_path(path, expand_user=expand_user)
 
 
 def decode_bytes(b):
@@ -152,9 +171,9 @@ class EnvPath(collections.MutableSequence):
     def __getitem__(self, item):
         # handle slices separately
         if isinstance(item, slice):
-            return [expandpath(i) for i in self._l[item]]
+            return [_expandpath(i) for i in self._l[item]]
         else:
-            return expandpath(self._l[item])
+            return _expandpath(self._l[item])
 
     def __setitem__(self, index, item):
         self._l.__setitem__(index, item)
@@ -653,6 +672,7 @@ def is_writable_file(filepath):
     """
     Checks if a filepath is valid for writing.
     """
+    filepath = expand_path(filepath)
     # convert to absolute path if needed
     if not os.path.isabs(filepath):
         filepath = os.path.abspath(filepath)
