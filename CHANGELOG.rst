@@ -4,6 +4,79 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.3
+====================
+
+**Added:**
+
+* Tab completion xontrib for python applications based on click framework.
+* Added ``on_transform_command`` event for pre-processing that macros can't handle.
+* Autodetection of backgroundability by binary analysis on POSIX.
+* New argument ``expand_user=True`` to ``tools.expand_path``.
+* New ``$COMPLETION_QUERY_LIMIT`` environment variable for setting the
+  number of completions above which the user will be asked if they wish to
+  see the potential completions.
+* Users may now redirect stdout to stderr in subprocess mode.
+
+
+**Changed:**
+
+* The ``Block`` and ``Functor`` context managers from ``xonsh.contexts`` have been
+  rewritten to use xonsh's macro capabilities. You must now enter these via the
+   ``with!`` statement, e.g. ``with! Block(): pass``.
+* The ``distributed`` xontrib now needs to use the ``with!`` statement, since it
+  relies on ``Functor``.
+* ``telnet`` has been flagged as unthreadable.
+* When ``$DYNAMIC_CWD_ELISION_CHAR`` is non empty and the last dir of cwd is too
+  long and shortened, the elision char is added at the end.
+* ``pygments`` is no longer a strict dependency of the ``prompt_toolkit``
+  backend. If ``pygments`` is not installed, the PTK backend will use the
+  default ansi color settings from the terminal. Syntax highlighting requires
+  that ``pygments`` is installed.
+* Events are now keyword arguments only
+* Restored ``on_precommand`` to its original signature.
+* Move ``built_ins.expand_path`` to ``tools.expand_path``.
+* Rename ``tools.expandpath`` to ``tools._expandpath``.
+* Added ``gvim`` command to unthreadable predictors.
+* The ``source`` alias now passes ``$ARGS`` down to file it is sourcing.
+
+
+**Removed:**
+
+* ``XonshBlockError`` has been removed, since it no longer serves a purpose.
+
+
+**Fixed:**
+
+* ``PopenThread`` will now re-issue SIGINT to the main thread when it is
+  recieved.
+* Fixed an issue that using sqlite history backend does not kill unfinished
+  jobs when quitting xonsh with a second "exit".
+* Fixed an issue that xonsh would fail over to external shells when
+  running .xsh script which raises exceptions.
+* Fixed an issue with ``openpty()`` returning non-unix line endings in its buffer.
+  This was causing git and ssh to fail when xonsh was used as the login shell on the
+  server. See https://mail.python.org/pipermail/python-list/2013-June/650460.html for
+  more details.
+* Restored the ability to ^Z and ``fg`` processes on posix platforms.
+* CommandPipelines were not gauranteeded to have been ended when the return code
+  was requested. This has been fixed.
+* Introduce path expansion in ``is_writable_file`` to fix
+  ``$XONSH_TRACEBACK_LOGFILE=~/xonsh.log``.
+* Backgrounding a running process (^Z) now restores ECHO mode to the terminal
+  in cases where the subprocess doesn't properly restore itself. A major instance
+  of this behaviour is Python's interactive interpreter.
+* Readline backend would not ask the user to confirm the printing of completion
+  options if they numbered above a certain value. Instead they would be dumped to
+  the screen. This has been fixed.
+* Jupyter kernel was no longer properly running subprocess commands.
+  This has been fixed.
+* The filename is applied to the target of the ``source`` alias, providing better
+  tracebacks.
+
+
+
+
 v0.5.2
 ====================
 
