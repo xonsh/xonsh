@@ -103,7 +103,7 @@ class CommandsCache(cabc.Mapping):
         for cmd in alss:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (cmd, None)
+                allcmds[key] = (cmd, True)
         self._cmds_cache = allcmds
         return allcmds
 
