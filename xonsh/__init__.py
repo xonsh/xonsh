@@ -1,6 +1,6 @@
 __version__ = '0.5.3'
 
-# amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
+# amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks style_tools
 # amalgamate exclude winutils wizard pytest_plugin fs
 import os as _os
 if _os.getenv('XONSH_DEBUG', ''):
@@ -33,8 +33,6 @@ else:
         _sys.modules['xonsh.lazyimps'] = __amalgam__
         parser = __amalgam__
         _sys.modules['xonsh.parser'] = __amalgam__
-        style_tools = __amalgam__
-        _sys.modules['xonsh.style_tools'] = __amalgam__
         tokenize = __amalgam__
         _sys.modules['xonsh.tokenize'] = __amalgam__
         tools = __amalgam__
