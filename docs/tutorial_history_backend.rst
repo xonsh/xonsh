@@ -1,4 +1,4 @@
-.. _tutorial_write_your_own_history_backend:
+.. _tutorial_history_backend:
 
 ****************************************
 Tutorial: Write Your Own History Backend
