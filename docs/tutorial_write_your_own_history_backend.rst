@@ -8,10 +8,11 @@ One of best thing you can do with xonsh is that you could customize
 a lot of stuff. In this tutorial, let's write our own history backend
 base on CouchDB.
 
-Start with a minimal history template
+
+Start with a Minimal History Template
 =====================================
 
-Here is a minimal *working* history backend we can have:
+Here is a minimal history backend we can have:
 
 .. code-block:: python
 
@@ -34,16 +35,16 @@ Here is a minimal *working* history backend we can have:
             data['sessionid'] = str(self.sessionid)
             return data
 
-Go ahead and create the file ``~/.xonsh/history_couchdb.py`` out and put the
+Go ahead and create the file ``~/.xonsh/history_couchdb.py`` and put the
 content above into it.
 
-Now we need to set xonsh to use it as the history backend. To do this
-we need xonsh able to find our file and use this ``CouchDBHistory`` class.
-Put the following code into your ``~/.xonshrc`` file can achieve it.
+Now we need to tell xonsh to use it as the history backend. To do this
+we need xonsh able to find our file and this ``CouchDBHistory`` class.
+Put the following code into ``~/.xonshrc`` file can achieve this.
 
-.. code-block:: python
+.. code-block:: none
 
-    import os
+    import os.path
     import sys
     xonsh_ext_dir = os.path.expanduser('~/.xonsh')
     if os.path.isdir(xonsh_ext_dir):
@@ -54,9 +55,9 @@ Put the following code into your ``~/.xonshrc`` file can achieve it.
     HISTORY_BACKENDS['couchdb'] = CouchDBHistory
     $XONSH_HISTORY_BACKEND = 'couchdb'
 
-After you starting a new xonsh session. Try the following commands:
+After starting a new xonsh session, try the following commands:
 
-.. code-block::
+.. code-block:: none
 
     $ history info
     backend: couchdb
@@ -65,19 +66,19 @@ After you starting a new xonsh session. Try the following commands:
     $ history -n
     0: couchdb in action
 
-Woho! We just wrote a working history backend!!
+Woho! We just wrote a working history backend!
+
 
 Setup CouchDB
 =============
 
 For real, we need a CouchDB running. Go to
-`CouchDB website <http://couchdb.apache.org/>`_ and get a copy and
-spend some time to install it. we will wait for you. Take your time.
+`CouchDB website <http://couchdb.apache.org/>`_ and spend some time to
+install it. we will wait for you. Take your time.
 
 After installing it, we could check it with ``curl``:
 
-
-.. code-block::
+.. code-block:: none
 
     $ curl -i 'http://127.0.0.1:5984/'
     HTTP/1.1 200 OK
@@ -97,8 +98,8 @@ After installing it, we could check it with ``curl``:
         }
     }
 
-Open ``http://127.0.0.1:5984/_utils/`` with your browser, and create a new
-database called ``xonsh-history``.
+Okay, CouchDB is working. Now open `<http://127.0.0.1:5984/_utils/>`_ with
+your browser, and create a new database called ``xonsh-history``.
 
 
 Initialize History Backend
@@ -118,6 +119,13 @@ Initialize History Backend
     def _build_session_id(self):
         ts = int(time.time() * 1000)
         return '{}-{}'.format(ts, str(uuid.uuid4())[:18])
+
+In the ``__init__()`` method, let's initilize
+`Some Public Attrbutes <api/history/base.html#xonsh.history.base.History>`_
+which xonsh would use in various places. Note that we use Unix timestamp and
+some random char to make ``self.sessionid`` unique and in order along the
+time using xonsh. We will cover it with a bit more details in next section.
+
 
 Save History to CouchDB
 =======================
@@ -152,18 +160,20 @@ First, we need some helper functions to write docs to CouchDB.
             resp = requests.get(url, headers=headers)
         return resp
 
-``_save_to_db()`` takes a dict, which contains the information about
-a command that use input, as the input, and save it into CouchDB.
+``_save_to_db()`` takes a dict as the input, which contains the information
+about a command that use input, and save it into CouchDB.
 
-As ``self.sessionid``, here we also use timestamps to build the doc KEY
-so that we don't need any views. Just with bare ``_all_docs`` API, we can
-fetch history items back in order.
+Instead of letting CouchDB provide us a random Document ID (i.e. the
+``data['_id']`` in our code), we built it for ourselves.  We use the Unix
+timestamp and UUID string for a second time. Prefixing with ``self.sessionid``
+we have, we make history items in order inside a single xonsh session too.
+So that we don't need any extra CouchDB's
+`Design Documents and Views <http://docs.couchdb.org/en/2.0.0/couchapp/ddocs.html>`_
+feature. Just with a bare ``_all_docs`` API, we can fetch history items back
+in order.
 
 Now that we have helper functions, we can update our ``append()`` method
 to do the real job - save history into DB.
-
-This method will be called by xonsh core every time it reveives new commands
-from user.
 
 .. code-block:: python
 
@@ -173,6 +183,8 @@ from user.
         self.outs.append(None)
         self.tss.append(cmd.get('ts', (None, None)))
         self._save_to_db(cmd)
+
+This method will be called by xonsh every time it run a new command from user.
 
 
 Retrieve History Items
@@ -209,13 +221,99 @@ And here is our helper methods to get docs from DB:
             cmd['ts'] = cmd['ts'][0]
             yield cmd
 
+The `try-except` is here so that we're safe when something bad happened, like
+couchdb is not get started, etc.
 
-History GC
-==========
 
-todo
+Try Out Our New History Backend
+===============================
+
+That's it. Your can find full code here:
+`<https://gist.github.com/mitnk/2d08dc60aab33d8b8b758c544b37d570>`_
+
+Let's start a new xonsh session:
+
+.. code-block:: none
+
+    $ history info
+    backend: couchdb
+    sessionid: 1486035364166-3bb78606-dd59-4679
+
+    $ ls
+    Applications   Desktop    Documents    Downloads
+
+    $ echo hi
+    hi
+
+Start a second xonsh session:
+
+.. code-block:: none
+
+    $ history info
+    backend: couchdb
+    sessionid: 1486035430658-6f81cd5d-b6d4-4f6a
+
+    $ echo new
+    new
+
+    $ history show all -nt
+    0:(2017-02-02 19:36) history info
+    1:(2017-02-02 19:36) ls
+    2:(2017-02-02 19:37) echo hi
+    3:(2017-02-02 19:37) history info
+    4:(2017-02-02 19:37) echo new
+
+    $ history -nt
+    0:(2017-02-02 19:37) history info
+    1:(2017-02-02 19:37) echo new
+    2:(2017-02-02 19:37) history show all -nt
+
+We don't miss any histories, so we're good I think.
+
+
+History Garbage Collection
+==========================
+
+In built-in history backends ``json``, ``sqlite``, GC will happen when
+xonsh get started or when run command ``history gc``. History items that
+range out of what `$XONSH_HISTORY_SIZE <envvars.html#xonsh-history-size>`_
+defines will be deleted.
+
+.. code-block:: python
+
+    class History:
+        def run_gc(self, size=None, blocking=True):
+            """Run the garbage collector.
+
+            Parameters
+            ----------
+            size: None or tuple of a int and a string
+                Detemines the size and units of what would be allowed to remain.
+            blocking: bool
+                If set blocking, then wait until gc action finished.
+            """
+            pass
+
+The History public method ``run_gc()`` is for this purpose. Our
+``CouchDBHistory`` define this method, thus it inherits from its parent
+`History`, which does nothing. We will leave the GC implementing as an
+exercise.
+
 
 Other History Options
 =====================
 
-todo
+There are some environment variables that could change the behaviors of
+history backend. Such as `$HISTCONTROL <envvars.html#histcontrol>`_,
+`$XONSH_HISTORY_SIZE <envvars.html#xonsh-history-size>`_,
+`$XONSH_STORE_STDOUT <envvars.html#xonsh-store-stdout>`_, etc.
+
+We should implement these ENVs in our CouchDB backend. Luckily, it's not a
+hard thing. We will leave these features implementing for yourself.
+
+
+Wrap Up
+=======
+
+Though the code are written as a just-work-level. But it does show us
+how easy you can customize xonsh's history backend.
