@@ -79,7 +79,7 @@ class CommandsCache(cabc.Mapping):
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        alss = getattr(builtins, 'aliases', set())
+        alss = getattr(builtins, 'aliases', dict())
         al_hash = hash(frozenset(alss))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
@@ -99,7 +99,7 @@ class CommandsCache(cabc.Mapping):
             # entries at the back.
             for cmd in executables_in(path):
                 key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (os.path.join(path, cmd), cmd in alss)
+                allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
         for cmd in alss:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
@@ -142,14 +142,32 @@ class CommandsCache(cabc.Mapping):
         """A lazy value getter."""
         return self._cmds_cache.get(self.cached_name(key), default)
 
-    def locate_binary(self, name):
-        """Locates an executable on the file system using the cache."""
+    def locate_binary(self, name, ignore_alias=False):
+        """Locates an executable on the file system using the cache.
+
+        Arguments
+        ---------
+        name : str
+                name of binary to search for
+        ignore_alias : bool, optional
+                Force return of binary path even if alias of ``name`` exists
+                (default ``False``)
+        """
         # make sure the cache is up to date by accessing the property
         _ = self.all_commands
-        return self.lazy_locate_binary(name)
+        return self.lazy_locate_binary(name, ignore_alias)
 
-    def lazy_locate_binary(self, name):
-        """Locates an executable in the cache, without checking its validity."""
+    def lazy_locate_binary(self, name, ignore_alias=False):
+        """Locates an executable in the cache, without checking its validity.
+
+        Arguments
+        ---------
+        name : str
+                name of binary to search for
+        ignore_alias : bool, optional
+                Force return of binary path even if alias of ``name`` exists
+                (default ``False``)
+        """
         possibilities = self.get_possible_names(name)
         if ON_WINDOWS:
             # Windows users expect to be able to execute files in the same
@@ -161,8 +179,11 @@ class CommandsCache(cabc.Mapping):
         cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache),
                       None)
         if cached:
-            (path, is_alias) = self._cmds_cache[cached]
-            return path if not is_alias else None
+            (path, alias) = self._cmds_cache[cached]
+            if not alias or ignore_alias:
+                return path
+            else:
+                return None
         elif os.path.isfile(name) and name != pathbasename(name):
             return name
 

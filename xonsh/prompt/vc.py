@@ -123,11 +123,11 @@ def current_branch():
     cmds = builtins.__xonsh_commands_cache__
     # check for binary only once
     if cmds.is_empty():
-        has_git = bool(cmds.locate_binary('git'))
-        has_hg = bool(cmds.locate_binary('hg'))
+        has_git = bool(cmds.locate_binary('git', ignore_alias=True))
+        has_hg = bool(cmds.locate_binary('hg', ignore_alias=True))
     else:
-        has_git = bool(cmds.lazy_locate_binary('git'))
-        has_hg = bool(cmds.lazy_locate_binary('hg'))
+        has_git = bool(cmds.lazy_locate_binary('git', ignore_alias=True))
+        has_hg = bool(cmds.lazy_locate_binary('hg', ignore_alias=True))
     if has_git:
         branch = get_git_branch()
     if not branch and has_hg:
