@@ -4,6 +4,7 @@ import argparse
 import builtins
 import datetime
 import functools
+import inspect
 import json
 import os
 import sys
@@ -26,7 +27,9 @@ def construct_history(**kwargs):
     """Construct the history backend object."""
     env = builtins.__xonsh_env__
     backend = env.get('XONSH_HISTORY_BACKEND')
-    if backend not in HISTORY_BACKENDS:
+    if inspect.isclass(backend):
+        kls_history = backend
+    elif backend not in HISTORY_BACKENDS:
         print('Unknown history backend: {}. Using JSON version'.format(
             backend), file=sys.stderr)
         kls_history = JsonHistory
