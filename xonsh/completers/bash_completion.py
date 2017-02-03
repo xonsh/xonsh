@@ -88,7 +88,7 @@ def get_sep():
         return os.sep
 
 
-def PATTERN_NEED_QUOTES():
+def pattern_need_quotes():
     pattern = r'\s`\$\{\}\,\*\(\)"\'\?&'
     if ON_WINDOWS:
         pattern += '%'
@@ -111,7 +111,7 @@ def expand_path(s):
     return s
 
 
-def _quote_to_use(x):
+def quote_to_use(x):
     single = "'"
     double = '"'
     if single in x and double not in x:
@@ -120,7 +120,7 @@ def _quote_to_use(x):
         return single
 
 
-def _quote_paths(paths, start, end):
+def quote_paths(paths, start, end):
     out = set()
     space = ' '
     backslash = '\\'
@@ -130,7 +130,7 @@ def _quote_paths(paths, start, end):
     orig_end = end
     # quote on all or none, to make readline completes to max prefix
     need_quotes = any(
-        re.search(PATTERN_NEED_QUOTES(), x) or
+        re.search(pattern_need_quotes(), x) or
         (backslash in x and slash != backslash)
         for x in paths)
 
@@ -138,7 +138,7 @@ def _quote_paths(paths, start, end):
         start = orig_start
         end = orig_end
         if start == '' and need_quotes:
-            start = end = _quote_to_use(s)
+            start = end = quote_to_use(s)
         if os.path.isdir(expand_path(s)):
             _tail = slash
         elif end == '':
@@ -207,7 +207,7 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
 
-def complete_from_bash(prefix, line, begidx, endidx, ctx, env=None, completers=None):
+def get_completions(prefix, line, begidx, endidx, ctx, env=None, completers=None):
     """Completes based on results from BASH completion."""
     source = _get_completions_source(completers) or set()
 
@@ -261,7 +261,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx, env=None, completers=N
         strip_len += 1
 
     if '-o noquote' not in complete_stmt:
-        out = _quote_paths(out, '', '')
+        out = quote_paths(out, '', '')
     if '-o nospace' in complete_stmt:
         out = set([x.rstrip() for x in out])
 
