@@ -14,6 +14,7 @@ import importlib.util
 
 from xonsh.lazyasd import LazyBool, lazyobject, lazybool
 
+
 @lazyobject
 def distro():
     try:
@@ -285,7 +286,8 @@ def windows_bash_command():
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     wbc = 'bash'
-    bash_on_path = builtins.__xonsh_commands_cache__.lazy_locate_binary('bash')
+    bash_on_path = builtins.__xonsh_commands_cache__.lazy_locate_binary('bash', 
+                                                                        ignore_alias=True)
     if bash_on_path:
         # Check if Bash is from the "Windows Subsystem for Linux" (WSL)
         # which can't be used by xonsh foreign-shell/completer
