@@ -6,12 +6,14 @@ import os
 import sys
 import shlex
 
+import pytest
+
 from xonsh.lazyjson import LazyJSON
 from xonsh.history.json import JsonHistory
 from xonsh.history.main import history_main, _xh_parse_args
 
-import pytest
 
+CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
 @pytest.yield_fixture
 def hist():
@@ -119,8 +121,6 @@ def test_cmd_field(hist, xonsh_builtins):
     assert 1 == hist.rtns[-1]
     assert None == hist.outs[-1]
 
-
-CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
 @pytest.mark.parametrize('inp, commands, offset', [
     ('', CMDS, (0, 1)),
@@ -258,16 +258,21 @@ def test_parser_show(args, exp):
 
 
 @pytest.mark.parametrize('index, exp', [
-    (-1, 'grep from me'),
-    ('hello', 'cat hello kitty'),
-    ((-1, -1), 'me'),
-    (('hello', 0), 'cat'),
-    ((-1, slice(0,2)), 'grep from'),
-    (('kitty', slice(1,3)), 'hello kitty')
+    (-1, ('grep from me', 'out', 0, (5, 6))),
+    (1, ('cat hello kitty', 'out', 0, (1, 2))),
+    (slice(1, 3), [('cat hello kitty', 'out', 0, (1, 2)),
+                   ('abc', 'out', 0, (2, 3))]),
 ])
 def test_history_getitem(index, exp, hist, xonsh_builtins):
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
-    for ts,cmd in enumerate(CMDS):  # populate the shell history
-        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
+    attrs = ('inp', 'out', 'rtn', 'ts')
 
-    assert hist[index] == exp
+    for ts,cmd in enumerate(CMDS):  # populate the shell history
+        entry = {k: v for k, v in zip(attrs, [cmd, 'out', 0, (ts, ts+1)])}
+        hist.append(entry)
+
+    entry = hist[index]
+    if isinstance(entry, list):
+        assert [(e.cmd, e.out, e.rtn, e.ts) for e in entry] == exp
+    else:
+        assert (entry.cmd, entry.out, entry.rtn, entry.ts) == exp
