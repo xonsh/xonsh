@@ -6,6 +6,7 @@ import os
 import sys
 import signal
 import pathlib
+import builtins
 import platform
 import functools
 import subprocess
@@ -285,16 +286,22 @@ def windows_bash_command():
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     wbc = 'bash'
-    try:
-        subprocess.check_call([wbc, '--version'],
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE)
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        gfwp = git_for_windows_path()
-        if gfwp:
-            bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
-            if os.path.isfile(bashcmd):
-                wbc = bashcmd
+    bash_on_path = builtins.__xonsh_commands_cache__.lazy_locate_binary('bash',
+                                                                        ignore_alias=True)
+    if bash_on_path:
+        # Check if Bash is from the "Windows Subsystem for Linux" (WSL)
+        # which can't be used by xonsh foreign-shell/completer
+        out = subprocess.check_output([bash_on_path, '--version'],
+                                      stderr=subprocess.PIPE,
+                                      universal_newlines=True)
+        if 'pc-linux-gnu' in out.splitlines()[0]:
+            gfwp = git_for_windows_path()
+            if gfwp:
+                bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
+                if os.path.isfile(bashcmd):
+                    wbc = bashcmd
+        else:
+            wbc = bash_on_path
     return wbc
 
 #
