@@ -227,7 +227,10 @@ CouchDB is not running properly, etc.
 Try Out Our New History Backend
 ===============================
 
-That's it. Your can find full code here:
+That's it. We've finished our new history backend. The ``import`` part is
+skipped, but I think you can figure it out though. Note that in our code
+an extra Python library is used: ``requests``. You could easily install it
+with ``pip`` or other library managers. You can find the full code here:
 `<https://gist.github.com/mitnk/2d08dc60aab33d8b8b758c544b37d570>`_
 
 Let's start a new xonsh session:
