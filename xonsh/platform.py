@@ -292,13 +292,13 @@ def windows_bash_command():
         out = subprocess.check_output([bash_on_path, '--version'],
                                       stderr=subprocess.PIPE,
                                       universal_newlines=True)
-        if 'pc-linux-gnu' in out.splitlines()[0]: 
+        if 'pc-linux-gnu' in out.splitlines()[0]:
             gfwp = git_for_windows_path()
             if gfwp:
                 bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
                 if os.path.isfile(bashcmd):
                     wbc = bashcmd
-        else: 
+        else:
             wbc = bash_on_path
     return wbc
 
