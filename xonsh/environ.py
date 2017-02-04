@@ -176,7 +176,7 @@ def DEFAULT_ENSURERS():
     'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
-    'XONSH_HISTORY_BACKEND': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_BACKEND': (is_string_or_callable, ensure_string, ensure_string),
     'XONSH_HISTORY_FILE': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
@@ -679,8 +679,10 @@ def DEFAULT_DOCS():
         '* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n'
     ),
     'XONSH_HISTORY_BACKEND': VarDocs(
-        'Set which history backend to use. Options are: ``json``, '
-        '``sqlite``, and ``dummy``. default is ``json``.'),
+        "Set which history backend to use. Options are: 'json', "
+        "'sqlite', and 'dummy'. The default is 'json'. "
+        '``XONSH_HISTORY_BACKEND`` also accepts a class type that inherits '
+        'from ``xonsh.history.base.History``.'),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),
