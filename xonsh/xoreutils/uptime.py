@@ -32,7 +32,7 @@ def _uptime_osx():
         bt = struct.unpack_from('@hh', bt)
     elif len(bt) == 8:
         bt = struct.unpack_from('@ii', bt)
-    elif len(bt) == 12:
+    elif len(bt) == 16:
         bt = struct.unpack_from('@qq', bt)
     else:
         raise ValueError('length of boot time not understood: ' + repr(bt))
