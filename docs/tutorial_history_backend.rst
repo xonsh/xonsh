@@ -5,13 +5,13 @@ Tutorial: Write Your Own History Backend
 ****************************************
 
 One of the great things about xonsh is how easy it is to customize. In
-this tutorial, let's write our own history backed based on CouchDB.
+this tutorial, let's write our own history backend based on CouchDB.
 
 
 Start with a Minimal History Template
 =====================================
 
-Here is a minimal history backend we can have:
+Here is a minimal history backend to start with:
 
 .. code-block:: python
 
@@ -123,7 +123,7 @@ In the ``__init__()`` method, let's initialize
 `Some Public Attributes <api/history/base.html#xonsh.history.base.History>`_
 which xonsh uses in various places. Note that we use Unix timestamp and
 some random char to make ``self.sessionid`` unique and to keep the entries
-ordered in time. We will cover it with a bit more detail in next section.
+ordered in time. We will cover it with a bit more detail in the next section.
 
 
 Save History to CouchDB
