@@ -23,7 +23,7 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
-    ensure_timestamp, get_portions
+    ensure_timestamp, get_portions, is_balanced
     )
 from xonsh.environ import Env
 
@@ -320,6 +320,24 @@ def test_subproc_toks_pyeval_redirect():
     exp = '![{0}]'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
     assert exp == obs
+
+
+@pytest.mark.parametrize('inp', [
+    'f(1,10),x.y',
+])
+def test_is_balanced_parens(inp):
+    obs = is_balanced(inp, '(', ')')
+    assert obs
+
+
+@pytest.mark.parametrize('inp', [
+    'f(x.',
+    'f(1,x.'
+    'f((1,10),x.y',
+])
+def test_is_not_balanced_parens(inp):
+    obs = is_balanced(inp, '(', ')')
+    assert not obs
 
 
 @pytest.mark.parametrize('inp, exp', [

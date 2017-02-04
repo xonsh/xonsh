@@ -346,17 +346,25 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+def is_balanced(expr, ltok, rtok):
+    """Determines whether an expression has unbalanced opening and closing tokens."""
+    lcnt = expr.count(ltok)
+    if lcnt == 0:
+        return True
+    rcnt = expr.count(rtok)
+    if lcnt == rcnt:
+        return True
+    else:
+        return False
+
+
 def subexpr_from_unbalanced(expr, ltok, rtok):
     """Attempts to pull out a valid subexpression for unbalanced grouping,
     based on opening tokens, eg. '(', and closing tokens, eg. ')'.  This
     does not do full tokenization, but should be good enough for tab
     completion.
     """
-    lcnt = expr.count(ltok)
-    if lcnt == 0:
-        return expr
-    rcnt = expr.count(rtok)
-    if lcnt == rcnt:
+    if is_balanced(expr, ltok, rtok):
         return expr
     subexpr = expr.rsplit(ltok, 1)[-1]
     subexpr = subexpr.rsplit(',', 1)[-1]
