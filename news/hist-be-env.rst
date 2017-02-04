@@ -1,4 +1,4 @@
-**Added:** None
+**Added:**
 
 * The environment variable ``XONSH_HISTORY_BACKEND`` now also supports a
   value of class type.
