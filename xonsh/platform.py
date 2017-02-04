@@ -56,6 +56,7 @@ ON_BSD = LazyBool(lambda: ON_FREEBSD or ON_NETBSD,
                   globals(), 'ON_BSD')
 """``True`` if on a BSD operating system, else ``False``."""
 
+
 @lazybool
 def ON_BEOS():
     """True if we are on BeOS or Haiku."""
@@ -367,6 +368,7 @@ def PATH_DEFAULT():
     else:
         pd = ()
     return pd
+
 
 #
 # libc

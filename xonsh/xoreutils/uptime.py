@@ -18,6 +18,7 @@ import struct
 
 import xonsh.platform as xp
 import xonsh.lazyimps as xlimps
+import xonsh.lazyasd as xl
 
 
 _BOOTTIME = None
@@ -27,7 +28,7 @@ def _uptime_osx():
     """Returns the uptime on mac / darwin."""
     global _BOOTTIME
     bt = xlimps.macutils.sysctlbyname("kern.boottime", return_str=False)
-    bt = struct.unpack('@LL', bt)
+    bt = struct.unpack('@ii', bt)
     bt = bt[0] + bt[1]*1e-6
     if bt == 0.0:
         return None
@@ -92,13 +93,13 @@ def _uptime_bsd():
         return None
     # Determine how much space we need for the response.
     sz = ctypes.c_uint(0)
-    libc.sysctlbyname('kern.boottime', None, ctypes.byref(sz), None, 0)
+    xp.LIBC.sysctlbyname('kern.boottime', None, ctypes.byref(sz), None, 0)
     if sz.value != struct.calcsize('@LL'):
         # Unexpected, let's give up.
         return None
     # For real now.
     buf = ctypes.create_string_buffer(sz.value)
-    libc.sysctlbyname('kern.boottime', buf, ctypes.byref(sz), None, 0)
+    xp.LIBC.sysctlbyname('kern.boottime', buf, ctypes.byref(sz), None, 0)
     sec, usec = struct.unpack('@LL', buf.raw)
     # OS X disagrees what that second value is.
     if usec > 1000000:
@@ -223,10 +224,8 @@ def _uptime_windows():
     return None
 
 
-def uptime():
-    """Returns uptime in seconds if even remotely possible, or None if not."""
-    if _BOOTTIME is not None:
-        return time.time() - _BOOTTIME
+@xl.lazyobject
+def _UPTIME_FUNCS():
     return {'amiga': _uptime_amiga,
             'aros12': _uptime_amiga,
             'beos5': _uptime_beos,
@@ -240,11 +239,19 @@ def uptime():
             'sunos5': _uptime_solaris,
             'syllable': _uptime_syllable,
             'win32': _uptime_windows,
-            'wince': _uptime_windows}.get(sys.platform, _uptime_bsd)() or \
-           _uptime_bsd() or _uptime_plan9() or _uptime_linux() or \
-           _uptime_windows() or _uptime_solaris() or _uptime_beos() or \
-           _uptime_amiga() or  \
-           _uptime_syllable() or _uptime_osx()
+            'wince': _uptime_windows}
+
+
+def uptime():
+    """Returns uptime in seconds if even remotely possible, or None if not."""
+    if _BOOTTIME is not None:
+        return time.time() - _BOOTTIME
+    up = _UPTIME_FUNCS.get(sys.platform, _uptime_bsd)()
+    if up is None:
+        up = (_uptime_bsd() or _uptime_plan9() or _uptime_linux() or
+              _uptime_windows() or _uptime_solaris() or _uptime_beos() or
+              _uptime_amiga() or _uptime_syllable() or _uptime_osx())
+    return up
 
 
 def boottime():
