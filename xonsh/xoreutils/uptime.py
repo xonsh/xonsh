@@ -28,7 +28,14 @@ def _uptime_osx():
     """Returns the uptime on mac / darwin."""
     global _BOOTTIME
     bt = xlimps.macutils.sysctlbyname("kern.boottime", return_str=False)
-    bt = struct.unpack_from('@LL', bt)
+    if len(bt) == 4:
+        bt = struct.unpack_from('@hh', bt)
+    elif len(bt) == 8:
+        bt = struct.unpack_from('@ii', bt)
+    elif len(bt) == 12:
+        bt = struct.unpack_from('@qq', bt)
+    else:
+        raise ValueError('length of boot time not understood: ' + repr(bt))
     bt = bt[0] + bt[1]*1e-6
     if bt == 0.0:
         return None
