@@ -28,7 +28,7 @@ def _uptime_osx():
     """Returns the uptime on mac / darwin."""
     global _BOOTTIME
     bt = xlimps.macutils.sysctlbyname("kern.boottime", return_str=False)
-    bt = struct.unpack('@ii', bt)
+    bt = struct.unpack('@ll', bt)
     bt = bt[0] + bt[1]*1e-6
     if bt == 0.0:
         return None
@@ -199,6 +199,7 @@ def _uptime_solaris():
         return time.time() - _BOOTTIME
     return None
 
+
 def _uptime_syllable():
     """Returns uptime in seconds or None, on Syllable."""
     global _BOOTTIME
@@ -207,6 +208,7 @@ def _uptime_syllable():
         return time.time() - _BOOTTIME
     except (NameError, OSError):
         return None
+
 
 def _uptime_windows():
     """
