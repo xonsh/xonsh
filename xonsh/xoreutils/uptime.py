@@ -28,7 +28,7 @@ def _uptime_osx():
     """Returns the uptime on mac / darwin."""
     global _BOOTTIME
     bt = xlimps.macutils.sysctlbyname("kern.boottime", return_str=False)
-    bt = struct.unpack('@ll', bt)
+    bt = struct.unpack_from('@LL', bt)
     bt = bt[0] + bt[1]*1e-6
     if bt == 0.0:
         return None
@@ -100,7 +100,7 @@ def _uptime_bsd():
     # For real now.
     buf = ctypes.create_string_buffer(sz.value)
     xp.LIBC.sysctlbyname('kern.boottime', buf, ctypes.byref(sz), None, 0)
-    sec, usec = struct.unpack('@LL', buf.raw)
+    sec, usec = struct.unpack_from('@LL', buf.raw)
     # OS X disagrees what that second value is.
     if usec > 1000000:
         usec = 0.
