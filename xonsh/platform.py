@@ -91,6 +91,25 @@ def pygments_version():
     return v
 
 
+
+@lazybool
+def HAS_JEDI():
+    """``True`` if `jedi` is available, else ``False``."""
+    spec = importlib.util.find_spec('jedi')
+    return (spec is not None)
+
+
+@functools.lru_cache(1)
+def jedi_version():
+    """jedi.__version__ version if available, else None."""
+    if HAS_JEDI:
+        import jedi
+        v = jedi.__version__
+    else:
+        v = None
+    return v
+
+
 @functools.lru_cache(1)
 def has_prompt_toolkit():
     """ Tests if the `prompt_toolkit` is available. """

@@ -19,8 +19,9 @@ import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.prompt.base import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
-                            PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
-                            ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
+                            PYTHON_VERSION_INFO, pygments_version, ON_POSIX,
+                            ON_LINUX, linux_distro, ON_DARWIN, ON_WINDOWS,
+                            ON_CYGWIN, DEFAULT_ENCODING, githash, jedi_version)
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
                          color_style_names, print_color, color_style)
 from xonsh.xontribs import xontrib_metadata, find_xontrib
@@ -357,6 +358,7 @@ def _info(ns):
         ('prompt toolkit', ptk_version() or None),
         ('shell type', env.get('SHELL_TYPE')),
         ('pygments', pygments_version()),
+        ('jedi', jedi_version()),
         ('on posix', bool(ON_POSIX)),
         ('on linux', ON_LINUX),
     ])
