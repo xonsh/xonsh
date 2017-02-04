@@ -380,6 +380,27 @@ def showcmd(args, stdin=None):
         sys.displayhook(args)
 
 
+def detect_xip_alias():
+    """
+    Determines the correct invokation to get xonsh's pip
+    """
+    if not getattr(sys, 'executable', None):
+        return lambda args, stdin=None: ("", "Sorry, unable to run pip on your system (missing sys.executable)", 1)
+
+    basecmd = [sys.executable, '-m', 'pip']
+    try:
+        if ON_WINDOWS:
+            # XXX: Does windows have an installation mode that requires UAC?
+            return basecmd
+        elif not os.access(os.path.dirname(sys.executable), os.W_OK):
+            return ['sudo'] + basecmd
+        else:
+            return basecmd
+    except Exception:
+        # Something freaky happened, return something that'll probably work
+        return basecmd
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -410,7 +431,8 @@ def make_default_aliases():
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'which': xxw.which,
         'xontrib': xontribs_main,
-        'completer': xca.completer_alias
+        'completer': xca.completer_alias,
+        'xip': detect_xip_alias(),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
