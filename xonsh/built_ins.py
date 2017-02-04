@@ -345,7 +345,6 @@ def no_pg_xonsh_preexec_fn():
     """Default subprocess preexec function for when there is no existing
     pipeline group.
     """
-    os.setpgrp()
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
@@ -540,7 +539,6 @@ class SubprocSpec:
         else:
             def xonsh_preexec_fn():
                 """Preexec function bound to a pipeline group."""
-                os.setpgid(0, pipeline_group)
                 signal.signal(signal.SIGTSTP, default_signal_pauser)
         kwargs['preexec_fn'] = xonsh_preexec_fn
 
