@@ -23,7 +23,7 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
-    ensure_timestamp, get_portions, is_balanced
+    ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced
     )
 from xonsh.environ import Env
 
@@ -347,6 +347,20 @@ def test_is_not_balanced_parens(inp):
 ])
 def test_subexpr_from_unbalanced_parens(inp, exp):
     obs = subexpr_from_unbalanced(inp, '(', ')')
+    assert exp == obs
+
+
+@pytest.mark.parametrize('inp, exp', [
+    ('f(x.', 'f'),
+    ('f(1,x.', 'f'),
+    ('f((1,10),x.y', 'f'),
+    ('wakka().f((1,10),x.y', '.f'),
+    ('wakka(f((1,10),x.y', 'f'),
+    ('wakka(jawakka().f((1,10),x.y', '.f'),
+    ('wakka(jawakka().f((1,10),x.y)', 'wakka'),
+])
+def test_subexpr_before_unbalanced_parens(inp, exp):
+    obs = subexpr_before_unbalanced(inp, '(', ')')
     assert exp == obs
 
 

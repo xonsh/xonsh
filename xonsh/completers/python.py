@@ -129,6 +129,17 @@ def attr_complete(prefix, ctx, filter_func):
     return attrs
 
 
+def complete_python_signature(prefix, line, start, end, ctx):
+    """Completes a python function (or other callable) call by completing
+    argument and keyword argument names.
+    """
+    front = line[:end]
+    if xt.is_balanced(line[:end], '(', ')'):
+        return set()
+    funcname = subexpr_before_unbalanced(front, '(', ')')
+
+
+
 def complete_import(prefix, line, start, end, ctx):
     """
     Completes module names and contents for "import ..." and "from ... import

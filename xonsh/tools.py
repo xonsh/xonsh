@@ -372,6 +372,19 @@ def subexpr_from_unbalanced(expr, ltok, rtok):
     return subexpr
 
 
+def subexpr_before_unbalanced(expr, ltok, rtok):
+    """Obtains the expression prior to last unblanced left token."""
+    subexpr, _, post = expr.rpartition(ltok)
+    nrtoks_in_post = post.count(rtok)
+    while nrtoks_in_post != 0:
+        for i in range(nrtoks_in_post):
+            subexpr, _, post = subexpr.rpartition(ltok)
+        nrtoks_in_post = post.count(rtok)
+    _, _, subexpr = subexpr.rpartition(rtok)
+    _, _, subexpr = subexpr.rpartition(ltok)
+    return subexpr
+
+
 def decode(s, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
     return s.decode(encoding, "replace")
