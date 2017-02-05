@@ -61,6 +61,7 @@ def _complete_python(prefix, line, start, end, ctx):
     if ctx is not None:
         if '.' in prefix:
             rtn |= attr_complete(prefix, ctx, filt)
+        rtn |= python_signature_complete(prefix, line, end, ctx, filt)
         rtn |= {s for s in ctx if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     return rtn
@@ -79,6 +80,24 @@ def complete_python_mode(prefix, line, start, end, ctx):
     return set(prefix_start + i for i in python_matches)
 
 
+def _safe_eval(expr, ctx):
+    """Safely tries to evaluate an expression. If this fails, it will return
+    a (None, None) tuple.
+    """
+    _ctx = None
+    xonsh_safe_eval = builtins.__xonsh_execer__.eval
+    try:
+        val = xonsh_safe_eval(expr, ctx, ctx, transform=False)
+        _ctx = ctx
+    except:  # pylint:disable=bare-except
+        try:
+            val = xonsh_safe_eval(expr, builtins.__dict__, transform=False)
+            _ctx = builtins.__dict__
+        except:  # pylint:disable=bare-except
+            val = _ctx = None
+    return val, _ctx
+
+
 def attr_complete(prefix, ctx, filter_func):
     """Complete attributes of an object."""
     attrs = set()
@@ -89,17 +108,9 @@ def attr_complete(prefix, ctx, filter_func):
     expr = xt.subexpr_from_unbalanced(expr, '(', ')')
     expr = xt.subexpr_from_unbalanced(expr, '[', ']')
     expr = xt.subexpr_from_unbalanced(expr, '{', '}')
-    _ctx = None
-    xonsh_safe_eval = builtins.__xonsh_execer__.eval
-    try:
-        val = xonsh_safe_eval(expr, ctx, transform=False)
-        _ctx = ctx
-    except:  # pylint:disable=bare-except
-        try:
-            val = xonsh_safe_eval(expr, builtins.__dict__, transform=False)
-            _ctx = builtins.__dict__
-        except:  # pylint:disable=bare-except
-            return attrs  # anything could have gone wrong!
+    val, _ctx = _safe_eval(expr, ctx)
+    if val is None and _ctx is None:
+        return attrs
     if len(attr) == 0:
         opts = [o for o in dir(val) if not o.startswith('_')]
     else:
@@ -129,15 +140,20 @@ def attr_complete(prefix, ctx, filter_func):
     return attrs
 
 
-def complete_python_signature(prefix, line, start, end, ctx):
+def python_signature_complete(prefix, line, end, ctx, filter_func):
     """Completes a python function (or other callable) call by completing
     argument and keyword argument names.
     """
     front = line[:end]
-    if xt.is_balanced(line[:end], '(', ')'):
+    if xt.is_balanced(front, '(', ')'):
         return set()
-    funcname = subexpr_before_unbalanced(front, '(', ')')
-
+    funcname = xt.subexpr_before_unbalanced(front, '(', ')')
+    val, _ctx = _safe_eval(funcname, ctx)
+    if val is None and _ctx is None:
+        return set()
+    sig = inspect.signature(val)
+    args = {p + '=' for p in sig.parameters if filter_func(p, prefix)}
+    return args
 
 
 def complete_import(prefix, line, start, end, ctx):
