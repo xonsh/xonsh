@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests the json history backend."""
 # pylint: disable=protected-access
-import io
 import os
-import sys
 import shlex
 
 from xonsh.lazyjson import LazyJSON
+from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
-from xonsh.history.main import history_main, _xh_parse_args
+from xonsh.history.main import history_main, _xh_parse_args, construct_history
 
 import pytest
 
@@ -268,6 +267,20 @@ def test_parser_show(args, exp):
 def test_history_getitem(index, exp, hist, xonsh_builtins):
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     for ts,cmd in enumerate(CMDS):  # populate the shell history
-        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
-
+        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts + 1, ts + 1.5)})
     assert hist[index] == exp
+
+
+def test_construct_history_str(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['XONSH_HISTORY_BACKEND'] = 'dummy'
+    assert isinstance(construct_history(), DummyHistory)
+
+
+def test_construct_history_class(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['XONSH_HISTORY_BACKEND'] = DummyHistory
+    assert isinstance(construct_history(), DummyHistory)
+
+
+def test_construct_history_instance(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['XONSH_HISTORY_BACKEND'] = DummyHistory()
+    assert isinstance(construct_history(), DummyHistory)
