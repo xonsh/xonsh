@@ -18,17 +18,30 @@ def RE_ATTR():
 
 
 @xl.lazyobject
-def XONSH_TOKENS():
+def XONSH_EXPR_TOKENS():
     return {
-        'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
-        'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 'global ',
-        'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ', 'or ',
-        'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', '+',
-        '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=',
-        '>', '>=', '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=',
-        '>>=', '<<=', '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(',
-        '${', '$[', '..', '...', '![', '!(', '@(', '@$(', '@'
+        'and ', 'else', 'for ', 'if ', 'in ', 'is ', 'lambda ', 'not ', 'or ',
+        '+', '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<',
+        '<=', '>', '>=', '==', '!=', ',', '?', '??', '$(',
+        '${', '$[', '...', '![', '!(', '@(', '@$(', '@',
         }
+
+
+@xl.lazyobject
+def XONSH_STMT_TOKENS():
+    return {
+        'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
+        'elif ', 'except ', 'finally:', 'from ', 'global ', 'import ',
+        'nonlocal ', 'pass', 'raise ', 'return ', 'try:', 'while ', 'with ',
+        'yield ', '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<',
+        '<', '<=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=',
+        '>>=', '<<=', '&=', '^=', '|=', '//=', ';', ':', '..',
+        }
+
+
+@xl.lazyobject
+def XONSH_TOKENS():
+    return set(XONSH_EXPR_TOKENS) | set(XONSH_STMT_TOKENS)
 
 
 def complete_python(prefix, line, start, end, ctx):
@@ -57,12 +70,20 @@ def _complete_python(prefix, line, start, end, ctx):
         if first in builtins.__xonsh_commands_cache__ and first not in ctx:
             return set()
     filt = get_filter_function()
-    rtn = {s for s in XONSH_TOKENS if filt(s, prefix)}
+    rtn = set()
     if ctx is not None:
         if '.' in prefix:
             rtn |= attr_complete(prefix, ctx, filt)
-        rtn |= python_signature_complete(prefix, line, end, ctx, filt)
+        args = python_signature_complete(prefix, line, end, ctx, filt)
+        rtn |= args
         rtn |= {s for s in ctx if filt(s, prefix)}
+    else:
+        args = ()
+    if len(args) == 0:
+        # not in a function call, so we can add non-expression tokens
+        rtn |= {s for s in XONSH_TOKENS if filt(s, prefix)}
+    else:
+        rtn |= {s for s in XONSH_EXPR_TOKENS if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     return rtn
 
@@ -118,10 +139,9 @@ def attr_complete(prefix, ctx, filter_func):
     prelen = len(prefix)
     for opt in opts:
         # check whether these options actually work (e.g., disallow 7.imag)
-        try:
-            _val = '{0}.{1}'.format(expr, opt)
-            xonsh_safe_eval(_val, _ctx, transform=False)
-        except:  # pylint:disable=bare-except
+        _expr = '{0}.{1}'.format(expr, opt)
+        _val_, _ctx_ = _safe_eval(_expr, _ctx)
+        if _val_ is None and _ctx_ is None:
             continue
         a = getattr(val, opt)
         if builtins.__xonsh_env__['COMPLETIONS_BRACKETS']:
