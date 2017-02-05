@@ -38,7 +38,7 @@ from xonsh.tools import (
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
-    seq_to_upper_pathsep, print_color
+    seq_to_upper_pathsep, print_color, is_history_backend, to_itself,
 )
 import xonsh.prompt.base as prompt
 
@@ -176,7 +176,7 @@ def DEFAULT_ENSURERS():
     'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
-    'XONSH_HISTORY_BACKEND': (is_string_or_callable, ensure_string, ensure_string),
+    'XONSH_HISTORY_BACKEND': (is_history_backend, to_itself, ensure_string),
     'XONSH_HISTORY_FILE': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
@@ -937,6 +937,7 @@ class Env(cabc.MutableMapping):
         if not ensurer.validate(val):
             val = ensurer.convert(val)
         # existing envvars can have any value including None
+
         old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
         if self.detypeable(val):

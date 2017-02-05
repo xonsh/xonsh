@@ -9,6 +9,7 @@ import json
 import os
 import sys
 
+from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
@@ -27,14 +28,16 @@ def construct_history(**kwargs):
     """Construct the history backend object."""
     env = builtins.__xonsh_env__
     backend = env.get('XONSH_HISTORY_BACKEND')
-    if inspect.isclass(backend):
+    if isinstance(backend, str) and backend in HISTORY_BACKENDS:
+        kls_history = HISTORY_BACKENDS[backend]
+    elif inspect.isclass(backend):
         kls_history = backend
-    elif backend not in HISTORY_BACKENDS:
+    elif isinstance(backend, History):
+        return backend
+    else:
         print('Unknown history backend: {}. Using JSON version'.format(
             backend), file=sys.stderr)
         kls_history = JsonHistory
-    else:
-        kls_history = HISTORY_BACKENDS[backend]
     return kls_history(**kwargs)
 
 
