@@ -171,7 +171,7 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
-            if backgrounded:
+            if backgrounded and hasattr(builtins, '__xonsh_shell__'):
                 # restoring sanity could probably be called whenever we return
                 # control to the shell. But it only seems to matter after a
                 # ^Z event. This *has* to be called after we give the terminal
