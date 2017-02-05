@@ -760,7 +760,7 @@ class PopenThread(threading.Thread):
             self.old_int_handler = None
         if frame is not None:
             self._disable_cbreak_stdin()
-            if old is not None:
+            if old is not None and old is not self._signal_int:
                 old(signal.SIGINT, frame)
 
     #
