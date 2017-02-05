@@ -682,7 +682,7 @@ def DEFAULT_DOCS():
         "Set which history backend to use. Options are: 'json', "
         "'sqlite', and 'dummy'. The default is 'json'. "
         '``XONSH_HISTORY_BACKEND`` also accepts a class type that inherits '
-        'from ``xonsh.history.base.History``.'),
+        'from ``xonsh.history.base.History``, or its instance.'),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),

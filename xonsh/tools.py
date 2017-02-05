@@ -921,7 +921,7 @@ def to_bool(x):
 
 
 def to_itself(x):
-    """Do not do conversion, returns to itself."""
+    """No conversion, returns itself."""
     return x
 
 
