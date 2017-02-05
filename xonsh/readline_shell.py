@@ -326,19 +326,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
-        _s, _e, _q = check_for_partial_string(line)
-        if _s is not None:
-            if _e is not None and ' ' in line[_e:]:
-                mline = line.rpartition(' ')[2]
-            else:
-                mline = line[_s:]
-        else:
-            mline = line.rpartition(' ')[2]
-        offs = len(mline) - len(prefix)
-        completions = self.completer.complete(prefix, line,
-                                              begidx, endidx,
-                                              ctx=self.ctx)[0]
-        rtn_completions = [i[offs:] for i in completions]
+        completions, l = self.completer.complete(prefix, line,
+                                                 begidx, endidx,
+                                                 ctx=self.ctx)
+        chopped = prefix[:-l]
+        rtn_completions = [chopped + i for i in completions]
         show_completions = self._querycompletions(completions, endidx - begidx)
         return rtn_completions if show_completions else []
 

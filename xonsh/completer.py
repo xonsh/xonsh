@@ -27,8 +27,7 @@ class Completer(object):
         rtn : list of str
             Possible completions of prefix, sorted alphabetically.
         lprefix : int
-            Length of the prefix to be replaced in the completion
-            (only used with prompt_toolkit)
+            Length of the prefix to be replaced in the completion.
         """
         ctx = ctx or {}
         for func in builtins.__xonsh_completers__.values():
