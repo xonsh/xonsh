@@ -4,7 +4,6 @@ import argparse
 import builtins
 import datetime
 import functools
-import inspect
 import json
 import os
 import sys
@@ -30,7 +29,7 @@ def construct_history(**kwargs):
     backend = env.get('XONSH_HISTORY_BACKEND')
     if isinstance(backend, str) and backend in HISTORY_BACKENDS:
         kls_history = HISTORY_BACKENDS[backend]
-    elif inspect.isclass(backend):
+    elif xt.is_class(backend):
         kls_history = backend
     elif isinstance(backend, History):
         return backend

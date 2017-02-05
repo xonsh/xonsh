@@ -937,7 +937,6 @@ class Env(cabc.MutableMapping):
         if not ensurer.validate(val):
             val = ensurer.convert(val)
         # existing envvars can have any value including None
-
         old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
         if self.detypeable(val):
