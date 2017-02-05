@@ -1248,6 +1248,13 @@ class ProcProxyThread(threading.Thread):
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
+        # Set some signal handles, if we can. Must come before process
+        # is started to prevent deadlock on windows
+        self.old_int_handler = None
+        if on_main_thread():
+            self.old_int_handler = signal.signal(signal.SIGINT,
+                                                 self._signal_int)
+        # start up the proc
         super().__init__()
         self.start()
 
@@ -1355,6 +1362,28 @@ class ProcProxyThread(threading.Thread):
         """Waits for the process to finish and returns the return code."""
         self.join()
         return self.returncode
+
+    #
+    # SIGINT handler
+    #
+
+    def _signal_int(self, signum, frame):
+        """Signal handler for SIGINT - Ctrl+C may have been pressed."""
+        #self.send_signal(signum)
+        if self.poll() is not None:
+            self._restore_sigint(frame=frame)
+        if on_main_thread():
+            signal.pthread_kill(threading.get_ident(), signal.SIGINT)
+
+    def _restore_sigint(self, frame=None):
+        old = self.old_int_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGINT, old)
+            self.old_int_handler = None
+        if frame is not None:
+            if old is not None and old is not self._signal_int:
+                old(signal.SIGINT, frame)
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
