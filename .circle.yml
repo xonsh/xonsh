@@ -1,6 +1,7 @@
 machine:
     environment:
         PATH: /home/ubuntu/miniconda/envs/test_env/bin:/home/ubuntu/miniconda/bin:$PATH
+        XONSH_DEBUG: 1
     post:
         - pyenv global 3.4.4 3.5.2
 

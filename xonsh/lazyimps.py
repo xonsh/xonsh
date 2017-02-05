@@ -1,7 +1,7 @@
 """Lazy imports that may apply across the xonsh package."""
 import importlib
 
-from xonsh.platform import ON_WINDOWS
+from xonsh.platform import ON_WINDOWS, ON_DARWIN
 from xonsh.lazyasd import LazyObject, lazyobject
 
 pygments = LazyObject(lambda: importlib.import_module('pygments'),
@@ -64,6 +64,15 @@ def msvcrt():
 def winutils():
     if ON_WINDOWS:
         import xonsh.winutils as m
+    else:
+        m = None
+    return m
+
+
+@lazyobject
+def macutils():
+    if ON_DARWIN:
+        import xonsh.macutils as m
     else:
         m = None
     return m
