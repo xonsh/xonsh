@@ -30,6 +30,7 @@ from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
                          columnize)
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN, ON_POSIX
 from xonsh.lazyimps import pygments, pyghooks
+from xonsh.events import events
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
@@ -275,6 +276,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
+        events.on_first_prompt.fire()
         rtn = input(self.prompt)
         if not store_in_history and pos >= 0:
             readline.remove_history_item(pos)

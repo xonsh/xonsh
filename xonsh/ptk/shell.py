@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
 import sys
+import time
 import builtins
 
 from prompt_toolkit.key_binding.manager import KeyBindingManager
@@ -107,7 +108,7 @@ class PromptToolkitShell(BaseShell):
                     prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
                 else:
                     prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
-
+            events.on_first_prompt.fire()
             line = self.prompter.prompt(**prompt_args)
         return line
 

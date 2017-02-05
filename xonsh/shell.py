@@ -41,6 +41,19 @@ on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 Fires just after a command is executed. The arguments are the same as history.
 """)
 
+events.transmogrify('on_first_prompt', 'LoadEvent')
+events.doc('on_first_prompt', """
+on_first_prompt() -> None
+
+Fires just before the first prompt is shown
+""")
+
+
+@events.on_first_prompt
+def startup_timing(**kw):
+    if hasattr(builtins, '__xonsh_starttime__'):
+        starttime = time.time() - builtins.__xonsh_starttime__
+        print('(Startup time: {:.2f} sec)'.format(starttime))
 
 def transform_command(src, show_diff=True):
     """Returns the results of firing the precommand handles."""

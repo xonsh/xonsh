@@ -1,5 +1,15 @@
 __version__ = '0.5.3'
 
+import sys as _sys
+if '--startuptime' in _sys.argv:
+    from time import time as _time
+    import builtins as _builtins
+    setattr(_builtins, '__xonsh_starttime__', _time())
+    _sys.argv.remove('--startuptime')
+    del _time
+    del _builtins
+del _sys
+
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard pytest_plugin fs macutils
 import os as _os
