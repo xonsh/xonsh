@@ -449,8 +449,8 @@ Exciting Technical Detail: Teeing and Pseudo Terminals
 Xonsh is able to capture all stdout and stderr transparently and responsively. For aliases,
 Python code, or xonsh code, this isn't a big deal. It is easy to redirect information
 flowing through ``sys.stdout`` and ``sys.stderr``.  For subprocess commands, this is
-considerably harder. (Subprocess stdout capturing is currently skipped on Windows, though
-is theoretically possible.)
+considerably harder. Storing stdout is disabled by default, but can be enabled by setting:
+``$XONSH_STORE_STDOUT=True`` in your ``~/.xonshrc`` file.
 
 To be able to tee stdout and stderr and still have the terminal responsive, xonsh implements
 its own teeing pseudo-terminal on top of the Python standard library ``pty`` module. You
