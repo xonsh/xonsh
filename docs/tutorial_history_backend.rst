@@ -50,9 +50,7 @@ Putting the following code into ``~/.xonshrc`` file can achieve this.
         sys.path.append(xonsh_ext_dir)
 
     from history_couchdb import CouchDBHistory
-    from xonsh.history.main import HISTORY_BACKENDS
-    HISTORY_BACKENDS['couchdb'] = CouchDBHistory
-    $XONSH_HISTORY_BACKEND = 'couchdb'
+    $XONSH_HISTORY_BACKEND = CouchDBHistory
 
 After starting a new xonsh session, try the following commands:
 
