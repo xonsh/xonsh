@@ -16,6 +16,7 @@ import builtins
 import itertools
 
 from xonsh.lazyasd import lazyobject, lazybool
+from xonsh.events import events
 
 
 @lazybool
@@ -223,3 +224,69 @@ def timeit_alias(args, stdin=None):
         if tc > tc_min:
             print("Compiler time: {0:.2f} s".format(tc))
     return
+
+# Can be used to insert custom timings into the code
+# events.on_timingprobe.fire(name='prope_test')
+# anywehere in the code base
+#@events.on_time_probe
+#def _time_prope_timing(name, **kw):
+#    if hasattr(builtins, '__xonsh_starttime__'):
+#        builtins.__xonsh_starttime__[name] = clock()
+##
+def setup_timings():
+    setattr(builtins, '__xonsh_timings__', {'startup': clock()})
+    
+    events.doc('on_timingprobe', """
+    on_timingprobe(name: str) -> None
+    
+    Fired to insert some timings into the startuptime list 
+    """)
+    
+    @events.on_post_cmdloop
+    def timing_on_post_cmdloop(**kw):
+        builtins.__xonsh_timings__['on_post_cmdloop'] = clock()
+    
+    @events.on_post_init
+    def timing_on_post_init(**kw):
+        builtins.__xonsh_timings__['on_post_init'] = clock()
+    
+    @events.on_post_rc
+    def timing_on_post_rc(**kw):
+        builtins.__xonsh_timings__['on_post_rc'] = clock()
+    
+    @events.on_postcommand
+    def timing_on_postcommand(**kw):
+        builtins.__xonsh_timings__['on_postcommand'] = clock()
+    
+    @events.on_pre_cmdloop
+    def timing_on_pre_cmdloop(**kw):
+        builtins.__xonsh_timings__['on_pre_cmdloop'] = clock()
+    
+    @events.on_pre_rc
+    def timing_on_pre_rc(**kw):
+        builtins.__xonsh_timings__['on_pre_rc'] = clock()
+    
+    @events.on_precommand
+    def timing_on_precommand(**kw):
+        builtins.__xonsh_timings__['on_precommand'] = clock()
+    
+    @events.on_ptk_create
+    def timing_on_ptk_create(**kw):
+        builtins.__xonsh_timings__['on_ptk_create'] = clock()
+        
+    @events.on_timingprobe
+    def timing_on_timingprobe(name, **kw):
+        builtins.__xonsh_timings__[name] = clock()
+
+    @events.on_prompt
+    def startup_timing(**kw):
+        builtins.__xonsh_timings__['Startup time'] = clock()
+    
+        times = list(builtins.__xonsh_timings__.items())
+        times = sorted(times, key=lambda x: x[1])
+        
+        prevtime = tmin = times[0][1]
+        for name, ts in times:
+            print('{}: {:.2f} s. ({:.3})'.format(name, ts-tmin, ts-prevtime))
+            prevtime = ts
+        builtins.__xonsh_timings__.clear()

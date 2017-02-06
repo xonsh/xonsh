@@ -1,13 +1,10 @@
 __version__ = '0.5.3'
 
 import sys as _sys
-if '--startuptime' in _sys.argv:
-    from time import time as _time
-    import builtins as _builtins
-    setattr(_builtins, '__xonsh_starttime__', _time())
-    _sys.argv.remove('--startuptime')
-    del _time
-    del _builtins
+if '--timings' in _sys.argv:
+    _sys.argv.remove('--timings')
+    from xonsh.timings import setup_timings
+    setup_timings()
 del _sys
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
@@ -35,8 +32,6 @@ else:
         _sys.modules['xonsh.platform'] = __amalgam__
         pretty = __amalgam__
         _sys.modules['xonsh.pretty'] = __amalgam__
-        timings = __amalgam__
-        _sys.modules['xonsh.timings'] = __amalgam__
         jobs = __amalgam__
         _sys.modules['xonsh.jobs'] = __amalgam__
         lazyimps = __amalgam__
@@ -71,6 +66,8 @@ else:
         _sys.modules['xonsh.dirstack'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
+        timings = __amalgam__
+        _sys.modules['xonsh.timings'] = __amalgam__
         xonfig = __amalgam__
         _sys.modules['xonsh.xonfig'] = __amalgam__
         environ = __amalgam__
