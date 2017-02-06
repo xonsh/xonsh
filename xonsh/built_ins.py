@@ -37,7 +37,7 @@ from xonsh.tools import (
     suggest_commands, expand_path, globpath, XonshError,
     XonshCalledProcessError
 )
-from xonsh.lazyimps import pty
+from xonsh.lazyimps import pty, termios
 from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
 
@@ -651,6 +651,20 @@ class SubprocSpec:
         self.captured = cpable
 
 
+def _safe_pipe_properties(fd, use_tty=False):
+    """Makes sure that a pipe file descriptor properties are sane."""
+    if not use_tty:
+        return
+    # due to some weird, long standing issue in Python, PTYs come out
+    # replacing newline \n with \r\n. This causes issues for raw unix
+    # protocols, like git and ssh, which expect unix line endings.
+    # see https://mail.python.org/pipermail/python-list/2013-June/650460.html
+    # for more details and the following solution.
+    props = termios.tcgetattr(fd)
+    props[1] = props[1] & (~termios.ONLCR) | termios.ONLRET
+    termios.tcsetattr(fd, termios.TCSANOW, props)
+
+
 def _update_last_spec(last):
     captured = last.captured
     last.last_in_pipeline = True
@@ -690,7 +704,9 @@ def _update_last_spec(last):
     else:
         last.universal_newlines = True
         r, w = pty.openpty() if use_tty else os.pipe()
+        _safe_pipe_properties(w, use_tty=use_tty)
         last.stdout = safe_open(w, 'w')
+        _safe_pipe_properties(r, use_tty=use_tty)
         last.captured_stdout = safe_open(r, 'r')
     # set standard error
     if last.stderr is not None:
@@ -707,7 +723,9 @@ def _update_last_spec(last):
         last.stderr = None  # must truly stream on windows
     else:
         r, w = pty.openpty() if use_tty else os.pipe()
+        _safe_pipe_properties(w, use_tty=use_tty)
         last.stderr = safe_open(w, 'w')
+        _safe_pipe_properties(r, use_tty=use_tty)
         last.captured_stderr = safe_open(r, 'r')
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:

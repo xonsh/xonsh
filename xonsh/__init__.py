@@ -1,7 +1,7 @@
-__version__ = '0.5.2'
+__version__ = '0.5.3'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
-# amalgamate exclude winutils wizard pytest_plugin fs
+# amalgamate exclude winutils wizard pytest_plugin fs macutils
 import os as _os
 if _os.getenv('XONSH_DEBUG', ''):
     pass

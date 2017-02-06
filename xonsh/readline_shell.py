@@ -572,7 +572,9 @@ class ReadlineHistoryAdder(threading.Thread):
         i = 1
         for h in hist.all_items():
             line = h['inp'].rstrip()
-            if line == readline.get_history_item(i - 1):
+            if i == 1:
+                pass
+            elif line == readline.get_history_item(i - 1):
                 continue
             readline.add_history(line)
             if RL_LIB is not None:

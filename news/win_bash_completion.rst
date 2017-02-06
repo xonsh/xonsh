@@ -8,7 +8,6 @@
 
 **Fixed:**
 
-* Jupyter kernel was no longer properly running subprocess commands.
-  This has been fixed.
+* Fixed broken bash completions on Windows if 'Windows Subsystem for Linux' is installed. 
 
 **Security:** None

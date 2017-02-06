@@ -1,6 +1,6 @@
 **Added:**
 
-* Autodetection of backgroundability by binary analysis on POSIX.
+* Add alias ``xip`` ("kip") so that xonsh's Python environment (whatever that is) can be modified.
 
 **Changed:** None
 
