@@ -11,6 +11,8 @@ class _TokenType(tuple):
     This class was forked from the mainline prompt-toolkit repo.
     Copyright (c) 2014, Jonathan Slenders, All rights reserved.
     """
+    parent = None
+
     def __getattr__(self, val):
         if not val or not val[0].isupper():
             return tuple.__getattribute__(self, val)
