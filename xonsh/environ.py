@@ -385,8 +385,10 @@ def DEFAULT_DOCS():
         'displayed suggestion. Only usable with ``$SHELL_TYPE=prompt_toolkit.``'),
     'BASH_COMPLETIONS': VarDocs(
         'This is a list (or tuple) of strings that specifies where the '
-        '``bash_completion`` script may be found. '
-        'The first valid path will be used. For better performance, '
+        '``bash_completion`` scripts may be found. '
+        'All valid paths will be used. Paths that point to directories cause all '
+        'directory entries to be used. '
+        'For better performance, '
         'bash-completion v2.x is recommended since it lazy-loads individual '
         'completion scripts. '
         'For both bash-completion v1.x and v2.x, paths of individual completion '

@@ -98,7 +98,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
     out = out.splitlines()
     complete_stmt = out[0]
-    out = set(out[1:])
+    out = list(set(out[1:]))
 
     # From GNU Bash document: The results of the expansion are prefix-matched
     # against the word being completed
@@ -119,7 +119,10 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
 def _get_completions_source():
     completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
+    sources = []
     for path in map(pathlib.Path, completers):
-        if path.is_file():
-            return 'source "{}"'.format(path.as_posix())
-    return None
+        if path.is_dir():
+            sources += (f for f in path.iterdir() if f.is_file())
+        elif path.is_file():
+            sources.append(path)
+    return '\n'.join('source "{}"'.format(source.as_posix()) for source in sources)
