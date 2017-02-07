@@ -129,6 +129,7 @@ Contents
     tutorial_xontrib
     tutorial_events
     tutorial_completers
+    tutorial_history_backend
     bash_to_xsh
     python_virtual_environments
 

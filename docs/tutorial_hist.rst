@@ -477,6 +477,9 @@ To use sqlite history backend, set ``$XONSH_HISTORY_BACKEND = 'sqlite'`` in
 your ``~/.xonshrc`` file. To switch back to JSON version, remove this line,
 or set it to ``'json'``.
 
+.. note:: SQLite history backend currently only supports ``commands`` as
+the unit in ``$XONSH_HISTORY_SIZE`` in its garbage collection.
+
 .. tip:: If you have `sqlite-web <https://pypi.python.org/pypi/sqlite-web>`_
     installed, you can read the history easily with command:
     ``sqlite_web @$(history file)``.
