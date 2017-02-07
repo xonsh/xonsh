@@ -6,6 +6,7 @@ import os
 import re
 import sys
 import shlex
+import shutil
 import pathlib
 import platform
 import subprocess
@@ -25,28 +26,33 @@ def _git_for_windows_path():
     return gfwp
 
 
-def _windows_bash_command():
+def _windows_bash_command(env=None):
     """Determines the command for Bash on windows."""
-    # Check that bash is on path otherwise try the default directory
-    # used by Git for windows
     wbc = 'bash'
-    try:
-        subprocess.check_call([wbc, '--version'],
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE)
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        gfwp = _git_for_windows_path()
-        if gfwp:
-            bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
-            if os.path.isfile(bashcmd):
-                wbc = bashcmd
+    path = None if env is None else env.get('PATH', None)
+    bash_on_path = shutil.which('bash', path=path)
+    if bash_on_path:
+        # Check if Bash is from the "Windows Subsystem for Linux" (WSL)
+        # which can't be used by xonsh foreign-shell/completer
+        out = subprocess.check_output([bash_on_path, '--version'],
+                                      stderr=subprocess.PIPE,
+                                      universal_newlines=True)
+        if 'pc-linux-gnu' in out.splitlines()[0]:
+            gfwp = _git_for_windows_path()
+            if gfwp:
+                bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
+                if os.path.isfile(bashcmd):
+                    wbc = bashcmd
+        else:
+            wbc = bash_on_path
     return wbc
 
 
-def _bash_command():
+
+def _bash_command(env=None):
     """Determines the command for Bash on the current plaform."""
     if platform.system() == 'Windows':
-        bc = _windows_bash_command()
+        bc = _windows_bash_command(env=None)
     else:
         bc = 'bash'
     return bc
@@ -294,7 +300,7 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
     )
 
     if command is None:
-        command = _bash_command()
+        command = _bash_command(env=env)
     try:
         out = subprocess.check_output(
             [command, '-c', script], universal_newlines=True,
