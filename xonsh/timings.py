@@ -7,6 +7,7 @@ The following time_it alias and Timer was forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
+import os
 import gc
 import sys
 import math
@@ -297,6 +298,7 @@ def setup_timings():
         entry_format = '|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
         sepline = '|{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
         # Print result table
+        print('Debug level: {}'.format(os.getenv('XONSH_DEBUG', 'Off')))
         print(sepline)
         print(header_format.format('Event name', 'Time (s)', 'Delta (s)'))
         print(sepline)

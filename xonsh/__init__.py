@@ -2,7 +2,6 @@ __version__ = '0.5.3'
 
 import sys as _sys
 if '--timings' in _sys.argv:
-    _sys.argv.remove('--timings')
     from xonsh.timings import setup_timings
     setup_timings()
 del _sys
