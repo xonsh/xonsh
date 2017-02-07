@@ -239,7 +239,7 @@ def setup_timings():
         events.doc('on_timingprobe', """
         on_timingprobe(name: str) -> None
 
-        Fired to insert some timings into the startuptime list 
+        Fired to insert some timings into the startuptime list
         """)
 
         @events.on_timingprobe
@@ -291,8 +291,8 @@ def setup_timings():
         def timing_on_chdir(**kw):
             global _timings
             _timings['on_chdir'] = clock()
-                
-        @events.on_post_prompt
+
+            @events.on_post_prompt
         def timing_on_post_prompt(**kw):
             global _timings
             _timings = {'on_post_prompt': 0.0}
@@ -303,7 +303,7 @@ def setup_timings():
             _timings['on_pre_prompt'] = clock()
             times = list(_timings.items())
             times = sorted(times, key=lambda x: x[1])
-            width = max(len(s) for s,_ in times) + 2
+            width = max(len(s) for s, _ in times) + 2
             header_format = ' |{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
             entry_format = ' |{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
             sepline = ' |{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
