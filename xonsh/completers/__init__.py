@@ -6,6 +6,8 @@ else:
     import sys as _sys
     try:
         from xonsh.completers import __amalgam__
+        bash_completion = __amalgam__
+        _sys.modules['xonsh.completers.bash_completion'] = __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completers.completer'] = __amalgam__
         pip = __amalgam__
@@ -16,6 +18,8 @@ else:
         _sys.modules['xonsh.completers.xompletions'] = __amalgam__
         _aliases = __amalgam__
         _sys.modules['xonsh.completers._aliases'] = __amalgam__
+        bash = __amalgam__
+        _sys.modules['xonsh.completers.bash'] = __amalgam__
         commands = __amalgam__
         _sys.modules['xonsh.completers.commands'] = __amalgam__
         man = __amalgam__
@@ -26,8 +30,6 @@ else:
         _sys.modules['xonsh.completers.python'] = __amalgam__
         base = __amalgam__
         _sys.modules['xonsh.completers.base'] = __amalgam__
-        bash = __amalgam__
-        _sys.modules['xonsh.completers.bash'] = __amalgam__
         dirs = __amalgam__
         _sys.modules['xonsh.completers.dirs'] = __amalgam__
         init = __amalgam__
