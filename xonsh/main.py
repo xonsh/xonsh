@@ -306,6 +306,7 @@ def main_xonsh(args):
             # enter the shell
             env['XONSH_INTERACTIVE'] = True
             ignore_sigtstp()
+            handle_sigint()
             if (env['XONSH_INTERACTIVE'] and
                     not env['LOADED_CONFIG'] and
                     not any(os.path.isfile(i) for i in env['XONSHRC'])):

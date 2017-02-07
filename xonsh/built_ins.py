@@ -28,7 +28,7 @@ from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job
-from xonsh.platform import ON_POSIX, ON_WINDOWS
+from xonsh.platform import ON_POSIX, ON_WINDOWS, ON_DARWIN
 from xonsh.proc import (
     PopenThread, ProcProxyThread, ProcProxy, ConsoleParallelReader,
     pause_call_resume, CommandPipeline, HiddenCommandPipeline,
@@ -345,6 +345,9 @@ def no_pg_xonsh_preexec_fn():
     """Default subprocess preexec function for when there is no existing
     pipeline group.
     """
+    if not ON_DARWIN:
+        # temporary fix for a pipeline issue on Mac, see Github #2064
+        os.setpgrp()
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
@@ -539,6 +542,9 @@ class SubprocSpec:
         else:
             def xonsh_preexec_fn():
                 """Preexec function bound to a pipeline group."""
+                if not ON_DARWIN:
+                    # A temporary fix for a pipeline issue on Mac, see #2064
+                    os.setpgid(0, pipeline_group)
                 signal.signal(signal.SIGTSTP, default_signal_pauser)
         kwargs['preexec_fn'] = xonsh_preexec_fn
 
