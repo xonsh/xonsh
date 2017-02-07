@@ -213,6 +213,7 @@ def handle_sigint():
     """
     if not ON_DARWIN:
         return
+
     def _func_handle_sigint(num, frame):
         global tasks
         for tid in tasks:
