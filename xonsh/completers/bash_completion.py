@@ -56,7 +56,7 @@ def _bash_completion_paths_default():
     """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
     """
-    platfom_sys = platform.system()
+    platform_sys = platform.system()
     if platform_sys == 'Linux' or sys.platform == 'cygwin':
         bcd = ('/usr/share/bash-completion/bash_completion', )
     elif platform_sys == 'Darwin':
@@ -77,6 +77,7 @@ def _bash_completion_paths_default():
 
 
 _BASH_COMPLETIONS_PATHS_DEFAULT = None
+
 
 def _get_bash_completions_source(paths=None):
     global _BASH_COMPLETIONS_PATHS_DEFAULT
@@ -101,6 +102,7 @@ def _bash_get_sep():
 
 
 _BASH_PATTERN_NEED_QUOTES = None
+
 
 def _bash_pattern_need_quotes():
     global _BASH_PATTERN_NEED_QUOTES
@@ -322,4 +324,3 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
         out = set([x.rstrip() for x in out])
 
     return out, len(prefix) - strip_len
-
