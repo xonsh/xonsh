@@ -1,21 +1,19 @@
+"""This module provides the implementation for the retrieving completion results
+from bash.
+"""
+# developer note: this file should not perform any action on import.
 import os
 import re
 import sys
-import platform
 import shlex
 import pathlib
+import platform
 import subprocess
 
 __version__ = '0.1.0'
 
-ON_DARWIN = platform.system() == 'Darwin'
-ON_LINUX = platform.system() == 'Linux'
-ON_WINDOWS = platform.system() == 'Windows'
-ON_CYGWIN = sys.platform == 'cygwin'
-ON_POSIX = os.name == 'posix'
 
-
-def git_for_windows_path():
+def _git_for_windows_path():
     """Returns the path to git for windows, if available and None otherwise."""
     import winreg
     try:
@@ -27,7 +25,7 @@ def git_for_windows_path():
     return gfwp
 
 
-def windows_bash_command():
+def _windows_bash_command():
     """Determines the command for Bash on windows."""
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
@@ -37,7 +35,7 @@ def windows_bash_command():
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
     except (FileNotFoundError, subprocess.CalledProcessError):
-        gfwp = git_for_windows_path()
+        gfwp = _git_for_windows_path()
         if gfwp:
             bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
             if os.path.isfile(bashcmd):
@@ -45,58 +43,78 @@ def windows_bash_command():
     return wbc
 
 
-def get_bash_command():
+def _bash_command():
     """Determines the command for Bash on the current plaform."""
-    if ON_WINDOWS:
-        bc = windows_bash_command()
+    if platform.system() == 'Windows':
+        bc = _windows_bash_command()
     else:
         bc = 'bash'
     return bc
 
-BASH_COMMAND = get_bash_command()
 
-
-def get_bash_completions_default():
+def _bash_completion_paths_default():
     """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
     """
-    if ON_LINUX or ON_CYGWIN:
+    platfom_sys = platform.system()
+    if platform_sys == 'Linux' or sys.platform == 'cygwin':
         bcd = ('/usr/share/bash-completion/bash_completion', )
-    elif ON_DARWIN:
+    elif platform_sys == 'Darwin':
         bcd = ('/usr/local/share/bash-completion/bash_completion',  # v2.x
                '/usr/local/etc/bash_completion')  # v1.x
-    elif ON_WINDOWS and git_for_windows_path():
-        bcd = (os.path.join(git_for_windows_path(),
-                            'usr\\share\\bash-completion\\bash_completion'),
-               os.path.join(git_for_windows_path(),
-                            'mingw64\\share\\git\\completion\\'
-                            'git-completion.bash'))
+    elif platform_sys == 'Windows':
+        gfwp = _git_for_windows_path()
+        if gfwp:
+            bcd = (os.path.join(gfwp, 'usr\\share\\bash-completion\\'
+                                      'bash_completion'),
+                   os.path.join(gfwp, 'mingw64\\share\\git\\completion\\'
+                                      'git-completion.bash'))
+        else:
+            bcd = ()
     else:
         bcd = ()
     return bcd
 
-BASH_COMPLETIONS_DEFAULT = get_bash_completions_default()
+
+_BASH_COMPLETIONS_PATHS_DEFAULT = None
+
+def _get_bash_completions_source(paths=None):
+    global _BASH_COMPLETIONS_PATHS_DEFAULT
+    if paths is None:
+        if _BASH_COMPLETIONS_PATHS_DEFAULT is None:
+            _BASH_COMPLETIONS_PATHS_DEFAULT = _bash_completion_paths_default()
+        paths = _BASH_COMPLETIONS_PATHS_DEFAULT
+    for path in map(pathlib.Path, paths):
+        if path.is_file():
+            return 'source "{}"'.format(path.as_posix())
+    return None
 
 
-def get_sep():
+def _bash_get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    if ON_WINDOWS:
+    if platform.system() == 'Windows':
         return os.altsep
     else:
         return os.sep
 
 
-def pattern_need_quotes():
+_BASH_PATTERN_NEED_QUOTES = None
+
+def _bash_pattern_need_quotes():
+    global _BASH_PATTERN_NEED_QUOTES
+    if _BASH_PATTERN_NEED_QUOTES is not None:
+        return _BASH_PATTERN_NEED_QUOTES
     pattern = r'\s`\$\{\}\,\*\(\)"\'\?&'
-    if ON_WINDOWS:
+    if platform.system() == 'Windows':
         pattern += '%'
     pattern = '[' + pattern + ']' + r'|\band\b|\bor\b'
-    return re.compile(pattern)
+    _BASH_PATTERN_NEED_QUOTES = re.compile(pattern)
+    return _BASH_PATTERN_NEED_QUOTES
 
 
-def expand_path(s):
+def _bash_expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
     # expand ~ according to Bash unquoted rules "Each variable assignment is
     # checked for unquoted tilde-prefixes immediately following a ':' or the
@@ -111,7 +129,7 @@ def expand_path(s):
     return s
 
 
-def quote_to_use(x):
+def _bash_quote_to_use(x):
     single = "'"
     double = '"'
     if single in x and double not in x:
@@ -120,17 +138,17 @@ def quote_to_use(x):
         return single
 
 
-def quote_paths(paths, start, end):
+def _bash_quote_paths(paths, start, end):
     out = set()
     space = ' '
     backslash = '\\'
     double_backslash = '\\\\'
-    slash = get_sep()
+    slash = _bash_get_sep()
     orig_start = start
     orig_end = end
     # quote on all or none, to make readline completes to max prefix
     need_quotes = any(
-        re.search(pattern_need_quotes(), x) or
+        re.search(_bash_pattern_need_quotes(), x) or
         (backslash in x and slash != backslash)
         for x in paths)
 
@@ -138,8 +156,8 @@ def quote_paths(paths, start, end):
         start = orig_start
         end = orig_end
         if start == '' and need_quotes:
-            start = end = quote_to_use(s)
-        if os.path.isdir(expand_path(s)):
+            start = end = _bash_quote_to_use(s)
+        if os.path.isdir(_bash_expand_path(s)):
             _tail = slash
         elif end == '':
             _tail = space
@@ -207,12 +225,48 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
 
-def get_completions(prefix, line, begidx, endidx, ctx, env=None, completers=None):
-    """Completes based on results from BASH completion."""
-    source = _get_completions_source(completers) or set()
+def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
+                     command=None, quote_paths=_bash_quote_paths, **kwargs):
+    """Completes based on results from BASH completion.
+
+    Parameters
+    ----------
+    prefix : str
+        The string to match
+    line : str
+        The line that prefix appears on.
+    begidx : int
+        The index in line that prefix starts on.
+    endidx : int
+        The index in line that prefix ends on.
+    env : Mapping, optional
+        The environment dict to execute the Bash suprocess in.
+    paths : list or tuple of str or None, optional
+        This is a list (or tuple) of strings that specifies where the
+        ``bash_completion`` script may be found. The first valid path will
+        be used. For better performance, bash-completion v2.x is recommended
+        since it lazy-loads individual completion scripts. For both
+        bash-completion v1.x and v2.x, paths of individual completion scripts
+        (like ``.../completes/ssh``) do not need to be included here. The
+        default values are platform dependent, but sane.
+    command : str or None, optional
+        The /path/to/bash to use. If None, it will be selected based on the
+        from the environment and platform.
+    quote_paths : callable, optional
+        A functions that quotes file system paths. You shouldn't normally need
+        this as the default is acceptable 99+% of the time.
+
+    Returns
+    -------
+    rtn : list of str
+        Possible completions of prefix, sorted alphabetically.
+    lprefix : int
+        Length of the prefix to be replaced in the completion.
+    """
+    source = _get_bash_completions_source(paths) or set()
 
     if prefix.startswith('$'):  # do not complete env variables
-        return set()
+        return set(), 0
 
     splt = line.split()
     cmd = splt[0]
@@ -237,13 +291,15 @@ def get_completions(prefix, line, begidx, endidx, ctx, env=None, completers=None
         end=endidx + 1, prefix=prefix_quoted, prev=shlex.quote(prev),
     )
 
+    if command is None:
+        command = _bash_command()
     try:
         out = subprocess.check_output(
-            [BASH_COMMAND, '-c', script], universal_newlines=True,
+            [command, '-c', script], universal_newlines=True,
             stderr=subprocess.PIPE, env=env)
     except (subprocess.CalledProcessError, FileNotFoundError,
             UnicodeDecodeError):
-        return set()
+        return set(), 0
 
     out = out.splitlines()
     complete_stmt = out[0]
@@ -267,11 +323,3 @@ def get_completions(prefix, line, begidx, endidx, ctx, env=None, completers=None
 
     return out, len(prefix) - strip_len
 
-
-def _get_completions_source(completers=None):
-    if completers is None:
-        completers = BASH_COMPLETIONS_DEFAULT
-    for path in map(pathlib.Path, completers):
-        if path.is_file():
-            return 'source "{}"'.format(path.as_posix())
-    return None
