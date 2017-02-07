@@ -1,10 +1,5 @@
 __version__ = '0.5.3'
 
-import sys as _sys
-if '--timings' in _sys.argv:
-    from xonsh.timings import setup_timings
-    setup_timings()
-del _sys
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard pytest_plugin fs macutils

@@ -9,6 +9,7 @@ import contextlib
 import traceback
 
 from xonsh import __version__
+from xonsh.timings import setup_timings
 from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
@@ -210,6 +211,7 @@ def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
+    setup_timings()
     setproctitle = get_setproctitle()
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + argv))

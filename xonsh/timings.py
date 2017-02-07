@@ -18,6 +18,7 @@ import itertools
 
 from xonsh.lazyasd import lazyobject, lazybool
 from xonsh.events import events
+from xonsh.platform import ON_WINDOWS
 
 
 @lazybool
@@ -226,86 +227,93 @@ def timeit_alias(args, stdin=None):
             print("Compiler time: {0:.2f} s".format(tc))
     return
 
-# Can be used to insert custom timings into the code
-# events.on_timingprobe.fire(name='prope_test')
-# anywehere in the code base
-#@events.on_time_probe
-#def _time_prope_timing(name, **kw):
-#    if hasattr(builtins, '__xonsh_starttime__'):
-#        builtins.__xonsh_starttime__[name] = clock()
-##
+
+if '--timings' in sys.argv:
+    # On windows clock() returns time since first call to the function
+    _timings = {'start': time.clock() if ON_WINDOWS else 0}
+
+
 def setup_timings():
-    setattr(builtins, '__xonsh_timings__', {'startup': clock()})
-    
-    events.doc('on_timingprobe', """
-    on_timingprobe(name: str) -> None
-    
-    Fired to insert some timings into the startuptime list 
-    """)
-    
-    @events.on_post_cmdloop
-    def timing_on_post_cmdloop(**kw):
-        builtins.__xonsh_timings__['on_post_cmdloop'] = clock()
-    
-    @events.on_post_init
-    def timing_on_post_init(**kw):
-        builtins.__xonsh_timings__['on_post_init'] = clock()
-    
-    @events.on_post_rc
-    def timing_on_post_rc(**kw):
-        builtins.__xonsh_timings__['on_post_rc'] = clock()
-    
-    @events.on_postcommand
-    def timing_on_postcommand(**kw):
-        builtins.__xonsh_timings__['on_postcommand'] = clock()
-    
-    @events.on_pre_cmdloop
-    def timing_on_pre_cmdloop(**kw):
-        builtins.__xonsh_timings__['on_pre_cmdloop'] = clock()
-    
-    @events.on_pre_rc
-    def timing_on_pre_rc(**kw):
-        builtins.__xonsh_timings__['on_pre_rc'] = clock()
-    
-    @events.on_precommand
-    def timing_on_precommand(**kw):
-        builtins.__xonsh_timings__['on_precommand'] = clock()
-    
-    @events.on_ptk_create
-    def timing_on_ptk_create(**kw):
-        builtins.__xonsh_timings__['on_ptk_create'] = clock()
-    
-    @events.on_chdir
-    def timing_on_chdir(**kw):
-        builtins.__xonsh_timings__['on_chdir'] = clock()
-            
-    @events.on_timingprobe
-    def timing_on_timingprobe(name, **kw):
-        builtins.__xonsh_timings__[name] = clock()
+    if '--timings' in sys.argv:
 
-    @events.on_post_prompt
-    def timing_on_post_prompt(**kw):
-        builtins.__xonsh_timings__['on_post_prompt'] = clock()
+        events.doc('on_timingprobe', """
+        on_timingprobe(name: str) -> None
 
-    @events.on_pre_prompt
-    def timing_on_pre_prompt(**kw):
-        builtins.__xonsh_timings__['on_pre_prompt'] = clock()
-    
-        times = list(builtins.__xonsh_timings__.items())
-        times = sorted(times, key=lambda x: x[1])
-        width = max((len(s) for s,_ in times )) + 2
-        header_format = '|{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
-        entry_format = '|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
-        sepline = '|{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
-        # Print result table
-        print('Debug level: {}'.format(os.getenv('XONSH_DEBUG', 'Off')))
-        print(sepline)
-        print(header_format.format('Event name', 'Time (s)', 'Delta (s)'))
-        print(sepline)
-        prevtime = tmin = times[0][1]
-        for name, ts in times:
-            print(entry_format.format(name, ts-tmin, ts-prevtime))
-            prevtime = ts
-        print(sepline)
+        Fired to insert some timings into the startuptime list 
+        """)
 
-        builtins.__xonsh_timings__.clear()
+        @events.on_timingprobe
+        def timing_on_timingprobe(name, **kw):
+            global _timings
+            _timings[name] = clock()
+
+        @events.on_post_cmdloop
+        def timing_on_post_cmdloop(**kw):
+            global _timings
+            _timings['on_post_cmdloop'] = clock()
+
+        @events.on_post_init
+        def timing_on_post_init(**kw):
+            global _timings
+            _timings['on_post_init'] = clock()
+
+        @events.on_post_rc
+        def timing_on_post_rc(**kw):
+            global _timings
+            _timings['on_post_rc'] = clock()
+
+        @events.on_postcommand
+        def timing_on_postcommand(**kw):
+            global _timings
+            _timings['on_postcommand'] = clock()
+
+        @events.on_pre_cmdloop
+        def timing_on_pre_cmdloop(**kw):
+            global _timings
+            _timings['on_pre_cmdloop'] = clock()
+
+        @events.on_pre_rc
+        def timing_on_pre_rc(**kw):
+            global _timings
+            _timings['on_pre_rc'] = clock()
+
+        @events.on_precommand
+        def timing_on_precommand(**kw):
+            global _timings
+            _timings['on_precommand'] = clock()
+
+        @events.on_ptk_create
+        def timing_on_ptk_create(**kw):
+            global _timings
+            _timings['on_ptk_create'] = clock()
+
+        @events.on_chdir
+        def timing_on_chdir(**kw):
+            global _timings
+            _timings['on_chdir'] = clock()
+                
+        @events.on_post_prompt
+        def timing_on_post_prompt(**kw):
+            global _timings
+            _timings = {'on_post_prompt': 0.0}
+
+        @events.on_pre_prompt
+        def timing_on_pre_prompt(**kw):
+            global _timings
+            _timings['on_pre_prompt'] = clock()
+            times = list(_timings.items())
+            times = sorted(times, key=lambda x: x[1])
+            width = max(len(s) for s,_ in times) + 2
+            header_format = ' |{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
+            entry_format = ' |{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
+            sepline = ' |{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
+            # Print result table
+            print('  Debug level: {}'.format(os.getenv('XONSH_DEBUG', 'Off')))
+            print(sepline)
+            print(header_format.format('Event name', 'Time (s)', 'Delta (s)'))
+            print(sepline)
+            prevtime = tstart = times[0][1]
+            for name, ts in times:
+                print(entry_format.format(name, ts - tstart, ts - prevtime))
+                prevtime = ts
+            print(sepline)
