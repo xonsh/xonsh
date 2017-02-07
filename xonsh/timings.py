@@ -292,7 +292,7 @@ def setup_timings():
             global _timings
             _timings['on_chdir'] = clock()
 
-            @events.on_post_prompt
+        @events.on_post_prompt
         def timing_on_post_prompt(**kw):
             global _timings
             _timings = {'on_post_prompt': 0.0}
