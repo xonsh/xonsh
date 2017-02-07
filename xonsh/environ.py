@@ -18,6 +18,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
+from xonsh.events import events
 from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
@@ -37,9 +38,27 @@ from xonsh.tools import (
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
-    seq_to_upper_pathsep, print_color
+    seq_to_upper_pathsep, print_color, is_history_backend, to_itself,
 )
 import xonsh.prompt.base as prompt
+
+
+events.doc('on_envvar_new', """
+on_envvar_new(name: str, value: Any) -> None
+
+Fires after a new enviroment variable is created.
+Note: Setting envvars inside the handler might
+cause a recursion until the limit.
+""")
+
+
+events.doc('on_envvar_change', """
+on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
+
+Fires after an enviroment variable is changed.
+Note: Setting envvars inside the handler might
+cause a recursion until the limit.
+""")
 
 
 @lazyobject
@@ -157,7 +176,7 @@ def DEFAULT_ENSURERS():
     'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
-    'XONSH_HISTORY_BACKEND': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_BACKEND': (is_history_backend, to_itself, ensure_string),
     'XONSH_HISTORY_FILE': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
@@ -660,8 +679,10 @@ def DEFAULT_DOCS():
         '* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n'
     ),
     'XONSH_HISTORY_BACKEND': VarDocs(
-        'Set which history backend to use. Options are: ``json``, '
-        '``sqlite``, and ``dummy``. default is ``json``.'),
+        "Set which history backend to use. Options are: 'json', "
+        "'sqlite', and 'dummy'. The default is 'json'. "
+        '``XONSH_HISTORY_BACKEND`` also accepts a class type that inherits '
+        'from ``xonsh.history.base.History``, or its instance.'),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),
@@ -749,6 +770,8 @@ class Env(cabc.MutableMapping):
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
+        # sentinel value for non existing envvars
+        self._no_value = object()
         self._orig_env = None
         self._ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
         self._defaults = DEFAULT_VALUES
@@ -913,6 +936,8 @@ class Env(cabc.MutableMapping):
         ensurer = self.get_ensurer(key)
         if not ensurer.validate(val):
             val = ensurer.convert(val)
+        # existing envvars can have any value including None
+        old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
         if self.detypeable(val):
             self._detyped = None
@@ -921,6 +946,12 @@ class Env(cabc.MutableMapping):
                     self.replace_env()
                 else:
                     os.environ[key] = ensurer.detype(val)
+        if old_value is self._no_value:
+            events.on_envvar_new.fire(name=key, value=val)
+        elif old_value != val:
+            events.on_envvar_change.fire(name=key,
+                                         oldvalue=old_value,
+                                         newvalue=val)
 
     def __delitem__(self, key):
         val = self._d.pop(key)

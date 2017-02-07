@@ -11,7 +11,7 @@ import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject
-from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN
+from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
 
 
 tasks = LazyObject(collections.deque, globals(), 'tasks')
@@ -134,9 +134,6 @@ else:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
     # this will give the terminal to the process group pgid
     if ON_CYGWIN:
-        _libc = LazyObject(lambda: ctypes.CDLL('cygwin1.dll'),
-                           globals(), '_libc')
-
         # on cygwin, signal.pthread_sigmask does not exist in Python, even
         # though pthread_sigmask is defined in the kernel.  thus, we use
         # ctypes to mimic the calls in the "normal" version below.
@@ -145,16 +142,16 @@ else:
             if st is not None and os.isatty(st):
                 omask = ctypes.c_ulong()
                 mask = ctypes.c_ulong()
-                _libc.sigemptyset(ctypes.byref(mask))
+                LIBC.sigemptyset(ctypes.byref(mask))
                 for i in _block_when_giving:
-                    _libc.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
-                _libc.sigemptyset(ctypes.byref(omask))
-                _libc.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
-                                  ctypes.byref(mask),
-                                  ctypes.byref(omask))
-                _libc.tcsetpgrp(ctypes.c_int(st), ctypes.c_int(pgid))
-                _libc.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
-                                  ctypes.byref(omask), None)
+                    LIBC.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
+                LIBC.sigemptyset(ctypes.byref(omask))
+                LIBC.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
+                                 ctypes.byref(mask),
+                                 ctypes.byref(omask))
+                LIBC.tcsetpgrp(ctypes.c_int(st), ctypes.c_int(pgid))
+                LIBC.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
+                                 ctypes.byref(omask), None)
     else:
         def _give_terminal_to(pgid):
             st = _shell_tty()
@@ -174,7 +171,7 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
-            if backgrounded:
+            if backgrounded and hasattr(builtins, '__xonsh_shell__'):
                 # restoring sanity could probably be called whenever we return
                 # control to the shell. But it only seems to matter after a
                 # ^Z event. This *has* to be called after we give the terminal

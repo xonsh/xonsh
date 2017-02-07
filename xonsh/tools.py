@@ -346,21 +346,42 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+def is_balanced(expr, ltok, rtok):
+    """Determines whether an expression has unbalanced opening and closing tokens."""
+    lcnt = expr.count(ltok)
+    if lcnt == 0:
+        return True
+    rcnt = expr.count(rtok)
+    if lcnt == rcnt:
+        return True
+    else:
+        return False
+
+
 def subexpr_from_unbalanced(expr, ltok, rtok):
     """Attempts to pull out a valid subexpression for unbalanced grouping,
     based on opening tokens, eg. '(', and closing tokens, eg. ')'.  This
     does not do full tokenization, but should be good enough for tab
     completion.
     """
-    lcnt = expr.count(ltok)
-    if lcnt == 0:
-        return expr
-    rcnt = expr.count(rtok)
-    if lcnt == rcnt:
+    if is_balanced(expr, ltok, rtok):
         return expr
     subexpr = expr.rsplit(ltok, 1)[-1]
     subexpr = subexpr.rsplit(',', 1)[-1]
     subexpr = subexpr.rsplit(':', 1)[-1]
+    return subexpr
+
+
+def subexpr_before_unbalanced(expr, ltok, rtok):
+    """Obtains the expression prior to last unblanced left token."""
+    subexpr, _, post = expr.rpartition(ltok)
+    nrtoks_in_post = post.count(rtok)
+    while nrtoks_in_post != 0:
+        for i in range(nrtoks_in_post):
+            subexpr, _, post = subexpr.rpartition(ltok)
+        nrtoks_in_post = post.count(rtok)
+    _, _, subexpr = subexpr.rpartition(rtok)
+    _, _, subexpr = subexpr.rpartition(ltok)
     return subexpr
 
 
@@ -819,6 +840,11 @@ def is_string_or_callable(x):
     return is_string(x) or is_callable(x)
 
 
+def is_class(x):
+    """Tests if something is a class"""
+    return isinstance(x, type)
+
+
 def always_true(x):
     """Returns True"""
     return True
@@ -913,6 +939,11 @@ def to_bool(x):
         return False if x.lower() in _FALSES else True
     else:
         return bool(x)
+
+
+def to_itself(x):
+    """No conversion, returns itself."""
+    return x
 
 
 def bool_to_str(x):
@@ -1238,6 +1269,11 @@ def is_history_tuple(x):
             x[1].lower() in CANON_HISTORY_UNITS):
         return True
     return False
+
+
+def is_history_backend(x):
+    """Tests if something is a valid history backend."""
+    return is_string(x) or is_class(x) or isinstance(x, object)
 
 
 def is_dynamic_cwd_width(x):
