@@ -41,10 +41,16 @@ on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 Fires just after a command is executed. The arguments are the same as history.
 """)
 
-events.doc('on_prompt', """
+events.doc('on_pre_prompt', """
 on_first_prompt() -> None
 
-Fires just before the first prompt is shown
+Fires just before the prompt is shown
+""")
+
+events.doc('on_post_prompt', """
+on_first_prompt() -> None
+
+Fires just after the prompt returns
 """)
 
 

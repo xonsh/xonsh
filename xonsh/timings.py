@@ -273,20 +273,37 @@ def setup_timings():
     @events.on_ptk_create
     def timing_on_ptk_create(**kw):
         builtins.__xonsh_timings__['on_ptk_create'] = clock()
-        
+    
+    @events.on_chdir
+    def timing_on_chdir(**kw):
+        builtins.__xonsh_timings__['on_chdir'] = clock()
+            
     @events.on_timingprobe
     def timing_on_timingprobe(name, **kw):
         builtins.__xonsh_timings__[name] = clock()
 
-    @events.on_prompt
-    def startup_timing(**kw):
-        builtins.__xonsh_timings__['Startup time'] = clock()
+    @events.on_post_prompt
+    def timing_on_post_prompt(**kw):
+        builtins.__xonsh_timings__['on_post_prompt'] = clock()
+
+    @events.on_pre_prompt
+    def timing_on_pre_prompt(**kw):
+        builtins.__xonsh_timings__['on_pre_prompt'] = clock()
     
         times = list(builtins.__xonsh_timings__.items())
         times = sorted(times, key=lambda x: x[1])
-        
+        width = max((len(s) for s,_ in times )) + 2
+        header_format = '|{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
+        entry_format = '|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
+        sepline = '|{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
+        # Print result table
+        print(sepline)
+        print(header_format.format('Event name', 'Time (s)', 'Delta (s)'))
+        print(sepline)
         prevtime = tmin = times[0][1]
         for name, ts in times:
-            print('{}: {:.2f} s. ({:.3})'.format(name, ts-tmin, ts-prevtime))
+            print(entry_format.format(name, ts-tmin, ts-prevtime))
             prevtime = ts
+        print(sepline)
+
         builtins.__xonsh_timings__.clear()
