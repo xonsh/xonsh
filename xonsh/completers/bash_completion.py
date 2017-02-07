@@ -48,7 +48,6 @@ def _windows_bash_command(env=None):
     return wbc
 
 
-
 def _bash_command(env=None):
     """Determines the command for Bash on the current plaform."""
     if platform.system() == 'Windows':
