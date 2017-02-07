@@ -1,10 +1,11 @@
 **Added:**
 
-* xonsh.completers.bash_completion module 
+* ``xonsh.completers.bash_completion`` module
 
 **Changed:**
 
-* Decoupled bash_completion from xonsh project
+* Decoupled ``bash_completion`` from xonsh project and added shim back to
+  xonsh.
 
 **Deprecated:** None
 
