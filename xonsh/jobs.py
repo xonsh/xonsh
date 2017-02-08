@@ -28,7 +28,10 @@ if ON_DARWIN:
         for pid in job['pids']:
             if pid is None:  # the pid of an aliased proc is None
                 continue
-            os.kill(pid, signal)
+            try:
+                os.kill(pid, signal)
+            except Exception:
+                pass
 elif ON_WINDOWS:
     pass
 elif ON_CYGWIN:
