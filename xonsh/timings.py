@@ -304,11 +304,11 @@ def setup_timings():
             times = list(_timings.items())
             times = sorted(times, key=lambda x: x[1])
             width = max(len(s) for s, _ in times) + 2
-            header_format = ' |{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
-            entry_format = ' |{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
-            sepline = ' |{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
+            header_format = '|{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
+            entry_format = '|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
+            sepline = '|{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
             # Print result table
-            print('  Debug level: {}'.format(os.getenv('XONSH_DEBUG', 'Off')))
+            print(' Debug level: {}'.format(os.getenv('XONSH_DEBUG', 'Off')))
             print(sepline)
             print(header_format.format('Event name', 'Time (s)', 'Delta (s)'))
             print(sepline)
