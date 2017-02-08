@@ -535,6 +535,9 @@ class SubprocSpec:
         """Prepares the 'preexec_fn' keyword argument"""
         if not (ON_POSIX and self.cls is subprocess.Popen):
             return
+        env = builtins.__xonsh_env__
+        if not env['XONSH_INTERACTIVE']:
+            return
         if pipeline_group is None:
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
         else:
