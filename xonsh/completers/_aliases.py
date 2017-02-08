@@ -1,4 +1,4 @@
-import inpsect
+import inspect
 import builtins
 import collections
 
