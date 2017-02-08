@@ -33,6 +33,8 @@ else:
         _sys.modules['xonsh.lazyimps'] = __amalgam__
         parser = __amalgam__
         _sys.modules['xonsh.parser'] = __amalgam__
+        style_tools = __amalgam__
+        _sys.modules['xonsh.style_tools'] = __amalgam__
         tokenize = __amalgam__
         _sys.modules['xonsh.tokenize'] = __amalgam__
         tools = __amalgam__
