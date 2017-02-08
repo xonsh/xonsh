@@ -1724,7 +1724,7 @@ class CommandPipeline:
             stdout = stdout.buffer
         if stdout is not None and not isinstance(stdout, self.nonblocking):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
-        if not stdout or not safe_readable(stdout):
+        if not stdout or self.captured == 'stdout' or not safe_readable(stdout):
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
@@ -1734,6 +1734,12 @@ class CommandPipeline:
                 self._endtime()
                 if self.captured == 'object':
                     self.end(tee_output=False)
+                elif self.captured == 'stdout':
+                    self.end(tee_output=False)
+                    b = stdout.read()
+                    s = self._decode_uninew(b)
+                    self.lines = s.splitlines(keepends=True)
+                    #self.lines = [l.decode() for l in safe_readlines(stdout)]
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
