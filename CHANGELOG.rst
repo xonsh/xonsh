@@ -7,6 +7,11 @@ Xonsh Change Log
 v0.5.4
 ====================
 
+
+
+v0.5.4
+====================
+
 **Added:**
 
 * Add alias ``xip`` ("kip") so that xonsh's Python environment (whatever that is) can be modified.
