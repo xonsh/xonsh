@@ -107,8 +107,9 @@ class PromptToolkitShell(BaseShell):
                     prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
                 else:
                     prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
-
+            events.on_pre_prompt.fire()
             line = self.prompter.prompt(**prompt_args)
+            events.on_post_prompt.fire()
         return line
 
     def _push(self, line):
