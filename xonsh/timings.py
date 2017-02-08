@@ -228,13 +228,13 @@ def timeit_alias(args, stdin=None):
     return
 
 
-if '--timings' in sys.argv:
-    # On windows clock() returns time since first call to the function
-    _timings = {'start': time.clock() if ON_WINDOWS else 0}
+_timings = {}
 
 
 def setup_timings():
+    global _timings
     if '--timings' in sys.argv:
+        _timings['start'] = clock() if ON_WINDOWS else 0.0
 
         events.doc('on_timingprobe', """
         on_timingprobe(name: str) -> None
