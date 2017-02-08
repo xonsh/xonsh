@@ -268,6 +268,7 @@ class BaseShell(object):
         self.mlprompt = None
         self._styler = DefaultNotGiven
         self.prompt_formatter = PromptFormatter()
+        self.accumulated_inputs = ''
 
     @property
     def styler(self):
@@ -334,6 +335,7 @@ class BaseShell(object):
         finally:
             ts1 = ts1 or time.time()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
+            self.accumulated_inputs += src
             tee.close()
             self._fix_cwd()
         if builtins.__xonsh_exit__:  # pylint: disable=no-member

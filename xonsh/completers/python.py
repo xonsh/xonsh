@@ -95,7 +95,7 @@ def complete_python_mode(prefix, line, start, end, ctx):
     if not (prefix.startswith('@(') or prefix.startswith('${')):
         return set()
     prefix_start = prefix[:2]
-    python_matches = complete_python(prefix[2:], line, start+2, end, ctx)
+    python_matches = complete_python(prefix[2:], line, start-2, end-2, ctx)
     if isinstance(python_matches, cabc.Sequence):
         python_matches = python_matches[0]
     return set(prefix_start + i for i in python_matches)
