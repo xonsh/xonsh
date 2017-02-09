@@ -682,7 +682,7 @@ def _update_last_spec(last):
         elif not thable:
             # foreground processes should use Popen
             last.threadable = False
-            if captured == 'object':
+            if captured == 'object' or captured == 'hiddenobject':
                 # CommandPipeline objects should not pipe stdout, stderr
                 return
     # cannot used PTY pipes for aliases, for some dark reason,
