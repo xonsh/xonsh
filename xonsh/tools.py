@@ -840,6 +840,11 @@ def is_string_or_callable(x):
     return is_string(x) or is_callable(x)
 
 
+def is_class(x):
+    """Tests if something is a class"""
+    return isinstance(x, type)
+
+
 def always_true(x):
     """Returns True"""
     return True
@@ -934,6 +939,11 @@ def to_bool(x):
         return False if x.lower() in _FALSES else True
     else:
         return bool(x)
+
+
+def to_itself(x):
+    """No conversion, returns itself."""
+    return x
 
 
 def bool_to_str(x):
@@ -1259,6 +1269,11 @@ def is_history_tuple(x):
             x[1].lower() in CANON_HISTORY_UNITS):
         return True
     return False
+
+
+def is_history_backend(x):
+    """Tests if something is a valid history backend."""
+    return is_string(x) or is_class(x) or isinstance(x, object)
 
 
 def is_dynamic_cwd_width(x):

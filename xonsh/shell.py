@@ -41,6 +41,18 @@ on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 Fires just after a command is executed. The arguments are the same as history.
 """)
 
+events.doc('on_pre_prompt', """
+on_first_prompt() -> None
+
+Fires just before the prompt is shown
+""")
+
+events.doc('on_post_prompt', """
+on_first_prompt() -> None
+
+Fires just after the prompt returns
+""")
+
 
 def transform_command(src, show_diff=True):
     """Returns the results of firing the precommand handles."""
@@ -101,7 +113,6 @@ class Shell(object):
         self._init_environ(ctx, config, rc,
                            kwargs.get('scriptcache', True),
                            kwargs.get('cacheall', False))
-
         env = builtins.__xonsh_env__
         # build history backend before creating shell
         builtins.__xonsh_history__ = hist = xhm.construct_history(
@@ -153,8 +164,10 @@ class Shell(object):
     def _init_environ(self, ctx, config, rc, scriptcache, cacheall):
         self.ctx = {} if ctx is None else ctx
         debug = to_bool_or_int(os.getenv('XONSH_DEBUG', '0'))
+        events.on_timingprobe.fire(name='pre_execer_init')
         self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx,
                              debug_level=debug)
+        events.on_timingprobe.fire(name='post_execer_init')
         self.execer.scriptcache = scriptcache
         self.execer.cacheall = cacheall
         if self.stype != 'none' or self.login:

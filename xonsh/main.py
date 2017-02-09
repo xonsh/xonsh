@@ -9,6 +9,7 @@ import contextlib
 import traceback
 
 from xonsh import __version__
+from xonsh.timings import setup_timings
 from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
@@ -157,6 +158,13 @@ def parser():
                    dest='shell_type',
                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
                    default=None)
+    p.add_argument('--timings',
+                   help='Prints timing infomation before the prompt is shown. '
+                        'This is usefull to track down perfomance issues '
+                        'and investigate startup times.',
+                   dest='timings',
+                   action='store_true',
+                   default=None)
     p.add_argument('file',
                    metavar='script-file',
                    help='If present, execute the script in script-file'
@@ -203,6 +211,7 @@ def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
+    setup_timings()
     setproctitle = get_setproctitle()
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + argv))

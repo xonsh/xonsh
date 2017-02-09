@@ -6,6 +6,8 @@ else:
     import sys as _sys
     try:
         from xonsh.completers import __amalgam__
+        bash_completion = __amalgam__
+        _sys.modules['xonsh.completers.bash_completion'] = __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completers.completer'] = __amalgam__
         pip = __amalgam__

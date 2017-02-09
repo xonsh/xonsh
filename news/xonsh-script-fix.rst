@@ -8,7 +8,6 @@
 
 **Fixed:**
 
-* Fixed issue with readline tab completer overwriting initial prefix in
-  some instances.
+* Fixed a ``tcsetattr: Interrupted system call`` issue when run xonsh scripts.
 
 **Security:** None

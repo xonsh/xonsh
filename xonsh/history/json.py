@@ -10,6 +10,7 @@ import collections.abc as cabc
 from xonsh.history.base import History
 import xonsh.tools as xt
 import xonsh.lazyjson as xlj
+import xonsh.xoreutils.uptime as uptime
 
 
 def _xhj_gc_commands_to_rmfiles(hsize, files):
@@ -122,7 +123,7 @@ class JsonHistoryGC(threading.Thread):
         env = getattr(builtins, '__xonsh_env__', None)
         if env is None:
             return []
-
+        boot = uptime.boottime()
         fs = _xhj_get_history_files(sort=False)
         files = []
         for f in fs:
@@ -132,10 +133,19 @@ class JsonHistoryGC(threading.Thread):
                     files.append((time.time(), 0, f))
                     continue
                 lj = xlj.LazyJSON(f, reopen=False)
+                if lj['locked'] and lj['ts'][0] < boot:
+                    # computer was rebooted between when this history was created
+                    # and now and so this history should be unlocked.
+                    hist = lj.load()
+                    lj.close()
+                    hist['locked'] = False
+                    with open(f, 'w', newline='\n') as fp:
+                        xlj.ljdump(hist, fp, sort_keys=True)
+                    lj = xlj.LazyJSON(f, reopen=False)
                 if only_unlocked and lj['locked']:
                     continue
                 # info: closing timestamp, number of commands, filename
-                files.append((lj['ts'][1] or time.time(),
+                files.append((lj['ts'][1] or lj['ts'][0],
                               len(lj.sizes['cmds']) - 1,
                               f))
                 lj.close()

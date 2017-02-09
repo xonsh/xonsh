@@ -1,7 +1,8 @@
-__version__ = '0.5.3'
+__version__ = '0.5.4'
+
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
-# amalgamate exclude winutils wizard pytest_plugin fs
+# amalgamate exclude winutils wizard pytest_plugin fs macutils
 import os as _os
 if _os.getenv('XONSH_DEBUG', ''):
     pass
@@ -25,8 +26,6 @@ else:
         _sys.modules['xonsh.platform'] = __amalgam__
         pretty = __amalgam__
         _sys.modules['xonsh.pretty'] = __amalgam__
-        timings = __amalgam__
-        _sys.modules['xonsh.timings'] = __amalgam__
         jobs = __amalgam__
         _sys.modules['xonsh.jobs'] = __amalgam__
         lazyimps = __amalgam__
@@ -61,6 +60,8 @@ else:
         _sys.modules['xonsh.dirstack'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
+        timings = __amalgam__
+        _sys.modules['xonsh.timings'] = __amalgam__
         xonfig = __amalgam__
         _sys.modules['xonsh.xonfig'] = __amalgam__
         environ = __amalgam__
