@@ -20,9 +20,12 @@ class PromptToolkitCompleter(Completer):
 
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
-
+        should_complete = (
+            complete_event.completion_requested or
+            builtins.__xonsh_env__.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
+            )
         #  Only generate completions when the user hits tab.
-        if complete_event.completion_requested:
+        if should_complete:
             if self.completer is None:
                 yield from []
             else:

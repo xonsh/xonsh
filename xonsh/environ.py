@@ -162,7 +162,9 @@ def DEFAULT_ENSURERS():
     'BOTTOM_TOOLBAR': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
+    'UPDATE_COMPLETIONS_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
+    'UPDATE_PROMPT_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     'VC_BRANCH_TIMEOUT': (is_float, float, str),
     'VC_HG_SHOW_BRANCH': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
@@ -188,7 +190,6 @@ def DEFAULT_ENSURERS():
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
     'XONSH_DATETIME_FORMAT': (is_string, ensure_string, ensure_string),
-    'UPDATE_PROMPT_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     }
 
 
@@ -305,7 +306,9 @@ def DEFAULT_VALUES():
         'SUGGEST_MAX_NUM': 5,
         'SUGGEST_THRESHOLD': 3,
         'TITLE': DEFAULT_TITLE,
+        'UPDATE_COMPLETIONS_ON_KEYPRESS': False,
         'UPDATE_OS_ENVIRON': False,
+        'UPDATE_PROMPT_ON_KEYPRESS': False,
         'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
         'VC_HG_SHOW_BRANCH': True,
         'VI_MODE': False,
@@ -336,7 +339,6 @@ def DEFAULT_VALUES():
         'XONSH_STORE_STDOUT': False,
         'XONSH_TRACEBACK_LOGFILE': None,
         'XONSH_DATETIME_FORMAT': '%Y-%m-%d %H:%M',
-        'UPDATE_PROMPT_ON_KEYPRESS': False,
     }
     if hasattr(locale, 'LC_MESSAGES'):
         dv['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
@@ -424,7 +426,7 @@ def DEFAULT_DOCS():
         "- If ``$COMPLETIONS_DISPLAY`` is ``multi`` or ``true``, display completions\n"
         "  in multiple columns while typing.\n\n"
         'These option values are not case- or type-sensitive, so e.g.'
-        "writing ``$COMPLETIONS_DISPLAY = None``"
+        "writing ``$COMPLETIONS_DISPLAY = None`` "
         "and ``$COMPLETIONS_DISPLAY = 'none'`` are equivalent. Only usable with "
         "``$SHELL_TYPE=prompt_toolkit``"),
     'COMPLETIONS_CONFIRM': VarDocs(
@@ -591,10 +593,19 @@ def DEFAULT_DOCS():
         "in the same manner as ``$PROMPT``, see 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='``xonsh.environ.DEFAULT_TITLE``'),
+    'UPDATE_COMPLETIONS_ON_KEYPRESS': VarDocs(
+        'Completions display is evaluated and presented whenever a key is '
+        'pressed. This avoids the need to press TAB, except to cycle through '
+        'the possibilities. This currently only affects the prompt-toolkit shell.'
+        ),
     'UPDATE_OS_ENVIRON': VarDocs(
         "If True ``os.environ`` will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
         "the default value by calling ``__xonsh_env__.undo_replace_env()``"),
+    'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
+        'Disables caching the prompt between commands, '
+        'so that it would be reevaluated on each keypress. '
+        'Disabled by default because of the incurred performance penalty.'),
     'VC_BRANCH_TIMEOUT': VarDocs(
         'The timeout (in seconds) for version control '
         'branch computations. This is a timeout per subprocess call, so the '
@@ -740,10 +751,6 @@ def DEFAULT_DOCS():
     'XONSH_DATETIME_FORMAT': VarDocs(
         'The format that is used for ``datetime.strptime()`` in various places'
         'i.e the history timestamp option'),
-    'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
-        'Disables caching the prompt between commands, '
-        'so that it would be reevaluated on each keypress. '
-        'Disabled by default because of the incurred performance penalty.'),
     }
 
 

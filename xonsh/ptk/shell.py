@@ -70,6 +70,10 @@ class PromptToolkitShell(BaseShell):
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         multicolumn = (completions_display == 'multi')
+        complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
+        if complete_while_typing:
+            # PTK requires history search to be none when completing while typing
+            enable_history_search = False
         if HAS_PYGMENTS:
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
@@ -100,6 +104,7 @@ class PromptToolkitShell(BaseShell):
                     'reserve_space_for_menu': 0,
                     'key_bindings_registry': self.key_bindings_manager.registry,
                     'display_completions_in_columns': multicolumn,
+                    'complete_while_typing': complete_while_typing,
                     }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
                 if HAS_PYGMENTS:
