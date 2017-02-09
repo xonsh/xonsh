@@ -1746,7 +1746,7 @@ class CommandPipeline:
                     self.end(tee_output=False)
                 elif self.captured == 'stdout':
                     b = stdout.read()
-                    s = self._decode_uninew(b)
+                    s = self._decode_uninew(b, universal_newlines=True)
                     self.lines = s.splitlines(keepends=True)
             raise StopIteration
         # get the correct stderr
@@ -1894,7 +1894,7 @@ class CommandPipeline:
         else:
             self.errors += s
 
-    def _decode_uninew(self, b):
+    def _decode_uninew(self, b, universal_newlines=None):
         """Decode bytes into a str and apply universal newlines as needed."""
         if not b:
             return ''
@@ -1904,7 +1904,7 @@ class CommandPipeline:
                          errors=env.get('XONSH_ENCODING_ERRORS'))
         else:
             s = b
-        if self.spec.universal_newlines:
+        if universal_newlines or self.spec.universal_newlines:
             s = s.replace('\r\n', '\n').replace('\r', '\n')
         return s
 
