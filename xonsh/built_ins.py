@@ -680,9 +680,11 @@ def _update_last_spec(last):
         if captured and thable:
             last.cls = PopenThread
         elif not thable:
-            # foreground processes should use Popen and not pipe stdout, stderr
+            # foreground processes should use Popen
             last.threadable = False
-            return
+            if captured == 'object' or captured == 'hiddenobject':
+                # CommandPipeline objects should not pipe stdout, stderr
+                return
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = ON_POSIX and not callable_alias
