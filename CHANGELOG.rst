@@ -4,6 +4,56 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.4
+====================
+
+
+
+v0.5.4
+====================
+
+**Added:**
+
+* Add alias ``xip`` ("kip") so that xonsh's Python environment (whatever that is) can be modified.
+* HistoryEntry, a SimpleNamespace object that represents a command in history.
+* ``xonsh.completers.bash_completion`` module
+* Added option to report timing information of xonsh startup times. Start xonsh
+  with the ``--timings`` flag to use the feature.
+* The Python tab completer will now complete the argument names of functions
+  and other callables.
+* Uptime module added to ``xonsh.xoreutils``. This can report the system
+  boot time and up time.
+* The environment variable ``XONSH_HISTORY_BACKEND`` now also supports a
+  value of class type or a History Backend instance.
+* ``on_envvar_new`` event that fires after a new envvar is created.
+* ``on_envvar_change`` event that fires after an envvar is changed.
+
+
+**Changed:**
+
+* history indexing api to be more simple, now returns HistoryEntry.
+* Decoupled ``bash_completion`` from xonsh project and added shim back to
+  xonsh.
+* The JSON history backend will now unlock history files that were created
+  prior to the last reboot.
+
+
+**Fixed:**
+
+* Fixed broken bash completions on Windows if 'Windows Subsystem for Linux' is installed.
+* Readline history would try to read the first element of history prior to 
+  actually loading any history. This caused an exception to be raised on 
+  Windows at xonsh startup when using pyreadline.
+* Fixed issue with readline tab completer overwriting initial prefix in
+  some instances.
+* Fixed issue wherein if ``git`` or (presumably) ``hg`` are aliased, then branch
+  information no longer appears in the ``$PROMPT``
+* Fixed an issue with commands that background themselves (such as
+  ``gpg-connect-agent``) not being able to be run from within xonshrc.
+
+
+
+
 v0.5.3
 ====================
 

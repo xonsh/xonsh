@@ -283,7 +283,7 @@ def safe_close(x):
         pass
 
 
-def _parse_redirects(r):
+def _parse_redirects(r, loc=None):
     """returns origin, mode, destination tuple"""
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
     # redirect to fd
@@ -534,6 +534,8 @@ class SubprocSpec:
     def prep_preexec_fn(self, kwargs, pipeline_group=None):
         """Prepares the 'preexec_fn' keyword argument"""
         if not (ON_POSIX and self.cls is subprocess.Popen):
+            return
+        if not builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
             return
         if pipeline_group is None:
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
@@ -907,7 +909,7 @@ def MACRO_FLAG_KINDS():
         'exec': exec,
         't': type,
         'type': type,
-        }
+    }
 
 
 def _convert_kind_flag(x):
