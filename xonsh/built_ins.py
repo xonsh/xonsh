@@ -283,7 +283,7 @@ def safe_close(x):
         pass
 
 
-def _parse_redirects(r):
+def _parse_redirects(r, loc=None):
     """returns origin, mode, destination tuple"""
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
     # redirect to fd
@@ -907,7 +907,7 @@ def MACRO_FLAG_KINDS():
         'exec': exec,
         't': type,
         'type': type,
-        }
+    }
 
 
 def _convert_kind_flag(x):

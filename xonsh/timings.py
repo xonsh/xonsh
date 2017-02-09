@@ -228,14 +228,12 @@ def timeit_alias(args, stdin=None):
     return
 
 
-_timings = {}
+_timings = {'start': clock() if ON_WINDOWS else 0.0}
 
 
 def setup_timings():
     global _timings
     if '--timings' in sys.argv:
-        _timings['start'] = clock() if ON_WINDOWS else 0.0
-
         events.doc('on_timingprobe', """
         on_timingprobe(name: str) -> None
 
@@ -295,7 +293,7 @@ def setup_timings():
         @events.on_post_prompt
         def timing_on_post_prompt(**kw):
             global _timings
-            _timings = {'on_post_prompt': 0.0}
+            _timings = {'on_post_prompt': clock()}
 
         @events.on_pre_prompt
         def timing_on_pre_prompt(**kw):
