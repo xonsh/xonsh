@@ -865,6 +865,11 @@ class PopenThread(threading.Thread):
         """Process return code."""
         return self.proc.returncode
 
+    @returncode.setter
+    def returncode(self, value):
+        """Process return code."""
+        self.proc.returncode = value
+
     @property
     def signal(self):
         """Process signal, or None."""
@@ -874,6 +879,11 @@ class PopenThread(threading.Thread):
             if rtn is not None and rtn != 0:
                 s = (-1*rtn, rtn < 0 if ON_WINDOWS else os.WCOREDUMP(rtn))
         return s
+
+    @signal.setter
+    def signal(self, value):
+        """Process signal, or None."""
+        self.proc.signal = value
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
@@ -1735,11 +1745,9 @@ class CommandPipeline:
                 if self.captured == 'object':
                     self.end(tee_output=False)
                 elif self.captured == 'stdout':
-                    self.end(tee_output=False)
                     b = stdout.read()
                     s = self._decode_uninew(b)
                     self.lines = s.splitlines(keepends=True)
-                    #self.lines = [l.decode() for l in safe_readlines(stdout)]
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
