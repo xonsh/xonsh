@@ -72,6 +72,7 @@ class PromptToolkitShell(BaseShell):
         multicolumn = (completions_display == 'multi')
         complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
         if complete_while_typing:
+            # PTK requires history search to be none when completing while typing
             enable_history_search = False
         if HAS_PYGMENTS:
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
