@@ -1941,6 +1941,8 @@ class CommandPipeline:
         if self.ended:
             return
         self.end_internal(tee_output=tee_output)
+        if ON_WINDOWS:
+            return
         pgid = os.getpgid(0)
         if self._term_pgid is None or pgid == self._term_pgid:
             return
