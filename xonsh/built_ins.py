@@ -27,7 +27,7 @@ from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
-from xonsh.jobs import add_job
+from xonsh.jobs import add_job, give_terminal_to
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     PopenThread, ProcProxyThread, ProcProxy, ConsoleParallelReader,
@@ -496,6 +496,8 @@ class SubprocSpec:
         self.prep_env(kwargs)
         self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
         if callable(self.alias):
+            if 'preexec_fn' in kwargs:
+                kwargs.pop('preexec_fn')
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
@@ -533,7 +535,7 @@ class SubprocSpec:
 
     def prep_preexec_fn(self, kwargs, pipeline_group=None):
         """Prepares the 'preexec_fn' keyword argument"""
-        if not (ON_POSIX and self.cls is subprocess.Popen):
+        if not ON_POSIX:
             return
         if not builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
             return
@@ -778,6 +780,17 @@ def _should_set_title(captured=False):
             hasattr(builtins, '__xonsh_shell__'))
 
 
+def update_fg_process_group(pipeline_group, background):
+    if background:
+        return False
+    if not ON_POSIX:
+        return False
+    env = builtins.__xonsh_env__
+    if not env.get('XONSH_INTERACTIVE'):
+        return False
+    return give_terminal_to(pipeline_group)
+
+
 def run_subproc(cmds, captured=False):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -793,34 +806,37 @@ def run_subproc(cmds, captured=False):
     """
     specs = cmds_to_specs(cmds, captured=captured)
     captured = specs[-1].captured
+    background = specs[-1].background
     procs = []
     proc = pipeline_group = None
+    term_pgid = None
     for spec in specs:
         starttime = time.time()
         proc = spec.run(pipeline_group=pipeline_group)
-        procs.append(proc)
-        if ON_POSIX and pipeline_group is None and \
-           spec.cls is subprocess.Popen:
+        if captured != 'object' and proc.pid and pipeline_group is None:
             pipeline_group = proc.pid
-    if not spec.is_proxy:
+            if update_fg_process_group(pipeline_group, background):
+                term_pgid = pipeline_group
+        procs.append(proc)
+    if not all(x.is_proxy for x in specs):
         add_job({
             'cmds': cmds,
             'pids': [i.pid for i in procs],
             'obj': proc,
-            'bg': spec.background,
+            'bg': background,
         })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
     # create command or return if backgrounding.
-    if spec.background:
+    if background:
         return
     if captured == 'hiddenobject':
         command = HiddenCommandPipeline(specs, procs, starttime=starttime,
-                                        captured=captured)
+                                        captured=captured, term_pgid=term_pgid)
     else:
         command = CommandPipeline(specs, procs, starttime=starttime,
-                                  captured=captured)
+                                  captured=captured, term_pgid=term_pgid)
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()

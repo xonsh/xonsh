@@ -29,7 +29,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
-from xonsh.jobs import wait_for_active_job
+from xonsh.jobs import wait_for_active_job, give_terminal_to
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 
 
@@ -1654,7 +1654,8 @@ class CommandPipeline:
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
 
-    def __init__(self, specs, procs, starttime=None, captured=False):
+    def __init__(self, specs, procs, starttime=None, captured=False,
+                 term_pgid=None):
         """
         Parameters
         ----------
@@ -1695,6 +1696,7 @@ class CommandPipeline:
         self._closed_handle_cache = {}
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
+        self._term_pgid = term_pgid
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
@@ -1912,12 +1914,10 @@ class CommandPipeline:
     # Ending methods
     #
 
-    def end(self, tee_output=True):
+    def end_internal(self, tee_output):
         """Waits for the command to complete and then runs any closing and
         cleanup procedures that need to be run.
         """
-        if self.ended:
-            return
         if tee_output:
             for _ in self.tee_stdout():
                 pass
@@ -1931,6 +1931,21 @@ class CommandPipeline:
         self._apply_to_history()
         self.ended = True
         self._raise_subproc_error()
+
+    def end(self, tee_output=True):
+        """
+        End the pipeline, return the controlling terminal if needed.
+
+        Main things done in end_internal().
+        """
+        if self.ended:
+            return
+        self.end_internal(tee_output=tee_output)
+        pgid = os.getpgid(0)
+        if self._term_pgid is None or pgid == self._term_pgid:
+            return
+        if give_terminal_to(pgid):  # if gave term succeed
+            self._term_pgid = pgid
 
     def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""
