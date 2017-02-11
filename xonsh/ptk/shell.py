@@ -21,10 +21,7 @@ from xonsh.platform import HAS_PYGMENTS
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks
 
-if HAS_PYGMENTS:
-    Token = pygments.style.Token
-else:
-    Token = _TokenType()
+Token = _TokenType()
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
 events.doc('on_ptk_create', """

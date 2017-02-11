@@ -8,21 +8,51 @@ from xonsh.lazyasd import LazyObject
 
 class _TokenType(tuple):
     """
-    This class was forked from the mainline prompt-toolkit repo.
-    Copyright (c) 2014, Jonathan Slenders, All rights reserved.
+    Forked from the pygments project
+    https://bitbucket.org/birkenfeld/pygments-main
+    Copyright (c) 2006-2017 by the respective authors, All rights reserved.
+    See https://bitbucket.org/birkenfeld/pygments-main/raw/05818a4ef9891d9ac22c851f7b3ea4b4fce460ab/AUTHORS
     """
     parent = None
+
+    def split(self):
+        buf = []
+        node = self
+        while node is not None:
+            buf.append(node)
+            node = node.parent
+        buf.reverse()
+        return buf
+
+    def __init__(self, *args):
+        # no need to call super.__init__
+        self.subtypes = set()
+
+    def __contains__(self, val):
+        return self is val or (
+            type(val) is self.__class__ and
+            val[:len(self)] == self
+        )
 
     def __getattr__(self, val):
         if not val or not val[0].isupper():
             return tuple.__getattribute__(self, val)
-
         new = _TokenType(self + (val,))
         setattr(self, val, new)
+        self.subtypes.add(new)
+        new.parent = self
         return new
 
     def __repr__(self):
         return 'Token' + (self and '.' or '') + '.'.join(self)
+
+    def __copy__(self):
+        # These instances are supposed to be singletons
+        return self
+
+    def __deepcopy__(self, memo):
+        # These instances are supposed to be singletons
+        return self
 
 RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
                            globals(), 'RE_BACKGROUND')
