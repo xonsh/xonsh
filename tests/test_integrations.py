@@ -181,6 +181,9 @@ def test_script_stder(case):
     ('pwd', None, lambda: os.getcwd() + '\n'),
     ('echo WORKING', None, 'WORKING\n'),
     ('ls -f', lambda out: out.splitlines().sort(), os.listdir().sort()),
+    ('printfile.xsh', None, 'printfile.xsh\n'),
+    ('printname.xsh', None, '__main__\n'),
+    ('sourcefile.xsh', None, 'printfile.xsh\n'),
     ])
 def test_single_command(cmd, fmt, exp):
     """The ``fmt`` parameter is a function

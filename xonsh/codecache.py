@@ -101,7 +101,8 @@ def compile_code(filename, code, execer, glb, loc, mode):
             code += '\n'
         old_filename = execer.filename
         execer.filename = filename
-        ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode)
+        ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode,
+                               filename=filename)
     except Exception:
         raise
     finally:

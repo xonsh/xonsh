@@ -336,6 +336,7 @@ def main_xonsh(args):
                 sys.argv = [args.file] + args.args
                 env['ARGS'] = sys.argv[:]  # $ARGS is not sys.argv
                 env['XONSH_SOURCE'] = path
+                shell.ctx.update({'__file__': args.file, '__name__': '__main__'})
                 run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
                                       loc=None, mode='exec')
             else:

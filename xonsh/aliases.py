@@ -18,7 +18,7 @@ from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
 from xonsh.proc import foreground
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
-from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool
+from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool, swap_values
 from xonsh.xontribs import xontribs_main
 
 import xonsh.completers._aliases as xca
@@ -270,8 +270,10 @@ def source_alias(args, stdin=None):
             src = fp.read()
         if not src.endswith('\n'):
             src += '\n'
-        with env.swap(ARGS=args[i+1:]):
-            builtins.execx(src, 'exec', builtins.__xonsh_ctx__, filename=fpath)
+        ctx = builtins.__xonsh_ctx__
+        updates = {'__file__': fpath, '__name__': os.path.abspath(fpath)}
+        with env.swap(ARGS=args[i+1:]), swap_values(ctx, updates):
+            builtins.execx(src, 'exec', ctx, filename=fpath)
 
 
 def source_cmd(args, stdin=None):

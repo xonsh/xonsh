@@ -805,6 +805,21 @@ def swap(namespace, name, value, default=NotImplemented):
     else:
         setattr(namespace, name, old)
 
+
+@contextlib.contextmanager
+def swap_values(d, updates, default=NotImplemented):
+    """Updates a dictionary (or other mapping) with values from another mapping,
+    and then restores the original mapping when the context is exited.
+    """
+    old = {k: d.get(k, NotImplemented) for k in updates}
+    d.update(updates)
+    yield
+    for k, v in old.items():
+        if v is default and k in d:
+            del d[k]
+        else:
+            d[k] = v
+
 #
 # Validators and converters
 #
