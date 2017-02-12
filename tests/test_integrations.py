@@ -199,11 +199,12 @@ def test_single_command_no_windows(cmd, fmt, exp):
     assert rtn == 0
 
 
-@pytest.mark.skipif(ON_DARWIN or ON_WINDOWS or ON_TRAVIS, reason="bad platforms")
+_bad_case = pytest.mark.skipif(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
+                               reason="bad platforms")
 @pytest.mark.parametrize('cmd, fmt, exp', [
-    ('printfile.xsh', None, 'printfile.xsh\n'),
-    ('printname.xsh', None, '__main__\n'),
-    ('sourcefile.xsh', None, 'printfile.xsh\n'),
+    _bad_case(('printfile.xsh', None, 'printfile.xsh\n')),
+    _bad_case(('printname.xsh', None, '__main__\n')),
+    _bad_case(('sourcefile.xsh', None, 'printfile.xsh\n')),
 ])
 def test_single_command_no_windows_no_mac(cmd, fmt, exp):
     """The ``fmt`` parameter is a function
