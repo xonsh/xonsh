@@ -5,12 +5,14 @@ env:
 matrix:
     include:
         - os: linux
-          python: 3.5 
-          env: 
+          python: 3.5
+          env:
             - MINICONDA_OS="Linux"
+            - CI=true
+            - TRAVIS=true
         - os: linux
           python: 3.6
-          env: 
+          env:
             - MINICONDA_OS="Linux"
             - BUILD_DOCS=true
         - os: linux
@@ -62,6 +64,6 @@ script:
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
     else
-      py.test --timeout=10;
+      py.test -vv -s --timeout=10;
     fi
 
