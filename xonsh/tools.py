@@ -1784,9 +1784,6 @@ def unthreadable(f):
     return f
 
 
-foreground = unthreadable
-
-
 def uncapturable(f):
     """Decorator that specifies that a callable alias should not be run with
     any capturing. This is often needed if the alias call interactive

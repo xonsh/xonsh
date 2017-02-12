@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* Moved decorators ``unthreadable``, ``foreground``, ``uncapturable`` from
+* Moved decorators ``unthreadable``, ``uncapturable`` from
   ``xonsh.proc`` to ``xonsh.tools``.
 
 **Deprecated:** None
