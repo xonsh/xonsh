@@ -28,6 +28,10 @@ PATH = os.path.join(os.path.dirname(__file__), 'bin') + os.pathsep + \
        os.environ['PATH']
 
 
+skip_if_no_xonsh = pytest.mark.skipif(shutil.which('xonsh', path=PATH) is None,
+                                      reason='xonsh not on path')
+
+
 def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
     env = dict(os.environ)
     env['PATH'] = PATH
@@ -194,6 +198,7 @@ def test_single_command_no_windows(cmd, fmt, exp):
     assert rtn == 0
 
 
+@skip_if_no_xonsh
 @skip_if_on_darwin
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, fmt, exp', [
