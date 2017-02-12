@@ -204,27 +204,27 @@ def test_single_command_no_windows(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
-_bad_case = pytest.mark.xfail(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
-                              reason="bad platforms")
+_bad_case = pytest.mark.skipif(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
+                               reason="bad platforms")
 
 @_bad_case
 def test_printfile():
     # There is some confluence of breakages with pytest and travis
     # environments where there is not enough information to debug.
-    try:
-        check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
-    except AssertionError:
-        pass
+    #try:
+    check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
+    #except AssertionError:
+    #    pass
 
 
 @_bad_case
 def test_printname():
     # There is some confluence of breakages with pytest and travis
     # environments where there is not enough information to debug.
-    try:
-        check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
-    except AssertionError:
-        pass
+    #try:
+    check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
+    #except AssertionError:
+    #    pass
 
 
 @_bad_case

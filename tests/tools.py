@@ -25,7 +25,7 @@ ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_CONDA = True in [conda in pytest.__file__ for conda
                     in ['anaconda', 'miniconda']]
-ON_TRAVIS = 'TRAVIS' is os.environ and 'CI' in os.environ
+ON_TRAVIS = 'TRAVIS' in os.environ and 'CI' in os.environ
 TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
