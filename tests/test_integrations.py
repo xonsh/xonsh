@@ -56,6 +56,20 @@ def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
         raise
     return out, err, proc.returncode
 
+
+def check_run_xonsh(cmd, fmt, exp):
+    """The ``fmt`` parameter is a function
+    that formats the output of cmd, can be None.
+    """
+    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
+    if callable(fmt):
+        out = fmt(out)
+    if callable(exp):
+        exp = exp()
+    assert out == exp
+    assert rtn == 0
+
+
 #
 # The following list contains a (stdin, stdout, returncode) tuples
 #
@@ -187,36 +201,26 @@ def test_script_stder(case):
     ('ls -f', lambda out: out.splitlines().sort(), os.listdir().sort()),
     ])
 def test_single_command_no_windows(cmd, fmt, exp):
-    """The ``fmt`` parameter is a function
-    that formats the output of cmd, can be None.
-    """
-    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
-    if callable(fmt):
-        out = fmt(out)
-    if callable(exp):
-        exp = exp()
-    assert out == exp
-    assert rtn == 0
+    check_run_xonsh(cmd, fmt, exp)
 
 
 _bad_case = pytest.mark.xfail(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
                               reason="bad platforms")
-@pytest.mark.parametrize('cmd, fmt, exp', [
-    _bad_case(('printfile.xsh', None, 'printfile.xsh\n')),
-    _bad_case(('printname.xsh', None, '__main__\n')),
-    _bad_case(('sourcefile.xsh', None, 'printfile.xsh\n')),
-])
-def test_single_command_no_windows_no_mac(cmd, fmt, exp):
-    """The ``fmt`` parameter is a function
-    that formats the output of cmd, can be None.
-    """
-    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
-    if callable(fmt):
-        out = fmt(out)
-    if callable(exp):
-        exp = exp()
-    assert out == exp
-    assert rtn == 0
+
+@_bad_case
+def test_printfile():
+    check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
+
+
+@_bad_case
+def test_printname():
+    check_run_xonsh('printname.xsh', None, '__main__\n')
+
+
+@_bad_case
+def test_sourcefile():
+    check_run_xonsh('sourcefile.xsh', None, 'printfile.xsh\n')
+
 
 
 @skip_if_on_windows
