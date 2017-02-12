@@ -1156,6 +1156,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
+    builtins.__xonsh_enabled_builtin_commands__ = set(all_builtin_commands.keys())
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
@@ -1236,6 +1237,7 @@ def unload_builtins():
              'compilex',
              'default_aliases',
              '__xonsh_all_jobs__',
+             '__xonsh_enabled_builtin_commands__',
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_list_of_strs_or_callables__',
              '__xonsh_history__',
