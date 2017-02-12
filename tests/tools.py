@@ -25,6 +25,7 @@ ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_CONDA = True in [conda in pytest.__file__ for conda
                     in ['anaconda', 'miniconda']]
+ON_TRAVIS = 'TRAVIS' is os.environ and 'CI' in os.environ
 TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
@@ -39,8 +40,7 @@ skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason='Windows stuff')
 
 skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason='not Mac friendly')
 
-skip_if_on_travis = pytest.mark.skipif('TRAVIS' is os.environ and 'CI' in os.environ,
-                                       reason='not Travis CI friendly')
+skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason='not Travis CI friendly')
 
 
 
