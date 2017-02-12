@@ -31,6 +31,8 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
+# these decorators are imported for users back-compatible
+from xonsh.tools import unthreadable, foreground, uncapturable
 
 
 @lazyobject
@@ -1586,26 +1588,6 @@ class ProcProxy(object):
         while not hasattr(self, name):
             time.sleep(1e-7)
         return getattr(self, name)
-
-
-def unthreadable(f):
-    """Decorator that specifies that a callable alias should be run only
-    on the main thread process. This is often needed for debuggers and profilers.
-    """
-    f.__xonsh_threadable__ = False
-    return f
-
-
-foreground = unthreadable
-
-
-def uncapturable(f):
-    """Decorator that specifies that a callable alias should not be run with
-    any capturing. This is often needed if the alias call interactive subprocess,
-    like pagers and text editors.
-    """
-    f.__xonsh_capturable__ = False
-    return f
 
 
 @lazyobject

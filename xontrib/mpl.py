@@ -1,6 +1,6 @@
 """Matplotlib xontribution."""
 
-from xonsh.proc import foreground as foreground
+from xonsh.tools import foreground
 
 __all__ = ()
 

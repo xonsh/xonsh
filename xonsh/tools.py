@@ -1773,3 +1773,24 @@ def columnize(elems, width=80, newline='\n'):
     lines = [row_t.format(row=row, w=colwidths) for row in
              itertools.zip_longest(*data, fillvalue='')]
     return lines
+
+
+def unthreadable(f):
+    """Decorator that specifies that a callable alias should be run only
+    on the main thread process. This is often needed for debuggers and
+    profilers.
+    """
+    f.__xonsh_threadable__ = False
+    return f
+
+
+foreground = unthreadable
+
+
+def uncapturable(f):
+    """Decorator that specifies that a callable alias should not be run with
+    any capturing. This is often needed if the alias call interactive
+    subprocess, like pagers and text editors.
+    """
+    f.__xonsh_capturable__ = False
+    return f
