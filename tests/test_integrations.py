@@ -8,7 +8,7 @@ import pytest
 import xonsh
 from xonsh.platform import ON_WINDOWS
 
-from tools import skip_if_on_windows
+from tools import skip_if_on_windows, skip_if_on_darwin
 
 
 XONSH_PREFIX = xonsh.__file__
@@ -175,17 +175,33 @@ def test_script_stder(case):
     assert exp_err == err
     assert exp_rtn == rtn
 
-
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, fmt, exp', [
     ('pwd', None, lambda: os.getcwd() + '\n'),
     ('echo WORKING', None, 'WORKING\n'),
     ('ls -f', lambda out: out.splitlines().sort(), os.listdir().sort()),
+    ])
+def test_single_command_no_windows(cmd, fmt, exp):
+    """The ``fmt`` parameter is a function
+    that formats the output of cmd, can be None.
+    """
+    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
+    if callable(fmt):
+        out = fmt(out)
+    if callable(exp):
+        exp = exp()
+    assert out == exp
+    assert rtn == 0
+
+
+@skip_if_on_darwin
+@skip_if_on_windows
+@pytest.mark.parametrize('cmd, fmt, exp', [
     ('printfile.xsh', None, 'printfile.xsh\n'),
     ('printname.xsh', None, '__main__\n'),
     ('sourcefile.xsh', None, 'printfile.xsh\n'),
     ])
-def test_single_command(cmd, fmt, exp):
+def test_single_command_no_windows_no_mac(cmd, fmt, exp):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
     """
