@@ -1,10 +1,12 @@
+"""A tty implementation for xonsh"""
 import os
 import sys
 
 
 def tty(args, stdin, stdout, stderr):
+    """A tty command for xonsh."""
     if '--help' in args:
-        print(HELP_STR, file=stdout)
+        print(TTY_HELP, file=stdout)
         return 0
     silent = False
     for i in ('-s', '--silent', '--quiet'):
@@ -32,7 +34,7 @@ def tty(args, stdin, stdout, stderr):
             return 3
     return 0
 
-HELP_STR = """This version of tty was written in Python for the xonsh project: http://xon.sh
+TTY_HELP = """This version of tty was written in Python for the xonsh project: http://xon.sh
 Based on tty from GNU coreutils: http://www.gnu.org/software/coreutils/
 
 Usage: /usr/bin/tty [OPTION]...

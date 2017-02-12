@@ -1,3 +1,4 @@
+"""A tee implementation for xonsh."""
 import os
 import sys
 
@@ -5,6 +6,7 @@ from xonsh.xoreutils.util import arg_handler
 
 
 def tee(args, stdin, stdout, stderr):
+    """A tee command for xonsh."""
     mode = 'w'
     if '-a' in args:
         args.remove('-a')
@@ -13,7 +15,7 @@ def tee(args, stdin, stdout, stderr):
         args.remove('--append')
         mode = 'a'
     if '--help' in args:
-        print(HELP_STR, file=stdout)
+        print(TEE_HELP, file=stdout)
         return 0
 
     errors = False
@@ -42,7 +44,7 @@ def tee(args, stdin, stdout, stderr):
     return int(errors)
 
 
-HELP_STR = """This version of tee was written in Python for the xonsh project: http://xon.sh
+TEE_HELP = """This version of tee was written in Python for the xonsh project: http://xon.sh
 Based on tee from GNU coreutils: http://www.gnu.org/software/coreutils/
 
 Usage: tee [OPTION]... [FILE]...

@@ -1,9 +1,12 @@
+"""A pwd implementation for xonsh."""
 import os
 
+
 def pwd(args, stdin, stdout, stderr):
+    """A pwd implementation"""
     e = __xonsh_env__['PWD']
     if '--help' in args:
-        print(HELP_STR, file=stdout)
+        print(PWD_HELP, file=stdout)
         return 0
     if '-P' in args:
         e = os.path.realpath(e)
@@ -11,7 +14,7 @@ def pwd(args, stdin, stdout, stderr):
     return 0
 
 
-HELP_STR = """This version of pwd was written in Python for the xonsh project: http://xon.sh
+PWD_HELP = """This version of pwd was written in Python for the xonsh project: http://xon.sh
 Based on pwd from GNU coreutils: http://www.gnu.org/software/coreutils/
 
 Usage: pwd [OPTION]...

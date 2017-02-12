@@ -1,10 +1,12 @@
+"""An implementation of yes for xonsh."""
 import os
 import sys
 
 
 def yes(args, stdin, stdout, stderr):
+    """A yes command."""
     if '--help' in args:
-        print(HELP_STR, file=stdout)
+        print(YES_HELP, file=stdout)
         return 0
 
     to_print = ["y"] if len(args) == 0 else [str(i) for i in args]
@@ -15,7 +17,7 @@ def yes(args, stdin, stdout, stderr):
     return 0
 
 
-HELP_STR = """This version of yes was written in Python for the xonsh project: http://xon.sh
+YES_HELP = """This version of yes was written in Python for the xonsh project: http://xon.sh
 Based on yes from GNU coreutils: http://www.gnu.org/software/coreutils/
 
 Usage: /usr/bin/yes [STRING]...

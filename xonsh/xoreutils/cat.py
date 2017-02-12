@@ -1,3 +1,4 @@
+"""Implements a cat command for xonsh."""
 import os
 import sys
 
@@ -43,9 +44,10 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
 
 
 def cat(args, stdin, stdout, stderr):
-    opts = _parse_args(args)
+    """A cat command for xonsh."""
+    opts = _cat_parse_args(args)
     if opts is None:
-        print(HELP_STR, file=stdout)
+        print(CAT_HELP_STR, file=stdout)
         return 0
 
     line_count = 1
@@ -62,7 +64,7 @@ def cat(args, stdin, stdout, stderr):
     return int(errors)
 
 
-def _parse_args(args):
+def _cat_parse_args(args):
     out = {'number_nonblank': False, 'number_all': False, 'squeeze_blank': False, 'show_ends': False}
     if '--help' in args:
         return
@@ -76,7 +78,7 @@ def _parse_args(args):
     return out
 
 
-HELP_STR = """This version of cat was written in Python for the xonsh project: http://xon.sh
+CAT_HELP_STR = """This version of cat was written in Python for the xonsh project: http://xon.sh
 Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 
 Usage: cat [OPTION]... [FILE]...

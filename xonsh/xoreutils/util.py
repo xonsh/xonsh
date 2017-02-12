@@ -1,4 +1,7 @@
+"""Assorted utilities for xonsh core utils."""
+
 def arg_handler(args, out, short, key, val, long=None):
+    """A simple argument handler for xoreutils."""
     if short in args:
         args.remove(short)
         if isinstance(key, (list, tuple)):
@@ -13,5 +16,3 @@ def arg_handler(args, out, short, key, val, long=None):
                 out[k] = val
         else:
             out[key] = val
-
-all_builtin_commands = {}
