@@ -199,8 +199,8 @@ def test_single_command_no_windows(cmd, fmt, exp):
     assert rtn == 0
 
 
-_bad_case = pytest.mark.skipif(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
-                               reason="bad platforms")
+_bad_case = pytest.mark.xfail(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
+                              reason="bad platforms")
 @pytest.mark.parametrize('cmd, fmt, exp', [
     _bad_case(('printfile.xsh', None, 'printfile.xsh\n')),
     _bad_case(('printname.xsh', None, '__main__\n')),
