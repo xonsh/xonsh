@@ -216,7 +216,7 @@ def test_single_command_no_windows_no_mac(cmd, fmt, exp):
         out = fmt(out)
     if callable(exp):
         exp = exp()
-    assert out == exp
+    assert out == exp, err
     assert rtn == 0
 
 
