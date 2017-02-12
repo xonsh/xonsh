@@ -43,6 +43,7 @@ For those of you who want the gritty details.
     pretty
     replay
     diff_history
+    xoreutils/index
 
 
 **Helpers:**
