@@ -1736,7 +1736,8 @@ class CommandPipeline:
             stdout = stdout.buffer
         if stdout is not None and not isinstance(stdout, self.nonblocking):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
-        if not stdout or self.captured == 'stdout' or not safe_readable(stdout):
+        if not stdout or self.captured == 'stdout' or not safe_readable(stdout) or \
+                not spec.threadable:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
@@ -1745,6 +1746,11 @@ class CommandPipeline:
                 proc.wait()
                 self._endtime()
                 if self.captured == 'object':
+                    self.end(tee_output=False)
+                elif self.captured == 'hiddenobject' and stdout:
+                    b = stdout.read()
+                    lines = b.splitlines(keepends=True)
+                    yield from lines
                     self.end(tee_output=False)
                 elif self.captured == 'stdout':
                     b = stdout.read()
@@ -1833,7 +1839,8 @@ class CommandPipeline:
 
     def tee_stdout(self):
         """Writes the process stdout to the output variable, line-by-line, and
-        yields each line.
+        yields each line. This may optionally accept lines (in bytes) to iterate
+        over, in which case it does not call iterraw().
         """
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
