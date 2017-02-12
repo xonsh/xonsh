@@ -209,16 +209,22 @@ _bad_case = pytest.mark.xfail(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
 
 @_bad_case
 def test_printfile():
+    if ON_DARWIN or ON_WINDOWS or ON_TRAVIS:
+        return
     check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
 
 
 @_bad_case
 def test_printname():
+    if ON_DARWIN or ON_WINDOWS or ON_TRAVIS:
+        return
     check_run_xonsh('printname.xsh', None, '__main__\n')
 
 
 @_bad_case
 def test_sourcefile():
+    if ON_DARWIN or ON_WINDOWS or ON_TRAVIS:
+        return
     check_run_xonsh('sourcefile.xsh', None, 'printfile.xsh\n')
 
 
