@@ -30,6 +30,7 @@ from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
                          columnize)
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN, ON_POSIX
 from xonsh.lazyimps import pygments, pyghooks
+from xonsh.events import events
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
@@ -275,7 +276,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
+        events.on_pre_prompt.fire()
         rtn = input(self.prompt)
+        events.on_post_prompt.fire()
         if not store_in_history and pos >= 0:
             readline.remove_history_item(pos)
         return rtn
@@ -326,19 +329,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
-        _s, _e, _q = check_for_partial_string(line)
-        if _s is not None:
-            if _e is not None and ' ' in line[_e:]:
-                mline = line.rpartition(' ')[2]
-            else:
-                mline = line[_s:]
-        else:
-            mline = line.rpartition(' ')[2]
-        offs = len(mline) - len(prefix)
-        completions = self.completer.complete(prefix, line,
-                                              begidx, endidx,
-                                              ctx=self.ctx)[0]
-        rtn_completions = [i[offs:] for i in completions]
+        completions, l = self.completer.complete(prefix, line,
+                                                 begidx, endidx,
+                                                 ctx=self.ctx)
+        chopped = prefix[:-l]
+        rtn_completions = [chopped + i for i in completions]
         show_completions = self._querycompletions(completions, endidx - begidx)
         return rtn_completions if show_completions else []
 

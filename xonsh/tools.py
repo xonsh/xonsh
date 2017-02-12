@@ -346,21 +346,42 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+def is_balanced(expr, ltok, rtok):
+    """Determines whether an expression has unbalanced opening and closing tokens."""
+    lcnt = expr.count(ltok)
+    if lcnt == 0:
+        return True
+    rcnt = expr.count(rtok)
+    if lcnt == rcnt:
+        return True
+    else:
+        return False
+
+
 def subexpr_from_unbalanced(expr, ltok, rtok):
     """Attempts to pull out a valid subexpression for unbalanced grouping,
     based on opening tokens, eg. '(', and closing tokens, eg. ')'.  This
     does not do full tokenization, but should be good enough for tab
     completion.
     """
-    lcnt = expr.count(ltok)
-    if lcnt == 0:
-        return expr
-    rcnt = expr.count(rtok)
-    if lcnt == rcnt:
+    if is_balanced(expr, ltok, rtok):
         return expr
     subexpr = expr.rsplit(ltok, 1)[-1]
     subexpr = subexpr.rsplit(',', 1)[-1]
     subexpr = subexpr.rsplit(':', 1)[-1]
+    return subexpr
+
+
+def subexpr_before_unbalanced(expr, ltok, rtok):
+    """Obtains the expression prior to last unblanced left token."""
+    subexpr, _, post = expr.rpartition(ltok)
+    nrtoks_in_post = post.count(rtok)
+    while nrtoks_in_post != 0:
+        for i in range(nrtoks_in_post):
+            subexpr, _, post = subexpr.rpartition(ltok)
+        nrtoks_in_post = post.count(rtok)
+    _, _, subexpr = subexpr.rpartition(rtok)
+    _, _, subexpr = subexpr.rpartition(ltok)
     return subexpr
 
 
@@ -1752,3 +1773,21 @@ def columnize(elems, width=80, newline='\n'):
     lines = [row_t.format(row=row, w=colwidths) for row in
              itertools.zip_longest(*data, fillvalue='')]
     return lines
+
+
+def unthreadable(f):
+    """Decorator that specifies that a callable alias should be run only
+    on the main thread process. This is often needed for debuggers and
+    profilers.
+    """
+    f.__xonsh_threadable__ = False
+    return f
+
+
+def uncapturable(f):
+    """Decorator that specifies that a callable alias should not be run with
+    any capturing. This is often needed if the alias call interactive
+    subprocess, like pagers and text editors.
+    """
+    f.__xonsh_capturable__ = False
+    return f

@@ -31,6 +31,11 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
+# these decorators are imported for users back-compatible
+from xonsh.tools import unthreadable, uncapturable  # NOQA
+
+# foreground has be deprecated
+foreground = unthreadable
 
 
 @lazyobject
@@ -865,6 +870,11 @@ class PopenThread(threading.Thread):
         """Process return code."""
         return self.proc.returncode
 
+    @returncode.setter
+    def returncode(self, value):
+        """Process return code."""
+        self.proc.returncode = value
+
     @property
     def signal(self):
         """Process signal, or None."""
@@ -874,6 +884,11 @@ class PopenThread(threading.Thread):
             if rtn is not None and rtn != 0:
                 s = (-1*rtn, rtn < 0 if ON_WINDOWS else os.WCOREDUMP(rtn))
         return s
+
+    @signal.setter
+    def signal(self, value):
+        """Process signal, or None."""
+        self.proc.signal = value
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
@@ -1607,26 +1622,6 @@ class ProcProxy(object):
         return getattr(self, name)
 
 
-def unthreadable(f):
-    """Decorator that specifies that a callable alias should be run only
-    on the main thread process. This is often needed for debuggers and profilers.
-    """
-    f.__xonsh_threadable__ = False
-    return f
-
-
-foreground = unthreadable
-
-
-def uncapturable(f):
-    """Decorator that specifies that a callable alias should not be run with
-    any capturing. This is often needed if the alias call interactive subprocess,
-    like pagers and text editors.
-    """
-    f.__xonsh_capturable__ = False
-    return f
-
-
 @lazyobject
 def SIGNAL_MESSAGES():
     sm = {
@@ -1753,7 +1748,8 @@ class CommandPipeline:
             stdout = stdout.buffer
         if stdout is not None and not isinstance(stdout, self.nonblocking):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
-        if not stdout or not safe_readable(stdout):
+        if not stdout or self.captured == 'stdout' or not safe_readable(stdout) or \
+                not spec.threadable:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
@@ -1763,6 +1759,15 @@ class CommandPipeline:
                 self._endtime()
                 if self.captured == 'object':
                     self.end(tee_output=False)
+                elif self.captured == 'hiddenobject' and stdout:
+                    b = stdout.read()
+                    lines = b.splitlines(keepends=True)
+                    yield from lines
+                    self.end(tee_output=False)
+                elif self.captured == 'stdout':
+                    b = stdout.read()
+                    s = self._decode_uninew(b, universal_newlines=True)
+                    self.lines = s.splitlines(keepends=True)
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
@@ -1846,7 +1851,8 @@ class CommandPipeline:
 
     def tee_stdout(self):
         """Writes the process stdout to the output variable, line-by-line, and
-        yields each line.
+        yields each line. This may optionally accept lines (in bytes) to iterate
+        over, in which case it does not call iterraw().
         """
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
@@ -1909,7 +1915,7 @@ class CommandPipeline:
         else:
             self.errors += s
 
-    def _decode_uninew(self, b):
+    def _decode_uninew(self, b, universal_newlines=None):
         """Decode bytes into a str and apply universal newlines as needed."""
         if not b:
             return ''
@@ -1919,7 +1925,7 @@ class CommandPipeline:
                          errors=env.get('XONSH_ENCODING_ERRORS'))
         else:
             s = b
-        if self.spec.universal_newlines:
+        if universal_newlines or self.spec.universal_newlines:
             s = s.replace('\r\n', '\n').replace('\r', '\n')
         return s
 

@@ -283,7 +283,7 @@ def safe_close(x):
         pass
 
 
-def _parse_redirects(r):
+def _parse_redirects(r, loc=None):
     """returns origin, mode, destination tuple"""
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
     # redirect to fd
@@ -535,6 +535,8 @@ class SubprocSpec:
         """Prepares the 'preexec_fn' keyword argument"""
         if not (ON_POSIX and self.cls is subprocess.Popen):
             return
+        if not builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+            return
         if pipeline_group is None:
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
         else:
@@ -678,9 +680,11 @@ def _update_last_spec(last):
         if captured and thable:
             last.cls = PopenThread
         elif not thable:
-            # foreground processes should use Popen and not pipe stdout, stderr
+            # foreground processes should use Popen
             last.threadable = False
-            return
+            if captured == 'object' or captured == 'hiddenobject':
+                # CommandPipeline objects should not pipe stdout, stderr
+                return
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = ON_POSIX and not callable_alias
@@ -905,7 +909,7 @@ def MACRO_FLAG_KINDS():
         'exec': exec,
         't': type,
         'type': type,
-        }
+    }
 
 
 def _convert_kind_flag(x):

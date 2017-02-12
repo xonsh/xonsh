@@ -15,7 +15,7 @@ from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
                             ON_NETBSD)
-from xonsh.proc import foreground
+from xonsh.tools import unthreadable
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool
@@ -350,7 +350,7 @@ def xonfig(args, stdin=None):
     return xonfig_main(args)
 
 
-@foreground
+@unthreadable
 def trace(args, stdin=None):
     """Runs the xonsh tracer utility."""
     from xonsh.tracer import tracermain  # lazy import
