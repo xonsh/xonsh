@@ -39,6 +39,11 @@ skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason='Windows stuff')
 
 skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason='not Mac friendly')
 
+skip_if_on_travis = pytest.mark.skipif('TRAVIS' is os.environ and 'CI' in os.environ,
+                                       reason='not Travis CI friendly')
+
+
+
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)

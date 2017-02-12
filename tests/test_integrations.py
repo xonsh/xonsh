@@ -8,7 +8,7 @@ import pytest
 import xonsh
 from xonsh.platform import ON_WINDOWS
 
-from tools import skip_if_on_windows, skip_if_on_darwin
+from tools import skip_if_on_windows, skip_if_on_darwin, skip_if_on_travis
 
 
 XONSH_PREFIX = xonsh.__file__
@@ -199,6 +199,7 @@ def test_single_command_no_windows(cmd, fmt, exp):
 
 
 @skip_if_no_xonsh
+@skip_if_on_travis
 @skip_if_on_darwin
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, fmt, exp', [
