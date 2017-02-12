@@ -32,7 +32,7 @@ from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 # these decorators are imported for users back-compatible
-from xonsh.tools import unthreadable, foreground, uncapturable
+from xonsh.tools import unthreadable, foreground, uncapturable  # NOQA
 
 
 @lazyobject
