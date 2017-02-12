@@ -198,15 +198,24 @@ def test_single_command_no_windows(cmd, fmt, exp):
     assert rtn == 0
 
 
-@pytest.mark.parametrize('cmd, fmt, exp', [
+SGNO = [
     ('printfile.xsh', None, 'printfile.xsh\n'),
     ('printname.xsh', None, '__main__\n'),
     ('sourcefile.xsh', None, 'printfile.xsh\n'),
-    ])
-@skip_if_no_xonsh
-@skip_if_on_travis
-@skip_if_on_darwin
-@skip_if_on_windows
+]
+SGNO = list(
+    map(skip_if_no_xonsh,
+    map(skip_if_on_travis,
+    map(skip_if_on_darwin,
+    map(skip_if_on_windows, SGNO
+    )))))
+
+#@skip_if_no_xonsh
+#@skip_if_on_travis
+#@skip_if_on_darwin
+#@skip_if_on_windows
+
+@pytest.mark.parametrize('cmd, fmt, exp', SGNO)
 def test_single_command_no_windows_no_mac(cmd, fmt, exp):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
