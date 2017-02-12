@@ -209,6 +209,8 @@ _bad_case = pytest.mark.xfail(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
 
 @_bad_case
 def test_printfile():
+    # There is some confluence of breakages with pytest and travis
+    # environments where there is not enough information to debug.
     try:
         check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
     except AssertionError:
@@ -217,6 +219,8 @@ def test_printfile():
 
 @_bad_case
 def test_printname():
+    # There is some confluence of breakages with pytest and travis
+    # environments where there is not enough information to debug.
     try:
         check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
     except AssertionError:
@@ -225,6 +229,8 @@ def test_printname():
 
 @_bad_case
 def test_sourcefile():
+    # There is some confluence of breakages with pytest and travis
+    # environments where there is not enough information to debug.
     try:
         check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
     except AssertionError:
