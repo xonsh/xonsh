@@ -792,8 +792,11 @@ def on_main_thread():
     return threading.current_thread() is threading.main_thread()
 
 
+_DEFAULT_SENTINEL = object()
+
+
 @contextlib.contextmanager
-def swap(namespace, name, value, default=NotImplemented):
+def swap(namespace, name, value, default=_DEFAULT_SENTINEL):
     """Swaps a current variable name in a namespace for another value, and then
     replaces it when the context is exited.
     """
@@ -807,11 +810,11 @@ def swap(namespace, name, value, default=NotImplemented):
 
 
 @contextlib.contextmanager
-def swap_values(d, updates, default=NotImplemented):
+def swap_values(d, updates, default=_DEFAULT_SENTINEL):
     """Updates a dictionary (or other mapping) with values from another mapping,
     and then restores the original mapping when the context is exited.
     """
-    old = {k: d.get(k, NotImplemented) for k in updates}
+    old = {k: d.get(k, default) for k in updates}
     d.update(updates)
     yield
     for k, v in old.items():
