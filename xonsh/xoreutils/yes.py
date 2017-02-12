@@ -1,6 +1,4 @@
 """An implementation of yes for xonsh."""
-import os
-import sys
 
 
 def yes(args, stdin, stdout, stderr):

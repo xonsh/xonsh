@@ -1,8 +1,4 @@
 """A tee implementation for xonsh."""
-import os
-import sys
-
-from xonsh.xoreutils.util import arg_handler
 
 
 def tee(args, stdin, stdout, stderr):

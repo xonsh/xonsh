@@ -1,5 +1,6 @@
 """Impelements a simple echo command for xonsh."""
 
+
 def echo(args, stdin, stdout, stderr):
     """A simple echo command."""
     opts = _echo_parse_args(args)

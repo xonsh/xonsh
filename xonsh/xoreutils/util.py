@@ -1,5 +1,6 @@
 """Assorted utilities for xonsh core utils."""
 
+
 def arg_handler(args, out, short, key, val, long=None):
     """A simple argument handler for xoreutils."""
     if short in args:

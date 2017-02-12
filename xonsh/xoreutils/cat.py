@@ -1,8 +1,8 @@
 """Implements a cat command for xonsh."""
 import os
-import sys
 
 from xonsh.xoreutils.util import arg_handler
+
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     if fname == '-':
@@ -98,7 +98,7 @@ Examples:
   cat f - g  Output f's contents, then standard input, then g's contents.
   cat        Copy standard input to standard output."""
 
-#NOT IMPLEMENTED:
+# NOT IMPLEMENTED:
 #  -A, --show-all           equivalent to -vET
 #  -e                       equivalent to -vE
 #  -t                       equivalent to -vT
