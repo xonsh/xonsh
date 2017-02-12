@@ -64,6 +64,6 @@ script:
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
     else
-      py.test -vv -s --timeout=10;
+      py.test --timeout=10;
     fi
 

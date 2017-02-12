@@ -216,7 +216,8 @@ def test_single_command_no_windows_no_mac(cmd, fmt, exp):
         out = fmt(out)
     if callable(exp):
         exp = exp()
-    assert out == exp, err
+    msg = "env: TRAVIS={0!r}, CI={1!r}".format(os.environ['TRAVIS'], os.environ['CI'])
+    assert out == exp, msg
     assert rtn == 0
 
 
