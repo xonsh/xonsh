@@ -8,7 +8,8 @@ import pytest
 import xonsh
 from xonsh.platform import ON_WINDOWS
 
-from tools import skip_if_on_windows
+from tools import (skip_if_on_windows, skip_if_on_darwin, skip_if_on_travis,
+    ON_WINDOWS, ON_DARWIN, ON_TRAVIS)
 
 
 XONSH_PREFIX = xonsh.__file__
@@ -26,6 +27,10 @@ PATH = os.path.join(os.path.dirname(__file__), 'bin') + os.pathsep + \
        os.path.join(XONSH_PREFIX, 'scripts') + os.pathsep + \
        os.path.dirname(sys.executable) + os.pathsep + \
        os.environ['PATH']
+
+
+skip_if_no_xonsh = pytest.mark.skipif(shutil.which('xonsh', path=PATH) is None,
+                                      reason='xonsh not on path')
 
 
 def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
@@ -50,6 +55,20 @@ def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
         proc.kill()
         raise
     return out, err, proc.returncode
+
+
+def check_run_xonsh(cmd, fmt, exp):
+    """The ``fmt`` parameter is a function
+    that formats the output of cmd, can be None.
+    """
+    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
+    if callable(fmt):
+        out = fmt(out)
+    if callable(exp):
+        exp = exp()
+    assert out == exp
+    assert rtn == 0
+
 
 #
 # The following list contains a (stdin, stdout, returncode) tuples
@@ -148,7 +167,7 @@ with open('tttt', 'w') as fp:
 """, '      1       3      24\n' if ON_WINDOWS else " 1  4 16 <stdin>\n", 0),
 # test unthreadable alias (which should trigger a ProcPoxy call)
 ("""
-from xonsh.proc import unthreadable
+from xonsh.tools import unthreadable
 
 @unthreadable
 def _f():
@@ -186,24 +205,33 @@ def test_script_stder(case):
     assert exp_err == err
     assert exp_rtn == rtn
 
-
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, fmt, exp', [
     ('pwd', None, lambda: os.getcwd() + '\n'),
     ('echo WORKING', None, 'WORKING\n'),
     ('ls -f', lambda out: out.splitlines().sort(), os.listdir().sort()),
     ])
-def test_single_command(cmd, fmt, exp):
-    """The ``fmt`` parameter is a function
-    that formats the output of cmd, can be None.
-    """
-    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
-    if callable(fmt):
-        out = fmt(out)
-    if callable(exp):
-        exp = exp()
-    assert out == exp
-    assert rtn == 0
+def test_single_command_no_windows(cmd, fmt, exp):
+    check_run_xonsh(cmd, fmt, exp)
+
+
+_bad_case = pytest.mark.skipif(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
+                               reason="bad platforms")
+
+@_bad_case
+def test_printfile():
+    check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
+
+
+@_bad_case
+def test_printname():
+    check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
+
+
+@_bad_case
+def test_sourcefile():
+    check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
+
 
 
 @skip_if_on_windows

@@ -1,11 +1,11 @@
 """Matplotlib xontribution."""
 
-from xonsh.proc import foreground as foreground
+from xonsh.tools import unthreadable
 
 __all__ = ()
 
 
-@foreground
+@unthreadable
 def mpl(args, stdin=None):
     """Hooks to matplotlib"""
     from xontrib.mplhooks import show
