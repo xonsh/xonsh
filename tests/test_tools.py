@@ -23,7 +23,8 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
-    ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced
+    ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
+    swap_values
     )
 from xonsh.environ import Env
 
@@ -1128,3 +1129,13 @@ def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xonsh_builtins)
         assert path == home_path + exp_end
     else:
         assert path == '~' + exp_end
+
+
+def test_swap_values():
+    orig = {'x': 1}
+    updates = {'x': 42, 'y': 43}
+    with swap_values(orig, updates):
+        assert orig['x'] == 42
+        assert orig['y'] == 43
+    assert orig['x'] == 1
+    assert 'y' not in orig
