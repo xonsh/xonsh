@@ -100,7 +100,8 @@ def xonsh_builtins(xonsh_events):
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.__xonsh_commands_cache__
     del builtins.__xonsh_all_jobs__
-    del builtins.__xonsh_history__
+    if hasattr(builtins, '__xonsh_history__'):
+        del builtins.__xonsh_history__
     del builtins.__xonsh_enter_macro__
     del builtins.evalx
     del builtins.execx
