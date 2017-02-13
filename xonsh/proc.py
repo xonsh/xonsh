@@ -1940,7 +1940,24 @@ class CommandPipeline:
     # Ending methods
     #
 
-    def end_internal(self, tee_output):
+    def end(self, tee_output=True):
+        """
+        End the pipeline, return the controlling terminal if needed.
+
+        Main things done in self._end().
+        """
+        if self.ended:
+            return
+        self._end(tee_output=tee_output)
+        if ON_WINDOWS:
+            return
+        pgid = os.getpgid(0)
+        if self._term_pgid is None or pgid == self._term_pgid:
+            return
+        if give_terminal_to(pgid):  # if gave term succeed
+            self._term_pgid = pgid
+
+    def _end(self, tee_output):
         """Waits for the command to complete and then runs any closing and
         cleanup procedures that need to be run.
         """
@@ -1957,23 +1974,6 @@ class CommandPipeline:
         self._apply_to_history()
         self.ended = True
         self._raise_subproc_error()
-
-    def end(self, tee_output=True):
-        """
-        End the pipeline, return the controlling terminal if needed.
-
-        Main things done in end_internal().
-        """
-        if self.ended:
-            return
-        self.end_internal(tee_output=tee_output)
-        if ON_WINDOWS:
-            return
-        pgid = os.getpgid(0)
-        if self._term_pgid is None or pgid == self._term_pgid:
-            return
-        if give_terminal_to(pgid):  # if gave term succeed
-            self._term_pgid = pgid
 
     def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""

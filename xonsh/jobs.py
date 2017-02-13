@@ -12,6 +12,7 @@ import collections
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
+from xonsh.tools import print_exception
 
 
 tasks = LazyObject(collections.deque, globals(), 'tasks')
@@ -160,13 +161,13 @@ else:
                                  ctypes.byref(omask), None)
     else:
         def give_terminal_to(pgid):
-            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
+            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
+                                             _block_when_giving)
             try:
                 os.tcsetpgrp(sys.stderr.fileno(), pgid)
                 return True
             except Exception as e:
-                print('tcsetpgrp error {}: {}'.format(e.__class__.__name__, e),
-                      file=sys.stderr)
+                print_exception('error in tcsetpgrp:')
                 return False
             finally:
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
