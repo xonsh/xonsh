@@ -26,7 +26,6 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
-from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (

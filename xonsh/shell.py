@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
-import os
 import sys
 import random
 import time
@@ -8,12 +7,9 @@ import difflib
 import builtins
 import warnings
 
-from xonsh.xontribs import update_context, prompt_xontrib_install
-from xonsh.environ import xonshrc_context
-from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
                             ptk_version_is_supported)
-from xonsh.tools import XonshError, to_bool_or_int, print_exception
+from xonsh.tools import XonshError, print_exception
 from xonsh.events import events
 import xonsh.history.main as xhm
 

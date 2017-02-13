@@ -9,7 +9,6 @@ import textwrap
 import locale
 import builtins
 import warnings
-import traceback
 import contextlib
 import collections
 import collections.abc as cabc
@@ -1160,15 +1159,14 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
             run_script_with_cache(filename, execer, ctx)
         loaded = True
     except SyntaxError as err:
-        msg = '{0}\nsyntax error in xonsh run control file {1!r}: {2!s}'
-        print_exception(msg.format(exc, filename, err))
+        msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+        print_exception(msg.format(filename, err))
         loaded = False
     except Exception as err:
-        msg = '{0}\nerror running xonsh run control file {1!r}: {2!s}'
-        print_exception(msg.format(exc, filename, err))
+        msg = 'error running xonsh run control file {0!r}: {1!s}'
+        print_exception(msg.format(filename, err))
         loaded = False
     return loaded
-
 
 
 def default_env(env=None):
