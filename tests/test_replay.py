@@ -7,6 +7,7 @@ import builtins
 import pytest
 
 from xonsh.shell import Shell
+from xonsh.execer import Execer
 from xonsh.replay import Replayer
 
 from tools import skip_if_on_darwin
@@ -18,7 +19,9 @@ HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
 @pytest.yield_fixture(scope='module', autouse=True)
 def ctx():
     """Create a global Shell instance to use in all the test."""
-    builtins.__xonsh_shell__ = Shell({'PATH': []})
+    ctx = {'PATH': []}
+    execer = Execer(xonsh_ctx=ctx)
+    builtins.__xonsh_shell__ = Shell(execer=execer, ctx=ctx)
     yield
     del builtins.__xonsh_shell__
 

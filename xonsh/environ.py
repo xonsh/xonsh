@@ -19,7 +19,8 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
-from xonsh.foreign_shells import load_foreign_envs
+from xonsh.foreign_shells import load_foreign_envs, load_foreign_aliases
+from xonsh.xontribs import update_context, prompt_xontrib_install
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
     ON_WINDOWS, ON_LINUX
@@ -39,6 +40,7 @@ from xonsh.tools import (
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
     seq_to_upper_pathsep, print_color, is_history_backend, to_itself,
+    swap_values,
 )
 import xonsh.prompt.base as prompt
 
@@ -234,14 +236,16 @@ def xonshconfig(env):
     return xc
 
 
-def default_xonshrc():
+@default_value
+def default_xonshrc(env):
     """Creates a new instance of the default xonshrc tuple."""
     if ON_WINDOWS:
-        dxrc = (os.path.join(os.environ['ALLUSERSPROFILE'],
+        dxrc = (xonshconfig(env),
+                os.path.join(os.environ['ALLUSERSPROFILE'],
                              'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc'))
     else:
-        dxrc = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
+        dxrc = (xonshconfig(env), '/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
     return dxrc
 
 
@@ -317,7 +321,7 @@ def DEFAULT_VALUES():
         'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local',
                                                          'share')),
         'XONSHCONFIG': xonshconfig,
-        'XONSHRC': default_xonshrc(),
+        'XONSHRC': default_xonshrc,
         'XONSH_AUTOPAIR': False,
         'XONSH_CACHE_SCRIPTS': True,
         'XONSH_CACHE_EVERYTHING': False,
@@ -1077,36 +1081,26 @@ def load_static_config(ctx, config=None):
     return conf
 
 
-def xonshrc_context(rcfiles=None, execer=None, initial=None):
-    """Attempts to read in xonshrc file, and return the contents."""
-    loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
-    if initial is None:
-        env = {}
-    else:
-        env = initial
-    if rcfiles is None or execer is None:
+def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
+    """Attempts to read in all xonshrc files and return the context."""
+    loaded = env['LOADED_RC_FILES'] = []
+    ctx = {} if ctx is None else ctx
+    if rcfiles is None:
         return env
     env['XONSHRC'] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
             continue
-        try:
-            run_script_with_cache(rcfile, execer, env)
-            loaded.append(True)
-        except SyntaxError as err:
-            loaded.append(False)
-            exc = traceback.format_exc()
-            msg = '{0}\nsyntax error in xonsh run control file {1!r}: {2!s}'
-            warnings.warn(msg.format(exc, rcfile, err), RuntimeWarning)
-            continue
-        except Exception as err:
-            loaded.append(False)
-            exc = traceback.format_exc()
-            msg = '{0}\nerror running xonsh run control file {1!r}: {2!s}'
-            warnings.warn(msg.format(exc, rcfile, err), RuntimeWarning)
-            continue
-    return env
+        _, ext = os.path.splitext(rcfile)
+        if ext == '.json':
+            status = static_config_run_control(rcfile, ctx, env, execer=execer,
+                                               login=login)
+        else:
+            status = xonsh_script_run_control(rcfile, ctx, env, execer=execer,
+                                              login=login)
+        loaded.append(status)
+    return ctx
 
 
 def windows_foreign_env_fixes(ctx):
@@ -1132,7 +1126,55 @@ def foreign_env_fixes(ctx):
         del ctx['PROMPT']
 
 
-def default_env(env=None, config=None, login=True):
+def static_config_run_control(filename, ctx, env, execer=None, login=True):
+    """Loads a static config file and applies it as a run control."""
+    if not login:
+        return
+    conf = load_static_config(env, config=filename)
+    # load foreign shells
+    foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
+                                    issue_warning=False)
+    if ON_WINDOWS:
+        windows_foreign_env_fixes(foreign_env)
+    foreign_env_fixes(foreign_env)
+    env.update(foreign_env)
+    foreign_aliases = load_foreign_aliases(config=filename, issue_warning=True)
+    builtins.aliases.update(foreign_aliases)
+    # load xontribs
+    names = conf.get('xontribs', ())
+    for name in names:
+        update_context(name, ctx=ctx)
+    if getattr(update_context, 'bad_imports', None):
+        prompt_xontrib_install(update_context.bad_imports)
+        del update_context.bad_imports
+    # Do static config environment last, to allow user to override any of
+    # our environment choices
+    env.update(conf.get('env', ()))
+    return True
+
+
+def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
+    """Loads a xonsh file and applies it as a run control."""
+    if execer is None:
+        return False
+    updates = {'__file__': filename, '__name__': os.path.abspath(filename)}
+    try:
+        with swap_values(ctx, updates):
+            run_script_with_cache(filename, execer, ctx)
+        loaded = True
+    except SyntaxError as err:
+        msg = '{0}\nsyntax error in xonsh run control file {1!r}: {2!s}'
+        print_exception(msg.format(exc, filename, err))
+        loaded = False
+    except Exception as err:
+        msg = '{0}\nerror running xonsh run control file {1!r}: {2!s}'
+        print_exception(msg.format(exc, filename, err))
+        loaded = False
+    return loaded
+
+
+
+def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
@@ -1143,17 +1185,6 @@ def default_env(env=None, config=None, login=True):
         del ctx['PROMPT']
     except KeyError:
         pass
-    if login:
-        conf = load_static_config(ctx, config=config)
-        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
-                                        issue_warning=False)
-        if ON_WINDOWS:
-            windows_foreign_env_fixes(foreign_env)
-        foreign_env_fixes(foreign_env)
-        ctx.update(foreign_env)
-        # Do static config environment last, to allow user to override any of
-        # our environment choices
-        ctx.update(conf.get('env', ()))
     # finalize env
     if env is not None:
         ctx.update(env)

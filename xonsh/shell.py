@@ -90,11 +90,12 @@ class Shell(object):
     readline version of shell should be used.
     """
 
-    def __init__(self, ctx=None, shell_type=None, config=None, rc=None,
-                 **kwargs):
+    def __init__(self, execer, ctx=None, shell_type=None, **kwargs):
         """
         Parameters
         ----------
+        execer : Execer
+            An execer instance capable of running xonsh code.
         ctx : Mapping, optional
             The execution context for the shell (e.g. the globals namespace).
             If none, this is computed by loading the rc files. If not None,
@@ -103,16 +104,10 @@ class Shell(object):
         shell_type : str, optional
             The shell type to start, such as 'readline', 'prompt_toolkit',
             or 'random'.
-        config : str, optional
-            Path to configuration file.
-        rc : list of str, optional
-            Sequence of paths to run control files.
         """
-        self.login = kwargs.get('login', True)
+        self.execer = execer
+        self.ctx = {} if ctx is None else ctx
         self.stype = shell_type
-        self._init_environ(ctx, config, rc,
-                           kwargs.get('scriptcache', True),
-                           kwargs.get('cacheall', False))
         env = builtins.__xonsh_env__
         # build history backend before creating shell
         builtins.__xonsh_history__ = hist = xhm.construct_history(
@@ -160,28 +155,3 @@ class Shell(object):
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""
         return getattr(self.shell, attr)
-
-    def _init_environ(self, ctx, config, rc, scriptcache, cacheall):
-        self.ctx = {} if ctx is None else ctx
-        debug = to_bool_or_int(os.getenv('XONSH_DEBUG', '0'))
-        events.on_timingprobe.fire(name='pre_execer_init')
-        self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx,
-                             debug_level=debug)
-        events.on_timingprobe.fire(name='post_execer_init')
-        self.execer.scriptcache = scriptcache
-        self.execer.cacheall = cacheall
-        if self.stype != 'none' or self.login:
-            # load xontribs from config file
-            names = builtins.__xonsh_config__.get('xontribs', ())
-            for name in names:
-                update_context(name, ctx=self.ctx)
-            if getattr(update_context, 'bad_imports', None):
-                prompt_xontrib_install(update_context.bad_imports)
-                del update_context.bad_imports
-            # load run control files
-            env = builtins.__xonsh_env__
-            rc = env.get('XONSHRC') if rc is None else rc
-            events.on_pre_rc.fire()
-            self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer, initial=self.ctx))
-            events.on_post_rc.fire()
-        self.ctx['__name__'] = '__main__'
