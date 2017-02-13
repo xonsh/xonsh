@@ -792,6 +792,7 @@ def run_subproc(cmds, captured=False):
     Lastly, the captured argument affects only the last real command.
     """
     specs = cmds_to_specs(cmds, captured=captured)
+    events.on_command_started.fire(cmd=specs)
     captured = specs[-1].captured
     procs = []
     proc = pipeline_group = None

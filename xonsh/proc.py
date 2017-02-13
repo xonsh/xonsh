@@ -33,6 +33,7 @@ from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 # these decorators are imported for users back-compatible
 from xonsh.tools import unthreadable, uncapturable  # NOQA
+from xonsh.events import events
 
 # foreground has be deprecated
 foreground = unthreadable
@@ -535,6 +536,8 @@ class PopenThread(threading.Thread):
         self.proc = None  # has to be here for closure for handles
         self.old_int_handler = self.old_winch_handler = None
         self.old_tstp_handler = self.old_quit_handler = None
+        self.command_args = args
+        self.previous_signal = None
         if on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT,
                                                  self._signal_int)
@@ -649,6 +652,7 @@ class PopenThread(threading.Thread):
         # kill the process if it is still alive. Happens when piping.
         if proc.poll() is None:
             proc.terminate()
+        events.on_command_finished.fire(cmd=self.command_args, sig=self.previous_signal)
 
     def _wait_and_getattr(self, name):
         """make sure the instance has a certain attr, and return it."""
@@ -899,6 +903,7 @@ class PopenThread(threading.Thread):
         if self.proc is None:
             return
         try:
+            self.previous_signal = signal
             rtn = self.proc.send_signal(signal)
         except ProcessLookupError:
             # This can happen in the case of !(cmd) when the command has ended
