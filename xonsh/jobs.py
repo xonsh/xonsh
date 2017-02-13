@@ -6,13 +6,12 @@ import time
 import ctypes
 import signal
 import builtins
-import functools
 import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
-from xonsh.tools import print_exception, unthreadable
+from xonsh.tools import unthreadable
 
 
 tasks = LazyObject(collections.deque, globals(), 'tasks')
@@ -125,18 +124,6 @@ else:
                                              signal.SIGTSTP, signal.SIGCHLD),
                                     globals(), '_block_when_giving')
 
-    # check for shell tty
-    @functools.lru_cache(1)
-    def _shell_tty():
-        try:
-            _st = sys.stderr.fileno()
-            if os.tcgetpgrp(_st) != os.getpgid(0):
-                # we don't own it
-                _st = None
-        except OSError:
-            _st = None
-        return _st
-
     # give_terminal_to is a simplified version of:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
     # this will give the terminal to the process group pgid
@@ -145,32 +132,27 @@ else:
         # though pthread_sigmask is defined in the kernel.  thus, we use
         # ctypes to mimic the calls in the "normal" version below.
         def give_terminal_to(pgid):
-            st = _shell_tty()
-            if st is not None and os.isatty(st):
-                omask = ctypes.c_ulong()
-                mask = ctypes.c_ulong()
-                LIBC.sigemptyset(ctypes.byref(mask))
-                for i in _block_when_giving:
-                    LIBC.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
-                LIBC.sigemptyset(ctypes.byref(omask))
-                LIBC.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
-                                 ctypes.byref(mask),
-                                 ctypes.byref(omask))
-                LIBC.tcsetpgrp(ctypes.c_int(st), ctypes.c_int(pgid))
-                LIBC.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
-                                 ctypes.byref(omask), None)
+            omask = ctypes.c_ulong()
+            mask = ctypes.c_ulong()
+            LIBC.sigemptyset(ctypes.byref(mask))
+            for i in _block_when_giving:
+                LIBC.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
+            LIBC.sigemptyset(ctypes.byref(omask))
+            LIBC.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
+                             ctypes.byref(mask),
+                             ctypes.byref(omask))
+            st = sys.stderr.fileno()
+            LIBC.tcsetpgrp(ctypes.c_int(st), ctypes.c_int(pgid))
+            LIBC.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
+                             ctypes.byref(omask), None)
+            return True
     else:
         def give_terminal_to(pgid):
             oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                              _block_when_giving)
-            try:
-                os.tcsetpgrp(sys.stderr.fileno(), pgid)
-                return True
-            except Exception as e:
-                print_exception('error in tcsetpgrp:')
-                return False
-            finally:
-                signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+            os.tcsetpgrp(sys.stderr.fileno(), pgid)
+            signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+            return True
 
     def wait_for_active_job(last_task=None, backgrounded=False):
         """
