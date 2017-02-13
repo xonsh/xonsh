@@ -76,7 +76,8 @@ def xonsh_builtins(xonsh_events):
     yield builtins
     if hasattr(builtins, '__xonsh_env__'):
         del builtins.__xonsh_env__
-    del builtins.__xonsh_ctx__
+    if hasattr(builtins, '__xonsh_ctx__'):
+        del builtins.__xonsh_ctx__
     del builtins.__xonsh_shell__
     if hasattr(builtins, '__xonsh_help__'):
         del builtins.__xonsh_help__
