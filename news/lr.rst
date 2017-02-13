@@ -18,7 +18,11 @@
 * The ``--config-path`` command line option is now deprecated in favor of
   ``--rc``.
 
-**Removed:** None
+**Removed:**
+
+* ``xonsh.environ.DEFAULT_XONSHRC`` has been removed due to deprecation.
+  For this value, please check the environment instead, or call
+  ``xonsh.environ.default_xonshrc(env)``.
 
 **Fixed:** None
 

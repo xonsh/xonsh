@@ -249,9 +249,6 @@ def default_xonshrc(env):
     return dxrc
 
 
-DEFAULT_XONSHRC = LazyObject(default_xonshrc, globals(), 'DEFAULT_XONSHRC')
-
-
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
