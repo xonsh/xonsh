@@ -806,6 +806,7 @@ def run_subproc(cmds, captured=False):
             'pids': [i.pid for i in command.procs],
             'obj': proc,
             'bg': background,
+            'pipeline': command,
         })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
@@ -954,7 +955,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
             ctx |= set(locs.keys())
         mode = mode or 'eval'
         arg = execer.parse(raw_arg, ctx, mode=mode, filename=filename)
-    elif kind is types.CodeType or kind is compile:
+    elif isinstance(kind, types.CodeType) or kind is compile:
         mode = mode or 'eval'
         arg = execer.compile(raw_arg, mode=mode, glbs=glbs, locs=locs,
                              filename=filename)

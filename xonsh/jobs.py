@@ -12,7 +12,7 @@ import collections
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
-from xonsh.tools import print_exception
+from xonsh.tools import print_exception, unthreadable
 
 
 tasks = LazyObject(collections.deque, globals(), 'tasks')
@@ -344,6 +344,7 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     return None, None
 
 
+@unthreadable
 def fg(args, stdin=None):
     """
     xonsh command: fg
@@ -382,7 +383,8 @@ def fg(args, stdin=None):
     job['bg'] = False
     job['status'] = "running"
     print_one_job(tid)
-    wait_for_active_job()
+    pipeline = job['pipeline']
+    pipeline.resume(job)
 
 
 def bg(args, stdin=None):

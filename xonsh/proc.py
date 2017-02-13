@@ -29,7 +29,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
-from xonsh.jobs import wait_for_active_job, give_terminal_to
+from xonsh.jobs import wait_for_active_job, give_terminal_to, _continue
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 # these decorators are imported for users back-compatible
 from xonsh.tools import unthreadable, uncapturable  # NOQA
@@ -1656,8 +1656,6 @@ class CommandPipeline:
         ----------
         specs : list of SubprocSpec
             Process sepcifications
-        starttime : floats or None, optional
-            Start timestamp.
 
         Attributes
         ----------
@@ -1675,6 +1673,8 @@ class CommandPipeline:
             A string of the standard error.
         lines : list of str
             The output lines
+        starttime : floats or None
+            Pipeline start timestamp.
         """
         self.starttime = None
         self.ended = False
@@ -1959,6 +1959,13 @@ class CommandPipeline:
         self._apply_to_history()
         self.ended = True
         self._raise_subproc_error()
+
+    def resume(self, job, tee_output=True):
+        self.ended = False
+        if give_terminal_to(job['pgrp']):
+            self._term_pgid = job['pgrp']
+        _continue(job)
+        self.end(tee_output=tee_output)
 
     def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""
