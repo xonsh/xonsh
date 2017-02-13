@@ -8,7 +8,6 @@ import io
 import os
 import re
 import sys
-import time
 import types
 import shlex
 import signal
@@ -27,7 +26,7 @@ from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
-from xonsh.jobs import add_job, give_terminal_to
+from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     PopenThread, ProcProxyThread, ProcProxy, ConsoleParallelReader,
@@ -780,17 +779,6 @@ def _should_set_title(captured=False):
             hasattr(builtins, '__xonsh_shell__'))
 
 
-def update_fg_process_group(pipeline_group, background):
-    if background:
-        return False
-    if not ON_POSIX:
-        return False
-    env = builtins.__xonsh_env__
-    if not env.get('XONSH_INTERACTIVE'):
-        return False
-    return give_terminal_to(pipeline_group)
-
-
 def run_subproc(cmds, captured=False):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -806,22 +794,16 @@ def run_subproc(cmds, captured=False):
     """
     specs = cmds_to_specs(cmds, captured=captured)
     captured = specs[-1].captured
-    background = specs[-1].background
-    procs = []
-    proc = pipeline_group = None
-    term_pgid = None
-    for spec in specs:
-        starttime = time.time()
-        proc = spec.run(pipeline_group=pipeline_group)
-        if captured != 'object' and proc.pid and pipeline_group is None:
-            pipeline_group = proc.pid
-            if update_fg_process_group(pipeline_group, background):
-                term_pgid = pipeline_group
-        procs.append(proc)
+    if captured == 'hiddenobject':
+        command = HiddenCommandPipeline(specs)
+    else:
+        command = CommandPipeline(specs)
+    proc = command.proc
+    background = command.spec.background
     if not all(x.is_proxy for x in specs):
         add_job({
             'cmds': cmds,
-            'pids': [i.pid for i in procs],
+            'pids': [i.pid for i in command.procs],
             'obj': proc,
             'bg': background,
         })
@@ -831,12 +813,6 @@ def run_subproc(cmds, captured=False):
     # create command or return if backgrounding.
     if background:
         return
-    if captured == 'hiddenobject':
-        command = HiddenCommandPipeline(specs, procs, starttime=starttime,
-                                        captured=captured, term_pgid=term_pgid)
-    else:
-        command = CommandPipeline(specs, procs, starttime=starttime,
-                                  captured=captured, term_pgid=term_pgid)
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()

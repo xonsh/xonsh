@@ -327,11 +327,11 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     # I believe that there is a bug in PTK that if we reset the
     # cursor position, the cursor on the next prompt is accidentally on
     # the next line.  If this is fixed, uncomment the following line.
-    #if max_offset < offset + expandsize:
-    #    rows, max_offset, orig_posize = _expand_console_buffer(
+    # if max_offset < offset + expandsize:
+    #     rows, max_offset, orig_posize = _expand_console_buffer(
     #                                        cols, max_offset, expandsize,
     #                                        orig_posize, fd)
-    #    winutils.set_console_cursor_position(x, y, fd=fd)
+    #     winutils.set_console_cursor_position(x, y, fd=fd)
     while True:
         posize = winutils.get_position_size(fd)
         offset = (cols*y) + x
@@ -1644,6 +1644,17 @@ def safe_readable(handle):
     return status
 
 
+def update_fg_process_group(pipeline_group, background):
+    if background:
+        return False
+    if not ON_POSIX:
+        return False
+    env = builtins.__xonsh_env__
+    if not env.get('XONSH_INTERACTIVE'):
+        return False
+    return give_terminal_to(pipeline_group)
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -1654,19 +1665,14 @@ class CommandPipeline:
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
 
-    def __init__(self, specs, procs, starttime=None, captured=False,
-                 term_pgid=None):
+    def __init__(self, specs):
         """
         Parameters
         ----------
         specs : list of SubprocSpec
             Process sepcifications
-        procs : list of Popen-like
-            Process objects.
         starttime : floats or None, optional
             Start timestamp.
-        captured : bool or str, optional
-            Flag for whether or not the command should be captured.
 
         Attributes
         ----------
@@ -1685,18 +1691,31 @@ class CommandPipeline:
         lines : list of str
             The output lines
         """
-        self.procs = procs
-        self.proc = procs[-1]
+        self.starttime = None
+        self.ended = False
+        self.procs = []
         self.specs = specs
         self.spec = specs[-1]
-        self.starttime = starttime or time.time()
-        self.captured = captured
-        self.ended = False
+        self.captured = specs[-1].captured
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
-        self._term_pgid = term_pgid
+        self._term_pgid = None
+
+        background = self.spec.background
+        pipeline_group = None
+        for spec in specs:
+            if self.starttime is None:
+                self.starttime = time.time()
+            proc = spec.run(pipeline_group=pipeline_group)
+            if proc.pid and pipeline_group is None and not spec.is_proxy and \
+                    self.captured != 'object':
+                pipeline_group = proc.pid
+                if update_fg_process_group(pipeline_group, background):
+                    self._term_pgid = pipeline_group
+            self.procs.append(proc)
+        self.proc = self.procs[-1]
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
