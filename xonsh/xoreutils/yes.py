@@ -15,11 +15,11 @@ def yes(args, stdin, stdout, stderr):
     return 0
 
 
-YES_HELP = """This version of yes was written in Python for the xonsh project: http://xon.sh
-Based on yes from GNU coreutils: http://www.gnu.org/software/coreutils/
-
-Usage: /usr/bin/yes [STRING]...
-  or:  /usr/bin/yes OPTION
+YES_HELP = """Usage: yes [STRING]...
+  or:  yes OPTION
 Repeatedly output a line with all specified STRING(s), or 'y'.
 
-      --help     display this help and exit"""
+      --help     display this help and exit
+
+This version of yes was written in Python for the xonsh project: http://xon.sh
+Based on yes from GNU coreutils: http://www.gnu.org/software/coreutils/"""

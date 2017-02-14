@@ -13,6 +13,10 @@ def tee(args, stdin, stdout, stderr):
     if '--help' in args:
         print(TEE_HELP, file=stdout)
         return 0
+    if stdin is None:
+        msg = "tee was not piped stdin, must have input stream to read from."
+        print(msg, file=stderr)
+        return 1
 
     errors = False
     files = []

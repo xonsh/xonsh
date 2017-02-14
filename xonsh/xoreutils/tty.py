@@ -34,11 +34,11 @@ def tty(args, stdin, stdout, stderr):
             return 3
     return 0
 
-TTY_HELP = """This version of tty was written in Python for the xonsh project: http://xon.sh
-Based on tty from GNU coreutils: http://www.gnu.org/software/coreutils/
-
-Usage: /usr/bin/tty [OPTION]...
+TTY_HELP = """Usage: tty [OPTION]...
 Print the file name of the terminal connected to standard input.
 
   -s, --silent, --quiet   print nothing, only return an exit status
-      --help     display this help and exit"""
+      --help     display this help and exit
+
+This version of tty was written in Python for the xonsh project: http://xon.sh
+Based on tty from GNU coreutils: http://www.gnu.org/software/coreutils/"""

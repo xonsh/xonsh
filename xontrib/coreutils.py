@@ -1,4 +1,4 @@
-"""Additional core utilites that are implemened in xonsh. The current list
+"""Additional core utilites that are implemented in xonsh. The current list
 includes:
 
 * cat
