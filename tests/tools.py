@@ -23,7 +23,7 @@ VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
 ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
-ON_CONDA = True in [conda in pytest.__file__ for conda
+ON_CONDA = True in [conda in pytest.__file__.lower() for conda
                     in ['anaconda', 'miniconda']]
 ON_TRAVIS = 'TRAVIS' in os.environ and 'CI' in os.environ
 TEST_DIR = os.path.dirname(__file__)
