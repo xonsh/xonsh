@@ -28,7 +28,10 @@ if ON_DARWIN:
         for pid in job['pids']:
             if pid is None:  # the pid of an aliased proc is None
                 continue
-            os.kill(pid, signal)
+            try:
+                os.kill(pid, signal)
+            except Exception:
+                pass
 elif ON_WINDOWS:
     pass
 elif ON_CYGWIN:
@@ -201,19 +204,46 @@ else:
                                    backgrounded=backgrounded)
 
 
+def handle_sigint():
+    """
+    Handle SIGINT for xonsh and its subprocesses. Currently this function
+    only affects macOS.
+
+    This is a temporary fix for a pipeline issue on Mac, see Github #2064
+    """
+    if not ON_DARWIN:
+        return
+
+    def _func_handle_sigint(num, frame):
+        global tasks
+        for tid in tasks:
+            try:
+                task = get_task(tid)
+            except KeyError:
+                continue
+            if task['status'] == 'stopped' or task['bg']:
+                continue
+            for pid in task['pids']:
+                try:
+                    os.kill(pid, signal.SIGINT)
+                except ProcessLookupError:
+                    pass
+    signal.signal(signal.SIGINT, _func_handle_sigint)
+
+
 def get_next_task():
     """ Get the next active task and put it on top of the queue"""
-    selected_task = None
+    selected_task_id = None
     for tid in tasks:
         task = get_task(tid)
         if not task['bg'] and task['status'] == "running":
-            selected_task = tid
+            selected_task_id = tid
             break
-    if selected_task is None:
+    if selected_task_id is None:
         return
-    tasks.remove(selected_task)
-    tasks.appendleft(selected_task)
-    return get_task(selected_task)
+    tasks.remove(selected_task_id)
+    tasks.appendleft(selected_task_id)
+    return get_task(selected_task_id)
 
 
 def get_task(tid):
@@ -226,9 +256,9 @@ def _clear_dead_jobs():
         obj = get_task(tid)['obj']
         if obj.poll() is not None:
             to_remove.add(tid)
-    for job in to_remove:
-        tasks.remove(job)
-        del builtins.__xonsh_all_jobs__[job]
+    for tid in to_remove:
+        tasks.remove(tid)
+        del builtins.__xonsh_all_jobs__[tid]
 
 
 def print_one_job(num, outfile=sys.stdout):

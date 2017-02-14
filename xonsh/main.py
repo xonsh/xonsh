@@ -14,7 +14,7 @@ from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
 from xonsh.proc import HiddenCommandPipeline
-from xonsh.jobs import ignore_sigtstp
+from xonsh.jobs import ignore_sigtstp, handle_sigint
 from xonsh.tools import setup_win_unicode_console, print_color
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
@@ -315,6 +315,7 @@ def main_xonsh(args):
             # enter the shell
             env['XONSH_INTERACTIVE'] = True
             ignore_sigtstp()
+            handle_sigint()
             if (env['XONSH_INTERACTIVE'] and
                     not env['LOADED_CONFIG'] and
                     not any(os.path.isfile(i) for i in env['XONSHRC'])):
