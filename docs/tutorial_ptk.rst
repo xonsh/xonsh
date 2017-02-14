@@ -61,13 +61,8 @@ functionality (in less you take the time to rebind them elsewhere).
 Useful imports
 ==============
 
-The first thing we need is a xonsh `event <events.html>`_. The `xonshrc
-<xonshrc.html>`_ is loaded before the shell is fully initialized so we need to
-delay the loading of our custom keybindings until after loading is finished.::
-
-    from builtins import events
-
-We also need a few ``prompt_toolkit`` tools::
+There are a few useful ``prompt_toolkit`` tools that will help us create better
+bindings::
 
     from prompt_toolkit.keys import Keys
     from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
@@ -75,15 +70,15 @@ We also need a few ``prompt_toolkit`` tools::
 Custom keyload function
 =======================
 
-To load the keybindings after the shell is initialized, we define a function
-that contains all of our custom keybindings and decorate it with the appropriate
-event, in our case ``on_ptk_create``.
+We need our additional keybindings to load after the shell is initialized, so we
+define a function that contains all of the custom keybindings and decorate it
+with the appropriate event, in this case ``on_ptk_create``.
 
 We'll start with a toy example that just inserts the text "hi" into the current line of the prompt::
 
     @events.on_ptk_create
-    def custom_keybindings(**kw):
-        handler = kw['bindings'].registry.add_binding
+    def custom_keybindings(bindings, **kw):
+        handler = bindings.registry.add_binding
 
         @handler(Keys.ControlW)
         def say_hi(event):
