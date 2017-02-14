@@ -32,7 +32,7 @@ def _echo_parse_args(args):
     return out
 
 
-EHCO_HELP = """Usage: echo [OPTIONS]... [STRING]...
+ECHO_HELP = """Usage: echo [OPTIONS]... [STRING]...
 Echo the STRING(s) to standard output.
 
   -n             do not include the trailing newline
