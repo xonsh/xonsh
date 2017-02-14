@@ -25,8 +25,8 @@ def source_path():
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    monkeypatch.setattr(xonsh.built_ins, 'load_builtins',
-                        lambda *args, **kwargs: None)
+    monkeypatch.setattr('xonsh.built_ins.load_builtins.__code__',
+                        (lambda *args, **kwargs: None).__code__)
     execer = Execer(unload=False)
     builtins.__xonsh_execer__ = execer
     return execer
