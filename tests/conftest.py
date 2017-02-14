@@ -4,8 +4,6 @@ import os
 
 import pytest
 
-import xonsh.built_ins
-
 from xonsh.built_ins import ensure_list_of_strs, enter_macro
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
