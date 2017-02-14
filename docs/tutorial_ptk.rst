@@ -17,28 +17,46 @@ Overview
 
 The ``prompt_toolkit`` shell has a registry for handling custom keybindings. You
 may not like the default keybindings in xonsh, or you may want to add a new key
-command.
+binding.
 
 We'll walk you though how to do this using ``prompt_toolkit`` tools to define
 keybindings and warn you about potential pitfalls.
 
 All of the code below can be entered into your `xonshrc <xonshrc.html>`_
 
-The danger keys
-===============
+Control characters
+==================
 
 We can't and won't stop you from doing what you want, but in the interest of a
-functioning shell, you probably shouldn't mess with the following keystrokes as
-they have some important functions already assigned to them.
+functioning shell, you probably shouldn't mess with the following keystrokes.
+Some of them are `ASCII control characters
+<https://en.wikipedia.org/wiki/Control_character#In_ASCII>`_ and _really_
+shouldn't be used. The others are used by xonsh and will result in some loss of
+functionality (in less you take the time to rebind them elsewhere).
 
 .. list-table::
-    :widths: 2 2
+    :widths: 2 2 2
     :header-rows: 1
 
     * - Keystroke
+      - ASCII control representation
       - Default commmand
-    * - Control J
-      - <Enter>
+    * - ``Control J``
+      - ``<Enter>``
+      - Run command
+    * - ``Control I``
+      - ``<Tab>``
+      - Indent, autocomplete
+    * - ``Control R``
+      - 
+      - Backwards history search
+    * - ``Control Z``
+      - 
+      - SIGSTOP current job
+    * - ``Control C``
+      -
+      - SIGINT current job
+
 
 Useful imports
 ==============
@@ -59,13 +77,13 @@ Custom keyload function
 
 To load the keybindings after the shell is initialized, we define a function
 that contains all of our custom keybindings and decorate it with the appropriate
-event, in our case ``on_post_init``.
+event, in our case ``on_ptk_create``.
 
 We'll start with a toy example that just inserts the text "hi" into the current line of the prompt::
 
-    @events.on_post_init
-    def custom_keybindings():
-        handler = __xonsh_shell__.shell.key_bindings_manager.registry.add_binding
+    @events.on_ptk_create
+    def custom_keybindings(**kw):
+        handler = kw['bindings'].registry.add_binding
 
         @handler(Keys.ControlW)
         def say_hi(event):
@@ -95,6 +113,32 @@ Restrict actions with filters
 =============================
 
 Often we want a key command to only work if certain conditions are met. For
-instance, the <TAB> key in xonsh brings up the completions menu, but then it
+instance, the ``<TAB>`` key in xonsh brings up the completions menu, but then it
 also cycles through the available completions. We use filters to create this
 behavior.
+
+A few helpful filters are included with ``prompt_toolkit``, like
+``ViInsertMode`` and ``EmacsInsertMode``, which return ``True`` when the
+respective insert mode is active.
+
+But it's also easy to create our own filters that take advantage of xonsh's
+beautiful strangeness. Suppose we want a filter to restrict a given command to
+run only when there are fewer than ten files in a given directory. We just need a function that returns a Bool that matches that requirement and then we decorate it! And remember, those functions can be in xonsh-language, not just pure Python::
+
+    @Condition
+    def lt_ten_files(cli):
+        return len(g`*`) < 10
+
+.. note:: See `the tutorial section on globbing
+          <tutorial.html#normal-globbing>`_ for more globbing options.
+
+Now that the condition is defined, we can pass it as a ``filter`` keyword to a keybinding definition::
+
+    @handler(Keys.ControlL, filter=lt_ten_files)
+    def ls_if_lt_ten(event):
+        ls -l
+        event.cli.renderer.erase()
+
+With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
+contents of your current directory if there are fewer than 10 items in it.
+Useful? Debatable. Powerful? Yes.
