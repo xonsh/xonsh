@@ -249,7 +249,6 @@ Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
 Funny = group(Operator, Bracket, Special)
 
 PlainToken = group(IORedirect, Number, Funny, String, Name_RE, SearchPath)
-Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.
 ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
