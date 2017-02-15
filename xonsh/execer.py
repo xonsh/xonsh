@@ -8,7 +8,8 @@ import collections.abc as cabc
 
 from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
-from xonsh.tools import subproc_toks, find_next_break
+from xonsh.tools import (subproc_toks, find_next_break, get_logical_line,
+    replace_logical_line)
 from xonsh.built_ins import load_builtins, unload_builtins
 
 
@@ -178,7 +179,7 @@ class Execer(object):
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
-                line = lines[idx]
+                line, nlogical = get_logical_line(lines, idx)
                 if input.endswith('\n'):
                     lines.append('')
                 if len(line.strip()) == 0:
@@ -220,6 +221,7 @@ class Execer(object):
                     # anything
                     raise original_error
                 else:
+                    # print some debugging info
                     if self.debug_level > 1:
                         msg = ('{0}:{1}:{2}{3} - {4}\n'
                                '{0}:{1}:{2}{3} + {5}')
@@ -227,7 +229,9 @@ class Execer(object):
                         msg = msg.format(self.filename, last_error_line,
                                          last_error_col, mstr, line, sbpline)
                         print(msg, file=sys.stderr)
-                    lines[idx] = sbpline
+                    # replace the line
+                    #lines[idx] = sbpline
+                    replace_logical_line(lines, sbpline, idx, nlogical)
                 last_error_col += 3
                 input = '\n'.join(lines)
         return tree, input
