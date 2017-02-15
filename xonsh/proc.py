@@ -838,7 +838,10 @@ class PopenThread(threading.Thread):
         new[LFLAG] |= termios.ECHO | termios.ICANON
         new[CC][termios.VMIN] = 1
         new[CC][termios.VTIME] = 0
-        termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
+        try:
+            termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
+        except termios.error:
+            pass
 
     #
     # Dispatch methods

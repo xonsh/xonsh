@@ -6,6 +6,7 @@ import enum
 import argparse
 import builtins
 import contextlib
+import signal
 import traceback
 
 from xonsh import __version__
@@ -340,6 +341,12 @@ def main(argv=None):
 
 def main_xonsh(args):
     """Main entry point for xonsh cli."""
+    if not ON_WINDOWS:
+        def func_sig_ttin_ttou(n, f):
+            pass
+        signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
+        signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
+
     events.on_post_init.fire()
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
