@@ -8,7 +8,6 @@ import io
 import os
 import re
 import sys
-import time
 import types
 import shlex
 import signal
@@ -495,6 +494,8 @@ class SubprocSpec:
         self.prep_env(kwargs)
         self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
         if callable(self.alias):
+            if 'preexec_fn' in kwargs:
+                kwargs.pop('preexec_fn')
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
@@ -532,7 +533,7 @@ class SubprocSpec:
 
     def prep_preexec_fn(self, kwargs, pipeline_group=None):
         """Prepares the 'preexec_fn' keyword argument"""
-        if not (ON_POSIX and self.cls is subprocess.Popen):
+        if not ON_POSIX:
             return
         if not builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
             return
@@ -792,34 +793,27 @@ def run_subproc(cmds, captured=False):
     """
     specs = cmds_to_specs(cmds, captured=captured)
     captured = specs[-1].captured
-    procs = []
-    proc = pipeline_group = None
-    for spec in specs:
-        starttime = time.time()
-        proc = spec.run(pipeline_group=pipeline_group)
-        procs.append(proc)
-        if ON_POSIX and pipeline_group is None and \
-           spec.cls is subprocess.Popen:
-            pipeline_group = proc.pid
-    if not spec.is_proxy:
+    if captured == 'hiddenobject':
+        command = HiddenCommandPipeline(specs)
+    else:
+        command = CommandPipeline(specs)
+    proc = command.proc
+    background = command.spec.background
+    if not all(x.is_proxy for x in specs):
         add_job({
             'cmds': cmds,
-            'pids': [i.pid for i in procs],
+            'pids': [i.pid for i in command.procs],
             'obj': proc,
-            'bg': spec.background,
+            'bg': background,
+            'pipeline': command,
+            'pgrp': command.term_pgid,
         })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
     # create command or return if backgrounding.
-    if spec.background:
+    if background:
         return
-    if captured == 'hiddenobject':
-        command = HiddenCommandPipeline(specs, procs, starttime=starttime,
-                                        captured=captured)
-    else:
-        command = CommandPipeline(specs, procs, starttime=starttime,
-                                  captured=captured)
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()
@@ -961,7 +955,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
             ctx |= set(locs.keys())
         mode = mode or 'eval'
         arg = execer.parse(raw_arg, ctx, mode=mode, filename=filename)
-    elif kind is types.CodeType or kind is compile:
+    elif kind is types.CodeType or kind is compile:  # NOQA
         mode = mode or 'eval'
         arg = execer.compile(raw_arg, mode=mode, glbs=glbs, locs=locs,
                              filename=filename)

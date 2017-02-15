@@ -29,7 +29,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
-from xonsh.jobs import wait_for_active_job
+from xonsh.jobs import wait_for_active_job, give_terminal_to, _continue
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 # these decorators are imported for users back-compatible
 from xonsh.tools import unthreadable, uncapturable  # NOQA
@@ -332,11 +332,11 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     # I believe that there is a bug in PTK that if we reset the
     # cursor position, the cursor on the next prompt is accidentally on
     # the next line.  If this is fixed, uncomment the following line.
-    #if max_offset < offset + expandsize:
-    #    rows, max_offset, orig_posize = _expand_console_buffer(
+    # if max_offset < offset + expandsize:
+    #     rows, max_offset, orig_posize = _expand_console_buffer(
     #                                        cols, max_offset, expandsize,
     #                                        orig_posize, fd)
-    #    winutils.set_console_cursor_position(x, y, fd=fd)
+    #     winutils.set_console_cursor_position(x, y, fd=fd)
     while True:
         posize = winutils.get_position_size(fd)
         offset = (cols*y) + x
@@ -1629,6 +1629,17 @@ def safe_readable(handle):
     return status
 
 
+def update_fg_process_group(pipeline_group, background):
+    if background:
+        return False
+    if not ON_POSIX:
+        return False
+    env = builtins.__xonsh_env__
+    if not env.get('XONSH_INTERACTIVE'):
+        return False
+    return give_terminal_to(pipeline_group)
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -1639,18 +1650,12 @@ class CommandPipeline:
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
 
-    def __init__(self, specs, procs, starttime=None, captured=False):
+    def __init__(self, specs):
         """
         Parameters
         ----------
         specs : list of SubprocSpec
             Process sepcifications
-        procs : list of Popen-like
-            Process objects.
-        starttime : floats or None, optional
-            Start timestamp.
-        captured : bool or str, optional
-            Flag for whether or not the command should be captured.
 
         Attributes
         ----------
@@ -1668,18 +1673,38 @@ class CommandPipeline:
             A string of the standard error.
         lines : list of str
             The output lines
+        starttime : floats or None
+            Pipeline start timestamp.
         """
-        self.procs = procs
-        self.proc = procs[-1]
+        self.starttime = None
+        self.ended = False
+        self.procs = []
         self.specs = specs
         self.spec = specs[-1]
-        self.starttime = starttime or time.time()
-        self.captured = captured
-        self.ended = False
+        self.captured = specs[-1].captured
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
+        self.term_pgid = None
+
+        background = self.spec.background
+        pipeline_group = None
+        for spec in specs:
+            if self.starttime is None:
+                self.starttime = time.time()
+            try:
+                proc = spec.run(pipeline_group=pipeline_group)
+            except XonshError:
+                self._return_terminal()
+                raise
+            if proc.pid and pipeline_group is None and not spec.is_proxy and \
+                    self.captured != 'object':
+                pipeline_group = proc.pid
+                if update_fg_process_group(pipeline_group, background):
+                    self.term_pgid = pipeline_group
+            self.procs.append(proc)
+        self.proc = self.procs[-1]
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
@@ -1905,11 +1930,20 @@ class CommandPipeline:
     #
 
     def end(self, tee_output=True):
-        """Waits for the command to complete and then runs any closing and
-        cleanup procedures that need to be run.
+        """
+        End the pipeline, return the controlling terminal if needed.
+
+        Main things done in self._end().
         """
         if self.ended:
             return
+        self._end(tee_output=tee_output)
+        self._return_terminal()
+
+    def _end(self, tee_output):
+        """Waits for the command to complete and then runs any closing and
+        cleanup procedures that need to be run.
+        """
         if tee_output:
             for _ in self.tee_stdout():
                 pass
@@ -1923,6 +1957,28 @@ class CommandPipeline:
         self._apply_to_history()
         self.ended = True
         self._raise_subproc_error()
+
+    def _return_terminal(self):
+        if ON_WINDOWS or not ON_POSIX:
+            return
+        pgid = os.getpgid(0)
+        if self.term_pgid is None or pgid == self.term_pgid:
+            return
+        if give_terminal_to(pgid):  # if gave term succeed
+            self.term_pgid = pgid
+            if hasattr(builtins, '__xonsh_shell__'):
+                # restoring sanity could probably be called whenever we return
+                # control to the shell. But it only seems to matter after a
+                # ^Z event. This *has* to be called after we give the terminal
+                # back to the shell.
+                builtins.__xonsh_shell__.shell.restore_tty_sanity()
+
+    def resume(self, job, tee_output=True):
+        self.ended = False
+        if give_terminal_to(job['pgrp']):
+            self.term_pgid = job['pgrp']
+        _continue(job)
+        self.end(tee_output=tee_output)
 
     def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""
