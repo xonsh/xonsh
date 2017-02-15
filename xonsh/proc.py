@@ -1236,6 +1236,7 @@ class ProcProxyThread(threading.Thread):
         self.stdout = stdout
         self.stderr = stderr
         self.env = env or builtins.__xonsh_env__
+        self._interrupted = False
 
         if ON_WINDOWS:
             if self.p2cwrite != -1:
@@ -1263,8 +1264,18 @@ class ProcProxyThread(threading.Thread):
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
+        # Set some signal handles, if we can. Must come before process
+        # is started to prevent deadlock on windows
+        self.old_int_handler = None
+        if on_main_thread():
+            self.old_int_handler = signal.signal(signal.SIGINT,
+                                                 self._signal_int)
+        # start up the proc
         super().__init__()
         self.start()
+
+    def __del__(self):
+        self._restore_sigint()
 
     def run(self):
         """Set up input/output streams and execute the child function in a new
@@ -1369,7 +1380,40 @@ class ProcProxyThread(threading.Thread):
     def wait(self, timeout=None):
         """Waits for the process to finish and returns the return code."""
         self.join()
+        self._restore_sigint()
         return self.returncode
+
+    #
+    # SIGINT handler
+    #
+
+    def _signal_int(self, signum, frame):
+        """Signal handler for SIGINT - Ctrl+C may have been pressed."""
+        # check if we have already be interrupted to prevent infintie recurrsion
+        if self._interrupted:
+            return
+        self._interrupted = True
+        # close file handles here to stop an processes piped to us.
+        handles = (self.p2cread, self.p2cwrite, self.c2pread, self.c2pwrite,
+                   self.errread, self.errwrite)
+        for handle in handles:
+            safe_fdclose(handle)
+        if self.poll() is not None:
+            self._restore_sigint(frame=frame)
+        if on_main_thread():
+            signal.pthread_kill(threading.get_ident(), signal.SIGINT)
+
+    def _restore_sigint(self, frame=None):
+        old = self.old_int_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGINT, old)
+            self.old_int_handler = None
+        if frame is not None:
+            if old is not None and old is not self._signal_int:
+                old(signal.SIGINT, frame)
+        if self._interrupted:
+            self.returncode = 1
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
@@ -1554,7 +1598,11 @@ class ProcProxy(object):
         if self.stdin is None:
             stdin = None
         else:
-            stdin = io.TextIOWrapper(self.stdin, encoding=enc, errors=err)
+            if isinstance(self.stdin, int):
+                inbuf = io.open(self.stdin, 'rb', -1)
+            else:
+                inbuf = self.stdin
+            stdin = io.TextIOWrapper(inbuf, encoding=enc, errors=err)
         stdout = self._pick_buf(self.stdout, sys.stdout, enc, err)
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
