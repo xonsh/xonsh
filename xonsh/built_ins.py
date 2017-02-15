@@ -25,7 +25,6 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
-from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
@@ -1118,14 +1117,14 @@ def enter_macro(obj, raw_block, glbs, locs):
     return obj
 
 
-def load_builtins(execer=None, config=None, login=False, ctx=None):
+def load_builtins(execer=None, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
     # private built-ins
     builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = Env(default_env(config=config, login=login))
+    builtins.__xonsh_env__ = Env(default_env())
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_pathsearch__ = pathsearch
@@ -1168,8 +1167,6 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     # Need this inline/lazy import here since we use locate_binary that
     # relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
-    if login:
-        builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     builtins.__xonsh_history__ = None
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
