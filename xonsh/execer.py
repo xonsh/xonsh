@@ -9,7 +9,7 @@ import collections.abc as cabc
 from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
 from xonsh.tools import (subproc_toks, find_next_break, get_logical_line,
-    replace_logical_line)
+                         replace_logical_line)
 from xonsh.built_ins import load_builtins, unload_builtins
 
 
@@ -230,7 +230,6 @@ class Execer(object):
                                          last_error_col, mstr, line, sbpline)
                         print(msg, file=sys.stderr)
                     # replace the line
-                    #lines[idx] = sbpline
                     replace_logical_line(lines, sbpline, idx, nlogical)
                 last_error_col += 3
                 input = '\n'.join(lines)
