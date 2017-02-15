@@ -841,7 +841,7 @@ class PopenThread(threading.Thread):
         try:
             termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
         except termios.error:
-            print_exception()
+            pass
 
     #
     # Dispatch methods
