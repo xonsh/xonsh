@@ -1939,8 +1939,14 @@ class CommandPipeline:
         pgid = os.getpgid(0)
         if self._term_pgid is None or pgid == self._term_pgid:
             return
-        if give_terminal_to(pgid):  # if gave term succeed
+        if give_terminal_to(pgid):
             self._term_pgid = pgid
+            if hasattr(builtins, '__xonsh_shell__'):
+                # restoring sanity could probably be called whenever we return
+                # control to the shell. But it only seems to matter after a
+                # ^Z event. This *has* to be called after we give the terminal
+                # back to the shell.
+                builtins.__xonsh_shell__.shell.restore_tty_sanity()
 
     def _end(self, tee_output):
         """Waits for the command to complete and then runs any closing and
