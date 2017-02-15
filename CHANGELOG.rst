@@ -63,13 +63,6 @@ v0.5.5
   the version where aliases have been resolved. This has been corrected.
 
 
-
-
-v0.5.4
-====================
-
-
-
 v0.5.4
 ====================
 
@@ -102,8 +95,8 @@ v0.5.4
 **Fixed:**
 
 * Fixed broken bash completions on Windows if 'Windows Subsystem for Linux' is installed.
-* Readline history would try to read the first element of history prior to 
-  actually loading any history. This caused an exception to be raised on 
+* Readline history would try to read the first element of history prior to
+  actually loading any history. This caused an exception to be raised on
   Windows at xonsh startup when using pyreadline.
 * Fixed issue with readline tab completer overwriting initial prefix in
   some instances.
