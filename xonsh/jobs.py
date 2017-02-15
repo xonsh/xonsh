@@ -70,9 +70,6 @@ if ON_WINDOWS:
     def ignore_sigtstp():
         pass
 
-    def _set_pgrp(info):
-        pass
-
     def give_terminal_to(pgid):
         pass
 
@@ -106,17 +103,6 @@ else:
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-
-    def _set_pgrp(info):
-        for pid in info['pids']:
-            if pid is None:  # occurs if first process is an alias
-                continue
-            try:
-                info['pgrp'] = os.getpgid(pid)
-                return
-            except ProcessLookupError:
-                continue
-        info['pgrp'] = None
 
     _shell_pgrp = os.getpgrp()
 
@@ -247,7 +233,6 @@ def add_job(info):
     num = get_next_job_number()
     info['started'] = time.time()
     info['status'] = "running"
-    _set_pgrp(info)
     tasks.appendleft(num)
     builtins.__xonsh_all_jobs__[num] = info
     if info['bg']:

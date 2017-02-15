@@ -1686,19 +1686,23 @@ class CommandPipeline:
         self._closed_handle_cache = {}
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
-        self._term_pgid = None
+        self.term_pgid = None
 
         background = self.spec.background
         pipeline_group = None
         for spec in specs:
             if self.starttime is None:
                 self.starttime = time.time()
-            proc = spec.run(pipeline_group=pipeline_group)
+            try:
+                proc = spec.run(pipeline_group=pipeline_group)
+            except XonshError:
+                self._return_terminal()
+                raise
             if proc.pid and pipeline_group is None and not spec.is_proxy and \
                     self.captured != 'object':
                 pipeline_group = proc.pid
                 if update_fg_process_group(pipeline_group, background):
-                    self._term_pgid = pipeline_group
+                    self.term_pgid = pipeline_group
             self.procs.append(proc)
         self.proc = self.procs[-1]
 
@@ -1934,19 +1938,7 @@ class CommandPipeline:
         if self.ended:
             return
         self._end(tee_output=tee_output)
-        if ON_WINDOWS:
-            return
-        pgid = os.getpgid(0)
-        if self._term_pgid is None or pgid == self._term_pgid:
-            return
-        if give_terminal_to(pgid):
-            self._term_pgid = pgid
-            if hasattr(builtins, '__xonsh_shell__'):
-                # restoring sanity could probably be called whenever we return
-                # control to the shell. But it only seems to matter after a
-                # ^Z event. This *has* to be called after we give the terminal
-                # back to the shell.
-                builtins.__xonsh_shell__.shell.restore_tty_sanity()
+        self._return_terminal()
 
     def _end(self, tee_output):
         """Waits for the command to complete and then runs any closing and
@@ -1966,10 +1958,25 @@ class CommandPipeline:
         self.ended = True
         self._raise_subproc_error()
 
+    def _return_terminal(self):
+        if ON_WINDOWS or not ON_POSIX:
+            return
+        pgid = os.getpgid(0)
+        if self.term_pgid is None or pgid == self.term_pgid:
+            return
+        if give_terminal_to(pgid):  # if gave term succeed
+            self.term_pgid = pgid
+            if hasattr(builtins, '__xonsh_shell__'):
+                # restoring sanity could probably be called whenever we return
+                # control to the shell. But it only seems to matter after a
+                # ^Z event. This *has* to be called after we give the terminal
+                # back to the shell.
+                builtins.__xonsh_shell__.shell.restore_tty_sanity()
+
     def resume(self, job, tee_output=True):
         self.ended = False
         if give_terminal_to(job['pgrp']):
-            self._term_pgid = job['pgrp']
+            self.term_pgid = job['pgrp']
         _continue(job)
         self.end(tee_output=tee_output)
 

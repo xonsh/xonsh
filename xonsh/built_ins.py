@@ -807,6 +807,7 @@ def run_subproc(cmds, captured=False):
             'obj': proc,
             'bg': background,
             'pipeline': command,
+            'pgrp': command.term_pgid,
         })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
