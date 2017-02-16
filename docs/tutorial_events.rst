@@ -45,8 +45,10 @@ Yes! It's even easy! In your xontrib, you just have to do something like::
 
 This will enable users to call ``help(events.myxontrib_on_spam)`` and get useful output.
 
-Under the Hood
-==============
+Further Reading
+===============
+
+For a complete list of available events, see `the events reference <events.html>`_.
 
 If you want to know more about the gory details of what makes events tick, see 
 `Advanced Events <advanced_events.html>`_.
