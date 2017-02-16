@@ -35,6 +35,13 @@ events.doc('on_postcommand', """
 on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 
 Fires just after a command is executed. The arguments are the same as history.
+
+Parameters:
+
+* ``cmd``: The command that was executed (after transformation)
+* ``rtn``: The result of the command executed (``0`` for success)
+* ``out``: If xonsh stores command output, this is the output
+* ``ts``: Timestamps, in the order of ``[starting, ending]``
 """)
 
 events.doc('on_pre_prompt', """
