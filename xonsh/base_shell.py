@@ -400,6 +400,9 @@ class BaseShell(object):
             if usecache:
                 self.reset_buffer()
                 return src, code
+        if src.endswith('\\\n'):
+            self.need_more_lines = True
+            return src, None
         try:
             code = self.execer.compile(src,
                                        mode='single',
