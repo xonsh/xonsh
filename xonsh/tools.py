@@ -346,6 +346,44 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+def get_logical_line(lines, idx):
+    """Returns a single logical line (i.e. one without line continuations)
+    from a list of lines.  This line should begin at index idx. This also
+    returns the number of physical lines the logical line spans. The lines
+    should not contain newlines
+    """
+    n = 1
+    nlines = len(lines)
+    line = lines[idx]
+    while line.endswith('\\') and idx < nlines:
+        n += 1
+        idx += 1
+        line = line[:-1] + lines[idx]
+    return line, n
+
+
+def replace_logical_line(lines, logical, idx, n):
+    """Replaces lines at idx that may end in line continuation with a logical
+    line that spans n lines.
+    """
+    if n == 1:
+        lines[idx] = logical
+        return
+    space = ' '
+    for i in range(idx, idx+n-1):
+        a = len(lines[i])
+        b = logical.find(space, a-1)
+        if b < 0:
+            # no space found
+            lines[i] = logical
+            logical = ''
+        else:
+            # found space to split on
+            lines[i] = logical[:b] + '\\'
+            logical = logical[b:]
+    lines[idx+n-1] = logical
+
+
 def is_balanced(expr, ltok, rtok):
     """Determines whether an expression has unbalanced opening and closing tokens."""
     lcnt = expr.count(ltok)
