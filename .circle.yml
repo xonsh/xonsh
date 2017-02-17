@@ -24,3 +24,5 @@ test:
     override:
         - case $CIRCLE_NODE_INDEX in 0) py.test --flake8 --timeout=10 --cov=./xonsh;; 1) py.test --timeout=10 ;; esac:
             parallel: true
+    post:
+        - if [[ $CIRCLE_NODE_INDEX -eq 0  ]]; then codecov; fi
