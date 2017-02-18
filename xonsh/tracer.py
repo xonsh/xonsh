@@ -13,8 +13,8 @@ from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file, getouterframes
 from xonsh.lazyimps import pygments, pyghooks
+from xonsh.proc import STDOUT_CAPTURE_KINDS
 import xonsh.prompt.cwd as prompt
-
 
 terminal = LazyObject(lambda: importlib.import_module(
                                 'pygments.formatters.terminal'),
@@ -100,6 +100,7 @@ def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=No
     """Formats a trace line suitable for printing."""
     fname = min(fname, prompt._replace_home(fname), os.path.relpath(fname),
                 key=len)
+    print(color)
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     cline = COLOR_LINE.format(fname=fname, lineno=lineno)
@@ -109,6 +110,10 @@ def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=No
     tokens = pyghooks.partial_color_tokenize(cline)
     lexer = lexer or pyghooks.XonshLexer()
     tokens += pygments.lex(line, lexer=lexer)
+    if tokens[-1][1] == '\n':
+        del tokens[-1]
+    elif tokens[-1][1].endswith('\n'):
+        tokens[-1] = (tokens[-1][0], tokens[-1][1].rstrip())
     return tokens
 
 
@@ -194,8 +199,11 @@ _TRACER_MAIN_ACTIONS = {
     }
 
 
-def tracermain(args=None):
+def tracermain(args=None, stdin=None, stdout=None, stderr=None, spec=None):
     """Main function for tracer command-line interface."""
     parser = _tracer_create_parser()
     ns = parser.parse_args(args)
+    tracer.usecolor = (spec.captured not in STDOUT_CAPTURE_KINDS)
+    tracer.usecolor = False
+    #import pdb; pdb.set_trace()
     return _TRACER_MAIN_ACTIONS[ns.action](ns, args)
