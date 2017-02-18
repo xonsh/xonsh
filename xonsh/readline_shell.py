@@ -232,6 +232,10 @@ def rl_on_new_line():
         func = getattr(RL_LIB, name, None)
         if func is not None:
             break
+    else:
+        def print_for_newline():
+            print()
+        func = print_for_newline
     return func
 
 
@@ -304,10 +308,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         show_completions = to_bool(yn)
         print()
         if not show_completions:
-            if rl_on_new_line is None:
-                rl_on_new_line()
-            else:
-                print()
+            rl_on_new_line()
             return False
         w, h = shutil.get_terminal_size()
         lines = columnize(completions, width=w)
