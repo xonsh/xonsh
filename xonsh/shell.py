@@ -110,7 +110,6 @@ class Shell(object):
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
-        self.stype = shell_type
         env = builtins.__xonsh_env__
         # build history backend before creating shell
         builtins.__xonsh_history__ = hist = xhm.construct_history(
@@ -138,7 +137,7 @@ class Shell(object):
                               'supported. Please update prompt-toolkit. Using '
                               'readline instead.')
                 shell_type = 'readline'
-        env['SHELL_TYPE'] = shell_type
+        self.shell_type = env['SHELL_TYPE'] = shell_type
         # actually make the shell
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class
