@@ -172,7 +172,7 @@ class PromptToolkitShell(BaseShell):
         toks = partial_color_tokenize(p)
         if self._first_prompt:
             carriage_return()
-            self._first_message = False
+            self._first_prompt = False
         self.settitle()
         return toks
 
