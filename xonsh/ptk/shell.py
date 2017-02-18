@@ -10,7 +10,7 @@ from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import print_exception
+from xonsh.tools import print_exception, carriage_return
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -36,6 +36,7 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._first_prompt = True
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
@@ -169,6 +170,9 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
+        if self._first_prompt:
+            carriage_return()
+            self._first_message = False
         self.settitle()
         return toks
 
