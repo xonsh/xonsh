@@ -249,6 +249,14 @@ def set_console_mode(mode, fd=1):
     SetConsoleMode(hcon, mode)
 
 
+def enable_virtual_terminal_processing():
+    """Enables virtual terminal processing on Windows.
+    This inlcudes ANSI escape sequence interpretation.
+    See http://stackoverflow.com/a/36760881/2312428
+    """
+    SetConsoleMode(GetStdHandle(-11), 7)
+
+
 @lazyobject
 def COORD():
     if platform.has_prompt_toolkit():
