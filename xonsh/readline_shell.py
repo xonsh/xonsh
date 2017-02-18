@@ -302,7 +302,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         show_completions = to_bool(yn)
         print()
         if not show_completions:
-            rl_on_new_line()
+            if rl_on_new_line is None:
+                rl_on_new_line()
+            else:
+                print()
             return False
         w, h = shutil.get_terminal_size()
         lines = columnize(completions, width=w)
