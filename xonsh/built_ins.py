@@ -676,7 +676,9 @@ def _update_last_spec(last):
     if callable_alias:
         pass
     else:
-        thable = builtins.__xonsh_commands_cache__.predict_threadable(last.cmd)
+        cmds_cache = builtins.__xonsh_commands_cache__
+        thable = (cmds_cache.predict_threadable(last.args) and
+                  cmds_cache.predict_threadable(last.cmd))
         if captured and thable:
             last.cls = PopenThread
         elif not thable:
