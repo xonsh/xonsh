@@ -45,6 +45,14 @@ class TracerType(object):
         for f in set(self.files):
             self.stop(f)
 
+    def color_output(self, usecolor):
+        """Specify whether or not the tracer output should be colored."""
+        # we have to use a function to set usecolor because of the way that
+        # lazyasd works. Namely, it cannot dispatch setattr to the target
+        # object without being unable to access its own __dict__. This makes
+        # setting an atter look like getting a function.
+        self.usecolor = usecolor
+
     def start(self, filename):
         """Starts tracing a file."""
         files = self.files
@@ -100,7 +108,6 @@ def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=No
     """Formats a trace line suitable for printing."""
     fname = min(fname, prompt._replace_home(fname), os.path.relpath(fname),
                 key=len)
-    print(color)
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     cline = COLOR_LINE.format(fname=fname, lineno=lineno)
@@ -162,7 +169,7 @@ def _off(ns, args):
 
 def _color(ns, args):
     """Manages color action for tracer CLI."""
-    tracer.usecolor = ns.toggle
+    tracer.color_output(ns.toggle)
 
 
 @functools.lru_cache(1)
@@ -203,7 +210,7 @@ def tracermain(args=None, stdin=None, stdout=None, stderr=None, spec=None):
     """Main function for tracer command-line interface."""
     parser = _tracer_create_parser()
     ns = parser.parse_args(args)
-    tracer.usecolor = (spec.captured not in STDOUT_CAPTURE_KINDS)
-    tracer.usecolor = False
-    #import pdb; pdb.set_trace()
+    usecolor = ((spec.captured not in STDOUT_CAPTURE_KINDS) and
+                sys.stdout.isatty())
+    tracer.color_output(usecolor)
     return _TRACER_MAIN_ACTIONS[ns.action](ns, args)
