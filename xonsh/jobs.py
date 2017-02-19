@@ -135,9 +135,19 @@ else:
         def give_terminal_to(pgid):
             oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                              _block_when_giving)
-            os.tcsetpgrp(FD_STDERR, pgid)
-            signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
-            return True
+            try:
+                os.tcsetpgrp(FD_STDERR, pgid)
+                return True
+            except OSError as e:
+                if e.errno == 22:  # [Errno 22] Invalid argument
+                    # there are cases that all the processes of pgid have
+                    # finished, then we don't need to do anything here, see
+                    # issue #2220
+                    return False
+                else:
+                    raise
+            finally:
+                signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
     def wait_for_active_job(last_task=None, backgrounded=False):
         """
