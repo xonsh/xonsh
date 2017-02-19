@@ -132,12 +132,34 @@ is the spec object. See importlib for more details.
 """)
 
 events.doc('on_import_post_create_module', """
-on_import_post_create_module(mod: Module, spec: ModuleSpec) -> None
+on_import_post_create_module(module: Module, spec: ModuleSpec) -> None
 
 Fires after a module is created by its loader but before the loader returns it.
 The parameters here are the module object itself and the spec object.
 See importlib for more details.
 """)
+
+events.doc('on_import_pre_exec_module', """
+on_import_pre_exec_module(module: Module) -> None
+
+Fires right before a module is executed by its loader. The only parameter
+is the module itself. See importlib for more details.
+""")
+
+events.doc('on_import_post_exec_module', """
+on_import_post_create_module(module: Module) -> None
+
+Fires after a module is executed by its loader but before the loader returns it.
+The only parameter is the module itself. See importlib for more details.
+""")
+
+
+def _should_dispatch_xonsh_import_event_loader():
+    """Figures out if we should dispatch to a load event"""
+    return (len(events.on_import_pre_create_module) > 0 or
+            len(events.on_import_post_create_module) > 0 or
+            len(events.on_import_pre_exec_module) > 0 or
+            len(events.on_import_post_exec_module) > 0)
 
 
 class XonshImportEventHook(MetaPathFinder):
@@ -166,12 +188,11 @@ class XonshImportEventHook(MetaPathFinder):
             return None
         npre = len(events.on_import_pre_find_spec)
         npost = len(events.on_import_post_find_spec)
-        nprecreate = len(events.on_import_pre_create_module)
-        npostcreate = len(events.on_import_post_create_module)
+        dispatch_load = _should_dispatch_xonsh_import_event_loader()
         if npre > 0:
             events.on_import_pre_find_spec.fire(fullname=fullname, path=path,
                                                 target=target)
-        elif npost == 0 and nprecreate == 0 and npostcreate == 0:
+        elif npost == 0 and not dispatch_load:
             # no events to fire, proceed normally and prevent recursion
             return None
         # now find the spec
@@ -181,7 +202,7 @@ class XonshImportEventHook(MetaPathFinder):
         if npost > 0:
             events.on_import_post_find_spec.fire(spec=spec, fullname=fullname,
                                                  path=path, target=target)
-        if nprecreate > 0 or npostcreate > 0:
+        if dispatch_load and spec is not None and hasattr(spec.loader, 'create_module'):
             spec.loader = XonshImportEventLoader(spec.loader)
         return spec
 
@@ -201,12 +222,15 @@ class XonshImportEventLoader(Loader):
         """Creates and returns the module object."""
         events.on_import_pre_create_module.fire(spec=spec)
         mod = self.loader.create_module(spec)
-        events.on_import_post_create_module.fire(mod=mod, spec=spec)
+        events.on_import_post_create_module.fire(module=mod, spec=spec)
         return mod
 
     def exec_module(self, module):
         """Executes the module in its own namespace."""
-        return self.loader.exec_module(module)
+        events.on_import_pre_exec_module.fire(module=module)
+        rtn = self.loader.exec_module(module)
+        events.on_import_post_exec_module.fire(module=module)
+        return rtn
 
     def load_module(self, fullname):
         """Legacy module loading, provided for backwards compatability."""
