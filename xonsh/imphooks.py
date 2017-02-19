@@ -14,7 +14,7 @@ from importlib.abc import MetaPathFinder, SourceLoader, Loader
 
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.platform import scandir, PYTHON_VERSION_INFO
+from xonsh.platform import scandir
 
 
 class XonshImportHook(MetaPathFinder, SourceLoader):
