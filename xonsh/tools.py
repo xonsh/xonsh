@@ -1847,3 +1847,8 @@ def uncapturable(f):
     """
     f.__xonsh_capturable__ = False
     return f
+
+
+def carriage_return():
+    """Writes a carriage return to stdout, and nothing else."""
+    print('\r', flush=True, end='')
