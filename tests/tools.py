@@ -48,7 +48,7 @@ def sp(cmd):
 
 
 class DummyStyler():
-    styles = defaultdict(None.__class__)
+    styles = defaultdict(str)
 
 
 class DummyBaseShell(BaseShell):
