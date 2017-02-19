@@ -29,7 +29,7 @@ from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
                          columnize, carriage_return)
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN, ON_POSIX
-from xonsh.lazyimps import pygments, pyghooks
+from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.events import events
 
 readline = None
@@ -126,6 +126,8 @@ def setup_readline():
         inputrc_name = os.path.join(os.path.expanduser('~'), inputrc_name)
     if (not ON_WINDOWS) and (not os.path.isfile(inputrc_name)):
         inputrc_name = '/etc/inputrc'
+    if ON_WINDOWS:
+        winutils.enable_virtual_terminal_processing()
     if os.path.isfile(inputrc_name):
         try:
             readline.read_init_file(inputrc_name)
@@ -232,6 +234,10 @@ def rl_on_new_line():
         func = getattr(RL_LIB, name, None)
         if func is not None:
             break
+    else:
+        def print_for_newline():
+            print()
+        func = print_for_newline
     return func
 
 
@@ -304,10 +310,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         show_completions = to_bool(yn)
         print()
         if not show_completions:
-            if rl_on_new_line is None:
-                rl_on_new_line()
-            else:
-                print()
+            rl_on_new_line()
             return False
         w, h = shutil.get_terminal_size()
         lines = columnize(completions, width=w)
