@@ -1134,7 +1134,7 @@ def static_config_run_control(filename, ctx, env, execer=None, login=True):
         windows_foreign_env_fixes(foreign_env)
     foreign_env_fixes(foreign_env)
     env.update(foreign_env)
-    aliase = builtins.aliases
+    aliases = builtins.aliases
     foreign_aliases = load_foreign_aliases(config=filename, issue_warning=True)
     for k, v in foreign_aliases.items():
         if k in aliases:
