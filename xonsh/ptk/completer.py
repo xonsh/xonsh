@@ -80,7 +80,7 @@ class PromptToolkitCompleter(Completer):
         sug = self.hist_suggester.get_suggestion(cli, cli.current_buffer, document)
         if sug is None:
             return None
-        comp, _ , _ = sug.text.partition(' ')
+        comp, _, _ = sug.text.partition(' ')
         _, _, prev = line.rpartition(' ')
         return prev + comp
 
