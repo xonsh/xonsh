@@ -14,6 +14,11 @@ import subprocess
 import importlib.util
 
 from xonsh.lazyasd import LazyBool, lazyobject, lazybool
+# do not import any xonsh-modules here to avoid circular dependencies
+
+FD_STDIN = 0
+FD_STDOUT = 1
+FD_STDERR = 2
 
 
 @lazyobject
@@ -25,9 +30,6 @@ def distro():
     except Exception:
         raise
     return d
-
-
-# do not import any xonsh-modules here to avoid circular dependencies
 
 
 #
@@ -175,6 +177,7 @@ def pathbasename(p):
     input without a drive.  This version does.
     """
     return pathsplit(p)[-1]
+
 
 # termios tc(get|set)attr indexes.
 IFLAG = 0
