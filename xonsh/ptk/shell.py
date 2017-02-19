@@ -38,7 +38,7 @@ class PromptToolkitShell(BaseShell):
         super().__init__(**kwargs)
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
-        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
+        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         key_bindings_manager_args = {
             'enable_auto_suggest_bindings': True,
             'enable_search': True,
