@@ -125,7 +125,7 @@ def _quote_to_use(x):
         return single
 
 
-def _quote_paths(paths, start, end):
+def _quote_paths(paths, start, end, append_end=True):
     expand_path = builtins.__xonsh_expand_path__
     out = set()
     space = ' '
@@ -161,7 +161,8 @@ def _quote_paths(paths, start, end):
                 s += backslash
         if end in s:
             s = s.replace(end, ''.join('\\%s' % i for i in end))
-        out.add(start + s + end)
+        s = start + s + end if append_end else start + s
+        out.add(s)
     return out
 
 
@@ -194,8 +195,11 @@ def _splitpath_helper(path, sofar=()):
     folder, path = os.path.split(path)
     if path:
         sofar = sofar + (path, )
-    if (not folder or folder == xt.get_sep() or
-       (xp.ON_WINDOWS and os.path.splitdrive(path)[0])):
+    if not folder or folder == xt.get_sep():
+        return sofar[::-1]
+    elif xp.ON_WINDOWS and not path:
+        return os.path.splitdrive(folder)[:1] + sofar[::-1]
+    elif xp.ON_WINDOWS and os.path.splitdrive(path)[0]:
         return sofar[::-1]
     return _splitpath_helper(folder, sofar)
 
@@ -245,6 +249,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     # string stuff for automatic quoting
     path_str_start = ''
     path_str_end = ''
+    append_end = True
     p = _path_from_partial_string(line, end)
     lprefix = len(prefix)
     if p is not None:
@@ -252,6 +257,8 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         prefix = p[1]
         path_str_start = p[2]
         path_str_end = p[3]
+        if len(line) >= end + 1 and line[end] == path_str_end:
+            append_end = False
     tilde = '~'
     paths = set()
     env = builtins.__xonsh_env__
@@ -291,7 +298,8 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     paths = set(filter(filtfunc, paths))
     paths = _quote_paths({_normpath(s) for s in paths},
                          path_str_start,
-                         path_str_end)
+                         path_str_end,
+                         append_end)
     paths.update(filter(filtfunc, _dots(prefix)))
     paths.update(filter(filtfunc, _env(prefix)))
     return paths, lprefix
