@@ -127,8 +127,7 @@ else:
             LIBC.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
                              ctypes.byref(mask),
                              ctypes.byref(omask))
-            st = sys.stderr.fileno()
-            LIBC.tcsetpgrp(ctypes.c_int(st), ctypes.c_int(pgid))
+            LIBC.tcsetpgrp(ctypes.c_int(2), ctypes.c_int(pgid))
             LIBC.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
                              ctypes.byref(omask), None)
             return True
@@ -136,7 +135,8 @@ else:
         def give_terminal_to(pgid):
             oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                              _block_when_giving)
-            os.tcsetpgrp(sys.stderr.fileno(), pgid)
+            # cannot use sys.stderr.fileno(), will cause `timeit ls` etc fail
+            os.tcsetpgrp(2, pgid)
             signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
             return True
 
