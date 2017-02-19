@@ -10,7 +10,7 @@ from xonsh.execer import Execer
 from xonsh.environ import Env
 from xonsh.built_ins import unload_builtins
 
-imphooks.install_hook()
+imphooks.install_import_hooks()
 
 
 @pytest.yield_fixture(autouse=True)
