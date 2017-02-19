@@ -139,7 +139,7 @@ else:
                 os.tcsetpgrp(FD_STDERR, pgid)
                 return True
             except OSError as e:
-                if getattr(e, 'errno') == 22:  # [Errno 22] Invalid argument
+                if e.errno == 22:  # [Errno 22] Invalid argument
                     # there are cases that all the processes of pgid have
                     # finished, then we don't need to do anything here, see
                     # issue #2220
