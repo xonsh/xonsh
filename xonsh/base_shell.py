@@ -16,6 +16,8 @@ from xonsh.completer import Completer
 from xonsh.prompt.base import multiline_prompt, PromptFormatter
 from xonsh.events import events
 from xonsh.shell import transform_command
+from xonsh.lazyimps import pygments, pyghooks
+from xonsh.ansi_colors import ansi_partial_color_format
 
 if ON_WINDOWS:
     import ctypes
@@ -475,19 +477,32 @@ class BaseShell(object):
         self.settitle()
         return p
 
-    def format_color(self, string, **kwargs):
-        """Formats the colors in a string. This base implmentation does not
-        actually do any coloring, but just returns the string directly.
+    def format_color(self, string, hide=False, force_string=False, **kwargs):
+        """Formats the colors in a string. This base implmentation colors based
+        on ANSI color codes
         """
-        return string
+        style = builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
+        return ansi_partial_color_format(string, hide=hide, style=style)
 
-    def print_color(self, string, **kwargs):
-        """Prints a string in color. This base implmentation does not actually
-        do any coloring, but just prints the string directly.
+    def print_color(self, string, hide=False, **kwargs):
+        """Prints a string in color. This base implmentation will color based
+        ANSI color codes if a string was given as input. If a list of token
+        pairs is given, it will color based on pygments, if available. If
+        pygments is not available, it will print a colorless string.
         """
-        if not isinstance(string, str):
-            string = ''.join([x for _, x in string])
-        print(string, **kwargs)
+        if isinstance(string, str):
+            s = self.format_color(string, hide=hide)
+        elif HAS_PYGMENTS:
+            # assume this is a list of (Token, str) tuples and format it
+            env = builtins.__xonsh_env__
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            style_proxy = pyghooks.xonsh_style_proxy(self.styler)
+            formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
+            s = pygments.format(string, formatter).rstrip()
+        else:
+            # assume this is a list of (Token, str) tuples and remove color
+            s = ''.join([x for _, x in string])
+        print(s, **kwargs)
 
     def color_style_names(self):
         """Returns an iterable of all available style names."""

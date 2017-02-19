@@ -48,7 +48,7 @@ def sp(cmd):
 
 
 class DummyStyler():
-    styles = defaultdict(None.__class__)
+    styles = defaultdict(str)
 
 
 class DummyBaseShell(BaseShell):
@@ -92,6 +92,7 @@ class DummyEnv(MutableMapping):
 
     DEFAULTS = {
         'XONSH_DEBUG': 1,
+        'XONSH_COLOR_STYLE': 'default',
     }
 
     def __init__(self, *args, **kwargs):

@@ -353,11 +353,12 @@ def xonfig(args, stdin=None):
 
 
 @unthreadable
-def trace(args, stdin=None):
+def trace(args, stdin=None, stdout=None, stderr=None, spec=None):
     """Runs the xonsh tracer utility."""
     from xonsh.tracer import tracermain  # lazy import
     try:
-        return tracermain(args)
+        return tracermain(args, stdin=stdin, stdout=stdout,
+                          stderr=stderr, spec=spec)
     except SystemExit:
         pass
 
