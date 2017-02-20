@@ -1134,8 +1134,16 @@ def static_config_run_control(filename, ctx, env, execer=None, login=True):
         windows_foreign_env_fixes(foreign_env)
     foreign_env_fixes(foreign_env)
     env.update(foreign_env)
+    aliases = builtins.aliases
     foreign_aliases = load_foreign_aliases(config=filename, issue_warning=True)
-    builtins.aliases.update(foreign_aliases)
+    for k, v in foreign_aliases.items():
+        if k in aliases:
+            msg = ('Skipping application of {0!r} alias from foreign shell '
+                   '(loaded from {1!r}) since it shares a name with an '
+                   'existing xonsh alias.')
+            print(msg.format(k, filename))
+        else:
+            aliases[k] = v
     # load xontribs
     names = conf.get('xontribs', ())
     for name in names:
