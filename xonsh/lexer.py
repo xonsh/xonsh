@@ -334,6 +334,33 @@ class Lexer(object):
             yield t
             t = self.token()
 
+    def split(self, s):
+        """Splits a string into a list of strings which are whitepace-separated
+        tokens.
+        """
+        vals = []
+        self.input(s)
+        l = c = -1
+        ws = 'WS'
+        nl = '\n'
+        for t in self:
+            if t.type == ws:
+                continue
+            elif l < t.lineno:
+                vals.append(t.value)
+            elif len(vals) > 0 and c == t.lexpos:
+                vals[-1] = vals[-1] + t.value
+            else:
+                vals.append(t.value)
+            nnl = t.value.count(nl)
+            if nnl == 0:
+                l = t.lineno
+                c = t.lexpos + len(t.value)
+            else:
+                l = t.lineno + nnl
+                c = len(t.value.rpartition(nl)[-1])
+        return vals
+
     #
     # All the tokens recognized by the lexer
     #
