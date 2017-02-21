@@ -28,7 +28,7 @@ def _HAVE_RESOURCE():
         have = True
     except ImportError:
         # There is no distinction of user/system time under windows, so we
-        # just use time.clock() for everything...
+        # just use time.perf_counter() for everything...
         have = False
     return have
 
@@ -44,12 +44,11 @@ def clocku():
     if _HAVE_RESOURCE:
         def clocku():
             """clocku() -> floating point number
-            Return the *USER* CPU time in seconds since the start of the process.
-            This is done via a call to resource.getrusage, so it avoids the
-            wraparound problems in time.clock()."""
+            Return the *USER* CPU time in seconds since the start of the
+            process."""
             return resource.getrusage(resource.RUSAGE_SELF)[0]
     else:
-        clocku = time.clock
+        clocku = time.perf_counter
     return clocku
 
 
@@ -58,12 +57,11 @@ def clocks():
     if _HAVE_RESOURCE:
         def clocks():
             """clocks() -> floating point number
-            Return the *SYSTEM* CPU time in seconds since the start of the process.
-            This is done via a call to resource.getrusage, so it avoids the
-            wraparound problems in time.clock()."""
+            Return the *SYSTEM* CPU time in seconds since the start of the
+            process."""
             return resource.getrusage(resource.RUSAGE_SELF)[1]
     else:
-        clocks = time.clock
+        clocks = time.perf_counter
     return clocks
 
 
@@ -72,13 +70,12 @@ def clock():
     if _HAVE_RESOURCE:
         def clock():
             """clock() -> floating point number
-            Return the *TOTAL USER+SYSTEM* CPU time in seconds since the start of
-            the process.  This is done via a call to resource.getrusage, so it
-            avoids the wraparound problems in time.clock()."""
+            Return the *TOTAL USER+SYSTEM* CPU time in seconds since the
+            start of the process."""
             u, s = resource.getrusage(resource.RUSAGE_SELF)[:2]
             return u + s
     else:
-        clock = time.clock
+        clock = time.perf_counter
     return clock
 
 
@@ -92,8 +89,8 @@ def clock2():
     else:
         def clock2():
             """Under windows, system CPU time can't be measured.
-            This just returns clock() and zero."""
-            return time.clock(), 0.0
+            This just returns perf_counter() and zero."""
+            return time.perf_counter(), 0.0
     return clock2
 
 
@@ -228,7 +225,7 @@ def timeit_alias(args, stdin=None):
     return
 
 
-_timings = {'start': clock() if ON_WINDOWS else 0.0}
+_timings = {'start': clock()}
 
 
 def setup_timings():
