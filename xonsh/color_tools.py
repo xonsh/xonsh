@@ -347,3 +347,61 @@ def rgb2short(rgb):
     equiv = RGB_to_SHORT[res]
     return equiv, res
 
+
+@lazyobject
+def BASE_XONSH_COLORS():
+    return {
+        'BLACK': (0, 0, 0),
+        'RED': (170, 0, 0),
+        'GREEN': (0, 170, 0),
+        'YELLOW': (170, 85, 0),
+        'BLUE': (0, 0, 170),
+        'PURPLE': (170, 0, 170),
+        'CYAN': (0, 170, 170),
+        'WHITE': (170, 170, 170),
+        'INTENSE_BLACK': (85, 85, 85),
+        'INTENSE_RED': (255, 85, 85),
+        'INTENSE_GREEN': (85, 255, 85),
+        'INTENSE_YELLOW': (255, 255, 85),
+        'INTENSE_BLUE': (85, 85, 255),
+        'INTENSE_PURPLE': (255, 85, 255),
+        'INTENSE_CYAN': (85, 255, 255),
+        'INTENSE_WHITE': (255, 255, 255),
+    }
+
+
+@lazyobject
+def RE_RGB3():
+    return re.compile(r'(.)(.)(.)')
+
+
+@lazyobject
+def RE_RGB6():
+    return re.compile(r'(..)(..)(..)')
+
+
+def rgb2ints(rgb):
+    if len(rgb) == 6:
+        return tuple([int(h, 16) for h in RE_RGB6.split(rgb)[1:4]])
+    else:
+        return tuple([int(h*2, 16) for h in RE_RGB3.split(rgb)[1:4]])
+
+
+def color_dist(x, y):
+    return math.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2 + (x[2]-y[2])**2)
+
+
+def find_closest_color(x, pallette):
+    key = lambda k: color_dist(x, pallette[k])
+    return min(sorted(pallette.keys())[::-1], key=key)
+
+
+def make_pallete(strings):
+    """Makes a color pallete from a colection of strings."""
+    pallette = {}
+    for s in strings:
+        while '#' in s:
+            _, t = s.split('#', 1)
+            t, _, s = t.partition(' ')
+            pallette[t] = rgb2ints(t)
+    return pallette
