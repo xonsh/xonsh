@@ -40,5 +40,6 @@ def complete_jedi(prefix, line, start, end, ctx):
 
 # register the completer
 builtins.__xonsh_ctx__['complete_jedi'] = complete_jedi
-completer add jedi complete_jedi "<python_mode"
+completer add jedi complete_jedi end
+completer remove python_mode
 del builtins.__xonsh_ctx__['complete_jedi']
