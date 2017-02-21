@@ -79,19 +79,6 @@ def get_hg_branch(root=None):
         root = q.get_nowait()
     except queue.Empty:
         return None
-#    if t.is_alive():
-#        return subprocess.TimeoutExpired(['hg'], timeout)
-
-#    try:
-#        root = subprocess.check_output(['hg', 'root'], timeout=timeout,
-#                                       stderr=subprocess.DEVNULL)
-#    except subprocess.TimeoutExpired:
-#        return subprocess.TimeoutExpired(['hg'], timeout)
-#    except (subprocess.CalledProcessError, FileNotFoundError):
-#        # not in repo or command not in PATH
-#        return None
-#    else:
-#        root = xt.decode_bytes(root).strip()
     if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
