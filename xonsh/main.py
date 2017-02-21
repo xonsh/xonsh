@@ -22,7 +22,7 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import xonfig_main
 from xonsh.lazyimps import pygments, pyghooks
-from xonsh.imphooks import install_hook
+from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context
 
@@ -222,7 +222,7 @@ def start_services(shell_kwargs):
     """Starts up the essential services in the proper order.
     This returns the envrionment instance as a convenience.
     """
-    install_hook()
+    install_import_hooks()
     # create execer, which loads builtins
     ctx = shell_kwargs.get('ctx', {})
     debug = to_bool_or_int(os.getenv('XONSH_DEBUG', '0'))
