@@ -4,10 +4,7 @@ import string
 import warnings
 
 from xonsh.lazyasd import LazyObject, LazyDict
-
-
-RE_BACKGROUND = LazyObject(lambda: re.compile('(bg|bg#|bghex|background)'),
-                           globals(), 'RE_BACKGROUND')
+from xonsh.color_tools import RE_BACKGROUND
 
 
 def ansi_partial_color_format(template, style='default', cmap=None, hide=False):
