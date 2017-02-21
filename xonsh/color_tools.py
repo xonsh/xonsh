@@ -6,13 +6,14 @@ http://MicahElliott.com Copyright (C) 2011 Micah Elliott. All rights reserved.
 WTFPL http://sam.zoy.org/wtfpl/
 """
 import re
-import sys
+import math
 
 from xonsh.lazyasd import lazyobject, LazyObject
 
 
 RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
                            globals(), 'RE_BACKGROUND')
+
 
 @lazyobject
 def BASE_XONSH_COLORS():
@@ -397,8 +398,8 @@ def color_dist(x, y):
 
 
 def find_closest_color(x, pallette):
-    key = lambda k: color_dist(x, pallette[k])
-    return min(sorted(pallette.keys())[::-1], key=key)
+    return min(sorted(pallette.keys())[::-1],
+               key=lambda k: color_dist(x, pallette[k]))
 
 
 def make_pallete(strings):

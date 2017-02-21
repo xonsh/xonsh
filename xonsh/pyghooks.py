@@ -5,7 +5,6 @@ import re
 import sys
 import string
 import builtins
-from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
 

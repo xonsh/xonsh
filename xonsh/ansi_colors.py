@@ -1,13 +1,13 @@
 """Tools for helping with ANSI color codes."""
-import re
 import sys
 import string
 import warnings
+import builtins
 
 from xonsh.platform import HAS_PYGMENTS
-from xonsh.lazyasd import LazyObject, LazyDict
+from xonsh.lazyasd import LazyDict
 from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
-                               find_closest_color, rgb2short)
+                               find_closest_color, rgb2short, rgb_to_256)
 
 
 def ansi_partial_color_format(template, style='default', cmap=None, hide=False):
@@ -861,6 +861,7 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _monokai_style, _murphy_style, _native_style, _paraiso_dark_style,
      _paraiso_light_style, _pastie_style, _perldoc_style,  _rrt_style,
      _tango_style, _trac_style, _vim_style, _vs_style, _xcode_style)
+
 
 #
 # Dynamically generated styles

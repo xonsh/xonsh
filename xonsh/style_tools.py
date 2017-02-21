@@ -1,4 +1,4 @@
-import re
+"""Xonsh color styling tools that simulate pygments, when it is unavailable."""
 import builtins
 import string
 
