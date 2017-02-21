@@ -1,3 +1,4 @@
+import inspect
 import builtins
 import collections
 
@@ -75,19 +76,29 @@ def _register_completer(args, stdin=None):
                "For help, run:  completer help add")
     else:
         name = args[0]
-        func = args[1]
+        func_name = args[1]
         if name in builtins.__xonsh_completers__:
             err = ("The name %s is already a registered "
                    "completer function.") % name
         else:
-            if func in builtins.__xonsh_ctx__:
-                if not callable(builtins.__xonsh_ctx__[func]):
-                    err = "%s is not callable" % func
+            if func_name in builtins.__xonsh_ctx__:
+                func = builtins.__xonsh_ctx__[func_name]
+                if not callable(func):
+                    err = "%s is not callable" % func_name
             else:
-                err = "No such function: %s" % func
+                print(inspect.stack(context=0))
+                for frame_info in inspect.stack(context=0):
+                    frame = frame_info[0]
+                    if func_name in frame.f_locals:
+                        func = frame.f_locals[func_name]
+                        break
+                    elif func_name in frame.f_globals:
+                        func = frame.f_globals[func_name]
+                        break
+                else:
+                    err = "No such function: %s" % func_name
     if err is None:
         position = "start" if len(args) == 2 else args[2]
-        func = builtins.__xonsh_ctx__[func]
         _add_one_completer(name, func, position)
     else:
         return None, err + '\n', 1

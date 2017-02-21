@@ -64,6 +64,11 @@
   "url": "https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
   "description": ["Adds tabcomplete functionality to docker inside of xonsh."]
  },
+ {"name": "jedi",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Jedi tab completion hooks for xonsh."]
+  },
  {"name": "mpl",
   "package": "xonsh",
   "url": "http://xon.sh",
