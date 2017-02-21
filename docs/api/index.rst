@@ -61,6 +61,7 @@ For those of you who want the gritty details.
     commands_cache
     tracer
     main
+    color_tools
     pyghooks
     jupyter_kernel
     wizard
