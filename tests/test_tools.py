@@ -23,7 +23,8 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
-    ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced
+    ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
+    swap_values, get_logical_line, replace_logical_line
     )
 from xonsh.environ import Env
 
@@ -319,6 +320,36 @@ def test_subproc_toks_pyeval_redirect():
     inp = '{0}'.format(s)
     exp = '![{0}]'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
+    assert exp == obs
+
+
+LOGICAL_LINE_CASES = [
+("""x = 14 + 2""", 0, 'x = 14 + 2', 1),
+("""x = \\
+14 \\
++ 2
+""", 0, 'x = 14 + 2', 3),
+("""y = 16
+14 \\
++ 2
+""", 1, '14 + 2', 2),
+]
+
+@pytest.mark.parametrize('src, idx, exp_line, exp_n', LOGICAL_LINE_CASES)
+def test_get_logical_line(src, idx, exp_line, exp_n):
+    lines = src.splitlines()
+    line, n = get_logical_line(lines, idx)
+    assert exp_line == line
+    assert exp_n == n
+
+
+@pytest.mark.parametrize('src, idx, exp_line, exp_n', LOGICAL_LINE_CASES)
+def test_replace_logical_line(src, idx, exp_line, exp_n):
+    lines = src.splitlines()
+    logical = exp_line
+    replace_logical_line(lines, logical, idx, exp_n)
+    exp = src.replace('\\\n', '').strip()
+    obs = '\n'.join(lines).replace('\\\n', '').strip()
     assert exp == obs
 
 
@@ -1128,3 +1159,13 @@ def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xonsh_builtins)
         assert path == home_path + exp_end
     else:
         assert path == '~' + exp_end
+
+
+def test_swap_values():
+    orig = {'x': 1}
+    updates = {'x': 42, 'y': 43}
+    with swap_values(orig, updates):
+        assert orig['x'] == 42
+        assert orig['y'] == 43
+    assert orig['x'] == 1
+    assert 'y' not in orig

@@ -10,7 +10,7 @@ from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import print_exception
+from xonsh.tools import print_exception, carriage_return
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -36,9 +36,10 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._first_prompt = True
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
-        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
+        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         key_bindings_manager_args = {
             'enable_auto_suggest_bindings': True,
             'enable_search': True,
@@ -70,6 +71,10 @@ class PromptToolkitShell(BaseShell):
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         multicolumn = (completions_display == 'multi')
+        complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
+        if complete_while_typing:
+            # PTK requires history search to be none when completing while typing
+            enable_history_search = False
         if HAS_PYGMENTS:
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
@@ -100,6 +105,7 @@ class PromptToolkitShell(BaseShell):
                     'reserve_space_for_menu': 0,
                     'key_bindings_registry': self.key_bindings_manager.registry,
                     'display_completions_in_columns': multicolumn,
+                    'complete_while_typing': complete_while_typing,
                     }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
                 if HAS_PYGMENTS:
@@ -107,8 +113,9 @@ class PromptToolkitShell(BaseShell):
                     prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
                 else:
                     prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
-
+            events.on_pre_prompt.fire()
             line = self.prompter.prompt(**prompt_args)
+            events.on_post_prompt.fire()
         return line
 
     def _push(self, line):
@@ -163,6 +170,9 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
+        if self._first_prompt:
+            carriage_return()
+            self._first_prompt = False
         self.settitle()
         return toks
 

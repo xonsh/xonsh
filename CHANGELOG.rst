@@ -4,6 +4,110 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.5
+====================
+
+**Added:**
+
+* New ``--rc`` command line option allows users to specify paths to run control
+  files from the command line. This includes both xonsh-based and JSON-based
+  configuration.
+* New ``$UPDATE_COMPLETIONS_ON_KEYPRESS`` controls whether or not completions
+  will automatically display and update while typing. This feature is only
+  available in the prompt-toolkit shell.
+
+
+**Changed:**
+
+* Xonsh scripts now report ``__file__`` and ``__name__`` when run as scripts
+  or sourced. These variables have the same meaning as they do in Python
+  scripts.
+* ``$XONSHRC`` and related configuration variables now accept JSON-based
+  static configuration file names as elements. This unifies the two methods
+  of run control to a single entry point and loading system.
+* The ``xonsh.shell.Shell()`` class now requires that an Execer instance
+  be explicitly provided to its init method. This class is no longer
+  responsible for creating an execer an its deprendencies.
+* Moved decorators ``unthreadable``, ``uncapturable`` from
+  ``xonsh.proc`` to ``xonsh.tools``.
+* Some refactorings on jobs control.
+
+
+**Deprecated:**
+
+* The ``--config-path`` command line option is now deprecated in favor of
+  ``--rc``.
+
+
+**Removed:**
+
+* ``xonsh.environ.DEFAULT_XONSHRC`` has been removed due to deprecation.
+  For this value, please check the environment instead, or call
+  ``xonsh.environ.default_xonshrc(env)``.
+
+
+**Fixed:**
+
+* Command pipelines that end in a callable alias are now interruptable with
+  ``^C`` and the processes that are piped into the alais have their file handles
+  closed. This should ensure that the entire pipeline is closed.
+* Fixed issue where unthreadable subprocs were not allowed to be
+  captured with the ``$(cmd)`` operator.
+* The ``ProcProxy`` class (unthreadable aliases) was not being executed and would
+  hange if the alias was capturable. This has been fixed.
+* Fixed a ``tcsetattr: Interrupted system call`` issue when run xonsh scripts.
+* Fixed issue with ``ValueError`` being thrown from ``inspect.signature()``
+  when called on C-extention callables in tab completer.
+* Fixed issue that ``ls | less`` crashes on Mac.
+* Threadable prediction was incorrectly based on the user input command, rather than
+  the version where aliases have been resolved. This has been corrected.
+
+
+v0.5.4
+====================
+
+**Added:**
+
+* Add alias ``xip`` ("kip") so that xonsh's Python environment (whatever that is) can be modified.
+* HistoryEntry, a SimpleNamespace object that represents a command in history.
+* ``xonsh.completers.bash_completion`` module
+* Added option to report timing information of xonsh startup times. Start xonsh
+  with the ``--timings`` flag to use the feature.
+* The Python tab completer will now complete the argument names of functions
+  and other callables.
+* Uptime module added to ``xonsh.xoreutils``. This can report the system
+  boot time and up time.
+* The environment variable ``XONSH_HISTORY_BACKEND`` now also supports a
+  value of class type or a History Backend instance.
+* ``on_envvar_new`` event that fires after a new envvar is created.
+* ``on_envvar_change`` event that fires after an envvar is changed.
+
+
+**Changed:**
+
+* history indexing api to be more simple, now returns HistoryEntry.
+* Decoupled ``bash_completion`` from xonsh project and added shim back to
+  xonsh.
+* The JSON history backend will now unlock history files that were created
+  prior to the last reboot.
+
+
+**Fixed:**
+
+* Fixed broken bash completions on Windows if 'Windows Subsystem for Linux' is installed.
+* Readline history would try to read the first element of history prior to
+  actually loading any history. This caused an exception to be raised on
+  Windows at xonsh startup when using pyreadline.
+* Fixed issue with readline tab completer overwriting initial prefix in
+  some instances.
+* Fixed issue wherein if ``git`` or (presumably) ``hg`` are aliased, then branch
+  information no longer appears in the ``$PROMPT``
+* Fixed an issue with commands that background themselves (such as
+  ``gpg-connect-agent``) not being able to be run from within xonshrc.
+
+
+
+
 v0.5.3
 ====================
 

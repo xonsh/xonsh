@@ -9,7 +9,6 @@ import textwrap
 import locale
 import builtins
 import warnings
-import traceback
 import contextlib
 import collections
 import collections.abc as cabc
@@ -19,7 +18,8 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
-from xonsh.foreign_shells import load_foreign_envs
+from xonsh.foreign_shells import load_foreign_envs, load_foreign_aliases
+from xonsh.xontribs import update_context, prompt_xontrib_install
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
     ON_WINDOWS, ON_LINUX
@@ -39,6 +39,7 @@ from xonsh.tools import (
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
     seq_to_upper_pathsep, print_color, is_history_backend, to_itself,
+    swap_values,
 )
 import xonsh.prompt.base as prompt
 
@@ -162,7 +163,9 @@ def DEFAULT_ENSURERS():
     'BOTTOM_TOOLBAR': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
+    'UPDATE_COMPLETIONS_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
+    'UPDATE_PROMPT_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     'VC_BRANCH_TIMEOUT': (is_float, float, str),
     'VC_HG_SHOW_BRANCH': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
@@ -188,7 +191,6 @@ def DEFAULT_ENSURERS():
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
     'XONSH_DATETIME_FORMAT': (is_string, ensure_string, ensure_string),
-    'UPDATE_PROMPT_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     }
 
 
@@ -233,18 +235,17 @@ def xonshconfig(env):
     return xc
 
 
-def default_xonshrc():
+@default_value
+def default_xonshrc(env):
     """Creates a new instance of the default xonshrc tuple."""
     if ON_WINDOWS:
-        dxrc = (os.path.join(os.environ['ALLUSERSPROFILE'],
+        dxrc = (xonshconfig(env),
+                os.path.join(os.environ['ALLUSERSPROFILE'],
                              'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc'))
     else:
-        dxrc = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
+        dxrc = (xonshconfig(env), '/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
     return dxrc
-
-
-DEFAULT_XONSHRC = LazyObject(default_xonshrc, globals(), 'DEFAULT_XONSHRC')
 
 
 # Default values should generally be immutable, that way if a user wants
@@ -305,7 +306,9 @@ def DEFAULT_VALUES():
         'SUGGEST_MAX_NUM': 5,
         'SUGGEST_THRESHOLD': 3,
         'TITLE': DEFAULT_TITLE,
+        'UPDATE_COMPLETIONS_ON_KEYPRESS': False,
         'UPDATE_OS_ENVIRON': False,
+        'UPDATE_PROMPT_ON_KEYPRESS': False,
         'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
         'VC_HG_SHOW_BRANCH': True,
         'VI_MODE': False,
@@ -314,7 +317,7 @@ def DEFAULT_VALUES():
         'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local',
                                                          'share')),
         'XONSHCONFIG': xonshconfig,
-        'XONSHRC': default_xonshrc(),
+        'XONSHRC': default_xonshrc,
         'XONSH_AUTOPAIR': False,
         'XONSH_CACHE_SCRIPTS': True,
         'XONSH_CACHE_EVERYTHING': False,
@@ -336,7 +339,6 @@ def DEFAULT_VALUES():
         'XONSH_STORE_STDOUT': False,
         'XONSH_TRACEBACK_LOGFILE': None,
         'XONSH_DATETIME_FORMAT': '%Y-%m-%d %H:%M',
-        'UPDATE_PROMPT_ON_KEYPRESS': False,
     }
     if hasattr(locale, 'LC_MESSAGES'):
         dv['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
@@ -424,7 +426,7 @@ def DEFAULT_DOCS():
         "- If ``$COMPLETIONS_DISPLAY`` is ``multi`` or ``true``, display completions\n"
         "  in multiple columns while typing.\n\n"
         'These option values are not case- or type-sensitive, so e.g.'
-        "writing ``$COMPLETIONS_DISPLAY = None``"
+        "writing ``$COMPLETIONS_DISPLAY = None`` "
         "and ``$COMPLETIONS_DISPLAY = 'none'`` are equivalent. Only usable with "
         "``$SHELL_TYPE=prompt_toolkit``"),
     'COMPLETIONS_CONFIRM': VarDocs(
@@ -591,10 +593,19 @@ def DEFAULT_DOCS():
         "in the same manner as ``$PROMPT``, see 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='``xonsh.environ.DEFAULT_TITLE``'),
+    'UPDATE_COMPLETIONS_ON_KEYPRESS': VarDocs(
+        'Completions display is evaluated and presented whenever a key is '
+        'pressed. This avoids the need to press TAB, except to cycle through '
+        'the possibilities. This currently only affects the prompt-toolkit shell.'
+        ),
     'UPDATE_OS_ENVIRON': VarDocs(
         "If True ``os.environ`` will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
         "the default value by calling ``__xonsh_env__.undo_replace_env()``"),
+    'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
+        'Disables caching the prompt between commands, '
+        'so that it would be reevaluated on each keypress. '
+        'Disabled by default because of the incurred performance penalty.'),
     'VC_BRANCH_TIMEOUT': VarDocs(
         'The timeout (in seconds) for version control '
         'branch computations. This is a timeout per subprocess call, so the '
@@ -740,10 +751,6 @@ def DEFAULT_DOCS():
     'XONSH_DATETIME_FORMAT': VarDocs(
         'The format that is used for ``datetime.strptime()`` in various places'
         'i.e the history timestamp option'),
-    'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
-        'Disables caching the prompt between commands, '
-        'so that it would be reevaluated on each keypress. '
-        'Disabled by default because of the incurred performance penalty.'),
     }
 
 
@@ -1070,36 +1077,26 @@ def load_static_config(ctx, config=None):
     return conf
 
 
-def xonshrc_context(rcfiles=None, execer=None, initial=None):
-    """Attempts to read in xonshrc file, and return the contents."""
-    loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
-    if initial is None:
-        env = {}
-    else:
-        env = initial
-    if rcfiles is None or execer is None:
+def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
+    """Attempts to read in all xonshrc files and return the context."""
+    loaded = env['LOADED_RC_FILES'] = []
+    ctx = {} if ctx is None else ctx
+    if rcfiles is None:
         return env
     env['XONSHRC'] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
             continue
-        try:
-            run_script_with_cache(rcfile, execer, env)
-            loaded.append(True)
-        except SyntaxError as err:
-            loaded.append(False)
-            exc = traceback.format_exc()
-            msg = '{0}\nsyntax error in xonsh run control file {1!r}: {2!s}'
-            warnings.warn(msg.format(exc, rcfile, err), RuntimeWarning)
-            continue
-        except Exception as err:
-            loaded.append(False)
-            exc = traceback.format_exc()
-            msg = '{0}\nerror running xonsh run control file {1!r}: {2!s}'
-            warnings.warn(msg.format(exc, rcfile, err), RuntimeWarning)
-            continue
-    return env
+        _, ext = os.path.splitext(rcfile)
+        if ext == '.json':
+            status = static_config_run_control(rcfile, ctx, env, execer=execer,
+                                               login=login)
+        else:
+            status = xonsh_script_run_control(rcfile, ctx, env, execer=execer,
+                                              login=login)
+        loaded.append(status)
+    return ctx
 
 
 def windows_foreign_env_fixes(ctx):
@@ -1125,7 +1122,62 @@ def foreign_env_fixes(ctx):
         del ctx['PROMPT']
 
 
-def default_env(env=None, config=None, login=True):
+def static_config_run_control(filename, ctx, env, execer=None, login=True):
+    """Loads a static config file and applies it as a run control."""
+    if not login:
+        return
+    conf = load_static_config(env, config=filename)
+    # load foreign shells
+    foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
+                                    issue_warning=False)
+    if ON_WINDOWS:
+        windows_foreign_env_fixes(foreign_env)
+    foreign_env_fixes(foreign_env)
+    env.update(foreign_env)
+    aliases = builtins.aliases
+    foreign_aliases = load_foreign_aliases(config=filename, issue_warning=True)
+    for k, v in foreign_aliases.items():
+        if k in aliases:
+            msg = ('Skipping application of {0!r} alias from foreign shell '
+                   '(loaded from {1!r}) since it shares a name with an '
+                   'existing xonsh alias.')
+            print(msg.format(k, filename))
+        else:
+            aliases[k] = v
+    # load xontribs
+    names = conf.get('xontribs', ())
+    for name in names:
+        update_context(name, ctx=ctx)
+    if getattr(update_context, 'bad_imports', None):
+        prompt_xontrib_install(update_context.bad_imports)
+        del update_context.bad_imports
+    # Do static config environment last, to allow user to override any of
+    # our environment choices
+    env.update(conf.get('env', ()))
+    return True
+
+
+def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
+    """Loads a xonsh file and applies it as a run control."""
+    if execer is None:
+        return False
+    updates = {'__file__': filename, '__name__': os.path.abspath(filename)}
+    try:
+        with swap_values(ctx, updates):
+            run_script_with_cache(filename, execer, ctx)
+        loaded = True
+    except SyntaxError as err:
+        msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+        print_exception(msg.format(filename, err))
+        loaded = False
+    except Exception as err:
+        msg = 'error running xonsh run control file {0!r}: {1!s}'
+        print_exception(msg.format(filename, err))
+        loaded = False
+    return loaded
+
+
+def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
@@ -1136,17 +1188,6 @@ def default_env(env=None, config=None, login=True):
         del ctx['PROMPT']
     except KeyError:
         pass
-    if login:
-        conf = load_static_config(ctx, config=config)
-        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
-                                        issue_warning=False)
-        if ON_WINDOWS:
-            windows_foreign_env_fixes(foreign_env)
-        foreign_env_fixes(foreign_env)
-        ctx.update(foreign_env)
-        # Do static config environment last, to allow user to override any of
-        # our environment choices
-        ctx.update(conf.get('env', ()))
     # finalize env
     if env is not None:
         ctx.update(env)

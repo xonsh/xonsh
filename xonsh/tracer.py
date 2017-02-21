@@ -13,8 +13,8 @@ from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file, getouterframes
 from xonsh.lazyimps import pygments, pyghooks
+from xonsh.proc import STDOUT_CAPTURE_KINDS
 import xonsh.prompt.cwd as prompt
-
 
 terminal = LazyObject(lambda: importlib.import_module(
                                 'pygments.formatters.terminal'),
@@ -44,6 +44,14 @@ class TracerType(object):
     def __del__(self):
         for f in set(self.files):
             self.stop(f)
+
+    def color_output(self, usecolor):
+        """Specify whether or not the tracer output should be colored."""
+        # we have to use a function to set usecolor because of the way that
+        # lazyasd works. Namely, it cannot dispatch setattr to the target
+        # object without being unable to access its own __dict__. This makes
+        # setting an atter look like getting a function.
+        self.usecolor = usecolor
 
     def start(self, filename):
         """Starts tracing a file."""
@@ -109,6 +117,10 @@ def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=No
     tokens = pyghooks.partial_color_tokenize(cline)
     lexer = lexer or pyghooks.XonshLexer()
     tokens += pygments.lex(line, lexer=lexer)
+    if tokens[-1][1] == '\n':
+        del tokens[-1]
+    elif tokens[-1][1].endswith('\n'):
+        tokens[-1] = (tokens[-1][0], tokens[-1][1].rstrip())
     return tokens
 
 
@@ -157,7 +169,7 @@ def _off(ns, args):
 
 def _color(ns, args):
     """Manages color action for tracer CLI."""
-    tracer.usecolor = ns.toggle
+    tracer.color_output(ns.toggle)
 
 
 @functools.lru_cache(1)
@@ -194,8 +206,11 @@ _TRACER_MAIN_ACTIONS = {
     }
 
 
-def tracermain(args=None):
+def tracermain(args=None, stdin=None, stdout=None, stderr=None, spec=None):
     """Main function for tracer command-line interface."""
     parser = _tracer_create_parser()
     ns = parser.parse_args(args)
+    usecolor = ((spec.captured not in STDOUT_CAPTURE_KINDS) and
+                sys.stdout.isatty())
+    tracer.color_output(usecolor)
     return _TRACER_MAIN_ACTIONS[ns.action](ns, args)

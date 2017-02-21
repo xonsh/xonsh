@@ -217,7 +217,7 @@ class CommandsCache(cabc.Mapping):
     def default_predictor(self, name, cmd0):
         if ON_POSIX:
             return self.default_predictor_readbin(name, cmd0,
-                                                  timeout=.1,
+                                                  timeout=0.1,
                                                   failure=predict_true)
         else:
             return predict_true
@@ -375,6 +375,7 @@ def default_threadable_predictors():
         'weechat': predict_help_ver,
         'xo': predict_help_ver,
         'xonsh': predict_shell,
+        'xon.sh': predict_shell,
         'zsh': predict_shell,
     }
     return predictors

@@ -8,7 +8,7 @@
 
 **Fixed:**
 
-* Fixed issue with readline tab completer overwriting initial prefix in
-  some instances.
+* Fixed a potential "OSError: [Errno 22] Invalid argument" to increase job
+  control stability.
 
 **Security:** None

@@ -6,21 +6,25 @@ import enum
 import argparse
 import builtins
 import contextlib
+import signal
 import traceback
 
 from xonsh import __version__
+from xonsh.timings import setup_timings
 from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
+from xonsh.execer import Execer
 from xonsh.proc import HiddenCommandPipeline
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import setup_win_unicode_console, print_color
+from xonsh.tools import setup_win_unicode_console, print_color, to_bool_or_int
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import xonfig_main
 from xonsh.lazyimps import pygments, pyghooks
-from xonsh.imphooks import install_hook
+from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
+from xonsh.environ import xonshrc_context
 
 
 events.transmogrify('on_post_init', 'LoadEvent')
@@ -124,10 +128,18 @@ def parser():
                    action='store_true',
                    default=False)
     p.add_argument('--config-path',
-                   help='specify a custom static configuration file',
+                   help='DEPRECATED: static configuration files may now be used '
+                        'in the XONSHRC file list, see the --rc option.',
                    dest='config_path',
                    default=None,
                    type=path_argument)
+    p.add_argument('--rc',
+                   help="The xonshrc files to load, these may be either xonsh "
+                        "files or JSON-based static configuration files.",
+                   dest='rc',
+                   nargs='+',
+                   type=path_argument,
+                   default=None)
     p.add_argument('--no-rc',
                    help="Do not load the .xonshrc files",
                    dest='norc',
@@ -156,6 +168,13 @@ def parser():
                         'Warning! If set this overrides $SHELL_TYPE variable.',
                    dest='shell_type',
                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
+                   default=None)
+    p.add_argument('--timings',
+                   help='Prints timing infomation before the prompt is shown. '
+                        'This is usefull to track down perfomance issues '
+                        'and investigate startup times.',
+                   dest='timings',
+                   action='store_true',
                    default=None)
     p.add_argument('file',
                    metavar='script-file',
@@ -199,10 +218,38 @@ class XonshMode(enum.Enum):
     interactive = 3
 
 
+def start_services(shell_kwargs):
+    """Starts up the essential services in the proper order.
+    This returns the envrionment instance as a convenience.
+    """
+    install_import_hooks()
+    # create execer, which loads builtins
+    ctx = shell_kwargs.get('ctx', {})
+    debug = to_bool_or_int(os.getenv('XONSH_DEBUG', '0'))
+    events.on_timingprobe.fire(name='pre_execer_init')
+    execer = Execer(xonsh_ctx=ctx, debug_level=debug,
+                    scriptcache=shell_kwargs.get('scriptcache', True),
+                    cacheall=shell_kwargs.get('cacheall', False))
+    events.on_timingprobe.fire(name='post_execer_init')
+    # load rc files
+    login = shell_kwargs.get('login', True)
+    env = builtins.__xonsh_env__
+    rc = shell_kwargs.get('rc', None)
+    rc = env.get('XONSHRC') if rc is None else rc
+    events.on_pre_rc.fire()
+    xonshrc_context(rcfiles=rc, execer=execer, ctx=ctx, env=env, login=login)
+    events.on_post_rc.fire()
+    # create shell
+    builtins.__xonsh_shell__ = Shell(execer=execer, **shell_kwargs)
+    ctx['__name__'] = '__main__'
+    return env
+
+
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
+    setup_timings()
     setproctitle = get_setproctitle()
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + argv))
@@ -223,8 +270,6 @@ def premain(argv=None):
                     'ctx': builtins.__xonsh_ctx__}
     if args.login:
         shell_kwargs['login'] = True
-    if args.config_path is not None:
-        shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
     setattr(sys, 'displayhook', _pprint_displayhook)
@@ -241,9 +286,7 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
-    install_hook()
-    builtins.__xonsh_shell__ = Shell(**shell_kwargs)
-    env = builtins.__xonsh_env__
+    env = start_services(shell_kwargs)
     env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
@@ -298,6 +341,12 @@ def main(argv=None):
 
 def main_xonsh(args):
     """Main entry point for xonsh cli."""
+    if not ON_WINDOWS:
+        def func_sig_ttin_ttou(n, f):
+            pass
+        signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
+        signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
+
     events.on_post_init.fire()
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
@@ -327,6 +376,7 @@ def main_xonsh(args):
                 sys.argv = [args.file] + args.args
                 env['ARGS'] = sys.argv[:]  # $ARGS is not sys.argv
                 env['XONSH_SOURCE'] = path
+                shell.ctx.update({'__file__': args.file, '__name__': '__main__'})
                 run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
                                       loc=None, mode='exec')
             else:

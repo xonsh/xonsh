@@ -1,7 +1,6 @@
 **Added:**
 
-* The Python tab completer will now complete the argument names of functions
-  and other callables.
+* CircleCI test post codecov run
 
 **Changed:** None
 

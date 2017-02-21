@@ -8,7 +8,6 @@ import io
 import os
 import re
 import sys
-import time
 import types
 import shlex
 import signal
@@ -26,7 +25,6 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
-from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
@@ -283,7 +281,7 @@ def safe_close(x):
         pass
 
 
-def _parse_redirects(r):
+def _parse_redirects(r, loc=None):
     """returns origin, mode, destination tuple"""
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
     # redirect to fd
@@ -496,6 +494,8 @@ class SubprocSpec:
         self.prep_env(kwargs)
         self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
         if callable(self.alias):
+            if 'preexec_fn' in kwargs:
+                kwargs.pop('preexec_fn')
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
@@ -533,7 +533,9 @@ class SubprocSpec:
 
     def prep_preexec_fn(self, kwargs, pipeline_group=None):
         """Prepares the 'preexec_fn' keyword argument"""
-        if not (ON_POSIX and self.cls is subprocess.Popen):
+        if not ON_POSIX:
+            return
+        if not builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
             return
         if pipeline_group is None:
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
@@ -674,13 +676,17 @@ def _update_last_spec(last):
     if callable_alias:
         pass
     else:
-        thable = builtins.__xonsh_commands_cache__.predict_threadable(last.args)
+        cmds_cache = builtins.__xonsh_commands_cache__
+        thable = (cmds_cache.predict_threadable(last.args) and
+                  cmds_cache.predict_threadable(last.cmd))
         if captured and thable:
             last.cls = PopenThread
         elif not thable:
-            # foreground processes should use Popen and not pipe stdout, stderr
+            # foreground processes should use Popen
             last.threadable = False
-            return
+            if captured == 'object' or captured == 'hiddenobject':
+                # CommandPipeline objects should not pipe stdout, stderr
+                return
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = ON_POSIX and not callable_alias
@@ -789,34 +795,27 @@ def run_subproc(cmds, captured=False):
     """
     specs = cmds_to_specs(cmds, captured=captured)
     captured = specs[-1].captured
-    procs = []
-    proc = pipeline_group = None
-    for spec in specs:
-        starttime = time.time()
-        proc = spec.run(pipeline_group=pipeline_group)
-        procs.append(proc)
-        if ON_POSIX and pipeline_group is None and \
-           spec.cls is subprocess.Popen:
-            pipeline_group = proc.pid
-    if not spec.is_proxy:
+    if captured == 'hiddenobject':
+        command = HiddenCommandPipeline(specs)
+    else:
+        command = CommandPipeline(specs)
+    proc = command.proc
+    background = command.spec.background
+    if not all(x.is_proxy for x in specs):
         add_job({
             'cmds': cmds,
-            'pids': [i.pid for i in procs],
+            'pids': [i.pid for i in command.procs],
             'obj': proc,
-            'bg': spec.background,
+            'bg': background,
+            'pipeline': command,
+            'pgrp': command.term_pgid,
         })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
     # create command or return if backgrounding.
-    if spec.background:
+    if background:
         return
-    if captured == 'hiddenobject':
-        command = HiddenCommandPipeline(specs, procs, starttime=starttime,
-                                        captured=captured)
-    else:
-        command = CommandPipeline(specs, procs, starttime=starttime,
-                                  captured=captured)
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()
@@ -840,8 +839,13 @@ def subproc_captured_stdout(*cmds):
 
 def subproc_captured_inject(*cmds):
     """Runs a subprocess, capturing the output. Returns a list of
-    whitespace-separated strings in the stdout that was produced."""
-    return [i.strip() for i in run_subproc(cmds, captured='stdout').split()]
+    whitespace-separated strings of the stdout that was produced.
+    The string is split using xonsh's lexer, rather than Python's str.split()
+    or shlex.split().
+    """
+    s = run_subproc(cmds, captured='stdout')
+    toks = builtins.__xonsh_execer__.parser.lexer.split(s)
+    return toks
 
 
 def subproc_captured_object(*cmds):
@@ -905,7 +909,7 @@ def MACRO_FLAG_KINDS():
         'exec': exec,
         't': type,
         'type': type,
-        }
+    }
 
 
 def _convert_kind_flag(x):
@@ -958,7 +962,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
             ctx |= set(locs.keys())
         mode = mode or 'eval'
         arg = execer.parse(raw_arg, ctx, mode=mode, filename=filename)
-    elif kind is types.CodeType or kind is compile:
+    elif kind is types.CodeType or kind is compile:  # NOQA
         mode = mode or 'eval'
         arg = execer.compile(raw_arg, mode=mode, glbs=glbs, locs=locs,
                              filename=filename)
@@ -1120,14 +1124,14 @@ def enter_macro(obj, raw_block, glbs, locs):
     return obj
 
 
-def load_builtins(execer=None, config=None, login=False, ctx=None):
+def load_builtins(execer=None, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
     # private built-ins
     builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = Env(default_env(config=config, login=login))
+    builtins.__xonsh_env__ = Env(default_env())
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_pathsearch__ = pathsearch
@@ -1170,8 +1174,6 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     # Need this inline/lazy import here since we use locate_binary that
     # relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
-    if login:
-        builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     builtins.__xonsh_history__ = None
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:

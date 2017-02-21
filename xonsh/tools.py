@@ -346,6 +346,44 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+def get_logical_line(lines, idx):
+    """Returns a single logical line (i.e. one without line continuations)
+    from a list of lines.  This line should begin at index idx. This also
+    returns the number of physical lines the logical line spans. The lines
+    should not contain newlines
+    """
+    n = 1
+    nlines = len(lines)
+    line = lines[idx]
+    while line.endswith('\\') and idx < nlines:
+        n += 1
+        idx += 1
+        line = line[:-1] + lines[idx]
+    return line, n
+
+
+def replace_logical_line(lines, logical, idx, n):
+    """Replaces lines at idx that may end in line continuation with a logical
+    line that spans n lines.
+    """
+    if n == 1:
+        lines[idx] = logical
+        return
+    space = ' '
+    for i in range(idx, idx+n-1):
+        a = len(lines[i])
+        b = logical.find(space, a-1)
+        if b < 0:
+            # no space found
+            lines[i] = logical
+            logical = ''
+        else:
+            # found space to split on
+            lines[i] = logical[:b] + '\\'
+            logical = logical[b:]
+    lines[idx+n-1] = logical
+
+
 def is_balanced(expr, ltok, rtok):
     """Determines whether an expression has unbalanced opening and closing tokens."""
     lcnt = expr.count(ltok)
@@ -792,8 +830,11 @@ def on_main_thread():
     return threading.current_thread() is threading.main_thread()
 
 
+_DEFAULT_SENTINEL = object()
+
+
 @contextlib.contextmanager
-def swap(namespace, name, value, default=NotImplemented):
+def swap(namespace, name, value, default=_DEFAULT_SENTINEL):
     """Swaps a current variable name in a namespace for another value, and then
     replaces it when the context is exited.
     """
@@ -804,6 +845,21 @@ def swap(namespace, name, value, default=NotImplemented):
         delattr(namespace, name)
     else:
         setattr(namespace, name, old)
+
+
+@contextlib.contextmanager
+def swap_values(d, updates, default=_DEFAULT_SENTINEL):
+    """Updates a dictionary (or other mapping) with values from another mapping,
+    and then restores the original mapping when the context is exited.
+    """
+    old = {k: d.get(k, default) for k in updates}
+    d.update(updates)
+    yield
+    for k, v in old.items():
+        if v is default and k in d:
+            del d[k]
+        else:
+            d[k] = v
 
 #
 # Validators and converters
@@ -1773,3 +1829,26 @@ def columnize(elems, width=80, newline='\n'):
     lines = [row_t.format(row=row, w=colwidths) for row in
              itertools.zip_longest(*data, fillvalue='')]
     return lines
+
+
+def unthreadable(f):
+    """Decorator that specifies that a callable alias should be run only
+    on the main thread process. This is often needed for debuggers and
+    profilers.
+    """
+    f.__xonsh_threadable__ = False
+    return f
+
+
+def uncapturable(f):
+    """Decorator that specifies that a callable alias should not be run with
+    any capturing. This is often needed if the alias call interactive
+    subprocess, like pagers and text editors.
+    """
+    f.__xonsh_capturable__ = False
+    return f
+
+
+def carriage_return():
+    """Writes a carriage return to stdout, and nothing else."""
+    print('\r', flush=True, end='')

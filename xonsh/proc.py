@@ -29,8 +29,13 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
-from xonsh.jobs import wait_for_active_job
+from xonsh.jobs import wait_for_active_job, give_terminal_to, _continue
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
+# these decorators are imported for users back-compatible
+from xonsh.tools import unthreadable, uncapturable  # NOQA
+
+# foreground has be deprecated
+foreground = unthreadable
 
 
 @lazyobject
@@ -327,11 +332,11 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     # I believe that there is a bug in PTK that if we reset the
     # cursor position, the cursor on the next prompt is accidentally on
     # the next line.  If this is fixed, uncomment the following line.
-    #if max_offset < offset + expandsize:
-    #    rows, max_offset, orig_posize = _expand_console_buffer(
+    # if max_offset < offset + expandsize:
+    #     rows, max_offset, orig_posize = _expand_console_buffer(
     #                                        cols, max_offset, expandsize,
     #                                        orig_posize, fd)
-    #    winutils.set_console_cursor_position(x, y, fd=fd)
+    #     winutils.set_console_cursor_position(x, y, fd=fd)
     while True:
         posize = winutils.get_position_size(fd)
         offset = (cols*y) + x
@@ -833,7 +838,10 @@ class PopenThread(threading.Thread):
         new[LFLAG] |= termios.ECHO | termios.ICANON
         new[CC][termios.VMIN] = 1
         new[CC][termios.VTIME] = 0
-        termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
+        try:
+            termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
+        except termios.error:
+            pass
 
     #
     # Dispatch methods
@@ -865,6 +873,11 @@ class PopenThread(threading.Thread):
         """Process return code."""
         return self.proc.returncode
 
+    @returncode.setter
+    def returncode(self, value):
+        """Process return code."""
+        self.proc.returncode = value
+
     @property
     def signal(self):
         """Process signal, or None."""
@@ -874,6 +887,11 @@ class PopenThread(threading.Thread):
             if rtn is not None and rtn != 0:
                 s = (-1*rtn, rtn < 0 if ON_WINDOWS else os.WCOREDUMP(rtn))
         return s
+
+    @signal.setter
+    def signal(self, value):
+        """Process signal, or None."""
+        self.proc.signal = value
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
@@ -1221,6 +1239,7 @@ class ProcProxyThread(threading.Thread):
         self.stdout = stdout
         self.stderr = stderr
         self.env = env or builtins.__xonsh_env__
+        self._interrupted = False
 
         if ON_WINDOWS:
             if self.p2cwrite != -1:
@@ -1248,8 +1267,18 @@ class ProcProxyThread(threading.Thread):
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
+        # Set some signal handles, if we can. Must come before process
+        # is started to prevent deadlock on windows
+        self.old_int_handler = None
+        if on_main_thread():
+            self.old_int_handler = signal.signal(signal.SIGINT,
+                                                 self._signal_int)
+        # start up the proc
         super().__init__()
         self.start()
+
+    def __del__(self):
+        self._restore_sigint()
 
     def run(self):
         """Set up input/output streams and execute the child function in a new
@@ -1354,7 +1383,40 @@ class ProcProxyThread(threading.Thread):
     def wait(self, timeout=None):
         """Waits for the process to finish and returns the return code."""
         self.join()
+        self._restore_sigint()
         return self.returncode
+
+    #
+    # SIGINT handler
+    #
+
+    def _signal_int(self, signum, frame):
+        """Signal handler for SIGINT - Ctrl+C may have been pressed."""
+        # check if we have already be interrupted to prevent infintie recurrsion
+        if self._interrupted:
+            return
+        self._interrupted = True
+        # close file handles here to stop an processes piped to us.
+        handles = (self.p2cread, self.p2cwrite, self.c2pread, self.c2pwrite,
+                   self.errread, self.errwrite)
+        for handle in handles:
+            safe_fdclose(handle)
+        if self.poll() is not None:
+            self._restore_sigint(frame=frame)
+        if on_main_thread():
+            signal.pthread_kill(threading.get_ident(), signal.SIGINT)
+
+    def _restore_sigint(self, frame=None):
+        old = self.old_int_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGINT, old)
+            self.old_int_handler = None
+        if frame is not None:
+            if old is not None and old is not self._signal_int:
+                old(signal.SIGINT, frame)
+        if self._interrupted:
+            self.returncode = 1
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
@@ -1539,7 +1601,11 @@ class ProcProxy(object):
         if self.stdin is None:
             stdin = None
         else:
-            stdin = io.TextIOWrapper(self.stdin, encoding=enc, errors=err)
+            if isinstance(self.stdin, int):
+                inbuf = io.open(self.stdin, 'rb', -1)
+            else:
+                inbuf = self.stdin
+            stdin = io.TextIOWrapper(inbuf, encoding=enc, errors=err)
         stdout = self._pick_buf(self.stdout, sys.stdout, enc, err)
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
@@ -1578,26 +1644,6 @@ class ProcProxy(object):
         return getattr(self, name)
 
 
-def unthreadable(f):
-    """Decorator that specifies that a callable alias should be run only
-    on the main thread process. This is often needed for debuggers and profilers.
-    """
-    f.__xonsh_threadable__ = False
-    return f
-
-
-foreground = unthreadable
-
-
-def uncapturable(f):
-    """Decorator that specifies that a callable alias should not be run with
-    any capturing. This is often needed if the alias call interactive subprocess,
-    like pagers and text editors.
-    """
-    f.__xonsh_capturable__ = False
-    return f
-
-
 @lazyobject
 def SIGNAL_MESSAGES():
     sm = {
@@ -1634,6 +1680,17 @@ def safe_readable(handle):
     return status
 
 
+def update_fg_process_group(pipeline_group, background):
+    if background:
+        return False
+    if not ON_POSIX:
+        return False
+    env = builtins.__xonsh_env__
+    if not env.get('XONSH_INTERACTIVE'):
+        return False
+    return give_terminal_to(pipeline_group)
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -1644,18 +1701,12 @@ class CommandPipeline:
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
 
-    def __init__(self, specs, procs, starttime=None, captured=False):
+    def __init__(self, specs):
         """
         Parameters
         ----------
         specs : list of SubprocSpec
             Process sepcifications
-        procs : list of Popen-like
-            Process objects.
-        starttime : floats or None, optional
-            Start timestamp.
-        captured : bool or str, optional
-            Flag for whether or not the command should be captured.
 
         Attributes
         ----------
@@ -1673,18 +1724,38 @@ class CommandPipeline:
             A string of the standard error.
         lines : list of str
             The output lines
+        starttime : floats or None
+            Pipeline start timestamp.
         """
-        self.procs = procs
-        self.proc = procs[-1]
+        self.starttime = None
+        self.ended = False
+        self.procs = []
         self.specs = specs
         self.spec = specs[-1]
-        self.starttime = starttime or time.time()
-        self.captured = captured
-        self.ended = False
+        self.captured = specs[-1].captured
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
+        self.term_pgid = None
+
+        background = self.spec.background
+        pipeline_group = None
+        for spec in specs:
+            if self.starttime is None:
+                self.starttime = time.time()
+            try:
+                proc = spec.run(pipeline_group=pipeline_group)
+            except XonshError:
+                self._return_terminal()
+                raise
+            if proc.pid and pipeline_group is None and not spec.is_proxy and \
+                    self.captured != 'object':
+                pipeline_group = proc.pid
+                if update_fg_process_group(pipeline_group, background):
+                    self.term_pgid = pipeline_group
+            self.procs.append(proc)
+        self.proc = self.procs[-1]
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
@@ -1724,7 +1795,8 @@ class CommandPipeline:
             stdout = stdout.buffer
         if stdout is not None and not isinstance(stdout, self.nonblocking):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
-        if not stdout or not safe_readable(stdout):
+        if not stdout or self.captured == 'stdout' or not safe_readable(stdout) or \
+                not spec.threadable:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
@@ -1734,6 +1806,15 @@ class CommandPipeline:
                 self._endtime()
                 if self.captured == 'object':
                     self.end(tee_output=False)
+                elif self.captured == 'hiddenobject' and stdout:
+                    b = stdout.read()
+                    lines = b.splitlines(keepends=True)
+                    yield from lines
+                    self.end(tee_output=False)
+                elif self.captured == 'stdout':
+                    b = stdout.read()
+                    s = self._decode_uninew(b, universal_newlines=True)
+                    self.lines = s.splitlines(keepends=True)
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
@@ -1817,7 +1898,8 @@ class CommandPipeline:
 
     def tee_stdout(self):
         """Writes the process stdout to the output variable, line-by-line, and
-        yields each line.
+        yields each line. This may optionally accept lines (in bytes) to iterate
+        over, in which case it does not call iterraw().
         """
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
@@ -1880,7 +1962,7 @@ class CommandPipeline:
         else:
             self.errors += s
 
-    def _decode_uninew(self, b):
+    def _decode_uninew(self, b, universal_newlines=None):
         """Decode bytes into a str and apply universal newlines as needed."""
         if not b:
             return ''
@@ -1890,7 +1972,7 @@ class CommandPipeline:
                          errors=env.get('XONSH_ENCODING_ERRORS'))
         else:
             s = b
-        if self.spec.universal_newlines:
+        if universal_newlines or self.spec.universal_newlines:
             s = s.replace('\r\n', '\n').replace('\r', '\n')
         return s
 
@@ -1899,11 +1981,20 @@ class CommandPipeline:
     #
 
     def end(self, tee_output=True):
-        """Waits for the command to complete and then runs any closing and
-        cleanup procedures that need to be run.
+        """
+        End the pipeline, return the controlling terminal if needed.
+
+        Main things done in self._end().
         """
         if self.ended:
             return
+        self._end(tee_output=tee_output)
+        self._return_terminal()
+
+    def _end(self, tee_output):
+        """Waits for the command to complete and then runs any closing and
+        cleanup procedures that need to be run.
+        """
         if tee_output:
             for _ in self.tee_stdout():
                 pass
@@ -1917,6 +2008,28 @@ class CommandPipeline:
         self._apply_to_history()
         self.ended = True
         self._raise_subproc_error()
+
+    def _return_terminal(self):
+        if ON_WINDOWS or not ON_POSIX:
+            return
+        pgid = os.getpgid(0)
+        if self.term_pgid is None or pgid == self.term_pgid:
+            return
+        if give_terminal_to(pgid):  # if gave term succeed
+            self.term_pgid = pgid
+            if hasattr(builtins, '__xonsh_shell__'):
+                # restoring sanity could probably be called whenever we return
+                # control to the shell. But it only seems to matter after a
+                # ^Z event. This *has* to be called after we give the terminal
+                # back to the shell.
+                builtins.__xonsh_shell__.shell.restore_tty_sanity()
+
+    def resume(self, job, tee_output=True):
+        self.ended = False
+        if give_terminal_to(job['pgrp']):
+            self.term_pgid = job['pgrp']
+        _continue(job)
+        self.end(tee_output=tee_output)
 
     def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""

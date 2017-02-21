@@ -13,6 +13,7 @@ tests/lexer_table.py
 tests/parser_table.py
 tests/lexer_test_table.py
 tests/parser_test_table.py
+tests/testfile
 build/
 dist/
 xonsh.egg-info/

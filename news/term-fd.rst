@@ -8,6 +8,7 @@
 
 **Fixed:**
 
-* Fixed broken bash completions on Windows if 'Windows Subsystem for Linux' is installed. 
+* Fixed issues like ``timeit ls`` causing OSError - "Inappropriate ioctl
+  for device".
 
 **Security:** None

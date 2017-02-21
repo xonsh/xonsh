@@ -6,12 +6,12 @@ import time
 import ctypes
 import signal
 import builtins
-import functools
 import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject
-from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
+from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
+from xonsh.tools import unthreadable
 
 
 tasks = LazyObject(collections.deque, globals(), 'tasks')
@@ -28,7 +28,10 @@ if ON_DARWIN:
         for pid in job['pids']:
             if pid is None:  # the pid of an aliased proc is None
                 continue
-            os.kill(pid, signal)
+            try:
+                os.kill(pid, signal)
+            except ProcessLookupError:
+                pass
 elif ON_WINDOWS:
     pass
 elif ON_CYGWIN:
@@ -67,7 +70,7 @@ if ON_WINDOWS:
     def ignore_sigtstp():
         pass
 
-    def _set_pgrp(info):
+    def give_terminal_to(pgid):
         pass
 
     def wait_for_active_job(last_task=None, backgrounded=False):
@@ -101,64 +104,49 @@ else:
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
-    def _set_pgrp(info):
-        pid = info['pids'][0]
-        if pid is None:
-            # occurs if first process is an alias
-            info['pgrp'] = None
-            return
-        try:
-            info['pgrp'] = os.getpgid(pid)
-        except ProcessLookupError:
-            info['pgrp'] = None
-
     _shell_pgrp = os.getpgrp()
 
     _block_when_giving = LazyObject(lambda: (signal.SIGTTOU, signal.SIGTTIN,
                                              signal.SIGTSTP, signal.SIGCHLD),
                                     globals(), '_block_when_giving')
 
-    # check for shell tty
-    @functools.lru_cache(1)
-    def _shell_tty():
-        try:
-            _st = sys.stderr.fileno()
-            if os.tcgetpgrp(_st) != os.getpgid(os.getpid()):
-                # we don't own it
-                _st = None
-        except OSError:
-            _st = None
-        return _st
-
-    # _give_terminal_to is a simplified version of:
+    # give_terminal_to is a simplified version of:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
     # this will give the terminal to the process group pgid
     if ON_CYGWIN:
         # on cygwin, signal.pthread_sigmask does not exist in Python, even
         # though pthread_sigmask is defined in the kernel.  thus, we use
         # ctypes to mimic the calls in the "normal" version below.
-        def _give_terminal_to(pgid):
-            st = _shell_tty()
-            if st is not None and os.isatty(st):
-                omask = ctypes.c_ulong()
-                mask = ctypes.c_ulong()
-                LIBC.sigemptyset(ctypes.byref(mask))
-                for i in _block_when_giving:
-                    LIBC.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
-                LIBC.sigemptyset(ctypes.byref(omask))
-                LIBC.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
-                                 ctypes.byref(mask),
-                                 ctypes.byref(omask))
-                LIBC.tcsetpgrp(ctypes.c_int(st), ctypes.c_int(pgid))
-                LIBC.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
-                                 ctypes.byref(omask), None)
+        def give_terminal_to(pgid):
+            omask = ctypes.c_ulong()
+            mask = ctypes.c_ulong()
+            LIBC.sigemptyset(ctypes.byref(mask))
+            for i in _block_when_giving:
+                LIBC.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
+            LIBC.sigemptyset(ctypes.byref(omask))
+            LIBC.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
+                             ctypes.byref(mask),
+                             ctypes.byref(omask))
+            LIBC.tcsetpgrp(ctypes.c_int(FD_STDERR), ctypes.c_int(pgid))
+            LIBC.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
+                             ctypes.byref(omask), None)
+            return True
     else:
-        def _give_terminal_to(pgid):
-            st = _shell_tty()
-            if st is not None and os.isatty(st):
-                oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
-                                                 _block_when_giving)
-                os.tcsetpgrp(st, pgid)
+        def give_terminal_to(pgid):
+            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
+                                             _block_when_giving)
+            try:
+                os.tcsetpgrp(FD_STDERR, pgid)
+                return True
+            except OSError as e:
+                if e.errno == 22:  # [Errno 22] Invalid argument
+                    # there are cases that all the processes of pgid have
+                    # finished, then we don't need to do anything here, see
+                    # issue #2220
+                    return False
+                else:
+                    raise
+            finally:
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
     def wait_for_active_job(last_task=None, backgrounded=False):
@@ -170,22 +158,14 @@ else:
         active_task = get_next_task()
         # Return when there are no foreground active task
         if active_task is None:
-            _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
-            if backgrounded and hasattr(builtins, '__xonsh_shell__'):
-                # restoring sanity could probably be called whenever we return
-                # control to the shell. But it only seems to matter after a
-                # ^Z event. This *has* to be called after we give the terminal
-                # back to the shell.
-                builtins.__xonsh_shell__.shell.restore_tty_sanity()
             return last_task
-        pgrp = active_task.get('pgrp', None)
         obj = active_task['obj']
         backgrounded = False
-        # give the terminal over to the fg process
-        if pgrp is not None:
-            _give_terminal_to(pgrp)
-        _continue(active_task)
-        _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
+        try:
+            _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
+        except ChildProcessError:  # No child processes
+            return wait_for_active_job(last_task=active_task,
+                                       backgrounded=backgrounded)
         if os.WIFSTOPPED(wcode):
             print('^Z')
             active_task['status'] = "stopped"
@@ -262,7 +242,6 @@ def add_job(info):
     num = get_next_job_number()
     info['started'] = time.time()
     info['status'] = "running"
-    _set_pgrp(info)
     tasks.appendleft(num)
     builtins.__xonsh_all_jobs__[num] = info
     if info['bg']:
@@ -307,9 +286,9 @@ def clean_jobs():
                     # newline
                     print()
                 print('xonsh: {}'.format(msg), file=sys.stderr)
-                print('-'*5, file=sys.stderr)
+                print('-' * 5, file=sys.stderr)
                 jobs([], stdout=sys.stderr)
-                print('-'*5, file=sys.stderr)
+                print('-' * 5, file=sys.stderr)
                 print('Type "exit" or press "ctrl-d" again to force quit.',
                       file=sys.stderr)
                 jobs_clean = False
@@ -341,6 +320,7 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     return None, None
 
 
+@unthreadable
 def fg(args, stdin=None):
     """
     xonsh command: fg
@@ -354,32 +334,33 @@ def fg(args, stdin=None):
         return '', 'Cannot bring nonexistent job to foreground.\n'
 
     if len(args) == 0:
-        act = tasks[0]  # take the last manipulated task by default
+        tid = tasks[0]  # take the last manipulated task by default
     elif len(args) == 1:
         try:
             if args[0] == '+':  # take the last manipulated task
-                act = tasks[0]
+                tid = tasks[0]
             elif args[0] == '-':  # take the second to last manipulated task
-                act = tasks[1]
+                tid = tasks[1]
             else:
-                act = int(args[0])
+                tid = int(args[0])
         except (ValueError, IndexError):
             return '', 'Invalid job: {}\n'.format(args[0])
 
-        if act not in builtins.__xonsh_all_jobs__:
+        if tid not in builtins.__xonsh_all_jobs__:
             return '', 'Invalid job: {}\n'.format(args[0])
     else:
         return '', 'fg expects 0 or 1 arguments, not {}\n'.format(len(args))
 
     # Put this one on top of the queue
-    tasks.remove(act)
-    tasks.appendleft(act)
+    tasks.remove(tid)
+    tasks.appendleft(tid)
 
-    job = get_task(act)
+    job = get_task(tid)
     job['bg'] = False
     job['status'] = "running"
-    print_one_job(act)
-    wait_for_active_job()
+    print_one_job(tid)
+    pipeline = job['pipeline']
+    pipeline.resume(job)
 
 
 def bg(args, stdin=None):

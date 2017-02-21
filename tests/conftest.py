@@ -4,8 +4,6 @@ import os
 
 import pytest
 
-import xonsh.built_ins
-
 from xonsh.built_ins import ensure_list_of_strs, enter_macro
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
@@ -25,9 +23,9 @@ def source_path():
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    monkeypatch.setattr(xonsh.built_ins, 'load_builtins',
-                        lambda *args, **kwargs: None)
-    execer = Execer(login=False, unload=False)
+    monkeypatch.setattr('xonsh.built_ins.load_builtins.__code__',
+                        (lambda *args, **kwargs: None).__code__)
+    execer = Execer(unload=False)
     builtins.__xonsh_execer__ = execer
     return execer
 
@@ -74,23 +72,34 @@ def xonsh_builtins(xonsh_events):
     # be firing events on the global instance.
     builtins.events = xonsh_events
     yield builtins
-    del builtins.__xonsh_env__
-    del builtins.__xonsh_ctx__
+    if hasattr(builtins, '__xonsh_env__'):
+        del builtins.__xonsh_env__
+    if hasattr(builtins, '__xonsh_ctx__'):
+        del builtins.__xonsh_ctx__
     del builtins.__xonsh_shell__
-    del builtins.__xonsh_help__
-    del builtins.__xonsh_glob__
-    del builtins.__xonsh_exit__
-    del builtins.__xonsh_superhelp__
+    if hasattr(builtins, '__xonsh_help__'):
+        del builtins.__xonsh_help__
+    if hasattr(builtins, '__xonsh_glob__'):
+        del builtins.__xonsh_glob__
+    if hasattr(builtins, '__xonsh_exit__'):
+        del builtins.__xonsh_exit__
+    if hasattr(builtins, '__xonsh_superhelp__'):
+        del builtins.__xonsh_superhelp__
     del builtins.__xonsh_regexpath__
-    del builtins.__xonsh_expand_path__
-    del builtins.__xonsh_stdout_uncaptured__
-    del builtins.__xonsh_stderr_uncaptured__
+    if hasattr(builtins, '__xonsh_expand_path__'):
+        del builtins.__xonsh_expand_path__
+    if hasattr(builtins, '__xonsh_stdout_uncaptured__'):
+        del builtins.__xonsh_stdout_uncaptured__
+    if hasattr(builtins, '__xonsh_stderr_uncaptured__'):
+        del builtins.__xonsh_stderr_uncaptured__
     del builtins.__xonsh_subproc_captured__
-    del builtins.__xonsh_subproc_uncaptured__
+    if hasattr(builtins, '__xonsh_subproc_uncaptured__'):
+        del builtins.__xonsh_subproc_uncaptured__
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.__xonsh_commands_cache__
     del builtins.__xonsh_all_jobs__
-    del builtins.__xonsh_history__
+    if hasattr(builtins, '__xonsh_history__'):
+        del builtins.__xonsh_history__
     del builtins.__xonsh_enter_macro__
     del builtins.evalx
     del builtins.execx

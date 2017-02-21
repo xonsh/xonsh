@@ -17,7 +17,7 @@ def Shell(*args, **kwargs):
 
 
 @pytest.fixture
-def shell(xonsh_builtins, monkeypatch):
+def shell(xonsh_builtins, xonsh_execer, monkeypatch):
     """Xonsh Shell Mock"""
     monkeypatch.setattr(xonsh.main, 'Shell', Shell)
 
@@ -62,7 +62,7 @@ def test_premain_interactive__with_file_argument(shell):
 
 
 @pytest.mark.parametrize('case', ['----', '--hep', '-TT', '--TTTT'])
-def test_premain_invalid_arguments(case, shell, capsys):
+def test_premain_invalid_arguments(shell, case, capsys):
     with pytest.raises(SystemExit):
         xonsh.main.premain([case])
     assert 'unrecognized argument' in capsys.readouterr()[1]
