@@ -1,10 +1,13 @@
 """Tools for helping with ANSI color codes."""
 import re
+import sys
 import string
 import warnings
 
+from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyObject, LazyDict
-from xonsh.color_tools import RE_BACKGROUND
+from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
+                               find_closest_color, rgb2short)
 
 
 def ansi_partial_color_format(template, style='default', cmap=None, hide=False):
@@ -41,9 +44,12 @@ def _ansi_partial_color_format_main(template, style='default', cmap=None, hide=F
     elif style in ANSI_STYLES:
         cmap = ANSI_STYLES[style]
     else:
-        msg = 'Could not find color style {0!r}, using default.'.format(style)
-        warnings.warn(msg, RuntimeWarning)
-        cmap = ANSI_STYLES['default']
+        try:  # dynamically loading the style
+            cmap = ansi_style_by_name(style)
+        except Exception:
+            msg = 'Could not find color style {0!r}, using default.'
+            print(msg.format(style), file=sys.stderr)
+            cmap = ANSI_STYLES['default']
     formatter = string.Formatter()
     esc = ('\001' if hide else '') + '\033['
     m = 'm' + ('\002' if hide else '')
@@ -1146,3 +1152,37 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _monokai_style, _murphy_style, _native_style, _paraiso_dark_style,
      _paraiso_light_style, _pastie_style, _perldoc_style,  _rrt_style,
      _tango_style, _trac_style, _vim_style, _vs_style, _xcode_style)
+
+#
+# Dynamically generated styles
+#
+def make_ansi_style(pallette):
+    """Makes an ANSI color style from a color pallette"""
+    style = {'NO_COLOR': '0'}
+    for name, t in BASE_XONSH_COLORS.items():
+        closest = find_closest_color(t, pallette)
+        if len(closest) == 3:
+            closest = ''.join([a*2 for a in closest])
+        short = rgb2short(closest)[0]
+        style[name] = '38;5;' + short
+        style['BOLD_'+name] = '1;38;5;' + short
+        style['UNDERLINE_'+name] = '4;38;5;' + short
+        style['BOLD_UNDERLINE_'+name] = '1;4;38;5;' + short
+        style['BACKGROUND_'+name] = '48;5;' + short
+    return style
+
+
+def ansi_style_by_name(name):
+    """Gets or makes an ANSI color style by name. If the styles does not
+    exist, it will look for a style using the pygments name.
+    """
+    if name in ANSI_STYLES:
+        return ANSI_STYLES[name]
+    elif not HAS_PYGMENTS:
+        raise KeyError('could not find style {0!r}'.format(name))
+    from pygments.styles import get_style_by_name
+    pstyle = get_style_by_name(name)
+    pallette = make_pallete(pstyle.styles.values())
+    astyle = make_ansi_style(pallette)
+    STYLES[name] = astyle
+    return astyle
