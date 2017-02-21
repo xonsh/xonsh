@@ -1395,7 +1395,7 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
 def make_pygments_style(pallette):
     """Makes a pygments style based on a color pallete."""
     global Color
-    style = {'NO_COLOR': 'noinherit'}
+    style = {getattr(Color, 'NO_COLOR'): 'noinherit'}
     for name, t in BASE_XONSH_COLORS.items():
         color = find_closest_color(t, pallette)
         style[getattr(Color, name)] = '#' + color

@@ -14,6 +14,27 @@ from xonsh.lazyasd import lazyobject, LazyObject
 RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
                            globals(), 'RE_BACKGROUND')
 
+@lazyobject
+def BASE_XONSH_COLORS():
+    return {
+        'BLACK': (0, 0, 0),
+        'RED': (170, 0, 0),
+        'GREEN': (0, 170, 0),
+        'YELLOW': (170, 85, 0),
+        'BLUE': (0, 0, 170),
+        'PURPLE': (170, 0, 170),
+        'CYAN': (0, 170, 170),
+        'WHITE': (170, 170, 170),
+        'INTENSE_BLACK': (85, 85, 85),
+        'INTENSE_RED': (255, 85, 85),
+        'INTENSE_GREEN': (85, 255, 85),
+        'INTENSE_YELLOW': (255, 255, 85),
+        'INTENSE_BLUE': (85, 85, 255),
+        'INTENSE_PURPLE': (255, 85, 255),
+        'INTENSE_CYAN': (85, 255, 255),
+        'INTENSE_WHITE': (255, 255, 255),
+    }
+
 
 @lazyobject
 def CLUT():
@@ -308,8 +329,8 @@ def short2rgb(short):
     return SHORT_TO_RGB[short]
 
 
-def rgb2short(rgb):
-    """Find the closest xterm-256 approximation to the given RGB value::
+def rgb_to_256(rgb):
+    """Find the closest ANSI 256 approximation to the given RGB value.
 
         >>> rgb2short('123456')
         ('23', '005f5f')
@@ -326,10 +347,12 @@ def rgb2short(rgb):
     -------
     String between 0 and 255, compatible with xterm.
     """
-    rgb = _strip_hash(rgb)
+    rgb = rgb.lstrip('#')
+    if len(rgb) == 0:
+        return '0', '000000'
     incs = (0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff)
     # Break 6-char RGB code into 3 integer vals.
-    parts = [ int(h, 16) for h in re.split(r'(..)(..)(..)', rgb)[1:4] ]
+    parts = rgb_to_ints(rgb)
     res = []
     for part in parts:
         i = 0
@@ -338,36 +361,18 @@ def rgb2short(rgb):
             if s <= part <= b:
                 s1 = abs(s - part)
                 b1 = abs(b - part)
-                if s1 < b1: closest = s
-                else: closest = b
+                if s1 < b1:
+                    closest = s
+                else:
+                    closest = b
                 res.append(closest)
                 break
             i += 1
-    res = ''.join([ ('%02.x' % i) for i in res ])
-    equiv = RGB_to_SHORT[res]
+    res = ''.join([('%02.x' % i) for i in res])
+    equiv = RGB_TO_SHORT[res]
     return equiv, res
 
-
-@lazyobject
-def BASE_XONSH_COLORS():
-    return {
-        'BLACK': (0, 0, 0),
-        'RED': (170, 0, 0),
-        'GREEN': (0, 170, 0),
-        'YELLOW': (170, 85, 0),
-        'BLUE': (0, 0, 170),
-        'PURPLE': (170, 0, 170),
-        'CYAN': (0, 170, 170),
-        'WHITE': (170, 170, 170),
-        'INTENSE_BLACK': (85, 85, 85),
-        'INTENSE_RED': (255, 85, 85),
-        'INTENSE_GREEN': (85, 255, 85),
-        'INTENSE_YELLOW': (255, 255, 85),
-        'INTENSE_BLUE': (85, 85, 255),
-        'INTENSE_PURPLE': (255, 85, 255),
-        'INTENSE_CYAN': (85, 255, 255),
-        'INTENSE_WHITE': (255, 255, 255),
-    }
+rgb2short = rgb_to_256
 
 
 @lazyobject
@@ -380,7 +385,7 @@ def RE_RGB6():
     return re.compile(r'(..)(..)(..)')
 
 
-def rgb2ints(rgb):
+def rgb_to_ints(rgb):
     if len(rgb) == 6:
         return tuple([int(h, 16) for h in RE_RGB6.split(rgb)[1:4]])
     else:
@@ -403,5 +408,5 @@ def make_pallete(strings):
         while '#' in s:
             _, t = s.split('#', 1)
             t, _, s = t.partition(' ')
-            pallette[t] = rgb2ints(t)
+            pallette[t] = rgb_to_ints(t)
     return pallette
