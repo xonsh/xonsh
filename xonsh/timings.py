@@ -225,7 +225,7 @@ def timeit_alias(args, stdin=None):
     return
 
 
-_timings = {'start': clock() if ON_WINDOWS else 0.0}
+_timings = {'start': clock()}
 
 
 def setup_timings():
