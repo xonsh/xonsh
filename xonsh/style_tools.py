@@ -1,9 +1,10 @@
-import re
+"""Xonsh color styling tools that simulate pygments, when it is unavailable."""
 import builtins
 import string
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyObject
+from xonsh.color_tools import RE_BACKGROUND
 
 
 class _TokenType(tuple):
@@ -54,8 +55,6 @@ class _TokenType(tuple):
         # These instances are supposed to be singletons
         return self
 
-RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
-                           globals(), 'RE_BACKGROUND')
 
 Token = _TokenType()
 Color = Token.Color

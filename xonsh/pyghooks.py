@@ -2,9 +2,9 @@
 """Hooks for pygments syntax highlighting."""
 import os
 import re
+import sys
 import string
 import builtins
-from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
 
@@ -24,6 +24,9 @@ from xonsh.commands_cache import CommandsCache
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
+from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
+                               find_closest_color)
+from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256
 
 load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
@@ -197,14 +200,6 @@ class XonshConsoleLexer(XonshLexer):
 #
 
 Color = Token.Color  # alias to new color token namespace
-
-RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
-                           globals(), 'RE_BACKGROUND')
-
-
-def norm_name(name):
-    """Normalizes a color name."""
-    return name.replace('#', 'HEX').replace('BGHEX', 'BACKGROUND_HEX')
 
 
 def color_by_name(name, fg=None, bg=None):
@@ -421,10 +416,13 @@ class XonshStyle(Style):
         if self._style_name == value:
             return
         if value not in STYLES:
-            warn('Could not find style {0!r}, using default'.format(value),
-                 RuntimeWarning)
-            value = 'default'
-            builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = value
+            try:  # loading style dynamically
+                pygments_style_by_name(value)
+            except Exception:
+                print('Could not find style {0!r}, using default'.format(value),
+                      file=sys.stderr)
+                value = 'default'
+                builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = value
         cmap = STYLES[value]
         if value == 'default':
             self._smap = XONSH_BASE_STYLE.copy()
@@ -1390,6 +1388,32 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _murphy_style, _native_style, _paraiso_dark_style, _paraiso_light_style,
      _pastie_style, _perldoc_style, _rrt_style, _tango_style, _trac_style,
      _vim_style, _vs_style, _xcode_style)
+
+
+# dynamic syles
+def make_pygments_style(pallette):
+    """Makes a pygments style based on a color pallete."""
+    global Color
+    style = {getattr(Color, 'NO_COLOR'): 'noinherit'}
+    for name, t in BASE_XONSH_COLORS.items():
+        color = find_closest_color(t, pallette)
+        style[getattr(Color, name)] = '#' + color
+        style[getattr(Color, 'BOLD_'+name)] = 'bold #' + color
+        style[getattr(Color, 'UNDERLINE_'+name)] = 'underline #' + color
+        style[getattr(Color, 'BOLD_UNDERLINE_'+name)] = 'bold underline #' + color
+        style[getattr(Color, 'BACKGROUND_'+name)] = 'bg:#' + color
+    return style
+
+
+def pygments_style_by_name(name):
+    """Gets or makes a pygments color style by its name."""
+    if name in STYLES:
+        return STYLES[name]
+    pstyle = get_style_by_name(name)
+    pallette = make_pallete(pstyle.styles.values())
+    astyle = make_pygments_style(pallette)
+    STYLES[name] = astyle
+    return astyle
 
 
 #
