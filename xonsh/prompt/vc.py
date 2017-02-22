@@ -52,6 +52,7 @@ def get_git_branch():
         branch = None
     return branch
 
+
 def _get_hg_root(q):
     _curpwd = os.getcwd()
     while True:
