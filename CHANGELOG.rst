@@ -4,6 +4,84 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.6
+====================
+
+**Added:**
+
+* New core utility function aliases (written in pure Python) are now
+  available in ``xonsh.xoreutils``. These include: ``cat``, ``echo``,
+  ``pwd``, ``tee``, ``tty``, and ``yes``. These are not enabled by default.
+  Use the new ``coreutils`` xontrib to load them.
+* CircleCI test post codecov run
+* The ``trace`` will automatically disable color printing when
+  stdout is not a TTY or stdout is captured.
+* New ``jedi`` xontrib enables jedi-based tab completions when it is loaded.
+  This supercedes xonsh's default Python-mode completer.
+* The lexer has a new ``split()`` method which splits strings
+  according to xonsh's rules for whitespace and quotes.
+* New events for hooking into the Python import process are now available.
+  You can now provide a handler for:
+
+  - ``on_import_pre_find_spec``
+  - ``on_import_post_find_spec``
+  - ``on_import_pre_create_module``
+  - ``on_import_post_create_module``
+  - ``on_import_pre_exec_module``
+  - ``on_import_post_exec_module``
+
+
+**Changed:**
+
+* The prompt toolkit shell's first completion will now be the
+  current token from the auto-suggetion, if available.
+* Sourcing foreign shells will now safely skip applying aliases
+  with the same name as existing xonsh aliases by default.
+  This prevents accitidentally overwriting important xonsh standard
+  aliases, such as ``cd``.
+
+
+**Fixed:**
+
+* Threadable predicition for subprocesses will now consult both the command
+  as it was typed in and any resolved aliases.
+* The first prompt will no longer print in the middle of the line if the user has
+  already started typing.
+* Windows consoles will now automatically enable virtual terminal processing
+  with the readline shell, if available. This allows the full use of ANSI
+  escape sequences.
+* On the Windows readline shell, the teb-completion supression prompt will no
+  longer error out depending on what you press.
+* Fixed issue with subprocess mode wrapping not repecting line continuation
+  backslashes.
+* Handle a bug where Bash On Windows causes platform.windows_bash_command() 
+  to raise CalledProcessError.
+* Fixed issues pertaining to completing from raw string paths.
+  This is particularly relevant to Windows, where raw strings
+  are instered in path completion.
+* Replace deprecated calls to ``time.clock()`` by calls to
+  ``time.perf_counter()``.
+* Use ``clock()`` to set the start time of ``_timings`` in non-windows instead
+  of manually setting it to ``0.0``.
+* The ``trace`` utility will now correctly color output and not
+  print extraneous newlines when called in a script.
+* The ``@$(cmd)`` operator now correctly splits strings according to
+  xonsh semantics, rather than just on whitespace using ``str.split()``.
+* The ``mpl`` xontrib has been updated to improve matplotlib
+  handling. If ``xontrib load mpl`` is run before matplotlib
+  is imported and xonsh is in ineteractive mode, matplotlib
+  will automatically enter interactive mode as well. Additionally,
+  ``pyplot.show()`` is patched in interactive mode to be non-blocking.
+  If a non-blocking show fails to draw the figre for some reason,
+  a regular blocking version is called.
+* Fixed issues like ``timeit ls`` causing OSError - "Inappropriate ioctl
+  for device".
+* Fixed a potential "OSError: [Errno 22] Invalid argument" to increase job
+  control stability.
+
+
+
+
 v0.5.5
 ====================
 

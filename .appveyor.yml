@@ -1,4 +1,4 @@
-version: 0.5.5.{build}
+version: 0.5.6.{build}
 os: Windows Server 2012 R2
 environment:
 
