@@ -167,7 +167,7 @@ Contents
     api/index
     advanced_events
     devguide/
-    previous/index
+    changelog
     faq
     todo
 

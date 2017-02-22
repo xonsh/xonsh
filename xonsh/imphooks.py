@@ -105,10 +105,10 @@ on_import_pre_find_spec(fullname: str, path: str, target: module or None) -> Non
 Fires before any import find_spec() calls have been executed. The parameters
 here are the same as importlib.abc.MetaPathFinder.find_spec(). Namely,
 
-``fullname``: The full name of the module to import.
-``path``: None if a top-level import, otherwise the ``__path__`` of the parent
+:``fullname``: The full name of the module to import.
+:``path``: None if a top-level import, otherwise the ``__path__`` of the parent
           package.
-``target``: Target module used to make a better guess about the package spec.
+:``target``: Target module used to make a better guess about the package spec.
 """)
 
 events.doc('on_import_post_find_spec', """
@@ -117,11 +117,11 @@ on_import_post_find_spec(spec, fullname, path, target) -> None
 Fires after all import find_spec() calls have been executed. The parameters
 here the spec and the arguments importlib.abc.MetaPathFinder.find_spec(). Namely,
 
-``spec``: A ModuleSpec object if the spec was found, or None if it was not.
-``fullname``: The full name of the module to import.
-``path``: None if a top-level import, otherwise the ``__path__`` of the parent
+:``spec``: A ModuleSpec object if the spec was found, or None if it was not.
+:``fullname``: The full name of the module to import.
+:``path``: None if a top-level import, otherwise the ``__path__`` of the parent
           package.
-``target``: Target module used to make a better guess about the package spec.
+:``target``: Target module used to make a better guess about the package spec.
 """)
 
 events.doc('on_import_pre_create_module', """
