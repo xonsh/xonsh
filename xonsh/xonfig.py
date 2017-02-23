@@ -167,6 +167,16 @@ ENVVAR_MESSAGE = """
 ENVVAR_PROMPT = "{BOLD_GREEN}>>>{NO_COLOR} "
 
 
+def make_exit_message():
+    """Creates a message for how to exit the wizard."""
+    shell_type = builtins.__xonsh_shell__.shell_type
+    keyseq = 'Ctrl-D' if shell_type == 'readline' else 'Ctrl-C'
+    msg = 'To exit the wizard at any time, press {BOLD_UNDERLINE_CYAN}'
+    msg += keyseq + '{NO_COLOR}.\n'
+    m = wiz.Message(message=msg)
+    return m
+
+
 def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
     env = builtins.__xonsh_env__
@@ -266,6 +276,7 @@ def make_xonfig_wizard(default_file=None, confirm=False):
     """
     w = wiz.Wizard(children=[
         wiz.Message(message=WIZARD_HEAD),
+        make_exit_message(),
         wiz.Load(default_file=default_file, check=True),
         wiz.Message(message=WIZARD_FS),
         make_fs_wiz(),
@@ -314,6 +325,7 @@ def _wizard(ns):
         try:
             pv.visit()
         except (KeyboardInterrupt, Exception):
+            print()
             print_exception()
 
 
