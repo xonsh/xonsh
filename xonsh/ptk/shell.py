@@ -17,9 +17,9 @@ from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
-from xonsh.platform import HAS_PYGMENTS
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
-from xonsh.lazyimps import pygments, pyghooks
+from xonsh.lazyimps import pygments, pyghooks winutils
 
 Token = _TokenType()
 
@@ -36,6 +36,8 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if ON_WINDOWS:
+            winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
