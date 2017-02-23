@@ -19,7 +19,7 @@ from xonsh.events import events
 from xonsh.shell import transform_command
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
-from xonsh.lazyimps import pygments, pyghooks winutils
+from xonsh.lazyimps import pygments, pyghooks, winutils
 
 Token = _TokenType()
 
