@@ -372,14 +372,15 @@ class BaseShell(object):
             hist.last_cmd_rtn = hist.last_cmd_out = None
 
     def _fix_cwd(self):
-        """Check if the cwd changed out from under us"""
+        """Check if the cwd changed out from under us."""
+        env = builtins.__xonsh_env__
         cwd = os.getcwd()
-        if cwd != builtins.__xonsh_env__.get('PWD'):
-            old = builtins.__xonsh_env__.get('PWD')  # working directory changed without updating $PWD
-            builtins.__xonsh_env__['PWD'] = cwd      # track it now
+        if 'PWD' in env and os.path.realpath(cwd) != os.path.realpath(env['PWD']):
+            old = env['PWD']  # working directory changed without updating $PWD
+            env['PWD'] = cwd  # track it now
             if old is not None:
-                builtins.__xonsh_env__['OLDPWD'] = old  # and update $OLDPWD like dirstack.
-            events.on_chdir.fire(olddir=old, newdir=cwd)              # fire event after cwd actually changed.
+                env['OLDPWD'] = old  # and update $OLDPWD like dirstack.
+            events.on_chdir.fire(olddir=old, newdir=cwd)  # fire event after cwd actually changed.
 
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that
