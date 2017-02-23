@@ -53,22 +53,33 @@ def get_git_branch():
     return branch
 
 
+def _get_hg_root(q):
+    _curpwd = os.getcwd()
+    while True:
+        if any([b.name == '.hg' for b in os.scandir(_curpwd)]):
+            q.put(_curpwd)
+            break
+        else:
+            _oldpwd = _curpwd
+            _curpwd = os.path.split(_curpwd)[0]
+            if _oldpwd == _curpwd:
+                return False
+
+
 def get_hg_branch(root=None):
     """Try to get the mercurial branch of the current directory,
     return None if not in a repo or subprocess.TimeoutExpired if timed out.
     """
     env = builtins.__xonsh_env__
     timeout = env['VC_BRANCH_TIMEOUT']
+    q = queue.Queue()
+    t = threading.Thread(target=_get_hg_root, args=(q,))
+    t.start()
+    t.join(timeout=timeout)
     try:
-        root = subprocess.check_output(['hg', 'root'], timeout=timeout,
-                                       stderr=subprocess.DEVNULL)
-    except subprocess.TimeoutExpired:
-        return subprocess.TimeoutExpired(['hg'], timeout)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # not in repo or command not in PATH
+        root = q.get_nowait()
+    except queue.Empty:
         return None
-    else:
-        root = xt.decode_bytes(root).strip()
     if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
