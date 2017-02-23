@@ -351,22 +351,7 @@ def main_xonsh(args):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
     try:
-        if args.mode == XonshMode.interactive:
-            # enter the shell
-            env['XONSH_INTERACTIVE'] = True
-            ignore_sigtstp()
-            if (env['XONSH_INTERACTIVE'] and
-                    not env['LOADED_CONFIG'] and
-                    not any(os.path.isfile(i) for i in env['XONSHRC'])):
-                print('Could not find xonsh configuration or run control files.',
-                      file=sys.stderr)
-                xonfig_main(['wizard', '--confirm'])
-            events.on_pre_cmdloop.fire()
-            try:
-                shell.shell.cmdloop()
-            finally:
-                events.on_post_cmdloop.fire()
-        elif args.mode == XonshMode.single_command:
+        if args.mode == XonshMode.single_command:
             # run a single command and exit
             run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
         elif args.mode == XonshMode.script_from_file:
@@ -386,6 +371,21 @@ def main_xonsh(args):
             code = sys.stdin.read()
             run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
                                 mode='exec')
+        if args.mode == XonshMode.interactive or args.force_interactive:
+            # enter the shell
+            env['XONSH_INTERACTIVE'] = True
+            ignore_sigtstp()
+            if (env['XONSH_INTERACTIVE'] and
+                    not env['LOADED_CONFIG'] and
+                    not any(os.path.isfile(i) for i in env['XONSHRC'])):
+                print('Could not find xonsh configuration or run control files.',
+                      file=sys.stderr)
+                xonfig_main(['wizard', '--confirm'])
+            events.on_pre_cmdloop.fire()
+            try:
+                shell.shell.cmdloop()
+            finally:
+                events.on_post_cmdloop.fire()
     finally:
         events.on_exit.fire()
     postmain(args)
