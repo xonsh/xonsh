@@ -156,7 +156,7 @@ class PromptToolkitShell(BaseShell):
                 else:
                     line = self.precmd(line)
                     self.default(line)
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, SystemExit):
                 self.reset_buffer()
             except EOFError:
                 if builtins.__xonsh_env__.get("IGNOREEOF"):
