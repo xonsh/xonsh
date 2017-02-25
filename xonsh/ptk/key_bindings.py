@@ -8,7 +8,7 @@ from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection,
 from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
-from xonsh.tools import ON_WINDOWS, check_for_partial_string
+from xonsh.tools import check_for_partial_string, LINE_CONTINUATION
 from xonsh.shell import transform_command
 
 env = builtins.__xonsh_env__
@@ -50,9 +50,7 @@ def carriage_return(b, cli, *, autoindent=True):
         b.delete_before_cursor(count=len(indent))
     elif (not doc.on_first_line and not current_line_blank):
         b.newline(copy_margin=autoindent)
-    elif (doc.char_before_cursor == '\\' and
-            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') and
-                 ON_WINDOWS)):
+    elif (doc.current_line.endswith(str(LINE_CONTINUATION))):
         b.newline(copy_margin=autoindent)
     elif (doc.find_next_word_beginning() is not None and
             (any(not _is_blank(i) for i in doc.lines_from_current[1:]))):

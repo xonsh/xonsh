@@ -346,6 +346,18 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+@lazyobject
+def LINE_CONTINUATION():
+    """ The line contiuation characters used in subproc mode. In interactive
+         mode on Windows the backslash must be preseeded by a space. This is because
+         paths on windows may end in a backspace.
+    """
+    if ON_WINDOWS and builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+        return ' \\'
+    else:
+        return '\\'
+
+
 def get_logical_line(lines, idx):
     """Returns a single logical line (i.e. one without line continuations)
     from a list of lines.  This line should begin at index idx. This also
@@ -355,7 +367,7 @@ def get_logical_line(lines, idx):
     n = 1
     nlines = len(lines)
     line = lines[idx]
-    while line.endswith('\\') and idx < nlines:
+    while line.endswith(str(LINE_CONTINUATION)) and idx < nlines:
         n += 1
         idx += 1
         line = line[:-1] + lines[idx]
@@ -379,7 +391,7 @@ def replace_logical_line(lines, logical, idx, n):
             logical = ''
         else:
             # found space to split on
-            lines[i] = logical[:b] + '\\'
+            lines[i] = logical[:b] + str(LINE_CONTINUATION)
             logical = logical[b:]
     lines[idx+n-1] = logical
 
