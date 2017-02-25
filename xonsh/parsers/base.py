@@ -19,7 +19,7 @@ from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath, StringPrefix
 from xonsh.lazyasd import LazyObject
 from xonsh.parsers.context_check import check_contexts
-from xonsh.tools import check_quotes
+
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
                            'RE_SEARCHPATH')
