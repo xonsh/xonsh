@@ -409,7 +409,7 @@ class BaseShell(object):
             if usecache:
                 self.reset_buffer()
                 return src, code
-        if src.endswith(LINECONT+'\n'):
+        if src.endswith(LINE_CONT_STR+'\n'):
             self.need_more_lines = True
             return src, None
         try:
