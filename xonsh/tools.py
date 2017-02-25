@@ -345,6 +345,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         rtn = line[:beg] + rtn + line[end:]
     return rtn
 
+
 @lazyobject
 def LINE_CONT_STR():
     """ The line contiuation characters used in subproc mode. In interactive

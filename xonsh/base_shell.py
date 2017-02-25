@@ -401,7 +401,6 @@ class BaseShell(object):
         """Compiles source code and returns the (possibly modified) source and
         a valid code object.
         """
-        import pdb;pdb.set_trace()
         _cache = should_use_cache(self.execer, 'single')
         if _cache:
             codefname = code_cache_name(src)
