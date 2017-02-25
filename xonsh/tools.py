@@ -319,7 +319,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             else:
                 tok.lexpos = len(line)
             break
-        elif isinstance(tok.value, str) and not check_quotes(tok.value):
+        elif check_bad_str_token(tok):
             return
     else:
         if len(toks) > 0 and toks[-1].type in END_TOK_TYPES:
@@ -346,6 +346,16 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     if returnline:
         rtn = line[:beg] + rtn + line[end:]
     return rtn
+
+
+def check_bad_str_token(tok):
+    """Checks if a token is a bad string."""
+    if tok.type == 'ERRORTOKEN' and tok.value == 'EOF in multi-line string':
+        return True
+    elif isinstance(tok.value, str) and not check_quotes(tok.value):
+        return True
+    else:
+        return False
 
 
 def check_quotes(s):

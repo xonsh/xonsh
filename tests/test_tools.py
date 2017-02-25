@@ -208,9 +208,24 @@ def test_subproc_toks_hello_mom_second():
     assert exp == obs
 
 
-def test_subproc_toks_hello_bad_quotes():
-    with pytest.raises(SyntaxError):
-        obs = subproc_toks('echo """hello', lexer=LEXER, returnline=True)
+def test_subproc_toks_hello_bad_leading_triple_quotes():
+    obs = subproc_toks('echo """hello', lexer=LEXER, returnline=True)
+    assert obs is None
+
+
+def test_subproc_toks_hello_bad_trailing_single_quotes():
+    obs = subproc_toks('echo hello"', lexer=LEXER, returnline=True)
+    assert obs is None
+
+
+def test_subproc_toks_hello_bad_leading_triple_quotes():
+    obs = subproc_toks('echo """hello', lexer=LEXER, returnline=True)
+    assert obs is None
+
+
+def test_subproc_toks_hello_bad_trailing_triple_quotes():
+    obs = subproc_toks('echo hello"""', lexer=LEXER, returnline=True)
+    assert obs is None
 
 
 def test_subproc_toks_comment():
@@ -368,6 +383,7 @@ def test_replace_logical_line(src, idx, exp_line, exp_n):
 def test_check_quotes(inp, exp):
     obs = check_quotes(inp)
     assert exp is obs
+
 
 @pytest.mark.parametrize('inp', [
     'f(1,10),x.y',
