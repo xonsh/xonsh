@@ -208,8 +208,8 @@ def test_subproc_toks_hello_mom_second():
     assert exp == obs
 
 
-def test_subproc_toks_hello_bad_leading_triple_quotes():
-    obs = subproc_toks('echo """hello', lexer=LEXER, returnline=True)
+def test_subproc_toks_hello_bad_leading_single_quotes():
+    obs = subproc_toks('echo "hello', lexer=LEXER, returnline=True)
     assert obs is None
 
 
