@@ -2524,11 +2524,8 @@ class BaseParser(object):
         p[0] = p1
 
     def p_subproc_atoms_subshell(self, p):
-        """subproc_atoms : lparen_tok test rparen_tok
-                         | lparen_tok stmt rparen_tok
-                         | lparen_tok stmt_list rparen_tok
-                         | lparen_tok eval_input rparen_tok
-                         | lparen_tok single_input rparen_tok
+        """subproc_atoms : lparen_tok any_raw_tok rparen_tok
+                         | lparen_tok any_raw_toks rparen_tok
         """
         p1 = p[1]
         p3 = p[3]

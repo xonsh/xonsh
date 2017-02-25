@@ -1807,9 +1807,10 @@ def test_redirect():
 @pytest.mark.parametrize('case', [
     '![(cat)]',
     '![(cat;)]',
-    #'![(cd path; ls; cd)]',
-    #'![(echo "abc"; sleep 1; echo "def")]',
-    #'![(echo "abc"; sleep 1; echo "def") | grep abc]',
+    '![(cd path; ls; cd)]',
+    '![(echo "abc"; sleep 1; echo "def")]',
+    '![(echo "abc"; sleep 1; echo "def") | grep abc]',
+    '![(if True:\n   ls\nelse:\n   echo not true)]',
 ])
 def test_use_subshell(case):
     check_xonsh_ast({}, case, False, debug_level=0)
