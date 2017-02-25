@@ -8,7 +8,7 @@ import functools
 import importlib
 import importlib.util
 
-from xonsh.tools import print_color
+from xonsh.tools import print_color, unthreadable
 
 
 @functools.lru_cache(1)
@@ -157,6 +157,7 @@ _MAIN_XONTRIB_ACTIONS = {
     }
 
 
+@unthreadable
 def xontribs_main(args=None, stdin=None):
     """Alias that loads xontribs"""
     if not args or (args[0] not in _MAIN_XONTRIB_ACTIONS and
