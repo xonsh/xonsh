@@ -2523,6 +2523,28 @@ class BaseParser(object):
         p1.append(p[3])
         p[0] = p1
 
+    def p_subproc_atoms_subshell(self, p):
+        """subproc_atoms : lparen_tok test rparen_tok
+                         | lparen_tok stmt rparen_tok
+                         | lparen_tok stmt_list rparen_tok
+                         | lparen_tok eval_input rparen_tok
+                         | lparen_tok single_input rparen_tok
+        """
+        p1 = p[1]
+        p3 = p[3]
+        l = p1.lineno
+        c = p1.lexpos + 1
+        subcmd = self.source_slice((l, c), (p3.lineno, p3.lexpos))
+        subcmd = subcmd.strip() + '\n'
+        p0 = [ast.Str(s='xonsh', lineno=l, col_offset=c),
+              ast.Str(s='-c', lineno=l, col_offset=c),
+              ast.Str(s=subcmd, lineno=l, col_offset=c),
+              ]
+        for arg in p0:
+            arg._cliarg_action = 'append'
+        p[0] = p0
+
+
     #
     # Subproc atom rules
     #

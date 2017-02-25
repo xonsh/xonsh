@@ -1803,6 +1803,29 @@ def test_redirect():
     assert check_xonsh_ast({}, '$[cat < input.txt]', False)
     assert check_xonsh_ast({}, '$[< input.txt cat]', False)
 
+
+@pytest.mark.parametrize('case', [
+    '![(cat)]',
+    '![(cat;)]',
+    #'![(cd path; ls; cd)]',
+    #'![(echo "abc"; sleep 1; echo "def")]',
+    #'![(echo "abc"; sleep 1; echo "def") | grep abc]',
+])
+def test_use_subshell(case):
+    check_xonsh_ast({}, case, False, debug_level=0)
+
+
+@pytest.mark.parametrize('case', [
+    '$[cat < /path/to/input.txt]',
+    '$[(cat) < /path/to/input.txt]',
+    '$[< /path/to/input.txt cat]',
+    '![< /path/to/input.txt]',
+    '![< /path/to/input.txt > /path/to/output.txt]',
+])
+def test_redirect_abspath(case):
+    assert check_xonsh_ast({}, case, False)
+
+
 @pytest.mark.parametrize('case', ['', 'o', 'out', '1'])
 def test_redirect_output(case):
     assert check_xonsh_ast({}, '$[echo "test" {}> test.txt]'.format(case), False)
