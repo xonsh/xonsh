@@ -1023,6 +1023,9 @@ def test_del_two():
 def test_del_two_comma():
     check_stmts('x = 42; y = 65; del x, y,')
 
+def test_del_with_parens():
+    check_stmts('x = 42; y = 65; del (x, y)')
+
 def test_raise():
     check_stmts('raise', False)
 
