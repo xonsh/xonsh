@@ -1,6 +1,6 @@
 **Added:** 
 
-* Line continuation backslashes are respected on Windows in PTK shell if
+* Line continuation backslashes are respected on Windows in the PTK shell if
   the backspace is is preceded by a space. 
 
 **Changed:** None
@@ -11,9 +11,9 @@
 
 **Fixed:** 
 
-* Fixed bug where trailing backspaces on windows paths could be interpreted 
+* Fixed bug where trailing backspaces on Windows paths could be interpreted
   as line continuations characters. Now line continuation characters must be
-  preceeded by a space on Windows. This only applies to interactive to ensure 
-  xonsh scripts are portable. 
+  preceded by a space on Windows. This only applies to xonsh in interactive
+  mode to ensure  scripts are portable. 
 
 **Security:** None

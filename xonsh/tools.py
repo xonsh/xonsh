@@ -357,6 +357,7 @@ def LINE_CONT_STR():
     else:
         return '\\'
 
+
 def get_logical_line(lines, idx):
     """Returns a single logical line (i.e. one without line continuations)
     from a list of lines.  This line should begin at index idx. This also
