@@ -455,6 +455,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 line = self.precmd(line)
                 stop = self.onecmd(line)
                 stop = self.postcmd(stop, line)
+                if ON_WINDOWS:
+                    winutils.enable_virtual_terminal_processing()
             self.postloop()
         finally:
             if self.use_rawinput and self.completekey:
