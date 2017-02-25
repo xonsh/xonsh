@@ -347,7 +347,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
 
 
 @lazyobject
-def LINE_CONT_STR():
+def LINE_CONTINUATION():
     """ The line contiuation characters used in subproc mode. In interactive
          mode on Windows the backslash must be preseeded by a space. This is because
          paths on windows may end in a backspace.
@@ -367,7 +367,7 @@ def get_logical_line(lines, idx):
     n = 1
     nlines = len(lines)
     line = lines[idx]
-    while line.endswith(str(LINE_CONT_STR)) and idx < nlines:
+    while line.endswith(str(LINE_CONTINUATION)) and idx < nlines:
         n += 1
         idx += 1
         line = line[:-1] + lines[idx]
@@ -391,7 +391,7 @@ def replace_logical_line(lines, logical, idx, n):
             logical = ''
         else:
             # found space to split on
-            lines[i] = logical[:b] + str(LINE_CONT_STR)
+            lines[i] = logical[:b] + str(LINE_CONTINUATION)
             logical = logical[b:]
     lines[idx+n-1] = logical
 

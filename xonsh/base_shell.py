@@ -8,7 +8,7 @@ import builtins
 
 from xonsh.tools import (XonshError, print_exception, DefaultNotGiven,
                          check_for_partial_string, format_std_prepost,
-                         LINE_CONT_STR)
+                         LINE_CONTINUATION)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
@@ -409,7 +409,7 @@ class BaseShell(object):
             if usecache:
                 self.reset_buffer()
                 return src, code
-        if src.endswith(str(LINE_CONT_STR)+'\n'):
+        if src.endswith(str(LINE_CONTINUATION)+'\n'):
             self.need_more_lines = True
             return src, None
         try:
