@@ -360,6 +360,9 @@ LOGICAL_LINE_CASES = [
 14 \\
 + 2
 """, 1, '14 + 2', 2),
+('''x = """wow
+mom"""
+''', 0, 'x = """wow\nmom"""', 2),
 ]
 
 @pytest.mark.parametrize('src, idx, exp_line, exp_n', LOGICAL_LINE_CASES)

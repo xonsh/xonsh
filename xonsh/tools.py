@@ -376,6 +376,16 @@ def check_quotes(s):
     return ok
 
 
+def _have_open_triple_quotes(s):
+    if s.count('"""')%2 == 1:
+        open_triple = '"""'
+    elif s.count("'''")%2 == 1:
+        open_triple = "'''"
+    else:
+        open_triple = False
+    return open_triple
+
+
 def get_logical_line(lines, idx):
     """Returns a single logical line (i.e. one without line continuations)
     from a list of lines.  This line should begin at index idx. This also
@@ -385,10 +395,15 @@ def get_logical_line(lines, idx):
     n = 1
     nlines = len(lines)
     line = lines[idx]
-    while line.endswith('\\') and idx < nlines:
+    open_triple = _have_open_triple_quotes(line)
+    while (line.endswith('\\') or open_triple) and idx < nlines:
         n += 1
         idx += 1
-        line = line[:-1] + lines[idx]
+        if line.endswith('\\'):
+            line = line[:-1] + lines[idx]
+        else:
+            line = line + '\n' + lines[idx]
+        open_triple = _have_open_triple_quotes(line)
     return line, n
 
 
