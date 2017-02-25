@@ -401,6 +401,7 @@ class BaseShell(object):
         """Compiles source code and returns the (possibly modified) source and
         a valid code object.
         """
+        import pdb;pdb.set_trace()
         _cache = should_use_cache(self.execer, 'single')
         if _cache:
             codefname = code_cache_name(src)
@@ -409,7 +410,7 @@ class BaseShell(object):
             if usecache:
                 self.reset_buffer()
                 return src, code
-        if src.endswith(LINE_CONT_STR+'\n'):
+        if src.endswith(str(LINE_CONT_STR)+'\n'):
             self.need_more_lines = True
             return src, None
         try:

@@ -389,7 +389,7 @@ def replace_logical_line(lines, logical, idx, n):
             logical = ''
         else:
             # found space to split on
-            lines[i] = logical[:b] + LINE_CONT_STR
+            lines[i] = logical[:b] + str(LINE_CONT_STR)
             logical = logical[b:]
     lines[idx+n-1] = logical
 
