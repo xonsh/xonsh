@@ -2516,12 +2516,14 @@ class BaseParser(object):
 
     def p_subproc_atoms_single(self, p):
         """subproc_atoms : subproc_atom"""
-        p[0] = [self._check_quotes(p[1])]
+        p[0] = [p[1]]
+        #p[0] = [self._check_quotes(p[1])]
 
     def p_subproc_atoms_many(self, p):
         """subproc_atoms : subproc_atoms WS subproc_atom"""
         p1 = p[1]
-        p1.append(self._check_quotes(p[3]))
+        p1.append(p[3])
+        #p1.append(self._check_quotes(p[3]))
         p[0] = p1
 
     #

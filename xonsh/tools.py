@@ -1592,7 +1592,7 @@ terminating quotes)"""
 def RE_COMPLETE_STRING():
     ptrn = ('^' + _RE_STRING_START + '(?P<quote>' + "|".join(_STRINGS) + ')' +
             '.*?(?P=quote)$')
-    return re.compile(ptrn)
+    return re.compile(ptrn, re.DOTALL)
 
 
 def check_for_partial_string(x):

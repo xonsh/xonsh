@@ -228,6 +228,13 @@ def test_subproc_toks_hello_bad_trailing_triple_quotes():
     assert obs is None
 
 
+def test_subproc_toks_hello_mom_triple_quotes_nl():
+    s = 'echo """hello\nmom"""'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert exp == obs
+
+
 def test_subproc_toks_comment():
     exp = None
     obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
@@ -379,6 +386,7 @@ def test_replace_logical_line(src, idx, exp_line, exp_n):
     ("'y'", True),
     ('b"x"', True),
     ("r'y'", True),
+    ('"""hello\nmom"""', True),
 ])
 def test_check_quotes(inp, exp):
     obs = check_quotes(inp)
