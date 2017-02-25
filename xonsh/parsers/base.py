@@ -2499,14 +2499,46 @@ class BaseParser(object):
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
         p[0] = p1 + [p[2], cliargs]
 
+    def _check_quotes(self, p):
+        """Make sure that subproc atoms begin and end with matching quotes,
+        if they begin or end in quotes.
+        """
+        if not isinstance(p, ast.Str):
+            return p
+        s = p.s
+        if s.startswith('"""'):
+            ok = s.endswith('"""')
+        elif s.endswith('"""'):
+            ok = s.startswith('"""')
+        elif s.startswith("'''"):
+            ok = s.endswith("'''")
+        elif s.endswith("'''"):
+            ok = s.startswith("'''")
+        elif s.startswith('"'):
+            ok = s.endswith('"')
+        elif s.endswith('"'):
+            ok = s.startswith('"')
+        elif s.startswith("'"):
+            ok = s.endswith("'")
+        elif s.endswith("'"):
+            ok = s.startswith("'")
+        else:
+            ok = True
+        if not ok:
+            msg = ("Subprocess tokes must have matching begining and ending "
+                   "quotes, if they start or end with quotes, got {0}")
+            msg = msg.format(s)
+            self._parse_error(msg, self.currloc(lineno=p.lineno, column=p.lexpos))
+        return p
+
     def p_subproc_atoms_single(self, p):
         """subproc_atoms : subproc_atom"""
-        p[0] = [p[1]]
+        p[0] = [self._check_quotes(p[1])]
 
     def p_subproc_atoms_many(self, p):
         """subproc_atoms : subproc_atoms WS subproc_atom"""
         p1 = p[1]
-        p1.append(p[3])
+        p1.append(self._check_quotes(p[3]))
         p[0] = p1
 
     #
