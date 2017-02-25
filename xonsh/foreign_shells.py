@@ -284,7 +284,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
             os.remove(tmpfile.name)
     env = parse_env(s)
     aliases = parse_aliases(s)
-    funcs = parse_funcs(s, shell=shell, sourcer=sourcer)
+    funcs = parse_funcs(s, shell=shell, sourcer=sourcer, extra_args=extra_args)
     aliases.update(funcs)
     return env, aliases
 
@@ -352,7 +352,7 @@ def FUNCS_RE():
                       flags=re.DOTALL)
 
 
-def parse_funcs(s, shell, sourcer=None):
+def parse_funcs(s, shell, sourcer=None, extra_args=()):
     """Parses the funcs portion of a string into a dict of callable foreign
     function wrappers.
     """
@@ -382,7 +382,8 @@ def parse_funcs(s, shell, sourcer=None):
         if not os.path.isabs(filename):
             filename = os.path.abspath(filename)
         wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell,
-                                            sourcer=sourcer, filename=filename)
+                                            sourcer=sourcer, filename=filename,
+                                            extra_args=extra_args)
         funcs[funcname] = wrapper
     return funcs
 
@@ -395,7 +396,7 @@ class ForeignShellFunctionAlias(object):
     INPUT = ('{sourcer} "{filename}"\n'
              '{funcname} {args}\n')
 
-    def __init__(self, name, shell, filename, sourcer=None):
+    def __init__(self, name, shell, filename, sourcer=None, extra_args=()):
         """
         Parameters
         ----------
@@ -407,6 +408,8 @@ class ForeignShellFunctionAlias(object):
             Where the function is defined, path to source.
         sourcer : str or None, optional
             Command to source foreing files with.
+        extra_args : tuple of str, optional
+            Addtional command line options to pass into the shell.
         """
         sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
             else sourcer
@@ -414,19 +417,23 @@ class ForeignShellFunctionAlias(object):
         self.shell = shell
         self.filename = filename
         self.sourcer = sourcer
+        self.extra_args = extra_args
 
     def __eq__(self, other):
         if not hasattr(other, 'name') or not hasattr(other, 'shell') or \
-                not hasattr(other, 'filename') or not hasattr(other, 'sourcer'):
+                not hasattr(other, 'filename') or not hasattr(other, 'sourcer') \
+                or not hasattr(other, 'exta_args'):
             return NotImplemented
         return (self.name == other.name) and (self.shell == other.shell) and \
-               (self.filename == other.filename) and (self.sourcer == other.sourcer)
+               (self.filename == other.filename) and \
+               (self.sourcer == other.sourcer) and \
+               (self.extra_args == other.extra_args)
 
     def __call__(self, args, stdin=None):
         args, streaming = self._is_streaming(args)
         input = self.INPUT.format(sourcer=self.sourcer, filename=self.filename,
                                   funcname=self.name, args=' '.join(args))
-        cmd = [self.shell, '-c', input]
+        cmd = [self.shell] + list(self.extra_args) + ['-c', input]
         env = builtins.__xonsh_env__
         denv = env.detype()
         if streaming:
