@@ -468,7 +468,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         while not builtins.__xonsh_exit__:
             try:
                 self._cmdloop(intro=intro)
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, SystemExit):
                 print()  # Gives a newline
                 fix_readline_state_after_ctrl_c()
                 self.reset_buffer()
