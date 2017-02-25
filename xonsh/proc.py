@@ -1176,19 +1176,26 @@ def proxy_four(f, args, stdin, stdout, stderr, spec):
 
 
 PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four)
+PROXY_KWARG_NAMES = frozenset(['args', 'stdin', 'stdout', 'stderr', 'spec'])
 
 
 def partial_proxy(f):
     """Dispatches the approriate proxy function based on the number of args."""
-    numargs = len(inspect.signature(f).parameters)
+    numargs = 0
+    for name, param in inspect.signature(f).parameters.items():
+        if param.kind == param.POSITIONAL_ONLY or \
+           param.kind == param.POSITIONAL_OR_KEYWORD:
+            numargs += 1
+        elif name in PROXY_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
+            numargs += 1
     if numargs < 5:
         return functools.partial(PROXIES[numargs], f)
     elif numargs == 5:
         # don't need to partial.
         return f
     else:
-        e = 'Expected proxy with 5 or fewer arguments, not {}'
-        raise XonshError(e.format(numargs))
+        e = 'Expected proxy with 5 or fewer arguments for {}, not {}'
+        raise XonshError(e.format(', '.join(PROXY_KWARG_NAMES), numargs))
 
 
 class ProcProxyThread(threading.Thread):
