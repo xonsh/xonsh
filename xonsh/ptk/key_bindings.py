@@ -8,7 +8,7 @@ from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection,
 from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
-from xonsh.tools import ON_WINDOWS, check_for_partial_string, LINE_CONT_STR
+from xonsh.tools import check_for_partial_string, LINE_CONT_STR
 from xonsh.shell import transform_command
 
 env = builtins.__xonsh_env__
