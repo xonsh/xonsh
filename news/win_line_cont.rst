@@ -1,4 +1,7 @@
-**Added:** None
+**Added:** 
+
+* Line continuation backslashes are respected on Windows in PTK shell if
+  the backspace is is preceded by a space. 
 
 **Changed:** None
 
