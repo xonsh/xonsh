@@ -319,6 +319,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             else:
                 tok.lexpos = len(line)
             break
+        elif isinstance(tok.value, str) and not check_quotes(tok.value):
+            return
     else:
         if len(toks) > 0 and toks[-1].type in END_TOK_TYPES:
             if _is_not_lparen_and_rparen(lparens, toks[-1]):
@@ -344,6 +346,24 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     if returnline:
         rtn = line[:beg] + rtn + line[end:]
     return rtn
+
+
+def check_quotes(s):
+    """Checks a string to make sure that if it starts with quotes, it also
+    ends with quotes.
+    """
+    starts_as_str = RE_BEGIN_STRING.match(s) is not None
+    ends_as_str = s.endswith('"') or s.endswith("'")
+    if not starts_as_str and not ends_as_str:
+        ok = True
+    elif starts_as_str and not ends_as_str:
+        ok = False
+    elif not starts_as_str and ends_as_str:
+        ok = False
+    else:
+        m = RE_COMPLETE_STRING.match(s)
+        ok = m is not None
+    return ok
 
 
 def get_logical_line(lines, idx):
@@ -1526,7 +1546,7 @@ def format_std_prepost(template, env=None):
     return s
 
 
-_RE_STRING_START = "[bBrRuU]*"
+_RE_STRING_START = "[bBprRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"
 _RE_STRING_DOUBLE = '"'
@@ -1556,6 +1576,13 @@ RE_STRING_CONT = LazyDict({
 """Dictionary mapping starting quote sequences to regular expressions that
 match the contents of a string beginning with those quotes (not including the
 terminating quotes)"""
+
+
+@lazyobject
+def RE_COMPLETE_STRING():
+    ptrn = ('^' + _RE_STRING_START + '(?P<quote>' + "|".join(_STRINGS) + ')' +
+            '.*?(?P=quote)$')
+    return re.compile(ptrn)
 
 
 def check_for_partial_string(x):

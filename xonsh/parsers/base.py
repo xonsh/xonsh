@@ -19,6 +19,7 @@ from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath, StringPrefix
 from xonsh.lazyasd import LazyObject
 from xonsh.parsers.context_check import check_contexts
+from xonsh.tools import check_quotes
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
                            'RE_SEARCHPATH')
@@ -2505,25 +2506,7 @@ class BaseParser(object):
         """
         if not isinstance(p, ast.Str):
             return p
-        s = p.s
-        if s.startswith('"""'):
-            ok = s.endswith('"""')
-        elif s.endswith('"""'):
-            ok = s.startswith('"""')
-        elif s.startswith("'''"):
-            ok = s.endswith("'''")
-        elif s.endswith("'''"):
-            ok = s.startswith("'''")
-        elif s.startswith('"'):
-            ok = s.endswith('"')
-        elif s.endswith('"'):
-            ok = s.startswith('"')
-        elif s.startswith("'"):
-            ok = s.endswith("'")
-        elif s.endswith("'"):
-            ok = s.startswith("'")
-        else:
-            ok = True
+        ok = check_quotes(p.s)
         if not ok:
             msg = ("Subprocess tokes must have matching begining and ending "
                    "quotes, if they start or end with quotes, got {0}")

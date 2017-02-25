@@ -24,7 +24,7 @@ from xonsh.tools import (
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
-    swap_values, get_logical_line, replace_logical_line
+    swap_values, get_logical_line, replace_logical_line, check_quotes,
     )
 from xonsh.environ import Env
 
@@ -208,6 +208,11 @@ def test_subproc_toks_hello_mom_second():
     assert exp == obs
 
 
+def test_subproc_toks_hello_bad_quotes():
+    with pytest.raises(SyntaxError):
+        obs = subproc_toks('echo """hello', lexer=LEXER, returnline=True)
+
+
 def test_subproc_toks_comment():
     exp = None
     obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
@@ -352,6 +357,17 @@ def test_replace_logical_line(src, idx, exp_line, exp_n):
     obs = '\n'.join(lines).replace('\\\n', '').strip()
     assert exp == obs
 
+
+@pytest.mark.parametrize('inp, exp', [
+    ('f(1,10),x.y', True),
+    ('"x"', True),
+    ("'y'", True),
+    ('b"x"', True),
+    ("r'y'", True),
+])
+def test_check_quotes(inp, exp):
+    obs = check_quotes(inp)
+    assert exp is obs
 
 @pytest.mark.parametrize('inp', [
     'f(1,10),x.y',

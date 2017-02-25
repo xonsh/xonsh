@@ -1792,6 +1792,9 @@ def test_comment_only():
 def test_echo_slash_question():
     check_xonsh_ast({}, '![echo /?]', False)
 
+def test_bad_quotes():
+    with pytest.raises(SyntaxError):
+        check_xonsh_ast({}, '![echo """hello]', False)
 
 def test_redirect():
     assert check_xonsh_ast({}, '$[cat < input.txt]', False)
