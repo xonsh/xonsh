@@ -377,9 +377,9 @@ def check_quotes(s):
 
 
 def _have_open_triple_quotes(s):
-    if s.count('"""')%2 == 1:
+    if s.count('"""') % 2 == 1:
         open_triple = '"""'
-    elif s.count("'''")%2 == 1:
+    elif s.count("'''") % 2 == 1:
         open_triple = "'''"
     else:
         open_triple = False

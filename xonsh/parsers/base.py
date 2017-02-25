@@ -2500,20 +2500,6 @@ class BaseParser(object):
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
         p[0] = p1 + [p[2], cliargs]
 
-    def _check_quotes(self, p):
-        """Make sure that subproc atoms begin and end with matching quotes,
-        if they begin or end in quotes.
-        """
-        if not isinstance(p, ast.Str):
-            return p
-        ok = check_quotes(p.s)
-        if not ok:
-            msg = ("Subprocess tokes must have matching begining and ending "
-                   "quotes, if they start or end with quotes, got {0}")
-            msg = msg.format(s)
-            self._parse_error(msg, self.currloc(lineno=p.lineno, column=p.lexpos))
-        return p
-
     def p_subproc_atoms_single(self, p):
         """subproc_atoms : subproc_atom"""
         p[0] = [p[1]]
