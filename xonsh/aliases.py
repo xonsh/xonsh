@@ -248,7 +248,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
             continue  # no change from original
-        elif ns.overwite_aliases or k not in baliases:
+        elif ns.overwrite_aliases or k not in baliases:
             baliases[k] = v
         else:
             msg = ('Skipping application of {0!r} alias from {1!r} '
