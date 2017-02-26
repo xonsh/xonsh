@@ -498,6 +498,7 @@ class SubprocSpec:
                 kwargs.pop('preexec_fn')
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
+            self._fix_null_cmd_bytes()
             p = self._run_binary(kwargs)
         p.spec = self
         p.last_in_pipeline = self.last_in_pipeline
@@ -545,6 +546,14 @@ class SubprocSpec:
                 os.setpgid(0, pipeline_group)
                 signal.signal(signal.SIGTSTP, default_signal_pauser)
         kwargs['preexec_fn'] = xonsh_preexec_fn
+
+    def _fix_null_cmd_bytes(self):
+        # Popen does not accept null bytes in its input commands.
+        # that doesn;t stop some subproces from using them. Here we
+        # escape them just in case.
+        cmd = self.cmd
+        for i in range(len(cmd)):
+            cmd[i] = cmd[i].replace('\0', '\\0')
 
     #
     # Building methods
