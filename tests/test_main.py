@@ -144,7 +144,7 @@ def test_main_xonsh_interactive_command(xonsh_builtins):
     assert shell.shell.cmdloop.called
 
 
-def test_main_xonsh_interactive_command(xonsh_builtins, monkeypatch):
+def test_main_xonsh_interactive_script(xonsh_builtins, monkeypatch):
     shell_mock = Mock()
     run_script_with_cache_mock = Mock()
     isfile_mock = Mock(return_value=True)
@@ -166,3 +166,14 @@ def test_main_xonsh_interactive_command(xonsh_builtins, monkeypatch):
 
     assert run_script_with_cache_mock.called
     assert shell.shell.cmdloop.called
+
+
+@pytest.mark.parametrize('args', [
+    ['-ic', '"a=10"'],
+    ['-i', 'script.xsh']
+    ])
+def test_premain_force_interactive_with_command_or_sript(args):
+    args = xonsh.main.premain(args)
+
+    assert args.mode == xonsh.main.XonshMode.interactive
+

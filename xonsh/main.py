@@ -275,12 +275,13 @@ def premain(argv=None):
     setattr(sys, 'displayhook', _pprint_displayhook)
     if args.command is not None:
         args.mode = XonshMode.single_command
-        shell_kwargs['shell_type'] = 'none'
     elif args.file is not None:
         args.mode = XonshMode.script_from_file
-        shell_kwargs['shell_type'] = 'none'
     elif not sys.stdin.isatty() and not args.force_interactive:
         args.mode = XonshMode.script_from_stdin
+    else:
+        args.mode = XonshMode.interactive
+    if not args.force_interactive and not args.mode == XonshMode.interactive:
         shell_kwargs['shell_type'] = 'none'
     else:
         args.mode = XonshMode.interactive
@@ -288,9 +289,9 @@ def premain(argv=None):
         shell_kwargs['login'] = True
     env = start_services(shell_kwargs)
     env['XONSH_LOGIN'] = shell_kwargs['login']
+    env['XONSH_INTERACTIVE'] = args.force_interactive
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
-    env['XONSH_INTERACTIVE'] = args.force_interactive
     if ON_WINDOWS:
         setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
     return args
