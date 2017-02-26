@@ -289,6 +289,9 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             continue
         if tok.type in LPARENS:
             lparens.append(tok.type)
+        if len(lparens) > 0 and lparens[-1] == 'LPAREN':
+            toks.append(tok)
+            continue
         if len(toks) == 0 and tok.type in BEG_TOK_SKIPS:
             continue  # handle indentation
         elif len(toks) > 0 and toks[-1].type in END_TOK_TYPES:
