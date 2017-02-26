@@ -377,7 +377,7 @@ def main_xonsh(args):
             env['XONSH_INTERACTIVE'] = True
             ignore_sigtstp()
             if (not env['LOADED_CONFIG'] and
-                not any(os.path.isfile(i) for i in env['XONSHRC'])):
+               not any(os.path.isfile(i) for i in env['XONSHRC'])):
                 print('Could not find xonsh configuration or run control files.',
                       file=sys.stderr)
                 xonfig_main(['wizard', '--confirm'])
