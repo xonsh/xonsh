@@ -129,11 +129,15 @@ def _get_cwd():
         return None
 
 
-def _change_working_directory(newdir):
+def _change_working_directory(newdir, follow_symlinks=False):
     env = builtins.__xonsh_env__
     old = env['PWD']
     new = os.path.join(old, newdir)
     absnew = os.path.abspath(new)
+
+    if follow_symlinks:
+        absnew = os.path.realpath(absnew)
+
     try:
         os.chdir(absnew)
     except (OSError, FileNotFoundError):
@@ -180,6 +184,11 @@ def cd(args, stdin=None):
     oldpwd = env.get('OLDPWD', None)
     cwd = env['PWD']
 
+    follow_symlinks = False
+    if len(args) > 0 and args[0] == '-P':
+        follow_symlinks = True
+        del args[0]
+
     if len(args) == 0:
         d = os.path.expanduser('~')
     elif len(args) == 1:
@@ -207,7 +216,9 @@ def cd(args, stdin=None):
             else:
                 d = _try_cdpath(d)
     else:
-        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args)), 1
+        return '', ('cd takes 0 or 1 arguments, not {0}. An additional `-P` '
+                    'flag can be passed in first position to follow symlinks.'
+                    '\n'.format(len(args))), 1
     if not os.path.exists(d):
         return '', 'cd: no such file or directory: {0}\n'.format(d), 1
     if not os.path.isdir(d):
@@ -223,7 +234,7 @@ def cd(args, stdin=None):
         pushd(['-n', '-q', cwd])
         if ON_WINDOWS and _is_unc_path(d):
             d = _unc_map_temp_drive(d)
-    _change_working_directory(d)
+    _change_working_directory(d, follow_symlinks)
     return None, None, 0
 
 

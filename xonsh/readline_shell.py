@@ -455,6 +455,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 line = self.precmd(line)
                 stop = self.onecmd(line)
                 stop = self.postcmd(stop, line)
+                if ON_WINDOWS:
+                    winutils.enable_virtual_terminal_processing()
             self.postloop()
         finally:
             if self.use_rawinput and self.completekey:
@@ -468,7 +470,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         while not builtins.__xonsh_exit__:
             try:
                 self._cmdloop(intro=intro)
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, SystemExit):
                 print()  # Gives a newline
                 fix_readline_state_after_ctrl_c()
                 self.reset_buffer()

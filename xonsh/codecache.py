@@ -1,10 +1,13 @@
+"""Tools for caching xonsh code."""
 import os
 import sys
 import hashlib
 import marshal
 import builtins
 
+from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import lazyobject
+from xonsh.platform import PYTHON_VERSION_INFO_BYTES
 
 
 def _splitpath(path, sofar=[]):
@@ -89,7 +92,18 @@ def update_cache(ccode, cache_file_name):
     if cache_file_name is not None:
         _make_if_not_exists(os.path.dirname(cache_file_name))
         with open(cache_file_name, 'wb') as cfile:
+            cfile.write(XONSH_VERSION.encode() + b'\n')
+            cfile.write(bytes(PYTHON_VERSION_INFO_BYTES) + b'\n')
             marshal.dump(ccode, cfile)
+
+
+def _check_cache_versions(cfile):
+    # version data should be < 1 kb
+    ver = cfile.readline(1024).strip()
+    if ver != XONSH_VERSION.encode():
+        return False
+    ver = cfile.readline(1024).strip()
+    return ver == PYTHON_VERSION_INFO_BYTES
 
 
 def compile_code(filename, code, execer, glb, loc, mode):
@@ -123,6 +137,8 @@ def script_cache_check(filename, cachefname):
     if os.path.isfile(cachefname):
         if os.stat(cachefname).st_mtime >= os.stat(filename).st_mtime:
             with open(cachefname, 'rb') as cfile:
+                if not _check_cache_versions(cfile):
+                    return False, None
                 ccode = marshal.load(cfile)
                 run_cached = True
     return run_cached, ccode
@@ -169,6 +185,8 @@ def code_cache_check(cachefname):
     run_cached = False
     if os.path.isfile(cachefname):
         with open(cachefname, 'rb') as cfile:
+            if not _check_cache_versions(cfile):
+                return False, None
             ccode = marshal.load(cfile)
             run_cached = True
     return run_cached, ccode

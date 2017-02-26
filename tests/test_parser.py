@@ -1023,6 +1023,9 @@ def test_del_two():
 def test_del_two_comma():
     check_stmts('x = 42; y = 65; del x, y,')
 
+def test_del_with_parens():
+    check_stmts('x = 42; y = 65; del (x, y)')
+
 def test_raise():
     check_stmts('raise', False)
 
@@ -1545,6 +1548,12 @@ def test_ls_dot():
 def test_lambda_in_atparens():
     check_xonsh_ast({}, '$(echo hello | @(lambda a, s=None: "hey!") foo bar baz)', False)
 
+def test_generator_in_atparens():
+    check_xonsh_ast({}, '$(echo @(i**2 for i in range(20)))', False)
+
+def test_bare_tuple_in_atparens():
+    check_xonsh_ast({}, '$(echo @("a", 7))', False)
+
 def test_nested_madness():
     check_xonsh_ast({}, '$(@$(which echo) ls | @(lambda a, s=None: $(@(s.strip()) @(a[1]))) foo -la baz)', False)
 
@@ -1792,6 +1801,9 @@ def test_comment_only():
 def test_echo_slash_question():
     check_xonsh_ast({}, '![echo /?]', False)
 
+def test_bad_quotes():
+    with pytest.raises(SyntaxError):
+        check_xonsh_ast({}, '![echo """hello]', False)
 
 def test_redirect():
     assert check_xonsh_ast({}, '$[cat < input.txt]', False)

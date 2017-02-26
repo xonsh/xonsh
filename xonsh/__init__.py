@@ -18,8 +18,6 @@ else:
         _sys.modules['xonsh.lazyasd'] = __amalgam__
         lazyjson = __amalgam__
         _sys.modules['xonsh.lazyjson'] = __amalgam__
-        codecache = __amalgam__
-        _sys.modules['xonsh.codecache'] = __amalgam__
         color_tools = __amalgam__
         _sys.modules['xonsh.color_tools'] = __amalgam__
         platform = __amalgam__
@@ -28,6 +26,8 @@ else:
         _sys.modules['xonsh.pretty'] = __amalgam__
         ansi_colors = __amalgam__
         _sys.modules['xonsh.ansi_colors'] = __amalgam__
+        codecache = __amalgam__
+        _sys.modules['xonsh.codecache'] = __amalgam__
         lazyimps = __amalgam__
         _sys.modules['xonsh.lazyimps'] = __amalgam__
         parser = __amalgam__

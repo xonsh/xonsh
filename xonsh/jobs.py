@@ -244,7 +244,7 @@ def add_job(info):
     info['status'] = "running"
     tasks.appendleft(num)
     builtins.__xonsh_all_jobs__[num] = info
-    if info['bg']:
+    if info['bg'] and builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
         print_one_job(num)
 
 
@@ -358,7 +358,8 @@ def fg(args, stdin=None):
     job = get_task(tid)
     job['bg'] = False
     job['status'] = "running"
-    print_one_job(tid)
+    if builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+        print_one_job(tid)
     pipeline = job['pipeline']
     pipeline.resume(job)
 

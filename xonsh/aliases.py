@@ -203,6 +203,10 @@ def _SOURCE_FOREIGN_PARSER():
                         dest='overwrite_aliases',
                         help='flag for whether or not sourced aliases should '
                              'replace the current xonsh aliases.')
+    parser.add_argument('--show', default=False, action='store_true', dest='show',
+                        help='Will show the script output.')
+    parser.add_argument('-d', '--dry-run', default=False, action='store_true',
+                        dest='dryrun', help='Will not actually source the file.')
     return parser
 
 
@@ -228,10 +232,15 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
                                           sourcer=ns.sourcer,
                                           use_tmpfile=ns.use_tmpfile,
                                           seterrprevcmd=ns.seterrprevcmd,
-                                          seterrpostcmd=ns.seterrpostcmd)
+                                          seterrpostcmd=ns.seterrpostcmd,
+                                          show=ns.show,
+                                          dryrun=ns.dryrun)
     if fsenv is None:
-        return (None, 'xonsh: error: Source failed: '
-                      '{}\n'.format(ns.prevcmd), 1)
+        if ns.dryrun:
+            return
+        else:
+            msg = 'xonsh: error: Source failed: {}\n'.format(ns.prevcmd)
+            return (None, msg, 1)
     # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
@@ -248,7 +257,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
             continue  # no change from original
-        elif ns.overwite_aliases or k not in baliases:
+        elif ns.overwrite_aliases or k not in baliases:
             baliases[k] = v
         else:
             msg = ('Skipping application of {0!r} alias from {1!r} '

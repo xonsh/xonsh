@@ -7,7 +7,8 @@ import time
 import builtins
 
 from xonsh.tools import (XonshError, print_exception, DefaultNotGiven,
-                         check_for_partial_string, format_std_prepost)
+                         check_for_partial_string, format_std_prepost,
+                         LINE_CONTINUATION)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
@@ -372,14 +373,18 @@ class BaseShell(object):
             hist.last_cmd_rtn = hist.last_cmd_out = None
 
     def _fix_cwd(self):
-        """Check if the cwd changed out from under us"""
+        """Check if the cwd changed out from under us."""
+        env = builtins.__xonsh_env__
         cwd = os.getcwd()
-        if cwd != builtins.__xonsh_env__.get('PWD'):
-            old = builtins.__xonsh_env__.get('PWD')  # working directory changed without updating $PWD
-            builtins.__xonsh_env__['PWD'] = cwd      # track it now
-            if old is not None:
-                builtins.__xonsh_env__['OLDPWD'] = old  # and update $OLDPWD like dirstack.
-            events.on_chdir.fire(olddir=old, newdir=cwd)              # fire event after cwd actually changed.
+        if 'PWD' not in env:
+            # $PWD is missing from env, recreate it
+            env['PWD'] = cwd
+        elif os.path.realpath(cwd) != os.path.realpath(env['PWD']):
+            # The working directory has changed without updating $PWD, fix this
+            old = env['PWD']
+            env['PWD'] = cwd
+            env['OLDPWD'] = old
+            events.on_chdir.fire(olddir=old, newdir=cwd)
 
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that
@@ -404,7 +409,7 @@ class BaseShell(object):
             if usecache:
                 self.reset_buffer()
                 return src, code
-        if src.endswith('\\\n'):
+        if src.endswith(str(LINE_CONTINUATION)+'\n'):
             self.need_more_lines = True
             return src, None
         try:

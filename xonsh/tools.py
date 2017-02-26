@@ -319,6 +319,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             else:
                 tok.lexpos = len(line)
             break
+        elif check_bad_str_token(tok):
+            return
     else:
         if len(toks) > 0 and toks[-1].type in END_TOK_TYPES:
             if _is_not_lparen_and_rparen(lparens, toks[-1]):
@@ -346,6 +348,56 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+def check_bad_str_token(tok):
+    """Checks if a token is a bad string."""
+    if tok.type == 'ERRORTOKEN' and tok.value == 'EOF in multi-line string':
+        return True
+    elif isinstance(tok.value, str) and not check_quotes(tok.value):
+        return True
+    else:
+        return False
+
+
+def check_quotes(s):
+    """Checks a string to make sure that if it starts with quotes, it also
+    ends with quotes.
+    """
+    starts_as_str = RE_BEGIN_STRING.match(s) is not None
+    ends_as_str = s.endswith('"') or s.endswith("'")
+    if not starts_as_str and not ends_as_str:
+        ok = True
+    elif starts_as_str and not ends_as_str:
+        ok = False
+    elif not starts_as_str and ends_as_str:
+        ok = False
+    else:
+        m = RE_COMPLETE_STRING.match(s)
+        ok = m is not None
+    return ok
+
+
+def _have_open_triple_quotes(s):
+    if s.count('"""') % 2 == 1:
+        open_triple = '"""'
+    elif s.count("'''") % 2 == 1:
+        open_triple = "'''"
+    else:
+        open_triple = False
+    return open_triple
+
+
+@lazyobject
+def LINE_CONTINUATION():
+    """ The line contiuation characters used in subproc mode. In interactive
+         mode on Windows the backslash must be preseeded by a space. This is because
+         paths on windows may end in a backspace.
+    """
+    if ON_WINDOWS and builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+        return ' \\'
+    else:
+        return '\\'
+
+
 def get_logical_line(lines, idx):
     """Returns a single logical line (i.e. one without line continuations)
     from a list of lines.  This line should begin at index idx. This also
@@ -355,10 +407,16 @@ def get_logical_line(lines, idx):
     n = 1
     nlines = len(lines)
     line = lines[idx]
-    while line.endswith('\\') and idx < nlines:
+    linecont = str(LINE_CONTINUATION)
+    open_triple = _have_open_triple_quotes(line)
+    while (line.endswith(linecont) or open_triple) and idx < nlines:
         n += 1
         idx += 1
-        line = line[:-1] + lines[idx]
+        if line.endswith(linecont):
+            line = line[:-1] + lines[idx]
+        else:
+            line = line + '\n' + lines[idx]
+        open_triple = _have_open_triple_quotes(line)
     return line, n
 
 
@@ -379,7 +437,7 @@ def replace_logical_line(lines, logical, idx, n):
             logical = ''
         else:
             # found space to split on
-            lines[i] = logical[:b] + '\\'
+            lines[i] = logical[:b] + str(LINE_CONTINUATION)
             logical = logical[b:]
     lines[idx+n-1] = logical
 
@@ -1526,7 +1584,7 @@ def format_std_prepost(template, env=None):
     return s
 
 
-_RE_STRING_START = "[bBrRuU]*"
+_RE_STRING_START = "[bBprRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"
 _RE_STRING_DOUBLE = '"'
@@ -1556,6 +1614,13 @@ RE_STRING_CONT = LazyDict({
 """Dictionary mapping starting quote sequences to regular expressions that
 match the contents of a string beginning with those quotes (not including the
 terminating quotes)"""
+
+
+@lazyobject
+def RE_COMPLETE_STRING():
+    ptrn = ('^' + _RE_STRING_START + '(?P<quote>' + "|".join(_STRINGS) + ')' +
+            '.*?(?P=quote)$')
+    return re.compile(ptrn, re.DOTALL)
 
 
 def check_for_partial_string(x):
