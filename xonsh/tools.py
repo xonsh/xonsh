@@ -34,6 +34,7 @@ import sys
 import threading
 import traceback
 import warnings
+import operator
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -197,6 +198,11 @@ class EnvPath(collections.MutableSequence):
 
     def __repr__(self):
         return repr(self._l)
+
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+        return all(map(operator.eq, self, other))
 
 
 class DefaultNotGivenType(object):
