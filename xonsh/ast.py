@@ -236,11 +236,13 @@ class CtxAwareTransformer(NodeTransformer):
                                          lexer=self.parser.lexer)
             else:
                 maxcol += 1
-        spline = subproc_toks(line,
-                              mincol=mincol,
-                              maxcol=maxcol,
-                              returnline=False,
-                              lexer=self.parser.lexer)
+        spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,
+                              returnline=False, lexer=self.parser.lexer)
+        if spline is None or len(spline) != len(line[mincol:maxcol]) + 3:
+            # failed to get something consistent, try greedy wrap
+            spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,
+                                  returnline=False, lexer=self.parser.lexer,
+                                  greedy=True)
         if spline is None:
             return node
         try:
