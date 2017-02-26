@@ -144,6 +144,11 @@ else:
                     # finished, then we don't need to do anything here, see
                     # issue #2220
                     return False
+                elif e.errno == 25:  # [Errno 25] Inappropriate ioctl for device
+                    # There are also cases where we are not connected to a
+                    # real TTY, even though we may be run in interactive
+                    # mode. See issue #2267 for an example with emacs
+                    return False
                 else:
                     raise
             finally:
