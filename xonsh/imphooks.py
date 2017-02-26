@@ -4,6 +4,7 @@
 This module registers the hooks it defines when it is imported.
 """
 import os
+import re
 import sys
 import types
 import builtins
@@ -15,6 +16,31 @@ from importlib.abc import MetaPathFinder, SourceLoader, Loader
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.platform import scandir
+from xonsh.lazyasd import lazyobject
+
+
+@lazyobject
+def ENCODING_LINE():
+    # this regex comes from PEP 263
+    # https://www.python.org/dev/peps/pep-0263/#defining-the-encoding
+    return re.compile(b"^[ tv]*#.*?coding[:=][ t]*([-_.a-zA-Z0-9]+)")
+
+
+def find_source_encoding(src):
+    """Finds the source encoding given bytes representing a file. If
+    no encoding is found, UTF-8 will be returned as per the docs
+    https://docs.python.org/3/howto/unicode.html#unicode-literals-in-python-source-code
+    """
+    utf8 = 'UTF-8'
+    first, _, rest = src.partition(b'\n')
+    m = ENCODING_LINE.match(first)
+    if m is not None:
+        return m.group(1).decode(utf8)
+    second, _, _ = rest.partition(b'\n')
+    m = ENCODING_LINE.match(second)
+    if m is not None:
+        return m.group(1).decode(utf8)
+    return utf8
 
 
 class XonshImportHook(MetaPathFinder, SourceLoader):
@@ -86,8 +112,10 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         if filename is None:
             msg = "xonsh file {0!r} could not be found".format(fullname)
             raise ImportError(msg)
-        with open(filename, 'r') as f:
+        with open(filename, 'rb') as f:
             src = f.read()
+        enc = find_source_encoding(src)
+        src = src.decode(encoding=enc)
         src = src if src.endswith('\n') else src + '\n'
         execer = self.execer
         execer.filename = filename
