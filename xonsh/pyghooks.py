@@ -45,7 +45,10 @@ def _command_is_valid(cmd):
 def _command_is_autocd(cmd):
     if not builtins.__xonsh_env__.get('AUTO_CD', False):
         return False
-    cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    tyr:
+        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    except (FileNotFoundError, OSError):
+        return False
     return os.path.isdir(cmd_abspath)
 
 
@@ -60,9 +63,11 @@ def subproc_cmd_callback(_, match):
 def subproc_arg_callback(_, match):
     """Check if match contains valid path"""
     text = match.group()
-    yield (match.start(),
-           Name.Constant if os.path.exists(os.path.expanduser(text)) else Text,
-           text)
+    try:
+        ispath = os.path.exists(os.path.expanduser(text))
+    except (FileNotFoundError, OSError):
+        ispath = False
+    yield (match.start(), Name.Constant if ispath else Text, text)
 
 
 COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`<&|;!]+(?=\s|$|\)|\]|\}|!)'
