@@ -229,7 +229,7 @@ class CtxAwareTransformer(NodeTransformer):
             mincol = len(line) - len(line.lstrip())
             maxcol = None
         else:
-            mincol = min_col(node)
+            mincol = max(min_col(node) - 1, 0)
             maxcol = max_col(node)
             if mincol == maxcol:
                 maxcol = find_next_break(line, mincol=mincol,
@@ -238,8 +238,10 @@ class CtxAwareTransformer(NodeTransformer):
                 maxcol += 1
         spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,
                               returnline=False, lexer=self.parser.lexer)
-        if spline is None or len(spline) != len(line[mincol:maxcol]) + 3:
+        if spline is None or len(spline) < len(line[mincol:maxcol]) + 2:
             # failed to get something consistent, try greedy wrap
+            # The +2 comes from "![]" being length 3, minus 1 since maxcol
+            # is one beyond the total length for slicing
             spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,
                                   returnline=False, lexer=self.parser.lexer,
                                   greedy=True)
