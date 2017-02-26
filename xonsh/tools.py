@@ -292,7 +292,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
             continue
         if tok.type in LPARENS:
             lparens.append(tok.type)
-        if greedy and len(lparens) > 0 and lparens[-1] == 'LPAREN':
+        if greedy and len(lparens) > 0 and 'LPAREN' in lparens:
             toks.append(tok)
             if tok.type == 'RPAREN':
                 lparens.pop()
@@ -349,7 +349,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
-    elif saw_macro:
+    elif saw_macro or greedy:
         end_offset = len(toks[-1].value.rstrip()) + 1
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     end = len(line[:end].rstrip())
