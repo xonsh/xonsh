@@ -890,11 +890,10 @@ def list_of_strs_or_callables(x):
     """Ensures that x is a list of strings or functions"""
     if isinstance(x, str) or callable(x):
         rtn = [x]
+    elif isinstance(x, cabc.Iterable):
+        rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
     else:
-        try:
-            rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
-        except:
-            rtn = [str(x)]
+        rtn = [str(x)]
     return rtn
 
 
