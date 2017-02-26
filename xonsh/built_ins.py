@@ -559,8 +559,10 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        # perform initial redirects
         spec.redirect_leading()
         spec.redirect_trailing()
+        # apply aliases
         spec.resolve_alias()
         spec.resolve_binary_loc()
         spec.resolve_auto_cd()
@@ -623,13 +625,16 @@ class SubprocSpec:
     def resolve_executable_commands(self):
         """Resolve command executables, if applicable."""
         alias = self.alias
-        if callable(alias):
+        if alias is None:
+            pass
+        elif callable(alias):
             self.cmd.pop(0)
             return
-        elif alias is None:
-            pass
         else:
             self.cmd = alias + self.cmd[1:]
+            # resolve any redirects the aliases may have applied
+            self.redirect_leading()
+            self.redirect_trailing()
         if self.binary_loc is None:
             return
         try:
