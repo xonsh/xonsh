@@ -82,10 +82,10 @@ def check_tokens(inp, exp):
     return assert_tokens_equal(exp, obs)
 
 
-def check_tokens_subproc(inp, exp):
+def check_tokens_subproc(inp, exp, stop=-1):
     l = Lexer()
     l.input('$[{}]'.format(inp))
-    obs = list(l)[1:-1]
+    obs = list(l)[1:stop]
     return assert_tokens_equal(exp, obs)
 
 
@@ -242,11 +242,23 @@ def test_regex_globs():
 def test_float_literals(case):
     assert check_token(case, ['NUMBER', case, 0])
 
+@pytest.mark.parametrize('case', [
+    '2>1', 'err>out', 'o>', 'all>', 'e>o', 'e>', 'out>', '2>&1'
+])
+def test_ioredir(case):
+    assert check_tokens_subproc(case, [('IOREDIRECT', case, 2)], stop=-2)
 
-def test_ioredir():
-    cases = ['2>1', 'err>out', 'o>', 'all>', 'e>o', 'e>', 'out>', '2>&1']
-    for s in cases:
-        assert check_tokens_subproc(s, [('IOREDIRECT', s, 2)])
+
+@pytest.mark.parametrize('case', [
+    '>', '>>', '<', 'e>',
+    '> ', '>>   ', '<  ', 'e> ',
+])
+def test_redir_whitespace(case):
+    inp = '![{}/path/to/file]'.format(case)
+    l = Lexer()
+    l.input(inp)
+    obs = list(l)
+    assert obs[2].type == 'WS'
 
 
 @pytest.mark.parametrize('s, exp', [
