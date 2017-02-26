@@ -74,6 +74,14 @@ def ON_BEOS():
 
 PYTHON_VERSION_INFO = sys.version_info[:3]
 """ Version of Python interpreter as three-value tuple. """
+
+
+@lazyobject
+def PYTHON_VERSION_INFO_BYTES():
+    """The python version info tuple in a canonical bytes form."""
+    return '.'.join(map(str, sys.version_info)).encode()
+
+
 ON_ANACONDA = LazyBool(
     lambda: any(s in sys.version for s in {'Anaconda', 'Continuum', 'conda-forge'}),
     globals(), 'ON_ANACONDA')
