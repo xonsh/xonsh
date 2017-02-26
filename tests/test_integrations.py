@@ -210,20 +210,6 @@ def test_script_stder(case):
     ('pwd', None, lambda: os.getcwd() + '\n'),
     ('echo WORKING', None, 'WORKING\n'),
     ('ls -f', lambda out: out.splitlines().sort(), os.listdir().sort()),
-    # test subshell wrapping
-    ("""
-with open('tttt', 'w') as fp:
-    fp.write("Wow mom!\\n")
-
-(wc) < tttt
-""", None, " 1  2 9 <stdin>\n"),
-    # test subshell statement wrapping
-    ("""
-with open('tttt', 'w') as fp:
-    fp.write("Wow mom!\\n")
-
-(wc;) < tttt
-""", None, " 1  2 9 <stdin>\n"),
     ])
 def test_single_command_no_windows(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
@@ -246,6 +232,26 @@ def test_printname():
 def test_sourcefile():
     check_run_xonsh('printfile.xsh', None, 'printfile.xsh\n')
 
+
+@_bad_case
+@pytest.mark.parametrize('cmd, fmt, exp', [
+    # test subshell wrapping
+    ("""
+with open('tttt', 'w') as fp:
+    fp.write("Wow mom!\\n")
+
+(wc) < tttt
+""", None, " 1  2 9 <stdin>\n"),
+    # test subshell statement wrapping
+    ("""
+with open('tttt', 'w') as fp:
+    fp.write("Wow mom!\\n")
+
+(wc;) < tttt
+""", None, " 1  2 9 <stdin>\n"),
+])
+def test_subshells(cmd, fmt, exp):
+    check_run_xonsh(cmd, fmt, exp)
 
 
 @skip_if_on_windows

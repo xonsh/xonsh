@@ -2541,7 +2541,6 @@ class BaseParser(object):
             arg._cliarg_action = 'append'
         p[0] = p0
 
-
     #
     # Subproc atom rules
     #
