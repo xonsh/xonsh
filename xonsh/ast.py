@@ -2,6 +2,7 @@
 """The xonsh abstract syntax tree node."""
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
+import sys
 from ast import (
     Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert,
     BinOp, Add, Sub, Mult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt,
@@ -171,8 +172,10 @@ class CtxAwareTransformer(NodeTransformer):
         self.lines = None
         self.mode = None
         self._nwith = 0
+        self.filename = '<xonsh-code>'
+        self.debug_level = 0
 
-    def ctxvisit(self, node, inp, ctx, mode='exec'):
+    def ctxvisit(self, node, inp, ctx, mode='exec', filename=None, debug_level=0):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -183,12 +186,18 @@ class CtxAwareTransformer(NodeTransformer):
             The input code in string format.
         ctx : dict
             The root context to use.
+        filename : str, optional
+            File we are to transform.
+        debug_level : int, optional
+            Debugging level to use in lexing and parsing.
 
         Returns
         -------
         node : ast.AST
             The transformed node.
         """
+        self.filename = self.filename if filename is None else filename
+        self.debug_level = debug_level
         self.lines = inp.splitlines()
         self.contexts = [ctx, set()]
         self.mode = mode
@@ -235,13 +244,22 @@ class CtxAwareTransformer(NodeTransformer):
         if spline is None:
             return node
         try:
-            newnode = self.parser.parse(spline, mode=self.mode)
+            newnode = self.parser.parse(spline, mode=self.mode,
+                                        filename=self.filename,
+                                        debug_level=(self.debug_level > 2))
             newnode = newnode.body
             if not isinstance(newnode, AST):
                 # take the first (and only) Expr
                 newnode = newnode[0]
             increment_lineno(newnode, n=node.lineno - 1)
             newnode.col_offset = node.col_offset
+            if self.debug_level > 1:
+                msg = ('{0}:{1}:{2}{3} - {4}\n'
+                       '{0}:{1}:{2}{3} + {5}')
+                mstr = '' if maxcol is None else ':' + str(maxcol)
+                msg = msg.format(self.filename, node.lineno,
+                                 mincol, mstr, line, spline)
+                print(msg, file=sys.stderr)
         except SyntaxError:
             newnode = node
         if strip_expr and isinstance(newnode, Expr):

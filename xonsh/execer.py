@@ -90,7 +90,8 @@ class Execer(object):
             ctx = set()
         elif isinstance(ctx, cabc.Mapping):
             ctx = set(ctx.keys())
-        tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
+        tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode,
+                                            debug_level=self.debug_level)
         return tree
 
     def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
