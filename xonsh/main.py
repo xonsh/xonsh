@@ -353,7 +353,8 @@ def main_xonsh(args):
     try:
         if args.mode == XonshMode.single_command:
             # run a single command and exit
-            run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
+            run_code_with_cache(args.command.lstrip(), shell.execer,
+                                glb=shell.ctx, loc=None, mode='single')
         elif args.mode == XonshMode.script_from_file:
             # run a script contained in a file
             path = os.path.abspath(os.path.expanduser(args.file))
@@ -375,9 +376,8 @@ def main_xonsh(args):
             # enter the shell
             env['XONSH_INTERACTIVE'] = True
             ignore_sigtstp()
-            if (env['XONSH_INTERACTIVE'] and
-                    not env['LOADED_CONFIG'] and
-                    not any(os.path.isfile(i) for i in env['XONSHRC'])):
+            if (not env['LOADED_CONFIG'] and
+                not any(os.path.isfile(i) for i in env['XONSHRC'])):
                 print('Could not find xonsh configuration or run control files.',
                       file=sys.stderr)
                 xonfig_main(['wizard', '--confirm'])

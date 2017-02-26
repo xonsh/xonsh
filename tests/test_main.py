@@ -172,7 +172,7 @@ def test_main_xonsh_interactive_script(xonsh_builtins, monkeypatch):
     ['-ic', '"a=10"'],
     ['-i', 'script.xsh']
     ])
-def test_premain_force_interactive_with_command_or_sript(args):
+def test_premain_force_interactive_with_command_or_script(args):
     args = xonsh.main.premain(args)
 
     assert args.force_interactive
