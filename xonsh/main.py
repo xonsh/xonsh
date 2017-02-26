@@ -280,11 +280,10 @@ def premain(argv=None):
     elif not sys.stdin.isatty() and not args.force_interactive:
         args.mode = XonshMode.script_from_stdin
     else:
-        args.mode = XonshMode.interactive
-    if not args.force_interactive and not args.mode == XonshMode.interactive:
+        args.force_interactive = True
+    if not args.force_interactive:
         shell_kwargs['shell_type'] = 'none'
     else:
-        args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
     env = start_services(shell_kwargs)
@@ -372,7 +371,7 @@ def main_xonsh(args):
             code = sys.stdin.read()
             run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
                                 mode='exec')
-        if args.mode == XonshMode.interactive or args.force_interactive:
+        if args.force_interactive:
             # enter the shell
             env['XONSH_INTERACTIVE'] = True
             ignore_sigtstp()

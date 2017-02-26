@@ -175,5 +175,5 @@ def test_main_xonsh_interactive_script(xonsh_builtins, monkeypatch):
 def test_premain_force_interactive_with_command_or_sript(args):
     args = xonsh.main.premain(args)
 
-    assert args.mode == xonsh.main.XonshMode.interactive
+    assert args.force_interactive
 
