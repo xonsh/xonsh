@@ -14,8 +14,9 @@ except ImportError:
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
-                            SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
-                            ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
+                            SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT,
+                            ENCODING, ENDMARKER, NAME, ERRORTOKEN, GREATER,
+                            LESS, RIGHTSHIFT, tokenize, TokenError)
 
 
 @lazyobject
@@ -167,6 +168,24 @@ def handle_double_pipe(state, token):
     yield _new_token('OR', 'or', token.start)
 
 
+def handle_redirect(state, token):
+    # The parser expects whitespace after a redirection in subproc mode.
+    # If whitespace does not exist, we'll issue an empty whitespace
+    # token before proceeding.
+    state['last'] = token
+    typ = token.type
+    st = token.string
+    key = (typ, st) if (typ, st) in token_map else typ
+    yield _new_token(token_map[key], st, token.start)
+    if state['pymode'][-1][0]:
+        return
+    # add a whitespace token after a redirection, if we need to
+    next_tok = next(state['stream'])
+    if next_tok.start == token.end:
+        yield _new_token('WS', '', token.end)
+    yield from handle_token(state, next_tok)
+
+
 def _make_matcher_handler(tok, typ, pymode, ender, handlers):
     matcher = (')' if tok.endswith('(') else
                '}' if tok.endswith('{') else
@@ -192,6 +211,13 @@ def special_handlers():
         ENDMARKER: handle_ignore,
         NAME: handle_name,
         ERRORTOKEN: handle_error_token,
+        LESS: handle_redirect,
+        GREATER: handle_redirect,
+        RIGHTSHIFT: handle_redirect,
+        IOREDIRECT: handle_redirect,
+        (OP, '<'): handle_redirect,
+        (OP, '>'): handle_redirect,
+        (OP, '>>'): handle_redirect,
         (OP, ')'): handle_rparen,
         (OP, '}'): handle_rbrace,
         (OP, ']'): handle_rbracket,
