@@ -54,8 +54,10 @@ def get_git_branch():
 
 
 def _get_hg_root(q):
-    _curpwd = os.getcwd()
+    _curpwd = builtins.__xonsh_env__['PWD']
     while True:
+        if not os.path.isdir(_curpwd):
+            return False
         if any([b.name == '.hg' for b in os.scandir(_curpwd)]):
             q.put(_curpwd)
             break
