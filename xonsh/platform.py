@@ -74,6 +74,14 @@ def ON_BEOS():
 
 PYTHON_VERSION_INFO = sys.version_info[:3]
 """ Version of Python interpreter as three-value tuple. """
+
+
+@lazyobject
+def PYTHON_VERSION_INFO_BYTES():
+    """The python version info tuple in a canonical bytes form."""
+    return '.'.join(map(str, sys.version_info)).encode()
+
+
 ON_ANACONDA = LazyBool(
     lambda: any(s in sys.version for s in {'Anaconda', 'Continuum', 'conda-forge'}),
     globals(), 'ON_ANACONDA')
@@ -177,6 +185,29 @@ def pathbasename(p):
     input without a drive.  This version does.
     """
     return pathsplit(p)[-1]
+
+
+@lazyobject
+def expanduser():
+    """Dispatches to the correct platform-dependent expanduser() function."""
+    if ON_WINDOWS:
+        return windows_expanduser
+    else:
+        return os.path.expanduser
+
+
+def windows_expanduser(path):
+    """A Windows-specific expanduser() function for xonsh. This is needed
+    since os.path.expanduser() does not check on Windows if the user actually
+    exists. This restircts expanding the '~' if it is not followed by a
+    separator. That is only '~/' and '~\' are expanded.
+    """
+    if not path.startswith('~'):
+        return path
+    elif len(path) < 2 or path[1] in seps:
+        return os.path.expanduser(path)
+    else:
+        return path
 
 
 # termios tc(get|set)attr indexes.

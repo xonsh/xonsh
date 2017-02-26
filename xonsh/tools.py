@@ -35,11 +35,12 @@ import threading
 import traceback
 import warnings
 
-# adding further imports from xonsh modules is discouraged to avoid circular
+# adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
-                            ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
+                            ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
+                            expanduser)
 
 
 @functools.lru_cache(1)
@@ -94,10 +95,10 @@ def expand_path(s, expand_user=True):
         # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
         pre, char, post = s.partition('=')
         if char:
-            s = os.path.expanduser(pre) + char
-            s += os.pathsep.join(map(os.path.expanduser, post.split(os.pathsep)))
+            s = expanduser(pre) + char
+            s += os.pathsep.join(map(expanduser, post.split(os.pathsep)))
         else:
-            s = os.path.expanduser(s)
+            s = expanduser(s)
     return s
 
 
@@ -1764,7 +1765,7 @@ def normabspath(p):
 
 def expanduser_abs_path(inp):
     """ Provides user expanded absolute path """
-    return os.path.abspath(os.path.expanduser(inp))
+    return os.path.abspath(expanduser(inp))
 
 
 WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),

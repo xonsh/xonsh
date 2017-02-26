@@ -65,11 +65,19 @@ fi
 echo $namefile"""
 
 DEFAULT_ZSH_FUNCSCMD = """# get function names
+autoload -U is-at-least  # We'll need to version check zsh
 namefile="{"
 for name in ${(ok)functions}; do
+  # force zsh to load the func in order to get the filename,
+  # but use +X so that it isn't executed.
+  autoload +X $name || continue
   loc=$(whence -v $name)
   loc=${(z)loc}
-  file=${loc[7,-1]}
+  if is-at-least 5.2; then
+    file=${loc[-1]}
+  else
+    file=${loc[7,-1]}
+  fi
   namefile="${namefile}\\"${name}\\":\\"${(Q)file:A}\\","
 done
 if [[ "{" == "${namefile}" ]]; then
@@ -171,7 +179,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                        aliascmd=None, extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
                        sourcer=None, use_tmpfile=False, tmpfile_ext=None,
-                       runcmd=None, seterrprevcmd=None, seterrpostcmd=None):
+                       runcmd=None, seterrprevcmd=None, seterrpostcmd=None,
+                       show=False, dryrun=False):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
 
@@ -228,6 +237,11 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         of the script. For example, this is "if errorlevel 1 exit 1" in
         cmd.exe. To disable exit-on-error behavior, simply pass in an
         empty string.
+    show : bool, optional
+        Whether or not to display the script that will be run.
+    dryrun : bool, optional
+        Whether or not to actually run and process the command.
+
 
     Returns
     -------
@@ -257,6 +271,10 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                              postcmd=postcmd, funcscmd=funcscmd,
                              seterrprevcmd=seterrprevcmd,
                              seterrpostcmd=seterrpostcmd).strip()
+    if show:
+        print(command)
+    if dryrun:
+        return None, None
     cmd.append(runcmd)
     if not use_tmpfile:
         cmd.append(command)

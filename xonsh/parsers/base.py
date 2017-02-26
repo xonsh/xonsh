@@ -2612,7 +2612,7 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_pyeval(self, p):
-        """subproc_atom : at_lparen_tok test RPAREN"""
+        """subproc_atom : at_lparen_tok testlist_comp RPAREN"""
         p1 = p[1]
         p0 = xonsh_call('__xonsh_list_of_strs_or_callables__', [p[2]],
                         lineno=p1.lineno, col=p1.lexpos)

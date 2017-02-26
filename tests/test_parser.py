@@ -1548,6 +1548,12 @@ def test_ls_dot():
 def test_lambda_in_atparens():
     check_xonsh_ast({}, '$(echo hello | @(lambda a, s=None: "hey!") foo bar baz)', False)
 
+def test_generator_in_atparens():
+    check_xonsh_ast({}, '$(echo @(i**2 for i in range(20)))', False)
+
+def test_bare_tuple_in_atparens():
+    check_xonsh_ast({}, '$(echo @("a", 7))', False)
+
 def test_nested_madness():
     check_xonsh_ast({}, '$(@$(which echo) ls | @(lambda a, s=None: $(@(s.strip()) @(a[1]))) foo -la baz)', False)
 
