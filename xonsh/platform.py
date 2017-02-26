@@ -187,6 +187,29 @@ def pathbasename(p):
     return pathsplit(p)[-1]
 
 
+@lazyobject
+def expanduser():
+    """Dispatches to the correct platform-dependent expanduser() function."""
+    if ON_WINDOWS:
+        return windows_expanduser
+    else:
+        return os.path.expanduser
+
+
+def windows_expanduser(path):
+    """A Windows-specific expanduser() function for xonsh. This is needed
+    since os.path.expanduser() does not check on Windows if the user actually
+    exists. This restircts expanding the '~' if it is not followed by a
+    separator. That is only '~/' and '~\' are expanded.
+    """
+    if not path.startswith('~'):
+        return path
+    elif len(path) < 2 or path[1] in seps:
+        return os.path.expanduser(path)
+    else:
+        return path
+
+
 # termios tc(get|set)attr indexes.
 IFLAG = 0
 OFLAG = 1
