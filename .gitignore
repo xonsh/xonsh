@@ -48,3 +48,7 @@ include/
 feedstock/
 *.cred
 tttt
+Actually_test.tst
+Actually.tst
+Complete_test.tst
+Complete.tst

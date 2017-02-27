@@ -173,7 +173,7 @@ class Execer(object):
             except SyntaxError as e:
                 if original_error is None:
                     original_error = e
-                elif (e.loc is None) or (last_error_line == e.loc.lineno and
+                if (e.loc is None) or (last_error_line == e.loc.lineno and
                                          last_error_col in (e.loc.column + 1,
                                                             e.loc.column)):
                     raise original_error from None
@@ -204,6 +204,12 @@ class Execer(object):
                 maxcol = None if greedy else find_next_break(line,
                                                              mincol=last_error_col,
                                                              lexer=lexer)
+                if not greedy and maxcol in (e.loc.column + 1, e.loc.column):
+                    # go greedy the first time if the syntax error was because
+                    # we hit an end token out of place. This usually indicates
+                    # a subshell or maybe a macro.
+                    greedy = True
+                    maxcol = None
                 sbpline = subproc_toks(line, returnline=True, greedy=greedy,
                                        maxcol=maxcol, lexer=lexer)
                 if sbpline is None:

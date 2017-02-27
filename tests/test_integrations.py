@@ -176,6 +176,39 @@ def _f():
 aliases['f'] = _f
 f
 """, "hello\n", 0),
+# test ambiguous globs
+("""
+import os
+
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+files = ['Actually_test.tst', 'Actually.tst', 'Complete_test.tst', 'Complete.tst']
+
+# touch the file
+for f in files:
+    with open(f, 'w'):
+        pass
+
+# echo the files
+echo *.tst and echo *_test.tst
+print('---')
+echo *_test.tst
+print('---')
+echo *_test.tst and echo *.tst
+
+# remove the files
+for f in files:
+    os.remove(f)
+""", """Actually.tst Actually_test.tst Complete.tst Complete_test.tst
+Actually_test.tst Complete_test.tst
+---
+Actually_test.tst Complete_test.tst
+---
+Actually_test.tst Complete_test.tst
+Actually.tst Actually_test.tst Complete.tst Complete_test.tst
+""", 0),
 ]
 
 
