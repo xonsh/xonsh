@@ -48,6 +48,7 @@ class PromptToolkitCompleter(Completer):
                                                  endidx + expand_offset,
                                                  self.ctx)
         # completions from auto suggest
+        sug_comp = None
         if env.get('AUTO_SUGGEST'):
             sug_comp = self.suggestion_completion(document, line)
             if sug_comp is None:
@@ -55,7 +56,9 @@ class PromptToolkitCompleter(Completer):
             elif len(completions) == 0:
                 completions = (sug_comp,)
             else:
-                completions = (sug_comp,) + completions
+                completions = set(completions)
+                completions.discard(sug_comp)
+                completions = (sug_comp,) + tuple(sorted(completions))
         # reserve space, if needed.
         if len(completions) <= 1:
             pass
@@ -69,9 +72,13 @@ class PromptToolkitCompleter(Completer):
                 break
             c_prefix = c_prefix[:-1]
         # yield completions
+        if sug_comp is None:
+            pre = min(document.cursor_position_col - begidx, len(c_prefix))
+        else:
+            pre = len(c_prefix)
         for comp in completions:
             # do not display quote
-            disp = comp.strip('\'"')[len(c_prefix):]
+            disp = comp[pre:].strip('\'"')
             yield Completion(comp, -l, display=disp)
 
     def suggestion_completion(self, document, line):
