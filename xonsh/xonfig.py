@@ -591,7 +591,6 @@ WELCOME_MSG = [
     'the browser{{NO_COLOR}}',
     '{{GREEN}}xonfig{{NO_COLOR}} wizard   {{INTENSE_WHITE}}-> Run the configuration '
     'wizard and claim your shell {{NO_COLOR}}',
-    ('{{INTENSE_YELLOW}}', '<', '-'),
     '{{INTENSE_BLACK}}Note: Running the Wizard or creating a {{RED}}~/.xonshrc{{NO_COLOR}} file '
     'will suppress this welcome message',
     '',
