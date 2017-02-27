@@ -498,7 +498,7 @@ def _xonfig_create_parser():
     colors = subp.add_parser('colors', help='preview color style')
     colors.add_argument('style', nargs='?', default=None,
                         help='style to preview, default: <current>')
-    tutorial = subp.add_parser('tutorial', help='Launch tutorial in browser.')
+    subp.add_parser('tutorial', help='Launch tutorial in browser.')
     return p
 
 
@@ -533,7 +533,7 @@ def _align_string(string, align='<', fill=' ', width=80):
     linelen = len(STRIP_COLOR_RE.sub('', string))
     padlen = max(width-linelen, 0)
     if align == '^':
-        return fill*(padlen//2) + string + fill*(padlen//2 + padlen%2)
+        return fill*(padlen//2) + string + fill*(padlen//2 + padlen % 2)
     elif align == '>':
         return fill*padlen + string
     elif align == '<':
