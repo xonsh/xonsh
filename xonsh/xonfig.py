@@ -586,13 +586,13 @@ WELCOME_MSG = [
     '',
     ('{{INTENSE_RED}}~{{NO_COLOR}} {tagline} {{INTENSE_RED}}~{{NO_COLOR}}', '^', ' '),
     '',
-    ('{{INTENSE_YELLOW}}', '<', '-'),
-    '{{GREEN}}xonfig{{NO_COLOR}} tutorial {{INTENSE_WHITE}}-> Launch the tutorial in '
+    ('{{INTENSE_BLACK}}', '<', '-'),
+    '{{GREEN}}xonfig{{NO_COLOR}} tutorial    {{INTENSE_WHITE}}->    Launch the tutorial in '
     'the browser{{NO_COLOR}}',
-    '{{GREEN}}xonfig{{NO_COLOR}} wizard   {{INTENSE_WHITE}}-> Run the configuration '
+    '{{GREEN}}xonfig{{NO_COLOR}} wizard      {{INTENSE_WHITE}}->    Run the configuration '
     'wizard and claim your shell {{NO_COLOR}}',
-    '{{INTENSE_BLACK}}Note: Running the Wizard or creating a {{RED}}~/.xonshrc{{NO_COLOR}} file '
-    'will suppress this welcome message',
+    '{{INTENSE_BLACK}}(Note: Run the Wizard or create a {{RED}}~/.xonshrc{{INTENSE_BLACK}} file '
+    'to suppress this meassage)',
     '',
 ]
 
