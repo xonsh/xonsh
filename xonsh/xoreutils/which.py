@@ -132,7 +132,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
             nmatches += 1
             if not pargs.all:
                 break
-        os_environ['PATH'] = original_os_path
+        xp.os_environ['PATH'] = original_os_path
         if not nmatches:
             failures.append(arg)
     if len(failures) == 0:
