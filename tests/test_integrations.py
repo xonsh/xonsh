@@ -201,14 +201,15 @@ echo *_test.tst and echo *.tst
 # remove the files
 for f in files:
     os.remove(f)
-""", """Actually.tst Actually_test.tst Complete.tst Complete_test.tst
-Actually_test.tst Complete_test.tst
----
-Actually_test.tst Complete_test.tst
----
-Actually_test.tst Complete_test.tst
-Actually.tst Actually_test.tst Complete.tst Complete_test.tst
-""", 0),
+""",
+'Actually.tst Actually_test.tst Complete.tst Complete_test.tst\n'
+'Actually_test.tst Complete_test.tst\n'
+'---\n'
+'Actually_test.tst Complete_test.tst\n'
+'---\n'
+'Actually_test.tst Complete_test.tst\n'
+'Actually.tst Actually_test.tst Complete.tst Complete_test.tst\n',
+0),
 ]
 
 
@@ -216,7 +217,7 @@ Actually.tst Actually_test.tst Complete.tst Complete_test.tst
 def test_script(case):
     script, exp_out, exp_rtn = case
     out, err, rtn = run_xonsh(script)
-    assert exp_out.replace('\r\n', '\n') == out.replace('\r\n', '\n')
+    assert exp_out == out
     assert exp_rtn == rtn
 
 
