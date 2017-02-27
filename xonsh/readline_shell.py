@@ -28,7 +28,7 @@ from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
                          columnize, carriage_return)
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN, ON_POSIX
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN, ON_POSIX, os_environ
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.events import events
 
@@ -117,7 +117,7 @@ def setup_readline():
     else:
         readline.parse_and_bind("tab: complete")
     # try to load custom user settings
-    inputrc_name = os.environ.get('INPUTRC')
+    inputrc_name = os_environ.get('INPUTRC')
     if inputrc_name is None:
         if uses_libedit:
             inputrc_name = '.editrc'

@@ -359,6 +359,20 @@ def windows_bash_command():
 #
 
 
+@lazyobject
+def os_environ():
+    """This dispatches to the correct, case-senstive version of os.envrion.
+    This is mainly a problem for Windows. See #2024 for more details.
+    This can probably go away once support for Python v3.5 or v3.6 is
+    dropped.
+    """
+    if ON_WINDOWS:
+        import nt
+        return nt.environ
+    else:
+        return os.environ
+
+
 @functools.lru_cache(1)
 def bash_command():
     """Determines the command for Bash on the current plaform."""

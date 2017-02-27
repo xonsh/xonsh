@@ -14,7 +14,7 @@ import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import to_bool, ensure_string
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN, os_environ
 
 COMMAND = """{seterrprevcmd}
 {prevcmd}
@@ -539,7 +539,7 @@ def _get_shells(shells=None, config=None, issue_warning=True):
     elif shells is not None:
         pass
     else:
-        env = getattr(builtins, '__xonsh_env__', os.environ)
+        env = getattr(builtins, '__xonsh_env__', os_environ)
         if env.get('LOADED_CONFIG', False):
             conf = builtins.__xonsh_config__
         else:

@@ -28,6 +28,7 @@ from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
                                find_closest_color)
 from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256
+from xonsh.platform import os_environ
 
 load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
                           replacements={'pygments.plugin': 'pkg_resources'})
@@ -86,7 +87,7 @@ class XonshLexer(PythonLexer):
         if not hasattr(builtins, '__xonsh_env__'):
             setattr(builtins, '__xonsh_env__', {})
             if ON_WINDOWS:
-                pathext = os.environ.get('PATHEXT', ['.EXE', '.BAT', '.CMD'])
+                pathext = os_environ.get('PATHEXT', ['.EXE', '.BAT', '.CMD'])
                 builtins.__xonsh_env__['PATHEXT'] = pathext.split(os.pathsep)
         if not hasattr(builtins, '__xonsh_commands_cache__'):
             setattr(builtins, '__xonsh_commands_cache__', CommandsCache())
@@ -735,7 +736,7 @@ def _default_style():
             Color.WHITE: '#ansilightgray',
             Color.YELLOW: '#ansibrown',
         }
-    elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
+    elif ON_WINDOWS and 'CONEMUANSI' not in os_environ:
         # These colors must match the color specification
         # in prompt_toolkit, so the colors are converted
         # correctly when using cmd.exe
