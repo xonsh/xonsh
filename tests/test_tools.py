@@ -350,6 +350,34 @@ def test_subproc_toks_pyeval_redirect():
     assert exp == obs
 
 
+def test_subproc_toks_greedy_parens():
+    s = '(sort)'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
+    assert exp == obs
+
+
+def test_subproc_toks_greedy_parens_inp():
+    s = '(sort) < input.txt'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
+    assert exp == obs
+
+
+def test_subproc_toks_greedy_parens_statements():
+    s = '(echo "abc"; sleep 1; echo "def")'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
+    assert exp == obs
+
+
+def test_subproc_toks_greedy_parens_statements_with_grep():
+    s = '(echo "abc"; sleep 1; echo "def") | grep'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
+    assert exp == obs
+
+
 LOGICAL_LINE_CASES = [
 ("""x = 14 + 2""", 0, 'x = 14 + 2', 1),
 ("""x = \\

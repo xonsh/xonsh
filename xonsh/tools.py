@@ -264,10 +264,12 @@ def find_next_break(line, mincol=0, lexer=None):
     return maxcol
 
 
-def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
+def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
+                 greedy=False):
     """Excapsulates tokens in a source code line in a uncaptured
     subprocess ![] starting at a minimum column. If there are no tokens
-    (ie in a comment line) this returns None.
+    (ie in a comment line) this returns None. If greedy is True, it will encapsulate
+    normal parentheses. Greedy is False by default.
     """
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
@@ -290,13 +292,19 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             continue
         if tok.type in LPARENS:
             lparens.append(tok.type)
+        if greedy and len(lparens) > 0 and 'LPAREN' in lparens:
+            toks.append(tok)
+            if tok.type == 'RPAREN':
+                lparens.pop()
+            continue
         if len(toks) == 0 and tok.type in BEG_TOK_SKIPS:
             continue  # handle indentation
         elif len(toks) > 0 and toks[-1].type in END_TOK_TYPES:
             if _is_not_lparen_and_rparen(lparens, toks[-1]):
                 lparens.pop()  # don't continue or break
             elif pos < maxcol and tok.type not in ('NEWLINE', 'DEDENT', 'WS'):
-                toks.clear()
+                if not greedy:
+                    toks.clear()
                 if tok.type in BEG_TOK_SKIPS:
                     continue
             else:
@@ -326,6 +334,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         if len(toks) > 0 and toks[-1].type in END_TOK_TYPES:
             if _is_not_lparen_and_rparen(lparens, toks[-1]):
                 pass
+            elif greedy and toks[-1].type == 'RPAREN':
+                pass
             else:
                 toks.pop()
         if len(toks) == 0:
@@ -339,7 +349,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
-    elif saw_macro:
+    elif saw_macro or greedy:
         end_offset = len(toks[-1].value.rstrip()) + 1
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     end = len(line[:end].rstrip())

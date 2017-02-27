@@ -90,7 +90,8 @@ class Execer(object):
             ctx = set()
         elif isinstance(ctx, cabc.Mapping):
             ctx = set(ctx.keys())
-        tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
+        tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode,
+                                            debug_level=self.debug_level)
         return tree
 
     def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
@@ -154,6 +155,7 @@ class Execer(object):
         last_error_line = last_error_col = -1
         parsed = False
         original_error = None
+        greedy = False
         if filename is None:
             filename = self.filename
         while not parsed:
@@ -171,9 +173,11 @@ class Execer(object):
             except SyntaxError as e:
                 if original_error is None:
                     original_error = e
-                if (e.loc is None) or (last_error_line == e.loc.lineno and
-                                       last_error_col in (e.loc.column + 1,
-                                                          e.loc.column)):
+                if not greedy:
+                    greedy = True
+                elif (e.loc is None) or (last_error_line == e.loc.lineno and
+                                         last_error_col in (e.loc.column + 1,
+                                                            e.loc.column)):
                     raise original_error from None
                 last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
@@ -186,7 +190,7 @@ class Execer(object):
                     # whitespace only lines are not valid syntax in Python's
                     # interactive mode='single', who knew?! Just ignore them.
                     # this might cause actual sytax errors to have bad line
-                    # numbers reported, but should only effect interactive mode
+                    # numbers reported, but should only affect interactive mode
                     del lines[idx]
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
@@ -199,9 +203,10 @@ class Execer(object):
                     if prev_indent == curr_indent:
                         raise original_error
                 lexer = self.parser.lexer
-                maxcol = find_next_break(line, mincol=last_error_col,
-                                         lexer=lexer)
-                sbpline = subproc_toks(line, returnline=True,
+                maxcol = None if greedy else find_next_break(line,
+                                                             mincol=last_error_col,
+                                                             lexer=lexer)
+                sbpline = subproc_toks(line, returnline=True, greedy=greedy,
                                        maxcol=maxcol, lexer=lexer)
                 if sbpline is None:
                     # subprocess line had no valid tokens,
@@ -211,6 +216,9 @@ class Execer(object):
                         last_error_line = last_error_col = -1
                         input = '\n'.join(lines)
                         continue
+                    elif not greedy:
+                        greedy = True
+                        continue
                     else:
                         # or for some other syntax error
                         raise original_error
@@ -219,7 +227,11 @@ class Execer(object):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything
-                    raise original_error
+                    if not greedy:
+                        greedy = True
+                        continue
+                    else:
+                        raise original_error
                 else:
                     # print some debugging info
                     if self.debug_level > 1:
