@@ -1,7 +1,9 @@
 """The xonsh configuration (xonfig) utility."""
+import re
 import ast
 import json
 import shutil
+import random
 import pprint
 import textwrap
 import builtins
@@ -24,6 +26,7 @@ from xonsh.platform import (is_readline_available, ptk_version,
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
                          color_style_names, print_color, color_style)
 from xonsh.xontribs import xontrib_metadata, find_xontrib
+from xonsh.lazyasd import lazyobject
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """
@@ -470,6 +473,11 @@ def _colors(args):
     builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = style_stash
 
 
+def _tutorial(args):
+    import webbrowser
+    webbrowser.open('http://xon.sh/tutorial.html')
+
+
 @functools.lru_cache(1)
 def _xonfig_create_parser():
     p = argparse.ArgumentParser(prog='xonfig',
@@ -479,8 +487,7 @@ def _xonfig_create_parser():
                                          'default action'))
     info.add_argument('--json', action='store_true', default=False,
                       help='reports results as json')
-    wiz = subp.add_parser('wizard', help='displays configuration information, '
-                                         'default action')
+    wiz = subp.add_parser('wizard', help='displays configuration information')
     wiz.add_argument('--file', default=None,
                      help='config file location, default=$XONSHCONFIG')
     wiz.add_argument('--confirm', action='store_true', default=False,
@@ -491,6 +498,7 @@ def _xonfig_create_parser():
     colors = subp.add_parser('colors', help='preview color style')
     colors.add_argument('style', nargs='?', default=None,
                         help='style to preview, default: <current>')
+    tutorial = subp.add_parser('tutorial', help='Launch tutorial in browser.')
     return p
 
 
@@ -499,6 +507,7 @@ _XONFIG_MAIN_ACTIONS = {
     'wizard': _wizard,
     'styles': _styles,
     'colors': _colors,
+    'tutorial': _tutorial,
 }
 
 
@@ -512,3 +521,92 @@ def xonfig_main(args=None):
     if ns.action is None:  # apply default action
         ns = parser.parse_args(['info'] + args)
     return _XONFIG_MAIN_ACTIONS[ns.action](ns)
+
+
+@lazyobject
+def STRIP_COLOR_RE():
+    return re.compile('{.*?}')
+
+
+def _align_string(string, align='<', fill=' ', width=80):
+    """ Align and pad a color formattet string """
+    linelen = len(STRIP_COLOR_RE.sub('', string))
+    padlen = max(width-linelen, 0)
+    if align == '^':
+        return fill*(padlen//2) + string + fill*(padlen//2 + padlen%2)
+    elif align == '>':
+        return fill*padlen + string
+    elif align == '<':
+        return string + fill*padlen
+    else:
+        return string
+
+
+@lazyobject
+def TAGLINES():
+    return [
+        "Exofrills in the shell",
+        "No frills in the shell",
+        "Become the Lord of the Files",
+        "Break out of your shell",
+        "The only shell that is also a shell",
+        "All that is and all that shell be",
+        "It cannot be that hard",
+        "Pass the xonsh, Piggy",
+        "Piggy glanced nervously into hell and cradled the xonsh",
+        "The xonsh is a symbol",
+        "It is pronounced conch",
+        "It is pronounced ðŸš",
+        "It is pronounced kÉ’ntÊƒ",
+        "The shell, bourne again",
+        "Snailed it",
+        "Starfish loves you",
+        "Come snail away",
+        "This is Major Tom to Ground Xonshtrol",
+        "Sally sells csh and keeps xonsh to herself",
+        "Nice indeed. Everything's accounted for, except your old shell.",
+        "I wanna thank you for putting me back in my snail shell",
+        "Crustaceanly Yours",
+        "With great shell comes great reproducibility",
+        "None shell pass",
+        "You shell not pass!",
+        "The x-on shell",
+        "Ever wonder why there isn't a Taco Shell? Because it is a corny idea.",
+        "It is pronounced ã‚³ãƒ³ã‚·ãƒ¥",
+        "The carcolh will catch you!",
+        "People xonshtantly mispronounce these things",
+        "WHAT...is your favorite shell?",
+        "Conches for the xonsh god!",
+        "Python-powered, cross-platform, Unix-gazing shell",
+        "Tab completion in Alderaan places",
+    ]
+
+
+# list of strings or tuples (string, align, fill)
+WELCOME_MSG = [
+    '',
+    ('{{INTENSE_WHITE}}Welcome to the xonsh shell ({version}){{NO_COLOR}}', '^', ' '),
+    '',
+    ('{{INTENSE_RED}}~{{NO_COLOR}} {tagline} {{INTENSE_RED}}~{{NO_COLOR}}', '^', ' '),
+    '',
+    ('{{INTENSE_YELLOW}}', '<', '-'),
+    '{{GREEN}}xonfig{{NO_COLOR}} tutorial {{INTENSE_WHITE}}-> Launch the tutorial in '
+    'the browser{{NO_COLOR}}',
+    '{{GREEN}}xonfig{{NO_COLOR}} wizard   {{INTENSE_WHITE}}-> Run the configuration '
+    'wizard and claim your shell {{NO_COLOR}}',
+    ('{{INTENSE_YELLOW}}', '<', '-'),
+    '{{INTENSE_BLACK}}Note: Running the Wizard or creating a {{RED}}~/.xonshrc{{NO_COLOR}} file '
+    'will suppress this welcome message',
+    '',
+]
+
+
+def print_welcome_screen():
+    subst = dict(tagline=random.choice(list(TAGLINES)),
+                 version=XONSH_VERSION)
+    for elem in WELCOME_MSG:
+        if isinstance(elem, str):
+            elem = (elem, '', '')
+        line = elem[0].format(**subst)
+        line = _align_string(line, elem[1], elem[2], width=80)
+        print_color(line)
