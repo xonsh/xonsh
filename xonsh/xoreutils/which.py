@@ -124,15 +124,15 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         # which.whichgen gives the nicest 'verbose' output if PATH is taken
         # from os.environ so we temporarily override it with
         # __xosnh_env__['PATH']
-        original_os_path = os.environ['PATH']
-        os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
+        original_os_path = xp.os_environ['PATH']
+        xp.os_environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
         matches = _which.whichgen(arg, exts=exts, verbose=verbose)
         for abs_name, from_where in matches:
             print_path(abs_name, from_where, stdout, verbose, captured)
             nmatches += 1
             if not pargs.all:
                 break
-        os.environ['PATH'] = original_os_path
+        xp.os_environ['PATH'] = original_os_path
         if not nmatches:
             failures.append(arg)
     if len(failures) == 0:
