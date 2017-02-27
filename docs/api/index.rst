@@ -54,6 +54,7 @@ For those of you who want the gritty details.
     events
     tools
     platform
+    jsonutils
     lazyjson
     lazyasd
     openpy

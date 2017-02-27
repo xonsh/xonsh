@@ -50,6 +50,8 @@ else:
         _sys.modules['xonsh.foreign_shells'] = __amalgam__
         jobs = __amalgam__
         _sys.modules['xonsh.jobs'] = __amalgam__
+        jsonutils = __amalgam__
+        _sys.modules['xonsh.jsonutils'] = __amalgam__
         lexer = __amalgam__
         _sys.modules['xonsh.lexer'] = __amalgam__
         openpy = __amalgam__
