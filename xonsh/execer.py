@@ -173,8 +173,6 @@ class Execer(object):
             except SyntaxError as e:
                 if original_error is None:
                     original_error = e
-                if not greedy:
-                    greedy = True
                 elif (e.loc is None) or (last_error_line == e.loc.lineno and
                                          last_error_col in (e.loc.column + 1,
                                                             e.loc.column)):

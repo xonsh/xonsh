@@ -92,9 +92,23 @@ def min_col(node):
 def max_col(node):
     """Returns the maximum col_offset of the node and all sub-nodes."""
     col = getattr(node, 'max_col', None)
-    if col is None:
-        col = max(map(get_col, walk(node)))
+    if col is not None:
+        return col
+    highest = max(walk(node), key=get_col)
+    col = highest.col_offset + node_len(highest)
     return col
+
+
+def node_len(node):
+    """The length of a node as a string"""
+    val = 0
+    for n in walk(node):
+        if isinstance(n, Name):
+            val += len(n.id)
+        elif isinstance(n, Attribute):
+            val += 1 + (len(n.attr) if isinstance(n.attr, str) else 0)
+        # this may need to be added to for more nodes as more cases are found
+    return val
 
 
 def get_id(node, default=None):
