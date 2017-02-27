@@ -275,22 +275,22 @@ def premain(argv=None):
     setattr(sys, 'displayhook', _pprint_displayhook)
     if args.command is not None:
         args.mode = XonshMode.single_command
-        shell_kwargs['shell_type'] = 'none'
     elif args.file is not None:
         args.mode = XonshMode.script_from_file
-        shell_kwargs['shell_type'] = 'none'
     elif not sys.stdin.isatty() and not args.force_interactive:
         args.mode = XonshMode.script_from_stdin
+    else:
+        args.force_interactive = True
+    if not args.force_interactive:
         shell_kwargs['shell_type'] = 'none'
     else:
-        args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
     env = start_services(shell_kwargs)
     env['XONSH_LOGIN'] = shell_kwargs['login']
+    env['XONSH_INTERACTIVE'] = args.force_interactive
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
-    env['XONSH_INTERACTIVE'] = args.force_interactive
     if ON_WINDOWS:
         setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
     return args
@@ -351,24 +351,10 @@ def main_xonsh(args):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
     try:
-        if args.mode == XonshMode.interactive:
-            # enter the shell
-            env['XONSH_INTERACTIVE'] = True
-            ignore_sigtstp()
-            if (env['XONSH_INTERACTIVE'] and
-                    not env['LOADED_CONFIG'] and
-                    not any(os.path.isfile(i) for i in env['XONSHRC'])):
-                print('Could not find xonsh configuration or run control files.',
-                      file=sys.stderr)
-                xonfig_main(['wizard', '--confirm'])
-            events.on_pre_cmdloop.fire()
-            try:
-                shell.shell.cmdloop()
-            finally:
-                events.on_post_cmdloop.fire()
-        elif args.mode == XonshMode.single_command:
+        if args.mode == XonshMode.single_command:
             # run a single command and exit
-            run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
+            run_code_with_cache(args.command.lstrip(), shell.execer,
+                                glb=shell.ctx, loc=None, mode='single')
         elif args.mode == XonshMode.script_from_file:
             # run a script contained in a file
             path = os.path.abspath(os.path.expanduser(args.file))
@@ -386,6 +372,20 @@ def main_xonsh(args):
             code = sys.stdin.read()
             run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
                                 mode='exec')
+        if args.force_interactive:
+            # enter the shell
+            env['XONSH_INTERACTIVE'] = True
+            ignore_sigtstp()
+            if (not env['LOADED_CONFIG'] and
+               not any(os.path.isfile(i) for i in env['XONSHRC'])):
+                print('Could not find xonsh configuration or run control files.',
+                      file=sys.stderr)
+                xonfig_main(['wizard', '--confirm'])
+            events.on_pre_cmdloop.fire()
+            try:
+                shell.shell.cmdloop()
+            finally:
+                events.on_post_cmdloop.fire()
     finally:
         events.on_exit.fire()
     postmain(args)

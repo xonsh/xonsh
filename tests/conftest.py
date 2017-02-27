@@ -43,6 +43,7 @@ def xonsh_events():
 @pytest.yield_fixture
 def xonsh_builtins(xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
+    old_builtins = set(dir(builtins))
     builtins.__xonsh_env__ = DummyEnv()
     if ON_WINDOWS:
         builtins.__xonsh_env__['PATHEXT'] = ['.EXE', '.BAT', '.CMD']
@@ -72,40 +73,8 @@ def xonsh_builtins(xonsh_events):
     # be firing events on the global instance.
     builtins.events = xonsh_events
     yield builtins
-    if hasattr(builtins, '__xonsh_env__'):
-        del builtins.__xonsh_env__
-    if hasattr(builtins, '__xonsh_ctx__'):
-        del builtins.__xonsh_ctx__
-    del builtins.__xonsh_shell__
-    if hasattr(builtins, '__xonsh_help__'):
-        del builtins.__xonsh_help__
-    if hasattr(builtins, '__xonsh_glob__'):
-        del builtins.__xonsh_glob__
-    if hasattr(builtins, '__xonsh_exit__'):
-        del builtins.__xonsh_exit__
-    if hasattr(builtins, '__xonsh_superhelp__'):
-        del builtins.__xonsh_superhelp__
-    del builtins.__xonsh_regexpath__
-    if hasattr(builtins, '__xonsh_expand_path__'):
-        del builtins.__xonsh_expand_path__
-    if hasattr(builtins, '__xonsh_stdout_uncaptured__'):
-        del builtins.__xonsh_stdout_uncaptured__
-    if hasattr(builtins, '__xonsh_stderr_uncaptured__'):
-        del builtins.__xonsh_stderr_uncaptured__
-    del builtins.__xonsh_subproc_captured__
-    if hasattr(builtins, '__xonsh_subproc_uncaptured__'):
-        del builtins.__xonsh_subproc_uncaptured__
-    del builtins.__xonsh_ensure_list_of_strs__
-    del builtins.__xonsh_commands_cache__
-    del builtins.__xonsh_all_jobs__
-    if hasattr(builtins, '__xonsh_history__'):
-        del builtins.__xonsh_history__
-    del builtins.__xonsh_enter_macro__
-    del builtins.evalx
-    del builtins.execx
-    del builtins.compilex
-    del builtins.aliases
-    del builtins.events
+    for attr in set(dir(builtins)) - old_builtins:
+        delattr(builtins, attr)
     tasks.clear()  # must to this to enable resetting all_jobs
 
 

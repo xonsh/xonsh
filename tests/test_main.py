@@ -6,20 +6,24 @@ from contextlib import contextmanager
 import builtins
 import os.path
 import sys
+from unittest.mock import Mock
+from argparse import Namespace
 
 import xonsh.main
 import pytest
 from tools import TEST_DIR
 
 
-def Shell(*args, **kwargs):
-    pass
+class Shell:
+    def __init__(self, *args, **kwargs):
+        pass
 
 
 @pytest.fixture
 def shell(xonsh_builtins, xonsh_execer, monkeypatch):
     """Xonsh Shell Mock"""
     monkeypatch.setattr(xonsh.main, 'Shell', Shell)
+    return Shell
 
 
 def test_premain_no_arg(shell, monkeypatch):
@@ -118,3 +122,58 @@ def test_xonsh_failback_script_from_file(shell, monkeypatch):
     with pytest.raises(Exception):
         xonsh.main.main()
     assert len(checker) == 0
+
+
+def test_main_xonsh_interactive_command(xonsh_builtins):
+    shell_mock = Mock()
+    run_code_with_cache_mock = Mock()
+    cmdloop_mock = Mock()
+    xonsh.main.run_code_with_cache = run_code_with_cache_mock
+    shell = xonsh_builtins.__xonsh_shell__ = shell_mock()
+    shell.shell.cmdloop = cmdloop_mock
+    env = xonsh_builtins.__xonsh_env__
+    env['LOADED_CONFIG'] = True
+    args = Namespace(mode=xonsh.main.XonshMode.single_command,
+                     force_interactive=True,
+                     command='a=10')
+
+    xonsh.main.main_xonsh(args)
+
+
+    assert run_code_with_cache_mock.called
+    assert shell.shell.cmdloop.called
+
+
+def test_main_xonsh_interactive_script(xonsh_builtins, monkeypatch):
+    shell_mock = Mock()
+    run_script_with_cache_mock = Mock()
+    isfile_mock = Mock(return_value=True)
+    cmdloop_mock = Mock()
+    xonsh.main.run_script_with_cache = run_script_with_cache_mock
+    shell = xonsh_builtins.__xonsh_shell__ = shell_mock()
+    shell.shell.cmdloop = cmdloop_mock
+    env = xonsh_builtins.__xonsh_env__
+    env['LOADED_CONFIG'] = True
+    monkeypatch.setattr(os.path, 'isfile', isfile_mock)
+    args = Namespace(mode=xonsh.main.XonshMode.script_from_file,
+                     force_interactive=True,
+                     file='',
+                     args=[]
+                     )
+
+    xonsh.main.main_xonsh(args)
+
+
+    assert run_script_with_cache_mock.called
+    assert shell.shell.cmdloop.called
+
+
+@pytest.mark.parametrize('args', [
+    ['-ic', '"a=10"'],
+    ['-i', 'script.xsh']
+    ])
+def test_premain_force_interactive_with_command_or_script(args):
+    args = xonsh.main.premain(args)
+
+    assert args.force_interactive
+
