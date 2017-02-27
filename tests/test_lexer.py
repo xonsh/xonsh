@@ -169,6 +169,82 @@ def test_ampersand():
     assert check_token('&', ['AMPERSAND', '&', 0])
 
 
+def test_not_really_and_pre():
+    inp = "![foo-and]"
+    exp = [
+        ('BANG_LBRACKET', '![', 0),
+        ('NAME', 'foo', 2),
+        ('MINUS', '-', 5),
+        ('NAME', 'and', 6),
+        ('RBRACKET', ']', 9),
+        ]
+    assert check_tokens(inp, exp)
+
+
+def test_not_really_and_post():
+    inp = "![and-bar]"
+    exp = [
+        ('BANG_LBRACKET', '![', 0),
+        ('NAME', 'and', 2),
+        ('MINUS', '-', 5),
+        ('NAME', 'bar', 6),
+        ('RBRACKET', ']', 9),
+        ]
+    assert check_tokens(inp, exp)
+
+
+def test_not_really_and_pre_post():
+    inp = "![foo-and-bar]"
+    exp = [
+        ('BANG_LBRACKET', '![', 0),
+        ('NAME', 'foo', 2),
+        ('MINUS', '-', 5),
+        ('NAME', 'and', 6),
+        ('MINUS', '-', 9),
+        ('NAME', 'bar', 10),
+        ('RBRACKET', ']', 13),
+        ]
+    assert check_tokens(inp, exp)
+
+
+def test_not_really_or_pre():
+    inp = "![foo-or]"
+    exp = [
+        ('BANG_LBRACKET', '![', 0),
+        ('NAME', 'foo', 2),
+        ('MINUS', '-', 5),
+        ('NAME', 'or', 6),
+        ('RBRACKET', ']', 8),
+        ]
+    assert check_tokens(inp, exp)
+
+
+def test_not_really_or_post():
+    inp = "![or-bar]"
+    exp = [
+        ('BANG_LBRACKET', '![', 0),
+        ('NAME', 'or', 2),
+        ('MINUS', '-', 4),
+        ('NAME', 'bar', 5),
+        ('RBRACKET', ']', 8),
+        ]
+    assert check_tokens(inp, exp)
+
+
+def test_not_really_or_pre_post():
+    inp = "![foo-or-bar]"
+    exp = [
+        ('BANG_LBRACKET', '![', 0),
+        ('NAME', 'foo', 2),
+        ('MINUS', '-', 5),
+        ('NAME', 'or', 6),
+        ('MINUS', '-', 8),
+        ('NAME', 'bar', 9),
+        ('RBRACKET', ']', 12),
+        ]
+    assert check_tokens(inp, exp)
+
+
 def test_atdollar():
     assert check_token('@$', ['ATDOLLAR', '@$', 0])
 
