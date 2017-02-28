@@ -592,7 +592,7 @@ WELCOME_MSG = [
     '{{GREEN}}xonfig{{NO_COLOR}} wizard      {{INTENSE_WHITE}}->    Run the configuration '
     'wizard and claim your shell {{NO_COLOR}}',
     '{{INTENSE_BLACK}}(Note: Run the Wizard or create a {{RED}}~/.xonshrc{{INTENSE_BLACK}} file '
-    'to suppress this meassage)',
+    'to suppress the welcome screen)',
     '',
 ]
 
@@ -604,5 +604,6 @@ def print_welcome_screen():
         if isinstance(elem, str):
             elem = (elem, '', '')
         line = elem[0].format(**subst)
-        line = _align_string(line, elem[1], elem[2], width=80)
+        termwidth = os.get_terminal_size().columns
+        line = _align_string(line, elem[1], elem[2], width=termwidth)
         print_color(line)
