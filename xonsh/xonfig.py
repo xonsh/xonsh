@@ -592,7 +592,7 @@ WELCOME_MSG = [
     '{{GREEN}}xonfig{{NO_COLOR}} wizard      {{INTENSE_WHITE}}->    Run the configuration '
     'wizard and claim your shell {{NO_COLOR}}',
     '{{INTENSE_BLACK}}(Note: Run the Wizard or create a {{RED}}~/.xonshrc{{INTENSE_BLACK}} file '
-    'to suppress this meassage)',
+    'to suppress this message)',
     '',
 ]
 
