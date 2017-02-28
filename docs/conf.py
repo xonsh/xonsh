@@ -17,9 +17,12 @@ os.environ['XONSH_DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 from xonsh.xontribs import xontrib_metadata
-from xonsh.events import events
 from xonsh import main
 from xonsh.commands_cache import CommandsCache
+
+# hacky runaround to import PTK-specific events
+builtins.__xonsh_env__ = Env()
+from xonsh.ptk.shell import events
 
 sys.path.insert(0, os.path.dirname(__file__))
 
