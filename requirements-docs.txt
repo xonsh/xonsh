@@ -1,3 +1,4 @@
 cloud_sptheme
 numpydoc==0.5
 Sphinx
+prompt_toolkit
