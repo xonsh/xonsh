@@ -20,7 +20,7 @@ from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import setup_win_unicode_console, print_color, to_bool_or_int
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
-from xonsh.xonfig import xonfig_main
+from xonsh.xonfig import print_welcome_screen
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
@@ -358,9 +358,7 @@ def main_xonsh(args):
             if (env['XONSH_INTERACTIVE'] and
                     not env['LOADED_CONFIG'] and
                     not any(os.path.isfile(i) for i in env['XONSHRC'])):
-                print('Could not find xonsh configuration or run control files.',
-                      file=sys.stderr)
-                xonfig_main(['wizard', '--confirm'])
+                print_welcome_screen()
             events.on_pre_cmdloop.fire()
             try:
                 shell.shell.cmdloop()
