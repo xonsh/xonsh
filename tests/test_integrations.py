@@ -193,9 +193,7 @@ for f in files:
 
 # echo the files
 echo *.tst and echo *_test.tst
-print('---')
 echo *_test.tst
-print('---')
 echo *_test.tst and echo *.tst
 
 # remove the files
@@ -204,9 +202,7 @@ for f in files:
 """,
 'Actually.tst Actually_test.tst Complete.tst Complete_test.tst\n'
 'Actually_test.tst Complete_test.tst\n'
-'---\n'
 'Actually_test.tst Complete_test.tst\n'
-'---\n'
 'Actually_test.tst Complete_test.tst\n'
 'Actually.tst Actually_test.tst Complete.tst Complete_test.tst\n',
 0),
