@@ -34,13 +34,14 @@ import sys
 import threading
 import traceback
 import warnings
+import operator
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
-                            expanduser)
+                            expanduser, os_environ)
 
 
 @functools.lru_cache(1)
@@ -85,7 +86,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
 def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
-    env = getattr(builtins, '__xonsh_env__', os.environ)
+    env = getattr(builtins, '__xonsh_env__', os_environ)
     if env.get('EXPAND_ENV_VARS', False):
         s = expandvars(s)
     if expand_user:
@@ -106,7 +107,7 @@ def _expandpath(path):
     """Performs environment variable / user expansion on a given path
     if EXPAND_ENV_VARS is set.
     """
-    env = getattr(builtins, '__xonsh_env__', os.environ)
+    env = getattr(builtins, '__xonsh_env__', os_environ)
     expand_user = env.get('EXPAND_ENV_VARS', False)
     return expand_path(path, expand_user=expand_user)
 
@@ -115,7 +116,7 @@ def decode_bytes(b):
     """Tries to decode the bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
     """
-    env = getattr(builtins, '__xonsh_env__', os.environ)
+    env = getattr(builtins, '__xonsh_env__', os_environ)
     enc = env.get('XONSH_ENCODING') or DEFAULT_ENCODING
     err = env.get('XONSH_ENCODING_ERRORS') or 'strict'
     return b.decode(encoding=enc, errors=err)
@@ -197,6 +198,11 @@ class EnvPath(collections.MutableSequence):
 
     def __repr__(self):
         return repr(self._l)
+
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+        return all(map(operator.eq, self, other))
 
 
 class DefaultNotGivenType(object):
@@ -745,7 +751,7 @@ def print_exception(msg=None):
     env = getattr(builtins, '__xonsh_env__', None)
     # flags indicating whether the traceback options have been manually set
     if env is None:
-        env = os.environ
+        env = os_environ
         manually_set_trace = 'XONSH_SHOW_TRACEBACK' in env
         manually_set_logfile = 'XONSH_TRACEBACK_LOGFILE' in env
     else:
@@ -1570,7 +1576,8 @@ def intensify_colors_on_win_setter(enable):
     """
     enable = to_bool(enable)
     if hasattr(builtins, '__xonsh_shell__'):
-        delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
+        if hasattr(builtins.__xonsh_shell__.shell.styler, 'style_name'):
+            delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
     return enable
 
 

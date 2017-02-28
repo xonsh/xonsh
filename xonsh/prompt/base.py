@@ -92,7 +92,7 @@ class PromptFormatter:
 @xl.lazyobject
 def PROMPT_FIELDS():
     return dict(
-        user=os.environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
+        user=xp.os_environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
         prompt_end='#' if xt.is_superuser() else '$',
         hostname=socket.gethostname().split('.', 1)[0],
         cwd=_dynamically_collapsed_pwd,

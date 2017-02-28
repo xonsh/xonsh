@@ -8,6 +8,7 @@ import builtins
 import textwrap
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
+from xonsh.jsonutils import serialize_xonsh_json
 
 
 #
@@ -610,7 +611,8 @@ class PromptVisitor(StateVisitor):
         return rtns
 
     def visit_save(self, node):
-        jstate = json.dumps(self.state, indent=1, sort_keys=True)
+        jstate = json.dumps(self.state, indent=1, sort_keys=True,
+                            default=serialize_xonsh_json)
         if node.check:
             msg = 'The current state is:\n\n{0}\n'
             print(msg.format(textwrap.indent(jstate, '    ')))

@@ -22,7 +22,7 @@ from xonsh.foreign_shells import load_foreign_envs, load_foreign_aliases
 from xonsh.xontribs import update_context, prompt_xontrib_install
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
-    ON_WINDOWS, ON_LINUX
+    ON_WINDOWS, ON_LINUX, os_environ
 )
 
 from xonsh.tools import (
@@ -240,7 +240,7 @@ def default_xonshrc(env):
     """Creates a new instance of the default xonshrc tuple."""
     if ON_WINDOWS:
         dxrc = (xonshconfig(env),
-                os.path.join(os.environ['ALLUSERSPROFILE'],
+                os.path.join(os_environ['ALLUSERSPROFILE'],
                              'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc'))
     else:
@@ -599,7 +599,7 @@ def DEFAULT_DOCS():
         'the possibilities. This currently only affects the prompt-toolkit shell.'
         ),
     'UPDATE_OS_ENVIRON': VarDocs(
-        "If True ``os.environ`` will always be updated "
+        "If True ``os_environ`` will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
         "the default value by calling ``__xonsh_env__.undo_replace_env()``"),
     'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
@@ -775,7 +775,7 @@ class Env(cabc.MutableMapping):
     _arg_regex = None
 
     def __init__(self, *args, **kwargs):
-        """If no initial environment is given, os.environ is used."""
+        """If no initial environment is given, os_environ is used."""
         self._d = {}
         # sentinel value for non existing envvars
         self._no_value = object()
@@ -784,7 +784,7 @@ class Env(cabc.MutableMapping):
         self._defaults = DEFAULT_VALUES
         self._docs = DEFAULT_DOCS
         if len(args) == 0 and len(kwargs) == 0:
-            args = (os.environ,)
+            args = (os_environ,)
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         if 'PATH' not in self._d:
@@ -819,21 +819,21 @@ class Env(cabc.MutableMapping):
         return ctx
 
     def replace_env(self):
-        """Replaces the contents of os.environ with a detyped version
+        """Replaces the contents of os_environ with a detyped version
         of the xonsh environement.
         """
         if self._orig_env is None:
-            self._orig_env = dict(os.environ)
-        os.environ.clear()
-        os.environ.update(self.detype())
+            self._orig_env = dict(os_environ)
+        os_environ.clear()
+        os_environ.update(self.detype())
 
     def undo_replace_env(self):
-        """Replaces the contents of os.environ with a detyped version
+        """Replaces the contents of os_environ with a detyped version
         of the xonsh environement.
         """
         if self._orig_env is not None:
-            os.environ.clear()
-            os.environ.update(self._orig_env)
+            os_environ.clear()
+            os_environ.update(self._orig_env)
             self._orig_env = None
 
     def get_ensurer(self, key,
@@ -952,7 +952,7 @@ class Env(cabc.MutableMapping):
                 if self._orig_env is None:
                     self.replace_env()
                 else:
-                    os.environ[key] = ensurer.detype(val)
+                    os_environ[key] = ensurer.detype(val)
         if old_value is self._no_value:
             events.on_envvar_new.fire(name=key, value=val)
         elif old_value != val:
@@ -964,8 +964,8 @@ class Env(cabc.MutableMapping):
         val = self._d.pop(key)
         if self.detypeable(val):
             self._detyped = None
-            if self.get('UPDATE_OS_ENVIRON') and key in os.environ:
-                del os.environ[key]
+            if self.get('UPDATE_OS_ENVIRON') and key in os_environ:
+                del os_environ[key]
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
@@ -1047,10 +1047,10 @@ def load_static_config(ctx, config=None):
         config = env['XONSHCONFIG'] = xonshconfig(env)
     if os.path.isfile(config):
         # Note that an Env instance at __xonsh_env__ has not been started yet,
-        # per se, so we have to use os.environ
-        encoding = os.environ.get('XONSH_ENCODING',
+        # per se, so we have to use os_environ
+        encoding = os_environ.get('XONSH_ENCODING',
                                   DEFAULT_VALUES.get('XONSH_ENCODING', 'utf8'))
-        errors = os.environ.get('XONSH_ENCODING_ERRORS',
+        errors = os_environ.get('XONSH_ENCODING_ERRORS',
                                 DEFAULT_VALUES.get('XONSH_ENCODING_ERRORS',
                                                    'surrogateescape'))
         with open(config, 'r', encoding=encoding, errors=errors) as f:
@@ -1109,8 +1109,8 @@ def windows_foreign_env_fixes(ctx):
     # /c/Windows/System32 syntax instead of C:\\Windows\\System32
     # which messes up these environment variables for xonsh.
     for ev in ['PATH', 'TEMP', 'TMP']:
-        if ev in os.environ:
-            ctx[ev] = os.environ[ev]
+        if ev in os_environ:
+            ctx[ev] = os_environ[ev]
         elif ev in ctx:
             del ctx[ev]
     ctx['PWD'] = _get_cwd() or ''
@@ -1181,7 +1181,7 @@ def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
-    ctx.update(os.environ)
+    ctx.update(os_environ)
     ctx['PWD'] = _get_cwd() or ''
     # other shells' PROMPT definitions generally don't work in XONSH:
     try:
