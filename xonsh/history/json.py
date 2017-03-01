@@ -68,8 +68,13 @@ def _xhj_get_history_files(sort=True, reverse=False):
     """
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
     data_dir = xt.expanduser_abs_path(data_dir)
-    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
-             if f.startswith('xonsh-') and f.endswith('.json')]
+    try:
+        files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
+                 if f.startswith('xonsh-') and f.endswith('.json')]
+    except OSError:
+        files = []
+        if builtins.__xonsh_env__.get('XONSH_DEBUG'):
+            xt.print_exception("Could not collect xonsh history files.")
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=reverse)
     return files
