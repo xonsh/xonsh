@@ -141,7 +141,7 @@ else:
                 os.tcsetpgrp(FD_STDERR, pgid)
                 return True
             except ProcessLookupError:
-                # when the process finished before give terminal to it,
+                # when the process finished before giving terminal to it,
                 # see issue #2288
                 return False
             except OSError as e:
