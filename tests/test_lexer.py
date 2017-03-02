@@ -245,6 +245,38 @@ def test_not_really_or_pre_post():
     assert check_tokens(inp, exp)
 
 
+def test_subproc_line_cont():
+    inp = ("![echo --option1 value1 \\\n"
+           "     --option2 value2 \\\n"
+           "     --optionZ valueZ]")
+    exp = [
+        ('BANG_LBRACKET', '![', 0),
+        ('NAME', 'echo', 2),
+        ('WS', ' ', 6),
+        ('MINUS', '-', 7),
+        ('MINUS', '-', 8),
+        ('NAME', 'option1', 9),
+        ('WS', ' ', 16),
+        ('NAME', 'value1', 17),
+        ('WS', ' ', 23),
+        ('WS', ' ', 24),
+        ('MINUS', '-', 5),
+        ('MINUS', '-', 6),
+        ('NAME', 'option2', 7),
+        ('WS', ' ', 14),
+        ('NAME', 'value2', 15),
+        ('WS', ' ', 21),
+        ('WS', ' ', 22),
+        ('MINUS', '-', 5),
+        ('MINUS', '-', 6),
+        ('NAME', 'optionZ', 7),
+        ('WS', ' ', 14),
+        ('NAME', 'valueZ', 15),
+        ('RBRACKET',']', 21),
+        ]
+    assert check_tokens(inp, exp)
+
+
 def test_atdollar():
     assert check_token('@$', ['ATDOLLAR', '@$', 0])
 

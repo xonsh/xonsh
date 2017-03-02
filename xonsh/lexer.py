@@ -144,6 +144,16 @@ def handle_error_space(state, token):
         yield from []
 
 
+def handle_error_linecont(state, token):
+    """Function for handling special line continuations as whitespace
+    characters in subprocess mode.
+    """
+    if state['pymode'][-1][0]:
+        return
+    state['last'] = token
+    yield _new_token('WS', ' ', token.start)
+
+
 def handle_error_token(state, token):
     """
     Function for handling error tokens
@@ -227,6 +237,8 @@ def special_handlers():
         (OP, '&&'): handle_double_amps,
         (OP, '||'): handle_double_pipe,
         (ERRORTOKEN, ' '): handle_error_space,
+        (ERRORTOKEN, '\\\n'): handle_error_linecont,
+        (ERRORTOKEN, '\\\r\n'): handle_error_linecont,
         }
     _make_matcher_handler('(', 'LPAREN', True, ')', sh)
     _make_matcher_handler('[', 'LBRACKET', True, ']', sh)
