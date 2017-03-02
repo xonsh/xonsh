@@ -25,7 +25,7 @@ v0.5.7
 * Sourcing foreign shells now have the ``--show`` option, which
   lets you see when script will be run, and the ``--dryrun``
   option which prevents the source from actually taking place.
-  Xonsh's foriegn shell API also added these keyword arguments.
+  Xonsh's foreign shell API also added these keyword arguments.
 * Subprocess mode now supports subshells. Place any xonsh
   code between two parentheses, e.g. ``(cmd)``, to run
   this command in a separate xonsh subprocess.
@@ -55,8 +55,8 @@ v0.5.7
 * The interactive prompt will now catch ``SystemExit`` and, instead
   of exiting the session, will refresh the prompt. This is the same
   process as for keyboard interrupts.
-* Xonsh no longer launches the wizard for new users. Instead a welcome screen is 
-  shown which say how to launch the wizard.
+* Xonsh no longer launches the wizard for new users. Instead a welcome screen is
+  shown which says how to launch the wizard.
 * Added Windows ``expanduser()``-like function which prevents
   the expansion of ``~`` that are not followed by a path
   separator.
@@ -102,7 +102,7 @@ v0.5.7
   to running a subprocess. This preevents Popen from issuing
   embedded null byte exceptions.
 * Xonsh will no longer crash is the current working directory is
-  removed out from it.
+  removed out from under it.
 * Multiline strings can now be written in subprocess mode.
 * PTK completions will now correctly deduplicate autosuggest completions
   and display completions values based on the cursor position.
@@ -114,8 +114,6 @@ v0.5.7
   that file and properly fallback to UTF-8. This beahviour follows
   the rules described in PEP 263.
 * Wizard is now able to properly serialize envrionment paths.
-
-
 
 
 v0.5.6
@@ -168,7 +166,7 @@ v0.5.6
   longer error out depending on what you press.
 * Fixed issue with subprocess mode wrapping not repecting line continuation
   backslashes.
-* Handle a bug where Bash On Windows causes platform.windows_bash_command() 
+* Handle a bug where Bash On Windows causes platform.windows_bash_command()
   to raise CalledProcessError.
 * Fixed issues pertaining to completing from raw string paths.
   This is particularly relevant to Windows, where raw strings
