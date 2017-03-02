@@ -135,6 +135,9 @@ else:
         def give_terminal_to(pgid):
             oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                              _block_when_giving)
+            if pgid is None:
+                signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+                return False
             try:
                 os.tcsetpgrp(FD_STDERR, pgid)
                 return True
