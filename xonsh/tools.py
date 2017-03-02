@@ -431,7 +431,6 @@ def get_logical_line(lines, idx):
     start = idx
     line = lines[idx]
     open_triple = _have_open_triple_quotes(line)
-    print(idx)
     while (line.endswith(linecont) or open_triple) and idx < nlines:
         n += 1
         idx += 1
