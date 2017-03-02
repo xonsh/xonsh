@@ -490,7 +490,7 @@ def ensure_shell(shell):
     if not (shell_keys <= VALID_SHELL_PARAMS):
         msg = 'unknown shell keys: {0}'
         raise KeyError(msg.format(shell_keys - VALID_SHELL_PARAMS))
-    shell['shell'] = ensure_string(shell['shell'])
+    shell['shell'] = ensure_string(shell['shell']).lower()
     if 'interactive' in shell_keys:
         shell['interactive'] = to_bool(shell['interactive'])
     if 'login' in shell_keys:
