@@ -318,7 +318,9 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
         if pos < mincol:
             continue
         toks.append(tok)
-        if tok.type == 'NEWLINE':
+        if tok.type == 'WS' and tok.value == '\\':
+            pass  # line continuation
+        elif tok.type == 'NEWLINE':
             break
         elif tok.type == 'DEDENT':
             # fake a newline when dedenting without a newline
@@ -423,9 +425,13 @@ def get_logical_line(lines, idx):
     """
     n = 1
     nlines = len(lines)
-    line = lines[idx]
     linecont = str(LINE_CONTINUATION)
+    while idx > 0 and lines[idx-1].endswith(linecont):
+        idx -= 1
+    start = idx
+    line = lines[idx]
     open_triple = _have_open_triple_quotes(line)
+    print(idx)
     while (line.endswith(linecont) or open_triple) and idx < nlines:
         n += 1
         idx += 1
@@ -434,7 +440,7 @@ def get_logical_line(lines, idx):
         else:
             line = line + '\n' + lines[idx]
         open_triple = _have_open_triple_quotes(line)
-    return line, n
+    return line, n, start
 
 
 def replace_logical_line(lines, logical, idx, n):

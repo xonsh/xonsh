@@ -150,8 +150,11 @@ def handle_error_linecont(state, token):
     """
     if state['pymode'][-1][0]:
         return
+    prev = state['last']
+    if prev.end != token.start:
+        return  # previous token is separated by whitespace
     state['last'] = token
-    yield _new_token('WS', ' ', token.start)
+    yield _new_token('WS', '\\', token.start)
 
 
 def handle_error_token(state, token):
