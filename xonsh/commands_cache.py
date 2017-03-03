@@ -2,7 +2,7 @@
 """Module for caching command & alias names as well as for predicting whether
 a command will be able to be run in the background.
 
-A background predictor is a function that accepect a single argument list
+A background predictor is a function that accepts a single argument list
 and returns whethere or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
