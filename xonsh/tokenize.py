@@ -768,7 +768,11 @@ def _tokenize(readline, encoding):
                         stashed = None
 
                     yield tok
+                elif token == '\\\n' or token == '\\\r\n':  # continued stmt
+                    continued = 1
+                    yield TokenInfo(ERRORTOKEN, token, spos, epos, line)
                 elif initial == '\\':  # continued stmt
+                    # for cases like C:\\path\\to\\file
                     continued = 1
                 else:
                     if initial in '([{':

@@ -47,7 +47,7 @@ def test_gather_load_store_names_tuple():
     # the second line wil be transformed still even though l exists.
     'l = 1',
 ])
-def test_multilline_num(line1):
+def test_multilline_num(xonsh_builtins, line1):
     code = line1 + '\nls -l\n'
     tree = check_parse(code)
     lsnode = tree.body[1]

@@ -391,12 +391,22 @@ LOGICAL_LINE_CASES = [
 ('''x = """wow
 mom"""
 ''', 0, 'x = """wow\nmom"""', 2),
+# test from start
+("echo --option1 value1 \\\n"
+ "     --option2 value2 \\\n"
+ "     --optionZ valueZ",
+0, "echo --option1 value1      --option2 value2      --optionZ valueZ", 3),
+# test from second line
+("echo --option1 value1 \\\n"
+ "     --option2 value2 \\\n"
+ "     --optionZ valueZ",
+1, "echo --option1 value1      --option2 value2      --optionZ valueZ", 3),
 ]
 
 @pytest.mark.parametrize('src, idx, exp_line, exp_n', LOGICAL_LINE_CASES)
 def test_get_logical_line(src, idx, exp_line, exp_n):
     lines = src.splitlines()
-    line, n = get_logical_line(lines, idx)
+    line, n, start = get_logical_line(lines, idx)
     assert exp_line == line
     assert exp_n == n
 
@@ -405,6 +415,8 @@ def test_get_logical_line(src, idx, exp_line, exp_n):
 def test_replace_logical_line(src, idx, exp_line, exp_n):
     lines = src.splitlines()
     logical = exp_line
+    while idx > 0 and lines[idx-1].endswith('\\'):
+        idx -= 1
     replace_logical_line(lines, logical, idx, exp_n)
     exp = src.replace('\\\n', '').strip()
     obs = '\n'.join(lines).replace('\\\n', '').strip()

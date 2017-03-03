@@ -181,7 +181,7 @@ class Execer(object):
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
-                line, nlogical = get_logical_line(lines, idx)
+                line, nlogical, idx = get_logical_line(lines, idx)
                 if input.endswith('\n'):
                     lines.append('')
                 if len(line.strip()) == 0:

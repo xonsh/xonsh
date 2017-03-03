@@ -21,7 +21,7 @@ from ast import Ellipsis as EllipsisNode
 import textwrap
 import itertools
 
-from xonsh.tools import subproc_toks, find_next_break
+from xonsh.tools import subproc_toks, find_next_break, get_logical_line
 from xonsh.platform import PYTHON_VERSION_INFO
 
 if PYTHON_VERSION_INFO >= (3, 5, 0):
@@ -238,7 +238,7 @@ class CtxAwareTransformer(NodeTransformer):
 
     def try_subproc_toks(self, node, strip_expr=False):
         """Tries to parse the line of the node as a subprocess."""
-        line = self.lines[node.lineno - 1]
+        line, nlogical, idx = get_logical_line(self.lines, node.lineno - 1)
         if self.mode == 'eval':
             mincol = len(line) - len(line.lstrip())
             maxcol = None
@@ -248,6 +248,8 @@ class CtxAwareTransformer(NodeTransformer):
             if mincol == maxcol:
                 maxcol = find_next_break(line, mincol=mincol,
                                          lexer=self.parser.lexer)
+            elif nlogical > 1:
+                maxcol = None
             else:
                 maxcol += 1
         spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,
