@@ -206,6 +206,17 @@ for f in files:
 'Actually_test.tst Complete_test.tst\n'
 'Actually.tst Actually_test.tst Complete.tst Complete_test.tst\n',
 0),
+#
+# test ambiguous line continuations
+#
+("""
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+echo --option1 \
+--option2
+""", '--option1 --option2\n', 0),
 ]
 
 
