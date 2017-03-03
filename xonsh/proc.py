@@ -549,11 +549,17 @@ class PopenThread(threading.Thread):
         # start up process
         if ON_WINDOWS and stdout is not None:
             os.set_handle_inheritable(stdout.fileno(), False)
-        self.proc = proc = subprocess.Popen(*args,
-                                            stdin=stdin,
-                                            stdout=stdout,
-                                            stderr=stderr,
-                                            **kwargs)
+
+        try:
+            self.proc = proc = subprocess.Popen(*args,
+                                                stdin=stdin,
+                                                stdout=stdout,
+                                                stderr=stderr,
+                                                **kwargs)
+        except Exception:
+            self._clean_up()
+            raise
+
         self.pid = proc.pid
         self.universal_newlines = uninew = proc.universal_newlines
         if uninew:
@@ -863,10 +869,13 @@ class PopenThread(threading.Thread):
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
             self.old_winch_handler = None
+        self._clean_up()
+        return rtn
+
+    def _clean_up(self):
         self._restore_sigint()
         self._restore_sigtstp()
         self._restore_sigquit()
-        return rtn
 
     @property
     def returncode(self):
