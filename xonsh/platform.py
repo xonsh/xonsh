@@ -363,7 +363,7 @@ if ON_WINDOWS:
     class OSEnvironCasePreserving(collections.MutableMapping):
         """ Case-preseving wrapper for os.environ on Windows.
             It uses nt.environ to get the correct cased keys on
-            initialization. It also preseves the case of any variables
+            initialization. It also preserves the case of any variables
             add after initialization.
         """
         def __init__(self):
@@ -371,7 +371,7 @@ if ON_WINDOWS:
             self._upperkeys = dict((k.upper(), k) for k in nt.environ)
 
         def _sync(self):
-            """ Ensure that the case sentive map of the keys are
+            """ Ensure that the case sensitive map of the keys are
                 in sync with os.environ
             """
             envkeys = set(os.environ.keys())
