@@ -11,6 +11,7 @@ import builtins
 import platform
 import functools
 import subprocess
+import collections
 import importlib.util
 
 from xonsh.lazyasd import LazyBool, lazyobject, lazybool
@@ -358,6 +359,58 @@ def windows_bash_command():
 # Environment variables defaults
 #
 
+if ON_WINDOWS:
+    class OSEnvironCasePreserving(collections.MutableMapping):
+        """ Case-preseving wrapper for os.environ on Windows.
+            It uses nt.environ to get the correct cased keys on
+            initialization. It also preseves the case of any variables
+            add after initialization. 
+        """
+        def __init__(self):
+            import nt
+            self._upperkeys = dict((k.upper(), k) for k in nt.environ)
+
+        def _sync(self):
+            """ Ensure that the case sentive map of the keys are
+                in sync with os.environ
+            """
+            envkeys = set(os.environ.keys())
+            for key in envkeys.difference(self._upperkeys):
+                self._upperkeys[key] = key.upper()
+            for key in set(self._upperkeys).difference(envkeys):
+                del self._upperkeys[key]
+
+        def __contains__(self, k):
+            self._sync()
+            return k.upper() in self._upperkeys
+
+        def __len__(self):
+            self._sync()
+            return len(self._upperkeys)
+
+        def __iter__(self):
+            self._sync()
+            return iter(self._upperkeys.values())
+
+        def __getitem__(self, k):
+            self._sync()
+            return os.environ[k]
+
+        def __setitem__(self, k, v):
+            self._sync()
+            self._upperkeys[k.upper()] = k
+            os.environ[k] = v
+
+        def __delitem__(self, k):
+            self._sync()
+            if k.upper() in self._upperkeys:
+                del self._upperkeys[k.upper()]
+                del os.environ[k]
+
+        def getkey_actual_case(self, k):
+            self._sync()
+            return self._upperkeys.get(k.upper())
+
 
 @lazyobject
 def os_environ():
@@ -367,8 +420,7 @@ def os_environ():
     dropped.
     """
     if ON_WINDOWS:
-        import nt
-        return nt.environ
+        return OSEnvironCasePreserving()
     else:
         return os.environ
 
