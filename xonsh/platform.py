@@ -364,7 +364,7 @@ if ON_WINDOWS:
         """ Case-preseving wrapper for os.environ on Windows.
             It uses nt.environ to get the correct cased keys on
             initialization. It also preseves the case of any variables
-            add after initialization. 
+            add after initialization.
         """
         def __init__(self):
             import nt
