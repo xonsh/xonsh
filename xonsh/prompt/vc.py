@@ -58,7 +58,7 @@ def _get_hg_root(q):
     while True:
         if not os.path.isdir(_curpwd):
             return False
-        if any([b.name == '.hg' for b in os.scandir(_curpwd)]):
+        if any([b.name == '.hg' for b in xt.scandir(_curpwd)]):
             q.put(_curpwd)
             break
         else:
