@@ -10,7 +10,8 @@ from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import print_exception, carriage_return
+from xonsh.tools import (print_exception, carriage_return, cwd_release_wrapper,
+                         cwd_restore_wrapper)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -92,23 +93,30 @@ class PromptToolkitShell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens
             get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
 
+        if ON_WINDOWS and not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
+            # Wrap the prompt method to release the cwd while showing the prompt
+            self.prompter.prompt = cwd_release_wrapper(self.prompter.prompt)
+            if self.completer:
+                # Temporarily restore cwd for callbacks to the completer
+                self.completer.complete = cwd_restore_wrapper(self.completer.complete)
+
         with self.prompter:
             prompt_args = {
-                    'mouse_support': mouse_support,
-                    'auto_suggest': auto_suggest,
-                    'get_prompt_tokens': get_prompt_tokens,
-                    'get_rprompt_tokens': get_rprompt_tokens,
-                    'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
-                    'completer': completer,
-                    'multiline': multiline,
-                    'get_continuation_tokens': self.continuation_tokens,
-                    'history': history,
-                    'enable_history_search': enable_history_search,
-                    'reserve_space_for_menu': 0,
-                    'key_bindings_registry': self.key_bindings_manager.registry,
-                    'display_completions_in_columns': multicolumn,
-                    'complete_while_typing': complete_while_typing,
-                    }
+                'mouse_support': mouse_support,
+                'auto_suggest': auto_suggest,
+                'get_prompt_tokens': get_prompt_tokens,
+                'get_rprompt_tokens': get_rprompt_tokens,
+                'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
+                'completer': completer,
+                'multiline': multiline,
+                'get_continuation_tokens': self.continuation_tokens,
+                'history': history,
+                'enable_history_search': enable_history_search,
+                'reserve_space_for_menu': 0,
+                'key_bindings_registry': self.key_bindings_manager.registry,
+                'display_completions_in_columns': multicolumn,
+                'complete_while_typing': complete_while_typing,
+            }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
                 if HAS_PYGMENTS:
                     prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)

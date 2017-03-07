@@ -1940,3 +1940,41 @@ def uncapturable(f):
 def carriage_return():
     """Writes a carriage return to stdout, and nothing else."""
     print('\r', flush=True, end='')
+
+
+def cwd_release_wrapper(func):
+    """ Decorator for Windows to the wrap the prompt function and release
+        the process lock on the current directory while the prompt is
+        displayed. This works by temporarily setting
+        the workdir to the users home direcotry.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        os.chdir(os.path.expanduser('~'))
+        try:
+            out = func(*args, **kwargs)
+        finally:
+            try:
+                os.chdir(builtins.__xonsh_env__['PWD'])
+            except FileNotFoundError as e:
+                print_exception()
+                os.chdir(os.path.dirname(builtins.__xonsh_env__['PWD']))
+        return out
+    return wrapper
+
+
+
+def cwd_restore_wrapper(func):
+    """ Decorator for Windows which will temporary restore the true working
+        directory. Designed to wrap completer callbacks from the
+        prompt_toolkit or readline.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        workdir = os.getcwd()
+        os.chdir(builtins.__xonsh_env__['PWD'])
+        out = func(*args, **kwargs)
+        os.chdir(workdir)
+        return out
+    return wrapper
+
