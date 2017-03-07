@@ -150,6 +150,17 @@ def test_test_repo(test_repo):
         assert os.path.isfile(os.path.join(test_repo['dir'], 'test-file'))
 
 
+def test_no_repo(xonsh_builtins):
+    import queue
+    temp_dir = tempfile.mkdtemp()
+    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=2, PWD=temp_dir)
+    q = queue.Queue()
+    try:
+        vc._get_hg_root(q)
+    except AttributeError:
+        assert False
+
+
 def test_vc_get_branch(test_repo, xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=2)
     # get corresponding function from vc module
