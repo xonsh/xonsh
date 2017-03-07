@@ -1942,6 +1942,21 @@ def carriage_return():
     print('\r', flush=True, end='')
 
 
+def _chdir_up(path):
+    """ Change directory to path or if path does not exist
+        the first valid parent.
+    """
+    try:
+        os.chdir(path)
+        return path
+    except FileNotFoundError:
+        parent = os.path.dirname(path)
+        if parent != path:
+            return _chdir_up(parent)
+        else:
+            raise
+
+
 def cwd_release_wrapper(func):
     """ Decorator for Windows to the wrap the prompt function and release
         the process lock on the current directory while the prompt is
@@ -1950,18 +1965,19 @@ def cwd_release_wrapper(func):
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        os.chdir(os.path.expanduser('~'))
+        home = os.path.expanduser('~')
+        os.chdir(home)
         try:
             out = func(*args, **kwargs)
         finally:
             try:
-                os.chdir(builtins.__xonsh_env__['PWD'])
+                pwd = builtins.__xonsh_env__.get('PWD', home)
+                os.chdir(pwd)
             except FileNotFoundError as e:
                 print_exception()
-                os.chdir(os.path.dirname(builtins.__xonsh_env__['PWD']))
+                _chdir_up(pwd)
         return out
     return wrapper
-
 
 
 def cwd_restore_wrapper(func):
@@ -1972,9 +1988,8 @@ def cwd_restore_wrapper(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         workdir = os.getcwd()
-        os.chdir(builtins.__xonsh_env__['PWD'])
+        _chdir_up(builtins.__xonsh_env__.get('PWD', workdir))
         out = func(*args, **kwargs)
-        os.chdir(workdir)
+        _chdir_up(workdir)
         return out
     return wrapper
-
