@@ -4,6 +4,34 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.8
+====================
+
+**Changed:**
+
+* The ``xonsh.platform.os_environ`` wrapper is  now case-insesitive and
+  case-preserving on Windows.
+* The private ``_TeeStd`` class will no longer attempt to write to a
+  standard buffer after the tee has been 'closed' and the standard
+  buffer returned to the system.
+
+
+**Fixed:**
+
+* Fixed a bug on py34 where os.scandir was used by accident.
+* Line continuations (``\\``) is subproc mode will no longer consume the
+  surrounding whitespace.
+* Fixed a bug if foreign_shell name was not written in lower case in 
+  the static configuration file ``config.json``
+* Fixed a regression on Windows where caused ``which`` reported that the
+  ``PATH`` envrionment variable could not be found.
+* Fixed issue with foregrounding jobs that were started in the background.
+* Fixed that ``Ctrl-C`` crashes xonsh after running an invalid command.
+* Fixed an potential ``ProcessLookupError`` issue, see #2288.
+
+
+
+
 v0.5.7
 ====================
 
