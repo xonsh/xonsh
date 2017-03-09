@@ -1963,21 +1963,33 @@ def cwd_release_wrapper(func):
         displayed. This works by temporarily setting
         the workdir to the users home direcotry.
     """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        rootdir = os.path.splitdrive(os.getcwd())[0]
-        os.chdir(rootdir)
-        try:
-            out = func(*args, **kwargs)
-        finally:
+    env = builtins.__xonsh_env__
+    if env.get('UPDATE_PROMPT_ON_KEYPRESS') or not env.get('RELEASE_CWD_ON_WIN'):
+        return func if not hasattr(func, '_orgfunc') else func._orgfunc
+
+    if hasattr(func, '_orgfunc'):
+        # Already wrapped
+        return func
+    else:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            rootdir = os.path.splitdrive(os.getcwd())[0] + '\\'
+            os.chdir(rootdir)
+            print('prompt: Set to: ' + rootdir +' ' + os.getcwd())
             try:
-                pwd = builtins.__xonsh_env__.get('PWD', rootdir)
-                os.chdir(pwd)
-            except FileNotFoundError as e:
-                print_exception()
-                _chdir_up(pwd)
-        return out
-    return wrapper
+                out = func(*args, **kwargs)
+            finally:
+                try:
+                    pwd = env.get('PWD', rootdir)
+                    os.chdir(pwd)
+                    print('prompt: reset to :' + pwd +' ' + os.getcwd())
+                except FileNotFoundError as e:
+                    print_exception()
+                    _chdir_up(pwd)
+            return out
+        wrapper._orgfunc = func
+        return wrapper
+
 
 
 def cwd_restore_wrapper(func):
@@ -1985,11 +1997,22 @@ def cwd_restore_wrapper(func):
         directory. Designed to wrap completer callbacks from the
         prompt_toolkit or readline.
     """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        workdir = os.getcwd()
-        _chdir_up(builtins.__xonsh_env__.get('PWD', workdir))
-        out = func(*args, **kwargs)
-        _chdir_up(workdir)
-        return out
-    return wrapper
+    env = builtins.__xonsh_env__
+    if env.get('UPDATE_PROMPT_ON_KEYPRESS') or not env.get('RELEASE_CWD_ON_WIN'):
+        return func if not hasattr(func, '_orgfunc') else func._orgfunc
+
+    if hasattr(func, '_orgfunc'):
+        # Already wrapped
+        return func
+    else:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            workdir = os.getcwd()
+            _chdir_up(env.get('PWD', workdir))
+            print('callback: Set to: ' + os.getcwd())
+            out = func(*args, **kwargs)
+            _chdir_up(workdir)
+            print('callback: reset to: ' + os.getcwd())
+            return out
+        wrapper._orgfunc = func
+        return wrapper
