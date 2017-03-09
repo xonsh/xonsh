@@ -405,13 +405,12 @@ def _have_open_triple_quotes(s):
     return open_triple
 
 
-@lazyobject
-def LINE_CONTINUATION():
+def get_line_continuation():
     """ The line contiuation characters used in subproc mode. In interactive
          mode on Windows the backslash must be preseeded by a space. This is because
          paths on windows may end in a backspace.
     """
-    if ON_WINDOWS and builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+    if ON_WINDOWS and builtins.__xonsh_env__.get('XONSH_INTERACTIVE', False):
         return ' \\'
     else:
         return '\\'
@@ -425,7 +424,7 @@ def get_logical_line(lines, idx):
     """
     n = 1
     nlines = len(lines)
-    linecont = str(LINE_CONTINUATION)
+    linecont = get_line_continuation()
     while idx > 0 and lines[idx-1].endswith(linecont):
         idx -= 1
     start = idx
@@ -446,6 +445,7 @@ def replace_logical_line(lines, logical, idx, n):
     """Replaces lines at idx that may end in line continuation with a logical
     line that spans n lines.
     """
+    lincont = get_line_continuation()
     if n == 1:
         lines[idx] = logical
         return
@@ -459,7 +459,7 @@ def replace_logical_line(lines, logical, idx, n):
             logical = ''
         else:
             # found space to split on
-            lines[i] = logical[:b] + str(LINE_CONTINUATION)
+            lines[i] = logical[:b] + linecont
             logical = logical[b:]
     lines[idx+n-1] = logical
 
