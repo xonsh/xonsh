@@ -14,6 +14,7 @@ import subprocess
 
 __version__ = '0.1.0'
 
+
 @functools.lru_cache(1)
 def _git_for_windows_path():
     """Returns the path to git for windows, if available and None otherwise."""
@@ -317,7 +318,6 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
     except (subprocess.CalledProcessError, FileNotFoundError,
             UnicodeDecodeError, ValueError):
         return set(), 0
-
 
     out = out.splitlines()
     complete_stmt = out[0]
