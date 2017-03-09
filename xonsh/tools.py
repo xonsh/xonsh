@@ -1975,21 +1975,18 @@ def cwd_release_wrapper(func):
         def wrapper(*args, **kwargs):
             rootdir = os.path.splitdrive(os.getcwd())[0] + '\\'
             os.chdir(rootdir)
-            print('prompt: Set to: ' + rootdir +' ' + os.getcwd())
             try:
                 out = func(*args, **kwargs)
             finally:
                 try:
                     pwd = env.get('PWD', rootdir)
                     os.chdir(pwd)
-                    print('prompt: reset to :' + pwd +' ' + os.getcwd())
                 except FileNotFoundError as e:
                     print_exception()
                     _chdir_up(pwd)
             return out
         wrapper._orgfunc = func
         return wrapper
-
 
 
 def cwd_restore_wrapper(func):
@@ -2009,10 +2006,8 @@ def cwd_restore_wrapper(func):
         def wrapper(*args, **kwargs):
             workdir = os.getcwd()
             _chdir_up(env.get('PWD', workdir))
-            print('callback: Set to: ' + os.getcwd())
             out = func(*args, **kwargs)
             _chdir_up(workdir)
-            print('callback: reset to: ' + os.getcwd())
             return out
         wrapper._orgfunc = func
         return wrapper

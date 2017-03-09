@@ -546,7 +546,7 @@ def DEFAULT_DOCS():
         'CWD to the root drive folder while waiting at the prompt. This only '
         'works with the prompt_toolkit backend and can cause cause issues '
         'if any extensions are enabled that hook the prompt and relies on '
-        '``os.getcwd()``.',configurable=ON_WINDOWS
+        '``os.getcwd()``.', configurable=ON_WINDOWS
         ),
     'RIGHT_PROMPT': VarDocs(
         'Template string for right-aligned text '
