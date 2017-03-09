@@ -19,7 +19,7 @@ def _chdir_up(path):
     try:
         os.chdir(path)
         return path
-    except FileNotFoundError:
+    except (FileNotFoundError, NotADirectoryError):
         parent = os.path.dirname(path)
         if parent != path:
             return _chdir_up(parent)
@@ -50,9 +50,11 @@ def _cwd_release_wrapper(func):
                 try:
                     pwd = env.get('PWD', rootdir)
                     os.chdir(pwd)
-                except FileNotFoundError as e:
+                except (FileNotFoundError, NotADirectoryError):
                     print_exception()
-                    _chdir_up(pwd)
+                    newpath = _chdir_up(pwd)
+                    builtins.__xonsh_env__['PWD'] = newpath
+                    raise KeyboardInterrupt
             return out
         wrapper._orgfunc = func
         return wrapper
