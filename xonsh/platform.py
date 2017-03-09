@@ -343,7 +343,7 @@ def windows_bash_command():
         else:
             # Check if Bash is from the "Windows Subsystem for Linux" (WSL)
             # which can't be used by xonsh foreign-shell/completer
-            bash_works = 'pc-linux-gnu' not in out.splitlines()[0]
+            bash_works = out and 'pc-linux-gnu' not in out.splitlines()[0]
 
         if bash_works:
             wbc = bash_on_path
