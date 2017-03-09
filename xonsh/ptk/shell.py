@@ -10,8 +10,7 @@ from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import (print_exception, carriage_return, cwd_release_wrapper,
-                         cwd_restore_wrapper)
+from xonsh.tools import (print_exception, carriage_return)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -93,12 +92,6 @@ class PromptToolkitShell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens
             get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
 
-        if ON_WINDOWS:
-            # Wrap the prompt method to release the cwd while showing the prompt
-            self.prompter.prompt = cwd_release_wrapper(self.prompter.prompt)
-            if self.completer:
-                # Temporarily restore cwd for callbacks to the completer
-                self.completer.complete = cwd_restore_wrapper(self.completer.complete)
 
         with self.prompter:
             prompt_args = {

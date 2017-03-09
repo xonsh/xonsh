@@ -159,7 +159,6 @@ def DEFAULT_ENSURERS():
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
     'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
-    'RELEASE_CWD_ON_WIN': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'BOTTOM_TOOLBAR': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
@@ -298,7 +297,6 @@ def DEFAULT_VALUES():
         'PUSHD_MINUS': False,
         'PUSHD_SILENT': False,
         'RAISE_SUBPROC_ERROR': False,
-        'RELEASE_CWD_ON_WIN': False,
         'RIGHT_PROMPT': '',
         'BOTTOM_TOOLBAR': '',
         'SHELL_TYPE': 'best',
@@ -538,16 +536,6 @@ def DEFAULT_DOCS():
         'This is most useful in xonsh scripts or modules where failures '
         'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a ``subprocess.CalledProcessError``.'),
-    'RELEASE_CWD_ON_WIN': VarDocs(
-        'This will release the lock on the current directory whenever the '
-        'prompt is shown. Enabling this will allow the other programs or '
-        'Windows Explorer to delete or rename the current or parent '
-        'directories. Internally, it is accomplished by temporarily resetting '
-        'CWD to the root drive folder while waiting at the prompt. This only '
-        'works with the prompt_toolkit backend and can cause cause issues '
-        'if any extensions are enabled that hook the prompt and relies on '
-        '``os.getcwd()``.', configurable=ON_WINDOWS
-        ),
     'RIGHT_PROMPT': VarDocs(
         'Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
