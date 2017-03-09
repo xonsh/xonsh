@@ -10,6 +10,7 @@
 import os
 import builtins
 import functools
+from xonsh.tools import print_exception
 
 def _chdir_up(path):
     """ Change directory to path or if path does not exist
