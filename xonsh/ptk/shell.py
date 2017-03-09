@@ -93,7 +93,8 @@ class PromptToolkitShell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens
             get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
 
-        if ON_WINDOWS and not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
+        if (ON_WINDOWS and env.get('RELEASE_CWD_ON_WIN') and
+                not env.get('UPDATE_PROMPT_ON_KEYPRESS')):
             # Wrap the prompt method to release the cwd while showing the prompt
             self.prompter.prompt = cwd_release_wrapper(self.prompter.prompt)
             if self.completer:
