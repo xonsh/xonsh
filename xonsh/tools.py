@@ -1965,13 +1965,13 @@ def cwd_release_wrapper(func):
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        home = os.path.expanduser('~')
-        os.chdir(home)
+        rootdir = os.path.splitdrive(os.getcwd())[0]
+        os.chdir(rootdir)
         try:
             out = func(*args, **kwargs)
         finally:
             try:
-                pwd = builtins.__xonsh_env__.get('PWD', home)
+                pwd = builtins.__xonsh_env__.get('PWD', rootdir)
                 os.chdir(pwd)
             except FileNotFoundError as e:
                 print_exception()
