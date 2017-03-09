@@ -445,7 +445,7 @@ def replace_logical_line(lines, logical, idx, n):
     """Replaces lines at idx that may end in line continuation with a logical
     line that spans n lines.
     """
-    lincont = get_line_continuation()
+    linecont = get_line_continuation()
     if n == 1:
         lines[idx] = logical
         return
