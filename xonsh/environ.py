@@ -543,9 +543,10 @@ def DEFAULT_DOCS():
         'prompt is shown. Enabling this will allow the other programs or '
         'Windows Explorer to delete or rename the current or parent '
         'directories. Internally, it is accomplished by temporarily resetting '
-        'CWD to the root drive folder while waiting at the prompt. So it can '
-        'cause problems if any extensions are enabled which hooks the prompt '
-        'and relies on ``os.getcwd()``.',configurable=ON_WINDOWS
+        'CWD to the root drive folder while waiting at the prompt. This only '
+        'works with the prompt_toolkit backend and can cause cause issues '
+        'if any extensions are enabled that hook the prompt and relies on '
+        '``os.getcwd()``.',configurable=ON_WINDOWS
         ),
     'RIGHT_PROMPT': VarDocs(
         'Template string for right-aligned text '

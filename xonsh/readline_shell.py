@@ -285,12 +285,6 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
 
-        if ON_WINDOWS and env.get('RELEASE_CWD_ON_WIN'):
-            # Wrap the prompt method to release the cwd while showing the prompt
-            input = cwd_release_wrapper(input)
-            if self.completer:
-                # Temporarily restore cwd for callbacks to the completer
-                self.completer.complete = cwd_restore_wrapper(self.completer.complete)
 
         events.on_pre_prompt.fire()
         rtn = input(self.prompt)
