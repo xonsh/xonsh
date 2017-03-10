@@ -92,7 +92,6 @@ class PromptToolkitShell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens
             get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
 
-
         with self.prompter:
             prompt_args = {
                 'mouse_support': mouse_support,

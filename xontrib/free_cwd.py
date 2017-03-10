@@ -12,6 +12,7 @@ import builtins
 import functools
 from xonsh.tools import print_exception
 
+
 def _chdir_up(path):
     """ Change directory to path or if path does not exist
         the first valid parent.
@@ -25,6 +26,7 @@ def _chdir_up(path):
             return _chdir_up(parent)
         else:
             raise
+
 
 def _cwd_release_wrapper(func):
     """ Decorator for Windows to the wrap the prompt function and release
@@ -90,4 +92,3 @@ def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
     if completer.completer:
         # Temporarily restore cwd for callbacks to the completer
         completer.completer.complete = _cwd_restore_wrapper(completer.completer.complete)
-

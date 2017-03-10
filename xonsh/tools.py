@@ -1940,4 +1940,3 @@ def uncapturable(f):
 def carriage_return():
     """Writes a carriage return to stdout, and nothing else."""
     print('\r', flush=True, end='')
-
