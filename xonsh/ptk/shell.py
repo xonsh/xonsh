@@ -10,7 +10,7 @@ from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import (print_exception, carriage_return)
+from xonsh.tools import print_exception, carriage_return
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings

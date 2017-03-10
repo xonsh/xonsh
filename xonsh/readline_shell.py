@@ -284,7 +284,6 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
-
         events.on_pre_prompt.fire()
         rtn = input(self.prompt)
         events.on_post_prompt.fire()

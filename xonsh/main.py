@@ -226,9 +226,11 @@ def start_services(shell_kwargs):
     # create execer, which loads builtins
     ctx = shell_kwargs.get('ctx', {})
     debug = to_bool_or_int(os.getenv('XONSH_DEBUG', '0'))
+    events.on_timingprobe.fire(name='pre_execer_init')
     execer = Execer(xonsh_ctx=ctx, debug_level=debug,
                     scriptcache=shell_kwargs.get('scriptcache', True),
                     cacheall=shell_kwargs.get('cacheall', False))
+    events.on_timingprobe.fire(name='post_execer_init')
     # load rc files
     login = shell_kwargs.get('login', True)
     env = builtins.__xonsh_env__
