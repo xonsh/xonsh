@@ -131,6 +131,7 @@ def DEFAULT_ENSURERS():
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
     'COMPLETION_QUERY_LIMIT': (is_int, int, str),
+    'DIRSTACK_SIZE': (is_int, int, str),
     'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
                           dynamic_cwd_tuple_to_str),
     'DYNAMIC_CWD_ELISION_CHAR': (is_string, ensure_string, ensure_string),
