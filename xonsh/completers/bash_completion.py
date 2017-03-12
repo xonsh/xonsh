@@ -9,11 +9,13 @@ import shlex
 import shutil
 import pathlib
 import platform
+import functools
 import subprocess
 
 __version__ = '0.1.0'
 
 
+@functools.lru_cache(1)
 def _git_for_windows_path():
     """Returns the path to git for windows, if available and None otherwise."""
     import winreg
@@ -26,25 +28,32 @@ def _git_for_windows_path():
     return gfwp
 
 
+@functools.lru_cache(1)
 def _windows_bash_command(env=None):
     """Determines the command for Bash on windows."""
     wbc = 'bash'
     path = None if env is None else env.get('PATH', None)
     bash_on_path = shutil.which('bash', path=path)
     if bash_on_path:
-        # Check if Bash is from the "Windows Subsystem for Linux" (WSL)
-        # which can't be used by xonsh foreign-shell/completer
-        out = subprocess.check_output([bash_on_path, '--version'],
-                                      stderr=subprocess.PIPE,
-                                      universal_newlines=True)
-        if 'pc-linux-gnu' in out.splitlines()[0]:
+        try:
+            out = subprocess.check_output([bash_on_path, '--version'],
+                                          stderr=subprocess.PIPE,
+                                          universal_newlines=True)
+        except subprocess.CalledProcessError:
+            bash_works = False
+        else:
+            # Check if Bash is from the "Windows Subsystem for Linux" (WSL)
+            # which can't be used by xonsh foreign-shell/completer
+            bash_works = out and 'pc-linux-gnu' not in out.splitlines()[0]
+
+        if bash_works:
+            wbc = bash_on_path
+        else:
             gfwp = _git_for_windows_path()
             if gfwp:
                 bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
                 if os.path.isfile(bashcmd):
                     wbc = bashcmd
-        else:
-            wbc = bash_on_path
     return wbc
 
 
@@ -304,8 +313,10 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
         out = subprocess.check_output(
             [command, '-c', script], universal_newlines=True,
             stderr=subprocess.PIPE, env=env)
+        if not out:
+            raise ValueError
     except (subprocess.CalledProcessError, FileNotFoundError,
-            UnicodeDecodeError):
+            UnicodeDecodeError, ValueError):
         return set(), 0
 
     out = out.splitlines()
