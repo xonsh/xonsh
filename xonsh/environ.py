@@ -39,7 +39,7 @@ from xonsh.tools import (
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
     seq_to_upper_pathsep, print_color, is_history_backend, to_itself,
-    swap_values,
+    swap_values, is_env_path_dir, str_to_env_path_dir,
 )
 import xonsh.prompt.base as prompt
 
@@ -154,7 +154,8 @@ def DEFAULT_ENSURERS():
     'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     'MULTILINE_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
-    re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
+    re.compile('\w*PATH$'): (is_env_path_dir, str_to_env_path_dir,
+                             env_path_to_str),
     'PATHEXT': (is_nonstring_seq_of_strings, pathsep_to_upper_seq,
                 seq_to_upper_pathsep),
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
