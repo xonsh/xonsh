@@ -1188,14 +1188,9 @@ def test_expand_case_matching(inp, exp):
     ("$?bar", "$?bar"),
     ("$foo}bar", "bar}bar"),
     ("${'foo", "${'foo"),
-    skip_if_on_unix(("%foo%bar", "barbar")),
-    skip_if_on_unix(("%foo% %a_bool%", "bar True")),
-    skip_if_on_unix(("%foo%%an_int%", "bar42")),
-    skip_if_on_unix(("%foo% $spam ${'a_bool'}", "bar eggs True")),
     (b"foo", "foo"),
     (b"$foo bar", "bar bar"),
     (b"${'foo'}bar", "barbar"),
-    skip_if_on_unix((b"%foo%bar", "barbar")),
 ])
 def test_expandvars(inp, exp, xonsh_builtins):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
