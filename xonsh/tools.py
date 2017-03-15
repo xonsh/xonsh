@@ -209,7 +209,7 @@ class EnvPath(collections.MutableSequence):
         if cycle:
             p.text('EnvPath(...)')
         else:
-            with p.group(8, 'EnvPath([', '])'):
+            with p.group(1, 'EnvPath(\n[', ']\n)'):
                 for idx, item in enumerate(self):
                     if idx:
                         p.text(',')
