@@ -4,13 +4,14 @@ from __future__ import unicode_literals, print_function
 import os
 import tempfile
 import builtins
+import itertools
 from tempfile import TemporaryDirectory
 from xonsh.tools import ON_WINDOWS
 
 import pytest
 
 from xonsh.commands_cache import CommandsCache
-from xonsh.environ import Env, load_static_config, locate_binary
+from xonsh.environ import Env, load_static_config, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES
 
 from tools import skip_if_on_unix
 
@@ -226,3 +227,9 @@ def test_events_on_envvar_called_in_right_order(xonsh_builtins):
 
     assert share == ['change']
 
+
+def test_int_bool_envvars_have_ensurers():
+    bool_ints = [type(envvar) in [bool, int] for envvar in DEFAULT_VALUES.values()]
+    key_mask = set(itertools.compress(DEFAULT_VALUES.keys(), bool_ints))
+    ensurer_keys = set(DEFAULT_ENSURERS.keys())
+    assert len(key_mask.intersection(ensurer_keys)) == len(key_mask)
