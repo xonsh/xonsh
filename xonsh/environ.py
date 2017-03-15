@@ -163,6 +163,7 @@ def DEFAULT_ENSURERS():
     'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'BOTTOM_TOOLBAR': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
+    'SUGGEST_THRESHOLD': (is_int, int, str),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
     'UPDATE_COMPLETIONS_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
