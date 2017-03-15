@@ -204,6 +204,18 @@ class EnvPath(collections.MutableSequence):
             return False
         return all(map(operator.eq, self, other))
 
+    def _repr_pretty_(self, p, cycle):
+        """ Pretty print path list """
+        if cycle:
+            p.text('EnvPath(...)')
+        else:
+            with p.group(8, 'EnvPath([', '])'):
+                for idx, item in enumerate(self):
+                    if idx:
+                        p.text(',')
+                        p.breakable()
+                    p.pretty(item)
+
 
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
