@@ -80,6 +80,19 @@
   "url": "http://xon.sh",
   "description": ["Adds return code info to the prompt"]
   },
+  {"name": "free_cwd",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": [
+    "Release the lock on the current directory whenever the",
+    "prompt is shown. Enabling this will allow the other programs or",
+    "Windows Explorer to delete or rename the current or parent",
+    "directories. Internally, it is accomplished by temporarily resetting",
+    "CWD to the root drive folder while waiting at the prompt. This only",
+    "works with the prompt_toolkit backend and can cause cause issues",
+    "if any extensions are enabled that hook the prompt and relies on",
+    "``os.getcwd()``"]
+ },
  {"name": "scrapy_tabcomplete",
   "package": "xonsh-scrapy-tabcomplete",
   "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",

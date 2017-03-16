@@ -94,21 +94,21 @@ class PromptToolkitShell(BaseShell):
 
         with self.prompter:
             prompt_args = {
-                    'mouse_support': mouse_support,
-                    'auto_suggest': auto_suggest,
-                    'get_prompt_tokens': get_prompt_tokens,
-                    'get_rprompt_tokens': get_rprompt_tokens,
-                    'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
-                    'completer': completer,
-                    'multiline': multiline,
-                    'get_continuation_tokens': self.continuation_tokens,
-                    'history': history,
-                    'enable_history_search': enable_history_search,
-                    'reserve_space_for_menu': 0,
-                    'key_bindings_registry': self.key_bindings_manager.registry,
-                    'display_completions_in_columns': multicolumn,
-                    'complete_while_typing': complete_while_typing,
-                    }
+                'mouse_support': mouse_support,
+                'auto_suggest': auto_suggest,
+                'get_prompt_tokens': get_prompt_tokens,
+                'get_rprompt_tokens': get_rprompt_tokens,
+                'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
+                'completer': completer,
+                'multiline': multiline,
+                'get_continuation_tokens': self.continuation_tokens,
+                'history': history,
+                'enable_history_search': enable_history_search,
+                'reserve_space_for_menu': 0,
+                'key_bindings_registry': self.key_bindings_manager.registry,
+                'display_completions_in_columns': multicolumn,
+                'complete_while_typing': complete_while_typing,
+            }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
                 if HAS_PYGMENTS:
                     prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
