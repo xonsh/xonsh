@@ -1719,12 +1719,6 @@ def POSIX_ENVVAR_REGEX():
     pat = r"""\$({(?P<quote>['"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))"""
     return re.compile(pat)
 
-if ON_WINDOWS:
-    # i.e %FOO%
-    @lazyobject
-    def WINDOWS_ENVVAR_REGEX():
-        return re.compile(r"%(?P<envvar>\w+)%")
-
 
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.
@@ -1736,13 +1730,6 @@ def expandvars(path):
     elif isinstance(path, pathlib.Path):
         # get the path's string representation
         path = str(path)
-    if ON_WINDOWS and '%' in path:
-        for match in WINDOWS_ENVVAR_REGEX.finditer(path):
-            name = match.group('envvar')
-            if name in env:
-                ensurer = env.get_ensurer(name)
-                value = ensurer.detype(env[name])
-                path = WINDOWS_ENVVAR_REGEX.sub(value, path, count=1)
     if '$' in path:
         for match in POSIX_ENVVAR_REGEX.finditer(path):
             name = match.group('envvar')
