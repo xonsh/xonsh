@@ -43,7 +43,7 @@ install:
       python setup.py install;
       pip install -r requirements-docs.txt;
       pip install pygments prompt_toolkit ply psutil ipykernel matplotlib;
-      pip install git+https://github.com/drdoctr/doctr.git@master;
+      pip install doctr;
     else
       pip install -r requirements-tests.txt;
     fi
@@ -57,12 +57,12 @@ script:
       cd docs;
       make html;
       cd ..;
-      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
+      doctr deploy --deploy-repo xonsh/xonsh-docs dev;
       git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
       cd docs;
       make clean html;
       cd ..;
-      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
+      doctr deploy --deploy-repo xonsh/xonsh-docs .;
     else
       py.test --timeout=10;
     fi
