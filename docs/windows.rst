@@ -129,11 +129,11 @@ Avoid locking the working directory
 -----------------------------------
 
 Python (like other processes on Windows) locks the current working directory so it can't be deleted or renamed.
-``cmd.exe`` has this behaviour as well, but it quite annoying for a shell. 
+``cmd.exe`` has this behaviour as well, but it is quite annoying for a shell. 
 
-There is a xontrib (``free_cwd``) for xonsh that solves some of this problem. It works by 
+The ``free_cwd`` xontrib (add-on) for xonsh solves some of this problem. It works by 
 hooking the prompt to reset the current working directory to the root drive folder whenever
-the shell is idle. To enable that behaviour run the following: 
+the shell is idle. It only works with the prompt-toolkit back-end. To enable that behaviour run the following: 
 
 .. code-block:: xonshcon
 
