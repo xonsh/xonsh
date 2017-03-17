@@ -17,7 +17,7 @@ def echo(args, stdin, stdout, stderr):
 
 
 def _echo_parse_args(args):
-    out = {'escapes': False, 'end': '\n'}
+    out = {'escapes': False, 'end': '\n', 'help': False}
     if '-e' in args:
         args.remove('-e')
         out['escapes'] = True
