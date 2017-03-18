@@ -970,28 +970,28 @@ class FileThreadDispatcher:
         if default is None:
             default = io.TextIOWrapper(io.BytesIO())
         self.default = default
-        self.registry = {}
+        self.registry = threading.local()
 
     def register(self, handle):
         """Registers a file handle for the current thread. Returns self so
         that this method can be used in a with-statement.
         """
-        self.registry[threading.get_ident()] = handle
+        self.registry.handle = handle
         return self
 
     def deregister(self):
         """Removes the current thread from the registry."""
-        del self.registry[threading.get_ident()]
+        del self.registry.handle
 
     @property
     def available(self):
         """True if the thread is available in the registry."""
-        return threading.get_ident() in self.registry
+        return hasattr(self.registry, 'handle')
 
     @property
     def handle(self):
         """Gets the current handle for the thread."""
-        return self.registry.get(threading.get_ident(), self.default)
+        return getattr(self.registry, 'handle', self.default)
 
     def __enter__(self):
         pass
