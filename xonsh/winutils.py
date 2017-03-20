@@ -142,10 +142,6 @@ def sudo(executable, args=None):
         nShow=SW_SHOW
     )
 
-    if not all(stream.isatty() for stream in (sys.stdin, sys.stdout, sys.stderr)):
-        # TODO: Some streams were redirected, we need to manually work them
-        raise NotImplementedError("Redirection is not supported")
-
     if not ShellExecuteEx(byref(execute_info)):
         raise ctypes.WinError()
 

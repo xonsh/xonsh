@@ -15,7 +15,7 @@ from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
                             ON_NETBSD)
-from xonsh.tools import unthreadable
+from xonsh.tools import uncapturable, unthreadable
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool, swap_values
@@ -489,7 +489,7 @@ def make_default_aliases():
         if not locate_binary('sudo'):
             import xonsh.winutils as winutils
 
-            def sudo(args, sdin=None):
+            def sudo(args):
                 if len(args) < 1:
                     print('You need to provide an executable to run as '
                           'Administrator.')
