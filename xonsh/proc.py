@@ -23,6 +23,8 @@ import threading
 import subprocess
 import collections.abc as cabc
 
+import slug
+
 from xonsh.platform import (ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW,
                             LFLAG, CC)
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
@@ -38,9 +40,7 @@ from xonsh.tools import unthreadable, uncapturable  # NOQA
 foreground = unthreadable
 
 
-@lazyobject
-def STDOUT_CAPTURE_KINDS():
-    return frozenset(['stdout', 'object'])
+STDOUT_CAPTURE_KINDS = {'stdout', 'object'}
 
 
 # The following escape codes are xterm codes.
@@ -70,6 +70,168 @@ def RE_HIDE_ESCAPE():
                       b'|' + RE_VT100_ESCAPE.pattern + b')')
 
 
+def parse_redirect(word, arg):
+    """parse_redirect(str) -> stdin, stdout, stderr
+    Attempts to parse all the variations of < and > redirects.
+    """
+    if word.startswith('<'):
+        post = word[1:]
+        if post and arg:
+            return None, None, None
+        if not post and not arg:
+            return None, None, None
+        return (arg or post), None, None
+    elif '>' in word:
+        # FIXME: Handle for files that end with '>'
+        if word.endswith('>'):
+            pre, post = word[:-1], ''
+        elif word.startswith('>'):
+            pre, post = '', word[1:]
+        else:
+            pre, post = word.split('>', 1)
+        if pre not in ('', 'e', 'err', 'o', 'out'):
+            return None, None, None
+
+        if not post and not arg:
+            return None, None, None
+
+        if post and arg:
+            return None, None, None
+
+        # These only work if part of the same word
+        if post in ('', 'o', 'out') and pre in ('e', 'err'):
+            return None, None, {'out'}
+        elif post in ('e', 'err') and pre in ('', 'o', 'out'):
+            return None, {'err'}, None
+
+        post = post or arg
+
+        if pre in ('', 'o', 'out'):
+            return None, post, None
+        elif pre in ('e', 'err'):
+            return None, None, post
+        else:
+            return None, None, None
+
+    else:
+        return None, None, None
+
+
+def build_proc(proc, before, after):
+    proc = proc.copy()  # TODO: Resolve aliases
+    stdin = stdout = stderr = None
+    if after is not None:
+        stdout = after.side_in
+    if before is not None:
+        stdin = before.side_out
+
+    # FIXME: https://github.com/xonsh/xonsh/issues/2335
+    # Find redirections
+    while len(proc) > 1:
+        # FIXME: Handle prefix redirect (`< foo.bar mycmd`)
+        (i, o, e), idx = parse_redirect(proc[-1], None), -1
+        if i == o == e == None and len(proc) > 2:  # noqa: E711
+            (i, o, e), idx = parse_redirect(proc[-2], proc[-1]), slice(-2, None)
+        if i == o == e == None:  # noqa: E711
+            break
+
+        del proc[idx]
+
+        if i is not None and stdin is not None:
+            raise ValueError
+        else:
+            stdin = i
+        if o is not None and stdout is not None:
+            raise ValueError
+        else:
+            stdout = o
+        if e is not None and stderr is not None:
+            raise ValueError
+        else:
+            stderr = e
+
+    if isinstance(stdin, str):
+        stdin = open(stdin, 'wb')
+    if isinstance(stdout, str):
+        stdout = open(stdout, 'wb')
+    if isinstance(stderr, str):
+        stderr = open(stderr, 'wb')
+
+    if stdout == {'err'} and stderr == {'out'}:
+        raise ValueError
+    elif stdout == {'err'}:
+        stdout = stderr
+    elif stderr == {'out'}:
+        stderr = stdout
+
+    # TODO: Handle if proc is an alias
+    return slug.Process(proc, stdin=stdin, stdout=stdout, stderr=stderr)
+
+
+class Job:
+    """
+    Top-level object for a pipeline.
+    """
+    @classmethod
+    def from_cmds(cls, cmds, captured=False):
+        """
+        Build a Job from a sequence describing the processes, redirections,
+        piping, etc.
+
+        captured is one of False, ...
+        """
+        cmds = list(cmds)
+        # Phase 0: Check for background
+        background = False
+        if cmds[-1] == '&':
+            background = True
+            del cmds[-1]
+
+        # Phase 1: Build inter-process pipes
+        for i, item in enumerate(cmds):
+            if item == '|':
+                cmds[i] = slug.Pipe()
+
+        # Phase 2: Build processes
+        processes = []  # List of processes
+        closers = []  # List of file-likes that need to be closed on start
+        for procidx, proc in enumerate(cmds):
+            if not isinstance(proc, list):
+                continue
+
+            before = cmds[procidx-1] if procidx > 0 else None
+            after = cmds[procidx+1] if procidx < len(cmds) - 1 else None
+
+            proc = build_proc(proc, before, after)
+            processes.append(proc)
+            closers += [proc.stdin, proc.stdout, proc.stderr]
+
+        closers = {f for f in closers if f is not None}
+
+        with slug.ProcessGroup() as pg:
+            # TODO: Handle if proc is an alias
+            for proc in processes:
+                pg.add(proc)
+
+        self = Job()
+        # TODO: aliases
+        self.processgroup = pg
+        self.background = background
+        self._files_to_close = closers
+        return self
+
+    def start(self):
+        # TODO: Handle aliases
+        self.processgroup.start()
+        for f in self._files_to_close:
+            f.close()
+        self._files_to_close = ()
+
+    def join(self):
+        self.processgroup.join()
+
+
+# SLUGIFY: Replace with Tee
 class QueueReader:
     """Provides a file-like interface to reading from a queue."""
 
@@ -177,7 +339,7 @@ class QueueReader:
                 continue
             yield chunk
 
-
+# SLUGIFY: Replace with Tee
 def populate_fd_queue(reader, fd, queue):
     """Reads 1 kb of data from a file descriptor into a queue.
     If this ends or fails, it flags the calling reader object as closed.
@@ -195,6 +357,7 @@ def populate_fd_queue(reader, fd, queue):
             break
 
 
+# SLUGIFY: Replace with Tee
 class NonBlockingFDReader(QueueReader):
     """A class for reading characters from a file descriptor on a background
     thread. This has the advantages that the calling thread can close the
@@ -218,6 +381,7 @@ class NonBlockingFDReader(QueueReader):
         self.thread.start()
 
 
+# SLUGIFY: Replace with Tee
 def populate_buffer(reader, fd, buffer, chunksize):
     """Reads bytes from the file descriptor and copies them into a buffer.
     The reads happend in parallel, using pread(), and is thus only
@@ -239,6 +403,7 @@ def populate_buffer(reader, fd, buffer, chunksize):
             break
 
 
+# SLUGIFY: Replace with Tee
 class BufferedFDParallelReader:
     """Buffered, parallel background thread reader."""
 
