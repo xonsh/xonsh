@@ -10,3 +10,4 @@ pygments==2.1.3
 codecov==2.0.5
 flake8==2.6.2
 coverage==4.2
+-e git+https://github.com/xonsh/slug.git#egg=xonsh-slug
