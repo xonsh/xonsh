@@ -76,27 +76,33 @@ Usage
 Color style
 --------------------------------
 The dark red and blue colors are completely unreadable in Windows' default
-terminal. To give new users, the best experience Xonsh automatically replaces 
+terminal. 
+
+.. image:: _static/intensify-colors-on-win-false.png
+   :width: 396 px
+   :alt: intensify-colors-win-false
+   :align: center
+
+To give new users, the best experience Xonsh automatically replaces 
 some of the dark colors with more readable alternatives (e.g. blue becomes cyan).
 The behavior is controlled with the ``$INTENSIFY_COLORS_ON_WIN``
 environment variable.
 
-.. image:: _static/intensify-colors-on-win-false.png
-   :width: 100 %
-   :alt: intensify-colors-win-false
-   :align: center
-
 .. image:: _static/intensify-colors-on-win-true.png
-   :width: 100 %
+   :width: 399 px
    :alt: intensify-colors-win-true
    :align: center
    
 It is possible to configure the Windows console with readable default colors,
-but it is tedious to do manually. It can also be set through the windows registry,
-so to get good defaults you can download and run the registry file. 
+but it is tedious to do manually. Here is registry file which will do it
+automatically and set some good default colors. Simply download and run the registry file. 
 
  * `console_colors.reg`_
- 
+
+ .. note:: This may not always work right away. Especially if you already fiddled around with the colors settings.
+           Try to delete any subfolders under ``HKCU/console/`` in the registry. Also, shortcuts files store their own
+           colors schemes and ignore registry settings.
+
 With better colors configured, ``$INTENSIFY_COLORS_ON_WIN`` should be set to 
 ``False``, and the default prompt can be changed to match how it looks on POSIX and Mac.
 You can do this by adding the following to the xonsh run control file ``.xonshrc``: 
@@ -110,13 +116,30 @@ You can do this by adding the following to the xonsh run control file ``.xonshrc
 With everything setup the console will look like this:
 
 .. image:: _static/better_colors_windows.png
-   :width: 100 %
+   :width: 366 px
    :alt: better_colors_windows
    :align: center
 
 
 
 .. _console_colors.reg: http://xon.sh/_static/console_colors.reg
+
+
+Avoid locking the working directory
+-----------------------------------
+
+Python (like other processes on Windows) locks the current working directory so it can't be deleted or renamed.
+``cmd.exe`` has this behaviour as well, but it is quite annoying for a shell. 
+
+The ``free_cwd`` xontrib (add-on) for xonsh solves some of this problem. It works by 
+hooking the prompt to reset the current working directory to the root drive folder whenever
+the shell is idle. It only works with the prompt-toolkit back-end. To enable that behaviour run the following: 
+
+.. code-block:: xonshcon
+
+   >>> xontrib load free_cwd
+
+Add this line to your ``~/.xonshrc`` file to have it always enabled. 
 
 
 Name space conflicts
@@ -151,8 +174,6 @@ typing and avoid the ambiguity altogether:
 
 You can add aliases to your ``~/.xonshrc`` to have it always
 available when xonsh starts.
-
-
 
 
 
