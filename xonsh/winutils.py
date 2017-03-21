@@ -21,7 +21,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import os
-import sys
 import ctypes
 import subprocess
 from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
@@ -141,10 +140,6 @@ def sudo(executable, args=None):
         lpDirectory=None,
         nShow=SW_SHOW
     )
-
-    if not all(stream.isatty() for stream in (sys.stdin, sys.stdout, sys.stderr)):
-        # TODO: Some streams were redirected, we need to manually work them
-        raise NotImplementedError("Redirection is not supported")
 
     if not ShellExecuteEx(byref(execute_info)):
         raise ctypes.WinError()

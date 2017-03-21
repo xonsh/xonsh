@@ -489,7 +489,7 @@ def make_default_aliases():
         if not locate_binary('sudo'):
             import xonsh.winutils as winutils
 
-            def sudo(args, sdin=None):
+            def sudo(args):
                 if len(args) < 1:
                     print('You need to provide an executable to run as '
                           'Administrator.')
