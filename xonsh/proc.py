@@ -237,6 +237,9 @@ class Job:
                 self.finished.set,
                 keepopen=True,
             )
+        else:
+            # Don't wait on finished
+            self.finished.set()
 
         self._files_to_close = {f for f in closers if f is not None}
 
