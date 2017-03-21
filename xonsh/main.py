@@ -15,7 +15,7 @@ from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
 from xonsh.execer import Execer
-from xonsh.proc import HiddenCommandPipeline
+from xonsh.proc import HiddenJob
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import setup_win_unicode_console, print_color, to_bool_or_int
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -195,7 +195,7 @@ def _pprint_displayhook(value):
     if value is None:
         return
     builtins._ = None  # Set '_' to None to avoid recursion
-    if isinstance(value, HiddenCommandPipeline):
+    if isinstance(value, HiddenJob):
         builtins._ = value
         return
     env = builtins.__xonsh_env__

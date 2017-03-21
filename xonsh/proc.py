@@ -176,6 +176,8 @@ class Job:
         self.processgroup = None
         self.background = False
         self.started = None
+        self.outbuffer = None
+        self.finished = threading.Event()
 
     @classmethod
     def from_cmds(cls, cmds, captured=False):
@@ -186,10 +188,11 @@ class Job:
         captured is one of False, ...
         """
         cmds = list(cmds)
+        self = cls()
         # Phase 0: Check for background
-        background = False
+        self.background = False
         if cmds[-1] == '&':
-            background = True
+            self.background = True
             del cmds[-1]
 
         # Phase 1: Build inter-process pipes
@@ -211,18 +214,38 @@ class Job:
             processes.append(proc)
             closers += [proc.stdin, proc.stdout, proc.stderr]
 
-        closers = {f for f in closers if f is not None}
+        # Phase 3: Post-processing
+        self.outbuffer = io.BytesIO()
+        if proc.stdout is None:  # If it hasn't otherwise been redirected
+            # TODO: Make this a PTY if the system stdout is a TTY
+            # FIXME: Bundle stderr with this if necessary
+            output = slug.Pipe()
+            proc.stdout = output.side_in
+            closers += [output.side_in]
+
+            if captured:
+                buf = output
+            else:
+                buf = slug.Pipe()
+                slug.Tee(output.side_out, sys.stdout, buf.side_in.write, buf.side_in.close)
+
+            slug.Tee(
+                buf.side_out,
+                self.outbuffer,
+                lambda data: None,
+                self.finished.set,
+                keepopen=True,
+            )
+
+        self._files_to_close = {f for f in closers if f is not None}
 
         with slug.ProcessGroup() as pg:
             # TODO: Handle if proc is an alias
             for proc in processes:
                 pg.add(proc)
 
-        self = cls()
         # TODO: aliases
         self.processgroup = pg
-        self.background = background
-        self._files_to_close = closers
         return self
 
     @property
@@ -239,6 +262,16 @@ class Job:
 
     def wait(self):
         self.processgroup.join()
+        self.finished.wait()
+
+    @property
+    def output(self):
+        # FIXME: Cache this in some way
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        if self.outbuffer is not None:
+            return self.outbuffer.getvalue().decode(enc, err)
 
 
 class HiddenJob(Job):
