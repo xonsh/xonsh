@@ -224,14 +224,14 @@
    "license": "GPLv3",
    "url": "https://github.com/astronouth7303/xontrib-avox",
    "install": {
-    "pip": "pip install xontrib-avox"
+    "pip": "xip install xontrib-avox"
    }
   },
   "xontrib-z": {
    "license": "GPLv3",
    "url": "https://github.com/astronouth7303/xontrib-z",
    "install": {
-    "pip": "pip install xontrib-z"
+    "pip": "xip install xontrib-z"
    }
   },
   "xontrib-powerline": {
