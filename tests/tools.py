@@ -87,6 +87,9 @@ class DummyHistory:
     def append(self, x):
         pass
 
+    def flush(self, at_exit=None):
+        pass
+
 
 class DummyEnv(MutableMapping):
 
