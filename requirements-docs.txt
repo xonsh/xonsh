@@ -2,3 +2,4 @@ cloud_sptheme
 numpydoc==0.5
 Sphinx
 prompt_toolkit
+-e git+https://github.com/xonsh/slug.git#egg=xonsh-slug
