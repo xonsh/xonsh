@@ -21,7 +21,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import os
-import sys
 import ctypes
 import subprocess
 from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
