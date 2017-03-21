@@ -248,14 +248,12 @@ def get_next_job_number():
     return i
 
 
-def add_job(info):
+def add_job(job):
     """Add a new job to the jobs dictionary."""
     num = get_next_job_number()
-    info['started'] = time.time()
-    info['status'] = "running"
     tasks.appendleft(num)
-    builtins.__xonsh_all_jobs__[num] = info
-    if info['bg'] and builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+    builtins.__xonsh_all_jobs__[num] = job
+    if job.background and builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
         print_one_job(num)
 
 
