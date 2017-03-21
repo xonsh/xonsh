@@ -172,6 +172,7 @@ class Job:
     """
     Top-level object for a pipeline.
     """
+    # FIXME: Implement rtns, inp, and other properties
     def __init__(self):
         self.processgroup = None
         self.background = False
