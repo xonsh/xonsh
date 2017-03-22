@@ -16,7 +16,6 @@ import pathlib
 import inspect
 import builtins
 import itertools
-import subprocess
 import contextlib
 import collections.abc as cabc
 

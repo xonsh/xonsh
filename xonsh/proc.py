@@ -13,7 +13,6 @@ import re
 import sys
 import time
 import queue
-import array
 import ctypes
 import signal
 import inspect
@@ -164,7 +163,16 @@ def build_proc(proc, before, after):
     elif stderr == {'out'}:
         stderr = stdout
 
-    # TODO: Handle if proc is an alias
+    alias = builtins.aliases.get(proc[0])
+    if callable(alias):
+        return XonshAlias(alias, proc[1:], stdin=stdin, stdout=stdout, stderr=stderr)
+    elif isinstance(alias, cabc.Sequence):
+        proc[0:1] = alias
+    elif alias is None:
+        # No alias, do nothing
+        pass
+    else:
+        raise RuntimeError("Unknown alias: {!r}".format(alias))
     return slug.Process(proc, stdin=stdin, stdout=stdout, stderr=stderr)
 
 
@@ -390,6 +398,7 @@ class QueueReader:
             if not chunk:
                 continue
             yield chunk
+
 
 # SLUGIFY: Replace with Tee
 def populate_fd_queue(reader, fd, queue):
@@ -995,6 +1004,52 @@ def partial_proxy(f):
     else:
         e = 'Expected proxy with 5 or fewer arguments for {}, not {}'
         raise XonshError(e.format(', '.join(PROXY_KWARG_NAMES), numargs))
+
+
+class XonshAlias(slug.ThreadedVirtualProcess):
+    def __init__(self, func, args, *, stdin=None, stdout=None, stderr=None):
+        super().__init__()
+        self.func = func
+        self.func_normed = partial_proxy(func)
+        self.args = args
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def run(self):
+        raise NotImplementedError
+
+    def terminate(self):
+        # Can't kill threads
+        pass
+
+    def kill(self):
+        # Can't kill threads, even rudely
+        pass
+
+    def pause(self):
+        # Pausing threads is potentially dangerous
+        pass
+
+    def unpause(self):
+        # And therefore we can't continue them either
+        pass
+
+    def on_signal(self, sig):
+        # Don't have a way to pass signals
+        pass
+
+    def status(self):
+        if self.ident is None:
+            return slug.INIT
+        elif self.is_alive():
+            return slug.RUNNING
+        else:
+            return slug.FINISHED
+
+    @property
+    def return_code(self):
+        raise NotImplementedError
 
 
 class ProcProxyThread(threading.Thread):
