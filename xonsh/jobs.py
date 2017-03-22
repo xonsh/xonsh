@@ -197,7 +197,7 @@ def get_next_task():
     selected_task = None
     for tid in tasks:
         task = get_task(tid)
-        if not task['bg'] and task['status'] == "running":
+        if not task.background and task.status in ('running', 'paused'):
             selected_task = tid
             break
     if selected_task is None:
@@ -214,8 +214,8 @@ def get_task(tid):
 def _clear_dead_jobs():
     to_remove = set()
     for tid in tasks:
-        obj = get_task(tid)['obj']
-        if obj.poll() is not None:
+        obj = get_task(tid)
+        if obj.status == 'finished':
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
