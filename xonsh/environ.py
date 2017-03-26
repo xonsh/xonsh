@@ -794,6 +794,10 @@ class Env(cabc.MutableMapping):
             args = (os_environ,)
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
+        if ON_WINDOWS:
+            path_key = next((k for k in self._d if k.upper() == 'PATH'), None)
+            if path_key:
+                self['PATH'] = self._d.pop(path_key)
         if 'PATH' not in self._d:
             # this is here so the PATH is accessible to subprocs and so that
             # it can be modified in-place in the xonshrc file
