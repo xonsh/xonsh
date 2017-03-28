@@ -27,7 +27,7 @@ from xonsh.environ import Env, default_env, locate_binary
 from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
-    Job, HiddenJob,
+    Job, HiddenJob, STDOUT_CAPTURE_KINDS, pause_call_resume,
 )
 from xonsh.tools import (
     suggest_commands, expand_path, globpath, XonshError,
