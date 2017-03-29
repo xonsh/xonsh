@@ -407,8 +407,8 @@ def _have_open_triple_quotes(s):
 
 def get_line_continuation():
     """ The line contiuation characters used in subproc mode. In interactive
-         mode on Windows the backslash must be preseeded by a space. This is because
-         paths on windows may end in a backspace.
+         mode on Windows the backslash must be preceded by a space. This is because
+         paths on Windows may end in a backslash.
     """
     if (ON_WINDOWS and hasattr(builtins, '__xonsh_env__') and
             builtins.__xonsh_env__.get('XONSH_INTERACTIVE', False)):
