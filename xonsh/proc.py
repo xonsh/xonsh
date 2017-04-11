@@ -115,7 +115,6 @@ def parse_redirect(word, arg):
     else:
         return None, None, None
 
-
 def build_proc(proc, before, after):
     proc = proc.copy()  # TODO: Resolve aliases
     stdin = stdout = stderr = None
@@ -194,7 +193,7 @@ class Job:
         Build a Job from a sequence describing the processes, redirections,
         piping, etc.
 
-        captured is one of False, ...
+        captured is one of False, 'stdout', 'object', 'hiddenobject'
         """
         cmds = list(cmds)
         self = cls()
@@ -387,6 +386,30 @@ def partial_proxy(f):
         raise XonshError(e.format(', '.join(PROXY_KWARG_NAMES), numargs))
 
 
+def may_wrap_as_text(fo):
+    """
+    Might wrap a file-like as its text equivelent, or could return the same
+    object.
+    """
+    if fo is None:
+        return
+
+    if 'b' in fo.mode:
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+
+        if '+' in fo.mode:
+            buf = io.BufferedRandom(fo)
+        elif 'w' in fo.mode or 'a' in fo.mode:
+            buf = io.BufferedWriter(fo)
+        else:
+            buf = io.BufferedReader(fo)
+        # XXX: Not sure Python's standard IO uses write_through
+        fo = io.TextIOWrapper(buf, encoding=enc, errors=err, line_buffering=True, write_through=True)
+    return fo
+
+
 class XonshAlias(slug.ThreadedVirtualProcess):
     def __init__(self, func, args, *, stdin=None, stdout=None, stderr=None, job=None):
         super().__init__()
@@ -400,9 +423,36 @@ class XonshAlias(slug.ThreadedVirtualProcess):
         self._return_code = None
 
     def run(self):
-        # FIXME: Use text endcaps for pipes
-        # FIXME: Mask sys.std{in,out,err}
-        rv = self.func_normed(self.args, self.stdin, self.stdout, self.stderr, self.job)
+        self.stdin = may_wrap_as_text(self.stdin)
+        self.stdout = may_wrap_as_text(self.stdout)
+        self.stderr = may_wrap_as_text(self.stderr)
+
+        try:
+            with STDOUT_DISPATCHER.register(self.stdout), \
+                 STDERR_DISPATCHER.register(self.stderr), \
+                 redirect_stdout(STDOUT_DISPATCHER), \
+                 redirect_stderr(STDERR_DISPATCHER):
+                rv = self.func_normed(self.args, self.stdin, self.stdout, self.stderr, self.job)
+        except SystemExit as e:
+            r = e.code if isinstance(e.code, int) else int(bool(e.code))
+        except OSError as e:
+            status = still_writable(self.c2pwrite) and \
+                     still_writable(self.errwrite)
+            if status:
+                # stdout and stderr are still writable, so error must
+                # come from function itself.
+                print_exception()
+                r = 1
+            else:
+                # stdout and stderr are no longer writable, so error must
+                # come from the fact that the next process in the pipeline
+                # has closed the other side of the pipe. The function then
+                # attempted to write to this side of the pipe anyway. This
+                # is not truly an error and we should exit gracefully.
+                r = 0
+        except Exception:
+            print_exception()
+            r = 1
         # FIXME: Returns
 
     @property
