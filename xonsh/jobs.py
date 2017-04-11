@@ -213,13 +213,12 @@ def get_task(tid):
 
 def _clear_dead_jobs():
     to_remove = set()
-    for tid in tasks:
-        obj = get_task(tid)
+    for tid, obj in builtins.__xonsh_all_jobs__.items():
         if obj.status == 'finished':
             to_remove.add(tid)
-    for job in to_remove:
-        tasks.remove(job)
-        del builtins.__xonsh_all_jobs__[job]
+    for tid in to_remove:
+        tasks.remove(tid)
+        del builtins.__xonsh_all_jobs__[tid]
 
 
 def print_one_job(num, outfile=sys.stdout):

@@ -423,16 +423,16 @@ class XonshAlias(slug.ThreadedVirtualProcess):
         self._return_code = None
 
     def run(self):
-        self.stdin = may_wrap_as_text(self.stdin)
-        self.stdout = may_wrap_as_text(self.stdout)
-        self.stderr = may_wrap_as_text(self.stderr)
+        stdin = may_wrap_as_text(self.stdin)
+        stdout = may_wrap_as_text(self.stdout)
+        stderr = may_wrap_as_text(self.stderr)
 
         try:
-            with STDOUT_DISPATCHER.register(self.stdout), \
-                 STDERR_DISPATCHER.register(self.stderr), \
+            with STDOUT_DISPATCHER.register(stdout), \
+                 STDERR_DISPATCHER.register(stderr), \
                  redirect_stdout(STDOUT_DISPATCHER), \
                  redirect_stderr(STDERR_DISPATCHER):
-                rv = self.func_normed(self.args, self.stdin, self.stdout, self.stderr, self.job)
+                rv = self.func_normed(self.args[1:], stdin, stdout, stderr, self.job)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except OSError as e:
@@ -1091,14 +1091,12 @@ class FileThreadDispatcher:
         return self.handle.tell()
 
     def write(self, s):
-        """Writes to this thread's handle. This also flushes, just to be
-        extra sure the string was written.
+        """Writes to this thread's handle.
         """
         h = self.handle
         try:
             r = h.write(s)
-            h.flush()
-        except OSError:
+        except (OSError, ValueError):
             r = None
         return r
 
