@@ -289,6 +289,11 @@ class Job:
         if self.processgroup:
             return self.processgroup.status
 
+    @property
+    def returncode(self):
+        # Use the return code of the last process
+        return list(self.processgroup)[-1].return_code
+
 
 class HiddenJob(Job):
     def __repr__(self):
