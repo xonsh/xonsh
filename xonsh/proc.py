@@ -220,7 +220,8 @@ class Job:
 
             proc = build_proc(proc, before, after)
             processes.append(proc)
-            closers += [proc.stdin, proc.stdout, proc.stderr]
+            if not isinstance(proc, slug.VirtualProcess):
+                closers += [proc.stdin, proc.stdout, proc.stderr]
 
         # Phase 3: Post-processing
         self.outbuffer = io.BytesIO()
@@ -229,7 +230,8 @@ class Job:
             # FIXME: Bundle stderr with this if necessary
             output = slug.Pipe()
             proc.stdout = output.side_in
-            closers += [output.side_in]
+            if not isinstance(proc, slug.VirtualProcess):
+                closers += [output.side_in]
 
             if captured:
                 buf = output
@@ -251,11 +253,9 @@ class Job:
         self._files_to_close = {f for f in closers if f is not None}
 
         with slug.ProcessGroup() as pg:
-            # TODO: Handle if proc is an alias
             for proc in processes:
                 pg.add(proc)
-
-        # TODO: aliases
+        
         self.processgroup = pg
         return self
 
@@ -265,9 +265,9 @@ class Job:
 
     def start(self):
         self.started = time.time()
-        # TODO: Handle aliases
         self.processgroup.start()
         for f in self._files_to_close:
+            assert f.fileno() not in (0,1,2)
             f.close()
         self._files_to_close = ()
 
@@ -405,7 +405,6 @@ def may_wrap_as_text(fo):
             buf = io.BufferedWriter(fo)
         else:
             buf = io.BufferedReader(fo)
-        # XXX: Not sure Python's standard IO uses write_through
         fo = io.TextIOWrapper(buf, encoding=enc, errors=err, line_buffering=True, write_through=True)
     return fo
 
@@ -488,459 +487,6 @@ class XonshAlias(slug.ThreadedVirtualProcess):
     def on_signal(self, sig):
         # Don't have a way to pass signals
         pass
-
-
-class ProcProxyThread(threading.Thread):
-    """
-    Class representing a function to be run as a subprocess-mode command.
-    """
-
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False, env=None):
-        """Parameters
-        ----------
-        f : function
-            The function to be executed.
-        args : list
-            A (possibly empty) list containing the arguments that were given on
-            the command line
-        stdin : file-like, optional
-            A file-like object representing stdin (input can be read from
-            here).  If `stdin` is not provided or if it is explicitly set to
-            `None`, then an instance of `io.StringIO` representing an empty
-            file is used.
-        stdout : file-like, optional
-            A file-like object representing stdout (normal output can be
-            written here).  If `stdout` is not provided or if it is explicitly
-            set to `None`, then `sys.stdout` is used.
-        stderr : file-like, optional
-            A file-like object representing stderr (error output can be
-            written here).  If `stderr` is not provided or if it is explicitly
-            set to `None`, then `sys.stderr` is used.
-        universal_newlines : bool, optional
-            Whether or not to use universal newlines.
-        env : Mapping, optiona            Environment mapping.
-        """
-        self.orig_f = f
-        self.f = partial_proxy(f)
-        self.args = args
-        self.pid = None
-        self.returncode = None
-        self._closed_handle_cache = {}
-
-        handles = self._get_handles(stdin, stdout, stderr)
-        (self.p2cread, self.p2cwrite,
-         self.c2pread, self.c2pwrite,
-         self.errread, self.errwrite) = handles
-
-        # default values
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
-        self.env = env or builtins.__xonsh_env__
-        self._interrupted = False
-
-        if ON_WINDOWS:
-            if self.p2cwrite != -1:
-                self.p2cwrite = msvcrt.open_osfhandle(self.p2cwrite.Detach(), 0)
-            if self.c2pread != -1:
-                self.c2pread = msvcrt.open_osfhandle(self.c2pread.Detach(), 0)
-            if self.errread != -1:
-                self.errread = msvcrt.open_osfhandle(self.errread.Detach(), 0)
-
-        if self.p2cwrite != -1:
-            self.stdin = io.open(self.p2cwrite, 'wb', -1)
-            if universal_newlines:
-                self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
-                                              line_buffering=False)
-        elif isinstance(stdin, int) and stdin != 0:
-            self.stdin = io.open(stdin, 'wb', -1)
-
-        if self.c2pread != -1:
-            self.stdout = io.open(self.c2pread, 'rb', -1)
-            if universal_newlines:
-                self.stdout = io.TextIOWrapper(self.stdout)
-
-        if self.errread != -1:
-            self.stderr = io.open(self.errread, 'rb', -1)
-            if universal_newlines:
-                self.stderr = io.TextIOWrapper(self.stderr)
-
-        # Set some signal handles, if we can. Must come before process
-        # is started to prevent deadlock on windows
-        self.old_int_handler = None
-        if on_main_thread():
-            self.old_int_handler = signal.signal(signal.SIGINT,
-                                                 self._signal_int)
-        # start up the proc
-        super().__init__()
-        self.start()
-
-    def __del__(self):
-        self._restore_sigint()
-
-    def run(self):
-        """Set up input/output streams and execute the child function in a new
-        thread.  This is part of the `threading.Thread` interface and should
-        not be called directly.
-        """
-        if self.f is None:
-            return
-        spec = self._wait_and_getattr('spec')
-        last_in_pipeline = spec.last_in_pipeline
-        if last_in_pipeline:
-            capout = spec.captured_stdout  # NOQA
-            caperr = spec.captured_stderr  # NOQA
-        env = builtins.__xonsh_env__
-        enc = env.get('XONSH_ENCODING')
-        err = env.get('XONSH_ENCODING_ERRORS')
-        if ON_WINDOWS:
-            if self.p2cread != -1:
-                self.p2cread = msvcrt.open_osfhandle(self.p2cread.Detach(), 0)
-            if self.c2pwrite != -1:
-                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
-            if self.errwrite != -1:
-                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
-        # get stdin
-        if self.stdin is None:
-            sp_stdin = None
-        elif self.p2cread != -1:
-            sp_stdin = io.TextIOWrapper(io.open(self.p2cread, 'rb', -1),
-                                        encoding=enc, errors=err)
-        else:
-            sp_stdin = sys.stdin
-        # stdout
-        if self.c2pwrite != -1:
-            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
-                                         encoding=enc, errors=err)
-        else:
-            sp_stdout = sys.stdout
-        # stderr
-        if self.errwrite == self.c2pwrite:
-            sp_stderr = sp_stdout
-        elif self.errwrite != -1:
-            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1),
-                                         encoding=enc, errors=err)
-        else:
-            sp_stderr = sys.stderr
-        # run the function itself
-        try:
-            with STDOUT_DISPATCHER.register(sp_stdout), \
-                 STDERR_DISPATCHER.register(sp_stderr), \
-                 redirect_stdout(STDOUT_DISPATCHER), \
-                 redirect_stderr(STDERR_DISPATCHER):
-                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
-        except SystemExit as e:
-            r = e.code if isinstance(e.code, int) else int(bool(e.code))
-        except OSError as e:
-            status = still_writable(self.c2pwrite) and \
-                     still_writable(self.errwrite)
-            if status:
-                # stdout and stderr are still writable, so error must
-                # come from function itself.
-                print_exception()
-                r = 1
-            else:
-                # stdout and stderr are no longer writable, so error must
-                # come from the fact that the next process in the pipeline
-                # has closed the other side of the pipe. The function then
-                # attempted to write to this side of the pipe anyway. This
-                # is not truly an error and we should exit gracefully.
-                r = 0
-        except Exception:
-            print_exception()
-            r = 1
-        safe_flush(sp_stdout)
-        safe_flush(sp_stderr)
-        self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        if not last_in_pipeline and not ON_WINDOWS:
-            # mac requires us *not to* close the handles here while
-            # windows requires us *to* close the handles here
-            return
-        # clean up
-        # scopz: not sure why this is needed, but stdin cannot go here
-        # and stdout & stderr must.
-        handles = [self.stdout, self.stderr]
-        for handle in handles:
-            safe_fdclose(handle, cache=self._closed_handle_cache)
-
-    def _wait_and_getattr(self, name):
-        """make sure the instance has a certain attr, and return it."""
-        while not hasattr(self, name):
-            time.sleep(1e-7)
-        return getattr(self, name)
-
-    def poll(self):
-        """Check if the function has completed.
-
-        Returns
-        -------
-        None if the function is still executing, and the returncode otherwise
-        """
-        return self.returncode
-
-    def wait(self, timeout=None):
-        """Waits for the process to finish and returns the return code."""
-        self.join()
-        self._restore_sigint()
-        return self.returncode
-
-    #
-    # SIGINT handler
-    #
-
-    def _signal_int(self, signum, frame):
-        """Signal handler for SIGINT - Ctrl+C may have been pressed."""
-        # check if we have already be interrupted to prevent infintie recurrsion
-        if self._interrupted:
-            return
-        self._interrupted = True
-        # close file handles here to stop an processes piped to us.
-        handles = (self.p2cread, self.p2cwrite, self.c2pread, self.c2pwrite,
-                   self.errread, self.errwrite)
-        for handle in handles:
-            safe_fdclose(handle)
-        if self.poll() is not None:
-            self._restore_sigint(frame=frame)
-        if on_main_thread():
-            signal.pthread_kill(threading.get_ident(), signal.SIGINT)
-
-    def _restore_sigint(self, frame=None):
-        old = self.old_int_handler
-        if old is not None:
-            if on_main_thread():
-                signal.signal(signal.SIGINT, old)
-            self.old_int_handler = None
-        if frame is not None:
-            if old is not None and old is not self._signal_int:
-                old(signal.SIGINT, frame)
-        if self._interrupted:
-            self.returncode = 1
-
-    # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
-    # from subprocess.py in the Python 3.4.2 Standard Library
-    def _get_devnull(self):
-        if not hasattr(self, '_devnull'):
-            self._devnull = os.open(os.devnull, os.O_RDWR)
-        return self._devnull
-
-    if ON_WINDOWS:
-        def _make_inheritable(self, handle):
-            """Return a duplicate of handle, which is inheritable"""
-            h = _winapi.DuplicateHandle(
-                _winapi.GetCurrentProcess(), handle,
-                _winapi.GetCurrentProcess(), 0, 1,
-                _winapi.DUPLICATE_SAME_ACCESS)
-            return Handle(h)
-
-        def _get_handles(self, stdin, stdout, stderr):
-            """Construct and return tuple with IO objects:
-            p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
-            """
-            if stdin is None and stdout is None and stderr is None:
-                return (-1, -1, -1, -1, -1, -1)
-
-            p2cread, p2cwrite = -1, -1
-            c2pread, c2pwrite = -1, -1
-            errread, errwrite = -1, -1
-
-            if stdin is None:
-                p2cread = _winapi.GetStdHandle(_winapi.STD_INPUT_HANDLE)
-                if p2cread is None:
-                    p2cread, _ = _winapi.CreatePipe(None, 0)
-                    p2cread = Handle(p2cread)
-                    _winapi.CloseHandle(_)
-            elif stdin == subprocess.PIPE:
-                p2cread, p2cwrite = Handle(p2cread), Handle(p2cwrite)
-            elif stdin == subprocess.DEVNULL:
-                p2cread = msvcrt.get_osfhandle(self._get_devnull())
-            elif isinstance(stdin, int):
-                p2cread = msvcrt.get_osfhandle(stdin)
-            else:
-                # Assuming file-like object
-                p2cread = msvcrt.get_osfhandle(stdin.fileno())
-            p2cread = self._make_inheritable(p2cread)
-
-            if stdout is None:
-                c2pwrite = _winapi.GetStdHandle(_winapi.STD_OUTPUT_HANDLE)
-                if c2pwrite is None:
-                    _, c2pwrite = _winapi.CreatePipe(None, 0)
-                    c2pwrite = Handle(c2pwrite)
-                    _winapi.CloseHandle(_)
-            elif stdout == subprocess.PIPE:
-                c2pread, c2pwrite = _winapi.CreatePipe(None, 0)
-                c2pread, c2pwrite = Handle(c2pread), Handle(c2pwrite)
-            elif stdout == subprocess.DEVNULL:
-                c2pwrite = msvcrt.get_osfhandle(self._get_devnull())
-            elif isinstance(stdout, int):
-                c2pwrite = msvcrt.get_osfhandle(stdout)
-            else:
-                # Assuming file-like object
-                c2pwrite = msvcrt.get_osfhandle(stdout.fileno())
-            c2pwrite = self._make_inheritable(c2pwrite)
-
-            if stderr is None:
-                errwrite = _winapi.GetStdHandle(_winapi.STD_ERROR_HANDLE)
-                if errwrite is None:
-                    _, errwrite = _winapi.CreatePipe(None, 0)
-                    errwrite = Handle(errwrite)
-                    _winapi.CloseHandle(_)
-            elif stderr == subprocess.PIPE:
-                errread, errwrite = _winapi.CreatePipe(None, 0)
-                errread, errwrite = Handle(errread), Handle(errwrite)
-            elif stderr == subprocess.STDOUT:
-                errwrite = c2pwrite
-            elif stderr == subprocess.DEVNULL:
-                errwrite = msvcrt.get_osfhandle(self._get_devnull())
-            elif isinstance(stderr, int):
-                errwrite = msvcrt.get_osfhandle(stderr)
-            else:
-                # Assuming file-like object
-                errwrite = msvcrt.get_osfhandle(stderr.fileno())
-            errwrite = self._make_inheritable(errwrite)
-
-            return (p2cread, p2cwrite,
-                    c2pread, c2pwrite,
-                    errread, errwrite)
-
-    else:
-        # POSIX versions
-        def _get_handles(self, stdin, stdout, stderr):
-            """Construct and return tuple with IO objects:
-            p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
-            """
-            p2cread, p2cwrite = -1, -1
-            c2pread, c2pwrite = -1, -1
-            errread, errwrite = -1, -1
-
-            if stdin is None:
-                pass
-            elif stdin == subprocess.PIPE:
-                p2cread, p2cwrite = os.pipe()
-            elif stdin == subprocess.DEVNULL:
-                p2cread = self._get_devnull()
-            elif isinstance(stdin, int):
-                p2cread = stdin
-            else:
-                # Assuming file-like object
-                p2cread = stdin.fileno()
-
-            if stdout is None:
-                pass
-            elif stdout == subprocess.PIPE:
-                c2pread, c2pwrite = os.pipe()
-            elif stdout == subprocess.DEVNULL:
-                c2pwrite = self._get_devnull()
-            elif isinstance(stdout, int):
-                c2pwrite = stdout
-            else:
-                # Assuming file-like object
-                c2pwrite = stdout.fileno()
-
-            if stderr is None:
-                pass
-            elif stderr == subprocess.PIPE:
-                errread, errwrite = os.pipe()
-            elif stderr == subprocess.STDOUT:
-                errwrite = c2pwrite
-            elif stderr == subprocess.DEVNULL:
-                errwrite = self._get_devnull()
-            elif isinstance(stderr, int):
-                errwrite = stderr
-            else:
-                # Assuming file-like object
-                errwrite = stderr.fileno()
-
-            return (p2cread, p2cwrite,
-                    c2pread, c2pwrite,
-                    errread, errwrite)
-
-
-#
-# Foreground Thread Process Proxies
-#
-
-class ProcProxy(object):
-    """This is process proxy class that runs its alias functions on the
-    same thread that it was called from, which is typically the main thread.
-    This prevents the process from running on a background thread, but enables
-    debugger and profiler tools (functions) be run on the same thread that they
-    are attempting to debug.
-    """
-
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False, env=None):
-        self.orig_f = f
-        self.f = partial_proxy(f)
-        self.args = args
-        self.pid = os.getpid()
-        self.returncode = None
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
-        self.universal_newlines = universal_newlines
-        self.env = env
-
-    def poll(self):
-        """Check if the function has completed via the returncode or None.
-        """
-        return self.returncode
-
-    def wait(self, timeout=None):
-        """Runs the function and returns the result. Timeout argument only
-        present for API compatability.
-        """
-        if self.f is None:
-            return 0
-        env = builtins.__xonsh_env__
-        enc = env.get('XONSH_ENCODING')
-        err = env.get('XONSH_ENCODING_ERRORS')
-        spec = self._wait_and_getattr('spec')
-        # set file handles
-        if self.stdin is None:
-            stdin = None
-        else:
-            if isinstance(self.stdin, int):
-                inbuf = io.open(self.stdin, 'rb', -1)
-            else:
-                inbuf = self.stdin
-            stdin = io.TextIOWrapper(inbuf, encoding=enc, errors=err)
-        stdout = self._pick_buf(self.stdout, sys.stdout, enc, err)
-        stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
-        # run the actual function
-        try:
-            r = self.f(self.args, stdin, stdout, stderr, spec)
-        except Exception:
-            print_exception()
-            r = 1
-        self.returncode = parse_proxy_return(r, stdout, stderr)
-        safe_flush(stdout)
-        safe_flush(stderr)
-        return self.returncode
-
-    @staticmethod
-    def _pick_buf(handle, sysbuf, enc, err):
-        if handle is None or handle is sysbuf:
-            buf = sysbuf
-        elif isinstance(handle, int):
-            if handle < 3:
-                buf = sysbuf
-            else:
-                buf = io.TextIOWrapper(io.open(handle, 'wb', -1),
-                                       encoding=enc, errors=err)
-        elif hasattr(handle, 'encoding'):
-            # must be a text stream, no need to wrap.
-            buf = handle
-        else:
-            # must be a binary stream, should wrap it.
-            buf = io.TextIOWrapper(handle, encoding=enc, errors=err)
-        return buf
-
-    def _wait_and_getattr(self, name):
-        """make sure the instance has a certain attr, and return it."""
-        while not hasattr(self, name):
-            time.sleep(1e-7)
-        return getattr(self, name)
 
 
 @lazyobject
@@ -1096,7 +642,7 @@ class FileThreadDispatcher:
         h = self.handle
         try:
             r = h.write(s)
-        except (OSError, ValueError):
+        except OSError:
             r = None
         return r
 
