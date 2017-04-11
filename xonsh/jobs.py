@@ -14,7 +14,7 @@ from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
 from xonsh.tools import unthreadable
 
 
-tasks = LazyObject(collections.deque, globals(), 'tasks')
+tasks = collections.deque()  # Profiling puts this constructor cheaper than list()
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
 _last_exit_time = None
