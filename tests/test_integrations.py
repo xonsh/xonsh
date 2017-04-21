@@ -217,6 +217,14 @@ aliases['echo'] = _echo
 echo --option1 \
 --option2
 """, '--option1 --option2\n', 0),
+#
+# test @$() with aliases
+#
+("""
+aliases['ls'] = 'spam spam sausage spam'
+
+echo @$(which ls)
+""", 'spam spam sausage spam\n', 0),
 ]
 
 
