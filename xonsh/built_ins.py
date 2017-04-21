@@ -858,7 +858,7 @@ def subproc_captured_inject(*cmds):
     or shlex.split().
     """
     s = run_subproc(cmds, captured='stdout')
-    toks = builtins.__xonsh_execer__.parser.lexer.split(s)
+    toks = builtins.__xonsh_execer__.parser.lexer.split(s.strip())
     return toks
 
 
