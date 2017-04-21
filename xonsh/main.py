@@ -272,6 +272,8 @@ def premain(argv=None):
         shell_kwargs['login'] = True
     if args.norc:
         shell_kwargs['rc'] = ()
+    elif args.rc:
+        shell_kwargs['rc'] = args.rc
     setattr(sys, 'displayhook', _pprint_displayhook)
     if args.command is not None:
         args.mode = XonshMode.single_command
