@@ -8,6 +8,7 @@ import os.path
 import sys
 
 import xonsh.main
+from xonsh.environ import Env
 import pytest
 from tools import TEST_DIR
 
@@ -47,6 +48,19 @@ def test_premain_D(shell):
     xonsh.main.premain(['-DTEST1=1616', '-DTEST2=LOL'])
     assert (builtins.__xonsh_env__.get('TEST1') == '1616')
     assert (builtins.__xonsh_env__.get('TEST2') == 'LOL')
+
+
+def test_premain_custom_rc(shell, tmpdir):
+    builtins.__xonsh_env__ = Env(XONSH_CACHE_SCRIPTS=False)
+    f = tmpdir.join('wakkawakka')
+    f.write("print('hi')")
+    xonsh.main.premain(['--rc', f.strpath])
+    assert f.strpath in builtins.__xonsh_env__.get('XONSHRC')
+
+
+def test_premain_no_rc(shell, tmpdir):
+    xonsh.main.premain(['--no-rc'])
+    assert not builtins.__xonsh_env__.get('XONSHRC')
 
 
 @pytest.mark.parametrize(
