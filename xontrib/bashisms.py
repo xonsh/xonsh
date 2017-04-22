@@ -1,6 +1,11 @@
 """Bash-like interface extensions for xonsh."""
+import shlex
+import sys
+
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
+
+__all__ = ()
 
 
 @events.on_transform_command
@@ -26,3 +31,28 @@ def custom_keybindings(bindings, **kw):
     def recall_last_arg(event):
         arg = __xonsh_history__[-1].cmd.split()[-1]
         event.current_buffer.insert_text(arg)
+
+
+def alias(args, stdin=None):
+    ret = 0
+
+    if args:
+        for arg in args:
+            if '=' in arg:
+                # shlex.split to remove quotes, e.g. "foo='echo hey'" into
+                # "foo=echo hey"
+                name, cmd = shlex.split(arg)[0].split('=', 1)
+                aliases[name] = shlex.split(cmd)
+            elif arg in aliases:
+                print('{}={}'.format(arg, aliases[arg]))
+            else:
+                print("alias: {}: not found".format(arg), file=sys.stderr)
+                ret = 1
+    else:
+        for alias, cmd in aliases.items():
+            print('{}={}'.format(alias, cmd))
+
+    return ret
+
+
+aliases['alias'] = alias
