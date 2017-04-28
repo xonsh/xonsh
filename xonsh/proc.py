@@ -30,7 +30,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
-from xonsh.jobs import wait_for_active_job, give_terminal_to, _continue
+from xonsh.jobs import wait_for_active_job, give_terminal_to
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 # these decorators are imported for users back-compatible
 from xonsh.tools import unthreadable, uncapturable  # NOQA
@@ -294,6 +294,32 @@ class Job:
         # Use the return code of the last process
         return list(self.processgroup)[-1].return_code
 
+    def kill(self):
+        """
+        Forcibly quit the job
+        """
+        self.processgroup.kill()
+
+    def terminate(self):
+        """
+        Ask the job to exit quickly, if "asking nicely" is something this
+        platform understands
+        """
+        self.processgroup.terminate()
+
+    def pause(self):
+        """
+        Pause the job, able to be continued later
+        """
+        self.processgroup.pause()
+
+    def unpause(self):
+        # continue is a reserved word
+        """
+        Continue the job after it's been paused
+        """
+        self.processgroup.unpause()
+
 
 class HiddenJob(Job):
     def __repr__(self):
@@ -420,6 +446,7 @@ class XonshAlias(slug.ThreadedVirtualProcess):
         self.func = func
         self.func_normed = partial_proxy(func)
         self.args = args
+        self.cmd = args
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
@@ -473,9 +500,12 @@ class XonshAlias(slug.ThreadedVirtualProcess):
 
     def terminate(self):
         # Can't kill threads, so just try to make it die
-        self.stdin.close()
-        self.stdout.close()
-        self.stderr.close()
+        if self.stdin is not None:
+            self.stdin.close()
+        if self.stdout is not None:
+            self.stdout.close()
+        if self.stderr is not None:
+            self.stderr.close()
 
     def kill(self):
         # Can't kill threads, even rudely
