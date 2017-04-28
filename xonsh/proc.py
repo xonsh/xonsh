@@ -580,12 +580,12 @@ class FileThreadDispatcher:
     @property
     def available(self):
         """True if the thread is available in the registry."""
-        return hasattr(self.registry, 'handle')
+        return getattr(self.registry, 'handle', None) is not None
 
     @property
     def handle(self):
         """Gets the current handle for the thread."""
-        return getattr(self.registry, 'handle', self.default)
+        return getattr(self.registry, 'handle', None) or self.default
 
     def __enter__(self):
         pass
