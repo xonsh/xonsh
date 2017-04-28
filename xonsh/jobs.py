@@ -20,52 +20,10 @@ tasks = collections.deque()  # Profiling puts this constructor cheaper than list
 _last_exit_time = None
 
 
-if ON_DARWIN:
-    def _send_signal(job, signal):
-        # On OS X, os.killpg() may cause PermissionError when there are
-        # any zombie processes in the process group.
-        # See github issue #1012 for details
-        for pid in job['pids']:
-            if pid is None:  # the pid of an aliased proc is None
-                continue
-            try:
-                os.kill(pid, signal)
-            except ProcessLookupError:
-                pass
-elif ON_WINDOWS:
-    pass
-elif ON_CYGWIN:
-    # Similar to what happened on OSX, more issues on Cygwin
-    # (see Github issue #514).
-    def _send_signal(job, signal):
-        try:
-            os.killpg(job['pgrp'], signal)
-        except Exception:
-            for pid in job['pids']:
-                try:
-                    os.kill(pid, signal)
-                except Exception:
-                    pass
-else:
-    def _send_signal(job, signal):
-        pgrp = job['pgrp']
-        if pgrp is None:
-            for pid in job['pids']:
-                try:
-                    os.kill(pid, signal)
-                except Exception:
-                    pass
-        else:
-            os.killpg(job['pgrp'], signal)
-
 
 if ON_WINDOWS:
     def _continue(job):
         job['status'] = "running"
-
-    def _kill(job):
-        subprocess.check_output(['taskkill', '/F', '/T', '/PID',
-                                 str(job['obj'].pid)])
 
     def ignore_sigtstp():
         pass
@@ -95,20 +53,13 @@ if ON_WINDOWS:
         return wait_for_active_job(last_task=active_task)
 
 else:
-    def _continue(job):
-        _send_signal(job, signal.SIGCONT)
-
-    def _kill(job):
-        _send_signal(job, signal.SIGKILL)
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
     _shell_pgrp = os.getpgrp()
 
-    _block_when_giving = LazyObject(lambda: (signal.SIGTTOU, signal.SIGTTIN,
-                                             signal.SIGTSTP, signal.SIGCHLD),
-                                    globals(), '_block_when_giving')
+    _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP, signal.SIGCHLD)
 
     # give_terminal_to is a simplified version of:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
@@ -228,11 +179,14 @@ def print_one_job(num, outfile=sys.stdout):
     except KeyError:
         return
     pos = '+' if tasks[0] == num else '-' if tasks[1] == num else ' '
-    status = job['status']
-    cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
+    status = job.status
+    cmd = [' '.join(p.cmd) for p in job.procs]
     cmd = ' '.join(cmd)
-    pid = job['pids'][-1]
-    bg = ' &' if job['bg'] else ''
+    try:
+        pid = list(job.procs)[-1].pid
+    except AttributeError:
+        pid = "None"
+    bg = ' &' if job.background else ''
     print('[{}]{} {}: {}{} ({})'.format(num, pos, status, cmd, bg, pid),
           file=outfile)
 
@@ -313,7 +267,7 @@ def kill_all_jobs():
     """
     _clear_dead_jobs()
     for job in builtins.__xonsh_all_jobs__.values():
-        _kill(job)
+        job.kill()
 
 
 def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
