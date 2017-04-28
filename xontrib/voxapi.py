@@ -286,7 +286,7 @@ class Vox(collections.abc.Mapping):
 
     def deactivate(self):
         """
-        Deactive the active virtual environment. Returns the name of it.
+        Deactivate the active virtual environment. Returns its name.
         """
         env = builtins.__xonsh_env__
         if 'VIRTUAL_ENV' not in env:
