@@ -35,6 +35,7 @@ from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 # these decorators are imported for users back-compatible
 from xonsh.tools import unthreadable, uncapturable  # NOQA
 
+
 # foreground has be deprecated
 foreground = unthreadable
 
@@ -481,7 +482,7 @@ class XonshAlias(slug.ThreadedVirtualProcess):
                  STDERR_DISPATCHER.register(stderr), \
                  redirect_stdout(STDOUT_DISPATCHER), \
                  redirect_stderr(STDERR_DISPATCHER):
-                rv = self.func_normed(self.args[1:], stdin, stdout, stderr, self.job)
+                r = self.func_normed(self.args[1:], stdin, stdout, stderr, self.job)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except OSError as e:
@@ -502,10 +503,14 @@ class XonshAlias(slug.ThreadedVirtualProcess):
         except Exception:
             print_exception()
             r = 1
-        # FIXME: Returns
+        self._return_code = parse_proxy_return(r, stdout, stderr)
 
     @property
     def return_code(self):
+        return self._return_code
+
+    @property
+    def returncode(self):
         return self._return_code
 
     def status(self):
