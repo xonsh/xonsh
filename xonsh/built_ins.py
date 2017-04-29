@@ -313,10 +313,11 @@ def run_subproc(cmds, captured=False):
     job = jobcls.from_cmds(cmds, captured)
     lastproc = list(job.procs)[-1]
     background = job.background
-    add_job(job)
+    if background:
+        add_job(job)
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
-        pause_call_resume(job.processgroup, builtins.__xonsh_shell__.settitle)
+        builtins.__xonsh_shell__.settitle()
     job.start()
     # create command or return if backgrounding.
     if background:

@@ -600,6 +600,7 @@ def fallback(cond, backup):
 try:
     from contextlib import redirect_stdout, redirect_stderr
 except ImportError:
+    #PY34
     # The following redirect classes were taken directly from Python 3.5's source
     # code (from the contextlib module). This can be removed when 3.5 is released,
     # although redirect_stdout exists in 3.4, redirect_stderr does not.
