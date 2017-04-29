@@ -160,6 +160,11 @@ class _TeeStd(io.TextIOBase):
 
     def write(self, s):
         """Writes data to the original std stream and the in-memory object."""
+        if isinstance(s, bytes):  # FIXME: This feels more like a hack than a good idea
+            env = builtins.__xonsh_env__
+            enc = env.get('XONSH_ENCODING')
+            err = env.get('XONSH_ENCODING_ERRORS')
+            s = s.decode(enc, err)
         self.mem.write(s)
         if self.std is None:
             return
