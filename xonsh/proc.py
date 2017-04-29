@@ -233,11 +233,13 @@ class Job:
             if not isinstance(proc, slug.VirtualProcess):
                 closers += [output.side_in]
 
-            if captured:
+            if False: # FIXME: When do we not stream to stdout?
+                # We need it not printed and stored
                 buf = output
             else:
+                # We need it printed, but store it for other uses
                 buf = slug.Pipe()
-                slug.Tee(output.side_out, sys.stdout, buf.side_in.write, buf.side_in.close)
+                slug.Tee(output.side_out, unwrap_to_binary(sys.stdout), buf.side_in.write, buf.side_in.close, keepopen=True)
 
             slug.Tee(
                 buf.side_out,
@@ -439,6 +441,22 @@ def may_wrap_as_text(fo):
         fo = io.TextIOWrapper(buf, encoding=enc, errors=err, line_buffering=True, write_through=True)
     return fo
 
+
+def unwrap_to_binary(fo):
+    """
+    Attempts to find the underlying binary file from the standard file-likes
+    """
+    if not hasattr(fo, 'mode'):
+        # FIXME: Warn
+        return fo
+    while 'b' not in fo.mode:
+        if hasattr(fo, 'buffer'):
+            fo = fo.buffer
+        elif hasattr(fo, 'raw'):
+            fo = fo.raw
+        else:
+            raise ValueError("Can't unwrap {!r}".format(fo), fo)
+    return fo
 
 class XonshAlias(slug.ThreadedVirtualProcess):
     def __init__(self, func, args, *, stdin=None, stdout=None, stderr=None, job=None):
