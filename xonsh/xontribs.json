@@ -264,7 +264,7 @@
    "license": "GPLv3",
    "url": "https://github.com/shahinism/xontrib-fzf-widgets",
    "install": {
-    "pip": "pip install xontrib-fzf-widgets"
+    "pip": "xip install xontrib-fzf-widgets"
    }
   }
  }
