@@ -16,6 +16,8 @@ else:
         _sys.modules['xonsh.completers.tools'] = __amalgam__
         xompletions = __amalgam__
         _sys.modules['xonsh.completers.xompletions'] = __amalgam__
+        xonsh = __amalgam__
+        _sys.modules['xonsh.completers.xonsh'] = __amalgam__
         _aliases = __amalgam__
         _sys.modules['xonsh.completers._aliases'] = __amalgam__
         commands = __amalgam__
