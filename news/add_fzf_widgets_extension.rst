@@ -1,6 +1,6 @@
-**Added:** None
+**Added:**
 
-* Add `fzf-widgets` xontrib which provides fuzzy search productivity widgets
+* Add "fzf-widgets" xontrib which provides fuzzy search productivity widgets
   with on custom keybindings to xontrib list.
 
 **Changed:** None
