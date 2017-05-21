@@ -339,6 +339,8 @@ def run_subproc(cmds, captured=False):
 def subproc_captured_stdout(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str.
+
+    $()
     """
     return run_subproc(cmds, captured='stdout')
 
@@ -348,6 +350,8 @@ def subproc_captured_inject(*cmds):
     whitespace-separated strings of the stdout that was produced.
     The string is split using xonsh's lexer, rather than Python's str.split()
     or shlex.split().
+
+    @$()
     """
     s = run_subproc(cmds, captured='stdout')
     toks = builtins.__xonsh_execer__.parser.lexer.split(s)
@@ -358,6 +362,8 @@ def subproc_captured_object(*cmds):
     """
     Runs a subprocess, capturing the output. Returns an instance of
     CommandPipeline representing the completed command.
+
+    !()
     """
     return run_subproc(cmds, captured='object')
 
@@ -365,6 +371,8 @@ def subproc_captured_object(*cmds):
 def subproc_captured_hiddenobject(*cmds):
     """Runs a subprocess, capturing the output. Returns an instance of
     HiddenCommandPipeline representing the completed command.
+
+    ![]
     """
     return run_subproc(cmds, captured='hiddenobject')
 
@@ -372,6 +380,8 @@ def subproc_captured_hiddenobject(*cmds):
 def subproc_uncaptured(*cmds):
     """Runs a subprocess, without capturing the output. Returns the stdout
     that was produced as a str.
+
+    $[]
     """
     return run_subproc(cmds, captured=False)
 
