@@ -189,12 +189,13 @@ class Job:
         self.finished = threading.Event()
 
     @classmethod
-    def from_cmds(cls, cmds, captured=False):
+    def from_cmds(cls, cmds, output=True):
         """
         Build a Job from a sequence describing the processes, redirections,
         piping, etc.
 
-        captured is one of False, 'stdout', 'object', 'hiddenobject'
+        If output is True, the command output is streamed out as well as captured. If
+        False, it is only captured
         """
         cmds = list(cmds)
         self = cls()
@@ -234,7 +235,7 @@ class Job:
             if not isinstance(proc, slug.VirtualProcess):
                 closers += [output.side_in]
 
-            if False: # FIXME: When do we not stream to stdout?
+            if not output:
                 # We need it not printed and stored
                 buf = output
             else:

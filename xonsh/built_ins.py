@@ -310,7 +310,7 @@ def run_subproc(cmds, captured=False):
     else:
         jobcls = Job
 
-    job = jobcls.from_cmds(cmds, captured)
+    job = jobcls.from_cmds(cmds, output=True)  # FIXME: When do we stream?
     lastproc = list(job.procs)[-1]
     background = job.background
     if background:
