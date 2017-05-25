@@ -7,6 +7,11 @@ Xonsh Change Log
 v0.5.10
 ====================
 
+
+
+v0.5.10
+====================
+
 **Added:**
 
 * Added ``xclip`` and ``repo`` to default threadable predictors (Issues #2355
