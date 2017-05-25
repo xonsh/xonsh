@@ -145,6 +145,11 @@
   "package": "xonsh-click-tabcomplete",
   "url": "https://github.com/Granitosaurus/xonsh-click-tabcomplete",
   "description": ["Adds tabcomplete functionality to click based python applications inside of xonsh."]
+ },
+ {"name": "fzf-widgets",
+  "package": "xontrib-fzf-widgets",
+  "url": "https://github.com/shahinism/xontrib-fzf-widgets",
+  "description": ["Adds some fzf widgets to your xonsh shell."]
  }
  ],
  "packages": {
@@ -253,6 +258,13 @@
    "url": "https://github.com/t184256/xontrib-prompt-vi-mode",
    "install": {
     "pip": "pip install xontrib-prompt-vi-mode"
+   }
+  },
+  "xontrib-fzf-widgets": {
+   "license": "GPLv3",
+   "url": "https://github.com/shahinism/xontrib-fzf-widgets",
+   "install": {
+    "pip": "xip install xontrib-fzf-widgets"
    }
   }
  }
