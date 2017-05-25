@@ -4,6 +4,46 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.10
+====================
+
+**Added:**
+
+* Added ``xclip`` and ``repo`` to default threadable predictors (Issues #2355
+  and #2348)
+* Pretty printing of the $PATH variable
+* Add "fzf-widgets" xontrib which provides fuzzy search productivity widgets
+  with on custom keybindings to xontrib list.
+* New ``free_cwd`` xontrib for Windows, which prevent the current directory from beeing locked when the prompt is shown. 
+  This allows the other programs or Windows explorer to delete the current or parent directory. This is accomplished by 
+  reseting the CWD to the users home directory temporarily while the prompt is displayed. The directory is still locked 
+  while any commands are processed so xonsh still can't remove it own working directory.
+
+
+**Changed:**
+
+* Codecov threshold to 2%
+
+
+**Removed:**
+
+* On Windows environments variables in wrapped like``%foo%`` are no longer expanded automatically.
+
+
+**Fixed:**
+
+* Fixed the ``--rc`` option so it now runs xonsh with the specified rc file
+* ``@$`` operator now functions properly when returned command is an alias
+* Correct line continuation would not work on Windows if the line continuations were used
+  in the ``xonshrc`` file.
+* Fixed a regression in the Windows ``sudo`` command, that allows users to run elevated commands in xonsh.
+* Fix echo command from xoreutils.
+* Fixed a bug on Windows which meant xonsh wasn't using PATH enrivonment variable but instead relying on a default
+  value from the widnows registry.
+
+
+
+
 v0.5.9
 ====================
 
