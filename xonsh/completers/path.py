@@ -18,6 +18,7 @@ def PATTERN_NEED_QUOTES():
     pattern = '[' + pattern + ']' + r'|\band\b|\bor\b'
     return re.compile(pattern)
 
+RE_WIN_DRIVE = xl.LazyObject(lambda: re.compile('\w:'), globals(), 'RE_WIN_DRIVE')
 
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
@@ -276,6 +277,9 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         if len(p) != 0:
             if p[0] == '':
                 basedir = ('', )
+                p = p[1:]
+            elif xp.ON_WINDOWS and re.match(RE_WIN_DRIVE, p[0]):
+                basedir = (re.match(RE_WIN_DRIVE, p[0]).group(), )
                 p = p[1:]
             else:
                 basedir = None
