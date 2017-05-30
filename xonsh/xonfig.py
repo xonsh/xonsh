@@ -374,7 +374,7 @@ def _info(ns):
         ('shell type', env.get('SHELL_TYPE')),
         ('pygments', pygments_version()),
         ('on posix', bool(ON_POSIX)),
-        ('on linux', ON_LINUX),
+        ('on linux', bool(ON_LINUX)),
     ])
     if ON_LINUX:
         data.append(('distro', linux_distro()))
