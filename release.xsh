@@ -115,12 +115,16 @@ def version_update(ver):
 
 
 def just_do_git(ns):
-    """Commits and updates tags."""
+    """Commits and updates tags. Creates github release and adds merged news as
+    release notes"""
     git status
     git commit -am @("version bump to " + ns.ver)
     git push @(ns.upstream) @(ns.branch)
     git tag @(ns.ver)
     git push --tags @(ns.upstream)
+    if github3 is not None:
+        do_github_release(ns.ver, ns.ghuser, 'xonsh', 'xonsh')
+
 
 
 def pipify():
@@ -228,6 +232,13 @@ def ghlogin(ghuser):
     gh = github3.login(ghuser, token=token)
     return gh
 
+def do_github_release(ver, ghuser, org, repo):
+    """Performs a github release"""
+    login = ghlogin(ghuser)
+    repo = login.repository(org, repo)
+    news = ver_news(ver)
+    repo.create_release(ver, target_commitish='master', name=ver, body=news,
+                        draft=False, prerelease=False)
 
 def open_feedstock_pr(ver, ghuser):
     """Opens a feedstock PR."""
