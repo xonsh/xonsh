@@ -19,6 +19,7 @@ the xonsh shell
         "Piggy glanced nervously into hell and cradled the xonsh",
         "The xonsh is a symbol",
         "It is pronounced <i>conch</i>",
+        "It is pronounced <i>covfefe</i>nch",
         "It is pronounced <i>🐚</i>",
         "It is pronounced <i>kɒntʃ</i>",
         "The shell, bourne again",
