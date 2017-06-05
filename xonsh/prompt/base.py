@@ -22,6 +22,7 @@ from xonsh.prompt.vc import (
     current_branch, branch_color, branch_bg_color
 )
 from xonsh.prompt.gitstatus import gitstatus_prompt
+from xonsh.prompt.github import github_prompt
 
 
 @xt.lazyobject
@@ -106,6 +107,7 @@ def PROMPT_FIELDS():
         env_name=env_name,
         vte_new_tab_cwd=vte_new_tab_cwd,
         gitstatus=gitstatus_prompt,
+        github=github_prompt,
     )
 
 
