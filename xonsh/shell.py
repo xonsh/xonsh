@@ -18,7 +18,7 @@ events.doc('on_transform_command', """
 on_transform_command(cmd: str) -> str
 
 Fired to request xontribs to transform a command line. Return the transformed
-command, or the same command if no transformaiton occurs. Only done for
+command, or the same command if no transformation occurs. Only done for
 interactive sessions.
 
 This may be fired multiple times per command, with other transformers input or
@@ -72,8 +72,8 @@ def transform_command(src, show_diff=True):
                 break
         i += 1
         if i == limit:
-            print_exception('Modifcations to source input took more than '
-                            'the recursion limit number of interations to '
+            print_exception('Modifications to source input took more than '
+                            'the recursion limit number of iterations to '
                             'converge.')
     debug_level = builtins.__xonsh_env__.get('XONSH_DEBUG')
     if show_diff and debug_level > 1 and src != raw:

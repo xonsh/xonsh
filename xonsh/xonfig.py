@@ -74,7 +74,7 @@ WIZARD_ENV = """
                   {{YELLOW}}--------------------------{{NO_COLOR}}
 The xonsh shell also allows you to setup environment variables from
 the static configuration file. Any variables set in this way are
-superceded by the definitions in the xonshrc or on the command line.
+superseded by the definitions in the xonshrc or on the command line.
 Still, setting environment variables in this way can help define
 options that are global to the system or user.
 

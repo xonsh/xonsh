@@ -170,8 +170,8 @@ def parser():
                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
                    default=None)
     p.add_argument('--timings',
-                   help='Prints timing infomation before the prompt is shown. '
-                        'This is usefull to track down perfomance issues '
+                   help='Prints timing information before the prompt is shown. '
+                        'This is usefull to track down performance issues '
                         'and investigate startup times.',
                    dest='timings',
                    action='store_true',
