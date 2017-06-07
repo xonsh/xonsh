@@ -284,7 +284,7 @@ def find_next_break(line, mincol=0, lexer=None):
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
                  greedy=False):
-    """Excapsulates tokens in a source code line in a uncaptured
+    """Encapsulates tokens in a source code line in a uncaptured
     subprocess ![] starting at a minimum column. If there are no tokens
     (ie in a comment line) this returns None. If greedy is True, it will encapsulate
     normal parentheses. Greedy is False by default.
@@ -418,7 +418,7 @@ def _have_open_triple_quotes(s):
 
 
 def get_line_continuation():
-    """ The line contiuation characters used in subproc mode. In interactive
+    """ The line continuation characters used in subproc mode. In interactive
          mode on Windows the backslash must be preceded by a space. This is because
          paths on Windows may end in a backslash.
     """
@@ -504,7 +504,7 @@ def subexpr_from_unbalanced(expr, ltok, rtok):
 
 
 def subexpr_before_unbalanced(expr, ltok, rtok):
-    """Obtains the expression prior to last unblanced left token."""
+    """Obtains the expression prior to last unbalanced left token."""
     subexpr, _, post = expr.rpartition(ltok)
     nrtoks_in_post = post.count(rtok)
     while nrtoks_in_post != 0:
@@ -875,7 +875,7 @@ def suggestion_sort_helper(x, y):
 
 def escape_windows_cmd_string(s):
     """Returns a string that is usable by the Windows cmd.exe.
-    The escaping is based on details here and emperical testing:
+    The escaping is based on details here and empirical testing:
     http://www.robvanderwoude.com/escapechars.php
     """
     for c in '()%!^<>&|"':
@@ -1427,7 +1427,7 @@ def is_history_backend(x):
 
 def is_dynamic_cwd_width(x):
     """ Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
-    environement variable.
+    environment variable.
     """
     return (isinstance(x, tuple) and
             len(x) == 2 and
@@ -1463,7 +1463,7 @@ RE_HISTORY_TUPLE = LazyObject(
 
 
 def to_history_tuple(x):
-    """Converts to a canonincal history tuple."""
+    """Converts to a canonical history tuple."""
     if not isinstance(x, (cabc.Sequence, float, int)):
         raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
@@ -1612,7 +1612,7 @@ def format_std_prepost(template, env=None):
     except Exception:
         print_exception()
     # \001\002 is there to fool pygments into not returning an empty string
-    # for potentially empty input. This happend when the template is just a
+    # for potentially empty input. This happens when the template is just a
     # color code with no visible text.
     invis = '\001\002'
     s = shell.format_color(invis + s + invis, force_string=True)
@@ -1725,7 +1725,7 @@ def check_for_partial_string(x):
         return (string_indices[-2], string_indices[-1], starting_quote[-1])
 
 
-# regular expressions for matching enviroment variables
+# regular expressions for matching environment variables
 # i.e $FOO, ${'FOO'}
 @lazyobject
 def POSIX_ENVVAR_REGEX():
@@ -1771,7 +1771,7 @@ def backup_file(fname):
 
 
 def normabspath(p):
-    """Retuns as normalized absolute path, namely, normcase(abspath(p))"""
+    """Returns as normalized absolute path, namely, normcase(abspath(p))"""
     return os.path.normcase(os.path.abspath(p))
 
 

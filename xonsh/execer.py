@@ -65,7 +65,7 @@ class Execer(object):
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Normally, all subprocess
         # lines should be wrapped in $(), to indicate that they are a
-        # subproc. But that would be super annoying. Unfortnately, Python
+        # subproc. But that would be super annoying. Unfortunately, Python
         # mode - after indentation - is whitespace agnostic while, using
         # the Python token, subproc mode is whitespace aware. That is to say,
         # in Python mode "ls -l", "ls-l", and "ls - l" all parse to the
@@ -187,7 +187,7 @@ class Execer(object):
                 if len(line.strip()) == 0:
                     # whitespace only lines are not valid syntax in Python's
                     # interactive mode='single', who knew?! Just ignore them.
-                    # this might cause actual sytax errors to have bad line
+                    # this might cause actual syntax errors to have bad line
                     # numbers reported, but should only affect interactive mode
                     del lines[idx]
                     last_error_line = last_error_col = -1

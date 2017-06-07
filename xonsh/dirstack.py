@@ -107,7 +107,7 @@ def _unc_unmap_temp_drive(left_drive, cwd):
     if left_drive not in _unc_tempDrives:   # if not one we've mapped, don't unmap it
         return
 
-    for p in DIRSTACK + [cwd]:              # if still in use , don't aunmap it.
+    for p in DIRSTACK + [cwd]:              # if still in use , don't unmap it.
         if p.casefold().startswith(left_drive):
             return
 
@@ -161,10 +161,10 @@ def _try_cdpath(apath):
     # In bash if a CDPATH is set, an unqualified local folder
     # is considered after all CDPATHs, example:
     # CDPATH=$HOME/src (with src/xonsh/ inside)
-    # $ cd xonsh -> src/xonsh (whith xonsh/xonsh)
+    # $ cd xonsh -> src/xonsh (with xonsh/xonsh)
     # a second $ cd xonsh has no effects, to move in the nested xonsh
     # in bash a full $ cd ./xonsh is needed.
-    # In xonsh a relative folder is allways preferred.
+    # In xonsh a relative folder is always preferred.
     env = builtins.__xonsh_env__
     cdpaths = env.get('CDPATH')
     for cdp in cdpaths:

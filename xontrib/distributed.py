@@ -5,7 +5,7 @@ __all__ = 'DSubmitter', 'dsubmit'
 
 
 def dworker(args, stdin=None):
-    """Programatic access to the dworker utility, to allow launching
+    """Programmatic access to the dworker utility, to allow launching
     workers that also have access to xonsh builtins.
     """
     from distributed.cli import dworker

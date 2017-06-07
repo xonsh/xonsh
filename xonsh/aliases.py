@@ -404,7 +404,7 @@ def showcmd(args, stdin=None):
 
 def detect_xip_alias():
     """
-    Determines the correct invokation to get xonsh's pip
+    Determines the correct invocation to get xonsh's pip
     """
     if not getattr(sys, 'executable', None):
         return lambda args, stdin=None: ("", "Sorry, unable to run pip on your system (missing sys.executable)", 1)

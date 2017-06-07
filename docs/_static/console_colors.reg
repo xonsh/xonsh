@@ -1,6 +1,6 @@
 Windows Registry Editor Version 5.00
 
-; Registry file that maps the solarized palette to the 16 avaliable colors
+; Registry file that maps the solarized palette to the 16 available colors
 ; in a Windows command prompt. Note, hex values in the table are RGB but byte
 ; ordering of a DWORD is BGR, e.g. "ColorTable<##>"=dword:00<B><G><R>
 ;

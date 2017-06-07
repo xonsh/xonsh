@@ -151,7 +151,7 @@ def color_by_name(name, fg=None, bg=None):
         fg = norm_name(name)
     else:
         bg = norm_name(name)
-    # assmble token
+    # assemble token
     if fg is None and bg is None:
         tokname = 'NO_COLOR'
     elif fg is None:

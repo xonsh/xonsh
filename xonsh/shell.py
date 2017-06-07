@@ -150,7 +150,7 @@ class Shell(object):
                              shell_type))
         self.shell = shell_class(execer=self.execer,
                                  ctx=self.ctx, **kwargs)
-        # allows history garbage colector to start running
+        # allows history garbage collector to start running
         if hist.gc is not None:
             hist.gc.wait_for_shell = False
 

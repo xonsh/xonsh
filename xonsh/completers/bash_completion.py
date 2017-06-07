@@ -256,7 +256,7 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
     endidx : int
         The index in line that prefix ends on.
     env : Mapping, optional
-        The environment dict to execute the Bash suprocess in.
+        The environment dict to execute the Bash subprocess in.
     paths : list or tuple of str or None, optional
         This is a list (or tuple) of strings that specifies where the
         ``bash_completion`` script may be found. The first valid path will

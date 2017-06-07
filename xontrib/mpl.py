@@ -44,7 +44,7 @@ def interactive_pyplot(module=None, **kwargs):
         """This is a monkey patched version of matplotlib.pyplot.show()
         for xonsh's interactive mode. First it tries non-blocking mode
         (block=False). If for some reason this fails, it will run show
-        in normal bloking mode (block=True).
+        in normal blocking mode (block=True).
         """
         kwargs.update(block=False)
         rtn = plt_show(*args, **kwargs)

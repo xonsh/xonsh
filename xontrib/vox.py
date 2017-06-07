@@ -106,7 +106,7 @@ class VoxHandler:
             print('Activated "%s".\n' % args.name)
 
     def cmd_deactivate(self, args, stdin=None):
-        """Deactive the active virtual environment."""
+        """Deactivate the active virtual environment."""
 
         if self.vox.active() is None:
             print('No environment currently active. Activate one with "vox activate".\n', file=sys.stderr)

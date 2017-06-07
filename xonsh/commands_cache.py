@@ -3,7 +3,7 @@
 a command will be able to be run in the background.
 
 A background predictor is a function that accepts a single argument list
-and returns whethere or not the process can be run in the background (returns
+and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
 import os
@@ -39,7 +39,7 @@ class CommandsCache(cabc.Mapping):
     def __iter__(self):
         for cmd, (path, is_alias) in self.all_commands.items():
             if ON_WINDOWS and path is not None:
-                # All comand keys are stored in uppercase on Windows.
+                # All command keys are stored in uppercase on Windows.
                 # This ensures the original command name is returned.
                 cmd = pathbasename(path)
             yield cmd
@@ -223,7 +223,7 @@ class CommandsCache(cabc.Mapping):
             return predict_true
 
     def default_predictor_readbin(self, name, cmd0, timeout, failure):
-        """Make a defautt predictor by
+        """Make a default predictor by
         analyzing the content of the binary. Should only works on POSIX.
         Return failure if the analysis fails.
         """
@@ -297,7 +297,7 @@ def SHELL_PREDICTOR_PARSER():
 
 
 def predict_shell(args):
-    """Precict the backgroundability of the normal shell interface, which
+    """Predict the backgroundability of the normal shell interface, which
     comes down to whether it is being run in subproc mode.
     """
     ns, _ = SHELL_PREDICTOR_PARSER.parse_known_args(args)
@@ -319,7 +319,7 @@ def HELP_VER_PREDICTOR_PARSER():
 
 
 def predict_help_ver(args):
-    """Precict the backgroundability of commands that have help & version
+    """Predict the backgroundability of commands that have help & version
     switches: -h, --help, -v, -V, --version. If either of these options is
     present, the command is assumed to print to stdout normally and is therefore
     threadable. Otherwise, the command is assumed to not be threadable.

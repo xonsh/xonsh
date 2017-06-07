@@ -65,7 +65,7 @@ class Question(Node):
             Mapping from user-input responses to nodes.
         converter : callable, optional
             Converts the string the user typed into another object
-            that serves as a key to the reponses dict.
+            that serves as a key to the responses dict.
         path : str or sequence of str, optional
             A path within the storage object.
         """
@@ -99,7 +99,7 @@ class Input(Node):
             default False.
         retry : bool, optional
             In the event that the conversion operation fails, should
-            users be re-prompted until they provide valid input. Deafult False.
+            users be re-prompted until they provide valid input. Default False.
         path : str or sequence of str, optional
             A path within the storage object.
         """
@@ -114,7 +114,7 @@ class Input(Node):
 class While(Node):
     """Computes a body while a condition function evaluates to true.
     The condition function has the form cond(visitor=None, node=None) and
-    should return an object that is convertable to a bool. The beg attribute
+    should return an object that is convertible to a bool. The beg attribute
     specifies the number to start the loop iteration at.
     """
 
@@ -128,7 +128,7 @@ class While(Node):
             Function that determines if the next loop iteration should
             be executed. The condition function has the form
             cond(visitor=None, node=None) and should return an object that
-            is convertable to a bool.
+            is convertible to a bool.
         body : sequence of nodes
             A list of node to execute on each iteration.
         idxname : str, optional
@@ -212,7 +212,7 @@ class StoreNonEmpty(Input):
 
 
 class StateFile(Input):
-    """Node for repesenting the state as a JSON file under a default or user
+    """Node for representing the state as a JSON file under a default or user
     given file name. This node type is likely not useful on its own.
     """
 

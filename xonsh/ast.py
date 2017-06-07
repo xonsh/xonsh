@@ -160,7 +160,7 @@ def xonsh_call(name, args, lineno=None, col=None):
 
 
 def isdescendable(node):
-    """Deteremines whether or not a node is worth visiting. Currently only
+    """Determines whether or not a node is worth visiting. Currently only
     UnaryOp and BoolOp nodes are visited.
     """
     return isinstance(node, (UnaryOp, BoolOp))
@@ -177,7 +177,7 @@ class CtxAwareTransformer(NodeTransformer):
         """Parameters
         ----------
         parser : xonsh.Parser
-            A parse instance to try to parse suprocess statements with.
+            A parse instance to try to parse subprocess statements with.
         """
         super(CtxAwareTransformer, self).__init__()
         self.parser = parser

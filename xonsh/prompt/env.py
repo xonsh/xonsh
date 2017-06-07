@@ -20,7 +20,7 @@ def env_name(pre_chars='(', post_chars=')'):
 
 
 def vte_new_tab_cwd():
-    """This prints an escape squence that tells VTE terminals the hostname
+    """This prints an escape sequence that tells VTE terminals the hostname
     and pwd. This should not be needed in most cases, but sometimes is for
     certain Linux terminals that do not read the PWD from the environment
     on startup. Note that this does not return a string, it simply prints

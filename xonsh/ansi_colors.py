@@ -19,7 +19,7 @@ def ansi_partial_color_format(template, style='default', cmap=None, hide=False):
     template : str
         The template string, potentially with color names.
     style : str, optional
-        Sytle name to look up color map from.
+        Style name to look up color map from.
     cmap : dict, optional
         A color map to use, this will prevent the color map from being
         looked up via the style name.

@@ -220,7 +220,7 @@ class XonshMode(enum.Enum):
 
 def start_services(shell_kwargs):
     """Starts up the essential services in the proper order.
-    This returns the envrionment instance as a convenience.
+    This returns the environment instance as a convenience.
     """
     install_import_hooks()
     # create execer, which loads builtins
@@ -246,7 +246,7 @@ def start_services(shell_kwargs):
 
 
 def premain(argv=None):
-    """Setup for main xonsh entry point, returns parsed arguments."""
+    """Setup for main xonsh entry point. Returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
     setup_timings()

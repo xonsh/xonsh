@@ -191,8 +191,8 @@ def get_script_subproc_command(fname, args):
     if not os.access(fname, os.X_OK):
         raise PermissionError
     if ON_POSIX and not os.access(fname, os.R_OK):
-        # on some systems, some importnat programs (e.g. sudo) will have
-        # execute permissions but not read/write permisions. This enables
+        # on some systems, some important programs (e.g. sudo) will have
+        # execute permissions but not read/write permissions. This enables
         # things with the SUID set to be run. Needs to come before _is_binary()
         # is called, because that function tries to read the file.
         return [fname] + args
@@ -348,7 +348,7 @@ def no_pg_xonsh_preexec_fn():
 
 
 class SubprocSpec:
-    """A container for specifiying how a subprocess command should be
+    """A container for specifying how a subprocess command should be
     executed.
     """
 
@@ -381,7 +381,7 @@ class SubprocSpec:
         args : list of str
             Arguments as originally supplied.
         alias : list of str, callable, or None
-            The alias that was reolved for this command, if any.
+            The alias that was resolved for this command, if any.
         binary_loc : str or None
             Path to binary to execute.
         is_proxy : bool
@@ -549,7 +549,7 @@ class SubprocSpec:
 
     def _fix_null_cmd_bytes(self):
         # Popen does not accept null bytes in its input commands.
-        # that doesn;t stop some subproces from using them. Here we
+        # That doesn't stop some subprocess' from using them. Here we
         # escape them just in case.
         cmd = self.cmd
         for i in range(len(cmd)):
@@ -562,8 +562,8 @@ class SubprocSpec:
     @classmethod
     def build(kls, cmd, *, cls=subprocess.Popen, **kwargs):
         """Creates an instance of the subprocess command, with any
-        modifcations and adjustments based on the actual cmd that
-        was recieved.
+        modifications and adjustments based on the actual cmd that
+        was received.
         """
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
@@ -662,7 +662,7 @@ class SubprocSpec:
         cls = ProcProxyThread if thable else ProcProxy
         self.cls = cls
         self.threadable = thable
-        # also check capturablity, while we are here
+        # also check capturability, while we are here
         cpable = getattr(alias, '__xonsh_capturable__', self.captured)
         self.captured = cpable
 
@@ -781,7 +781,7 @@ def cmds_to_specs(cmds, captured=False):
             specs[-1].background = True
         else:
             raise XonshError('unrecognized redirect {0!r}'.format(redirect))
-    # Apply boundry conditions
+    # Apply boundary conditions
     _update_last_spec(specs[-1])
     return specs
 
@@ -942,7 +942,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
     Parameters
     ----------
     raw_arg : str
-        The str reprensetaion of the macro argument.
+        The str representation of the macro argument.
     kind : object
         A flag or type representing how to convert the argument.
     glbs : Mapping
@@ -966,7 +966,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
     if isinstance(kind, str):
         kind = _convert_kind_flag(kind)
     if kind is str or kind is None:
-        return raw_arg  # short circut since there is nothing else to do
+        return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
     execer = builtins.__xonsh_execer__
     filename = macroname + '(' + name + ')'
@@ -1035,9 +1035,9 @@ def call_macro(f, raw_args, glbs, locs):
     f : callable object
         The function that is called as ``f(*args)``.
     raw_args : tuple of str
-        The str reprensetaion of arguments of that were passed into the
+        The str representation of arguments of that were passed into the
         macro. These strings will be parsed, compiled, evaled, or left as
-        a string dependending on the annotations of f.
+        a string depending on the annotations of f.
     glbs : Mapping
         The globals from the call site.
     locs : Mapping or None
@@ -1110,7 +1110,7 @@ def enter_macro(obj, raw_block, glbs, locs):
     raw_block : str
         The str of the block that is the context body.
         This string will be parsed, compiled, evaled, or left as
-        a string dependending on the return annotation of obj.__enter__.
+        a string depending on the return annotation of obj.__enter__.
     glbs : Mapping
         The globals from the context site.
     locs : Mapping or None

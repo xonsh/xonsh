@@ -236,7 +236,7 @@ class XonshImportEventHook(MetaPathFinder):
 
 
 class XonshImportEventLoader(Loader):
-    """A class that dispatches loader calls to another loader and fires relevent
+    """A class that dispatches loader calls to another loader and fires relevant
     xonsh events.
     """
 
@@ -261,11 +261,11 @@ class XonshImportEventLoader(Loader):
         return rtn
 
     def load_module(self, fullname):
-        """Legacy module loading, provided for backwards compatability."""
+        """Legacy module loading, provided for backwards compatibility."""
         return self.loader.load_module(fullname)
 
     def module_repr(self, module):
-        """Legacy module repr, provided for backwards compatability."""
+        """Legacy module repr, provided for backwards compatibility."""
         return self.loader.module_repr(module)
 
 

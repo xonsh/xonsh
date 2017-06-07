@@ -772,7 +772,7 @@ class Env(cabc.MutableMapping):
 
     * PATH: any variable whose name ends in PATH is a list of strings.
     * XONSH_HISTORY_SIZE: this variable is an (int | float, str) tuple.
-    * LC_* (locale categories): locale catergory names get/set the Python
+    * LC_* (locale categories): locale category names get/set the Python
       locale via locale.getlocale() and locale.setlocale() functions.
 
     An Env instance may be converted to an untyped version suitable for
@@ -831,7 +831,7 @@ class Env(cabc.MutableMapping):
 
     def replace_env(self):
         """Replaces the contents of os_environ with a detyped version
-        of the xonsh environement.
+        of the xonsh environment.
         """
         if self._orig_env is None:
             self._orig_env = dict(os_environ)
@@ -840,7 +840,7 @@ class Env(cabc.MutableMapping):
 
     def undo_replace_env(self):
         """Replaces the contents of os_environ with a detyped version
-        of the xonsh environement.
+        of the xonsh environment.
         """
         if self._orig_env is not None:
             os_environ.clear()
@@ -874,7 +874,7 @@ class Env(cabc.MutableMapping):
         return vd
 
     def help(self, key):
-        """Get information about a specific enviroment variable."""
+        """Get information about a specific environment variable."""
         vardocs = self.get_docs(key)
         width = min(79, os.get_terminal_size()[0])
         docstr = '\n'.join(textwrap.wrap(vardocs.docstr, width=width))

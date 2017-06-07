@@ -31,5 +31,5 @@ pylint:
 
 mccabe:
   disable:
-    - MC0000  # not Py3k compatabile
+    - MC0000  # not Py3k compatible
     - MC0001  # silly cyclomatic complexity

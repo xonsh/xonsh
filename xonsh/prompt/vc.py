@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Prompt formatter for simple version control branchs"""
+"""Prompt formatter for simple version control branches"""
 # pylint:disable=no-member, invalid-name
 
 import os
@@ -234,7 +234,7 @@ def branch_color():
 
 def branch_bg_color():
     """Return red if the current branch is dirty, yellow if the dirtiness can
-    not be determined, and green if it clean. These are bacground colors.
+    not be determined, and green if it clean. These are background colors.
     """
     dwd = dirty_working_directory()
     if dwd is None:

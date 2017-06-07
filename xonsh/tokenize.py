@@ -801,7 +801,7 @@ def _tokenize(readline, encoding):
 
 def tokenize(readline):
     """
-    The tokenize() generator requires one argment, readline, which
+    The tokenize() generator requires one argument, readline, which
     must be a callable object which provides the same interface as the
     readline() method of built-in file objects.  Each call to the function
     should return one line of input as bytes.  Alternately, readline

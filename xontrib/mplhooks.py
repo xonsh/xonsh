@@ -93,7 +93,7 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         # leave only one line for top and bottom
         fig.subplots_adjust(bottom=1/height, top=1-1/height, left=0, right=1)
 
-        # redeuce font size in order to reduce text impact on the image
+        # reduce font size in order to reduce text impact on the image
         font_size = matplotlib.rcParams['font.size']
         matplotlib.rcParams.update({'font.size': 0})
     else:

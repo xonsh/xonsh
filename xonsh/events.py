@@ -24,7 +24,7 @@ def debug_level():
         return builtins.__xonsh_env__.get('XONSH_DEBUG')
     # FIXME: Under py.test, return 1(?)
     else:
-        return 0  # Optimize for speed, not guarenteed correctness
+        return 0  # Optimize for speed, not guaranteed correctness
 
 
 class AbstractEvent(collections.abc.MutableSet, abc.ABC):
@@ -267,7 +267,7 @@ class EventManager:
         ----------
         name : str
             The name of the event, eg "on_precommand"
-        species : sublcass of AbstractEvent
+        species : subclass of AbstractEvent
             The type to turn the event in to.
         """
         if isinstance(species, str):

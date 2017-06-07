@@ -21,7 +21,7 @@ class LazyObject(object):
         provided context (typically the globals of the call site) with the
         given name.
 
-        For example, you can prevent the compilation of a regular expreession
+        For example, you can prevent the compilation of a regular expression
         until it is actually used::
 
             DOT = LazyObject((lambda: re.compile('.')), globals(), 'DOT')
@@ -150,7 +150,7 @@ class LazyDict(cabc.MutableMapping):
         ----------
         loaders : Mapping of keys to functions with no arguments
             A mapping of loader function that performs the actual value
-            construction upon acces.
+            construction upon access.
         ctx : Mapping
             Context to replace the LazyDict instance in
             with the the fully loaded mapping.
@@ -335,7 +335,7 @@ def load_module_in_background(name, package=None, debug='DEBUG', env=None,
         os.environ otherwise.
     replacements : Mapping or None, optional
         Dictionary mapping fully qualified module names (eg foo.bar.baz) that
-        import the lazily loaded moudle, with the variable name in that
+        import the lazily loaded module, with the variable name in that
         module. For example, suppose that foo.bar imports module a as b,
         this dict is then {'foo.bar': 'b'}.
 

@@ -360,7 +360,7 @@ class JsonHistory(History):
         ----------
         at_exit : bool, optional
             Whether the JsonHistoryFlusher should act as a thread in the
-            background, or execute immeadiately and block.
+            background, or execute immediately and block.
 
         Returns
         -------
@@ -383,7 +383,7 @@ class JsonHistory(History):
         """
         Returns all history as found in XONSH_DATA_DIR.
 
-        yeild format: {'inp': cmd, 'rtn': 0, ...}
+        yield format: {'inp': cmd, 'rtn': 0, ...}
         """
         while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer

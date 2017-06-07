@@ -103,8 +103,8 @@ class History:
         Parameters
         ----------
         cmd: dict
-            A dict contains informations of a command. It should contains
-            the following keys like ``inp``, ``rtn``, ``ts`` etc.
+            A dict contains information on a command. It should contain
+            the following keys, like ``inp``, ``rtn``, ``ts`` &etc.
         """
         pass
 
@@ -136,7 +136,7 @@ class History:
         Parameters
         ----------
         size: None or tuple of a int and a string
-            Detemines the size and units of what would be allowed to remain.
+            Determines the size and units of what would be allowed to remain.
         blocking: bool
             If set blocking, then wait until gc action finished.
         """
