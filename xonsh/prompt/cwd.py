@@ -45,16 +45,16 @@ def _dynamically_collapsed_pwd():
     """Return the compact current working directory.  It respects the
     environment variable DYNAMIC_CWD_WIDTH.
     """
-    originial_path = _replace_home_cwd()
+    original_path = _replace_home_cwd()
     target_width, units = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
     elision_char = builtins.__xonsh_env__['DYNAMIC_CWD_ELISION_CHAR']
     if target_width == float('inf'):
-        return originial_path
+        return original_path
     if (units == '%'):
         cols, _ = shutil.get_terminal_size()
         target_width = (cols * target_width) // 100
     sep = xt.get_sep()
-    pwd = originial_path.split(sep)
+    pwd = original_path.split(sep)
     last = pwd.pop()
     remaining_space = target_width - len(last)
     # Reserve space for separators

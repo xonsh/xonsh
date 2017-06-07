@@ -397,17 +397,17 @@ def color_dist(x, y):
     return math.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2 + (x[2]-y[2])**2)
 
 
-def find_closest_color(x, pallette):
-    return min(sorted(pallette.keys())[::-1],
-               key=lambda k: color_dist(x, pallette[k]))
+def find_closest_color(x, palette):
+    return min(sorted(palette.keys())[::-1],
+               key=lambda k: color_dist(x, palette[k]))
 
 
 def make_pallete(strings):
-    """Makes a color pallete from a colection of strings."""
-    pallette = {}
+    """Makes a color palete from a collection of strings."""
+    palette = {}
     for s in strings:
         while '#' in s:
             _, t = s.split('#', 1)
             t, _, s = t.partition(' ')
-            pallette[t] = rgb_to_ints(t)
-    return pallette
+            palette[t] = rgb_to_ints(t)
+    return palette

@@ -1399,13 +1399,13 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _vim_style, _vs_style, _xcode_style)
 
 
-# dynamic syles
-def make_pygments_style(pallette):
-    """Makes a pygments style based on a color pallete."""
+# dynamic styles
+def make_pygments_style(palette):
+    """Makes a pygments style based on a color palete."""
     global Color
     style = {getattr(Color, 'NO_COLOR'): 'noinherit'}
     for name, t in BASE_XONSH_COLORS.items():
-        color = find_closest_color(t, pallette)
+        color = find_closest_color(t, palette)
         style[getattr(Color, name)] = '#' + color
         style[getattr(Color, 'BOLD_'+name)] = 'bold #' + color
         style[getattr(Color, 'UNDERLINE_'+name)] = 'underline #' + color
@@ -1419,8 +1419,8 @@ def pygments_style_by_name(name):
     if name in STYLES:
         return STYLES[name]
     pstyle = get_style_by_name(name)
-    pallette = make_pallete(pstyle.styles.values())
-    astyle = make_pygments_style(pallette)
+    palette = make_pallete(pstyle.styles.values())
+    astyle = make_pygments_style(palette)
     STYLES[name] = astyle
     return astyle
 
