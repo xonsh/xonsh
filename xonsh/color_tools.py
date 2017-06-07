@@ -402,8 +402,8 @@ def find_closest_color(x, palette):
                key=lambda k: color_dist(x, palette[k]))
 
 
-def make_pallete(strings):
-    """Makes a color palete from a collection of strings."""
+def make_palette(strings):
+    """Makes a color palette from a collection of strings."""
     palette = {}
     for s in strings:
         while '#' in s:
@@ -411,3 +411,5 @@ def make_pallete(strings):
             t, _, s = t.partition(' ')
             palette[t] = rgb_to_ints(t)
     return palette
+
+make_pallette = make_palette

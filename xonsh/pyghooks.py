@@ -24,7 +24,7 @@ from xonsh.commands_cache import CommandsCache
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
-from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
+from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
                                find_closest_color)
 from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256
@@ -1419,7 +1419,7 @@ def pygments_style_by_name(name):
     if name in STYLES:
         return STYLES[name]
     pstyle = get_style_by_name(name)
-    palette = make_pallete(pstyle.styles.values())
+    palette = make_palette(pstyle.styles.values())
     astyle = make_pygments_style(palette)
     STYLES[name] = astyle
     return astyle

@@ -6,7 +6,7 @@ import builtins
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict
-from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
+from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
                                find_closest_color, rgb2short, rgb_to_256)
 
 
@@ -892,7 +892,7 @@ def ansi_style_by_name(name):
         raise KeyError('could not find style {0!r}'.format(name))
     from pygments.styles import get_style_by_name
     pstyle = get_style_by_name(name)
-    palette = make_pallete(pstyle.styles.values())
+    palette = make_palette(pstyle.styles.values())
     astyle = make_ansi_style(palette)
     ANSI_STYLES[name] = astyle
     return astyle
