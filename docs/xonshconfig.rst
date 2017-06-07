@@ -112,7 +112,7 @@ Some examples can be seen below:
 
 Putting it all together
 -----------------------
-The following ecample shows a fully fleshed out config file.
+The following example shows a fully fleshed out config file.
 
 :download:`Download config.json <xonshconfig.json>`
 

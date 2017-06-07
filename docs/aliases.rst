@@ -72,7 +72,7 @@ only works on xonsh and Python files.
 ``source-bash``
 ====================
 Like the ``source`` command but for Bash files. This is a thin wrapper around
-the ``source-foreign`` alias where the ``shell`` argument is autoamtically set
+the ``source-foreign`` alias where the ``shell`` argument is automatically set
 to ``bash``.
 
 
@@ -111,7 +111,7 @@ Simple alias defined as ``['rsync', '--partial', '-h', '--progress', '--rsh=ssh'
 
 ``showcmd``
 ============
-Displays how comands and arguments are evaluated.
+Displays how commands and arguments are evaluated.
 
 
 ``ipynb``

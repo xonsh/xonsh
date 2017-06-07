@@ -19,9 +19,9 @@ v0.5.10
 * Pretty printing of the $PATH variable
 * Add "fzf-widgets" xontrib which provides fuzzy search productivity widgets
   with on custom keybindings to xontrib list.
-* New ``free_cwd`` xontrib for Windows, which prevent the current directory from beeing locked when the prompt is shown. 
+* New ``free_cwd`` xontrib for Windows, which prevent the current directory from being locked when the prompt is shown.
   This allows the other programs or Windows explorer to delete the current or parent directory. This is accomplished by 
-  reseting the CWD to the users home directory temporarily while the prompt is displayed. The directory is still locked 
+  resetting the CWD to the users home directory temporarily while the prompt is displayed. The directory is still locked
   while any commands are processed so xonsh still can't remove it own working directory.
 
 
@@ -43,8 +43,8 @@ v0.5.10
   in the ``xonshrc`` file.
 * Fixed a regression in the Windows ``sudo`` command, that allows users to run elevated commands in xonsh.
 * Fix echo command from xoreutils.
-* Fixed a bug on Windows which meant xonsh wasn't using PATH enrivonment variable but instead relying on a default
-  value from the widnows registry.
+* Fixed a bug on Windows which meant xonsh wasn't using PATH environment variable but instead relying on a default
+  value from the windows registry.
 
 
 
@@ -80,7 +80,7 @@ v0.5.8
 
 **Changed:**
 
-* The ``xonsh.platform.os_environ`` wrapper is  now case-insesitive and
+* The ``xonsh.platform.os_environ`` wrapper is  now case-insensitive and
   case-preserving on Windows.
 * The private ``_TeeStd`` class will no longer attempt to write to a
   standard buffer after the tee has been 'closed' and the standard
@@ -95,7 +95,7 @@ v0.5.8
 * Fixed a bug if foreign_shell name was not written in lower case in 
   the static configuration file ``config.json``
 * Fixed a regression on Windows where caused ``which`` reported that the
-  ``PATH`` envrionment variable could not be found.
+  ``PATH`` environment variable could not be found.
 * Fixed issue with foregrounding jobs that were started in the background.
 * Fixed that ``Ctrl-C`` crashes xonsh after running an invalid command.
 * Fixed an potential ``ProcessLookupError`` issue, see #2288.
@@ -109,7 +109,7 @@ v0.5.7
 **Added:**
 
 * New ``color_tools`` module provides basic color tools for converting
-  to and from various formats as well as creating pallettes from color
+  to and from various formats as well as creating palettes from color
   strings.
 * Redirections may now be used in string and list-of-strings
   aliases.
@@ -135,7 +135,7 @@ v0.5.7
   prior to running the next command.
 * Line continuation backslashes are respected on Windows in the PTK shell if
   the backspace is is preceded by a space.
-* Added ``ponysay`` as a command which will ususally not run in a
+* Added ``ponysay`` as a command which will usually not run in a
   threaded mode in the commands cache.
 * New ``jsonutils`` module available for serializing special
   xonsh objects to JSON.
@@ -145,7 +145,7 @@ v0.5.7
 
 * The literal tokens ``and`` and ``or`` must be surrounded by
   whitespace to delimit subprocess mode. If they do not have
-  whitespace on both sides in subproc mode, they are condisered
+  whitespace on both sides in subproc mode, they are considered
   to be part of a command argument.
 * The ``xontrib`` command is now flagged as unthreadable and will be
   run on the main Python thread. This allows xontribs to set signal
@@ -186,8 +186,8 @@ v0.5.7
   able to be used in xonsh. These styles are dynamically created upon
   first use, rather than being lazily loaded by xonsh.
 * On Windows, ``os.environ`` is case insensitive. This would potentially
-  change the case of envrionment variables set into the environment.
-  Xonsh now uses ``nt.envrion``, the case sensitive counterpart, to avoid
+  change the case of environment variables set into the environment.
+  Xonsh now uses ``nt.environ``, the case sensitive counterpart, to avoid
   these issues on Windows.
 * Fix how ``$PWD`` is managed in order to work with symlinks gracefully
 * ``history replay`` no longer barfs on ``style_name`` when setting up the
@@ -198,7 +198,7 @@ v0.5.7
 * Certain vim commands issue commands involving subshells,
   and this is now supported.
 * Null bytes handed to Popen are now automatically escaped prior
-  to running a subprocess. This preevents Popen from issuing
+  to running a subprocess. This prevents Popen from issuing
   embedded null byte exceptions.
 * Xonsh will no longer crash is the current working directory is
   removed out from under it.
@@ -210,9 +210,9 @@ v0.5.7
   preceded by a space on Windows. This only applies to xonsh in interactive
   mode to ensure  scripts are portable.
 * Importing ``*.xsh`` files will now respect the encoding listed in
-  that file and properly fallback to UTF-8. This beahviour follows
+  that file and properly fallback to UTF-8. This behaviour follows
   the rules described in PEP 263.
-* Wizard is now able to properly serialize envrionment paths.
+* Wizard is now able to properly serialize environment paths.
 
 
 v0.5.6
@@ -228,7 +228,7 @@ v0.5.6
 * The ``trace`` will automatically disable color printing when
   stdout is not a TTY or stdout is captured.
 * New ``jedi`` xontrib enables jedi-based tab completions when it is loaded.
-  This supercedes xonsh's default Python-mode completer.
+  This supersedes xonsh's default Python-mode completer.
 * The lexer has a new ``split()`` method which splits strings
   according to xonsh's rules for whitespace and quotes.
 * New events for hooking into the Python import process are now available.
@@ -245,31 +245,31 @@ v0.5.6
 **Changed:**
 
 * The prompt toolkit shell's first completion will now be the
-  current token from the auto-suggetion, if available.
+  current token from the auto-suggestion, if available.
 * Sourcing foreign shells will now safely skip applying aliases
   with the same name as existing xonsh aliases by default.
-  This prevents accitidentally overwriting important xonsh standard
+  This prevents accidentally overwriting important xonsh standard
   aliases, such as ``cd``.
 
 
 **Fixed:**
 
-* Threadable predicition for subprocesses will now consult both the command
+* Threadable prediction for subprocesses will now consult both the command
   as it was typed in and any resolved aliases.
 * The first prompt will no longer print in the middle of the line if the user has
   already started typing.
 * Windows consoles will now automatically enable virtual terminal processing
   with the readline shell, if available. This allows the full use of ANSI
   escape sequences.
-* On the Windows readline shell, the teb-completion supression prompt will no
+* On the Windows readline shell, the tab-completion suppression prompt will no
   longer error out depending on what you press.
-* Fixed issue with subprocess mode wrapping not repecting line continuation
+* Fixed issue with subprocess mode wrapping not respecting line continuation
   backslashes.
 * Handle a bug where Bash On Windows causes platform.windows_bash_command()
   to raise CalledProcessError.
 * Fixed issues pertaining to completing from raw string paths.
   This is particularly relevant to Windows, where raw strings
-  are instered in path completion.
+  are inserted in path completion.
 * Replace deprecated calls to ``time.clock()`` by calls to
   ``time.perf_counter()``.
 * Use ``clock()`` to set the start time of ``_timings`` in non-windows instead
@@ -280,10 +280,10 @@ v0.5.6
   xonsh semantics, rather than just on whitespace using ``str.split()``.
 * The ``mpl`` xontrib has been updated to improve matplotlib
   handling. If ``xontrib load mpl`` is run before matplotlib
-  is imported and xonsh is in ineteractive mode, matplotlib
+  is imported and xonsh is in interactive mode, matplotlib
   will automatically enter interactive mode as well. Additionally,
   ``pyplot.show()`` is patched in interactive mode to be non-blocking.
-  If a non-blocking show fails to draw the figre for some reason,
+  If a non-blocking show fails to draw the figure for some reason,
   a regular blocking version is called.
 * Fixed issues like ``timeit ls`` causing OSError - "Inappropriate ioctl
   for device".
@@ -316,7 +316,7 @@ v0.5.5
   of run control to a single entry point and loading system.
 * The ``xonsh.shell.Shell()`` class now requires that an Execer instance
   be explicitly provided to its init method. This class is no longer
-  responsible for creating an execer an its deprendencies.
+  responsible for creating an execer an its dependencies.
 * Moved decorators ``unthreadable``, ``uncapturable`` from
   ``xonsh.proc`` to ``xonsh.tools``.
 * Some refactorings on jobs control.
@@ -338,15 +338,15 @@ v0.5.5
 **Fixed:**
 
 * Command pipelines that end in a callable alias are now interruptable with
-  ``^C`` and the processes that are piped into the alais have their file handles
+  ``^C`` and the processes that are piped into the alias have their file handles
   closed. This should ensure that the entire pipeline is closed.
 * Fixed issue where unthreadable subprocs were not allowed to be
   captured with the ``$(cmd)`` operator.
 * The ``ProcProxy`` class (unthreadable aliases) was not being executed and would
-  hange if the alias was capturable. This has been fixed.
+  hang if the alias was capturable. This has been fixed.
 * Fixed a ``tcsetattr: Interrupted system call`` issue when run xonsh scripts.
 * Fixed issue with ``ValueError`` being thrown from ``inspect.signature()``
-  when called on C-extention callables in tab completer.
+  when called on C-extension callables in tab completer.
 * Fixed issue that ``ls | less`` crashes on Mac.
 * Threadable prediction was incorrectly based on the user input command, rather than
   the version where aliases have been resolved. This has been corrected.
@@ -442,7 +442,7 @@ v0.5.3
 **Fixed:**
 
 * ``PopenThread`` will now re-issue SIGINT to the main thread when it is
-  recieved.
+  received.
 * Fixed an issue that using sqlite history backend does not kill unfinished
   jobs when quitting xonsh with a second "exit".
 * Fixed an issue that xonsh would fail over to external shells when
@@ -452,7 +452,7 @@ v0.5.3
   server. See https://mail.python.org/pipermail/python-list/2013-June/650460.html for
   more details.
 * Restored the ability to ^Z and ``fg`` processes on posix platforms.
-* CommandPipelines were not gauranteeded to have been ended when the return code
+* CommandPipelines were not guaranteed to have been ended when the return code
   was requested. This has been fixed.
 * Introduce path expansion in ``is_writable_file`` to fix
   ``$XONSH_TRACEBACK_LOGFILE=~/xonsh.log``.
@@ -521,11 +521,11 @@ v0.5.0
 * Added entry to customization faq re: tab completion selection (#1725)
 * Added entry to customization faq re: libgcc core dump (#1160)
 * Section about quoting in the tutorial.
-* The ``$VC_HG_SHOW_BRANCH`` environement variable to control whether to hide the hg branch in the prompt.
+* The ``$VC_HG_SHOW_BRANCH`` environment variable to control whether to hide the hg branch in the prompt.
 * xonfig now contains the latest git commit date if xonsh installed
   from source.
 * Alt+Enter will execute a multiline code block irrespective of cursor position
-* Windows now has the ability to read output asyncronously from
+* Windows now has the ability to read output asynchronously from
   the console.
 * Use `doctr <https://drdoctr.github.io/doctr/>`_ to deploy dev docs to github pages
 * New ``xonsh.proc.uncapturable()`` decorator for declaring that function
@@ -533,12 +533,12 @@ v0.5.0
 * New history backend sqlite.
 * Prompt user to install xontrib package if they try to load an uninstalled
   xontrib
-* Callable aliases may now take a final ``spec`` arguemnt, which is the
-  cooresponding ``SubprocSpec`` instance.
+* Callable aliases may now take a final ``spec`` argument, which is the
+  corresponding ``SubprocSpec`` instance.
 * New ``bashisms`` xontrib provides additional Bash-like syntax, such as ``!!``.
   This xontrib only affects the command line, and not xonsh scripts.
 * Tests that create testing repos (git, hg)
-* New subprocess specification class ``SubprocSpec`` is used for specifiying
+* New subprocess specification class ``SubprocSpec`` is used for specifying
   and manipulating subprocess classes prior to execution.
 * New ``PopenThread`` class runs subprocesses on a a separate thread.
 * New ``CommandPipeline`` and ``HiddenCommandPipeline`` classes manage the
@@ -554,11 +554,11 @@ v0.5.0
   ``f()``, ``f(args)``,  ``f(args, stdin=None)``,
   ``f(args, stdin=None, stdout=None)``, and `
   ``f(args, stdin=None, stdout=None, stderr=None)``.
-* Uncaptured subprocesses now recieve a PTY file handle for stdout and
+* Uncaptured subprocesses now receive a PTY file handle for stdout and
   stderr.
 * New ``$XONSH_PROC_FREQUENCY`` environment variable that specifies how long
-  loops in the subprocess framwork should sleep. This may be adjusted from
-  its default value to improved perfromance and mitigate "leaky" pipes on
+  loops in the subprocess framework should sleep. This may be adjusted from
+  its default value to improved performance and mitigate "leaky" pipes on
   slower machines.
 * ``Shift+Tab`` moves backwards in completion dropdown in prompt_toolkit
 * PromptFormatter class that holds all the related prompt methods
@@ -654,7 +654,7 @@ v0.5.0
 * readline/ptk shells use PromptFormatter
 * Updated the bundled version of ``ply`` to current master available
 * vended ``ply`` is now a git subtree to help with any future updates
-* ``WHITE``  color keyword now means lightgray and ``INTENSE_WHITE`` commpletely white
+* ``WHITE``  color keyword now means lightgray and ``INTENSE_WHITE`` completely white
 * Removed ``add_to_shell`` doc section from ``*nix`` install pages and instead
   relocated it to the general customization page
 * Moved a few ``*nix`` customization tips from the linux install page to the general
@@ -686,7 +686,7 @@ v0.5.0
 * Jupyter kernel installation now respects the setuptools ``root`` parameter.
 * Fix ``__repr__`` and ``__str__`` methods of ``SubprocSpec`` so they report
   correctly
-* Fixed the meassage printed when which is unable to find the command.
+* Fixed the message printed when which is unable to find the command.
 * Fixed a handful of sphinx errors and warnings in the docs
 * Fixed many PEP8 violations that had gone unnoticed
 * Fix failure to detect an Anaconda python distribution if the python was install from the conda-forge channel.
@@ -700,7 +700,7 @@ v0.5.0
 * Added a minimum time buffer time for command pipelines to check for
   if previous commands have executed successfully.  This is helpful
   for pipelines where the last command takes a long time to start up,
-  such as GNU Parallel. This also checks to make sure that output has occured.
+  such as GNU Parallel. This also checks to make sure that output has occurred.
   This includes piping 2+ commands together and pipelines that end in
   unthreadable commands.
 * ``curr_branch`` reports correctly when ``git config status.short true`` is used
@@ -710,23 +710,23 @@ v0.5.0
 * Aliases that begin with a comma now complete correctly (no spurious comma)
 * Use ``python3`` in shebang lines for compatibility with distros that still use Python 2 as the default Python
 * STDOUT is only stored when ``$XONSH_STORE_STDOUT=True``
-* Fixed issue with alais redirections to files throwing an OSError because
+* Fixed issue with alias redirections to files throwing an OSError because
   the function ProcProxies were not being waited upon.
-* Fixed issue with callablable aliases that happen to call sys.exit() or
+* Fixed issue with callable aliases that happen to call sys.exit() or
   raise SystemExit taking out the whole xonsh process.
 * Safely flushes file handles on threaded buffers.
 * Proper default value and documentation for ``$BASH_COMPLETIONS``
 * Fixed readline completer issues on paths with spaces
 * Fix bug in ``argvquote()`` functions used when sourcing batch files on Windows. The bug meant an extra backslash was added to UNC paths.
   Thanks to @bytesemantics for spotting it, and @janschulz for fixing the issue.
-* pep8, lint and refator in pytest style of ``test_ptk_multiline.py``, ``test_replay.py``
+* pep8, lint and refactor in pytest style of ``test_ptk_multiline.py``, ``test_replay.py``
 * Tab completion of aliases returned a upper cased alias on Windows.
 * History show all action now also include current session items.
 * ``proc.stream_stderr`` now handles stderr that doesn't have buffer attribute
 * Made ``history show`` result sorted.
 * Fixed issue that ``history gc`` does not delete empty history files.
 * Standard stream tees have been fixed to accept the possibility that
-  they may not be backed by a binary buffer. This inludes the pipeline
+  they may not be backed by a binary buffer. This includes the pipeline
   stdout tee as well as the shell tees.
 * Fixed a bug when the pygments plugin was used by third party editors etc.
 * CPU usage of ``PopenThread`` and ``CommandPipeline`` has been brought
@@ -774,12 +774,12 @@ v0.4.7
 * moved prompt formatting specific functions from ``xonsh.environ``
   to ``xonsh.prompt.base``
 * All prompt formatter functions moved to ``xonsh.prompt`` subpackage
-* Printing the message about foreign aliases being ingored happens only
+* Printing the message about foreign aliases being ignored happens only
   if XONSH_DEBUG is set.
 * Use ``SetConsoleTitleW()`` on Windows instead of a process call.
 * Tutorial to reflect the current history command argument functionality
 * Macro function arguments now default to ``str``, rather than ``eval``,
-  for consistentcy with other parts of the macro system.
+  for consistency with other parts of the macro system.
 
 
 **Removed:**
@@ -800,13 +800,13 @@ v0.4.7
 * ``xonsh.prompt.vc_branch.git_dirty_working_directory``
    uses ``porcelain`` option instead of using the bytestring
    ``nothing to commit`` to find out if a git directory is dirty
-* Fix bug where know commands where not highlighed on windows.
+* Fix bug where know commands where not highlighted on windows.
 * Fixed completer showing executable in upper case on windows.
-* Fixed issue where tilde expansion was occuring more than once before an
+* Fixed issue where tilde expansion was occurring more than once before an
   equals sign.
 * test_dirstack test_cdpath_expansion leaving stray testing dirs
 * Better completer display for long completions in prompt-toolkit
-* Automatucally append newine to target of ``source`` alias, so that it may
+* Automatically append newline to target of ``source`` alias, so that it may
   be exec'd.
 * test_news fails when single graves around word
 * Slashes in virtual environment names work in vox
@@ -836,7 +836,7 @@ v0.4.6
 * NetBSD is now supported.
 * Macro function calls are now available. These use a Rust-like
   ``f!(arg)`` syntax.
-* Macro subprocess call now avalaible with the ``echo! x y z``
+* Macro subprocess call now available with the ``echo! x y z``
   syntax.
 * A new `event subsystem <http://xon.sh/tutorial_events.html>`_ has been added.
 * howto install sections for Debian/Ubuntu and Fedora.
@@ -893,12 +893,12 @@ v0.4.6
 **Fixed:**
 
 * xonsh modules imported now have the __file__ attribute
-* Context senstitive AST transformer was not adding argument names to the
+* Context sensitive AST transformer was not adding argument names to the
   local scope. This would then enable extraneous subprocess mode wrapping
   for expressions whose leftmost name was function argument. This has been
   fixed by properly adding the argument names to the scope.
 * Foreign shell functions that are mapped to empty filenames no longer
-  receive alaises since they can't be found to source later.
+  receive aliases since they can't be found to source later.
 * Correctly preserve arguments given to xon.sh, in case there are quoted ones.
 * Environment variables in subprocess mode were not being expanded
   unless they were in a sting. They are now expanded properly.
@@ -1028,7 +1028,7 @@ v0.4.4
 * ``vox remove`` command can remove multiple environments at once.
 * Added FreeBSD support.
 * Tab completion for pip python package manager.
-* Regular expressions for enviroment variable matching
+* Regular expressions for environment variable matching.
 
 * __contains__ method on Env
 * Added news tests to enforce changelog conformity.
@@ -1051,7 +1051,7 @@ v0.4.4
 * xonsh_builtins, xonsh_execer fixtures in conftest.py
 * Docs on how to tweak the Windows ConHost for a better color scheme.
 * Docs: how to fix Thunar's "Open Terminal Here" action.
-* A new API class was added to Vox: ``xontrib.voxapi.Vox``. This allows programtic access to the virtual environment machinery for other xontribs. See the API documentation for details.
+* A new API class was added to Vox: ``xontrib.voxapi.Vox``. This allows programmatic access to the virtual environment machinery for other xontribs. See the API documentation for details.
 * History now accepts multiple slices arguments separated by spaces
 
 
@@ -1059,7 +1059,7 @@ v0.4.4
 
 * amalgamate now works on Python 2 and allows relative imports.
 * Top-level xonsh package now more lazy.
-* Show conda environement name in prompt in parentheses similiar what conda does.
+* Show conda environment name in prompt in parentheses similar what conda does.
 * Implementation of expandvars now uses regex
 * Because of the addition of "optional items" to the prompt format string, the
   functions ``xonsh.environ.current_branch``, ``xonsh.environ.env_name`` and
@@ -1111,7 +1111,7 @@ v0.4.4
 * Fix bug that prevented disabling $INTENSIFY_COLORS_ON_WIN in ``xonshrc``
 * ``LazyJSON`` will now hide failures to close, and instead rely on reference
   counting if something goes wrong.
-* Fixed maximum recurssion error with color styles.
+* Fixed maximum recursion error with color styles.
 * Parser tables will no longer be generated in the current directory
   by accident.
 * Error messages when zsh or bash history file is not found
@@ -1153,7 +1153,7 @@ v0.4.3
 * Minor amalgamate bug with ``import pkg.mod`` amalgamated imports.
 * No longer raises an error if a directory in ``$PATH`` does not exist on
   Python v3.4.
-* Fixed a readline shell completion issue that caused by inconsistence between
+* Fixed a readline shell completion issue that caused by inconsistency between
   ``$CASE_SENSITIVE_COMPLETIONS`` and readline's inputrc setting.
 
 
@@ -1218,7 +1218,7 @@ v0.4.0
     - A ``LazyBool`` will only be created when ``__bool__()`` is called.
 
   Additionally, when fully loaded, the above objects will replace themselves
-  by name in the context that they were handed, thus derefenceing themselves.
+  by name in the context that they were handed, thus dereferencing themselves.
   This is useful for global variables that may be expensive to create,
   should only be created once, and may not be used in any particular session.
 * New ``xon.sh`` script added for launching xonsh from a sh environment.
@@ -1234,7 +1234,7 @@ v0.4.0
 * New ``Block`` and ``Functor`` context managers are now available as
   part of the ``xonsh.contexts`` module.
 * ``Block`` provides support for turning a context body into a non-executing
-  list of string lines. This is implmement via a syntax tree transformation.
+  list of string lines. This is implement via a syntax tree transformation.
   This is useful for creating remote execution tools that seek to prevent
   local execution.
 * ``Functor`` is a subclass of the ``Block`` context manager that turns the
@@ -1283,10 +1283,10 @@ v0.4.0
   can be resolved properly.
 * In ``VI_MODE``, the ``v`` key will enter character selection mode, not open
   the editor.  ``Ctrl-X Ctrl-E`` will still open an editor in any mode
-* ``$XONSH_DEBUG`` will now supress amalgamted imports. This usually needs to be
+* ``$XONSH_DEBUG`` will now suppress amalgamated imports. This usually needs to be
   set in the calling environment or prior to *any* xonsh imports.
-* Restuctured ``xonsh.platform`` to be fully lazy.
-* Restuctured ``xonsh.ansi_colors`` to be fully lazy.
+* Restructured ``xonsh.platform`` to be fully lazy.
+* Restructured ``xonsh.ansi_colors`` to be fully lazy.
 * Ensured the ``pygments`` and ``xonsh.pyghooks`` are not imported until
   actually needed.
 * Yacc parser is now loaded in a background thread.
@@ -1298,7 +1298,7 @@ v0.4.0
 * On Windows the ``PROMPT`` environment variable is reset to `$P$G` before
   sourcing ``*.bat`` files.
 * On Windows the ``PROMPT`` environment variable is reset to `$P$G` before starting
-  subprocesses. This prevents the unformatted xonsh ``PROMPT`` tempalte from showing up
+  subprocesses. This prevents the unformatted xonsh ``PROMPT`` template from showing up
   when running batch files with ``ECHO ON```
 * ``@()`` now passes through functions as well as strings, which allows for the
   use of anonymous aliases and aliases not explicitly added to the ``aliases``
@@ -1336,7 +1336,7 @@ v0.4.0
 
 * Issue where ``xonsh`` did not expand user and environment variables in
   ``$PATH``, forcing the user to add absolute paths.
-* Fixed a problem with aliases not always beeing found.
+* Fixed a problem with aliases not always being found.
 * Fixed issue where input was directed to the last process in a pipeline,
   rather than the first.
 * Bug where xonfig wizard can't find ENV docs
@@ -1371,7 +1371,7 @@ v0.3.4
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
-* Git and mercurial branch and dirty function refactor to imporve run times.
+* Git and mercurial branch and dirty function refactor to improve run times.
 
 
 **Fixed:**
@@ -1385,7 +1385,7 @@ v0.3.4
 * Fixed crash resulting from malformed ``$PROMPT``.
 * Fixed regression on Windows with the locate_binary() function.
   The bug prevented `source-cmd` from working correctly and broke the
-  ``activate``/``deactivate`` aliases for the conda environements.
+  ``activate``/``deactivate`` aliases for the conda environments.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
 * On Windows if bash is not on the path look in the registry for the defaults
@@ -1429,7 +1429,7 @@ v0.3.3
 
 **Fixed:**
 
-* Fixed crashed bash-completer when bash is not avaiable on Windows
+* Fixed crashed bash-completer when bash is not available on Windows
 * Fixed bug on Windows where tab-completion for executables would return all files.
 * Fixed bug on Windows which caused the bash $PROMPT variable to be used when no
   no $PROMPT variable was set in .xonshrc
@@ -1438,7 +1438,7 @@ v0.3.3
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
   .xonshrc
 * Fixed an issue about ``os.killpg()`` on OS X which caused xonsh crash with
-  occasionality
+  occasionally.
 
 
 
@@ -1465,7 +1465,7 @@ v0.3.1
   commands and arguments.
 * Added ``$DYNAMIC_CWD_WIDTH`` to allow the adjusting of the current working
   directory width in the prompt.
-* Added ``$XONSH_DEBUG`` environment variable to help with debuging.
+* Added ``$XONSH_DEBUG`` environment variable to help with debugging.
 * The ``${...}`` shortcut for ``__xonsh_env__`` now returns appropriate
   completion options
 
@@ -1495,7 +1495,7 @@ v0.3.1
   triggered by libedit.
 * ``$MULTILINE_PROMPT`` now allows colors, as originally intended.
 * Rectified install issue with Jupyter hook when installing with pyenv,
-  Jupyter install hook now repects ``--prefix`` argument.
+  Jupyter install hook now respects ``--prefix`` argument.
 * Fixed issue with the xonsh.ply subpackage not being installed.
 * Fixed a parsing bug whereby a trailing ``&`` on a line was being ignored
   (processes were unable to be started in the background)
@@ -1509,7 +1509,7 @@ v0.3.0
 * ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
   by popular demand!
 * Subprocesses may be negated with ``not`` and grouped together with parentheses.
-* New framework for writing xonsh extentions, called ``xontribs``.
+* New framework for writing xonsh extensions, called ``xontribs``.
 * Added a new shell type ``'none'``, used to avoid importing ``readline`` or
   ``prompt_toolkit`` when running scripts or running a single command.
 * New: `sudo` functionality on Windows through an alias
@@ -1572,14 +1572,14 @@ v0.3.0
 * Fixed bug with loading prompt-toolkit shell < v0.57.
 * Fixed bug with prompt-toolkit completion when the cursor is not at the end of
   the line.
-* Aliases will now evaluate enviornment variables and other expansions
+* Aliases will now evaluate environment variables and other expansions
   at execution time rather than passing through a literal string.
-* Fixed environment variables from os.environ not beeing loaded when a running
+* Fixed environment variables from os.environ not being loaded when a running
   a script
 * The readline shell will now load the inputrc files.
 * Fixed bug that prevented `source-alias` from working.
 * Now able to ``^C`` the xonfig wizard on start up.
-* Fixed deadlock on Windows when runing subprocess that generates enough output
+* Fixed deadlock on Windows when running subprocess that generates enough output
   to fill the OS pipe buffer.
 * Sourcing foreign shells will now return a non-zero exit code if the
   source operation failed for some reason.
@@ -1600,7 +1600,7 @@ v0.2.7
   for the concrete shell type based on the availability on the user's machine.
 * New environment variable ``$XONSH_COLOR_STYLE`` will set the color mapping
   for all of xonsh.
-* New ``XonshStyle`` pygments style will determine the approriate color
+* New ``XonshStyle`` pygments style will determine the appropriate color
   mapping based on ``$XONSH_COLOR_STYLE``.  The associated ``xonsh_style_proxy()``
   is intended for wrapping ``XonshStyle`` when actually being used by
   pygments.
@@ -1609,7 +1609,7 @@ v0.2.7
   anywhere.
 * ``xonsh.tools.HAVE_PYGMENTS`` flag now denotes if pygments is installed and
   available on the users system.
-* The ``ansi_colors`` module is now availble for handling ANSI color codes.
+* The ``ansi_colors`` module is now available for handling ANSI color codes.
 * ``?`` and ``??`` operator output now has colored titles, like in IPython.
 * ``??`` will syntax highlight source code if pygments is available.
 * Python mode output is now syntax highlighted if pygments is available.

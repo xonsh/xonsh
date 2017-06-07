@@ -40,7 +40,7 @@ functionality (in less you take the time to rebind them elsewhere).
 
     * - Keystroke
       - ASCII control representation
-      - Default commmand
+      - Default command
     * - ``Control J``
       - ``<Enter>``
       - Run command

@@ -150,7 +150,7 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
    >>> 'HOME' in ${...}
    True
 
-To get information about a specific enviroment variable you can use the
+To get information about a specific environment variable you can use the
 :func:`~xonsh.environ.Env.help` method.
 
 .. code-block:: xonshcon
@@ -297,7 +297,7 @@ the directories again.
     >>> l = 2
     >>> ls -l
     42
-    >>> # deleting ls will return us to supbroc-mode
+    >>> # deleting ls will return us to subproc-mode
     >>> del ls
     >>> ls -l
     total 0
@@ -913,7 +913,7 @@ Let's see a demonstration with some simple filenames:
     3
 
 This same kind of search is performed if the backticks are prefaced with ``r``.
-So the following expresions are equivalent: ```test``` and ``r`test```.
+So the following expressions are equivalent: ```test``` and ``r`test```.
 
 Other than the regex matching, this functions in the same way as normal
 globbing.  For more information, please see the documentation for the ``re``
@@ -1203,7 +1203,7 @@ may have one of the following signatures:
 
     def mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
         """Lastly, the final form of subprocess callables takes all of the
-        arguments shown above as well as a subpcrocess specification
+        arguments shown above as well as a subprocess specification
         SubprocSpec object. This holds many attributes that dictate how
         the command is being run.  For instance this can be useful for
         knowing if the process is captured by $() or !().
@@ -1316,9 +1316,9 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
 
-.. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` enviroment variable is False
+.. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` environment variable is False
              (the default) then foreign shell aliases that try to override
-             xonsh aliases will be ignored. Setting of this enviroment variable
+             xonsh aliases will be ignored. Setting of this environment variable
              must happen in the static configuration file
              ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
 
@@ -1408,7 +1408,7 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   hex color, or the nearest approximation that that is supported by
   the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
   both valid.
-* ``BACKGROUND_`` may be added to the begining of a color name or hex
+* ``BACKGROUND_`` may be added to the beginning of a color name or hex
   color to set a background color.  For example, ``BACKGROUND_INTENSE_RED``
   and ``BACKGROUND_#123456`` can both be used.
 * ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
@@ -1586,7 +1586,7 @@ file. Errors in Python mode will already raise exceptions and so this
 is roughly equivalent to Bash's ``set -e``.
 
 Furthermore, you can also toggle the ability to print source code lines with the
-``trace on`` and ``trace off`` commands.  This is roughly equivelent to
+``trace on`` and ``trace off`` commands.  This is roughly equivalent to
 Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 
 Importing Xonsh (``*.xsh``)

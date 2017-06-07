@@ -288,7 +288,7 @@ History items outside of the range defined by
             Parameters
             ----------
             size: None or tuple of a int and a string
-                Detemines the size and units of what would be allowed to remain.
+                Determines the size and units of what would be allowed to remain.
             blocking: bool
                 If set blocking, then wait until gc action finished.
             """
