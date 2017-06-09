@@ -549,7 +549,7 @@ class SubprocSpec:
 
     def _fix_null_cmd_bytes(self):
         # Popen does not accept null bytes in its input commands.
-        # That doesn't stop some subprocess' from using them. Here we
+        # That doesn't stop some subprocesses from using them. Here we
         # escape them just in case.
         cmd = self.cmd
         for i in range(len(cmd)):
