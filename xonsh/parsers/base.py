@@ -2097,11 +2097,11 @@ class BaseParser(object):
 
     # The following grammar rules are no-ops because we don't need to glue the
     # source code back together piece-by-piece. Instead, we simply look for
-    # top-level commas and record their positions. With these positions and
-    # the bounding parenthesis !() positions we can use the source_slice()
-    # method. This does a much better job of capturing exactly the source code
-    # that was provided. The tokenizer & lexer can be a little lossy, especially
-    # with respect to whitespace.
+    # top-level commas and record their positions. With these positions and the
+    # respective positions of the bounding parentheses, we can use the
+    # source_slice() method. This does a much better job of capturing exactly
+    # the source code that was provided. The tokenizer & lexer can be a little
+    # lossy, especially with respect to whitespace.
 
     def p_nocomma_tok(self, p):
         # see attachment function above for docstring
