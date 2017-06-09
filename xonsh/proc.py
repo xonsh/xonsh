@@ -220,8 +220,9 @@ class NonBlockingFDReader(QueueReader):
 
 def populate_buffer(reader, fd, buffer, chunksize):
     """Reads bytes from the file descriptor and copies them into a buffer.
-    The reads happened in parallel, using pread(), and is thus only
-    available on posix. If the read fails for any reason, the reader is
+
+    The reads happen in parallel using the pread() syscall; which is only
+    available on POSIX systems. If the read fails for any reason, the reader is
     flagged as closed.
     """
     offset = 0
