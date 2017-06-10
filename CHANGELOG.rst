@@ -4,6 +4,17 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.12
+====================
+
+**Fixed:**
+
+* Fixed ``release.xsh`` to prevent it from dirtying the repo on release and
+  leading to an unwanted ``.dev`` suffix on the version number
+
+
+
+
 v0.5.11
 ====================
 
