@@ -338,7 +338,10 @@ class JsonHistory(History):
         Parameters
         ----------
         cmd : dict
-            Command dictionary that should be added to the ordered history.
+            This dict contains information about the command that is to be
+            added to the history list. It should contain the keys ``inp``,
+            ``rtn`` and ``ts``. These key names mirror the same names defined
+            as instance variables in the ``HistoryEntry`` class.
 
         Returns
         -------

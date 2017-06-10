@@ -103,8 +103,10 @@ class History:
         Parameters
         ----------
         cmd: dict
-            A dict contains information on a command. It should contain
-            the following keys, like ``inp``, ``rtn``, ``ts`` &etc.
+            This dict contains information about the command that is to be
+            added to the history list. It should contain the keys ``inp``,
+            ``rtn`` and ``ts``. These key names mirror the same names defined
+            as instance variables in the ``HistoryEntry`` class.
         """
         pass
 
