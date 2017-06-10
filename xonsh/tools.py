@@ -23,7 +23,7 @@ import collections.abc as cabc
 import contextlib
 import ctypes
 import datetime
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 import functools
 import glob
 import itertools
@@ -2007,7 +2007,7 @@ def _deprecated_message_suffix(deprecated_in, removed_in):
 def _deprecated_error_on_expiration(name, removed_in):
     if not removed_in:
         return
-    elif StrictVersion(__version__) >= StrictVersion(removed_in):
+    elif LooseVersion(__version__) >= LooseVersion(removed_in):
         raise AssertionError(
             '{} has passed its version {} expiry date!'.format(
                 name, removed_in))
