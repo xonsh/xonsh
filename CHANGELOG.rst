@@ -4,6 +4,22 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.11
+====================
+
+**Added:**
+
+* ``release.xsh`` creates a github release with the merged news entries as the
+  release body
+
+
+**Fixed:**
+
+* ``xonfig`` now displays the proper value for "on linux"
+
+
+
+
 v0.5.10
 ====================
 
