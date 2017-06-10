@@ -7,11 +7,6 @@ Xonsh Change Log
 v0.5.11
 ====================
 
-
-
-v0.5.11
-====================
-
 **Added:**
 
 * ``release.xsh`` creates a github release with the merged news entries as the
@@ -21,13 +16,6 @@ v0.5.11
 **Fixed:**
 
 * ``xonfig`` now displays the proper value for "on linux"
-
-
-
-
-v0.5.10
-====================
-
 
 
 v0.5.10

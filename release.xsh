@@ -236,9 +236,23 @@ def do_github_release(ver, ghuser, org, repo):
     """Performs a github release"""
     login = ghlogin(ghuser)
     repo = login.repository(org, repo)
-    news = ver_news(ver)
+    news = read_changelog_recent()
     repo.create_release(ver, target_commitish='master', name=ver, body=news,
                         draft=False, prerelease=False)
+
+def read_changelog_recent():
+    with open('CHANGELOG.rst', 'r') as f:
+        line = ''
+        while not line.startswith('v'):
+            line = f.readline()
+        news = ''
+        while True:
+            line = f.readline()
+            if line.startswith('v'):
+                break
+            news += line
+
+    return news
 
 def open_feedstock_pr(ver, ghuser):
     """Opens a feedstock PR."""
