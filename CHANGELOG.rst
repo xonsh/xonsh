@@ -7,6 +7,11 @@ Xonsh Change Log
 v0.5.11
 ====================
 
+
+
+v0.5.11
+====================
+
 **Added:**
 
 * ``release.xsh`` creates a github release with the merged news entries as the
