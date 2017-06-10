@@ -1401,7 +1401,7 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
 
 # dynamic styles
 def make_pygments_style(palette):
-    """Makes a pygments style based on a color palete."""
+    """Makes a pygments style based on a color palette."""
     global Color
     style = {getattr(Color, 'NO_COLOR'): 'noinherit'}
     for name, t in BASE_XONSH_COLORS.items():
