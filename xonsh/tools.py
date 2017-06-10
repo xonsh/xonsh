@@ -23,6 +23,7 @@ import collections.abc as cabc
 import contextlib
 import ctypes
 import datetime
+from distutils.version import StrictVersion
 import functools
 import glob
 import itertools
@@ -38,6 +39,7 @@ import operator
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
+from xonsh import __version__
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
@@ -1949,8 +1951,12 @@ def deprecated(deprecated_in=None, removed_in=None):
     that deprecation occurred in and the version it will be removed
     in if both of these values are passed.
 
-    In all circumstances, call ``warnings.warn`` with details, while
-    raising ``DeprecationWarning``.
+    When removed_in is not a release equal to or less than the current
+    release, call ``warnings.warn`` with details, while raising
+    ``DeprecationWarning``.
+
+    When removed_in is a release equal to or less than the current release,
+    raise an ``AssertionError``.
 
     Parameters
     ----------
@@ -1959,7 +1965,7 @@ def deprecated(deprecated_in=None, removed_in=None):
     removed_in : str
         The version number that this function will be removed in.
     """
-    message_suffix = _deprecation_message_suffix(deprecated_in, removed_in)
+    message_suffix = _deprecated_message_suffix(deprecated_in, removed_in)
     if not message_suffix:
         message_suffix = ''
 
@@ -1969,6 +1975,7 @@ def deprecated(deprecated_in=None, removed_in=None):
 
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
+            _deprecated_error_on_expiration(func.__name__, removed_in)
             func(*args, **kwargs)
             warnings.warn(warning_message, DeprecationWarning)
 
@@ -1980,7 +1987,7 @@ def deprecated(deprecated_in=None, removed_in=None):
     return decorated
 
 
-def _deprecation_message_suffix(deprecated_in, removed_in):
+def _deprecated_message_suffix(deprecated_in, removed_in):
     if deprecated_in and removed_in:
         message_suffix = (
             ' in version {} and will be removed in version {}'.format(
@@ -1995,3 +2002,12 @@ def _deprecation_message_suffix(deprecated_in, removed_in):
         message_suffix = None
 
     return message_suffix
+
+
+def _deprecated_error_on_expiration(name, removed_in):
+    if not removed_in:
+        return
+    elif StrictVersion(__version__) >= StrictVersion(removed_in):
+        raise AssertionError(
+            '{} has passed its version {} expiry date!'.format(
+                name, removed_in))

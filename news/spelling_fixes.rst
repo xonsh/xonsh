@@ -2,6 +2,17 @@
 
 *  ``xonsh.color_tools.make_palette()``
 
+   Simple rename of the pre-existing
+   ``xonsh.color_tools.make_pallete()`` function.
+
+*  ``xonsh.tools.decorator()`` function/method decorator.
+
+   This allows for an API function to be annotated with a
+   decorator that documents deprecation, while also tying in
+   functionality that will warn a user that the function has
+   been deprecated, and, raise an ``AssertionError`` if the
+   function has passed its expiry date.
+
 **Changed:** None
 
 **Deprecated:**

@@ -9,6 +9,7 @@ import warnings
 
 import pytest
 
+from xonsh import __version__
 from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 
@@ -1313,3 +1314,12 @@ def test_deprecated_warning_contains_message():
         my_function()
 
         assert str(warning.pop().message) == 'my_function has been deprecated'
+
+
+@pytest.mark.parametrize('expired_version', ['0.1.0', __version__])
+def test_deprecated_past_expiry_raises_assertion_error(expired_version):
+    @deprecated(removed_in=expired_version)
+    def my_function(): pass
+
+    with pytest.raises(AssertionError):
+        my_function()
