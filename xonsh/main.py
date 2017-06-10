@@ -171,8 +171,8 @@ def parser():
                    default=None)
     p.add_argument('--timings',
                    help='Prints timing information before the prompt is shown. '
-                        'This is usefull to track down performance issues '
-                        'and investigate startup times.',
+                        'This is useful while tracking down performance issues '
+                        'and investigating startup times.',
                    dest='timings',
                    action='store_true',
                    default=None)
