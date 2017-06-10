@@ -360,7 +360,7 @@ def _partial_color_tokenize_main(template, styles):
 
 
 class CompoundColorMap(MutableMapping):
-    """Looks up color tokes by name, potentially generating the value
+    """Looks up color tokens by name, potentially generating the value
     from the lookup.
     """
 
