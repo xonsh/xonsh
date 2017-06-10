@@ -1410,7 +1410,8 @@ class ProcProxyThread(threading.Thread):
 
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
-        # check if we have already be interrupted to prevent infinite recursion
+        # Check if we have already been interrupted. This should prevent
+        # the possibility of infinite recursion.
         if self._interrupted:
             return
         self._interrupted = True
