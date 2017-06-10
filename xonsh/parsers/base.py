@@ -189,7 +189,7 @@ def empty_list_if_newline(x):
 
 
 def lopen_loc(x):
-    """Extracts the line and column number for a node that may have anb opening
+    """Extracts the line and column number for a node that may have an opening
     parenthesis, brace, or bracket.
     """
     lineno = x._lopen_lineno if hasattr(x, '_lopen_lineno') else x.lineno
