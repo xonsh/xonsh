@@ -9,6 +9,7 @@ import re
 import math
 
 from xonsh.lazyasd import lazyobject, LazyObject
+from xonsh.tools import deprecated
 
 
 RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
@@ -412,4 +413,7 @@ def make_palette(strings):
             palette[t] = rgb_to_ints(t)
     return palette
 
-make_pallette = make_palette
+
+@deprecated(deprecated_in='0.5.10', removed_in='0.6.0')
+def make_pallete(*args, **kwargs):
+    make_palette(*args, **kwargs)
