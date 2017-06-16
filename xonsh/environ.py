@@ -47,7 +47,7 @@ import xonsh.prompt.base as prompt
 events.doc('on_envvar_new', """
 on_envvar_new(name: str, value: Any) -> None
 
-Fires after a new enviroment variable is created.
+Fires after a new environment variable is created.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
 """)
@@ -56,7 +56,7 @@ cause a recursion until the limit.
 events.doc('on_envvar_change', """
 on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
 
-Fires after an enviroment variable is changed.
+Fires after an environment variable is changed.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
 """)
@@ -521,7 +521,7 @@ def DEFAULT_DOCS():
                       configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
-    'PATHEXT': VarDocs('Sequence of extention strings (eg, ``.EXE``) for '
+    'PATHEXT': VarDocs('Sequence of extension strings (eg, ``.EXE``) for '
                        'filtering valid executables by. Each element must be '
                        'uppercase.'),
     'PRETTY_PRINT_RESULTS': VarDocs(
@@ -545,12 +545,12 @@ def DEFAULT_DOCS():
         'The error that is raised is a ``subprocess.CalledProcessError``.'),
     'RIGHT_PROMPT': VarDocs(
         'Template string for right-aligned text '
-        'at the prompt. This may be parameterized in the same way as '
+        'at the prompt. This may be parametrized in the same way as '
         'the ``$PROMPT`` variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
     'BOTTOM_TOOLBAR': VarDocs(
         'Template string for the bottom toolbar. '
-        'This may be parameterized in the same way as '
+        'This may be parametrized in the same way as '
         'the ``$PROMPT`` variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
     'SHELL_TYPE': VarDocs(
@@ -580,7 +580,7 @@ def DEFAULT_DOCS():
         'command will be offered as a suggestion.  Also used for "fuzzy" '
         'tab completion of paths.'),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': VarDocs(
-        'Whether or not to supress branch timeout warning messages.'),
+        'Whether or not to suppress branch timeout warning messages.'),
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "
@@ -664,7 +664,7 @@ def DEFAULT_DOCS():
     'XONSH_DEBUG': VarDocs(
         'Sets the xonsh debugging level. This may be an integer or a boolean. '
         'Setting this variable prior to stating xonsh to ``1`` or ``True`` '
-        'will supress amalgamated imports. Setting it to ``2`` will get some '
+        'will suppress amalgamated imports. Setting it to ``2`` will get some '
         'basic information like input transformation, command replacement. '
         'With ``3`` or a higher number will make more debugging information '
         'presented, like PLY parsing messages.',
@@ -720,7 +720,7 @@ def DEFAULT_DOCS():
         '``True`` if xonsh is running as a login shell, and ``False`` otherwise.',
         configurable=False),
     'XONSH_PROC_FREQUENCY': VarDocs(
-        'The process frquency is the time that '
+        'The process frequency is the time that '
         'xonsh process threads sleep for while running command pipelines. '
         'The value has units of seconds [s].'),
     'XONSH_SHOW_TRACEBACK': VarDocs(
@@ -772,7 +772,7 @@ class Env(cabc.MutableMapping):
 
     * PATH: any variable whose name ends in PATH is a list of strings.
     * XONSH_HISTORY_SIZE: this variable is an (int | float, str) tuple.
-    * LC_* (locale categories): locale catergory names get/set the Python
+    * LC_* (locale categories): locale category names get/set the Python
       locale via locale.getlocale() and locale.setlocale() functions.
 
     An Env instance may be converted to an untyped version suitable for
@@ -831,7 +831,7 @@ class Env(cabc.MutableMapping):
 
     def replace_env(self):
         """Replaces the contents of os_environ with a detyped version
-        of the xonsh environement.
+        of the xonsh environment.
         """
         if self._orig_env is None:
             self._orig_env = dict(os_environ)
@@ -840,7 +840,7 @@ class Env(cabc.MutableMapping):
 
     def undo_replace_env(self):
         """Replaces the contents of os_environ with a detyped version
-        of the xonsh environement.
+        of the xonsh environment.
         """
         if self._orig_env is not None:
             os_environ.clear()
@@ -874,7 +874,7 @@ class Env(cabc.MutableMapping):
         return vd
 
     def help(self, key):
-        """Get information about a specific enviroment variable."""
+        """Get information about a specific environment variable."""
         vardocs = self.get_docs(key)
         width = min(79, os.get_terminal_size()[0])
         docstr = '\n'.join(textwrap.wrap(vardocs.docstr, width=width))

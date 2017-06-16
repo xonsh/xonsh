@@ -306,8 +306,8 @@ class PromptToolkitShell(BaseShell):
         # needs to be performed by the subprocess itself. This fix is important
         # when subprocesses don't properly restore the terminal attributes,
         # like Python in interactive mode. Also note that the sequences "\033M"
-        # and "\033E" seem to work too, but these are techinally VT100 codes.
-        # I used the more primitive ANSI sequence to maximize compatability.
+        # and "\033E" seem to work too, but these are technically VT100 codes.
+        # I used the more primitive ANSI sequence to maximize compatibility.
         # -scopatz 2017-01-28
         #   if not ON_POSIX:
         #       return

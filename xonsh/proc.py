@@ -220,8 +220,9 @@ class NonBlockingFDReader(QueueReader):
 
 def populate_buffer(reader, fd, buffer, chunksize):
     """Reads bytes from the file descriptor and copies them into a buffer.
-    The reads happend in parallel, using pread(), and is thus only
-    availabe on posix. If the read fails for any reason, the reader is
+
+    The reads happen in parallel using the pread() syscall; which is only
+    available on POSIX systems. If the read fails for any reason, the reader is
     flagged as closed.
     """
     offset = 0
@@ -280,7 +281,7 @@ def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
 
 def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     """Reads bytes from the file descriptor and puts lines into the queue.
-    The reads happend in parallel,
+    The reads happened in parallel,
     using xonsh.winutils.read_console_output_character(),
     and is thus only available on windows. If the read fails for any reason,
     the reader is flagged as closed.
@@ -300,23 +301,23 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     # These chunked reads basically need to happen like this because,
     #   a. The default buffer size is HUGE for the console (90k lines x 120 cols)
     #      as so we can't just read in everything at the end and see what we
-    #      care about without a noticible performance hit.
+    #      care about without a noticeable performance hit.
     #   b. Even with this huge size, it is still possible to write more lines than
     #      this, so we should scroll along with the console.
-    # Unfortnately, because we do not have control over the terminal emulator,
-    # It is not possible to compute how far back we should set the begining
+    # Unfortunately, because we do not have control over the terminal emulator,
+    # It is not possible to compute how far back we should set the beginning
     # read position because we don't know how many characters have been popped
     # off the top of the buffer. If we did somehow know this number we could do
     # something like the following:
     #
     #    new_offset = (y*cols) + x
     #    if new_offset == max_offset:
-    #        new_offset -= scolled_offset
+    #        new_offset -= scrolled_offset
     #        x = new_offset%cols
     #        y = new_offset//cols
     #        continue
     #
-    # So this method is imperfect and only works as long as the sceen has
+    # So this method is imperfect and only works as long as the screen has
     # room to expand to.  Thus the trick here is to expand the screen size
     # when we get close enough to the end of the screen. There remain some
     # async issues related to not being able to set the cursor position.
@@ -488,7 +489,7 @@ def safe_flush(handle):
 
 
 def still_writable(fd):
-    """Determines whether a file descriptior is still writable by trying to
+    """Determines whether a file descriptor is still writable by trying to
     write an empty string and seeing if it fails.
     """
     try:
@@ -664,7 +665,7 @@ class PopenThread(threading.Thread):
 
     def _read_write(self, reader, writer, stdbuf):
         """Reads a chunk of bytes from a buffer and write into memory or back
-        down to the standard buffer, as approriate. Returns the number of
+        down to the standard buffer, as appropriate. Returns the number of
         successful reads.
         """
         if reader is None:
@@ -696,7 +697,7 @@ class PopenThread(threading.Thread):
             self._alt_mode_writer(chunk[:i], membuf, stdbuf)
             # switch modes
             # write the flag itself the current mode where alt mode is on
-            # so that it is streamed to the termial ASAP.
+            # so that it is streamed to the terminal ASAP.
             # this is needed for terminal emulators to find the correct
             # positions before and after alt mode.
             alt_mode = (flag in START_ALTERNATE_MODE)
@@ -950,7 +951,7 @@ class Handle(int):
 
 class FileThreadDispatcher:
     """Dispatches to different file handles depending on the
-    current thread. Useful if you want file operation to go to differnt
+    current thread. Useful if you want file operation to go to different
     places for different threads.
     """
 
@@ -960,7 +961,7 @@ class FileThreadDispatcher:
         ----------
         default : file-like or None, optional
             The file handle to write to if a thread cannot be found in
-            the registery. If None, a new in-memory instance.
+            the registry. If None, a new in-memory instance.
 
         Attributes
         ----------
@@ -1111,13 +1112,13 @@ class FileThreadDispatcher:
 
 
 # These should NOT be lazy since they *need* to get the true stdout from the
-# main thread. Also their creation time should be neglibible.
+# main thread. Also their creation time should be negligible.
 STDOUT_DISPATCHER = FileThreadDispatcher(default=sys.stdout)
 STDERR_DISPATCHER = FileThreadDispatcher(default=sys.stderr)
 
 
 def parse_proxy_return(r, stdout, stderr):
-    """Proxies may return a variety of outputs. This hanles them generally.
+    """Proxies may return a variety of outputs. This handles them generally.
 
     Parameters
     ----------
@@ -1189,7 +1190,7 @@ PROXY_KWARG_NAMES = frozenset(['args', 'stdin', 'stdout', 'stderr', 'spec'])
 
 
 def partial_proxy(f):
-    """Dispatches the approriate proxy function based on the number of args."""
+    """Dispatches the appropriate proxy function based on the number of args."""
     numargs = 0
     for name, param in inspect.signature(f).parameters.items():
         if param.kind == param.POSITIONAL_ONLY or \
@@ -1236,7 +1237,8 @@ class ProcProxyThread(threading.Thread):
             set to `None`, then `sys.stderr` is used.
         universal_newlines : bool, optional
             Whether or not to use universal newlines.
-        env : Mapping, optiona            Environment mapping.
+        env : Mapping, optional
+            Environment mapping.
         """
         self.orig_f = f
         self.f = partial_proxy(f)
@@ -1408,7 +1410,8 @@ class ProcProxyThread(threading.Thread):
 
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
-        # check if we have already be interrupted to prevent infintie recurrsion
+        # Check if we have already been interrupted. This should prevent
+        # the possibility of infinite recursion.
         if self._interrupted:
             return
         self._interrupted = True
@@ -1605,7 +1608,7 @@ class ProcProxy(object):
 
     def wait(self, timeout=None):
         """Runs the function and returns the result. Timeout argument only
-        present for API compatability.
+        present for API compatibility.
         """
         if self.f is None:
             return 0
@@ -1722,7 +1725,7 @@ class CommandPipeline:
         Parameters
         ----------
         specs : list of SubprocSpec
-            Process sepcifications
+            Process specifications
 
         Attributes
         ----------
@@ -1798,7 +1801,7 @@ class CommandPipeline:
         """Iterates through the last stdout, and returns the lines
         exactly as found.
         """
-        # get approriate handles
+        # get appropriate handles
         spec = self.spec
         proc = self.proc
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
@@ -2094,7 +2097,7 @@ class CommandPipeline:
         self._safe_close(s.captured_stderr)
 
     def _set_input(self):
-        """Sets the input vaiable."""
+        """Sets the input variable."""
         stdin = self.proc.stdin
         if stdin is None or isinstance(stdin, int) or stdin.closed or \
            not stdin.seekable() or not safe_readable(stdin):
@@ -2105,7 +2108,7 @@ class CommandPipeline:
         self.input = self._decode_uninew(input)
 
     def _check_signal(self):
-        """Checks if a signal was recieved and issues a message."""
+        """Checks if a signal was received and issues a message."""
         proc_signal = getattr(self.proc, 'signal', None)
         if proc_signal is None:
             return
@@ -2125,7 +2128,7 @@ class CommandPipeline:
             hist.last_cmd_rtn = self.proc.returncode
 
     def _raise_subproc_error(self):
-        """Raises a subprocess error, if we are suppossed to."""
+        """Raises a subprocess error, if we are supposed to."""
         spec = self.spec
         rtn = self.returncode
         if (not spec.is_proxy and
@@ -2296,7 +2299,7 @@ def pause_call_resume(p, f, *args, **kwargs):
 class PrevProcCloser(threading.Thread):
     """Previous process closer thread for pipelines whose last command
     is itself unthreadable. This makes sure that the pipeline is
-    driven foreward and does not deadlock.
+    driven forward and does not deadlock.
     """
 
     def __init__(self, pipeline):
@@ -2312,7 +2315,7 @@ class PrevProcCloser(threading.Thread):
         self.start()
 
     def run(self):
-        """Runs the closing algorithim."""
+        """Runs the closing algorithm."""
         pipeline = self.pipeline
         check_prev_done = len(pipeline.procs) == 1
         if check_prev_done:

@@ -50,7 +50,7 @@ class TracerType(object):
         # we have to use a function to set usecolor because of the way that
         # lazyasd works. Namely, it cannot dispatch setattr to the target
         # object without being unable to access its own __dict__. This makes
-        # setting an atter look like getting a function.
+        # setting an attr look like getting a function.
         self.usecolor = usecolor
 
     def start(self, filename):

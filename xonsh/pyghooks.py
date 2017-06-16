@@ -24,7 +24,7 @@ from xonsh.commands_cache import CommandsCache
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
-from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
+from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
                                find_closest_color)
 from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256
@@ -242,7 +242,7 @@ def color_by_name(name, fg=None, bg=None):
         fg = norm_name(name)
     else:
         bg = norm_name(name)
-    # assmble token
+    # assemble token
     if fg is None and bg is None:
         tokname = 'NO_COLOR'
     elif fg is None:
@@ -360,7 +360,7 @@ def _partial_color_tokenize_main(template, styles):
 
 
 class CompoundColorMap(MutableMapping):
-    """Looks up color tokes by name, potentailly generating the value
+    """Looks up color tokens by name, potentially generating the value
     from the lookup.
     """
 
@@ -410,7 +410,7 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        self.trap = {}  # for traping custom colors set by user
+        self.trap = {}  # for trapping custom colors set by user
         self._smap = {}
         self._style_name = ''
         self.style_name = style_name
@@ -453,7 +453,7 @@ class XonshStyle(Style):
     def enhance_colors_for_cmd_exe(self):
         """ Enhance colors when using cmd.exe on windows.
             When using the default style all blue and dark red colors
-            are changed to CYAN and intence red.
+            are changed to CYAN and intense red.
         """
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu
@@ -1399,13 +1399,13 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _vim_style, _vs_style, _xcode_style)
 
 
-# dynamic syles
-def make_pygments_style(pallette):
-    """Makes a pygments style based on a color pallete."""
+# dynamic styles
+def make_pygments_style(palette):
+    """Makes a pygments style based on a color palette."""
     global Color
     style = {getattr(Color, 'NO_COLOR'): 'noinherit'}
     for name, t in BASE_XONSH_COLORS.items():
-        color = find_closest_color(t, pallette)
+        color = find_closest_color(t, palette)
         style[getattr(Color, name)] = '#' + color
         style[getattr(Color, 'BOLD_'+name)] = 'bold #' + color
         style[getattr(Color, 'UNDERLINE_'+name)] = 'underline #' + color
@@ -1419,8 +1419,8 @@ def pygments_style_by_name(name):
     if name in STYLES:
         return STYLES[name]
     pstyle = get_style_by_name(name)
-    pallette = make_pallete(pstyle.styles.values())
-    astyle = make_pygments_style(pallette)
+    palette = make_palette(pstyle.styles.values())
+    astyle = make_pygments_style(palette)
     STYLES[name] = astyle
     return astyle
 

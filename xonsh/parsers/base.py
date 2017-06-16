@@ -189,8 +189,8 @@ def empty_list_if_newline(x):
 
 
 def lopen_loc(x):
-    """Extracts the line and column number for a node that may have anb opening
-    parenthesis, brace, or braket.
+    """Extracts the line and column number for a node that may have an opening
+    parenthesis, brace, or bracket.
     """
     lineno = x._lopen_lineno if hasattr(x, '_lopen_lineno') else x.lineno
     col = x._lopen_col if hasattr(x, '_lopen_col') else x.col_offset
@@ -390,7 +390,7 @@ class BaseParser(object):
         setattr(self.__class__, listfunc.__name__, listfunc)
 
     def _tok_rule(self, rulename):
-        """For a rule name, creates a rule that retuns the corresponding token.
+        """For a rule name, creates a rule that returns the corresponding token.
         '_tok' is appended to the rule name.
         """
 
@@ -1437,7 +1437,7 @@ class BaseParser(object):
         self.p_nodedent_base.__func__.__doc__ = doc
 
     def p_nodedent_base(self, p):
-        # see above attachament function
+        # see above attachment function
         pass
 
     def p_nodedent_any(self, p):
@@ -1471,7 +1471,7 @@ class BaseParser(object):
         self.p_nonewline_base.__func__.__doc__ = doc
 
     def p_nonewline_base(self, p):
-        # see above attachament function
+        # see above attachment function
         pass
 
     def p_nonewline_any(self, p):
@@ -1979,7 +1979,7 @@ class BaseParser(object):
         self.p_nocloser_base.__func__.__doc__ = doc
 
     def p_nocloser_base(self, p):
-        # see above attachament function
+        # see above attachment function
         pass
 
     def p_nocloser_any(self, p):
@@ -2097,14 +2097,14 @@ class BaseParser(object):
 
     # The following grammar rules are no-ops because we don't need to glue the
     # source code back together piece-by-piece. Instead, we simply look for
-    # top-level commas and record their positions. With these positions and
-    # the bounding parantheses !() positions we can use the source_slice()
-    # method. This does a much better job of capturing exactly the source code
-    # that was provided. The tokenizer & lexer can be a little lossy, especially
-    # with respect to whitespace.
+    # top-level commas and record their positions. With these positions and the
+    # respective positions of the bounding parentheses, we can use the
+    # source_slice() method. This does a much better job of capturing exactly
+    # the source code that was provided. The tokenizer & lexer can be a little
+    # lossy, especially with respect to whitespace.
 
     def p_nocomma_tok(self, p):
-        # see attachement function above for docstring
+        # see attachment function above for docstring
         pass
 
     def p_any_raw_tok(self, p):

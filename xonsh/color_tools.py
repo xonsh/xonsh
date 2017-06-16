@@ -9,6 +9,7 @@ import re
 import math
 
 from xonsh.lazyasd import lazyobject, LazyObject
+from xonsh.tools import deprecated
 
 
 RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
@@ -397,17 +398,22 @@ def color_dist(x, y):
     return math.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2 + (x[2]-y[2])**2)
 
 
-def find_closest_color(x, pallette):
-    return min(sorted(pallette.keys())[::-1],
-               key=lambda k: color_dist(x, pallette[k]))
+def find_closest_color(x, palette):
+    return min(sorted(palette.keys())[::-1],
+               key=lambda k: color_dist(x, palette[k]))
 
 
-def make_pallete(strings):
-    """Makes a color pallete from a colection of strings."""
-    pallette = {}
+def make_palette(strings):
+    """Makes a color palette from a collection of strings."""
+    palette = {}
     for s in strings:
         while '#' in s:
             _, t = s.split('#', 1)
             t, _, s = t.partition(' ')
-            pallette[t] = rgb_to_ints(t)
-    return pallette
+            palette[t] = rgb_to_ints(t)
+    return palette
+
+
+@deprecated(deprecated_in='0.5.10', removed_in='0.6.0')
+def make_pallete(*args, **kwargs):
+    make_palette(*args, **kwargs)

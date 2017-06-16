@@ -25,7 +25,7 @@ class Parser(BaseParser):
         outputdir : str or None, optional
             The directory to place generated tables within.
         """
-        # Rule creation and modifiation *must* take place before super()
+        # Rule creation and modification *must* take place before super()
         opt_rules = ['argument_comma_list', 'comma_argument_list']
         for rule in opt_rules:
             self._opt_rule(rule)

@@ -188,7 +188,7 @@ def call_tip(oinfo, format_call=True):
     Returns
     -------
     call_info : None, str or (str, dict) tuple.
-      When format_call is True, the whole call information is formattted as a
+      When format_call is True, the whole call information is formatted as a
       single string.  Otherwise, the object's name and its argspec dict are
       returned.  If no call information is available, None is returned.
 

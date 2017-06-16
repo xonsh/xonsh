@@ -88,7 +88,7 @@ fi
 echo ${namefile}"""
 
 
-# mapping of shell name alises to keys in other lookup dictionaries.
+# mapping of shell name aliases to keys in other lookup dictionaries.
 @lazyobject
 def CANON_SHELL_NAMES():
     return {
@@ -197,7 +197,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     aliascmd : str or None, optional
         The command to generate alias output with.
     extra_args : tuple of str, optional
-        Addtional command line options to pass into the shell.
+        Additional command line options to pass into the shell.
     currenv : tuple of items or None, optional
         Manual override for the current environment.
     safe : bool, optional
@@ -248,7 +248,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     env : dict
         Dictionary of shell's environment. (None if the subproc command fails)
     aliases : dict
-        Dictionary of shell's alaiases, this includes foreign function
+        Dictionary of shell's aliases, this includes foreign function
         wrappers.(None if the subproc command fails)
     """
     cmd = [shell]
@@ -425,9 +425,9 @@ class ForeignShellFunctionAlias(object):
         filename : str
             Where the function is defined, path to source.
         sourcer : str or None, optional
-            Command to source foreing files with.
+            Command to source foreign files with.
         extra_args : tuple of str, optional
-            Addtional command line options to pass into the shell.
+            Additional command line options to pass into the shell.
         """
         sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
             else sourcer

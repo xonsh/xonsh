@@ -63,12 +63,12 @@ def test_bad_indent():
         check_parse(code)
 
 def test_good_rhs_subproc():
-    # nonsense but parsebale
+    # nonsense but parsable
     code = 'str().split() | ![grep exit]\n'
     assert(code)
 
 def test_bad_rhs_subproc():
-    # nonsense but unparsebale
+    # nonsense but unparsable
     code = 'str().split() | grep exit\n'
     with pytest.raises(SyntaxError):
         check_parse(code)

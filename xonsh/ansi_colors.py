@@ -6,7 +6,7 @@ import builtins
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict
-from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_pallete,
+from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
                                find_closest_color, rgb2short, rgb_to_256)
 
 
@@ -19,7 +19,7 @@ def ansi_partial_color_format(template, style='default', cmap=None, hide=False):
     template : str
         The template string, potentially with color names.
     style : str, optional
-        Sytle name to look up color map from.
+        Style name to look up color map from.
     cmap : dict, optional
         A color map to use, this will prevent the color map from being
         looked up via the style name.
@@ -866,11 +866,11 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
 #
 # Dynamically generated styles
 #
-def make_ansi_style(pallette):
-    """Makes an ANSI color style from a color pallette"""
+def make_ansi_style(palette):
+    """Makes an ANSI color style from a color palette"""
     style = {'NO_COLOR': '0'}
     for name, t in BASE_XONSH_COLORS.items():
-        closest = find_closest_color(t, pallette)
+        closest = find_closest_color(t, palette)
         if len(closest) == 3:
             closest = ''.join([a*2 for a in closest])
         short = rgb2short(closest)[0]
@@ -892,7 +892,7 @@ def ansi_style_by_name(name):
         raise KeyError('could not find style {0!r}'.format(name))
     from pygments.styles import get_style_by_name
     pstyle = get_style_by_name(name)
-    pallette = make_pallete(pstyle.styles.values())
-    astyle = make_ansi_style(pallette)
+    palette = make_palette(pstyle.styles.values())
+    astyle = make_ansi_style(palette)
     ANSI_STYLES[name] = astyle
     return astyle

@@ -5,9 +5,11 @@ import os
 import pathlib
 import stat
 from tempfile import TemporaryDirectory
+import warnings
 
 import pytest
 
+from xonsh import __version__
 from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 
@@ -24,7 +26,7 @@ from xonsh.tools import (
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
-    swap_values, get_logical_line, replace_logical_line, check_quotes,
+    swap_values, get_logical_line, replace_logical_line, check_quotes, deprecated,
     )
 from xonsh.environ import Env
 
@@ -1247,3 +1249,77 @@ def test_swap_values():
         assert orig['y'] == 43
     assert orig['x'] == 1
     assert 'y' not in orig
+
+
+@pytest.mark.parametrize('arguments, expected_docstring', [
+    ({'deprecated_in': '0.5.10', 'removed_in': '0.6.0'},
+     'my_function has been deprecated in version 0.5.10 and will be removed '
+     'in version 0.6.0'),
+    ({'deprecated_in': '0.5.10'},
+     'my_function has been deprecated in version 0.5.10'),
+    ({'removed_in': '0.6.0'},
+     'my_function has been deprecated and will be removed in version 0.6.0'),
+    ({},
+     'my_function has been deprecated')
+])
+def test_deprecated_docstrings_with_empty_docstring(
+        arguments, expected_docstring):
+    @deprecated(**arguments)
+    def my_function(): pass
+
+    assert my_function.__doc__ == expected_docstring
+
+
+@pytest.mark.parametrize('arguments, expected_docstring', [
+    ({'deprecated_in': '0.5.10', 'removed_in': '0.6.0'},
+     'Does nothing.\n\nmy_function has been deprecated in version 0.5.10 and '
+     'will be removed in version 0.6.0'),
+    ({'deprecated_in': '0.5.10'},
+     'Does nothing.\n\nmy_function has been deprecated in version 0.5.10'),
+    ({'removed_in': '0.6.0'},
+     'Does nothing.\n\nmy_function has been deprecated and will be removed '
+     'in version 0.6.0'),
+    ({},
+     'Does nothing.\n\nmy_function has been deprecated')
+])
+def test_deprecated_docstrings_with_nonempty_docstring(
+        arguments, expected_docstring):
+    @deprecated(**arguments)
+    def my_function():
+        """Does nothing."""
+        pass
+
+    assert my_function.__doc__ == expected_docstring
+
+
+def test_deprecated_warning_raised():
+    @deprecated()
+    def my_function(): pass
+
+    with warnings.catch_warnings(record=True) as warning:
+        warnings.simplefilter('always')
+
+        my_function()
+
+        assert issubclass(warning.pop().category, DeprecationWarning)
+
+
+def test_deprecated_warning_contains_message():
+    @deprecated()
+    def my_function(): pass
+
+    with warnings.catch_warnings(record=True) as warning:
+        warnings.simplefilter('always')
+
+        my_function()
+
+        assert str(warning.pop().message) == 'my_function has been deprecated'
+
+
+@pytest.mark.parametrize('expired_version', ['0.1.0', __version__])
+def test_deprecated_past_expiry_raises_assertion_error(expired_version):
+    @deprecated(removed_in=expired_version)
+    def my_function(): pass
+
+    with pytest.raises(AssertionError):
+        my_function()

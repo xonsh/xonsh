@@ -4,19 +4,19 @@
 Advanced Events
 ********************
 
-If you havent, go read the `events tutorial <tutorial_events.html>`_ first. This documents the messy
+If you haven't, go read the `events tutorial <tutorial_events.html>`_ first. This documents the messy
 details of the event system.
 
 You may also find the `events API reference <api/events.html>`_ useful.
 
 Why Unordered?
 ==============
-Yes, handler call order is not guarenteed. Please don't file bugs about this.
+Yes, handler call order is not guaranteed. Please don't file bugs about this.
 
 This was chosen because the order of handler registration is dependant on load order, which is 
 stable in a release but not something generally reasoned about. In addition, xontribs mean that we
 don't know what handlers could be registered. So even an "ordered" event system would be unable to
-make guarentees about ordering because of the larger system.
+make guarantees about ordering because of the larger system.
 
 Because of this, the event system is not ordered; this is a form of abstraction. Order-dependant 
 semantics are not encouraged by the built-in methods.

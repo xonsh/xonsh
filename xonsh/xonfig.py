@@ -74,7 +74,7 @@ WIZARD_ENV = """
                   {{YELLOW}}--------------------------{{NO_COLOR}}
 The xonsh shell also allows you to setup environment variables from
 the static configuration file. Any variables set in this way are
-superceded by the definitions in the xonshrc or on the command line.
+superseded by the definitions in the xonshrc or on the command line.
 Still, setting environment variables in this way can help define
 options that are global to the system or user.
 
@@ -530,7 +530,7 @@ def STRIP_COLOR_RE():
 
 
 def _align_string(string, align='<', fill=' ', width=80):
-    """ Align and pad a color formattet string """
+    """ Align and pad a color formatted string """
     linelen = len(STRIP_COLOR_RE.sub('', string))
     padlen = max(width-linelen, 0)
     if align == '^':

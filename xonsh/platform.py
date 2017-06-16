@@ -200,7 +200,7 @@ def expanduser():
 def windows_expanduser(path):
     """A Windows-specific expanduser() function for xonsh. This is needed
     since os.path.expanduser() does not check on Windows if the user actually
-    exists. This restircts expanding the '~' if it is not followed by a
+    exists. This restricts expanding the '~' if it is not followed by a
     separator. That is only '~/' and '~\' are expanded.
     """
     if not path.startswith('~'):
@@ -361,7 +361,7 @@ def windows_bash_command():
 
 if ON_WINDOWS:
     class OSEnvironCasePreserving(collections.MutableMapping):
-        """ Case-preseving wrapper for os.environ on Windows.
+        """ Case-preserving wrapper for os.environ on Windows.
             It uses nt.environ to get the correct cased keys on
             initialization. It also preserves the case of any variables
             add after initialization.
@@ -414,7 +414,7 @@ if ON_WINDOWS:
 
 @lazyobject
 def os_environ():
-    """This dispatches to the correct, case-senstive version of os.envrion.
+    """This dispatches to the correct, case-sensitive version of os.environ.
     This is mainly a problem for Windows. See #2024 for more details.
     This can probably go away once support for Python v3.5 or v3.6 is
     dropped.
@@ -427,7 +427,7 @@ def os_environ():
 
 @functools.lru_cache(1)
 def bash_command():
-    """Determines the command for Bash on the current plaform."""
+    """Determines the command for Bash on the current platform."""
     if ON_WINDOWS:
         bc = windows_bash_command()
     else:

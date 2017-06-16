@@ -134,7 +134,7 @@ def setup_readline():
         except Exception:
             # this seems to fail with libedit
             print_exception('xonsh: could not load readline default init file.')
-    # properly reset intput typed before the first prompt
+    # properly reset input typed before the first prompt
     readline.set_startup_hook(carriage_return)
 
 
@@ -184,7 +184,7 @@ def fix_readline_state_after_ctrl_c():
 
 
 def rl_completion_suppress_append(val=1):
-    """Sets the rl_completion_suppress_append varaiable, if possible.
+    """Sets the rl_completion_suppress_append variable, if possible.
     A value of 1 (default) means to suppress, a value of 0 means to enable.
     """
     if RL_COMPLETION_SUPPRESS_APPEND is None:
@@ -193,7 +193,7 @@ def rl_completion_suppress_append(val=1):
 
 
 def rl_completion_query_items(val=None):
-    """Sets the rl_completion_query_items varaiable, if possible.
+    """Sets the rl_completion_query_items variable, if possible.
     A None value will set this to $COMPLETION_QUERY_LIMIT, otherwise any integer
     is accepted.
     """
@@ -506,7 +506,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         return p
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
-        """Readline implementation of color formatting. This usess ANSI color
+        """Readline implementation of color formatting. This uses ANSI color
         codes.
         """
         hide = hide if self._force_hide is None else self._force_hide

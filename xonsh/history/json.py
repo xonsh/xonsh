@@ -338,7 +338,10 @@ class JsonHistory(History):
         Parameters
         ----------
         cmd : dict
-            Command dictionary that should be added to the ordered history.
+            This dict contains information about the command that is to be
+            added to the history list. It should contain the keys ``inp``,
+            ``rtn`` and ``ts``. These key names mirror the same names defined
+            as instance variables in the ``HistoryEntry`` class.
 
         Returns
         -------
@@ -360,7 +363,7 @@ class JsonHistory(History):
         ----------
         at_exit : bool, optional
             Whether the JsonHistoryFlusher should act as a thread in the
-            background, or execute immeadiately and block.
+            background, or execute immediately and block.
 
         Returns
         -------
@@ -383,7 +386,7 @@ class JsonHistory(History):
         """
         Returns all history as found in XONSH_DATA_DIR.
 
-        yeild format: {'inp': cmd, 'rtn': 0, ...}
+        yield format: {'inp': cmd, 'rtn': 0, ...}
         """
         while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer

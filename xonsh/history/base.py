@@ -103,8 +103,10 @@ class History:
         Parameters
         ----------
         cmd: dict
-            A dict contains informations of a command. It should contains
-            the following keys like ``inp``, ``rtn``, ``ts`` etc.
+            This dict contains information about the command that is to be
+            added to the history list. It should contain the keys ``inp``,
+            ``rtn`` and ``ts``. These key names mirror the same names defined
+            as instance variables in the ``HistoryEntry`` class.
         """
         pass
 
@@ -136,7 +138,7 @@ class History:
         Parameters
         ----------
         size: None or tuple of a int and a string
-            Detemines the size and units of what would be allowed to remain.
+            Determines the size and units of what would be allowed to remain.
         blocking: bool
             If set blocking, then wait until gc action finished.
         """

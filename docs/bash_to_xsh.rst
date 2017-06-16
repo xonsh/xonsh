@@ -2,7 +2,7 @@ Bash to Xonsh Translation Guide
 ================================
 As you have probably figured out by now, xonsh is not ``sh``-lang compliant.
 If your muscles have memorized all of the Bash prestidigitations, this page
-will help you put a finger on how to do the equivelent task in xonsh.
+will help you put a finger on how to do the equivalent task in xonsh.
 
 .. list-table::
     :widths: 30 30 40

@@ -5,7 +5,7 @@ from xonsh.platform import LIBC
 
 
 def sysctlbyname(name, return_str=True):
-    """Gets a sysctrl value by name. If return_str is true, this will return
+    """Gets a sysctl value by name. If return_str is true, this will return
     a string representation, else it will return the raw value.
     """
     # forked from https://gist.github.com/pudquick/581a71425439f2cf8f09

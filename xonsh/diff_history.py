@@ -52,7 +52,7 @@ def greenline(line):
 
 
 def highlighted_ndiff(a, b):
-    """Returns a highlited string, with bold charaters where different."""
+    """Returns a highlighted string, with bold characters where different."""
     s = ''
     sm = difflib.SequenceMatcher()
     sm.set_seqs(a, b)

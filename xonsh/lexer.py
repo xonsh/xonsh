@@ -379,7 +379,7 @@ class Lexer(object):
             t = self.token()
 
     def split(self, s):
-        """Splits a string into a list of strings which are whitepace-separated
+        """Splits a string into a list of strings which are whitespace-separated
         tokens.
         """
         vals = []

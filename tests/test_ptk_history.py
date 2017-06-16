@@ -10,7 +10,7 @@ from xonsh.ptk.history import PromptToolkitHistory
 
 @pytest.fixture
 def history_obj():
-    """Instatiate `PromptToolkitHistory` and append a line string"""
+    """Instantiate `PromptToolkitHistory` and append a line string"""
     hist = PromptToolkitHistory(load_prev=False)
     hist.append('line10')
     return hist

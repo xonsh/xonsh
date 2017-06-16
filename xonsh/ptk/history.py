@@ -7,7 +7,7 @@ import prompt_toolkit.history
 
 
 class PromptToolkitHistory(prompt_toolkit.history.History):
-    """History class that implements the promt-toolkit history interface
+    """History class that implements the prompt-toolkit history interface
     with the xonsh backend.
     """
 

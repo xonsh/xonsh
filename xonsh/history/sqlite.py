@@ -32,7 +32,7 @@ def _xh_sqlite_create_history_table(cursor):
     """Create Table for history items.
 
     Columns:
-        info - JSON formated, reserved for future extension.
+        info - JSON formatted, reserved for future extension.
     """
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS xonsh_history

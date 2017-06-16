@@ -39,7 +39,7 @@ class Replayer(object):
         Parameters
         ----------
         merge_env : tuple of str or Mappings, optional
-            Describes how to merge the environments, in order of increasing precednce.
+            Describes how to merge the environments, in order of increasing precedence.
             Available strings are 'replay' and 'native'. The 'replay' env comes from the
             history file that we are replaying. The 'native' env comes from what this
             instance of xonsh was started up with. Instead of a string, a dict or other

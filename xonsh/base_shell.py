@@ -213,10 +213,10 @@ class _TeeStd(io.TextIOBase):
 
 
 class Tee:
-    """Class that merges tee'd stdout and stderr into a single strea,.
+    """Class that merges tee'd stdout and stderr into a single stream.
 
     This represents what a user would actually see on the command line.
-    This class as the same interface as io.TextIOWrapper, except that
+    This class has the same interface as io.TextIOWrapper, except that
     the buffer is optional.
     """
     # pylint is a stupid about counting public methods when using inheritance.
@@ -480,7 +480,7 @@ class BaseShell(object):
             kernel32.SetConsoleTitleW(t)
         else:
             with open(1, 'wb', closefd=False) as f:
-                # prevent xonsh from answering interative questions
+                # prevent xonsh from answering interactive questions
                 # on the next command by writing the title
                 f.write("\x1b]0;{0}\x07".format(t).encode())
                 f.flush()
@@ -506,15 +506,15 @@ class BaseShell(object):
         return p
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
-        """Formats the colors in a string. This base implmentation colors based
-        on ANSI color codes
+        """Formats the colors in a string. ``BaseShell``'s default implementation
+        of this method uses colors based on ANSI color codes.
         """
         style = builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
         return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
-        """Prints a string in color. This base implmentation will color based
-        ANSI color codes if a string was given as input. If a list of token
+        """Prints a string in color. This base implementation's colors are based
+        on ANSI color codes if a string was given as input. If a list of token
         pairs is given, it will color based on pygments, if available. If
         pygments is not available, it will print a colorless string.
         """

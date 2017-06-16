@@ -23,6 +23,7 @@ import collections.abc as cabc
 import contextlib
 import ctypes
 import datetime
+from distutils.version import LooseVersion
 import functools
 import glob
 import itertools
@@ -38,6 +39,7 @@ import operator
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
+from xonsh import __version__
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
@@ -284,7 +286,7 @@ def find_next_break(line, mincol=0, lexer=None):
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
                  greedy=False):
-    """Excapsulates tokens in a source code line in a uncaptured
+    """Encapsulates tokens in a source code line in a uncaptured
     subprocess ![] starting at a minimum column. If there are no tokens
     (ie in a comment line) this returns None. If greedy is True, it will encapsulate
     normal parentheses. Greedy is False by default.
@@ -418,7 +420,7 @@ def _have_open_triple_quotes(s):
 
 
 def get_line_continuation():
-    """ The line contiuation characters used in subproc mode. In interactive
+    """ The line continuation characters used in subproc mode. In interactive
          mode on Windows the backslash must be preceded by a space. This is because
          paths on Windows may end in a backslash.
     """
@@ -504,7 +506,7 @@ def subexpr_from_unbalanced(expr, ltok, rtok):
 
 
 def subexpr_before_unbalanced(expr, ltok, rtok):
-    """Obtains the expression prior to last unblanced left token."""
+    """Obtains the expression prior to last unbalanced left token."""
     subexpr, _, post = expr.rpartition(ltok)
     nrtoks_in_post = post.count(rtok)
     while nrtoks_in_post != 0:
@@ -875,7 +877,7 @@ def suggestion_sort_helper(x, y):
 
 def escape_windows_cmd_string(s):
     """Returns a string that is usable by the Windows cmd.exe.
-    The escaping is based on details here and emperical testing:
+    The escaping is based on details here and empirical testing:
     http://www.robvanderwoude.com/escapechars.php
     """
     for c in '()%!^<>&|"':
@@ -1427,7 +1429,7 @@ def is_history_backend(x):
 
 def is_dynamic_cwd_width(x):
     """ Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
-    environement variable.
+    environment variable.
     """
     return (isinstance(x, tuple) and
             len(x) == 2 and
@@ -1463,7 +1465,7 @@ RE_HISTORY_TUPLE = LazyObject(
 
 
 def to_history_tuple(x):
-    """Converts to a canonincal history tuple."""
+    """Converts to a canonical history tuple."""
     if not isinstance(x, (cabc.Sequence, float, int)):
         raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
@@ -1612,7 +1614,7 @@ def format_std_prepost(template, env=None):
     except Exception:
         print_exception()
     # \001\002 is there to fool pygments into not returning an empty string
-    # for potentially empty input. This happend when the template is just a
+    # for potentially empty input. This happens when the template is just a
     # color code with no visible text.
     invis = '\001\002'
     s = shell.format_color(invis + s + invis, force_string=True)
@@ -1725,7 +1727,7 @@ def check_for_partial_string(x):
         return (string_indices[-2], string_indices[-1], starting_quote[-1])
 
 
-# regular expressions for matching enviroment variables
+# regular expressions for matching environment variables
 # i.e $FOO, ${'FOO'}
 @lazyobject
 def POSIX_ENVVAR_REGEX():
@@ -1771,7 +1773,7 @@ def backup_file(fname):
 
 
 def normabspath(p):
-    """Retuns as normalized absolute path, namely, normcase(abspath(p))"""
+    """Returns as normalized absolute path, namely, normcase(abspath(p))"""
     return os.path.normcase(os.path.abspath(p))
 
 
@@ -1940,3 +1942,72 @@ def uncapturable(f):
 def carriage_return():
     """Writes a carriage return to stdout, and nothing else."""
     print('\r', flush=True, end='')
+
+
+def deprecated(deprecated_in=None, removed_in=None):
+    """Parametrized decorator that deprecates a function in a graceful manner.
+
+    Updates the decorated function's docstring to mention the version
+    that deprecation occurred in and the version it will be removed
+    in if both of these values are passed.
+
+    When removed_in is not a release equal to or less than the current
+    release, call ``warnings.warn`` with details, while raising
+    ``DeprecationWarning``.
+
+    When removed_in is a release equal to or less than the current release,
+    raise an ``AssertionError``.
+
+    Parameters
+    ----------
+    deprecated_in : str
+        The version number that deprecated this function.
+    removed_in : str
+        The version number that this function will be removed in.
+    """
+    message_suffix = _deprecated_message_suffix(deprecated_in, removed_in)
+    if not message_suffix:
+        message_suffix = ''
+
+    def decorated(func):
+        warning_message = '{} has been deprecated'.format(func.__name__)
+        warning_message += message_suffix
+
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            _deprecated_error_on_expiration(func.__name__, removed_in)
+            func(*args, **kwargs)
+            warnings.warn(warning_message, DeprecationWarning)
+
+        wrapped.__doc__ = (
+            '{}\n\n{}'.format(wrapped.__doc__, warning_message)
+            if wrapped.__doc__ else warning_message)
+
+        return wrapped
+    return decorated
+
+
+def _deprecated_message_suffix(deprecated_in, removed_in):
+    if deprecated_in and removed_in:
+        message_suffix = (
+            ' in version {} and will be removed in version {}'.format(
+                deprecated_in, removed_in))
+    elif deprecated_in and not removed_in:
+        message_suffix = (
+            ' in version {}'.format(deprecated_in))
+    elif not deprecated_in and removed_in:
+        message_suffix = (
+            ' and will be removed in version {}'.format(removed_in))
+    else:
+        message_suffix = None
+
+    return message_suffix
+
+
+def _deprecated_error_on_expiration(name, removed_in):
+    if not removed_in:
+        return
+    elif LooseVersion(__version__) >= LooseVersion(removed_in):
+        raise AssertionError(
+            '{} has passed its version {} expiry date!'.format(
+                name, removed_in))

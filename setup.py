@@ -314,7 +314,7 @@ def main():
         )
     if HAVE_SETUPTOOLS:
         # WARNING!!! Do not use setuptools 'console_scripts'
-        # It validates the depenendcies (of which we have none) everytime the
+        # It validates the dependencies (of which we have none) every time the
         # 'xonsh' command is run. This validation adds ~0.2 sec. to the startup
         # time of xonsh - for every single xonsh run.  This prevents us from
         # reaching the goal of a startup time of < 0.1 sec.  So never ever write

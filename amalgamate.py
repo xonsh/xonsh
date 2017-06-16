@@ -386,9 +386,9 @@ def rewrite_imports(name, pkg, order, imps):
             for n in a.names:
                 p, dot, m = n.name.rpartition('.')
                 if p == pkg and m in order:
-                    msg = ('Cannot amalgamate almagate import of '
-                           'amalgamated module:\n\n  import {0}.{1}\n'
-                           '\nin {0}/{2}.py').format(pkg, n.name, name)
+                    msg = ('Cannot amalgamate import of amalgamated module:'
+                           '\n\n  import {0}.{1}\n\nin {0}/{2}.py').format(
+                        pkg, n.name, name)
                     raise RuntimeError(msg)
                 imp = (Import, n.name, n.asname)
                 if imp not in imps:

@@ -71,7 +71,7 @@ class PromptFormatter:
             val = self._get_field_value(field)
             return _format_value(val, spec, conv)
         else:
-            # color or unkown field, return as is
+            # color or unknown field, return as is
             return '{' + field + '}'
 
     def _get_field_value(self, field):
@@ -158,7 +158,7 @@ def multiline_prompt(curr=''):
     headlen = len(head)
     # tail is the trailing whitespace
     tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
-    # now to constuct the actual string
+    # now to construct the actual string
     dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:

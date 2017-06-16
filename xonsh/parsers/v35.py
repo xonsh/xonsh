@@ -25,7 +25,7 @@ class Parser(BaseParser):
         outputdir : str or None, optional
             The directory to place generated tables within.
         """
-        # Rule creation and modifiation *must* take place before super()
+        # Rule creation and modification *must* take place before super()
         tok_rules = ['await', 'async']
         for rule in tok_rules:
             self._tok_rule(rule)
@@ -113,7 +113,7 @@ class Parser(BaseParser):
     # to our LL(1) parser. Even though 'test' includes '*expr' in star_expr,
     # we explicitly match '*' here, too, to give it proper precedence.
     # Illegal combinations and orderings are blocked in ast.c:
-    # multiple (test comp_for) arguements are blocked; keyword unpackings
+    # multiple (test comp_for) arguments are blocked; keyword unpackings
     # that precede iterable unpackings are blocked; etc.
     def p_argument_test_or_star(self, p):
         """argument : test_or_star_expr"""

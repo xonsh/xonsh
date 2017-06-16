@@ -140,7 +140,7 @@ def test_uncpushd_push_to_same_share(xonsh_builtins, shares_setup):
     assert len(DIRSTACK) == 2
 
     dirstack.popd([])
-    assert os.path.isdir(TEMP_DRIVE[0] + '\\'), "Temp drived not unmapped till last reference removed"
+    assert os.path.isdir(TEMP_DRIVE[0] + '\\'), "Temp drive not unmapped till last reference removed"
     dirstack.popd([])
     assert owd.casefold() == os.getcwd().casefold(), "popd returned cwd to expected dir"
     assert len(_unc_tempDrives) == 0

@@ -143,13 +143,13 @@ the above from from-import syntax.
 Alternatively, for modules outside of the current package (or modules that are
 not amalgamated) the import statement should be either ``import pkg.x`` or
 ``import pkg.x as name``. This is because these are the only cases where the
-amalgamater is able to automatically insert lazy imports in way that is guarantted
+amalgamater is able to automatically insert lazy imports in way that is guaranteed
 to be safe. This is due to the ambiguity that ``from pkg.x import name`` may
 import a variable that cannot be lazily constructed or may import a module.
 So the simple rules to follow are that:
 
 1. Import objects from modules in the same package directly in using from-import,
-2. Import objects from moudules outside of the package via a direct import
+2. Import objects from modules outside of the package via a direct import
    or import-as statement.
 
 How to Test
@@ -167,7 +167,7 @@ you just have to run this::
 
 This will build and run the current state of the repository in an isolated
 container (it may take a while the first time you run it). There are two
-additionals arguments you can pass this script.
+additional arguments you can pass this script.
 
 * The version of python
 * the version of ``prompt_toolkit``
@@ -233,7 +233,7 @@ parts of xonsh for more test isolation. For a list of the various fixtures::
 
     $ py.test --fixtures
 
-when writting tests it's best to use pytest features i.e parametrization::
+when writing tests it's best to use pytest features i.e parametrization::
 
     @pytest.mark.parametrize('env', [test_env1, test_env2])
     def test_one(env, xonsh_builtins):

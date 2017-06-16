@@ -310,7 +310,7 @@ class RepresentationPrinter(PrettyPrinter):
     printer for a python object.
 
     This class stores processing data on `self` so you must *never* use
-    this class in a threaded environment.  Always lock it or reinstanciate
+    this class in a threaded environment.  Always lock it or reinstantiate
     it.
 
     Instances also have a verbose flag callbacks can access to control their

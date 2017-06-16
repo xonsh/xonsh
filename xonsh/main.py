@@ -170,9 +170,9 @@ def parser():
                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
                    default=None)
     p.add_argument('--timings',
-                   help='Prints timing infomation before the prompt is shown. '
-                        'This is usefull to track down perfomance issues '
-                        'and investigate startup times.',
+                   help='Prints timing information before the prompt is shown. '
+                        'This is useful while tracking down performance issues '
+                        'and investigating startup times.',
                    dest='timings',
                    action='store_true',
                    default=None)
@@ -220,7 +220,7 @@ class XonshMode(enum.Enum):
 
 def start_services(shell_kwargs):
     """Starts up the essential services in the proper order.
-    This returns the envrionment instance as a convenience.
+    This returns the environment instance as a convenience.
     """
     install_import_hooks()
     # create execer, which loads builtins
@@ -246,7 +246,7 @@ def start_services(shell_kwargs):
 
 
 def premain(argv=None):
-    """Setup for main xonsh entry point, returns parsed arguments."""
+    """Setup for main xonsh entry point. Returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
     setup_timings()

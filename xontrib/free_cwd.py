@@ -32,7 +32,7 @@ def _cwd_release_wrapper(func):
     """ Decorator for Windows to the wrap the prompt function and release
         the process lock on the current directory while the prompt is
         displayed. This works by temporarily setting
-        the workdir to the users home direcotry.
+        the workdir to the users home directory.
     """
     env = builtins.__xonsh_env__
     if env.get('UPDATE_PROMPT_ON_KEYPRESS'):

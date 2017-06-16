@@ -28,7 +28,7 @@ from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY,
                              LPDWORD, SHORT, LPCWSTR, WORD, SMALL_RECT, LPCSTR)
 
 from xonsh.lazyasd import lazyobject
-from xonsh import lazyimps  # we aren't amagamated in this module.
+from xonsh import lazyimps  # we aren't amalgamated in this module.
 from xonsh import platform
 
 
@@ -246,7 +246,7 @@ def set_console_mode(mode, fd=1):
 
 def enable_virtual_terminal_processing():
     """Enables virtual terminal processing on Windows.
-    This inlcudes ANSI escape sequence interpretation.
+    This includes ANSI escape sequence interpretation.
     See http://stackoverflow.com/a/36760881/2312428
     """
     SetConsoleMode(GetStdHandle(-11), 7)
@@ -305,7 +305,7 @@ def ReadConsoleOutputCharacterW():
 
 def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024,
                                   raw=False):
-    """Reads chracters from the console buffer.
+    """Reads characters from the console buffer.
 
     Parameters
     ----------
@@ -320,7 +320,7 @@ def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024,
         An existing buffer to (re-)use.
     bufsize : int, optional
         The maximum read size.
-    raw : bool, opional
+    raw : bool, optional
         Whether to read in and return as bytes (True) or as a
         unicode string (False, default).
 

@@ -27,7 +27,7 @@
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": [
-    "Additional core utilites that are implemened in xonsh. The current list ",
+    "Additional core utilities that are implemented in xonsh. The current list ",
     "includes:\n",
     "\n",
     "* cat\n",
@@ -47,10 +47,10 @@
   "url": "http://xon.sh",
   "description": [
     "The distributed parallel computing library hooks for xonsh. ",
-    "Importantly this provides a subsitute 'dworker' command which enables ",
+    "Importantly this provides a substitute 'dworker' command which enables ",
     "distributed workers to have access to xonsh builtins.\n\n",
     "Furthermore, this xontrib adds a 'DSubmitter' context manager for ",
-    "executing a block remotely. Moroever, this also adds a convienece ",
+    "executing a block remotely. Moreover, this also adds a convenience ",
     "function 'dsubmit()' for creating DSubmitter and Executor instances ",
     "at the same time. Thus users may submit distributed jobs with::\n\n",
     "    with dsubmit('127.0.0.1:8786', rtn='x') as dsub:\n",
