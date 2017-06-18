@@ -93,6 +93,13 @@
     "if any extensions are enabled that hook the prompt and relies on",
     "``os.getcwd()``"]
  },
+  {"name": "whole_word_jumping",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": [
+    "Jumping across whole words (non-whitespace) with Ctrl+Left/Right.",
+    "Alt+Left/Right remains unmodified to jump over smaller word segments."]
+ },
  {"name": "scrapy_tabcomplete",
   "package": "xonsh-scrapy-tabcomplete",
   "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
