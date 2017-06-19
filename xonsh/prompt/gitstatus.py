@@ -70,11 +70,10 @@ def _get_def(key):
 
 
 def _get_tag_or_hash():
-    tag = _check_output(['git', 'describe', '--exact-match']).strip()
-    if tag:
-        return tag
+    tag_or_hash = _check_output(['git', 'describe', '--always']).strip()
     hash_ = _check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
-    return _get_def('HASH') + hash_
+    have_tag_name = tag_or_hash != hash_
+    return tag_or_hash if have_tag_name else _get_def('HASH') + hash_
 
 
 def _get_stash(gitdir):
