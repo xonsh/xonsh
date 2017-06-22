@@ -179,6 +179,7 @@ def DEFAULT_ENSURERS():
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
     'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
+    'XONSH_APPEND_NEWLINE': (is_bool, to_bool, bool_to_str),
     'XONSH_AUTOPAIR': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_SCRIPTS': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_EVERYTHING': (is_bool, to_bool, bool_to_str),
@@ -325,6 +326,7 @@ def DEFAULT_VALUES():
                                                          'share')),
         'XONSHCONFIG': xonshconfig,
         'XONSHRC': default_xonshrc,
+        'XONSH_APPEND_NEWLINE': False,
         'XONSH_AUTOPAIR': False,
         'XONSH_CACHE_SCRIPTS': True,
         'XONSH_CACHE_EVERYTHING': False,
@@ -645,6 +647,9 @@ def DEFAULT_DOCS():
             "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.xonshrc']``\n"
             "\nOn Windows: "
             "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.xonshrc']``")),
+    'XONSH_APPEND_NEWLINE': VarDocs(
+        'Append new line when a partial line is preserved in output.'
+    ),
     'XONSH_AUTOPAIR': VarDocs(
         'Whether Xonsh will auto-insert matching parentheses, brackets, and '
         'quotes. Only available under the prompt-toolkit shell.'
