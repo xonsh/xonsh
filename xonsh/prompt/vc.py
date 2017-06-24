@@ -13,10 +13,11 @@ import xonsh.tools as xt
 
 
 def _get_git_branch(q):
+    denv = builtins.__xonsh_env__.detype()
     try:
         branches = xt.decode_bytes(subprocess.check_output(
-            ['git', 'branch'],
-            stderr=subprocess.DEVNULL
+            ['git', 'branch'], env=denv,
+            stderr=subprocess.DEVNULL,
         )).splitlines()
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
@@ -153,13 +154,15 @@ def current_branch():
 
 def _git_dirty_working_directory(q, include_untracked):
     status = None
+    denv = builtins.__xonsh_env__.detype()
     try:
         cmd = ['git', 'status', '--porcelain']
         if include_untracked:
             cmd.append('--untracked-files=normal')
         else:
             cmd.append('--untracked-files=no')
-        status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+        status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL,
+                                         env=denv)
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     if status is not None:
