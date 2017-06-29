@@ -339,8 +339,12 @@ class BaseShell(object):
                 hist.last_cmd_rtn = 1  # return code for failure
         finally:
             ts1 = ts1 or time.time()
-            self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
+            tee_out = tee.getvalue()
+            self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee_out)
             self.accumulated_inputs += src
+            append_newline = env.get('XONSH_APPEND_NEWLINE')
+            if append_newline and not tee_out.endswith(os.linesep):
+                print(os.linesep, end='')
             tee.close()
             self._fix_cwd()
         if builtins.__xonsh_exit__:  # pylint: disable=no-member
