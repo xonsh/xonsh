@@ -63,6 +63,7 @@ class PromptToolkitShell(BaseShell):
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
+        events.on_pre_prompt.fire()
         env = builtins.__xonsh_env__
         mouse_support = env.get('MOUSE_SUPPORT')
         if store_in_history:
@@ -115,7 +116,6 @@ class PromptToolkitShell(BaseShell):
                     prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
                 else:
                     prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
-            events.on_pre_prompt.fire()
             line = self.prompter.prompt(**prompt_args)
             events.on_post_prompt.fire()
         return line
