@@ -213,9 +213,9 @@ def dirty_working_directory():
     """
     dwd = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git'):
+    if cmds.lazy_locate_binary('git', ignore_alias=True):
         dwd = git_dirty_working_directory()
-    if cmds.lazy_locate_binary('hg') and dwd is None:
+    if cmds.lazy_locate_binary('hg', ignore_alias=True) and dwd is None:
         dwd = hg_dirty_working_directory()
     return dwd
 
