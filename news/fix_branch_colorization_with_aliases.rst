@@ -6,6 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** Fix branch colorization when ``git`` or ``hg`` are aliases.
+**Fixed:**
+
+* Fix branch colorization when ``git`` or ``hg`` are aliases.
 
 **Security:** None
