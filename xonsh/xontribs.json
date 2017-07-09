@@ -157,6 +157,11 @@
   "package": "xontrib-fzf-widgets",
   "url": "https://github.com/shahinism/xontrib-fzf-widgets",
   "description": ["Adds some fzf widgets to your xonsh shell."]
+ },
+ {"name": "schedule",
+  "package": "xontrib-schedule",
+  "url": "https://github.com/astronouth7303/xontrib-schedule",
+  "description": ["Xonsh Task Scheduling"]
  }
  ],
  "packages": {
@@ -272,6 +277,13 @@
    "url": "https://github.com/shahinism/xontrib-fzf-widgets",
    "install": {
     "pip": "xip install xontrib-fzf-widgets"
+   }
+  },
+  "xontrib-schedule": {
+   "license": "MIT",
+   "url": "https://github.com/astronouth7303/xontrib-schedule",
+   "install": {
+    "pip": "xip install xontrib-schedule"
    }
   }
  }
