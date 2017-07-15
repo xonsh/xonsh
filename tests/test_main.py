@@ -58,6 +58,14 @@ def test_premain_custom_rc(shell, tmpdir):
     assert f.strpath in builtins.__xonsh_env__.get('XONSHRC')
 
 
+def test_no_rc_with_script(shell, tmpdir):
+    builtins.__xonsh_env__ = Env(XONSH_CACHE_SCRIPTS=False)
+    f = tmpdir.join('wakkawakka')
+    f.write("print('hi')")
+    xonsh.main.premain(['--rc', f.strpath, 'tests/sample.xsh'])
+    assert not (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+
+
 def test_premain_no_rc(shell, tmpdir):
     xonsh.main.premain(['--no-rc'])
     assert not builtins.__xonsh_env__.get('XONSHRC')

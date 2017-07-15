@@ -236,6 +236,9 @@ def start_services(shell_kwargs):
     env = builtins.__xonsh_env__
     rc = shell_kwargs.get('rc', None)
     rc = env.get('XONSHRC') if rc is None else rc
+    if shell_kwargs['shell_type'] != 'none':
+        #  Don't load xonshrc if not interactive shell
+        rc = None
     events.on_pre_rc.fire()
     xonshrc_context(rcfiles=rc, execer=execer, ctx=ctx, env=env, login=login)
     events.on_post_rc.fire()
