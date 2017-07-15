@@ -248,7 +248,7 @@ f o>e
 ]
 
 @pytest.mark.parametrize('case', ALL_PLATFORMS_STDERR)
-def test_script_stder(case):
+def test_script_stderr(case):
     script, exp_err, exp_rtn = case
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert exp_err == err
@@ -262,6 +262,15 @@ def test_script_stder(case):
     ])
 def test_single_command_no_windows(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
+
+
+def test_eof_syntax_error():
+    """Ensures syntax errors for EOF appear on last line."""
+    script = 'x = 1\na = (1, 0\n'
+    out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
+    assert rtn != 0
+    assert ':0:0: EOF in multi-line statement' not in out
+    assert ':2:0: EOF in multi-line statement' in out
 
 
 _bad_case = pytest.mark.skipif(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,

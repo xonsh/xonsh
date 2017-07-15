@@ -468,6 +468,8 @@ class BaseParser(object):
         else:
             col = loc.column + 1
             lines = self.lines
+            if loc.lineno == 0:
+                loc.lineno = len(lines)
             i = loc.lineno - 1
             if 0 <= i < len(lines):
                 err_line = lines[i].rstrip()
