@@ -268,7 +268,6 @@ def test_eof_syntax_error():
     """Ensures syntax errors for EOF appear on last line."""
     script = 'x = 1\na = (1, 0\n'
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
-    assert rtn != 0
     assert ':0:0: EOF in multi-line statement' not in err
     assert ':2:0: EOF in multi-line statement' in err
 
