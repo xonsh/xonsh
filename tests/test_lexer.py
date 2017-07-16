@@ -345,6 +345,14 @@ def test_double_raw_string_literal():
     assert check_token('r"yo"', ['STRING', 'r"yo"', 0])
 
 
+def test_single_f_string_literal():
+    assert check_token("f'{yo}'", ['STRING', "f'{yo}'", 0])
+
+
+def test_double_f_string_literal():
+    assert check_token('f"{yo}"', ['STRING', 'f"{yo}"', 0])
+
+
 def test_single_unicode_literal():
     assert check_token("u'yo'", ['STRING', "u'yo'", 0])
 

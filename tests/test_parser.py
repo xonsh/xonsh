@@ -10,7 +10,7 @@ import pytest
 from xonsh.ast import AST, With, Pass
 from xonsh.parser import Parser
 
-from tools import VER_FULL, skip_if_py34, nodes_equal
+from tools import VER_FULL, skip_if_py34, skip_if_lt_py36, nodes_equal
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL

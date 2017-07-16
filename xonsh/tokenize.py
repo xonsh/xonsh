@@ -205,7 +205,7 @@ Floatnumber = group(Pointfloat, Expfloat)
 Imagnumber = group(r'[0-9]+[jJ]', Floatnumber + r'[jJ]')
 Number = group(Imagnumber, Floatnumber, Intnumber)
 
-StringPrefix = r'(?:[bBp][rR]?|[rR][bBp]?|[uU])?'
+StringPrefix = r'(?:[bBp][rR]?|[rR][bBpfF]?|[uU]|[fF][rR]?)?'
 
 # Tail end of ' string.
 Single = r"[^'\\]*(?:\\.[^'\\]*)*'"
@@ -268,16 +268,23 @@ endpats = {"'": Single, '"': Double,
            "'''": Single3, '"""': Double3,
            "r'''": Single3, 'r"""': Double3,
            "b'''": Single3, 'b"""': Double3,
+           "f'''": Single3, 'f"""': Double3,
            "R'''": Single3, 'R"""': Double3,
            "B'''": Single3, 'B"""': Double3,
+           "F'''": Single3, 'F"""': Double3,
            "br'''": Single3, 'br"""': Double3,
+           "fr'''": Single3, 'fr"""': Double3,
            "bR'''": Single3, 'bR"""': Double3,
            "Br'''": Single3, 'Br"""': Double3,
            "BR'''": Single3, 'BR"""': Double3,
            "rb'''": Single3, 'rb"""': Double3,
+           "rf'''": Single3, 'rf"""': Double3,
            "Rb'''": Single3, 'Rb"""': Double3,
+           "Fr'''": Single3, 'Fr"""': Double3,
            "rB'''": Single3, 'rB"""': Double3,
+           "rF'''": Single3, 'rF"""': Double3,
            "RB'''": Single3, 'RB"""': Double3,
+           "RF'''": Single3, 'RF"""': Double3,
            "u'''": Single3, 'u"""': Double3,
            "U'''": Single3, 'U"""': Double3,
            "p'''": Single3, 'p"""': Double3,
@@ -286,16 +293,22 @@ endpats = {"'": Single, '"': Double,
            "rp'''": Single3, 'rp"""': Double3,
            "Rp'''": Single3, 'Rp"""': Double3,
            'r': None, 'R': None, 'b': None, 'B': None,
-           'u': None, 'U': None, 'p': None}
+           'u': None, 'U': None, 'p': None, 'f': None,
+           'F': None}
 
 triple_quoted = {}
 for t in ("'''", '"""',
           "r'''", 'r"""', "R'''", 'R"""',
           "b'''", 'b"""', "B'''", 'B"""',
+          "f'''", 'f"""', "F'''", 'F"""',
           "br'''", 'br"""', "Br'''", 'Br"""',
           "bR'''", 'bR"""', "BR'''", 'BR"""',
           "rb'''", 'rb"""', "rB'''", 'rB"""',
           "Rb'''", 'Rb"""', "RB'''", 'RB"""',
+          "fr'''", 'fr"""', "Fr'''", 'Fr"""',
+          "fR'''", 'fR"""', "FR'''", 'FR"""',
+          "rf'''", 'rf"""', "rF'''", 'rF"""',
+          "Rf'''", 'Rf"""', "RF'''", 'RF"""',
           "u'''", 'u"""', "U'''", 'U"""',
           "p'''", 'p""""', "pr'''", 'pr""""',
           "pR'''", 'pR""""', "rp'''", 'rp""""',
@@ -306,10 +319,15 @@ single_quoted = {}
 for t in ("'", '"',
           "r'", 'r"', "R'", 'R"',
           "b'", 'b"', "B'", 'B"',
+          "f'", 'f"', "F'", 'F"',
           "br'", 'br"', "Br'", 'Br"',
           "bR'", 'bR"', "BR'", 'BR"',
           "rb'", 'rb"', "rB'", 'rB"',
           "Rb'", 'Rb"', "RB'", 'RB"',
+          "fr'", 'fr"', "Fr'", 'Fr"',
+          "fR'", 'fR"', "FR'", 'FR"',
+          "rf'", 'rf"', "rF'", 'rF"',
+          "Rf'", 'Rf"', "RF'", 'RF"',
           "u'", 'u"', "U'", 'U"',
           "p'", 'p"', "pr'", 'pr"',
           "pR'", 'pR"', "rp'", 'rp"',
