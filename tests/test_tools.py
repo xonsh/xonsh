@@ -403,6 +403,7 @@ mom"""
  "     --option2 value2 \\\n"
  "     --optionZ valueZ",
 1, "echo --option1 value1      --option2 value2      --optionZ valueZ", 3),
+('"""\n', 0, '"""', 1),
 ]
 
 @pytest.mark.parametrize('src, idx, exp_line, exp_n', LOGICAL_LINE_CASES)
