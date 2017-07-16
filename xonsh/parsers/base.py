@@ -2715,7 +2715,6 @@ class BaseParser(object):
         p2.insert(0, p[1])
         p[0] = p2
 
-
     def p_empty(self, p):
         'empty : '
         p[0] = None
