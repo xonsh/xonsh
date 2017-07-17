@@ -22,23 +22,23 @@ def xonsh_builtins_autouse(xonsh_builtins):
 PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
 
 
-def check_ast(inp, run=True, mode='eval', debug_level=0):
+def check_ast(inp, run=True, mode='eval'):
     __tracebackhide__ = True
     # expect a Python AST
     exp = ast.parse(inp, mode=mode)
     # observe something from xonsh
-    obs = PARSER.parse(inp, debug_level=debug_level)
+    obs = PARSER.parse(inp, debug_level=0)
     # Check that they are equal
     assert nodes_equal(exp, obs)
     # round trip by running xonsh AST via Python
     if run:
         exec(compile(obs, '<test-ast>', mode))
 
-def check_stmts(inp, run=True, mode='exec', debug_level=0):
+def check_stmts(inp, run=True, mode='exec'):
     __tracebackhide__ = True
     if not inp.endswith('\n'):
         inp += '\n'
-    check_ast(inp, run=run, mode=mode, debug_level=debug_level)
+    check_ast(inp, run=run, mode=mode)
 
 def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0,
                     return_obs=False):
@@ -91,6 +91,10 @@ def test_bytes_literal():
 def test_raw_literal():
     check_ast('r"hell\o"')
     check_ast('R"hell\o"')
+
+def test_f_literal():
+    check_ast('f"{yo}"')
+    check_ast('F"{yo}"')
 
 def test_raw_bytes_literal():
     check_ast('br"hell\o"')
@@ -989,9 +993,6 @@ def test_bare_x_stary():
 
 def test_bare_x_stary_z():
     check_stmts('x, *y, z = [1, 2, 2, 3]')
-
-def test_bare_x_y_starz():
-    check_stmts('x, y, *z = [1, 2, 2, 3]', debug_level=1)
 
 def test_equals_list():
     check_stmts('x = [42]; x[0] = 65')
