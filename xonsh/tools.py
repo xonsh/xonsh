@@ -218,6 +218,16 @@ class EnvPath(collections.MutableSequence):
                         p.breakable()
                     p.pretty(item)
 
+    def __add__(self, other):
+        if isinstance(other, EnvPath):
+            other = other._l
+        return EnvPath(self._l + other)
+
+    def __radd__(self, other):
+        if isinstance(other, EnvPath):
+            other = other._l
+        return EnvPath(other + self._l)
+
 
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
