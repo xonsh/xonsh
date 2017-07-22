@@ -5,6 +5,7 @@ import re
 import time
 import textwrap
 from threading import Thread
+from ast import parse as pyparse
 from collections import Iterable, Sequence, Mapping
 
 try:
@@ -2002,6 +2003,10 @@ class BaseParser(object):
                         col_offset=p1.lexpos)
             p[0] = xonsh_call('__xonsh_path_literal__', [s],
                               lineno=p1.lineno, col=p1.lexpos)
+        elif 'f' in prefix or 'F' in prefix:
+            s = pyparse(p1.value).body[0].value
+            s = ast.increment_lineno(s, p1.lineno - 1)
+            p[0] = s
         else:
             s = ast.literal_eval(p1.value)
             is_bytes = 'b' in prefix or 'B' in prefix

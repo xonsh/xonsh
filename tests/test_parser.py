@@ -7,7 +7,7 @@ import itertools
 
 import pytest
 
-from xonsh.ast import AST, With, Pass
+from xonsh.ast import AST, With, Pass, pdump
 from xonsh.parser import Parser
 
 from tools import VER_FULL, skip_if_py34, skip_if_lt_py36, nodes_equal
@@ -22,23 +22,24 @@ def xonsh_builtins_autouse(xonsh_builtins):
 PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
 
 
-def check_ast(inp, run=True, mode='eval'):
+def check_ast(inp, run=True, mode='eval', debug_level=0):
     __tracebackhide__ = True
     # expect a Python AST
     exp = ast.parse(inp, mode=mode)
+    print(pdump(exp))
     # observe something from xonsh
-    obs = PARSER.parse(inp, debug_level=0)
+    obs = PARSER.parse(inp, debug_level=debug_level)
     # Check that they are equal
     assert nodes_equal(exp, obs)
     # round trip by running xonsh AST via Python
     if run:
         exec(compile(obs, '<test-ast>', mode))
 
-def check_stmts(inp, run=True, mode='exec'):
+def check_stmts(inp, run=True, mode='exec', debug_level=0):
     __tracebackhide__ = True
     if not inp.endswith('\n'):
         inp += '\n'
-    check_ast(inp, run=run, mode=mode)
+    check_ast(inp, run=run, mode=mode, debug_level=debug_level)
 
 def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0,
                     return_obs=False):
@@ -93,8 +94,8 @@ def test_raw_literal():
     check_ast('R"hell\o"')
 
 def test_f_literal():
-    check_ast('f"{yo}"')
-    check_ast('F"{yo}"')
+    check_ast('f"wakka{yo}yakka{42}"', run=False)
+    check_ast('F"{yo}"', run=False)
 
 def test_raw_bytes_literal():
     check_ast('br"hell\o"')
