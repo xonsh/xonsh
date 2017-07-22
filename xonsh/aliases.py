@@ -15,7 +15,7 @@ from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
                             ON_NETBSD)
-from xonsh.tools import unthreadable
+from xonsh.tools import unthreadable, print_color
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool, swap_values
@@ -285,6 +285,12 @@ def source_alias(args, stdin=None):
                     raise RuntimeError('must source at least one file, ' + fname +
                                        'does not exist.')
                 break
+        _, fext = os.path.splitext()
+        if fext and (fext != '.xsh' or fext != '.py'):
+            raise RuntimeError('attempting to source non-xonsh file! If you are '
+                               'trying to source a file in another language, '
+                               'then please use the approriate source command. '
+                               'For example, source-bash script.sh')
         with open(fpath, 'r', encoding=encoding, errors=errors) as fp:
             src = fp.read()
         if not src.endswith('\n'):
@@ -292,7 +298,15 @@ def source_alias(args, stdin=None):
         ctx = builtins.__xonsh_ctx__
         updates = {'__file__': fpath, '__name__': os.path.abspath(fpath)}
         with env.swap(ARGS=args[i+1:]), swap_values(ctx, updates):
-            builtins.execx(src, 'exec', ctx, filename=fpath)
+            try:
+                builtins.execx(src, 'exec', ctx, filename=fpath)
+            except Exception:
+                print_color('{RED}You may be attempting to source non-xonsh file! '
+                            '{NO_COLOR}If you are trying to source a file in '
+                            'another language, then please use the approriate '
+                            'source command. For example, {GREEN}source-bash '
+                            'script.sh{NO_COLOR}', file=sys.stderr)
+                raise
 
 
 def source_cmd(args, stdin=None):
