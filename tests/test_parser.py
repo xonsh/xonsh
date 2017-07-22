@@ -93,6 +93,7 @@ def test_raw_literal():
     check_ast('r"hell\o"')
     check_ast('R"hell\o"')
 
+@skip_if_lt_py36
 def test_f_literal():
     check_ast('f"wakka{yo}yakka{42}"', run=False)
     check_ast('F"{yo}"', run=False)
