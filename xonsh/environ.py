@@ -120,7 +120,7 @@ def DEFAULT_ENSURERS():
     'AUTO_CD': (is_bool, to_bool, bool_to_str),
     'AUTO_PUSHD': (is_bool, to_bool, bool_to_str),
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
-    'AUTO_SUGGESTIN_COMPLETIONS': (is_bool, to_bool, bool_to_str),
+    'AUTO_SUGGEST_IN_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
@@ -396,7 +396,7 @@ def DEFAULT_DOCS():
         'Enable automatic command suggestions based on history, like in the fish '
         'shell.\n\nPressing the right arrow key inserts the currently '
         'displayed suggestion. Only usable with ``$SHELL_TYPE=prompt_toolkit.``'),
-    'AUTO_SUGGEST': VarDocs(
+    'AUTO_SUGGEST_IN_COMPLETIONS': VarDocs(
         'Places the auto-suggest result as the first option in the completions. '
         'This enables you to tab complete the auto-suggestion.'
         ),
