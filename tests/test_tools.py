@@ -684,6 +684,19 @@ def test_env_path_to_str(inp, exp):
     assert exp == obs
 
 
+@pytest.mark.parametrize('left, right, exp', [
+    (EnvPath(['/home/wakka']), ['/home/jawaka'], EnvPath(['/home/wakka', '/home/jawaka'])),
+    (['a'], EnvPath(['b']), EnvPath(['a', 'b'])),
+    (EnvPath(['c']), EnvPath(['d']), EnvPath(['c', 'd'])),
+])
+def test_env_path_add(left, right, exp):
+    obs = left + right
+    assert is_env_path(obs)
+    assert exp == obs
+
+
+
+
 # helper
 def expand(path):
     return os.path.expanduser(os.path.expandvars(path))
