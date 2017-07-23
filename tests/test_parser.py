@@ -26,7 +26,6 @@ def check_ast(inp, run=True, mode='eval', debug_level=0):
     __tracebackhide__ = True
     # expect a Python AST
     exp = ast.parse(inp, mode=mode)
-    print(pdump(exp))
     # observe something from xonsh
     obs = PARSER.parse(inp, debug_level=debug_level)
     # Check that they are equal
