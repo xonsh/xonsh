@@ -289,7 +289,7 @@ def source_alias(args, stdin=None):
         if fext and (fext != '.xsh' or fext != '.py'):
             raise RuntimeError('attempting to source non-xonsh file! If you are '
                                'trying to source a file in another language, '
-                               'then please use the approriate source command. '
+                               'then please use the appropriate source command. '
                                'For example, source-bash script.sh')
         with open(fpath, 'r', encoding=encoding, errors=errors) as fp:
             src = fp.read()
@@ -303,7 +303,7 @@ def source_alias(args, stdin=None):
             except Exception:
                 print_color('{RED}You may be attempting to source non-xonsh file! '
                             '{NO_COLOR}If you are trying to source a file in '
-                            'another language, then please use the approriate '
+                            'another language, then please use the appropriate '
                             'source command. For example, {GREEN}source-bash '
                             'script.sh{NO_COLOR}', file=sys.stderr)
                 raise
