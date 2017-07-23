@@ -218,7 +218,7 @@ class XonshMode(enum.Enum):
     interactive = 3
 
 
-def start_services(shell_kwargs):
+def start_services(shell_kwargs, args):
     """Starts up the essential services in the proper order.
     This returns the environment instance as a convenience.
     """
@@ -236,7 +236,7 @@ def start_services(shell_kwargs):
     env = builtins.__xonsh_env__
     rc = shell_kwargs.get('rc', None)
     rc = env.get('XONSHRC') if rc is None else rc
-    if shell_kwargs['shell_type'] != 'none':
+    if args.mode != XonshMode.interactive:
         #  Don't load xonshrc if not interactive shell
         rc = None
     events.on_pre_rc.fire()
@@ -291,7 +291,7 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
-    env = start_services(shell_kwargs)
+    env = start_services(shell_kwargs, args)
     env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
