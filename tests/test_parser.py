@@ -7,10 +7,10 @@ import itertools
 
 import pytest
 
-from xonsh.ast import AST, With, Pass
+from xonsh.ast import AST, With, Pass, pdump
 from xonsh.parser import Parser
 
-from tools import VER_FULL, skip_if_py34, nodes_equal
+from tools import VER_FULL, skip_if_py34, skip_if_lt_py36, nodes_equal
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
@@ -91,6 +91,11 @@ def test_bytes_literal():
 def test_raw_literal():
     check_ast('r"hell\o"')
     check_ast('R"hell\o"')
+
+@skip_if_lt_py36
+def test_f_literal():
+    check_ast('f"wakka{yo}yakka{42}"', run=False)
+    check_ast('F"{yo}"', run=False)
 
 def test_raw_bytes_literal():
     check_ast('br"hell\o"')
@@ -989,9 +994,6 @@ def test_bare_x_stary():
 
 def test_bare_x_stary_z():
     check_stmts('x, *y, z = [1, 2, 2, 3]')
-
-def test_bare_x_y_starz():
-    check_stmts('x, y, *z = [1, 2, 2, 3]', debug_level=1)
 
 def test_equals_list():
     check_stmts('x = [42]; x[0] = 65')

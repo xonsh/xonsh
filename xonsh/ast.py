@@ -31,6 +31,13 @@ if PYTHON_VERSION_INFO >= (3, 5, 0):
 else:
     MatMult = AsyncFunctionDef = AsyncWith = AsyncFor = Await = None
 
+if PYTHON_VERSION_INFO >= (3, 6, 0):
+    # pylint: disable=unused-import
+    # pylint: disable=no-name-in-module
+    from ast import JoinedStr, FormattedValue
+else:
+    JoinedStr = FormattedValue = None
+
 STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
               While, If, With, Raise, Try, Assert, Import, ImportFrom, Global,
               Nonlocal, Expr, Pass, Break, Continue)
@@ -52,7 +59,7 @@ def leftmostname(node):
         rtn = leftmostname(node.values[0])
     elif isinstance(node, Assign):
         rtn = leftmostname(node.targets[0])
-    elif isinstance(node, (Str, Bytes)):
+    elif isinstance(node, (Str, Bytes, JoinedStr)):
         # handles case of "./my executable"
         rtn = leftmostname(node.s)
     elif isinstance(node, Tuple) and len(node.elts) > 0:
