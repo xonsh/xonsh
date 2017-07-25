@@ -114,7 +114,8 @@ def make_fs_wiz():
     """Makes the foreign shell part of the wizard."""
     cond = wiz.create_truefalse_cond(prompt='Add a new foreign shell, ' + wiz.YN)
     fs = wiz.While(cond=cond, body=[
-        wiz.Input('shell name (e.g. bash): ',
+        wiz.Input("shell name [str, default='bash']: ",
+                  converter=lambda val: val or 'bash',
                   path='/foreign_shells/{idx}/shell'),
         wiz.StoreNonEmpty('interactive shell [bool, default=True]: ',
                           converter=to_bool,
