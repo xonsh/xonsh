@@ -170,14 +170,14 @@
    "url": "http://exofrills.org",
    "install": {
     "conda": "conda install -c conda-forge xo",
-    "pip": "pip install exofrills"}
+    "pip": "xpip install exofrills"}
    },
   "xonsh": {
    "license": "BSD 3-clause",
    "url": "http://xon.sh",
    "install": {
     "conda": "conda install -c conda-forge xonsh",
-    "pip": "pip install xonsh",
+    "pip": "xpip install xonsh",
     "aura": "sudo aura -A xonsh",
     "yaourt": "yaourt -Sa xonsh"}
    },
@@ -185,105 +185,105 @@
    "license": "MIT",
    "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
    "install": {
-    "pip": "pip install xontrib-prompt-ret-code"
+    "pip": "xpip install xontrib-prompt-ret-code"
    }
   },
   "xonsh-apt-tabcomplete": {
    "license": "BSD 2-clause",
    "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
    "install": {
-    "pip": "pip install xonsh-apt-tabcomplete"
+    "pip": "xpip install xonsh-apt-tabcomplete"
    }
   },
   "xonsh-docker-tabcomplete": {
    "license": "MIT",
    "url": "https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
    "install": {
-    "pip": "pip install xonsh-docker-tabcomplete"
+    "pip": "xpip install xonsh-docker-tabcomplete"
    }
   },
   "xonsh-scrapy-tabcomplete": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
    "install": {
-    "pip": "pip install xonsh-scrapy-tabcomplete"
+    "pip": "xpip install xonsh-scrapy-tabcomplete"
     }
    },
   "xonsh-vox-tabcomplete": {
    "license": "GPLv3",
    "url": "https://github.com/Granitosaurus/xonsh-vox-tabcomplete",
    "install": {
-    "pip": "pip install xonsh-vox-tabcomplete"
+    "pip": "xpip install xonsh-vox-tabcomplete"
    }
   },
   "xonsh-click-tabcomplete": {
    "license": "GPLv3",
    "url": "https://github.com/Granitosaurus/xonsh-click-tabcomplete",
    "install": {
-    "pip": "pip install xonsh-click-tabcomplete"
+    "pip": "xpip install xonsh-click-tabcomplete"
    }
   },
   "xonsh-autoxsh": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-autoxsh",
    "install": {
-    "pip": "pip install xonsh-autoxsh"
+    "pip": "xpip install xonsh-autoxsh"
    }
   },
   "xonda": {
    "license": "MIT",
    "url": "https://github.com/gforsyth/xonda",
    "install": {
-    "pip": "pip install xonda"
+    "pip": "xpip install xonda"
    }
   },
   "xontrib-avox": {
    "license": "GPLv3",
    "url": "https://github.com/astronouth7303/xontrib-avox",
    "install": {
-    "pip": "xip install xontrib-avox"
+    "pip": "xpip install xontrib-avox"
    }
   },
   "xontrib-z": {
    "license": "GPLv3",
    "url": "https://github.com/astronouth7303/xontrib-z",
    "install": {
-    "pip": "xip install xontrib-z"
+    "pip": "xpip install xontrib-z"
    }
   },
   "xontrib-powerline": {
    "license": "MIT",
    "url": "https://github.com/santagada/xontrib-powerline",
    "install": {
-    "pip": "pip install xontrib-powerline"
+    "pip": "xpip install xontrib-powerline"
    }
   },
   "xontrib-thefuck": {
    "license": "MIT",
    "url": "https://github.com/meatballs/xontrib-thefuck",
    "install": {
-    "pip": "pip install xontrib-thefuck"
+    "pip": "xpip install xontrib-thefuck"
    }
   },
   "xontrib-prompt-vi-mode": {
    "license": "MIT",
    "url": "https://github.com/t184256/xontrib-prompt-vi-mode",
    "install": {
-    "pip": "pip install xontrib-prompt-vi-mode"
+    "pip": "xpip install xontrib-prompt-vi-mode"
    }
   },
   "xontrib-fzf-widgets": {
    "license": "GPLv3",
    "url": "https://github.com/shahinism/xontrib-fzf-widgets",
    "install": {
-    "pip": "xip install xontrib-fzf-widgets"
+    "pip": "xpip install xontrib-fzf-widgets"
    }
   },
   "xontrib-schedule": {
    "license": "MIT",
    "url": "https://github.com/astronouth7303/xontrib-schedule",
    "install": {
-    "pip": "xip install xontrib-schedule"
+    "pip": "xpip install xontrib-schedule"
    }
   }
  }

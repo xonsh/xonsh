@@ -51,8 +51,8 @@ def prompt_xontrib_install(names):
     print('The following xontribs are enabled but not installed: \n'
           '   {xontribs}\n'
           'To install them run \n'
-          '    pip install {packages}'.format(xontribs=' '.join(names),
-                                              packages=' '.join(packages)))
+          '    xpip install {packages}'.format(xontribs=' '.join(names),
+                                               packages=' '.join(packages)))
 
 
 def update_context(name, ctx=None):

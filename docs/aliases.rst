@@ -126,10 +126,13 @@ Provides an interface to printing lines of source code prior to their execution.
 .. command-help:: xonsh.tracer.tracermain
 
 
-``xip``
+``xpip``
 =================
 Runs the ``pip`` package manager for xonsh itself. Useful for installations where xonsh is in an
-isolated environment (eg homebrew). Pronounced "kip".
+isolated environment (eg conda, homebrew).
+
+In general, use ``xpip`` if you're configuring or adding features to xonsh, and use ``pip`` if
+you're doing Python development.
 
 
 ``xonfig``
