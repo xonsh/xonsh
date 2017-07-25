@@ -112,7 +112,7 @@ def setup_readline():
                          "   * failure to wrap or indent lines properly",
                          "",
                          "It is highly recommended that you install gnureadline, which is installable with:",
-                         "     xip install gnureadline",
+                         "     xpip install gnureadline",
                          "*" * 78]), file=sys.stderr)
     else:
         readline.parse_and_bind("tab: complete")

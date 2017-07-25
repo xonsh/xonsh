@@ -51,7 +51,7 @@ def prompt_xontrib_install(names):
     print('The following xontribs are enabled but not installed: \n'
           '   {xontribs}\n'
           'To install them run \n'
-          '    xip install {packages}'.format(xontribs=' '.join(names),
+          '    xpip install {packages}'.format(xontribs=' '.join(names),
                                               packages=' '.join(packages)))
 
 

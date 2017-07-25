@@ -416,7 +416,7 @@ def showcmd(args, stdin=None):
         sys.displayhook(args)
 
 
-def detect_xip_alias():
+def detect_xpip_alias():
     """
     Determines the correct invocation to get xonsh's pip
     """
@@ -468,7 +468,7 @@ def make_default_aliases():
         'which': xxw.which,
         'xontrib': xontribs_main,
         'completer': xca.completer_alias,
-        'xip': detect_xip_alias(),
+        'xpip': detect_xpip_alias(),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
