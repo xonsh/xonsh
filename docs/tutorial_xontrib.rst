@@ -218,7 +218,7 @@ entries have the following structure:
        "url": "http://example",
        "install": {
         "conda": "conda install package-name",
-        "pip": "pip install package-name"}
+        "pip": "xip install package-name"}
        }
      }
     }
