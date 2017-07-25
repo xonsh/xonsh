@@ -52,7 +52,7 @@ def prompt_xontrib_install(names):
           '   {xontribs}\n'
           'To install them run \n'
           '    xpip install {packages}'.format(xontribs=' '.join(names),
-                                              packages=' '.join(packages)))
+                                               packages=' '.join(packages)))
 
 
 def update_context(name, ctx=None):
