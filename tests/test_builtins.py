@@ -292,11 +292,13 @@ def test_enter_macro():
     assert obj.macro_locals
 
 
-def test__update_last_spec_uncaptured_stderr():
+@pytest.mark.parametrize('captured', [None, 'hiddenobject', 'stdout'])
+def test__update_last_spec_uncaptured_objects(captured):
     last = Mock(captured=True)
     last.alias = None
+    last.stdout = None
     last.stderr = None
-    last.captured = 'stdout'
+    last.captured = captured
 
     from xonsh.built_ins import _update_last_spec
 
@@ -304,4 +306,8 @@ def test__update_last_spec_uncaptured_stderr():
         with patch('builtins.__xonsh_stderr_uncaptured__', None, create=True):
             _update_last_spec(last)
 
+    if captured == 'stdout':
+        assert last.stdout is not None
+    else:
+        assert last.stdout is None
     assert last.stderr is None
