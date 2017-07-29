@@ -684,7 +684,8 @@ def _safe_pipe_properties(fd, use_tty=False):
 def _update_last_spec(last):
     captured = last.captured
     last.last_in_pipeline = True
-    if not captured or captured == 'hiddenobject':
+    if not captured or \
+            (captured == 'hiddenobject' and not (last.stdout or last.stderr)):
         return
     callable_alias = callable(last.alias)
     if callable_alias:
