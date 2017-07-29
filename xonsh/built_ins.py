@@ -741,7 +741,7 @@ def _update_last_spec(last):
     elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
-    else:
+    elif captured != 'stdout':
         r, w = pty.openpty() if use_tty else os.pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
         last.stderr = safe_open(w, 'w')

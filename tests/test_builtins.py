@@ -6,6 +6,7 @@ import re
 import builtins
 import types
 from ast import AST
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -290,3 +291,17 @@ def test_enter_macro():
     assert obj.macro_globals
     assert obj.macro_locals
 
+
+def test__update_last_spec_uncaptured_stderr():
+    last = Mock(captured=True)
+    last.alias = None
+    last.stderr = None
+    last.captured = 'stdout'
+
+    from xonsh.built_ins import _update_last_spec
+
+    with patch('builtins.__xonsh_commands_cache__', create=True):
+        with patch('builtins.__xonsh_stderr_uncaptured__', None, create=True):
+            _update_last_spec(last)
+
+    assert last.stderr is None
