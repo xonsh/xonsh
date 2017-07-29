@@ -693,9 +693,9 @@ def _update_last_spec(last):
         cmds_cache = builtins.__xonsh_commands_cache__
         thable = (cmds_cache.predict_threadable(last.args) and
                   cmds_cache.predict_threadable(last.cmd))
-        if captured and thable:
+        if thable:
             last.cls = PopenThread
-        elif not thable:
+        else:
             # foreground processes should use Popen
             last.threadable = False
             if captured == 'object':
