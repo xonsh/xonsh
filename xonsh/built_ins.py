@@ -684,7 +684,7 @@ def _safe_pipe_properties(fd, use_tty=False):
 def _update_last_spec(last):
     captured = last.captured
     last.last_in_pipeline = True
-    if not captured:
+    if not captured or captured == 'hiddenobject':
         return
     callable_alias = callable(last.alias)
     if callable_alias:
@@ -698,9 +698,10 @@ def _update_last_spec(last):
         elif not thable:
             # foreground processes should use Popen
             last.threadable = False
-            if captured == 'object' or captured == 'hiddenobject':
+            if captured == 'object':
                 # CommandPipeline objects should not pipe stdout, stderr
                 return
+
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = ON_POSIX and not callable_alias
