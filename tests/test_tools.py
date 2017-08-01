@@ -1070,7 +1070,7 @@ def test_dynamic_cwd_tuple_to_str(inp, exp):
     ('foo&bar', 'foo^&bar'),
     ('foo$?-/_"\\', 'foo$?-/_^"\\'),
     ('^&<>|', '^^^&^<^>^|'),
-    ('this /?', 'this /.')
+    ('()<>','^(^)^<^>'),
 ])
 def test_escape_windows_cmd_string(st, esc):
     obs = escape_windows_cmd_string(st)

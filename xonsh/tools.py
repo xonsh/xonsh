@@ -890,9 +890,8 @@ def escape_windows_cmd_string(s):
     The escaping is based on details here and empirical testing:
     http://www.robvanderwoude.com/escapechars.php
     """
-    for c in '()%!^<>&|"':
+    for c in '^()%!<>&|"':
         s = s.replace(c, '^' + c)
-    s = s.replace('/?', '/.')
     return s
 
 
