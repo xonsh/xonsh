@@ -286,7 +286,7 @@ def source_alias(args, stdin=None):
                                        'does not exist.')
                 break
         _, fext = os.path.splitext(fpath)
-        if fext and (fext != '.xsh' or fext != '.py'):
+        if fext and fext != '.xsh' and fext != '.py':
             raise RuntimeError('attempting to source non-xonsh file! If you are '
                                'trying to source a file in another language, '
                                'then please use the appropriate source command. '
