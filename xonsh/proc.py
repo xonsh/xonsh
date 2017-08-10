@@ -549,7 +549,7 @@ class PopenThread(threading.Thread):
                                                        self._signal_winch)
         # start up process
         if ON_WINDOWS and stdout is not None:
-            os.set_handle_inheritable(stdout.fileno(), False)
+            os.set_handle_inheritable(self.stdout_fd, False)
 
         try:
             self.proc = proc = subprocess.Popen(*args,
