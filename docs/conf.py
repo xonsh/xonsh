@@ -134,7 +134,7 @@ modindex_common_prefix = ['xonsh.']
 if not on_rtd:
     import cloud_sptheme as csp
 
-    html_theme = 'cloud'
+    html_theme = 'readable'
 
     html_theme_options = {
         'max_width': '1250px',
@@ -175,7 +175,7 @@ html_favicon = '_static/magic_conch.ico'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_style = "numpy_friendly.css"
+html_style = "readable.css"
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
