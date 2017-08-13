@@ -1,0 +1,74 @@
+Windows Registry Editor Version 5.00
+
+; Registry file that maps the solarized palette to the 16 available colors
+; in a Windows command prompt. Note, hex values in the table are RGB but byte
+; ordering of a DWORD is BGR, e.g. "ColorTable<##>"=dword:00<B><G><R>
+;
+;                   OLD                   MODIFY
+; NR  cmd.exe       HEX     DWORD         HEX      DWORD
+; --  -------       ------  ---------     -------  --------
+; 00  Black         000000  00000000      #0A0A0A  000A0A0A
+; 01  Blue          000080  00800000      #4080D6  00D68040
+; 02  Green         008000  00008000      #00BB00  0000BB00
+; 03  Aqua          008080  00808000      #00CDCD  00CDCD00
+; 04  Red           800000  00000080      #CD0000  000000CD
+; 05  Purple        800080  00800080      #CD00CD  00CD00CD
+; 06  Yellow        808000  00008080      #BEBE28  0028BEBE
+; 07  White         C0C0C0  00C0C0C0      #C8C8C8  00C8C8C8
+; 08  Gray          808080  00808080      #7F7F7F  007F7F7F
+; 09  LightBlue     0000FF  00FF0000      #46AAFF  00FFAA46
+; 10  LightGreen    00FF00  0000FF00      #00FF00  0000FF00                     
+; 11  LightAqua     00FFFF  00FFFF00      #00FFFF  00FFFF00
+; 12  LightRed      FF0000  000000FF      #FF0000  000000FF
+; 13  LightPurple   FF00FF  00FF00FF      #FF00FF  00FF00FF
+; 14  LightYellow   FFFF00  0000FFFF      #FFFF00  0000FFFF
+; 15  BrightWhite   FFFFFF  00FFFFFF      #FFFFFF  00FFFFFF              
+
+
+[HKEY_CURRENT_USER\Console]
+"ColorTable00"=dword:000A0A0A
+"ColorTable01"=dword:00D68040
+"ColorTable02"=dword:0000BB00
+"ColorTable03"=dword:00CDCD00
+"ColorTable04"=dword:000000CD
+"ColorTable05"=dword:00CD00CD
+"ColorTable06"=dword:0028BEBE
+"ColorTable07"=dword:00C8C8C8
+"ColorTable08"=dword:007F7F7F
+"ColorTable09"=dword:00FFAA46
+"ColorTable10"=dword:0000FF00
+"ColorTable11"=dword:00FFFF00
+"ColorTable12"=dword:000000FF
+"ColorTable13"=dword:00FF00FF
+"ColorTable14"=dword:0000FFFF
+"ColorTable15"=dword:00FFFFFF
+"ScreenColors"=dword:00000007
+"PopupColors" =dword:000000f8 
+"FontFamily"  =dword:00000036
+"FontSize"    =dword:00100000
+"FontWeight"  =dword:00000400
+"FaceName"    ="Consolas"
+
+[HKEY_CURRENT_USER\Console\%SystemRoot%_cmd.exe]
+"ColorTable00"=dword:000A0A0A
+"ColorTable01"=dword:00D68040
+"ColorTable02"=dword:0000BB00
+"ColorTable03"=dword:00CDCD00
+"ColorTable04"=dword:000000CD
+"ColorTable05"=dword:00CD00CD
+"ColorTable06"=dword:0028BEBE
+"ColorTable07"=dword:00C8C8C8
+"ColorTable08"=dword:007F7F7F
+"ColorTable09"=dword:00FFAA46
+"ColorTable10"=dword:0000FF00
+"ColorTable11"=dword:00FFFF00
+"ColorTable12"=dword:000000FF
+"ColorTable13"=dword:00FF00FF
+"ColorTable14"=dword:0000FFFF
+"ColorTable15"=dword:00FFFFFF
+"ScreenColors"=dword:00000007
+"PopupColors"=dword: 000000f8
+"FontFamily"  =dword:00000036
+"FontSize"    =dword:00100000
+"FontWeight"  =dword:00000400
+"FaceName"    ="Consolas"
