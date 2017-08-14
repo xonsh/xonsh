@@ -57,7 +57,7 @@ script:
       cd docs;
       make html;
       cd ..;
-      doctr deploy --sync --no-require-master  --built-docs docs/_build/html "docs-$TRAVIS_BRANCH";
+      doctr deploy --sync --no-require-master --deploy-repo xonsh/xonsh-docs --built-docs docs/_build/html "docs-$TRAVIS_BRANCH";
     else
       py.test --timeout=10;
     fi
