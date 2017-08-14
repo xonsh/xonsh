@@ -47,7 +47,8 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.imgmath',
               'sphinx.ext.inheritance_diagram', 'sphinx.ext.viewcode',
               #'sphinx.ext.autosummary',
-              'numpydoc', 'cmdhelp',
+              #'numpydoc',
+              'sphinx.ext.napoleon', 'cmdhelp',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -60,7 +61,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'sidebar'
 
 # General information about the project.
 project = u'xonsh'
@@ -132,28 +133,29 @@ modindex_common_prefix = ['xonsh.']
 # further.  For a list of options available for each theme, see the
 # documentation.
 if not on_rtd:
-    import cloud_sptheme as csp
 
-    html_theme = 'cloud'
+    import sphinx_readable_theme as srt
 
-    html_theme_options = {
-        'max_width': '1250px',
-        'minimal_width': '700px',
-        'relbarbgcolor': '#000000',
-        'footerbgcolor': '#FFFFE7',
-        'sidebarwidth': '322px',
-        'sidebarbgcolor': '#e7e7ff',
-        #'googleanalytics_id': 'UA-41934829-1',
-        'stickysidebar': False,
-        'highlighttoc': False,
-        'externalrefs': False,
-        'collapsiblesidebar': True,
-        'default_layout_text_size': "100%",  # prevents division by zero error
-        }
+    html_theme = 'readable'
+
+#    html_theme_options = {
+#        'max_width': '1250px',
+#        'minimal_width': '700px',
+#        'relbarbgcolor': '#000000',
+#        'footerbgcolor': '#FFFFE7',
+#        'sidebarwidth': '322px',
+#        'sidebarbgcolor': '#e7e7ff',
+#        #'googleanalytics_id': 'UA-41934829-1',
+#        'stickysidebar': False,
+#        'highlighttoc': False,
+#        'externalrefs': False,
+#        'collapsiblesidebar': True,
+#        'default_layout_text_size': "100%",  # prevents division by zero error
+#        }
 
     # Add any paths that contain custom themes here, relative to this directory.
-    html_theme_path = ["_theme", csp.get_theme_dir()]
-    templates_path = ["_templates_overwrite"]
+    html_theme_path = [srt.get_html_theme_path()]
+    templates_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -174,8 +176,8 @@ html_favicon = '_static/magic_conch.ico'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-html_style = "numpy_friendly.css"
+#html_static_path = []
+#html_style = "numpy_friendly.css"
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
