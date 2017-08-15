@@ -57,7 +57,12 @@ script:
       cd docs;
       make html;
       cd ..;
-      doctr deploy --sync --no-require-master --deploy-repo xonsh/xonsh-docs --built-docs docs/_build/html "docs-$TRAVIS_BRANCH";
+      doctr deploy --deploy-repo xonsh/xonsh-docs dev;
+      git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
+      cd docs;
+      make clean html;
+      cd ..;
+      doctr deploy --deploy-repo xonsh/xonsh-docs .;
     else
       py.test --timeout=10;
     fi

@@ -47,8 +47,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.imgmath',
               'sphinx.ext.inheritance_diagram', 'sphinx.ext.viewcode',
               #'sphinx.ext.autosummary',
-              #'numpydoc',
-              'sphinx.ext.napoleon', 'cmdhelp',
+              'numpydoc', 'cmdhelp',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
