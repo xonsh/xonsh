@@ -1,5 +1,4 @@
 cloud_sptheme
-sphinx-readable-theme
 numpydoc==0.5
 Sphinx==1.5.6
 prompt_toolkit
