@@ -60,7 +60,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'sidebar'
 
 # General information about the project.
 project = u'xonsh'
@@ -132,6 +132,7 @@ modindex_common_prefix = ['xonsh.']
 # further.  For a list of options available for each theme, see the
 # documentation.
 if not on_rtd:
+
     import cloud_sptheme as csp
 
     html_theme = 'cloud'
@@ -164,7 +165,7 @@ if not on_rtd:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/ascii_conch_part_color_tight.png'
+html_logo = '_static/ascii_conch_part_transparent_tight.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

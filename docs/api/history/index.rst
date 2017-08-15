@@ -6,7 +6,7 @@ Xonsh History API
 **History Modules:**
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
     base
     main

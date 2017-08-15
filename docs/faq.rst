@@ -1,4 +1,4 @@
-==========================
+
 Frequently Asked Questions
 ==========================
 Ok, so, maybe no one actually asked them.
