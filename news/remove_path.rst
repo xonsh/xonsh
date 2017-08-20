@@ -6,6 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** $PATH.remove
+**Fixed:**
+
+* $PATH.remove
 
 **Security:** None
