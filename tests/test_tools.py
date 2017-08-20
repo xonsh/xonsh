@@ -788,6 +788,27 @@ def test_env_path_slice_get_all_except_first_element(inp, exp):
     assert exp == obs
 
 
+def test_env_path_remove():
+    path = pathlib.Path("~/node_modules/.bin")
+    env_path = EnvPath([path])
+    env_path.remove(path)
+    assert len(env_path) == 0
+
+
+def test_env_path_append():
+    path = pathlib.Path("~/node_modules/.bin")
+    env_path = EnvPath([])
+    assert len(env_path) == 0
+    env_path.append(path)
+    assert len(env_path) == 1
+
+
+def test_env_path_eq():
+    env_path = EnvPath([pathlib.Path("~/node_modules/.bin")])
+    list_paths = [pathlib.Path("~/node_modules/.bin")]
+    assert env_path == list_paths
+
+
 @pytest.mark.parametrize('inp, exp_a, exp_b', [
         ([mkpath('home', 'wakka'),
           mkpath('home', 'jakka'),
