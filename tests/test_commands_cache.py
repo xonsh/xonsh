@@ -49,10 +49,12 @@ def test_predict_shell_false(args):
 PATTERN_BIN_USING_TTY_OR_NOT = [
     (False, {10: b'isnotatty'}),
     (False, {12: b'isatty'}),
+    (False, {151: b'gpm'}),
     (False, {10: b'isatty', 100: b'tcgetattr', }),
     (False, {10: b'isatty', 100: b'tcsetattr'}),
     (True, {10: b'isatty', 100: b'tcsetattr', 1000: b'tcgetattr'}),
     (True, {1000: b'libncurses'}),
+    (True, {4094: b'libgpm'}),
     (True, {2045: b'tcgetattr', 4095: b'tcgetattr', 6140: b'tcsetattr',
             8190: b'isatty'}),
 ]
