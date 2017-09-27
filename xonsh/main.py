@@ -236,7 +236,7 @@ def start_services(shell_kwargs, args):
     env = builtins.__xonsh_env__
     rc = shell_kwargs.get('rc', None)
     rc = env.get('XONSHRC') if rc is None else rc
-    if args.mode != XonshMode.interactive:
+    if args.mode != XonshMode.interactive and not args.force_interactive:
         #  Don't load xonshrc if not interactive shell
         rc = None
     events.on_pre_rc.fire()
@@ -295,7 +295,7 @@ def premain(argv=None):
     env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
-    env['XONSH_INTERACTIVE'] = args.force_interactive
+    env['XONSH_INTERACTIVE'] = args.force_interactive or (args.mode == XonshMode.interactive)
     if ON_WINDOWS:
         setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
     return args
