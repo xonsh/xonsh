@@ -243,6 +243,7 @@ class CommandsCache(cabc.Mapping):
 
         search_for = {
             (b'ncurses',): [False, ],
+            (b'libgpm',): [False, ],
             (b'isatty', b'tcgetattr', b'tcsetattr'): [False, False, False],
         }
         tstart = time.time()
