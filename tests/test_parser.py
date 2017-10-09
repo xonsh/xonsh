@@ -68,9 +68,11 @@ def check_xonsh(xenv, inp, run=True, mode='exec'):
 
 def test_int_literal():
     check_ast('42')
+    check_ast('4_2')
 
 def test_float_literal():
     check_ast('42.0')
+    check_ast('4_2.4_2')
 
 def test_imag_literal():
     check_ast('42j')

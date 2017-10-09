@@ -91,18 +91,22 @@ def check_tokens_subproc(inp, exp, stop=-1):
 
 def test_int_literal():
     assert check_token('42', ['NUMBER', '42', 0])
+    assert check_token('4_2', ['NUMBER', '4_2', 0])
 
 
 def test_hex_literal():
     assert check_token('0x42', ['NUMBER', '0x42', 0])
+    assert check_token('0x4_2', ['NUMBER', '0x4_2', 0])
 
 
 def test_oct_o_literal():
     assert check_token('0o42', ['NUMBER', '0o42', 0])
+    assert check_token('0o4_2', ['NUMBER', '0o4_2', 0])
 
 
 def test_bin_literal():
     assert check_token('0b101010', ['NUMBER', '0b101010', 0])
+    assert check_token('0b10_10_10', ['NUMBER', '0b10_10_10', 0])
 
 
 def test_indent():
@@ -382,7 +386,7 @@ def test_regex_globs():
 
 
 @pytest.mark.parametrize('case', [
-    '0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42', '5E10', '5e+42'])
+    '0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42', '5E10', '5e+42', '1_0e1_0'])
 def test_float_literals(case):
     assert check_token(case, ['NUMBER', case, 0])
 
