@@ -200,7 +200,7 @@ Decnumber = r'(?:0(?:_?0)*|[1-9](?:_?[0-9])*)'
 Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
 Exponent = r'[eE][-+]?[0-9](?:_?[0-9])*'
 Pointfloat = group(r'[0-9](?:_?[0-9])*\.(?:[0-9](?:_?[0-9])*)?',
-                           r'\.[0-9](?:_?[0-9])*') + maybe(Exponent)
+                   r'\.[0-9](?:_?[0-9])*') + maybe(Exponent)
 Expfloat = r'[0-9](?:_?[0-9])*' + Exponent
 Floatnumber = group(Pointfloat, Expfloat)
 Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
