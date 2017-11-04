@@ -145,17 +145,23 @@ def autopair_condition(cli):
 
 
 @Condition
-def whitespace_before(cli):
-    """Check if there is whitespace (or nothing) to the left of the cursor"""
+def whitespace_or_bracket_before(cli):
+    """Check if there is whitespace or an opening
+       bracket to the left of the cursor"""
     d = cli.current_buffer.document
-    return bool(d.cursor_position == 0 or d.char_before_cursor.isspace())
+    return bool(d.cursor_position == 0
+                or d.char_before_cursor.isspace()
+                or d.char_before_cursor in '([{')
 
 
 @Condition
-def whitespace_after(cli):
-    """Check if there is whitespace (or nothing) to the right of the cursor"""
+def whitespace_or_bracket_after(cli):
+    """Check if there is whitespace or a closing
+       bracket to the right of the cursor"""
     d = cli.current_buffer.document
-    return bool(d.is_cursor_at_the_end_of_line or d.current_char.isspace())
+    return bool(d.is_cursor_at_the_end_of_line
+                or d.current_char.isspace()
+                or d.current_char in ')]}')
 
 
 def load_xonsh_bindings(key_bindings_manager):
@@ -188,7 +194,7 @@ def load_xonsh_bindings(key_bindings_manager):
         else:
             event.cli.current_buffer.insert_text(env.get('INDENT'))
 
-    @handle('(', filter=autopair_condition & whitespace_after)
+    @handle('(', filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_parens(event):
         event.cli.current_buffer.insert_text('(')
         event.cli.current_buffer.insert_text(')', move_cursor=False)
@@ -201,7 +207,7 @@ def load_xonsh_bindings(key_bindings_manager):
         else:
             buffer.insert_text(')')
 
-    @handle('[', filter=autopair_condition & whitespace_after)
+    @handle('[', filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_bracket(event):
         event.cli.current_buffer.insert_text('[')
         event.cli.current_buffer.insert_text(']', move_cursor=False)
@@ -215,7 +221,7 @@ def load_xonsh_bindings(key_bindings_manager):
         else:
             buffer.insert_text(']')
 
-    @handle('{', filter=autopair_condition & whitespace_after)
+    @handle('{', filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_brace(event):
         event.cli.current_buffer.insert_text('{')
         event.cli.current_buffer.insert_text('}', move_cursor=False)
@@ -235,7 +241,8 @@ def load_xonsh_bindings(key_bindings_manager):
 
         if buffer.document.current_char == '\'':
             buffer.cursor_position += 1
-        elif whitespace_before(event.cli) and whitespace_after(event.cli):
+        elif whitespace_or_bracket_before(event.cli)\
+                and whitespace_or_bracket_after(event.cli):
             buffer.insert_text('\'')
             buffer.insert_text('\'', move_cursor=False)
         else:
@@ -247,7 +254,8 @@ def load_xonsh_bindings(key_bindings_manager):
 
         if buffer.document.current_char == '"':
             buffer.cursor_position += 1
-        elif whitespace_before(event.cli) and whitespace_after(event.cli):
+        elif whitespace_or_bracket_before(event.cli)\
+                and whitespace_or_bracket_after(event.cli):
             buffer.insert_text('"')
             buffer.insert_text('"', move_cursor=False)
         else:
