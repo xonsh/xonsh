@@ -6,7 +6,7 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
 
 * Now f-strings can be used inside @() without explicit enclosing command in ![]
 
