@@ -1631,7 +1631,7 @@ def format_std_prepost(template, env=None):
     return s
 
 
-_RE_STRING_START = "[bBprRuU]*"
+_RE_STRING_START = "[bBprRuUf]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"
 _RE_STRING_DOUBLE = '"'

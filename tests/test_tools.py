@@ -432,6 +432,7 @@ def test_replace_logical_line(src, idx, exp_line, exp_n):
     ("'y'", True),
     ('b"x"', True),
     ("r'y'", True),
+    ("f'z'", True),
     ('"""hello\nmom"""', True),
 ])
 def test_check_quotes(inp, exp):
