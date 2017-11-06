@@ -69,8 +69,16 @@ def check_xonsh(xenv, inp, run=True, mode='exec'):
 def test_int_literal():
     check_ast('42')
 
+@skip_if_lt_py36
+def test_int_literal_underscore():
+    check_ast('4_2')
+
 def test_float_literal():
     check_ast('42.0')
+
+@skip_if_lt_py36
+def test_float_literal_underscore():
+    check_ast('4_2.4_2')
 
 def test_imag_literal():
     check_ast('42j')
