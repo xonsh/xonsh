@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Implements JSON version of xonsh history backend."""
 import os
+import sys
 import time
+import json
 import builtins
 import collections
 import threading
@@ -396,7 +398,14 @@ class JsonHistory(History):
             except ValueError:
                 # Invalid json file
                 continue
-            commands = json_file.load()['cmds']
+            try:
+                commands = json_file.load()['cmds']
+            except json.decoder.JSONDecodeError:
+                # file is corrupted somehow
+                if builtins.__xonsh_env__.get('XONSH_DEBUG') > 0:
+                    msg = 'xonsh history file {0!r} is not valid JSON'
+                    print(msg.format(f), file=sys.stderr)
+                continue
             for c in commands:
                 yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0]}
         # all items should also include session items
