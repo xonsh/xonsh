@@ -27,7 +27,7 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
     swap_values, get_logical_line, replace_logical_line, check_quotes, deprecated,
-    )
+    balanced_parens)
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows, skip_if_on_unix
@@ -480,6 +480,25 @@ def test_subexpr_from_unbalanced_parens(inp, exp):
 def test_subexpr_before_unbalanced_parens(inp, exp):
     obs = subexpr_before_unbalanced(inp, '(', ')')
     assert exp == obs
+
+
+@pytest.mark.parametrize('line, exp', [
+    ('', True),
+    ('wakka jawaka', True),
+    ('rm *; echo hello world', True),
+    ('()', True),
+    ('f()', True),
+    ('(', False),
+    (')', False),
+    ('(cmd;', False),
+    ('cmd;)', False),
+])
+def test_balanced_parens(line, exp):
+    obs = balanced_parens(line, lexer=LEXER)
+    if exp:
+        assert obs
+    else:
+        assert not obs
 
 
 @pytest.mark.parametrize('line, mincol, exp', [
