@@ -34,6 +34,11 @@ def test_which_ls():
 def test_echo_hello():
     assert check_parse('echo hello')
 
+
+def test_echo_star_with_semi():
+    assert check_parse('echo * spam ; ![echo eggs]\n')
+
+
 def test_simple_func():
     code = ('def prompt():\n'
             "    return '{user}'.format(user='me')\n")
