@@ -341,7 +341,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                                                  begidx, endidx,
                                                  ctx=self.ctx)
         chopped = prefix[:-l]
-        rtn_completions = [chopped + i for i in completions]
+        if chopped:
+            rtn_completions = [chopped + i for i in completions]
+        else:
+            rtn_completions = completions
+        rtn_completions = [i.rsplit(' ', 1)[-1] for i in rtn_completions]
         show_completions = self._querycompletions(completions, endidx - begidx)
         return rtn_completions if show_completions else []
 
