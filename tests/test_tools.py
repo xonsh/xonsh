@@ -488,6 +488,7 @@ def test_subexpr_before_unbalanced_parens(inp, exp):
     ('rm *; echo hello world', True),
     ('()', True),
     ('f()', True),
+    ('echo * yo ; echo eggs', True),
     ('(', False),
     (')', False),
     ('(cmd;', False),
@@ -510,6 +511,7 @@ def test_balanced_parens(line, exp):
     ('not (ls) && echo a', 0, 8),
     ('bash -c ! export var=42; echo $var', 0, 35),
     ('python -c ! import os; print(os.path.abspath("/"))', 0, 51),
+    ('echo * yo ; echo eggs', 0, 11),
 ])
 def test_find_next_break(line, mincol, exp):
     obs = find_next_break(line, mincol=mincol, lexer=LEXER)
