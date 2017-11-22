@@ -1,6 +1,7 @@
 import os
 import re
 import ast
+import glob
 import builtins
 
 import xonsh.tools as xt
@@ -264,6 +265,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
     glob_sorted = env.get('GLOB_SORTED')
+    prefix = glob.escape(prefix)
     for s in xt.iglobpath(prefix + '*', ignore_case=(not csc),
                           sort_result=glob_sorted):
         paths.add(s)
