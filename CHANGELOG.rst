@@ -4,6 +4,91 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.0
+====================
+
+**Added:**
+
+* Added an alias command, matching bash's implementation, available as part of bashisms.
+* New ``$AUTO_SUGGEST_IN_COMPLETIONS`` environment variable that enables/disables
+  whether the auto-suggestion result appears in the tab completions.
+* Added ``__add__()`` and ``__radd__()`` methods to ``EnvPath``.
+* Xonsh now supports f-strings, as in Python v3.6+.
+* Added ``ipython`` as unthreadable in command cache threadabilty predictors.
+* Added ``whole_word_jumping`` xontrib
+* Added ``$XONSH_APPEND_NEWLINE`` environment variable
+* Support for PEP 515: Underscores in Numeric Literals
+*  ``xonsh.color_tools.make_palette()``
+
+   Simple rename of the pre-existing
+   ``xonsh.color_tools.make_pallete()`` function.
+
+*  ``xonsh.tools.decorator()`` function/method decorator.
+
+   This allows for an API function to be annotated with a
+   decorator that documents deprecation, while also tying in
+   functionality that will warn a user that the function has
+   been deprecated, and, raise an ``AssertionError`` if the
+   function has passed its expiry date.
+* New xontrib ``schedule`` (Xonsh Task Scheduler)
+
+
+**Changed:**
+
+* ``on_pre_prompt`` is now fired before prompt calculations are made, allowing modifications to the prompt.
+* ``emacsclient`` will now return false in the threadable predictors.
+* Improved the autopair behavior to match that of popular code editors.
+* Moved the lazy ``pkg_resources`` package back to its original
+  place. The will hopefully address some of the slowdown issues
+  experiances on some platforms.
+* When xonsh is used to run an ``xsh`` script, the ``xonshrc`` is not loaded
+* Change in the behavior of the default predictor with binary analysis. The pattern ``libgpm`` is use, assuming when ``gpm`` is used the program is not threadable. This change solves issues with programs as ``links``.
+* Error messages added to the ``source`` command if it is used with a language
+  that is not xonsh or Python.
+
+
+**Deprecated:**
+
+*  ``xonsh.color_tools.make_pallette()``
+
+   Deprecated in release 0.5.10 and will be removed in release 0.6.0.
+
+
+**Fixed:**
+
+* Now f-strings can be used inside @() without explicit enclosing command in ![]
+* Fix for ``x, y, *z = ...`` unpacking.
+* Git branch detection now correctly passes the environment down to the subprocess
+  call.  This allows for branch detection when git is installed into a non-standard
+  location.
+* Escape regex characters in ``path_complete`` to avoid regex parsing errors for
+  certain combinations of characters in path completer
+* gistatus: Fixed hash not being shown when in detaced HEAD and there are no tags
+* Fix branch colorization when ``git`` or ``hg`` are aliases.
+* Fixed leftover ``.git/index.lock`` in ``gitstatus``
+* Made JSON history loading more robust to corrupt files.
+* Starting a new command with an open parentheses will no longer
+  throw a traceback when ``$UPDATE_COMPLETIONS_ON_KEYPRESS`` is
+  ``True``.
+* Automatically wrapping subprocess calls would sometimes include
+  semincolons and other line-ending tokens, rather than stopping at them.
+  This has been fixed.
+*  Numerous spelling errors in documentation, docstrings/comments, text
+   strings and local variable names.
+
+*  Spelling error in the ``xonsh.color_tools.make_pallete()`` public
+   function declaration. This was fixed by renaming the function to
+   ``xonsh.color_tools.make_palette()`` while maintaining a binding
+   of ``make_pallete()`` to the new ``make_palette()`` in case users
+   are already used to this API.
+* Fixed issue with starting triple quote strings being run as a command.
+* Fixed a problem with escaping charet (^) character for cmd.exe in the source-cmd function.
+* ``EOF in multi-line statement`` errors were misreported as being on line 0.
+  Now they are correctly reported as being on the last line of the file.
+
+
+
+
 v0.5.12
 ====================
 
