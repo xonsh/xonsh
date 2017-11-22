@@ -10,16 +10,22 @@ $VERSION_BUMP_PATTERNS = [
     ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
+
+$PYTEST_COMMAND = "rm -r .cache/ __pycache__/ */__pycache__ */*/__pycache__ && pytest"
+
 $TAG_REMOTE = 'git@github.com:xonsh/xonsh.git'
 $TAG_TARGET = 'master'
 
 $GHPAGES_REPO = 'git@github.com:scopatz/xonsh-docs.git'
 
 with open('requirements-tests.txt') as f:
-    $DOCKER_CONDA_DEPS = f.read().split()
+    conda_deps = f.read().split()
 with open('requirements-docs.txt') as f:
-    $DOCKER_CONDA_DEPS += f.read().split()
-$DOCKER_CONDA_DEPS = [d.lower() for d in set($DOCKER_CONDA_DEPS)]
+    conda_deps += f.read().split()
+conda_deps = {d.lower().split('=')[0] for d in set(conda_deps)}
+conda_deps.discard('prompt-toolkit')
+conda_deps.add('prompt_toolkit')
+$DOCKER_CONDA_DEPS = sorted(conda_deps)
 $DOCKER_INSTALL_COMMAND = './setup.py install'
 $DOCKER_GIT_NAME = 'xonsh'
 $DOCKER_GIT_EMAIL = 'xonsh@googlegroups.com'
