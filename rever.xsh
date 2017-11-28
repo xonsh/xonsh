@@ -11,8 +11,6 @@ $VERSION_BUMP_PATTERNS = [
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
 
-#$PYTEST_COMMAND = "rm -r .cache/ __pycache__/ */__pycache__ */*/__pycache__ && pytest"
-
 $TAG_REMOTE = 'git@github.com:xonsh/xonsh.git'
 $TAG_TARGET = 'master'
 
