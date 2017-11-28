@@ -27,7 +27,7 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
     swap_values, get_logical_line, replace_logical_line, check_quotes, deprecated,
-    balanced_parens)
+    is_writable_file, balanced_parens)
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows, skip_if_on_unix
@@ -1044,7 +1044,8 @@ def test_is_logfile_opt(inp, exp):
         (None, None),
         ('throwback.log', 'throwback.log'),
         skip_if_on_windows(('/dev/null', '/dev/null')),
-        skip_if_on_windows(('/dev/nonexistent_dev', None))
+        skip_if_on_windows(('/dev/nonexistent_dev',
+            '/dev/nonexistent_dev' if is_writable_file('/dev/nonexistent_dev') else None))
     ])
 def test_to_logfile_opt(inp, exp):
     obs = to_logfile_opt(inp)
