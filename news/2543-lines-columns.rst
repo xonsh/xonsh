@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* Clean out ``$LINES`` and ``$COLUMNS`` if set, preventing some programs from drawing weird.
+* Clean out ``$LINES`` and ``$COLUMNS`` if set, preventing some programs from drawing weirdly
 
 **Security:** None
