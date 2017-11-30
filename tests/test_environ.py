@@ -11,7 +11,7 @@ from xonsh.tools import ON_WINDOWS
 import pytest
 
 from xonsh.commands_cache import CommandsCache
-from xonsh.environ import Env, load_static_config, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES
+from xonsh.environ import Env, load_static_config, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES, default_env
 
 from tools import skip_if_on_unix
 
@@ -233,3 +233,15 @@ def test_int_bool_envvars_have_ensurers():
     key_mask = set(itertools.compress(DEFAULT_VALUES.keys(), bool_ints))
     ensurer_keys = set(DEFAULT_ENSURERS.keys())
     assert len(key_mask.intersection(ensurer_keys)) == len(key_mask)
+
+
+def test_no_lines_columns():
+    os.environ['LINES'] = 'spam'
+    os.environ['COLUMNS'] = 'eggs'
+    try:
+        env = default_env()
+        assert 'LINES' not in env
+        assert 'COLUMNS' not in env
+    finally:
+        del os.environ['LINES']
+        del os.environ['COLUMNS']
