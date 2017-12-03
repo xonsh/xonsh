@@ -11,6 +11,7 @@ import os
 import builtins
 import functools
 from xonsh.tools import print_exception
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 
 def _chdir_up(path):
@@ -88,7 +89,8 @@ def _cwd_restore_wrapper(func):
 
 @events.on_ptk_create
 def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
-    prompter.prompt = _cwd_release_wrapper(prompter.prompt)
-    if completer.completer:
-        # Temporarily restore cwd for callbacks to the completer
-        completer.completer.complete = _cwd_restore_wrapper(completer.completer.complete)
+    if ON_WINDOWS and not ON_CYGWIN:
+        prompter.prompt = _cwd_release_wrapper(prompter.prompt)
+        if completer.completer:
+            # Temporarily restore cwd for callbacks to the completer
+            completer.completer.complete = _cwd_restore_wrapper(completer.completer.complete)
