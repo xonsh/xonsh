@@ -1,5 +1,5 @@
 """ This will release the lock on the current directory whenever the
-    prompt is shown. Enabling this will allow the other programs or
+    prompt is shown. Enabling this will allow other programs or
     Windows Explorer to delete or rename the current or parent
     directories. Internally, it is accomplished by temporarily resetting
     CWD to the root drive folder while waiting at the prompt. This only
@@ -30,7 +30,7 @@ def _chdir_up(path):
 
 
 def _cwd_release_wrapper(func):
-    """ Decorator for Windows to the wrap the prompt function and release
+    """ Decorator for Windows to wrap the prompt function and release
         the process lock on the current directory while the prompt is
         displayed. This works by temporarily setting
         the workdir to the users home directory.
