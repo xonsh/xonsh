@@ -10,6 +10,8 @@
 import os
 import builtins
 import functools
+from pathlib import Path
+
 from xonsh.tools import print_exception
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
@@ -18,15 +20,13 @@ def _chdir_up(path):
     """ Change directory to path or if path does not exist
         the first valid parent.
     """
+    path = Path(path)
     try:
         os.chdir(path)
         return path
     except (FileNotFoundError, NotADirectoryError):
-        parent = os.path.dirname(path)
-        if parent != path:
-            return _chdir_up(parent)
-        else:
-            raise
+        path.resolve()
+        return _chdir_up(path.parent)
 
 
 def _cwd_release_wrapper(func):
@@ -45,13 +45,13 @@ def _cwd_release_wrapper(func):
     else:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            rootdir = os.path.splitdrive(os.getcwd())[0] + '\\'
-            os.chdir(rootdir)
+            anchor = Path(os.getcwd()).anchor
+            os.chdir(anchor)
             try:
                 out = func(*args, **kwargs)
             finally:
                 try:
-                    pwd = env.get('PWD', rootdir)
+                    pwd = env.get('PWD', anchor)
                     os.chdir(pwd)
                 except (FileNotFoundError, NotADirectoryError):
                     print_exception()
