@@ -18,9 +18,9 @@ matrix:
             - MINICONDA_OS="Linux"
             - BUILD_DOCS=true
         - os: linux
-          python: 
-            - "nightly"
-            - "pypy3"
+          python: "nightly"
+        - os: linux
+          python: "pypy3"
         - os: osx
           language: generic
           env: PYTHON="3.6" MINICONDA_OS="MacOSX"
