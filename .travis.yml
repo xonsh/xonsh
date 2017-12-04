@@ -21,6 +21,8 @@ matrix:
           python: "nightly"
         - os: linux
           python: "pypy3"
+          env:
+            - BUILD_DOCS=false
         - os: osx
           language: generic
           env: PYTHON="3.6" MINICONDA_OS="MacOSX"
