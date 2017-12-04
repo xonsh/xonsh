@@ -5,7 +5,6 @@ include license
 include CHANGELOG.rst
 include README.rst
 graft docs
-graft news
 recursive-include xonsh/ply/example *
 recursive-include xonsh/ply/doc *
 recursive-include xonsh/ply/test *
