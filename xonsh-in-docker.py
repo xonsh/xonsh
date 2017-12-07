@@ -21,7 +21,6 @@ args = parser.parse_args()
 
 docker_script = """
 from python:{python_version}
-from pypy:3-slim
 RUN pip install --upgrade pip && pip install \\
   ply \\
   prompt-toolkit=={ptk_version} \\
