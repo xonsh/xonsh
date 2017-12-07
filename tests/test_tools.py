@@ -27,7 +27,7 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
     swap_values, get_logical_line, replace_logical_line, check_quotes, deprecated,
-    )
+    is_writable_file, balanced_parens)
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows, skip_if_on_unix
@@ -432,6 +432,7 @@ def test_replace_logical_line(src, idx, exp_line, exp_n):
     ("'y'", True),
     ('b"x"', True),
     ("r'y'", True),
+    ("f'z'", True),
     ('"""hello\nmom"""', True),
 ])
 def test_check_quotes(inp, exp):
@@ -481,6 +482,26 @@ def test_subexpr_before_unbalanced_parens(inp, exp):
     assert exp == obs
 
 
+@pytest.mark.parametrize('line, exp', [
+    ('', True),
+    ('wakka jawaka', True),
+    ('rm *; echo hello world', True),
+    ('()', True),
+    ('f()', True),
+    ('echo * yo ; echo eggs', True),
+    ('(', False),
+    (')', False),
+    ('(cmd;', False),
+    ('cmd;)', False),
+])
+def test_balanced_parens(line, exp):
+    obs = balanced_parens(line, lexer=LEXER)
+    if exp:
+        assert obs
+    else:
+        assert not obs
+
+
 @pytest.mark.parametrize('line, mincol, exp', [
     ('ls && echo a', 0, 4),
     ('ls && echo a', 6, None),
@@ -490,6 +511,7 @@ def test_subexpr_before_unbalanced_parens(inp, exp):
     ('not (ls) && echo a', 0, 8),
     ('bash -c ! export var=42; echo $var', 0, 35),
     ('python -c ! import os; print(os.path.abspath("/"))', 0, 51),
+    ('echo * yo ; echo eggs', 0, 11),
 ])
 def test_find_next_break(line, mincol, exp):
     obs = find_next_break(line, mincol=mincol, lexer=LEXER)
@@ -1022,7 +1044,8 @@ def test_is_logfile_opt(inp, exp):
         (None, None),
         ('throwback.log', 'throwback.log'),
         skip_if_on_windows(('/dev/null', '/dev/null')),
-        skip_if_on_windows(('/dev/nonexistent_dev', None))
+        skip_if_on_windows(('/dev/nonexistent_dev',
+            '/dev/nonexistent_dev' if is_writable_file('/dev/nonexistent_dev') else None))
     ])
 def test_to_logfile_opt(inp, exp):
     obs = to_logfile_opt(inp)

@@ -144,6 +144,26 @@ def autopair_condition(cli):
     return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
 
 
+@Condition
+def whitespace_or_bracket_before(cli):
+    """Check if there is whitespace or an opening
+       bracket to the left of the cursor"""
+    d = cli.current_buffer.document
+    return bool(d.cursor_position == 0
+                or d.char_before_cursor.isspace()
+                or d.char_before_cursor in '([{')
+
+
+@Condition
+def whitespace_or_bracket_after(cli):
+    """Check if there is whitespace or a closing
+       bracket to the right of the cursor"""
+    d = cli.current_buffer.document
+    return bool(d.is_cursor_at_the_end_of_line
+                or d.current_char.isspace()
+                or d.current_char in ')]}')
+
+
 def load_xonsh_bindings(key_bindings_manager):
     """
     Load custom key bindings.
@@ -174,7 +194,7 @@ def load_xonsh_bindings(key_bindings_manager):
         else:
             event.cli.current_buffer.insert_text(env.get('INDENT'))
 
-    @handle('(', filter=autopair_condition)
+    @handle('(', filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_parens(event):
         event.cli.current_buffer.insert_text('(')
         event.cli.current_buffer.insert_text(')', move_cursor=False)
@@ -187,7 +207,7 @@ def load_xonsh_bindings(key_bindings_manager):
         else:
             buffer.insert_text(')')
 
-    @handle('[', filter=autopair_condition)
+    @handle('[', filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_bracket(event):
         event.cli.current_buffer.insert_text('[')
         event.cli.current_buffer.insert_text(']', move_cursor=False)
@@ -201,15 +221,32 @@ def load_xonsh_bindings(key_bindings_manager):
         else:
             buffer.insert_text(']')
 
+    @handle('{', filter=autopair_condition & whitespace_or_bracket_after)
+    def insert_right_brace(event):
+        event.cli.current_buffer.insert_text('{')
+        event.cli.current_buffer.insert_text('}', move_cursor=False)
+
+    @handle('}', filter=autopair_condition)
+    def overwrite_right_brace(event):
+        buffer = event.cli.current_buffer
+
+        if buffer.document.current_char == '}':
+            buffer.cursor_position += 1
+        else:
+            buffer.insert_text('}')
+
     @handle('\'', filter=autopair_condition)
     def insert_right_quote(event):
         buffer = event.cli.current_buffer
 
         if buffer.document.current_char == '\'':
             buffer.cursor_position += 1
-        else:
+        elif whitespace_or_bracket_before(event.cli)\
+                and whitespace_or_bracket_after(event.cli):
             buffer.insert_text('\'')
             buffer.insert_text('\'', move_cursor=False)
+        else:
+            buffer.insert_text('\'')
 
     @handle('"', filter=autopair_condition)
     def insert_right_double_quote(event):
@@ -217,9 +254,25 @@ def load_xonsh_bindings(key_bindings_manager):
 
         if buffer.document.current_char == '"':
             buffer.cursor_position += 1
-        else:
+        elif whitespace_or_bracket_before(event.cli)\
+                and whitespace_or_bracket_after(event.cli):
             buffer.insert_text('"')
             buffer.insert_text('"', move_cursor=False)
+        else:
+            buffer.insert_text('"')
+
+    @handle(Keys.Backspace, filter=autopair_condition)
+    def delete_brackets_or_quotes(event):
+        """Delete empty pair of brackets or quotes"""
+        buffer = event.cli.current_buffer
+        before = buffer.document.char_before_cursor
+        after = buffer.document.current_char
+
+        if any([before == b and after == a
+                for (b, a) in ['()', '[]', '{}', "''", '""']]):
+            buffer.delete(1)
+
+        buffer.delete_before_cursor(1)
 
     @handle(Keys.ControlD, filter=ctrl_d_condition)
     def call_exit_alias(event):

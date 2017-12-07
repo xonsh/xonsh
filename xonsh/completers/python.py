@@ -169,7 +169,7 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
         return set()
     funcname = xt.subexpr_before_unbalanced(front, '(', ')')
     val, _ctx = _safe_eval(funcname, ctx)
-    if val is None and _ctx is None:
+    if val is None:
         return set()
     try:
         sig = inspect.signature(val)

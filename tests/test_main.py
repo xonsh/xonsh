@@ -8,6 +8,7 @@ import os.path
 import sys
 
 import xonsh.main
+from xonsh.main import XonshMode
 from xonsh.environ import Env
 import pytest
 from tools import TEST_DIR
@@ -50,12 +51,46 @@ def test_premain_D(shell):
     assert (builtins.__xonsh_env__.get('TEST2') == 'LOL')
 
 
-def test_premain_custom_rc(shell, tmpdir):
+def test_premain_custom_rc(shell, tmpdir, monkeypatch):
+    monkeypatch.setattr(sys.stdin, 'isatty', lambda: True)
     builtins.__xonsh_env__ = Env(XONSH_CACHE_SCRIPTS=False)
     f = tmpdir.join('wakkawakka')
     f.write("print('hi')")
-    xonsh.main.premain(['--rc', f.strpath])
+    args = xonsh.main.premain(['--rc', f.strpath])
+    assert args.mode == XonshMode.interactive
     assert f.strpath in builtins.__xonsh_env__.get('XONSHRC')
+
+
+def test_no_rc_with_script(shell, tmpdir):
+    args = xonsh.main.premain(['tests/sample.xsh'])
+    assert not (args.mode == XonshMode.interactive)
+
+
+def test_force_interactive_rc_with_script(shell, tmpdir):
+    args = xonsh.main.premain(['-i', 'tests/sample.xsh'])
+    assert builtins.__xonsh_env__.get('XONSH_INTERACTIVE')
+
+
+def test_force_interactive_custom_rc_with_script(shell, tmpdir):
+    """Calling a custom RC file on a script-call with the interactive flag
+    should run interactively
+    """
+    builtins.__xonsh_env__ = Env(XONSH_CACHE_SCRIPTS=False)
+    f = tmpdir.join('wakkawakka')
+    f.write("print('hi')")
+    args = xonsh.main.premain(['-i', '--rc', f.strpath, 'tests/sample.xsh'])
+    assert args.mode == XonshMode.interactive
+    assert f.strpath in builtins.__xonsh_env__.get('XONSHRC')
+
+
+def test_custom_rc_with_script(shell, tmpdir):
+    """Calling a custom RC file on a script-call without the interactive flag
+    should not run interactively
+    """
+    f = tmpdir.join('wakkawakka')
+    f.write("print('hi')")
+    args = xonsh.main.premain(['--rc', f.strpath, 'tests/sample.xsh'])
+    assert not (args.mode == XonshMode.interactive)
 
 
 def test_premain_no_rc(shell, tmpdir):

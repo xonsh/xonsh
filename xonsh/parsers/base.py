@@ -2024,7 +2024,7 @@ class BaseParser(object):
     def p_number(self, p):
         """number : number_tok"""
         p1 = p[1]
-        p[0] = ast.Num(n=ast.literal_eval(p1.value), lineno=p1.lineno,
+        p[0] = ast.Num(n=ast.literal_eval(p1.value.replace('_', '')), lineno=p1.lineno,
                        col_offset=p1.lexpos)
 
     def p_testlist_comp_comp(self, p):

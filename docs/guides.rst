@@ -1,0 +1,18 @@
+
+Guides
+======
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 2
+
+    tutorial
+    tutorial_hist
+    tutorial_macros
+    tutorial_xontrib
+    tutorial_events
+    tutorial_completers
+    tutorial_history_backend
+    tutorial_ptk
+    bash_to_xsh
+    python_virtual_environments

@@ -1534,8 +1534,8 @@ or by invoking xonsh with its filename as an argument:
     adding files
     file0.txt file1.txt file2.txt file3.txt file4.txt test_script.sh
 
-xonsh scripts can also accept arguments.  These arguments are made available to
-the script in two different ways:
+xonsh scripts can also accept command line arguments and parameters. 
+These arguments are made available to the script in two different ways:
 
 #. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)
 #. In Python mode only, as a list ``$ARGS``

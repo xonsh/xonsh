@@ -257,6 +257,8 @@ class CtxAwareTransformer(NodeTransformer):
                                          lexer=self.parser.lexer)
             elif nlogical > 1:
                 maxcol = None
+            elif maxcol < len(line) and line[maxcol] == ';':
+                pass
             else:
                 maxcol += 1
         spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,

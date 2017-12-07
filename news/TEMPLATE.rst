@@ -1,8 +1,6 @@
 **Added:** None
 
-**Changed:**
-
-* ``xip`` is now ``xpip``, because of a conflict with the Mac OSX archive format
+**Changed:** None
 
 **Deprecated:** None
 

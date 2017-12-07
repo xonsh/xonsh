@@ -243,6 +243,7 @@ class CommandsCache(cabc.Mapping):
 
         search_for = {
             (b'ncurses',): [False, ],
+            (b'libgpm',): [False, ],
             (b'isatty', b'tcgetattr', b'tcsetattr'): [False, False, False],
         }
         tstart = time.time()
@@ -343,6 +344,7 @@ def default_threadable_predictors():
         'cls': predict_false,
         'cmd': predict_shell,
         'ex': predict_false,
+        'emacsclient': predict_false,
         'fish': predict_shell,
         'gvim': predict_help_ver,
         'htop': predict_help_ver,

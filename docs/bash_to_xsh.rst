@@ -52,4 +52,10 @@ will help you put a finger on how to do the equivalent task in xonsh.
     * - ``!$``
       - ``__xonsh_history__[-1, -1]``
       - Get the last argument of the last command
-
+    * - ``$<n>``
+      - ``$ARG<n>``
+      - Command line argument at index ``n``, 
+        so ``$ARG1`` is the equivalent of ``$1``.
+    * - ``$@``
+      - ``$ARGS``
+      - List of all command line argument and parameter strings.
