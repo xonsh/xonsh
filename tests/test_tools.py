@@ -1367,7 +1367,8 @@ def test_iglobpath_empty_str(monkeypatch, xonsh_builtins):
     # fail to return valid results, like an empty filename
     def mockscandir(path):
         yield ''
-    monkeypatch.setattr(os, 'scandir', mockscandir)
+    if hasattr(os, 'scandir'):
+        monkeypatch.setattr(os, 'scandir', mockscandir)
     def mocklistdir(path):
         return ['']
     monkeypatch.setattr(os, 'listdir', mocklistdir)
