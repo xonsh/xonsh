@@ -100,7 +100,7 @@ class VoxHandler:
         try:
             self.vox.activate(args.name)
         except KeyError:
-            print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name, file=sys.stderr)
+            print('This environment doesn\'t exist. Create it with "vox new %s".\n' % args.name, file=sys.stderr)
             return None
         else:
             print('Activated "%s".\n' % args.name)

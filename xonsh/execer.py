@@ -9,7 +9,7 @@ import collections.abc as cabc
 from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
 from xonsh.tools import (subproc_toks, find_next_break, get_logical_line,
-                         replace_logical_line)
+                         replace_logical_line, balanced_parens)
 from xonsh.built_ins import load_builtins, unload_builtins
 
 
@@ -208,8 +208,9 @@ class Execer(object):
                     # go greedy the first time if the syntax error was because
                     # we hit an end token out of place. This usually indicates
                     # a subshell or maybe a macro.
-                    greedy = True
-                    maxcol = None
+                    if not balanced_parens(line, maxcol=maxcol):
+                        greedy = True
+                        maxcol = None
                 sbpline = subproc_toks(line, returnline=True, greedy=greedy,
                                        maxcol=maxcol, lexer=lexer)
                 if sbpline is None:

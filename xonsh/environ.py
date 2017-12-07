@@ -1205,6 +1205,9 @@ def default_env(env=None):
     ctx = dict(BASE_ENV)
     ctx.update(os_environ)
     ctx['PWD'] = _get_cwd() or ''
+    # These can cause problems for programs (#2543)
+    ctx.pop('LINES', None)
+    ctx.pop('COLUMNS', None)
     # other shells' PROMPT definitions generally don't work in XONSH:
     try:
         del ctx['PROMPT']

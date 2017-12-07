@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* Fix for ``x, y, *z = ...`` unpacking.
+* Ensure that the ``free_cwd`` contrib can only be active on pure Windows. 
 
 **Security:** None

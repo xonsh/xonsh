@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* gistatus: Fixed hash not being shown when in detaced HEAD and there are no tags
+* Clean out ``$LINES`` and ``$COLUMNS`` if set, preventing some programs from drawing weirdly
 
 **Security:** None

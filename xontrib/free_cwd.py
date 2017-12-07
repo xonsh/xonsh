@@ -1,5 +1,5 @@
 """ This will release the lock on the current directory whenever the
-    prompt is shown. Enabling this will allow the other programs or
+    prompt is shown. Enabling this will allow other programs or
     Windows Explorer to delete or rename the current or parent
     directories. Internally, it is accomplished by temporarily resetting
     CWD to the root drive folder while waiting at the prompt. This only
@@ -10,26 +10,27 @@
 import os
 import builtins
 import functools
+from pathlib import Path
+
 from xonsh.tools import print_exception
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 
 def _chdir_up(path):
     """ Change directory to path or if path does not exist
         the first valid parent.
     """
+    path = Path(path)
     try:
         os.chdir(path)
         return path
     except (FileNotFoundError, NotADirectoryError):
-        parent = os.path.dirname(path)
-        if parent != path:
-            return _chdir_up(parent)
-        else:
-            raise
+        path.resolve()
+        return _chdir_up(path.parent)
 
 
 def _cwd_release_wrapper(func):
-    """ Decorator for Windows to the wrap the prompt function and release
+    """ Decorator for Windows to wrap the prompt function and release
         the process lock on the current directory while the prompt is
         displayed. This works by temporarily setting
         the workdir to the users home directory.
@@ -44,13 +45,13 @@ def _cwd_release_wrapper(func):
     else:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            rootdir = os.path.splitdrive(os.getcwd())[0] + '\\'
-            os.chdir(rootdir)
+            anchor = Path(os.getcwd()).anchor
+            os.chdir(anchor)
             try:
                 out = func(*args, **kwargs)
             finally:
                 try:
-                    pwd = env.get('PWD', rootdir)
+                    pwd = env.get('PWD', anchor)
                     os.chdir(pwd)
                 except (FileNotFoundError, NotADirectoryError):
                     print_exception()
@@ -88,7 +89,8 @@ def _cwd_restore_wrapper(func):
 
 @events.on_ptk_create
 def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
-    prompter.prompt = _cwd_release_wrapper(prompter.prompt)
-    if completer.completer:
-        # Temporarily restore cwd for callbacks to the completer
-        completer.completer.complete = _cwd_restore_wrapper(completer.completer.complete)
+    if ON_WINDOWS and not ON_CYGWIN:
+        prompter.prompt = _cwd_release_wrapper(prompter.prompt)
+        if completer.completer:
+            # Temporarily restore cwd for callbacks to the completer
+            completer.completer.complete = _cwd_restore_wrapper(completer.completer.complete)

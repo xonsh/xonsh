@@ -262,6 +262,25 @@ def _is_not_lparen_and_rparen(lparens, rtok):
     return rtok.type == 'RPAREN' and any(x != 'LPAREN' for x in lparens)
 
 
+def balanced_parens(line, mincol=0, maxcol=None, lexer=None):
+    """Determines if parentheses are balanced in an expression."""
+    line = line[mincol:maxcol]
+    if lexer is None:
+        lexer = builtins.__xonsh_execer__.parser.lexer
+    if '(' not in line and ')' not in line:
+        return True
+    cnt = 0
+    lexer.input(line)
+    for tok in lexer:
+        if tok.type in LPARENS:
+            cnt += 1
+        elif tok.type == 'RPAREN':
+            cnt -= 1
+        elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
+            cnt -= 1
+    return cnt == 0
+
+
 def find_next_break(line, mincol=0, lexer=None):
     """Returns the column number of the next logical break in subproc mode.
     This function may be useful in finding the maxcol argument of
