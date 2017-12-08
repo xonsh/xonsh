@@ -1,6 +1,6 @@
 **Added:**
 
-* Release tarballs now include licenses and documentation for xonsh and ply
+* Release tarballs now include licenses and minimal documentation for xonsh and ply
 
 **Changed:** None
 

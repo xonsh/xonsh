@@ -4,7 +4,6 @@ include tests/*
 include license
 include CHANGELOG.rst
 include README.rst
-graft docs
 recursive-include xonsh/ply/example *
 recursive-include xonsh/ply/doc *
 recursive-include xonsh/ply/test *
