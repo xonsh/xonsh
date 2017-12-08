@@ -268,6 +268,43 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         self._current_indent = ''
         self._current_prompt = ''
         self._force_hide = None
+        self._complete_only_last_table = {
+            # Truth table for completions, keys are:
+            # (prefix_begs_quote, prefix_ends_quote, i_ends_quote,
+            #  last_starts_with_prefix, i_has_space)
+            (True, True, True, True, True): True,
+            (True, True, True, True, False): True,
+            (True, True, True, False, True): False,
+            (True, True, True, False, False): True,
+            (True, True, False, True, True): False,
+            (True, True, False, True, False): False,
+            (True, True, False, False, True): False,
+            (True, True, False, False, False): False,
+            (True, False, True, True, True): True,
+            (True, False, True, True, False): False,
+            (True, False, True, False, True): True,
+            (True, False, True, False, False): True,
+            (True, False, False, True, True): False,
+            (True, False, False, True, False): False,
+            (True, False, False, False, True): False,
+            (True, False, False, False, False): False,
+            (False, True, True, True, True): True,
+            (False, True, True, True, False): True,
+            (False, True, True, False, True): True,
+            (False, True, True, False, False): True,
+            (False, True, False, True, True): False,
+            (False, True, False, True, False): False,
+            (False, True, False, False, True): False,
+            (False, True, False, False, False): False,
+            (False, False, True, True, True): True,
+            (False, False, True, True, False): False,
+            (False, False, True, False, True): False,
+            (False, False, True, False, False): True,
+            (False, False, False, True, True): True,
+            (False, False, False, True, False): False,
+            (False, False, False, False, True): False,
+            (False, False, False, False, False): False,
+            }
         self.cmdqueue = collections.deque()
 
     def __del__(self):
@@ -345,9 +382,23 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             rtn_completions = [chopped + i for i in completions]
         else:
             rtn_completions = completions
-        rtn_completions = [i.rsplit(' ', 1)[-1] for i in rtn_completions]
+        rtn = []
+        prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
+        prefix_ends_quote = prefix.endswith("'") or prefix.endswith('"')
+        for i in rtn_completions:
+            i_ends_quote = i.endswith("'") or i.endswith('"')
+            last = i.rsplit(' ', 1)[-1]
+            last_starts_prefix = last.startswith(prefix)
+            i_has_space = ' ' in i
+            key = (prefix_begs_quote, prefix_ends_quote, i_ends_quote,
+                   last_starts_prefix, i_has_space)
+            if key == (True, False, True, False, True):
+                # remove leading quote
+                rtn.append(i[1:])
+            else:
+                rtn.append(last if self._complete_only_last_table[key] else i)
         show_completions = self._querycompletions(completions, endidx - begidx)
-        return rtn_completions if show_completions else []
+        return rtn if show_completions else []
 
     # tab complete on first index too
     completenames = completedefault
