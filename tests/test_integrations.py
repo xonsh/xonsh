@@ -83,7 +83,7 @@ def _f():
 aliases['f'] = _f
 f
 """, "hello\n", 0),
-# test redirecting a function alias
+# test redirecting a function alias to a file
 ("""
 def _f():
     print('Wow Mom!')
@@ -95,6 +95,14 @@ with open('tttt') as tttt:
     s = tttt.read().strip()
 print('REDIRECTED OUTPUT: ' + s)
 """, "REDIRECTED OUTPUT: Wow Mom!\n", 0),
+# test redirecting a function alias from stderr -> stdout
+("""
+def _f(args, stdin, stdout, stderr):
+    print('The Truth is Out There', file=stderr)
+
+aliases['f'] = _f
+f e>o
+""", "The Truth is Out There\n", 0),
 # test system exit in function alias
 ("""
 import sys
@@ -239,7 +247,7 @@ def test_script(case):
 ALL_PLATFORMS_STDERR = [
 # test redirecting a function alias
 ("""
-def _f(args, stdout):
+def _f(args, stdin, stdout):
     print('Wow Mom!', file=stdout)
 
 aliases['f'] = _f
