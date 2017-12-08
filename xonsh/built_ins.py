@@ -751,11 +751,11 @@ def _update_last_spec(last):
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.
         last._stdout = last.stderr
-        last.captured_stdout = last.captured_stderr
+        last.captured_stdout = None #last.captured_stderr
     # redirect stderr to stdout, if we should
     if callable_alias and last.stderr == subprocess.STDOUT:
         last._stderr = last.stdout
-        last.captured_stderr = last.captured_stdout
+        last.captured_stderr = None #last.captured_stdout
 
 
 def cmds_to_specs(cmds, captured=False):
