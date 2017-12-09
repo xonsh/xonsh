@@ -14,7 +14,7 @@ like Python strings!** This will (help) preserve your sanity.
 No Escape
 =========
 Xonsh strings are exactly like Python strings everywhere. Xonsh uses
-exactly the same escape characters that Python dones; no more and no less.
+exactly the same escape characters that Python does; no more and no less.
 This is different from other shells, which have a different set of escape
 sequences than Python has.  Notably, many sh-langs allow you to escape
 spaces with ``\ `` (backslash-space).
@@ -90,7 +90,7 @@ In sh-langs, internal quote characters are removed. For instance:
     $ echo --key="value"
     --key=value
 
-Xonsh considers this behaviour insane. Instead, xonsh treats these
+Xonsh considers this behavior insane. Instead, xonsh treats these
 arguments as if they were surrounded in another, outer level of
 quotation (``'foo"bar"baz'``). Xonsh will keep the quotation marks
 when leading and trailing quotes are not matched.
@@ -118,7 +118,7 @@ You can think of these being equivalent to,
     $ echo '--key="value"'
     --key="value"
 
-This is yet-another major point of departure for xonsh from traditional
+This is yet another major point of departure for xonsh from traditional
 shells. However, the xonsh subprocess string handling is
 consistent and predictable.
 
