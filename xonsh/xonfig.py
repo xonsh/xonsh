@@ -577,6 +577,7 @@ def TAGLINES():
         "Conches for the xonsh god!",
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
+        "This fix was trickier expected",
     ]
 
 

@@ -8,7 +8,9 @@
 
 **Fixed:**
 
-* Fixed issue with readline completer tab completing entries
+* Fixed issues with readline completer tab completing entries
   with spaces.
+* Fixed ``xonsh.tools.columnize()`` bug the prevented single-row
+  input from being columnized correctly.
 
 **Security:** None

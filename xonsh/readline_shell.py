@@ -333,11 +333,15 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         return '', line, line
 
     def _querycompletions(self, completions, loc):
-        """Returns whether or not we should show completions"""
+        """Returns whether or not we should show completions. 0 means that prefixes
+        should not be shown, 1 means that there is a common prefix among all completions
+        and they should be shown, while 2 means that there is no common prefix but
+        we are under the query limit and they should be shown.
+        """
         if os.path.commonprefix([c[loc:] for c in completions]):
-            return True
+            return 1
         elif len(completions) <= builtins.__xonsh_env__.get('COMPLETION_QUERY_LIMIT'):
-            return True
+            return 2
         msg = '\nDisplay all {} possibilities? '.format(len(completions))
         msg += '({GREEN}y{NO_COLOR} or {RED}n{NO_COLOR})'
         self.print_color(msg, end='', flush=True, file=sys.stderr)
@@ -348,7 +352,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         print()
         if not show_completions:
             rl_on_new_line()
-            return False
+            return 0
         w, h = shutil.get_terminal_size()
         lines = columnize(completions, width=w)
         more_msg = self.format_color('{YELLOW}==={NO_COLOR} more or '
@@ -362,10 +366,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             print(flush=True, file=sys.stderr)
             if q == 'q':
                 rl_on_new_line()
-                return False
+                return 0
         print(''.join(lines), end='', flush=True, file=sys.stderr)
         rl_on_new_line()
-        return False
+        return 0
 
     def completedefault(self, prefix, line, begidx, endidx):
         """Implements tab-completion for text."""
@@ -397,8 +401,16 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 rtn.append(i[1:])
             else:
                 rtn.append(last if self._complete_only_last_table[key] else i)
+        # return based on show completions
         show_completions = self._querycompletions(completions, endidx - begidx)
-        return rtn if show_completions else []
+        if show_completions == 0:
+            return []
+        elif show_completions == 1:
+            return rtn
+        elif show_completions == 2:
+            return completions
+        else:
+            raise ValueError('query compeltions flag not understood.')
 
     # tab complete on first index too
     completenames = completedefault

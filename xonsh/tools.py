@@ -1923,12 +1923,21 @@ def columnize(elems, width=80, newline='\n'):
     The newline character will be appended to the end of each line.
     """
     sizes = [len(e) + 1 for e in elems]
+    total = sum(sizes)
     nelem = len(elems)
-    ncols = 1
-    nrows = len(sizes)
-    columns = [sizes]
-    last_longest_row = max(sizes)
-    while True:
+    if total - 1 <= width:
+        ncols = len(sizes)
+        nrows = 1
+        columns = [sizes]
+        last_longest_row = total
+        enter_loop = False
+    else:
+        ncols = 1
+        nrows = len(sizes)
+        columns = [sizes]
+        last_longest_row = max(sizes)
+        enter_loop = True
+    while enter_loop:
         longest_row = sum(map(max, columns))
         if longest_row - 1 <= width:
             # we might be able to fit another column.
