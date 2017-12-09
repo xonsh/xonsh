@@ -1888,7 +1888,11 @@ def _iglobpath(s, ignore_case=False, sort_result=None):
 
 def iglobpath(s, ignore_case=False, sort_result=None):
     """Simple wrapper around iglob that also expands home and env vars."""
-    return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)[0]
+    try:
+        return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)[0]
+    except IndexError:
+        # something went wrong in the actual iglob() call
+        return iter(())
 
 
 def ensure_timestamp(t, datetime_format=None):

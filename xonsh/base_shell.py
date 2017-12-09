@@ -42,10 +42,11 @@ class _TeeStdBuf(io.RawIOBase):
             The in memory stream buffer.
         encoding : str or None, optional
             The encoding of the stream. Only used if stdbuf is a text stream,
-            rather than a binary one.
+            rather than a binary one. Defaults to $XONSH_ENCODING if None.
         errors : str or None, optional
             The error form for the encoding of the stream. Only used if stdbuf
-            is a text stream, rather than a binary one.
+            is a text stream, rather than a binary one. Deafults to
+            $XONSH_ENCODING_ERRORS if None.
         prestd : bytes, optional
             The prefix to prepend to the standard buffer.
         poststd : bytes, optional
@@ -53,8 +54,9 @@ class _TeeStdBuf(io.RawIOBase):
         """
         self.stdbuf = stdbuf
         self.membuf = membuf
-        self.encoding = encoding
-        self.errors = errors
+        env = builtins.__xonsh_env__
+        self.encoding = env.get('XONSH_ENCODING') if encoding is None else encoding
+        self.errors = env.get('XONSH_ENCODING_ERRORS') if errors is None else errors
         self.prestd = prestd
         self.poststd = poststd
         self._std_is_binary = not hasattr(stdbuf, 'encoding')
