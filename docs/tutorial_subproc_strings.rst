@@ -93,7 +93,7 @@ In sh-langs, internal quote characters are removed. For instance:
 Xonsh considers this behaviour insane. Instead, xonsh treats these
 arguments as if they were surrounded in another, outer level of
 quotation (``'foo"bar"baz'``). Xonsh will keep the quotation marks
-when leading and triling quotes are not matched.
+when leading and trailing quotes are not matched.
 
 **xonsh**
 
