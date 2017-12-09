@@ -646,19 +646,35 @@ class BaseParser(object):
         p[0] = ast.arguments(args=[], vararg=None, kwonlyargs=[],
                              kw_defaults=[], kwarg=p[2], defaults=[])
 
-    def p_typedargslist_times4(self, p):
-        """typedargslist : TIMES tfpdef_opt comma_pow_tfpdef_opt"""
+    def p_typedargslist_times4_tfpdef(self, p):
+        """typedargslist : TIMES tfpdef comma_pow_tfpdef_opt"""
+        # *args, **kwargs
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=p[3], defaults=[])
         self._set_var_args(p0, p[2], None)
         p[0] = p0
 
-    def p_typedargslist_times5(self, p):
-        """typedargslist : TIMES tfpdef_opt comma_tfpdef_list comma_pow_tfpdef_opt"""
+    def p_typedargslist_times4_comma(self, p):
+        """typedargslist : TIMES comma_pow_tfpdef"""
+        # *, **kwargs
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=p[2], defaults=[])
+        p[0] = p0
+
+    def p_typedargslist_times5_tdpdef(self, p):
+        """typedargslist : TIMES tfpdef comma_tfpdef_list comma_pow_tfpdef_opt"""
         # *args, x, **kwargs
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=p[4], defaults=[])
         self._set_var_args(p0, p[2], p[3])  # *args
+        p[0] = p0
+
+    def p_typedargslist_times5_comma(self, p):
+        """typedargslist : TIMES comma_tfpdef_list comma_pow_tfpdef_opt"""
+        # *, x, **kwargs
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=p[3], defaults=[])
+        self._set_var_args(p0, None, p[2])  # *args
         p[0] = p0
 
     def p_typedargslist_t5(self, p):
@@ -733,6 +749,9 @@ class BaseParser(object):
     def _set_args_def(self, argmts, vals, kwargs=False):
         args, defs = (argmts.kwonlyargs, argmts.kw_defaults) if kwargs else \
                      (argmts.args, argmts.defaults)
+        if vals is None and kwargs:
+            loc = self.currloc(self.lineno, self.col)
+            self._parse_error('named arguments must follow bare *', loc)
         for v in vals:
             args.append(v['arg'])
             d = v['default']
@@ -758,7 +777,7 @@ class BaseParser(object):
             self._set_args_def(p0, p3)
 
     def _set_var_args(self, p0, vararg, kwargs):
-        if vararg is None:
+        if vararg is None and kwargs is not None:
             self._set_args_def(p0, kwargs, kwargs=True)
         elif vararg is not None and kwargs is None:
             # *args

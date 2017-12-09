@@ -2310,3 +2310,8 @@ def test_syntax_error_augassign_ops(exp):
 def test_syntax_error_augassign_cmp(exp):
     with pytest.raises(SyntaxError):
         PARSER.parse('{} += a'.format(exp))
+
+
+def test_syntax_error_bar_kwonlyargs():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('def spam(*):\n   pass\n', mode='exec')

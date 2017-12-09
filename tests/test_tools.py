@@ -27,7 +27,7 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions, is_balanced, subexpr_before_unbalanced,
     swap_values, get_logical_line, replace_logical_line, check_quotes, deprecated,
-    is_writable_file, balanced_parens)
+    is_writable_file, balanced_parens, iglobpath)
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows, skip_if_on_unix
@@ -1360,3 +1360,17 @@ def test_deprecated_past_expiry_raises_assertion_error(expired_version):
 
     with pytest.raises(AssertionError):
         my_function()
+
+
+def test_iglobpath_empty_str(monkeypatch, xonsh_builtins):
+    # makes sure that iglobpath works, even when os.scandir() and os.listdir()
+    # fail to return valid results, like an empty filename
+    def mockscandir(path):
+        yield ''
+    if hasattr(os, 'scandir'):
+        monkeypatch.setattr(os, 'scandir', mockscandir)
+    def mocklistdir(path):
+        return ['']
+    monkeypatch.setattr(os, 'listdir', mocklistdir)
+    paths = list(iglobpath('some/path'))
+    assert len(paths) == 0
