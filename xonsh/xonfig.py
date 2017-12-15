@@ -268,7 +268,7 @@ def make_xontribs_wiz():
     return w
 
 
-def make_xonfig_wizard(default_file=None, confirm=False):
+def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
     """Makes a configuration wizard for xonsh config file.
 
     Parameters
@@ -277,11 +277,14 @@ def make_xonfig_wizard(default_file=None, confirm=False):
         Default filename to save and load to. User will still be prompted.
     confirm : bool, optional
         Confirm that the main part of the wizard should be run.
+    no_wizard_file : str, optional
+        Filename for that will flag to future runs that the wizard should not be
+        run again. If None (default), this defaults to default_file.
     """
     w = wiz.Wizard(children=[
         wiz.Message(message=WIZARD_HEAD),
         make_exit_message(),
-        wiz.Load(default_file=default_file, check=True),
+        wiz.LoadJSON(default_file=default_file, check=True),
         wiz.Message(message=WIZARD_FS),
         make_fs_wiz(),
         wiz.Message(message=WIZARD_ENV),
@@ -291,7 +294,7 @@ def make_xonfig_wizard(default_file=None, confirm=False):
         wiz.YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(),
                   no=wiz.Pass()),
         wiz.Message(message='\n' + HR + '\n'),
-        wiz.Save(default_file=default_file, check=True),
+        wiz.SaveJSON(default_file=default_file, check=True),
         wiz.Message(message=WIZARD_TAIL),
     ])
     if confirm:
@@ -300,9 +303,10 @@ def make_xonfig_wizard(default_file=None, confirm=False):
              "2. No, but ask me next time.\n"
              "3. No, and don't ask me again.\n\n"
              "1, 2, or 3 [default: 2]? ")
+        no_wizard_file = default_file if no_wizard_file is None else no_wizard_file
         passer = wiz.Pass()
-        saver = wiz.Save(check=False, ask_filename=False,
-                         default_file=default_file)
+        saver = wiz.SaveJSON(check=False, ask_filename=False,
+                         default_file=no_wizard_file)
         w = wiz.Question(q, {1: w, 2: passer, 3: saver},
                          converter=lambda x: int(x) if x != '' else 2)
     return w
@@ -311,8 +315,10 @@ def make_xonfig_wizard(default_file=None, confirm=False):
 def _wizard(ns):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__.shell
-    fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
-    w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm)
+    fname = env.get('XONSHRC') if ns.file is None else ns.file
+    no_wiz = os.path.join(env.get('XONSH_CONFIG_DIR'), 'no-wizard'))
+    w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm,
+                           no_wizard_file=no_wiz)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
     pv = wiz.PromptVisitor(w, store_in_history=False, multiline=False)
 
@@ -490,7 +496,7 @@ def _xonfig_create_parser():
                       help='reports results as json')
     wiz = subp.add_parser('wizard', help='displays configuration information')
     wiz.add_argument('--file', default=None,
-                     help='config file location, default=$XONSHCONFIG')
+                     help='config file location, default=$XONSHRC')
     wiz.add_argument('--confirm', action='store_true', default=False,
                      help='confirm that the wizard should be run.')
     sty = subp.add_parser('styles', help='prints available xonsh color styles')

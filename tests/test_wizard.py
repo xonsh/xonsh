@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from xonsh.wizard import (Node, Wizard, Pass, PrettyFormatter, 
+from xonsh.wizard import (Node, Wizard, Pass, PrettyFormatter,
     Message, Question, StateVisitor)
 
 
