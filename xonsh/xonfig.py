@@ -12,6 +12,7 @@ import argparse
 import functools
 import itertools
 import contextlib
+import collections
 
 try:
     import ply
@@ -26,6 +27,7 @@ from xonsh.platform import (is_readline_available, ptk_version,
                             ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
                          color_style_names, print_color, color_style)
+from xonsh.foreign_shells import CANON_SHELL_NAMES
 from xonsh.xontribs import xontrib_metadata, find_xontrib
 from xonsh.lazyasd import lazyobject
 
@@ -108,6 +110,30 @@ WIZARD_XONTRIB_QUESTION = "Would you like to enable xontribs now, " + wiz.YN
 
 WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
+
+
+@lazyobject
+def _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND():
+    return defaultdict(lambda: 'source-foreign',
+                       bash='source-bash',
+                       cmd='source-cmd',
+                       zsh='source-zsh',
+                       )
+
+
+def _dump_xonfig_foreign_shell(path, value):
+    shell = value['shell']
+    shell = CANON_SHELL_NAMES.get(shell, shell)
+    cmd = [_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND.get(shell)]
+
+
+
+@lazyobject
+def XONFIG_DUMP_RULES():
+    return {'/foreign_shells/*/': _dump_xonfig_foreign_shell,
+            '/env/*': _dump_xonfig_env,
+            '/xontribs/': _dump_xonfig_xontribs,
+            }
 
 
 def make_fs_wiz():
@@ -284,7 +310,6 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
     w = wiz.Wizard(children=[
         wiz.Message(message=WIZARD_HEAD),
         make_exit_message(),
-        wiz.LoadJSON(default_file=default_file, check=True),
         wiz.Message(message=WIZARD_FS),
         make_fs_wiz(),
         wiz.Message(message=WIZARD_ENV),
@@ -294,7 +319,9 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
         wiz.YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(),
                   no=wiz.Pass()),
         wiz.Message(message='\n' + HR + '\n'),
-        wiz.SaveJSON(default_file=default_file, check=True),
+        wiz.FileInserter(prefix='# XONSH WIZARD START', suffix='# XONSH WIZARD END',
+                         dump_rules=XONFIG_DUMP_RULES, default_file=default_file,
+                         check=True),
         wiz.Message(message=WIZARD_TAIL),
     ])
     if confirm:

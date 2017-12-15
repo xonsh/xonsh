@@ -289,14 +289,14 @@ class FileInserter(StateFile):
             e.g. '\n# XONSH WIZARD END'
         dump_rules : dict of strs to functions
             This is a dictionary that maps the path-like match strings to functions
-            that convert the state value at a path to a string. The keys here may
-            use wildcards (as seen in the standard library fnmatch module).
-            For example::
+            that take the flat path and the value as arguments and convert the state
+            value at a path to a string. The keys here may use wildcards (as seen in
+            the standard library fnmatch module). For example::
 
                 dump_rules = {
-                    '/path/to/exact': str,
-                    '/otherpath/*': lambda x: x,
-                    '*ending': repr,
+                    '/path/to/exact': lambda path, x: str(x),
+                    '/otherpath/*': lambda path, x: x,
+                    '*ending': lambda path x: repr(x),
                     }
 
             If a wildcard is not used in a path, then that rule will be used
@@ -772,7 +772,7 @@ class PromptVisitor(StateVisitor):
         flat = self.flatten()
         for path, value in sorted(flat.items()):
             rule, func = node.find_rule(path)
-            line = func(value)
+            line = func(path, value)
             lines.append(line)
         lines.append(suffix)
         new = '\n'.join(lines)
