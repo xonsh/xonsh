@@ -125,6 +125,8 @@ def _dump_xonfig_foreign_shell(path, value):
     shell = value['shell']
     shell = CANON_SHELL_NAMES.get(shell, shell)
     cmd = [_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND.get(shell)]
+    if cmd[0] == 'source-foreign':
+        cmd.append(shell)
 
 
 
