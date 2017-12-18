@@ -1,10 +1,13 @@
 """Implements a cat command for xonsh."""
 import os
+import builtins
 
 from xonsh.xoreutils.util import arg_handler
 
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
+    env = builtins.__xonsh_env__
+    enc = env.get('XONSH_ENCODING')
     if fname == '-':
         f = stdin
     elif os.path.isdir(fname):
@@ -37,7 +40,7 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         if opts['show_ends']:
             _r = _r + b'$'
         try:
-            print(_r.decode('unicode_escape'), flush=True, file=out)
+            print(_r.decode(enc), flush=True, file=out)
         except:
             pass
     return False, line_count
