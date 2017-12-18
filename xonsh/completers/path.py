@@ -164,7 +164,7 @@ def _quote_paths(paths, start, end, append_end=True):
             s = s.replace(end, ''.join('\\%s' % i for i in end))
         s = start + s + end if append_end else start + s
         out.add(s)
-    return out
+    return out, need_quotes
 
 
 def _joinpath(path):
@@ -298,10 +298,10 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     if cdpath:
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
-    paths = _quote_paths({_normpath(s) for s in paths},
-                         path_str_start,
-                         path_str_end,
-                         append_end)
+    paths, _ = _quote_paths({_normpath(s) for s in paths},
+                           path_str_start,
+                           path_str_end,
+                           append_end)
     paths.update(filter(filtfunc, _dots(prefix)))
     paths.update(filter(filtfunc, _env(prefix)))
     return paths, lprefix

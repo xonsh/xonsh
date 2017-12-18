@@ -190,7 +190,7 @@ def _bash_quote_paths(paths, start, end):
         if end in s:
             s = s.replace(end, ''.join('\\%s' % i for i in end))
         out.add(start + s + end)
-    return out
+    return out, need_quotes
 
 
 BASH_COMPLETE_SCRIPT = r"""
@@ -270,7 +270,8 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
         from the environment and platform.
     quote_paths : callable, optional
         A functions that quotes file system paths. You shouldn't normally need
-        this as the default is acceptable 99+% of the time.
+        this as the default is acceptable 99+% of the time. This function should
+        a set of the new paths and a boolean for whether the paths were quoted.
 
     Returns
     -------
@@ -335,7 +336,8 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
         strip_len += 1
 
     if '-o noquote' not in complete_stmt:
-        out = quote_paths(out, '', '')
+        out, need_qoutes = quote_paths(out, '', '')
+        strip_len += int(need_qoutes)
     if '-o nospace' in complete_stmt:
         out = set([x.rstrip() for x in out])
 

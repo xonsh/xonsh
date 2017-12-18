@@ -282,7 +282,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             (True, True, False, False, False): False,
             (True, False, True, True, True): True,
             (True, False, True, True, False): False,
-            (True, False, True, False, True): True,
+            (True, False, True, False, True): False,
             (True, False, True, False, False): True,
             (True, False, False, True, True): False,
             (True, False, False, True, False): False,
@@ -396,11 +396,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             i_has_space = ' ' in i
             key = (prefix_begs_quote, prefix_ends_quote, i_ends_quote,
                    last_starts_prefix, i_has_space)
-            if key == (True, False, True, False, True):
-                # remove leading quote
-                rtn.append(i[1:])
-            else:
-                rtn.append(last if self._complete_only_last_table[key] else i)
+            rtn.append(last if self._complete_only_last_table[key] else i)
         # return based on show completions
         show_completions = self._querycompletions(completions, endidx - begidx)
         if show_completions == 0:
