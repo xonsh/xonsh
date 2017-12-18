@@ -299,9 +299,9 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
     paths, _ = _quote_paths({_normpath(s) for s in paths},
-                           path_str_start,
-                           path_str_end,
-                           append_end)
+                            path_str_start,
+                            path_str_end,
+                            append_end)
     paths.update(filter(filtfunc, _dots(prefix)))
     paths.update(filter(filtfunc, _env(prefix)))
     return paths, lprefix
