@@ -142,7 +142,7 @@ class Shell(object):
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class
         elif shell_type == 'prompt_toolkit':
-            from xonsh.ptk.shell import PromptToolkitShell as shell_class
+            from xonsh.ptk.shell import get_ptk_shell as shell_class
         elif shell_type == 'readline':
             from xonsh.readline_shell import ReadlineShell as shell_class
         else:

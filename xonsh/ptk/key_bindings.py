@@ -6,6 +6,7 @@ from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection,
                                     EmacsInsertMode, ViInsertMode)
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.application.current import get_app
 
 from xonsh.aliases import xonsh_exit
 from xonsh.tools import check_for_partial_string, get_line_continuation
@@ -84,34 +85,36 @@ def can_compile(src):
 
 
 @Condition
-def tab_insert_indent(cli):
+def tab_insert_indent():
     """Check if <Tab> should insert indent instead of starting autocompletion.
     Checks if there are only whitespaces before the cursor - if so indent
     should be inserted, otherwise autocompletion.
 
     """
-    before_cursor = cli.current_buffer.document.current_line_before_cursor
+    before_cursor = get_app(
+        ).current_buffer.document.current_line_before_cursor
 
     return bool(before_cursor.isspace())
 
 
 @Condition
-def beginning_of_line(cli):
+def beginning_of_line():
     """Check if cursor is at beginning of a line other than the first line in a
     multiline document
     """
-    before_cursor = cli.current_buffer.document.current_line_before_cursor
+    app = get_app()
+    before_cursor = app.current_buffer.document.current_line_before_cursor
 
     return bool(len(before_cursor) == 0 and
-                not cli.current_buffer.document.on_first_line)
+                not app.current_buffer.document.on_first_line)
 
 
 @Condition
-def end_of_line(cli):
+def end_of_line():
     """Check if cursor is at the end of a line other than the last line in a
     multiline document
     """
-    d = cli.current_buffer.document
+    d = get_app().current_buffer.document
     at_end = d.is_cursor_at_the_end_of_line
     last_line = d.is_cursor_at_the_end
 
@@ -119,56 +122,57 @@ def end_of_line(cli):
 
 
 @Condition
-def should_confirm_completion(cli):
+def should_confirm_completion():
     """Check if completion needs confirmation"""
     return (builtins.__xonsh_env__.get('COMPLETIONS_CONFIRM') and
-            cli.current_buffer.complete_state)
+            get_app().current_buffer.complete_state)
 
 
 # Copied from prompt-toolkit's key_binding/bindings/basic.py
 @Condition
-def ctrl_d_condition(cli):
+def ctrl_d_condition():
     """Ctrl-D binding is only active when the default buffer is selected and
     empty.
     """
     if builtins.__xonsh_env__.get("IGNOREEOF"):
         raise EOFError
     else:
-        return (cli.current_buffer_name == DEFAULT_BUFFER and
-                not cli.current_buffer.text)
+        app = get_app()
+        return (app.current_buffer_name == DEFAULT_BUFFER and
+                not app.current_buffer.text)
 
 
 @Condition
-def autopair_condition(cli):
+def autopair_condition():
     """Check if XONSH_AUTOPAIR is set"""
     return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
 
 
 @Condition
-def whitespace_or_bracket_before(cli):
+def whitespace_or_bracket_before():
     """Check if there is whitespace or an opening
        bracket to the left of the cursor"""
-    d = cli.current_buffer.document
+    d = get_app().current_buffer.document
     return bool(d.cursor_position == 0
                 or d.char_before_cursor.isspace()
                 or d.char_before_cursor in '([{')
 
 
 @Condition
-def whitespace_or_bracket_after(cli):
+def whitespace_or_bracket_after():
     """Check if there is whitespace or a closing
        bracket to the right of the cursor"""
-    d = cli.current_buffer.document
+    d = get_app().current_buffer.document
     return bool(d.is_cursor_at_the_end_of_line
                 or d.current_char.isspace()
                 or d.current_char in ')]}')
 
 
-def load_xonsh_bindings(key_bindings_manager):
+def load_xonsh_bindings(key_bindings):
     """
     Load custom key bindings.
     """
-    handle = key_bindings_manager.registry.add_binding
+    handle = key_bindings.add
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
