@@ -297,11 +297,13 @@ class FileInserter(StateFile):
                     '/path/to/exact': lambda path, x: str(x),
                     '/otherpath/*': lambda path, x: x,
                     '*ending': lambda path x: repr(x),
+                    '/': None,
                     }
 
             If a wildcard is not used in a path, then that rule will be used
             used on an exact match. If wildcards are used, the deepest and longest
-            match is used.
+            match is used.  If None is given instead of a the function, it means to
+            skip generating that key.
         default_file : str, optional
             The default filename to save the file as.
         check : bool, optional
@@ -342,11 +344,12 @@ class FileInserter(StateFile):
         for rule, func in self.dump_rules.items():
             m = rule.match(path)
             if m is None:
-                pass
+                continue
             i, j = m.span()
             len_funcs.append((j - i, rule, func))
         if len(len_funcs) == 0:
-            raise RuntimeError('No dump rule function for path ' + path)
+            # No dump rule function for path
+            return path, None
         len_funcs.sort(reverse=True)
         _, rule, func = len_funcs[0]
         return rule, func
@@ -772,10 +775,12 @@ class PromptVisitor(StateVisitor):
         flat = self.flatten()
         for path, value in sorted(flat.items()):
             rule, func = node.find_rule(path)
+            if func is None:
+                continue
             line = func(path, value)
             lines.append(line)
-        lines.append(suffix)
-        new = '\n'.join(lines)
+        lines.append(node.suffix)
+        new = '\n'.join(lines) + '\n'
         # check if we should write this out
         if node.check:
             msg = 'The current state to insert is:\n\n{0}\n'
@@ -799,7 +804,9 @@ class PromptVisitor(StateVisitor):
             backup_file(fname)
         else:
             before = current = after = ''
-            os.makedirs(os.path.dirname(fname), exist_ok=True)
+            dname = os.path.dirname(fname)
+            if dname:
+                os.makedirs(dname, exist_ok=True)
         # write out the file
         with open(fname, 'w') as f:
             f.write(before + new + after)

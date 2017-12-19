@@ -114,11 +114,11 @@ Thanks for using the xonsh configuration wizard!"""
 
 @lazyobject
 def _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND():
-    return defaultdict(lambda: 'source-foreign',
-                       bash='source-bash',
-                       cmd='source-cmd',
-                       zsh='source-zsh',
-                       )
+    return collections.defaultdict(lambda: 'source-foreign',
+                                   bash='source-bash',
+                                   cmd='source-cmd',
+                                   zsh='source-zsh',
+                                   )
 
 
 def _dump_xonfig_foreign_shell(path, value):
@@ -165,7 +165,7 @@ def _dump_xonfig_env(path, value):
     name = os.path.basename(path)
     ensurer = builtins.__xonsh_env__.get_ensurer(name)
     dval = ensurer.detype(value)
-    return '${name} = {val!r}'.format(name=name, val=val)
+    return '${name} = {val!r}'.format(name=name, val=dval)
 
 
 def _dump_xonfig_xontribs(path, value):
@@ -174,7 +174,9 @@ def _dump_xonfig_xontribs(path, value):
 
 @lazyobject
 def XONFIG_DUMP_RULES():
-    return {'/foreign_shells/*/': _dump_xonfig_foreign_shell,
+    return {'/': None,
+            '/env/': None,
+            '/foreign_shells/*/': _dump_xonfig_foreign_shell,
             '/env/*': _dump_xonfig_env,
             '/xontribs/': _dump_xonfig_xontribs,
             }
@@ -382,7 +384,7 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
 def _wizard(ns):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__.shell
-    fname = env.get('XONSHRC') if ns.file is None else ns.file
+    fname = env.get('XONSHRC')[-1] if ns.file is None else ns.file
     no_wiz = os.path.join(env.get('XONSH_CONFIG_DIR'), 'no-wizard')
     w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm,
                            no_wizard_file=no_wiz)

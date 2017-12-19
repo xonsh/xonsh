@@ -244,7 +244,7 @@ def default_xonshrc(env):
                              'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc'))
     else:
-        dxrc = (xonshconfig(env), '/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
+        dxrc = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
     return dxrc
 
 
