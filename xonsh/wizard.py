@@ -616,7 +616,7 @@ class StateVisitor(Visitor):
                 self.flatten(path=p, value=v, flat=flat)
         elif isinstance(value, (str, bytes)):
             flat[path] = value
-        if isinstance(value, cabc.Sequence):
+        elif isinstance(value, cabc.Sequence):
             path = path if path.endswith('/') else path + '/'
             flat[path] = value
             for i, v in enumerate(value):

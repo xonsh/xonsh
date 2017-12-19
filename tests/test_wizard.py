@@ -46,3 +46,14 @@ def test_state_visitor_store():
     exp['rick'][1]['mr'] = 'meeseeks'
     sv.store('/rick/-2/mr', 'meeseeks')
     assert exp == obs
+
+    flat_exp = {'/': {'rick': [{}, {'mr': 'meeseeks'}, {'and': 'morty'}]},
+                '/rick/': [{}, {'mr': 'meeseeks'}, {'and': 'morty'}],
+                '/rick/0/': {},
+                '/rick/1/': {'mr': 'meeseeks'},
+                '/rick/1/mr': 'meeseeks',
+                '/rick/2/': {'and': 'morty'},
+                '/rick/2/and': 'morty',
+                }
+    flat_obs = sv.flatten()
+    assert flat_exp == flat_obs
