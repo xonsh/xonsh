@@ -125,8 +125,39 @@ def _dump_xonfig_foreign_shell(path, value):
     shell = value['shell']
     shell = CANON_SHELL_NAMES.get(shell, shell)
     cmd = [_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND.get(shell)]
+    interactive = value.get('interactive', None)
+    if interactive is not None:
+        cmd.extend(['--interactive', str(interactive)])
+    login = value.get('login', None)
+    if login is not None:
+        cmd.extend(['--login', str(login)])
+    envcmd = value.get('envcmd', None)
+    if envcmd is not None:
+        cmd.extend(['--envcmd', envcmd])
+    aliascmd = value.get('aliasmd', None)
+    if aliascmd is not None:
+        cmd.extend(['--aliascmd', aliascmd])
+    extra_args = value.get('extra_args', None)
+    if extra_args:
+        cmd.extend(['--extra-args', ' '.join(extra_args)])
+    safe = value.get('safe', None)
+    if safe is not None:
+        cmd.extend(['--safe', str(safe)])
+    prevcmd = value.get('prevcmd', '')
+    if prevcmd:
+        cmd.extend(['--prevcmd', repr(prevcmd)])
+    postcmd = value.get('postcmd', '')
+    if postcmd:
+        cmd.extend(['--postcmd', repr(postcmd)])
+    funcscmd = value.get('funcscmd', None)
+    if funcscmd:
+        cmd.extend(['--funcscmd', repr(funcscmd)])
+    sourcer = value.get('sourcer', None)
+    if sourcer:
+        cmd.extend(['--sourcer', sourcer])
     if cmd[0] == 'source-foreign':
         cmd.append(shell)
+    cmd.append('"echo loading xonsh foreign shell"')
 
 
 
@@ -161,10 +192,6 @@ def make_fs_wiz():
                           converter=ast.literal_eval,
                           show_conversion=True,
                           path='/foreign_shells/{idx}/extra_args'),
-        wiz.StoreNonEmpty('current environment [dict, default=None]: ',
-                          converter=ast.literal_eval,
-                          show_conversion=True,
-                          path='/foreign_shells/{idx}/currenv'),
         wiz.StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
                           converter=to_bool,
                           show_conversion=True,
