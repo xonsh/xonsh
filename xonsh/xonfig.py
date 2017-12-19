@@ -112,13 +112,12 @@ WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
 
 
-@lazyobject
-def _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND():
-    return collections.defaultdict(lambda: 'source-foreign',
-                                   bash='source-bash',
-                                   cmd='source-cmd',
-                                   zsh='source-zsh',
-                                   )
+_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
+    lambda: 'source-foreign',
+    bash='source-bash',
+    cmd='source-cmd',
+    zsh='source-zsh',
+    )
 
 
 def _dump_xonfig_foreign_shell(path, value):
