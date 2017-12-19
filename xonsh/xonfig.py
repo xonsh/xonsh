@@ -383,7 +383,7 @@ def _wizard(ns):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__.shell
     fname = env.get('XONSHRC') if ns.file is None else ns.file
-    no_wiz = os.path.join(env.get('XONSH_CONFIG_DIR'), 'no-wizard'))
+    no_wiz = os.path.join(env.get('XONSH_CONFIG_DIR'), 'no-wizard')
     w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm,
                            no_wizard_file=no_wiz)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
