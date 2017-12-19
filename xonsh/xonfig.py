@@ -139,7 +139,7 @@ def _dump_xonfig_foreign_shell(path, value):
         cmd.extend(['--aliascmd', aliascmd])
     extra_args = value.get('extra_args', None)
     if extra_args:
-        cmd.extend(['--extra-args', ' '.join(extra_args)])
+        cmd.extend(['--extra-args', repr(' '.join(extra_args))])
     safe = value.get('safe', None)
     if safe is not None:
         cmd.extend(['--safe', str(safe)])
@@ -158,7 +158,18 @@ def _dump_xonfig_foreign_shell(path, value):
     if cmd[0] == 'source-foreign':
         cmd.append(shell)
     cmd.append('"echo loading xonsh foreign shell"')
+    return ' '.join(cmd)
 
+
+def _dump_xonfig_env(path, value):
+    name = os.path.basename(path)
+    ensurer = builtins.__xonsh_env__.get_ensurer(name)
+    dval = ensurer.detype(value)
+    return '${name} = {val!r}'.format(name=name, val=val)
+
+
+def _dump_xonfig_xontribs(path, value):
+    return 'xontrib load {0}'.format(' '.join(value))
 
 
 @lazyobject
