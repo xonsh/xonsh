@@ -800,10 +800,10 @@ class PromptVisitor(StateVisitor):
             with open(fname, 'r') as f:
                 s = f.read()
             before, _, s = s.partition(node.prefix)
-            current, _, after = s.partition(node.suffix)
+            _, _, after = s.partition(node.suffix)
             backup_file(fname)
         else:
-            before = current = after = ''
+            before = after = ''
             dname = os.path.dirname(fname)
             if dname:
                 os.makedirs(dname, exist_ok=True)
@@ -811,4 +811,3 @@ class PromptVisitor(StateVisitor):
         with open(fname, 'w') as f:
             f.write(before + new + after)
         return fname
-

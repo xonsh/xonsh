@@ -11,6 +11,8 @@
 * The xonsh startup wizard will only be triggered if no xonshrc files exist
   and the file ``~/.local/config/xonsh/no-wizard`` is not present.
 * The ``xonfig wizard`` command will now run write out to the xonshrc file.
+* Wizard nodes ``Save`` and ``Load`` had their names changed to ``SaveJSON``
+  and ``LoadJSON``.
 
 
 **Deprecated:** None

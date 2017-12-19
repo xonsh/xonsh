@@ -375,7 +375,7 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
         no_wizard_file = default_file if no_wizard_file is None else no_wizard_file
         passer = wiz.Pass()
         saver = wiz.SaveJSON(check=False, ask_filename=False,
-                         default_file=no_wizard_file)
+                             default_file=no_wizard_file)
         w = wiz.Question(q, {1: w, 2: passer, 3: saver},
                          converter=lambda x: int(x) if x != '' else 2)
     return w

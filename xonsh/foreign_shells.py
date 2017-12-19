@@ -14,7 +14,7 @@ import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import to_bool, ensure_string
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, os_environ
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 COMMAND = """{seterrprevcmd}
 {prevcmd}

@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import json
 import pprint
 import textwrap
 import locale
@@ -18,8 +17,6 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
-from xonsh.foreign_shells import load_foreign_envs, load_foreign_aliases
-from xonsh.xontribs import update_context, prompt_xontrib_install
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
     ON_WINDOWS, ON_LINUX, os_environ
@@ -239,8 +236,7 @@ def xonsh_config_dir(env):
 def default_xonshrc(env):
     """Creates a new instance of the default xonshrc tuple."""
     if ON_WINDOWS:
-        dxrc = (xonshconfig(env),
-                os.path.join(os_environ['ALLUSERSPROFILE'],
+        dxrc = (os.path.join(os_environ['ALLUSERSPROFILE'],
                              'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc'))
     else:
