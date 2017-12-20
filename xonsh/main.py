@@ -431,7 +431,7 @@ def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),)):
         Environment to update the current environment with after the shell
         has been initialized.
     """
-    ctx = {} of ctx is None else ctx
+    ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
     builtins.__xonsh_ctx__ = ctx
     builtins.__xonsh_execer__ = Execer(xonsh_ctx=ctx)
