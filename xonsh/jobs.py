@@ -10,7 +10,8 @@ import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject
-from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, LIBC
+from xonsh.platform import (FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN,
+                            ON_MSYS, LIBC)
 from xonsh.tools import unthreadable
 
 
@@ -110,55 +111,61 @@ else:
                                              signal.SIGTSTP, signal.SIGCHLD),
                                     globals(), '_block_when_giving')
 
-    # give_terminal_to is a simplified version of:
-    #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
-    # this will give the terminal to the process group pgid
-    if ON_CYGWIN:
+    if ON_CYGWIN or ON_MSYS:
         # on cygwin, signal.pthread_sigmask does not exist in Python, even
         # though pthread_sigmask is defined in the kernel.  thus, we use
         # ctypes to mimic the calls in the "normal" version below.
-        def give_terminal_to(pgid):
-            omask = ctypes.c_ulong()
-            mask = ctypes.c_ulong()
-            LIBC.sigemptyset(ctypes.byref(mask))
-            for i in _block_when_giving:
-                LIBC.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
-            LIBC.sigemptyset(ctypes.byref(omask))
-            LIBC.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
-                             ctypes.byref(mask),
-                             ctypes.byref(omask))
-            LIBC.tcsetpgrp(ctypes.c_int(FD_STDERR), ctypes.c_int(pgid))
-            LIBC.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
-                             ctypes.byref(omask), None)
-            return True
+        LIBC.pthread_sigmask.restype = ctypes.c_int
+        LIBC.pthread_sigmask.argtypes = [ctypes.c_int,
+                                         ctypes.POINTER(ctypes.c_ulong),
+                                         ctypes.POINTER(ctypes.c_ulong)]
+
+
+        def _pthread_sigmask(how, signals):
+            mask = 0
+            for sig in signals:
+                mask |= 1 << sig
+            oldmask = ctypes.c_ulong()
+            mask = ctypes.c_ulong(mask)
+            result = LIBC.pthread_sigmask(how, ctypes.byref(mask),
+                                          ctypes.byref(oldmask))
+            if result:
+                raise OSError(result, 'Sigmask error.')
+
+            return {sig for sig in getattr(signal, 'Signals', range(0, 65))
+                    if (oldmask.value >> sig) & 1}
     else:
-        def give_terminal_to(pgid):
-            if pgid is None:
+        _pthread_sigmask = signal.pthread_sigmask
+
+    # give_terminal_to is a simplified version of:
+    #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
+    # this will give the terminal to the process group pgid
+    def give_terminal_to(pgid):
+        if pgid is None:
+            return False
+        oldmask = _pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
+        try:
+            os.tcsetpgrp(FD_STDERR, pgid)
+            return True
+        except ProcessLookupError:
+            # when the process finished before giving terminal to it,
+            # see issue #2288
+            return False
+        except OSError as e:
+            if e.errno == 22:  # [Errno 22] Invalid argument
+                # there are cases that all the processes of pgid have
+                # finished, then we don't need to do anything here, see
+                # issue #2220
                 return False
-            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
-                                             _block_when_giving)
-            try:
-                os.tcsetpgrp(FD_STDERR, pgid)
-                return True
-            except ProcessLookupError:
-                # when the process finished before giving terminal to it,
-                # see issue #2288
+            elif e.errno == 25:  # [Errno 25] Inappropriate ioctl for device
+                # There are also cases where we are not connected to a
+                # real TTY, even though we may be run in interactive
+                # mode. See issue #2267 for an example with emacs
                 return False
-            except OSError as e:
-                if e.errno == 22:  # [Errno 22] Invalid argument
-                    # there are cases that all the processes of pgid have
-                    # finished, then we don't need to do anything here, see
-                    # issue #2220
-                    return False
-                elif e.errno == 25:  # [Errno 25] Inappropriate ioctl for device
-                    # There are also cases where we are not connected to a
-                    # real TTY, even though we may be run in interactive
-                    # mode. See issue #2267 for an example with emacs
-                    return False
-                else:
-                    raise
-            finally:
-                signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+            else:
+                raise
+        finally:
+            _pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
     def wait_for_active_job(last_task=None, backgrounded=False):
         """
