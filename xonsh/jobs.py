@@ -120,7 +120,6 @@ else:
                                          ctypes.POINTER(ctypes.c_ulong),
                                          ctypes.POINTER(ctypes.c_ulong)]
 
-
         def _pthread_sigmask(how, signals):
             mask = 0
             for sig in signals:
