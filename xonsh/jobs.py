@@ -35,7 +35,7 @@ if ON_DARWIN:
                 pass
 elif ON_WINDOWS:
     pass
-elif ON_CYGWIN:
+elif ON_CYGWIN or ON_MSYS:
     # Similar to what happened on OSX, more issues on Cygwin
     # (see Github issue #514).
     def _send_signal(job, signal):

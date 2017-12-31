@@ -23,7 +23,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.prompt.base import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
                             PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
-                            ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
+                            ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, ON_MSYS, githash)
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
                          color_style_names, print_color, color_style)
 from xonsh.xontribs import xontrib_metadata, find_xontrib
@@ -382,6 +382,7 @@ def _info(ns):
         ('on darwin', ON_DARWIN),
         ('on windows', ON_WINDOWS),
         ('on cygwin', ON_CYGWIN),
+        ('on msys2', ON_MSYS),
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
         ('xonsh encoding', env.get('XONSH_ENCODING')),
