@@ -24,6 +24,7 @@ VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
 ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
+ON_MSYS = (sys.platform == 'msys')
 ON_CONDA = True in [conda in pytest.__file__.lower() for conda
                     in ['conda', 'anaconda', 'miniconda']]
 ON_TRAVIS = 'TRAVIS' in os.environ and 'CI' in os.environ
@@ -35,6 +36,9 @@ skip_if_lt_py36 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_6, reason="Py3.6+ o
 
 skip_if_on_conda = pytest.mark.skipif(ON_CONDA,
                         reason="Conda and virtualenv _really_ hate each other")
+
+skip_if_on_msys = pytest.mark.skipif(ON_MSYS,
+                        reason="MSYS and virtualenv _really_ hate each other")
 
 skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 
