@@ -14,7 +14,7 @@ import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import to_bool, ensure_string
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, os_environ
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_MSYS, os_environ
 
 COMMAND = """{seterrprevcmd}
 {prevcmd}
@@ -291,7 +291,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
                                     # start new session to avoid hangs
                                     # (doesn't work on Cygwin though)
-                                    start_new_session=(not ON_CYGWIN),
+                                    start_new_session=((not ON_CYGWIN) and
+                                                       (not ON_MSYS)),
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:

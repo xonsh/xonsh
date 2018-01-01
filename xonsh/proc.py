@@ -23,8 +23,8 @@ import threading
 import subprocess
 import collections.abc as cabc
 
-from xonsh.platform import (ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW,
-                            LFLAG, CC)
+from xonsh.platform import (ON_WINDOWS, ON_POSIX, ON_MSYS, ON_CYGWIN,
+                            CAN_RESIZE_WINDOW, LFLAG, CC)
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
@@ -2285,7 +2285,8 @@ def pause_call_resume(p, f, *args, **kwargs):
     args : remaining arguments
     kwargs : keyword arguments
     """
-    can_send_signal = hasattr(p, 'send_signal') and ON_POSIX
+    can_send_signal = (hasattr(p, 'send_signal') and ON_POSIX and
+                       not ON_MSYS and not ON_CYGWIN)
     if can_send_signal:
         p.send_signal(signal.SIGSTOP)
     try:

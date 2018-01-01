@@ -116,7 +116,7 @@ def _FORMATTER():
 
 def default_prompt():
     """Creates a new instance of the default prompt."""
-    if xp.ON_CYGWIN:
+    if xp.ON_CYGWIN or xp.ON_MSYS:
         dp = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
               '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
     elif xp.ON_WINDOWS:
