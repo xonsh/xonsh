@@ -30,7 +30,7 @@ matrix:
           language: generic
           env: PYTHON="3.7" MINICONDA_OS="MacOSX"
     allow_failures:
-        - python: "nightly"
+        - python: ["nightly", "pypy3"]
 
 before_install:
   - if [[ ! ("$TRAVIS_PYTHON_VERSION" == "nightly" || "$TRAVIS_PYTHON_VERSION" == "3.6-dev") && ! $BUILD_DOCS ]]; then
