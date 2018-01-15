@@ -9,7 +9,7 @@ from prompt_toolkit.layout.lexers import PygmentsLexer
 from xonsh.platform import ptk_version_info
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception, carriage_return
-from xonsh.ptk.completer import PromptToolkitCompleter
+from xonsh.ptk.completer import PromptToolkitCompleter, PromptToolkit2Completer
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import get_prompter
@@ -337,7 +337,7 @@ class PromptToolkitShell2(PromptToolkitShell):
         self._first_prompt = True
         self.prompter = get_prompter()
         self.history = PromptToolkitHistory()
-        self.pt_completer = PromptToolkitCompleter(
+        self.pt_completer = PromptToolkit2Completer(
             self.completer, self.ctx, self)
         self.key_bindings = KeyBindings()
         load_xonsh_bindings(self.key_bindings)
