@@ -4,7 +4,10 @@ import sys
 import builtins
 
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.layout.lexers import PygmentsLexer
+try:
+    from prompt_toolkit.layout.lexers import PygmentsLexer
+except ImportError:
+    from prompt_toolkit.lexers import PygmentsLexer
 
 from xonsh.platform import ptk_version_info
 from xonsh.base_shell import BaseShell
@@ -30,8 +33,8 @@ else:  # ptk 2.0
     from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
     from prompt_toolkit.shortcuts import CompleteStyle
     from prompt_toolkit.formatted_text import PygmentsTokens
-    from prompt_toolkit.styles.pygments import (
-        style_from_pygments, Style, pygments_token_to_classname)
+    from prompt_toolkit.styles.pygments import Style, pygments_token_to_classname
+    from prompt_toolkit.styles.pygments import style_from_pygments_cls as style_from_pygments
 
 
 Token = _TokenType()

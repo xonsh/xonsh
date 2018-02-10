@@ -61,7 +61,10 @@ def carriage_return(b, cli, *, autoindent=True):
     elif current_line_blank and in_partial_string:
         b.newline(copy_margin=autoindent)
     else:
-        b.accept_action.validate_and_handle(cli, b)
+        try:
+            b.accept_action.validate_and_handle(cli, b)
+        except AttributeError:  # PTK 2.0
+            b.validate_and_handle()
 
 
 def _is_blank(l):
@@ -138,8 +141,12 @@ def ctrl_d_condition():
         raise EOFError
     else:
         app = get_app()
-        return (app.current_buffer_name == DEFAULT_BUFFER and
-                not app.current_buffer.text)
+        try:
+            buffer_name = app.current_buffer_name
+        except AttributeError:  # PTK 2.0
+            buffer_name = app.current_buffer.name
+
+        return buffer_name == DEFAULT_BUFFER and not app.current_buffer.text
 
 
 @Condition
@@ -282,16 +289,21 @@ def load_xonsh_bindings(key_bindings):
     def call_exit_alias(event):
         """Use xonsh exit function"""
         b = event.cli.current_buffer
-        b.accept_action.validate_and_handle(event.cli, b)
+        try:
+            b.accept_action.validate_and_handle(event.cli, b)
+        except AttributeError:  # PTK 2.0
+            b.validate_and_handle()
         xonsh_exit([])
 
     @handle(Keys.ControlJ, filter=IsMultiline())
+    @handle(Keys.ControlM, filter=IsMultiline())
     def multiline_carriage_return(event):
         """ Wrapper around carriage_return multiline parser """
         b = event.cli.current_buffer
         carriage_return(b, event.cli)
 
     @handle(Keys.ControlJ, filter=should_confirm_completion)
+    @handle(Keys.ControlM, filter=should_confirm_completion)
     def enter_confirm_completion(event):
         """Ignore <enter> (confirm completion)"""
         event.current_buffer.complete_state = None
@@ -305,7 +317,10 @@ def load_xonsh_bindings(key_bindings):
     def execute_block_now(event):
         """Execute a block of text irrespective of cursor position"""
         b = event.cli.current_buffer
-        b.accept_action.validate_and_handle(event.cli, b)
+        try:
+            b.accept_action.validate_and_handle(event.cli, b)
+        except AttributeError:  # PTK 2.0
+            b.validate_and_handle()
 
     @handle(Keys.Left, filter=beginning_of_line)
     def wrap_cursor_back(event):
@@ -338,16 +353,20 @@ def load_xonsh_bindings(key_bindings):
         """
         b = event.current_buffer
 
+        try:
+            start_completion = event.cli.start_completion
+        except AttributeError:  # PTK 2.0
+            start_completion = event.current_buffer.start_completion
+
         def second_tab():
             if b.complete_state:
                 b.complete_next()
             else:
-                event.cli.start_completion(select_first=False)
+                start_completion(select_first=False)
 
         # On the second tab-press, or when already navigating through
         # completions.
         if event.is_repeat or b.complete_state:
             second_tab()
         else:
-            event.cli.start_completion(insert_common_part=True,
-                                       select_first=False)
+            start_completion(insert_common_part=True, select_first=False)
