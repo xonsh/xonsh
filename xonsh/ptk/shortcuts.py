@@ -162,7 +162,14 @@ class Prompter2(object):
             editing_mode = EditingMode.EMACS
 
         kwargs['editing_mode'] = editing_mode
-        self.cli.prompt(message=message, **kwargs)
+
+        # A bottom toolbar is displayed if some FormattedText has been passed.
+        # However, if this is an empty list, we don't want to show a toolbar.
+        # (Better would be to pass `None`.)
+        if kwargs['bottom_toolbar'] and kwargs['bottom_toolbar'].__pt_formatted_text__() == []:
+            kwargs['bottom_toolbar'] = None
+
+        return self.cli.prompt(message=message, **kwargs)
 
     def reset(self):
         """Resets the prompt and cli to a pristine state on this object."""

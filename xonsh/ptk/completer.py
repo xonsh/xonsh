@@ -93,7 +93,10 @@ class PromptToolkitCompleter(Completer):
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
-        window = cli.application.layout.children[0].content.children[1]
+        try:
+            window = cli.application.layout.children[0].content.children[1]
+        except AttributeError:  # PTK 2.0
+            window = cli.app.layout.container.children[0].content.children[1].content
 
         if window and window.render_info:
             h = window.render_info.content_height
