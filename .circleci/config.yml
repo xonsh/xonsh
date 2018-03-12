@@ -5,6 +5,7 @@ jobs:
     machine: true
     environment:
       PYTHON: "3.4"
+      ENV_NAME: "py34-xonsh-test"
     steps:
       - checkout
       - restore_cache:
@@ -24,12 +25,10 @@ jobs:
           name: configure conda
           command: |
               export PATH="$HOME/miniconda/bin:$PATH"
-              export ENV_NAME="py34-xonsh-test"
               if [ ! -d "/home/circleci/miniconda/envs/py34-xonsh-test" ]; then
                 conda update -q conda
                 conda env create -f ci/environment-${PYTHON}.yml --name=${ENV_NAME}
                 source activate ${ENV_NAME}
-                python setup.py install
               fi
               conda env list
               conda list ${ENV_NAME}
@@ -37,6 +36,11 @@ jobs:
           key: miniconda-v1-{{ checksum "ci/environment-3.4.yml" }}
           paths:
             - "/home/circleci/miniconda"
+      - run:
+          command: |
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            python setup.py install
       - run:
           command: |
             /home/circleci/miniconda/envs/py34-xonsh-test/bin/pytest --timeout=10
@@ -68,7 +72,6 @@ jobs:
                 conda update -q conda
                 conda env create -f ci/environment-${PYTHON}.yml --name=${ENV_NAME}
                 source activate ${ENV_NAME}
-                python setup.py install
               fi
               conda env list
               conda list ${ENV_NAME}
@@ -76,6 +79,11 @@ jobs:
           key: miniconda-v1-{{ checksum "ci/environment-3.5.yml" }}
           paths:
             - "/home/circleci/miniconda"
+      - run:
+          command: |
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            python setup.py install
       - run:
           command: |
             /home/circleci/miniconda/envs/py35-xonsh-test/bin/pytest --timeout=10
@@ -107,7 +115,6 @@ jobs:
                 conda update -q conda
                 conda env create -f ci/environment-${PYTHON}.yml --name=${ENV_NAME}
                 source activate ${ENV_NAME}
-                python setup.py install
               fi
               conda env list
               conda list ${ENV_NAME}
@@ -115,6 +122,11 @@ jobs:
           key: miniconda-v1-{{ checksum "ci/environment-3.6.yml" }}
           paths:
             - "/home/circleci/miniconda"
+      - run:
+          command: |
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            python setup.py install
       - run:
           command: |
             /home/circleci/miniconda/envs/py36-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh
