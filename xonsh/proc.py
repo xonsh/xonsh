@@ -2062,16 +2062,18 @@ class CommandPipeline:
         """Boolean for if all previous processes have completed. If there
         is only a single process in the pipeline, this returns False.
         """
+        any_running = False
         for s, p in zip(self.specs[:-1], self.procs[:-1]):
+            if p.poll() is None:
+                any_running = True
+                continue
             self._safe_close(p.stdin)
             self._safe_close(s.stdin)
-            if p.poll() is None:
-                return False
             self._safe_close(p.stdout)
             self._safe_close(s.stdout)
             self._safe_close(p.stderr)
             self._safe_close(s.stderr)
-        return len(self) > 1
+        return False if any_running else (len(self) > 1)
 
     def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
