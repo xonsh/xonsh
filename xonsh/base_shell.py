@@ -344,8 +344,8 @@ class BaseShell(object):
             tee_out = tee.getvalue()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee_out)
             self.accumulated_inputs += src
-            if tee_out and env.get('XONSH_APPEND_NEWLINE') \
-                       and not tee_out.endswith(os.linesep):
+            if (tee_out and env.get('XONSH_APPEND_NEWLINE') and
+                    not tee_out.endswith(os.linesep)):
                 print(os.linesep, end='')
             tee.close()
             self._fix_cwd()
