@@ -259,8 +259,8 @@ def default_xonshrc(env):
 
 @default_value
 def xonsh_append_newline(env):
-    """Appends a newline if we are in interactive mode and using prompt-toolkit"""
-    return env.get('XONSH_INTERACTIVE', False) and env.get('SHELL_TYPE') == 'prompt_toolkit'
+    """Appends a newline if we are in interactive mode"""
+    return env.get('XONSH_INTERACTIVE', False)
 
 
 # Default values should generally be immutable, that way if a user wants
