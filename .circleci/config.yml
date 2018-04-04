@@ -48,6 +48,7 @@ jobs:
     machine: true
     environment:
       PYTHON: "3.5"
+      ENV_NAME: "py35-xonsh-test"
     steps:
       - checkout
       - restore_cache:
@@ -91,6 +92,7 @@ jobs:
     machine: true
     environment:
       PYTHON: "3.6"
+      ENV_NAME: "py36-xonsh-test"
     steps:
       - checkout
       - restore_cache:

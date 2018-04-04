@@ -100,6 +100,8 @@ for root, dirs, files in os.walk(path):
     paths.extend(os.path.join(root, d) for d in dirs)
     paths.extend(os.path.join(root, f) for f in files)
 """,
+"""lambda x: x + 1
+""",
 ])
 def test_unmodified(inp):
     # Context sensitive parsing should not modify AST
