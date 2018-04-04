@@ -327,7 +327,7 @@ class CtxAwareTransformer(NodeTransformer):
         """Handle visiting an expression."""
         if isdescendable(node.value):
             node.value = self.visit(node.value)  # this allows diving into BoolOps
-        if self.is_in_scope(node):
+        if self.is_in_scope(node) or isinstance(node.value, Lambda):
             return node
         else:
             newnode = self.try_subproc_toks(node)
