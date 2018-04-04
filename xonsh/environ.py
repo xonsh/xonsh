@@ -257,6 +257,12 @@ def default_xonshrc(env):
     return dxrc
 
 
+@default_value
+def xonsh_append_newline(env):
+    """Appends a newline if we are in interactive mode"""
+    return env.get('XONSH_INTERACTIVE', False)
+
+
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
@@ -328,7 +334,7 @@ def DEFAULT_VALUES():
                                                          'share')),
         'XONSHCONFIG': xonshconfig,
         'XONSHRC': default_xonshrc,
-        'XONSH_APPEND_NEWLINE': False,
+        'XONSH_APPEND_NEWLINE': xonsh_append_newline,
         'XONSH_AUTOPAIR': False,
         'XONSH_CACHE_SCRIPTS': True,
         'XONSH_CACHE_EVERYTHING': False,
