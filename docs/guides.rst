@@ -16,4 +16,5 @@ Guides
     tutorial_subproc_strings
     tutorial_ptk
     bash_to_xsh
+    subproc_types
     python_virtual_environments
