@@ -171,7 +171,7 @@ class QueueReader:
 
     def iterqueue(self):
         """Iterates through all remaining chunks in a blocking fashion."""
-        while not self.is_fully_read():
+        while not self.closed and not self.is_fully_read():
             chunk = self.read_queue()
             if not chunk:
                 continue
@@ -182,12 +182,17 @@ def populate_fd_queue(reader, fd, queue):
     """Reads 1 kb of data from a file descriptor into a queue.
     If this ends or fails, it flags the calling reader object as closed.
     """
-    while True:
+    #while True:
+    while not reader.closed:
         try:
             c = os.read(fd, 1024)
         except OSError:
             reader.closed = True
             break
+        except:
+            print('Something else happened!')
+            reader.closed = True
+            raise
         if c:
             queue.put(c)
         else:
@@ -226,7 +231,8 @@ def populate_buffer(reader, fd, buffer, chunksize):
     flagged as closed.
     """
     offset = 0
-    while True:
+    #while True:
+    while not reader.closed:
         try:
             buf = os.pread(fd, chunksize, offset)
         except OSError:
@@ -673,6 +679,8 @@ class PopenThread(threading.Thread):
         i = -1
         for i, chunk in enumerate(iter(reader.read_queue, b'')):
             self._alt_mode_switch(chunk, writer, stdbuf)
+            if self.proc.poll() is not None:
+                break
         if i >= 0:
             writer.flush()
             stdbuf.flush()
