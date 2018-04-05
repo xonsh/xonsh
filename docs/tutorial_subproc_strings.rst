@@ -17,7 +17,7 @@ Xonsh strings are exactly like Python strings everywhere. Xonsh uses
 exactly the same escape characters that Python does; no more and no less.
 This is different from other shells, which have a different set of escape
 sequences than Python has.  Notably, many sh-langs allow you to escape
-spaces with ``\ `` (backslash-space).
+spaces with ``"\ "`` (backslash-space).
 
 **bash**
 
@@ -32,7 +32,7 @@ to try this in xonsh, you'd see:
 
 **xonsh**
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     $ echo Actually\ Three\ Arguments
     Actually\ Three\ Arguments
@@ -43,7 +43,7 @@ pass in a single argument:
 
 **xonsh** or **bash**
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     $ echo "A Single Argument"
     A Single Argument
@@ -71,7 +71,7 @@ For example,
 
 **xonsh**
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     $ echo! A  Single     Argument
     A  Single     Argument
@@ -97,7 +97,7 @@ when leading and trailing quotes are not matched.
 
 **xonsh**
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     $ echo foo"bar"baz
     foo"bar"baz
@@ -110,7 +110,7 @@ You can think of these being equivalent to,
 
 **xonsh**
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     $ echo 'foo"bar"baz'
     foo"bar"baz
