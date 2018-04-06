@@ -85,7 +85,7 @@ class QueueReader:
         self.fd = fd
         self.timeout = timeout
         self.closed = False
-        self.queue = queue.Queue()
+        self.queue = queue.Queue(maxsize=2)
         self.thread = None
 
     def close(self):
@@ -106,6 +106,10 @@ class QueueReader:
         """
         try:
             return self.queue.get(block=True, timeout=self.timeout)
+        except KeyboardInterrupt:
+            self.closed = True
+            raise
+            return b''
         except queue.Empty:
             return b''
 
