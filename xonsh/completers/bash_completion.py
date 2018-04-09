@@ -239,7 +239,18 @@ COMP_COUNT={end}
 COMP_CWORD={n}
 $_func {cmd} {prefix} {prev}
 
-for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo "${{COMPREPLY[i]}}"; done
+# print out completions, right-stripped if they contain no internal spaces
+shopt -s extglob
+for ((i=0;i<${{#COMPREPLY[*]}};i++))
+do
+    no_spaces="${{COMPREPLY[i]//[[:space:]]}}"
+    no_trailing_spaces="${{COMPREPLY[i]%%+([[:space:]])}}"
+    if [[ "$no_spaces" == "$no_trailing_spaces" ]]; then
+        echo "$no_trailing_spaces"
+    else
+        echo "${{COMPREPLY[i]}}"
+    fi
+done
 """
 
 
