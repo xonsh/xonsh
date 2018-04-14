@@ -1,7 +1,7 @@
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
 $ACTIVITIES = ['version_bump', 'changelog', 'pytest',
-               'sphinx', 'tag', 'pypi', 'conda_forge', 'ghpages', 'ghrelease'
+               'sphinx', 'tag', 'push_tag',  'pypi', 'conda_forge', 'ghpages', 'ghrelease'
                ]
 
 $VERSION_BUMP_PATTERNS = [
