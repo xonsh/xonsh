@@ -13,7 +13,7 @@ from xonsh.completers.tools import get_filter_function
 
 @xl.lazyobject
 def PATTERN_NEED_QUOTES():
-    pattern = r'\s`\$\{\}\,\*\(\)"\'\?&'
+    pattern = r'\s`\$\{\}\,\*\(\)"\'\?&#'
     if xp.ON_WINDOWS:
         pattern += '%'
     pattern = '[' + pattern + ']' + r'|\band\b|\bor\b'
