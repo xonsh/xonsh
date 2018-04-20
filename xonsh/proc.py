@@ -189,7 +189,8 @@ def populate_fd_queue(reader, fd, queue):
     """
     n = 2
     nl = b'\n'
-    length = nnl = 0
+    nnl = 1  # so that we don't get divide-by-zero errors
+    length = 0
     while not reader.closed:
         try:
             c = os.read(fd, n)
