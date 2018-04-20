@@ -23,8 +23,8 @@ import threading
 import subprocess
 import collections.abc as cabc
 
-from xonsh.platform import (ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW,
-                            LFLAG, CC)
+from xonsh.platform import (ON_WINDOWS, ON_POSIX, ON_MSYS, ON_CYGWIN,
+                            CAN_RESIZE_WINDOW, LFLAG, CC)
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
                          XonshError, format_std_prepost)
@@ -1834,7 +1834,7 @@ class CommandPipeline:
                     b = stdout.read()
                     s = self._decode_uninew(b, universal_newlines=True)
                     self.lines = s.splitlines(keepends=True)
-            raise StopIteration
+            return
         # get the correct stderr
         stderr = proc.stderr
         if ((stderr is None or spec.stderr is None or not safe_readable(stderr))
@@ -2062,16 +2062,18 @@ class CommandPipeline:
         """Boolean for if all previous processes have completed. If there
         is only a single process in the pipeline, this returns False.
         """
+        any_running = False
         for s, p in zip(self.specs[:-1], self.procs[:-1]):
+            if p.poll() is None:
+                any_running = True
+                continue
             self._safe_close(p.stdin)
             self._safe_close(s.stdin)
-            if p.poll() is None:
-                return False
             self._safe_close(p.stdout)
             self._safe_close(s.stdout)
             self._safe_close(p.stderr)
             self._safe_close(s.stderr)
-        return len(self) > 1
+        return False if any_running else (len(self) > 1)
 
     def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
@@ -2285,7 +2287,8 @@ def pause_call_resume(p, f, *args, **kwargs):
     args : remaining arguments
     kwargs : keyword arguments
     """
-    can_send_signal = hasattr(p, 'send_signal') and ON_POSIX
+    can_send_signal = (hasattr(p, 'send_signal') and ON_POSIX and
+                       not ON_MSYS and not ON_CYGWIN)
     if can_send_signal:
         p.send_signal(signal.SIGSTOP)
     try:

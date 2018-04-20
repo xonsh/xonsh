@@ -235,13 +235,21 @@ def xonsh_config_dir(env):
 @default_value
 def default_xonshrc(env):
     """Creates a new instance of the default xonshrc tuple."""
+    xcdrc = os.path.join(xonsh_config_dir(env), 'rc.xsh')
     if ON_WINDOWS:
         dxrc = (os.path.join(os_environ['ALLUSERSPROFILE'],
                              'xonsh', 'xonshrc'),
+                xcdrc,
                 os.path.expanduser('~/.xonshrc'))
     else:
-        dxrc = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
+        dxrc = ('/etc/xonshrc', xcdrc, os.path.expanduser('~/.xonshrc'))
     return dxrc
+
+
+@default_value
+def xonsh_append_newline(env):
+    """Appends a newline if we are in interactive mode"""
+    return env.get('XONSH_INTERACTIVE', False)
 
 
 # Default values should generally be immutable, that way if a user wants
@@ -313,7 +321,7 @@ def DEFAULT_VALUES():
         'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local',
                                                          'share')),
         'XONSHRC': default_xonshrc,
-        'XONSH_APPEND_NEWLINE': False,
+        'XONSH_APPEND_NEWLINE': xonsh_append_newline,
         'XONSH_AUTOPAIR': False,
         'XONSH_CACHE_SCRIPTS': True,
         'XONSH_CACHE_EVERYTHING': False,
@@ -627,9 +635,9 @@ def DEFAULT_DOCS():
         'A list of the locations of run control files, if they exist.  User '
         'defined run control file will supersede values set in system-wide '
         'control file if there is a naming collision.', default=(
-            "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.xonshrc']``\n"
+            "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
             "\nOn Windows: "
-            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.xonshrc']``")),
+            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``")),
     'XONSH_APPEND_NEWLINE': VarDocs(
         'Append new line when a partial line is preserved in output.'
     ),

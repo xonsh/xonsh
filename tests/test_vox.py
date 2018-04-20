@@ -6,10 +6,11 @@ import os
 import pytest
 from xontrib.voxapi import Vox
 
-from tools import skip_if_on_conda
+from tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
 
 
+@skip_if_on_msys
 @skip_if_on_conda
 def test_crud(xonsh_builtins, tmpdir):
     """
@@ -47,6 +48,7 @@ def test_crud(xonsh_builtins, tmpdir):
     assert last_event == ('delete', 'spam')
 
 
+@skip_if_on_msys
 @skip_if_on_conda
 def test_activate(xonsh_builtins, tmpdir):
     """
@@ -78,6 +80,7 @@ def test_activate(xonsh_builtins, tmpdir):
     assert last_event == ('deactivate', 'spam')
 
 
+@skip_if_on_msys
 @skip_if_on_conda
 def test_path(xonsh_builtins, tmpdir):
     """
@@ -100,6 +103,7 @@ def test_path(xonsh_builtins, tmpdir):
     assert oldpath == xonsh_builtins.__xonsh_env__['PATH']
 
 
+@skip_if_on_msys
 @skip_if_on_conda
 def test_crud_subdir(xonsh_builtins, tmpdir):
     """
@@ -130,6 +134,7 @@ try:
 except ImportError:
     pass
 else:
+    @skip_if_on_msys
     @skip_if_on_conda
     def test_crud_path(xonsh_builtins, tmpdir):
         """
@@ -150,6 +155,7 @@ else:
         assert not tmpdir.check()
 
 
+@skip_if_on_msys
 @skip_if_on_conda
 def test_crud_subdir(xonsh_builtins, tmpdir):
     """

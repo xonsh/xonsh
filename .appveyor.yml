@@ -1,4 +1,4 @@
-version: 0.6.0.{build}
+version: 0.6.1.{build}
 os: Windows Server 2012 R2
 environment:
 
@@ -11,9 +11,17 @@ environment:
       DISTUTILS_USE_SDK: "1"
     - PYTHON: "C:\\Python35-x64"
     - PYTHON: "C:\\Python36-x64"
+    - XONSH_TEST_ENV: "MSYS2"
+      MSYS2_PATH: "C:\\msys64"
     # TODO: Miniconda
+
+matrix:
+  allow_failures:
+    # ignore MSYS2 test results for now
+    - XONSH_TEST_ENV: "MSYS2"
+
 install:
-- "%PYTHON%\\Scripts\\pip install -r requirements-tests.txt"
+  - ".appveyor_install.cmd"
 build: off
 test_script:
-- "%PYTHON%\\Scripts\\py.test"
+  - ".appveyor_test.cmd"

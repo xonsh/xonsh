@@ -410,3 +410,32 @@ def main_context(argv=None):
     args = premain(argv)
     yield builtins.__xonsh_shell__
     postmain(args)
+
+
+def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),)):
+    """Starts up a new xonsh shell. Calling this in function in another
+    packages __init__.py will allow xonsh to be fully used in the
+    package in headless or headed mode. This function is primarily indended to
+    make starting up xonsh for 3rd party packages easier.
+
+    Parameters
+    ----------
+    ctx : dict-like or None, optional
+        The xonsh context to start with. If None, an empty dictionary
+        is provided.
+    shell_type : str, optional
+        The type of shell to start. By default this is 'none', indicating
+        we should start in headless mode.
+    env : dict-like, optional
+        Environment to update the current environment with after the shell
+        has been initialized.
+    """
+    ctx = {} if ctx is None else ctx
+    # setup xonsh ctx and execer
+    builtins.__xonsh_ctx__ = ctx
+    builtins.__xonsh_execer__ = Execer(xonsh_ctx=ctx)
+    builtins.__xonsh_shell__ = Shell(builtins.__xonsh_execer__,
+                                     ctx=ctx,
+                                     shell_type='none')
+    builtins.__xonsh_env__.update(env)
+    install_import_hooks()

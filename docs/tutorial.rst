@@ -455,7 +455,7 @@ difference is that the subprocess's stdout passes directly through xonsh and
 to the screen.  The return value of ``$[]`` is always ``None``.
 
 In the following, we can see that the results of ``$[]`` are automatically
-printed, and the return value is not a string.
+printed, and that the return value is not a string.
 
 .. code-block:: xonshcon
 
@@ -464,10 +464,6 @@ printed, and the return value is not a string.
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
     >>> x is None
     True
-
-Previously when we automatically entered subprocess-mode, uncaptured
-subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually
-equivalent.
 
 The ``![]`` operator is similar to the ``!()`` in that it returns an object
 containing information about the result of executing the given command.

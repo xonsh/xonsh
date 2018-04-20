@@ -47,6 +47,8 @@ ON_WINDOWS = LazyBool(lambda: platform.system() == 'Windows',
 """``True`` if executed on a native Windows platform, else ``False``. """
 ON_CYGWIN = LazyBool(lambda: sys.platform == 'cygwin', globals(), 'ON_CYGWIN')
 """``True`` if executed on a Cygwin Windows platform, else ``False``. """
+ON_MSYS = LazyBool(lambda: sys.platform == 'msys', globals(), 'ON_MSYS')
+"""``True`` if executed on a MSYS Windows platform, else ``False``. """
 ON_POSIX = LazyBool(lambda: (os.name == 'posix'), globals(), 'ON_POSIX')
 """``True`` if executed on a POSIX-compliant platform, else ``False``. """
 ON_FREEBSD = LazyBool(lambda: (sys.platform.startswith('freebsd')),
@@ -440,7 +442,7 @@ def BASH_COMPLETIONS_DEFAULT():
     """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
     """
-    if ON_LINUX or ON_CYGWIN:
+    if ON_LINUX or ON_CYGWIN or ON_MSYS:
         bcd = ('/usr/share/bash-completion/bash_completion', )
     elif ON_DARWIN:
         bcd = ('/usr/local/share/bash-completion/bash_completion',  # v2.x
@@ -458,7 +460,7 @@ def BASH_COMPLETIONS_DEFAULT():
 
 @lazyobject
 def PATH_DEFAULT():
-    if ON_LINUX or ON_CYGWIN:
+    if ON_LINUX or ON_CYGWIN or ON_MSYS:
         if linux_distro() == 'arch':
             pd = ('/usr/local/sbin',
                   '/usr/local/bin', '/usr/bin', '/usr/bin/site_perl',
@@ -489,6 +491,8 @@ def LIBC():
         libc = ctypes.CDLL(ctypes.util.find_library("c"))
     elif ON_CYGWIN:
         libc = ctypes.CDLL('cygwin1.dll')
+    elif ON_MSYS:
+        libc = ctypes.CDLL('msys-2.0.dll')
     elif ON_BSD:
         try:
             libc = ctypes.CDLL('libc.so')

@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* Clean out ``$LINES`` and ``$COLUMNS`` if set, preventing some programs from drawing weirdly
+* Files starting with ``#`` are auto-escaped by TAB completion
 
 **Security:** None
