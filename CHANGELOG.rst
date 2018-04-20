@@ -4,6 +4,51 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.1
+====================
+
+**Added:**
+
+* Support for MSYS2.
+* New ``xonsh.main.setup()`` function for starting up xonsh in 3rd party
+  packages.
+
+
+**Changed:**
+
+* Updated CircleCI to use circle version 2.0
+* Replaced StopIteration with return in CommandPipeline.iterraw.
+* Xonsh run control now also looks for the XDG-compliant file
+  ``~/.config/xonsh/rc.xsh`` at startup.
+
+
+**Fixed:**
+
+* Clean out ``$LINES`` and ``$COLUMNS`` if set, preventing some programs from drawing weirdly
+* cat from xoreutils now outputs in configured encoding
+* Fixed hanging issue with pipelines whose middle processes exit before the
+  first or last process.
+* Fixed issue where xonsh would deduplicate spaces from bash autocompletions.
+* Fixed failing redirections from stderr to stdout when the command
+  being executed was a callable alias.
+* Ensure that the ``free_cwd`` contrib can only be active on pure Windows.
+* Made an exceptional case in ``iglobpath()`` more robust when Python globbing
+  fails for due to strange scrandir issue.
+* Unexpected process suspension on Cygwin and MSYS2.
+* ``$XONSH_APPEND_NEWLINE`` will now default to True when in interactive mode.
+* Fixed issue with uncalled lambdas being run in subproc mode.
+* Lambda nodes not have proper line and column numbers in AST.
+* Properly throw ``SyntaxError`` when no kwargs are defined
+  in a kwarg-only function. This used to throw a
+  ``TypeError: 'NoneType' object is not iterable``.
+* Addressed issue where encoding and errors were None when teeing output.
+* Commands like ``git c`` would complete to ``git 'checkout '`` because git adds an extra space
+  to the end of the completion, which was being captured in the completion. Xonsh now fixes the git issue
+  while retaining all whitespace when there is other internal whitespace.
+
+
+
+
 v0.6.0
 ====================
 

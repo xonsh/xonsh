@@ -1,7 +1,8 @@
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
 $ACTIVITIES = ['version_bump', 'changelog', 'pytest',
-               'sphinx', 'tag', 'pypi', 'conda_forge', 'ghpages', 'ghrelease'
+               'tag', 'push_tag',  'pypi', 'conda_forge', 'ghpages', 'ghrelease'
+               'sphinx',
                ]
 
 $VERSION_BUMP_PATTERNS = [
@@ -14,7 +15,7 @@ $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
 $TAG_REMOTE = 'git@github.com:xonsh/xonsh.git'
 $TAG_TARGET = 'master'
 
-$GHPAGES_REPO = 'git@github.com:scopatz/xonsh-docs.git'
+$GHPAGES_REPO = 'git@github.com:xonsh/xonsh-docs.git'
 
 $DOCKER_APT_DEPS = ['man']
 with open('requirements-tests.txt') as f:

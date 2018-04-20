@@ -1846,7 +1846,7 @@ class CommandPipeline:
                     b = stdout.read()
                     s = self._decode_uninew(b, universal_newlines=True)
                     self.lines = s.splitlines(keepends=True)
-            raise StopIteration
+            return
         # get the correct stderr
         stderr = proc.stderr
         if ((stderr is None or spec.stderr is None or not safe_readable(stderr))
