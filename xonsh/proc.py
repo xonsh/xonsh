@@ -85,7 +85,7 @@ class QueueReader:
         self.fd = fd
         self.timeout = timeout
         self.closed = False
-        self.queue = queue.Queue(maxsize=16)
+        self.queue = queue.Queue(maxsize=32)
         self.thread = None
 
     def close(self):
