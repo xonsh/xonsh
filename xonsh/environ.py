@@ -232,6 +232,13 @@ def xonsh_config_dir(env):
     return xcd
 
 
+def xonshconfig(env):
+    """Ensures and returns the $XONSHCONFIG"""
+    xcd = env.get('XONSH_CONFIG_DIR')
+    xc = os.path.join(xcd, 'config.json')
+    return xc
+
+
 @default_value
 def default_xonshrc(env):
     """Creates a new instance of the default xonshrc tuple."""
@@ -243,6 +250,12 @@ def default_xonshrc(env):
                 os.path.expanduser('~/.xonshrc'))
     else:
         dxrc = ('/etc/xonshrc', xcdrc, os.path.expanduser('~/.xonshrc'))
+    # Check if old config file exists and issue warning
+    old_config_filename = xonshconfig(env):
+    if os.path.isfile(old_config_filename):
+        print_color('{RED}WARNING!{NO_COLOR} old style configuration (' +
+                    old_config_filename + ') is not longer supported. ' +
+                    'Please migrate to xonshrc.')
     return dxrc
 
 
