@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* Keyboard intterupts (``Ctrl-C``) are now significantly more interactive.
+* Keyboard interrupts (``Ctrl-C``) are now significantly more interactive.
 
 **Security:** None

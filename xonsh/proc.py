@@ -182,7 +182,7 @@ class QueueReader:
 
 
 def populate_fd_queue(reader, fd, queue):
-    """Addaptively reads between 2 bytes and 1 kb of data from a file descriptor
+    """Adaptively reads between 2 bytes and 1 kb of data from a file descriptor
     into a queue. If this ends or fails, it flags the calling reader object
     as closed. The number of bytes it reads in on any given pass is the average
     distance between newlines.
