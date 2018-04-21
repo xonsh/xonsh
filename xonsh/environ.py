@@ -251,7 +251,7 @@ def default_xonshrc(env):
     else:
         dxrc = ('/etc/xonshrc', xcdrc, os.path.expanduser('~/.xonshrc'))
     # Check if old config file exists and issue warning
-    old_config_filename = xonshconfig(env):
+    old_config_filename = xonshconfig(env)
     if os.path.isfile(old_config_filename):
         print_color('{RED}WARNING!{NO_COLOR} old style configuration (' +
                     old_config_filename + ') is not longer supported. ' +
