@@ -361,7 +361,6 @@ def main_xonsh(args):
             env['XONSH_INTERACTIVE'] = True
             ignore_sigtstp()
             if (env['XONSH_INTERACTIVE'] and
-                    not env['LOADED_CONFIG'] and
                     not any(os.path.isfile(i) for i in env['XONSHRC'])):
                 print_welcome_screen()
             events.on_pre_cmdloop.fire()

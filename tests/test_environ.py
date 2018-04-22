@@ -11,7 +11,7 @@ from xonsh.tools import ON_WINDOWS
 import pytest
 
 from xonsh.commands_cache import CommandsCache
-from xonsh.environ import Env, load_static_config, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES, default_env
+from xonsh.environ import Env, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES, default_env
 
 from tools import skip_if_on_unix
 
@@ -106,21 +106,6 @@ def test_swap():
     assert 'VAR1' not in env
     assert 'VAR2' not in env
     assert 'VAR3' not in env
-
-
-@pytest.mark.parametrize('s, exp, loaded',[
-    (b'{"best": "awash"}', {'best': 'awash'}, True), # works
-    (b'["best", "awash"]', {}, False), # fail
-    (b'{"best": "awash"', {}, False) # json fail
-])
-def test_load_static_config(s, exp, loaded, tmpdir, xonsh_builtins):
-    env = Env({'XONSH_SHOW_TRACEBACK': False})
-    xonsh_builtins.__xonsh_env__ = env
-    f = tmpdir.join('test_static_config')
-    f.write(s)
-    conf = load_static_config(env, str(f))
-    assert exp == conf
-    assert env['LOADED_CONFIG'] == loaded
 
 
 @skip_if_on_unix
