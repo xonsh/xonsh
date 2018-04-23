@@ -20,7 +20,7 @@ You can install xonsh using homebrew, conda, pip, or from source.
 
     $ conda config --add channels conda-forge
     $ conda install xonsh
-    
+
 
 **pip:**
 
@@ -36,6 +36,24 @@ the following from the source directory,
 .. code-block:: console
 
     $ python3 setup.py install
+
+
+Path Helper
+===========
+
+macOS provides a `path helper
+<http://www.softec.lu/site/DevelopersCorner/MasteringThePathHelper>`_,
+which by default configures paths in bash and other shells. Without
+including these paths, common tools including those installed by Homebrew
+may be unavailable. See ``/etc/profile`` for details on how it is done.
+To ensure the path helper is invoked on xonsh (for all users), add the
+following to ``/etc/xonshrc``::
+
+    source-bash $(/usr/libexec/path_helper -s)
+
+To incorporate the whole functionality of ``/etc/profile``::
+
+    source-bash --seterrprevcmd "" /etc/profile
 
 
 Extras for OSX
