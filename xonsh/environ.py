@@ -254,7 +254,7 @@ def default_xonshrc(env):
     old_config_filename = xonshconfig(env)
     if os.path.isfile(old_config_filename):
         print('WARNING! old style configuration (' +
-              old_config_filename + ') is not longer supported. ' +
+              old_config_filename + ') is no longer supported. ' +
               'Please migrate to xonshrc.')
     return dxrc
 
