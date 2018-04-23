@@ -7,7 +7,6 @@ Config Files and Settings
     :maxdepth: 2
 
     xonshrc
-    xonshconfig
     envvars
     aliases
     xontribs

@@ -1315,8 +1315,7 @@ with Python and subprocess.
 .. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` environment variable is False
              (the default) then foreign shell aliases that try to override
              xonsh aliases will be ignored. Setting of this environment variable
-             must happen in the static configuration file
-             ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
+             must happen outside if xonsh, i.e. in the process that starts xonsh.
 
 
 Up, Down, Tab
