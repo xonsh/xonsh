@@ -73,23 +73,14 @@ default, they cannot be unloaded (easily).
 
 .. note::
 
-    When a xontrib is loaded from a config file or via the xontrib command,
-    its public variables are placed in the current execution context unless
-    ``__all__`` is defined, just like in regular Python modules.
+    When a xontrib is loaded its public variables are placed in the current
+    execution context unless ``__all__`` is defined, just like in regular Python
+    modules.
 
-Loading xontribs in the config file is as simple as adding a list of string
-xontrib names to the top-level ``"xontribs"`` key. For example, the following
-would load the ``"mpl"`` and ``"example"`` xontribs.
-
-.. code:: json
-
-    {"xontribs": ["mpl", "example"]}
-
-Extensions may also be loaded via the ``xontrib`` command, which is a xonsh
-default alias. This command may be run from anywhere in a xonshrc file or at
-any point after xonsh has started up. Loading is the default action of the
-``xontrib`` command. Thus the following methods for loading via this command
-are equivalent:
+Extensions are loaded via the ``xontrib`` command, which is a xonsh default
+alias. This command may be run from anywhere in a xonshrc file or at any point
+after xonsh has started up. Loading is the default action of the ``xontrib``
+command. Thus the following methods for loading via this command are equivalent:
 
 .. code-block:: xonsh
 
@@ -138,7 +129,7 @@ string:
     {"mpl": {"loaded": false, "installed": true}}
 
 Authoring Xontribs
-=========================
+==================
 Writing a xontrib is as easy as writing a xonsh or Python file and sticking
 it in a directory named ``xontrib/``. However, please do not place an
 ``__init__.py`` in the ``xontrib/`` directory. It is an
@@ -181,7 +172,7 @@ good idea, in general, because then:
 * It will show up in ``xonfig wizard``.
 
 All of this let's users know that your xontrib is out there, ready to be used.
-Of course, your under no obligation to register your xontrib.  Users will
+Of course, you're under no obligation to register your xontrib.  Users will
 still be able to load your xontrib, as long as they have it installed.
 
 To register a xontrib, add an entry to
