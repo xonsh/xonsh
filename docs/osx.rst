@@ -20,7 +20,7 @@ You can install xonsh using homebrew, conda, pip, or from source.
 
     $ conda config --add channels conda-forge
     $ conda install xonsh
-    
+
 
 **pip:**
 
