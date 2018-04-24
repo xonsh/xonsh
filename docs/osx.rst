@@ -77,7 +77,7 @@ Tab completion
 --------------
 Xonsh has support for using bash completion files on the shell, to use it you need to install the bash-completion package. The regular bash-completion package uses v1 which mostly works, but `occasionally has rough edges <https://github.com/xonsh/xonsh/issues/2111>`_ so we recommend using bash-completion v2.
 
-Bash completion comes from <https://github.com/scop/bash-completion> which suggests you use a package manager to install it, this manager will also install a new version of bash without affecting  /bin/bash. Xonsh also needs to be told where the bash shell file that builds the completions is, this has to be added to $BASH_COMPLETIONS. The package includes completions fopr many Unix commands.
+Bash completion comes from <https://github.com/scop/bash-completion> which suggests you use a package manager to install it, this manager will also install a new version of bash without affecting  /bin/bash. Xonsh also needs to be told where the bash shell file that builds the completions is, this has to be added to $BASH_COMPLETIONS. The package includes completions for many Unix commands.
 
 Common packaging systems for MacOs include
 
@@ -91,15 +91,17 @@ Common packaging systems for MacOs include
 
  - `MacPorts <https://trac.macports.org/wiki/howto/bash-completion>`_ where the bash-completion port needs to be installed.
 
-    .. code-block:: console
+   .. code-block:: console
 
-       $ sudo port install bash-completion
+    $ sudo port install bash-completion
+     
 
-    This includes a bash_completion file that needs to be added to the environment.
 
-    .. code-block:: console
+   This includes a bash_completion file that needs to be added to the environment.
 
-       $ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
+   .. code-block:: console
+
+    $ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
 
 Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script to be called as in .../profile.d/bash_completion.sh which will the call the script mentioned above and one in $XDG_CONFIG_HOME . Currently xonsh seems only to be able to read the first script directly.
 
