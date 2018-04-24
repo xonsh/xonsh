@@ -253,9 +253,9 @@ def default_xonshrc(env):
     # Check if old config file exists and issue warning
     old_config_filename = xonshconfig(env)
     if os.path.isfile(old_config_filename):
-        print_color('{RED}WARNING!{NO_COLOR} old style configuration (' +
-                    old_config_filename + ') is not longer supported. ' +
-                    'Please migrate to xonshrc.')
+        print('WARNING! old style configuration (' +
+              old_config_filename + ') is no longer supported. ' +
+              'Please migrate to xonshrc.')
     return dxrc
 
 
