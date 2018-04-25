@@ -33,7 +33,7 @@ from xonsh.proc import (
     STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expand_path, globpath, XonshError,
-    XonshCalledProcessError
+    XonshCalledProcessError, print_exception
 )
 from xonsh.lazyimps import pty, termios
 from xonsh.commands_cache import CommandsCache

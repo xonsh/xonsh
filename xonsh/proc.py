@@ -1765,9 +1765,14 @@ class CommandPipeline:
                 self.starttime = time.time()
             try:
                 proc = spec.run(pipeline_group=pipeline_group)
-            except XonshError:
+            #except XonshError:
+            #    self._return_terminal()
+            #    raise
+            except Exception:
+                print_exception()
                 self._return_terminal()
-                raise
+                self.proc = None
+                return
             if proc.pid and pipeline_group is None and not spec.is_proxy and \
                     self.captured != 'object':
                 pipeline_group = proc.pid
@@ -1804,6 +1809,8 @@ class CommandPipeline:
         # get appropriate handles
         spec = self.spec
         proc = self.proc
+        if proc is None:
+            return
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         # get the correct stdout
         stdout = proc.stdout
@@ -2067,22 +2074,26 @@ class CommandPipeline:
             if p.poll() is None:
                 any_running = True
                 continue
-            self._safe_close(p.stdin)
             self._safe_close(s.stdin)
-            self._safe_close(p.stdout)
             self._safe_close(s.stdout)
-            self._safe_close(p.stderr)
             self._safe_close(s.stderr)
+            if p is None:
+                continue
+            self._safe_close(p.stdin)
+            self._safe_close(p.stdout)
+            self._safe_close(p.stderr)
         return False if any_running else (len(self) > 1)
 
     def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
         for s, p in zip(self.specs[:-1], self.procs[:-1]):
             self._safe_close(s.stdin)
-            self._safe_close(p.stdin)
             self._safe_close(s.stdout)
-            self._safe_close(p.stdout)
             self._safe_close(s.stderr)
+            if p is None:
+                continue
+            self._safe_close(p.stdin)
+            self._safe_close(p.stdout)
             self._safe_close(p.stderr)
 
     def _close_proc(self):
@@ -2090,16 +2101,20 @@ class CommandPipeline:
         s = self.spec
         p = self.proc
         self._safe_close(s.stdin)
-        self._safe_close(p.stdin)
         self._safe_close(s.stdout)
-        self._safe_close(p.stdout)
         self._safe_close(s.stderr)
-        self._safe_close(p.stderr)
         self._safe_close(s.captured_stdout)
         self._safe_close(s.captured_stderr)
+        if p is None:
+            return
+        self._safe_close(p.stdin)
+        self._safe_close(p.stdout)
+        self._safe_close(p.stderr)
 
     def _set_input(self):
         """Sets the input variable."""
+        if self.proc is None:
+            return
         stdin = self.proc.stdin
         if stdin is None or isinstance(stdin, int) or stdin.closed or \
            not stdin.seekable() or not safe_readable(stdin):
@@ -2127,7 +2142,7 @@ class CommandPipeline:
         """Applies the results to the current history object."""
         hist = builtins.__xonsh_history__
         if hist is not None:
-            hist.last_cmd_rtn = self.proc.returncode
+            hist.last_cmd_rtn = 1 if self.proc is None else self.proc.returncode
 
     def _raise_subproc_error(self):
         """Raises a subprocess error, if we are supposed to."""
@@ -2191,6 +2206,8 @@ class CommandPipeline:
     def returncode(self):
         """Process return code, waits until command is completed."""
         self.end()
+        if self.proc is None:
+            return 1
         return self.proc.returncode
 
     rtn = returncode
