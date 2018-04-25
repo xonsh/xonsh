@@ -294,7 +294,7 @@ def make_envvars():
                         default=vd.default, store_as_str=vd.store_as_str)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'envvarsbody')
-    with open(fname, 'w') as f:
+    with open(fname, 'w', encoding='utf-8') as f:
         f.write(s)
 
 
