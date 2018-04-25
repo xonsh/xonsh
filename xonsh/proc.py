@@ -1765,9 +1765,6 @@ class CommandPipeline:
                 self.starttime = time.time()
             try:
                 proc = spec.run(pipeline_group=pipeline_group)
-            #except XonshError:
-            #    self._return_terminal()
-            #    raise
             except Exception:
                 print_exception()
                 self._return_terminal()
