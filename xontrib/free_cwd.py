@@ -23,7 +23,7 @@ def _chdir_up(path):
     path = Path(path)
     try:
         os.chdir(path)
-        return path
+        return str(path.absolute())
     except (FileNotFoundError, NotADirectoryError):
         path.resolve()
         return _chdir_up(path.parent)
