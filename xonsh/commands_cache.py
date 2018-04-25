@@ -61,7 +61,7 @@ class CommandsCache(cabc.Mapping):
          name on Windows as a list, conserving the ordering in `PATHEXT`.
          Returns a list as `name` being the only item in it on other platforms."""
         if ON_WINDOWS:
-            pathext = builtins.__xonsh_env__.get('PATHEXT')
+            pathext = builtins.__xonsh_env__.get('PATHEXT', [])
             name = name.upper()
             return [
                 name + ext
