@@ -221,7 +221,7 @@ def _clear_dead_jobs():
     to_remove = set()
     for tid in tasks:
         obj = get_task(tid)['obj']
-        if obj.poll() is not None:
+        if obj is None or obj.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
