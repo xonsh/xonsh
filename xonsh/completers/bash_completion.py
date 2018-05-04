@@ -14,7 +14,7 @@ import platform
 import functools
 import subprocess
 
-__version__ = '0.1.0'
+__version__ = '0.2.1'
 
 
 @functools.lru_cache(1)
@@ -349,8 +349,8 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
         strip_len += 1
 
     if '-o noquote' not in complete_stmt:
-        out, need_qoutes = quote_paths(out, '', '')
-        strip_len += int(need_qoutes)
+        out, need_quotes = quote_paths(out, '', '')
+        strip_len += int(need_quotes)
     if '-o nospace' in complete_stmt:
         out = set([x.rstrip() for x in out])
 

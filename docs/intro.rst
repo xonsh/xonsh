@@ -42,7 +42,7 @@ the xonsh shell
         "Conches for the xonsh god!",
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
-        "This fix was trickier expected",
+        "This fix was trickier than expected",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
