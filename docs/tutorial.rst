@@ -502,8 +502,10 @@ result is automatically converted to a string. For example,
     42 yo
     >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
     hello world
-    >>> @(['echo', 'hello world'])
+    >>> @(['echo', 'hello', 'world'])
     hello world
+    >>> @('echo hello world')
+    xonsh: subprocess mode: command not found: echo hello world
 
 .. warning::
     If the expression is a string and not a list then it will be passed to the
