@@ -407,7 +407,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif show_completions == 2:
             return completions
         else:
-            raise ValueError('query compeltions flag not understood.')
+            raise ValueError('query completions flag not understood.')
 
     # tab complete on first index too
     completenames = completedefault
