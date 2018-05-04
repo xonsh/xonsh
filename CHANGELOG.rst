@@ -4,6 +4,38 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.3
+====================
+
+**Added:**
+
+* Docs for using ``@(<expr>)`` as a way to run commands and a gotcha about
+  list of strings vs single string expressions.
+* Ubuntu versions which xonsh is packaged for (with xonsh versions)
+
+
+**Changed:**
+
+* When reporting errors without a traceback (i.e. ``$XONSH_SHOW_TRACEBACK = False``) and the error is a ``XonshError``
+  the exception type is not longer printed.
+* ``CommandPipeline.proc`` may now be ``None``, to accomodate when the process
+  fails to even start (i.e. a missing command or incorrect permisions).
+
+
+**Fixed:**
+
+* The ``curl`` command will now be run in a thread, which prevents documents that
+  do not end in a newline from writing over the next prompt and vice versa.
+* Fix bug on Windows when ``PATHEXT`` environment variable did not exist.
+  This also fixes building the xonsh documentation on Windows.
+* Fixed a bug in the `free_cwd <http://xon.sh/xontribs.html#free-cwd>`__ Windows Xontrib, which caused the prompt to error if the current directory is 
+  deleted/renamed from an other process.
+* Fixed issue with ``$XONSH_SHOW_TRACEBACK`` not being respected in subprocess
+  mode when the command could not be found or had incorrect permissions.
+
+
+
+
 v0.6.2
 ====================
 
