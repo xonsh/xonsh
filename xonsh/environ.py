@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import json
 import pprint
 import textwrap
 import locale
@@ -18,8 +17,6 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
-from xonsh.foreign_shells import load_foreign_envs, load_foreign_aliases
-from xonsh.xontribs import update_context, prompt_xontrib_install
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
     ON_WINDOWS, ON_LINUX, os_environ
@@ -152,7 +149,6 @@ def DEFAULT_ENSURERS():
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
-    'LOADED_CONFIG': (is_bool, to_bool, bool_to_str),
     'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     'MULTILINE_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
@@ -236,7 +232,6 @@ def xonsh_config_dir(env):
     return xcd
 
 
-@default_value
 def xonshconfig(env):
     """Ensures and returns the $XONSHCONFIG"""
     xcd = env.get('XONSH_CONFIG_DIR')
@@ -247,14 +242,27 @@ def xonshconfig(env):
 @default_value
 def default_xonshrc(env):
     """Creates a new instance of the default xonshrc tuple."""
+    xcdrc = os.path.join(xonsh_config_dir(env), 'rc.xsh')
     if ON_WINDOWS:
-        dxrc = (xonshconfig(env),
-                os.path.join(os_environ['ALLUSERSPROFILE'],
+        dxrc = (os.path.join(os_environ['ALLUSERSPROFILE'],
                              'xonsh', 'xonshrc'),
+                xcdrc,
                 os.path.expanduser('~/.xonshrc'))
     else:
-        dxrc = (xonshconfig(env), '/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
+        dxrc = ('/etc/xonshrc', xcdrc, os.path.expanduser('~/.xonshrc'))
+    # Check if old config file exists and issue warning
+    old_config_filename = xonshconfig(env)
+    if os.path.isfile(old_config_filename):
+        print('WARNING! old style configuration (' +
+              old_config_filename + ') is no longer supported. ' +
+              'Please migrate to xonshrc.')
     return dxrc
+
+
+@default_value
+def xonsh_append_newline(env):
+    """Appends a newline if we are in interactive mode"""
+    return env.get('XONSH_INTERACTIVE', False)
 
 
 # Default values should generally be immutable, that way if a user wants
@@ -296,7 +304,6 @@ def DEFAULT_VALUES():
         'LC_TIME': locale.setlocale(locale.LC_TIME),
         'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
         'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
-        'LOADED_CONFIG': False,
         'LOADED_RC_FILES': (),
         'MOUSE_SUPPORT': False,
         'MULTILINE_PROMPT': '.',
@@ -326,9 +333,8 @@ def DEFAULT_VALUES():
         'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
         'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local',
                                                          'share')),
-        'XONSHCONFIG': xonshconfig,
         'XONSHRC': default_xonshrc,
-        'XONSH_APPEND_NEWLINE': False,
+        'XONSH_APPEND_NEWLINE': xonsh_append_newline,
         'XONSH_AUTOPAIR': False,
         'XONSH_CACHE_SCRIPTS': True,
         'XONSH_CACHE_EVERYTHING': False,
@@ -473,9 +479,8 @@ def DEFAULT_DOCS():
     'FOREIGN_ALIASES_OVERRIDE': VarDocs(
         'Whether or not foreign aliases should override xonsh aliases '
         'with the same name. Note that setting of this must happen in the '
-        'static configuration file '
-        "``$XONSH_CONFIG_DIR/config.json`` in the 'env' section and not in "
-        '``.xonshrc`` as loading of foreign aliases happens before'
+        'environment that xonsh was started from. '
+        "It cannot be set in the ``.xonshrc`` as loading of foreign aliases happens before"
         '``.xonshrc`` is parsed', configurable=True),
     'PROMPT_FIELDS': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
@@ -507,9 +512,6 @@ def DEFAULT_DOCS():
         'generally replaced by their bright counter parts.',
         configurable=ON_WINDOWS),
     'LANG': VarDocs('Fallback locale setting for systems where it matters'),
-    'LOADED_CONFIG': VarDocs(
-        'Whether or not the xonsh config file was loaded',
-        configurable=False),
     'LOADED_RC_FILES': VarDocs(
         'Whether or not any of the xonsh run control files were loaded at '
         'startup. This is a sequence of bools in Python that is converted '
@@ -642,17 +644,13 @@ def DEFAULT_DOCS():
     'XDG_DATA_HOME': VarDocs(
         'Open desktop standard data home dir. This is the same default as '
         'used in the standard.', default="``~/.local/share``"),
-    'XONSHCONFIG': VarDocs(
-        'The location of the static xonsh configuration file, if it exists. '
-        'This is in JSON format.', configurable=False,
-        default="``$XONSH_CONFIG_DIR/config.json``"),
     'XONSHRC': VarDocs(
         'A list of the locations of run control files, if they exist.  User '
         'defined run control file will supersede values set in system-wide '
         'control file if there is a naming collision.', default=(
-            "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.xonshrc']``\n"
+            "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
             "\nOn Windows: "
-            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.xonshrc']``")),
+            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``")),
     'XONSH_APPEND_NEWLINE': VarDocs(
         'Append new line when a partial line is preserved in output.'
     ),
@@ -1051,54 +1049,6 @@ BASE_ENV = LazyObject(lambda: {
 }, globals(), 'BASE_ENV')
 
 
-def load_static_config(ctx, config=None):
-    """Loads a static configuration file from a given context, rather than the
-    current environment.  Optionally may pass in configuration file name.
-    """
-    env = {}
-    env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME',
-                                     DEFAULT_VALUES['XDG_CONFIG_HOME'])
-    env['XONSH_CONFIG_DIR'] = ctx['XONSH_CONFIG_DIR'] if 'XONSH_CONFIG_DIR' in ctx \
-        else xonsh_config_dir(env)
-    if config is not None:
-        env['XONSHCONFIG'] = ctx['XONSHCONFIG'] = config
-    elif 'XONSHCONFIG' in ctx:
-        config = env['XONSHCONFIG'] = ctx['XONSHCONFIG']
-    else:
-        # don't set in ctx in order to maintain default
-        config = env['XONSHCONFIG'] = xonshconfig(env)
-    if os.path.isfile(config):
-        # Note that an Env instance at __xonsh_env__ has not been started yet,
-        # per se, so we have to use os_environ
-        encoding = os_environ.get('XONSH_ENCODING',
-                                  DEFAULT_VALUES.get('XONSH_ENCODING', 'utf8'))
-        errors = os_environ.get('XONSH_ENCODING_ERRORS',
-                                DEFAULT_VALUES.get('XONSH_ENCODING_ERRORS',
-                                                   'surrogateescape'))
-        with open(config, 'r', encoding=encoding, errors=errors) as f:
-            try:
-                conf = json.load(f)
-                assert isinstance(conf, cabc.Mapping)
-                ctx['LOADED_CONFIG'] = True
-            except Exception as e:
-                conf = {}
-                ctx['LOADED_CONFIG'] = False
-                print_exception()
-                # JSONDecodeError was added in Python v3.5
-                jerr = json.JSONDecodeError \
-                    if hasattr(json, 'JSONDecodeError') else ValueError
-                if isinstance(e, jerr):
-                    msg = 'Xonsh config file is not valid JSON.'
-                else:
-                    msg = 'Could not load xonsh config.'
-                print(msg, file=sys.stderr)
-    else:
-        conf = {}
-        ctx['LOADED_CONFIG'] = False
-    builtins.__xonsh_config__ = conf
-    return conf
-
-
 def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
     """Attempts to read in all xonshrc files and return the context."""
     loaded = env['LOADED_RC_FILES'] = []
@@ -1111,12 +1061,8 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
             loaded.append(False)
             continue
         _, ext = os.path.splitext(rcfile)
-        if ext == '.json':
-            status = static_config_run_control(rcfile, ctx, env, execer=execer,
-                                               login=login)
-        else:
-            status = xonsh_script_run_control(rcfile, ctx, env, execer=execer,
-                                              login=login)
+        status = xonsh_script_run_control(rcfile, ctx, env, execer=execer,
+                                          login=login)
         loaded.append(status)
     return ctx
 
@@ -1142,41 +1088,6 @@ def foreign_env_fixes(ctx):
     """Environment fixes for all operating systems"""
     if 'PROMPT' in ctx:
         del ctx['PROMPT']
-
-
-def static_config_run_control(filename, ctx, env, execer=None, login=True):
-    """Loads a static config file and applies it as a run control."""
-    if not login:
-        return
-    conf = load_static_config(env, config=filename)
-    # load foreign shells
-    foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
-                                    issue_warning=False)
-    if ON_WINDOWS:
-        windows_foreign_env_fixes(foreign_env)
-    foreign_env_fixes(foreign_env)
-    env.update(foreign_env)
-    aliases = builtins.aliases
-    foreign_aliases = load_foreign_aliases(config=filename, issue_warning=True)
-    for k, v in foreign_aliases.items():
-        if k in aliases:
-            msg = ('Skipping application of {0!r} alias from foreign shell '
-                   '(loaded from {1!r}) since it shares a name with an '
-                   'existing xonsh alias.')
-            print(msg.format(k, filename))
-        else:
-            aliases[k] = v
-    # load xontribs
-    names = conf.get('xontribs', ())
-    for name in names:
-        update_context(name, ctx=ctx)
-    if getattr(update_context, 'bad_imports', None):
-        prompt_xontrib_install(update_context.bad_imports)
-        del update_context.bad_imports
-    # Do static config environment last, to allow user to override any of
-    # our environment choices
-    env.update(conf.get('env', ()))
-    return True
 
 
 def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):

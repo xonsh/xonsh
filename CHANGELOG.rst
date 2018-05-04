@@ -4,6 +4,120 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.3
+====================
+
+**Added:**
+
+* Docs for using ``@(<expr>)`` as a way to run commands and a gotcha about
+  list of strings vs single string expressions.
+* Ubuntu versions which xonsh is packaged for (with xonsh versions)
+
+
+**Changed:**
+
+* When reporting errors without a traceback (i.e. ``$XONSH_SHOW_TRACEBACK = False``) and the error is a ``XonshError``
+  the exception type is not longer printed.
+* ``CommandPipeline.proc`` may now be ``None``, to accomodate when the process
+  fails to even start (i.e. a missing command or incorrect permisions).
+
+
+**Fixed:**
+
+* The ``curl`` command will now be run in a thread, which prevents documents that
+  do not end in a newline from writing over the next prompt and vice versa.
+* Fix bug on Windows when ``PATHEXT`` environment variable did not exist.
+  This also fixes building the xonsh documentation on Windows.
+* Fixed a bug in the `free_cwd <http://xon.sh/xontribs.html#free-cwd>`__ Windows Xontrib, which caused the prompt to error if the current directory is 
+  deleted/renamed from an other process.
+* Fixed issue with ``$XONSH_SHOW_TRACEBACK`` not being respected in subprocess
+  mode when the command could not be found or had incorrect permissions.
+
+
+
+
+v0.6.2
+====================
+
+**Added:**
+
+* Release tarballs now include licenses and minimal documentation for xonsh and ply
+* Wizard now has a ``FileInserter`` node that allows blocks to be
+  inserted and replaced inside of a file. This adheres to conversion
+  rules fordumping as provided on this node.
+* New ``xonsh.wizard.StateVisitor.flatten()`` method for flattening the
+  current state.
+
+
+**Changed:**
+
+* The xonsh startup wizard will only be triggered if no xonshrc files exist
+  and the file ``~/.local/config/xonsh/no-wizard`` is not present.
+* The ``xonfig wizard`` command will now run write out to the xonshrc file.
+* Wizard nodes ``Save`` and ``Load`` had their names changed to ``SaveJSON``
+  and ``LoadJSON``.
+
+
+**Removed:**
+
+* Static configuration is dead (``config.json``), long live run control (``xonshrc``)!
+* The following evironment variables have been removed as they are no longer needed:
+  ``$LOADED_CONFIG`` and ``$XONSHCONFIG``.
+* Many support functions for static configuration have also been removed.
+
+
+**Fixed:**
+
+* Files starting with ``#`` are auto-escaped by TAB completion
+
+
+
+
+v0.6.1
+====================
+
+**Added:**
+
+* Support for MSYS2.
+* New ``xonsh.main.setup()`` function for starting up xonsh in 3rd party
+  packages.
+
+
+**Changed:**
+
+* Updated CircleCI to use circle version 2.0
+* Replaced StopIteration with return in CommandPipeline.iterraw.
+* Xonsh run control now also looks for the XDG-compliant file
+  ``~/.config/xonsh/rc.xsh`` at startup.
+
+
+**Fixed:**
+
+* Clean out ``$LINES`` and ``$COLUMNS`` if set, preventing some programs from drawing weirdly
+* cat from xoreutils now outputs in configured encoding
+* Fixed hanging issue with pipelines whose middle processes exit before the
+  first or last process.
+* Fixed issue where xonsh would deduplicate spaces from bash autocompletions.
+* Fixed failing redirections from stderr to stdout when the command
+  being executed was a callable alias.
+* Ensure that the ``free_cwd`` contrib can only be active on pure Windows.
+* Made an exceptional case in ``iglobpath()`` more robust when Python globbing
+  fails for due to strange scrandir issue.
+* Unexpected process suspension on Cygwin and MSYS2.
+* ``$XONSH_APPEND_NEWLINE`` will now default to True when in interactive mode.
+* Fixed issue with uncalled lambdas being run in subproc mode.
+* Lambda nodes not have proper line and column numbers in AST.
+* Properly throw ``SyntaxError`` when no kwargs are defined
+  in a kwarg-only function. This used to throw a
+  ``TypeError: 'NoneType' object is not iterable``.
+* Addressed issue where encoding and errors were None when teeing output.
+* Commands like ``git c`` would complete to ``git 'checkout '`` because git adds an extra space
+  to the end of the completion, which was being captured in the completion. Xonsh now fixes the git issue
+  while retaining all whitespace when there is other internal whitespace.
+
+
+
+
 v0.6.0
 ====================
 

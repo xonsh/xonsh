@@ -28,7 +28,8 @@ from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
                          columnize, carriage_return)
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN, ON_POSIX, os_environ
+from xonsh.platform import (ON_WINDOWS, ON_CYGWIN, ON_MSYS, ON_DARWIN, ON_POSIX,
+                            os_environ)
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.events import events
 
@@ -71,7 +72,7 @@ def setup_readline():
     uses_libedit = readline.__doc__ and 'libedit' in readline.__doc__
     readline.set_completer_delims(' \t\n')
     # Cygwin seems to hang indefinitely when querying the readline lib
-    if (not ON_CYGWIN) and (not readline.__file__.endswith('.py')):
+    if (not ON_CYGWIN) and (not ON_MSYS) and (not readline.__file__.endswith('.py')):
         RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
         try:
             RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(

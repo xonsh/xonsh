@@ -40,6 +40,9 @@ Debian/Ubuntu users can install xonsh from the repository with:
     $ apt install xonsh
 
 
+Xonsh is available on bionic bever (version 0.6.0) and artful aardvark 
+(version 0.5.12).
+
 Fedora users can install xonsh from the repository with:
 
 **dnf:**

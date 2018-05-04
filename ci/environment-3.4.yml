@@ -1,0 +1,20 @@
+name: py34-xonsh-test
+channels:
+  - defaults
+dependencies:
+  - python=3.4
+  - pygments
+  - prompt_toolkit<2.0
+  - ply
+  - pytest
+  - pytest-timeout
+  - numpy
+  - psutil
+  - matplotlib=1.5.3
+  - flake8
+  - coverage
+  - pyflakes
+  - pytest-cov
+  - pip:
+    - pytest-flake8
+    - codecov

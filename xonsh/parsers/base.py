@@ -292,7 +292,7 @@ class BaseParser(object):
                      'dollar_lbrace', 'dollar_lbracket', 'try',
                      'bang_lparen', 'bang_lbracket', 'comma', 'rparen',
                      'rbracket', 'at_lparen', 'atdollar_lparen', 'indent',
-                     'dedent', 'newline']
+                     'dedent', 'newline', 'lambda']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1522,15 +1522,15 @@ class BaseParser(object):
         p[0] = p[1]
 
     def p_lambdef(self, p):
-        """lambdef : LAMBDA varargslist_opt COLON test"""
-        p2, p4 = p[2], p[4]
+        """lambdef : lambda_tok varargslist_opt COLON test"""
+        p1, p2, p4 = p[1], p[2], p[4]
         if p2 is None:
             args = ast.arguments(args=[], vararg=None, kwonlyargs=[],
                                  kw_defaults=[], kwarg=None, defaults=[])
         else:
             args = p2
-        p0 = ast.Lambda(args=args, body=p4, lineno=self.lineno,
-                        col_offset=self.col)
+        p0 = ast.Lambda(args=args, body=p4, lineno=p1.lineno,
+                        col_offset=p1.lexpos)
         p[0] = p0
 
     def p_lambdef_nocond(self, p):

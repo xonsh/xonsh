@@ -14,7 +14,8 @@ import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import to_bool, ensure_string
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, os_environ
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_MSYS
+
 
 COMMAND = """{seterrprevcmd}
 {prevcmd}
@@ -291,7 +292,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
                                     # start new session to avoid hangs
                                     # (doesn't work on Cygwin though)
-                                    start_new_session=(not ON_CYGWIN),
+                                    start_new_session=((not ON_CYGWIN) and
+                                                       (not ON_MSYS)),
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
@@ -533,43 +535,20 @@ def ensure_shell(shell):
     return shell
 
 
-def _get_shells(shells=None, config=None, issue_warning=True):
-    if shells is not None and config is not None:
-        raise RuntimeError('Only one of shells and config may be non-None.')
-    elif shells is not None:
-        pass
-    else:
-        env = getattr(builtins, '__xonsh_env__', os_environ)
-        if env.get('LOADED_CONFIG', False):
-            conf = builtins.__xonsh_config__
-        else:
-            from xonsh.environ import load_static_config
-            conf = load_static_config(env, config)
-        shells = conf.get('foreign_shells', ())
-    return shells
-
-
-def load_foreign_envs(shells=None, config=None, issue_warning=True):
+def load_foreign_envs(shells):
     """Loads environments from foreign shells.
 
     Parameters
     ----------
-    shells : sequence of dicts, optional
+    shells : sequence of dicts
         An iterable of dicts that can be passed into foreign_shell_data() as
-        keyword arguments. Not compatible with config not being None.
-    config : str of None, optional
-        Path to the static config file. Not compatible with shell not being None.
-        If both shell and config is None, then it will be read from the
-        $XONSHCONFIG environment variable.
-    issue_warning : bool, optional
-        Issues warnings if config file cannot be found.
+        keyword arguments.
 
     Returns
     -------
     env : dict
         A dictionary of the merged environments.
     """
-    shells = _get_shells(shells=shells, config=config, issue_warning=issue_warning)
     env = {}
     for shell in shells:
         shell = ensure_shell(shell)
@@ -579,27 +558,20 @@ def load_foreign_envs(shells=None, config=None, issue_warning=True):
     return env
 
 
-def load_foreign_aliases(shells=None, config=None, issue_warning=True):
+def load_foreign_aliases(shells):
     """Loads aliases from foreign shells.
 
     Parameters
     ----------
-    shells : sequence of dicts, optional
+    shells : sequence of dicts
         An iterable of dicts that can be passed into foreign_shell_data() as
-        keyword arguments. Not compatible with config not being None.
-    config : str of None, optional
-        Path to the static config file. Not compatible with shell not being None.
-        If both shell and config is None, then it will be read from the
-        $XONSHCONFIG environment variable.
-    issue_warning : bool, optional
-        Issues warnings if config file cannot be found.
+        keyword arguments.
 
     Returns
     -------
     aliases : dict
         A dictionary of the merged aliases.
     """
-    shells = _get_shells(shells=shells, config=config, issue_warning=issue_warning)
     aliases = {}
     xonsh_aliases = builtins.aliases
     for shell in shells:

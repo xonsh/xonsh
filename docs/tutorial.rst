@@ -455,7 +455,7 @@ difference is that the subprocess's stdout passes directly through xonsh and
 to the screen.  The return value of ``$[]`` is always ``None``.
 
 In the following, we can see that the results of ``$[]`` are automatically
-printed, and the return value is not a string.
+printed, and that the return value is not a string.
 
 .. code-block:: xonshcon
 
@@ -464,10 +464,6 @@ printed, and the return value is not a string.
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
     >>> x is None
     True
-
-Previously when we automatically entered subprocess-mode, uncaptured
-subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually
-equivalent.
 
 The ``![]`` operator is similar to the ``!()`` in that it returns an object
 containing information about the result of executing the given command.
@@ -506,6 +502,10 @@ result is automatically converted to a string. For example,
     42 yo
     >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
     hello world
+    >>> @(['echo', 'hello', 'world'])
+    hello world
+    >>> @('echo hello world')  # note that strings are not split automatically
+    xonsh: subprocess mode: command not found: echo hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
 be used to generate any of the tokens in the subprocess command list.
@@ -1319,8 +1319,7 @@ with Python and subprocess.
 .. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` environment variable is False
              (the default) then foreign shell aliases that try to override
              xonsh aliases will be ignored. Setting of this environment variable
-             must happen in the static configuration file
-             ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
+             must happen outside if xonsh, i.e. in the process that starts xonsh.
 
 
 Up, Down, Tab
@@ -1534,7 +1533,7 @@ or by invoking xonsh with its filename as an argument:
     adding files
     file0.txt file1.txt file2.txt file3.txt file4.txt test_script.sh
 
-xonsh scripts can also accept command line arguments and parameters. 
+xonsh scripts can also accept command line arguments and parameters.
 These arguments are made available to the script in two different ways:
 
 #. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)

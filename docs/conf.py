@@ -294,7 +294,7 @@ def make_envvars():
                         default=vd.default, store_as_str=vd.store_as_str)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'envvarsbody')
-    with open(fname, 'w') as f:
+    with open(fname, 'w', encoding='utf-8') as f:
         f.write(s)
 
 
@@ -319,7 +319,8 @@ def make_xontribs():
            ':Website: {url}\n'
            ':Package: {pkg}\n\n'
            '{desc}\n\n'
-           '{inst}'
+           '{inst}\n\n'
+           '{usage}'
            '-------\n\n')
     for name in names:
         for d in md['xontribs']:
@@ -334,6 +335,7 @@ def make_xontribs():
         if pkgname is None:
             pkg = 'unknown'
             inst = ''
+            usage = ''
         else:
             pd = md['packages'].get(pkgname, {})
             pkg = pkgname
@@ -343,16 +345,24 @@ def make_xontribs():
                 pkg = pkg + ', ' + pd['license']
             inst = ''
             installd = pd.get('install', {})
-            if len(installd) > 0:
+            if pkgname == 'xonsh':
+                inst = ('This xontrib is preinstalled with xonsh.\n\n')
+            elif len(installd) > 0:
                 inst = ('**Installation:**\n\n'
                         '.. code-block:: xonsh\n\n')
                 for k, v in sorted(pd.get('install', {}).items()):
                     cmd = "\n    ".join(v.split('\n'))
                     inst += ('    # install with {k}\n'
-                             '    {cmd}\n\n').format(k=k, cmd=cmd)
+                             '    {cmd}').format(k=k, cmd=cmd)
+            usage = ('**Usage:**\n\n'
+                     'Run the following command to enable (or add '
+                     'it to your :doc:`.xonshrc </xonshrc>` file to enable '
+                     'on startup.)\n\n'
+                     '.. code-block:: xonsh\n\n')
+            usage += '    xontrib load {}\n\n'.format(name)
         s += sec.format(low=name.lower(), title=title, under=under,
                         url=d.get('url', 'unknown'), desc=desc,
-                        pkg=pkg, inst=inst)
+                        pkg=pkg, inst=inst, usage=usage)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'xontribsbody')
     with open(fname, 'w') as f:

@@ -1,11 +1,14 @@
 """Tools for creating command-line and web-based wizards from a tree of nodes.
 """
 import os
+import re
 import ast
 import json
 import pprint
+import fnmatch
 import builtins
 import textwrap
+import collections.abc as cabc
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 from xonsh.jsonutils import serialize_xonsh_json
@@ -213,7 +216,7 @@ class StoreNonEmpty(Input):
 
 
 class StateFile(Input):
-    """Node for representing the state as a JSON file under a default or user
+    """Node for representing the state as a file under a default or user
     given file name. This node type is likely not useful on its own.
     """
 
@@ -253,16 +256,103 @@ class StateFile(Input):
             self.prompt = 'filename [default={0!r}]: '.format(val)
 
 
-class Save(StateFile):
+class SaveJSON(StateFile):
     """Node for saving the state as a JSON file under a default or user
     given file name.
     """
 
 
-class Load(StateFile):
+class LoadJSON(StateFile):
     """Node for loading the state as a JSON file under a default or user
     given file name.
     """
+
+
+class FileInserter(StateFile):
+    """Node for inserting the state into a file in between a prefix and suffix.
+    The state is converted according to some dumper rules.
+    """
+
+    attrs = ('prefix', 'suffix', 'dump_rules', 'default_file', 'check',
+             'ask_filename')
+
+    def __init__(self, prefix, suffix, dump_rules, default_file=None,
+                 check=True, ask_filename=True):
+        """
+        Parameters
+        ----------
+        prefix : str
+            Starting unique string in file to find and begin the insertion at,
+            e.g. '# XONSH WIZARD START\n'
+        suffix : str
+            Ending unique string to find in the file and end the replacement at,
+            e.g. '\n# XONSH WIZARD END'
+        dump_rules : dict of strs to functions
+            This is a dictionary that maps the path-like match strings to functions
+            that take the flat path and the value as arguments and convert the state
+            value at a path to a string. The keys here may use wildcards (as seen in
+            the standard library fnmatch module). For example::
+
+                dump_rules = {
+                    '/path/to/exact': lambda path, x: str(x),
+                    '/otherpath/*': lambda path, x: x,
+                    '*ending': lambda path x: repr(x),
+                    '/': None,
+                    }
+
+            If a wildcard is not used in a path, then that rule will be used
+            used on an exact match. If wildcards are used, the deepest and longest
+            match is used.  If None is given instead of a the function, it means to
+            skip generating that key.
+        default_file : str, optional
+            The default filename to save the file as.
+        check : bool, optional
+            Whether to print the current state and ask if it should be
+            saved/loaded prior to asking for the file name and saving the
+            file, default=True.
+        ask_filename : bool, optional
+            Whether to ask for the filename (if ``False``, always use the
+            default filename)
+        """
+        self._dr = None
+        super().__init__(default_file=default_file, check=check,
+                         ask_filename=ask_filename)
+        self.prefix = prefix
+        self.suffix = suffix
+        self.dump_rules = self.string_rules = dump_rules
+
+    @property
+    def dump_rules(self):
+        return self._dr
+
+    @dump_rules.setter
+    def dump_rules(self, value):
+        dr = {}
+        for key, func in value.items():
+            key_trans = fnmatch.translate(key)
+            r = re.compile(key_trans)
+            dr[r] = func
+        self._dr = dr
+
+    def find_rule(self, path):
+        """For a path, find the key and conversion function that should be used to
+        dump a value.
+        """
+        if path in self.string_rules:
+            return path, self.string_rules[path]
+        len_funcs = []
+        for rule, func in self.dump_rules.items():
+            m = rule.match(path)
+            if m is None:
+                continue
+            i, j = m.span()
+            len_funcs.append((j - i, rule, func))
+        if len(len_funcs) == 0:
+            # No dump rule function for path
+            return path, None
+        len_funcs.sort(reverse=True)
+        _, rule, func = len_funcs[0]
+        return rule, func
 
 
 def create_truefalse_cond(prompt='yes or no [default: no]? ', path=None):
@@ -514,6 +604,31 @@ class StateVisitor(Visitor):
             loc.extend(ex)
         loc[p] = val
 
+    def flatten(self, path='/', value=None, flat=None):
+        """Returns a dict version of the store whose keys are paths.
+        Note that list and dict entries will always end in '/', allowing
+        disambiquation in dump_rules.
+        """
+        value = self.state if value is None else value
+        flat = {} if flat is None else flat
+        if isinstance(value, cabc.Mapping):
+            path = path if path.endswith('/') else path + '/'
+            flat[path] = value
+            for k, v in value.items():
+                p = path + k
+                self.flatten(path=p, value=v, flat=flat)
+        elif isinstance(value, (str, bytes)):
+            flat[path] = value
+        elif isinstance(value, cabc.Sequence):
+            path = path if path.endswith('/') else path + '/'
+            flat[path] = value
+            for i, v in enumerate(value):
+                p = path + str(i)
+                self.flatten(path=p, value=v, flat=flat)
+        else:
+            flat[path] = value
+        return flat
+
 
 YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} [default: no]? "
 YNB = ('{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR}, or '
@@ -611,7 +726,7 @@ class PromptVisitor(StateVisitor):
             self.indices[node.idxname] = origidx
         return rtns
 
-    def visit_save(self, node):
+    def visit_savejson(self, node):
         jstate = json.dumps(self.state, indent=1, sort_keys=True,
                             default=serialize_xonsh_json)
         if node.check:
@@ -635,7 +750,7 @@ class PromptVisitor(StateVisitor):
             f.write(jstate)
         return fname
 
-    def visit_load(self, node):
+    def visit_loadjson(self, node):
         if node.check:
             ap = 'Would you like to load an existing file, ' + YN
             asker = TrueFalse(prompt=ap)
@@ -652,4 +767,47 @@ class PromptVisitor(StateVisitor):
         else:
             print_color(('{{RED}}{0!r} could not be found, '
                          'continuing.{{NO_COLOR}}').format(fname))
+        return fname
+
+    def visit_fileinserter(self, node):
+        # perform the dumping operation.
+        lines = [node.prefix]
+        flat = self.flatten()
+        for path, value in sorted(flat.items()):
+            rule, func = node.find_rule(path)
+            if func is None:
+                continue
+            line = func(path, value)
+            lines.append(line)
+        lines.append(node.suffix)
+        new = '\n'.join(lines) + '\n'
+        # check if we should write this out
+        if node.check:
+            msg = 'The current state to insert is:\n\n{0}\n'
+            print(msg.format(textwrap.indent(new, '    ')))
+            ap = 'Would you like to write out the current state, ' + YN
+            asker = TrueFalse(prompt=ap)
+            do_save = self.visit(asker)
+            if not do_save:
+                return Unstorable
+        # get and backup the file.
+        fname = None
+        if node.ask_filename:
+            fname = self.visit_input(node)
+        if fname is None or len(fname) == 0:
+            fname = node.default_file
+        if os.path.isfile(fname):
+            with open(fname, 'r') as f:
+                s = f.read()
+            before, _, s = s.partition(node.prefix)
+            _, _, after = s.partition(node.suffix)
+            backup_file(fname)
+        else:
+            before = after = ''
+            dname = os.path.dirname(fname)
+            if dname:
+                os.makedirs(dname, exist_ok=True)
+        # write out the file
+        with open(fname, 'w') as f:
+            f.write(before + new + after)
         return fname

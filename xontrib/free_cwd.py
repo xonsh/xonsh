@@ -13,7 +13,7 @@ import functools
 from pathlib import Path
 
 from xonsh.tools import print_exception
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_MSYS
 
 
 def _chdir_up(path):
@@ -23,7 +23,7 @@ def _chdir_up(path):
     path = Path(path)
     try:
         os.chdir(path)
-        return path
+        return str(path.absolute())
     except (FileNotFoundError, NotADirectoryError):
         path.resolve()
         return _chdir_up(path.parent)
@@ -89,7 +89,7 @@ def _cwd_restore_wrapper(func):
 
 @events.on_ptk_create
 def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
-    if ON_WINDOWS and not ON_CYGWIN:
+    if ON_WINDOWS and not ON_CYGWIN and not ON_MSYS:
         prompter.prompt = _cwd_release_wrapper(prompter.prompt)
         if completer.completer:
             # Temporarily restore cwd for callbacks to the completer

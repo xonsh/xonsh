@@ -842,12 +842,14 @@ def print_exception(msg=None):
         sys.stderr.write(msg)
 
 
-def display_error_message():
+def display_error_message(strip_xonsh_error_types=True):
     """
     Prints the error message of the current exception on stderr.
     """
     exc_type, exc_value, exc_traceback = sys.exc_info()
     exception_only = traceback.format_exception_only(exc_type, exc_value)
+    if exc_type is XonshError and strip_xonsh_error_types:
+        exception_only[0] = exception_only[0].partition(': ')[-1]
     sys.stderr.write(''.join(exception_only))
 
 

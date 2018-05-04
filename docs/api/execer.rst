@@ -1,7 +1,7 @@
 .. _xonsh_execer:
 
 ***********************************************************
-Compiliation, Evaluation, & Execution  (``xonsh.execer``)
+Compilation, Evaluation, & Execution  (``xonsh.execer``)
 ***********************************************************
 
 .. automodule:: xonsh.execer

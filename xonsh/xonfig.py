@@ -12,6 +12,7 @@ import argparse
 import functools
 import itertools
 import contextlib
+import collections
 
 try:
     import ply
@@ -23,9 +24,10 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.prompt.base import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
                             PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
-                            ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
+                            ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, ON_MSYS, githash)
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
                          color_style_names, print_color, color_style)
+from xonsh.foreign_shells import CANON_SHELL_NAMES
 from xonsh.xontribs import xontrib_metadata, find_xontrib
 from xonsh.lazyasd import lazyobject
 
@@ -110,6 +112,75 @@ WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
 
 
+_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
+    lambda: 'source-foreign',
+    bash='source-bash',
+    cmd='source-cmd',
+    zsh='source-zsh',
+    )
+
+
+def _dump_xonfig_foreign_shell(path, value):
+    shell = value['shell']
+    shell = CANON_SHELL_NAMES.get(shell, shell)
+    cmd = [_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND.get(shell)]
+    interactive = value.get('interactive', None)
+    if interactive is not None:
+        cmd.extend(['--interactive', str(interactive)])
+    login = value.get('login', None)
+    if login is not None:
+        cmd.extend(['--login', str(login)])
+    envcmd = value.get('envcmd', None)
+    if envcmd is not None:
+        cmd.extend(['--envcmd', envcmd])
+    aliascmd = value.get('aliasmd', None)
+    if aliascmd is not None:
+        cmd.extend(['--aliascmd', aliascmd])
+    extra_args = value.get('extra_args', None)
+    if extra_args:
+        cmd.extend(['--extra-args', repr(' '.join(extra_args))])
+    safe = value.get('safe', None)
+    if safe is not None:
+        cmd.extend(['--safe', str(safe)])
+    prevcmd = value.get('prevcmd', '')
+    if prevcmd:
+        cmd.extend(['--prevcmd', repr(prevcmd)])
+    postcmd = value.get('postcmd', '')
+    if postcmd:
+        cmd.extend(['--postcmd', repr(postcmd)])
+    funcscmd = value.get('funcscmd', None)
+    if funcscmd:
+        cmd.extend(['--funcscmd', repr(funcscmd)])
+    sourcer = value.get('sourcer', None)
+    if sourcer:
+        cmd.extend(['--sourcer', sourcer])
+    if cmd[0] == 'source-foreign':
+        cmd.append(shell)
+    cmd.append('"echo loading xonsh foreign shell"')
+    return ' '.join(cmd)
+
+
+def _dump_xonfig_env(path, value):
+    name = os.path.basename(path)
+    ensurer = builtins.__xonsh_env__.get_ensurer(name)
+    dval = ensurer.detype(value)
+    return '${name} = {val!r}'.format(name=name, val=dval)
+
+
+def _dump_xonfig_xontribs(path, value):
+    return 'xontrib load {0}'.format(' '.join(value))
+
+
+@lazyobject
+def XONFIG_DUMP_RULES():
+    return {'/': None,
+            '/env/': None,
+            '/foreign_shells/*/': _dump_xonfig_foreign_shell,
+            '/env/*': _dump_xonfig_env,
+            '/xontribs/': _dump_xonfig_xontribs,
+            }
+
+
 def make_fs_wiz():
     """Makes the foreign shell part of the wizard."""
     cond = wiz.create_truefalse_cond(prompt='Add a new foreign shell, ' + wiz.YN)
@@ -133,10 +204,6 @@ def make_fs_wiz():
                           converter=ast.literal_eval,
                           show_conversion=True,
                           path='/foreign_shells/{idx}/extra_args'),
-        wiz.StoreNonEmpty('current environment [dict, default=None]: ',
-                          converter=ast.literal_eval,
-                          show_conversion=True,
-                          path='/foreign_shells/{idx}/currenv'),
         wiz.StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
                           converter=to_bool,
                           show_conversion=True,
@@ -268,7 +335,7 @@ def make_xontribs_wiz():
     return w
 
 
-def make_xonfig_wizard(default_file=None, confirm=False):
+def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
     """Makes a configuration wizard for xonsh config file.
 
     Parameters
@@ -277,11 +344,13 @@ def make_xonfig_wizard(default_file=None, confirm=False):
         Default filename to save and load to. User will still be prompted.
     confirm : bool, optional
         Confirm that the main part of the wizard should be run.
+    no_wizard_file : str, optional
+        Filename for that will flag to future runs that the wizard should not be
+        run again. If None (default), this defaults to default_file.
     """
     w = wiz.Wizard(children=[
         wiz.Message(message=WIZARD_HEAD),
         make_exit_message(),
-        wiz.Load(default_file=default_file, check=True),
         wiz.Message(message=WIZARD_FS),
         make_fs_wiz(),
         wiz.Message(message=WIZARD_ENV),
@@ -291,7 +360,9 @@ def make_xonfig_wizard(default_file=None, confirm=False):
         wiz.YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(),
                   no=wiz.Pass()),
         wiz.Message(message='\n' + HR + '\n'),
-        wiz.Save(default_file=default_file, check=True),
+        wiz.FileInserter(prefix='# XONSH WIZARD START', suffix='# XONSH WIZARD END',
+                         dump_rules=XONFIG_DUMP_RULES, default_file=default_file,
+                         check=True),
         wiz.Message(message=WIZARD_TAIL),
     ])
     if confirm:
@@ -300,9 +371,10 @@ def make_xonfig_wizard(default_file=None, confirm=False):
              "2. No, but ask me next time.\n"
              "3. No, and don't ask me again.\n\n"
              "1, 2, or 3 [default: 2]? ")
+        no_wizard_file = default_file if no_wizard_file is None else no_wizard_file
         passer = wiz.Pass()
-        saver = wiz.Save(check=False, ask_filename=False,
-                         default_file=default_file)
+        saver = wiz.SaveJSON(check=False, ask_filename=False,
+                             default_file=no_wizard_file)
         w = wiz.Question(q, {1: w, 2: passer, 3: saver},
                          converter=lambda x: int(x) if x != '' else 2)
     return w
@@ -311,8 +383,10 @@ def make_xonfig_wizard(default_file=None, confirm=False):
 def _wizard(ns):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__.shell
-    fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
-    w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm)
+    fname = env.get('XONSHRC')[-1] if ns.file is None else ns.file
+    no_wiz = os.path.join(env.get('XONSH_CONFIG_DIR'), 'no-wizard')
+    w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm,
+                           no_wizard_file=no_wiz)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
     pv = wiz.PromptVisitor(w, store_in_history=False, multiline=False)
 
@@ -382,6 +456,7 @@ def _info(ns):
         ('on darwin', ON_DARWIN),
         ('on windows', ON_WINDOWS),
         ('on cygwin', ON_CYGWIN),
+        ('on msys2', ON_MSYS),
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
         ('xonsh encoding', env.get('XONSH_ENCODING')),
@@ -490,7 +565,7 @@ def _xonfig_create_parser():
                       help='reports results as json')
     wiz = subp.add_parser('wizard', help='displays configuration information')
     wiz.add_argument('--file', default=None,
-                     help='config file location, default=$XONSHCONFIG')
+                     help='config file location, default=$XONSHRC')
     wiz.add_argument('--confirm', action='store_true', default=False,
                      help='confirm that the wizard should be run.')
     sty = subp.add_parser('styles', help='prints available xonsh color styles')
