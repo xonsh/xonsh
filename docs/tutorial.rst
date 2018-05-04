@@ -509,7 +509,7 @@ result is automatically converted to a string. For example,
 
 .. warning::
     If the expression is a string and not a list then it will be passed to the
-    subprocess as a single argument.
+    subprocess as a single argument. Strings are not split automatically!
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
 be used to generate any of the tokens in the subprocess command list.
