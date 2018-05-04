@@ -502,6 +502,10 @@ result is automatically converted to a string. For example,
     42 yo
     >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
     hello world
+    >>> @(['echo', 'hello', 'world'])
+    hello world
+    >>> @('echo hello world')  # note that strings are not split automatically
+    xonsh: subprocess mode: command not found: echo hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
 be used to generate any of the tokens in the subprocess command list.
