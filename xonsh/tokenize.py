@@ -35,7 +35,6 @@ from token import (AMPER, AMPEREQUAL, AT, CIRCUMFLEX,
                    tok_name)
 
 from xonsh.lazyasd import LazyObject
-from xonsh.platform import PYTHON_VERSION_INFO
 
 cookie_re = LazyObject(
     lambda: re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII),
@@ -52,7 +51,7 @@ __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
                            'DOLLARNAME', 'IOREDIRECT']
-PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
+PY35 = (3, 5, 0) <= sys.version_info < (3, 7, 0, 'beta', 4)
 if PY35:
     ASYNC = token.ASYNC
     AWAIT = token.AWAIT
