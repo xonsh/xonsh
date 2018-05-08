@@ -52,7 +52,7 @@ __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
                            'DOLLARNAME', 'IOREDIRECT']
-PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
+PY35 = (3, 5, 0) <= PYTHON_VERSION_INFO < (3, 7, 0)
 if PY35:
     ASYNC = token.ASYNC
     AWAIT = token.AWAIT
