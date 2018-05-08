@@ -59,7 +59,7 @@ def token_map():
     tm[NEWLINE] = 'NEWLINE'
     tm[INDENT] = 'INDENT'
     tm[DEDENT] = 'DEDENT'
-    if PYTHON_VERSION_INFO >= (3, 5, 0):
+    if (3, 5, 0) <= PYTHON_VERSION_INFO < (3, 7, 0):
         from xonsh.tokenize import ASYNC, AWAIT
         tm[ASYNC] = 'ASYNC'
         tm[AWAIT] = 'AWAIT'
