@@ -4,7 +4,6 @@
 Written using a hybrid of ``tokenize`` and PLY.
 """
 import io
-import sys
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
 try:
@@ -13,6 +12,7 @@ except ImportError:
     from xonsh.ply.ply.lex import LexToken
 
 from xonsh.lazyasd import lazyobject
+from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
                             SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT,
                             ENCODING, ENDMARKER, NAME, ERRORTOKEN, GREATER,
@@ -59,7 +59,7 @@ def token_map():
     tm[NEWLINE] = 'NEWLINE'
     tm[INDENT] = 'INDENT'
     tm[DEDENT] = 'DEDENT'
-    if (3, 5, 0) <= sys.version_info < (3, 7, 0, 'beta', 4):
+    if (3, 5, 0) <= PYTHON_VERSION_INFO < (3, 7, 0):
         from xonsh.tokenize import ASYNC, AWAIT
         tm[ASYNC] = 'ASYNC'
         tm[AWAIT] = 'AWAIT'
