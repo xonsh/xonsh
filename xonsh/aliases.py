@@ -239,7 +239,8 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
         if ns.dryrun:
             return
         else:
-            msg = 'xonsh: error: Source failed: {}\n'.format(ns.prevcmd)
+            msg = 'xonsh: error: Source failed: {0!r}\n'.format(ns.prevcmd)
+            msg += 'xonsh: error: Possible reasons: File not found or syntax error\n'
             return (None, msg, 1)
     # apply results
     env = builtins.__xonsh_env__
