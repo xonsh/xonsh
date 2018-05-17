@@ -4,6 +4,27 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.4
+====================
+
+**Changed:**
+
+* Error message improved for sourcing foreign shells, when file cannot be found
+  or there is a syntax error.
+
+
+**Fixed:**
+
+* Fixed issues with readline completer tab completing entries
+  with spaces.
+* Fixed ``xonsh.tools.columnize()`` bug the prevented single-row
+  input from being columnized correctly.
+* Now honor ASYNC and AWAIT as keywords in tokenizer on
+  Python 3.7.
+
+
+
+
 v0.6.3
 ====================
 
