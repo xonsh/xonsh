@@ -6,7 +6,7 @@ import os
 import pytest
 
 from xonsh.wizard import (Node, Wizard, Pass, PrettyFormatter,
-    Message, Question, StateVisitor)
+    Message, Question, StateVisitor, FileInserter)
 
 
 TREE0 = Wizard(children=[Pass(), Message(message='yo')])
@@ -57,3 +57,26 @@ def test_state_visitor_store():
                 }
     flat_obs = sv.flatten()
     assert flat_exp == flat_obs
+
+
+def dump_xonfig_env_mock(path, value):
+    name = os.path.basename(path.rstrip('/'))
+    return '${name} = {val!r}'.format(name=name, val=value)
+
+
+def test_tuple_store_and_write():
+    # setup
+    sv = StateVisitor()
+    sv.store('/env/XONSH_HISTORY_SIZE', (1073741824, 'b'))
+    dump_rules = {'/': None, '/env/': None,
+                  '/env/*': dump_xonfig_env_mock,
+                  '/env/*/[0-9]*': None}
+    fi = FileInserter(prefix='# XONSH WIZARD START', suffix='# XONSH WIZARD END',
+                      dump_rules=dump_rules, default_file=None,
+                      check=False, ask_filename=False)
+    # run test
+    exp = ("# XONSH WIZARD START\n"
+           "$XONSH_HISTORY_SIZE = (1073741824, 'b')\n"
+           "# XONSH WIZARD END\n")
+    obs = fi.dumps(sv.flatten())
+    assert exp == obs

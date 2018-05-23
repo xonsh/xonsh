@@ -334,6 +334,11 @@ class FileInserter(StateFile):
             dr[r] = func
         self._dr = dr
 
+    @staticmethod
+    def _find_rule_key(x):
+        """Key function for sorting regular expression rules"""
+        return (x[0], len(x[1].pattern))
+
     def find_rule(self, path):
         """For a path, find the key and conversion function that should be used to
         dump a value.
@@ -350,9 +355,24 @@ class FileInserter(StateFile):
         if len(len_funcs) == 0:
             # No dump rule function for path
             return path, None
-        len_funcs.sort(reverse=True)
+        len_funcs.sort(reverse=True, key=self._find_rule_key)
         _, rule, func = len_funcs[0]
         return rule, func
+
+    def dumps(self, flat):
+        """Dumps a flat mapping of (string path keys, values) pairs and returns
+        a formatted string.
+        """
+        lines = [self.prefix]
+        for path, value in sorted(flat.items()):
+            rule, func = self.find_rule(path)
+            if func is None:
+                continue
+            line = func(path, value)
+            lines.append(line)
+        lines.append(self.suffix)
+        new = '\n'.join(lines) + '\n'
+        return new
 
 
 def create_truefalse_cond(prompt='yes or no [default: no]? ', path=None):
@@ -771,16 +791,7 @@ class PromptVisitor(StateVisitor):
 
     def visit_fileinserter(self, node):
         # perform the dumping operation.
-        lines = [node.prefix]
-        flat = self.flatten()
-        for path, value in sorted(flat.items()):
-            rule, func = node.find_rule(path)
-            if func is None:
-                continue
-            line = func(path, value)
-            lines.append(line)
-        lines.append(node.suffix)
-        new = '\n'.join(lines) + '\n'
+        new = node.dumps(self.flatten())
         # check if we should write this out
         if node.check:
             msg = 'The current state to insert is:\n\n{0}\n'

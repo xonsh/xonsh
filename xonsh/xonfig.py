@@ -161,7 +161,7 @@ def _dump_xonfig_foreign_shell(path, value):
 
 
 def _dump_xonfig_env(path, value):
-    name = os.path.basename(path)
+    name = os.path.basename(path.rstrip('/'))
     ensurer = builtins.__xonsh_env__.get_ensurer(name)
     dval = ensurer.detype(value)
     return '${name} = {val!r}'.format(name=name, val=dval)
@@ -177,6 +177,7 @@ def XONFIG_DUMP_RULES():
             '/env/': None,
             '/foreign_shells/*/': _dump_xonfig_foreign_shell,
             '/env/*': _dump_xonfig_env,
+            '/env/*/[0-9]*': None,
             '/xontribs/': _dump_xonfig_xontribs,
             }
 
