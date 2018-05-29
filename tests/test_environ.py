@@ -15,6 +15,8 @@ from xonsh.environ import Env, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES, 
 
 from tools import skip_if_on_unix
 
+os.environ.clear()
+
 def test_env_normal():
     env = Env(VAR='wakka')
     assert 'wakka' == env['VAR']
