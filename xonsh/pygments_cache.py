@@ -110,7 +110,7 @@ def _discover_lexers():
             if '*' in filename:
                 continue
             if (DEBUG and filename in exts and exts[filename] != val
-                      and filename not in default_exts):
+                and filename not in default_exts):
                 duplicates[filename].add(val)
                 duplicates[filename].add(exts[filename])
             exts[filename] = val
@@ -145,7 +145,7 @@ def _discover_formatters():
             if '*' in filename:
                 continue
             if (DEBUG and filename in exts and exts[filename] != val
-                      and filename not in default_exts):
+                and filename not in default_exts):
                 duplicates[filename].add(val)
                 duplicates[filename].add(exts[filename])
             exts[filename] = val
@@ -153,7 +153,7 @@ def _discover_formatters():
         names[cls.name] = val
         for alias in cls.aliases:
             if (DEBUG and alias in names and names[alias] != val
-                      and alias not in default_names):
+                and alias not in default_names):
                 duplicates[alias].add(val)
                 duplicates[alias].add(names[alias])
             names[alias] = val
@@ -181,7 +181,7 @@ def _discover_styles():
         mod = inspect.getmodule(cls)
         val = (mod.__name__, cls.__name__)
         if (DEBUG and name in names and names[name] != val
-                  and name not in default_names):
+            and name not in default_names):
             duplicates[name].add(val)
             duplicates[name].add(names[name])
         names[name] = val
@@ -209,7 +209,7 @@ def _discover_filters():
         mod = inspect.getmodule(cls)
         val = (mod.__name__, cls.__name__)
         if (DEBUG and name in names and names[name] != val
-                  and name not in default_names):
+            and name not in default_names):
             duplicates[name].add(val)
             duplicates[name].add(names[name])
         names[name] = val
@@ -387,7 +387,7 @@ def get_style_by_name(name):
         style = get_style_by_name(name)
         # add this style to the cache for future use
         mod = inspect.getmodule(style)
-        names[name] = (mod.__name__, cls.__name__)
+        names[name] = (mod.__name__, style.__name__)
         write_cache(cache_filename())
     return style
 
@@ -412,6 +412,6 @@ def get_filter_by_name(filtername, **options):
         # add this filter to the cache for future use
         cls = type(filter)
         mod = inspect.getmodule(cls)
-        names[name] = (mod.__name__, cls.__name__)
+        names[filtername] = (mod.__name__, cls.__name__)
         write_cache(cache_filename())
     return filter
