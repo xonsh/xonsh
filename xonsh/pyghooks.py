@@ -8,21 +8,12 @@ import builtins
 from collections import ChainMap
 from collections.abc import MutableMapping
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#           DO NOT MOVE
-# must come before pygments imports
-from xonsh.lazyasd import load_module_in_background
-load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
-                          replacements={'pygments.plugin': 'pkg_resources'})
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 from pygments.lexer import inherit, bygroups, include
 from pygments.lexers.agile import PythonLexer
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token, Punctuation,
                             Text)
 from pygments.style import Style
-from pygments.styles import get_style_by_name
 import pygments.util
 
 from xonsh.commands_cache import CommandsCache
@@ -34,6 +25,7 @@ from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
 from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256
 from xonsh.platform import os_environ
+from xonsh.pygments_cache import get_style_by_name
 
 
 def _command_is_valid(cmd):
