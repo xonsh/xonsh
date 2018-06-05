@@ -73,7 +73,7 @@ class CommandsCache(cabc.Mapping):
     @property
     def all_commands(self):
         paths = builtins.__xonsh_env__.get('PATH', [])
-        pathset = frozenset(x for x in paths if os.path.isdir(x))
+        pathset = tuple(x for x in paths if os.path.isdir(x))
         # did PATH change?
         path_hash = hash(pathset)
         cache_valid = path_hash == self._path_checksum
@@ -94,7 +94,7 @@ class CommandsCache(cabc.Mapping):
         if cache_valid:
             return self._cmds_cache
         allcmds = {}
-        for path in reversed(paths):
+        for path in reversed(pathset):
             # iterate backwards so that entries at the front of PATH overwrite
             # entries at the back.
             for cmd in executables_in(path):
