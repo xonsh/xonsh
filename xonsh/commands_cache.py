@@ -73,6 +73,13 @@ class CommandsCache(cabc.Mapping):
     @property
     def all_commands(self):
         paths = builtins.__xonsh_env__.get('PATH', [])
+        def removeDups(p):
+            ret = list()
+            for e in p:
+                if e not in ret:
+                    ret.append(e)
+            return ret
+        path = removeDups(path)
         pathset = tuple(x for x in paths if os.path.isdir(x))
         # did PATH change?
         path_hash = hash(pathset)
