@@ -228,6 +228,30 @@ class EnvPath(collections.MutableSequence):
             other = other._l
         return EnvPath(other + self._l)
 
+    def add(self, data, toStart=False, replace=False):
+        """
+        add a value to this EnvPath,
+        kwargs:
+            toStart:
+                Value will be added to start if True, or to the end
+                if it's False
+                Default: False
+            replace:
+                If True, the value will be removed and added to the
+                start or end(depending on the value of toStart)
+                Default: False
+        """
+        try:
+            i = self._l.index(data)
+        except ValueError:
+            self._l.insert(0 if toStart else len(self._l), data)
+            return
+        if replace:
+            self._l.remove(data)
+            self._l.insert(0 if toStart else len(self._l), data)
+
+
+
 
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
