@@ -4,6 +4,46 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.6
+====================
+
+**Added:**
+
+* A multipurpose add method to EnvPath. For example:
+
+  .. code-block:: xonshcon
+
+    $ $PATH
+    EnvPath(
+    ['/usr/bin', '/usr/local/bin', '/bin']
+    )
+    $ $PATH.add('~/.local/bin', front=True); $PATH
+    EnvPath(
+    ['/home/user/.local/bin', '/usr/bin', '/usr/local/bin', '/bin']
+    )
+    $ $PATH.add('/usr/bin', front=True, replace=True); $PATH
+    EnvPath(
+    ['/usr/bin', '/home/user/.local/bin', '/usr/local/bin', '/bin']
+    )
+* Added ``pygments-cache`` project in order to reduce startup time.
+
+
+**Changed:**
+
+* built_ins.py, corrected a typo.
+* test/test_news.py
+  It now uses regex to verify the format of rst files
+* Mercurial (``hg``) will no longer run in a threadable subprocess when
+  it is run in interactive mode.
+
+
+**Fixed:**
+
+* issue 2313
+
+
+
+
 v0.6.5
 ====================
 
