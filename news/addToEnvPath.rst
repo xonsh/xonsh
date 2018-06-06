@@ -1,4 +1,4 @@
-**Added:** None
+**Added:**
 
 * A multipurpose `add` method to EnvPath
 
