@@ -890,7 +890,7 @@ def ansi_style_by_name(name):
         return ANSI_STYLES[name]
     elif not HAS_PYGMENTS:
         raise KeyError('could not find style {0!r}'.format(name))
-    from pygments.styles import get_style_by_name
+    from xonsh.pygments_cache import get_style_by_name
     pstyle = get_style_by_name(name)
     palette = make_palette(pstyle.styles.values())
     astyle = make_ansi_style(palette)
