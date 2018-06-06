@@ -4,9 +4,7 @@
 
 **Changed:**
 
-* built_ins.py
-
-corrected a typo. 
+* built_ins.py, corrected a typo. 
 
 **Added:** None
 
