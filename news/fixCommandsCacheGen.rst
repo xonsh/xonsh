@@ -1,7 +1,19 @@
-**Changed:**
-    built_ins.py:
-        corrected a typo. 
+**Added:** None
+
+**Changed:** None
+
+* built_ins.py
+
+corrected a typo. 
     
 
-**Fixed:**
-    issue 2313
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+* issue 2313
+
+**Security:** None
+
