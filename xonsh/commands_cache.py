@@ -70,19 +70,22 @@ class CommandsCache(cabc.Mapping):
         else:
             return [name]
 
+    @staticmethod
+    def remove_dups(p):
+        ret = list()
+        for e in p:
+            if e not in ret:
+                ret.append(e)
+        return ret
+    
+
     @property
     def all_commands(self):
         paths = builtins.__xonsh_env__.get('PATH', [])
-        def removeDups(p):
-            ret = list()
-            for e in p:
-                if e not in ret:
-                    ret.append(e)
-            return ret
-        path = removeDups(path)
-        pathset = tuple(x for x in paths if os.path.isdir(x))
+        paths = CommandsCache.remove_dups(paths)
+        path_immut = tuple(x for x in paths if os.path.isdir(x))
         # did PATH change?
-        path_hash = hash(pathset)
+        path_hash = hash(path_immut)
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
@@ -92,7 +95,7 @@ class CommandsCache(cabc.Mapping):
         self._alias_checksum = al_hash
         # did the contents of any directory in PATH change?
         max_mtime = 0
-        for path in pathset:
+        for path in path_immut:
             mtime = os.stat(path).st_mtime
             if mtime > max_mtime:
                 max_mtime = mtime
@@ -101,7 +104,7 @@ class CommandsCache(cabc.Mapping):
         if cache_valid:
             return self._cmds_cache
         allcmds = {}
-        for path in reversed(pathset):
+        for path in reversed(path_immut):
             # iterate backwards so that entries at the front of PATH overwrite
             # entries at the back.
             for cmd in executables_in(path):
