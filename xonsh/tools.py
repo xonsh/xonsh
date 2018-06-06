@@ -228,6 +228,36 @@ class EnvPath(collections.MutableSequence):
             other = other._l
         return EnvPath(other + self._l)
 
+    def add(self, data, front=False, replace=False):
+        """Add a value to this EnvPath,
+
+        path.add(data, front=bool, replace=bool) -> ensures that path contains data, with position determined by kwargs
+
+        Parameters
+        ----------
+        data : string or bytes or pathlib.Path
+            value to be added
+        front : bool
+            whether the value should be added to the front, will be
+            ignored if the data already exists in this EnvPath and
+            replace is False
+            Default : False
+        replace : bool
+            If True, the value will be removed and added to the
+            start or end(depending on the value of front)
+            Default : False
+
+        Returns
+        -------
+        None
+
+        """
+        if data not in self._l:
+            self._l.insert(0 if front else len(self._l), data)
+        elif replace:
+            self._l.remove(data)
+            self._l.insert(0 if front else len(self._l), data)
+
 
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
