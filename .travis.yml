@@ -42,7 +42,7 @@ install:
   - if [[ $BUILD_DOCS = true ]]; then
       python setup.py install;
       pip install -r requirements-docs.txt;
-      pip install pygments prompt_toolkit ply psutil ipykernel matplotlib;
+      pip install pygments prompt_toolkit<2 ply psutil ipykernel matplotlib;
       pip install doctr;
     else
       pip install -r requirements-tests.txt;
