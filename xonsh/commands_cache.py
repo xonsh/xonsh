@@ -332,6 +332,23 @@ def predict_help_ver(args):
     return pred
 
 
+@lazyobject
+def HG_PREDICTOR_PARSER():
+    p = argparse.ArgumentParser('hg', add_help=False)
+    p.add_argument('command')
+    p.add_argument('-i', '--interactive', action='store_true', default=False,
+                   dest='interactive')
+    return p
+
+
+def predict_hg(args):
+    """Predict if mercurial is about to be run in interactive mode.
+    If it is interactive, predict False. If it isn't, predict True.
+    """
+    ns, _ = HG_PREDICTOR_PARSER.parse_known_args(args)
+    return not ns.interactive
+
+
 def default_threadable_predictors():
     """Generates a new defaultdict for known threadable predictors.
     The default is to predict true.
@@ -348,6 +365,7 @@ def default_threadable_predictors():
         'emacsclient': predict_false,
         'fish': predict_shell,
         'gvim': predict_help_ver,
+        'hg': predict_hg,
         'htop': predict_help_ver,
         'ipython': predict_shell,
         'ksh': predict_shell,
