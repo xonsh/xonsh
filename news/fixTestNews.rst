@@ -9,10 +9,7 @@
 
 **Removed:** None
 
-**Fixed:**
-
-* Previous implementation had a lot of nested if-elses
-  and was needlessly tedious
+**Fixed:** None
 
 **Security:** None
 
