@@ -19,42 +19,40 @@ def check_news_file(fname):
     name = fname.name
     with open(fname.path) as f:
         lines = f.read().splitlines()
-    nlines = len(lines)
-    for i, line in enumerate(lines):
-        if line.startswith('**'):
-            cat, *_ = line[2:].rsplit(':')
-            if cat not in CATEGORIES:
+    form = ""
+    for i, l in enumerate(lines):
+        # search the graves
+        if '`' in l:
+            if single_grave_reg.search(l):
+                pytest.fail("{}:{}: single grave accents"
+                            " are not valid rst".format(name, i+1),
+                            pytrace=False)
+
+        # determine the form of line
+        if l.startswith('**'):
+            if l[2:].rsplit(':')[0] not in CATEGORIES:
                 pytest.fail('{}:{}: {!r} not a proper category '
                             'must be one of {}'
                             ''.format(name, i+1, cat, list(CATEGORIES)),
                             pytrace=False)
-            if i+1 == nlines:
-                continue
-            if not lines[i+1].strip() == '':
-                pytest.fail('{}:{}: empty line required after category'
-                            ''.format(name, i+1), pytrace=False)
-            if i > 0 and not lines[i-1].strip() == '':
-                pytest.fail('{}:{}: empty line required before category'
-                            ''.format(name, i+1), pytrace=False)
-            if line.endswith('None'):
-                if not lines[i+2].startswith('**'):
-                    pytest.fail("{}:{}: can't have entries after None"
-                                ''.format(name, i+1), pytrace=False)
+            if l.endswith('None'): 
+                form += '3'
             else:
-                if lines[i+2].startswith('**'):
-                    pytest.fail("{}:{}: must have entry if not None"
-                                ''.format(name, i+1), pytrace=False)
+                form += '2'
+        elif l.startswith('* ') or l.startswith('  '):
+            form += '1'
+        elif l.strip() == '':
+            form += '0'
         else:
-            if not (line.startswith('* ')
-                    or line.startswith('  ')
-                    or (line.strip() == '')):
-                pytest.fail('{}:{}: invalid rst'.format(name, i+1),
-                            pytrace=False)
-            if '`' in line:
-                if single_grave_reg.search(line):
-                    pytest.fail("{}:{}: single grave accents"
-                                " are not valid rst".format(name, i+1),
-                                pytrace=False)
+            pytest.fail('{}:{}: invalid rst'.format(name, i+1),
+                        pytrace=False)
+    # The file should have:
+    #   empty lines around categories
+    #   at least one content line in a non null category
+    reg = re.compile(r'(30|201(1|0)*0)+')
+    if not reg.match(form):
+        pytest.fail('{}:{}: invalid rst'.format(name),
+                    pytrace=False)
 
 
 @pytest.mark.parametrize('fname', list(scandir(NEWSDIR)))
