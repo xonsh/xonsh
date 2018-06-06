@@ -50,7 +50,7 @@ def check_news_file(fname):
     # The file should have:
     #   empty lines around categories
     #   at least one content line in a non null category
-    reg = re.compile(r'^(30|201(1|0)*0)+$')
+    reg = re.compile(r'^(3(0|$)|201(1|0)*0)+$')
     if not reg.match(form):
         pytest.fail('{}: invalid rst'.format(name),
                     pytrace=False)
