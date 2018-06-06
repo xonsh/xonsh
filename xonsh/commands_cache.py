@@ -77,7 +77,6 @@ class CommandsCache(cabc.Mapping):
             if e not in ret:
                 ret.append(e)
         return ret
-    
 
     @property
     def all_commands(self):
