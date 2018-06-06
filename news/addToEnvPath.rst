@@ -1,7 +1,9 @@
 **Added:**
 
-* A multipurpose add method to EnvPath
-  example:
+* A multipurpose add method to EnvPath. For example:
+
+  .. code-block:: xonshcon
+
     $ $PATH
     EnvPath(
     ['/usr/bin', '/usr/local/bin', '/bin']
