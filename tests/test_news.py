@@ -30,7 +30,8 @@ def check_news_file(fname):
 
         # determine the form of line
         if l.startswith('**'):
-            if l[2:].rsplit(':')[0] not in CATEGORIES:
+            cat = l[2:].rsplit(':')[0]
+            if cat not in CATEGORIES:
                 pytest.fail('{}:{}: {!r} not a proper category '
                             'must be one of {}'
                             ''.format(name, i+1, cat, list(CATEGORIES)),
