@@ -1,6 +1,6 @@
 **Added:**
 
-* A multipurpose `add` method to EnvPath
+* A multipurpose add method to EnvPath
 
 **Changed:** None
 
