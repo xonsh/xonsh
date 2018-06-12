@@ -1,4 +1,3 @@
-
 Comparison
 ==========
 Xonsh is significantly different from most other shells or shell tools. The following
