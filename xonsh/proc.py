@@ -2149,8 +2149,12 @@ class CommandPipeline:
                 rtn is not None and
                 rtn > 0 and
                 builtins.__xonsh_env__.get('RAISE_SUBPROC_ERROR')):
-            raise subprocess.CalledProcessError(rtn, spec.cmd,
-                                                output=self.output)
+            try:
+                raise subprocess.CalledProcessError(rtn, spec.cmd,
+                                                    output=self.output)
+            finally:
+                # this is need to get a working terminal in interactive mode
+                self._return_terminal()
 
     #
     # Properties
