@@ -24,6 +24,7 @@ import codecs
 import builtins
 import itertools
 import collections
+import token
 from token import (AMPER, AMPEREQUAL, AT, CIRCUMFLEX,
                    CIRCUMFLEXEQUAL, COLON, COMMA, DEDENT, DOT, DOUBLESLASH,
                    DOUBLESLASHEQUAL, DOUBLESTAR, DOUBLESTAREQUAL, ENDMARKER, EQEQUAL,
@@ -46,8 +47,7 @@ blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
 #
 # token modifications
 #
-import token
-
+tok_name = tok_name.copy()
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
