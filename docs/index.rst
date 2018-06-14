@@ -1,5 +1,6 @@
-
 .. include:: intro.rst
+
+.. include:: tryitnow.rst
 
 .. include:: comparison.rst
 
