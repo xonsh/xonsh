@@ -4,6 +4,25 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.7
+====================
+
+**Changed:**
+
+* Xonsh live example has been re-added back to the documentation.
+
+
+**Fixed:**
+
+* Fixed issue where xonsh would fail to properly return the terminal prompt
+  (and eat up 100% CPU) after a failed subprocess command in interactive mode
+  if ``$RAISE_SUBPROC_ERROR = True``.
+* ``xonsh.tokenize.tok_name`` no longer mutates the standard library ``tokenize.tok_name``.
+  A copy is made on import instead.
+
+
+
+
 v0.6.6
 ====================
 
