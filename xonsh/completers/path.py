@@ -20,6 +20,18 @@ def PATTERN_NEED_QUOTES():
     return re.compile(pattern)
 
 
+def cd_in_command(line):
+    lexer = builtins.__xonsh_execer__.parser.lexer
+    lexer.reset()
+    lexer.input(line)
+    have_cd = False
+    for tok in lexer:
+        if tok.type == 'NAME' and tok.value == 'cd':
+            have_cd = True
+            break
+    return have_cd
+
+
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
         pos = len(inp)
@@ -295,7 +307,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     if tilde in prefix:
         home = os.path.expanduser(tilde)
         paths = {s.replace(home, tilde) for s in paths}
-    if cdpath:
+    if cdpath and cd_in_command(line):
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
     paths, _ = _quote_paths({_normpath(s) for s in paths},
