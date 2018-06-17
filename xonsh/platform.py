@@ -147,6 +147,15 @@ def ptk_version_is_supported():
 
 
 @functools.lru_cache(1)
+def ptk_shell_type():
+    """Returns the prompt_toolkit shell type based on the installed version."""
+    if ptk_version_info()[:2] < (2, 0):
+        return 'prompt_toolkit1'
+    else:
+        return 'prompt_toolkit2'
+
+
+@functools.lru_cache(1)
 def best_shell_type():
     if ON_WINDOWS or has_prompt_toolkit():
         return 'prompt_toolkit'
