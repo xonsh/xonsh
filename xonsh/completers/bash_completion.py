@@ -14,7 +14,7 @@ import platform
 import functools
 import subprocess
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 
 @functools.lru_cache(1)
@@ -284,7 +284,8 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
     quote_paths : callable, optional
         A functions that quotes file system paths. You shouldn't normally need
         this as the default is acceptable 99+% of the time. This function should
-        a set of the new paths and a boolean for whether the paths were quoted.
+        return a set of the new paths and a boolean for whether the paths were
+        quoted.
 
     Returns
     -------
@@ -354,7 +355,7 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
     if '-o nospace' in complete_stmt:
         out = set([x.rstrip() for x in out])
 
-    return out, len(prefix) - strip_len
+    return out, max(len(prefix) - strip_len, 0)
 
 
 def bash_complete_line(line, return_line=True, **kwargs):
