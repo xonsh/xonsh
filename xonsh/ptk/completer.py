@@ -93,7 +93,10 @@ class PromptToolkitCompleter(Completer):
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
-        window = cli.application.layout.children[0].content.children[1]
+        try:
+            window = cli.application.layout.children[0].content.children[1]
+        except AttributeError:  # PTK 2.0
+            window = cli.app.layout.container.children[0].content.children[1].content
 
         if window and window.render_info:
             h = window.render_info.content_height
@@ -108,3 +111,17 @@ class PromptToolkitCompleter(Completer):
                 else:
                     return LayoutDimension()
             window._height = comp_height
+
+
+class PromptToolkit2Completer(PromptToolkitCompleter):
+    """Completer for ptk2.
+    """
+    def suggestion_completion(self, document, line):
+        """Provides a completion based on the current auto-suggestion."""
+        cli = self.shell.prompter.cli
+        sug = self.hist_suggester.get_suggestion(cli.app.current_buffer, document)
+        if sug is None:
+            return None
+        comp, _, _ = sug.text.partition(' ')
+        _, _, prev = line.rpartition(' ')
+        return prev + comp
