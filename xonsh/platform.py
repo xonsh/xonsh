@@ -487,6 +487,7 @@ def PATH_DEFAULT():
 @lazyobject
 def LIBC():
     """The platform dependent libc implementation."""
+    global ctypes
     if ON_DARWIN:
         import ctypes.util
         libc = ctypes.CDLL(ctypes.util.find_library("c"))
