@@ -21,6 +21,7 @@ def PATTERN_NEED_QUOTES():
 
 
 def cd_in_command(line):
+    """Returns True if "cd" is a token in the line, False otherwise."""
     lexer = builtins.__xonsh_execer__.parser.lexer
     lexer.reset()
     lexer.input(line)
