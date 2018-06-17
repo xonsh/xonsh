@@ -12,10 +12,10 @@ except ImportError:
 from xonsh.platform import ptk_version_info
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception, carriage_return
-from xonsh.ptk.completer import PromptToolkitCompleter, PromptToolkit2Completer
-from xonsh.ptk.history import PromptToolkitHistory
-from xonsh.ptk.key_bindings import load_xonsh_bindings
-from xonsh.ptk.shortcuts import get_prompter
+from xonsh.ptk2.completer import PromptToolkitCompleter, PromptToolkit2Completer
+from xonsh.ptk2.history import PromptToolkitHistory
+from xonsh.ptk2.key_bindings import load_xonsh_bindings
+from xonsh.ptk2.shortcuts import get_prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -23,18 +23,12 @@ from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_
 from xonsh.lazyimps import pygments, pyghooks, winutils
 
 
-if ptk_version_info()[:2] < (2, 0):
-    from prompt_toolkit.key_binding.manager import KeyBindingManager
-    from prompt_toolkit.shortcuts import print_tokens as ptk_print
-    from prompt_toolkit.styles import style_from_dict
-    from prompt_toolkit.styles import PygmentsStyle as style_from_pygments
-else:  # ptk 2.0
-    from prompt_toolkit.key_binding import KeyBindings
-    from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
-    from prompt_toolkit.shortcuts import CompleteStyle
-    from prompt_toolkit.formatted_text import PygmentsTokens
-    from prompt_toolkit.styles.pygments import Style, pygments_token_to_classname
-    from prompt_toolkit.styles.pygments import style_from_pygments_cls as style_from_pygments
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
+from prompt_toolkit.shortcuts import CompleteStyle
+from prompt_toolkit.formatted_text import PygmentsTokens
+from prompt_toolkit.styles.pygments import Style, pygments_token_to_classname
+from prompt_toolkit.styles.pygments import style_from_pygments_cls as style_from_pygments
 
 
 Token = _TokenType()
@@ -47,8 +41,8 @@ Fired after prompt toolkit has been initialized
 """)
 
 
-class PromptToolkitShell(BaseShell):
-    """The xonsh shell."""
+class PromptToolkit2Shell(BaseShell):
+    """The xonsh shell for prompt_toolkit v2."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -58,14 +52,9 @@ class PromptToolkitShell(BaseShell):
         self.prompter = get_prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-        key_bindings_manager_args = {
-            'enable_auto_suggest_bindings': True,
-            'enable_search': True,
-            'enable_abort_and_exit_bindings': True,
-            }
-        self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
-        load_xonsh_bindings(self.key_bindings_manager)
-        # This assumes that PromptToolkitShell is a singleton
+        self.key_bindings = KeyBindings()
+        load_xonsh_bindings(self.key_bindings)
+        # This assumes that PromptToolkit2Shell is a singleton
         events.on_ptk_create.fire(
             prompter=self.prompter,
             history=self.history,
@@ -331,26 +320,6 @@ class PromptToolkitShell(BaseShell):
 
 
 class PromptToolkitShell2(PromptToolkitShell):
-    """The xonsh shell for ptk 2.0.
-    """
-    def __init__(self, **kwargs):
-        super(PromptToolkitShell, self).__init__(**kwargs)
-        if ON_WINDOWS:
-            winutils.enable_virtual_terminal_processing()
-        self._first_prompt = True
-        self.prompter = get_prompter()
-        self.history = PromptToolkitHistory()
-        self.pt_completer = PromptToolkit2Completer(
-            self.completer, self.ctx, self)
-        self.key_bindings = KeyBindings()
-        load_xonsh_bindings(self.key_bindings)
-        # This assumes that PromptToolkitShell is a singleton
-        events.on_ptk_create.fire(
-            prompter=self.prompter,
-            history=self.history,
-            completer=self.pt_completer,
-            bindings=self.key_bindings,
-        )
 
     def singleline(self, store_in_history=True, auto_suggest=None,
                    enable_history_search=True, multiline=True, **kwargs):

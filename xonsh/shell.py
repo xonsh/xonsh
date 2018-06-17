@@ -8,7 +8,7 @@ import builtins
 import warnings
 
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
-                            ptk_version_is_supported)
+                            ptk_version_is_supported, ptk_shell_type)
 from xonsh.tools import XonshError, print_exception
 from xonsh.events import events
 import xonsh.history.main as xhm
@@ -93,6 +93,18 @@ class Shell(object):
     readline version of shell should be used.
     """
 
+    shell_type_aliases = {
+        'b': 'best',
+        'ptk': 'prompt_toolkit',
+        'ptk1': 'prompt_toolkit1',
+        'ptk2': 'prompt_toolkit2',
+        'prompt-toolkit': 'prompt_toolkit',
+        'prompt-toolkit1': 'prompt_toolkit1',
+        'prompt-toolkit2': 'prompt_toolkit2',
+        'rand': 'random',
+        'rl': 'readline',
+        }
+
     def __init__(self, execer, ctx=None, shell_type=None, **kwargs):
         """
         Parameters
@@ -105,7 +117,7 @@ class Shell(object):
             this no additional context is computed and this is used
             directly.
         shell_type : str, optional
-            The shell type to start, such as 'readline', 'prompt_toolkit',
+            The shell type to start, such as 'readline', 'prompt_toolkit1',
             or 'random'.
         """
         self.execer = execer
@@ -123,6 +135,7 @@ class Shell(object):
                 # This bricks interactive xonsh
                 # Can happen from the use of .xinitrc, .xsession, etc
                 shell_type = 'best'
+        shell_type = self.shell_type_aliases.get(shell_type, shell_type)
         if shell_type == 'best' or shell_type is None:
             shell_type = best_shell_type()
         elif shell_type == 'random':
@@ -137,12 +150,16 @@ class Shell(object):
                               'supported. Please update prompt-toolkit. Using '
                               'readline instead.')
                 shell_type = 'readline'
+            else:
+                shell_type = ptk_shell_type()
         self.shell_type = env['SHELL_TYPE'] = shell_type
         # actually make the shell
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class
-        elif shell_type == 'prompt_toolkit':
-            from xonsh.ptk.shell import get_ptk_shell as shell_class
+        elif shell_type == 'prompt_toolkit2':
+            from xonsh.ptk2.shell import PromptToolkit2Shell as shell_class
+        elif shell_type == 'prompt_toolkit1':
+            from xonsh.ptk.shell import PromptToolkitShell as shell_class
         elif shell_type == 'readline':
             from xonsh.readline_shell import ReadlineShell as shell_class
         else:
