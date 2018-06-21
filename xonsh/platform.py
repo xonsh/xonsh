@@ -116,14 +116,14 @@ def pygments_version():
 
 @functools.lru_cache(1)
 def has_prompt_toolkit():
-    """ Tests if the `prompt_toolkit` is available. """
+    """Tests if the `prompt_toolkit` is available."""
     spec = importlib.util.find_spec('prompt_toolkit')
     return (spec is not None)
 
 
 @functools.lru_cache(1)
 def ptk_version():
-    """ Returns `prompt_toolkit.__version__` if available, else ``None``. """
+    """Returns `prompt_toolkit.__version__` if available, else ``None``."""
     if has_prompt_toolkit():
         import prompt_toolkit
         return getattr(prompt_toolkit, '__version__', '<0.57')
@@ -487,7 +487,9 @@ def PATH_DEFAULT():
 @lazyobject
 def LIBC():
     """The platform dependent libc implementation."""
+    global ctypes
     if ON_DARWIN:
+        import ctypes.util
         libc = ctypes.CDLL(ctypes.util.find_library("c"))
     elif ON_CYGWIN:
         libc = ctypes.CDLL('cygwin1.dll')
