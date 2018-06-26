@@ -233,6 +233,13 @@ aliases['ls'] = 'spam spam sausage spam'
 
 echo @$(which ls)
 """, 'spam spam sausage spam\n', 0),
+#
+# test redirection
+#
+("""
+echo Just the place for a snark. >tttt
+cat tttt
+""", 'Just the place for a snark.\n', 0),
 ]
 
 
