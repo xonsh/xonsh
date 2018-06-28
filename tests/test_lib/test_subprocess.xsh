@@ -1,11 +1,4 @@
-from xonsh.extra_tools import indir, run, check_call
-
-
-def test_indir(source_path):
-    assert ![pwd].output.strip() != source_path
-    with indir(source_path):
-        assert ![pwd].output.strip() == source_path
-    assert ![pwd].output.strip() != source_path
+from xonsh.lib.subprocess import run, check_call
 
 
 def test_run(tmpdir):
