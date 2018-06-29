@@ -4,6 +4,25 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.8
+====================
+
+**Fixed:**
+
+* completions relative to ``CDPATH`` only trigger when used with ``cd``
+* Import of ``ctypes.util`` is now explictly performed, as needed.
+  Python v3.7 no longer imports this module along with ``ctypes``.
+* Fixed issue with pygments-cache not properly generating a cache the first
+  time when using prompt-toolkit. This was due to a lingering lazy import
+  of ``pkg_resources`` that has been removed.
+* Removed duplicate ``pip`` completer
+* ``bash_completion`` no longer returns invalid prefix lengths for directories
+  containing escape file names
+* Fixed error when using redirection (e.g., >) on Windows.
+
+
+
+
 v0.6.7
 ====================
 
