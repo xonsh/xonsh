@@ -261,7 +261,7 @@ def which(command, path=None, verbose=0, exts=None):
     If no match is found for the command, a WhichError is raised.
     """
     try:
-        absName, fromWhere = whichgen(command, path, verbose, exts).next()
+        absName, fromWhere = next(whichgen(command, path, verbose, exts))
     except StopIteration:
         raise WhichError("Could not find '%s' on the path." % command)
     if verbose:
