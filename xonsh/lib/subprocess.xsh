@@ -1,5 +1,9 @@
 """Xonsh extension of the standard library subprocess module, using xonsh for
 subprocess calls"""
+from xonsh.imphooks import install_hook
+
+install_hook()
+
 from xonsh.tools import XonshCalledProcessError as CalledProcessError
 
 def run(cmd, cwd=None, check=False):

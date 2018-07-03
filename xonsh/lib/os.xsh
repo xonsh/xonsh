@@ -2,9 +2,9 @@
 subprocess calls"""
 import sys
 
-from xonsh.imphooks import XonshImportHook
+from xonsh.imphooks import install_hook
 
-sys.meta_path.append(XonshImportHook())
+install_hook
 
 import os
 from contextlib import contextmanager
