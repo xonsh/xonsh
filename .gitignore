@@ -57,5 +57,5 @@ tags
 
 # Rever
 rever/
-
+# Allow the lib
 !/xonsh/lib
