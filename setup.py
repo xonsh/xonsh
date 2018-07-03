@@ -308,9 +308,9 @@ def main():
                   'xonsh.xoreutils', 'xontrib',
                   'xonsh.completers', 'xonsh.history', 'xonsh.prompt',
                   'xonsh.lib'],
-        package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
+        package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib', 'xonsh.lib': 'xonsh/lib'},
         package_data={'xonsh': ['*.json', '*.githash'], 'xontrib': ['*.xsh'],
-                      'xonsh.lib': ['lib/*.xsh']},
+                      'xonsh.lib': ['*.xsh']},
         cmdclass=cmdclass,
         scripts=scripts,
         )
