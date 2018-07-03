@@ -34,7 +34,7 @@ xonsh/dev.githash
 # Virtualenv
 pip-selfcheck.json
 bin/
-lib/
+/lib/
 include/
 
 # Mac
@@ -57,3 +57,5 @@ tags
 
 # Rever
 rever/
+
+!/xonsh/lib
