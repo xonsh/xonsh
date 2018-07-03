@@ -5,6 +5,7 @@ from xonsh.imphooks import install_hook
 install_hook()
 
 from xonsh.tools import XonshCalledProcessError as CalledProcessError
+from xonsh.lib.os import indir
 
 def run(cmd, cwd=None, check=False):
     """Stub for ``subprocess.run`` like functionality"""

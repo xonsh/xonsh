@@ -1,7 +1,9 @@
+import os
 from xonsh.lib.os import indir
 
-def test_indir(source_path):
-    assert ![pwd].output.strip() != source_path
-    with indir(source_path):
-        assert ![pwd].output.strip() == source_path
-    assert ![pwd].output.strip() != source_path
+def test_indir():
+    path = os.path.dirname(__file__)
+    assert ![pwd].output.strip() != path
+    with indir(path):
+        assert ![pwd].output.strip() == path
+    assert ![pwd].output.strip() != path
