@@ -206,7 +206,7 @@ quote_readline()
 
 _quote_readline_by_ref()
 {{
-    if [[ $1 == \'* ]]; then
+    if [[ $1 == \'* || $1 == \"* ]]; then
         # Leave out first character
         printf -v $2 %s "${{1:1}}"
     else
