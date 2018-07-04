@@ -142,7 +142,7 @@ class Shell(object):
                               'supported. Please see Github PR #2570 for '
                               'latest status. To use prompt-toolkit now you '
                               'can downgrade to version 1.x with\n'
-                              'pip install "prompt_toolkit<2"\n'
+                              'xpip install "prompt_toolkit<2"\n'
                               'Starting xonsh with readline shell instead.')
                 shell_type = 'readline'
         self.shell_type = env['SHELL_TYPE'] = shell_type
