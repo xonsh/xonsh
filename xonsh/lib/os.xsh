@@ -6,7 +6,6 @@ from contextlib import contextmanager
 @contextmanager
 def indir(d):
     """Context manager for temporarily entering into a directory."""
-    # Copyright (c) 2018, The Regro Developers
     ![pushd @(d)]
     yield
     ![popd]

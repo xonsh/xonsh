@@ -15,5 +15,5 @@ def run(cmd, cwd=None, check=False):
 
 def check_call(cmd, cwd=None):
     """Drop in replacement for ``subprocess.check_call`` like functionality"""
-    run(cmd, cwd=cwd, check=True)
-    return 0
+    p = run(cmd, cwd=cwd, check=True)
+    return p.returncode
