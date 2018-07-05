@@ -206,7 +206,7 @@ quote_readline()
 
 _quote_readline_by_ref()
 {{
-    if [[ $1 == \'* ]]; then
+    if [[ $1 == \'* || $1 == \"* ]]; then
         # Leave out first character
         printf -v $2 %s "${{1:1}}"
     else
@@ -344,14 +344,14 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
     # Ensure input to `commonprefix` is a list (now required by Python 3.6)
     commprefix = os.path.commonprefix(list(out))
     strip_len = 0
+    strip_prefix = prefix.strip("\"'")
     while strip_len < len(prefix):
-        if commprefix.startswith(prefix[strip_len:]):
+        if commprefix.startswith(strip_prefix[strip_len:]):
             break
         strip_len += 1
 
     if '-o noquote' not in complete_stmt:
         out, need_quotes = quote_paths(out, '', '')
-        strip_len += int(need_quotes)
     if '-o nospace' in complete_stmt:
         out = set([x.rstrip() for x in out])
 
