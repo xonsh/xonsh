@@ -8,7 +8,7 @@ import builtins
 import warnings
 
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
-                            ptk_version_is_supported)
+                            ptk_above_min_supported, ptk_below_max_supported)
 from xonsh.tools import XonshError, print_exception
 from xonsh.events import events
 import xonsh.history.main as xhm
@@ -132,10 +132,18 @@ class Shell(object):
                 warnings.warn('prompt_toolkit is not available, using '
                               'readline instead.')
                 shell_type = 'readline'
-            elif not ptk_version_is_supported():
+            elif not ptk_above_min_supported():
                 warnings.warn('prompt-toolkit version < v1.0.0 is not '
                               'supported. Please update prompt-toolkit. Using '
                               'readline instead.')
+                shell_type = 'readline'
+            elif not ptk_below_max_supported():
+                warnings.warn('prompt-toolkit version 2.0 is not yet '
+                              'supported. Please see Github PR #2570 for '
+                              'latest status. To use prompt-toolkit now you '
+                              'can downgrade to version 1.x with\n'
+                              'xpip install "prompt_toolkit<2"\n'
+                              'Starting xonsh with readline shell instead.')
                 shell_type = 'readline'
         self.shell_type = env['SHELL_TYPE'] = shell_type
         # actually make the shell
