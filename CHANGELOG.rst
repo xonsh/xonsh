@@ -4,6 +4,47 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.9
+====================
+
+**Added:**
+
+* New xonsh standard library ``xonsh.lib`` subpackage
+* ``xonsh.lib.os.indir`` a context manager for temporarily entering into a directory
+* ``xonsh.lib.subprocess.run`` and ``xonsh.lib.subprocess.check_call``
+  subprocess stubs using ``xonsh`` as the backend
+
+
+**Fixed:**
+
+* update xoreutils._which.which() for python 3.x support.
+* Fixed issue with incorrect strip lengths for prefixes with quotes in them
+* Fixed bash script to also consider leading double quotes and not just single
+  quotes
+* Launching xonsh with prompt_toolkit version 2.x no longer fails, and instead fallsback to readline shell. This is a patch for until prompt_toolkit 2.x support is fully implemented. See PR #2570
+
+
+
+
+v0.6.8
+====================
+
+**Fixed:**
+
+* completions relative to ``CDPATH`` only trigger when used with ``cd``
+* Import of ``ctypes.util`` is now explictly performed, as needed.
+  Python v3.7 no longer imports this module along with ``ctypes``.
+* Fixed issue with pygments-cache not properly generating a cache the first
+  time when using prompt-toolkit. This was due to a lingering lazy import
+  of ``pkg_resources`` that has been removed.
+* Removed duplicate ``pip`` completer
+* ``bash_completion`` no longer returns invalid prefix lengths for directories
+  containing escape file names
+* Fixed error when using redirection (e.g., >) on Windows.
+
+
+
+
 v0.6.7
 ====================
 

@@ -53,8 +53,8 @@ class XshFunction(pytest.Item):
         self._test_func = test_func
         self._test_module = test_module
 
-    def runtest(self):
-        self._test_func()
+    def runtest(self, *args, **kwargs):
+        self._test_func(*args, **kwargs)
 
     def repr_failure(self, excinfo):
         """ called when self.runtest() raises an exception. """

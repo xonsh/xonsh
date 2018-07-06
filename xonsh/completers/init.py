@@ -22,7 +22,6 @@ def default_completers():
         ('completer', complete_completer),
         ('skip', complete_skipper),
         ('pip', complete_pip),
-        ('xpip', complete_pip),
         ('cd', complete_cd),
         ('rmdir', complete_rmdir),
         ('xonfig', complete_xonfig),

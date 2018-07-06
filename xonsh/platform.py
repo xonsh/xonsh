@@ -116,14 +116,14 @@ def pygments_version():
 
 @functools.lru_cache(1)
 def has_prompt_toolkit():
-    """ Tests if the `prompt_toolkit` is available. """
+    """Tests if the `prompt_toolkit` is available."""
     spec = importlib.util.find_spec('prompt_toolkit')
     return (spec is not None)
 
 
 @functools.lru_cache(1)
 def ptk_version():
-    """ Returns `prompt_toolkit.__version__` if available, else ``None``. """
+    """Returns `prompt_toolkit.__version__` if available, else ``None``."""
     if has_prompt_toolkit():
         import prompt_toolkit
         return getattr(prompt_toolkit, '__version__', '<0.57')
@@ -141,7 +141,7 @@ def ptk_version_info():
 
 
 @functools.lru_cache(1)
-def ptk_version_is_supported():
+def ptk_above_min_supported():
     minimum_required_ptk_version = (1, 0)
     return ptk_version_info()[:2] >= minimum_required_ptk_version
 
@@ -153,6 +153,12 @@ def ptk_shell_type():
         return 'prompt_toolkit1'
     else:
         return 'prompt_toolkit2'
+
+
+@functools.lru_cache(1)
+def ptk_below_max_supported():
+    ptk_max_version_cutoff = (2, 0)
+    return ptk_version_info()[:2] < ptk_max_version_cutoff
 
 
 @functools.lru_cache(1)
@@ -496,7 +502,9 @@ def PATH_DEFAULT():
 @lazyobject
 def LIBC():
     """The platform dependent libc implementation."""
+    global ctypes
     if ON_DARWIN:
+        import ctypes.util
         libc = ctypes.CDLL(ctypes.util.find_library("c"))
     elif ON_CYGWIN:
         libc = ctypes.CDLL('cygwin1.dll')
