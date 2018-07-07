@@ -21,6 +21,8 @@ def test_run_os():
         chdir(tmpdir)
         run(['touch', 'hello.txt'])
         assert 'hello.txt' in g`*.txt`
+        out = ![readlink -f hello.txt].out.strip()
+        assert tmpdir in out
         rm hello.txt
         mkdir tst_dir
         run(['touch', 'hello.txt'], cwd='tst_dir')
