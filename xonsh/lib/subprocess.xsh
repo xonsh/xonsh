@@ -17,3 +17,10 @@ def check_call(cmd, cwd=None):
     """Drop in replacement for ``subprocess.check_call`` like functionality"""
     p = run(cmd, cwd=cwd, check=True)
     return p.returncode
+
+
+def check_output(cmd, cwd=None):
+    """Drop in replacement for ``subprocess.check_output`` like functionality"""
+    p = run(cmd, cwd=cwd, check=True)
+    # Note the encoding is to match the expected output of check_output
+    return p.output.encode('utf-8')
