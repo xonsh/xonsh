@@ -52,16 +52,20 @@ __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
                            'DOLLARNAME', 'IOREDIRECT']
-PY35 = (3, 5, 0) <= PYTHON_VERSION_INFO < (3, 7, 0)
-if PY35:
+HAS_ASYNC = (3, 5, 0) <= PYTHON_VERSION_INFO < (3, 7, 0)
+if HAS_ASYNC:
     ASYNC = token.ASYNC
     AWAIT = token.AWAIT
-    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
 else:
-    AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER)
 del token  # must clean up token
+PY35 = (3, 5, 0) <= PYTHON_VERSION_INFO
+if PY35:
+    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
+else:
+    AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
+
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = 'COMMENT'
