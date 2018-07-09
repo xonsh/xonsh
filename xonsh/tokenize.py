@@ -61,10 +61,9 @@ else:
     ADDSPACE_TOKS = (NAME, NUMBER)
 del token  # must clean up token
 PY35 = (3, 5, 0) <= PYTHON_VERSION_INFO
-if PY35:
-    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
-else:
-    AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
+AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
+if not PY35:
+    AUGASSIGN_OPS = AUGASSIGN_OPS.replace('@', '')
 
 
 COMMENT = N_TOKENS
