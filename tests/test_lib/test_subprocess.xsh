@@ -27,19 +27,6 @@ def test_run():
             assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
 
 
-def test_run_os():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with osindir(tmpdir):
-            run(['touch', 'hello.txt'])
-            assert 'hello.txt' in g`*.txt`
-            out = ![readlink -f hello.txt].out.strip()
-            assert tmpdir in out
-            rm hello.txt
-            mkdir tst_dir
-            run(['touch', 'hello.txt'], cwd='tst_dir')
-            assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
-
-
 def test_check_call():
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
