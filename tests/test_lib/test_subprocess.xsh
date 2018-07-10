@@ -1,19 +1,7 @@
-from contextlib import contextmanager
-import os
 import tempfile
 
 from xonsh.lib.os import indir
 from xonsh.lib.subprocess import run, check_call, check_output
-
-
-@contextmanager
-def osindir(d):
-    """Context manager for temporarily entering into a directory."""
-    # Copyright (c) 2018, The Regro Developers
-    old_d = os.getcwd()
-    os.chdir(d)
-    yield
-    os.chdir(old_d)
 
 
 def test_run():
