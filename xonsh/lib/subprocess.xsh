@@ -7,9 +7,11 @@ from xonsh.lib.os import indir
 def run(cmd, cwd=None, check=False):
     """Drop in replacement for ``subprocess.run`` like functionality"""
     if cwd is None:
-        cwd = '.'
-    with indir(cwd), ${...}.swap(RAISE_SUBPROC_ERROR=check):
-        p = ![@(cmd)]
+        with ${...}.swap(RAISE_SUBPROC_ERROR=check):
+            p = ![@(cmd)]
+    else:
+        with indir(cwd), ${...}.swap(RAISE_SUBPROC_ERROR=check):
+            p = ![@(cmd)]
     return p
 
 
