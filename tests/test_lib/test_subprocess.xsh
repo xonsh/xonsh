@@ -1,8 +1,19 @@
-from os import chdir
+from contextlib import contextmanager
+import os
 import tempfile
 
 from xonsh.lib.os import indir
 from xonsh.lib.subprocess import run, check_call, check_output
+
+
+@contextmanager
+def osindir(d):
+    """Context manager for temporarily entering into a directory."""
+    # Copyright (c) 2018, The Regro Developers
+    old_d = os.getcwd()
+    os.chdir(d)
+    yield
+    os.chdir(old_d)
 
 
 def test_run():
@@ -18,15 +29,15 @@ def test_run():
 
 def test_run_os():
     with tempfile.TemporaryDirectory() as tmpdir:
-        chdir(tmpdir)
-        run(['touch', 'hello.txt'])
-        assert 'hello.txt' in g`*.txt`
-        out = ![readlink -f hello.txt].out.strip()
-        assert tmpdir in out
-        rm hello.txt
-        mkdir tst_dir
-        run(['touch', 'hello.txt'], cwd='tst_dir')
-        assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
+        with osindir(tmpdir):
+            run(['touch', 'hello.txt'])
+            assert 'hello.txt' in g`*.txt`
+            out = ![readlink -f hello.txt].out.strip()
+            assert tmpdir in out
+            rm hello.txt
+            mkdir tst_dir
+            run(['touch', 'hello.txt'], cwd='tst_dir')
+            assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
 
 
 def test_check_call():
