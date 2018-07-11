@@ -1,10 +1,11 @@
 import os
+import tempfile
 from xonsh.lib.os import indir
 
 
 def test_indir():
-    path = os.path.dirname(__file__)
-    assert ![pwd].output.strip() != path
-    with indir(path):
-        assert ![pwd].output.strip() == path
-    assert ![pwd].output.strip() != path
+    with tempfile.TemporaryDirectory() as tmpdir:
+        assert ![pwd].output.strip() != tmpdir
+        with indir(tmpdir):
+            assert ![pwd].output.strip() == tmpdir
+        assert ![pwd].output.strip() != tmpdir
