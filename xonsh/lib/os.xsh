@@ -1,7 +1,6 @@
 """Xonsh extension of the standard library os module, using xonsh for
 subprocess calls"""
 from contextlib import contextmanager
-import os
 
 
 @contextmanager
