@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-- Restored AUGASSIGN_OPS definition, inadvertently removed in #2639.
+- Restored AUGASSIGN_OPS definition, which was inadvertently removed.
 
 **Security:** None
