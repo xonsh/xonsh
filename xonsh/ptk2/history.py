@@ -14,52 +14,32 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
     def __init__(self, load_prev=True, wait_for_gc=True, *args, **kwargs):
         """Initialize history object."""
         super().__init__()
-        self.strings = []
-        if load_prev:
-            PromptToolkitHistoryAdder(self, wait_for_gc=wait_for_gc)
+        #self.strings = []
 
-    def append(self, entry):
+    def store_string(self, entry):
         """Append new entry to the history."""
         self.strings.append(entry)
 
-    def __getitem__(self, index):
-        return self.strings[index]
+    def load_history_strings(self):
+        """Loads synchronous history strings"""
+        yield from self.load_history_strings_async()
 
-    def __len__(self):
-        return len(self.strings)
-
-    def __iter__(self):
-        return iter(self.strings)
-
-
-class PromptToolkitHistoryAdder(Thread):
-
-    def __init__(self, ptkhist, wait_for_gc=True, *args, **kwargs):
-        """Thread responsible for adding inputs from history to the current
-        prompt-toolkit history instance. May wait for the history garbage
-        collector to finish.
-        """
-        super(PromptToolkitHistoryAdder, self).__init__(*args, **kwargs)
-        self.daemon = True
-        self.ptkhist = ptkhist
-        self.wait_for_gc = wait_for_gc
-        self.start()
-
-    def run(self):
+    def load_history_strings_async(self):
+        """Loads asynchronous history strings"""
         hist = builtins.__xonsh_history__
         if hist is None:
             return
         buf = None
-        ptkhist = self.ptkhist
         for cmd in hist.all_items():
             line = cmd['inp'].rstrip()
-            if len(ptkhist) == 0 or line != ptkhist[-1]:
-                ptkhist.append(line)
-                if buf is None:
-                    buf = self._buf()
-                    if buf is None:
-                        continue
-                buf.reset(initial_document=buf.document)
+            strs = self.get_strings()
+            if len(strs) == 0 or line != strs[-1]:
+                yield line
+                #if buf is None:
+                #    buf = self._buf()
+                #    if buf is None:
+                #        continue
+                #buf.reset(initial_document=buf.document)
 
     def _buf(self):
         # Thread-safe version of
@@ -72,3 +52,12 @@ class PromptToolkitHistoryAdder(Thread):
             if buf is None:
                 break
         return buf
+
+    def __getitem__(self, index):
+        return self.get_strings()[index]
+
+    def __len__(self):
+        return len(self.get_strings())
+
+    def __iter__(self):
+        return iter(self.get_strings())
