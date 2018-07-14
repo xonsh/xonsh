@@ -15,7 +15,6 @@ from xonsh.tools import print_exception, carriage_return
 from xonsh.ptk2.completer import PromptToolkitCompleter
 from xonsh.ptk2.history import PromptToolkitHistory
 from xonsh.ptk2.key_bindings import load_xonsh_bindings
-from xonsh.ptk2.shortcuts import Prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -30,7 +29,7 @@ from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
 from prompt_toolkit.styles.pygments import Style, pygments_token_to_classname
-from prompt_toolkit.styles.pygments import style_from_pygments_cls as style_from_pygments
+from prompt_toolkit.styles.pygments import style_from_pygments_cls, style_from_pygments_dict
 
 
 Token = _TokenType()
@@ -51,8 +50,7 @@ class PromptToolkit2Shell(BaseShell):
         if ON_WINDOWS:
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
-        self.prompter = PromptSession(history=PromptToolkitHistory(),
-                                      )
+        self.prompter = PromptSession(history=PromptToolkitHistory())
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = KeyBindings()
         load_xonsh_bindings(self.key_bindings)
@@ -104,7 +102,6 @@ class PromptToolkit2Shell(BaseShell):
         else:
             editing_mode = EditingMode.EMACS
 
-        kwargs['editing_mode'] = editing_mode
         prompt_args = {
             'mouse_support': mouse_support,
             'auto_suggest': auto_suggest,
@@ -125,14 +122,14 @@ class PromptToolkit2Shell(BaseShell):
         if builtins.__xonsh_env__.get('COLOR_INPUT'):
             if HAS_PYGMENTS:
                 prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
-                style = style_from_pygments(
+                style = style_from_pygments_cls(
                     pyghooks.xonsh_style_proxy(self.styler))
             else:
                 style_dict = {
                     pygments_token_to_classname(key.__name__): value
                     for key, value in DEFAULT_STYLE_DICT
                 }
-                style = Style.from_dict(style_dict)
+                style = style_from_pygments_dict(style_dict)
 
             prompt_args['style'] = style
 
@@ -287,12 +284,13 @@ class PromptToolkit2Shell(BaseShell):
         else:
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
+        tokens = PygmentsTokens(tokens)
         if HAS_PYGMENTS:
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-            proxy_style = style_from_pygments(pyghooks.xonsh_style_proxy(self.styler))
+            proxy_style = style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
         else:
-            proxy_style = style_from_dict(DEFAULT_STYLE_DICT)
+            proxy_style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
         ptk_print(tokens, style=proxy_style)
 
     def color_style_names(self):
