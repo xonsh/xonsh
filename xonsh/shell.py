@@ -95,14 +95,18 @@ class Shell(object):
 
     shell_type_aliases = {
         'b': 'best',
+        'best': 'best',
         'ptk': 'prompt_toolkit',
         'ptk1': 'prompt_toolkit1',
         'ptk2': 'prompt_toolkit2',
         'prompt-toolkit': 'prompt_toolkit',
+        'prompt_toolkit': 'prompt_toolkit',
         'prompt-toolkit1': 'prompt_toolkit1',
         'prompt-toolkit2': 'prompt_toolkit2',
         'rand': 'random',
+        'random': 'random',
         'rl': 'readline',
+        'readline': 'readline',
         }
 
     def __init__(self, execer, ctx=None, shell_type=None, **kwargs):

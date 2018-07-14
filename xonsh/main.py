@@ -167,7 +167,7 @@ def parser():
                         'Possible options: readline, prompt_toolkit, random. '
                         'Warning! If set this overrides $SHELL_TYPE variable.',
                    dest='shell_type',
-                   choices=('readline', 'prompt_toolkit', 'best', 'random'),
+                   choices=tuple(Shell.shell_type_aliases.keys()),
                    default=None)
     p.add_argument('--timings',
                    help='Prints timing information before the prompt is shown. '
