@@ -4,6 +4,21 @@ Xonsh Change Log
 
 .. current developments
 
+v0.6.10
+====================
+
+**Added:**
+
+* ``xonsh.lib.subprocess.check_output`` as a ``check_output`` drop in
+
+
+**Fixed:**
+
+* ``xonsh.lib.subprocess.run`` doesn't change dirs unless asked
+
+
+
+
 v0.6.9
 ====================
 
