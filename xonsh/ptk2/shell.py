@@ -3,12 +3,6 @@
 import sys
 import builtins
 
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-try:
-    from prompt_toolkit.layout.lexers import PygmentsLexer
-except ImportError:
-    from prompt_toolkit.lexers import PygmentsLexer
-
 from xonsh.events import events
 from xonsh.base_shell import BaseShell
 from xonsh.shell import transform_command
@@ -20,7 +14,8 @@ from xonsh.ptk2.history import PromptToolkitHistory
 from xonsh.ptk2.completer import PromptToolkitCompleter
 from xonsh.ptk2.key_bindings import load_xonsh_bindings
 
-
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.history import ThreadedHistory
