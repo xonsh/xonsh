@@ -111,7 +111,7 @@ class PromptToolkit2Shell(BaseShell):
             'completer': completer,
             'multiline': multiline,
             'editing_mode': editing_mode,
-#            'prompt_continuation': self.continuation_tokens,
+            'prompt_continuation': self.continuation_tokens,
             'enable_history_search': enable_history_search,
             'reserve_space_for_menu': 0,
             'key_bindings': self.key_bindings,
@@ -219,8 +219,8 @@ class PromptToolkit2Shell(BaseShell):
         # self.prompt_formatter does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $TOOLBAR == ''.
-        if isinstance(p, str) and len(p) == 0:
-            return []
+        if not p:
+            return
         try:
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
@@ -228,8 +228,10 @@ class PromptToolkit2Shell(BaseShell):
         toks = partial_color_tokenize(p)
         return PygmentsTokens(toks)
 
-    def continuation_tokens(self, width):
+    def continuation_tokens(self, width, line_number, is_soft_wrap=False):
         """Displays dots in multiline prompt"""
+        if is_soft_wrap:
+            return ''
         width = width - 1
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
         dots = dots() if callable(dots) else dots
