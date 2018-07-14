@@ -1270,3 +1270,60 @@ def xonsh_builtins(execer=None):
     load_builtins(execer=execer)
     yield
     unload_builtins()
+
+
+class XonshSession:
+    """All components defining a xonsh session.
+
+    """
+
+    def __init__(self):
+        self.config__ = {}
+        self.env = Env(default_env())
+        self.help = helper
+        self.superhelp = superhelper
+        self.pathsearch = pathsearch
+        self.globsearch = globsearch
+        self.regexsearch = regexsearch
+        self.glob = globpath
+        self.expand_path = expand_path
+        self.exit = False
+        self.stdout_uncaptured = None
+        self.stderr_uncaptured = None
+
+        if hasattr(builtins, 'exit'):
+            self.pyexit = builtins.exit
+            del builtins.exit
+
+        if hasattr(builtins, 'quit'):
+            self.pyquit = builtins.quit
+            del builtins.quit
+
+        self.subproc_captured_stdout = subproc_captured_stdout
+        self.subproc_captured_inject = subproc_captured_inject
+        self.subproc_captured_object = subproc_captured_object
+        self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
+        self.subproc_uncaptured = subproc_uncaptured
+        self.execer = execer
+        self.commands_cache = CommandsCache()
+        self.all_jobs = {}
+        self.ensure_list_of_strs = ensure_list_of_strs
+        self.list_of_strs_or_callables = list_of_strs_or_callables
+        self.completers = xonsh.completers.init.default_completers()
+        self.call_macro = call_macro
+        self.enter_macro = enter_macro
+        self.path_literal = path_literal
+
+        self.builtins = _BuiltIns()
+
+
+class _BuiltIns:
+
+    def __init__(self):
+        # public built-ins
+        self.XonshError = XonshError
+        self.XonshCalledProcessError = XonshCalledProcessError
+        self.evalx = None if execer is None else execer.eval
+        self.execx = None if execer is None else execer.exec
+        self.compilex = None if execer is None else execer.compile
+        self.events = events
