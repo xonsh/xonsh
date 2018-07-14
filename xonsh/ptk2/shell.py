@@ -9,7 +9,6 @@ try:
 except ImportError:
     from prompt_toolkit.lexers import PygmentsLexer
 
-from xonsh.platform import ptk_version_info
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception, carriage_return
 from xonsh.ptk2.completer import PromptToolkitCompleter
@@ -24,12 +23,13 @@ from xonsh.lazyimps import pygments, pyghooks, winutils
 
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.history import ThreadedHistory
 from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
-from prompt_toolkit.styles.pygments import Style, pygments_token_to_classname
-from prompt_toolkit.styles.pygments import style_from_pygments_cls, style_from_pygments_dict
+from prompt_toolkit.styles.pygments import (style_from_pygments_cls,
+                                            style_from_pygments_dict, pygments_token_to_classname)
 
 
 Token = _TokenType()
@@ -50,7 +50,7 @@ class PromptToolkit2Shell(BaseShell):
         if ON_WINDOWS:
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
-        self.prompter = PromptSession(history=PromptToolkitHistory())
+        self.prompter = PromptSession(history=ThreadedHistory(PromptToolkitHistory()))
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = KeyBindings()
         load_xonsh_bindings(self.key_bindings)
@@ -112,7 +112,6 @@ class PromptToolkit2Shell(BaseShell):
             'multiline': multiline,
             'editing_mode': editing_mode,
 #            'prompt_continuation': self.continuation_tokens,
-#            'history': history,
             'enable_history_search': enable_history_search,
             'reserve_space_for_menu': 0,
             'key_bindings': self.key_bindings,
