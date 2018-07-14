@@ -9,16 +9,16 @@ try:
 except ImportError:
     from prompt_toolkit.lexers import PygmentsLexer
 
-from xonsh.base_shell import BaseShell
-from xonsh.tools import print_exception, carriage_return
-from xonsh.ptk2.completer import PromptToolkitCompleter
-from xonsh.ptk2.history import PromptToolkitHistory
-from xonsh.ptk2.key_bindings import load_xonsh_bindings
 from xonsh.events import events
+from xonsh.base_shell import BaseShell
 from xonsh.shell import transform_command
+from xonsh.tools import print_exception, carriage_return
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
+from xonsh.ptk2.history import PromptToolkitHistory
+from xonsh.ptk2.completer import PromptToolkitCompleter
+from xonsh.ptk2.key_bindings import load_xonsh_bindings
 
 
 from prompt_toolkit.enums import EditingMode
@@ -36,7 +36,7 @@ Token = _TokenType()
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
 events.doc('on_ptk_create', """
-on_ptk_create(prompter: Prompter, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindingManager) ->
+on_ptk_create(prompter: PromptSession, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindings) ->
 
 Fired after prompt toolkit has been initialized
 """)
@@ -50,20 +50,21 @@ class PromptToolkit2Shell(BaseShell):
         if ON_WINDOWS:
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
-        self.prompter = PromptSession(history=ThreadedHistory(PromptToolkitHistory()))
+        self.history = ThreadedHistory(PromptToolkitHistory())
+        self.prompter = PromptSession(history=self.history)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = KeyBindings()
         load_xonsh_bindings(self.key_bindings)
         # This assumes that PromptToolkit2Shell is a singleton
-#        events.on_ptk_create.fire(
-#            prompter=self.prompter,
-#            history=self.history,
-#            completer=self.pt_completer,
-#            bindings=self.key_bindings,
-#        )
+        events.on_ptk_create.fire(
+            prompter=self.prompter,
+            history=self.history,
+            completer=self.pt_completer,
+            bindings=self.key_bindings,
+        )
 
-    def singleline(self, store_in_history=True, auto_suggest=None,
-                   enable_history_search=True, multiline=True, **kwargs):
+    def singleline(self, auto_suggest=None, enable_history_search=True,
+                   multiline=True, **kwargs):
         """Reads a single line of input from the shell. The store_in_history
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
@@ -71,11 +72,6 @@ class PromptToolkit2Shell(BaseShell):
         events.on_pre_prompt.fire()
         env = builtins.__xonsh_env__
         mouse_support = env.get('MOUSE_SUPPORT')
-#        if store_in_history:
-#            history = self.history
-#        else:
-#            history = None
-#            enable_history_search = False
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         if completions_display == 'multi':
@@ -216,9 +212,6 @@ class PromptToolkit2Shell(BaseShell):
         toolbar.
         """
         p = builtins.__xonsh_env__.get('BOTTOM_TOOLBAR')
-        # self.prompt_formatter does handle empty strings properly,
-        # but this avoids descending into it in the common case of
-        # $TOOLBAR == ''.
         if not p:
             return
         try:
