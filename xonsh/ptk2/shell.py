@@ -84,14 +84,14 @@ class PromptToolkit2Shell(BaseShell):
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
 
-        if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
-            get_prompt_tokens = self.prompt_tokens(None)
-            get_rprompt_tokens = self.rprompt_tokens(None)
-            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens(None)
-        else:
+        if env.get('UPDATE_PROMPT_ON_KEYPRESS'):
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
             get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
+        else:
+            get_prompt_tokens = self.prompt_tokens()
+            get_rprompt_tokens = self.rprompt_tokens()
+            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens()
 
         if env.get('VI_MODE'):
             editing_mode = EditingMode.VI
@@ -176,7 +176,7 @@ class PromptToolkit2Shell(BaseShell):
                 else:
                     break
 
-    def prompt_tokens(self, cli):
+    def prompt_tokens(self):
         """Returns a list of (token, str) tuples for the current prompt."""
         p = builtins.__xonsh_env__.get('PROMPT')
         try:
@@ -190,7 +190,7 @@ class PromptToolkit2Shell(BaseShell):
         self.settitle()
         return PygmentsTokens(toks)
 
-    def rprompt_tokens(self, cli):
+    def rprompt_tokens(self):
         """Returns a list of (token, str) tuples for the current right
         prompt.
         """
@@ -207,7 +207,7 @@ class PromptToolkit2Shell(BaseShell):
         toks = partial_color_tokenize(p)
         return PygmentsTokens(toks)
 
-    def bottom_toolbar_tokens(self, cli):
+    def bottom_toolbar_tokens(self):
         """Returns a list of (token, str) tuples for the current bottom
         toolbar.
         """
