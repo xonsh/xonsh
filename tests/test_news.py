@@ -36,11 +36,11 @@ def check_news_file(fname):
                             'must be one of {}'
                             ''.format(name, i+1, cat, list(CATEGORIES)),
                             pytrace=False)
-            if l.endswith('None'): 
+            if l.endswith('None'):
                 form += '3'
             else:
                 form += '2'
-        elif l.startswith('* ') or l.startswith('  '):
+        elif l.startswith('* ') or l.startswith('- ') or l.startswith('  '):
             form += '1'
         elif l.strip() == '':
             form += '0'
