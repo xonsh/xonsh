@@ -53,8 +53,8 @@ class PromptToolkit2Shell(BaseShell):
         self.prompter = PromptSession(history=PromptToolkitHistory(),
                                       )
 #        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-#        self.key_bindings = KeyBindings()
-#        load_xonsh_bindings(self.key_bindings)
+        self.key_bindings = KeyBindings()
+        load_xonsh_bindings(self.key_bindings)
         # This assumes that PromptToolkit2Shell is a singleton
 #        events.on_ptk_create.fire(
 #            prompter=self.prompter,
@@ -110,7 +110,7 @@ class PromptToolkit2Shell(BaseShell):
 #            'history': history,
             'enable_history_search': enable_history_search,
             'reserve_space_for_menu': 0,
-#            'extra_key_bindings': self.key_bindings,
+            'key_bindings': self.key_bindings,
             'complete_style': complete_style,
             'complete_while_typing': complete_while_typing,
         }
