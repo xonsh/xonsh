@@ -8,7 +8,7 @@ from prompt_toolkit.utils import DummyContext
 from xonsh.platform import ptk_version_info
 import xonsh.tools as xt
 
-from prompt_toolkit.shortcuts import Prompt
+from prompt_toolkit.shortcuts.prompt import prompt
 
 
 class Prompter(object):
@@ -27,7 +27,7 @@ class Prompter(object):
         """
         # TODO: maybe call this ``.prompt`` now since
         # ``CommandLineInterface`` is gone?
-        self.cli = cli or Prompt(**kwargs)
+        self.cli = cli or prompt(**kwargs)
         self.major_minor = ptk_version_info()[:2]
 
     def __enter__(self):

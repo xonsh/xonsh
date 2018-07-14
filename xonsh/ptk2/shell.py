@@ -15,7 +15,6 @@ from xonsh.tools import print_exception, carriage_return
 from xonsh.ptk2.completer import PromptToolkitCompleter, PromptToolkit2Completer
 from xonsh.ptk2.history import PromptToolkitHistory
 from xonsh.ptk2.key_bindings import load_xonsh_bindings
-from xonsh.ptk2.shortcuts import get_prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -26,6 +25,7 @@ from xonsh.lazyimps import pygments, pyghooks, winutils
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
+from prompt_toolkit.shortcuts.prompt import prompt
 from prompt_toolkit.formatted_text import PygmentsTokens
 from prompt_toolkit.styles.pygments import Style, pygments_token_to_classname
 from prompt_toolkit.styles.pygments import style_from_pygments_cls as style_from_pygments
@@ -49,7 +49,7 @@ class PromptToolkit2Shell(BaseShell):
         if ON_WINDOWS:
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
-        self.prompter = get_prompter()
+        self.prompter = prompt()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = KeyBindings()
@@ -78,7 +78,8 @@ class PromptToolkit2Shell(BaseShell):
             enable_history_search = False
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
-        multicolumn = (completions_display == 'multi')
+        if completions_display == 'multi':
+            complete_style = CompleteStyle.MULTI_COLUMN
         complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
         if complete_while_typing:
             # PTK requires history search to be none when completing while typing
@@ -86,13 +87,11 @@ class PromptToolkit2Shell(BaseShell):
         if HAS_PYGMENTS:
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
+
         if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
-            prompt_tokens_cached = self.prompt_tokens(None)
-            get_prompt_tokens = lambda cli: prompt_tokens_cached
-            rprompt_tokens_cached = self.rprompt_tokens(None)
-            get_rprompt_tokens = lambda cli: rprompt_tokens_cached
-            bottom_toolbar_tokens_cached = self.bottom_toolbar_tokens(None)
-            get_bottom_toolbar_tokens = lambda cli: bottom_toolbar_tokens_cached
+            get_prompt_tokens = self.prompt_tokens(None)
+            get_rprompt_tokens = self.rprompt_tokens(None)
+            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens(None)
         else:
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
@@ -102,25 +101,33 @@ class PromptToolkit2Shell(BaseShell):
             prompt_args = {
                 'mouse_support': mouse_support,
                 'auto_suggest': auto_suggest,
-                'get_prompt_tokens': get_prompt_tokens,
-                'get_rprompt_tokens': get_rprompt_tokens,
-                'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
+                'message': get_prompt_tokens,
+                'rprompt': get_rprompt_tokens,
+                'bottom_toolbar': get_bottom_toolbar_tokens,
                 'completer': completer,
                 'multiline': multiline,
-                'get_continuation_tokens': self.continuation_tokens,
+                'prompt_continuation': self.continuation_tokens,
                 'history': history,
                 'enable_history_search': enable_history_search,
                 'reserve_space_for_menu': 0,
-                'key_bindings_registry': self.key_bindings_manager.registry,
-                'display_completions_in_columns': multicolumn,
+                'extra_key_bindings': self.key_bindings,
+                'complete_style': complete_style,
                 'complete_while_typing': complete_while_typing,
             }
             if builtins.__xonsh_env__.get('COLOR_INPUT'):
                 if HAS_PYGMENTS:
                     prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
-                    prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+                    style = style_from_pygments(
+                        pyghooks.xonsh_style_proxy(self.styler))
                 else:
-                    prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
+                    style_dict = {
+                        pygments_token_to_classname(key.__name__): value
+                        for key, value in DEFAULT_STYLE_DICT
+                    }
+                    style = Style.from_dict(style_dict)
+
+                prompt_args['style'] = style
+
             line = self.prompter.prompt(**prompt_args)
             events.on_post_prompt.fire()
         return line
@@ -181,7 +188,7 @@ class PromptToolkit2Shell(BaseShell):
             carriage_return()
             self._first_prompt = False
         self.settitle()
-        return toks
+        return PygmentsTokens(toks)
 
     def rprompt_tokens(self, cli):
         """Returns a list of (token, str) tuples for the current right
@@ -198,7 +205,7 @@ class PromptToolkit2Shell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
-        return toks
+        return PygmentsTokens(toks)
 
     def bottom_toolbar_tokens(self, cli):
         """Returns a list of (token, str) tuples for the current bottom
@@ -215,7 +222,7 @@ class PromptToolkit2Shell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
-        return toks
+        return PygmentsTokens(toks)
 
     def continuation_tokens(self, cli, width):
         """Displays dots in multiline prompt"""
@@ -244,7 +251,7 @@ class PromptToolkit2Shell(BaseShell):
             if n <= count:
                 break
         toks.append((Token, ' '))  # final space
-        return toks
+        return PygmentsTokens(toks)
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
@@ -317,98 +324,3 @@ class PromptToolkit2Shell(BaseShell):
         #   if not ON_POSIX:
         #       return
         #   sys.stdout.write('\033[9999999C\n')
-
-
-class PromptToolkitShell2(PromptToolkitShell):
-
-    def singleline(self, store_in_history=True, auto_suggest=None,
-                   enable_history_search=True, multiline=True, **kwargs):
-        """Reads a single line of input from the shell. The store_in_history
-        kwarg flags whether the input should be stored in PTK's in-memory
-        history.
-        """
-        events.on_pre_prompt.fire()
-        env = builtins.__xonsh_env__
-        mouse_support = env.get('MOUSE_SUPPORT')
-        if store_in_history:
-            history = self.history
-        else:
-            history = None
-            enable_history_search = False
-        auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
-        completions_display = env.get('COMPLETIONS_DISPLAY')
-        if completions_display == 'multi':
-            complete_style = CompleteStyle.MULTI_COLUMN
-        complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
-        if complete_while_typing:
-            # PTK requires history search to be none when completing while typing
-            enable_history_search = False
-        if HAS_PYGMENTS:
-            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-        completer = None if completions_display == 'none' else self.pt_completer
-
-        if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
-            get_prompt_tokens = self.prompt_tokens(None)
-            get_rprompt_tokens = self.rprompt_tokens(None)
-            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens(None)
-        else:
-            get_prompt_tokens = self.prompt_tokens
-            get_rprompt_tokens = self.rprompt_tokens
-            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
-
-        with self.prompter:
-            prompt_args = {
-                'mouse_support': mouse_support,
-                'auto_suggest': auto_suggest,
-                'message': get_prompt_tokens,
-                'rprompt': get_rprompt_tokens,
-                'bottom_toolbar': get_bottom_toolbar_tokens,
-                'completer': completer,
-                'multiline': multiline,
-                'prompt_continuation': self.continuation_tokens,
-                'history': history,
-                'enable_history_search': enable_history_search,
-                'reserve_space_for_menu': 0,
-                'extra_key_bindings': self.key_bindings,
-                'complete_style': complete_style,
-                'complete_while_typing': complete_while_typing,
-            }
-            if builtins.__xonsh_env__.get('COLOR_INPUT'):
-                if HAS_PYGMENTS:
-                    prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
-                    style = style_from_pygments(
-                        pyghooks.xonsh_style_proxy(self.styler))
-                else:
-                    style_dict = {
-                        pygments_token_to_classname(key.__name__): value
-                        for key, value in DEFAULT_STYLE_DICT
-                    }
-                    style = Style.from_dict(style_dict)
-
-                prompt_args['style'] = style
-
-            line = self.prompter.prompt(**prompt_args)
-            events.on_post_prompt.fire()
-        return line
-
-    def prompt_tokens(self, cli):
-        return PygmentsTokens(super().prompt_tokens(cli))
-
-    def rprompt_tokens(self, cli):
-        return PygmentsTokens(super().rprompt_tokens(cli))
-
-    def bottom_toolbar_tokens(self, cli):
-        return PygmentsTokens(super().bottom_toolbar_tokens(cli))
-
-    def continuation_tokens(self, width, cli=None):
-        return PygmentsTokens(
-            super().continuation_tokens(width=width, cli=cli))
-
-
-def get_ptk_shell(**kwargs):
-    """Return a new ptk shell wrapper based on the installed version.
-    """
-    if ptk_version_info()[:2] < (2, 0):
-        return PromptToolkitShell(**kwargs)
-    else:
-        return PromptToolkitShell2(**kwargs)
