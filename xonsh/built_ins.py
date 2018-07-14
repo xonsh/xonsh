@@ -1147,52 +1147,20 @@ def load_builtins(execer=None, ctx=None):
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
-    # private built-ins
-    builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = Env(default_env())
-    builtins.__xonsh_help__ = helper
-    builtins.__xonsh_superhelp__ = superhelper
-    builtins.__xonsh_pathsearch__ = pathsearch
-    builtins.__xonsh_globsearch__ = globsearch
-    builtins.__xonsh_regexsearch__ = regexsearch
-    builtins.__xonsh_glob__ = globpath
-    builtins.__xonsh_expand_path__ = expand_path
-    builtins.__xonsh_exit__ = False
-    builtins.__xonsh_stdout_uncaptured__ = None
-    builtins.__xonsh_stderr_uncaptured__ = None
-    if hasattr(builtins, 'exit'):
-        builtins.__xonsh_pyexit__ = builtins.exit
-        del builtins.exit
-    if hasattr(builtins, 'quit'):
-        builtins.__xonsh_pyquit__ = builtins.quit
-        del builtins.quit
-    builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
-    builtins.__xonsh_subproc_captured_inject__ = subproc_captured_inject
-    builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
-    builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
-    builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
-    builtins.__xonsh_execer__ = execer
-    builtins.__xonsh_commands_cache__ = CommandsCache()
-    builtins.__xonsh_all_jobs__ = {}
-    builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
-    builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
-    builtins.__xonsh_call_macro__ = call_macro
-    builtins.__xonsh_enter_macro__ = enter_macro
-    builtins.__xonsh_path_literal__ = path_literal
+    builtins.__xonsh__ = xs = XonshSession()
+
     # public built-ins
-    builtins.XonshError = XonshError
-    builtins.XonshCalledProcessError = XonshCalledProcessError
+    builtins.XonshError = xs.builtins.XonshError
+    builtins.XonshCalledProcessError = xs.builtins.XonshCalledProcessError
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
-    builtins.events = events
+    builtins.events = xs.builtins.events
 
     # sneak the path search functions into the aliases
     # Need this inline/lazy import here since we use locate_binary that
     # relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
-    builtins.__xonsh_history__ = None
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
         resetting_signal_handle(sig, _lastflush)
@@ -1200,9 +1168,9 @@ def load_builtins(execer=None, ctx=None):
 
 
 def _lastflush(s=None, f=None):
-    if hasattr(builtins, '__xonsh_history__'):
-        if builtins.__xonsh_history__ is not None:
-            builtins.__xonsh_history__.flush(at_exit=True)
+    if hasattr(builtins, '__xonsh__'):
+        if builtins.__xonsh__.history is not None:
+            builtins.__xonsh__.history.flush(at_exit=True)
 
 
 def unload_builtins():
@@ -1219,42 +1187,14 @@ def unload_builtins():
         builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return
-    names = ['__xonsh_config__',
-             '__xonsh_env__',
-             '__xonsh_ctx__',
-             '__xonsh_help__',
-             '__xonsh_superhelp__',
-             '__xonsh_pathsearch__',
-             '__xonsh_globsearch__',
-             '__xonsh_regexsearch__',
-             '__xonsh_glob__',
-             '__xonsh_expand_path__',
-             '__xonsh_exit__',
-             '__xonsh_stdout_uncaptured__',
-             '__xonsh_stderr_uncaptured__',
-             '__xonsh_pyexit__',
-             '__xonsh_pyquit__',
-             '__xonsh_subproc_captured_stdout__',
-             '__xonsh_subproc_captured_inject__',
-             '__xonsh_subproc_captured_object__',
-             '__xonsh_subproc_captured_hiddenobject__',
-             '__xonsh_subproc_uncaptured__',
-             '__xonsh_execer__',
-             '__xonsh_commands_cache__',
-             '__xonsh_completers__',
-             '__xonsh_call_macro__',
-             '__xonsh_enter_macro__',
-             '__xonsh_path_literal__',
+    names = [
+             '__xonsh__',
              'XonshError',
              'XonshCalledProcessError',
              'evalx',
              'execx',
              'compilex',
              'default_aliases',
-             '__xonsh_all_jobs__',
-             '__xonsh_ensure_list_of_strs__',
-             '__xonsh_list_of_strs_or_callables__',
-             '__xonsh_history__',
              ]
     for name in names:
         if hasattr(builtins, name):
@@ -1315,6 +1255,8 @@ class XonshSession:
         self.path_literal = path_literal
 
         self.builtins = _BuiltIns()
+
+        self.history = None
 
 
 class _BuiltIns:
