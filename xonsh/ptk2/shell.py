@@ -23,6 +23,7 @@ from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_
 from xonsh.lazyimps import pygments, pyghooks, winutils
 
 
+from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
@@ -98,6 +99,12 @@ class PromptToolkit2Shell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens
             get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
 
+        if env.get('VI_MODE'):
+            editing_mode = EditingMode.VI
+        else:
+            editing_mode = EditingMode.EMACS
+
+        kwargs['editing_mode'] = editing_mode
         prompt_args = {
             'mouse_support': mouse_support,
             'auto_suggest': auto_suggest,
@@ -106,6 +113,7 @@ class PromptToolkit2Shell(BaseShell):
             'bottom_toolbar': get_bottom_toolbar_tokens,
             'completer': completer,
             'multiline': multiline,
+            'editing_mode': editing_mode,
 #            'prompt_continuation': self.continuation_tokens,
 #            'history': history,
             'enable_history_search': enable_history_search,
