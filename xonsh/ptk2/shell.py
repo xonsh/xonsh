@@ -12,7 +12,7 @@ except ImportError:
 from xonsh.platform import ptk_version_info
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception, carriage_return
-from xonsh.ptk2.completer import PromptToolkitCompleter, PromptToolkit2Completer
+from xonsh.ptk2.completer import PromptToolkitCompleter
 from xonsh.ptk2.history import PromptToolkitHistory
 from xonsh.ptk2.key_bindings import load_xonsh_bindings
 from xonsh.ptk2.shortcuts import Prompter
@@ -52,7 +52,7 @@ class PromptToolkit2Shell(BaseShell):
         self._first_prompt = True
         self.prompter = PromptSession(history=PromptToolkitHistory(),
                                       )
-#        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
+        self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = KeyBindings()
         load_xonsh_bindings(self.key_bindings)
         # This assumes that PromptToolkit2Shell is a singleton
@@ -87,7 +87,7 @@ class PromptToolkit2Shell(BaseShell):
             enable_history_search = False
         if HAS_PYGMENTS:
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-        completer = None #if completions_display == 'none' else self.pt_completer
+        completer = None if completions_display == 'none' else self.pt_completer
 
         if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
             get_prompt_tokens = self.prompt_tokens(None)
@@ -224,7 +224,7 @@ class PromptToolkit2Shell(BaseShell):
         toks = partial_color_tokenize(p)
         return PygmentsTokens(toks)
 
-    def continuation_tokens(self, cli, width):
+    def continuation_tokens(self, width):
         """Displays dots in multiline prompt"""
         width = width - 1
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
