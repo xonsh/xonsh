@@ -8,13 +8,13 @@ from prompt_toolkit.utils import DummyContext
 from xonsh.platform import ptk_version_info
 import xonsh.tools as xt
 
-from prompt_toolkit.shortcuts.prompt import prompt
+from prompt_toolkit.shortcuts.prompt import PromptSession
 
 
-class Prompter(object):
+class Prompter:
     """Prompter for ptk 2.0
     """
-    def __init__(self, cli=None, *args, **kwargs):
+    def __init__(self, app=None, *args, **kwargs):
         """Implements a prompt that statefully holds a command-line
         interface.  When used as a context manager, it will return itself
         on entry and reset itself on exit.
@@ -27,7 +27,7 @@ class Prompter(object):
         """
         # TODO: maybe call this ``.prompt`` now since
         # ``CommandLineInterface`` is gone?
-        self.cli = cli or prompt(**kwargs)
+        self.app = app or PromptSession(**kwargs)
         self.major_minor = ptk_version_info()[:2]
 
     def __enter__(self):
@@ -53,9 +53,10 @@ class Prompter(object):
         if kwargs['bottom_toolbar'] and kwargs['bottom_toolbar'].__pt_formatted_text__() == []:
             kwargs['bottom_toolbar'] = None
 
-        return self.cli.prompt(message=message, **kwargs)
+        return self.app.prompt(message=message, **kwargs)
 
     def reset(self):
         """Resets the prompt and cli to a pristine state on this object."""
         # XXX Is this necessary any more?
-        # self.prompt = None
+        #self.prompt = None
+        pass
