@@ -116,7 +116,7 @@ def pretty(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SE
     Pretty print the object's representation.
     """
     if hasattr(obj, 'xonsh_display'):
-        obj.xonsh_display()
+        return obj.xonsh_display()
 
     stream = CUnicodeIO()
     printer = RepresentationPrinter(stream, verbose, max_width, newline, max_seq_length=max_seq_length)
