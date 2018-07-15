@@ -830,7 +830,7 @@ def run_subproc(cmds, captured=False):
         })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
-        pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
+        pause_call_resume(proc, builtins.__xonsh__.shell.settitle)
     # create command or return if backgrounding.
     if background:
         return
@@ -862,7 +862,7 @@ def subproc_captured_inject(*cmds):
     or shlex.split().
     """
     s = run_subproc(cmds, captured='stdout')
-    toks = builtins.__xonsh_execer__.parser.lexer.split(s.strip())
+    toks = builtins.__xonsh__.execer.parser.lexer.split(s.strip())
     return toks
 
 
@@ -972,7 +972,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
     if kind is str or kind is None:
         return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
-    execer = builtins.__xonsh_execer__
+    execer = builtins.__xonsh__.exece_
     filename = macroname + '(' + name + ')'
     if kind is AST:
         ctx = set(dir(builtins)) | set(glbs.keys())
@@ -1084,7 +1084,7 @@ def _eval_regular_args(raw_args, glbs, locs):
         return [], {}
     arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
     kwarglist = raw_args[len(arglist):]
-    execer = builtins.__xonsh_execer__
+    execer = builtins.__xonsh__.execer
     if not arglist:
         args = arglist
         kwargstr = 'dict({})'.format(', '.join(kwarglist))
@@ -1147,23 +1147,9 @@ def load_builtins(execer=None, ctx=None):
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
-    builtins.__xonsh__ = xs = XonshSession()
 
-    # public built-ins
-    builtins.XonshError = xs.builtins.XonshError
-    builtins.XonshCalledProcessError = xs.builtins.XonshCalledProcessError
-    builtins.evalx = None if execer is None else execer.eval
-    builtins.execx = None if execer is None else execer.exec
-    builtins.compilex = None if execer is None else execer.compile
-    builtins.events = xs.builtins.events
+    builtins.__xonsh__.link_builtins(execer=execer)
 
-    # sneak the path search functions into the aliases
-    # Need this inline/lazy import here since we use locate_binary that
-    # relies on __xonsh_env__ in default aliases
-    builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
-    atexit.register(_lastflush)
-    for sig in AT_EXIT_SIGNALS:
-        resetting_signal_handle(sig, _lastflush)
     BUILTINS_LOADED = True
 
 
@@ -1187,18 +1173,9 @@ def unload_builtins():
         builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return
-    names = [
-             '__xonsh__',
-             'XonshError',
-             'XonshCalledProcessError',
-             'evalx',
-             'execx',
-             'compilex',
-             'default_aliases',
-             ]
-    for name in names:
-        if hasattr(builtins, name):
-            delattr(builtins, name)
+    builtins.__xonsh__.unlink_builtins()
+    delattr(builtins, '__xonsh__')
+
     BUILTINS_LOADED = False
 
 
@@ -1218,6 +1195,9 @@ class XonshSession:
     """
 
     def __init__(self):
+        self.ctx = {}
+
+    def load(self):
         self.config__ = {}
         self.env = Env(default_env())
         self.help = helper
@@ -1257,6 +1237,37 @@ class XonshSession:
         self.builtins = _BuiltIns()
 
         self.history = None
+
+    def link_builtins(self, execer=None):
+        # public built-ins
+        builtins.XonshError = self.builtins.XonshError
+        builtins.XonshCalledProcessError = self.builtins.XonshCalledProcessError
+        builtins.evalx = None if execer is None else execer.eval
+        builtins.execx = None if execer is None else execer.exec
+        builtins.compilex = None if execer is None else execer.compile
+        builtins.events = self.builtins.events
+
+        # sneak the path search functions into the aliases
+        # Need this inline/lazy import here since we use locate_binary that
+        # relies on __xonsh_env__ in default aliases
+        builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
+        atexit.register(_lastflush)
+        for sig in AT_EXIT_SIGNALS:
+            resetting_signal_handle(sig, _lastflush)
+
+    def unlink_builtins(self):
+        names = [
+                 'XonshError',
+                 'XonshCalledProcessError',
+                 'evalx',
+                 'execx',
+                 'compilex',
+                 'default_aliases',
+                 ]
+
+        for name in names:
+            if hasattr(builtins, name):
+                delattr(builtins, name)
 
 
 class _BuiltIns:

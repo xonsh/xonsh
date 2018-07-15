@@ -25,6 +25,7 @@ from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context
+from xonsh.built_ins import XonshSession
 
 
 events.transmogrify('on_post_init', 'LoadEvent')
@@ -233,7 +234,7 @@ def start_services(shell_kwargs, args):
     events.on_timingprobe.fire(name='post_execer_init')
     # load rc files
     login = shell_kwargs.get('login', True)
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     rc = shell_kwargs.get('rc', None)
     rc = env.get('XONSHRC') if rc is None else rc
     if args.mode != XonshMode.interactive and not args.force_interactive:
@@ -243,7 +244,7 @@ def start_services(shell_kwargs, args):
     xonshrc_context(rcfiles=rc, execer=execer, ctx=ctx, env=env, login=login)
     events.on_post_rc.fire()
     # create shell
-    builtins.__xonsh_shell__ = Shell(execer=execer, **shell_kwargs)
+    builtins.__xonsh__.shell = Shell(execer=execer, **shell_kwargs)
     ctx['__name__'] = '__main__'
     return env
 
@@ -256,7 +257,7 @@ def premain(argv=None):
     setproctitle = get_setproctitle()
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + argv))
-    builtins.__xonsh_ctx__ = {}
+    builtins.__xonsh__ = XonshSession()
     args = parser.parse_args(argv)
     if args.help:
         parser.print_help()
@@ -270,7 +271,7 @@ def premain(argv=None):
                     'login': False,
                     'scriptcache': args.scriptcache,
                     'cacheall': args.cacheall,
-                    'ctx': builtins.__xonsh_ctx__}
+                    'ctx': builtins.__xonsh__.ctx}
     if args.login:
         shell_kwargs['login'] = True
     if args.norc:
@@ -353,8 +354,8 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
     events.on_post_init.fire()
-    env = builtins.__xonsh_env__
-    shell = builtins.__xonsh_shell__
+    env = builtins.__xonsh__.env
+    shell = builtins.__xonsh__.shell
     try:
         if args.mode == XonshMode.interactive:
             # enter the shell
@@ -397,8 +398,8 @@ def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
     if ON_WINDOWS:
         setup_win_unicode_console(enable=False)
-    if hasattr(builtins, '__xonsh_shell__'):
-        del builtins.__xonsh_shell__
+    if hasattr(builtins.__xonsh__, 'shell'):
+        del builtins.__xonsh__.shell
 
 
 @contextlib.contextmanager
@@ -408,7 +409,7 @@ def main_context(argv=None):
     up the shell.
     """
     args = premain(argv)
-    yield builtins.__xonsh_shell__
+    yield builtins.__xonsh__.shell
     postmain(args)
 
 
@@ -432,10 +433,10 @@ def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),)):
     """
     ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
-    builtins.__xonsh_ctx__ = ctx
-    builtins.__xonsh_execer__ = Execer(xonsh_ctx=ctx)
-    builtins.__xonsh_shell__ = Shell(builtins.__xonsh_execer__,
+    builtins.__xonsh__.ctx = ctx
+    builtins.__xonsh__.execer = Execer(xonsh_ctx=ctx)
+    builtins.__xonsh__.shell = Shell(builtins.__xonsh__.execer,
                                      ctx=ctx,
                                      shell_type='none')
-    builtins.__xonsh_env__.update(env)
+    builtins.__xonsh__.env.update(env)
     install_import_hooks()
