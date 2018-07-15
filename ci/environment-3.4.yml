@@ -15,5 +15,7 @@ dependencies:
   - coverage
   - pyflakes
   - pytest-cov
-  - pytest-flake8
   - codecov
+  # conda forge doesn't have the following for Python v3.4
+  - pip:
+    - pytest-flake8
