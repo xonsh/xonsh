@@ -4,17 +4,16 @@ channels:
 dependencies:
   - python=3.4
   - pygments
-  - prompt_toolkit<2.0
+  - prompt_toolkit
   - ply
   - pytest
   - pytest-timeout
   - numpy
   - psutil
-  - matplotlib=1.5.3
+  - matplotlib
   - flake8
   - coverage
   - pyflakes
   - pytest-cov
-  - pip:
-    - pytest-flake8
-    - codecov
+  - pytest-flake8
+  - codecov
