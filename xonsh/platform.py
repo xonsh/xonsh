@@ -190,7 +190,7 @@ def pathsplit(p):
     without a drive.
     """
     n = len(p)
-    while n and p[n-1] not in seps:
+    while n and p[n - 1] not in seps:
         n -= 1
     pre = p[:n]
     pre = pre.rstrip(seps) or pre
@@ -283,14 +283,14 @@ if PYTHON_VERSION_INFO < (3, 5, 0):
                 return self.__path__.is_dir()
             else:
                 return not self.__path__.is_symlink() \
-                       and self.__path__.is_dir()
+                    and self.__path__.is_dir()
 
         def is_file(self, *, follow_symlinks=True):
             if follow_symlinks:
                 return self.__path__.is_file()
             else:
                 return not self.__path__.is_symlink() \
-                       and self.__path__.is_file()
+                    and self.__path__.is_file()
 
         def stat(self, *, follow_symlinks=True):
             return os.stat(self.path, follow_symlinks=follow_symlinks)

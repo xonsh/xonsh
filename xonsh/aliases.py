@@ -96,7 +96,7 @@ class Aliases(cabc.MutableMapping):
                                                    cabc.Sequence):
             word_idx = line.find(word)
             expansion = ' '.join(self.get(word))
-            line = line[:word_idx] + expansion + line[word_idx+len(word):]
+            line = line[:word_idx] + expansion + line[word_idx + len(word):]
         return line
 
     #
@@ -298,7 +298,7 @@ def source_alias(args, stdin=None):
             src += '\n'
         ctx = builtins.__xonsh_ctx__
         updates = {'__file__': fpath, '__name__': os.path.abspath(fpath)}
-        with env.swap(ARGS=args[i+1:]), swap_values(ctx, updates):
+        with env.swap(ARGS=args[i + 1:]), swap_values(ctx, updates):
             try:
                 builtins.execx(src, 'exec', ctx, filename=fpath)
             except Exception:
@@ -455,7 +455,7 @@ def make_default_aliases():
         'xexec': xexec,
         'source': source_alias,
         'source-zsh': ['source-foreign', 'zsh', '--sourcer=source'],
-        'source-bash':  ['source-foreign', 'bash', '--sourcer=source'],
+        'source-bash': ['source-foreign', 'bash', '--sourcer=source'],
         'source-cmd': source_cmd,
         'source-foreign': source_foreign,
         'history': xhm.history_main,

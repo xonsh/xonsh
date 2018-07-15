@@ -303,7 +303,7 @@ def CLUT():
         ('253', 'dadada'),
         ('254', 'e4e4e4'),
         ('255', 'eeeeee'),
-        ]
+   ]
 
 
 def _str2hex(hexstr):
@@ -358,8 +358,8 @@ def rgb_to_256(rgb):
     res = []
     for part in parts:
         i = 0
-        while i < len(incs)-1:
-            s, b = incs[i], incs[i+1]  # smaller, bigger
+        while i < len(incs) - 1:
+            s, b = incs[i], incs[i + 1]  # smaller, bigger
             if s <= part <= b:
                 s1 = abs(s - part)
                 b1 = abs(b - part)
@@ -391,11 +391,11 @@ def rgb_to_ints(rgb):
     if len(rgb) == 6:
         return tuple([int(h, 16) for h in RE_RGB6.split(rgb)[1:4]])
     else:
-        return tuple([int(h*2, 16) for h in RE_RGB3.split(rgb)[1:4]])
+        return tuple([int(h * 2, 16) for h in RE_RGB3.split(rgb)[1:4]])
 
 
 def color_dist(x, y):
-    return math.sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2 + (x[2]-y[2])**2)
+    return math.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2 + (x[2] - y[2])**2)
 
 
 def find_closest_color(x, palette):

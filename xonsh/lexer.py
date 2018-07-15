@@ -242,7 +242,7 @@ def special_handlers():
         (ERRORTOKEN, ' '): handle_error_space,
         (ERRORTOKEN, '\\\n'): handle_error_linecont,
         (ERRORTOKEN, '\\\r\n'): handle_error_linecont,
-        }
+    }
     _make_matcher_handler('(', 'LPAREN', True, ')', sh)
     _make_matcher_handler('[', 'LBRACKET', True, ']', sh)
     _make_matcher_handler('{', 'LBRACE', True, '}', sh)
@@ -426,6 +426,6 @@ class Lexer(object):
                 'DOLLAR_LBRACKET',       # $[
                 'ATDOLLAR_LPAREN',       # @$(
                 'ERRORTOKEN',            # whoops!
-                ) + tuple(i.upper() for i in kwmod.kwlist)
+            ) + tuple(i.upper() for i in kwmod.kwlist)
             self._tokens = t
         return self._tokens

@@ -194,9 +194,9 @@ class Execer(object):
                     input = '\n'.join(lines)
                     continue
 
-                if last_error_line > 1 and lines[idx-1].rstrip()[-1:] == ':':
+                if last_error_line > 1 and lines[idx - 1].rstrip()[-1:] == ':':
                     # catch non-indented blocks and raise error.
-                    prev_indent = len(lines[idx-1]) - len(lines[idx-1].lstrip())
+                    prev_indent = len(lines[idx - 1]) - len(lines[idx - 1].lstrip())
                     curr_indent = len(lines[idx]) - len(lines[idx].lstrip())
                     if prev_indent == curr_indent:
                         raise original_error

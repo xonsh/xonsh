@@ -41,6 +41,7 @@ class Completer(object):
                 res = out
                 lprefix = len(prefix)
             if res is not None and len(res) != 0:
-                def sortkey(s): return s.lstrip(''''"''').lower()
+                def sortkey(s):
+                    return s.lstrip(''''"''').lower()
                 return tuple(sorted(res, key=sortkey)), lprefix
         return set(), lprefix

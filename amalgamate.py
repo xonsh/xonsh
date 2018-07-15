@@ -435,7 +435,7 @@ def rewrite_imports(name, pkg, order, imps):
     for start, stop, s in replacements[::-1]:
         lines[start] = s
         for i in range(stop - start - 1):
-            del lines[start+1]
+            del lines[start + 1]
     return ''.join(lines)
 
 
@@ -524,8 +524,8 @@ def rewrite_init(pkg, order, debug='DEBUG'):
     if start + 1 == stop:
         lines.insert(stop, s)
     else:
-        lines[start+1] = s
-        lines = lines[:start+2] + lines[stop:]
+        lines[start + 1] = s
+        lines = lines[:start + 2] + lines[stop:]
     init = '\n'.join(lines) + '\n'
     with open(fname, 'w', encoding='utf-8', errors='surrogateescape') as f:
         f.write(init)

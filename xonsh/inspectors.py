@@ -35,7 +35,7 @@ _object_init_docstring = LazyObject(lambda: object.__init__.__doc__,
 _builtin_type_docstrings = LazyObject(lambda: {
     t.__doc__
     for t in (types.ModuleType, types.MethodType, types.FunctionType)
-    }, globals(), '_builtin_type_docstrings')
+}, globals(), '_builtin_type_docstrings')
 
 _builtin_func_type = LazyObject(lambda: type(all), globals(),
                                 '_builtin_func_type')
@@ -50,7 +50,7 @@ info_fields = LazyObject(lambda: [
     # These won't be printed but will be used to determine how to
     # format the object
     'ismagic', 'isalias', 'isclass', 'argspec', 'found', 'name'
-    ], globals(), 'info_fields')
+], globals(), 'info_fields')
 
 
 def object_info(**kw):

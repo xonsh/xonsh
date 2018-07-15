@@ -73,7 +73,7 @@ class XonshKernel(Kernel):
         if n == 0:
             return
         lower = range(0, n, chunksize)
-        upper = range(chunksize, n+chunksize, chunksize)
+        upper = range(chunksize, n + chunksize, chunksize)
         for l, u in zip(lower, upper):
             response = {'name': name, 'text': s[l:u], }
             self.send_response(self.iopub_socket, 'stream', response)

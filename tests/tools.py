@@ -53,7 +53,6 @@ skip_if_lt_ptk2 = pytest.mark.skipif(ptk_version_info()[0] < 2,
                                      reason="prompt-tollkit <2")
 
 
-
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
