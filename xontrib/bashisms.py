@@ -19,11 +19,11 @@ def bash_preproc(cmd, **kw):
 
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
-    handler = bindings.registry.add_binding
+    handler = bindings.add
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
     @Condition
-    def last_command_exists(cli):
+    def last_command_exists():
         return len(__xonsh_history__) > 0
 
     @handler(Keys.Escape, '.', filter=last_command_exists &
