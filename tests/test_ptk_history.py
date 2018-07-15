@@ -5,7 +5,7 @@ try:
 except ImportError:
     pytest.mark.skip(msg='prompt_toolkit is not available')
 
-from xonsh.ptk.history import PromptToolkitHistory
+from xonsh.ptk2.history import PromptToolkitHistory
 
 
 @pytest.fixture

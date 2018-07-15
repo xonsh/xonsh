@@ -154,14 +154,6 @@ class Shell(object):
                               'supported. Please update prompt-toolkit. Using '
                               'readline instead.')
                 shell_type = 'readline'
-            elif not ptk_below_max_supported():
-                warnings.warn('prompt-toolkit version 2.0 is not yet '
-                              'supported. Please see Github PR #2570 for '
-                              'latest status. To use prompt-toolkit now you '
-                              'can downgrade to version 1.x with\n'
-                              'xpip install "prompt_toolkit<2"\n'
-                              'Starting xonsh with readline shell instead.')
-                shell_type = 'readline'
             else:
                 shell_type = ptk_shell_type()
         self.shell_type = env['SHELL_TYPE'] = shell_type
