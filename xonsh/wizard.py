@@ -481,7 +481,7 @@ class PrettyFormatter(Visitor):
             s += '\n'
             t = sorted(node.responses.items())
             t = ['{0!r}: {1}'.format(k, self.visit(v)) for k, v in t]
-            s += textwrap.indent(',\n'.join(t), 2*self.indent)
+            s += textwrap.indent(',\n'.join(t), 2 * self.indent)
             s += '\n' + self.indent + '}'
         if node.converter is not None:
             s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
@@ -620,7 +620,7 @@ class StateVisitor(Visitor):
         p = path[-1]
         if isinstance(p, int) and abs(p) + (p >= 0) > len(loc):
             i = abs(p) + (p >= 0) - len(loc)
-            ex = [None]*i
+            ex = [None] * i
             loc.extend(ex)
         loc[p] = val
 

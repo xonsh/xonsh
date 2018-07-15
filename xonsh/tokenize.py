@@ -238,7 +238,7 @@ _redir_map = (
     # stdout to stderr
     'out>err', 'out>&2', '1>err', 'out>e', 'out>2', 'o>err', 'o>&2',
     '1>&2', 'o>e', '1>e', 'o>2', '1>2',
-    )
+)
 IORedirect = group(group(*_redir_map), '{}>>?'.format(group(*_redir_names)))
 _redir_check = set(_redir_map)
 _redir_check = {'{}>'.format(i) for i in _redir_names}.union(_redir_check)

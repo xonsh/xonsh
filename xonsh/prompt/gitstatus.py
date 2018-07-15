@@ -86,13 +86,13 @@ def _get_stash(gitdir):
 
 def _gitoperation(gitdir):
     files = (
-             ('rebase-merge', 'REBASE'),
-             ('rebase-apply', 'AM/REBASE'),
-             ('MERGE_HEAD', 'MERGING'),
-             ('CHERRY_PICK_HEAD', 'CHERRY-PICKING'),
-             ('REVERT_HEAD', 'REVERTING'),
-             ('BISECT_LOG', 'BISECTING'),
-             )
+        ('rebase-merge', 'REBASE'),
+        ('rebase-apply', 'AM/REBASE'),
+        ('MERGE_HEAD', 'MERGING'),
+        ('CHERRY_PICK_HEAD', 'CHERRY-PICKING'),
+        ('REVERT_HEAD', 'REVERTING'),
+        ('BISECT_LOG', 'BISECTING'),
+    )
     return [f[1] for f in files
             if os.path.exists(os.path.join(gitdir, f[0]))]
 

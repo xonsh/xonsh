@@ -66,7 +66,7 @@ def _dynamically_collapsed_pwd():
                            max(1, remaining_space_for_text // (len(pwd) - i))))
         remaining_space_for_text -= part_len
         if len(part) > part_len:
-            reduced_part = part[0:part_len-len(elision_char)] + elision_char
+            reduced_part = part[0:part_len - len(elision_char)] + elision_char
             parts.append(reduced_part)
         else:
             parts.append(part)

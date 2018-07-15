@@ -18,7 +18,7 @@ class VoxHandler:
         create = subparsers.add_parser(
             'new', aliases=['create'],
             help='Create a new virtual environment'
-            )
+        )
         create.add_argument('name', metavar='ENV',
                             help='The environments to create')
 
@@ -48,7 +48,7 @@ class VoxHandler:
         activate = subparsers.add_parser(
             'activate', aliases=['workon', 'enter'],
             help='Activate virtual environment'
-            )
+        )
         activate.add_argument('name', metavar='ENV',
                               help='The environment to activate')
         subparsers.add_parser('deactivate', aliases=['exit'], help='Deactivate current virtual environment')
@@ -83,7 +83,7 @@ class VoxHandler:
         if cmd is None:
             self.parser.print_usage()
         else:
-            getattr(self, 'cmd_'+cmd)(args, stdin)
+            getattr(self, 'cmd_' + cmd)(args, stdin)
 
     def cmd_new(self, args, stdin=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.

@@ -301,7 +301,7 @@ def setup_timings():
             width = max(len(s) for s, _ in times) + 2
             header_format = '|{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
             entry_format = '|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
-            sepline = '|{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
+            sepline = '|{}|{}|{}|'.format('-' * width, '-' * 11, '-' * 11)
             # Print result table
             print(' Debug level: {}'.format(os.getenv('XONSH_DEBUG', 'Off')))
             print(sepline)

@@ -224,11 +224,11 @@ class PromptToolkit2Shell(BaseShell):
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
         dots = dots() if callable(dots) else dots
         if dots is None:
-            return [(Token, ' '*(width + 1))]
+            return [(Token, ' ' * (width + 1))]
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            return [(Token, ' '*(width + 1))]
+            return [(Token, ' ' * (width + 1))]
         toks = basetoks * (width // baselen)
         n = width % baselen
         count = 0
@@ -240,7 +240,7 @@ class PromptToolkit2Shell(BaseShell):
             elif newcount <= n:
                 toks.append(tok)
             else:
-                toks.append((tok[0], tok[1][:n-count]))
+                toks.append((tok[0], tok[1][:n - count]))
             count = newcount
             if n <= count:
                 break

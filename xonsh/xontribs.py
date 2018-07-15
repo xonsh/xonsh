@@ -118,7 +118,7 @@ def _list(ns):
         for d in data:
             name = d['name']
             lname = len(name)
-            s += "{PURPLE}" + name + "{NO_COLOR}  " + " "*(nname - lname)
+            s += "{PURPLE}" + name + "{NO_COLOR}  " + " " * (nname - lname)
             if d['installed']:
                 s += '{GREEN}installed{NO_COLOR}      '
             else:
@@ -154,7 +154,7 @@ def _create_xontrib_parser():
 _MAIN_XONTRIB_ACTIONS = {
     'load': _load,
     'list': _list,
-    }
+}
 
 
 @unthreadable

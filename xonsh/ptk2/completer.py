@@ -29,7 +29,7 @@ class PromptToolkitCompleter(Completer):
         should_complete = (
             complete_event.completion_requested or
             env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
-            )
+        )
         #  Only generate completions when the user hits tab.
         if not should_complete or self.completer is None:
             return

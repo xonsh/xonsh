@@ -149,9 +149,9 @@ def whitespace_or_bracket_before(cli):
     """Check if there is whitespace or an opening
        bracket to the left of the cursor"""
     d = cli.current_buffer.document
-    return bool(d.cursor_position == 0
-                or d.char_before_cursor.isspace()
-                or d.char_before_cursor in '([{')
+    return bool(d.cursor_position == 0 or
+                d.char_before_cursor.isspace() or
+                d.char_before_cursor in '([{')
 
 
 @Condition
@@ -159,9 +159,9 @@ def whitespace_or_bracket_after(cli):
     """Check if there is whitespace or a closing
        bracket to the right of the cursor"""
     d = cli.current_buffer.document
-    return bool(d.is_cursor_at_the_end_of_line
-                or d.current_char.isspace()
-                or d.current_char in ')]}')
+    return bool(d.is_cursor_at_the_end_of_line or
+                d.current_char.isspace() or
+                d.current_char in ')]}')
 
 
 def load_xonsh_bindings(key_bindings_manager):

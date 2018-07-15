@@ -94,7 +94,7 @@ def _discover_lexers():
         '.sql': ('pygments.lexers.sql', 'SqlLexer'),
         '.txt': ('pygments.lexers.special', 'TextLexer'),
         '.html': ('pygments.lexers.html', 'HtmlLexer'),
-        }
+    }
     exts = {}
     lexers = {'exts': exts}
     if DEBUG:
@@ -109,8 +109,8 @@ def _discover_lexers():
                 filename = filename[1:]
             if '*' in filename:
                 continue
-            if (DEBUG and filename in exts and exts[filename] != val
-                    and filename not in default_exts):
+            if (DEBUG and filename in exts and exts[filename] != val and
+                    filename not in default_exts):
                 duplicates[filename].add(val)
                 duplicates[filename].add(exts[filename])
             exts[filename] = val
@@ -144,16 +144,16 @@ def _discover_formatters():
                 filename = filename[1:]
             if '*' in filename:
                 continue
-            if (DEBUG and filename in exts and exts[filename] != val
-                    and filename not in default_exts):
+            if (DEBUG and filename in exts and exts[filename] != val and
+                    filename not in default_exts):
                 duplicates[filename].add(val)
                 duplicates[filename].add(exts[filename])
             exts[filename] = val
         # add names and aliases
         names[cls.name] = val
         for alias in cls.aliases:
-            if (DEBUG and alias in names and names[alias] != val
-                    and alias not in default_names):
+            if (DEBUG and alias in names and names[alias] != val and
+                    alias not in default_names):
                 duplicates[alias].add(val)
                 duplicates[alias].add(names[alias])
             names[alias] = val
@@ -180,8 +180,8 @@ def _discover_styles():
         cls = get_style_by_name(name)
         mod = inspect.getmodule(cls)
         val = (mod.__name__, cls.__name__)
-        if (DEBUG and name in names and names[name] != val
-                and name not in default_names):
+        if (DEBUG and name in names and names[name] != val and
+                name not in default_names):
             duplicates[name].add(val)
             duplicates[name].add(names[name])
         names[name] = val
@@ -208,8 +208,8 @@ def _discover_filters():
         cls = type(filter)
         mod = inspect.getmodule(cls)
         val = (mod.__name__, cls.__name__)
-        if (DEBUG and name in names and names[name] != val
-                and name not in default_names):
+        if (DEBUG and name in names and names[name] != val and
+                name not in default_names):
             duplicates[name].add(val)
             duplicates[name].add(names[name])
         names[name] = val

@@ -79,9 +79,9 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         # perform reversible operations to produce an optimally tight layout
         dpi = dpi_fig
         subplotpars = {
-                k: getattr(fig.subplotpars, k)
-                for k in ['wspace', 'hspace', 'bottom', 'top', 'left', 'right']
-                }
+            k: getattr(fig.subplotpars, k)
+            for k in ['wspace', 'hspace', 'bottom', 'top', 'left', 'right']
+        }
 
         # set the figure dimensions to the terminal size
         fig.set_size_inches(width/dpi, height/dpi, forward=True)
@@ -91,7 +91,7 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         fig.subplots_adjust(wspace=0, hspace=0)
         # move all subplots to take the entirety of space in the figure
         # leave only one line for top and bottom
-        fig.subplots_adjust(bottom=1/height, top=1-1/height, left=0, right=1)
+        fig.subplots_adjust(bottom=1 / height, top=1 - 1 / height, left=0, right=1)
 
         # reduce font size in order to reduce text impact on the image
         font_size = matplotlib.rcParams['font.size']
@@ -110,7 +110,7 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         matplotlib.rcParams.update({'font.size': font_size})
 
         # reset the axis positions and figure dimensions
-        fig.set_size_inches(w/dpi, h/dpi, forward=True)
+        fig.set_size_inches(w / dpi, h / dpi, forward=True)
         fig.subplots_adjust(**subplotpars)
     else:
         fig.dpi = dpi_fig

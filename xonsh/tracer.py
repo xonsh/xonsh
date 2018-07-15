@@ -17,8 +17,7 @@ from xonsh.proc import STDOUT_CAPTURE_KINDS
 import xonsh.prompt.cwd as prompt
 
 terminal = LazyObject(lambda: importlib.import_module(
-                                'pygments.formatters.terminal'),
-                      globals(), 'terminal')
+    'pygments.formatters.terminal'), globals(), 'terminal')
 
 
 class TracerType(object):
@@ -203,7 +202,7 @@ _TRACER_MAIN_ACTIONS = {
     'del': _off,
     'stop': _off,
     'color': _color,
-    }
+}
 
 
 def tracermain(args=None, stdin=None, stdout=None, stderr=None, spec=None):

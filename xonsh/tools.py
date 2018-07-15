@@ -165,8 +165,8 @@ class EnvPath(collections.MutableSequence):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence
                     raise TypeError(
-                            "EnvPath's initialization sequence should only "
-                            "contain str, bytes and pathlib.Path entries")
+                        "EnvPath's initialization sequence should only "
+                        "contain str, bytes and pathlib.Path entries")
                 self._l = args
             else:
                 raise TypeError('EnvPath cannot be initialized with items '
@@ -499,7 +499,7 @@ def get_logical_line(lines, idx):
     n = 1
     nlines = len(lines)
     linecont = get_line_continuation()
-    while idx > 0 and lines[idx-1].endswith(linecont):
+    while idx > 0 and lines[idx - 1].endswith(linecont):
         idx -= 1
     start = idx
     line = lines[idx]
@@ -524,9 +524,9 @@ def replace_logical_line(lines, logical, idx, n):
         lines[idx] = logical
         return
     space = ' '
-    for i in range(idx, idx+n-1):
+    for i in range(idx, idx + n - 1):
         a = len(lines[i])
-        b = logical.find(space, a-1)
+        b = logical.find(space, a - 1)
         if b < 0:
             # no space found
             lines[i] = logical
@@ -535,7 +535,7 @@ def replace_logical_line(lines, logical, idx, n):
             # found space to split on
             lines[i] = logical[:b] + linecont
             logical = logical[b:]
-    lines[idx+n-1] = logical
+    lines[idx + n - 1] = logical
 
 
 def is_balanced(expr, ltok, rtok):
@@ -1468,7 +1468,7 @@ HISTORY_UNITS = LazyObject(lambda: {
     'tb': ('b', _tb_to_b),
     'terabyte': ('b', _tb_to_b),
     'terabytes': ('b', _tb_to_b),
-    }, globals(), 'HISTORY_UNITS')
+}, globals(), 'HISTORY_UNITS')
 """Maps lowercase unit names to canonical name and conversion utilities."""
 
 
@@ -1708,7 +1708,7 @@ RE_STRING_CONT = LazyDict({
     "'": lambda: re.compile(r"((\\(.|\n))|([^'\\]))*"),
     '"""': lambda: re.compile(r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*'),
     "'''": lambda: re.compile(r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*"),
-    }, globals(), 'RE_STRING_CONT')
+}, globals(), 'RE_STRING_CONT')
 """Dictionary mapping starting quote sequences to regular expressions that
 match the contents of a string beginning with those quotes (not including the
 terminating quotes)"""
@@ -1975,7 +1975,7 @@ def columnize(elems, width=80, newline='\n'):
             # we might be able to fit another column.
             ncols += 1
             nrows = nelem // ncols
-            columns = [sizes[i*nrows:(i+1)*nrows] for i in range(ncols)]
+            columns = [sizes[i * nrows:(i + 1)*nrows] for i in range(ncols)]
             last_longest_row = longest_row
         else:
             # we can't fit another column
@@ -1984,7 +1984,7 @@ def columnize(elems, width=80, newline='\n'):
             break
     pad = (width - last_longest_row + ncols) // ncols
     pad = pad if pad > 1 else 1
-    data = [elems[i*nrows:(i+1)*nrows] for i in range(ncols)]
+    data = [elems[i * nrows:(i + 1) * nrows] for i in range(ncols)]
     colwidths = [max(map(len, d)) + pad for d in data]
     colwidths[-1] -= pad
     row_t = ''.join(['{{row[{i}]: <{{w[{i}]}}}}'.format(i=i) for i in range(ncols)])

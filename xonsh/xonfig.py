@@ -117,7 +117,7 @@ _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
     bash='source-bash',
     cmd='source-cmd',
     zsh='source-zsh',
-    )
+)
 
 
 def _dump_xonfig_foreign_shell(path, value):
@@ -608,13 +608,13 @@ def STRIP_COLOR_RE():
 def _align_string(string, align='<', fill=' ', width=80):
     """ Align and pad a color formatted string """
     linelen = len(STRIP_COLOR_RE.sub('', string))
-    padlen = max(width-linelen, 0)
+    padlen = max(width - linelen, 0)
     if align == '^':
-        return fill*(padlen//2) + string + fill*(padlen//2 + padlen % 2)
+        return fill * (padlen // 2) + string + fill * (padlen // 2 + padlen % 2)
     elif align == '>':
         return fill*padlen + string
     elif align == '<':
-        return string + fill*padlen
+        return string + fill * padlen
     else:
         return string
 

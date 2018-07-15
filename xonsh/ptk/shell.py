@@ -46,7 +46,7 @@ class PromptToolkitShell(BaseShell):
             'enable_auto_suggest_bindings': True,
             'enable_search': True,
             'enable_abort_and_exit_bindings': True,
-            }
+        }
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
         # This assumes that PromptToolkitShell is a singleton
@@ -218,11 +218,11 @@ class PromptToolkitShell(BaseShell):
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
         dots = dots() if callable(dots) else dots
         if dots is None:
-            return [(Token, ' '*(width + 1))]
+            return [(Token, ' ' * (width + 1))]
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            return [(Token, ' '*(width + 1))]
+            return [(Token, ' ' * (width + 1))]
         toks = basetoks * (width // baselen)
         n = width % baselen
         count = 0
@@ -234,7 +234,7 @@ class PromptToolkitShell(BaseShell):
             elif newcount <= n:
                 toks.append(tok)
             else:
-                toks.append((tok[0], tok[1][:n-count]))
+                toks.append((tok[0], tok[1][:n - count]))
             count = newcount
             if n <= count:
                 break

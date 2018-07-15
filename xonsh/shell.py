@@ -8,7 +8,7 @@ import builtins
 import warnings
 
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
-                            ptk_above_min_supported, ptk_below_max_supported, ptk_shell_type)
+                            ptk_above_min_supported, ptk_shell_type)
 from xonsh.tools import XonshError, print_exception
 from xonsh.events import events
 import xonsh.history.main as xhm
@@ -107,7 +107,7 @@ class Shell(object):
         'random': 'random',
         'rl': 'readline',
         'readline': 'readline',
-        }
+    }
 
     def __init__(self, execer, ctx=None, shell_type=None, **kwargs):
         """

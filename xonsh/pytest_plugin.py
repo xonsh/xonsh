@@ -24,7 +24,7 @@ def _limited_traceback(excinfo):
     tb = extract_tb(excinfo.tb)
     try:
         idx = [__file__ in e for e in tb].index(True)
-        return format_list(tb[idx+1:])
+        return format_list(tb[idx + 1:])
     except ValueError:
         return format_list(tb)
 

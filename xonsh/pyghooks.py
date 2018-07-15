@@ -273,7 +273,7 @@ def code_by_name(name, styles):
         pass
     elif 'hex' in fg:
         for p in fg.split('_'):
-            codes.append('#'+p[3:] if p.startswith('hex') else p)
+            codes.append('#' + p[3:] if p.startswith('hex') else p)
     else:
         fgtok = getattr(Color, fg.upper())
         if fgtok in styles:
@@ -284,7 +284,7 @@ def code_by_name(name, styles):
     if len(bg) == 0:
         pass
     elif bg.startswith('background_hex'):
-        codes.append('bg:#'+bg[14:])
+        codes.append('bg:#' + bg[14:])
     else:
         bgtok = getattr(Color, bg.upper())
         if bgtok in styles:
@@ -540,7 +540,7 @@ if hasattr(pygments.style, 'ansicolors'):
         Generic.Output: '#ansidarkblue',
         Generic.Traceback: '#ansidarkblue',
         Error: '#ansired',
-        }, globals(), 'XONSH_BASE_STYLE')
+    }, globals(), 'XONSH_BASE_STYLE')
 else:
     XONSH_BASE_STYLE = LazyObject(lambda: {
         Whitespace: "#bbbbbb",
@@ -548,9 +548,9 @@ else:
         Comment.Preproc: "noitalic #BC7A00",
         Keyword: "bold #008000",
         Keyword.Pseudo: "nobold",
-        Keyword.Type:   "nobold #B00040",
-        Operator:   "#666666",
-        Operator.Word:  "bold #AA22FF",
+        Keyword.Type: "nobold #B00040",
+        Operator: "#666666",
+        Operator.Word: "bold #AA22FF",
         Name.Builtin: "#008000",
         Name.Function: "#0000FF",
         Name.Class: "bold #0000FF",
@@ -667,7 +667,7 @@ KNOWN_COLORS = LazyObject(lambda: frozenset([
     'UNDERLINE_YELLOW',
     'WHITE',
     'YELLOW',
-    ]), globals(), 'KNOWN_COLORS')
+]), globals(), 'KNOWN_COLORS')
 
 
 def _expand_style(cmap):
@@ -676,13 +676,13 @@ def _expand_style(cmap):
         if key is Color.NO_COLOR:
             continue
         _, _, key = str(key).rpartition('.')
-        cmap[getattr(Color, 'BOLD_'+key)] = 'bold ' + val
-        cmap[getattr(Color, 'UNDERLINE_'+key)] = 'underline ' + val
-        cmap[getattr(Color, 'BOLD_UNDERLINE_'+key)] = 'bold underline ' + val
+        cmap[getattr(Color, 'BOLD_' + key)] = 'bold ' + val
+        cmap[getattr(Color, 'UNDERLINE_' + key)] = 'underline ' + val
+        cmap[getattr(Color, 'BOLD_UNDERLINE_' + key)] = 'bold underline ' + val
         if val == 'noinherit':
-            cmap[getattr(Color, 'BACKGROUND_'+key)] = val
+            cmap[getattr(Color, 'BACKGROUND_' + key)] = val
         else:
-            cmap[getattr(Color, 'BACKGROUND_'+key)] = 'bg:' + val
+            cmap[getattr(Color, 'BACKGROUND_' + key)] = 'bg:' + val
 
 
 def _bw_style():
@@ -704,7 +704,7 @@ def _bw_style():
         Color.RED: 'noinherit',
         Color.WHITE: 'noinherit',
         Color.YELLOW: 'noinherit',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -823,7 +823,7 @@ def _algol_style():
         Color.RED: '#FF0000',
         Color.WHITE: '#888',
         Color.YELLOW: '#FF0000',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -847,7 +847,7 @@ def _algol_nu_style():
         Color.RED: '#FF0000',
         Color.WHITE: '#888',
         Color.YELLOW: '#FF0000',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -871,7 +871,7 @@ def _autumn_style():
         Color.RED: '#aa0000',
         Color.WHITE: '#aaaaaa',
         Color.YELLOW: '#aa5500',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -895,7 +895,7 @@ def _borland_style():
         Color.RED: '#aa0000',
         Color.WHITE: '#aaaaaa',
         Color.YELLOW: '#a61717',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -919,7 +919,7 @@ def _colorful_style():
         Color.RED: '#A00000',
         Color.WHITE: '#bbbbbb',
         Color.YELLOW: '#A60',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -943,7 +943,7 @@ def _emacs_style():
         Color.RED: '#A00000',
         Color.WHITE: '#bbbbbb',
         Color.YELLOW: '#BB6622',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -967,7 +967,7 @@ def _friendly_style():
         Color.RED: '#A00000',
         Color.WHITE: '#bbbbbb',
         Color.YELLOW: '#c65d09',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -991,7 +991,7 @@ def _fruity_style():
         Color.RED: '#ff0007',
         Color.WHITE: '#cdcaa9',
         Color.YELLOW: '#fb660a',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1015,7 +1015,7 @@ def _igor_style():
         Color.RED: '#C34E00',
         Color.WHITE: '#CC00A3',
         Color.YELLOW: '#C34E00',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1039,7 +1039,7 @@ def _lovelace_style():
         Color.RED: '#c02828',
         Color.WHITE: '#888888',
         Color.YELLOW: '#b85820',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1063,7 +1063,7 @@ def _manni_style():
         Color.RED: '#AA0000',
         Color.WHITE: '#AAAAAA',
         Color.YELLOW: '#CC3300',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1087,7 +1087,7 @@ def _murphy_style():
         Color.RED: '#A00000',
         Color.WHITE: '#bbbbbb',
         Color.YELLOW: '#c65d09',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1111,7 +1111,7 @@ def _native_style():
         Color.RED: '#a61717',
         Color.WHITE: '#aaaaaa',
         Color.YELLOW: '#a61717',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1135,7 +1135,7 @@ def _paraiso_dark_style():
         Color.RED: '#ef6155',
         Color.WHITE: '#5bc4bf',
         Color.YELLOW: '#f99b15',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1159,7 +1159,7 @@ def _paraiso_light_style():
         Color.RED: '#2f1e2e',
         Color.WHITE: '#8d8687',
         Color.YELLOW: '#f99b15',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1183,7 +1183,7 @@ def _pastie_style():
         Color.RED: '#aa0000',
         Color.WHITE: '#bbbbbb',
         Color.YELLOW: '#aa6600',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1207,7 +1207,7 @@ def _perldoc_style():
         Color.RED: '#aa0000',
         Color.WHITE: '#a7a7a7',
         Color.YELLOW: '#cb6c20',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1231,7 +1231,7 @@ def _rrt_style():
         Color.RED: '#ff0000',
         Color.WHITE: '#87ceeb',
         Color.YELLOW: '#ff0000',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1255,7 +1255,7 @@ def _tango_style():
         Color.RED: '#a40000',
         Color.WHITE: '#f8f8f8',
         Color.YELLOW: '#8f5902',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1279,7 +1279,7 @@ def _trac_style():
         Color.RED: '#aa0000',
         Color.WHITE: '#aaaaaa',
         Color.YELLOW: '#808000',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1303,7 +1303,7 @@ def _vim_style():
         Color.RED: '#cd0000',
         Color.WHITE: '#cccccc',
         Color.YELLOW: '#cd0000',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1327,7 +1327,7 @@ def _vs_style():
         Color.RED: '#a31515',
         Color.WHITE: '#2b91af',
         Color.YELLOW: '#a31515',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1351,7 +1351,7 @@ def _xcode_style():
         Color.RED: '#C41A16',
         Color.WHITE: '#3F6E75',
         Color.YELLOW: '#836C28',
-        }
+    }
     _expand_style(style)
     return style
 
@@ -1383,7 +1383,7 @@ STYLES = LazyDict({
     'vim': _vim_style,
     'vs': _vs_style,
     'xcode': _xcode_style,
-    }, globals(), 'STYLES')
+}, globals(), 'STYLES')
 
 del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _colorful_style, _default_style, _emacs_style, _friendly_style,
@@ -1401,10 +1401,10 @@ def make_pygments_style(palette):
     for name, t in BASE_XONSH_COLORS.items():
         color = find_closest_color(t, palette)
         style[getattr(Color, name)] = '#' + color
-        style[getattr(Color, 'BOLD_'+name)] = 'bold #' + color
-        style[getattr(Color, 'UNDERLINE_'+name)] = 'underline #' + color
-        style[getattr(Color, 'BOLD_UNDERLINE_'+name)] = 'bold underline #' + color
-        style[getattr(Color, 'BACKGROUND_'+name)] = 'bg:#' + color
+        style[getattr(Color, 'BOLD_' + name)] = 'bold #' + color
+        style[getattr(Color, 'UNDERLINE_' + name)] = 'underline #' + color
+        style[getattr(Color, 'BOLD_UNDERLINE_' + name)] = 'bold underline #' + color
+        style[getattr(Color, 'BACKGROUND_' + name)] = 'bg:#' + color
     return style
 
 
