@@ -15,6 +15,7 @@ import pytest
 
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
+from xonsh.platform import ptk_version_info
 
 
 VER_3_4 = (3, 4)
@@ -47,6 +48,10 @@ skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason='Windows stuff')
 skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason='not Mac friendly')
 
 skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason='not Travis CI friendly')
+
+skip_if_lt_ptk2 = pytest.mark.skipif(ptk_version_info()[0] < 2,
+                                     reason="prompt-tollkit <2")
+
 
 
 def sp(cmd):

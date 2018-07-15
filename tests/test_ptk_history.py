@@ -7,6 +7,8 @@ except ImportError:
 
 from xonsh.ptk2.history import PromptToolkitHistory
 
+from tools import skip_if_lt_ptk2
+
 
 @pytest.fixture
 def history_obj():
@@ -16,6 +18,7 @@ def history_obj():
     return hist
 
 
+@skip_if_lt_ptk2
 def test_obj(history_obj):
     assert ['line10'] == history_obj.get_strings()
     assert len(history_obj) == 1

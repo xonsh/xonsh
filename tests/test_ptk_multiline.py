@@ -11,7 +11,7 @@ from prompt_toolkit.buffer import Buffer
 
 from xonsh.tools import ON_WINDOWS
 
-from tools import DummyEnv
+from tools import DummyEnv, skip_if_lt_ptk2
 
 
 Context = namedtuple('Context', ['indent', 'buffer', 'accept', 'cli', 'cr'])
@@ -34,6 +34,7 @@ def ctx():
     del builtins.__xonsh_env__
 
 
+@skip_if_lt_ptk2
 def test_colon_indent(ctx):
     document = Document('for i in range(5):')
     ctx.buffer.set_document(document)
@@ -41,6 +42,7 @@ def test_colon_indent(ctx):
     assert ctx.buffer.document.current_line == ctx.indent
 
 
+@skip_if_lt_ptk2
 def test_dedent(ctx):
     document = Document('\n'+ctx.indent+'pass')
     ctx.buffer.set_document(document)
@@ -53,6 +55,7 @@ def test_dedent(ctx):
     assert ctx.buffer.document.current_line == ctx.indent
 
 
+@skip_if_lt_ptk2
 def test_nodedent(ctx):
     '''don't dedent if first line of ctx.buffer'''
     mock = MagicMock(return_value=True)
@@ -70,6 +73,7 @@ def test_nodedent(ctx):
         assert ctx.accept.mock_calls is not None
 
 
+@skip_if_lt_ptk2
 def test_continuation_line(ctx):
     document = Document('\nsecond line')
     ctx.buffer.set_document(document)
@@ -77,6 +81,7 @@ def test_continuation_line(ctx):
     assert ctx.buffer.document.current_line == ''
 
 
+@skip_if_lt_ptk2
 def test_trailing_slash(ctx):
     mock = MagicMock(return_value=True)
     with patch('xonsh.ptk2.key_bindings.can_compile', mock):
@@ -89,6 +94,7 @@ def test_trailing_slash(ctx):
             assert ctx.accept.mock_calls is not None
 
 
+@skip_if_lt_ptk2
 def test_cant_compile_newline(ctx):
     mock = MagicMock(return_value=False)
     with patch('xonsh.ptk2.key_bindings.can_compile', mock):
@@ -98,6 +104,7 @@ def test_cant_compile_newline(ctx):
         assert ctx.buffer.document.current_line == ''
 
 
+@skip_if_lt_ptk2
 def test_can_compile_and_executes(ctx):
     mock = MagicMock(return_value=True)
     with patch('xonsh.ptk2.key_bindings.can_compile', mock):
