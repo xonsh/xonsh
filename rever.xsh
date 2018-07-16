@@ -22,7 +22,8 @@ with open('requirements-tests.txt') as f:
     conda_deps = f.read().split()
 with open('requirements-docs.txt') as f:
     conda_deps += f.read().split()
-conda_deps = {d.lower().split('=')[0] for d in set(conda_deps)}
+for delimiter in '=<>':
+    conda_deps = {d.lower().split(delimiter)[0] for d in conda_deps}
 conda_deps.discard('prompt-toolkit')
 conda_deps |= {'prompt_toolkit', 'pip', 'psutil', 'numpy', 'matplotlib'}
 $DOCKER_CONDA_DEPS = sorted(conda_deps)
