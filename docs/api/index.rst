@@ -40,6 +40,10 @@ For those of you who want the gritty details.
     ptk/history
     ptk/completer
     ptk/key_bindings
+    ptk2/shell
+    ptk2/history
+    ptk2/completer
+    ptk2/key_bindings
     pretty
     replay
     diff_history
