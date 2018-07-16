@@ -152,6 +152,9 @@ def xonsh_exit(args, stdin=None):
     print()  # gimme a newline
     return None, None
 
+def xonsh_reset(args, stdin=None):
+    """ Clears __xonsh_ctx__"""
+    builtins.__xonsh_ctx__.clear()
 
 @lazyobject
 def _SOURCE_FOREIGN_PARSER():
@@ -470,6 +473,7 @@ def make_default_aliases():
         'xontrib': xontribs_main,
         'completer': xca.completer_alias,
         'xpip': detect_xpip_alias(),
+        'xonsh-reset': xonsh_reset,
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
