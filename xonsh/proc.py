@@ -386,7 +386,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         beg_offset = (cols * y) + x
         end_offset = beg_offset + nread
         if end_offset > cur_offset and cur_offset != max_offset:
-            buf = buf[:cur_offset-end_offset]
+            buf = buf[:cur_offset - end_offset]
         # convert to lines
         xshift = cols - x
         yshift = (nread // cols) + (1 if nread % cols > 0 else 0)
@@ -1352,8 +1352,7 @@ class ProcProxyThread(threading.Thread):
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except OSError as e:
-            status = still_writable(self.c2pwrite) and \
-                     still_writable(self.errwrite)
+            status = still_writable(self.c2pwrite) and still_writable(self.errwrite)
             if status:
                 # stdout and stderr are still writable, so error must
                 # come from function itself.

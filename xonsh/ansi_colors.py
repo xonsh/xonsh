@@ -853,7 +853,7 @@ ANSI_STYLES = LazyDict({
     'vim': _vim_style,
     'vs': _vs_style,
     'xcode': _xcode_style,
-    }, globals(), 'ANSI_STYLES')
+}, globals(), 'ANSI_STYLES')
 
 del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _colorful_style, _default_style, _emacs_style, _friendly_style,

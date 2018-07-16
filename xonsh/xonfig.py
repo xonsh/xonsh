@@ -612,7 +612,7 @@ def _align_string(string, align='<', fill=' ', width=80):
     if align == '^':
         return fill * (padlen // 2) + string + fill * (padlen // 2 + padlen % 2)
     elif align == '>':
-        return fill*padlen + string
+        return fill * padlen + string
     elif align == '<':
         return string + fill * padlen
     else:

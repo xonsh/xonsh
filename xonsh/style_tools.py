@@ -250,7 +250,7 @@ KNOWN_COLORS = LazyObject(lambda: frozenset([
     'UNDERLINE_YELLOW',
     'WHITE',
     'YELLOW',
-    ]), globals(), 'KNOWN_COLORS')
+]), globals(), 'KNOWN_COLORS')
 
 DEFAULT_STYLE_DICT = LazyObject(lambda: {
     Token: '',

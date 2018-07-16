@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from xonsh.tools import print_color, ON_WINDOWS
 
+
 try:
     # Use iterm2_tools as an indicator for the iterm2 terminal emulator
     from iterm2_tools.images import display_image_bytes
@@ -84,7 +85,7 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         }
 
         # set the figure dimensions to the terminal size
-        fig.set_size_inches(width/dpi, height/dpi, forward=True)
+        fig.set_size_inches(width / dpi, height / dpi, forward=True)
         width, height = fig.canvas.get_width_height()
 
         # remove all space between subplots

@@ -272,9 +272,8 @@ class DefaultNotGivenType(object):
 
 DefaultNotGiven = DefaultNotGivenType()
 
-BEG_TOK_SKIPS = LazyObject(
-                    lambda: frozenset(['WS', 'INDENT', 'NOT', 'LPAREN']),
-                    globals(), 'BEG_TOK_SKIPS')
+BEG_TOK_SKIPS = LazyObject(lambda: frozenset(['WS', 'INDENT', 'NOT', 'LPAREN']),
+                           globals(), 'BEG_TOK_SKIPS')
 END_TOK_TYPES = LazyObject(lambda: frozenset(['SEMI', 'AND', 'OR', 'RPAREN']),
                            globals(), 'END_TOK_TYPES')
 RE_END_TOKS = LazyObject(lambda: re.compile('(;|and|\&\&|or|\|\||\))'),
@@ -1975,7 +1974,7 @@ def columnize(elems, width=80, newline='\n'):
             # we might be able to fit another column.
             ncols += 1
             nrows = nelem // ncols
-            columns = [sizes[i * nrows:(i + 1)*nrows] for i in range(ncols)]
+            columns = [sizes[i * nrows:(i + 1) * nrows] for i in range(ncols)]
             last_longest_row = longest_row
         else:
             # we can't fit another column

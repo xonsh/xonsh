@@ -255,7 +255,7 @@ class EventManager:
     def _mkevent(name, species=Event, doc=None):
         # NOTE: Also used in `xonsh_events` test fixture
         # (A little bit of magic to enable docstrings to work right)
-        return type(name, (species,), {'__doc__': doc, '__module__': 'xonsh.events', '__qualname__': 'events.'+name})()
+        return type(name, (species,), {'__doc__': doc, '__module__': 'xonsh.events', '__qualname__': 'events.' + name})()
 
     def transmogrify(self, name, species):
         """
