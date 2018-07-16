@@ -49,8 +49,8 @@ except ImportError:
                 raise TypeError("expected __fspath__() to return str or bytes, "
                                 "not " + type(path).__name__)
 
-        raise TypeError("expected str, bytes or os.PathLike object, not "
-                        + path_type.__name__)
+        raise TypeError("expected str, bytes or os.PathLike object, not " +
+                        path_type.__name__)
 
     def _fscodec():
         encoding = sys.getfilesystemencoding()

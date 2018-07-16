@@ -2197,7 +2197,7 @@ class BaseParser(object):
             pass
         elif isinstance(p1, ast.Slice) or \
                 any([isinstance(x, ast.Slice) for x in p2]):
-            p1 = ast.ExtSlice(dims=[p1]+p2)
+            p1 = ast.ExtSlice(dims=[p1] + p2)
         else:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(), lineno=p1.lineno,

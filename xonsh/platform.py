@@ -147,6 +147,15 @@ def ptk_above_min_supported():
 
 
 @functools.lru_cache(1)
+def ptk_shell_type():
+    """Returns the prompt_toolkit shell type based on the installed version."""
+    if ptk_version_info()[:2] < (2, 0):
+        return 'prompt_toolkit1'
+    else:
+        return 'prompt_toolkit2'
+
+
+@functools.lru_cache(1)
 def ptk_below_max_supported():
     ptk_max_version_cutoff = (2, 0)
     return ptk_version_info()[:2] < ptk_max_version_cutoff
@@ -181,7 +190,7 @@ def pathsplit(p):
     without a drive.
     """
     n = len(p)
-    while n and p[n-1] not in seps:
+    while n and p[n - 1] not in seps:
         n -= 1
     pre = p[:n]
     pre = pre.rstrip(seps) or pre
@@ -274,14 +283,14 @@ if PYTHON_VERSION_INFO < (3, 5, 0):
                 return self.__path__.is_dir()
             else:
                 return not self.__path__.is_symlink() \
-                       and self.__path__.is_dir()
+                    and self.__path__.is_dir()
 
         def is_file(self, *, follow_symlinks=True):
             if follow_symlinks:
                 return self.__path__.is_file()
             else:
                 return not self.__path__.is_symlink() \
-                       and self.__path__.is_file()
+                    and self.__path__.is_file()
 
         def stat(self, *, follow_symlinks=True):
             return os.stat(self.path, follow_symlinks=follow_symlinks)

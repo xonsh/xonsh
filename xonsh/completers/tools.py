@@ -29,5 +29,5 @@ def justify(s, max_length, left_pad=0):
     characters long, padding all lines but the first on the left with the
     string left_pad.
     """
-    txt = textwrap.wrap(s, width=max_length, subsequent_indent=' '*left_pad)
+    txt = textwrap.wrap(s, width=max_length, subsequent_indent=' ' * left_pad)
     return '\n'.join(txt)

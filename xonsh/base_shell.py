@@ -375,7 +375,7 @@ class BaseShell(object):
             rtn=info['rtn'],
             out=info.get('out', None),
             ts=info['ts']
-            )
+        )
         if hist is not None:
             hist.append(info)
             hist.last_cmd_rtn = hist.last_cmd_out = None
@@ -436,7 +436,7 @@ class BaseShell(object):
                 self.reset_buffer()
                 return src, code
         lincont = get_line_continuation()
-        if src.endswith(lincont+'\n'):
+        if src.endswith(lincont + '\n'):
             self.need_more_lines = True
             return src, None
         try:

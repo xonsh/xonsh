@@ -110,9 +110,9 @@ def _dots(prefix):
     if slash == '\\':
         slash = ''
     if prefix in {'', '.'}:
-        return ('.'+slash, '..'+slash)
+        return ('.' + slash, '..' + slash)
     elif prefix == '..':
-        return ('..'+slash,)
+        return ('..' + slash,)
     else:
         return ()
 

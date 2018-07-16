@@ -96,9 +96,9 @@ class QueueReader:
         """Returns whether or not the queue is fully read and the reader is
         closed.
         """
-        return (self.closed
-                and (self.thread is None or not self.thread.is_alive())
-                and self.queue.empty())
+        return (self.closed and
+                (self.thread is None or not self.thread.is_alive()) and
+                self.queue.empty())
 
     def read_queue(self):
         """Reads a single chunk from the queue. This is blocking if
@@ -272,7 +272,7 @@ def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
     # expand it so that we can read from it successfully.
     if cols == 0:
         return orig_posize[-1], max_offset, orig_posize
-    rows = ((max_offset + expandsize)//cols) + 1
+    rows = ((max_offset + expandsize) // cols) + 1
     winutils.set_console_screen_buffer_size(cols, rows, fd=fd)
     orig_posize = orig_posize[:3] + (rows,)
     max_offset = (rows - 1) * cols
@@ -328,7 +328,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     x, y, cols, rows = posize = winutils.get_position_size(fd)
     pre_x = pre_y = -1
     orig_posize = posize
-    offset = (cols*y) + x
+    offset = (cols * y) + x
     max_offset = (rows - 1) * cols
     # I believe that there is a bug in PTK that if we reset the
     # cursor position, the cursor on the next prompt is accidentally on
@@ -340,7 +340,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     #     winutils.set_console_cursor_position(x, y, fd=fd)
     while True:
         posize = winutils.get_position_size(fd)
-        offset = (cols*y) + x
+        offset = (cols * y) + x
         if ((posize[1], posize[0]) <= (y, x) and posize[2:] == (cols, rows)) or \
                 (pre_x == x and pre_y == y):
             # already at or ahead of the current cursor position.
@@ -382,11 +382,11 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             time.sleep(reader.timeout)
             continue
         cur_x, cur_y = posize[0], posize[1]
-        cur_offset = (cols*cur_y) + cur_x
-        beg_offset = (cols*y) + x
+        cur_offset = (cols * cur_y) + cur_x
+        beg_offset = (cols * y) + x
         end_offset = beg_offset + nread
         if end_offset > cur_offset and cur_offset != max_offset:
-            buf = buf[:cur_offset-end_offset]
+            buf = buf[:cur_offset - end_offset]
         # convert to lines
         xshift = cols - x
         yshift = (nread // cols) + (1 if nread % cols > 0 else 0)
@@ -895,7 +895,7 @@ class PopenThread(threading.Thread):
         if s is None:
             rtn = self.returncode
             if rtn is not None and rtn != 0:
-                s = (-1*rtn, rtn < 0 if ON_WINDOWS else os.WCOREDUMP(rtn))
+                s = (-1 * rtn, rtn < 0 if ON_WINDOWS else os.WCOREDUMP(rtn))
         return s
 
     @signal.setter
@@ -1345,15 +1345,14 @@ class ProcProxyThread(threading.Thread):
         # run the function itself
         try:
             with STDOUT_DISPATCHER.register(sp_stdout), \
-                 STDERR_DISPATCHER.register(sp_stderr), \
-                 redirect_stdout(STDOUT_DISPATCHER), \
-                 redirect_stderr(STDERR_DISPATCHER):
+            STDERR_DISPATCHER.register(sp_stderr), \
+            redirect_stdout(STDOUT_DISPATCHER), \
+            redirect_stderr(STDERR_DISPATCHER):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except OSError as e:
-            status = still_writable(self.c2pwrite) and \
-                     still_writable(self.errwrite)
+            status = still_writable(self.c2pwrite) and still_writable(self.errwrite)
             if status:
                 # stdout and stderr are still writable, so error must
                 # come from function itself.
@@ -1671,13 +1670,13 @@ def SIGNAL_MESSAGES():
         signal.SIGILL: 'Illegal instructions',
         signal.SIGTERM: 'Terminated',
         signal.SIGSEGV: 'Segmentation fault',
-        }
+    }
     if ON_POSIX:
         sm.update({
             signal.SIGQUIT: 'Quit',
             signal.SIGHUP: 'Hangup',
             signal.SIGKILL: 'Killed',
-            })
+        })
     return sm
 
 
@@ -1811,8 +1810,8 @@ class CommandPipeline:
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         # get the correct stdout
         stdout = proc.stdout
-        if ((stdout is None or spec.stdout is None or not safe_readable(stdout))
-                and spec.captured_stdout is not None):
+        if ((stdout is None or spec.stdout is None or not safe_readable(stdout)) and
+                spec.captured_stdout is not None):
             stdout = spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
@@ -1841,8 +1840,8 @@ class CommandPipeline:
             return
         # get the correct stderr
         stderr = proc.stderr
-        if ((stderr is None or spec.stderr is None or not safe_readable(stderr))
-                and spec.captured_stderr is not None):
+        if ((stderr is None or spec.stderr is None or not safe_readable(stderr)) and
+                spec.captured_stderr is not None):
             stderr = spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer

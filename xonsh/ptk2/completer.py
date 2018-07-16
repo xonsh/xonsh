@@ -83,8 +83,8 @@ class PromptToolkitCompleter(Completer):
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""
-        cli = self.shell.prompter.cli
-        sug = self.hist_suggester.get_suggestion(cli, cli.current_buffer, document)
+        app = self.shell.prompter.app
+        sug = self.hist_suggester.get_suggestion(app.current_buffer, document)
         if sug is None:
             return None
         comp, _, _ = sug.text.partition(' ')
@@ -92,8 +92,8 @@ class PromptToolkitCompleter(Completer):
         return prev + comp
 
     def reserve_space(self):
-        cli = builtins.__xonsh_shell__.shell.prompter.cli
-        window = cli.application.layout.children[0].content.children[1]
+        app = builtins.__xonsh_shell__.shell.prompter.app
+        window = app.layout.container.children[0].content.children[1].content
 
         if window and window.render_info:
             h = window.render_info.content_height

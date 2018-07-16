@@ -405,7 +405,7 @@ def DEFAULT_DOCS():
     'AUTO_SUGGEST_IN_COMPLETIONS': VarDocs(
         'Places the auto-suggest result as the first option in the completions. '
         'This enables you to tab complete the auto-suggestion.'
-        ),
+    ),
     'BASH_COMPLETIONS': VarDocs(
         'This is a list (or tuple) of strings that specifies where the '
         '``bash_completion`` script may be found. '
@@ -614,7 +614,7 @@ def DEFAULT_DOCS():
         'Completions display is evaluated and presented whenever a key is '
         'pressed. This avoids the need to press TAB, except to cycle through '
         'the possibilities. This currently only affects the prompt-toolkit shell.'
-        ),
+    ),
     'UPDATE_OS_ENVIRON': VarDocs(
         "If True ``os_environ`` will always be updated "
         "when the xonsh environment changes. The environment can be reset to "

@@ -478,9 +478,9 @@ def pdump(s, **kwargs):
     closer = closers[openers.find(s[i])]
     j = s.rfind(closer)
     if j == -1 or j <= i:
-        return s[:i+1] + '\n' + textwrap.indent(pdump(s[i+1:]), ' ')
-    pre = s[:i+1] + '\n'
-    mid = s[i+1:j]
+        return s[:i + 1] + '\n' + textwrap.indent(pdump(s[i + 1:]), ' ')
+    pre = s[:i + 1] + '\n'
+    mid = s[i + 1:j]
     post = '\n' + s[j:]
     mid = textwrap.indent(pdump(mid), ' ')
     if '(' in post or '[' in post or '{' in post:

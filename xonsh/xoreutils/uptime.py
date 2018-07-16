@@ -36,7 +36,7 @@ def _uptime_osx():
         bt = struct.unpack_from('@qq', bt)
     else:
         raise ValueError('length of boot time not understood: ' + repr(bt))
-    bt = bt[0] + bt[1]*1e-6
+    bt = bt[0] + bt[1] * 1e-6
     if bt == 0.0:
         return None
     _BOOTTIME = bt

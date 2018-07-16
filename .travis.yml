@@ -40,10 +40,8 @@ before_install:
 
 install:
   - if [[ $BUILD_DOCS = true ]]; then
-      python setup.py install;
       pip install -r requirements-docs.txt;
-      pip install pygments prompt_toolkit<2 ply psutil ipykernel matplotlib;
-      pip install doctr;
+      python setup.py install;
     else
       pip install -r requirements-tests.txt;
     fi

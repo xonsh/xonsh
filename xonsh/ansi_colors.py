@@ -113,15 +113,15 @@ def _ansi_expand_style(cmap):
         if key == 'NO_COLOR':
             continue
         elif len(val) == 0:
-            cmap['BOLD_'+key] = '1'
-            cmap['UNDERLINE_'+key] = '4'
-            cmap['BOLD_UNDERLINE_'+key] = '1;4'
-            cmap['BACKGROUND_'+key] = val
+            cmap['BOLD_' + key] = '1'
+            cmap['UNDERLINE_' + key] = '4'
+            cmap['BOLD_UNDERLINE_' + key] = '1;4'
+            cmap['BACKGROUND_' + key] = val
         else:
-            cmap['BOLD_'+key] = '1;' + val
-            cmap['UNDERLINE_'+key] = '4;' + val
-            cmap['BOLD_UNDERLINE_'+key] = '1;4;' + val
-            cmap['BACKGROUND_'+key] = val.replace('38', '48', 1)
+            cmap['BOLD_' + key] = '1;' + val
+            cmap['UNDERLINE_' + key] = '4;' + val
+            cmap['BOLD_UNDERLINE_' + key] = '1;4;' + val
+            cmap['BACKGROUND_' + key] = val.replace('38', '48', 1)
 
 
 def _bw_style():
@@ -143,7 +143,7 @@ def _bw_style():
         'RED': '',
         'WHITE': '',
         'YELLOW': '',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -242,7 +242,7 @@ def _default_style():
         'BACKGROUND_INTENSE_PURPLE': '0;105',  # PURPLE
         'BACKGROUND_INTENSE_CYAN': '0;106',  # CYAN
         'BACKGROUND_INTENSE_WHITE': '0;107',  # WHITE
-        }
+    }
     return style
 
 
@@ -265,7 +265,7 @@ def _monokai_style():
         'INTENSE_RED': '38;5;197',
         'INTENSE_WHITE': '38;5;15',
         'INTENSE_YELLOW': '38;5;186',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -293,7 +293,7 @@ def _algol_style():
         'RED': '38;5;09',
         'WHITE': '38;5;102',
         'YELLOW': '38;5;09',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -317,7 +317,7 @@ def _algol_nu_style():
         'RED': '38;5;09',
         'WHITE': '38;5;102',
         'YELLOW': '38;5;09',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -365,7 +365,7 @@ def _borland_style():
         'RED': '38;5;124',
         'WHITE': '38;5;145',
         'YELLOW': '38;5;124',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -461,7 +461,7 @@ def _fruity_style():
         'RED': '38;5;09',
         'WHITE': '38;5;187',
         'YELLOW': '38;5;202',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -485,7 +485,7 @@ def _igor_style():
         'RED': '38;5;166',
         'WHITE': '38;5;163',
         'YELLOW': '38;5;166',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -509,7 +509,7 @@ def _lovelace_style():
         'RED': '38;5;124',
         'WHITE': '38;5;102',
         'YELLOW': '38;5;130',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -533,7 +533,7 @@ def _manni_style():
         'RED': '38;5;124',
         'WHITE': '38;5;145',
         'YELLOW': '38;5;166',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -557,7 +557,7 @@ def _murphy_style():
         'RED': '38;5;124',
         'WHITE': '38;5;145',
         'YELLOW': '38;5;166',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -581,7 +581,7 @@ def _native_style():
         'RED': '38;5;124',
         'WHITE': '38;5;145',
         'YELLOW': '38;5;124',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -605,7 +605,7 @@ def _paraiso_dark_style():
         'RED': '38;5;203',
         'WHITE': '38;5;79',
         'YELLOW': '38;5;214',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -629,7 +629,7 @@ def _paraiso_light_style():
         'RED': '38;5;16',
         'WHITE': '38;5;102',
         'YELLOW': '38;5;214',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -653,7 +653,7 @@ def _pastie_style():
         'RED': '38;5;124',
         'WHITE': '38;5;145',
         'YELLOW': '38;5;130',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -677,7 +677,7 @@ def _perldoc_style():
         'RED': '38;5;124',
         'WHITE': '38;5;145',
         'YELLOW': '38;5;166',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -701,7 +701,7 @@ def _rrt_style():
         'RED': '38;5;09',
         'WHITE': '38;5;117',
         'YELLOW': '38;5;09',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -725,7 +725,7 @@ def _tango_style():
         'RED': '38;5;124',
         'WHITE': '38;5;15',
         'YELLOW': '38;5;94',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -749,7 +749,7 @@ def _trac_style():
         'RED': '38;5;124',
         'WHITE': '38;5;145',
         'YELLOW': '38;5;100',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -773,7 +773,7 @@ def _vim_style():
         'RED': '38;5;160',
         'WHITE': '38;5;188',
         'YELLOW': '38;5;160',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -797,7 +797,7 @@ def _vs_style():
         'RED': '38;5;124',
         'WHITE': '38;5;31',
         'YELLOW': '38;5;124',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -821,7 +821,7 @@ def _xcode_style():
         'RED': '38;5;160',
         'WHITE': '38;5;60',
         'YELLOW': '38;5;94',
-        }
+    }
     _ansi_expand_style(style)
     return style
 
@@ -853,13 +853,13 @@ ANSI_STYLES = LazyDict({
     'vim': _vim_style,
     'vs': _vs_style,
     'xcode': _xcode_style,
-    }, globals(), 'ANSI_STYLES')
+}, globals(), 'ANSI_STYLES')
 
 del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _colorful_style, _default_style, _emacs_style, _friendly_style,
      _fruity_style, _igor_style, _lovelace_style, _manni_style,
      _monokai_style, _murphy_style, _native_style, _paraiso_dark_style,
-     _paraiso_light_style, _pastie_style, _perldoc_style,  _rrt_style,
+     _paraiso_light_style, _pastie_style, _perldoc_style, _rrt_style,
      _tango_style, _trac_style, _vim_style, _vs_style, _xcode_style)
 
 
@@ -872,13 +872,13 @@ def make_ansi_style(palette):
     for name, t in BASE_XONSH_COLORS.items():
         closest = find_closest_color(t, palette)
         if len(closest) == 3:
-            closest = ''.join([a*2 for a in closest])
+            closest = ''.join([a * 2 for a in closest])
         short = rgb2short(closest)[0]
         style[name] = '38;5;' + short
-        style['BOLD_'+name] = '1;38;5;' + short
-        style['UNDERLINE_'+name] = '4;38;5;' + short
-        style['BOLD_UNDERLINE_'+name] = '1;4;38;5;' + short
-        style['BACKGROUND_'+name] = '48;5;' + short
+        style['BOLD_' + name] = '1;38;5;' + short
+        style['UNDERLINE_' + name] = '4;38;5;' + short
+        style['BOLD_UNDERLINE_' + name] = '1;4;38;5;' + short
+        style['BACKGROUND_' + name] = '48;5;' + short
     return style
 
 

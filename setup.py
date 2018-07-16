@@ -304,8 +304,8 @@ def main():
         url='https://github.com/xonsh/xonsh',
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
-        packages=['xonsh', 'xonsh.ply.ply', 'xonsh.ptk', 'xonsh.parsers',
-                  'xonsh.xoreutils', 'xontrib',
+        packages=['xonsh', 'xonsh.ply.ply', 'xonsh.ptk', 'xonsh.ptk2',
+                  'xonsh.parsers', 'xonsh.xoreutils', 'xontrib',
                   'xonsh.completers', 'xonsh.history', 'xonsh.prompt',
                   'xonsh.lib'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib', 'xonsh.lib': 'xonsh/lib'},
@@ -332,7 +332,7 @@ def main():
         }
         skw['cmdclass']['develop'] = xdevelop
         skw['extras_require'] = {
-            'ptk':  ['prompt-toolkit<2.0.0'],
+            'ptk':  ['prompt-toolkit'],
             'pygments': ['pygments'],
             'win': ['win_unicode_console'],
             'mac': ['gnureadline'],

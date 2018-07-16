@@ -236,7 +236,7 @@ class Vox(collections.abc.Mapping):
         bin_, lib, inc = _subdir_names()
         for dirpath, dirnames, _ in os.walk(self.venvdir):
             if bin_ in dirnames and lib in dirnames:
-                yield dirpath[len(self.venvdir)+1:]  # +1 is to remove the separator
+                yield dirpath[len(self.venvdir) + 1:]  # +1 is to remove the separator
                 # Don't recurse in to the special dirs
                 dirnames.remove(bin_)
                 dirnames.remove(lib)  # This one in particular is likely to be quite large.

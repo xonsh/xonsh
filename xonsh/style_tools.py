@@ -250,7 +250,7 @@ KNOWN_COLORS = LazyObject(lambda: frozenset([
     'UNDERLINE_YELLOW',
     'WHITE',
     'YELLOW',
-    ]), globals(), 'KNOWN_COLORS')
+]), globals(), 'KNOWN_COLORS')
 
 DEFAULT_STYLE_DICT = LazyObject(lambda: {
     Token: '',
@@ -419,5 +419,5 @@ DEFAULT_STYLE_DICT = LazyObject(lambda: {
     Token.Scrollbar.Arrow: 'bg:#ansiblack #ansiwhite bold',
     Token.Scrollbar.Button: 'bg:#ansiblack',
     Token.Text: '',
-    Token.Text.Whitespace: '#ansilightgray'},
-                                globals(), 'DEFAULT_STYLE_DICT')
+    Token.Text.Whitespace: '#ansilightgray',
+}, globals(), 'DEFAULT_STYLE_DICT')

@@ -3,62 +3,63 @@
 import sys
 import builtins
 
-from prompt_toolkit.key_binding.manager import KeyBindingManager
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.layout.lexers import PygmentsLexer
-from prompt_toolkit.shortcuts import print_tokens
-from prompt_toolkit.styles import PygmentsStyle, style_from_dict
-
-from xonsh.base_shell import BaseShell
-from xonsh.tools import print_exception, carriage_return
-from xonsh.ptk.completer import PromptToolkitCompleter
-from xonsh.ptk.history import PromptToolkitHistory
-from xonsh.ptk.key_bindings import load_xonsh_bindings
-from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
+from xonsh.base_shell import BaseShell
 from xonsh.shell import transform_command
+from xonsh.tools import print_exception, carriage_return
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
+from xonsh.ptk2.history import PromptToolkitHistory
+from xonsh.ptk2.completer import PromptToolkitCompleter
+from xonsh.ptk2.key_bindings import load_xonsh_bindings
+
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.enums import EditingMode
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.history import ThreadedHistory
+from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
+from prompt_toolkit.shortcuts import CompleteStyle
+from prompt_toolkit.shortcuts.prompt import PromptSession
+from prompt_toolkit.formatted_text import PygmentsTokens
+from prompt_toolkit.styles.pygments import (style_from_pygments_cls,
+                                            style_from_pygments_dict, pygments_token_to_classname)
+
 
 Token = _TokenType()
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
 events.doc('on_ptk_create', """
-on_ptk_create(prompter: Prompter, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindingManager) ->
+on_ptk_create(prompter: PromptSession, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindings) ->
 
 Fired after prompt toolkit has been initialized
 """)
 
 
-class PromptToolkitShell(BaseShell):
-    """The xonsh shell."""
+class PromptToolkit2Shell(BaseShell):
+    """The xonsh shell for prompt_toolkit v2."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if ON_WINDOWS:
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
-        self.prompter = Prompter()
-        self.history = PromptToolkitHistory()
+        self.history = ThreadedHistory(PromptToolkitHistory())
+        self.prompter = PromptSession(history=self.history)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-        key_bindings_manager_args = {
-            'enable_auto_suggest_bindings': True,
-            'enable_search': True,
-            'enable_abort_and_exit_bindings': True,
-        }
-        self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
-        load_xonsh_bindings(self.key_bindings_manager)
-        # This assumes that PromptToolkitShell is a singleton
+        self.key_bindings = KeyBindings()
+        load_xonsh_bindings(self.key_bindings)
+        # This assumes that PromptToolkit2Shell is a singleton
         events.on_ptk_create.fire(
             prompter=self.prompter,
             history=self.history,
             completer=self.pt_completer,
-            bindings=self.key_bindings_manager,
+            bindings=self.key_bindings,
         )
 
-    def singleline(self, store_in_history=True, auto_suggest=None,
-                   enable_history_search=True, multiline=True, **kwargs):
+    def singleline(self, auto_suggest=None, enable_history_search=True,
+                   multiline=True, **kwargs):
         """Reads a single line of input from the shell. The store_in_history
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
@@ -66,14 +67,10 @@ class PromptToolkitShell(BaseShell):
         events.on_pre_prompt.fire()
         env = builtins.__xonsh_env__
         mouse_support = env.get('MOUSE_SUPPORT')
-        if store_in_history:
-            history = self.history
-        else:
-            history = None
-            enable_history_search = False
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
-        multicolumn = (completions_display == 'multi')
+        if completions_display == 'multi':
+            complete_style = CompleteStyle.MULTI_COLUMN
         complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
         if complete_while_typing:
             # PTK requires history search to be none when completing while typing
@@ -81,43 +78,53 @@ class PromptToolkitShell(BaseShell):
         if HAS_PYGMENTS:
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
-        if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
-            prompt_tokens_cached = self.prompt_tokens(None)
-            get_prompt_tokens = lambda cli: prompt_tokens_cached
-            rprompt_tokens_cached = self.rprompt_tokens(None)
-            get_rprompt_tokens = lambda cli: rprompt_tokens_cached
-            bottom_toolbar_tokens_cached = self.bottom_toolbar_tokens(None)
-            get_bottom_toolbar_tokens = lambda cli: bottom_toolbar_tokens_cached
-        else:
+
+        if env.get('UPDATE_PROMPT_ON_KEYPRESS'):
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
             get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
+        else:
+            get_prompt_tokens = self.prompt_tokens()
+            get_rprompt_tokens = self.rprompt_tokens()
+            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens()
 
-        with self.prompter:
-            prompt_args = {
-                'mouse_support': mouse_support,
-                'auto_suggest': auto_suggest,
-                'get_prompt_tokens': get_prompt_tokens,
-                'get_rprompt_tokens': get_rprompt_tokens,
-                'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
-                'completer': completer,
-                'multiline': multiline,
-                'get_continuation_tokens': self.continuation_tokens,
-                'history': history,
-                'enable_history_search': enable_history_search,
-                'reserve_space_for_menu': 0,
-                'key_bindings_registry': self.key_bindings_manager.registry,
-                'display_completions_in_columns': multicolumn,
-                'complete_while_typing': complete_while_typing,
-            }
-            if builtins.__xonsh_env__.get('COLOR_INPUT'):
-                if HAS_PYGMENTS:
-                    prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
-                    prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
-                else:
-                    prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
-            line = self.prompter.prompt(**prompt_args)
-            events.on_post_prompt.fire()
+        if env.get('VI_MODE'):
+            editing_mode = EditingMode.VI
+        else:
+            editing_mode = EditingMode.EMACS
+
+        prompt_args = {
+            'mouse_support': mouse_support,
+            'auto_suggest': auto_suggest,
+            'message': get_prompt_tokens,
+            'rprompt': get_rprompt_tokens,
+            'bottom_toolbar': get_bottom_toolbar_tokens,
+            'completer': completer,
+            'multiline': multiline,
+            'editing_mode': editing_mode,
+            'prompt_continuation': self.continuation_tokens,
+            'enable_history_search': enable_history_search,
+            'reserve_space_for_menu': 0,
+            'key_bindings': self.key_bindings,
+            'complete_style': complete_style,
+            'complete_while_typing': complete_while_typing,
+        }
+        if builtins.__xonsh_env__.get('COLOR_INPUT'):
+            if HAS_PYGMENTS:
+                prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
+                style = style_from_pygments_cls(
+                    pyghooks.xonsh_style_proxy(self.styler))
+            else:
+                style_dict = {
+                    pygments_token_to_classname(key.__name__): value
+                    for key, value in DEFAULT_STYLE_DICT
+                }
+                style = style_from_pygments_dict(style_dict)
+
+            prompt_args['style'] = style
+
+        line = self.prompter.prompt(**prompt_args)
+        events.on_post_prompt.fire()
         return line
 
     def _push(self, line):
@@ -164,7 +171,7 @@ class PromptToolkitShell(BaseShell):
                 else:
                     break
 
-    def prompt_tokens(self, cli):
+    def prompt_tokens(self):
         """Returns a list of (token, str) tuples for the current prompt."""
         p = builtins.__xonsh_env__.get('PROMPT')
         try:
@@ -176,9 +183,9 @@ class PromptToolkitShell(BaseShell):
             carriage_return()
             self._first_prompt = False
         self.settitle()
-        return toks
+        return PygmentsTokens(toks)
 
-    def rprompt_tokens(self, cli):
+    def rprompt_tokens(self):
         """Returns a list of (token, str) tuples for the current right
         prompt.
         """
@@ -193,27 +200,26 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
-        return toks
+        return PygmentsTokens(toks)
 
-    def bottom_toolbar_tokens(self, cli):
+    def bottom_toolbar_tokens(self):
         """Returns a list of (token, str) tuples for the current bottom
         toolbar.
         """
         p = builtins.__xonsh_env__.get('BOTTOM_TOOLBAR')
-        # self.prompt_formatter does handle empty strings properly,
-        # but this avoids descending into it in the common case of
-        # $TOOLBAR == ''.
-        if isinstance(p, str) and len(p) == 0:
-            return []
+        if not p:
+            return
         try:
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
-        return toks
+        return PygmentsTokens(toks)
 
-    def continuation_tokens(self, cli, width):
+    def continuation_tokens(self, width, line_number, is_soft_wrap=False):
         """Displays dots in multiline prompt"""
+        if is_soft_wrap:
+            return ''
         width = width - 1
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
         dots = dots() if callable(dots) else dots
@@ -239,7 +245,7 @@ class PromptToolkitShell(BaseShell):
             if n <= count:
                 break
         toks.append((Token, ' '))  # final space
-        return toks
+        return PygmentsTokens(toks)
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
@@ -267,13 +273,14 @@ class PromptToolkitShell(BaseShell):
         else:
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
+        tokens = PygmentsTokens(tokens)
         if HAS_PYGMENTS:
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-            proxy_style = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+            proxy_style = style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
         else:
-            proxy_style = style_from_dict(DEFAULT_STYLE_DICT)
-        print_tokens(tokens, style=proxy_style)
+            proxy_style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
+        ptk_print(tokens, style=proxy_style)
 
     def color_style_names(self):
         """Returns an iterable of all available style names."""

@@ -15,7 +15,7 @@ def custom_keybindings(bindings, **kw):
     # Alt+Left and Alt+Right still jump over smaller word segments.
     # See https://github.com/xonsh/xonsh/issues/2403
 
-    handler = bindings.registry.add_binding
+    handler = bindings.add
 
     @handler(Keys.ControlLeft)
     def ctrl_left(event):

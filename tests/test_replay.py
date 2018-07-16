@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh replay functionality."""
-from __future__ import unicode_literals, print_function
 import os
 import builtins
 
@@ -21,7 +20,7 @@ def ctx():
     """Create a global Shell instance to use in all the test."""
     ctx = {'PATH': []}
     execer = Execer(xonsh_ctx=ctx)
-    builtins.__xonsh_shell__ = Shell(execer=execer, ctx=ctx)
+    builtins.__xonsh_shell__ = Shell(execer=execer, ctx=ctx, shell_type='none')
     yield
     del builtins.__xonsh_shell__
 

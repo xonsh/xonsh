@@ -305,7 +305,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             (False, False, False, True, False): False,
             (False, False, False, False, True): False,
             (False, False, False, False, False): False,
-            }
+        }
         self.cmdqueue = collections.deque()
 
     def __del__(self):
@@ -360,8 +360,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                                      '{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit '
                                      '{YELLOW}==={NO_COLOR}')
         while len(lines) > h - 1:
-            print(''.join(lines[:h-1]), end='', flush=True, file=sys.stderr)
-            lines = lines[h-1:]
+            print(''.join(lines[:h - 1]), end='', flush=True, file=sys.stderr)
+            lines = lines[h - 1:]
             print(more_msg, end='', flush=True, file=sys.stderr)
             q = sys.stdin.read(1).lower()
             print(flush=True, file=sys.stderr)

@@ -31,4 +31,4 @@ def default_completers():
         ('import', complete_import),
         ('python', complete_python),
         ('path', complete_path),
-        ])
+    ])

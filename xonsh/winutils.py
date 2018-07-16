@@ -395,7 +395,7 @@ def CONSOLE_SCREEN_BUFFER_INFO():
             ("wAttributes", WORD),
             ("srWindow", SMALL_RECT),
             ("dwMaximumWindowSize", COORD),
-            ]
+        ]
 
     return _CONSOLE_SCREEN_BUFFER_INFO
 
@@ -408,7 +408,7 @@ def GetConsoleScreenBufferInfo():
     gcsbi.argtypes = (
         HANDLE,
         POINTER(CONSOLE_SCREEN_BUFFER_INFO),
-        )
+    )
     gcsbi.restype = BOOL
     return gcsbi
 
@@ -469,7 +469,7 @@ def SetConsoleScreenBufferSize():
     scsbs.argtypes = (
         HANDLE,  # _In_ HANDLE hConsoleOutput
         COORD,   # _In_ COORD  dwSize
-        )
+    )
     scsbs.restype = BOOL
     return scsbs
 
@@ -503,7 +503,7 @@ def SetConsoleCursorPosition():
     sccp.argtypes = (
         HANDLE,  # _In_ HANDLE hConsoleOutput
         COORD,   # _In_ COORD  dwCursorPosition
-        )
+    )
     sccp.restype = BOOL
     return sccp
 

@@ -42,7 +42,7 @@ class LazyObject(object):
             'load': load,
             'ctx': ctx,
             'name': name,
-            }
+        }
 
     def _lazy_obj(self):
         d = self._lasdo
@@ -258,7 +258,7 @@ class BackgroundModuleProxy(types.ModuleType):
         self.__dct__ = {
             'loaded': False,
             'modname': modname,
-            }
+        }
 
     def __getattribute__(self, name):
         passthrough = frozenset({'__dct__', '__class__', '__spec__'})

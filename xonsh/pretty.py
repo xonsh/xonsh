@@ -802,8 +802,7 @@ def for_type_by_name(type_module, type_name, func, dtp=None):
 #: printers for the default singletons
 _singleton_pprinters = LazyObject(lambda: dict.fromkeys(
     map(id, [None, True, False, Ellipsis,
-             NotImplemented]), _repr_pprint),
-                                  globals(), '_singleton_pprinters')
+             NotImplemented]), _repr_pprint), globals(), '_singleton_pprinters')
 
 
 def _defaultdict_pprint(obj, p, cycle):
