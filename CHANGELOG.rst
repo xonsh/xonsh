@@ -4,6 +4,26 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.0
+====================
+
+**Added:**
+
+- Added a hook for printing a spcial display method on an object.
+* Support for ``prompt_toolkit 2.0``
+* The ``--shell-type`` (``$SHELL_TYPE``) may now be specified using
+  shortcuts, such as ``rl`` for ``readline`` and ``ptk2`` for
+  ``prompt_toolkit2``. See ``xonsh --help`` for a full listing
+  of available aliases.
+
+
+**Fixed:**
+
+- Restored AUGASSIGN_OPS definition, which was inadvertently removed.
+
+
+
+
 v0.6.10
 ====================
 
