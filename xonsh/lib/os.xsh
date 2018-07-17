@@ -1,6 +1,7 @@
 """Xonsh extension of the standard library os module, using xonsh for
 subprocess calls"""
 from contextlib import contextmanager
+import sys
 
 
 @contextmanager
@@ -11,7 +12,7 @@ def indir(d):
     ![popd]
 
 
-def rmtree(dirname):
+def rmtree(dirname, force=False):
     """Remove a directory, even if it has read-only files (Windows).
     Git creates read-only files that must be removed on teardown. See
     https://stackoverflow.com/questions/2656322  for more info.
@@ -20,12 +21,16 @@ def rmtree(dirname):
     ----------
     dirname : str
         Directory to be removed
+    force : bool
+        If True force removal, defaults to False
     """
     try:
-        rm -r @(dirname)
+        if force:
+            rm -rf @(dirname)
+        else:
+            rm - r @ (dirname)
     except PermissionError:
         if sys.platform == "win32":
-            from xonsh.lib import subprocess
-            subprocess.check_call(["del", "/F/S/Q", dirname])
+            del /F/S/Q @(dirname)
         else:
             raise
