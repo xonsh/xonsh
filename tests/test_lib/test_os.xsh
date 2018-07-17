@@ -11,7 +11,7 @@ def test_indir():
         assert ![pwd].output.strip() != tmpdir
 
 def test_rmtree():
-    with tempfile.TemporaryDirectory as tmpdir:
+    with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
             mkdir rmtree_test
             pushd rmtree_test
