@@ -23,10 +23,10 @@ import collections.abc as cabc
 import contextlib
 import ctypes
 import datetime
-from distutils.version import LooseVersion
 import functools
 import glob
 import itertools
+import operator
 import os
 import pathlib
 import re
@@ -35,15 +35,15 @@ import sys
 import threading
 import traceback
 import warnings
-import operator
+from distutils.version import LooseVersion
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
-from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
-from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
-                            ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
-                            expanduser, os_environ)
+from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.platform import (DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
+                            PYTHON_VERSION_INFO, expanduser,
+                            has_prompt_toolkit, os_environ, scandir)
 
 
 @functools.lru_cache(1)
@@ -190,6 +190,9 @@ class EnvPath(collections.MutableSequence):
 
     def insert(self, index, value):
         self._l.insert(index, value)
+
+    def remove(self, value):
+        self._l.remove(value)
 
     @property
     def paths(self):
