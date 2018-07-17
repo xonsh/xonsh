@@ -28,7 +28,7 @@ def rmtree(dirname, force=False):
         if force:
             rm -rf @(dirname)
         else:
-            rm - r @ (dirname)
+            rm -r @ (dirname)
     except PermissionError:
         if sys.platform == "win32":
             del /F/S/Q @(dirname)
