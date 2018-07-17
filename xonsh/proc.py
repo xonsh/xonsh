@@ -2181,9 +2181,13 @@ class CommandPipeline:
 
     @property
     def output(self):
-        if self._output is None:
-            self._output = ''.join(self.lines)
-        return self._output
+        """Non-blocking, lazy access to output"""
+        if self.ended:
+            if self._output is None:
+                self._output = ''.join(self.lines)
+            return self._output
+        else:
+            return ''.join(self.lines)
 
     @property
     def out(self):
