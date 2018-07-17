@@ -251,8 +251,8 @@ def load_xonsh_bindings(key_bindings):
 
         if buffer.document.current_char == '\'':
             buffer.cursor_position += 1
-        elif whitespace_or_bracket_before(event.cli)\
-                and whitespace_or_bracket_after(event.cli):
+        elif whitespace_or_bracket_before()\
+                and whitespace_or_bracket_after():
             buffer.insert_text('\'')
             buffer.insert_text('\'', move_cursor=False)
         else:
@@ -264,8 +264,8 @@ def load_xonsh_bindings(key_bindings):
 
         if buffer.document.current_char == '"':
             buffer.cursor_position += 1
-        elif whitespace_or_bracket_before(event.cli)\
-                and whitespace_or_bracket_after(event.cli):
+        elif whitespace_or_bracket_before()\
+                and whitespace_or_bracket_after():
             buffer.insert_text('"')
             buffer.insert_text('"', move_cursor=False)
         else:
