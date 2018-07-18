@@ -286,7 +286,7 @@ class PromptToolkit2Shell(BaseShell):
         """Returns an iterable of all available style names."""
         if not HAS_PYGMENTS:
             return ['For other xonsh styles, please install pygments']
-        from pygments.styles import get_all_styles 
+        from pygments.styles import get_all_styles
         return get_all_styles()
 
     def color_style(self):
