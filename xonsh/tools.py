@@ -41,7 +41,7 @@ import operator
 # dependencies
 from xonsh import __version__
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
-from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
+from xonsh.platform import (scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
                             expanduser, os_environ)
 
@@ -1572,12 +1572,10 @@ def _token_attr_from_stylemap(stylemap):
     """yields tokens attr, and index from a stylemap """
     import prompt_toolkit as ptk
     if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
-        colorlookup = ptk.terminal.win32_output.ColorLookupTable
         style = ptk.styles.style_from_dict(stylemap)
         for token in stylemap:
             yield token, style.token_to_attrs[token]
     else:
-        from prompt_toolkit.styles.pygments import pygments_token_to_classname
         style = ptk.styles.style_from_pygments_dict(stylemap)
         for token in stylemap:
             style_str = 'class:{}'.format(
