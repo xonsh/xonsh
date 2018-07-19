@@ -1568,18 +1568,39 @@ def color_style():
     return builtins.__xonsh_shell__.shell.color_style()
 
 
+def _token_attr_from_stylemap(stylemap):
+    """yields tokens attr, and index from a stylemap """
+    import prompt_toolkit as ptk
+    if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
+        colorlookup = ptk.terminal.win32_output.ColorLookupTable
+        style = ptk.styles.style_from_dict(stylemap)
+        for token in stylemap:
+            yield token, style.token_to_attrs[token]
+    else:
+        from prompt_toolkit.styles.pygments import pygments_token_to_classname
+        style = ptk.styles.style_from_pygments_dict(stylemap)
+        for token in stylemap:
+            style_str = 'class:{}'.format(
+                ptk.styles.pygments.pygments_token_to_classname(token)
+            )
+            yield (token, style.get_attrs_for_style_str(style_str))
+
+
+def _get_color_lookup_table():
+    """Returns the prompt_toolkit win32 ColorLookupTable """
+    if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
+        from prompt_toolkit.terminal.win32_output import ColorLookupTable
+    else:
+        from prompt_toolkit.output.win32 import ColorLookupTable
+    return ColorLookupTable()
+
+
 def _get_color_indexes(style_map):
-    """ Generates the color and windows color index for a style """
-    import prompt_toolkit
-    table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
-    pt_style = prompt_toolkit.styles.style_from_dict(style_map)
-    for token in style_map:
-        attr = pt_style.token_to_attrs[token]
+    """Generates the color and windows color index for a style """
+    table = _get_color_lookup_table()
+    for token, attr in _token_attr_from_stylemap(style_map):
         if attr.color is not None:
-            try:
-                index = table.lookup_color(attr.color, attr.bgcolor)
-            except AttributeError:
-                index = table.lookup_fg_color(attr.color)
+            index = table.lookup_fg_color(attr.color)
             try:
                 rgb = (int(attr.color[0:2], 16),
                        int(attr.color[2:4], 16),
@@ -1596,9 +1617,7 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
     """
     modified_style = {}
     stype = builtins.__xonsh_env__.get('SHELL_TYPE')
-    if (not ON_WINDOWS or
-            (stype not in ('prompt_toolkit', 'best')) or
-            (stype == 'best' and not has_prompt_toolkit())):
+    if (not ON_WINDOWS or 'prompt_toolkit' not in stype):
         return modified_style
     if replace_colors is None:
         if ansi:
@@ -1634,9 +1653,7 @@ def expand_gray_colors_for_cmd_exe(style_map):
     """
     modified_style = {}
     stype = builtins.__xonsh_env__.get('SHELL_TYPE')
-    if (not ON_WINDOWS or
-            (stype not in ('prompt_toolkit', 'best')) or
-            (stype == 'best' and not has_prompt_toolkit())):
+    if (not ON_WINDOWS or 'prompt_toolkit1' != stype):
         return modified_style
     for token, idx, rgb in _get_color_indexes(style_map):
         if idx == 7 and rgb:
