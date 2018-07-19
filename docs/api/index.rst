@@ -5,6 +5,14 @@ Xonsh API
 =================
 For those of you who want the gritty details.
 
+**Xonsh Standard Library:**
+
+.. toctree::
+    :maxdepth: 2
+
+    lib/index
+
+
 **Language:**
 
 .. toctree::

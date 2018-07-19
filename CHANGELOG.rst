@@ -9,7 +9,7 @@ v0.7.0
 
 **Added:**
 
-- Added a hook for printing a spcial display method on an object.
+* Added a hook for printing a spcial display method on an object.
 * Support for ``prompt_toolkit 2.0``
 * The ``--shell-type`` (``$SHELL_TYPE``) may now be specified using
   shortcuts, such as ``rl`` for ``readline`` and ``ptk2`` for
@@ -202,7 +202,7 @@ v0.6.3
   do not end in a newline from writing over the next prompt and vice versa.
 * Fix bug on Windows when ``PATHEXT`` environment variable did not exist.
   This also fixes building the xonsh documentation on Windows.
-* Fixed a bug in the `free_cwd <http://xon.sh/xontribs.html#free-cwd>`__ Windows Xontrib, which caused the prompt to error if the current directory is 
+* Fixed a bug in the `free_cwd <http://xon.sh/xontribs.html#free-cwd>`__ Windows Xontrib, which caused the prompt to error if the current directory is
   deleted/renamed from an other process.
 * Fixed issue with ``$XONSH_SHOW_TRACEBACK`` not being respected in subprocess
   mode when the command could not be found or had incorrect permissions.
@@ -413,7 +413,7 @@ v0.5.10
 * Add "fzf-widgets" xontrib which provides fuzzy search productivity widgets
   with on custom keybindings to xontrib list.
 * New ``free_cwd`` xontrib for Windows, which prevent the current directory from being locked when the prompt is shown.
-  This allows the other programs or Windows explorer to delete the current or parent directory. This is accomplished by 
+  This allows the other programs or Windows explorer to delete the current or parent directory. This is accomplished by
   resetting the CWD to the users home directory temporarily while the prompt is displayed. The directory is still locked
   while any commands are processed so xonsh still can't remove it own working directory.
 
@@ -485,7 +485,7 @@ v0.5.8
 * Fixed a bug on py34 where os.scandir was used by accident.
 * Line continuations (``\\``) is subproc mode will no longer consume the
   surrounding whitespace.
-* Fixed a bug if foreign_shell name was not written in lower case in 
+* Fixed a bug if foreign_shell name was not written in lower case in
   the static configuration file ``config.json``
 * Fixed a regression on Windows where caused ``which`` reported that the
   ``PATH`` environment variable could not be found.

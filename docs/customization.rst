@@ -148,10 +148,9 @@ then choose ``Open Terminal Here`` and click on ``Edit currently selected action
 
 If you are unable to use utf-8 (ie. non-ascii) characters in xonsh. For example if you get the following output
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
-    echo "ßðđ"
-
+    $ echo "ßðđ"
     xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
     UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-2: ordinal not in range(128)
 
