@@ -298,7 +298,7 @@ def clean_jobs():
                 else:
                     msg = 'there is an unfinished job'
 
-                if builtins.__xonsh_env__['SHELL_TYPE'] != 'prompt_toolkit':
+                if 'prompt_toolkit' not in builtins.__xonsh_env__['SHELL_TYPE']:
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
