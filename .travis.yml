@@ -5,7 +5,7 @@ env:
 matrix:
     include:
         - os: linux
-          python: 3.5
+          python: 3.7
           env:
             - MINICONDA_OS="Linux"
             - CI=true
@@ -19,10 +19,10 @@ matrix:
           python: "nightly"
         - os: osx
           language: generic
-          env: PYTHON="3.4" MINICONDA_OS="MacOSX"
+          env: PYTHON="3.6" MINICONDA_OS="MacOSX"
         - os: osx
           language: generic
-          env: PYTHON="3.5" MINICONDA_OS="MacOSX"
+          env: PYTHON="3.7" MINICONDA_OS="MacOSX"
     allow_failures:
         - python: "nightly"
 

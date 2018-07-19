@@ -132,6 +132,50 @@ jobs:
       - run:
           command: |
             /home/circleci/miniconda/envs/py36-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh
+  build_37:
+    machine: true
+    environment:
+      PYTHON: "3.7"
+      ENV_NAME: "py37-xonsh-test"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - miniconda-v1-{{ checksum "ci/environment-3.7.yml" }}
+      - run:
+          name: install miniconda
+          command: |
+              if [ ! -d "/home/circleci/miniconda" ]; then
+                wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+                bash miniconda.sh -b -p $HOME/miniconda
+                export PATH="$HOME/miniconda/bin:$PATH"
+                conda config --set always_yes yes --set changeps1 no
+              fi
+              sudo chown -R $USER.$USER $HOME
+      - run:
+          name: configure conda
+          command: |
+              export PATH="$HOME/miniconda/bin:$PATH"
+              export ENV_NAME="py37-xonsh-test"
+              if [ ! -d "/home/circleci/miniconda/envs/py37-xonsh-test" ]; then
+                conda update -q conda
+                conda env create -f ci/environment-${PYTHON}.yml --name=${ENV_NAME}
+                source activate ${ENV_NAME}
+              fi
+              conda env list
+              conda list ${ENV_NAME}
+      - save_cache:
+          key: miniconda-v1-{{ checksum "ci/environment-3.7.yml" }}
+          paths:
+            - "/home/circleci/miniconda"
+      - run:
+          command: |
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            python setup.py install
+      - run:
+          command: |
+            /home/circleci/miniconda/envs/py37-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh
 
 workflows:
   version: 2
@@ -140,3 +184,4 @@ workflows:
       - build_34
       - build_35
       - build_36
+      - build_37
