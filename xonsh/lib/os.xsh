@@ -24,11 +24,11 @@ def rmtree(dirname, force=False):
     force : bool
         If True force removal, defaults to False
     """
+    cmd_args = '-r'
+    if force:
+        cmd_args += 'f'
     try:
-        if force:
-            rm -rf @(dirname)
-        else:
-            rm -r @(dirname)
+        rm @(cmd_args) @(dirname)
     except PermissionError:
         if sys.platform == "win32":
             del /F/S/Q @(dirname)

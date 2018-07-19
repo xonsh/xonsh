@@ -1,6 +1,6 @@
 **Added:**
 
-* ``xonsh.lib.rmtree()`` an rmtree which works on windows properly (even with
+* ``xonsh.lib.os.rmtree()`` an rmtree which works on windows properly (even with
   git)
 
 **Changed:** None
