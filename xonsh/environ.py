@@ -274,7 +274,7 @@ def DEFAULT_VALUES():
         'AUTO_CD': False,
         'AUTO_PUSHD': False,
         'AUTO_SUGGEST': True,
-        'AUTO_SUGGEST_IN_COMPLETIONS': True,
+        'AUTO_SUGGEST_IN_COMPLETIONS': False,
         'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
         'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
         'CDPATH': (),
