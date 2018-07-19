@@ -184,4 +184,6 @@ workflows:
       - build_34
       - build_35
       - build_36
-      - build_37
+      # conda-foge does not yet have all Python 3.7 packages available
+      # uncomment when it does
+      #- build_37
