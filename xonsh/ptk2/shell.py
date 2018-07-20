@@ -24,7 +24,7 @@ from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
 from prompt_toolkit.styles.pygments import (style_from_pygments_cls,
-                                            style_from_pygments_dict, pygments_token_to_classname)
+                                            style_from_pygments_dict)
 
 
 Token = _TokenType()
@@ -115,11 +115,7 @@ class PromptToolkit2Shell(BaseShell):
                 style = style_from_pygments_cls(
                     pyghooks.xonsh_style_proxy(self.styler))
             else:
-                style_dict = {
-                    pygments_token_to_classname(key.__name__): value
-                    for key, value in DEFAULT_STYLE_DICT
-                }
-                style = style_from_pygments_dict(style_dict)
+                style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
 
             prompt_args['style'] = style
 
