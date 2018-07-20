@@ -5,6 +5,8 @@ import sys
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
 
+from xonsh.platform import ptk_shell_type
+
 __all__ = ()
 
 
@@ -19,7 +21,11 @@ def bash_preproc(cmd, **kw):
 
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
-    handler = bindings.add
+    if ptk_shell_type() == 'prompt_toolkit2':
+        handler = bindings.add
+    else:
+        handler = bindings.registry.add_binding
+
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
     @Condition
