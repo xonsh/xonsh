@@ -342,6 +342,11 @@ def find_next_break(line, mincol=0, lexer=None):
     return maxcol
 
 
+def _offset_from_prev_lines(line, last):
+    lines = line.splitlines(keepends=True)[:last]
+    return sum(map(len, lines))
+
+
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
                  greedy=False):
     """Encapsulates tokens in a source code line in a uncaptured
@@ -431,6 +436,9 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False,
         return  # handle comment lines
     elif saw_macro or greedy:
         end_offset = len(toks[-1].value.rstrip()) + 1
+    if toks[0].lineno != toks[-1].lineno:
+        # handle multiline cases
+        end_offset += _offset_from_prev_lines(line, toks[-1].lineno)
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     end = len(line[:end].rstrip())
     rtn = '![' + line[beg:end] + ']'

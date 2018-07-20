@@ -98,6 +98,12 @@ def test_pyeval_redirect():
     code = 'echo @("foo") > bar\n'
     assert check_parse(code)
 
+
+def test_pyeval_multiline_str():
+    code = 'echo @("""hello\nmom""")\n'
+    assert check_parse(code)
+
+
 def test_echo_comma():
     code = 'echo ,\n'
     assert check_parse(code)
@@ -114,3 +120,5 @@ def test_echo_comma_2val():
 def test_echo_line_cont():
     code = 'echo "1 \\\n2"\n'
     assert check_parse(code)
+
+
