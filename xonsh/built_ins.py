@@ -684,7 +684,8 @@ def _safe_pipe_properties(fd, use_tty=False):
 def _update_last_spec(last):
     captured = last.captured
     last.last_in_pipeline = True
-    if not captured:
+    if not captured or \
+            (captured == 'hiddenobject' and not (last.stdout or last.stderr)):
         return
     callable_alias = callable(last.alias)
     if callable_alias:
@@ -693,14 +694,15 @@ def _update_last_spec(last):
         cmds_cache = builtins.__xonsh_commands_cache__
         thable = (cmds_cache.predict_threadable(last.args) and
                   cmds_cache.predict_threadable(last.cmd))
-        if captured and thable:
+        if thable:
             last.cls = PopenThread
-        elif not thable:
+        else:
             # foreground processes should use Popen
             last.threadable = False
-            if captured == 'object' or captured == 'hiddenobject':
+            if captured == 'object':
                 # CommandPipeline objects should not pipe stdout, stderr
                 return
+
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = ON_POSIX and not callable_alias
@@ -741,7 +743,7 @@ def _update_last_spec(last):
     elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
-    else:
+    elif captured != 'stdout':
         r, w = pty.openpty() if use_tty else os.pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
         last.stderr = safe_open(w, 'w')
