@@ -287,6 +287,18 @@ def test_eof_syntax_error():
     assert ':2:0: EOF in multi-line statement' in err
 
 
+def test_open_quote_syntax_error():
+    script = ('#!/usr/bin/env xonsh\n\n'
+              'echo "This is line 3"\n'
+              'print ("This is line 4")\n'
+              'x = "This is a string where I forget the closing quote on line 5\n'
+              'echo "This is line 6"\n')
+    out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
+    assert """:3:5: ('code: "This is line 3"',)""" not in err
+    assert ':5:4: "' in err
+    assert 'SyntaxError:' in err
+
+
 _bad_case = pytest.mark.skipif(ON_DARWIN or ON_WINDOWS or ON_TRAVIS,
                                reason="bad platforms")
 
