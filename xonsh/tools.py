@@ -138,6 +138,15 @@ def findfirst(s, substrs):
     return i, result
 
 
+def _is_directory(path):
+    """Takes a path or a list of paths and checks if it is a directory.
+    """
+    if isinstance(path, collections.Iterable):
+        return all(os.path.isdir(p) for p in path)
+    else:
+        return os.path.isdir(path)
+
+
 class EnvPath(collections.MutableSequence):
     """A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
@@ -189,6 +198,8 @@ class EnvPath(collections.MutableSequence):
         self._l.__delitem__(key)
 
     def insert(self, index, value):
+        if not _is_directory(value):
+            raise ValueError('Path should be a directory')
         self._l.insert(index, value)
 
     @property
@@ -257,6 +268,28 @@ class EnvPath(collections.MutableSequence):
         elif replace:
             self._l.remove(data)
             self._l.insert(0 if front else len(self._l), data)
+
+
+class EnvPathDir(EnvPath):
+    """
+    Inherits from EnvPath class and checks if all paths are directories when
+    setting the paths.
+    """
+    def __init__(self, args=None):
+        super().__init__(args=args)
+        if not _is_directory(self._l):
+            raise ValueError('Path(s) should be a directory or a list of '
+                             'directories')
+
+    def __setitem__(self, index, item):
+        if not _is_directory(item):
+            raise ValueError('Path should be a directory')
+        super().__setitem__(index, item)
+
+    def insert(self, index, value):
+        if not _is_directory(value):
+            raise ValueError('Path should be a directory')
+        super().insert(index, value)
 
 
 class DefaultNotGivenType(object):
@@ -1083,12 +1116,28 @@ def is_env_path(x):
     return isinstance(x, EnvPath)
 
 
+def is_env_path_dir(x):
+    """
+    Tests if something is an environment path and the path(s) are all
+    directories.
+    """
+    return isinstance(x, EnvPathDir)
+
+
 def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
     """
     # splitting will be done implicitly in EnvPath's __init__
     return EnvPath(x)
+
+
+def str_to_env_path_dir(x):
+    """
+    Converts a string to an enviroment path, splitting on the OS separator,
+    and ensures path(s) are all directories.
+    """
+    return EnvPathDir(x)
 
 
 def env_path_to_str(x):
