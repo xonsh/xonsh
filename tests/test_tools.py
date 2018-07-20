@@ -292,6 +292,13 @@ def test_subproc_toks_pyeval():
     assert exp == obs
 
 
+def test_subproc_toks_pyeval_multiline_string():
+    s = 'echo @("""hello\nmom""")'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert exp == obs
+
+
 def test_subproc_toks_twopyeval():
     s = 'echo @(1+1) @(40 + 2)'
     exp = '![{0}]'.format(s)
