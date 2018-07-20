@@ -10,6 +10,8 @@ else:
     import sys as _sys
     try:
         from xonsh import __amalgam__
+        braceexpand = __amalgam__
+        _sys.modules['xonsh.braceexpand'] = __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completer'] = __amalgam__
         contexts = __amalgam__

@@ -38,6 +38,7 @@ from xonsh.tools import (
 from xonsh.lazyimps import pty, termios
 from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
+from xonsh.braceexpand import braceexpand
 
 import xonsh.completers.init
 
@@ -132,8 +133,11 @@ def regexsearch(s):
 def globsearch(s):
     csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
     glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
-    return globpath(s, ignore_case=(not csc), return_empty=True,
-                    sort_result=glob_sorted)
+    test_strings = braceexpand(s)
+    return sum((list(globpath(s, ignore_case=(not csc),
+                              return_empty=True,
+                              sort_result=glob_sorted)) for s in test_strings),
+               [])
 
 
 def pathsearch(func, s, pymode=False, pathobj=False):
