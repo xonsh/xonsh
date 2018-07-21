@@ -813,12 +813,6 @@ class Env(cabc.MutableMapping):
             self._d['PATH'] = list(PATH_DEFAULT)
         self._detyped = None
 
-    @property
-    def arg_regex(self):
-        if self._arg_regex is None:
-            self._arg_regex = re.compile(r'ARG(\d+)')
-        return self._arg_regex
-
     @staticmethod
     def detypeable(val):
         return not (callable(val) or isinstance(val, cabc.MutableMapping))
@@ -937,14 +931,6 @@ class Env(cabc.MutableMapping):
             return self['PROMPT_FIELDS']
         if key is Ellipsis:
             return self
-        m = self.arg_regex.match(key)
-        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
-            args = self._d['ARGS']
-            ix = int(m.group(1))
-            if ix >= len(args):
-                e = "Not enough arguments given to access ARG{0}."
-                raise KeyError(e.format(ix))
-            val = self._d['ARGS'][ix]
         elif key in self._d:
             val = self._d[key]
         elif key in self._defaults:
@@ -1128,3 +1114,14 @@ def default_env(env=None):
     if env is not None:
         ctx.update(env)
     return ctx
+
+
+def make_args_env(args=None):
+    """Makes a dictionary containing the $ARGS and $ARG<N> environment
+    variables. If the supplied ARGS is None, then sys.argv is used.
+    """
+    if args is None:
+        args = sys.argv
+    env = {'ARG' + str(i): arg for i, arg in enumerate(args)}
+    env['ARGS'] = list(args)  # make a copy so we don't interfere with original variable
+    return env

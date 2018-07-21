@@ -24,7 +24,7 @@ from xonsh.xonfig import print_welcome_screen
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
-from xonsh.environ import xonshrc_context
+from xonsh.environ import xonshrc_context, make_args_env
 
 
 events.transmogrify('on_post_init', 'LoadEvent')
@@ -376,7 +376,7 @@ def main_xonsh(args):
             path = os.path.abspath(os.path.expanduser(args.file))
             if os.path.isfile(path):
                 sys.argv = [args.file] + args.args
-                env['ARGS'] = sys.argv[:]  # $ARGS is not sys.argv
+                env.update(make_args_env())  # $ARGS is not sys.argv
                 env['XONSH_SOURCE'] = path
                 shell.ctx.update({'__file__': args.file, '__name__': '__main__'})
                 run_script_with_cache(args.file, shell.execer, glb=shell.ctx,

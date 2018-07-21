@@ -11,7 +11,8 @@ from xonsh.tools import ON_WINDOWS
 import pytest
 
 from xonsh.commands_cache import CommandsCache
-from xonsh.environ import Env, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES, default_env
+from xonsh.environ import (Env, locate_binary, DEFAULT_ENSURERS, DEFAULT_VALUES,
+                           default_env, make_args_env)
 
 from tools import skip_if_on_unix
 
@@ -230,3 +231,15 @@ def test_no_lines_columns():
     finally:
         del os.environ['LINES']
         del os.environ['COLUMNS']
+
+
+def test_make_args_env():
+    obs = make_args_env(['script', '1', '2', '3'])
+    exp = {
+        'ARGS': ['script', '1', '2', '3'],
+        'ARG0': 'script',
+        'ARG1': '1',
+        'ARG2': '2',
+        'ARG3': '3',
+    }
+    assert exp == obs
