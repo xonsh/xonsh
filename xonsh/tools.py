@@ -1639,7 +1639,7 @@ def _get_color_indexes(style_map):
             yield token, index, rgb
 
 
-def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
+def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
     """Returns a modified style to where colors that maps to dark
        colors are replaced with brighter versions. Also expands the
        range used by the gray colors
@@ -1649,49 +1649,18 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
     if (not ON_WINDOWS or 'prompt_toolkit' not in stype):
         return modified_style
     if replace_colors is None:
-        if ansi:
-            replace_colors = {
-                1: '#ansiturquoise',  # subst blue with bright cyan
-                2: '#ansigreen',      # subst green with bright green
-                4: '#ansired',        # subst red with bright red
-                5: '#ansifuchsia',    # subst magenta with bright magenta
-                6: '#ansiyellow',     # subst yellow with bright yellow
-                9: '#ansiteal',       # subst intense blue (hard to read)
-                                      # with dark cyan (which is readable)
-            }
-        else:
-            replace_colors = {
-                1: '#44ffff',  # subst blue with bright cyan
-                2: '#44ff44',  # subst green with bright green
-                4: '#ff4444',  # subst red with bright red
-                5: '#ff44ff',  # subst magenta with bright magenta
-                6: '#ffff44',  # subst yellow with bright yellow
-                9: '#00aaaa',  # subst intense blue (hard to read)
-                               # with dark cyan (which is readable)
-            }
+        replace_colors = {
+            1: '#ansiturquoise',  # subst blue with bright cyan
+            2: '#ansigreen',      # subst green with bright green
+            4: '#ansired',        # subst red with bright red
+            5: '#ansifuchsia',    # subst magenta with bright magenta
+            6: '#ansiyellow',     # subst yellow with bright yellow
+            9: '#ansiteal',       # subst intense blue (hard to read)
+                                    # with dark cyan (which is readable)
+        }
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]
-    return modified_style
-
-
-def expand_gray_colors_for_cmd_exe(style_map):
-    """ Expand the style's gray scale color range.
-        All gray scale colors has a tendency to map to the same default GRAY
-        in cmd.exe.
-    """
-    modified_style = {}
-    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
-    if (not ON_WINDOWS or 'prompt_toolkit1' != stype):
-        return modified_style
-    for token, idx, rgb in _get_color_indexes(style_map):
-        if idx == 7 and rgb:
-            if sum(rgb) <= 306:
-                # Equal and below '#666666 is reset to dark gray
-                modified_style[token] = '#444444'
-            elif sum(rgb) >= 408:
-                # Equal and above 0x888888 is reset to white
-                modified_style[token] = '#ffffff'
     return modified_style
 
 

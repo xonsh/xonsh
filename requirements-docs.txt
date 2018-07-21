@@ -2,7 +2,7 @@ cloud_sptheme
 numpydoc
 Sphinx
 prompt_toolkit
-pygments
+pygments>=2.2
 ply
 psutil
 ipykernel
