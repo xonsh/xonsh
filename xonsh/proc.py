@@ -85,7 +85,7 @@ class QueueReader:
         self.fd = fd
         self.timeout = timeout
         self.closed = False
-        self.queue = queue.Queue()
+        self.queue = queue.Queue(maxsize=64)
         self.thread = None
 
     def close(self):
@@ -106,6 +106,9 @@ class QueueReader:
         """
         try:
             return self.queue.get(block=True, timeout=self.timeout)
+        except KeyboardInterrupt:
+            self.closed = True
+            raise
         except queue.Empty:
             return b''
 
@@ -171,7 +174,7 @@ class QueueReader:
 
     def iterqueue(self):
         """Iterates through all remaining chunks in a blocking fashion."""
-        while not self.is_fully_read():
+        while not self.closed and not self.is_fully_read():
             chunk = self.read_queue()
             if not chunk:
                 continue
@@ -179,12 +182,18 @@ class QueueReader:
 
 
 def populate_fd_queue(reader, fd, queue):
-    """Reads 1 kb of data from a file descriptor into a queue.
-    If this ends or fails, it flags the calling reader object as closed.
+    """Adaptively reads between 2 bytes and 1 kb of data from a file descriptor
+    into a queue. If this ends or fails, it flags the calling reader object
+    as closed. The number of bytes it reads in on any given pass is the average
+    distance between newlines.
     """
-    while True:
+    n = 2
+    nl = b'\n'
+    nnl = 1  # so that we don't get divide-by-zero errors
+    length = 0
+    while not reader.closed:
         try:
-            c = os.read(fd, 1024)
+            c = os.read(fd, n)
         except OSError:
             reader.closed = True
             break
@@ -193,6 +202,10 @@ def populate_fd_queue(reader, fd, queue):
         else:
             reader.closed = True
             break
+        # set new read length
+        nnl += c.count(nl)
+        length += len(c)
+        n = min(max(length//nnl, 2), 1024)
 
 
 class NonBlockingFDReader(QueueReader):
@@ -226,7 +239,7 @@ def populate_buffer(reader, fd, buffer, chunksize):
     flagged as closed.
     """
     offset = 0
-    while True:
+    while not reader.closed:
         try:
             buf = os.pread(fd, chunksize, offset)
         except OSError:
@@ -673,6 +686,8 @@ class PopenThread(threading.Thread):
         i = -1
         for i, chunk in enumerate(iter(reader.read_queue, b'')):
             self._alt_mode_switch(chunk, writer, stdbuf)
+            if self.proc.poll() is not None:
+                break
         if i >= 0:
             writer.flush()
             stdbuf.flush()
