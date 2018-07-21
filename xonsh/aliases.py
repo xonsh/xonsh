@@ -10,7 +10,7 @@ import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
-from xonsh.environ import locate_binary
+from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
@@ -303,7 +303,7 @@ def source_alias(args, stdin=None):
             src += '\n'
         ctx = builtins.__xonsh_ctx__
         updates = {'__file__': fpath, '__name__': os.path.abspath(fpath)}
-        with env.swap(ARGS=args[i + 1:]), swap_values(ctx, updates):
+        with env.swap(**make_args_env(args[i + 1:])), swap_values(ctx, updates):
             try:
                 builtins.execx(src, 'exec', ctx, filename=fpath)
             except Exception:
