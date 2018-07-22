@@ -20,6 +20,7 @@ from xonsh.shell import transform_command
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
+from xonsh.pygments_cache import get_all_styles
 
 Token = _TokenType()
 
@@ -279,7 +280,6 @@ class PromptToolkitShell(BaseShell):
         """Returns an iterable of all available style names."""
         if not HAS_PYGMENTS:
             return ['For other xonsh styles, please install pygments']
-        from pygments.styles import get_all_styles
         return get_all_styles()
 
     def color_style(self):
