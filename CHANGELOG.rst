@@ -4,6 +4,47 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.1
+====================
+
+**Added:**
+
+- Added feature to aliases.
+* ``xonsh.lib.os.rmtree()`` an rmtree which works on windows properly (even with
+  git)
+
+
+**Changed:**
+
+* set default value of ``$AUTO_SUGGEST_IN_COMPLETIONS=False``
+* Use the ``pygments_cache.get_all_styles()`` function instead of 
+  interacting directly with pygments.
+
+
+**Fixed:**
+
+* Fixed issue with ``$ARG<N>`` varaibles not being passed to subprocesses correctly.
+* Fixed issue with multiline string inside of ``@(expr)`` in
+  unwrapped subprocesses. For example, the following now works::
+
+    echo @("""hello
+    mom""")
+* ``CommandPipeline.output`` now does properly lazy, non-blocking creation of
+  output string. ``CommandPipeline.out`` remains blocking.
+* Fix regression in ``INTENSIFY_COLORS_ON_WIN`` functionality due to prompt_toolkit 2 update.
+* Fixed issue that can't insert quotation marks and double quotes 
+  for completion.
+* Fixed issue with ``SyntaxErrors`` being reported on the wrong line
+  when a block of code contained multiple implicit subprocesses.
+- ``prompt_toolkit >= 2`` will start up even if Pygments isn't present
+* Fixed a regression with ``xonfig styles`` reporting ``AttributeError: module 'pygments' has no attribute 'styles'``
+- ptk dependent xontribs (that use custom keybindings) now work with both ptk1
+  and ptk2
+* Fixed async tokenizing issue on Python v3.7.
+
+
+
+
 v0.7.0
 ====================
 
