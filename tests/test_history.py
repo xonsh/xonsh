@@ -251,7 +251,8 @@ def test_parser_show(args, exp):
               'start_time': None,
               'end_time': None,
               'datetime_format': None,
-              'timestamp': False}
+              'timestamp': False,
+              'null_byte': False}
     ns = _xh_parse_args(shlex.split(args))
     assert ns.__dict__ == exp_ns
 

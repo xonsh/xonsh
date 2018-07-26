@@ -184,18 +184,19 @@ def _xh_show_history(hist, ns, stdout=None, stderr=None):
         for c in commands:
             dt = datetime.datetime.fromtimestamp(c['ts'])
             print('{}:({}) {}'.format(c['ind'], xt.format_datetime(dt), c['inp']),
-                  file=stdout)
+                  file=stdout, end='\n' if not ns.null_byte else '\0')
     elif ns.numerate:
         for c in commands:
-            print('{}: {}'.format(c['ind'], c['inp']), file=stdout)
+            print('{}: {}'.format(c['ind'], c['inp']), file=stdout,
+                  end='\n' if not ns.null_byte else '\0')
     elif ns.timestamp:
         for c in commands:
             dt = datetime.datetime.fromtimestamp(c['ts'])
             print('({}) {}'.format(xt.format_datetime(dt), c['inp']),
-                  file=stdout)
+                  file=stdout, end='\n' if not ns.null_byte else '\0')
     else:
         for c in commands:
-            print(c['inp'], file=stdout)
+            print(c['inp'], file=stdout, end='\n' if not ns.null_byte else '\0')
 
 
 @xla.lazyobject
@@ -233,6 +234,10 @@ def _xh_create_parser():
     show.add_argument('-f', dest='datetime_format', default=None,
                       help='the datetime format to be used for'
                            'filtering and printing')
+    show.add_argument('-0', dest='null_byte', default=False,
+                      action='store_true',
+                      help='separate commands by the null character for piping '
+                           'history to external filters')
     show.add_argument('session', nargs='?', choices=_XH_HISTORY_SESSIONS.keys(),
                       default='session',
                       metavar='session',
