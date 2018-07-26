@@ -3,7 +3,6 @@
 import os
 import builtins
 
-from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.application.current import get_app
@@ -106,4 +105,3 @@ class PromptToolkitCompleter(Completer):
             last_h = max(render._min_available_height, last_h)
             if last_h < size:
                 render._last_screen.height = size
-
