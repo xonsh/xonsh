@@ -6,6 +6,7 @@ import builtins
 from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.application.current import get_app
 
 
 class PromptToolkitCompleter(Completer):
@@ -92,19 +93,17 @@ class PromptToolkitCompleter(Completer):
         return prev + comp
 
     def reserve_space(self):
-        app = builtins.__xonsh_shell__.shell.prompter.app
+        """Adjust the height for showing autocompletion menu."""
+        app = get_app()
+        render = app.renderer
         window = app.layout.container.children[0].content.children[1].content
 
         if window and window.render_info:
             h = window.render_info.content_height
             r = builtins.__xonsh_env__.get('COMPLETIONS_MENU_ROWS')
             size = h + r
+            last_h = render._last_screen.height if render._last_screen else 0
+            last_h = max(render._min_available_height, last_h)
+            if last_h < size:
+                render._last_screen.height = size
 
-            def comp_height(cli):
-                # If there is an autocompletion menu to be shown, make sure that o
-                # layout has at least a minimal height in order to display it.
-                if not cli.is_done:
-                    return LayoutDimension(min=size)
-                else:
-                    return LayoutDimension()
-            window._height = comp_height
