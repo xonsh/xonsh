@@ -8,8 +8,10 @@ import sys
 def indir(d):
     """Context manager for temporarily entering into a directory."""
     ![pushd @(d)]
-    yield
-    ![popd]
+    try:
+        yield
+    finally:
+        ![popd]
 
 
 def rmtree(dirname, force=False):
