@@ -9,6 +9,11 @@ def test_indir():
         with indir(tmpdir):
             assert ![pwd].output.strip() == tmpdir
         assert ![pwd].output.strip() != tmpdir
+        try:
+            with indir(tmpdir):
+                raise Exception
+        except Exception:
+            assert ![pwd].output.strip() != tmpdir
 
 def test_rmtree():
     with tempfile.TemporaryDirectory() as tmpdir:
