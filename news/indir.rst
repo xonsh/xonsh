@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* indir returns to original repository if exception is raised
+* If exception is raised in indir context manager, return to original directory
 
 **Security:** None
