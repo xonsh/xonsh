@@ -4,6 +4,24 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.2
+====================
+
+**Added:**
+
+* ``history show`` builtin now supports optional ``-0`` parameter that switches
+  the output to null-delimited. Useful for piping history to external filters.
+
+
+**Fixed:**
+
+* If exception is raised in indir context manager, return to original directory
+* Fixed issue that autocomplete menu does not display
+  at terminal's maximum height
+
+
+
+
 v0.7.1
 ====================
 
