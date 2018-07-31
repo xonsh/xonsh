@@ -109,6 +109,7 @@ class PromptToolkit2Shell(BaseShell):
             'key_bindings': self.key_bindings,
             'complete_style': complete_style,
             'complete_while_typing': complete_while_typing,
+            'include_default_pygments_style': False,
         }
         if builtins.__xonsh_env__.get('COLOR_INPUT'):
             if HAS_PYGMENTS:
@@ -266,7 +267,7 @@ class PromptToolkit2Shell(BaseShell):
     def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
         if isinstance(string, str):
-            tokens = partial_color_tokenize(string + end)
+            tokens = partial_color_tokenize(string)
         else:
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
@@ -277,7 +278,7 @@ class PromptToolkit2Shell(BaseShell):
             proxy_style = style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
         else:
             proxy_style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
-        ptk_print(tokens, style=proxy_style)
+        ptk_print(tokens, style=proxy_style, end=end, include_default_pygments_style=False)
 
     def color_style_names(self):
         """Returns an iterable of all available style names."""
