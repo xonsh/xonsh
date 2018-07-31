@@ -156,6 +156,18 @@ def ptk_shell_type():
 
 
 @functools.lru_cache(1)
+def win_ansi_support():
+    if ON_WINDOWS:
+        try:
+            from prompt_toolkit.utils import is_windows_vt100_supported, is_conemu_ansi
+        except ImportError:
+            return False
+        return is_conemu_ansi() or is_windows_vt100_supported()
+    else:
+        return False
+
+
+@functools.lru_cache(1)
 def ptk_below_max_supported():
     ptk_max_version_cutoff = (2, 0)
     return ptk_version_info()[:2] < ptk_max_version_cutoff

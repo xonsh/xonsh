@@ -119,7 +119,7 @@ def default_prompt():
     if xp.ON_CYGWIN or xp.ON_MSYS:
         dp = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
               '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
-    elif xp.ON_WINDOWS:
+    elif xp.ON_WINDOWS and not xp.win_ansi_support():
         dp = ('{env_name:{} }'
               '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
               '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '

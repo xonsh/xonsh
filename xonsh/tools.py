@@ -1628,7 +1628,7 @@ def _get_color_indexes(style_map):
     """Generates the color and windows color index for a style """
     table = _get_color_lookup_table()
     for token, attr in _token_attr_from_stylemap(style_map):
-        if attr.color is not None:
+        if attr.color:
             index = table.lookup_fg_color(attr.color)
             try:
                 rgb = (int(attr.color[0:2], 16),
@@ -1658,6 +1658,77 @@ ANSICOLOR_NAMES_MAP = LazyObject(lambda: {
     'ansiwhite': '#ansiwhite',
 }, globals(), 'ANSICOLOR_NAMES_MAP')
 
+def _win10_color_map():
+    cmap = {
+        'ansiblack': (12, 12, 12),
+        'ansiblue': (0, 55, 218),
+        'ansigreen': (19, 161, 14),
+        'ansicyan': (58, 150, 221),
+        'ansired': (197, 15, 31),
+        'ansimagenta': (136, 23, 152),
+        'ansiyellow': (193, 156, 0),
+        'ansigray': (204, 204, 204),
+        'ansibrightblack': (118, 118, 118),
+        'ansibrightblue': (59, 120, 255),
+        'ansibrightgreen': (22, 198, 12),
+        'ansibrightcyan': (97, 214, 214),
+        'ansibrightred': (231, 72, 86),
+        'ansibrightmagenta': (180, 0, 158),
+        'ansibrightyellow': (249, 241, 165),
+        'ansiwhite': (242, 242, 242),
+    }
+    return {
+        k: '#{0:02x}{1:02x}{2:02x}'.format(r, g, b) for k, (r, g, b) in cmap.items()
+    }
+
+WIN10_COLOR_MAP = LazyObject(_win10_color_map, globals(), 'WIN10_COLOR_MAP')
+
+
+def _win_bold_color_map():
+    """ Map dark ansi colors to lighter version. """
+    return {
+        'ansiblack': 'ansibrightblack',
+        'ansiblue': 'ansibrightblue',
+        'ansigreen': 'ansibrightgreen',
+        'ansicyan': 'ansibrightcyan',
+        'ansired': 'ansibrightred',
+        'ansimagenta': 'ansibrightmagenta',
+        'ansiyellow': 'ansibrightyellow',
+        'ansigray': 'ansiwhite',
+    }
+
+WIN_BOLD_COLOR_MAP = LazyObject(_win_bold_color_map, globals(), "WIN_BOLD_COLOR_MAP")
+
+
+def hardcode_colors_for_win10(style_map):
+    """Replace all ansi colors with hardcoded colors to avoid unreadable defaults
+       in conhost.exe
+    """
+    modified_style = {}
+    if not builtins.__xonsh_env__['PROMPT_TOOLKIT_COLOR_DEPTH']:
+        builtins.__xonsh_env__['PROMPT_TOOLKIT_COLOR_DEPTH'] = 'DEPTH_24_BIT'
+    # Replace all ansi colors with hardcoded colors to avoid unreadable defaults
+    # in conhost.exe
+    for token, style_str in style_map.items():
+        for ansicolor in WIN10_COLOR_MAP:
+            if ansicolor in style_str:
+                if 'bold' in style_str and 'nobold' not in style_str:
+                    # Win10  doesn't yet handle bold colors. Instead dark
+                    # colors are mapped to their lighter version. We simulate
+                    # the same here.
+                    style_str.replace('bold', '')
+                    hexcolor = WIN10_COLOR_MAP[
+                        WIN_BOLD_COLOR_MAP.get(ansicolor, ansicolor)
+                    ]
+                else:
+                    hexcolor = WIN10_COLOR_MAP[ansicolor]
+                style_str = style_str.replace(ansicolor, hexcolor)
+                continue
+        modified_style[token] = style_str
+    return modified_style
+
+
+
 
 def ansicolors_to_ptk1_names(stylemap):
     """Converts ansicolor names in a stylemap to old PTK1 color names
@@ -1670,26 +1741,21 @@ def ansicolors_to_ptk1_names(stylemap):
     return modified_stylemap
 
 
-def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
+def intensify_colors_for_cmd_exe(style_map):
     """Returns a modified style to where colors that maps to dark
-       colors are replaced with brighter versions. Also expands the
-       range used by the gray colors
+       colors are replaced with brighter versions.
     """
     modified_style = {}
-    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
-    if (not ON_WINDOWS or 'prompt_toolkit' not in stype):
-        return modified_style
-    if replace_colors is None:
-        replace_colors = {
-            1: 'ansibrightcyan',  # subst blue with bright cyan
-            2: 'ansibrightgreen',  # subst green with bright green
-            4: 'ansibrightred',  # subst red with bright red
-            5: 'ansibrightmagenta',  # subst magenta with bright magenta
-            6: 'ansibrightyellow',  # subst yellow with bright yellow
-            9: 'ansicyan',  # subst intense blue with dark cyan (more readable)
-        }
-        if stype == 'prompt_toolkit1':
-            replace_colors = ansicolors_to_ptk1_names(replace_colors)
+    replace_colors = {
+        1: 'ansibrightcyan',  # subst blue with bright cyan
+        2: 'ansibrightgreen',  # subst green with bright green
+        4: 'ansibrightred',  # subst red with bright red
+        5: 'ansibrightmagenta',  # subst magenta with bright magenta
+        6: 'ansibrightyellow',  # subst yellow with bright yellow
+        9: 'ansicyan',  # subst intense blue with dark cyan (more readable)
+    }
+    if stype == 'prompt_toolkit1':
+        replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]
@@ -1702,6 +1768,7 @@ def intensify_colors_on_win_setter(enable):
     """
     enable = to_bool(enable)
     if hasattr(builtins, '__xonsh_shell__'):
+        builtins.__xonsh_shell__.shell.styler.trap.clear()
         if hasattr(builtins.__xonsh_shell__.shell.styler, 'style_name'):
             delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
     return enable
