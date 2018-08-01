@@ -1375,6 +1375,30 @@ def bool_seq_to_csv(x):
     return ','.join(map(str, x))
 
 
+def ptk2_color_depth_setter(x):
+    """ Setter function for $PROMPT_TOOLKIT_COLOR_DEPTH. It also 
+        updates os.environ so prompt toolkit can pickup the value
+    """
+    x = str(x)
+    if x in {'DEPTH_1_BIT', 'MONOCHROME',
+             'DEPTH_4_BIT', 'ANSI_COLORS_ONLY',
+             'DEPTH_8_BIT', 'DEFAULT',
+             'DEPTH_24_BIT', 'TRUE_COLOR'}:
+        pass
+    elif x in {'', None}:
+        x = ''
+    else:
+        msg = '"{}" is not a valid value for $PROMPT_TOOLKIT_COLOR_DEPTH. '.format(x)
+        warnings.warn(msg, RuntimeWarning)
+        x = ''
+    if x == '' and 'PROMPT_TOOLKIT_COLOR_DEPTH' in os_environ:
+        del os_environ['PROMPT_TOOLKIT_COLOR_DEPTH']
+    else: 
+        os_environ['PROMPT_TOOLKIT_COLOR_DEPTH'] = x
+    return x
+
+
+
 def is_completions_display_value(x):
     return x in {'none', 'single', 'multi'}
 
