@@ -1376,8 +1376,8 @@ def bool_seq_to_csv(x):
 
 
 def ptk2_color_depth_setter(x):
-    """ Setter function for $PROMPT_TOOLKIT_COLOR_DEPTH. It also 
-        updates os.environ so prompt toolkit can pickup the value
+    """ Setter function for $PROMPT_TOOLKIT_COLOR_DEPTH. Also
+        updates os.environ so prompt toolkit can pickup the value.
     """
     x = str(x)
     if x in {'DEPTH_1_BIT', 'MONOCHROME',
@@ -1393,10 +1393,9 @@ def ptk2_color_depth_setter(x):
         x = ''
     if x == '' and 'PROMPT_TOOLKIT_COLOR_DEPTH' in os_environ:
         del os_environ['PROMPT_TOOLKIT_COLOR_DEPTH']
-    else: 
+    else:
         os_environ['PROMPT_TOOLKIT_COLOR_DEPTH'] = x
     return x
-
 
 
 def is_completions_display_value(x):
