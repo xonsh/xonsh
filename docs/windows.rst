@@ -8,13 +8,12 @@ Installation
 The easy way
 ----------------
 
-The easiest way to install xonsh on windows is through the Anaconda Python
-Distribution and the conda package manager.
+The easiest way to install xonsh on windows is through the `Anaconda Python
+Distribution <https://www.anaconda.com/download/>`__ and the conda package manager.
 
 .. note::
 
-    Be sure to install the version with Python3.4 or later.
-    Xonsh is not yet supported on legacy Python (2.7).
+    Xonsh is not supported on legacy Python (2.7).
 
 Install xonsh with the following command:
 
@@ -42,10 +41,6 @@ Next, install the prompt_toolkit dependency via ``pip``:
 .. code-block:: bat
 
    > pip install prompt-toolkit
-
-While prompt-toolkit is considered an optional dependency, it is the
-recommended alternative to pyreadline for Windows users. For Windows,
-it is recommended to use a replacement console emulator. Good choices are `cmder`_ or `conemu`_.
 
 Download the latest `xonsh-master.zip`_ from github and unzip it
 to ``xonsh-master``.
@@ -75,79 +70,80 @@ Usage
 
 Color style
 --------------------------------
+
 The dark red and blue colors are completely unreadable in Windows' default
-terminal. 
+terminal.
 
 .. image:: _static/intensify-colors-on-win-false.png
    :width: 396 px
    :alt: intensify-colors-win-false
    :align: center
 
-To give new users, the best experience Xonsh automatically replaces 
-some of the dark colors with more readable alternatives (e.g. blue becomes cyan).
-The behavior is controlled with the ``$INTENSIFY_COLORS_ON_WIN``
-environment variable.
+There are ways to configure the colors (see below), but to give new users the
+best experience Xonsh has some tricks to fix colors. This is controlled by the
+:ref:`$INTENSIFY_COLORS_ON_WIN <intensify_colors_on_win>`
+environment variable which is ``True`` by default. 
 
-.. image:: _static/intensify-colors-on-win-true.png
-   :width: 399 px
-   :alt: intensify-colors-win-true
+**On Windows 10**
+
+Windows 10 supports true color in the terminal, so on Win 10 Xonsh will use
+a style with hard coded colors instead of the terminal colors.
+
+.. image:: _static/better_colors_windows.png
+   :width: 600 px
+   :alt: better_colors_windows
    :align: center
    
+**On older Windows** 
+
+On older windows installations Xonsh takes an other
+approach and replaces some of the unreadable dark colors with more readable
+alternatives (e.g. blue becomes cyan).
+
+**Configure the terminal colors**
+
 It is possible to configure the Windows console with readable default colors,
-but it is tedious to do manually. Here is registry file which will do it
-automatically and set some good default colors. Simply download and run the registry file. 
+but it is tedious to do manually. The Microsoft console team has made a `handy tool
+to configure colors`_ in the terminal
 
- * `console_colors.reg`_
-
- .. note:: This may not always work right away. Especially if you already fiddled around with the colors settings.
-           Try to delete any subfolders under ``HKCU/console/`` in the registry. Also, shortcuts files store their own
-           colors schemes and ignore registry settings.
+* `Download Colortool`_ from from GitHub
 
 With better colors configured, ``$INTENSIFY_COLORS_ON_WIN`` should be set to 
-``False``, and the default prompt can be changed to match how it looks on POSIX and Mac.
+``False`` to allow the console to control the colors.
 You can do this by adding the following to the xonsh run control file ``.xonshrc``: 
-
 
 .. code-block:: xonshcon
 
     $INTENSIFY_COLORS_ON_WIN = False
-    $PROMPT = $PROMPT.replace('INTENSE_','').replace('CYAN','BLUE')
-
-With everything setup the console will look like this:
-
-.. image:: _static/better_colors_windows.png
-   :width: 366 px
-   :alt: better_colors_windows
-   :align: center
 
 
-
-.. _console_colors.reg: http://xon.sh/_static/console_colors.reg
-
+.. _handy tool to configure colors: https://blogs.msdn.microsoft.com/commandline/2017/08/11/introducing-the-windows-console-colortool/
+.. _Download Colortool: https://github.com/Microsoft/console/tree/master/tools/ColorTool
 
 Avoid locking the working directory
 -----------------------------------
 
-Python (like other processes on Windows) locks the current working directory so it can't be deleted or renamed.
-``cmd.exe`` has this behaviour as well, but it is quite annoying for a shell. 
+Python (like other processes on Windows) locks the current working directory so
+it can't be deleted or renamed. ``cmd.exe`` has this behaviour as well, but it
+is quite annoying for a shell. 
 
-The ``free_cwd`` xontrib (add-on) for xonsh solves some of this problem. It works by 
-hooking the prompt to reset the current working directory to the root drive folder whenever
-the shell is idle. It only works with the prompt-toolkit back-end. To enable that behaviour run the following: 
+The :ref:`free_cwd <free_cwd>` xontrib (add-on) for xonsh solves some of this problem. It
+works by hooking the prompt to reset the current working directory to the root
+drive folder whenever the shell is idle. It only works with the prompt-toolkit
+back-end. To enable that behaviour run the following: 
+
+Add this line to your ``~/.xonshrc`` file to have it always enabled. 
 
 .. code-block:: xonshcon
 
    >>> xontrib load free_cwd
 
-Add this line to your ``~/.xonshrc`` file to have it always enabled. 
-
 
 Name space conflicts
 --------------------
 
-Due to ambiguity with the Python ``dir`` builtin, to list the current
-directory via the ``cmd.exe`` builtin you must explicitly request
-the ``.``, like this:
+Due to ambiguity with the Python ``dir`` builtin, to list the current directory
+via the ``cmd.exe`` builtin you must explicitly request the ``.``, like this:
 
 .. code-block:: xonshcon
 
@@ -180,7 +176,7 @@ available when xonsh starts.
 Unicode support for Windows
 ----------------------------
 
-Python's utf-8 unicode is not compatible with the default shell 'cmd.exe' on Windows. The package ``win_unicode_console`` fixes this. Xonsh will use ``win_unicode_console`` if it is installed. This can be disabled/enabled with the ``$WIN_UNICODE_CONSOLE``` environment variable.
+Python's utf-8 unicode is not compatible with the default shell 'cmd.exe' on Windows. The package ``win_unicode_console`` fixes this. Xonsh will use ``win_unicode_console`` if it is installed. This can be disabled/enabled with the :ref:`$WIN_UNICODE_CONSOLE <win_unicode_console>` environment variable.
 
 .. note:: Even with unicode support enabled the symbols available will depend on the font used in cmd.exe.
 
