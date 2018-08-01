@@ -36,7 +36,7 @@ from xonsh.tools import (
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
     seq_to_upper_pathsep, print_color, is_history_backend, to_itself,
-    swap_values,
+    swap_values, ptk2_color_depth_setter
 )
 import xonsh.prompt.base as prompt
 
@@ -157,6 +157,7 @@ def DEFAULT_ENSURERS():
                 seq_to_upper_pathsep),
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
     'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
+    'PROMPT_TOOLKIT_COLOR_DEPTH': (always_false, ptk2_color_depth_setter, ensure_string),
     'PUSHD_MINUS': (is_bool, to_bool, bool_to_str),
     'PUSHD_SILENT': (is_bool, to_bool, bool_to_str),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
@@ -311,6 +312,7 @@ def DEFAULT_VALUES():
         'PATHEXT': ['.COM', '.EXE', '.BAT', '.CMD'] if ON_WINDOWS else [],
         'PRETTY_PRINT_RESULTS': True,
         'PROMPT': prompt.default_prompt(),
+        'PROMPT_TOOLKIT_COLOR_DEPTH': '',
         'PUSHD_MINUS': False,
         'PUSHD_SILENT': False,
         'RAISE_SUBPROC_ERROR': False,
@@ -542,6 +544,10 @@ def DEFAULT_DOCS():
         'http://xon.sh/tutorial.html#customizing-the-prompt. '
         'This value is never inherited from parent processes.',
         default='``xonsh.environ.DEFAULT_PROMPT``'),
+    'PROMPT_TOOLKIT_COLOR_DEPTH': VarDocs(
+        'The color depth used by prompt toolkit 2. Possible values are: '
+        '``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` '
+        'colors. Default is an empty string which means that prompt toolkit decide.'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
         'behavior.'),
