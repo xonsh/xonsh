@@ -61,7 +61,7 @@ class XonshKernel:
                      }
     signature_schemes = {"hmac-sha256": hashlib.sha256}
 
-    def __init__(self, debug_level=3, session_id=None, config=None, **kwargs):
+    def __init__(self, debug_level=0, session_id=None, config=None, **kwargs):
         """
         Parameters
         ----------
@@ -343,16 +343,6 @@ class XonshKernel:
             interrupted = False
         except KeyboardInterrupt:
             interrupted = True
-
-        #if not silent:  # stdout response
-        #    if hist is not None and len(hist) > 0:
-        #        self._respond_in_chunks('stdout', hist.outs[-1],
-        #                                parent_header=parent_header)
-        #    elif hasattr(builtins, '_') and builtins._ is not None:
-        #        # rely on sys.displayhook functionality
-        #        self._respond_in_chunks('stdout', pformat(builtins._),
-        #                                parent_header=parent_header)
-        #        builtins._ = None
 
         if interrupted:
             return {'status': 'abort', 'execution_count': self.execution_count}
