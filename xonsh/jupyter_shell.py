@@ -54,7 +54,7 @@ class StdJupyterRedirect(io.TextIOBase):
         self.kernel = kernel
         self.parent_header = parent_header
 
-        self.std = std = getattr(sys, name)
+        self.std = getattr(sys, name)
         self.buffer = StdJupyterRedirectBuf(self)
         setattr(sys, name, self)
 
