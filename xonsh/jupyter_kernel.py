@@ -18,7 +18,7 @@ from zmq.eventloop import ioloop, zmqstream
 from zmq.error import ZMQError
 
 from xonsh import __version__ as version
-from xonsh.main import main_context
+from xonsh.main import setup
 from xonsh.completer import Completer
 
 
@@ -188,8 +188,8 @@ class XonshKernel:
     def dprint(self, level, *args, **kwargs):
         """Print but with debug information."""
         if level <= self.debug_level:
-            print("DEBUG" + str(level) + ':', *args, **kwargs)
-            sys.stdout.flush()
+            print("DEBUG" + str(level) + ':', file=sys.__stdout__, *args, **kwargs)
+            sys.__stdout__.flush()
 
     def sign(self, messages):
         """Sign a message list with a secure signature."""
@@ -339,20 +339,20 @@ class XonshKernel:
         shell = builtins.__xonsh_shell__
         hist = builtins.__xonsh_history__
         try:
-            shell.default(code)
+            shell.default(code, self, parent_header)
             interrupted = False
         except KeyboardInterrupt:
             interrupted = True
 
-        if not silent:  # stdout response
-            if hist is not None and len(hist) > 0:
-                self._respond_in_chunks('stdout', hist.outs[-1],
-                                        parent_header=parent_header)
-            elif hasattr(builtins, '_') and builtins._ is not None:
-                # rely on sys.displayhook functionality
-                self._respond_in_chunks('stdout', pformat(builtins._),
-                                        parent_header=parent_header)
-                builtins._ = None
+        #if not silent:  # stdout response
+        #    if hist is not None and len(hist) > 0:
+        #        self._respond_in_chunks('stdout', hist.outs[-1],
+        #                                parent_header=parent_header)
+        #    elif hasattr(builtins, '_') and builtins._ is not None:
+        #        # rely on sys.displayhook functionality
+        #        self._respond_in_chunks('stdout', pformat(builtins._),
+        #                                parent_header=parent_header)
+        #        builtins._ = None
 
         if interrupted:
             return {'status': 'abort', 'execution_count': self.execution_count}
@@ -419,7 +419,7 @@ class XonshKernel:
 
 
 if __name__ == '__main__':
-    # must manually pass in args to avoid interfering w/ Jupyter arg parsing
-    with main_context(argv=['--shell-type=readline']):
-        kernel = XonshKernel()
-        kernel.start()
+    setup(shell_type='jupyter', env={})
+    shell = builtins.__xonsh_shell__
+    kernel = shell.kernel = XonshKernel()
+    kernel.start()

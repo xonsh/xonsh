@@ -5,6 +5,6 @@ prompt_toolkit
 pygments
 ply
 psutil
-ipykernel
+pyzmq
 matplotlib
 doctr
