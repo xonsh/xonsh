@@ -11,6 +11,7 @@ import builtins
 import threading
 from pprint import pformat
 from argparse import ArgumentParser
+from collections.abc import Set
 
 import zmq
 from zmq.eventloop import ioloop, zmqstream
@@ -344,14 +345,14 @@ class XonshKernel:
             interrupted = True
 
         if not silent:  # stdout response
-            if hasattr(builtins, '_') and builtins._ is not None:
+            if hist is not None and len(hist) > 0:
+                self._respond_in_chunks('stdout', hist.outs[-1],
+                                        parent_header=parent_header)
+            elif hasattr(builtins, '_') and builtins._ is not None:
                 # rely on sys.displayhook functionality
                 self._respond_in_chunks('stdout', pformat(builtins._),
                                         parent_header=parent_header)
                 builtins._ = None
-            if hist is not None and len(hist) > 0:
-                self._respond_in_chunks('stdout', hist.outs[-1],
-                                        parent_header=parent_header)
 
         if interrupted:
             return {'status': 'abort', 'execution_count': self.execution_count}
@@ -395,6 +396,8 @@ class XonshKernel:
         begidx = pos - len(prefix)
         rtn, _ = self.completer.complete(prefix, line, begidx,
                                          endidx, shell.ctx)
+        if isinstance(rtn, Set):
+            rtn = list(rtn)
         message = {'matches': rtn, 'cursor_start': begidx, 'cursor_end': endidx,
                    'metadata': {}, 'status': 'ok'}
         return message
