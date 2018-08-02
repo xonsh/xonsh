@@ -29,12 +29,26 @@ def dump_bytes(*args, **kwargs):
     return json.dumps(*args, **kwargs).encode('ascii')
 
 
+def load_bytes(b):
+    """Converts bytes of JSON to an object."""
+    return json.loads(b.decode('ascii'))
+
+
+def bind(socket, connection, port):
+    """Binds a socket to a port, or a random port if needed. Returns the port."""
+    if port <= 0:
+        return socket.bind_to_random_port(connection)
+    else:
+        socket.bind("{}:{}".format(connection, port))
+    return port
+
+
 class XonshKernel:
     """Xonsh xernal for Jupyter"""
     implementation = 'Xonsh ' + version
     implementation_version = version
     language = 'xonsh'
-    language_version = version
+    language_version = version.split('.')[:3]
     banner = 'Xonsh - Python-powered, cross-platform shell'
     language_info = {'name': 'xonsh',
                      'version': version,
@@ -43,8 +57,9 @@ class XonshKernel:
                      'mimetype': 'text/x-sh',
                      'file_extension': '.xsh',
                      }
+    signature_schemes = {"hmac-sha256": hashlib.sha256}
 
-    def __init__(self, debug_level=3, session_id=None, **kwargs):
+    def __init__(self, debug_level=3, session_id=None, config=None, **kwargs):
         """
         Parameters
         ----------
@@ -53,12 +68,106 @@ class XonshKernel:
         session_id : str or None, optional
             Unique string id representing the kernel session. If None, this will
             be replaced with a random UUID.
+        config : dict or None, optional
+            Configuration dictionary to start server with. BY default will
+            search the command line for options (if given) or use default
+            configuration.
         """
         self.debug_level = debug_level
         self.session_id = str(uuid.uuid4()) if session_id is None else session_id
+        self.config = self.make_default_config if config is None else config
 
         self.exiting = False
+        self.execution_count = 1
         self.completer = Completer()
+
+    def make_default_config(self):
+        """Provides default configuration"""
+        if len(sys.argv) > 1:
+            self.dprint(1, "Loading simple_kernel with args:", sys.argv)
+            self.dprint(1, "Reading config file {!r}...".format(sys.argv[1]))
+            with open(sys.argv[1]) as f:
+                lines = f.readlines()
+            config = json.loads(lines)
+        else:
+            self.dprint(1, "Starting xonsh kernel with default args...")
+            config = {
+                'control_port'      : 0,
+                'hb_port'           : 0,
+                'iopub_port'        : 0,
+                'ip'                : '127.0.0.1',
+                'key'               : str(uuid.uuid4()),
+                'shell_port'        : 0,
+                'signature_scheme'  : 'hmac-sha256',
+                'stdin_port'        : 0,
+                'transport'         : 'tcp'
+            }
+        return config
+
+    def iopub_handler(self, message):
+        """Handles iopub requests."""
+        self.dprint(2, "iopub received:", message)
+
+    def control_handler(self, wire_message):
+        """Handles control requests"""
+        self.dprint(1, "control received:", wire_message)
+        identities, msg = self.deserialize_wire_message(wire_message)
+        if msg['header']["msg_type"] == "shutdown_request":
+            self.shutdown()
+
+    def stdin_handler(self, message):
+        dprint(2, "stdin received:", message)
+
+    def start(self):
+        """Starts the server"""
+        ioloop.install()
+        connection = self.config["transport"] + "://" + self.config["ip"]
+        secure_key = self.config["key"].encode()
+        digestmod = self.signature_schemes[self.config["signature_scheme"]])
+        self.auth = hmac.HMAC(secure_key, digestmod=digestmod)
+
+        # Heartbeat
+        ctx = zmq.Context()
+        self.heartbeat_socket = ctx.socket(zmq.REP)
+        self.config["hb_port"] = bind(self.heartbeat_socket, connection,
+                                      self.config["hb_port"])
+
+        # IOPub/Sub, aslo called SubSocketChannel in IPython sources
+        self.iopub_socket = ctx.socket(zmq.PUB)
+        aelf.config["iopub_port"] = bind(self.iopub_socket, connection,
+                                         self.config["iopub_port"])
+        self.iopub_stream = zmqstream.ZMQStream(self.iopub_socket)
+        self.iopub_stream.on_recv(self.iopub_handler)
+
+        # Control
+        self.control_socket = ctx.socket(zmq.ROUTER)
+        self.config["control_port"] = bind(self.control_socket, connection,
+                                           self.config["control_port"])
+        self.control_stream = zmqstream.ZMQStream(self.control_socket)
+        self.control_stream.on_recv(self.control_handler)
+
+        # Stdin:
+        self.stdin_socket = ctx.socket(zmq.ROUTER)
+        self.config["stdin_port"] = bind(self.stdin_socket, connection,
+                                         self.config["stdin_port"])
+        self.stdin_stream = zmqstream.ZMQStream(self.stdin_socket)
+        self.stdin_stream.on_recv(self.stdin_handler)
+
+        # Shell
+        self.shell_socket = ctx.socket(zmq.ROUTER)
+        self.config["shell_port"] = bind(self.shell_socket, connection,
+                                         self.config["shell_port"])
+        self.shell_stream = zmqstream.ZMQStream(self.shell_socket)
+        self.shell_stream.on_recv(self.shell_handler)
+
+        # start up configurtation
+        self.dprint(2, "Config:", json.dumps(self.config))
+        self.dprint(1, "Starting loops...")
+        self.hb_thread = threading.Thread(target=self.heartbeat_loop)
+        self.hb_thread.daemon = True
+        self.hb_thread.start()
+        self.dprint(1, "Ready! Listening...")
+        ioloop.IOLoop.instance().start()
 
     def shutdown(self):
         """Shutsdown the kernel"""
@@ -109,6 +218,20 @@ class XonshKernel:
         stream.send_multipart(parts)
         stream.flush()
 
+    def deserialize_wire_message(self, wire_message):
+        """Split the routing prefix and message frames from a message on the wire"""
+        delim_idx = wire_message.index(DELIM)
+        identities = wire_message[:delim_idx]
+        m_signature = wire_message[delim_idx + 1]
+        msg_frames = wire_message[delim_idx + 2:]
+
+        keys = ('header', 'parent_header', 'metadata', 'content')
+        m = {k: load_bytes(v) for k, v in zip(keys, msg_frames)}
+        check_sig = self.sign(msg_frames)
+        if check_sig != m_signature:
+            raise ValueError("Signatures do not match")
+        return identities, m
+
     def run_thread(self, loop, name):
         """Run main thread"""
         self.dprint(2, "Starting loop for {name!r}...".format(name=name))
@@ -146,6 +269,70 @@ class XonshKernel:
                     raise
             else:
                 break
+
+    def shell_handler(self, message):
+        """Dispatch shell messages to their handlers"""
+        self.dprint(1, "received:", message)
+        position = 0
+        identities, msg = deserialize_wire_message(message)
+        handler = getattr(self, 'handle_' + msg['header']["msg_type"], None)
+        if handler is None:
+            self.dprint(0, "unknown message type:", msg['header']["msg_type"])
+            return
+        handler(msg)
+
+    def handle_execute_request(self, message):
+        """Handle execute request messages."""
+        self.dprint(2, "Xonsh Kernel Executing:", pformat(msg['content']["code"]))
+        content = {'execution_state': "busy"}
+        self.send(self.iopub_stream, 'status', content,
+                  parent_header=message['header'])
+
+        content = {
+            'execution_count': self.execution_count,
+            'code': message['content']["code"],
+        }
+        self.send(self.iopub_stream, 'execute_input', content,
+                  parent_header=message['header'])
+
+        content = {
+            'name': "stdout",
+            'text': "hello, world",
+        }
+        self.send(self.iopub_stream, 'stream', content,
+                  parent_header=message['header'])
+
+        content = {
+            'execution_count': self.execution_count,
+            'data': {"text/plain": "result!"},
+            'metadata': {}
+        }
+        self.send(self.iopub_stream, 'execute_result', content,
+                  parent_header=message['header'])
+
+        content = {
+            'execution_state': "idle",
+        }
+        self.send(self.iopub_stream, 'status', content,
+                  parent_header=message['header'])
+
+        metadata = {
+            "dependencies_met": True,
+            "engine": self.session_id,
+            "status": "ok",
+            "started": datetime.datetime.now().isoformat(),
+        }
+        content = {
+            "status": "ok",
+            "execution_count": self.execution_count,
+            "user_variables": {},
+            "payload": [],
+            "user_expressions": {},
+        }
+        self.send(self.shell_stream, 'execute_reply', content,
+                  metadata=metadata, parent_header=message['header'],
+                  identities=identities)
+        self.execution_count += 1
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):
@@ -207,9 +394,23 @@ class XonshKernel:
                    'metadata': {}, 'status': 'ok'}
         return message
 
+    def handle_kernel_info_request(self):
+        content = {
+            "protocol_version": "5.0",
+            "ipython_version": [1, 1, 0, ""],
+            "language": self.language,
+            "language_version": self.language_version,
+            "implementation": self.implementation,
+            "implementation_version": self.implementation_version,
+            "language_info": self.language_info,
+            "banner": self.banner,
+        }
+        self.send(self.shell_stream, 'kernel_info_reply', content,
+                  parent_header=message['header'], identities=identities)
+
 
 if __name__ == '__main__':
-    from ipykernel.kernelapp import IPKernelApp
     # must manually pass in args to avoid interfering w/ Jupyter arg parsing
     with main_context(argv=['--shell-type=readline']):
-        IPKernelApp.launch_instance(kernel_class=XonshKernel)
+        kernel = XonshKernel()
+        kernel.start()
