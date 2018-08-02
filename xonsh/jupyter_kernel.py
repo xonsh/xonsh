@@ -226,7 +226,8 @@ class XonshKernel:
             parts = identities + parts
         self.dprint(3, "send parts:", parts)
         stream.send_multipart(parts)
-        stream.flush()
+        if isinstance(stream, zmqstream.ZMQStream):
+            stream.flush()
 
     def deserialize_wire_message(self, wire_message):
         """Split the routing prefix and message frames from a message on the wire"""
@@ -295,10 +296,12 @@ class XonshKernel:
     def handle_execute_request(self, message, identities):
         """Handle execute request messages."""
         self.dprint(2, "Xonsh Kernel Executing:", pformat(message['content']["code"]))
+        # Start by sending busy signal
         content = {'execution_state': "busy"}
         self.send(self.iopub_stream, 'status', content,
                   parent_header=message['header'])
 
+        # confirm the input that we are executing
         content = {
             'execution_count': self.execution_count,
             'code': message['content']["code"],
@@ -306,47 +309,28 @@ class XonshKernel:
         self.send(self.iopub_stream, 'execute_input', content,
                   parent_header=message['header'])
 
-        content = {
-            'name': "stdout",
-            'text': "hello, world",
-        }
-        self.send(self.iopub_stream, 'stream', content,
-                  parent_header=message['header'])
-
-        content = {
-            'execution_count': self.execution_count,
-            'data': {"text/plain": "result!"},
-            'metadata': {}
-        }
-        self.send(self.iopub_stream, 'execute_result', content,
-                  parent_header=message['header'])
-
-        content = {
-            'execution_state': "idle",
-        }
-        self.send(self.iopub_stream, 'status', content,
-                  parent_header=message['header'])
-
+        # execute the code
         metadata = {
             "dependencies_met": True,
             "engine": self.session_id,
             "status": "ok",
             "started": datetime.datetime.now().isoformat(),
         }
-        content = {
-            "status": "ok",
-            "execution_count": self.execution_count,
-            "user_variables": {},
-            "payload": [],
-            "user_expressions": {},
-        }
+        content = self.do_execute(parent_header=message["header"], **message['content'])
         self.send(self.shell_stream, 'execute_reply', content,
                   metadata=metadata, parent_header=message['header'],
                   identities=identities)
         self.execution_count += 1
 
-    def do_execute(self, code, silent, store_history=True, user_expressions=None,
-                   allow_stdin=False):
+        # once we are done, send a signal that we are idle
+        content = {'execution_state': "idle"}
+        self.send(self.iopub_stream, 'status', content,
+                  parent_header=message['header'])
+
+
+    def do_execute(self, code='', silent=False, store_history=True,
+                   user_expressions=None, allow_stdin=False, parent_header=None,
+                   **kwargs):
         """Execute user code."""
         if len(code.strip()) == 0:
             return {'status': 'ok', 'execution_count': self.execution_count,
@@ -362,10 +346,12 @@ class XonshKernel:
         if not silent:  # stdout response
             if hasattr(builtins, '_') and builtins._ is not None:
                 # rely on sys.displayhook functionality
-                self._respond_in_chunks('stdout', pformat(builtins._))
+                self._respond_in_chunks('stdout', pformat(builtins._),
+                                        parent_header=parent_header)
                 builtins._ = None
             if hist is not None and len(hist) > 0:
-                self._respond_in_chunks('stdout', hist.outs[-1])
+                self._respond_in_chunks('stdout', hist.outs[-1],
+                                        parent_header=parent_header)
 
         if interrupted:
             return {'status': 'abort', 'execution_count': self.execution_count}
@@ -379,7 +365,7 @@ class XonshKernel:
                        'payload': [], 'user_expressions': {}}
         return message
 
-    def _respond_in_chunks(self, name, s, chunksize=1024):
+    def _respond_in_chunks(self, name, s, chunksize=1024, parent_header=None):
         if s is None:
             return
         n = len(s)
@@ -389,7 +375,8 @@ class XonshKernel:
         upper = range(chunksize, n + chunksize, chunksize)
         for l, u in zip(lower, upper):
             response = {'name': name, 'text': s[l:u], }
-            self.send_response(self.iopub_socket, 'stream', response)
+            self.send(self.iopub_socket, 'stream', response,
+                      parent_header=parent_header)
 
     def do_complete(self, code, pos):
         """Get completions."""
