@@ -10,6 +10,7 @@ import datetime
 import builtins
 import threading
 from pprint import pformat
+from argparse import ArgumentParser
 
 import zmq
 from zmq.eventloop import ioloop, zmqstream
@@ -75,21 +76,25 @@ class XonshKernel:
         """
         self.debug_level = debug_level
         self.session_id = str(uuid.uuid4()) if session_id is None else session_id
-        self.config = self.make_default_config if config is None else config
+        self._parser = None
+        self.config = self.make_default_config() if config is None else config
 
         self.exiting = False
         self.execution_count = 1
         self.completer = Completer()
 
+    @property
+    def parser(self):
+        if self._parser is None:
+            p = ArgumentParser('jupyter_kerenel')
+            p.add_argument('-f', dest='config_file', default=None)
+            self._parser = p
+        return self._parser
+
     def make_default_config(self):
         """Provides default configuration"""
-        if len(sys.argv) > 1:
-            self.dprint(1, "Loading simple_kernel with args:", sys.argv)
-            self.dprint(1, "Reading config file {!r}...".format(sys.argv[1]))
-            with open(sys.argv[1]) as f:
-                lines = f.readlines()
-            config = json.loads(lines)
-        else:
+        ns, unknown = self.parser.parse_known_args(sys.argv)
+        if ns.config_file is None:
             self.dprint(1, "Starting xonsh kernel with default args...")
             config = {
                 'control_port'      : 0,
@@ -102,6 +107,11 @@ class XonshKernel:
                 'stdin_port'        : 0,
                 'transport'         : 'tcp'
             }
+        else:
+            self.dprint(1, "Loading simple_kernel with args:", sys.argv)
+            self.dprint(1, "Reading config file {!r}...".format(ns.config_file))
+            with open(ns.config_file) as f:
+                config = json.load(f)
         return config
 
     def iopub_handler(self, message):
@@ -123,7 +133,7 @@ class XonshKernel:
         ioloop.install()
         connection = self.config["transport"] + "://" + self.config["ip"]
         secure_key = self.config["key"].encode()
-        digestmod = self.signature_schemes[self.config["signature_scheme"]])
+        digestmod = self.signature_schemes[self.config["signature_scheme"]]
         self.auth = hmac.HMAC(secure_key, digestmod=digestmod)
 
         # Heartbeat
@@ -134,7 +144,7 @@ class XonshKernel:
 
         # IOPub/Sub, aslo called SubSocketChannel in IPython sources
         self.iopub_socket = ctx.socket(zmq.PUB)
-        aelf.config["iopub_port"] = bind(self.iopub_socket, connection,
+        self.config["iopub_port"] = bind(self.iopub_socket, connection,
                                          self.config["iopub_port"])
         self.iopub_stream = zmqstream.ZMQStream(self.iopub_socket)
         self.iopub_stream.on_recv(self.iopub_handler)
@@ -210,7 +220,7 @@ class XonshKernel:
             metadata = {}
 
         messages = list(map(dump_bytes, [header, parent_header, metadata, content]))
-        signature = sign(messages)
+        signature = self.sign(messages)
         parts = [DELIM, signature] + messages
         if identities:
             parts = identities + parts
@@ -261,7 +271,8 @@ class XonshKernel:
         while not self.exiting:
             self.dprint(3, ".", end="")
             try:
-                zmq.device(zmq.FORWARDER, heartbeat_socket, heartbeat_socket)
+                zmq.device(zmq.FORWARDER, self.heartbeat_socket,
+                           self.heartbeat_socket)
             except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
                     continue
@@ -274,16 +285,16 @@ class XonshKernel:
         """Dispatch shell messages to their handlers"""
         self.dprint(1, "received:", message)
         position = 0
-        identities, msg = deserialize_wire_message(message)
+        identities, msg = self.deserialize_wire_message(message)
         handler = getattr(self, 'handle_' + msg['header']["msg_type"], None)
         if handler is None:
             self.dprint(0, "unknown message type:", msg['header']["msg_type"])
             return
-        handler(msg)
+        handler(msg, identities)
 
-    def handle_execute_request(self, message):
+    def handle_execute_request(self, message, identities):
         """Handle execute request messages."""
-        self.dprint(2, "Xonsh Kernel Executing:", pformat(msg['content']["code"]))
+        self.dprint(2, "Xonsh Kernel Executing:", pformat(message['content']["code"]))
         content = {'execution_state': "busy"}
         self.send(self.iopub_stream, 'status', content,
                   parent_header=message['header'])
@@ -394,7 +405,7 @@ class XonshKernel:
                    'metadata': {}, 'status': 'ok'}
         return message
 
-    def handle_kernel_info_request(self):
+    def handle_kernel_info_request(self, message, identities):
         content = {
             "protocol_version": "5.0",
             "ipython_version": [1, 1, 0, ""],
