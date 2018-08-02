@@ -378,6 +378,13 @@ class XonshKernel:
             self.send(self.iopub_socket, 'stream', response,
                       parent_header=parent_header)
 
+    def handle_complete_request(self, message, identities):
+        """Handles kernel info requests."""
+        content = self.do_complete(message['content']['code'],
+                                   message['content']['cursor_pos'])
+        self.send(self.shell_stream, 'complete_reply', content,
+                  parent_header=message['header'], identities=identities)
+
     def do_complete(self, code, pos):
         """Get completions."""
         shell = builtins.__xonsh_shell__
@@ -393,6 +400,7 @@ class XonshKernel:
         return message
 
     def handle_kernel_info_request(self, message, identities):
+        """Handles kernel info requests."""
         content = {
             "protocol_version": "5.0",
             "ipython_version": [1, 1, 0, ""],
