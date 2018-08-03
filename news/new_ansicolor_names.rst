@@ -4,7 +4,7 @@
 
 * All ansicolor names used in styles have ben updated to the color names used by prompt_toolkit 2. 
   The new names are are much easier to understand 
-  (e.g. `ansicyan`/`ansibrightcyan` vs. the old `#ansiteal`/`#ansiturquoise`). The names are automatically 
+  (e.g. ``ansicyan``/``ansibrightcyan`` vs. the old ``#ansiteal``/``#ansiturquoise``). The names are automatically 
   translated back when using prompt_toolkit 1.
 
 **Deprecated:** None
