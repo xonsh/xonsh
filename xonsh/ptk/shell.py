@@ -2,7 +2,6 @@
 """The prompt_toolkit based xonsh shell."""
 import sys
 import builtins
-import collections
 
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory

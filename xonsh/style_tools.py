@@ -7,7 +7,6 @@ from xonsh.lazyasd import LazyObject
 from xonsh.color_tools import RE_BACKGROUND
 
 
-
 class _TokenType(tuple):
     """
     Forked from the pygments project

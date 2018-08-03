@@ -45,6 +45,7 @@ from xonsh.platform import (scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
                             expanduser, os_environ)
 
+
 @functools.lru_cache(1)
 def is_superuser():
     if ON_WINDOWS:
@@ -1664,7 +1665,7 @@ def ansicolors_to_ptk1_names(stylemap):
     modified_stylemap = {}
     for token, style_str in stylemap.items():
         for color, ptk1_color in ANSICOLOR_NAMES_MAP.items():
-            style_str=style_str.replace(color,ptk1_color)
+            style_str = style_str.replace(color, ptk1_color)
         modified_stylemap[token] = style_str
     return modified_stylemap
 
