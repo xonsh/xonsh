@@ -129,7 +129,7 @@ class XonshKernel:
             self.shutdown()
 
     def stdin_handler(self, message):
-        dprint(2, "stdin received:", message)
+        self.dprint(2, "stdin received:", message)
 
     def start(self):
         """Starts the server"""
@@ -299,7 +299,6 @@ class XonshKernel:
     def shell_handler(self, message):
         """Dispatch shell messages to their handlers"""
         self.dprint(1, "received:", message)
-        position = 0
         identities, msg = self.deserialize_wire_message(message)
         handler = getattr(self, "handle_" + msg["header"]["msg_type"], None)
         if handler is None:
