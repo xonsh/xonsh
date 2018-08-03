@@ -45,7 +45,6 @@ from xonsh.platform import (scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
                             expanduser, os_environ)
 
-
 @functools.lru_cache(1)
 def is_superuser():
     if ON_WINDOWS:
@@ -1638,6 +1637,37 @@ def _get_color_indexes(style_map):
                 rgb = None
             yield token, index, rgb
 
+# Map of new ansicolor names to old PTK1 names
+ANSICOLOR_NAMES_MAP = LazyObject(lambda: {
+    'ansiblack': '#ansiblack',
+    'ansired': '#ansidarkred',
+    'ansigreen': '#ansidarkgreen',
+    'ansiyellow': '#ansibrown',
+    'ansiblue': '#ansidarkblue',
+    'ansimagenta': '#ansipurple',
+    'ansicyan': '#ansiteal',
+    'ansigray': '#ansilightgray',
+    'ansibrightblack': '#ansidarkgray',
+    'ansibrightred': '#ansired',
+    'ansibrightgreen': '#ansigreen',
+    'ansibrightyellow': '#ansiyellow',
+    'ansibrightblue': '#ansiblue',
+    'ansibrightmagenta': '#ansifuchsia',
+    'ansibrightcyan': '#ansiturquoise',
+    'ansiwhite': '#ansiwhite',
+}, globals(), 'ANSICOLOR_NAMES_MAP')
+
+
+def ansicolors_to_ptk1_names(stylemap):
+    """Converts ansicolor names in a stylemap to old PTK1 color names
+    """
+    modified_stylemap = {}
+    for token, style_str in stylemap.items():
+        for color, ptk1_color in ANSICOLOR_NAMES_MAP.items():
+            style_str=style_str.replace(color,ptk1_color)
+        modified_stylemap[token] = style_str
+    return modified_stylemap
+
 
 def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
     """Returns a modified style to where colors that maps to dark
@@ -1651,13 +1681,14 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
     if replace_colors is None:
         replace_colors = {
             1: 'ansibrightcyan',  # subst blue with bright cyan
-            2: 'ansibrightgreen',      # subst green with bright green
-            4: 'ansibrightred',        # subst red with bright red
-            5: 'ansibrightmagenta',    # subst magenta with bright magenta
-            6: 'ansibrightyellow',     # subst yellow with bright yellow
-            9: 'ansicyan',       # subst intense blue (hard to read)
-                                    # with dark cyan (which is readable)
+            2: 'ansibrightgreen',  # subst green with bright green
+            4: 'ansibrightred',  # subst red with bright red
+            5: 'ansibrightmagenta',  # subst magenta with bright magenta
+            6: 'ansibrightyellow',  # subst yellow with bright yellow
+            9: 'ansicyan',  # subst intense blue with dark cyan (more readable)
         }
+        if stype == 'prompt_toolkit1':
+            replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]

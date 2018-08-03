@@ -18,7 +18,13 @@ import pygments.util
 
 from xonsh.commands_cache import CommandsCache
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
-from xonsh.tools import ON_WINDOWS, intensify_colors_for_cmd_exe
+from xonsh.tools import (
+    ON_WINDOWS,
+    intensify_colors_for_cmd_exe,
+    ansicolors_to_ptk1_names,
+    ANSICOLOR_NAMES_MAP
+)
+
 from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
                                find_closest_color)
 from xonsh.style_tools import norm_name
@@ -436,6 +442,11 @@ class XonshStyle(Style):
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
+        # Convert new ansicolor names to old PTK1 names
+        # Can be remvoed when PTK1 support is dropped.
+        if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
+            for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
+                smap.update(ansicolors_to_ptk1_names(smap))
         if ON_WINDOWS:
             self.enhance_colors_for_cmd_exe()
 
@@ -458,6 +469,10 @@ class XonshStyle(Style):
 
 def xonsh_style_proxy(styler):
     """Factory for a proxy class to a xonsh style."""
+    # Monky patch pygments' list of known ansi colors
+    # with the new ansi color names used by PTK2
+    # Can be removed once pygment names get fixed.
+    pygments.style.ansicolors.update(ANSICOLOR_NAMES_MAP)
     class XonshStyleProxy(Style):
         """Simple proxy class to fool prompt toolkit."""
 
@@ -483,44 +498,44 @@ PTK_STYLE = LazyObject(lambda: {
 
 
 XONSH_BASE_STYLE = LazyObject(lambda: {
-        Whitespace: 'ansigray',
-        Comment: 'underline ansicyan',
-        Comment.Preproc: 'underline ansiyellow',
-        Keyword: 'bold ansigreen',
-        Keyword.Pseudo: 'nobold',
-        Keyword.Type: 'nobold ansired',
-        Operator: 'ansibrightblack',
-        Operator.Word: 'bold ansimagenta',
-        Name.Builtin: 'ansigreen',
-        Name.Function: 'ansibrightblue',
-        Name.Class: 'bold ansibrightblue',
-        Name.Namespace: 'bold ansibrightblue',
-        Name.Exception: 'bold ansibrightred',
-        Name.Variable: 'ansiblue',
-        Name.Constant: 'ansired',
-        Name.Label: 'ansibrightyellow',
-        Name.Entity: 'bold ansigray',
-        Name.Attribute: 'ansibrightyellow',
-        Name.Tag: 'bold ansigreen',
-        Name.Decorator: 'ansibrightmagenta',
-        String: 'ansibrightred',
-        String.Doc: 'underline',
-        String.Interpol: 'bold ansimagenta',
-        String.Escape: 'bold ansiyellow',
-        String.Regex: 'ansimagenta',
-        String.Symbol: 'ansiyellow',
-        String.Other: 'ansigreen',
-        Number: 'ansibrightblack',
-        Generic.Heading: 'bold ansiblue',
-        Generic.Subheading: 'bold ansimagenta',
-        Generic.Deleted: 'ansired',
-        Generic.Inserted: 'ansibrightgreen',
-        Generic.Error: 'bold ansibrightred',
-        Generic.Emph: 'underline',
-        Generic.Prompt: 'bold ansiblue',
-        Generic.Output: 'ansiblue',
-        Generic.Traceback: 'ansiblue',
-        Error: 'ansibrightred',
+    Whitespace: 'ansigray',
+    Comment: 'underline ansicyan',
+    Comment.Preproc: 'underline ansiyellow',
+    Keyword: 'bold ansigreen',
+    Keyword.Pseudo: 'nobold',
+    Keyword.Type: 'nobold ansired',
+    Operator: 'ansibrightblack',
+    Operator.Word: 'bold ansimagenta',
+    Name.Builtin: 'ansigreen',
+    Name.Function: 'ansibrightblue',
+    Name.Class: 'bold ansibrightblue',
+    Name.Namespace: 'bold ansibrightblue',
+    Name.Exception: 'bold ansibrightred',
+    Name.Variable: 'ansiblue',
+    Name.Constant: 'ansired',
+    Name.Label: 'ansibrightyellow',
+    Name.Entity: 'bold ansigray',
+    Name.Attribute: 'ansibrightyellow',
+    Name.Tag: 'bold ansigreen',
+    Name.Decorator: 'ansibrightmagenta',
+    String: 'ansibrightred',
+    String.Doc: 'underline',
+    String.Interpol: 'bold ansimagenta',
+    String.Escape: 'bold ansiyellow',
+    String.Regex: 'ansimagenta',
+    String.Symbol: 'ansiyellow',
+    String.Other: 'ansigreen',
+    Number: 'ansibrightblack',
+    Generic.Heading: 'bold ansiblue',
+    Generic.Subheading: 'bold ansimagenta',
+    Generic.Deleted: 'ansired',
+    Generic.Inserted: 'ansibrightgreen',
+    Generic.Error: 'bold ansibrightred',
+    Generic.Emph: 'underline',
+    Generic.Prompt: 'bold ansiblue',
+    Generic.Output: 'ansiblue',
+    Generic.Traceback: 'ansiblue',
+    Error: 'ansibrightred',
 }, globals(), 'XONSH_BASE_STYLE')
 
 
@@ -650,23 +665,23 @@ def _bw_style():
 
 def _default_style():
     style = {
-            Color.BLACK: 'ansiblack',
-            Color.BLUE: 'ansiblue',
-            Color.CYAN: 'ansicyan',
-            Color.GREEN: 'ansigreen',
-            Color.INTENSE_BLACK: 'ansibrightblack',
-            Color.INTENSE_BLUE: 'ansibrightblue',
-            Color.INTENSE_CYAN: 'ansibrightcyan',
-            Color.INTENSE_GREEN: 'ansibrightgreen',
-            Color.INTENSE_PURPLE: 'ansibrightmagenta',
-            Color.INTENSE_RED: 'ansibrightred',
-            Color.INTENSE_WHITE: 'ansiwhite',
-            Color.INTENSE_YELLOW: 'ansibrightyellow',
-            Color.NO_COLOR: 'noinherit',
-            Color.PURPLE: 'ansimagenta',
-            Color.RED: 'ansired',
-            Color.WHITE: 'ansigray',
-            Color.YELLOW: 'ansiyellow',
+        Color.BLACK: 'ansiblack',
+        Color.BLUE: 'ansiblue',
+        Color.CYAN: 'ansicyan',
+        Color.GREEN: 'ansigreen',
+        Color.INTENSE_BLACK: 'ansibrightblack',
+        Color.INTENSE_BLUE: 'ansibrightblue',
+        Color.INTENSE_CYAN: 'ansibrightcyan',
+        Color.INTENSE_GREEN: 'ansibrightgreen',
+        Color.INTENSE_PURPLE: 'ansibrightmagenta',
+        Color.INTENSE_RED: 'ansibrightred',
+        Color.INTENSE_WHITE: 'ansiwhite',
+        Color.INTENSE_YELLOW: 'ansibrightyellow',
+        Color.NO_COLOR: 'noinherit',
+        Color.PURPLE: 'ansimagenta',
+        Color.RED: 'ansired',
+        Color.WHITE: 'ansigray',
+        Color.YELLOW: 'ansiyellow',
     }
     _expand_style(style)
     return style
