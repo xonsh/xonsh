@@ -1658,6 +1658,7 @@ ANSICOLOR_NAMES_MAP = LazyObject(lambda: {
     'ansiwhite': '#ansiwhite',
 }, globals(), 'ANSICOLOR_NAMES_MAP')
 
+
 def _win10_color_map():
     cmap = {
         'ansiblack': (12, 12, 12),
@@ -1726,8 +1727,6 @@ def hardcode_colors_for_win10(style_map):
                 continue
         modified_style[token] = style_str
     return modified_style
-
-
 
 
 def ansicolors_to_ptk1_names(stylemap):
