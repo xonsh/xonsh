@@ -77,6 +77,7 @@ For those of you who want the gritty details.
     color_tools
     pyghooks
     jupyter_kernel
+    jupyter_shell
     wizard
     xonfig
     codecache
