@@ -473,7 +473,7 @@ def xonsh_style_proxy(styler):
     # with the new ansi color names used by PTK2
     # Can be removed once pygment names get fixed.
     pygments.style.ansicolors.update(ANSICOLOR_NAMES_MAP)
-    
+
     class XonshStyleProxy(Style):
         """Simple proxy class to fool prompt toolkit."""
 
