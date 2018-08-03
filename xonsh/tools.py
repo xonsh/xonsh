@@ -1754,7 +1754,7 @@ def intensify_colors_for_cmd_exe(style_map):
         6: 'ansibrightyellow',  # subst yellow with bright yellow
         9: 'ansicyan',  # subst intense blue with dark cyan (more readable)
     }
-    if stype == 'prompt_toolkit1':
+    if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
         replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
