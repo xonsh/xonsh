@@ -1724,7 +1724,6 @@ def hardcode_colors_for_win10(style_map):
                 else:
                     hexcolor = WIN10_COLOR_MAP[ansicolor]
                 style_str = style_str.replace(ansicolor, hexcolor)
-                continue
         modified_style[token] = style_str
     return modified_style
 
