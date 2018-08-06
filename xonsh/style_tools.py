@@ -1,6 +1,7 @@
 """Xonsh color styling tools that simulate pygments, when it is unavailable."""
 import builtins
 import string
+from collections import defaultdict
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyObject
@@ -252,7 +253,7 @@ KNOWN_COLORS = LazyObject(lambda: frozenset([
     'YELLOW',
 ]), globals(), 'KNOWN_COLORS')
 
-DEFAULT_STYLE_DICT = LazyObject(lambda: {
+DEFAULT_STYLE_DICT = LazyObject(lambda: defaultdict(lambda: '', {
     Token: '',
     Token.Aborted: 'ansibrightblack',
     Token.AutoSuggestion: 'ansibrightblack',
@@ -420,4 +421,4 @@ DEFAULT_STYLE_DICT = LazyObject(lambda: {
     Token.Scrollbar.Button: 'bg:ansiblack',
     Token.Text: '',
     Token.Text.Whitespace: 'ansigray',
-}, globals(), 'DEFAULT_STYLE_DICT')
+}), globals(), 'DEFAULT_STYLE_DICT')

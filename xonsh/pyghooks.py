@@ -22,14 +22,15 @@ from xonsh.tools import (
     ON_WINDOWS,
     intensify_colors_for_cmd_exe,
     ansicolors_to_ptk1_names,
-    ANSICOLOR_NAMES_MAP
+    ANSICOLOR_NAMES_MAP,
+    hardcode_colors_for_win10
 )
 
 from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
                                find_closest_color)
 from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256
-from xonsh.platform import os_environ
+from xonsh.platform import os_environ, win_ansi_support
 from xonsh.pygments_cache import get_style_by_name
 
 
@@ -447,7 +448,7 @@ class XonshStyle(Style):
         if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
             for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
                 smap.update(ansicolors_to_ptk1_names(smap))
-        if ON_WINDOWS:
+        if ON_WINDOWS and 'prompt_toolkit' in builtins.__xonsh_shell__.shell_type:
             self.enhance_colors_for_cmd_exe()
 
     @style_name.deleter
@@ -460,11 +461,15 @@ class XonshStyle(Style):
             are changed to CYAN and intense red.
         """
         env = builtins.__xonsh_env__
-        # Ensure we are not using ConEmu
-        if 'CONEMUANSI' not in env:
-            if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                newcolors = intensify_colors_for_cmd_exe(self._smap)
-                self._smap.update(newcolors)
+        # Ensure we are not using ConEmu or Visual Stuio Code
+        if 'CONEMUANSI' in env or 'VSCODE' in env:
+            return
+        if env.get('INTENSIFY_COLORS_ON_WIN', False):
+            if win_ansi_support():
+                newcolors = hardcode_colors_for_win10(self.styles.parents)
+            else:
+                newcolors = intensify_colors_for_cmd_exe(self.styles.parents)
+            self.trap.update(newcolors)
 
 
 def xonsh_style_proxy(styler):
