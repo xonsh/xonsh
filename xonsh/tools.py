@@ -1638,8 +1638,39 @@ def _get_color_indexes(style_map):
                 rgb = None
             yield token, index, rgb
 
+# Map of new ansicolor names to old PTK1 names
+ANSICOLOR_NAMES_MAP = LazyObject(lambda: {
+    'ansiblack': '#ansiblack',
+    'ansired': '#ansidarkred',
+    'ansigreen': '#ansidarkgreen',
+    'ansiyellow': '#ansibrown',
+    'ansiblue': '#ansidarkblue',
+    'ansimagenta': '#ansipurple',
+    'ansicyan': '#ansiteal',
+    'ansigray': '#ansilightgray',
+    'ansibrightblack': '#ansidarkgray',
+    'ansibrightred': '#ansired',
+    'ansibrightgreen': '#ansigreen',
+    'ansibrightyellow': '#ansiyellow',
+    'ansibrightblue': '#ansiblue',
+    'ansibrightmagenta': '#ansifuchsia',
+    'ansibrightcyan': '#ansiturquoise',
+    'ansiwhite': '#ansiwhite',
+}, globals(), 'ANSICOLOR_NAMES_MAP')
 
-def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
+
+def ansicolors_to_ptk1_names(stylemap):
+    """Converts ansicolor names in a stylemap to old PTK1 color names
+    """
+    modified_stylemap = {}
+    for token, style_str in stylemap.items():
+        for color, ptk1_color in ANSICOLOR_NAMES_MAP.items():
+            style_str = style_str.replace(color, ptk1_color)
+        modified_stylemap[token] = style_str
+    return modified_stylemap
+
+
+def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
     """Returns a modified style to where colors that maps to dark
        colors are replaced with brighter versions. Also expands the
        range used by the gray colors
@@ -1649,49 +1680,19 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
     if (not ON_WINDOWS or 'prompt_toolkit' not in stype):
         return modified_style
     if replace_colors is None:
-        if ansi:
-            replace_colors = {
-                1: '#ansiturquoise',  # subst blue with bright cyan
-                2: '#ansigreen',      # subst green with bright green
-                4: '#ansired',        # subst red with bright red
-                5: '#ansifuchsia',    # subst magenta with bright magenta
-                6: '#ansiyellow',     # subst yellow with bright yellow
-                9: '#ansiteal',       # subst intense blue (hard to read)
-                                      # with dark cyan (which is readable)
-            }
-        else:
-            replace_colors = {
-                1: '#44ffff',  # subst blue with bright cyan
-                2: '#44ff44',  # subst green with bright green
-                4: '#ff4444',  # subst red with bright red
-                5: '#ff44ff',  # subst magenta with bright magenta
-                6: '#ffff44',  # subst yellow with bright yellow
-                9: '#00aaaa',  # subst intense blue (hard to read)
-                               # with dark cyan (which is readable)
-            }
+        replace_colors = {
+            1: 'ansibrightcyan',  # subst blue with bright cyan
+            2: 'ansibrightgreen',  # subst green with bright green
+            4: 'ansibrightred',  # subst red with bright red
+            5: 'ansibrightmagenta',  # subst magenta with bright magenta
+            6: 'ansibrightyellow',  # subst yellow with bright yellow
+            9: 'ansicyan',  # subst intense blue with dark cyan (more readable)
+        }
+        if stype == 'prompt_toolkit1':
+            replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]
-    return modified_style
-
-
-def expand_gray_colors_for_cmd_exe(style_map):
-    """ Expand the style's gray scale color range.
-        All gray scale colors has a tendency to map to the same default GRAY
-        in cmd.exe.
-    """
-    modified_style = {}
-    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
-    if (not ON_WINDOWS or 'prompt_toolkit1' != stype):
-        return modified_style
-    for token, idx, rgb in _get_color_indexes(style_map):
-        if idx == 7 and rgb:
-            if sum(rgb) <= 306:
-                # Equal and below '#666666 is reset to dark gray
-                modified_style[token] = '#444444'
-            elif sum(rgb) >= 408:
-                # Equal and above 0x888888 is reset to white
-                modified_style[token] = '#ffffff'
     return modified_style
 
 

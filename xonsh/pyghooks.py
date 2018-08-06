@@ -18,8 +18,13 @@ import pygments.util
 
 from xonsh.commands_cache import CommandsCache
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
-from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
-                         expand_gray_colors_for_cmd_exe)
+from xonsh.tools import (
+    ON_WINDOWS,
+    intensify_colors_for_cmd_exe,
+    ansicolors_to_ptk1_names,
+    ANSICOLOR_NAMES_MAP
+)
+
 from xonsh.color_tools import (RE_BACKGROUND, BASE_XONSH_COLORS, make_palette,
                                find_closest_color)
 from xonsh.style_tools import norm_name
@@ -437,6 +442,11 @@ class XonshStyle(Style):
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
+        # Convert new ansicolor names to old PTK1 names
+        # Can be remvoed when PTK1 support is dropped.
+        if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
+            for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
+                smap.update(ansicolors_to_ptk1_names(smap))
         if ON_WINDOWS:
             self.enhance_colors_for_cmd_exe()
 
@@ -452,19 +462,18 @@ class XonshStyle(Style):
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
-            if not hasattr(pygments.style, 'ansicolors'):
-                # Auto suggest needs to be a darker shade to be distinguishable
-                # from the default color
-                self.styles[Token.AutoSuggestion] = '#444444'
-                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                has_ansi = hasattr(pygments.style, 'ansicolors')
-                newcolors = intensify_colors_for_cmd_exe(self._smap, ansi=has_ansi)
+                newcolors = intensify_colors_for_cmd_exe(self._smap)
                 self._smap.update(newcolors)
 
 
 def xonsh_style_proxy(styler):
     """Factory for a proxy class to a xonsh style."""
+    # Monky patch pygments' list of known ansi colors
+    # with the new ansi color names used by PTK2
+    # Can be removed once pygment names get fixed.
+    pygments.style.ansicolors.update(ANSICOLOR_NAMES_MAP)
+
     class XonshStyleProxy(Style):
         """Simple proxy class to fool prompt toolkit."""
 
@@ -477,112 +486,58 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
-if hasattr(pygments.style, 'ansicolors'):
-    PTK_STYLE = {
-        Token.Menu.Completions: 'bg:#ansilightgray #ansiblack',
-        Token.Menu.Completions.Completion: '',
-        Token.Menu.Completions.Completion.Current: 'bg:#ansidarkgray #ansiwhite',
-        Token.Scrollbar: 'bg:#ansidarkgray',
-        Token.Scrollbar.Button: 'bg:#ansiblack',
-        Token.Scrollbar.Arrow: 'bg:#ansiblack #ansiwhite bold',
-        Token.AutoSuggestion: '#ansidarkgray',
-        Token.Aborted: '#ansidarkgray',
-    }
-else:
-    PTK_STYLE = {
-        Token.Menu.Completions: 'bg:#888888 #000000',
-        Token.Menu.Completions.Completion: '',
-        Token.Menu.Completions.Completion.Current: 'bg:#555555 #ffffff',
-        Token.Scrollbar: 'bg:#555555',
-        Token.Scrollbar.Button: 'bg:#000000',
-        Token.Scrollbar.Arrow: 'bg:#000000 #ffffff bold',
-        Token.AutoSuggestion: '#666666',
-        Token.Aborted: '#666666',
-    }
+PTK_STYLE = LazyObject(lambda: {
+    Token.Menu.Completions: 'bg:ansigray ansiblack',
+    Token.Menu.Completions.Completion: '',
+    Token.Menu.Completions.Completion.Current: 'bg:ansibrightblack ansiwhite',
+    Token.Scrollbar: 'bg:ansibrightblack',
+    Token.Scrollbar.Button: 'bg:ansiblack',
+    Token.Scrollbar.Arrow: 'bg:ansiblack ansiwhite bold',
+    Token.AutoSuggestion: 'ansibrightblack',
+    Token.Aborted: 'ansibrightblack',
+}, globals(), 'PTK_STYLE')
 
-if hasattr(pygments.style, 'ansicolors'):
-    XONSH_BASE_STYLE = LazyObject(lambda: {
-        Whitespace: '#ansilightgray',
-        Comment: 'underline #ansiteal',
-        Comment.Preproc: 'underline #ansibrown',
-        Keyword: 'bold #ansidarkgreen',
-        Keyword.Pseudo: 'nobold',
-        Keyword.Type: 'nobold #ansidarkred',
-        Operator: '#ansidarkgray',
-        Operator.Word: 'bold #ansipurple',
-        Name.Builtin: '#ansidarkgreen',
-        Name.Function: '#ansiblue',
-        Name.Class: 'bold #ansiblue',
-        Name.Namespace: 'bold #ansiblue',
-        Name.Exception: 'bold #ansired',
-        Name.Variable: '#ansidarkblue',
-        Name.Constant: '#ansidarkred',
-        Name.Label: '#ansiyellow',
-        Name.Entity: 'bold #ansilightgray',
-        Name.Attribute: '#ansiyellow',
-        Name.Tag: 'bold #ansidarkgreen',
-        Name.Decorator: '#ansifuchsia',
-        String: '#ansired',
-        String.Doc: 'underline',
-        String.Interpol: 'bold #ansipurple',
-        String.Escape: 'bold #ansibrown',
-        String.Regex: '#ansipurple',
-        String.Symbol: '#ansibrown',
-        String.Other: '#ansidarkgreen',
-        Number: '#ansidarkgray',
-        Generic.Heading: 'bold #ansidarkblue',
-        Generic.Subheading: 'bold #ansipurple',
-        Generic.Deleted: '#ansidarkred',
-        Generic.Inserted: '#ansigreen',
-        Generic.Error: 'bold #ansired',
-        Generic.Emph: 'underline',
-        Generic.Prompt: 'bold #ansidarkblue',
-        Generic.Output: '#ansidarkblue',
-        Generic.Traceback: '#ansidarkblue',
-        Error: '#ansired',
-    }, globals(), 'XONSH_BASE_STYLE')
-else:
-    XONSH_BASE_STYLE = LazyObject(lambda: {
-        Whitespace: "#bbbbbb",
-        Comment: "italic #408080",
-        Comment.Preproc: "noitalic #BC7A00",
-        Keyword: "bold #008000",
-        Keyword.Pseudo: "nobold",
-        Keyword.Type: "nobold #B00040",
-        Operator: "#666666",
-        Operator.Word: "bold #AA22FF",
-        Name.Builtin: "#008000",
-        Name.Function: "#0000FF",
-        Name.Class: "bold #0000FF",
-        Name.Namespace: "bold #0000FF",
-        Name.Exception: "bold #D2413A",
-        Name.Variable: "#19177C",
-        Name.Constant: "#880000",
-        Name.Label: "#A0A000",
-        Name.Entity: "bold #999999",
-        Name.Attribute: "#7D9029",
-        Name.Tag: "bold #008000",
-        Name.Decorator: "#AA22FF",
-        String: "#BA2121",
-        String.Doc: "italic",
-        String.Interpol: "bold #BB6688",
-        String.Escape: "bold #BB6622",
-        String.Regex: "#BB6688",
-        String.Symbol: "#19177C",
-        String.Other: "#008000",
-        Number: "#666666",
-        Generic.Heading: "bold #000080",
-        Generic.Subheading: "bold #800080",
-        Generic.Deleted: "#A00000",
-        Generic.Inserted: "#00A000",
-        Generic.Error: "#FF0000",
-        Generic.Emph: "italic",
-        Generic.Strong: "bold",
-        Generic.Prompt: "bold #000080",
-        Generic.Output: "#888",
-        Generic.Traceback: "#04D",
-        Error: "border:#FF0000"
-    }, globals(), 'XONSH_BASE_STYLE')
+
+XONSH_BASE_STYLE = LazyObject(lambda: {
+    Whitespace: 'ansigray',
+    Comment: 'underline ansicyan',
+    Comment.Preproc: 'underline ansiyellow',
+    Keyword: 'bold ansigreen',
+    Keyword.Pseudo: 'nobold',
+    Keyword.Type: 'nobold ansired',
+    Operator: 'ansibrightblack',
+    Operator.Word: 'bold ansimagenta',
+    Name.Builtin: 'ansigreen',
+    Name.Function: 'ansibrightblue',
+    Name.Class: 'bold ansibrightblue',
+    Name.Namespace: 'bold ansibrightblue',
+    Name.Exception: 'bold ansibrightred',
+    Name.Variable: 'ansiblue',
+    Name.Constant: 'ansired',
+    Name.Label: 'ansibrightyellow',
+    Name.Entity: 'bold ansigray',
+    Name.Attribute: 'ansibrightyellow',
+    Name.Tag: 'bold ansigreen',
+    Name.Decorator: 'ansibrightmagenta',
+    String: 'ansibrightred',
+    String.Doc: 'underline',
+    String.Interpol: 'bold ansimagenta',
+    String.Escape: 'bold ansiyellow',
+    String.Regex: 'ansimagenta',
+    String.Symbol: 'ansiyellow',
+    String.Other: 'ansigreen',
+    Number: 'ansibrightblack',
+    Generic.Heading: 'bold ansiblue',
+    Generic.Subheading: 'bold ansimagenta',
+    Generic.Deleted: 'ansired',
+    Generic.Inserted: 'ansibrightgreen',
+    Generic.Error: 'bold ansibrightred',
+    Generic.Emph: 'underline',
+    Generic.Prompt: 'bold ansiblue',
+    Generic.Output: 'ansiblue',
+    Generic.Traceback: 'ansiblue',
+    Error: 'ansibrightred',
+}, globals(), 'XONSH_BASE_STYLE')
 
 
 KNOWN_COLORS = LazyObject(lambda: frozenset([
@@ -710,69 +665,25 @@ def _bw_style():
 
 
 def _default_style():
-    if hasattr(pygments.style, 'ansicolors'):
-        style = {
-            Color.BLACK: '#ansiblack',
-            Color.BLUE: '#ansidarkblue',
-            Color.CYAN: '#ansiteal',
-            Color.GREEN: '#ansidarkgreen',
-            Color.INTENSE_BLACK: '#ansidarkgray',
-            Color.INTENSE_BLUE: '#ansiblue',
-            Color.INTENSE_CYAN: '#ansiturquoise',
-            Color.INTENSE_GREEN: '#ansigreen',
-            Color.INTENSE_PURPLE: '#ansifuchsia',
-            Color.INTENSE_RED: '#ansired',
-            Color.INTENSE_WHITE: '#ansiwhite',
-            Color.INTENSE_YELLOW: '#ansiyellow',
-            Color.NO_COLOR: 'noinherit',
-            Color.PURPLE: '#ansipurple',
-            Color.RED: '#ansidarkred',
-            Color.WHITE: '#ansilightgray',
-            Color.YELLOW: '#ansibrown',
-        }
-    elif ON_WINDOWS and 'CONEMUANSI' not in os_environ:
-        # These colors must match the color specification
-        # in prompt_toolkit, so the colors are converted
-        # correctly when using cmd.exe
-        style = {
-            Color.BLACK: '#000000',
-            Color.BLUE: '#0000AA',
-            Color.CYAN: '#00AAAA',
-            Color.GREEN: '#00AA00',
-            Color.INTENSE_BLACK: '#444444',
-            Color.INTENSE_BLUE: '#4444FF',
-            Color.INTENSE_CYAN: '#44FFFF',
-            Color.INTENSE_GREEN: '#44FF44',
-            Color.INTENSE_PURPLE: '#FF44FF',
-            Color.INTENSE_RED: '#FF4444',
-            Color.INTENSE_WHITE: '#FFFFFF',
-            Color.INTENSE_YELLOW: '#FFFF44',
-            Color.NO_COLOR: 'noinherit',
-            Color.PURPLE: '#AA00AA',
-            Color.RED: '#AA0000',
-            Color.WHITE: '#888888',
-            Color.YELLOW: '#AAAA00',
-        }
-    else:
-        style = {
-            Color.BLACK: '#000000',
-            Color.BLUE: '#0000AA',
-            Color.CYAN: '#00AAAA',
-            Color.GREEN: '#00AA00',
-            Color.INTENSE_BLACK: '#555555',
-            Color.INTENSE_BLUE: '#0000FF',
-            Color.INTENSE_CYAN: '#55FFFF',
-            Color.INTENSE_GREEN: '#00FF00',
-            Color.INTENSE_PURPLE: '#FF00FF',
-            Color.INTENSE_RED: '#FF0000',
-            Color.INTENSE_WHITE: '#ffffff',
-            Color.INTENSE_YELLOW: '#FFFF55',
-            Color.NO_COLOR: 'noinherit',
-            Color.PURPLE: '#AA00AA',
-            Color.RED: '#AA0000',
-            Color.WHITE: '#aaaaaa',
-            Color.YELLOW: '#ffff00',
-        }
+    style = {
+        Color.BLACK: 'ansiblack',
+        Color.BLUE: 'ansiblue',
+        Color.CYAN: 'ansicyan',
+        Color.GREEN: 'ansigreen',
+        Color.INTENSE_BLACK: 'ansibrightblack',
+        Color.INTENSE_BLUE: 'ansibrightblue',
+        Color.INTENSE_CYAN: 'ansibrightcyan',
+        Color.INTENSE_GREEN: 'ansibrightgreen',
+        Color.INTENSE_PURPLE: 'ansibrightmagenta',
+        Color.INTENSE_RED: 'ansibrightred',
+        Color.INTENSE_WHITE: 'ansiwhite',
+        Color.INTENSE_YELLOW: 'ansibrightyellow',
+        Color.NO_COLOR: 'noinherit',
+        Color.PURPLE: 'ansimagenta',
+        Color.RED: 'ansired',
+        Color.WHITE: 'ansigray',
+        Color.YELLOW: 'ansiyellow',
+    }
     _expand_style(style)
     return style
 
