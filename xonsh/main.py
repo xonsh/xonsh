@@ -436,6 +436,6 @@ def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),)):
     builtins.__xonsh_execer__ = Execer(xonsh_ctx=ctx)
     builtins.__xonsh_shell__ = Shell(builtins.__xonsh_execer__,
                                      ctx=ctx,
-                                     shell_type='none')
+                                     shell_type=shell_type)
     builtins.__xonsh_env__.update(env)
     install_import_hooks()

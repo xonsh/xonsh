@@ -166,6 +166,8 @@ class Shell(object):
             from xonsh.ptk.shell import PromptToolkitShell as shell_class
         elif shell_type == 'readline':
             from xonsh.readline_shell import ReadlineShell as shell_class
+        elif shell_type == 'jupyter':
+            from xonsh.jupyter_shell import JupyterShell as shell_class
         else:
             raise XonshError('{} is not recognized as a shell type'.format(
                              shell_type))
