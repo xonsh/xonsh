@@ -4,6 +4,47 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.3
+====================
+
+**Added:**
+
+* Add the ``PROMPT_TOOLKIT_COLOR_DEPTH`` environment to xonsh default environment.
+  Possible values are ``DEPTH_1_BIT``/``MONOCHROME``,
+  ``DEPTH_4_BIT``/``ANSI_COLORS_ONLY``, ``DEPTH_8_BIT``/``DEFAULT``, or ``DEPTH_24_BIT``/``TRUE_COLOR``. 
+  Note: not all terminals support all color depths.
+* New way to fix unreadable default terminal colors on Windows 10. Windows 10
+  now supports true color in the terminal, so if prompt toolkit 2 is
+  installed Xonsh will use a style with hard coded colors instead of the 
+  default terminal colors. This will give the same color experience as on linux an mac.
+  The behaviour can be disabled with ``$INTENSIFY_COLORS_ON_WIN``
+  environment variable.
+* New ``JupyterShell`` for interactive interfacing with Jupyter.
+
+
+**Changed:**
+
+* All ansicolor names used in styles have ben updated to the color names used by prompt_toolkit 2. 
+  The new names are are much easier to understand 
+  (e.g. ``ansicyan``/``ansibrightcyan`` vs. the old ``#ansiteal``/``#ansiturquoise``). The names are automatically 
+  translated back when using prompt_toolkit 1.
+
+
+**Removed:**
+
+* Removed support for pygments < 2.2.
+
+
+**Fixed:**
+
+* New ansi-color names fixes the problem with darker colors using prompt_toolkit 2 on windows.
+* Fixed a problem with the color styles on prompt toolkit 2. The default pygment
+  style is no longer merged into style selected in xonsh.
+* The JupyterKernel has been fixed from a rather broken state.
+
+
+
+
 v0.7.2
 ====================
 
