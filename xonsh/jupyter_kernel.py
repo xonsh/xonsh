@@ -20,6 +20,7 @@ from zmq.error import ZMQError
 from xonsh import __version__ as version
 from xonsh.main import setup
 from xonsh.completer import Completer
+from xonsh.commands_cache import predict_true
 
 
 MAX_SIZE = 8388608  # 8 Mb
@@ -460,7 +461,16 @@ class XonshKernel:
 
 
 if __name__ == "__main__":
-    setup(shell_type="jupyter", env={})
+    setup(shell_type="jupyter",
+          env={'PAGER': 'cat'},
+          aliases={'less': 'cat'},
+          xontribs=['coreutils'],
+          threadable_predictors={'git': predict_true, 'man': predict_true}
+    )
+    if builtins.__xonsh_commands_cache__.is_only_functional_alias('cat'):
+        # this is needed if the underlying system doesn't have cat
+        # we supply our own, because we can
+        builtins.aliases['cat'] = 'xonsh-cat'
     shell = builtins.__xonsh_shell__
     kernel = shell.kernel = XonshKernel()
     kernel.start()

@@ -78,16 +78,21 @@ def xontrib_metadata():
     return md
 
 
-def _load(ns):
-    """load xontribs"""
+def xontribs_load(names, verbose=False):
+    """Load xontribs from a list of names"""
     ctx = builtins.__xonsh_ctx__
-    for name in ns.names:
-        if ns.verbose:
+    for name in names:
+        if verbose:
             print('loading xontrib {0!r}'.format(name))
         update_context(name, ctx=ctx)
     if update_context.bad_imports:
         prompt_xontrib_install(update_context.bad_imports)
         del update_context.bad_imports
+
+
+def _load(ns):
+    """load xontribs"""
+    xontribs_load(ns.names, verbose=ns.verbose)
 
 
 def _list(ns):

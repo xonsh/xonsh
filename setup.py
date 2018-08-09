@@ -290,8 +290,10 @@ def main():
     scripts = ['scripts/xon.sh']
     if sys.platform == 'win32':
         scripts.append('scripts/xonsh.bat')
+        scripts.append('scripts/xonsh-cat.bat')
     else:
         scripts.append('scripts/xonsh')
+        scripts.append('scripts/xonsh-cat')
     skw = dict(
         name='xonsh',
         description='Python-powered, cross-platform, Unix-gazing shell',

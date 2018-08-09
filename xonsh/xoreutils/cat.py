@@ -107,3 +107,14 @@ Examples:
 #  -t                       equivalent to -vT
 #  -v, --show-nonprinting   use ^ and M- notation, except for LFD and TAB
 #      --version  output version information and exit"""
+
+def cat_main(args=None):
+    import sys
+    from xonsh.main import setup
+    setup()
+    args = sys.argv if args is None else args
+    cat(args, sys.stdin, sys.stdout, sys.stderr)
+
+
+if __name__ == '__main__':
+    cat_main()
