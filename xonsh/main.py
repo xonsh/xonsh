@@ -26,7 +26,6 @@ from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context, make_args_env
 from xonsh.xontribs import xontribs_load
-from xonsh.commands_cache import predict_true
 
 
 events.transmogrify('on_post_init', 'LoadEvent')

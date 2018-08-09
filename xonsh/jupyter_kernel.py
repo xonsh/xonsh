@@ -471,6 +471,7 @@ if __name__ == "__main__":
         # this is needed if the underlying system doesn't have cat
         # we supply our own, because we can
         builtins.aliases['cat'] = 'xonsh-cat'
+        builtins.__xonsh_env__['PAGER'] = 'xonsh-cat'
     shell = builtins.__xonsh_shell__
     kernel = shell.kernel = XonshKernel()
     kernel.start()
