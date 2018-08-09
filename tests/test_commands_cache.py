@@ -86,6 +86,7 @@ def test_commands_cache_predictor_default(args):
     assert result == expected
 
 
+@skip_if_on_windows
 def test_cd_is_only_functional_alias(xonsh_builtins):
     cc = CommandsCache()
     builtins.aliases['cd'] = lambda args: os.chdir(args[0])
