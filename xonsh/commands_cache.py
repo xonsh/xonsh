@@ -215,7 +215,7 @@ class CommandsCache(cabc.Mapping):
         if val is None:
             return False
         return val == (name, True) and \
-               self.locate_binary(name, ignore_alias=True) is None
+            self.locate_binary(name, ignore_alias=True) is None
 
     def predict_threadable(self, cmd):
         """Predicts whether a command list is able to be run on a background

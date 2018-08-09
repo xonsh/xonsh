@@ -108,6 +108,7 @@ Examples:
 #  -v, --show-nonprinting   use ^ and M- notation, except for LFD and TAB
 #      --version  output version information and exit"""
 
+
 def cat_main(args=None):
     import sys
     from xonsh.main import setup

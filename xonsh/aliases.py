@@ -142,6 +142,7 @@ class Aliases(cabc.MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
+
 def xonsh_exit(args, stdin=None):
     """Sends signal to exit shell."""
     if not clean_jobs():
