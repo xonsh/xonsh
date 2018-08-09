@@ -189,10 +189,12 @@ class CommandsCache(cabc.Mapping):
                       None)
         if cached:
             (path, alias) = self._cmds_cache[cached]
-            if not alias or ignore_alias:
-                return path
-            else:
+            ispure = path == pathbasename(path)
+            if alias and ignore_alias and ispure:
+                # pure alias, which we are ignoring
                 return None
+            else:
+                return path
         elif os.path.isfile(name) and name != pathbasename(name):
             return name
 
@@ -212,7 +214,8 @@ class CommandsCache(cabc.Mapping):
         val = self._cmds_cache.get(name, None)
         if val is None:
             return False
-        return val == (name, True)
+        return val == (name, True) and \
+               self.locate_binary(name, ignore_alias=True) is None
 
     def predict_threadable(self, cmd):
         """Predicts whether a command list is able to be run on a background
