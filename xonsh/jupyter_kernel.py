@@ -461,12 +461,13 @@ class XonshKernel:
 
 
 if __name__ == "__main__":
-    setup(shell_type="jupyter",
-          env={'PAGER': 'cat'},
-          aliases={'less': 'cat'},
-          xontribs=['coreutils'],
-          threadable_predictors={'git': predict_true, 'man': predict_true},
-         )
+    setup(
+        shell_type="jupyter",
+        env={'PAGER': 'cat'},
+        aliases={'less': 'cat'},
+        xontribs=['coreutils'],
+        threadable_predictors={'git': predict_true, 'man': predict_true},
+    )
     if builtins.__xonsh_commands_cache__.is_only_functional_alias('cat'):
         # this is needed if the underlying system doesn't have cat
         # we supply our own, because we can
