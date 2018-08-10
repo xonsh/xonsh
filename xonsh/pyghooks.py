@@ -445,7 +445,7 @@ class XonshStyle(Style):
         self._style_name = value
         # Convert new ansicolor names to old PTK1 names
         # Can be remvoed when PTK1 support is dropped.
-        if builtins.__xonsh_shell__.shell_type == 'prompt_toolkit1':
+        if builtins.__xonsh_shell__.shell_type in ('prompt_toolkit1', 'jupyter'):
             for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
                 smap.update(ansicolors_to_ptk1_names(smap))
         if ON_WINDOWS and 'prompt_toolkit' in builtins.__xonsh_shell__.shell_type:
@@ -462,13 +462,13 @@ class XonshStyle(Style):
         """
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu or Visual Stuio Code
-        if 'CONEMUANSI' in env or 'VSCODE' in env:
+        if 'CONEMUANSI' in env or 'VSCODE_PID' in env:
             return
         if env.get('INTENSIFY_COLORS_ON_WIN', False):
             if win_ansi_support():
-                newcolors = hardcode_colors_for_win10(self.styles.parents)
+                newcolors = hardcode_colors_for_win10(self.styles)
             else:
-                newcolors = intensify_colors_for_cmd_exe(self.styles.parents)
+                newcolors = intensify_colors_for_cmd_exe(self.styles)
             self.trap.update(newcolors)
 
 
