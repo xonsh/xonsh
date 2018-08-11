@@ -1408,7 +1408,7 @@ def to_completions_display_value(x):
         x = 'none'
     elif x in {'multi', 'true'}:
         x = 'multi'
-    elif x == 'single':
+    elif x in {'single', 'readline'}:
         pass
     else:
         msg = '"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x)

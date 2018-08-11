@@ -448,6 +448,8 @@ def DEFAULT_DOCS():
         '  single column while typing.\n'
         "- If ``$COMPLETIONS_DISPLAY`` is ``multi`` or ``true``, display completions\n"
         "  in multiple columns while typing.\n\n"
+        "- If ``$COMPLETIONS_DISPLAY`` is ``readline``, display completions\n"
+        "  will emulate the behavior of readline.\n\n"
         'These option values are not case- or type-sensitive, so e.g.'
         "writing ``$COMPLETIONS_DISPLAY = None`` "
         "and ``$COMPLETIONS_DISPLAY = 'none'`` are equivalent. Only usable with "
