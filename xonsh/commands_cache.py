@@ -189,12 +189,33 @@ class CommandsCache(cabc.Mapping):
                       None)
         if cached:
             (path, alias) = self._cmds_cache[cached]
-            if not alias or ignore_alias:
-                return path
-            else:
+            ispure = path == pathbasename(path)
+            if alias and ignore_alias and ispure:
+                # pure alias, which we are ignoring
                 return None
+            else:
+                return path
         elif os.path.isfile(name) and name != pathbasename(name):
             return name
+
+    def is_only_functional_alias(self, name):
+        """Returns whether or not a command is only a functional alias, and has
+        no underlying executable. For example, the "cd" command is only available
+        as a functional alias.
+        """
+        _ = self.all_commands
+        return self.lazy_is_only_functional_alias(name)
+
+    def lazy_is_only_functional_alias(self, name):
+        """Returns whether or not a command is only a functional alias, and has
+        no underlying executable. For example, the "cd" command is only available
+        as a functional alias. This search is performed lazily.
+        """
+        val = self._cmds_cache.get(name, None)
+        if val is None:
+            return False
+        return val == (name, True) and \
+            self.locate_binary(name, ignore_alias=True) is None
 
     def predict_threadable(self, cmd):
         """Predicts whether a command list is able to be run on a background

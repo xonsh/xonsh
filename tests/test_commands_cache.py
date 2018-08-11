@@ -1,6 +1,8 @@
+import os
+import builtins
+
 import pytest
 
-import os
 from xonsh.commands_cache import (CommandsCache, predict_shell,
                                   SHELL_PREDICTOR_PARSER, predict_true, predict_false)
 from tools import skip_if_on_windows
@@ -82,3 +84,30 @@ def test_commands_cache_predictor_default(args):
                                           timeout=1, failure=None)
     expected = predict_false if use_tty else predict_true
     assert result == expected
+
+
+@skip_if_on_windows
+def test_cd_is_only_functional_alias(xonsh_builtins):
+    cc = CommandsCache()
+    builtins.aliases['cd'] = lambda args: os.chdir(args[0])
+    assert cc.is_only_functional_alias('cd')
+
+
+def test_non_exist_is_only_functional_alias(xonsh_builtins):
+    cc = CommandsCache()
+    assert not cc.is_only_functional_alias('<not really a command name>')
+
+
+@skip_if_on_windows
+def test_bash_is_only_functional_alias(xonsh_builtins):
+    builtins.__xonsh_env__['PATH'] = os.environ['PATH'].split(os.pathsep)
+    cc = CommandsCache()
+    assert not cc.is_only_functional_alias('bash')
+
+
+@skip_if_on_windows
+def test_bash_and_is_alias_is_only_functional_alias(xonsh_builtins):
+    builtins.__xonsh_env__['PATH'] = os.environ['PATH'].split(os.pathsep)
+    cc = CommandsCache()
+    builtins.aliases['bash'] = lambda args: os.chdir(args[0])
+    assert not cc.is_only_functional_alias('bash')

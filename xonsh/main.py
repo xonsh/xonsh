@@ -25,6 +25,7 @@ from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context, make_args_env
+from xonsh.xontribs import xontribs_load
 
 
 events.transmogrify('on_post_init', 'LoadEvent')
@@ -412,7 +413,8 @@ def main_context(argv=None):
     postmain(args)
 
 
-def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),)):
+def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),),
+          aliases=(), xontribs=(), threadable_predictors=()):
     """Starts up a new xonsh shell. Calling this in function in another
     packages __init__.py will allow xonsh to be fully used in the
     package in headless or headed mode. This function is primarily indended to
@@ -429,6 +431,12 @@ def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),)):
     env : dict-like, optional
         Environment to update the current environment with after the shell
         has been initialized.
+    aliases : dict-like, optional
+        Aliases to add after the shell has been initialized.
+    xontribs : iterable of str, optional
+        Xontrib names to load.
+    threadable_predictors : dict-like, optional
+        Threadable predictors to start up with. These overide the defaults.
     """
     ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
@@ -439,3 +447,8 @@ def setup(ctx=None, shell_type='none', env=(('RAISE_SUBPROC_ERROR', True),)):
                                      shell_type=shell_type)
     builtins.__xonsh_env__.update(env)
     install_import_hooks()
+    builtins.aliases.update(aliases)
+    if xontribs:
+        xontribs_load(xontribs)
+    tp = builtins.__xonsh_commands_cache__.threadable_predictors
+    tp.update(threadable_predictors)
