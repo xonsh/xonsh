@@ -41,6 +41,13 @@ Fired after prompt toolkit has been initialized
 class PromptToolkit2Shell(BaseShell):
     """The xonsh shell for prompt_toolkit v2."""
 
+    completion_displays_to_styles = {
+        "multi": CompleteStyle.MULTI_COLUMN,
+        "single": CompleteStyle.COLUMN,
+        "readline": CompleteStyle.READLINE_LIKE,
+        "none": None,
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if ON_WINDOWS:
@@ -70,8 +77,8 @@ class PromptToolkit2Shell(BaseShell):
         mouse_support = env.get('MOUSE_SUPPORT')
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
-        if completions_display == 'multi':
-            complete_style = CompleteStyle.MULTI_COLUMN
+        complete_style = self.completion_displays_to_styles[completions_display]
+
         complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
         if complete_while_typing:
             # PTK requires history search to be none when completing while typing
