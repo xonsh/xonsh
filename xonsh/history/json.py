@@ -384,7 +384,7 @@ class JsonHistory(History):
         for item, tss in zip(self.inps, self.tss):
             yield {'inp': item.rstrip(), 'ts': tss[0]}
 
-    def all_items(self, **kwargs):
+    def all_items(self, reverse=False, **kwargs):
         """
         Returns all history as found in XONSH_DATA_DIR.
 
@@ -392,7 +392,7 @@ class JsonHistory(History):
         """
         while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        for f in _xhj_get_history_files():
+        for f in _xhj_get_history_files(reverse=reverse):
             try:
                 json_file = xlj.LazyJSON(f, reopen=False)
             except ValueError:
