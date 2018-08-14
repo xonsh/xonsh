@@ -121,11 +121,11 @@ def xh_sqlite_get_count(sessionid=None, filename=None):
         return _xh_sqlite_get_count(c, sessionid=sessionid)
 
 
-def xh_sqlite_items(sessionid=None, filename=None):
+def xh_sqlite_items(sessionid=None, filename=None, reverse=False):
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        return _xh_sqlite_get_records(c, sessionid=sessionid)
+        return _xh_sqlite_get_records(c, sessionid=sessionid, reverse=reverse)
 
 
 def xh_sqlite_delete_items(size_to_keep, filename=None):
@@ -208,15 +208,15 @@ class SqliteHistory(History):
             cmd, str(self.sessionid), store_stdout,
             filename=self.filename)
 
-    def all_items(self):
+    def all_items(self, reverse=False):
         """Display all history items."""
-        for item in xh_sqlite_items(filename=self.filename):
+        for item in xh_sqlite_items(filename=self.filename, reverse=reverse):
             yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
 
-    def items(self):
+    def items(self, reverse=False):
         """Display history items of current session."""
         for item in xh_sqlite_items(
-                sessionid=str(self.sessionid), filename=self.filename):
+                sessionid=str(self.sessionid), filename=self.filename, reverse=reverse):
             yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
 
     def info(self):

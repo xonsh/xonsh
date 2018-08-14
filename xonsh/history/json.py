@@ -379,9 +379,13 @@ class JsonHistory(History):
         self.buffer.clear()
         return hf
 
-    def items(self):
+    def items(self, reverse=False):
         """Display history items of current session."""
-        for item, tss in zip(self.inps, self.tss):
+        if reverse:
+            items = zip(reversed(self.inps), reversed(self.tss))
+        else:
+            items = zip(self.inps, self.tss)
+        for item, tss in items:
             yield {'inp': item.rstrip(), 'ts': tss[0]}
 
     def all_items(self, reverse=False, **kwargs):
@@ -406,6 +410,8 @@ class JsonHistory(History):
                     msg = 'xonsh history file {0!r} is not valid JSON'
                     print(msg.format(f), file=sys.stderr)
                 continue
+            if reverse:
+                commands = reversed(commands)
             for c in commands:
                 yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0]}
         # all items should also include session items

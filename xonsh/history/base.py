@@ -114,11 +114,11 @@ class History:
         """Flush the history items to disk from a buffer."""
         pass
 
-    def items(self):
+    def items(self, reverse=False):
         """Get history items of current session."""
         raise NotImplementedError
 
-    def all_items(self):
+    def all_items(self, reverse=False):
         """Get all history items."""
         raise NotImplementedError
 
