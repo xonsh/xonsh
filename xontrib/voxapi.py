@@ -235,12 +235,11 @@ class Vox(collections.abc.Mapping):
         """
         bin_, lib, inc = _subdir_names()
         for dirpath, dirnames, _ in os.walk(self.venvdir):
+            # Don't recurse in to the special dirs
+            if any(os.sep + d in dirpath for d in (bin_, lib, inc)):
+                continue
             if bin_ in dirnames and lib in dirnames:
                 yield dirpath[len(self.venvdir) + 1:]  # +1 is to remove the separator
-                # Don't recurse in to the special dirs
-                dirnames.remove(bin_)
-                dirnames.remove(lib)  # This one in particular is likely to be quite large.
-                dirnames.remove(inc)
 
     def __len__(self):
         """Counts known virtual environments, using the same rules as iter().
