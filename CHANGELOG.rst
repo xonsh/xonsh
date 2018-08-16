@@ -4,6 +4,20 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.5
+====================
+
+**Fixed:**
+
+* Recent command history in ptk2 prompt now returns most recently executed
+  commands first (as expected)
+* Fixed a regression taat prevented the readline backend from beeing used. This
+  regression was caused by the new ansi-color names, which are incompatible with
+  pygments 2.2.
+
+
+
+
 v0.7.4
 ====================
 
