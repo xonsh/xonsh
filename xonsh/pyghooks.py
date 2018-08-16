@@ -445,7 +445,7 @@ class XonshStyle(Style):
         self._style_name = value
         # Convert new ansicolor names to old PTK1 names
         # Can be remvoed when PTK1 support is dropped.
-        if builtins.__xonsh_shell__.shell_type in ('prompt_toolkit1', 'jupyter'):
+        if builtins.__xonsh_shell__.shell_type != 'prompt_toolkit2':
             for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
                 smap.update(ansicolors_to_ptk1_names(smap))
         if ON_WINDOWS and 'prompt_toolkit' in builtins.__xonsh_shell__.shell_type:
