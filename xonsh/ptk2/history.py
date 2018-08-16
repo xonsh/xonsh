@@ -25,7 +25,7 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         hist = builtins.__xonsh_history__
         if hist is None:
             return
-        for cmd in hist.all_items():
+        for cmd in hist.all_items(newest_first=True):
             line = cmd['inp'].rstrip()
             strs = self.get_strings()
             if len(strs) == 0 or line != strs[-1]:

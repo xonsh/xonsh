@@ -9,11 +9,11 @@ class DummyHistory(History):
     def append(self, cmd):
         pass
 
-    def items(self):
+    def items(self, newest_first=False):
         yield {'inp': 'dummy in action', 'ts': 1464652800, 'ind': 0}
 
-    def all_items(self):
-        return self.items()
+    def all_items(self, newest_first=False):
+        return self.items(newest_first=newest_first)
 
     def info(self):
         data = collections.OrderedDict()

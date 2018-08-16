@@ -40,18 +40,18 @@ def construct_history(**kwargs):
     return kls_history(**kwargs)
 
 
-def _xh_session_parser(hist=None, **kwargs):
+def _xh_session_parser(hist=None, newest_first=False, **kwargs):
     """Returns history items of current session."""
     if hist is None:
         hist = builtins.__xonsh_history__
-    return hist.items()
+    return hist.items(newest_first=newest_first)
 
 
-def _xh_all_parser(hist=None, **kwargs):
+def _xh_all_parser(hist=None, newest_first=False, **kwargs):
     """Returns all history items."""
     if hist is None:
         hist = builtins.__xonsh_history__
-    return hist.all_items()
+    return hist.all_items(newest_first=newest_first)
 
 
 def _xh_find_histfile_var(file_list, default=None):

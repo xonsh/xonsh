@@ -78,14 +78,14 @@ def _xh_sqlite_get_count(cursor, sessionid=None):
     return cursor.fetchone()[0]
 
 
-def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, reverse=False):
+def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, newest_first=False):
     sql = 'SELECT inp, tsb, rtn FROM xonsh_history '
     params = []
     if sessionid is not None:
         sql += 'WHERE sessionid = ? '
         params.append(sessionid)
     sql += 'ORDER BY tsb '
-    if reverse:
+    if newest_first:
         sql += 'DESC '
     if limit is not None:
         sql += 'LIMIT %d ' % limit
@@ -121,11 +121,11 @@ def xh_sqlite_get_count(sessionid=None, filename=None):
         return _xh_sqlite_get_count(c, sessionid=sessionid)
 
 
-def xh_sqlite_items(sessionid=None, filename=None):
+def xh_sqlite_items(sessionid=None, filename=None, newest_first=False):
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        return _xh_sqlite_get_records(c, sessionid=sessionid)
+        return _xh_sqlite_get_records(c, sessionid=sessionid, newest_first=newest_first)
 
 
 def xh_sqlite_delete_items(size_to_keep, filename=None):
@@ -208,15 +208,15 @@ class SqliteHistory(History):
             cmd, str(self.sessionid), store_stdout,
             filename=self.filename)
 
-    def all_items(self):
+    def all_items(self, newest_first=False):
         """Display all history items."""
-        for item in xh_sqlite_items(filename=self.filename):
+        for item in xh_sqlite_items(filename=self.filename, newest_first=newest_first):
             yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
 
-    def items(self):
+    def items(self, newest_first=False):
         """Display history items of current session."""
         for item in xh_sqlite_items(
-                sessionid=str(self.sessionid), filename=self.filename):
+                sessionid=str(self.sessionid), filename=self.filename, newest_first=newest_first):
             yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
 
     def info(self):
