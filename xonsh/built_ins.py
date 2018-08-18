@@ -1148,6 +1148,7 @@ def load_builtins(execer=None, ctx=None):
     """
     global BUILTINS_LOADED
 
+    builtins.__xonsh__.load(execer=execer)
     builtins.__xonsh__.link_builtins(execer=execer)
 
     BUILTINS_LOADED = True
@@ -1197,7 +1198,7 @@ class XonshSession:
     def __init__(self):
         self.ctx = {}
 
-    def load(self):
+    def load(self, execer=None):
         self.config__ = {}
         self.env = Env(default_env())
         self.help = helper
@@ -1234,7 +1235,7 @@ class XonshSession:
         self.enter_macro = enter_macro
         self.path_literal = path_literal
 
-        self.builtins = _BuiltIns()
+        self.builtins = _BuiltIns(execer)
 
         self.history = None
 
@@ -1272,7 +1273,7 @@ class XonshSession:
 
 class _BuiltIns:
 
-    def __init__(self):
+    def __init__(self, execer=None):
         # public built-ins
         self.XonshError = XonshError
         self.XonshCalledProcessError = XonshCalledProcessError
