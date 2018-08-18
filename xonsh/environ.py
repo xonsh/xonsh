@@ -100,8 +100,8 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    if hasattr(builtins, '__xonsh_execer__'):
-        builtins.__xonsh_execer__.debug_level = val
+    if hasattr(builtins.__xonsh__, 'execer'):
+        builtins.__xonsh__.execer.debug_level = val
     return val
 
 
@@ -618,7 +618,7 @@ def DEFAULT_DOCS():
     'UPDATE_OS_ENVIRON': VarDocs(
         "If True ``os_environ`` will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
-        "the default value by calling ``__xonsh_env__.undo_replace_env()``"),
+        "the default value by calling ``__xonsh__.env.undo_replace_env()``"),
     'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
         'Disables caching the prompt between commands, '
         'so that it would be reevaluated on each keypress. '
@@ -1039,7 +1039,7 @@ def _yield_executables(directory, name):
 
 def locate_binary(name):
     """Locates an executable on the file system."""
-    return builtins.__xonsh_commands_cache__.locate_binary(name)
+    return builtins.__xonsh__.commands_cache.locate_binary(name)
 
 
 BASE_ENV = LazyObject(lambda: {

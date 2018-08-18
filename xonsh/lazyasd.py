@@ -331,7 +331,7 @@ def load_module_in_background(name, package=None, debug='DEBUG', env=None,
     debug : str, optional
         Debugging symbol name to look up in the environment.
     env : Mapping or None, optional
-        Environment this will default to __xonsh_env__, if available, and
+        Environment this will default to __xonsh__.env, if available, and
         os.environ otherwise.
     replacements : Mapping or None, optional
         Dictionary mapping fully qualified module names (eg foo.bar.baz) that
@@ -350,7 +350,7 @@ def load_module_in_background(name, package=None, debug='DEBUG', env=None,
     if modname in sys.modules:
         return sys.modules[modname]
     if env is None:
-        env = getattr(builtins, '__xonsh_env__', os.environ)
+        env = getattr(builtins, '__xonsh__.env', os.environ)
     if env.get(debug, None):
         mod = importlib.import_module(name, package=package)
         return mod

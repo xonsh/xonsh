@@ -199,7 +199,7 @@ def _pprint_displayhook(value):
     if isinstance(value, HiddenCommandPipeline):
         builtins._ = value
         return
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     if env.get('PRETTY_PRINT_RESULTS'):
         printed_val = pretty(value)
     else:

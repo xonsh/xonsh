@@ -339,7 +339,7 @@ def windows_bash_command():
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     wbc = 'bash'
-    cmd_cache = builtins.__xonsh_commands_cache__
+    cmd_cache = builtins.__xonsh__.commands_cache
     bash_on_path = cmd_cache.lazy_locate_binary('bash', ignore_alias=True)
     if bash_on_path:
         try:

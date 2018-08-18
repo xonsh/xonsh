@@ -436,7 +436,7 @@ class ConsoleParallelReader(QueueReader):
         timeout : float, optional
             The queue reading timeout.
         """
-        timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        timeout = timeout or builtins.__xonsh__.env.get('XONSH_PROC_FREQUENCY')
         super().__init__(fd, timeout=timeout)
         self._buffer = buffer  # this cannot be public
         if buffer is None:
@@ -512,7 +512,7 @@ class PopenThread(threading.Thread):
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
         self.lock = threading.RLock()
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         # stdin setup
         self.orig_stdin = stdin
         if stdin is None:
@@ -1256,7 +1256,7 @@ class ProcProxyThread(threading.Thread):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
-        self.env = env or builtins.__xonsh_env__
+        self.env = env or builtins.__xonsh__.env
         self._interrupted = False
 
         if ON_WINDOWS:
@@ -1310,7 +1310,7 @@ class ProcProxyThread(threading.Thread):
         if last_in_pipeline:
             capout = spec.captured_stdout  # NOQA
             caperr = spec.captured_stderr  # NOQA
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
         if ON_WINDOWS:
@@ -1612,7 +1612,7 @@ class ProcProxy(object):
         """
         if self.f is None:
             return 0
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
         spec = self._wait_and_getattr('spec')
@@ -1704,7 +1704,7 @@ def update_fg_process_group(pipeline_group, background):
         return False
     if not ON_POSIX:
         return False
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     if not env.get('XONSH_INTERACTIVE'):
         return False
     return give_terminal_to(pipeline_group)
@@ -1808,7 +1808,7 @@ class CommandPipeline:
         proc = self.proc
         if proc is None:
             return
-        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        timeout = builtins.__xonsh__.env.get('XONSH_PROC_FREQUENCY')
         # get the correct stdout
         stdout = proc.stdout
         if ((stdout is None or spec.stdout is None or not safe_readable(stdout))
@@ -1924,7 +1924,7 @@ class CommandPipeline:
         yields each line. This may optionally accept lines (in bytes) to iterate
         over, in which case it does not call iterraw().
         """
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
         lines = self.lines
@@ -1958,7 +1958,7 @@ class CommandPipeline:
         """Streams lines to sys.stderr and the errors attribute."""
         if not lines:
             return
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
         b = b''.join(lines)
@@ -1976,7 +1976,7 @@ class CommandPipeline:
         # do some munging of the line before we save it to the attr
         b = b.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
         b = RE_HIDE_ESCAPE.sub(b'', b)
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         s = b.decode(encoding=env.get('XONSH_ENCODING'),
                      errors=env.get('XONSH_ENCODING_ERRORS'))
         # set the errors
@@ -1990,7 +1990,7 @@ class CommandPipeline:
         if not b:
             return ''
         if isinstance(b, bytes):
-            env = builtins.__xonsh_env__
+            env = builtins.__xonsh__.env
             s = b.decode(encoding=env.get('XONSH_ENCODING'),
                          errors=env.get('XONSH_ENCODING_ERRORS'))
         else:
@@ -2040,12 +2040,12 @@ class CommandPipeline:
             return
         if give_terminal_to(pgid):  # if gave term succeed
             self.term_pgid = pgid
-            if hasattr(builtins, '__xonsh_shell__'):
+            if hasattr(builtins.__xonsh__, 'shell'):
                 # restoring sanity could probably be called whenever we return
                 # control to the shell. But it only seems to matter after a
                 # ^Z event. This *has* to be called after we give the terminal
                 # back to the shell.
-                builtins.__xonsh_shell__.shell.restore_tty_sanity()
+                builtins.__xonsh__.shell.shell.restore_tty_sanity()
 
     def resume(self, job, tee_output=True):
         self.ended = False
@@ -2137,7 +2137,7 @@ class CommandPipeline:
 
     def _apply_to_history(self):
         """Applies the results to the current history object."""
-        hist = builtins.__xonsh_history__
+        hist = builtins.__xonsh__.history
         if hist is not None:
             hist.last_cmd_rtn = 1 if self.proc is None else self.proc.returncode
 
@@ -2148,7 +2148,7 @@ class CommandPipeline:
         if (not spec.is_proxy and
                 rtn is not None and
                 rtn > 0 and
-                builtins.__xonsh_env__.get('RAISE_SUBPROC_ERROR')):
+                builtins.__xonsh__.env.get('RAISE_SUBPROC_ERROR')):
             try:
                 raise subprocess.CalledProcessError(rtn, spec.cmd,
                                                     output=self.output)
@@ -2267,7 +2267,7 @@ class CommandPipeline:
         """Prefix to print in front of stderr, as bytes."""
         p = self._stderr_prefix
         if p is None:
-            env = builtins.__xonsh_env__
+            env = builtins.__xonsh__.env
             t = env.get('XONSH_STDERR_PREFIX')
             s = format_std_prepost(t, env=env)
             p = s.encode(encoding=env.get('XONSH_ENCODING'),
@@ -2280,7 +2280,7 @@ class CommandPipeline:
         """Postfix to print after stderr, as bytes."""
         p = self._stderr_postfix
         if p is None:
-            env = builtins.__xonsh_env__
+            env = builtins.__xonsh__.env
             t = env.get('XONSH_STDERR_POSTFIX')
             s = format_std_prepost(t, env=env)
             p = s.encode(encoding=env.get('XONSH_ENCODING'),
@@ -2343,7 +2343,7 @@ class PrevProcCloser(threading.Thread):
             return
         proc = pipeline.proc
         prev_end_time = None
-        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        timeout = builtins.__xonsh__.env.get('XONSH_PROC_FREQUENCY')
         sleeptime = min(timeout * 1000, 0.1)
         while proc.poll() is None:
             if not check_prev_done:

@@ -38,8 +38,8 @@ class XonshKernel(Kernel):
         if len(code.strip()) == 0:
             return {'status': 'ok', 'execution_count': self.execution_count,
                     'payload': [], 'user_expressions': {}}
-        shell = builtins.__xonsh_shell__
-        hist = builtins.__xonsh_history__
+        shell = builtins.__xonsh__.shell
+        hist = builtins.__xonsh__.history
         try:
             shell.default(code)
             interrupted = False
@@ -80,7 +80,7 @@ class XonshKernel(Kernel):
 
     def do_complete(self, code, pos):
         """Get completions."""
-        shell = builtins.__xonsh_shell__
+        shell = builtins.__xonsh__.shell
         line = code.split('\n')[-1]
         line = builtins.aliases.expand_alias(line)
         prefix = line.split(' ')[-1]

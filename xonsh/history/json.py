@@ -68,14 +68,14 @@ def _xhj_get_history_files(sort=True, reverse=False):
     """Find and return the history files. Optionally sort files by
         modify time.
     """
-    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+    data_dir = builtins.__xonsh__.env.get('XONSH_DATA_DIR')
     data_dir = xt.expanduser_abs_path(data_dir)
     try:
         files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
                  if f.startswith('xonsh-') and f.endswith('.json')]
     except OSError:
         files = []
-        if builtins.__xonsh_env__.get('XONSH_DEBUG'):
+        if builtins.__xonsh__.env.get('XONSH_DEBUG'):
             xt.print_exception("Could not collect xonsh history files.")
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=reverse)
@@ -103,7 +103,7 @@ class JsonHistoryGC(threading.Thread):
     def run(self):
         while self.wait_for_shell:
             time.sleep(0.01)
-        env = builtins.__xonsh_env__  # pylint: disable=no-member
+        env = builtins.__xonsh__.env  # pylint: disable=no-member
         if self.size is None:
             hsize, units = env.get('XONSH_HISTORY_SIZE')
         else:
@@ -193,7 +193,7 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
-        opts = builtins.__xonsh_env__.get('HISTCONTROL')
+        opts = builtins.__xonsh__.env.get('HISTCONTROL')
         last_inp = None
         cmds = []
         for cmd in self.buffer:
@@ -212,7 +212,7 @@ class JsonHistoryFlusher(threading.Thread):
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
-        if not builtins.__xonsh_env__.get('XONSH_STORE_STDOUT', False):
+        if not builtins.__xonsh__.env.get('XONSH_STORE_STDOUT', False):
             [cmd.pop('out') for cmd in hist['cmds'][load_hist_len:]
                 if 'out' in cmd]
         with open(self.filename, 'w', newline='\n') as f:
@@ -307,7 +307,7 @@ class JsonHistory(History):
         super().__init__(sessionid=sessionid, **meta)
         if filename is None:
             # pylint: disable=no-member
-            data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+            data_dir = builtins.__xonsh__.env.get('XONSH_DATA_DIR')
             data_dir = os.path.expanduser(data_dir)
             self.filename = os.path.join(
                 data_dir, 'xonsh-{0}.json'.format(self.sessionid))
@@ -402,7 +402,7 @@ class JsonHistory(History):
                 commands = json_file.load()['cmds']
             except json.decoder.JSONDecodeError:
                 # file is corrupted somehow
-                if builtins.__xonsh_env__.get('XONSH_DEBUG') > 0:
+                if builtins.__xonsh__.env.get('XONSH_DEBUG') > 0:
                     msg = 'xonsh history file {0!r} is not valid JSON'
                     print(msg.format(f), file=sys.stderr)
                 continue
@@ -419,7 +419,7 @@ class JsonHistory(History):
         data['length'] = len(self)
         data['buffersize'] = self.buffersize
         data['bufferlength'] = len(self.buffer)
-        envs = builtins.__xonsh_env__
+        envs = builtins.__xonsh__.env__
         data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
         return data
 

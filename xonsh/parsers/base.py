@@ -117,17 +117,17 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
 
 
 def xonsh_help(x, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_help__() function."""
-    return xonsh_call('__xonsh_help__', [x], lineno=lineno, col=col)
+    """Creates the AST node for calling the __xonsh__.help() function."""
+    return xonsh_call('__xonsh__.help', [x], lineno=lineno, col=col)
 
 
 def xonsh_superhelp(x, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_superhelp__() function."""
-    return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
+    """Creates the AST node for calling the __xonsh__.superhelp() function."""
+    return xonsh_call('__xonsh__.superhelp', [x], lineno=lineno, col=col)
 
 
 def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_pathsearch__() function.
+    """Creates the AST node for calling the __xonsh__.pathsearch() function.
     The pymode argument indicate if it is called from subproc or python mode"""
     pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
     searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
@@ -137,15 +137,15 @@ def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
     if searchfunc.startswith('@'):
         func = searchfunc[1:]
     elif 'g' in searchfunc:
-        func = '__xonsh_globsearch__'
+        func = '__xonsh__.globsearch'
         pathobj = 'p' in searchfunc
     else:
-        func = '__xonsh_regexsearch__'
+        func = '__xonsh__.regexsearch'
         pathobj = 'p' in searchfunc
     func = ast.Name(id=func, ctx=ast.Load(), lineno=lineno,
                     col_offset=col)
     pathobj = ast.NameConstant(value=pathobj, lineno=lineno, col_offset=col)
-    return xonsh_call('__xonsh_pathsearch__', args=[func, pattern, pymode, pathobj],
+    return xonsh_call('__xonsh__.pathsearch', args=[func, pattern, pymode, pathobj],
                       lineno=lineno, col=col)
 
 
@@ -1377,7 +1377,7 @@ class BaseParser(object):
         gblcall = xonsh_call('globals', [], lineno=l, col=c)
         loccall = xonsh_call('locals', [], lineno=l, col=c)
         margs = [expr, p4, gblcall, loccall]
-        p3.context_expr = xonsh_call('__xonsh_enter_macro__', margs,
+        p3.context_expr = xonsh_call('__xonsh__.enter_macro', margs,
                                      lineno=l, col=c)
         body = [ast.Pass(lineno=p4.lineno, col_offset=p4.col_offset)]
         p[0] = [ast.With(items=[p3], body=body,
@@ -1393,7 +1393,7 @@ class BaseParser(object):
             gblcall = xonsh_call('globals', [], lineno=l, col=c)
             loccall = xonsh_call('locals', [], lineno=l, col=c)
             margs = [expr, p5, gblcall, loccall]
-            item.context_expr = xonsh_call('__xonsh_enter_macro__', margs,
+            item.context_expr = xonsh_call('__xonsh__.enter_macro_', margs,
                                            lineno=l, col=c)
         body = [ast.Pass(lineno=p5.lineno, col_offset=p5.col_offset)]
         p[0] = [ast.With(items=items, body=body,
@@ -1837,7 +1837,7 @@ class BaseParser(object):
                 if isinstance(trailer, tuple):
                     trailer, arglist = trailer
                 margs = [leader, trailer, gblcall, loccall]
-                p0 = xonsh_call('__xonsh_call_macro__', margs, lineno=l, col=c)
+                p0 = xonsh_call('__xonsh__.call_macro', margs, lineno=l, col=c)
             elif isinstance(trailer, str):
                 if trailer == '?':
                     p0 = xonsh_help(leader, lineno=leader.lineno,
@@ -2020,7 +2020,7 @@ class BaseParser(object):
             value_without_p = prefix.replace('p', '') + p1.value[len(prefix):]
             s = ast.Str(s=ast.literal_eval(value_without_p), lineno=p1.lineno,
                         col_offset=p1.lexpos)
-            p[0] = xonsh_call('__xonsh_path_literal__', [s],
+            p[0] = xonsh_call('__xonsh__.path_literal', [s],
                               lineno=p1.lineno, col=p1.lexpos)
         elif 'f' in prefix or 'F' in prefix:
             s = pyparse(p1.value).body[0].value
@@ -2425,7 +2425,7 @@ class BaseParser(object):
 
     def _dollar_rules(self, p):
         """These handle the special xonsh $ shell atoms by looking up
-        in a special __xonsh_env__ dictionary injected in the __builtin__.
+        in a special __xonsh__.env dictionary injected in the __builtin__.
         """
         lenp = len(p)
         p1, p2 = p[1], p[2]
@@ -2442,16 +2442,16 @@ class BaseParser(object):
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                                lineno=lineno, col_offset=col)
         elif p1 == '$(':
-            p0 = xonsh_call('__xonsh_subproc_captured_stdout__', p2,
+            p0 = xonsh_call('__xonsh__.subproc_captured_stdout', p2,
                             lineno=lineno, col=col)
         elif p1 == '!(':
-            p0 = xonsh_call('__xonsh_subproc_captured_object__', p2,
+            p0 = xonsh_call('__xonsh__.subproc_captured_object', p2,
                             lineno=lineno, col=col)
         elif p1 == '![':
-            p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', p2,
+            p0 = xonsh_call('__xonsh__.subproc_captured_hiddenobject', p2,
                             lineno=lineno, col=col)
         elif p1 == '$[':
-            p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
+            p0 = xonsh_call('__xonsh__.subproc_uncaptured', p2,
                             lineno=lineno, col=col)
         else:
             assert False
@@ -2459,7 +2459,7 @@ class BaseParser(object):
 
     def _xenv(self, lineno=lineno, col=col):
         """Creates a new xonsh env reference."""
-        return ast.Name(id='__xonsh_env__', ctx=ast.Load(),
+        return ast.Name(id='__xonsh__.env', ctx=ast.Load(),
                         lineno=lineno, col_offset=col)
 
     def _envvar_getter_by_name(self, var, lineno=None, col=None):
@@ -2590,7 +2590,7 @@ class BaseParser(object):
     def p_subproc_atom_uncaptured(self, p):
         """subproc_atom : dollar_lbracket_tok subproc RBRACKET"""
         p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_uncaptured__', args=p[2],
+        p0 = xonsh_call('__xonsh__.subproc_uncaptured', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'splitlines'
         p[0] = p0
@@ -2608,7 +2608,7 @@ class BaseParser(object):
     def p_subproc_atom_captured_stdout(self, p):
         """subproc_atom : dollar_lparen_tok subproc RPAREN"""
         p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_stdout__', args=p[2],
+        p0 = xonsh_call('__xonsh__.subproc_captured_stdout', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'append'
         p[0] = p0
@@ -2640,7 +2640,7 @@ class BaseParser(object):
     def p_subproc_atom_pyeval(self, p):
         """subproc_atom : at_lparen_tok testlist_comp RPAREN"""
         p1 = p[1]
-        p0 = xonsh_call('__xonsh_list_of_strs_or_callables__', [p[2]],
+        p0 = xonsh_call('__xonsh__.list_of_strs_or_callables', [p[2]],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'extend'
         p[0] = p0
@@ -2648,7 +2648,7 @@ class BaseParser(object):
     def p_subproc_atom_subproc_inject(self, p):
         """subproc_atom : atdollar_lparen_tok subproc RPAREN"""
         p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_inject__', p[2],
+        p0 = xonsh_call('__xonsh__.subproc_captured_inject', p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'extend'
         p[0] = p0
@@ -2682,7 +2682,7 @@ class BaseParser(object):
 
     def p_subproc_atom_str(self, p):
         """subproc_atom : string_literal"""
-        p0 = xonsh_call('__xonsh_expand_path__', args=[p[1]],
+        p0 = xonsh_call('__xonsh__.expand_path', args=[p[1]],
                         lineno=self.lineno, col=self.col)
         p0._cliarg_action = 'append'
         p[0] = p0
@@ -2692,11 +2692,11 @@ class BaseParser(object):
         p1 = p[1]
         p0 = ast.Str(s=p[1], lineno=self.lineno, col_offset=self.col)
         if '*' in p1:
-            p0 = xonsh_call('__xonsh_glob__', args=[p0],
+            p0 = xonsh_call('__xonsh__.glob', args=[p0],
                             lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'extend'
         else:
-            p0 = xonsh_call('__xonsh_expand_path__', args=[p0],
+            p0 = xonsh_call('__xonsh__.expand_path', args=[p0],
                             lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'append'
         p[0] = p0

@@ -33,12 +33,12 @@ def _command_is_valid(cmd):
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     except (FileNotFoundError, OSError):
         return False
-    return cmd in builtins.__xonsh_commands_cache__ or \
+    return cmd in builtins.__xonsh__.commands_cache or \
         (os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK))
 
 
 def _command_is_autocd(cmd):
-    if not builtins.__xonsh_env__.get('AUTO_CD', False):
+    if not builtins.__xonsh__.env.get('AUTO_CD', False):
         return False
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
@@ -78,14 +78,14 @@ class XonshLexer(PythonLexer):
     def __init__(self, *args, **kwargs):
         # If the lexor is loaded as a pygment plugin, we have to mock
         # __xonsh_env__ and __xonsh_commands_cache__
-        if not hasattr(builtins, '__xonsh_env__'):
-            setattr(builtins, '__xonsh_env__', {})
+        if not hasattr(builtins.__xonsh__, 'env'):
+            setattr(builtins.__xonsh__, 'env', {})
             if ON_WINDOWS:
                 pathext = os_environ.get('PATHEXT', ['.EXE', '.BAT', '.CMD'])
-                builtins.__xonsh_env__['PATHEXT'] = pathext.split(os.pathsep)
-        if not hasattr(builtins, '__xonsh_commands_cache__'):
-            setattr(builtins, '__xonsh_commands_cache__', CommandsCache())
-        _ = builtins.__xonsh_commands_cache__.all_commands  # NOQA
+                builtins.__xonsh__.env['PATHEXT'] = pathext.split(os.pathsep)
+        if not hasattr(builtins.__xonsh__, 'commands_cache'):
+            setattr(builtins.__xonsh__, 'commands_cache', CommandsCache())
+        _ = builtins.__xonsh__.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)
 
     tokens = {
@@ -300,8 +300,8 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if hasattr(builtins, '__xonsh_shell__'):
-        styles = __xonsh_shell__.shell.styler.styles
+    if hasattr(builtins.__xonsh__, 'shell'):
+        styles = __xonsh__.shell.shell.styler.styles
     else:
         styles = None
     color = Color.NO_COLOR
@@ -425,7 +425,7 @@ class XonshStyle(Style):
                 print('Could not find style {0!r}, using default'.format(value),
                       file=sys.stderr)
                 value = 'default'
-                builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = value
+                builtins.__xonsh__.env['XONSH_COLOR_STYLE'] = value
         cmap = STYLES[value]
         if value == 'default':
             self._smap = XONSH_BASE_STYLE.copy()
@@ -449,7 +449,7 @@ class XonshStyle(Style):
             When using the default style all blue and dark red colors
             are changed to CYAN and intense red.
         """
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
             if not hasattr(pygments.style, 'ansicolors'):

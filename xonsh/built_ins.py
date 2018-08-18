@@ -130,8 +130,8 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+    csc = builtins.__xonsh__.env.get('CASE_SENSITIVE_COMPLETIONS')
+    glob_sorted = builtins.__xonsh__.env.get('GLOB_SORTED')
     return globpath(s, ignore_case=(not csc), return_empty=True,
                     sort_result=glob_sorted)
 
@@ -203,7 +203,7 @@ def get_script_subproc_command(fname, args):
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-        if ext.upper() in builtins.__xonsh_env__.get('PATHEXT'):
+        if ext.upper() in builtins.__xonsh__.env.get('PATHEXT'):
             return [fname] + args
     # find interpreter
     with open(fname, 'rb') as f:
@@ -516,7 +516,7 @@ class SubprocSpec:
         except FileNotFoundError:
             cmd0 = self.cmd[0]
             e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd0)
-            env = builtins.__xonsh_env__
+            env = builtins.__xonsh__.env
             sug = suggest_commands(cmd0, env, builtins.aliases)
             if len(sug.strip()) > 0:
                 e += '\n' + suggest_commands(cmd0, env, builtins.aliases)
@@ -525,7 +525,7 @@ class SubprocSpec:
 
     def prep_env(self, kwargs):
         """Prepares the environment to use in the subprocess."""
-        denv = builtins.__xonsh_env__.detype()
+        denv = builtins.__xonsh__.env.detype()
         if ON_WINDOWS:
             # Over write prompt variable as xonsh's $PROMPT does
             # not make much sense for other subprocs
@@ -536,7 +536,7 @@ class SubprocSpec:
         """Prepares the 'preexec_fn' keyword argument"""
         if not ON_POSIX:
             return
-        if not builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+        if not builtins.__xonsh__.env.get('XONSH_INTERACTIVE'):
             return
         if pipeline_group is None:
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
@@ -625,7 +625,7 @@ class SubprocSpec:
         if not (self.alias is None and
                 self.binary_loc is None and
                 len(self.cmd) == 1 and
-                builtins.__xonsh_env__.get('AUTO_CD') and
+                builtins.__xonsh__.env.get('AUTO_CD') and
                 os.path.isdir(self.cmd[0])):
             return
         self.cmd.insert(0, 'cd')
@@ -690,7 +690,7 @@ def _update_last_spec(last):
     if callable_alias:
         pass
     else:
-        cmds_cache = builtins.__xonsh_commands_cache__
+        cmds_cache = builtins.__xonsh__.commands_cache
         thable = (cmds_cache.predict_threadable(last.args) and
                   cmds_cache.predict_threadable(last.cmd))
         if captured and thable:
@@ -713,9 +713,9 @@ def _update_last_spec(last):
         r, w = os.pipe()
         last.stdout = safe_open(w, 'wb')
         last.captured_stdout = safe_open(r, 'rb')
-    elif builtins.__xonsh_stdout_uncaptured__ is not None:
+    elif builtins.__xonsh__.stdout_uncaptured is not None:
         last.universal_newlines = True
-        last.stdout = builtins.__xonsh_stdout_uncaptured__
+        last.stdout = builtins.__xonsh__.stdout_uncaptured
         last.captured_stdout = last.stdout
     elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
@@ -735,8 +735,8 @@ def _update_last_spec(last):
         r, w = os.pipe()
         last.stderr = safe_open(w, 'w')
         last.captured_stderr = safe_open(r, 'r')
-    elif builtins.__xonsh_stderr_uncaptured__ is not None:
-        last.stderr = builtins.__xonsh_stderr_uncaptured__
+    elif builtins.__xonsh__.stderr_uncaptured is not None:
+        last.stderr = builtins.__xonsh__.stderr_uncaptured
         last.captured_stderr = last.stderr
     elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
@@ -791,11 +791,11 @@ def cmds_to_specs(cmds, captured=False):
 
 
 def _should_set_title(captured=False):
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     return (env.get('XONSH_INTERACTIVE') and
             not env.get('XONSH_STORE_STDOUT') and
             captured not in STDOUT_CAPTURE_KINDS and
-            hasattr(builtins, '__xonsh_shell__'))
+            hasattr(builtins.__xonsh__, 'shell'))
 
 
 def run_subproc(cmds, captured=False):
@@ -972,7 +972,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
     if kind is str or kind is None:
         return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
-    execer = builtins.__xonsh__.exece_
+    execer = builtins.__xonsh__.execer
     filename = macroname + '(' + name + ')'
     if kind is AST:
         ctx = set(dir(builtins)) | set(glbs.keys())
@@ -1164,12 +1164,12 @@ def unload_builtins():
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED
-    env = getattr(builtins, '__xonsh_env__', None)
+    env = getattr(builtins.__xonsh__, 'env', None)
     if isinstance(env, Env):
         env.undo_replace_env()
-    if hasattr(builtins, '__xonsh_pyexit__'):
+    if hasattr(builtins.__xonsh__, 'pyexit'):
         builtins.exit = builtins.__xonsh_pyexit__
-    if hasattr(builtins, '__xonsh_pyquit__'):
+    if hasattr(builtins.__xonsh__, 'pyquit'):
         builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return

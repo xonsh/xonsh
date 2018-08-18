@@ -46,7 +46,7 @@ class PromptToolkitHistoryAdder(Thread):
         self.start()
 
     def run(self):
-        hist = builtins.__xonsh_history__
+        hist = builtins.__xonsh__.history
         if hist is None:
             return
         buf = None
@@ -63,8 +63,8 @@ class PromptToolkitHistoryAdder(Thread):
 
     def _buf(self):
         # Thread-safe version of
-        # buf = builtins.__xonsh_shell__.shell.prompter.cli.application.buffer
-        path = ['__xonsh_shell__', 'shell', 'prompter', 'cli', 'application',
+        # buf = builtins.__xonsh__.shell.shell.prompter.cli.application.buffer
+        path = ['__xonsh__', 'shell', 'shell', 'prompter', 'cli', 'application',
                 'buffer']
         buf = builtins
         for a in path:

@@ -65,9 +65,9 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if HAS_PYGMENTS and hasattr(builtins, '__xonsh_shell__'):
-        styles = __xonsh_shell__.shell.styler.styles
-    elif hasattr(builtins, '__xonsh_shell__'):
+    if HAS_PYGMENTS and hasattr(builtins.__xonsh__, 'shell'):
+        styles = __xonsh__.shell.shell.styler.styles
+    elif hasattr(builtins.__xonsh__, 'shell'):
         styles = DEFAULT_STYLE_DICT
     else:
         styles = None

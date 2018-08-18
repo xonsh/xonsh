@@ -130,7 +130,7 @@ def _get_cwd():
 
 
 def _change_working_directory(newdir, follow_symlinks=False):
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     old = env['PWD']
     new = os.path.join(old, newdir)
     absnew = os.path.abspath(new)
@@ -165,10 +165,10 @@ def _try_cdpath(apath):
     # a second $ cd xonsh has no effects, to move in the nested xonsh
     # in bash a full $ cd ./xonsh is needed.
     # In xonsh a relative folder is always preferred.
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     cdpaths = env.get('CDPATH')
     for cdp in cdpaths:
-        globber = builtins.__xonsh_expand_path__(os.path.join(cdp, apath))
+        globber = builtins.__xonsh__.expand_path(os.path.join(cdp, apath))
         for cdpath_prefixed_path in glob.iglob(globber):
             return cdpath_prefixed_path
     return apath
@@ -180,7 +180,7 @@ def cd(args, stdin=None):
     If no directory is specified (i.e. if `args` is None) then this
     changes to the current user's home directory.
     """
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     oldpwd = env.get('OLDPWD', None)
     cwd = env['PWD']
 
@@ -272,7 +272,7 @@ def pushd(args, stdin=None):
     except SystemExit:
         return None, None, 1
 
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
 
     pwd = env['PWD']
 
@@ -367,7 +367,7 @@ def popd(args, stdin=None):
     except SystemExit:
         return None, None, 1
 
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
 
     if env.get('PUSHD_MINUS'):
         BACKWARD = '-'
@@ -415,7 +415,7 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
-            env = builtins.__xonsh_env__
+            env = builtins.__xonsh__.env
             pwd = env['PWD']
 
             _change_working_directory(new_pwd)
@@ -470,7 +470,7 @@ def dirs(args, stdin=None):
     except SystemExit:
         return None, None
 
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     dirstack = [os.path.expanduser(env['PWD'])] + DIRSTACK
 
     if env.get('PUSHD_MINUS'):

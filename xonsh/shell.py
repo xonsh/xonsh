@@ -75,7 +75,7 @@ def transform_command(src, show_diff=True):
             print_exception('Modifications to source input took more than '
                             'the recursion limit number of iterations to '
                             'converge.')
-    debug_level = builtins.__xonsh_env__.get('XONSH_DEBUG')
+    debug_level = builtins.__xonsh__.env.get('XONSH_DEBUG')
     if show_diff and debug_level > 1 and src != raw:
         sys.stderr.writelines(difflib.unified_diff(
             raw.splitlines(keepends=True),
@@ -110,9 +110,9 @@ class Shell(object):
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         # build history backend before creating shell
-        builtins.__xonsh_history__ = hist = xhm.construct_history(
+        builtins.__xonsh__.history = hist = xhm.construct_history(
             env=env.detype(), ts=[time.time(), None], locked=True)
 
         # pick a valid shell -- if no shell is specified by the user,
