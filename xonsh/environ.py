@@ -930,7 +930,7 @@ class Env(cabc.MutableMapping):
                     del self[k]
                 else:
                     self[k] = v
-            if exception != None:
+            if exception is not None:
                 raise exception
 
     #
