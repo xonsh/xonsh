@@ -1157,36 +1157,44 @@ def parse_proxy_return(r, stdout, stderr):
     return cmd_result
 
 
-def proxy_zero(f, args, stdin, stdout, stderr, spec):
+def proxy_zero(f, args, stdin, stdout, stderr, spec, stack):
     """Calls a proxy function which takes no parameters."""
     return f()
 
 
-def proxy_one(f, args, stdin, stdout, stderr, spec):
+def proxy_one(f, args, stdin, stdout, stderr, spec, stack):
     """Calls a proxy function which takes one parameter: args"""
     return f(args)
 
 
-def proxy_two(f, args, stdin, stdout, stderr, spec):
+def proxy_two(f, args, stdin, stdout, stderr, spec, stack):
     """Calls a proxy function which takes two parameter: args and stdin."""
     return f(args, stdin)
 
 
-def proxy_three(f, args, stdin, stdout, stderr, spec):
+def proxy_three(f, args, stdin, stdout, stderr, spec, stack):
     """Calls a proxy function which takes three parameter: args, stdin, stdout.
     """
     return f(args, stdin, stdout)
 
 
-def proxy_four(f, args, stdin, stdout, stderr, spec):
+def proxy_four(f, args, stdin, stdout, stderr, spec, stack):
     """Calls a proxy function which takes four parameter: args, stdin, stdout,
     and stderr.
     """
     return f(args, stdin, stdout, stderr)
 
 
-PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four)
-PROXY_KWARG_NAMES = frozenset(['args', 'stdin', 'stdout', 'stderr', 'spec'])
+def proxy_five(f, args, stdin, stdout, stderr, spec, stack):
+    """Calls a proxy function which takes four parameter: args, stdin, stdout,
+    stderr, and spec.
+    """
+    return f(args, stdin, stdout, stderr, spec)
+
+
+PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four, proxy_five)
+PROXY_KWARG_NAMES = frozenset(['args', 'stdin', 'stdout', 'stderr', 'spec',
+                               'stack'])
 
 
 def partial_proxy(f):
@@ -1198,13 +1206,13 @@ def partial_proxy(f):
             numargs += 1
         elif name in PROXY_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
             numargs += 1
-    if numargs < 5:
+    if numargs < 6:
         return functools.partial(PROXIES[numargs], f)
-    elif numargs == 5:
+    elif numargs == 6:
         # don't need to partial.
         return f
     else:
-        e = 'Expected proxy with 5 or fewer arguments for {}, not {}'
+        e = 'Expected proxy with 6 or fewer arguments for {}, not {}'
         raise XonshError(e.format(', '.join(PROXY_KWARG_NAMES), numargs))
 
 
@@ -1348,7 +1356,8 @@ class ProcProxyThread(threading.Thread):
             STDERR_DISPATCHER.register(sp_stderr), \
             redirect_stdout(STDOUT_DISPATCHER), \
             redirect_stderr(STDERR_DISPATCHER):
-                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
+                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec,
+                           spec.stack)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except OSError as e:
@@ -1628,7 +1637,7 @@ class ProcProxy(object):
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
-            r = self.f(self.args, stdin, stdout, stderr, spec)
+            r = self.f(self.args, stdin, stdout, stderr, spec, spec.stack)
         except Exception:
             print_exception()
             r = 1
