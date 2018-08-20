@@ -240,6 +240,28 @@ echo @$(which ls)
 echo Just the place for a snark. >tttt
 cat tttt
 """, 'Just the place for a snark.\n', 0),
+#
+# Test completion registration and subproc stack
+#
+("""
+def _f():
+    def j():
+        pass
+
+    global aliases
+    aliases['j'] = j
+
+    def completions(pref, *args):
+        return set(['hello', 'world'])
+
+    completer add j completions "start"
+
+
+_f()
+del _f
+
+"""
+, '', 0),
 ]
 
 
