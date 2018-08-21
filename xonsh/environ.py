@@ -921,8 +921,8 @@ class Env(cabc.MutableMapping):
         exception = None
         try:
             yield self
-        except Exception as e:
-            exception = e
+        except Exception as exception:
+            pass
         finally:
             # restore the values
             for k, v in old.items():
@@ -931,7 +931,7 @@ class Env(cabc.MutableMapping):
                 else:
                     self[k] = v
             if exception is not None:
-                raise exception
+                raise exception from None
 
     #
     # Mutable mapping interface

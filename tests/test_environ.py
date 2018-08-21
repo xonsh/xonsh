@@ -109,6 +109,17 @@ def test_swap():
     assert 'VAR3' not in env
 
 
+def test_swap_exception_replacement():
+    env = Env(VAR='original value')
+    try:
+        with env.swap(VAR='inner value'):
+            assert env['VAR'] == 'inner value'
+            raise Exception()
+    except Exception:
+        assert env['VAR'] == 'original value'
+    assert env['VAR'] == 'original value'
+
+
 @skip_if_on_unix
 def test_locate_binary_on_windows(xonsh_builtins):
     files = ('file1.exe', 'FILE2.BAT', 'file3.txt')
