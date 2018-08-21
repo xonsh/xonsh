@@ -1638,25 +1638,31 @@ def _get_color_indexes(style_map):
                 rgb = None
             yield token, index, rgb
 
+
+# Map of new PTK2 color names to PTK1 variants
+PTK_NEW_OLD_COLOR_MAP = LazyObject(lambda: {
+    "black": "black",
+    "red": "darkred",
+    "green": "darkgreen",
+    "yellow": "brown",
+    "blue": "darkblue",
+    "magenta": "purple",
+    "cyan": "teal",
+    "gray": "lightgray",
+    "brightblack": "darkgray",
+    "brightred": "red",
+    "brightgreen": "green",
+    "brightyellow": "yellow",
+    "brightblue": "blue",
+    "brightmagenta": "fuchsia",
+    "brightcyan": "turquoise",
+    "white": "white",
+}, globals(), "PTK_NEW_OLD_COLOR_MAP")
+
 # Map of new ansicolor names to old PTK1 names
 ANSICOLOR_NAMES_MAP = LazyObject(lambda: {
-    'ansiblack': '#ansiblack',
-    'ansired': '#ansidarkred',
-    'ansigreen': '#ansidarkgreen',
-    'ansiyellow': '#ansibrown',
-    'ansiblue': '#ansidarkblue',
-    'ansimagenta': '#ansipurple',
-    'ansicyan': '#ansiteal',
-    'ansigray': '#ansilightgray',
-    'ansibrightblack': '#ansidarkgray',
-    'ansibrightred': '#ansired',
-    'ansibrightgreen': '#ansigreen',
-    'ansibrightyellow': '#ansiyellow',
-    'ansibrightblue': '#ansiblue',
-    'ansibrightmagenta': '#ansifuchsia',
-    'ansibrightcyan': '#ansiturquoise',
-    'ansiwhite': '#ansiwhite',
-}, globals(), 'ANSICOLOR_NAMES_MAP')
+    "ansi" + k: "#ansi" + v for k, v in PTK_NEW_OLD_COLOR_MAP.items()
+}, globals(), "ANSICOLOR_NAMES_MAP")
 
 
 def _win10_color_map():

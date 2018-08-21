@@ -115,6 +115,15 @@ def pygments_version():
 
 
 @functools.lru_cache(1)
+def pygments_version_info():
+    """ Returns `pygments`'s version as tuple of integers. """
+    if HAS_PYGMENTS:
+        return tuple(int(x) for x in pygments_version().strip('<>+-=.').split('.'))
+    else:
+        return None
+
+
+@functools.lru_cache(1)
 def has_prompt_toolkit():
     """Tests if the `prompt_toolkit` is available."""
     spec = importlib.util.find_spec('prompt_toolkit')
