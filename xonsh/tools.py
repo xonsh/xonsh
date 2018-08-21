@@ -1661,8 +1661,8 @@ PTK_NEW_OLD_COLOR_MAP = LazyObject(lambda: {
 
 # Map of new ansicolor names to old PTK1 names
 ANSICOLOR_NAMES_MAP = LazyObject(lambda: {
-    "ansi" + k: "#ansi" + v for k, v in PTK_NEW_OLD_COLOR_MAP
-}, globals(), 'ANSICOLOR_NAMES_MAP')
+    "ansi" + k: "#ansi" + v for k, v in PTK_NEW_OLD_COLOR_MAP.items()
+}, globals(), "ANSICOLOR_NAMES_MAP")
 
 
 def _win10_color_map():
