@@ -4,6 +4,39 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.6
+====================
+
+**Added:**
+
+* Callable aliases may now accept a ``stack`` argument. If they do, then the
+  stack, as computed from the aliases call site, is provided as a list of
+  ``FrameInfo`` objects (as detailed in the standard library ``inspect``
+  module). Otherwise, the ``stack`` parameter is ``None``.
+* ``SubprocSpec`` now has a ``stack`` attribute, for passing the call stack
+  to callable aliases. This defaults to ``None`` if the spec does not
+  need the stack. The ``resolve_stack()`` method computes the ``stack``
+  attribute.
+
+
+**Changed:**
+
+* xonsh/environ.py
+  Exceptions are caught in the code executed under Env.swap()
+
+
+**Fixed:**
+
+* Scripts are now cached by their realpath, not just abspath.
+* Fixed a potential crash (``AssertionError: wrong color format``) on Python 3.5 and prompt_toolkit 1.
+* The ``completer`` command now correctly finds completion functions
+  when nested inside of other functions.
+* Fixed a crash when using the ``$XONSH_STDERR_PREFIX/POSTFIX`` with
+  prompt_toolkit and Pygments 2.2.
+
+
+
+
 v0.7.5
 ====================
 
