@@ -1342,9 +1342,8 @@ def pygments_style_by_name(name):
     return astyle
 
 
-
 def _monkey_patch_pygments_codes():
-    """ Monky patch pygments' dict of console codes, 
+    """ Monky patch pygments' dict of console codes,
         with new color names
     """
     import pygments.console
@@ -1379,7 +1378,6 @@ def XonshTerminal256Formatter():
         # with the new color names used by PTK2
         # Can be removed once pygment names get fixed.
         _monkey_patch_pygments_codes()
-
 
     class XonshTerminal256FormatterProxy(terminal256.Terminal256Formatter):
         """Proxy class for xonsh terminal256 formatting that understands.
