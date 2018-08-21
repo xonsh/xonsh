@@ -29,7 +29,7 @@ def _CHARACTER_MAP():
 
 def _cache_renamer(path, code=False):
     if not code:
-        path = os.path.abspath(path)
+        path = os.path.realpath(path)
     o = [''.join(_CHARACTER_MAP.get(i, i) for i in w) for w in _splitpath(path)]
     o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
     return o
