@@ -397,6 +397,9 @@ class SubprocSpec:
             Handle to captured stdin
         captured_stderr : file-like
             Handle to captured stderr
+        stack : list of FrameInfo namedtuples or None
+            The stack of the call-site of alias, if the alias requires it.
+            None otherwise.
         """
         self._stdin = self._stdout = self._stderr = None
         # args
@@ -417,6 +420,7 @@ class SubprocSpec:
         self.last_in_pipeline = False
         self.captured_stdout = None
         self.captured_stderr = None
+        self.stack = None
 
     def __str__(self):
         s = self.__class__.__name__ + '(' + str(self.cmd) + ', '
@@ -577,6 +581,7 @@ class SubprocSpec:
         spec.resolve_auto_cd()
         spec.resolve_executable_commands()
         spec.resolve_alias_cls()
+        spec.resolve_stack()
         return spec
 
     def redirect_leading(self):
@@ -665,6 +670,23 @@ class SubprocSpec:
         # also check capturability, while we are here
         cpable = getattr(alias, '__xonsh_capturable__', self.captured)
         self.captured = cpable
+
+    def resolve_stack(self):
+        """Computes the stack for a callable alias's call-site, if needed."""
+        if not callable(self.alias):
+            return
+        # check that we actual need the stack
+        sig = inspect.signature(self.alias)
+        if len(sig.parameters) <= 5 and 'stack' not in sig.parameters:
+            return
+        # compute the stack, and filter out these build methods
+        # run_subproc() is the 4th command in the stack
+        # we want to filter out one up, e.g. subproc_captured_hiddenobject()
+        # after that the stack from the call site starts.
+        stack = inspect.stack(context=0)
+        assert stack[3][3] == 'run_subproc', 'xonsh stack has changed!'
+        del stack[:5]
+        self.stack = stack
 
 
 def _safe_pipe_properties(fd, use_tty=False):
