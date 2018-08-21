@@ -1,4 +1,3 @@
-import inspect
 import builtins
 import collections
 
@@ -38,7 +37,7 @@ def _add_one_completer(name, func, loc='end'):
     builtins.__xonsh_completers__.update(new)
 
 
-def _list_completers(args, stdin=None):
+def _list_completers(args, stdin=None, stack=None):
     o = "Registered Completer Functions: \n"
     _comp = builtins.__xonsh_completers__
     ml = max((len(i) for i in _comp), default=0)
@@ -53,7 +52,7 @@ def _list_completers(args, stdin=None):
     return o + '\n'.join(_strs) + '\n'
 
 
-def _remove_completer(args, stdin=None):
+def _remove_completer(args, stdin=None, stack=None):
     err = None
     if len(args) != 1:
         err = "completer remove takes exactly 1 argument."
@@ -69,7 +68,7 @@ def _remove_completer(args, stdin=None):
         return None, err + '\n', 1
 
 
-def _register_completer(args, stdin=None):
+def _register_completer(args, stdin=None, stack=None):
     err = None
     if len(args) not in {2, 3}:
         err = ("completer add takes either 2 or 3 arguments.\n"
@@ -86,8 +85,7 @@ def _register_completer(args, stdin=None):
                 if not callable(func):
                     err = "%s is not callable" % func_name
             else:
-                print(inspect.stack(context=0))
-                for frame_info in inspect.stack(context=0):
+                for frame_info in stack:
                     frame = frame_info[0]
                     if func_name in frame.f_locals:
                         func = frame.f_locals[func_name]
@@ -104,7 +102,8 @@ def _register_completer(args, stdin=None):
         return None, err + '\n', 1
 
 
-def completer_alias(args, stdin=None):
+def completer_alias(args, stdin=None, stdout=None, stderr=None, spec=None,
+                    stack=None):
     err = None
     if len(args) == 0 or args[0] not in (VALID_ACTIONS | {'help'}):
         err = ('Please specify an action.  Valid actions are: '
@@ -129,7 +128,7 @@ def completer_alias(args, stdin=None):
         func = _remove_completer
     elif args[0] == 'list':
         func = _list_completers
-    return func(args[1:], stdin=stdin)
+    return func(args[1:], stdin=stdin, stack=stack)
 
 COMPLETER_LIST_HELP_STR = """completer list: ordered list the active completers
 

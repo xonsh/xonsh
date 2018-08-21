@@ -1202,7 +1202,7 @@ may have one of the following signatures:
         return 0
 
     def mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
-        """Lastly, the final form of subprocess callables takes all of the
+        """This form of subprocess callables takes all of the
         arguments shown above as well as a subprocess specification
         SubprocSpec object. This holds many attributes that dictate how
         the command is being run.  For instance this can be useful for
@@ -1216,6 +1216,24 @@ may have one of the following signatures:
         # Now we'll get a newline if the user is at the terminal, and no
         # newline if we are captured
         print('Hi Mom!', end=end)
+        return 0
+
+    def mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        """Lastly, the final form of subprocess callables takes a stack argument
+        in addition to the arguments shown above. The stack is a list of
+        FrameInfo namedtuple objects, as described in the standard library
+        inspect module. The stack is computed such the the call site is the
+        first and innermost entry, while the outer frame is the last entry.
+
+        The stack is only computed if the alias has a "stack" argument.
+        However, the stack is also accessible as "spec.stack".
+        """
+        for frame_info in stack:
+            frame = frame_info[0]
+            print('In function ' + frame_info[3])
+            print('  locals', frame.f_locals)
+            print('  globals', frame.f_globals)
+            print('\n')
         return 0
 
 
