@@ -918,13 +918,20 @@ class Env(cabc.MutableMapping):
             old[k] = self.get(k, NotImplemented)
             self[k] = v
 
-        yield self
-        # restore the values
-        for k, v in old.items():
-            if v is NotImplemented:
-                del self[k]
-            else:
-                self[k] = v
+        exception = None
+        try:
+            yield self
+        except Exception as exception:
+            pass
+        finally:
+            # restore the values
+            for k, v in old.items():
+                if v is NotImplemented:
+                    del self[k]
+                else:
+                    self[k] = v
+            if exception is not None:
+                raise exception from None
 
     #
     # Mutable mapping interface
