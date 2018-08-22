@@ -14,7 +14,7 @@ except ImportError:
     from xonsh.ply.ply import yacc
 
 from xonsh import ast
-from xonsh.ast import has_elts, xonsh_call
+from xonsh.ast import has_elts, xonsh_call, load_attribute_chain
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath, StringPrefix
@@ -142,8 +142,7 @@ def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
     else:
         func = '__xonsh__.regexsearch'
         pathobj = 'p' in searchfunc
-    func = ast.Name(id=func, ctx=ast.Load(), lineno=lineno,
-                    col_offset=col)
+    func = load_attribute_chain(func, lineno=lineno, col=col)
     pathobj = ast.NameConstant(value=pathobj, lineno=lineno, col_offset=col)
     return xonsh_call('__xonsh__.pathsearch', args=[func, pattern, pymode, pathobj],
                       lineno=lineno, col=col)
@@ -2437,7 +2436,7 @@ class BaseParser(object):
         if lenp == 3:  # $NAME
             p0 = self._envvar_by_name(p2, lineno=lineno, col=col)
         elif p1 == '${':
-            xenv = self._xenv(lineno=lineno, col=col)
+            xenv = load_attribute_chain('__xonsh__.env', lineno=lineno, col=col)
             idx = ast.Index(value=p2)
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                                lineno=lineno, col_offset=col)
@@ -2457,13 +2456,8 @@ class BaseParser(object):
             assert False
         return p0
 
-    def _xenv(self, lineno=lineno, col=col):
-        """Creates a new xonsh env reference."""
-        return ast.Name(id='__xonsh__.env', ctx=ast.Load(),
-                        lineno=lineno, col_offset=col)
-
     def _envvar_getter_by_name(self, var, lineno=None, col=None):
-        xenv = self._xenv(lineno=lineno, col=col)
+        xenv = load_attribute_chain('__xonsh__.env', lineno=lineno, col=col)
         func = ast.Attribute(value=xenv, attr='get', ctx=ast.Load(),
                              lineno=lineno, col_offset=col)
         return ast.Call(func=func,
@@ -2474,7 +2468,7 @@ class BaseParser(object):
 
     def _envvar_by_name(self, var, lineno=None, col=None):
         """Looks up a xonsh variable by name."""
-        xenv = self._xenv(lineno=lineno, col=col)
+        xenv = load_attribute_chain('__xonsh__.env', lineno=lineno, col=col)
         idx = ast.Index(value=ast.Str(s=var, lineno=lineno, col_offset=col))
         return ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                              lineno=lineno, col_offset=col)
@@ -2627,7 +2621,7 @@ class BaseParser(object):
         """subproc_atom : dollar_lbrace_tok test RBRACE"""
         p1 = p[1]
         lineno, col = p1.lineno, p1.lexpos
-        xenv = self._xenv(lineno=lineno, col=col)
+        xenv = load_attribute_chain('__xonsh__.env', lineno=lineno, col=col)
         func = ast.Attribute(value=xenv, attr='get', ctx=ast.Load(),
                              lineno=lineno, col_offset=col)
         p0 = ast.Call(func=func, args=[p[2], ast.Str(s='', lineno=lineno,
