@@ -187,6 +187,7 @@ def DEFAULT_ENSURERS():
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_BACKEND': (is_history_backend, to_itself, ensure_string),
     'XONSH_HISTORY_FILE': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_MATCH_ANYWHERE': (is_bool, to_bool, bool_to_str),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_PROC_FREQUENCY': (is_float, float, str),
@@ -348,6 +349,7 @@ def DEFAULT_VALUES():
         'XONSH_ENCODING_ERRORS': 'surrogateescape',
         'XONSH_HISTORY_BACKEND': 'json',
         'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
+        'XONSH_HISTORY_MATCH_ANYWHERE': False,
         'XONSH_HISTORY_SIZE': (8128, 'commands'),
         'XONSH_LOGIN': False,
         'XONSH_PROC_FREQUENCY': 1e-4,
@@ -721,6 +723,10 @@ def DEFAULT_DOCS():
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),
+    'XONSH_HISTORY_MATCH_ANYWHERE': VarDocs(
+        "When searching history from a partial string (by pressing up arrow), "
+        "match command history anywhere in a given line (not just the start)",
+        default="False"),
     'XONSH_HISTORY_SIZE': VarDocs(
         'Value and units tuple that sets the size of history after garbage '
         'collection. Canonical units are:\n\n'

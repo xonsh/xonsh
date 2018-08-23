@@ -2,6 +2,7 @@
 """The prompt_toolkit based xonsh shell."""
 import sys
 import builtins
+from types import MethodType
 
 from xonsh.events import events
 from xonsh.base_shell import BaseShell
@@ -11,7 +12,7 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.pygments_cache import get_all_styles
-from xonsh.ptk2.history import PromptToolkitHistory
+from xonsh.ptk2.history import PromptToolkitHistory, _cust_history_matches
 from xonsh.ptk2.completer import PromptToolkitCompleter
 from xonsh.ptk2.key_bindings import load_xonsh_bindings
 
@@ -58,6 +59,8 @@ class PromptToolkit2Shell(BaseShell):
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = KeyBindings()
         load_xonsh_bindings(self.key_bindings)
+        # Store original `_history_matches` in case we need to restore it
+        self._history_matches_orig = self.prompter.default_buffer._history_matches
         # This assumes that PromptToolkit2Shell is a singleton
         events.on_ptk_create.fire(
             prompter=self.prompter,
@@ -100,6 +103,15 @@ class PromptToolkit2Shell(BaseShell):
             editing_mode = EditingMode.VI
         else:
             editing_mode = EditingMode.EMACS
+
+        if env.get('XONSH_HISTORY_MATCH_ANYWHERE'):
+            self.prompter.default_buffer._history_matches = MethodType(
+                _cust_history_matches,
+                self.prompter.default_buffer
+            )
+        elif (self.prompter.default_buffer._history_matches is not
+              self._history_matches_orig):
+            self.prompter.default_buffer._history_matches = self._history_matches_orig
 
         prompt_args = {
             'mouse_support': mouse_support,
