@@ -39,3 +39,13 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
 
     def __iter__(self):
         return iter(self.get_strings())
+
+
+def _cust_history_matches(self, i):
+    """Custom history search method for prompt_toolkit that matches previous
+    commands anywhere on a line, not just at the start.
+
+    This gets monkeypatched into the prompt_toolkit prompter if
+    ``XONSH_HISTORY_MATCH_ANYWHERE=True``"""
+    return (self.history_search_text is None or
+            self.history_search_text in self._working_lines[i])
