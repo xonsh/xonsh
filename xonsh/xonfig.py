@@ -654,6 +654,7 @@ def TAGLINES():
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
         "This fix was trickier than expected",
+        "The unholy cross of Bash/Python",
     ]
 
 
