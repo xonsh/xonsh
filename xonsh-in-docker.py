@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description=program_description)
 parser.add_argument('env', nargs='*', default=[], metavar='ENV=value')
 parser.add_argument('--python', '-p', default='3.4', metavar='python_version')
 parser.add_argument('--pypy', default=None, metavar='pypy_version')
-parser.add_argument('--ptk', '-t', default='1.0.15', metavar='ptk_version')
+parser.add_argument('--ptk', '-t', default='2.0.4', metavar='ptk_version')
 parser.add_argument('--keep', action='store_true')
 parser.add_argument('--build', action='store_true')
 parser.add_argument('--command', '-c', default='xonsh',
