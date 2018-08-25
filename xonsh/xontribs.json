@@ -4,6 +4,11 @@
   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
   "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
  },
+ {"name": "autojump",
+  "package": "xontrib-autojump",
+  "url": "https://github.com/gsaga/autojump-xonsh",
+  "description": ["autojump support for xonsh"]
+ },
  {"name": "autoxsh",
   "package": "xonsh-autoxsh",
   "url": "https://github.com/Granitas/xonsh-autoxsh",
