@@ -235,7 +235,7 @@ class Vox(collections.abc.Mapping):
         """
         bin_, lib, inc = _subdir_names()
         for dirpath, dirnames, filenames in os.walk(self.venvdir):
-            if 'pyvenv.conf' in filenames:
+            if 'pyvenv.cfg' in filenames:
                 yield dirpath[len(self.venvdir) + 1:]  # +1 is to remove the separator
                 dirnames.clear()
 
