@@ -10,7 +10,8 @@ parser = argparse.ArgumentParser(description=program_description)
 
 parser.add_argument('env', nargs='*', default=[], metavar='ENV=value')
 parser.add_argument('--python', '-p', default='3.4', metavar='python_version')
-parser.add_argument('--ptk', '-t', default='1.00', metavar='ptk_version')
+parser.add_argument('--pypy', default=None, metavar='pypy_version')
+parser.add_argument('--ptk', '-t', default='2.0.4', metavar='ptk_version')
 parser.add_argument('--keep', action='store_true')
 parser.add_argument('--build', action='store_true')
 parser.add_argument('--command', '-c', default='xonsh',
@@ -31,6 +32,22 @@ RUN python setup.py install
 """.format(
     python_version=args.python,
     ptk_version=args.ptk)
+
+if args.pypy:
+    docker_script = """
+from pypy:{python_version}
+RUN pypy3 -m ensurepip
+RUN pip install --upgrade pip && pip install \\
+  ply \\
+  prompt-toolkit=={ptk_version} \\
+  pygments
+RUN mkdir /xonsh
+WORKDIR /xonsh
+ADD ./ ./
+RUN pypy3 setup.py install
+    """.format(
+        python_version=args.pypy,
+        ptk_version=args.ptk)
 
 print('Building and running Xonsh')
 print('Using python ', args.python)
