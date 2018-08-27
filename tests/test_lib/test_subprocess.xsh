@@ -1,7 +1,10 @@
+"""Tests for subprocess lib"""
 import tempfile
 
 from xonsh.lib.os import indir
-from xonsh.lib.subprocess import run, check_call, check_output
+from xonsh.lib.subprocess import run, check_call, check_output, CalledProcessError
+
+from tools import skip_if_on_windows
 
 
 def test_run():
@@ -26,6 +29,16 @@ def test_check_call():
             assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
 
 
+@skip_if_on_windows
+def test_check_call_raises():
+    try:
+        check_call('false')
+        got_raise = False
+    except CalledProcessError:
+        got_raise = True
+    assert got_raise
+
+
 def test_check_output():
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
@@ -36,3 +49,4 @@ def test_check_output():
             p = check_output(['touch', 'hello.txt'], cwd='tst_dir')
             assert p.decode('utf-8') == ''
             assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
+

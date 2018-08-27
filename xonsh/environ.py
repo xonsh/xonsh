@@ -927,8 +927,8 @@ class Env(cabc.MutableMapping):
         exception = None
         try:
             yield self
-        except Exception as exception:
-            pass
+        except Exception as e:
+            exception = e
         finally:
             # restore the values
             for k, v in old.items():
