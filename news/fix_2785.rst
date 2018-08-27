@@ -1,0 +1,13 @@
+**Added:** None
+
+**Changed:**
+
+* Improved iteration over virtual environments in Vox.__iter__
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
