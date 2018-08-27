@@ -162,7 +162,6 @@ class Execer(object):
                              last_error_col, mstr, line, sbpline)
             print(msg, file=sys.stderr)
 
-
     def _parse_ctx_free(self, input, mode='exec', filename=None, logical_input=False):
         last_error_line = last_error_col = -1
         parsed = False
