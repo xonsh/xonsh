@@ -151,7 +151,18 @@ class Execer(object):
             return None  # handles comment only input
         return exec(code, glbs, locs)
 
-    def _parse_ctx_free(self, input, mode='exec', filename=None):
+    def _print_debug_wrapping(self, line, sbpline, last_error_line, last_error_col,
+                              maxcol=None):
+        """print some debugging info if asked for."""
+        if self.debug_level > 1:
+            msg = ('{0}:{1}:{2}{3} - {4}\n'
+                   '{0}:{1}:{2}{3} + {5}')
+            mstr = '' if maxcol is None else ':' + str(maxcol)
+            msg = msg.format(self.filename, last_error_line,
+                             last_error_col, mstr, line, sbpline)
+            print(msg, file=sys.stderr)
+
+    def _parse_ctx_free(self, input, mode='exec', filename=None, logical_input=False):
         last_error_line = last_error_col = -1
         parsed = False
         original_error = None
@@ -184,6 +195,16 @@ class Execer(object):
                 idx = last_error_line - 1
                 lines = input.splitlines()
                 line, nlogical, idx = get_logical_line(lines, idx)
+                if nlogical > 1 and not logical_input:
+                    _, sbpline = self._parse_ctx_free(line, mode=mode,
+                                                      filename=filename,
+                                                      logical_input=True)
+                    self._print_debug_wrapping(line, sbpline, last_error_line,
+                                               last_error_col, maxcol=None)
+                    replace_logical_line(lines, sbpline, idx, nlogical)
+                    last_error_col += 3
+                    input = '\n'.join(lines)
+                    continue
                 if input.endswith('\n'):
                     lines.append('')
                 if len(line.strip()) == 0:
@@ -239,17 +260,10 @@ class Execer(object):
                         continue
                     else:
                         raise original_error
-                else:
-                    # print some debugging info
-                    if self.debug_level > 1:
-                        msg = ('{0}:{1}:{2}{3} - {4}\n'
-                               '{0}:{1}:{2}{3} + {5}')
-                        mstr = '' if maxcol is None else ':' + str(maxcol)
-                        msg = msg.format(self.filename, last_error_line,
-                                         last_error_col, mstr, line, sbpline)
-                        print(msg, file=sys.stderr)
-                    # replace the line
-                    replace_logical_line(lines, sbpline, idx, nlogical)
+                # replace the line
+                self._print_debug_wrapping(line, sbpline, last_error_line,
+                                           last_error_col, maxcol=maxcol)
+                replace_logical_line(lines, sbpline, idx, nlogical)
                 last_error_col += 3
                 input = '\n'.join(lines)
         return tree, input

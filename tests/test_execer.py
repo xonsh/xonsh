@@ -121,4 +121,10 @@ def test_echo_line_cont():
     code = 'echo "1 \\\n2"\n'
     assert check_parse(code)
 
-
+@pytest.mark.parametrize('code', [
+    "echo a and \\\necho b\n",
+    "echo a \\\n or echo b\n",
+    "echo a \\\n or echo b and \\\n echo c\n",
+])
+def test_two_echo_line_cont(code):
+    assert check_parse(code)
