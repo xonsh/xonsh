@@ -2,9 +2,10 @@
 """Key bindings for prompt_toolkit xonsh shell."""
 import builtins
 
+from prompt_toolkit import search
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection,
-                                    EmacsInsertMode, ViInsertMode)
+                                    EmacsInsertMode, ViInsertMode, IsSearching)
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.application.current import get_app
 
@@ -338,6 +339,11 @@ def load_xonsh_bindings(key_bindings):
         relative_begin_index = b.document.get_start_of_line_position()
         b.cursor_left(count=abs(relative_begin_index))
         b.cursor_down(count=1)
+
+    @handle(Keys.ControlM, filter=IsSearching())
+    @handle(Keys.ControlJ, filter=IsSearching())
+    def accept_search(event):
+        search.accept_search()
 
     @handle(Keys.ControlI, filter=insert_mode)
     def generate_completions(event):
