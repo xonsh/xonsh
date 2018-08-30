@@ -344,34 +344,3 @@ def load_xonsh_bindings(key_bindings):
     @handle(Keys.ControlJ, filter=IsSearching())
     def accept_search(event):
         search.accept_search()
-
-    @handle(Keys.ControlI, filter=insert_mode)
-    def generate_completions(event):
-        """
-        Tab-completion: where the first tab completes the common suffix and the
-        second tab lists all the completions.
-
-        Notes
-        -----
-        This method was forked from the mainline prompt-toolkit repo.
-        Copyright (c) 2014, Jonathan Slenders, All rights reserved.
-        """
-        b = event.current_buffer
-
-        try:
-            start_completion = event.cli.start_completion
-        except AttributeError:  # PTK 2.0
-            start_completion = event.current_buffer.start_completion
-
-        def second_tab():
-            if b.complete_state:
-                b.complete_next()
-            else:
-                start_completion(select_first=False)
-
-        # On the second tab-press, or when already navigating through
-        # completions.
-        if event.is_repeat or b.complete_state:
-            second_tab()
-        else:
-            start_completion(insert_common_part=True, select_first=False)
