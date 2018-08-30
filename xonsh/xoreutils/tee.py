@@ -3,14 +3,14 @@
 
 def tee(args, stdin, stdout, stderr):
     """A tee command for xonsh."""
-    mode = 'w'
-    if '-a' in args:
-        args.remove('-a')
-        mode = 'a'
-    if '--append' in args:
-        args.remove('--append')
-        mode = 'a'
-    if '--help' in args:
+    mode = "w"
+    if "-a" in args:
+        args.remove("-a")
+        mode = "a"
+    if "--append" in args:
+        args.remove("--append")
+        mode = "a"
+    if "--help" in args:
         print(TEE_HELP, file=stdout)
         return 0
     if stdin is None:
@@ -21,19 +21,19 @@ def tee(args, stdin, stdout, stderr):
     errors = False
     files = []
     for i in args:
-        if i == '-':
+        if i == "-":
             files.append(stdout)
         else:
             try:
                 files.append(open(i, mode))
             except:
-                print('tee: failed to open {}'.format(i), file=stderr)
+                print("tee: failed to open {}".format(i), file=stderr)
                 errors = True
     files.append(stdout)
 
     while True:
         r = stdin.read(1024)
-        if r == '':
+        if r == "":
             break
         for i in files:
             i.write(r)

@@ -4,11 +4,11 @@ import os
 
 def pwd(args, stdin, stdout, stderr):
     """A pwd implementation"""
-    e = __xonsh_env__['PWD']
-    if '-h' in args or '--help' in args:
+    e = __xonsh_env__["PWD"]
+    if "-h" in args or "--help" in args:
         print(PWD_HELP, file=stdout)
         return 0
-    if '-P' in args:
+    if "-P" in args:
         e = os.path.realpath(e)
     print(e, file=stdout)
     return 0

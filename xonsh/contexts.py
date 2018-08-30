@@ -10,6 +10,7 @@ class Block(object):
     executing the block. The lines are accessible as the 'lines' attribute.
     This must be used as a macro.
     """
+
     __xonsh_block__ = str
 
     def __init__(self):
@@ -26,9 +27,8 @@ class Block(object):
         self.lines = self.glbs = self.locs = None
 
     def __enter__(self):
-        if not hasattr(self, 'macro_block'):
-            raise XonshError(self.__class__.__name__ +
-                             ' must be entered as a macro!')
+        if not hasattr(self, "macro_block"):
+            raise XonshError(self.__class__.__name__ + " must be entered as a macro!")
         self.lines = self.macro_block.splitlines()
         self.glbs = self.macro_globals
         if self.macro_locals is not self.macro_globals:
@@ -45,7 +45,7 @@ class Functor(Block):
     object, bound to the execution context it was created in.
     """
 
-    def __init__(self, args=(), kwargs=None, rtn=''):
+    def __init__(self, args=(), kwargs=None, rtn=""):
         """
         Parameters
         ----------
@@ -75,21 +75,21 @@ class Functor(Block):
 
     def __enter__(self):
         super().__enter__()
-        body = textwrap.indent(self.macro_block, '    ')
+        body = textwrap.indent(self.macro_block, "    ")
         uid = hash(body) + sys.maxsize  # should always be a positive int
-        name = '__xonsh_functor_{uid}__'.format(uid=uid)
+        name = "__xonsh_functor_{uid}__".format(uid=uid)
         # construct signature string
-        sig = rtn = ''
-        sig = ', '.join(self.args)
-        kwstr = ', '.join([k + '=None' for k, _ in self.kwargs])
+        sig = rtn = ""
+        sig = ", ".join(self.args)
+        kwstr = ", ".join([k + "=None" for k, _ in self.kwargs])
         if len(kwstr) > 0:
-            sig = kwstr if len(sig) == 0 else sig + ', ' + kwstr
+            sig = kwstr if len(sig) == 0 else sig + ", " + kwstr
         # construct return string
         rtn = str(self.rtn)
         if len(rtn) > 0:
-            rtn = '    return ' + rtn + '\n'
+            rtn = "    return " + rtn + "\n"
         # construct function string
-        fstr = 'def {name}({sig}):\n{body}\n{rtn}'
+        fstr = "def {name}({sig}):\n{body}\n{rtn}"
         fstr = fstr.format(name=name, sig=sig, body=body, rtn=rtn)
         glbs = self.glbs
         locs = self.locs
@@ -100,7 +100,7 @@ class Functor(Block):
         elif name in glbs:
             func = glbs[name]
         else:
-            raise ValueError('Functor block could not be found in context.')
+            raise ValueError("Functor block could not be found in context.")
         if len(self.kwargs) > 0:
             func.__defaults__ = tuple(v for _, v in self.kwargs)
         self.func = func

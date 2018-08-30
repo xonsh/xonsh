@@ -7,9 +7,15 @@ from xonsh.parsers.base import BaseParser
 class Parser(BaseParser):
     """A Python v3.4 compliant parser for the xonsh language."""
 
-    def __init__(self, lexer_optimize=True, lexer_table='xonsh.lexer_table',
-                 yacc_optimize=True, yacc_table='xonsh.parser_table',
-                 yacc_debug=False, outputdir=None):
+    def __init__(
+        self,
+        lexer_optimize=True,
+        lexer_table="xonsh.lexer_table",
+        yacc_optimize=True,
+        yacc_table="xonsh.parser_table",
+        yacc_debug=False,
+        outputdir=None,
+    ):
         """Parameters
         ----------
         lexer_optimize : bool, optional
@@ -26,18 +32,22 @@ class Parser(BaseParser):
             The directory to place generated tables within.
         """
         # Rule creation and modification *must* take place before super()
-        opt_rules = ['argument_comma_list', 'comma_argument_list']
+        opt_rules = ["argument_comma_list", "comma_argument_list"]
         for rule in opt_rules:
             self._opt_rule(rule)
 
-        list_rules = ['argument_comma']
+        list_rules = ["argument_comma"]
         for rule in list_rules:
             self._list_rule(rule)
 
-        super().__init__(lexer_optimize=lexer_optimize,
-                         lexer_table=lexer_table, yacc_optimize=yacc_optimize,
-                         yacc_table=yacc_table, yacc_debug=yacc_debug,
-                         outputdir=outputdir)
+        super().__init__(
+            lexer_optimize=lexer_optimize,
+            lexer_table=lexer_table,
+            yacc_optimize=yacc_optimize,
+            yacc_table=yacc_table,
+            yacc_debug=yacc_debug,
+            outputdir=outputdir,
+        )
 
     def p_classdef_or_funcdef(self, p):
         """classdef_or_funcdef : classdef
@@ -58,11 +68,11 @@ class Parser(BaseParser):
 
     def _set_arg(self, args, arg, ensure_kw=False):
         if isinstance(arg, ast.keyword):
-            args['keywords'].append(arg)
+            args["keywords"].append(arg)
         elif ensure_kw:
-            args['kwargs'] = arg
+            args["kwargs"] = arg
         else:
-            args['args'].append(arg)
+            args["args"].append(arg)
 
     def p_arglist(self, p):
         """arglist : argument comma_opt
@@ -74,20 +84,20 @@ class Parser(BaseParser):
         """
         lenp = len(p)
         p1, p2 = p[1], p[2]
-        p0 = {'args': [], 'keywords': [], 'starargs': None, 'kwargs': None}
+        p0 = {"args": [], "keywords": [], "starargs": None, "kwargs": None}
         if lenp == 3:
             self._set_arg(p0, p1)
-        elif lenp == 4 and p2 != '**':
+        elif lenp == 4 and p2 != "**":
             for arg in p1:
                 self._set_arg(p0, arg)
             self._set_arg(p0, p2)
-        elif lenp == 4 and p2 == '**':
+        elif lenp == 4 and p2 == "**":
             if p1 is not None:
                 for arg in p1:
                     self._set_arg(p0, arg)
             self._set_arg(p0, p[3], ensure_kw=True)
         elif lenp == 5:
-            p0['starargs'], p4 = p[3], p[4]
+            p0["starargs"], p4 = p[3], p[4]
             if p1 is not None:
                 for arg in p1:
                     self._set_arg(p0, arg)
@@ -95,13 +105,13 @@ class Parser(BaseParser):
                 for arg in p4:
                     self._set_arg(p0, arg, ensure_kw=True)
         elif lenp == 7:
-            p0['starargs'] = p[3]
+            p0["starargs"] = p[3]
             if p1 is not None:
                 for arg in p1:
                     self._set_arg(p0, arg)
             self._set_arg(p0, p[6], ensure_kw=True)
         elif lenp == 8:
-            p0['starargs'], p4 = p[3], p[4]
+            p0["starargs"], p4 = p[3], p[4]
             if p1 is not None:
                 for arg in p1:
                     self._set_arg(p0, arg)
@@ -129,14 +139,17 @@ class Parser(BaseParser):
         if lenp == 2:
             p0 = p1
         elif lenp == 3:
-            if p1 == '**':
+            if p1 == "**":
                 p0 = ast.keyword(arg=None, value=p[2])
-            elif p1 == '*':
+            elif p1 == "*":
                 p0 = ast.Starred(value=p[2])
             else:
-                p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
-                                      lineno=p1.lineno,
-                                      col_offset=p1.col_offset)
+                p0 = ast.GeneratorExp(
+                    elt=p1,
+                    generators=p[2]["comps"],
+                    lineno=p1.lineno,
+                    col_offset=p1.col_offset,
+                )
         elif lenp == 4:
             p0 = ast.keyword(arg=p1.id, value=p[3])
         else:

@@ -29,13 +29,13 @@ def _uptime_osx():
     global _BOOTTIME
     bt = xlimps.macutils.sysctlbyname(b"kern.boottime", return_str=False)
     if len(bt) == 4:
-        bt = struct.unpack_from('@hh', bt)
+        bt = struct.unpack_from("@hh", bt)
     elif len(bt) == 8:
-        bt = struct.unpack_from('@ii', bt)
+        bt = struct.unpack_from("@ii", bt)
     elif len(bt) == 16:
-        bt = struct.unpack_from('@qq', bt)
+        bt = struct.unpack_from("@qq", bt)
     else:
-        raise ValueError('length of boot time not understood: ' + repr(bt))
+        raise ValueError("length of boot time not understood: " + repr(bt))
     bt = bt[0] + bt[1] * 1e-6
     if bt == 0.0:
         return None
@@ -47,7 +47,7 @@ def _uptime_linux():
     """Returns uptime in seconds or None, on Linux."""
     # With procfs
     try:
-        with open('/proc/uptime', 'r') as f:
+        with open("/proc/uptime", "r") as f:
             up = float(f.readline().split()[0])
         return up
     except (IOError, ValueError):
@@ -55,7 +55,7 @@ def _uptime_linux():
     buf = ctypes.create_string_buffer(128)  # 64 suffices on 32-bit, whatever.
     if xp.LIBC.sysinfo(buf) < 0:
         return None
-    up = struct.unpack_from('@l', buf.raw)[0]
+    up = struct.unpack_from("@l", buf.raw)[0]
     if up < 0:
         up = None
     return up
@@ -65,9 +65,9 @@ def _boottime_linux():
     """A way to figure out the boot time directly on Linux."""
     global _BOOTTIME
     try:
-        with open('/proc/stat', 'r') as f:
+        with open("/proc/stat", "r") as f:
             for line in f:
-                if line.startswith('btime'):
+                if line.startswith("btime"):
                     _BOOTTIME = float(line.split()[1])
         return _BOOTTIME
     except (IOError, IndexError):
@@ -78,7 +78,7 @@ def _uptime_amiga():
     """Returns uptime in seconds or None, on AmigaOS."""
     global _BOOTTIME
     try:
-        _BOOTTIME = os.stat('RAM:').st_ctime
+        _BOOTTIME = os.stat("RAM:").st_ctime
         return time.time() - _BOOTTIME
     except (NameError, OSError):
         return None
@@ -86,7 +86,7 @@ def _uptime_amiga():
 
 def _uptime_beos():
     """Returns uptime in seconds on None, on BeOS/Haiku."""
-    if not hasattr(xp.LIBC, 'system_time'):
+    if not hasattr(xp.LIBC, "system_time"):
         return None
     xp.LIBC.system_time.restype = ctypes.c_int64
     return xp.LIBC.system_time() / 1000000.
@@ -95,19 +95,19 @@ def _uptime_beos():
 def _uptime_bsd():
     """Returns uptime in seconds or None, on BSD (including OS X)."""
     global _BOOTTIME
-    if not hasattr(xp.LIBC, 'sysctlbyname'):
+    if not hasattr(xp.LIBC, "sysctlbyname"):
         # Not BSD.
         return None
     # Determine how much space we need for the response.
     sz = ctypes.c_uint(0)
-    xp.LIBC.sysctlbyname('kern.boottime', None, ctypes.byref(sz), None, 0)
-    if sz.value != struct.calcsize('@LL'):
+    xp.LIBC.sysctlbyname("kern.boottime", None, ctypes.byref(sz), None, 0)
+    if sz.value != struct.calcsize("@LL"):
         # Unexpected, let's give up.
         return None
     # For real now.
     buf = ctypes.create_string_buffer(sz.value)
-    xp.LIBC.sysctlbyname('kern.boottime', buf, ctypes.byref(sz), None, 0)
-    sec, usec = struct.unpack_from('@LL', buf.raw)
+    xp.LIBC.sysctlbyname("kern.boottime", buf, ctypes.byref(sz), None, 0)
+    sec, usec = struct.unpack_from("@LL", buf.raw)
     # OS X disagrees what that second value is.
     if usec > 1000000:
         usec = 0.
@@ -121,7 +121,7 @@ def _uptime_bsd():
 def _uptime_minix():
     """Returns uptime in seconds or None, on MINIX."""
     try:
-        with open('/proc/uptime', 'r') as f:
+        with open("/proc/uptime", "r") as f:
             up = float(f.read())
         return up
     except (IOError, ValueError):
@@ -139,7 +139,7 @@ def _uptime_plan9():
         # senting nanoseconds since start of epoch, clock ticks, and
         # clock frequency.
         #  -- cons(3)
-        with open('/dev/time', 'r') as f:
+        with open("/dev/time", "r") as f:
             s, ns, ct, cf = f.read().split()
         return float(ct) / float(cf)
     except (IOError, ValueError):
@@ -150,7 +150,7 @@ def _uptime_solaris():
     """Returns uptime in seconds or None, on Solaris."""
     global _BOOTTIME
     try:
-        kstat = ctypes.CDLL('libkstat.so')
+        kstat = ctypes.CDLL("libkstat.so")
     except (AttributeError, OSError):
         return None
 
@@ -159,35 +159,35 @@ def _uptime_solaris():
     # First, let's pretend to be kstat.h
 
     # Constant
-    KSTAT_STRLEN = 31   # According to every kstat.h I could find.
+    KSTAT_STRLEN = 31  # According to every kstat.h I could find.
 
     # Data structures
     class anon_union(ctypes.Union):
         # The ``value'' union in kstat_named_t actually has a bunch more
         # members, but we're only using it for boot_time, so we only need
         # the padding and the one we're actually using.
-        _fields_ = [('c', ctypes.c_char * 16),
-                    ('time', ctypes.c_int)]
+        _fields_ = [("c", ctypes.c_char * 16), ("time", ctypes.c_int)]
 
     class kstat_named_t(ctypes.Structure):
-        _fields_ = [('name', ctypes.c_char * KSTAT_STRLEN),
-                    ('data_type', ctypes.c_char),
-                    ('value', anon_union)]
+        _fields_ = [
+            ("name", ctypes.c_char * KSTAT_STRLEN),
+            ("data_type", ctypes.c_char),
+            ("value", anon_union),
+        ]
 
     # Function signatures
     kstat.kstat_open.restype = ctypes.c_void_p
     kstat.kstat_lookup.restype = ctypes.c_void_p
-    kstat.kstat_lookup.argtypes = [ctypes.c_void_p,
-                                   ctypes.c_char_p,
-                                   ctypes.c_int,
-                                   ctypes.c_char_p]
+    kstat.kstat_lookup.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_char_p,
+        ctypes.c_int,
+        ctypes.c_char_p,
+    ]
     kstat.kstat_read.restype = ctypes.c_int
-    kstat.kstat_read.argtypes = [ctypes.c_void_p,
-                                 ctypes.c_void_p,
-                                 ctypes.c_void_p]
+    kstat.kstat_read.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
     kstat.kstat_data_lookup.restype = ctypes.POINTER(kstat_named_t)
-    kstat.kstat_data_lookup.argtypes = [ctypes.c_void_p,
-                                        ctypes.c_char_p]
+    kstat.kstat_data_lookup.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 
     # Now, let's do something useful.
     # Initialise kstat control structure.
@@ -195,9 +195,9 @@ def _uptime_solaris():
     if not kc:
         return None
     # We're looking for unix:0:system_misc:boot_time.
-    ksp = kstat.kstat_lookup(kc, 'unix', 0, 'system_misc')
+    ksp = kstat.kstat_lookup(kc, "unix", 0, "system_misc")
     if ksp and kstat.kstat_read(kc, ksp, None) != -1:
-        data = kstat.kstat_data_lookup(ksp, 'boot_time')
+        data = kstat.kstat_data_lookup(ksp, "boot_time")
         if data:
             _BOOTTIME = data.contents.value.time
     # Clean-up.
@@ -211,7 +211,7 @@ def _uptime_syllable():
     """Returns uptime in seconds or None, on Syllable."""
     global _BOOTTIME
     try:
-        _BOOTTIME = os.stat('/dev/pty/mst/pty0').st_mtime
+        _BOOTTIME = os.stat("/dev/pty/mst/pty0").st_mtime
         return time.time() - _BOOTTIME
     except (NameError, OSError):
         return None
@@ -222,11 +222,11 @@ def _uptime_windows():
     Returns uptime in seconds or None, on Windows. Warning: may return
     incorrect answers after 49.7 days on versions older than Vista.
     """
-    if hasattr(xp.LIBC, 'GetTickCount64'):
+    if hasattr(xp.LIBC, "GetTickCount64"):
         # Vista/Server 2008 or later.
         xp.LIBC.GetTickCount64.restype = ctypes.c_uint64
         return xp.LIBC.GetTickCount64() / 1000.
-    if hasattr(xp.LIBC, 'GetTickCount'):
+    if hasattr(xp.LIBC, "GetTickCount"):
         # WinCE and Win2k or later; gives wrong answers after 49.7 days.
         xp.LIBC.GetTickCount.restype = ctypes.c_uint32
         return xp.LIBC.GetTickCount() / 1000.
@@ -235,20 +235,22 @@ def _uptime_windows():
 
 @xl.lazyobject
 def _UPTIME_FUNCS():
-    return {'amiga': _uptime_amiga,
-            'aros12': _uptime_amiga,
-            'beos5': _uptime_beos,
-            'cygwin': _uptime_linux,
-            'darwin': _uptime_osx,
-            'haiku1': _uptime_beos,
-            'linux': _uptime_linux,
-            'linux-armv71': _uptime_linux,
-            'linux2': _uptime_linux,
-            'minix3': _uptime_minix,
-            'sunos5': _uptime_solaris,
-            'syllable': _uptime_syllable,
-            'win32': _uptime_windows,
-            'wince': _uptime_windows}
+    return {
+        "amiga": _uptime_amiga,
+        "aros12": _uptime_amiga,
+        "beos5": _uptime_beos,
+        "cygwin": _uptime_linux,
+        "darwin": _uptime_osx,
+        "haiku1": _uptime_beos,
+        "linux": _uptime_linux,
+        "linux-armv71": _uptime_linux,
+        "linux2": _uptime_linux,
+        "minix3": _uptime_minix,
+        "sunos5": _uptime_solaris,
+        "syllable": _uptime_syllable,
+        "win32": _uptime_windows,
+        "wince": _uptime_windows,
+    }
 
 
 def uptime():
@@ -257,9 +259,17 @@ def uptime():
         return time.time() - _BOOTTIME
     up = _UPTIME_FUNCS.get(sys.platform, _uptime_bsd)()
     if up is None:
-        up = (_uptime_bsd() or _uptime_plan9() or _uptime_linux() or
-              _uptime_windows() or _uptime_solaris() or _uptime_beos() or
-              _uptime_amiga() or _uptime_syllable() or _uptime_osx())
+        up = (
+            _uptime_bsd()
+            or _uptime_plan9()
+            or _uptime_linux()
+            or _uptime_windows()
+            or _uptime_solaris()
+            or _uptime_beos()
+            or _uptime_amiga()
+            or _uptime_syllable()
+            or _uptime_osx()
+        )
     return up
 
 

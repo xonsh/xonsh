@@ -10,29 +10,31 @@ import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject
-from xonsh.platform import (FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN,
-                            ON_MSYS, LIBC)
+from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, ON_MSYS, LIBC
 from xonsh.tools import unthreadable
 
 
-tasks = LazyObject(collections.deque, globals(), 'tasks')
+tasks = LazyObject(collections.deque, globals(), "tasks")
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
 _last_exit_time = None
 
 
 if ON_DARWIN:
+
     def _send_signal(job, signal):
         # On OS X, os.killpg() may cause PermissionError when there are
         # any zombie processes in the process group.
         # See github issue #1012 for details
-        for pid in job['pids']:
+        for pid in job["pids"]:
             if pid is None:  # the pid of an aliased proc is None
                 continue
             try:
                 os.kill(pid, signal)
             except ProcessLookupError:
                 pass
+
+
 elif ON_WINDOWS:
     pass
 elif ON_CYGWIN or ON_MSYS:
@@ -40,33 +42,36 @@ elif ON_CYGWIN or ON_MSYS:
     # (see Github issue #514).
     def _send_signal(job, signal):
         try:
-            os.killpg(job['pgrp'], signal)
+            os.killpg(job["pgrp"], signal)
         except Exception:
-            for pid in job['pids']:
+            for pid in job["pids"]:
                 try:
                     os.kill(pid, signal)
                 except Exception:
                     pass
+
+
 else:
+
     def _send_signal(job, signal):
-        pgrp = job['pgrp']
+        pgrp = job["pgrp"]
         if pgrp is None:
-            for pid in job['pids']:
+            for pid in job["pids"]:
                 try:
                     os.kill(pid, signal)
                 except Exception:
                     pass
         else:
-            os.killpg(job['pgrp'], signal)
+            os.killpg(job["pgrp"], signal)
 
 
 if ON_WINDOWS:
+
     def _continue(job):
-        job['status'] = "running"
+        job["status"] = "running"
 
     def _kill(job):
-        subprocess.check_output(['taskkill', '/F', '/T', '/PID',
-                                 str(job['obj'].pid)])
+        subprocess.check_output(["taskkill", "/F", "/T", "/PID", str(job["obj"].pid)])
 
     def ignore_sigtstp():
         pass
@@ -84,7 +89,7 @@ if ON_WINDOWS:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        obj = active_task['obj']
+        obj = active_task["obj"]
         _continue(active_task)
         while obj.returncode is None:
             try:
@@ -95,7 +100,9 @@ if ON_WINDOWS:
                 _kill(active_task)
         return wait_for_active_job(last_task=active_task)
 
+
 else:
+
     def _continue(job):
         _send_signal(job, signal.SIGCONT)
 
@@ -107,18 +114,22 @@ else:
 
     _shell_pgrp = os.getpgrp()
 
-    _block_when_giving = LazyObject(lambda: (signal.SIGTTOU, signal.SIGTTIN,
-                                             signal.SIGTSTP, signal.SIGCHLD),
-                                    globals(), '_block_when_giving')
+    _block_when_giving = LazyObject(
+        lambda: (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP, signal.SIGCHLD),
+        globals(),
+        "_block_when_giving",
+    )
 
     if ON_CYGWIN or ON_MSYS:
         # on cygwin, signal.pthread_sigmask does not exist in Python, even
         # though pthread_sigmask is defined in the kernel.  thus, we use
         # ctypes to mimic the calls in the "normal" version below.
         LIBC.pthread_sigmask.restype = ctypes.c_int
-        LIBC.pthread_sigmask.argtypes = [ctypes.c_int,
-                                         ctypes.POINTER(ctypes.c_ulong),
-                                         ctypes.POINTER(ctypes.c_ulong)]
+        LIBC.pthread_sigmask.argtypes = [
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_ulong),
+            ctypes.POINTER(ctypes.c_ulong),
+        ]
 
         def _pthread_sigmask(how, signals):
             mask = 0
@@ -126,13 +137,18 @@ else:
                 mask |= 1 << sig
             oldmask = ctypes.c_ulong()
             mask = ctypes.c_ulong(mask)
-            result = LIBC.pthread_sigmask(how, ctypes.byref(mask),
-                                          ctypes.byref(oldmask))
+            result = LIBC.pthread_sigmask(
+                how, ctypes.byref(mask), ctypes.byref(oldmask)
+            )
             if result:
-                raise OSError(result, 'Sigmask error.')
+                raise OSError(result, "Sigmask error.")
 
-            return {sig for sig in getattr(signal, 'Signals', range(0, 65))
-                    if (oldmask.value >> sig) & 1}
+            return {
+                sig
+                for sig in getattr(signal, "Signals", range(0, 65))
+                if (oldmask.value >> sig) & 1
+            }
+
     else:
         _pthread_sigmask = signal.pthread_sigmask
 
@@ -176,16 +192,15 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        obj = active_task['obj']
+        obj = active_task["obj"]
         backgrounded = False
         try:
             _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         except ChildProcessError:  # No child processes
-            return wait_for_active_job(last_task=active_task,
-                                       backgrounded=backgrounded)
+            return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
         if os.WIFSTOPPED(wcode):
-            print('^Z')
-            active_task['status'] = "stopped"
+            print("^Z")
+            active_task["status"] = "stopped"
             backgrounded = True
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
@@ -194,8 +209,7 @@ else:
         else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
-        return wait_for_active_job(last_task=active_task,
-                                   backgrounded=backgrounded)
+        return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
 
 
 def get_next_task():
@@ -203,7 +217,7 @@ def get_next_task():
     selected_task = None
     for tid in tasks:
         task = get_task(tid)
-        if not task['bg'] and task['status'] == "running":
+        if not task["bg"] and task["status"] == "running":
             selected_task = tid
             break
     if selected_task is None:
@@ -220,7 +234,7 @@ def get_task(tid):
 def _clear_dead_jobs():
     to_remove = set()
     for tid in tasks:
-        obj = get_task(tid)['obj']
+        obj = get_task(tid)["obj"]
         if obj is None or obj.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
@@ -234,14 +248,13 @@ def print_one_job(num, outfile=sys.stdout):
         job = builtins.__xonsh_all_jobs__[num]
     except KeyError:
         return
-    pos = '+' if tasks[0] == num else '-' if tasks[1] == num else ' '
-    status = job['status']
-    cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
-    cmd = ' '.join(cmd)
-    pid = job['pids'][-1]
-    bg = ' &' if job['bg'] else ''
-    print('[{}]{} {}: {}{} ({})'.format(num, pos, status, cmd, bg, pid),
-          file=outfile)
+    pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
+    status = job["status"]
+    cmd = [" ".join(i) if isinstance(i, list) else i for i in job["cmds"]]
+    cmd = " ".join(cmd)
+    pid = job["pids"][-1]
+    bg = " &" if job["bg"] else ""
+    print("[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid), file=outfile)
 
 
 def get_next_job_number():
@@ -257,11 +270,11 @@ def get_next_job_number():
 def add_job(info):
     """Add a new job to the jobs dictionary."""
     num = get_next_job_number()
-    info['started'] = time.time()
-    info['status'] = "running"
+    info["started"] = time.time()
+    info["status"] = "running"
     tasks.appendleft(num)
     builtins.__xonsh_all_jobs__[num] = info
-    if info['bg'] and builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+    if info["bg"] and builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
         print_one_job(num)
 
 
@@ -274,7 +287,7 @@ def clean_jobs():
     warning if any exist, and return False. Otherwise, return True.
     """
     jobs_clean = True
-    if builtins.__xonsh_env__['XONSH_INTERACTIVE']:
+    if builtins.__xonsh_env__["XONSH_INTERACTIVE"]:
         _clear_dead_jobs()
 
         if builtins.__xonsh_all_jobs__:
@@ -285,8 +298,7 @@ def clean_jobs():
             else:
                 last_cmd_start = None
 
-            if (_last_exit_time and last_cmd_start and
-                    _last_exit_time > last_cmd_start):
+            if _last_exit_time and last_cmd_start and _last_exit_time > last_cmd_start:
                 # Exit occurred after last command started, so it was called as
                 # part of the last command and is now being called again
                 # immediately. Kill jobs and exit without reminder about
@@ -294,20 +306,22 @@ def clean_jobs():
                 kill_all_jobs()
             else:
                 if len(builtins.__xonsh_all_jobs__) > 1:
-                    msg = 'there are unfinished jobs'
+                    msg = "there are unfinished jobs"
                 else:
-                    msg = 'there is an unfinished job'
+                    msg = "there is an unfinished job"
 
-                if 'prompt_toolkit' not in builtins.__xonsh_env__['SHELL_TYPE']:
+                if "prompt_toolkit" not in builtins.__xonsh_env__["SHELL_TYPE"]:
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
-                print('xonsh: {}'.format(msg), file=sys.stderr)
-                print('-' * 5, file=sys.stderr)
+                print("xonsh: {}".format(msg), file=sys.stderr)
+                print("-" * 5, file=sys.stderr)
                 jobs([], stdout=sys.stderr)
-                print('-' * 5, file=sys.stderr)
-                print('Type "exit" or press "ctrl-d" again to force quit.',
-                      file=sys.stderr)
+                print("-" * 5, file=sys.stderr)
+                print(
+                    'Type "exit" or press "ctrl-d" again to force quit.',
+                    file=sys.stderr,
+                )
                 jobs_clean = False
                 _last_exit_time = time.time()
     else:
@@ -348,36 +362,36 @@ def fg(args, stdin=None):
     """
     _clear_dead_jobs()
     if len(tasks) == 0:
-        return '', 'Cannot bring nonexistent job to foreground.\n'
+        return "", "Cannot bring nonexistent job to foreground.\n"
 
     if len(args) == 0:
         tid = tasks[0]  # take the last manipulated task by default
     elif len(args) == 1:
         try:
-            if args[0] == '+':  # take the last manipulated task
+            if args[0] == "+":  # take the last manipulated task
                 tid = tasks[0]
-            elif args[0] == '-':  # take the second to last manipulated task
+            elif args[0] == "-":  # take the second to last manipulated task
                 tid = tasks[1]
             else:
                 tid = int(args[0])
         except (ValueError, IndexError):
-            return '', 'Invalid job: {}\n'.format(args[0])
+            return "", "Invalid job: {}\n".format(args[0])
 
         if tid not in builtins.__xonsh_all_jobs__:
-            return '', 'Invalid job: {}\n'.format(args[0])
+            return "", "Invalid job: {}\n".format(args[0])
     else:
-        return '', 'fg expects 0 or 1 arguments, not {}\n'.format(len(args))
+        return "", "fg expects 0 or 1 arguments, not {}\n".format(len(args))
 
     # Put this one on top of the queue
     tasks.remove(tid)
     tasks.appendleft(tid)
 
     job = get_task(tid)
-    job['bg'] = False
-    job['status'] = "running"
-    if builtins.__xonsh_env__.get('XONSH_INTERACTIVE'):
+    job["bg"] = False
+    job["status"] = "running"
+    if builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
         print_one_job(tid)
-    pipeline = job['pipeline']
+    pipeline = job["pipeline"]
     pipeline.resume(job)
 
 
@@ -390,7 +404,7 @@ def bg(args, stdin=None):
     res = fg(args, stdin)
     if res is None:
         curtask = get_task(tasks[0])
-        curtask['bg'] = True
+        curtask["bg"] = True
         _continue(curtask)
     else:
         return res

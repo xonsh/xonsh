@@ -3,7 +3,7 @@
 
 def yes(args, stdin, stdout, stderr):
     """A yes command."""
-    if '--help' in args:
+    if "--help" in args:
         print(YES_HELP, file=stdout)
         return 0
 

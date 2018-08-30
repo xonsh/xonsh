@@ -68,14 +68,17 @@ def _xhj_get_history_files(sort=True, newest_first=False):
     """Find and return the history files. Optionally sort files by
     modify time.
     """
-    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+    data_dir = builtins.__xonsh_env__.get("XONSH_DATA_DIR")
     data_dir = xt.expanduser_abs_path(data_dir)
     try:
-        files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
-                 if f.startswith('xonsh-') and f.endswith('.json')]
+        files = [
+            os.path.join(data_dir, f)
+            for f in os.listdir(data_dir)
+            if f.startswith("xonsh-") and f.endswith(".json")
+        ]
     except OSError:
         files = []
-        if builtins.__xonsh_env__.get('XONSH_DEBUG'):
+        if builtins.__xonsh_env__.get("XONSH_DEBUG"):
             xt.print_exception("Could not collect xonsh history files.")
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
@@ -95,23 +98,25 @@ class JsonHistoryGC(threading.Thread):
         self.size = size
         self.wait_for_shell = wait_for_shell
         self.start()
-        self.gc_units_to_rmfiles = {'commands': _xhj_gc_commands_to_rmfiles,
-                                    'files': _xhj_gc_files_to_rmfiles,
-                                    's': _xhj_gc_seconds_to_rmfiles,
-                                    'b': _xhj_gc_bytes_to_rmfiles}
+        self.gc_units_to_rmfiles = {
+            "commands": _xhj_gc_commands_to_rmfiles,
+            "files": _xhj_gc_files_to_rmfiles,
+            "s": _xhj_gc_seconds_to_rmfiles,
+            "b": _xhj_gc_bytes_to_rmfiles,
+        }
 
     def run(self):
         while self.wait_for_shell:
             time.sleep(0.01)
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         if self.size is None:
-            hsize, units = env.get('XONSH_HISTORY_SIZE')
+            hsize, units = env.get("XONSH_HISTORY_SIZE")
         else:
             hsize, units = xt.to_history_tuple(self.size)
         files = self.files(only_unlocked=True)
         rmfiles_fn = self.gc_units_to_rmfiles.get(units)
         if rmfiles_fn is None:
-            raise ValueError('Units type {0!r} not understood'.format(units))
+            raise ValueError("Units type {0!r} not understood".format(units))
 
         for _, _, f in rmfiles_fn(hsize, files):
             try:
@@ -127,7 +132,7 @@ class JsonHistoryGC(threading.Thread):
         (timestamp, number of cmds, file name) tuples.
         """
         # pylint: disable=no-member
-        env = getattr(builtins, '__xonsh_env__', None)
+        env = getattr(builtins, "__xonsh_env__", None)
         if env is None:
             return []
         boot = uptime.boottime()
@@ -140,21 +145,19 @@ class JsonHistoryGC(threading.Thread):
                     files.append((time.time(), 0, f))
                     continue
                 lj = xlj.LazyJSON(f, reopen=False)
-                if lj['locked'] and lj['ts'][0] < boot:
+                if lj["locked"] and lj["ts"][0] < boot:
                     # computer was rebooted between when this history was created
                     # and now and so this history should be unlocked.
                     hist = lj.load()
                     lj.close()
-                    hist['locked'] = False
-                    with open(f, 'w', newline='\n') as fp:
+                    hist["locked"] = False
+                    with open(f, "w", newline="\n") as fp:
                         xlj.ljdump(hist, fp, sort_keys=True)
                     lj = xlj.LazyJSON(f, reopen=False)
-                if only_unlocked and lj['locked']:
+                if only_unlocked and lj["locked"]:
                     continue
                 # info: closing timestamp, number of commands, filename
-                files.append((lj['ts'][1] or lj['ts'][0],
-                              len(lj.sizes['cmds']) - 1,
-                              f))
+                files.append((lj["ts"][1] or lj["ts"][0], len(lj.sizes["cmds"]) - 1, f))
                 lj.close()
             except (IOError, OSError, ValueError):
                 continue
@@ -165,8 +168,7 @@ class JsonHistoryGC(threading.Thread):
 class JsonHistoryFlusher(threading.Thread):
     """Flush shell history to disk periodically."""
 
-    def __init__(self, filename, buffer, queue, cond, at_exit=False, *args,
-                 **kwargs):
+    def __init__(self, filename, buffer, queue, cond, at_exit=False, *args, **kwargs):
         """Thread for flushing history."""
         super(JsonHistoryFlusher, self).__init__(*args, **kwargs)
         self.filename = filename
@@ -193,29 +195,28 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
-        opts = builtins.__xonsh_env__.get('HISTCONTROL')
+        opts = builtins.__xonsh_env__.get("HISTCONTROL")
         last_inp = None
         cmds = []
         for cmd in self.buffer:
-            if 'ignoredups' in opts and cmd['inp'] == last_inp:
+            if "ignoredups" in opts and cmd["inp"] == last_inp:
                 # Skipping dup cmd
                 continue
-            if 'ignoreerr' in opts and cmd['rtn'] != 0:
+            if "ignoreerr" in opts and cmd["rtn"] != 0:
                 # Skipping failed cmd
                 continue
             cmds.append(cmd)
-            last_inp = cmd['inp']
-        with open(self.filename, 'r', newline='\n') as f:
+            last_inp = cmd["inp"]
+        with open(self.filename, "r", newline="\n") as f:
             hist = xlj.LazyJSON(f).load()
-        load_hist_len = len(hist['cmds'])
-        hist['cmds'].extend(cmds)
+        load_hist_len = len(hist["cmds"])
+        hist["cmds"].extend(cmds)
         if self.at_exit:
-            hist['ts'][1] = time.time()  # apply end time
-            hist['locked'] = False
-        if not builtins.__xonsh_env__.get('XONSH_STORE_STDOUT', False):
-            [cmd.pop('out') for cmd in hist['cmds'][load_hist_len:]
-                if 'out' in cmd]
-        with open(self.filename, 'w', newline='\n') as f:
+            hist["ts"][1] = time.time()  # apply end time
+            hist["locked"] = False
+        if not builtins.__xonsh_env__.get("XONSH_STORE_STDOUT", False):
+            [cmd.pop("out") for cmd in hist["cmds"][load_hist_len:] if "out" in cmd]
+        with open(self.filename, "w", newline="\n") as f:
             xlj.ljdump(hist, f, sort_keys=True)
 
 
@@ -249,24 +250,22 @@ class JsonCommandField(cabc.Sequence):
         if isinstance(key, slice):
             return [self[i] for i in range(*key.indices(size))]
         elif not isinstance(key, int):
-            raise IndexError(
-                'JsonCommandField may only be indexed by int or slice.')
+            raise IndexError("JsonCommandField may only be indexed by int or slice.")
         elif size == 0:
-            raise IndexError('JsonCommandField is empty.')
+            raise IndexError("JsonCommandField is empty.")
         # now we know we have an int
         key = size + key if key < 0 else key  # ensure key is non-negative
         bufsize = len(self.hist.buffer)
         if size - bufsize <= key:  # key is in buffer
-            return self.hist.buffer[key + bufsize - size].get(
-                self.field, self.default)
+            return self.hist.buffer[key + bufsize - size].get(self.field, self.default)
         # now we know we have to go into the file
         queue = self.hist._queue
         queue.append(self)
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
-            with open(self.hist.filename, 'r', newline='\n') as f:
+            with open(self.hist.filename, "r", newline="\n") as f:
                 lj = xlj.LazyJSON(f, reopen=False)
-                rtn = lj['cmds'][key].get(self.field, self.default)
+                rtn = lj["cmds"][key].get(self.field, self.default)
                 if isinstance(rtn, xlj.LJNode):
                     rtn = rtn.load()
             queue.popleft()
@@ -283,8 +282,7 @@ class JsonHistory(History):
     JsonHistory implements two extra actions: ``diff``, and ``replay``.
     """
 
-    def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True,
-                 **meta):
+    def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True, **meta):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
@@ -307,10 +305,11 @@ class JsonHistory(History):
         super().__init__(sessionid=sessionid, **meta)
         if filename is None:
             # pylint: disable=no-member
-            data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+            data_dir = builtins.__xonsh_env__.get("XONSH_DATA_DIR")
             data_dir = os.path.expanduser(data_dir)
             self.filename = os.path.join(
-                data_dir, 'xonsh-{0}.json'.format(self.sessionid))
+                data_dir, "xonsh-{0}.json".format(self.sessionid)
+            )
         else:
             self.filename = filename
         self.buffer = []
@@ -320,16 +319,16 @@ class JsonHistory(History):
         self._len = 0
         self.last_cmd_out = None
         self.last_cmd_rtn = None
-        meta['cmds'] = []
-        meta['sessionid'] = str(self.sessionid)
-        with open(self.filename, 'w', newline='\n') as f:
+        meta["cmds"] = []
+        meta["sessionid"] = str(self.sessionid)
+        with open(self.filename, "w", newline="\n") as f:
             xlj.ljdump(meta, f, sort_keys=True)
         self.gc = JsonHistoryGC() if gc else None
         # command fields that are known
-        self.tss = JsonCommandField('ts', self)
-        self.inps = JsonCommandField('inp', self)
-        self.outs = JsonCommandField('out', self)
-        self.rtns = JsonCommandField('rtn', self)
+        self.tss = JsonCommandField("ts", self)
+        self.inps = JsonCommandField("inp", self)
+        self.outs = JsonCommandField("out", self)
+        self.rtns = JsonCommandField("rtn", self)
 
     def __len__(self):
         return self._len
@@ -374,8 +373,9 @@ class JsonHistory(History):
         """
         if len(self.buffer) == 0:
             return
-        hf = JsonHistoryFlusher(self.filename, tuple(self.buffer), self._queue,
-                                self._cond, at_exit=at_exit)
+        hf = JsonHistoryFlusher(
+            self.filename, tuple(self.buffer), self._queue, self._cond, at_exit=at_exit
+        )
         self.buffer.clear()
         return hf
 
@@ -386,7 +386,7 @@ class JsonHistory(History):
         else:
             items = zip(self.inps, self.tss)
         for item, tss in items:
-            yield {'inp': item.rstrip(), 'ts': tss[0]}
+            yield {"inp": item.rstrip(), "ts": tss[0]}
 
     def all_items(self, newest_first=False, **kwargs):
         """
@@ -403,30 +403,30 @@ class JsonHistory(History):
                 # Invalid json file
                 continue
             try:
-                commands = json_file.load()['cmds']
+                commands = json_file.load()["cmds"]
             except json.decoder.JSONDecodeError:
                 # file is corrupted somehow
-                if builtins.__xonsh_env__.get('XONSH_DEBUG') > 0:
-                    msg = 'xonsh history file {0!r} is not valid JSON'
+                if builtins.__xonsh_env__.get("XONSH_DEBUG") > 0:
+                    msg = "xonsh history file {0!r} is not valid JSON"
                     print(msg.format(f), file=sys.stderr)
                 continue
             if newest_first:
                 commands = reversed(commands)
             for c in commands:
-                yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0]}
+                yield {"inp": c["inp"].rstrip(), "ts": c["ts"][0]}
         # all items should also include session items
         yield from self.items()
 
     def info(self):
         data = collections.OrderedDict()
-        data['backend'] = 'json'
-        data['sessionid'] = str(self.sessionid)
-        data['filename'] = self.filename
-        data['length'] = len(self)
-        data['buffersize'] = self.buffersize
-        data['bufferlength'] = len(self.buffer)
+        data["backend"] = "json"
+        data["sessionid"] = str(self.sessionid)
+        data["filename"] = self.filename
+        data["length"] = len(self)
+        data["buffersize"] = self.buffersize
+        data["bufferlength"] = len(self.buffer)
         envs = builtins.__xonsh_env__
-        data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
+        data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         return data
 
     def run_gc(self, size=None, blocking=True):

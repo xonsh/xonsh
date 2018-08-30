@@ -14,16 +14,16 @@ import platform
 import functools
 import subprocess
 
-__version__ = '0.2.2'
+__version__ = "0.2.2"
 
 
 @functools.lru_cache(1)
 def _git_for_windows_path():
     """Returns the path to git for windows, if available and None otherwise."""
     import winreg
+
     try:
-        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                             'SOFTWARE\\GitForWindows')
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\GitForWindows")
         gfwp, _ = winreg.QueryValueEx(key, "InstallPath")
     except FileNotFoundError:
         gfwp = None
@@ -33,27 +33,29 @@ def _git_for_windows_path():
 @functools.lru_cache(1)
 def _windows_bash_command(env=None):
     """Determines the command for Bash on windows."""
-    wbc = 'bash'
-    path = None if env is None else env.get('PATH', None)
-    bash_on_path = shutil.which('bash', path=path)
+    wbc = "bash"
+    path = None if env is None else env.get("PATH", None)
+    bash_on_path = shutil.which("bash", path=path)
     if bash_on_path:
         try:
-            out = subprocess.check_output([bash_on_path, '--version'],
-                                          stderr=subprocess.PIPE,
-                                          universal_newlines=True)
+            out = subprocess.check_output(
+                [bash_on_path, "--version"],
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
         except subprocess.CalledProcessError:
             bash_works = False
         else:
             # Check if Bash is from the "Windows Subsystem for Linux" (WSL)
             # which can't be used by xonsh foreign-shell/completer
-            bash_works = out and 'pc-linux-gnu' not in out.splitlines()[0]
+            bash_works = out and "pc-linux-gnu" not in out.splitlines()[0]
 
         if bash_works:
             wbc = bash_on_path
         else:
             gfwp = _git_for_windows_path()
             if gfwp:
-                bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
+                bashcmd = os.path.join(gfwp, "bin\\bash.exe")
                 if os.path.isfile(bashcmd):
                     wbc = bashcmd
     return wbc
@@ -61,10 +63,10 @@ def _windows_bash_command(env=None):
 
 def _bash_command(env=None):
     """Determines the command for Bash on the current plaform."""
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         bc = _windows_bash_command(env=None)
     else:
-        bc = 'bash'
+        bc = "bash"
     return bc
 
 
@@ -73,18 +75,22 @@ def _bash_completion_paths_default():
     the current platform.
     """
     platform_sys = platform.system()
-    if platform_sys == 'Linux' or sys.platform == 'cygwin':
-        bcd = ('/usr/share/bash-completion/bash_completion', )
-    elif platform_sys == 'Darwin':
-        bcd = ('/usr/local/share/bash-completion/bash_completion',  # v2.x
-               '/usr/local/etc/bash_completion')  # v1.x
-    elif platform_sys == 'Windows':
+    if platform_sys == "Linux" or sys.platform == "cygwin":
+        bcd = ("/usr/share/bash-completion/bash_completion",)
+    elif platform_sys == "Darwin":
+        bcd = (
+            "/usr/local/share/bash-completion/bash_completion",  # v2.x
+            "/usr/local/etc/bash_completion",
+        )  # v1.x
+    elif platform_sys == "Windows":
         gfwp = _git_for_windows_path()
         if gfwp:
-            bcd = (os.path.join(gfwp, 'usr\\share\\bash-completion\\'
-                                      'bash_completion'),
-                   os.path.join(gfwp, 'mingw64\\share\\git\\completion\\'
-                                      'git-completion.bash'))
+            bcd = (
+                os.path.join(gfwp, "usr\\share\\bash-completion\\" "bash_completion"),
+                os.path.join(
+                    gfwp, "mingw64\\share\\git\\completion\\" "git-completion.bash"
+                ),
+            )
         else:
             bcd = ()
     else:
@@ -111,7 +117,7 @@ def _bash_get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         return os.altsep
     else:
         return os.sep
@@ -125,9 +131,9 @@ def _bash_pattern_need_quotes():
     if _BASH_PATTERN_NEED_QUOTES is not None:
         return _BASH_PATTERN_NEED_QUOTES
     pattern = r'\s`\$\{\}\,\*\(\)"\'\?&'
-    if platform.system() == 'Windows':
-        pattern += '%'
-    pattern = '[' + pattern + ']' + r'|\band\b|\bor\b'
+    if platform.system() == "Windows":
+        pattern += "%"
+    pattern = "[" + pattern + "]" + r"|\band\b|\bor\b"
     _BASH_PATTERN_NEED_QUOTES = re.compile(pattern)
     return _BASH_PATTERN_NEED_QUOTES
 
@@ -138,7 +144,7 @@ def _bash_expand_path(s):
     # checked for unquoted tilde-prefixes immediately following a ':' or the
     # first '='". See the following for more details.
     # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
-    pre, char, post = s.partition('=')
+    pre, char, post = s.partition("=")
     if char:
         s = os.path.expanduser(pre) + char
         s += os.pathsep.join(map(os.path.expanduser, post.split(os.pathsep)))
@@ -158,39 +164,40 @@ def _bash_quote_to_use(x):
 
 def _bash_quote_paths(paths, start, end):
     out = set()
-    space = ' '
-    backslash = '\\'
-    double_backslash = '\\\\'
+    space = " "
+    backslash = "\\"
+    double_backslash = "\\\\"
     slash = _bash_get_sep()
     orig_start = start
     orig_end = end
     # quote on all or none, to make readline completes to max prefix
     need_quotes = any(
-        re.search(_bash_pattern_need_quotes(), x) or
-        (backslash in x and slash != backslash)
-        for x in paths)
+        re.search(_bash_pattern_need_quotes(), x)
+        or (backslash in x and slash != backslash)
+        for x in paths
+    )
 
     for s in paths:
         start = orig_start
         end = orig_end
-        if start == '' and need_quotes:
+        if start == "" and need_quotes:
             start = end = _bash_quote_to_use(s)
         if os.path.isdir(_bash_expand_path(s)):
             _tail = slash
-        elif end == '':
+        elif end == "":
             _tail = space
         else:
-            _tail = ''
-        if start != '' and 'r' not in start and backslash in s:
-            start = 'r%s' % start
+            _tail = ""
+        if start != "" and "r" not in start and backslash in s:
+            start = "r%s" % start
         s = s + _tail
-        if end != '':
+        if end != "":
             if "r" not in start.lower():
                 s = s.replace(backslash, double_backslash)
             if s.endswith(backslash) and not s.endswith(double_backslash):
                 s += backslash
         if end in s:
-            s = s.replace(end, ''.join('\\%s' % i for i in end))
+            s = s.replace(end, "".join("\\%s" % i for i in end))
         out.add(start + s + end)
     return out, need_quotes
 
@@ -254,8 +261,17 @@ done
 """
 
 
-def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
-                     command=None, quote_paths=_bash_quote_paths, **kwargs):
+def bash_completions(
+    prefix,
+    line,
+    begidx,
+    endidx,
+    env=None,
+    paths=None,
+    command=None,
+    quote_paths=_bash_quote_paths,
+    **kwargs
+):
     """Completes based on results from BASH completion.
 
     Parameters
@@ -296,13 +312,13 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
     """
     source = _get_bash_completions_source(paths) or set()
 
-    if prefix.startswith('$'):  # do not complete env variables
+    if prefix.startswith("$"):  # do not complete env variables
         return set(), 0
 
     splt = line.split()
     cmd = splt[0]
     idx = n = 0
-    prev = ''
+    prev = ""
     for n, tok in enumerate(splt):
         if tok == prefix:
             idx = line.find(prefix, idx)
@@ -317,21 +333,33 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
         prefix_quoted = shlex.quote(prefix)
 
     script = BASH_COMPLETE_SCRIPT.format(
-        source=source, line=' '.join(shlex.quote(p) for p in splt),
-        comp_line=shlex.quote(line), n=n, cmd=shlex.quote(cmd),
-        end=endidx + 1, prefix=prefix_quoted, prev=shlex.quote(prev),
+        source=source,
+        line=" ".join(shlex.quote(p) for p in splt),
+        comp_line=shlex.quote(line),
+        n=n,
+        cmd=shlex.quote(cmd),
+        end=endidx + 1,
+        prefix=prefix_quoted,
+        prev=shlex.quote(prev),
     )
 
     if command is None:
         command = _bash_command(env=env)
     try:
         out = subprocess.check_output(
-            [command, '-c', script], universal_newlines=True,
-            stderr=subprocess.PIPE, env=env)
+            [command, "-c", script],
+            universal_newlines=True,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
         if not out:
             raise ValueError
-    except (subprocess.CalledProcessError, FileNotFoundError,
-            UnicodeDecodeError, ValueError):
+    except (
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+        UnicodeDecodeError,
+        ValueError,
+    ):
         return set(), 0
 
     out = out.splitlines()
@@ -350,9 +378,9 @@ def bash_completions(prefix, line, begidx, endidx, env=None, paths=None,
             break
         strip_len += 1
 
-    if '-o noquote' not in complete_stmt:
-        out, need_quotes = quote_paths(out, '', '')
-    if '-o nospace' in complete_stmt:
+    if "-o noquote" not in complete_stmt:
+        out, need_quotes = quote_paths(out, "", "")
+    if "-o nospace" in complete_stmt:
         out = set([x.rstrip() for x in out])
 
     return out, max(len(prefix) - strip_len, 0)
@@ -378,11 +406,11 @@ def bash_complete_line(line, return_line=True, **kwargs):
     """
     # set up for completing from the end of the line
     split = line.split()
-    if len(split) > 1 and not line.endswith(' '):
+    if len(split) > 1 and not line.endswith(" "):
         prefix = split[-1]
         begidx = len(line.rsplit(prefix)[0])
     else:
-        prefix = ''
+        prefix = ""
         begidx = len(line)
     endidx = len(line)
     # get completions
@@ -399,17 +427,27 @@ def bash_complete_line(line, return_line=True, **kwargs):
 def _bc_main(args=None):
     """Runs complete_line() and prints the output."""
     from argparse import ArgumentParser
-    p = ArgumentParser('bash_completions')
-    p.add_argument('--return-line', action='store_true', dest='return_line', default=True,
-                   help='will return the entire line, with the completion added')
-    p.add_argument('--no-return-line', action='store_false', dest='return_line',
-                   help='will instead return the strings to append to the original line')
-    p.add_argument('line', help='line to complete')
+
+    p = ArgumentParser("bash_completions")
+    p.add_argument(
+        "--return-line",
+        action="store_true",
+        dest="return_line",
+        default=True,
+        help="will return the entire line, with the completion added",
+    )
+    p.add_argument(
+        "--no-return-line",
+        action="store_false",
+        dest="return_line",
+        help="will instead return the strings to append to the original line",
+    )
+    p.add_argument("line", help="line to complete")
     ns = p.parse_args(args=args)
     out = bash_complete_line(ns.line, return_line=ns.return_line)
     for o in sorted(out):
         print(o)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _bc_main()

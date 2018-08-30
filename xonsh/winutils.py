@@ -24,15 +24,27 @@ import os
 import ctypes
 import subprocess
 from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
-from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY,
-                             LPDWORD, SHORT, LPCWSTR, WORD, SMALL_RECT, LPCSTR)
+from ctypes.wintypes import (
+    HANDLE,
+    BOOL,
+    DWORD,
+    HWND,
+    HINSTANCE,
+    HKEY,
+    LPDWORD,
+    SHORT,
+    LPCWSTR,
+    WORD,
+    SMALL_RECT,
+    LPCSTR,
+)
 
 from xonsh.lazyasd import lazyobject
 from xonsh import lazyimps  # we aren't amalgamated in this module.
 from xonsh import platform
 
 
-__all__ = ('sudo', )
+__all__ = ("sudo",)
 
 
 @lazyobject
@@ -56,21 +68,21 @@ TOKEN_READ = 0x20008
 
 class ShellExecuteInfo(ctypes.Structure):
     _fields_ = [
-        ('cbSize', DWORD),
-        ('fMask', c_ulong),
-        ('hwnd', HWND),
-        ('lpVerb', c_char_p),
-        ('lpFile', c_char_p),
-        ('lpParameters', c_char_p),
-        ('lpDirectory', c_char_p),
-        ('nShow', c_int),
-        ('hInstApp', HINSTANCE),
-        ('lpIDList', c_void_p),
-        ('lpClass', c_char_p),
-        ('hKeyClass', HKEY),
-        ('dwHotKey', DWORD),
-        ('hIcon', HANDLE),
-        ('hProcess', HANDLE)
+        ("cbSize", DWORD),
+        ("fMask", c_ulong),
+        ("hwnd", HWND),
+        ("lpVerb", c_char_p),
+        ("lpFile", c_char_p),
+        ("lpParameters", c_char_p),
+        ("lpDirectory", c_char_p),
+        ("nShow", c_int),
+        ("hInstApp", HINSTANCE),
+        ("lpIDList", c_void_p),
+        ("lpClass", c_char_p),
+        ("hKeyClass", HKEY),
+        ("dwHotKey", DWORD),
+        ("hIcon", HANDLE),
+        ("hProcess", HANDLE),
     ]
 
     def __init__(self, **kw):
@@ -84,7 +96,7 @@ class ShellExecuteInfo(ctypes.Structure):
 def ShellExecuteEx():
     see = ctypes.windll.Shell32.ShellExecuteExA
     PShellExecuteInfo = ctypes.POINTER(ShellExecuteInfo)
-    see.argtypes = (PShellExecuteInfo, )
+    see.argtypes = (PShellExecuteInfo,)
     see.restype = BOOL
     return see
 
@@ -134,17 +146,18 @@ def sudo(executable, args=None):
     execute_info = ShellExecuteInfo(
         fMask=SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,
         hwnd=GetActiveWindow(),
-        lpVerb=b'runas',
-        lpFile=executable.encode('utf-8'),
-        lpParameters=subprocess.list2cmdline(args).encode('utf-8'),
+        lpVerb=b"runas",
+        lpFile=executable.encode("utf-8"),
+        lpParameters=subprocess.list2cmdline(args).encode("utf-8"),
         lpDirectory=None,
-        nShow=SW_SHOW
+        nShow=SW_SHOW,
     )
 
     if not ShellExecuteEx(byref(execute_info)):
         raise ctypes.WinError()
 
     wait_and_close_handle(execute_info.hProcess)
+
 
 #
 # The following has been refactored from
@@ -182,9 +195,11 @@ def GetStdHandle():
 @lazyobject
 def STDHANDLES():
     """Tuple of the Windows handles for (stdin, stdout, stderr)."""
-    hs = [lazyimps._winapi.STD_INPUT_HANDLE,
-          lazyimps._winapi.STD_OUTPUT_HANDLE,
-          lazyimps._winapi.STD_ERROR_HANDLE]
+    hs = [
+        lazyimps._winapi.STD_INPUT_HANDLE,
+        lazyimps._winapi.STD_OUTPUT_HANDLE,
+        lazyimps._winapi.STD_ERROR_HANDLE,
+    ]
     hcons = []
     for h in hs:
         hcon = GetStdHandle(int(h))
@@ -196,8 +211,7 @@ def STDHANDLES():
 def GetConsoleMode():
     gcm = ctypes.windll.kernel32.GetConsoleMode
     gcm.errcheck = check_zero
-    gcm.argtypes = (HANDLE,   # _In_  hConsoleHandle
-                    LPDWORD)  # _Out_ lpMode
+    gcm.argtypes = (HANDLE, LPDWORD)  # _In_  hConsoleHandle  # _Out_ lpMode
     return gcm
 
 
@@ -222,8 +236,7 @@ def get_console_mode(fd=1):
 def SetConsoleMode():
     scm = ctypes.windll.kernel32.SetConsoleMode
     scm.errcheck = check_zero
-    scm.argtypes = (HANDLE,  # _In_  hConsoleHandle
-                    DWORD)   # _Out_ lpMode
+    scm.argtypes = (HANDLE, DWORD)  # _In_  hConsoleHandle  # _Out_ lpMode
     return scm
 
 
@@ -259,6 +272,7 @@ def COORD():
         # for this struct and also wraps similar function calls
         # we need to use the same struct to prevent clashes.
         import prompt_toolkit.win32_types
+
         return prompt_toolkit.win32_types.COORD
 
     class _COORD(ctypes.Structure):
@@ -271,8 +285,8 @@ def COORD():
         Y : int
             Row position
         """
-        _fields_ = [("X", SHORT),
-                    ("Y", SHORT)]
+
+        _fields_ = [("X", SHORT), ("Y", SHORT)]
 
     return _COORD
 
@@ -281,11 +295,13 @@ def COORD():
 def ReadConsoleOutputCharacterA():
     rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterA
     rcoc.errcheck = check_zero
-    rcoc.argtypes = (HANDLE,   # _In_  hConsoleOutput
-                     LPCSTR,   # _Out_ LPTSTR lpMode
-                     DWORD,    # _In_  nLength
-                     COORD,    # _In_  dwReadCoord,
-                     LPDWORD)  # _Out_ lpNumberOfCharsRead
+    rcoc.argtypes = (
+        HANDLE,  # _In_  hConsoleOutput
+        LPCSTR,  # _Out_ LPTSTR lpMode
+        DWORD,  # _In_  nLength
+        COORD,  # _In_  dwReadCoord,
+        LPDWORD,
+    )  # _Out_ lpNumberOfCharsRead
     rcoc.restype = BOOL
     return rcoc
 
@@ -294,17 +310,18 @@ def ReadConsoleOutputCharacterA():
 def ReadConsoleOutputCharacterW():
     rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterW
     rcoc.errcheck = check_zero
-    rcoc.argtypes = (HANDLE,   # _In_  hConsoleOutput
-                     LPCWSTR,  # _Out_ LPTSTR lpMode
-                     DWORD,    # _In_  nLength
-                     COORD,    # _In_  dwReadCoord,
-                     LPDWORD)  # _Out_ lpNumberOfCharsRead
+    rcoc.argtypes = (
+        HANDLE,  # _In_  hConsoleOutput
+        LPCWSTR,  # _Out_ LPTSTR lpMode
+        DWORD,  # _In_  nLength
+        COORD,  # _In_  dwReadCoord,
+        LPDWORD,
+    )  # _Out_ lpNumberOfCharsRead
     rcoc.restype = BOOL
     return rcoc
 
 
-def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024,
-                                  raw=False):
+def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024, raw=False):
     """Reads characters from the console buffer.
 
     Parameters
@@ -341,7 +358,7 @@ def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024,
         ReadConsoleOutputCharacterA(hcon, buf, bufsize, coord, byref(n))
     else:
         ReadConsoleOutputCharacterW(hcon, buf, bufsize, coord, byref(n))
-    return buf.value[:n.value]
+    return buf.value[: n.value]
 
 
 def pread_console(fd, buffersize, offset, buf=None):
@@ -351,14 +368,16 @@ def pread_console(fd, buffersize, offset, buf=None):
     cols, rows = os.get_terminal_size(fd=fd)
     x = offset % cols
     y = offset // cols
-    return read_console_output_character(x=x, y=y, fd=fd, buf=buf,
-                                         bufsize=buffersize, raw=True)
+    return read_console_output_character(
+        x=x, y=y, fd=fd, buf=buf, bufsize=buffersize, raw=True
+    )
 
 
 #
 # The following piece has been forked from colorama.win32
 # Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
 #
+
 
 @lazyobject
 def CONSOLE_SCREEN_BUFFER_INFO():
@@ -367,6 +386,7 @@ def CONSOLE_SCREEN_BUFFER_INFO():
         # for this struct and also wraps kernel32.GetConsoleScreenBufferInfo
         # we need to use the same struct to prevent clashes.
         import prompt_toolkit.win32_types
+
         return prompt_toolkit.win32_types.CONSOLE_SCREEN_BUFFER_INFO
 
     # Otherwise we should wrap it ourselves
@@ -389,6 +409,7 @@ def CONSOLE_SCREEN_BUFFER_INFO():
         dwMaximumWindowSize : COORD
             Maximum window scrollback size.
         """
+
         _fields_ = [
             ("dwSize", COORD),
             ("dwCursorPosition", COORD),
@@ -405,10 +426,7 @@ def GetConsoleScreenBufferInfo():
     """Returns the windows version of the get screen buffer."""
     gcsbi = ctypes.windll.kernel32.GetConsoleScreenBufferInfo
     gcsbi.errcheck = check_zero
-    gcsbi.argtypes = (
-        HANDLE,
-        POINTER(CONSOLE_SCREEN_BUFFER_INFO),
-    )
+    gcsbi.argtypes = (HANDLE, POINTER(CONSOLE_SCREEN_BUFFER_INFO))
     gcsbi.restype = BOOL
     return gcsbi
 
@@ -431,6 +449,7 @@ def get_console_screen_buffer_info(fd=1):
     csbi = CONSOLE_SCREEN_BUFFER_INFO()
     GetConsoleScreenBufferInfo(hcon, byref(csbi))
     return csbi
+
 
 #
 # end colorama forked section
@@ -457,8 +476,12 @@ def get_position_size(fd=1):
     (x, y, columns, lines).
     """
     info = get_console_screen_buffer_info(fd)
-    return (info.dwCursorPosition.X, info.dwCursorPosition.Y,
-            info.dwSize.X, info.dwSize.Y)
+    return (
+        info.dwCursorPosition.X,
+        info.dwCursorPosition.Y,
+        info.dwSize.X,
+        info.dwSize.Y,
+    )
 
 
 @lazyobject
@@ -466,10 +489,7 @@ def SetConsoleScreenBufferSize():
     """Set screen buffer dimensions."""
     scsbs = ctypes.windll.kernel32.SetConsoleScreenBufferSize
     scsbs.errcheck = check_zero
-    scsbs.argtypes = (
-        HANDLE,  # _In_ HANDLE hConsoleOutput
-        COORD,   # _In_ COORD  dwSize
-    )
+    scsbs.argtypes = (HANDLE, COORD)  # _In_ HANDLE hConsoleOutput  # _In_ COORD  dwSize
     scsbs.restype = BOOL
     return scsbs
 
@@ -502,7 +522,7 @@ def SetConsoleCursorPosition():
     sccp.errcheck = check_zero
     sccp.argtypes = (
         HANDLE,  # _In_ HANDLE hConsoleOutput
-        COORD,   # _In_ COORD  dwCursorPosition
+        COORD,  # _In_ COORD  dwCursorPosition
     )
     sccp.restype = BOOL
     return sccp

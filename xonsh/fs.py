@@ -10,6 +10,7 @@ import pathlib
 try:
     from os import PathLike, fspath, fsencode, fsdecode
 except ImportError:
+
     class PathLike(abc.ABC):
         """Abstract base class for implementing the file system path protocol."""
 
@@ -40,24 +41,27 @@ except ImportError:
         try:
             path = path_type.__fspath__(path)
         except AttributeError:
-            if hasattr(path_type, '__fspath__'):
+            if hasattr(path_type, "__fspath__"):
                 raise
         else:
             if isinstance(path, (str, bytes)):
                 return path
             else:
-                raise TypeError("expected __fspath__() to return str or bytes, "
-                                "not " + type(path).__name__)
+                raise TypeError(
+                    "expected __fspath__() to return str or bytes, "
+                    "not " + type(path).__name__
+                )
 
-        raise TypeError("expected str, bytes or os.PathLike object, not " +
-                        path_type.__name__)
+        raise TypeError(
+            "expected str, bytes or os.PathLike object, not " + path_type.__name__
+        )
 
     def _fscodec():
         encoding = sys.getfilesystemencoding()
-        if encoding == 'mbcs':
-            errors = 'strict'
+        if encoding == "mbcs":
+            errors = "strict"
         else:
-            errors = 'surrogateescape'
+            errors = "surrogateescape"
 
         def fsencode(filename):
             """Encode filename (an os.PathLike, bytes, or str) to the filesystem

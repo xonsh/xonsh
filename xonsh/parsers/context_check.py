@@ -12,40 +12,41 @@ def _not_assignable(x, augassign=False):
     meaningful syntax errors.
     """
     if augassign and isinstance(x, (ast.Tuple, ast.List)):
-        return 'literal'
+        return "literal"
     elif isinstance(x, (ast.Tuple, ast.List)):
         if len(x.elts) == 0:
-            return '()'
+            return "()"
         for i in x.elts:
             res = _not_assignable(i)
             if res is not None:
                 return res
     elif isinstance(x, (ast.Set, ast.Dict, ast.Num, ast.Str, ast.Bytes)):
-        return 'literal'
+        return "literal"
     elif isinstance(x, ast.Call):
-        return 'function call'
+        return "function call"
     elif isinstance(x, ast.Lambda):
-        return 'lambda'
+        return "lambda"
     elif isinstance(x, (ast.BoolOp, ast.BinOp, ast.UnaryOp)):
-        return 'operator'
+        return "operator"
     elif isinstance(x, ast.IfExp):
-        return 'conditional expression'
+        return "conditional expression"
     elif isinstance(x, ast.ListComp):
-        return 'list comprehension'
+        return "list comprehension"
     elif isinstance(x, ast.DictComp):
-        return 'dictionary comprehension'
+        return "dictionary comprehension"
     elif isinstance(x, ast.SetComp):
-        return 'set comprehension'
+        return "set comprehension"
     elif isinstance(x, ast.GeneratorExp):
-        return 'generator expression'
+        return "generator expression"
     elif isinstance(x, ast.Compare):
-        return 'comparison'
+        return "comparison"
     elif isinstance(x, ast.Name) and x.id in _all_keywords:
-        return 'keyword'
+        return "keyword"
     elif isinstance(x, ast.NameConstant):
-        return 'keyword'
+        return "keyword"
 
-_loc = collections.namedtuple('_loc', ['lineno', 'column'])
+
+_loc = collections.namedtuple("_loc", ["lineno", "column"])
 
 
 def check_contexts(tree):

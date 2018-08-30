@@ -26,7 +26,7 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         if hist is None:
             return
         for cmd in hist.all_items(newest_first=True):
-            line = cmd['inp'].rstrip()
+            line = cmd["inp"].rstrip()
             strs = self.get_strings()
             if len(strs) == 0 or line != strs[-1]:
                 yield line
@@ -47,5 +47,7 @@ def _cust_history_matches(self, i):
 
     This gets monkeypatched into the prompt_toolkit prompter if
     ``XONSH_HISTORY_MATCH_ANYWHERE=True``"""
-    return (self.history_search_text is None or
-            self.history_search_text in self._working_lines[i])
+    return (
+        self.history_search_text is None
+        or self.history_search_text in self._working_lines[i]
+    )
