@@ -4,6 +4,40 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.7
+====================
+
+**Added:**
+
+* A xontrib which adds support for autojump to xonsh
+* Added new env-var ``XONSH_HISTORY_MATCH_ANYWHERE``. If set to ``True`` then
+  up-arrow history matching will match existing history entries with the search
+  term located anywhere, not just at the beginning of the line. Default value is
+  ``False``
+
+
+**Changed:**
+
+* Improved iteration over virtual environments in Vox.__iter__
+
+
+**Fixed:**
+
+* Fix for ``Enter`` not returning from Control-R search buffer
+* Fixed automatic wrapping of many subprocesses that spanned multiple lines via
+  line continuation characters with logical operators separating the commands.
+  For example, the following now works:
+
+  .. code-block:: sh
+
+        echo 'a' \
+        and echo 'b'
+* Environment swapping would not properly reraise errors due to weird
+  Python name binding issue.
+
+
+
+
 v0.7.6
 ====================
 
