@@ -23,8 +23,10 @@ def source_path():
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    monkeypatch.setattr('xonsh.built_ins.load_builtins.__code__',
-                        (lambda *args, **kwargs: None).__code__)
+    monkeypatch.setattr(
+        "xonsh.built_ins.load_builtins.__code__",
+        (lambda *args, **kwargs: None).__code__,
+    )
     execer = Execer(unload=False)
     builtins.__xonsh_execer__ = execer
     return execer
@@ -46,7 +48,7 @@ def xonsh_builtins(xonsh_events):
     old_builtins = set(dir(builtins))
     builtins.__xonsh_env__ = DummyEnv()
     if ON_WINDOWS:
-        builtins.__xonsh_env__['PATHEXT'] = ['.EXE', '.BAT', '.CMD']
+        builtins.__xonsh_env__["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_shell__ = DummyShell()
     builtins.__xonsh_help__ = lambda x: x
@@ -84,8 +86,9 @@ if ON_WINDOWS:
     except ImportError:
         pass
     else:
+
         @pytest.fixture(autouse=True)
         def disable_win_unicode_console(monkeypatch):
             """ Disable win_unicode_console if it is present since it collides with
             pytests ouptput capture"""
-            monkeypatch.setattr(win_unicode_console, 'enable', lambda: None)
+            monkeypatch.setattr(win_unicode_console, "enable", lambda: None)

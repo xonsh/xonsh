@@ -11,19 +11,17 @@ class TestWhich:
     # use from the _which.py module.
     def setup(self):
         # Setup two folders with some test files.
-        self.testdirs = [tempfile.TemporaryDirectory(),
-                         tempfile.TemporaryDirectory()]
+        self.testdirs = [tempfile.TemporaryDirectory(), tempfile.TemporaryDirectory()]
         if ON_WINDOWS:
-            self.testapps = ['whichtestapp1.exe',
-                             'whichtestapp2.wta']
-            self.exts = ['.EXE']
+            self.testapps = ["whichtestapp1.exe", "whichtestapp2.wta"]
+            self.exts = [".EXE"]
         else:
-            self.testapps = ['whichtestapp1']
+            self.testapps = ["whichtestapp1"]
             self.exts = None
         for app in self.testapps:
             for d in self.testdirs:
                 path = os.path.join(d.name, app)
-                open(path, 'wb').write(b'')
+                open(path, "wb").write(b"")
                 os.chmod(path, 0o755)
 
     def teardown_module(self):
@@ -32,48 +30,49 @@ class TestWhich:
 
     def test_whichgen(self):
         testdir = self.testdirs[0].name
-        arg = 'whichtestapp1'
+        arg = "whichtestapp1"
         matches = list(_which.whichgen(arg, path=[testdir], exts=self.exts))
         assert len(matches) == 1
         assert self._file_match(matches[0][0], os.path.join(testdir, arg))
 
     def test_whichgen_failure(self):
         testdir = self.testdirs[0].name
-        arg = 'not_a_file'
+        arg = "not_a_file"
         matches = list(_which.whichgen(arg, path=[testdir], exts=self.exts))
         assert len(matches) == 0
 
     def test_whichgen_verbose(self):
         testdir = self.testdirs[0].name
-        arg = 'whichtestapp1'
-        matches = list(_which.whichgen(arg, path=[testdir], exts=self.exts,
-                                       verbose=True))
+        arg = "whichtestapp1"
+        matches = list(
+            _which.whichgen(arg, path=[testdir], exts=self.exts, verbose=True)
+        )
         assert len(matches) == 1
         match, from_where = matches[0]
         assert self._file_match(match, os.path.join(testdir, arg))
-        assert from_where == 'from given path element 0'
+        assert from_where == "from given path element 0"
 
     def test_whichgen_multiple(self):
         testdir0 = self.testdirs[0].name
         testdir1 = self.testdirs[1].name
-        arg = 'whichtestapp1'
-        matches = list(_which.whichgen(arg, path=[testdir0, testdir1],
-                                       exts=self.exts))
+        arg = "whichtestapp1"
+        matches = list(_which.whichgen(arg, path=[testdir0, testdir1], exts=self.exts))
         assert len(matches) == 2
         assert self._file_match(matches[0][0], os.path.join(testdir0, arg))
         assert self._file_match(matches[1][0], os.path.join(testdir1, arg))
 
     if ON_WINDOWS:
+
         def test_whichgen_ext_failure(self):
             testdir = self.testdirs[0].name
-            arg = 'whichtestapp2'
+            arg = "whichtestapp2"
             matches = list(_which.whichgen(arg, path=[testdir], exts=self.exts))
             assert len(matches) == 0
 
         def test_whichgen_ext_success(self):
             testdir = self.testdirs[0].name
-            arg = 'whichtestapp2'
-            matches = list(_which.whichgen(arg, path=[testdir], exts=['.wta']))
+            arg = "whichtestapp2"
+            matches = list(_which.whichgen(arg, path=[testdir], exts=[".wta"]))
             assert len(matches) == 1
             assert self._file_match(matches[0][0], os.path.join(testdir, arg))
 
