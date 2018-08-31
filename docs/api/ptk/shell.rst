@@ -4,7 +4,4 @@
 Prompt Toolkit Shell (``xonsh.ptk.shell``)
 ******************************************************
 
-.. automodule:: xonsh.ptk.shell
-    :members:
-    :undoc-members:
-    :inherited-members:
+.. warning:: This module is pending deprecation.

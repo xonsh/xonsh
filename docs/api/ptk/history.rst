@@ -4,7 +4,4 @@
 Prompt Toolkit History Object (``xonsh.ptk.history``)
 ****************************************************************
 
-.. automodule:: xonsh.ptk.history
-    :members:
-    :undoc-members:
-    :inherited-members:
+.. warning:: This module is pending deprecation.
