@@ -66,6 +66,8 @@ script:
       git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
       pip install --upgrade .;
       git clean -fdx;
+      git checkout -- .;
+      git reset --hard HEAD;
       cd docs;
       make clean html;
       cd ..;
