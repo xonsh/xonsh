@@ -21,7 +21,7 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.style_tools import (
     partial_color_tokenize,
     _TokenType,
-    DEFAULT_STYLE_DICT as _DEFAULT_STYLE_DICT
+    DEFAULT_STYLE_DICT as _DEFAULT_STYLE_DICT,
 )
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.pygments_cache import get_all_styles
@@ -30,19 +30,22 @@ from xonsh.lazyasd import LazyObject
 
 Token = _TokenType()
 
-events.transmogrify('on_ptk_create', 'LoadEvent')
-events.doc('on_ptk_create', """
+events.transmogrify("on_ptk_create", "LoadEvent")
+events.doc(
+    "on_ptk_create",
+    """
 on_ptk_create(prompter: Prompter, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindingManager) ->
 
 Fired after prompt toolkit has been initialized
-""")
+""",
+)
 
 # Convert new ansicolor names to names
 # understood by PTK1
 DEFAULT_STYLE_DICT = LazyObject(
     lambda: ansicolors_to_ptk1_names(_DEFAULT_STYLE_DICT),
     globals(),
-    'DEFAULT_STYLE_DICT'
+    "DEFAULT_STYLE_DICT",
 )
 
 
@@ -58,9 +61,9 @@ class PromptToolkitShell(BaseShell):
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         key_bindings_manager_args = {
-            'enable_auto_suggest_bindings': True,
-            'enable_search': True,
-            'enable_abort_and_exit_bindings': True,
+            "enable_auto_suggest_bindings": True,
+            "enable_search": True,
+            "enable_abort_and_exit_bindings": True,
         }
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
@@ -72,31 +75,37 @@ class PromptToolkitShell(BaseShell):
             bindings=self.key_bindings_manager,
         )
 
-    def singleline(self, store_in_history=True, auto_suggest=None,
-                   enable_history_search=True, multiline=True, **kwargs):
+    def singleline(
+        self,
+        store_in_history=True,
+        auto_suggest=None,
+        enable_history_search=True,
+        multiline=True,
+        **kwargs
+    ):
         """Reads a single line of input from the shell. The store_in_history
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
         events.on_pre_prompt.fire()
         env = builtins.__xonsh_env__
-        mouse_support = env.get('MOUSE_SUPPORT')
+        mouse_support = env.get("MOUSE_SUPPORT")
         if store_in_history:
             history = self.history
         else:
             history = None
             enable_history_search = False
-        auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
-        completions_display = env.get('COMPLETIONS_DISPLAY')
-        multicolumn = (completions_display == 'multi')
-        complete_while_typing = env.get('UPDATE_COMPLETIONS_ON_KEYPRESS')
+        auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
+        completions_display = env.get("COMPLETIONS_DISPLAY")
+        multicolumn = completions_display == "multi"
+        complete_while_typing = env.get("UPDATE_COMPLETIONS_ON_KEYPRESS")
         if complete_while_typing:
             # PTK requires history search to be none when completing while typing
             enable_history_search = False
         if HAS_PYGMENTS:
-            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-        completer = None if completions_display == 'none' else self.pt_completer
-        if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
+            self.styler.style_name = env.get("XONSH_COLOR_STYLE")
+        completer = None if completions_display == "none" else self.pt_completer
+        if not env.get("UPDATE_PROMPT_ON_KEYPRESS"):
             prompt_tokens_cached = self.prompt_tokens(None)
             get_prompt_tokens = lambda cli: prompt_tokens_cached
             rprompt_tokens_cached = self.rprompt_tokens(None)
@@ -110,27 +119,29 @@ class PromptToolkitShell(BaseShell):
 
         with self.prompter:
             prompt_args = {
-                'mouse_support': mouse_support,
-                'auto_suggest': auto_suggest,
-                'get_prompt_tokens': get_prompt_tokens,
-                'get_rprompt_tokens': get_rprompt_tokens,
-                'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
-                'completer': completer,
-                'multiline': multiline,
-                'get_continuation_tokens': self.continuation_tokens,
-                'history': history,
-                'enable_history_search': enable_history_search,
-                'reserve_space_for_menu': 0,
-                'key_bindings_registry': self.key_bindings_manager.registry,
-                'display_completions_in_columns': multicolumn,
-                'complete_while_typing': complete_while_typing,
+                "mouse_support": mouse_support,
+                "auto_suggest": auto_suggest,
+                "get_prompt_tokens": get_prompt_tokens,
+                "get_rprompt_tokens": get_rprompt_tokens,
+                "get_bottom_toolbar_tokens": get_bottom_toolbar_tokens,
+                "completer": completer,
+                "multiline": multiline,
+                "get_continuation_tokens": self.continuation_tokens,
+                "history": history,
+                "enable_history_search": enable_history_search,
+                "reserve_space_for_menu": 0,
+                "key_bindings_registry": self.key_bindings_manager.registry,
+                "display_completions_in_columns": multicolumn,
+                "complete_while_typing": complete_while_typing,
             }
-            if builtins.__xonsh_env__.get('COLOR_INPUT'):
+            if builtins.__xonsh_env__.get("COLOR_INPUT"):
                 if HAS_PYGMENTS:
-                    prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
-                    prompt_args['style'] = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
+                    prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
+                    prompt_args["style"] = PygmentsStyle(
+                        pyghooks.xonsh_style_proxy(self.styler)
+                    )
                 else:
-                    prompt_args['style'] = style_from_dict(DEFAULT_STYLE_DICT)
+                    prompt_args["style"] = style_from_dict(DEFAULT_STYLE_DICT)
             line = self.prompter.prompt(**prompt_args)
             events.on_post_prompt.fire()
         return line
@@ -143,13 +154,10 @@ class PromptToolkitShell(BaseShell):
         self.buffer.append(line)
         if self.need_more_lines:
             return None, code
-        src = ''.join(self.buffer)
+        src = "".join(self.buffer)
         src = transform_command(src)
         try:
-            code = self.execer.compile(src,
-                                       mode='single',
-                                       glbs=self.ctx,
-                                       locs=None)
+            code = self.execer.compile(src, mode="single", glbs=self.ctx, locs=None)
             self.reset_buffer()
         except Exception:  # pylint: disable=broad-except
             self.reset_buffer()
@@ -181,7 +189,7 @@ class PromptToolkitShell(BaseShell):
 
     def prompt_tokens(self, cli):
         """Returns a list of (token, str) tuples for the current prompt."""
-        p = builtins.__xonsh_env__.get('PROMPT')
+        p = builtins.__xonsh_env__.get("PROMPT")
         try:
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
@@ -197,7 +205,7 @@ class PromptToolkitShell(BaseShell):
         """Returns a list of (token, str) tuples for the current right
         prompt.
         """
-        p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
+        p = builtins.__xonsh_env__.get("RIGHT_PROMPT")
         # self.prompt_formatter does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $RIGHT_PROMPT == ''.
@@ -214,7 +222,7 @@ class PromptToolkitShell(BaseShell):
         """Returns a list of (token, str) tuples for the current bottom
         toolbar.
         """
-        p = builtins.__xonsh_env__.get('BOTTOM_TOOLBAR')
+        p = builtins.__xonsh_env__.get("BOTTOM_TOOLBAR")
         # self.prompt_formatter does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $TOOLBAR == ''.
@@ -230,14 +238,14 @@ class PromptToolkitShell(BaseShell):
     def continuation_tokens(self, cli, width):
         """Displays dots in multiline prompt"""
         width = width - 1
-        dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
+        dots = builtins.__xonsh_env__.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
         if dots is None:
-            return [(Token, ' ' * (width + 1))]
+            return [(Token, " " * (width + 1))]
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            return [(Token, ' ' * (width + 1))]
+            return [(Token, " " * (width + 1))]
         toks = basetoks * (width // baselen)
         n = width % baselen
         count = 0
@@ -249,11 +257,11 @@ class PromptToolkitShell(BaseShell):
             elif newcount <= n:
                 toks.append(tok)
             else:
-                toks.append((tok[0], tok[1][:n - count]))
+                toks.append((tok[0], tok[1][: n - count]))
             count = newcount
             if n <= count:
                 break
-        toks.append((Token, ' '))  # final space
+        toks.append((Token, " "))  # final space
         return toks
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
@@ -264,7 +272,7 @@ class PromptToolkitShell(BaseShell):
         tokens = partial_color_tokenize(string)
         if force_string and HAS_PYGMENTS:
             env = builtins.__xonsh_env__
-            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             proxy_style = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=proxy_style)
             s = pygments.format(tokens, formatter)
@@ -275,7 +283,7 @@ class PromptToolkitShell(BaseShell):
         else:
             return tokens
 
-    def print_color(self, string, end='\n', **kwargs):
+    def print_color(self, string, end="\n", **kwargs):
         """Prints a color string using prompt-toolkit color management."""
         if isinstance(string, str):
             tokens = partial_color_tokenize(string + end)
@@ -284,7 +292,7 @@ class PromptToolkitShell(BaseShell):
             tokens = string
         if HAS_PYGMENTS:
             env = builtins.__xonsh_env__
-            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             proxy_style = PygmentsStyle(pyghooks.xonsh_style_proxy(self.styler))
         else:
             proxy_style = style_from_dict(DEFAULT_STYLE_DICT)
@@ -293,7 +301,7 @@ class PromptToolkitShell(BaseShell):
     def color_style_names(self):
         """Returns an iterable of all available style names."""
         if not HAS_PYGMENTS:
-            return ['For other xonsh styles, please install pygments']
+            return ["For other xonsh styles, please install pygments"]
         return get_all_styles()
 
     def color_style(self):
@@ -301,7 +309,7 @@ class PromptToolkitShell(BaseShell):
         if not HAS_PYGMENTS:
             return DEFAULT_STYLE_DICT
         env = builtins.__xonsh_env__
-        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+        self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         return self.styler.styles
 
     def restore_tty_sanity(self):

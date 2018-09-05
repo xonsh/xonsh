@@ -26,13 +26,13 @@ class Node(object):
         return PrettyFormatter(self).visit()
 
     def __repr__(self):
-        return str(self).replace('\n', '')
+        return str(self).replace("\n", "")
 
 
 class Wizard(Node):
     """Top-level node in the tree."""
 
-    attrs = ('children', 'path')
+    attrs = ("children", "path")
 
     def __init__(self, children, path=None):
         self.children = children
@@ -46,7 +46,7 @@ class Pass(Node):
 class Message(Node):
     """Contains a simple message to report to the user."""
 
-    attrs = ('message')
+    attrs = "message"
 
     def __init__(self, message):
         self.message = message
@@ -56,7 +56,7 @@ class Question(Node):
     """Asks a question and then chooses the next node based on the response.
     """
 
-    attrs = ('question', 'responses', 'converter', 'path')
+    attrs = ("question", "responses", "converter", "path")
 
     def __init__(self, question, responses, converter=None, path=None):
         """
@@ -81,10 +81,17 @@ class Question(Node):
 class Input(Node):
     """Gets input from the user."""
 
-    attrs = ('prompt', 'converter', 'show_conversion', 'confirm', 'path')
+    attrs = ("prompt", "converter", "show_conversion", "confirm", "path")
 
-    def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
-                 confirm=False, retry=False, path=None):
+    def __init__(
+        self,
+        prompt=">>> ",
+        converter=None,
+        show_conversion=False,
+        confirm=False,
+        retry=False,
+        path=None,
+    ):
         """
         Parameters
         ----------
@@ -122,9 +129,9 @@ class While(Node):
     The beg attribute specifies the number to start the loop iteration at.
     """
 
-    attrs = ('cond', 'body', 'idxname', 'beg', 'path')
+    attrs = ("cond", "body", "idxname", "beg", "path")
 
-    def __init__(self, cond, body, idxname='idx', beg=0, path=None):
+    def __init__(self, cond, body, idxname="idx", beg=0, path=None):
         """
         Parameters
         ----------
@@ -153,6 +160,7 @@ class While(Node):
 # Helper nodes
 #
 
+
 class YesNo(Question):
     """Represents a simple yes/no question."""
 
@@ -170,24 +178,33 @@ class YesNo(Question):
             A path within the storage object.
         """
         responses = {True: yes, False: no}
-        super().__init__(question, responses, converter=to_bool,
-                         path=path)
+        super().__init__(question, responses, converter=to_bool, path=path)
 
 
 class TrueFalse(Input):
     """Input node the returns a True or False value."""
 
-    def __init__(self, prompt='yes or no [default: no]? ', path=None):
-        super().__init__(prompt=prompt, converter=to_bool,
-                         show_conversion=False, confirm=False, path=path)
+    def __init__(self, prompt="yes or no [default: no]? ", path=None):
+        super().__init__(
+            prompt=prompt,
+            converter=to_bool,
+            show_conversion=False,
+            confirm=False,
+            path=path,
+        )
 
 
 class TrueFalseBreak(Input):
     """Input node the returns a True, False, or 'break' value."""
 
-    def __init__(self, prompt='yes, no, or break [default: no]? ', path=None):
-        super().__init__(prompt=prompt, converter=to_bool_or_break,
-                         show_conversion=False, confirm=False, path=path)
+    def __init__(self, prompt="yes, no, or break [default: no]? ", path=None):
+        super().__init__(
+            prompt=prompt,
+            converter=to_bool_or_break,
+            show_conversion=False,
+            confirm=False,
+            path=path,
+        )
 
 
 class StoreNonEmpty(Input):
@@ -195,8 +212,16 @@ class StoreNonEmpty(Input):
     This works by wrapping the converter function.
     """
 
-    def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
-                 confirm=False, retry=False, path=None, store_raw=False):
+    def __init__(
+        self,
+        prompt=">>> ",
+        converter=None,
+        show_conversion=False,
+        confirm=False,
+        retry=False,
+        path=None,
+        store_raw=False,
+    ):
         def nonempty_converter(x):
             """Converts non-empty values and converts empty inputs to
             Unstorable.
@@ -210,9 +235,15 @@ class StoreNonEmpty(Input):
             else:
                 x = converter(x)
             return x
-        super().__init__(prompt=prompt, converter=nonempty_converter,
-                         show_conversion=show_conversion, confirm=confirm,
-                         path=path, retry=retry)
+
+        super().__init__(
+            prompt=prompt,
+            converter=nonempty_converter,
+            show_conversion=show_conversion,
+            confirm=confirm,
+            path=path,
+            retry=retry,
+        )
 
 
 class StateFile(Input):
@@ -220,7 +251,7 @@ class StateFile(Input):
     given file name. This node type is likely not useful on its own.
     """
 
-    attrs = ('default_file', 'check', 'ask_filename')
+    attrs = ("default_file", "check", "ask_filename")
 
     def __init__(self, default_file=None, check=True, ask_filename=True):
         """
@@ -237,8 +268,7 @@ class StateFile(Input):
             default filename)
         """
         self._df = None
-        super().__init__(prompt='filename: ', converter=None,
-                         confirm=False, path=None)
+        super().__init__(prompt="filename: ", converter=None, confirm=False, path=None)
         self.ask_filename = ask_filename
         self.default_file = default_file
         self.check = check
@@ -251,9 +281,9 @@ class StateFile(Input):
     def default_file(self, val):
         self._df = val
         if val is None:
-            self.prompt = 'filename: '
+            self.prompt = "filename: "
         else:
-            self.prompt = 'filename [default={0!r}]: '.format(val)
+            self.prompt = "filename [default={0!r}]: ".format(val)
 
 
 class SaveJSON(StateFile):
@@ -273,11 +303,17 @@ class FileInserter(StateFile):
     The state is converted according to some dumper rules.
     """
 
-    attrs = ('prefix', 'suffix', 'dump_rules', 'default_file', 'check',
-             'ask_filename')
+    attrs = ("prefix", "suffix", "dump_rules", "default_file", "check", "ask_filename")
 
-    def __init__(self, prefix, suffix, dump_rules, default_file=None,
-                 check=True, ask_filename=True):
+    def __init__(
+        self,
+        prefix,
+        suffix,
+        dump_rules,
+        default_file=None,
+        check=True,
+        ask_filename=True,
+    ):
         """
         Parameters
         ----------
@@ -315,8 +351,9 @@ class FileInserter(StateFile):
             default filename)
         """
         self._dr = None
-        super().__init__(default_file=default_file, check=check,
-                         ask_filename=ask_filename)
+        super().__init__(
+            default_file=default_file, check=check, ask_filename=ask_filename
+        )
         self.prefix = prefix
         self.suffix = suffix
         self.dump_rules = self.string_rules = dump_rules
@@ -371,21 +408,23 @@ class FileInserter(StateFile):
             line = func(path, value)
             lines.append(line)
         lines.append(self.suffix)
-        new = '\n'.join(lines) + '\n'
+        new = "\n".join(lines) + "\n"
         return new
 
 
-def create_truefalse_cond(prompt='yes or no [default: no]? ', path=None):
+def create_truefalse_cond(prompt="yes or no [default: no]? ", path=None):
     """This creates a basic condition function for use with nodes like While
     or other conditions. The condition function creates and visits a TrueFalse
     node and returns the result. This TrueFalse node takes the prompt and
     path that is passed in here.
     """
+
     def truefalse_cond(visitor, node=None):
         """Prompts the user for a true/false condition."""
         tf = TrueFalse(prompt=prompt, path=path)
         rtn = visitor.visit(tf)
         return rtn
+
     return truefalse_cond
 
 
@@ -411,14 +450,14 @@ class Visitor(object):
         if node is None:
             node = self.tree
         if node is None:
-            raise RuntimeError('no node or tree given!')
+            raise RuntimeError("no node or tree given!")
         for clsname in map(_lowername, type.mro(node.__class__)):
-            meth = getattr(self, 'visit_' + clsname, None)
+            meth = getattr(self, "visit_" + clsname, None)
             if callable(meth):
                 rtn = meth(node)
                 break
         else:
-            msg = 'could not find valid visitor method for {0} on {1}'
+            msg = "could not find valid visitor method for {0} on {1}"
             nodename = node.__class__.__name__
             selfname = self.__class__.__name__
             raise AttributeError(msg.format(nodename, selfname))
@@ -428,104 +467,104 @@ class Visitor(object):
 class PrettyFormatter(Visitor):
     """Formats a tree of nodes into a pretty string"""
 
-    def __init__(self, tree=None, indent=' '):
+    def __init__(self, tree=None, indent=" "):
         super().__init__(tree=tree)
         self.level = 0
         self.indent = indent
 
     def visit_node(self, node):
-        s = node.__class__.__name__ + '('
+        s = node.__class__.__name__ + "("
         if len(node.attrs) == 0:
-            return s + ')'
-        s += '\n'
+            return s + ")"
+        s += "\n"
         self.level += 1
         t = []
         for aname in node.attrs:
             a = getattr(node, aname)
             t.append(self.visit(a) if isinstance(a, Node) else pprint.pformat(a))
-        t = ['{0}={1}'.format(n, x) for n, x in zip(node.attrs, t)]
-        s += textwrap.indent(',\n'.join(t), self.indent)
+        t = ["{0}={1}".format(n, x) for n, x in zip(node.attrs, t)]
+        s += textwrap.indent(",\n".join(t), self.indent)
         self.level -= 1
-        s += '\n)'
+        s += "\n)"
         return s
 
     def visit_wizard(self, node):
-        s = 'Wizard(children=['
+        s = "Wizard(children=["
         if len(node.children) == 0:
             if node.path is None:
-                return s + '])'
+                return s + "])"
             else:
-                return s + '], path={0!r})'.format(node.path)
-        s += '\n'
+                return s + "], path={0!r})".format(node.path)
+        s += "\n"
         self.level += 1
-        s += textwrap.indent(',\n'.join(map(self.visit, node.children)),
-                             self.indent)
+        s += textwrap.indent(",\n".join(map(self.visit, node.children)), self.indent)
         self.level -= 1
         if node.path is None:
-            s += '\n])'
+            s += "\n])"
         else:
-            s += '{0}],\n{0}path={1!r}\n)'.format(self.indent, node.path)
+            s += "{0}],\n{0}path={1!r}\n)".format(self.indent, node.path)
         return s
 
     def visit_message(self, node):
-        return 'Message({0!r})'.format(node.message)
+        return "Message({0!r})".format(node.message)
 
     def visit_question(self, node):
-        s = node.__class__.__name__ + '(\n'
+        s = node.__class__.__name__ + "(\n"
         self.level += 1
-        s += self.indent + 'question={0!r},\n'.format(node.question)
-        s += self.indent + 'responses={'
+        s += self.indent + "question={0!r},\n".format(node.question)
+        s += self.indent + "responses={"
         if len(node.responses) == 0:
-            s += '}'
+            s += "}"
         else:
-            s += '\n'
+            s += "\n"
             t = sorted(node.responses.items())
-            t = ['{0!r}: {1}'.format(k, self.visit(v)) for k, v in t]
-            s += textwrap.indent(',\n'.join(t), 2 * self.indent)
-            s += '\n' + self.indent + '}'
+            t = ["{0!r}: {1}".format(k, self.visit(v)) for k, v in t]
+            s += textwrap.indent(",\n".join(t), 2 * self.indent)
+            s += "\n" + self.indent + "}"
         if node.converter is not None:
-            s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
+            s += ",\n" + self.indent + "converter={0!r}".format(node.converter)
         if node.path is not None:
-            s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
+            s += ",\n" + self.indent + "path={0!r}".format(node.path)
         self.level -= 1
-        s += '\n)'
+        s += "\n)"
         return s
 
     def visit_input(self, node):
-        s = '{0}(prompt={1!r}'.format(node.__class__.__name__, node.prompt)
+        s = "{0}(prompt={1!r}".format(node.__class__.__name__, node.prompt)
         if node.converter is None and node.path is None:
-            return s + '\n)'
+            return s + "\n)"
         if node.converter is not None:
-            s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
-        s += ',\n' + self.indent + 'show_conversion={0!r}'.format(node.show_conversion)
-        s += ',\n' + self.indent + 'confirm={0!r}'.format(node.confirm)
-        s += ',\n' + self.indent + 'retry={0!r}'.format(node.retry)
+            s += ",\n" + self.indent + "converter={0!r}".format(node.converter)
+        s += ",\n" + self.indent + "show_conversion={0!r}".format(node.show_conversion)
+        s += ",\n" + self.indent + "confirm={0!r}".format(node.confirm)
+        s += ",\n" + self.indent + "retry={0!r}".format(node.retry)
         if node.path is not None:
-            s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
-        s += '\n)'
+            s += ",\n" + self.indent + "path={0!r}".format(node.path)
+        s += "\n)"
         return s
 
     def visit_statefile(self, node):
-        s = '{0}(default_file={1!r}, check={2}, ask_filename={3})'
-        s = s.format(node.__class__.__name__, node.default_file, node.check, node.ask_filename)
+        s = "{0}(default_file={1!r}, check={2}, ask_filename={3})"
+        s = s.format(
+            node.__class__.__name__, node.default_file, node.check, node.ask_filename
+        )
         return s
 
     def visit_while(self, node):
-        s = '{0}(cond={1!r}'.format(node.__class__.__name__, node.cond)
-        s += ',\n' + self.indent + 'body=['
+        s = "{0}(cond={1!r}".format(node.__class__.__name__, node.cond)
+        s += ",\n" + self.indent + "body=["
         if len(node.body) > 0:
-            s += '\n'
+            s += "\n"
             self.level += 1
-            s += textwrap.indent(',\n'.join(map(self.visit, node.body)),
-                                 self.indent)
+            s += textwrap.indent(",\n".join(map(self.visit, node.body)), self.indent)
             self.level -= 1
-            s += '\n' + self.indent
-        s += ']'
-        s += ',\n' + self.indent + 'idxname={0!r}'.format(node.idxname)
-        s += ',\n' + self.indent + 'beg={0!r}'.format(node.beg)
+            s += "\n" + self.indent
+        s += "]"
+        s += ",\n" + self.indent + "idxname={0!r}".format(node.idxname)
+        s += ",\n" + self.indent + "beg={0!r}".format(node.beg)
         if node.path is not None:
-            s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
-        s += '\n)'
+            s += ",\n" + self.indent + "path={0!r}".format(node.path)
+        s += "\n)"
         return s
 
 
@@ -539,7 +578,7 @@ def ensure_str_or_int(x):
     except (ValueError, SyntaxError):
         pass
     if not isinstance(x, (int, str)):
-        msg = '{0!r} could not be converted to int or str'.format(x)
+        msg = "{0!r} could not be converted to int or str".format(x)
         raise ValueError(msg)
     return x
 
@@ -552,11 +591,11 @@ def canon_path(path, indices=None):
         return tuple(map(ensure_str_or_int, path))
     if indices is not None:
         path = path.format(**indices)
-    path = path[1:] if path.startswith('/') else path
-    path = path[:-1] if path.endswith('/') else path
+    path = path[1:] if path.startswith("/") else path
+    path = path[:-1] if path.endswith("/") else path
     if len(path) == 0:
         return ()
-    return tuple(map(ensure_str_or_int, path.split('/')))
+    return tuple(map(ensure_str_or_int, path.split("/")))
 
 
 class UnstorableType(object):
@@ -569,8 +608,7 @@ class UnstorableType(object):
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:
-            cls._inst = super(UnstorableType, cls).__new__(cls, *args,
-                                                           **kwargs)
+            cls._inst = super(UnstorableType, cls).__new__(cls, *args, **kwargs)
         return cls._inst
 
 
@@ -593,9 +631,9 @@ class StateVisitor(Visitor):
         if node is None:
             node = self.tree
         if node is None:
-            raise RuntimeError('no node or tree given!')
+            raise RuntimeError("no node or tree given!")
         rtn = super().visit(node)
-        path = getattr(node, 'path', None)
+        path = getattr(node, "path", None)
         if callable(path):
             path = path(visitor=self, node=node, val=rtn)
         if path is not None and rtn is not Unstorable:
@@ -624,7 +662,7 @@ class StateVisitor(Visitor):
             loc.extend(ex)
         loc[p] = val
 
-    def flatten(self, path='/', value=None, flat=None):
+    def flatten(self, path="/", value=None, flat=None):
         """Returns a dict version of the store whose keys are paths.
         Note that list and dict entries will always end in '/', allowing
         disambiquation in dump_rules.
@@ -632,7 +670,7 @@ class StateVisitor(Visitor):
         value = self.state if value is None else value
         flat = {} if flat is None else flat
         if isinstance(value, cabc.Mapping):
-            path = path if path.endswith('/') else path + '/'
+            path = path if path.endswith("/") else path + "/"
             flat[path] = value
             for k, v in value.items():
                 p = path + k
@@ -640,7 +678,7 @@ class StateVisitor(Visitor):
         elif isinstance(value, (str, bytes)):
             flat[path] = value
         elif isinstance(value, cabc.Sequence):
-            path = path if path.endswith('/') else path + '/'
+            path = path if path.endswith("/") else path + "/"
             flat[path] = value
             for i, v in enumerate(value):
                 p = path + str(i)
@@ -651,8 +689,10 @@ class StateVisitor(Visitor):
 
 
 YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} [default: no]? "
-YNB = ('{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR}, or '
-       '{YELLOW}break{NO_COLOR} [default: no]? ')
+YNB = (
+    "{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR}, or "
+    "{YELLOW}break{NO_COLOR} [default: no]? "
+)
 
 
 class PromptVisitor(StateVisitor):
@@ -686,7 +726,7 @@ class PromptVisitor(StateVisitor):
         print_color(node.message)
 
     def visit_question(self, node):
-        self.env['PROMPT'] = node.question
+        self.env["PROMPT"] = node.question
         r = self.shell.singleline(**self.shell_kwargs)
         if callable(node.converter):
             r = node.converter(r)
@@ -696,7 +736,7 @@ class PromptVisitor(StateVisitor):
     def visit_input(self, node):
         need_input = True
         while need_input:
-            self.env['PROMPT'] = node.prompt
+            self.env["PROMPT"] = node.prompt
             raw = self.shell.singleline(**self.shell_kwargs)
             if callable(node.converter):
                 try:
@@ -705,24 +745,25 @@ class PromptVisitor(StateVisitor):
                     raise
                 except Exception:
                     if node.retry:
-                        msg = ('{{BOLD_RED}}Invalid{{NO_COLOR}} input {0!r}, '
-                               'please retry.')
+                        msg = (
+                            "{{BOLD_RED}}Invalid{{NO_COLOR}} input {0!r}, "
+                            "please retry."
+                        )
                         print_color(msg.format(raw))
                         continue
                     else:
                         raise
-                if node.show_conversion and x is not Unstorable \
-                        and str(x) != raw:
-                    msg = '{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}.'
+                if node.show_conversion and x is not Unstorable and str(x) != raw:
+                    msg = "{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}."
                     print_color(msg.format(raw, x))
             else:
                 x = raw
             if node.confirm:
-                msg = 'Would you like to keep the input: {0}'
+                msg = "Would you like to keep the input: {0}"
                 print(msg.format(pprint.pformat(x)))
                 confirmer = TrueFalseBreak(prompt=YNB)
                 status = self.visit(confirmer)
-                if isinstance(status, str) and status == 'break':
+                if isinstance(status, str) and status == "break":
                     x = Unstorable
                     break
                 else:
@@ -747,12 +788,13 @@ class PromptVisitor(StateVisitor):
         return rtns
 
     def visit_savejson(self, node):
-        jstate = json.dumps(self.state, indent=1, sort_keys=True,
-                            default=serialize_xonsh_json)
+        jstate = json.dumps(
+            self.state, indent=1, sort_keys=True, default=serialize_xonsh_json
+        )
         if node.check:
-            msg = 'The current state is:\n\n{0}\n'
-            print(msg.format(textwrap.indent(jstate, '    ')))
-            ap = 'Would you like to save this state, ' + YN
+            msg = "The current state is:\n\n{0}\n"
+            print(msg.format(textwrap.indent(jstate, "    ")))
+            ap = "Would you like to save this state, " + YN
             asker = TrueFalse(prompt=ap)
             do_save = self.visit(asker)
             if not do_save:
@@ -766,13 +808,13 @@ class PromptVisitor(StateVisitor):
             backup_file(fname)
         else:
             os.makedirs(os.path.dirname(fname), exist_ok=True)
-        with open(fname, 'w') as f:
+        with open(fname, "w") as f:
             f.write(jstate)
         return fname
 
     def visit_loadjson(self, node):
         if node.check:
-            ap = 'Would you like to load an existing file, ' + YN
+            ap = "Would you like to load an existing file, " + YN
             asker = TrueFalse(prompt=ap)
             do_load = self.visit(asker)
             if not do_load:
@@ -781,12 +823,15 @@ class PromptVisitor(StateVisitor):
         if fname is None or len(fname) == 0:
             fname = node.default_file
         if os.path.isfile(fname):
-            with open(fname, 'r') as f:
+            with open(fname, "r") as f:
                 self.state = json.load(f)
-            print_color('{{GREEN}}{0!r} loaded.{{NO_COLOR}}'.format(fname))
+            print_color("{{GREEN}}{0!r} loaded.{{NO_COLOR}}".format(fname))
         else:
-            print_color(('{{RED}}{0!r} could not be found, '
-                         'continuing.{{NO_COLOR}}').format(fname))
+            print_color(
+                ("{{RED}}{0!r} could not be found, " "continuing.{{NO_COLOR}}").format(
+                    fname
+                )
+            )
         return fname
 
     def visit_fileinserter(self, node):
@@ -794,9 +839,9 @@ class PromptVisitor(StateVisitor):
         new = node.dumps(self.flatten())
         # check if we should write this out
         if node.check:
-            msg = 'The current state to insert is:\n\n{0}\n'
-            print(msg.format(textwrap.indent(new, '    ')))
-            ap = 'Would you like to write out the current state, ' + YN
+            msg = "The current state to insert is:\n\n{0}\n"
+            print(msg.format(textwrap.indent(new, "    ")))
+            ap = "Would you like to write out the current state, " + YN
             asker = TrueFalse(prompt=ap)
             do_save = self.visit(asker)
             if not do_save:
@@ -808,17 +853,17 @@ class PromptVisitor(StateVisitor):
         if fname is None or len(fname) == 0:
             fname = node.default_file
         if os.path.isfile(fname):
-            with open(fname, 'r') as f:
+            with open(fname, "r") as f:
                 s = f.read()
             before, _, s = s.partition(node.prefix)
             _, _, after = s.partition(node.suffix)
             backup_file(fname)
         else:
-            before = after = ''
+            before = after = ""
             dname = os.path.dirname(fname)
             if dname:
                 os.makedirs(dname, exist_ok=True)
         # write out the file
-        with open(fname, 'w') as f:
+        with open(fname, "w") as f:
             f.write(before + new + after)
         return fname

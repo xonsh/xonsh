@@ -17,6 +17,7 @@ from xonsh.built_ins import load_builtins
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
 
+
 @contextmanager
 def chdir(adir):
     old_dir = os.getcwd()
@@ -28,17 +29,17 @@ def chdir(adir):
 def test_simple(xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=PARENT)
     with chdir(PARENT):
-        assert os.getcwd() !=  HERE
+        assert os.getcwd() != HERE
         dirstack.cd(["tests"])
-        assert os.getcwd() ==  HERE
+        assert os.getcwd() == HERE
 
 
 def test_cdpath_simple(xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
     with chdir(os.path.normpath("/")):
-        assert os.getcwd() !=  HERE
+        assert os.getcwd() != HERE
         dirstack.cd(["tests"])
-        assert os.getcwd() ==  HERE
+        assert os.getcwd() == HERE
 
 
 def test_cdpath_collision(xonsh_builtins):
@@ -49,20 +50,22 @@ def test_cdpath_collision(xonsh_builtins):
     with chdir(HERE):
         assert os.getcwd() == HERE
         dirstack.cd(["tests"])
-        assert os.getcwd() ==  os.path.join(HERE, "tests")
+        assert os.getcwd() == os.path.join(HERE, "tests")
 
 
 def test_cdpath_expansion(xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(HERE=HERE, CDPATH=("~", "$HERE"))
     test_dirs = (
         os.path.join(HERE, "xonsh-test-cdpath-here"),
-        os.path.expanduser("~/xonsh-test-cdpath-home")
+        os.path.expanduser("~/xonsh-test-cdpath-home"),
     )
     try:
         for d in test_dirs:
             if not os.path.exists(d):
                 os.mkdir(d)
-            assert os.path.exists(dirstack._try_cdpath(d)), "dirstack._try_cdpath: could not resolve {0}".format(d)
+            assert os.path.exists(
+                dirstack._try_cdpath(d)
+            ), "dirstack._try_cdpath: could not resolve {0}".format(d)
     finally:
         for d in test_dirs:
             if os.path.exists(d):
@@ -74,6 +77,7 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
     target = str(tmpdir)
 
     ev = None
+
     @xonsh_builtins.events.on_chdir
     def handler(olddir, newdir, **kw):
         nonlocal ev

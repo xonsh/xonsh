@@ -19,8 +19,8 @@ class Parser(ThreeFiveParser):
         # only difference with base should be the is_async=0
         comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=0)
         comps = [comp]
-        p0 = {'comps': comps}
+        p0 = {"comps": comps}
         if p5 is not None:
-            comps += p5.get('comps', [])
-            comp.ifs += p5.get('if', [])
+            comps += p5.get("comps", [])
+            comp.ifs += p5.get("if", [])
         p[0] = p0

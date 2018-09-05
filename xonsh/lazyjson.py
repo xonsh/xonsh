@@ -13,43 +13,44 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
         o = offset
         n = size = len(s.encode())  # size in bytes
     elif isinstance(obj, cabc.Mapping):
-        s = '{'
+        s = "{"
         j = offset + 1
         o = {}
         size = {}
         items = sorted(obj.items()) if sort_keys else obj.items()
         for key, val in items:
-            s_k, o_k, n_k, size_k = _to_json_with_size(key, offset=j,
-                                                       sort_keys=sort_keys)
-            s += s_k + ': '
+            s_k, o_k, n_k, size_k = _to_json_with_size(
+                key, offset=j, sort_keys=sort_keys
+            )
+            s += s_k + ": "
             j += n_k + 2
-            s_v, o_v, n_v, size_v = _to_json_with_size(val, offset=j,
-                                                       sort_keys=sort_keys)
+            s_v, o_v, n_v, size_v = _to_json_with_size(
+                val, offset=j, sort_keys=sort_keys
+            )
             o[key] = o_v
             size[key] = size_v
-            s += s_v + ', '
+            s += s_v + ", "
             j += n_v + 2
-        if s.endswith(', '):
+        if s.endswith(", "):
             s = s[:-2]
-        s += '}\n'
+        s += "}\n"
         n = len(s)
-        o['__total__'] = offset
-        size['__total__'] = n
+        o["__total__"] = offset
+        size["__total__"] = n
     elif isinstance(obj, cabc.Sequence):
-        s = '['
+        s = "["
         j = offset + 1
         o = []
         size = []
         for x in obj:
-            s_x, o_x, n_x, size_x = _to_json_with_size(x, offset=j,
-                                                       sort_keys=sort_keys)
+            s_x, o_x, n_x, size_x = _to_json_with_size(x, offset=j, sort_keys=sort_keys)
             o.append(o_x)
             size.append(size_x)
-            s += s_x + ', '
+            s += s_x + ", "
             j += n_x + 2
-        if s.endswith(', '):
+        if s.endswith(", "):
             s = s[:-2]
-        s += ']\n'
+        s += "]\n"
         n = len(s)
         o.append(offset)
         size.append(n)
@@ -64,7 +65,7 @@ def index(obj, sort_keys=False):
     """Creates an index for a JSON file."""
     idx = {}
     json_obj = _to_json_with_size(obj, sort_keys=sort_keys)
-    s, idx['offsets'], _, idx['sizes'] = json_obj
+    s, idx["offsets"], _, idx["sizes"] = json_obj
     return s, idx
 
 
@@ -83,8 +84,9 @@ def dumps(obj, sort_keys=False):
     ilen = len(jdx)
     dloc = iloc + ilen + 11
     dlen = len(data)
-    s = JSON_FORMAT.format(index=jdx, data=data, iloc=iloc, ilen=ilen,
-                           dloc=dloc, dlen=dlen)
+    s = JSON_FORMAT.format(
+        index=jdx, data=data, iloc=iloc, ilen=ilen, dloc=dloc, dlen=dlen
+    )
     return s
 
 
@@ -121,8 +123,8 @@ class LJNode(cabc.Mapping, cabc.Sequence):
     def load(self):
         """Returns the Python data structure represented by the node."""
         if self.is_mapping:
-            offset = self.offsets['__total__']
-            size = self.sizes['__total__']
+            offset = self.offsets["__total__"]
+            size = self.sizes["__total__"]
         elif self.is_sequence:
             offset = self.offsets[-1]
             size = self.sizes[-1]
@@ -133,18 +135,18 @@ class LJNode(cabc.Mapping, cabc.Sequence):
 
     def _load_or_node(self, offset, size):
         if isinstance(offset, int):
-            with self.root._open(newline='\n') as f:
+            with self.root._open(newline="\n") as f:
                 f.seek(self.root.dloc + offset)
                 s = f.read(size)
             val = json.loads(s)
         elif isinstance(offset, (cabc.Mapping, cabc.Sequence)):
             val = LJNode(offset, size, self.root)
         else:
-            raise TypeError('incorrect types for offset node')
+            raise TypeError("incorrect types for offset node")
         return val
 
     def _getitem_mapping(self, key):
-        if key == '__total__':
+        if key == "__total__":
             raise KeyError('"__total__" is a special LazyJSON key!')
         offset = self.offsets[key]
         size = self.sizes[key]
@@ -155,10 +157,9 @@ class LJNode(cabc.Mapping, cabc.Sequence):
             rtn = self._load_or_node(self.offsets[key], self.sizes[key])
         elif isinstance(key, slice):
             key = slice(*key.indices(len(self)))
-            rtn = list(map(self._load_or_node, self.offsets[key],
-                           self.sizes[key]))
+            rtn = list(map(self._load_or_node, self.offsets[key], self.sizes[key]))
         else:
-            raise TypeError('only integer indexing available')
+            raise TypeError("only integer indexing available")
         return rtn
 
     def __getitem__(self, key):
@@ -173,7 +174,7 @@ class LJNode(cabc.Mapping, cabc.Sequence):
     def __iter__(self):
         if self.is_mapping:
             keys = set(self.offsets.keys())
-            keys.discard('__total__')
+            keys.discard("__total__")
             yield from iter(keys)
         elif self.is_sequence:
             i = 0
@@ -201,7 +202,7 @@ class LazyJSON(LJNode):
         self._f = f
         self.reopen = reopen
         if not reopen and isinstance(f, str):
-            self._f = open(f, 'r', newline='\n')
+            self._f = open(f, "r", newline="\n")
         self._load_index()
         self.root = weakref.proxy(self)
         self.is_mapping = isinstance(self.offsets, cabc.Mapping)
@@ -229,7 +230,7 @@ class LazyJSON(LJNode):
 
     def _load_index(self):
         """Loads the index from the start of the file."""
-        with self._open(newline='\n') as f:
+        with self._open(newline="\n") as f:
             # read in the location data
             f.seek(9)
             locs = f.read(48)
@@ -239,8 +240,8 @@ class LazyJSON(LJNode):
             f.seek(self.iloc)
             idx = f.read(self.ilen)
             idx = json.loads(idx)
-        self.offsets = idx['offsets']
-        self.sizes = idx['sizes']
+        self.offsets = idx["offsets"]
+        self.sizes = idx["sizes"]
 
     def __enter__(self):
         return self

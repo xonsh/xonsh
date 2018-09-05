@@ -16,12 +16,14 @@ from xonsh.tools import print_exception
 
 
 def has_kwargs(func):
-    return any(p.kind == p.VAR_KEYWORD for p in inspect.signature(func).parameters.values())
+    return any(
+        p.kind == p.VAR_KEYWORD for p in inspect.signature(func).parameters.values()
+    )
 
 
 def debug_level():
-    if hasattr(builtins, '__xonsh_env__'):
-        return builtins.__xonsh_env__.get('XONSH_DEBUG')
+    if hasattr(builtins, "__xonsh_env__"):
+        return builtins.__xonsh_env__.get("XONSH_DEBUG")
     # FIXME: Under py.test, return 1(?)
     else:
         return 0  # Optimize for speed, not guaranteed correctness
@@ -41,7 +43,9 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
         """
         The species (basically, class) of the event
         """
-        return type(self).__bases__[0]  # events.on_chdir -> <class on_chdir> -> <class Event>
+        return type(self).__bases__[
+            0
+        ]  # events.on_chdir -> <class on_chdir> -> <class Event>
 
     def __call__(self, handler):
         """
@@ -76,8 +80,11 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
             """
             if debug_level():
                 if not has_kwargs(handler):
-                    raise ValueError("Event validators need a **kwargs for future proofing")
+                    raise ValueError(
+                        "Event validators need a **kwargs for future proofing"
+                    )
             handler.__validator = vfunc
+
         handler.validator = validator
 
         return handler
@@ -107,6 +114,7 @@ class Event(AbstractEvent):
     """
     An event species for notify and scatter-gather events.
     """
+
     # Wish I could just pull from set...
     def __init__(self):
         self._handlers = set()
@@ -176,6 +184,7 @@ class LoadEvent(AbstractEvent):
 
     Note: This is currently NOT thread safe.
     """
+
     def __init__(self):
         self._fired = set()
         self._unfired = set()
@@ -255,7 +264,15 @@ class EventManager:
     def _mkevent(name, species=Event, doc=None):
         # NOTE: Also used in `xonsh_events` test fixture
         # (A little bit of magic to enable docstrings to work right)
-        return type(name, (species,), {'__doc__': doc, '__module__': 'xonsh.events', '__qualname__': 'events.' + name})()
+        return type(
+            name,
+            (species,),
+            {
+                "__doc__": doc,
+                "__module__": "xonsh.events",
+                "__qualname__": "events." + name,
+            },
+        )()
 
     def transmogrify(self, name, species):
         """
@@ -285,7 +302,7 @@ class EventManager:
 
     def __getattr__(self, name):
         """Get an event, if it doesn't already exist."""
-        if name.startswith('_'):
+        if name.startswith("_"):
             raise AttributeError
         # This is only called if the attribute doesn't exist, so create the Event...
         e = self._mkevent(name)

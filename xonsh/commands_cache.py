@@ -61,12 +61,9 @@ class CommandsCache(cabc.Mapping):
          name on Windows as a list, conserving the ordering in `PATHEXT`.
          Returns a list as `name` being the only item in it on other platforms."""
         if ON_WINDOWS:
-            pathext = builtins.__xonsh_env__.get('PATHEXT', [])
+            pathext = builtins.__xonsh_env__.get("PATHEXT", [])
             name = name.upper()
-            return [
-                name + ext
-                for ext in ([''] + pathext)
-            ]
+            return [name + ext for ext in ([""] + pathext)]
         else:
             return [name]
 
@@ -80,7 +77,7 @@ class CommandsCache(cabc.Mapping):
 
     @property
     def all_commands(self):
-        paths = builtins.__xonsh_env__.get('PATH', [])
+        paths = builtins.__xonsh_env__.get("PATH", [])
         paths = CommandsCache.remove_dups(paths)
         path_immut = tuple(x for x in paths if os.path.isdir(x))
         # did PATH change?
@@ -88,7 +85,7 @@ class CommandsCache(cabc.Mapping):
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        alss = getattr(builtins, 'aliases', dict())
+        alss = getattr(builtins, "aliases", dict())
         al_hash = hash(frozenset(alss))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
@@ -181,12 +178,10 @@ class CommandsCache(cabc.Mapping):
         if ON_WINDOWS:
             # Windows users expect to be able to execute files in the same
             # directory without `./`
-            local_bin = next((fn for fn in possibilities if os.path.isfile(fn)),
-                             None)
+            local_bin = next((fn for fn in possibilities if os.path.isfile(fn)), None)
             if local_bin:
                 return os.path.abspath(local_bin)
-        cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache),
-                      None)
+        cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
         if cached:
             (path, alias) = self._cmds_cache[cached]
             ispure = path == pathbasename(path)
@@ -214,8 +209,9 @@ class CommandsCache(cabc.Mapping):
         val = self._cmds_cache.get(name, None)
         if val is None:
             return False
-        return val == (name, True) and \
-            self.locate_binary(name, ignore_alias=True) is None
+        return (
+            val == (name, True) and self.locate_binary(name, ignore_alias=True) is None
+        )
 
     def predict_threadable(self, cmd):
         """Predicts whether a command list is able to be run on a background
@@ -246,9 +242,9 @@ class CommandsCache(cabc.Mapping):
 
     def default_predictor(self, name, cmd0):
         if ON_POSIX:
-            return self.default_predictor_readbin(name, cmd0,
-                                                  timeout=0.1,
-                                                  failure=predict_true)
+            return self.default_predictor_readbin(
+                name, cmd0, timeout=0.1, failure=predict_true
+            )
         else:
             return predict_true
 
@@ -272,12 +268,12 @@ class CommandsCache(cabc.Mapping):
             return failure  # opening error
 
         search_for = {
-            (b'ncurses',): [False, ],
-            (b'libgpm',): [False, ],
-            (b'isatty', b'tcgetattr', b'tcsetattr'): [False, False, False],
+            (b"ncurses",): [False],
+            (b"libgpm",): [False],
+            (b"isatty", b"tcgetattr", b"tcsetattr"): [False, False, False],
         }
         tstart = time.time()
-        block = b''
+        block = b""
         while time.time() < tstart + timeout:
             previous_block = block
             try:
@@ -321,9 +317,9 @@ def predict_false(args):
 
 @lazyobject
 def SHELL_PREDICTOR_PARSER():
-    p = argparse.ArgumentParser('shell', add_help=False)
-    p.add_argument('-c', nargs='?', default=None)
-    p.add_argument('filename', nargs='?', default=None)
+    p = argparse.ArgumentParser("shell", add_help=False)
+    p.add_argument("-c", nargs="?", default=None)
+    p.add_argument("filename", nargs="?", default=None)
     return p
 
 
@@ -341,11 +337,11 @@ def predict_shell(args):
 
 @lazyobject
 def HELP_VER_PREDICTOR_PARSER():
-    p = argparse.ArgumentParser('cmd', add_help=False)
-    p.add_argument('-h', '--help', dest='help',
-                   action='store_true', default=None)
-    p.add_argument('-v', '-V', '--version', dest='version',
-                   action='store_true', default=None)
+    p = argparse.ArgumentParser("cmd", add_help=False)
+    p.add_argument("-h", "--help", dest="help", action="store_true", default=None)
+    p.add_argument(
+        "-v", "-V", "--version", dest="version", action="store_true", default=None
+    )
     return p
 
 
@@ -364,10 +360,11 @@ def predict_help_ver(args):
 
 @lazyobject
 def HG_PREDICTOR_PARSER():
-    p = argparse.ArgumentParser('hg', add_help=False)
-    p.add_argument('command')
-    p.add_argument('-i', '--interactive', action='store_true', default=False,
-                   dest='interactive')
+    p = argparse.ArgumentParser("hg", add_help=False)
+    p.add_argument("command")
+    p.add_argument(
+        "-i", "--interactive", action="store_true", default=False, dest="interactive"
+    )
     return p
 
 
@@ -385,53 +382,53 @@ def default_threadable_predictors():
     """
     # alphabetical, for what it is worth.
     predictors = {
-        'bash': predict_shell,
-        'csh': predict_shell,
-        'clear': predict_false,
-        'cls': predict_false,
-        'cmd': predict_shell,
-        'curl': predict_true,
-        'ex': predict_false,
-        'emacsclient': predict_false,
-        'fish': predict_shell,
-        'gvim': predict_help_ver,
-        'hg': predict_hg,
-        'htop': predict_help_ver,
-        'ipython': predict_shell,
-        'ksh': predict_shell,
-        'less': predict_help_ver,
-        'man': predict_help_ver,
-        'more': predict_help_ver,
-        'mvim': predict_help_ver,
-        'mutt': predict_help_ver,
-        'nano': predict_help_ver,
-        'nvim': predict_false,
-        'ponysay': predict_help_ver,
-        'psql': predict_false,
-        'python': predict_shell,
-        'python2': predict_shell,
-        'python3': predict_shell,
-        'repo': predict_help_ver,
-        'ranger': predict_help_ver,
-        'rview': predict_false,
-        'rvim': predict_false,
-        'scp': predict_false,
-        'sh': predict_shell,
-        'ssh': predict_false,
-        'startx': predict_false,
-        'sudo': predict_help_ver,
-        'tcsh': predict_shell,
-        'telnet': predict_false,
-        'top': predict_help_ver,
-        'vi': predict_false,
-        'view': predict_false,
-        'vim': predict_false,
-        'vimpager': predict_help_ver,
-        'weechat': predict_help_ver,
-        'xclip': predict_help_ver,
-        'xo': predict_help_ver,
-        'xonsh': predict_shell,
-        'xon.sh': predict_shell,
-        'zsh': predict_shell,
+        "bash": predict_shell,
+        "csh": predict_shell,
+        "clear": predict_false,
+        "cls": predict_false,
+        "cmd": predict_shell,
+        "curl": predict_true,
+        "ex": predict_false,
+        "emacsclient": predict_false,
+        "fish": predict_shell,
+        "gvim": predict_help_ver,
+        "hg": predict_hg,
+        "htop": predict_help_ver,
+        "ipython": predict_shell,
+        "ksh": predict_shell,
+        "less": predict_help_ver,
+        "man": predict_help_ver,
+        "more": predict_help_ver,
+        "mvim": predict_help_ver,
+        "mutt": predict_help_ver,
+        "nano": predict_help_ver,
+        "nvim": predict_false,
+        "ponysay": predict_help_ver,
+        "psql": predict_false,
+        "python": predict_shell,
+        "python2": predict_shell,
+        "python3": predict_shell,
+        "repo": predict_help_ver,
+        "ranger": predict_help_ver,
+        "rview": predict_false,
+        "rvim": predict_false,
+        "scp": predict_false,
+        "sh": predict_shell,
+        "ssh": predict_false,
+        "startx": predict_false,
+        "sudo": predict_help_ver,
+        "tcsh": predict_shell,
+        "telnet": predict_false,
+        "top": predict_help_ver,
+        "vi": predict_false,
+        "view": predict_false,
+        "vim": predict_false,
+        "vimpager": predict_help_ver,
+        "weechat": predict_help_ver,
+        "xclip": predict_help_ver,
+        "xo": predict_help_ver,
+        "xonsh": predict_shell,
+        "xon.sh": predict_shell,
+        "zsh": predict_shell,
     }
     return predictors

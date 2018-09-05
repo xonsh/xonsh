@@ -44,10 +44,6 @@ For those of you who want the gritty details.
     shell
     base_shell
     readline_shell
-    ptk/shell
-    ptk/history
-    ptk/completer
-    ptk/key_bindings
     ptk2/shell
     ptk2/history
     ptk2/completer
@@ -92,3 +88,12 @@ For those of you who want the gritty details.
     mplhooks
     vox
 
+**Pending Deprecation:**
+
+.. toctree::
+    :maxdepth: 1
+
+    ptk/shell
+    ptk/history
+    ptk/completer
+    ptk/key_bindings

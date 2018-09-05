@@ -14,28 +14,108 @@ from xonsh.completers.tools import get_filter_function
 
 @xl.lazyobject
 def RE_ATTR():
-    return re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')
+    return re.compile(r"([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$")
 
 
 @xl.lazyobject
 def XONSH_EXPR_TOKENS():
     return {
-        'and ', 'else', 'for ', 'if ', 'in ', 'is ', 'lambda ', 'not ', 'or ',
-        '+', '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<',
-        '<=', '>', '>=', '==', '!=', ',', '?', '??', '$(',
-        '${', '$[', '...', '![', '!(', '@(', '@$(', '@',
+        "and ",
+        "else",
+        "for ",
+        "if ",
+        "in ",
+        "is ",
+        "lambda ",
+        "not ",
+        "or ",
+        "+",
+        "-",
+        "/",
+        "//",
+        "%",
+        "**",
+        "|",
+        "&",
+        "~",
+        "^",
+        ">>",
+        "<<",
+        "<",
+        "<=",
+        ">",
+        ">=",
+        "==",
+        "!=",
+        ",",
+        "?",
+        "??",
+        "$(",
+        "${",
+        "$[",
+        "...",
+        "![",
+        "!(",
+        "@(",
+        "@$(",
+        "@",
     }
 
 
 @xl.lazyobject
 def XONSH_STMT_TOKENS():
     return {
-        'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
-        'elif ', 'except ', 'finally:', 'from ', 'global ', 'import ',
-        'nonlocal ', 'pass', 'raise ', 'return ', 'try:', 'while ', 'with ',
-        'yield ', '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<',
-        '<', '<=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=',
-        '>>=', '<<=', '&=', '^=', '|=', '//=', ';', ':', '..',
+        "as ",
+        "assert ",
+        "break",
+        "class ",
+        "continue",
+        "def ",
+        "del ",
+        "elif ",
+        "except ",
+        "finally:",
+        "from ",
+        "global ",
+        "import ",
+        "nonlocal ",
+        "pass",
+        "raise ",
+        "return ",
+        "try:",
+        "while ",
+        "with ",
+        "yield ",
+        "-",
+        "/",
+        "//",
+        "%",
+        "**",
+        "|",
+        "&",
+        "~",
+        "^",
+        ">>",
+        "<<",
+        "<",
+        "<=",
+        "->",
+        "=",
+        "+=",
+        "-=",
+        "*=",
+        "/=",
+        "%=",
+        "**=",
+        ">>=",
+        "<<=",
+        "&=",
+        "^=",
+        "|=",
+        "//=",
+        ";",
+        ":",
+        "..",
     }
 
 
@@ -52,8 +132,11 @@ def complete_python(prefix, line, start, end, ctx):
     """
     rtn = _complete_python(prefix, line, start, end, ctx)
     if not rtn:
-        prefix = (re.split(r'\(|=|{|\[|,', prefix)[-1] if not
-                  prefix.startswith(',') else prefix)
+        prefix = (
+            re.split(r"\(|=|{|\[|,", prefix)[-1]
+            if not prefix.startswith(",")
+            else prefix
+        )
         start = line.find(prefix)
         rtn = _complete_python(prefix, line, start, end, ctx)
         return rtn, len(prefix)
@@ -65,14 +148,14 @@ def _complete_python(prefix, line, start, end, ctx):
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
     """
-    if line != '':
+    if line != "":
         first = line.split()[0]
         if first in builtins.__xonsh_commands_cache__ and first not in ctx:
             return set()
     filt = get_filter_function()
     rtn = set()
     if ctx is not None:
-        if '.' in prefix:
+        if "." in prefix:
             rtn |= attr_complete(prefix, ctx, filt)
         args = python_signature_complete(prefix, line, end, ctx, filt)
         rtn |= args
@@ -92,7 +175,7 @@ def complete_python_mode(prefix, line, start, end, ctx):
     """
     Python-mode completions for @( and ${
     """
-    if not (prefix.startswith('@(') or prefix.startswith('${')):
+    if not (prefix.startswith("@(") or prefix.startswith("${")):
         return set()
     prefix_start = prefix[:2]
     python_matches = complete_python(prefix[2:], line, start - 2, end - 2, ctx)
@@ -126,36 +209,36 @@ def attr_complete(prefix, ctx, filter_func):
     if m is None:
         return attrs
     expr, attr = m.group(1, 3)
-    expr = xt.subexpr_from_unbalanced(expr, '(', ')')
-    expr = xt.subexpr_from_unbalanced(expr, '[', ']')
-    expr = xt.subexpr_from_unbalanced(expr, '{', '}')
+    expr = xt.subexpr_from_unbalanced(expr, "(", ")")
+    expr = xt.subexpr_from_unbalanced(expr, "[", "]")
+    expr = xt.subexpr_from_unbalanced(expr, "{", "}")
     val, _ctx = _safe_eval(expr, ctx)
     if val is None and _ctx is None:
         return attrs
     if len(attr) == 0:
-        opts = [o for o in dir(val) if not o.startswith('_')]
+        opts = [o for o in dir(val) if not o.startswith("_")]
     else:
         opts = [o for o in dir(val) if filter_func(o, attr)]
     prelen = len(prefix)
     for opt in opts:
         # check whether these options actually work (e.g., disallow 7.imag)
-        _expr = '{0}.{1}'.format(expr, opt)
+        _expr = "{0}.{1}".format(expr, opt)
         _val_, _ctx_ = _safe_eval(_expr, _ctx)
         if _val_ is None and _ctx_ is None:
             continue
         a = getattr(val, opt)
-        if builtins.__xonsh_env__['COMPLETIONS_BRACKETS']:
+        if builtins.__xonsh_env__["COMPLETIONS_BRACKETS"]:
             if callable(a):
-                rpl = opt + '('
+                rpl = opt + "("
             elif isinstance(a, (cabc.Sequence, cabc.Mapping)):
-                rpl = opt + '['
+                rpl = opt + "["
             else:
                 rpl = opt
         else:
             rpl = opt
         # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]
         # when len(attr) == 0.
-        comp = prefix[:prelen - len(attr)] + rpl
+        comp = prefix[: prelen - len(attr)] + rpl
         attrs.add(comp)
     return attrs
 
@@ -165,9 +248,9 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
     argument and keyword argument names.
     """
     front = line[:end]
-    if xt.is_balanced(front, '(', ')'):
+    if xt.is_balanced(front, "(", ")"):
         return set()
-    funcname = xt.subexpr_before_unbalanced(front, '(', ')')
+    funcname = xt.subexpr_before_unbalanced(front, "(", ")")
     val, _ctx = _safe_eval(funcname, ctx)
     if val is None:
         return set()
@@ -175,7 +258,7 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
         sig = inspect.signature(val)
     except ValueError:
         return set()
-    args = {p + '=' for p in sig.parameters if filter_func(p, prefix)}
+    args = {p + "=" for p in sig.parameters if filter_func(p, prefix)}
     return args
 
 
@@ -186,21 +269,19 @@ def complete_import(prefix, line, start, end, ctx):
     """
     ltoks = line.split()
     ntoks = len(ltoks)
-    if ntoks == 2 and ltoks[0] == 'from':
+    if ntoks == 2 and ltoks[0] == "from":
         # completing module to import
-        return {'{} '.format(i) for i in complete_module(prefix)}
-    if ntoks > 1 and ltoks[0] == 'import' and start == len('import '):
+        return {"{} ".format(i) for i in complete_module(prefix)}
+    if ntoks > 1 and ltoks[0] == "import" and start == len("import "):
         # completing module to import
         return complete_module(prefix)
-    if ntoks > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
+    if ntoks > 2 and ltoks[0] == "from" and ltoks[2] == "import":
         # complete thing inside a module
         try:
             mod = importlib.import_module(ltoks[1])
         except ImportError:
             return set()
-        out = {i[0]
-               for i in inspect.getmembers(mod)
-               if i[0].startswith(prefix)}
+        out = {i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix)}
         return out
     return set()
 

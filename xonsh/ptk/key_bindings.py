@@ -3,8 +3,13 @@
 import builtins
 
 from prompt_toolkit.enums import DEFAULT_BUFFER
-from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection,
-                                    EmacsInsertMode, ViInsertMode)
+from prompt_toolkit.filters import (
+    Condition,
+    IsMultiline,
+    HasSelection,
+    EmacsInsertMode,
+    ViInsertMode,
+)
 from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
@@ -12,7 +17,7 @@ from xonsh.tools import check_for_partial_string, get_line_continuation
 from xonsh.shell import transform_command
 
 env = builtins.__xonsh_env__
-DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
+DEDENT_TOKENS = frozenset(["raise", "return", "pass", "break", "continue"])
 
 
 def carriage_return(b, cli, *, autoindent=True):
@@ -31,29 +36,32 @@ def carriage_return(b, cli, *, autoindent=True):
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
     current_line_blank = _is_blank(doc.current_line)
 
-    indent = env.get('INDENT') if autoindent else ''
+    indent = env.get("INDENT") if autoindent else ""
 
     partial_string_info = check_for_partial_string(doc.text)
-    in_partial_string = (partial_string_info[0] is not None and
-                         partial_string_info[1] is None)
+    in_partial_string = (
+        partial_string_info[0] is not None and partial_string_info[1] is None
+    )
 
     # indent after a colon
-    if (doc.current_line_before_cursor.strip().endswith(':') and
-            at_end_of_line):
+    if doc.current_line_before_cursor.strip().endswith(":") and at_end_of_line:
         b.newline(copy_margin=autoindent)
         b.insert_text(indent, fire_event=False)
     # if current line isn't blank, check dedent tokens
-    elif (not current_line_blank and
-            doc.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS and
-            doc.line_count > 1):
+    elif (
+        not current_line_blank
+        and doc.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS
+        and doc.line_count > 1
+    ):
         b.newline(copy_margin=autoindent)
         b.delete_before_cursor(count=len(indent))
-    elif (not doc.on_first_line and not current_line_blank):
+    elif not doc.on_first_line and not current_line_blank:
         b.newline(copy_margin=autoindent)
-    elif (doc.current_line.endswith(get_line_continuation())):
+    elif doc.current_line.endswith(get_line_continuation()):
         b.newline(copy_margin=autoindent)
-    elif (doc.find_next_word_beginning() is not None and
-            (any(not _is_blank(i) for i in doc.lines_from_current[1:]))):
+    elif doc.find_next_word_beginning() is not None and (
+        any(not _is_blank(i) for i in doc.lines_from_current[1:])
+    ):
         b.newline(copy_margin=autoindent)
     elif not current_line_blank and not can_compile(doc.text):
         b.newline(copy_margin=autoindent)
@@ -69,12 +77,13 @@ def _is_blank(l):
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
-    src = src if src.endswith('\n') else src + '\n'
+    src = src if src.endswith("\n") else src + "\n"
     src = transform_command(src, show_diff=False)
     src = src.lstrip()
     try:
-        builtins.__xonsh_execer__.compile(src, mode='single', glbs=None,
-                                          locs=builtins.__xonsh_ctx__)
+        builtins.__xonsh_execer__.compile(
+            src, mode="single", glbs=None, locs=builtins.__xonsh_ctx__
+        )
         rtn = True
     except SyntaxError:
         rtn = False
@@ -102,8 +111,9 @@ def beginning_of_line(cli):
     """
     before_cursor = cli.current_buffer.document.current_line_before_cursor
 
-    return bool(len(before_cursor) == 0 and
-                not cli.current_buffer.document.on_first_line)
+    return bool(
+        len(before_cursor) == 0 and not cli.current_buffer.document.on_first_line
+    )
 
 
 @Condition
@@ -121,8 +131,10 @@ def end_of_line(cli):
 @Condition
 def should_confirm_completion(cli):
     """Check if completion needs confirmation"""
-    return (builtins.__xonsh_env__.get('COMPLETIONS_CONFIRM') and
-            cli.current_buffer.complete_state)
+    return (
+        builtins.__xonsh_env__.get("COMPLETIONS_CONFIRM")
+        and cli.current_buffer.complete_state
+    )
 
 
 # Copied from prompt-toolkit's key_binding/bindings/basic.py
@@ -134,8 +146,7 @@ def ctrl_d_condition(cli):
     if builtins.__xonsh_env__.get("IGNOREEOF"):
         raise EOFError
     else:
-        return (cli.current_buffer_name == DEFAULT_BUFFER and
-                not cli.current_buffer.text)
+        return cli.current_buffer_name == DEFAULT_BUFFER and not cli.current_buffer.text
 
 
 @Condition
@@ -149,9 +160,11 @@ def whitespace_or_bracket_before(cli):
     """Check if there is whitespace or an opening
        bracket to the left of the cursor"""
     d = cli.current_buffer.document
-    return bool(d.cursor_position == 0 or
-                d.char_before_cursor.isspace() or
-                d.char_before_cursor in '([{')
+    return bool(
+        d.cursor_position == 0
+        or d.char_before_cursor.isspace()
+        or d.char_before_cursor in "([{"
+    )
 
 
 @Condition
@@ -159,9 +172,11 @@ def whitespace_or_bracket_after(cli):
     """Check if there is whitespace or a closing
        bracket to the right of the cursor"""
     d = cli.current_buffer.document
-    return bool(d.is_cursor_at_the_end_of_line or
-                d.current_char.isspace() or
-                d.current_char in ')]}')
+    return bool(
+        d.is_cursor_at_the_end_of_line
+        or d.current_char.isspace()
+        or d.current_char in ")]}"
+    )
 
 
 def load_xonsh_bindings(key_bindings_manager):
@@ -178,7 +193,7 @@ def load_xonsh_bindings(key_bindings_manager):
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
-        event.cli.current_buffer.insert_text(env.get('INDENT'))
+        event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):
@@ -192,61 +207,62 @@ def load_xonsh_bindings(key_bindings_manager):
         if b.complete_state:
             b.complete_previous()
         else:
-            event.cli.current_buffer.insert_text(env.get('INDENT'))
+            event.cli.current_buffer.insert_text(env.get("INDENT"))
 
-    @handle('(', filter=autopair_condition & whitespace_or_bracket_after)
+    @handle("(", filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_parens(event):
-        event.cli.current_buffer.insert_text('(')
-        event.cli.current_buffer.insert_text(')', move_cursor=False)
+        event.cli.current_buffer.insert_text("(")
+        event.cli.current_buffer.insert_text(")", move_cursor=False)
 
-    @handle(')', filter=autopair_condition)
+    @handle(")", filter=autopair_condition)
     def overwrite_right_parens(event):
         buffer = event.cli.current_buffer
-        if buffer.document.current_char == ')':
+        if buffer.document.current_char == ")":
             buffer.cursor_position += 1
         else:
-            buffer.insert_text(')')
+            buffer.insert_text(")")
 
-    @handle('[', filter=autopair_condition & whitespace_or_bracket_after)
+    @handle("[", filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_bracket(event):
-        event.cli.current_buffer.insert_text('[')
-        event.cli.current_buffer.insert_text(']', move_cursor=False)
+        event.cli.current_buffer.insert_text("[")
+        event.cli.current_buffer.insert_text("]", move_cursor=False)
 
-    @handle(']', filter=autopair_condition)
+    @handle("]", filter=autopair_condition)
     def overwrite_right_bracket(event):
         buffer = event.cli.current_buffer
 
-        if buffer.document.current_char == ']':
+        if buffer.document.current_char == "]":
             buffer.cursor_position += 1
         else:
-            buffer.insert_text(']')
+            buffer.insert_text("]")
 
-    @handle('{', filter=autopair_condition & whitespace_or_bracket_after)
+    @handle("{", filter=autopair_condition & whitespace_or_bracket_after)
     def insert_right_brace(event):
-        event.cli.current_buffer.insert_text('{')
-        event.cli.current_buffer.insert_text('}', move_cursor=False)
+        event.cli.current_buffer.insert_text("{")
+        event.cli.current_buffer.insert_text("}", move_cursor=False)
 
-    @handle('}', filter=autopair_condition)
+    @handle("}", filter=autopair_condition)
     def overwrite_right_brace(event):
         buffer = event.cli.current_buffer
 
-        if buffer.document.current_char == '}':
+        if buffer.document.current_char == "}":
             buffer.cursor_position += 1
         else:
-            buffer.insert_text('}')
+            buffer.insert_text("}")
 
-    @handle('\'', filter=autopair_condition)
+    @handle("'", filter=autopair_condition)
     def insert_right_quote(event):
         buffer = event.cli.current_buffer
 
-        if buffer.document.current_char == '\'':
+        if buffer.document.current_char == "'":
             buffer.cursor_position += 1
-        elif whitespace_or_bracket_before(event.cli)\
-                and whitespace_or_bracket_after(event.cli):
-            buffer.insert_text('\'')
-            buffer.insert_text('\'', move_cursor=False)
+        elif whitespace_or_bracket_before(event.cli) and whitespace_or_bracket_after(
+            event.cli
+        ):
+            buffer.insert_text("'")
+            buffer.insert_text("'", move_cursor=False)
         else:
-            buffer.insert_text('\'')
+            buffer.insert_text("'")
 
     @handle('"', filter=autopair_condition)
     def insert_right_double_quote(event):
@@ -254,8 +270,9 @@ def load_xonsh_bindings(key_bindings_manager):
 
         if buffer.document.current_char == '"':
             buffer.cursor_position += 1
-        elif whitespace_or_bracket_before(event.cli)\
-                and whitespace_or_bracket_after(event.cli):
+        elif whitespace_or_bracket_before(event.cli) and whitespace_or_bracket_after(
+            event.cli
+        ):
             buffer.insert_text('"')
             buffer.insert_text('"', move_cursor=False)
         else:
@@ -268,8 +285,9 @@ def load_xonsh_bindings(key_bindings_manager):
         before = buffer.document.char_before_cursor
         after = buffer.document.current_char
 
-        if any([before == b and after == a
-                for (b, a) in ['()', '[]', '{}', "''", '""']]):
+        if any(
+            [before == b and after == a for (b, a) in ["()", "[]", "{}", "''", '""']]
+        ):
             buffer.delete(1)
 
         buffer.delete_before_cursor(1)
@@ -345,5 +363,4 @@ def load_xonsh_bindings(key_bindings_manager):
         if event.is_repeat or b.complete_state:
             second_tab()
         else:
-            event.cli.start_completion(insert_common_part=True,
-                                       select_first=False)
+            event.cli.start_completion(insert_common_part=True, select_first=False)

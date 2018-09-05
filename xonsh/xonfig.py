@@ -22,11 +22,30 @@ except ImportError:
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.prompt.base import is_template_string
-from xonsh.platform import (is_readline_available, ptk_version,
-                            PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
-                            ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, ON_MSYS, githash)
-from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
-                         color_style_names, print_color, color_style)
+from xonsh.platform import (
+    is_readline_available,
+    ptk_version,
+    PYTHON_VERSION_INFO,
+    pygments_version,
+    ON_POSIX,
+    ON_LINUX,
+    linux_distro,
+    ON_DARWIN,
+    ON_WINDOWS,
+    ON_CYGWIN,
+    DEFAULT_ENCODING,
+    ON_MSYS,
+    githash,
+)
+from xonsh.tools import (
+    to_bool,
+    is_string,
+    print_exception,
+    is_superuser,
+    color_style_names,
+    print_color,
+    color_style,
+)
 from xonsh.foreign_shells import CANON_SHELL_NAMES
 from xonsh.xontribs import xontrib_metadata, find_xontrib
 from xonsh.lazyasd import lazyobject
@@ -52,7 +71,9 @@ variable setup. Each phase may be skipped in its entirety.
 For the configuration to take effect, you will need to restart xonsh.
 
 {hr}
-""".format(hr=HR)
+""".format(
+    hr=HR
+)
 
 WIZARD_FS = """
 {hr}
@@ -67,7 +88,9 @@ aliases, and functions specified in the config files of these shells.
 Naturally, these shells must be available on the system to work.
 Being able to share configuration (and source) from foreign shells
 makes it easier to transition to and from xonsh.
-""".format(hr=HR)
+""".format(
+    hr=HR
+)
 
 WIZARD_ENV = """
 {hr}
@@ -86,7 +109,9 @@ values are presented as pretty repr strings of their Python types.
 
 {{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any environment variable
 will accept the default value for that entry.
-""".format(hr=HR)
+""".format(
+    hr=HR
+)
 
 WIZARD_ENV_QUESTION = "Would you like to set env vars now, " + wiz.YN
 
@@ -104,7 +129,9 @@ This allows the xontrib to be used immediately in your xonshrc files.
 
 The following describes all xontribs that have been registered with xonsh.
 These come from users, 3rd party developers, or xonsh itself!
-""".format(hr=HR)
+""".format(
+    hr=HR
+)
 
 WIZARD_XONTRIB_QUESTION = "Would you like to enable xontribs now, " + wiz.YN
 
@@ -113,120 +140,137 @@ Thanks for using the xonsh configuration wizard!"""
 
 
 _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
-    lambda: 'source-foreign',
-    bash='source-bash',
-    cmd='source-cmd',
-    zsh='source-zsh',
+    lambda: "source-foreign", bash="source-bash", cmd="source-cmd", zsh="source-zsh"
 )
 
 
 def _dump_xonfig_foreign_shell(path, value):
-    shell = value['shell']
+    shell = value["shell"]
     shell = CANON_SHELL_NAMES.get(shell, shell)
     cmd = [_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND.get(shell)]
-    interactive = value.get('interactive', None)
+    interactive = value.get("interactive", None)
     if interactive is not None:
-        cmd.extend(['--interactive', str(interactive)])
-    login = value.get('login', None)
+        cmd.extend(["--interactive", str(interactive)])
+    login = value.get("login", None)
     if login is not None:
-        cmd.extend(['--login', str(login)])
-    envcmd = value.get('envcmd', None)
+        cmd.extend(["--login", str(login)])
+    envcmd = value.get("envcmd", None)
     if envcmd is not None:
-        cmd.extend(['--envcmd', envcmd])
-    aliascmd = value.get('aliasmd', None)
+        cmd.extend(["--envcmd", envcmd])
+    aliascmd = value.get("aliasmd", None)
     if aliascmd is not None:
-        cmd.extend(['--aliascmd', aliascmd])
-    extra_args = value.get('extra_args', None)
+        cmd.extend(["--aliascmd", aliascmd])
+    extra_args = value.get("extra_args", None)
     if extra_args:
-        cmd.extend(['--extra-args', repr(' '.join(extra_args))])
-    safe = value.get('safe', None)
+        cmd.extend(["--extra-args", repr(" ".join(extra_args))])
+    safe = value.get("safe", None)
     if safe is not None:
-        cmd.extend(['--safe', str(safe)])
-    prevcmd = value.get('prevcmd', '')
+        cmd.extend(["--safe", str(safe)])
+    prevcmd = value.get("prevcmd", "")
     if prevcmd:
-        cmd.extend(['--prevcmd', repr(prevcmd)])
-    postcmd = value.get('postcmd', '')
+        cmd.extend(["--prevcmd", repr(prevcmd)])
+    postcmd = value.get("postcmd", "")
     if postcmd:
-        cmd.extend(['--postcmd', repr(postcmd)])
-    funcscmd = value.get('funcscmd', None)
+        cmd.extend(["--postcmd", repr(postcmd)])
+    funcscmd = value.get("funcscmd", None)
     if funcscmd:
-        cmd.extend(['--funcscmd', repr(funcscmd)])
-    sourcer = value.get('sourcer', None)
+        cmd.extend(["--funcscmd", repr(funcscmd)])
+    sourcer = value.get("sourcer", None)
     if sourcer:
-        cmd.extend(['--sourcer', sourcer])
-    if cmd[0] == 'source-foreign':
+        cmd.extend(["--sourcer", sourcer])
+    if cmd[0] == "source-foreign":
         cmd.append(shell)
     cmd.append('"echo loading xonsh foreign shell"')
-    return ' '.join(cmd)
+    return " ".join(cmd)
 
 
 def _dump_xonfig_env(path, value):
-    name = os.path.basename(path.rstrip('/'))
+    name = os.path.basename(path.rstrip("/"))
     ensurer = builtins.__xonsh_env__.get_ensurer(name)
     dval = ensurer.detype(value)
-    return '${name} = {val!r}'.format(name=name, val=dval)
+    return "${name} = {val!r}".format(name=name, val=dval)
 
 
 def _dump_xonfig_xontribs(path, value):
-    return 'xontrib load {0}'.format(' '.join(value))
+    return "xontrib load {0}".format(" ".join(value))
 
 
 @lazyobject
 def XONFIG_DUMP_RULES():
-    return {'/': None,
-            '/env/': None,
-            '/foreign_shells/*/': _dump_xonfig_foreign_shell,
-            '/env/*': _dump_xonfig_env,
-            '/env/*/[0-9]*': None,
-            '/xontribs/': _dump_xonfig_xontribs,
-            }
+    return {
+        "/": None,
+        "/env/": None,
+        "/foreign_shells/*/": _dump_xonfig_foreign_shell,
+        "/env/*": _dump_xonfig_env,
+        "/env/*/[0-9]*": None,
+        "/xontribs/": _dump_xonfig_xontribs,
+    }
 
 
 def make_fs_wiz():
     """Makes the foreign shell part of the wizard."""
-    cond = wiz.create_truefalse_cond(prompt='Add a new foreign shell, ' + wiz.YN)
-    fs = wiz.While(cond=cond, body=[
-        wiz.Input('shell name (e.g. bash): ',
-                  path='/foreign_shells/{idx}/shell'),
-        wiz.StoreNonEmpty('interactive shell [bool, default=True]: ',
-                          converter=to_bool,
-                          show_conversion=True,
-                          path='/foreign_shells/{idx}/interactive'),
-        wiz.StoreNonEmpty('login shell [bool, default=False]: ',
-                          converter=to_bool,
-                          show_conversion=True,
-                          path='/foreign_shells/{idx}/login'),
-        wiz.StoreNonEmpty("env command [str, default='env']: ",
-                          path='/foreign_shells/{idx}/envcmd'),
-        wiz.StoreNonEmpty("alias command [str, default='alias']: ",
-                          path='/foreign_shells/{idx}/aliascmd'),
-        wiz.StoreNonEmpty(("extra command line arguments [list of str, "
-                           "default=[]]: "),
-                          converter=ast.literal_eval,
-                          show_conversion=True,
-                          path='/foreign_shells/{idx}/extra_args'),
-        wiz.StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
-                          converter=to_bool,
-                          show_conversion=True,
-                          path='/foreign_shells/{idx}/safe'),
-        wiz.StoreNonEmpty("pre-command [str, default='']: ",
-                          path='/foreign_shells/{idx}/prevcmd'),
-        wiz.StoreNonEmpty("post-command [str, default='']: ",
-                          path='/foreign_shells/{idx}/postcmd'),
-        wiz.StoreNonEmpty("foreign function command [str, default=None]: ",
-                          path='/foreign_shells/{idx}/funcscmd'),
-        wiz.StoreNonEmpty("source command [str, default=None]: ",
-                          path='/foreign_shells/{idx}/sourcer'),
-        wiz.Message(message='Foreign shell added.\n')
-    ])
+    cond = wiz.create_truefalse_cond(prompt="Add a new foreign shell, " + wiz.YN)
+    fs = wiz.While(
+        cond=cond,
+        body=[
+            wiz.Input("shell name (e.g. bash): ", path="/foreign_shells/{idx}/shell"),
+            wiz.StoreNonEmpty(
+                "interactive shell [bool, default=True]: ",
+                converter=to_bool,
+                show_conversion=True,
+                path="/foreign_shells/{idx}/interactive",
+            ),
+            wiz.StoreNonEmpty(
+                "login shell [bool, default=False]: ",
+                converter=to_bool,
+                show_conversion=True,
+                path="/foreign_shells/{idx}/login",
+            ),
+            wiz.StoreNonEmpty(
+                "env command [str, default='env']: ",
+                path="/foreign_shells/{idx}/envcmd",
+            ),
+            wiz.StoreNonEmpty(
+                "alias command [str, default='alias']: ",
+                path="/foreign_shells/{idx}/aliascmd",
+            ),
+            wiz.StoreNonEmpty(
+                ("extra command line arguments [list of str, " "default=[]]: "),
+                converter=ast.literal_eval,
+                show_conversion=True,
+                path="/foreign_shells/{idx}/extra_args",
+            ),
+            wiz.StoreNonEmpty(
+                "safely handle exceptions [bool, default=True]: ",
+                converter=to_bool,
+                show_conversion=True,
+                path="/foreign_shells/{idx}/safe",
+            ),
+            wiz.StoreNonEmpty(
+                "pre-command [str, default='']: ", path="/foreign_shells/{idx}/prevcmd"
+            ),
+            wiz.StoreNonEmpty(
+                "post-command [str, default='']: ", path="/foreign_shells/{idx}/postcmd"
+            ),
+            wiz.StoreNonEmpty(
+                "foreign function command [str, default=None]: ",
+                path="/foreign_shells/{idx}/funcscmd",
+            ),
+            wiz.StoreNonEmpty(
+                "source command [str, default=None]: ",
+                path="/foreign_shells/{idx}/sourcer",
+            ),
+            wiz.Message(message="Foreign shell added.\n"),
+        ],
+    )
     return fs
 
 
 def _wrap_paragraphs(text, width=70, **kwargs):
     """Wraps paragraphs instead."""
-    pars = text.split('\n')
-    pars = ['\n'.join(textwrap.wrap(p, width=width, **kwargs)) for p in pars]
-    s = '\n'.join(pars)
+    pars = text.split("\n")
+    pars = ["\n".join(textwrap.wrap(p, width=width, **kwargs)) for p in pars]
+    s = "\n".join(pars)
     return s
 
 
@@ -242,9 +286,9 @@ ENVVAR_PROMPT = "{BOLD_GREEN}>>>{NO_COLOR} "
 def make_exit_message():
     """Creates a message for how to exit the wizard."""
     shell_type = builtins.__xonsh_shell__.shell_type
-    keyseq = 'Ctrl-D' if shell_type == 'readline' else 'Ctrl-C'
-    msg = 'To exit the wizard at any time, press {BOLD_UNDERLINE_CYAN}'
-    msg += keyseq + '{NO_COLOR}.\n'
+    keyseq = "Ctrl-D" if shell_type == "readline" else "Ctrl-C"
+    msg = "To exit the wizard at any time, press {BOLD_UNDERLINE_CYAN}"
+    msg += keyseq + "{NO_COLOR}.\n"
     m = wiz.Message(message=msg)
     return m
 
@@ -256,22 +300,31 @@ def make_envvar(name):
     if not vd.configurable:
         return
     default = vd.default
-    if '\n' in default:
-        default = '\n' + _wrap_paragraphs(default, width=69)
+    if "\n" in default:
+        default = "\n" + _wrap_paragraphs(default, width=69)
     curr = env.get(name)
     if is_string(curr) and is_template_string(curr):
-        curr = curr.replace('{', '{{').replace('}', '}}')
+        curr = curr.replace("{", "{{").replace("}", "}}")
     curr = pprint.pformat(curr, width=69)
-    if '\n' in curr:
-        curr = '\n' + curr
-    msg = ENVVAR_MESSAGE.format(name=name, default=default, current=curr,
-                                docstr=_wrap_paragraphs(vd.docstr, width=69))
+    if "\n" in curr:
+        curr = "\n" + curr
+    msg = ENVVAR_MESSAGE.format(
+        name=name,
+        default=default,
+        current=curr,
+        docstr=_wrap_paragraphs(vd.docstr, width=69),
+    )
     mnode = wiz.Message(message=msg)
     ens = env.get_ensurer(name)
-    path = '/env/' + name
-    pnode = wiz.StoreNonEmpty(ENVVAR_PROMPT, converter=ens.convert,
-                              show_conversion=True, path=path, retry=True,
-                              store_raw=vd.store_as_str)
+    path = "/env/" + name
+    pnode = wiz.StoreNonEmpty(
+        ENVVAR_PROMPT,
+        converter=ens.convert,
+        show_conversion=True,
+        path=path,
+        retry=True,
+        store_raw=vd.store_as_str,
+    )
     return mnode, pnode
 
 
@@ -292,47 +345,46 @@ def make_env_wiz():
     return w
 
 
-XONTRIB_PROMPT = '{BOLD_GREEN}Add this xontrib{NO_COLOR}, ' + wiz.YN
+XONTRIB_PROMPT = "{BOLD_GREEN}Add this xontrib{NO_COLOR}, " + wiz.YN
 
 
 def _xontrib_path(visitor=None, node=None, val=None):
     # need this to append only based on user-selected size
-    return ('xontribs', len(visitor.state.get('xontribs', ())))
+    return ("xontribs", len(visitor.state.get("xontribs", ())))
 
 
 def make_xontrib(xontrib, package):
     """Makes a message and StoreNonEmpty node for a xontrib."""
-    name = xontrib.get('name', '<unknown-xontrib-name>')
-    msg = '\n{BOLD_CYAN}' + name + '{NO_COLOR}\n'
-    if 'url' in xontrib:
-        msg += '{RED}url:{NO_COLOR} ' + xontrib['url'] + '\n'
-    if 'package' in xontrib:
-        msg += '{RED}package:{NO_COLOR} ' + xontrib['package'] + '\n'
-    if 'url' in package:
-        if 'url' in xontrib and package['url'] != xontrib['url']:
-            msg += '{RED}package-url:{NO_COLOR} ' + package['url'] + '\n'
-    if 'license' in package:
-        msg += '{RED}license:{NO_COLOR} ' + package['license'] + '\n'
-    msg += '{PURPLE}installed?{NO_COLOR} '
-    msg += ('no' if find_xontrib(name) is None else 'yes') + '\n'
-    desc = xontrib.get('description', '')
+    name = xontrib.get("name", "<unknown-xontrib-name>")
+    msg = "\n{BOLD_CYAN}" + name + "{NO_COLOR}\n"
+    if "url" in xontrib:
+        msg += "{RED}url:{NO_COLOR} " + xontrib["url"] + "\n"
+    if "package" in xontrib:
+        msg += "{RED}package:{NO_COLOR} " + xontrib["package"] + "\n"
+    if "url" in package:
+        if "url" in xontrib and package["url"] != xontrib["url"]:
+            msg += "{RED}package-url:{NO_COLOR} " + package["url"] + "\n"
+    if "license" in package:
+        msg += "{RED}license:{NO_COLOR} " + package["license"] + "\n"
+    msg += "{PURPLE}installed?{NO_COLOR} "
+    msg += ("no" if find_xontrib(name) is None else "yes") + "\n"
+    desc = xontrib.get("description", "")
     if not isinstance(desc, str):
-        desc = ''.join(desc)
+        desc = "".join(desc)
     msg += _wrap_paragraphs(desc, width=69)
-    if msg.endswith('\n'):
+    if msg.endswith("\n"):
         msg = msg[:-1]
     mnode = wiz.Message(message=msg)
     convert = lambda x: name if to_bool(x) else wiz.Unstorable
-    pnode = wiz.StoreNonEmpty(XONTRIB_PROMPT, converter=convert,
-                              path=_xontrib_path)
+    pnode = wiz.StoreNonEmpty(XONTRIB_PROMPT, converter=convert, path=_xontrib_path)
     return mnode, pnode
 
 
 def make_xontribs_wiz():
     """Makes a xontrib wizard."""
     md = xontrib_metadata()
-    pkgs = [md['packages'].get(d.get('package', None), {}) for d in md['xontribs']]
-    w = _make_flat_wiz(make_xontrib, md['xontribs'], pkgs)
+    pkgs = [md["packages"].get(d.get("package", None), {}) for d in md["xontribs"]]
+    w = _make_flat_wiz(make_xontrib, md["xontribs"], pkgs)
     return w
 
 
@@ -349,51 +401,62 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
         Filename for that will flag to future runs that the wizard should not be
         run again. If None (default), this defaults to default_file.
     """
-    w = wiz.Wizard(children=[
-        wiz.Message(message=WIZARD_HEAD),
-        make_exit_message(),
-        wiz.Message(message=WIZARD_FS),
-        make_fs_wiz(),
-        wiz.Message(message=WIZARD_ENV),
-        wiz.YesNo(question=WIZARD_ENV_QUESTION, yes=make_env_wiz(),
-                  no=wiz.Pass()),
-        wiz.Message(message=WIZARD_XONTRIB),
-        wiz.YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(),
-                  no=wiz.Pass()),
-        wiz.Message(message='\n' + HR + '\n'),
-        wiz.FileInserter(prefix='# XONSH WIZARD START', suffix='# XONSH WIZARD END',
-                         dump_rules=XONFIG_DUMP_RULES, default_file=default_file,
-                         check=True),
-        wiz.Message(message=WIZARD_TAIL),
-    ])
+    w = wiz.Wizard(
+        children=[
+            wiz.Message(message=WIZARD_HEAD),
+            make_exit_message(),
+            wiz.Message(message=WIZARD_FS),
+            make_fs_wiz(),
+            wiz.Message(message=WIZARD_ENV),
+            wiz.YesNo(question=WIZARD_ENV_QUESTION, yes=make_env_wiz(), no=wiz.Pass()),
+            wiz.Message(message=WIZARD_XONTRIB),
+            wiz.YesNo(
+                question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(), no=wiz.Pass()
+            ),
+            wiz.Message(message="\n" + HR + "\n"),
+            wiz.FileInserter(
+                prefix="# XONSH WIZARD START",
+                suffix="# XONSH WIZARD END",
+                dump_rules=XONFIG_DUMP_RULES,
+                default_file=default_file,
+                check=True,
+            ),
+            wiz.Message(message=WIZARD_TAIL),
+        ]
+    )
     if confirm:
-        q = ("Would you like to run the xonsh configuration wizard now?\n\n"
-             "1. Yes (You can abort at any time)\n"
-             "2. No, but ask me next time.\n"
-             "3. No, and don't ask me again.\n\n"
-             "1, 2, or 3 [default: 2]? ")
+        q = (
+            "Would you like to run the xonsh configuration wizard now?\n\n"
+            "1. Yes (You can abort at any time)\n"
+            "2. No, but ask me next time.\n"
+            "3. No, and don't ask me again.\n\n"
+            "1, 2, or 3 [default: 2]? "
+        )
         no_wizard_file = default_file if no_wizard_file is None else no_wizard_file
         passer = wiz.Pass()
-        saver = wiz.SaveJSON(check=False, ask_filename=False,
-                             default_file=no_wizard_file)
-        w = wiz.Question(q, {1: w, 2: passer, 3: saver},
-                         converter=lambda x: int(x) if x != '' else 2)
+        saver = wiz.SaveJSON(
+            check=False, ask_filename=False, default_file=no_wizard_file
+        )
+        w = wiz.Question(
+            q, {1: w, 2: passer, 3: saver}, converter=lambda x: int(x) if x != "" else 2
+        )
     return w
 
 
 def _wizard(ns):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__.shell
-    fname = env.get('XONSHRC')[-1] if ns.file is None else ns.file
-    no_wiz = os.path.join(env.get('XONSH_CONFIG_DIR'), 'no-wizard')
-    w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm,
-                           no_wizard_file=no_wiz)
-    tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
+    fname = env.get("XONSHRC")[-1] if ns.file is None else ns.file
+    no_wiz = os.path.join(env.get("XONSH_CONFIG_DIR"), "no-wizard")
+    w = make_xonfig_wizard(
+        default_file=fname, confirm=ns.confirm, no_wizard_file=no_wiz
+    )
+    tempenv = {"PROMPT": "", "XONSH_STORE_STDOUT": False}
     pv = wiz.PromptVisitor(w, store_in_history=False, multiline=False)
 
     @contextlib.contextmanager
     def force_hide():
-        if env.get('XONSH_STORE_STDOUT') and hasattr(shell, '_force_hide'):
+        if env.get("XONSH_STORE_STDOUT") and hasattr(shell, "_force_hide"):
             orig, shell._force_hide = shell._force_hide, False
             yield
             shell._force_hide = orig
@@ -413,8 +476,8 @@ def _xonfig_format_human(data):
     for key, val in data:
         wcol1 = max(wcol1, len(key))
         wcol2 = max(wcol2, len(str(val)))
-    hr = '+' + ('-' * (wcol1 + 2)) + '+' + ('-' * (wcol2 + 2)) + '+\n'
-    row = '| {key!s:<{wcol1}} | {val!s:<{wcol2}} |\n'
+    hr = "+" + ("-" * (wcol1 + 2)) + "+" + ("-" * (wcol2 + 2)) + "+\n"
+    row = "| {key!s:<{wcol1}} | {val!s:<{wcol2}} |\n"
     s = hr
     for key, val in data:
         s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
@@ -423,8 +486,8 @@ def _xonfig_format_human(data):
 
 
 def _xonfig_format_json(data):
-    data = {k.replace(' ', '_'): v for k, v in data}
-    s = json.dumps(data, sort_keys=True, indent=1) + '\n'
+    data = {k.replace(" ", "_"): v for k, v in data}
+    s = json.dumps(data, sort_keys=True, indent=1) + "\n"
     return s
 
 
@@ -433,36 +496,38 @@ def _info(ns):
     try:
         ply.__version__ = ply.__version__
     except AttributeError:
-        ply.__version__ = '3.8'
-    data = [
-        ('xonsh', XONSH_VERSION),
-    ]
+        ply.__version__ = "3.8"
+    data = [("xonsh", XONSH_VERSION)]
     hash_, date_ = githash()
     if hash_:
-        data.append(('Git SHA', hash_))
-        data.append(('Commit Date', date_))
-    data.extend([
-        ('Python', '{}.{}.{}'.format(*PYTHON_VERSION_INFO)),
-        ('PLY', ply.__version__),
-        ('have readline', is_readline_available()),
-        ('prompt toolkit', ptk_version() or None),
-        ('shell type', env.get('SHELL_TYPE')),
-        ('pygments', pygments_version()),
-        ('on posix', bool(ON_POSIX)),
-        ('on linux', bool(ON_LINUX)),
-    ])
+        data.append(("Git SHA", hash_))
+        data.append(("Commit Date", date_))
+    data.extend(
+        [
+            ("Python", "{}.{}.{}".format(*PYTHON_VERSION_INFO)),
+            ("PLY", ply.__version__),
+            ("have readline", is_readline_available()),
+            ("prompt toolkit", ptk_version() or None),
+            ("shell type", env.get("SHELL_TYPE")),
+            ("pygments", pygments_version()),
+            ("on posix", bool(ON_POSIX)),
+            ("on linux", bool(ON_LINUX)),
+        ]
+    )
     if ON_LINUX:
-        data.append(('distro', linux_distro()))
-    data.extend([
-        ('on darwin', ON_DARWIN),
-        ('on windows', ON_WINDOWS),
-        ('on cygwin', ON_CYGWIN),
-        ('on msys2', ON_MSYS),
-        ('is superuser', is_superuser()),
-        ('default encoding', DEFAULT_ENCODING),
-        ('xonsh encoding', env.get('XONSH_ENCODING')),
-        ('encoding errors', env.get('XONSH_ENCODING_ERRORS')),
-    ])
+        data.append(("distro", linux_distro()))
+    data.extend(
+        [
+            ("on darwin", ON_DARWIN),
+            ("on windows", ON_WINDOWS),
+            ("on cygwin", ON_CYGWIN),
+            ("on msys2", ON_MSYS),
+            ("is superuser", is_superuser()),
+            ("default encoding", DEFAULT_ENCODING),
+            ("xonsh encoding", env.get("XONSH_ENCODING")),
+            ("encoding errors", env.get("XONSH_ENCODING_ERRORS")),
+        ]
+    )
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s
@@ -470,7 +535,7 @@ def _info(ns):
 
 def _styles(ns):
     env = builtins.__xonsh_env__
-    curr = env.get('XONSH_COLOR_STYLE')
+    curr = env.get("XONSH_COLOR_STYLE")
     styles = sorted(color_style_names())
     if ns.json:
         s = json.dumps(styles, sort_keys=True, indent=1)
@@ -479,10 +544,10 @@ def _styles(ns):
     lines = []
     for style in styles:
         if style == curr:
-            lines.append('* {GREEN}' + style + '{NO_COLOR}')
+            lines.append("* {GREEN}" + style + "{NO_COLOR}")
         else:
-            lines.append('  ' + style)
-    s = '\n'.join(lines)
+            lines.append("  " + style)
+    s = "\n".join(lines)
     print_color(s)
 
 
@@ -492,26 +557,27 @@ def _str_colors(cmap, cols):
     lines = []
     for n, group in itertools.groupby(color_names, key=grper):
         width = cols // n
-        line = ''
+        line = ""
         for i, name in enumerate(group):
-            buf = ' ' * (width - len(name))
-            line += '{' + name + '}' + name + '{NO_COLOR}' + buf
+            buf = " " * (width - len(name))
+            line += "{" + name + "}" + name + "{NO_COLOR}" + buf
             if (i + 1) % n == 0:
                 lines.append(line)
-                line = ''
+                line = ""
         if len(line) != 0:
             lines.append(line)
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def _tok_colors(cmap, cols):
     from xonsh.style_tools import Color
+
     nc = Color.NO_COLOR
     names_toks = {}
     for t in cmap.keys():
         name = str(t)
-        if name.startswith('Token.Color.'):
-            _, _, name = name.rpartition('.')
+        if name.startswith("Token.Color."):
+            _, _, name = name.rpartition(".")
         names_toks[name] = t
     color_names = sorted(names_toks.keys(), key=(lambda s: (len(s), s)))
     grper = lambda s: min(cols // (len(s) + 1), 8)
@@ -520,25 +586,25 @@ def _tok_colors(cmap, cols):
         width = cols // n
         for i, name in enumerate(group):
             toks.append((names_toks[name], name))
-            buf = ' ' * (width - len(name))
+            buf = " " * (width - len(name))
             if (i + 1) % n == 0:
-                buf += '\n'
+                buf += "\n"
             toks.append((nc, buf))
-        if not toks[-1][1].endswith('\n'):
-            toks[-1] = (nc, toks[-1][1] + '\n')
+        if not toks[-1][1].endswith("\n"):
+            toks[-1] = (nc, toks[-1][1] + "\n")
     return toks
 
 
 def _colors(args):
     columns, _ = shutil.get_terminal_size()
     columns -= int(ON_WINDOWS)
-    style_stash = builtins.__xonsh_env__['XONSH_COLOR_STYLE']
+    style_stash = builtins.__xonsh_env__["XONSH_COLOR_STYLE"]
 
     if args.style is not None:
         if args.style not in color_style_names():
-            print('Invalid style: {}'.format(args.style))
+            print("Invalid style: {}".format(args.style))
             return
-        builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = args.style
+        builtins.__xonsh_env__["XONSH_COLOR_STYLE"] = args.style
 
     color_map = color_style()
     akey = next(iter(color_map))
@@ -547,73 +613,85 @@ def _colors(args):
     else:
         s = _tok_colors(color_map, columns)
     print_color(s)
-    builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = style_stash
+    builtins.__xonsh_env__["XONSH_COLOR_STYLE"] = style_stash
 
 
 def _tutorial(args):
     import webbrowser
-    webbrowser.open('http://xon.sh/tutorial.html')
+
+    webbrowser.open("http://xon.sh/tutorial.html")
 
 
 @functools.lru_cache(1)
 def _xonfig_create_parser():
-    p = argparse.ArgumentParser(prog='xonfig',
-                                description='Manages xonsh configuration.')
-    subp = p.add_subparsers(title='action', dest='action')
-    info = subp.add_parser('info', help=('displays configuration information, '
-                                         'default action'))
-    info.add_argument('--json', action='store_true', default=False,
-                      help='reports results as json')
-    wiz = subp.add_parser('wizard', help='displays configuration information')
-    wiz.add_argument('--file', default=None,
-                     help='config file location, default=$XONSHRC')
-    wiz.add_argument('--confirm', action='store_true', default=False,
-                     help='confirm that the wizard should be run.')
-    sty = subp.add_parser('styles', help='prints available xonsh color styles')
-    sty.add_argument('--json', action='store_true', default=False,
-                     help='reports results as json')
-    colors = subp.add_parser('colors', help='preview color style')
-    colors.add_argument('style', nargs='?', default=None,
-                        help='style to preview, default: <current>')
-    subp.add_parser('tutorial', help='Launch tutorial in browser.')
+    p = argparse.ArgumentParser(
+        prog="xonfig", description="Manages xonsh configuration."
+    )
+    subp = p.add_subparsers(title="action", dest="action")
+    info = subp.add_parser(
+        "info", help=("displays configuration information, " "default action")
+    )
+    info.add_argument(
+        "--json", action="store_true", default=False, help="reports results as json"
+    )
+    wiz = subp.add_parser("wizard", help="displays configuration information")
+    wiz.add_argument(
+        "--file", default=None, help="config file location, default=$XONSHRC"
+    )
+    wiz.add_argument(
+        "--confirm",
+        action="store_true",
+        default=False,
+        help="confirm that the wizard should be run.",
+    )
+    sty = subp.add_parser("styles", help="prints available xonsh color styles")
+    sty.add_argument(
+        "--json", action="store_true", default=False, help="reports results as json"
+    )
+    colors = subp.add_parser("colors", help="preview color style")
+    colors.add_argument(
+        "style", nargs="?", default=None, help="style to preview, default: <current>"
+    )
+    subp.add_parser("tutorial", help="Launch tutorial in browser.")
     return p
 
 
 _XONFIG_MAIN_ACTIONS = {
-    'info': _info,
-    'wizard': _wizard,
-    'styles': _styles,
-    'colors': _colors,
-    'tutorial': _tutorial,
+    "info": _info,
+    "wizard": _wizard,
+    "styles": _styles,
+    "colors": _colors,
+    "tutorial": _tutorial,
 }
 
 
 def xonfig_main(args=None):
     """Main xonfig entry point."""
-    if not args or (args[0] not in _XONFIG_MAIN_ACTIONS and
-                    args[0] not in {'-h', '--help'}):
-        args.insert(0, 'info')
+    if not args or (
+        args[0] not in _XONFIG_MAIN_ACTIONS and args[0] not in {"-h", "--help"}
+    ):
+        args.insert(0, "info")
     parser = _xonfig_create_parser()
     ns = parser.parse_args(args)
     if ns.action is None:  # apply default action
-        ns = parser.parse_args(['info'] + args)
+        ns = parser.parse_args(["info"] + args)
     return _XONFIG_MAIN_ACTIONS[ns.action](ns)
 
 
 @lazyobject
 def STRIP_COLOR_RE():
-    return re.compile('{.*?}')
+    return re.compile("{.*?}")
 
 
-def _align_string(string, align='<', fill=' ', width=80):
+def _align_string(string, align="<", fill=" ", width=80):
     """ Align and pad a color formatted string """
-    linelen = len(STRIP_COLOR_RE.sub('', string))
+    linelen = len(STRIP_COLOR_RE.sub("", string))
     padlen = max(width - linelen, 0)
-    if align == '^':
+    if align == "^":
         return fill * (padlen // 2) + string + fill * (padlen // 2 + padlen % 2)
-    elif align == '>':
+    elif align == ">":
         return fill * padlen + string
-    elif align == '<':
+    elif align == "<":
         return string + fill * padlen
     else:
         return string
@@ -660,28 +738,27 @@ def TAGLINES():
 
 # list of strings or tuples (string, align, fill)
 WELCOME_MSG = [
-    '',
-    ('{{INTENSE_WHITE}}Welcome to the xonsh shell ({version}){{NO_COLOR}}', '^', ' '),
-    '',
-    ('{{INTENSE_RED}}~{{NO_COLOR}} {tagline} {{INTENSE_RED}}~{{NO_COLOR}}', '^', ' '),
-    '',
-    ('{{INTENSE_BLACK}}', '<', '-'),
-    '{{GREEN}}xonfig{{NO_COLOR}} tutorial    {{INTENSE_WHITE}}->    Launch the tutorial in '
-    'the browser{{NO_COLOR}}',
-    '{{GREEN}}xonfig{{NO_COLOR}} wizard      {{INTENSE_WHITE}}->    Run the configuration '
-    'wizard and claim your shell {{NO_COLOR}}',
-    '{{INTENSE_BLACK}}(Note: Run the Wizard or create a {{RED}}~/.xonshrc{{INTENSE_BLACK}} file '
-    'to suppress the welcome screen)',
-    '',
+    "",
+    ("{{INTENSE_WHITE}}Welcome to the xonsh shell ({version}){{NO_COLOR}}", "^", " "),
+    "",
+    ("{{INTENSE_RED}}~{{NO_COLOR}} {tagline} {{INTENSE_RED}}~{{NO_COLOR}}", "^", " "),
+    "",
+    ("{{INTENSE_BLACK}}", "<", "-"),
+    "{{GREEN}}xonfig{{NO_COLOR}} tutorial    {{INTENSE_WHITE}}->    Launch the tutorial in "
+    "the browser{{NO_COLOR}}",
+    "{{GREEN}}xonfig{{NO_COLOR}} wizard      {{INTENSE_WHITE}}->    Run the configuration "
+    "wizard and claim your shell {{NO_COLOR}}",
+    "{{INTENSE_BLACK}}(Note: Run the Wizard or create a {{RED}}~/.xonshrc{{INTENSE_BLACK}} file "
+    "to suppress the welcome screen)",
+    "",
 ]
 
 
 def print_welcome_screen():
-    subst = dict(tagline=random.choice(list(TAGLINES)),
-                 version=XONSH_VERSION)
+    subst = dict(tagline=random.choice(list(TAGLINES)), version=XONSH_VERSION)
     for elem in WELCOME_MSG:
         if isinstance(elem, str):
-            elem = (elem, '', '')
+            elem = (elem, "", "")
         line = elem[0].format(**subst)
         termwidth = os.get_terminal_size().columns
         line = _align_string(line, elem[1], elem[2], width=termwidth)

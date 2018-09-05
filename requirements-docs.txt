@@ -8,3 +8,4 @@ psutil
 pyzmq
 matplotlib
 doctr
+tornado

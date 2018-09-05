@@ -20,15 +20,15 @@ class StdJupyterRedirectBuf(io.RawIOBase):
 
     def seek(self, offset, whence=io.SEEK_SET):
         """Sets the location in both the stdbuf and the membuf."""
-        raise io.UnsupportedOperation('cannot seek Jupyter redirect')
+        raise io.UnsupportedOperation("cannot seek Jupyter redirect")
 
     def truncate(self, size=None):
         """Truncate both buffers."""
-        raise io.UnsupportedOperation('cannot truncate Jupyter redirect')
+        raise io.UnsupportedOperation("cannot truncate Jupyter redirect")
 
     def readinto(self, b):
         """Read bytes into buffer from both streams."""
-        raise io.UnsupportedOperation('cannot read into Jupyter redirect')
+        raise io.UnsupportedOperation("cannot read into Jupyter redirect")
 
     def write(self, b):
         """Write bytes to kernel."""
@@ -62,13 +62,13 @@ class StdJupyterRedirect(io.TextIOBase):
     def encoding(self):
         """The encoding of the stream"""
         env = builtins.__xonsh_env__
-        return getattr(self.std, 'encoding', env.get('XONSH_ENCODING'))
+        return getattr(self.std, "encoding", env.get("XONSH_ENCODING"))
 
     @property
     def errors(self):
         """The encoding errors of the stream"""
         env = builtins.__xonsh_env__
-        return getattr(self.std, 'errors', env.get('XONSH_ENCODING_ERRORS'))
+        return getattr(self.std, "errors", env.get("XONSH_ENCODING_ERRORS"))
 
     @property
     def newlines(self):
@@ -97,8 +97,7 @@ class StdJupyterRedirect(io.TextIOBase):
 
     def write(self, s):
         """Writes data to the original kernel stream."""
-        self.kernel._respond_in_chunks(self._name, s,
-                                       parent_header=self.parent_header)
+        self.kernel._respond_in_chunks(self._name, s, parent_header=self.parent_header)
 
     def flush(self):
         """Flushes kernel iopub_stream."""
@@ -110,23 +109,23 @@ class StdJupyterRedirect(io.TextIOBase):
 
     def seek(self, offset, whence=io.SEEK_SET):
         """Seek to a location."""
-        raise io.UnsupportedOperation('cannot seek Jupyter redirect')
+        raise io.UnsupportedOperation("cannot seek Jupyter redirect")
 
     def truncate(self, size=None):
         """Truncate the streams."""
-        raise io.UnsupportedOperation('cannot truncate Jupyter redirect')
+        raise io.UnsupportedOperation("cannot truncate Jupyter redirect")
 
     def detach(self):
         """This operation is not supported."""
-        raise io.UnsupportedOperation('cannot detach a Jupyter redirect')
+        raise io.UnsupportedOperation("cannot detach a Jupyter redirect")
 
     def read(self, size=None):
         """Read from the stream"""
-        raise io.UnsupportedOperation('cannot read a Jupyter redirect')
+        raise io.UnsupportedOperation("cannot read a Jupyter redirect")
 
     def readline(self, size=-1):
         """Read a line."""
-        raise io.UnsupportedOperation('cannot read a line from a Jupyter redirect')
+        raise io.UnsupportedOperation("cannot read a line from a Jupyter redirect")
 
 
 class JupyterShell(BaseShell):
@@ -138,8 +137,8 @@ class JupyterShell(BaseShell):
 
     def default(self, line, kernel, parent_header=None):
         """Executes code, but redirects output to Jupyter client"""
-        stdout = StdJupyterRedirect('stdout', kernel, parent_header)
-        stderr = StdJupyterRedirect('stderr', kernel, parent_header)
+        stdout = StdJupyterRedirect("stdout", kernel, parent_header)
+        stderr = StdJupyterRedirect("stderr", kernel, parent_header)
         with stdout, stderr:
             rtn = super().default(line)
         return rtn

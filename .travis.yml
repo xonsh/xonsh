@@ -57,17 +57,23 @@ before_script:
   - rvm get head || true
 
 script:
-  - set -e
+  - set -ex
   - if [[ $BUILD_DOCS = true ]]; then
+      git clean -fdx;
       cd docs;
       make html;
       cd ..;
+      git checkout -- .;
+      git reset --hard HEAD;
       doctr deploy --deploy-repo xonsh/xonsh-docs dev;
       git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
       pip install --upgrade .;
+      git clean -fdx;
       cd docs;
       make clean html;
       cd ..;
+      git checkout -- .;
+      git reset --hard HEAD;
       doctr deploy --deploy-repo xonsh/xonsh-docs .;
     else
       py.test --timeout=10;

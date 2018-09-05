@@ -7,8 +7,8 @@ from xonsh.xoreutils.util import arg_handler
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     env = builtins.__xonsh_env__
-    enc = env.get('XONSH_ENCODING')
-    if fname == '-':
+    enc = env.get("XONSH_ENCODING")
+    if fname == "-":
         f = stdin
     elif os.path.isdir(fname):
         print("cat: {}: Is a directory.".format(fname), file=err)
@@ -17,28 +17,27 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         print("cat: No such file or directory: {}".format(fname), file=err)
         return True, line_count
     else:
-        f = open(fname, 'rb')
+        f = open(fname, "rb")
     sep = os.linesep.encode()
     last_was_blank = False
     while True:
         _r = r = f.readline()
         if isinstance(_r, str):
             _r = r = _r.encode()
-        if r == b'':
+        if r == b"":
             break
         if r.endswith(sep):
-            _r = _r[:-len(sep)]
-        this_one_blank = _r == b''
-        if last_was_blank and this_one_blank and opts['squeeze_blank']:
+            _r = _r[: -len(sep)]
+        this_one_blank = _r == b""
+        if last_was_blank and this_one_blank and opts["squeeze_blank"]:
             continue
         last_was_blank = this_one_blank
-        if (opts['number_all'] or
-                (opts['number_nonblank'] and not this_one_blank)):
+        if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
             start = ("%6d " % line_count).encode()
             _r = start + _r
             line_count += 1
-        if opts['show_ends']:
-            _r = _r + b'$'
+        if opts["show_ends"]:
+            _r = _r + b"$"
         try:
             print(_r.decode(enc), flush=True, file=out)
         except:
@@ -56,7 +55,7 @@ def cat(args, stdin, stdout, stderr):
     line_count = 1
     errors = False
     if len(args) == 0:
-        args = ['-']
+        args = ["-"]
     for i in args:
         o = _cat_single_file(opts, i, stdin, stdout, stderr, line_count)
         if o is None:
@@ -68,15 +67,20 @@ def cat(args, stdin, stdout, stderr):
 
 
 def _cat_parse_args(args):
-    out = {'number_nonblank': False, 'number_all': False, 'squeeze_blank': False, 'show_ends': False}
-    if '--help' in args:
+    out = {
+        "number_nonblank": False,
+        "number_all": False,
+        "squeeze_blank": False,
+        "show_ends": False,
+    }
+    if "--help" in args:
         return
 
-    arg_handler(args, out, '-b', 'number_nonblank', True, '--number-nonblank')
-    arg_handler(args, out, '-n', 'number_all', True, '--number')
-    arg_handler(args, out, '-E', 'show_ends', True, '--show-ends')
-    arg_handler(args, out, '-s', 'squeeze_blank', True, '--squeeze-blank')
-    arg_handler(args, out, '-T', 'show_tabs', True, '--show-tabs')
+    arg_handler(args, out, "-b", "number_nonblank", True, "--number-nonblank")
+    arg_handler(args, out, "-n", "number_all", True, "--number")
+    arg_handler(args, out, "-E", "show_ends", True, "--show-ends")
+    arg_handler(args, out, "-s", "squeeze_blank", True, "--squeeze-blank")
+    arg_handler(args, out, "-T", "show_tabs", True, "--show-tabs")
 
     return out
 
@@ -112,10 +116,11 @@ Examples:
 def cat_main(args=None):
     import sys
     from xonsh.main import setup
+
     setup()
     args = sys.argv if args is None else args
     cat(args, sys.stdin, sys.stdout, sys.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cat_main()

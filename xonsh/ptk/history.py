@@ -33,7 +33,6 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
 
 
 class PromptToolkitHistoryAdder(Thread):
-
     def __init__(self, ptkhist, wait_for_gc=True, *args, **kwargs):
         """Thread responsible for adding inputs from history to the current
         prompt-toolkit history instance. May wait for the history garbage
@@ -52,7 +51,7 @@ class PromptToolkitHistoryAdder(Thread):
         buf = None
         ptkhist = self.ptkhist
         for cmd in hist.all_items():
-            line = cmd['inp'].rstrip()
+            line = cmd["inp"].rstrip()
             if len(ptkhist) == 0 or line != ptkhist[-1]:
                 ptkhist.append(line)
                 if buf is None:
@@ -64,8 +63,7 @@ class PromptToolkitHistoryAdder(Thread):
     def _buf(self):
         # Thread-safe version of
         # buf = builtins.__xonsh_shell__.shell.prompter.cli.application.buffer
-        path = ['__xonsh_shell__', 'shell', 'prompter', 'cli', 'application',
-                'buffer']
+        path = ["__xonsh_shell__", "shell", "prompter", "cli", "application", "buffer"]
         buf = builtins
         for a in path:
             buf = getattr(buf, a, None)

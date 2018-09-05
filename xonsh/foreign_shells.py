@@ -93,95 +93,78 @@ echo ${namefile}"""
 @lazyobject
 def CANON_SHELL_NAMES():
     return {
-    'bash': 'bash',
-    '/bin/bash': 'bash',
-    'zsh': 'zsh',
-    '/bin/zsh': 'zsh',
-    '/usr/bin/zsh': 'zsh',
-    'cmd': 'cmd',
-    'cmd.exe': 'cmd',
+        "bash": "bash",
+        "/bin/bash": "bash",
+        "zsh": "zsh",
+        "/bin/zsh": "zsh",
+        "/usr/bin/zsh": "zsh",
+        "cmd": "cmd",
+        "cmd.exe": "cmd",
     }
 
 
 @lazyobject
 def DEFAULT_ENVCMDS():
-    return {
-    'bash': 'env',
-    'zsh': 'env',
-    'cmd': 'set',
-    }
+    return {"bash": "env", "zsh": "env", "cmd": "set"}
 
 
 @lazyobject
 def DEFAULT_ALIASCMDS():
-    return {
-    'bash': 'alias',
-    'zsh': 'alias -L',
-    'cmd': '',
-    }
+    return {"bash": "alias", "zsh": "alias -L", "cmd": ""}
 
 
 @lazyobject
 def DEFAULT_FUNCSCMDS():
-    return {
-    'bash': DEFAULT_BASH_FUNCSCMD,
-    'zsh': DEFAULT_ZSH_FUNCSCMD,
-    'cmd': '',
-    }
+    return {"bash": DEFAULT_BASH_FUNCSCMD, "zsh": DEFAULT_ZSH_FUNCSCMD, "cmd": ""}
 
 
 @lazyobject
 def DEFAULT_SOURCERS():
-    return {
-    'bash': 'source',
-    'zsh': 'source',
-    'cmd': 'call',
-    }
+    return {"bash": "source", "zsh": "source", "cmd": "call"}
 
 
 @lazyobject
 def DEFAULT_TMPFILE_EXT():
-    return {
-    'bash': '.sh',
-    'zsh': '.zsh',
-    'cmd': '.bat',
-    }
+    return {"bash": ".sh", "zsh": ".zsh", "cmd": ".bat"}
 
 
 @lazyobject
 def DEFAULT_RUNCMD():
-    return {
-    'bash': '-c',
-    'zsh': '-c',
-    'cmd': '/C',
-    }
+    return {"bash": "-c", "zsh": "-c", "cmd": "/C"}
 
 
 @lazyobject
 def DEFAULT_SETERRPREVCMD():
-    return {
-    'bash': 'set -e',
-    'zsh': 'set -e',
-    'cmd': '@echo off',
-    }
+    return {"bash": "set -e", "zsh": "set -e", "cmd": "@echo off"}
 
 
 @lazyobject
 def DEFAULT_SETERRPOSTCMD():
-    return {
-    'bash': '',
-    'zsh': '',
-    'cmd': 'if errorlevel 1 exit 1',
-    }
+    return {"bash": "", "zsh": "", "cmd": "if errorlevel 1 exit 1"}
 
 
 @functools.lru_cache()
-def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
-                       aliascmd=None, extra_args=(), currenv=None,
-                       safe=True, prevcmd='', postcmd='', funcscmd=None,
-                       sourcer=None, use_tmpfile=False, tmpfile_ext=None,
-                       runcmd=None, seterrprevcmd=None, seterrpostcmd=None,
-                       show=False, dryrun=False):
+def foreign_shell_data(
+    shell,
+    interactive=True,
+    login=False,
+    envcmd=None,
+    aliascmd=None,
+    extra_args=(),
+    currenv=None,
+    safe=True,
+    prevcmd="",
+    postcmd="",
+    funcscmd=None,
+    sourcer=None,
+    use_tmpfile=False,
+    tmpfile_ext=None,
+    runcmd=None,
+    seterrprevcmd=None,
+    seterrpostcmd=None,
+    show=False,
+    dryrun=False,
+):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
 
@@ -255,23 +238,32 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     cmd = [shell]
     cmd.extend(extra_args)  # needs to come here for GNU long options
     if interactive:
-        cmd.append('-i')
+        cmd.append("-i")
     if login:
-        cmd.append('-l')
+        cmd.append("-l")
     shkey = CANON_SHELL_NAMES[shell]
-    envcmd = DEFAULT_ENVCMDS.get(shkey, 'env') if envcmd is None else envcmd
-    aliascmd = DEFAULT_ALIASCMDS.get(shkey, 'alias') if aliascmd is None else aliascmd
-    funcscmd = DEFAULT_FUNCSCMDS.get(shkey, 'echo {}') if funcscmd is None else funcscmd
-    tmpfile_ext = DEFAULT_TMPFILE_EXT.get(shkey, 'sh') if tmpfile_ext is None else tmpfile_ext
-    runcmd = DEFAULT_RUNCMD.get(shkey, '-c') if runcmd is None else runcmd
-    seterrprevcmd = DEFAULT_SETERRPREVCMD.get(shkey, '') \
-        if seterrprevcmd is None else seterrprevcmd
-    seterrpostcmd = DEFAULT_SETERRPOSTCMD.get(shkey, '') \
-        if seterrpostcmd is None else seterrpostcmd
-    command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
-                             postcmd=postcmd, funcscmd=funcscmd,
-                             seterrprevcmd=seterrprevcmd,
-                             seterrpostcmd=seterrpostcmd).strip()
+    envcmd = DEFAULT_ENVCMDS.get(shkey, "env") if envcmd is None else envcmd
+    aliascmd = DEFAULT_ALIASCMDS.get(shkey, "alias") if aliascmd is None else aliascmd
+    funcscmd = DEFAULT_FUNCSCMDS.get(shkey, "echo {}") if funcscmd is None else funcscmd
+    tmpfile_ext = (
+        DEFAULT_TMPFILE_EXT.get(shkey, "sh") if tmpfile_ext is None else tmpfile_ext
+    )
+    runcmd = DEFAULT_RUNCMD.get(shkey, "-c") if runcmd is None else runcmd
+    seterrprevcmd = (
+        DEFAULT_SETERRPREVCMD.get(shkey, "") if seterrprevcmd is None else seterrprevcmd
+    )
+    seterrpostcmd = (
+        DEFAULT_SETERRPOSTCMD.get(shkey, "") if seterrpostcmd is None else seterrpostcmd
+    )
+    command = COMMAND.format(
+        envcmd=envcmd,
+        aliascmd=aliascmd,
+        prevcmd=prevcmd,
+        postcmd=postcmd,
+        funcscmd=funcscmd,
+        seterrprevcmd=seterrprevcmd,
+        seterrpostcmd=seterrpostcmd,
+    ).strip()
     if show:
         print(command)
     if dryrun:
@@ -281,20 +273,23 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         cmd.append(command)
     else:
         tmpfile = tempfile.NamedTemporaryFile(suffix=tmpfile_ext, delete=False)
-        tmpfile.write(command.encode('utf8'))
+        tmpfile.write(command.encode("utf8"))
         tmpfile.close()
         cmd.append(tmpfile.name)
-    if currenv is None and hasattr(builtins, '__xonsh_env__'):
+    if currenv is None and hasattr(builtins, "__xonsh_env__"):
         currenv = builtins.__xonsh_env__.detype()
     elif currenv is not None:
         currenv = dict(currenv)
     try:
-        s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
-                                    # start new session to avoid hangs
-                                    # (doesn't work on Cygwin though)
-                                    start_new_session=((not ON_CYGWIN) and
-                                                       (not ON_MSYS)),
-                                    universal_newlines=True)
+        s = subprocess.check_output(
+            cmd,
+            stderr=subprocess.PIPE,
+            env=currenv,
+            # start new session to avoid hangs
+            # (doesn't work on Cygwin though)
+            start_new_session=((not ON_CYGWIN) and (not ON_MSYS)),
+            universal_newlines=True,
+        )
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
             raise
@@ -311,14 +306,12 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
 
 @lazyobject
 def ENV_RE():
-    return re.compile('__XONSH_ENV_BEG__\n(.*)'
-                      '__XONSH_ENV_END__', flags=re.DOTALL)
+    return re.compile("__XONSH_ENV_BEG__\n(.*)" "__XONSH_ENV_END__", flags=re.DOTALL)
 
 
 @lazyobject
 def ENV_SPLIT_RE():
-    return re.compile('^([^=]+)=([^=]*|[^\n]*)$',
-                      flags=re.DOTALL | re.MULTILINE)
+    return re.compile("^([^=]+)=([^=]*|[^\n]*)$", flags=re.DOTALL | re.MULTILINE)
 
 
 def parse_env(s):
@@ -327,16 +320,16 @@ def parse_env(s):
     if m is None:
         return {}
     g1 = m.group(1)
-    g1 = g1[:-1] if g1.endswith('\n') else g1
+    g1 = g1[:-1] if g1.endswith("\n") else g1
     env = dict(ENV_SPLIT_RE.findall(g1))
     return env
 
 
 @lazyobject
 def ALIAS_RE():
-    return re.compile('__XONSH_ALIAS_BEG__\n(.*)'
-                      '__XONSH_ALIAS_END__',
-                      flags=re.DOTALL)
+    return re.compile(
+        "__XONSH_ALIAS_BEG__\n(.*)" "__XONSH_ALIAS_END__", flags=re.DOTALL
+    )
 
 
 def parse_aliases(s):
@@ -345,21 +338,25 @@ def parse_aliases(s):
     if m is None:
         return {}
     g1 = m.group(1)
-    items = [line.split('=', 1) for line in g1.splitlines() if
-             line.startswith('alias ') and '=' in line]
+    items = [
+        line.split("=", 1)
+        for line in g1.splitlines()
+        if line.startswith("alias ") and "=" in line
+    ]
     aliases = {}
     for key, value in items:
         try:
             key = key[6:]  # lstrip 'alias '
             # undo bash's weird quoting of single quotes (sh_single_quote)
-            value = value.replace('\'\\\'\'', '\'')
+            value = value.replace("'\\''", "'")
             # strip one single quote at the start and end of value
-            if value[0] == '\'' and value[-1] == '\'':
+            if value[0] == "'" and value[-1] == "'":
                 value = value[1:-1]
             value = shlex.split(value)
         except ValueError as exc:
-            warnings.warn('could not parse alias "{0}": {1!r}'.format(key, exc),
-                          RuntimeWarning)
+            warnings.warn(
+                'could not parse alias "{0}": {1!r}'.format(key, exc), RuntimeWarning
+            )
             continue
         aliases[key] = value
     return aliases
@@ -367,9 +364,9 @@ def parse_aliases(s):
 
 @lazyobject
 def FUNCS_RE():
-    return re.compile('__XONSH_FUNCS_BEG__\n(.+)\n'
-                      '__XONSH_FUNCS_END__',
-                      flags=re.DOTALL)
+    return re.compile(
+        "__XONSH_FUNCS_BEG__\n(.+)\n" "__XONSH_FUNCS_END__", flags=re.DOTALL
+    )
 
 
 def parse_funcs(s, shell, sourcer=None, extra_args=()):
@@ -385,25 +382,30 @@ def parse_funcs(s, shell, sourcer=None, extra_args=()):
     try:
         namefiles = json.loads(g1.strip())
     except json.decoder.JSONDecodeError as exc:
-        msg = ('{0!r}\n\ncould not parse {1} functions:\n'
-               '  s  = {2!r}\n'
-               '  g1 = {3!r}\n\n'
-               'Note: you may be seeing this error if you use zsh with '
-               'prezto. Prezto overwrites GNU coreutils functions (like echo) '
-               'with its own zsh functions. Please try disabling prezto.')
+        msg = (
+            "{0!r}\n\ncould not parse {1} functions:\n"
+            "  s  = {2!r}\n"
+            "  g1 = {3!r}\n\n"
+            "Note: you may be seeing this error if you use zsh with "
+            "prezto. Prezto overwrites GNU coreutils functions (like echo) "
+            "with its own zsh functions. Please try disabling prezto."
+        )
         warnings.warn(msg.format(exc, shell, s, g1), RuntimeWarning)
         return {}
-    sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
-        else sourcer
+    sourcer = DEFAULT_SOURCERS.get(shell, "source") if sourcer is None else sourcer
     funcs = {}
     for funcname, filename in namefiles.items():
-        if funcname.startswith('_') or not filename:
+        if funcname.startswith("_") or not filename:
             continue  # skip private functions and invalid files
         if not os.path.isabs(filename):
             filename = os.path.abspath(filename)
-        wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell,
-                                            sourcer=sourcer, filename=filename,
-                                            extra_args=extra_args)
+        wrapper = ForeignShellFunctionAlias(
+            name=funcname,
+            shell=shell,
+            sourcer=sourcer,
+            filename=filename,
+            extra_args=extra_args,
+        )
         funcs[funcname] = wrapper
     return funcs
 
@@ -413,8 +415,7 @@ class ForeignShellFunctionAlias(object):
     they were aliases. This does not currently support taking stdin.
     """
 
-    INPUT = ('{sourcer} "{filename}"\n'
-             '{funcname} {args}\n')
+    INPUT = '{sourcer} "{filename}"\n' "{funcname} {args}\n"
 
     def __init__(self, name, shell, filename, sourcer=None, extra_args=()):
         """
@@ -431,8 +432,7 @@ class ForeignShellFunctionAlias(object):
         extra_args : tuple of str, optional
             Additional command line options to pass into the shell.
         """
-        sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
-            else sourcer
+        sourcer = DEFAULT_SOURCERS.get(shell, "source") if sourcer is None else sourcer
         self.name = name
         self.shell = shell
         self.filename = filename
@@ -440,20 +440,31 @@ class ForeignShellFunctionAlias(object):
         self.extra_args = extra_args
 
     def __eq__(self, other):
-        if not hasattr(other, 'name') or not hasattr(other, 'shell') or \
-                not hasattr(other, 'filename') or not hasattr(other, 'sourcer') \
-                or not hasattr(other, 'exta_args'):
+        if (
+            not hasattr(other, "name")
+            or not hasattr(other, "shell")
+            or not hasattr(other, "filename")
+            or not hasattr(other, "sourcer")
+            or not hasattr(other, "exta_args")
+        ):
             return NotImplemented
-        return (self.name == other.name) and (self.shell == other.shell) and \
-               (self.filename == other.filename) and \
-               (self.sourcer == other.sourcer) and \
-               (self.extra_args == other.extra_args)
+        return (
+            (self.name == other.name)
+            and (self.shell == other.shell)
+            and (self.filename == other.filename)
+            and (self.sourcer == other.sourcer)
+            and (self.extra_args == other.extra_args)
+        )
 
     def __call__(self, args, stdin=None):
         args, streaming = self._is_streaming(args)
-        input = self.INPUT.format(sourcer=self.sourcer, filename=self.filename,
-                                  funcname=self.name, args=' '.join(args))
-        cmd = [self.shell] + list(self.extra_args) + ['-c', input]
+        input = self.INPUT.format(
+            sourcer=self.sourcer,
+            filename=self.filename,
+            funcname=self.name,
+            args=" ".join(args),
+        )
+        cmd = [self.shell] + list(self.extra_args) + ["-c", input]
         env = builtins.__xonsh_env__
         denv = env.detype()
         if streaming:
@@ -461,27 +472,40 @@ class ForeignShellFunctionAlias(object):
             out = None
         else:
             out = subprocess.check_output(cmd, env=denv, stderr=subprocess.STDOUT)
-            out = out.decode(encoding=env.get('XONSH_ENCODING'),
-                             errors=env.get('XONSH_ENCODING_ERRORS'))
-            out = out.replace('\r\n', '\n')
+            out = out.decode(
+                encoding=env.get("XONSH_ENCODING"),
+                errors=env.get("XONSH_ENCODING_ERRORS"),
+            )
+            out = out.replace("\r\n", "\n")
         return out
 
     def _is_streaming(self, args):
         """Test and modify args if --xonsh-stream is present."""
-        if '--xonsh-stream' not in args:
+        if "--xonsh-stream" not in args:
             return args, False
         args = list(args)
-        args.remove('--xonsh-stream')
+        args.remove("--xonsh-stream")
         return args, True
 
 
 @lazyobject
 def VALID_SHELL_PARAMS():
-    return frozenset([
-    'shell', 'interactive', 'login', 'envcmd',
-    'aliascmd', 'extra_args', 'currenv', 'safe',
-    'prevcmd', 'postcmd', 'funcscmd', 'sourcer',
-    ])
+    return frozenset(
+        [
+            "shell",
+            "interactive",
+            "login",
+            "envcmd",
+            "aliascmd",
+            "extra_args",
+            "currenv",
+            "safe",
+            "prevcmd",
+            "postcmd",
+            "funcscmd",
+            "sourcer",
+        ]
+    )
 
 
 def ensure_shell(shell):
@@ -490,48 +514,58 @@ def ensure_shell(shell):
         shell = dict(shell)
     shell_keys = set(shell.keys())
     if not (shell_keys <= VALID_SHELL_PARAMS):
-        msg = 'unknown shell keys: {0}'
+        msg = "unknown shell keys: {0}"
         raise KeyError(msg.format(shell_keys - VALID_SHELL_PARAMS))
-    shell['shell'] = ensure_string(shell['shell']).lower()
-    if 'interactive' in shell_keys:
-        shell['interactive'] = to_bool(shell['interactive'])
-    if 'login' in shell_keys:
-        shell['login'] = to_bool(shell['login'])
-    if 'envcmd' in shell_keys:
-        shell['envcmd'] = None if shell['envcmd'] is None \
-            else ensure_string(shell['envcmd'])
-    if 'aliascmd' in shell_keys:
-        shell['aliascmd'] = None if shell['aliascmd'] is None \
-            else ensure_string(shell['aliascmd'])
-    if 'extra_args' in shell_keys and not isinstance(shell['extra_args'], tuple):
-        shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
-    if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
-        ce = shell['currenv']
+    shell["shell"] = ensure_string(shell["shell"]).lower()
+    if "interactive" in shell_keys:
+        shell["interactive"] = to_bool(shell["interactive"])
+    if "login" in shell_keys:
+        shell["login"] = to_bool(shell["login"])
+    if "envcmd" in shell_keys:
+        shell["envcmd"] = (
+            None if shell["envcmd"] is None else ensure_string(shell["envcmd"])
+        )
+    if "aliascmd" in shell_keys:
+        shell["aliascmd"] = (
+            None if shell["aliascmd"] is None else ensure_string(shell["aliascmd"])
+        )
+    if "extra_args" in shell_keys and not isinstance(shell["extra_args"], tuple):
+        shell["extra_args"] = tuple(map(ensure_string, shell["extra_args"]))
+    if "currenv" in shell_keys and not isinstance(shell["currenv"], tuple):
+        ce = shell["currenv"]
         if isinstance(ce, cabc.Mapping):
             ce = tuple([(ensure_string(k), v) for k, v in ce.items()])
         elif isinstance(ce, cabc.Sequence):
             ce = tuple([(ensure_string(k), v) for k, v in ce])
         else:
-            raise RuntimeError('unrecognized type for currenv')
-        shell['currenv'] = ce
-    if 'safe' in shell_keys:
-        shell['safe'] = to_bool(shell['safe'])
-    if 'prevcmd' in shell_keys:
-        shell['prevcmd'] = ensure_string(shell['prevcmd'])
-    if 'postcmd' in shell_keys:
-        shell['postcmd'] = ensure_string(shell['postcmd'])
-    if 'funcscmd' in shell_keys:
-        shell['funcscmd'] = None if shell['funcscmd'] is None \
-            else ensure_string(shell['funcscmd'])
-    if 'sourcer' in shell_keys:
-        shell['sourcer'] = None if shell['sourcer'] is None \
-            else ensure_string(shell['sourcer'])
-    if 'seterrprevcmd' in shell_keys:
-        shell['seterrprevcmd'] = None if shell['seterrprevcmd'] is None \
-            else ensure_string(shell['seterrprevcmd'])
-    if 'seterrpostcmd' in shell_keys:
-        shell['seterrpostcmd'] = None if shell['seterrpostcmd'] is None \
-            else ensure_string(shell['seterrpostcmd'])
+            raise RuntimeError("unrecognized type for currenv")
+        shell["currenv"] = ce
+    if "safe" in shell_keys:
+        shell["safe"] = to_bool(shell["safe"])
+    if "prevcmd" in shell_keys:
+        shell["prevcmd"] = ensure_string(shell["prevcmd"])
+    if "postcmd" in shell_keys:
+        shell["postcmd"] = ensure_string(shell["postcmd"])
+    if "funcscmd" in shell_keys:
+        shell["funcscmd"] = (
+            None if shell["funcscmd"] is None else ensure_string(shell["funcscmd"])
+        )
+    if "sourcer" in shell_keys:
+        shell["sourcer"] = (
+            None if shell["sourcer"] is None else ensure_string(shell["sourcer"])
+        )
+    if "seterrprevcmd" in shell_keys:
+        shell["seterrprevcmd"] = (
+            None
+            if shell["seterrprevcmd"] is None
+            else ensure_string(shell["seterrprevcmd"])
+        )
+    if "seterrpostcmd" in shell_keys:
+        shell["seterrpostcmd"] = (
+            None
+            if shell["seterrpostcmd"] is None
+            else ensure_string(shell["seterrpostcmd"])
+        )
     return shell
 
 
@@ -577,14 +611,16 @@ def load_foreign_aliases(shells):
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
-        if not builtins.__xonsh_env__.get('FOREIGN_ALIASES_OVERRIDE'):
+        if not builtins.__xonsh_env__.get("FOREIGN_ALIASES_OVERRIDE"):
             shaliases = {} if shaliases is None else shaliases
             for alias in set(shaliases) & set(xonsh_aliases):
                 del shaliases[alias]
-                if builtins.__xonsh_env__.get('XONSH_DEBUG') > 1:
-                    print('aliases: ignoring alias {!r} of shell {!r} '
-                          'which tries to override xonsh alias.'
-                          ''.format(alias, shell['shell']),
-                          file=sys.stderr)
+                if builtins.__xonsh_env__.get("XONSH_DEBUG") > 1:
+                    print(
+                        "aliases: ignoring alias {!r} of shell {!r} "
+                        "which tries to override xonsh alias."
+                        "".format(alias, shell["shell"]),
+                        file=sys.stderr,
+                    )
         aliases.update(shaliases)
     return aliases
