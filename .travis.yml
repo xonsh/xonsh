@@ -57,7 +57,7 @@ before_script:
   - rvm get head || true
 
 script:
-  - set -e
+  - set -ex
   - if [[ $BUILD_DOCS = true ]]; then
       cd docs;
       make html;
