@@ -502,12 +502,15 @@ def read_exclude(pkg):
 
 FAKE_LOAD = """
 import os as _os
-if _os.getenv('{debug}', ''):
+
+if _os.getenv("{debug}", ""):
     pass
 else:
     import sys as _sys
+
     try:
         from {pkg} import __amalgam__
+
         {load}
         del __amalgam__
     except ImportError:
@@ -526,7 +529,7 @@ def rewrite_init(pkg, order, debug="DEBUG"):
             stop = i
         elif line.startswith("# amalgamate"):
             start = i
-    t = "{1} = __amalgam__\n        " "_sys.modules['{0}.{1}'] = __amalgam__"
+    t = "{1} = __amalgam__\n        " "_sys.modules[\"{0}.{1}\"] = __amalgam__"
     load = "\n        ".join(t.format(pkg, m) for m in order)
     s = FAKE_LOAD.format(pkg=pkg, load=load, debug=debug)
     if start + 1 == stop:
