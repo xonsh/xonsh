@@ -6,8 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
 
-Pass all params to voxapi.create
+* Pass all params to voxapi.create
 
 **Security:** None
