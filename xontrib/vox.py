@@ -23,7 +23,7 @@ class VoxHandler:
                             help='The environments to create')
 
         create.add_argument('--system-site-packages', default=False,
-                            action='store_true', dest='system_site',
+                            action='store_true', dest='system_site_packages',
                             help='Give the virtual environment access to the '
                                  'system site-packages dir.')
 
@@ -89,7 +89,10 @@ class VoxHandler:
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
         """
         print('Creating environment...')
-        self.vox.create(args.name)
+        self.vox.create(args.name,
+                        system_site_packages=args.system_site_packages,
+                        symlinks=args.symlinks,
+                        with_pip=args.with_pip)
         msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
         print(msg.format(args.name))
 
