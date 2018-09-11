@@ -4,6 +4,23 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.8
+====================
+
+**Added:**
+
+* ``xonsh.lib.collections.ChainDB``, a chain map which merges mergable fields
+
+
+**Fixed:**
+
+* Pass all params to voxapi.create
+* PTK tab-completion now auto-accepts completion if only one option is present
+  (note that fix is only for PTK2)
+
+
+
+
 v0.7.7
 ====================
 
