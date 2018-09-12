@@ -185,6 +185,7 @@ def DEFAULT_ENSURERS():
         "DYNAMIC_CWD_ELISION_CHAR": (is_string, ensure_string, ensure_string),
         "EXPAND_ENV_VARS": (is_bool, to_bool, bool_to_str),
         "FORCE_POSIX_PATHS": (is_bool, to_bool, bool_to_str),
+        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": (is_bool, to_bool, bool_to_str),
         "FOREIGN_ALIASES_OVERRIDE": (is_bool, to_bool, bool_to_str),
         "FUZZY_PATH_COMPLETION": (is_bool, to_bool, bool_to_str),
         "GLOB_SORTED": (is_bool, to_bool, bool_to_str),
@@ -360,6 +361,7 @@ def DEFAULT_VALUES():
         "DYNAMIC_CWD_ELISION_CHAR": "",
         "EXPAND_ENV_VARS": True,
         "FORCE_POSIX_PATHS": False,
+        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": False,
         "FOREIGN_ALIASES_OVERRIDE": False,
         "PROMPT_FIELDS": dict(prompt.PROMPT_FIELDS),
         "FUZZY_PATH_COMPLETION": True,
@@ -569,6 +571,12 @@ def DEFAULT_DOCS():
             "Forces forward slashes (``/``) on Windows systems when using auto "
             "completion if set to anything truthy.",
             configurable=ON_WINDOWS,
+        ),
+        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": VarDocs(
+            "Whether or not foreign aliases should suppress the message "
+            "that informs the user when a foreign alias has been skipped "
+            "because it already exists in xonsh.",
+            configurable=True,
         ),
         "FOREIGN_ALIASES_OVERRIDE": VarDocs(
             "Whether or not foreign aliases should override xonsh aliases "

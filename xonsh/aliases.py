@@ -261,6 +261,13 @@ def _SOURCE_FOREIGN_PARSER():
         "replace the current xonsh aliases.",
     )
     parser.add_argument(
+        "--suppress-skip-message",
+        default=None,
+        action="store_true",
+        dest="suppress_skip_message",
+        help="flag for whether or not skip messages should be suppressed.",
+    )
+    parser.add_argument(
         "--show",
         default=False,
         action="store_true",
@@ -280,7 +287,13 @@ def _SOURCE_FOREIGN_PARSER():
 
 def source_foreign(args, stdin=None, stdout=None, stderr=None):
     """Sources a file written in a foreign shell language."""
+    env = builtins.__xonsh_env__
     ns = _SOURCE_FOREIGN_PARSER.parse_args(args)
+    ns.suppress_skip_message = (
+        env.get("FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE")
+        if ns.suppress_skip_message is None
+        else ns.suppress_skip_message
+    )
     if ns.prevcmd is not None:
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
@@ -315,7 +328,6 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
             msg += "xonsh: error: Possible reasons: File not found or syntax error\n"
             return (None, msg, 1)
     # apply results
-    env = builtins.__xonsh_env__
     denv = env.detype()
     for k, v in fsenv.items():
         if k in denv and v == denv[k]:
@@ -332,11 +344,15 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
             continue  # no change from original
         elif ns.overwrite_aliases or k not in baliases:
             baliases[k] = v
+        elif ns.suppress_skip_message:
+            pass
         else:
             msg = (
                 "Skipping application of {0!r} alias from {1!r} "
                 "since it shares a name with an existing xonsh alias. "
                 'Use "--overwrite-alias" option to apply it anyway.'
+                'You may prevent this message with "--suppress-skip-message" or '
+                '"$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = True".'
             )
             print(msg.format(k, ns.shell), file=stderr)
 
