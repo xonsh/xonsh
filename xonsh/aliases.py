@@ -289,9 +289,11 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
     """Sources a file written in a foreign shell language."""
     env = builtins.__xonsh_env__
     ns = _SOURCE_FOREIGN_PARSER.parse_args(args)
-    ns.suppress_skip_message = env.get('FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE') \
-                               if ns.suppress_skip_message is None \
-                               else ns.suppress_skip_message
+    ns.suppress_skip_message = (
+        env.get("FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE")
+        if ns.suppress_skip_message is None
+        else ns.suppress_skip_message
+    )
     if ns.prevcmd is not None:
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
