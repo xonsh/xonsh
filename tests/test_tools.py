@@ -1601,6 +1601,38 @@ def test_deprecated_past_expiry_raises_assertion_error(expired_version):
         my_function()
 
 
+@skip_if_on_windows
+def test_iglobpath_no_dotfiles(xonsh_builtins):
+    d = os.path.dirname(__file__)
+    g = d + '/*'
+    files = list(iglobpath(g, include_dotfiles=False))
+    assert d + '/.somedotfile' not in files
+
+
+@skip_if_on_windows
+def test_iglobpath_dotfiles(xonsh_builtins):
+    d = os.path.dirname(__file__)
+    g = d + '/*'
+    files = list(iglobpath(g, include_dotfiles=True))
+    assert d + '/.somedotfile' in files
+
+
+@skip_if_on_windows
+def test_iglobpath_no_dotfiles_recursive(xonsh_builtins):
+    d = os.path.dirname(__file__)
+    g = d + '/**'
+    files = list(iglobpath(g, include_dotfiles=False))
+    assert d + '/bin/.someotherdotfile' not in files
+
+
+@skip_if_on_windows
+def test_iglobpath_dotfiles_recursive(xonsh_builtins):
+    d = os.path.dirname(__file__)
+    g = d + '/**'
+    files = list(iglobpath(g, include_dotfiles=True))
+    assert d + '/bin/.someotherdotfile' in files
+
+
 def test_iglobpath_empty_str(monkeypatch, xonsh_builtins):
     # makes sure that iglobpath works, even when os.scandir() and os.listdir()
     # fail to return valid results, like an empty filename

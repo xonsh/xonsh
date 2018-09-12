@@ -2087,45 +2087,76 @@ def expand_case_matching(s):
     return "".join(t)
 
 
-def globpath(s, ignore_case=False, return_empty=False, sort_result=None):
+def globpath(s, ignore_case=False, return_empty=False, sort_result=None,
+             include_dotfiles=None):
     """Simple wrapper around glob that also expands home and env vars."""
-    o, s = _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)
+    o, s = _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result,
+                      include_dotfiles=include_dotfiles)
     o = list(o)
     no_match = [] if return_empty else [s]
     return o if len(o) != 0 else no_match
 
 
-def _iglobpath(s, ignore_case=False, sort_result=None):
+def _dotglobstr(s):
+    modified = False
+    dotted_s = s
+    if '/*' in dotted_s:
+        dotted_s = dotted_s.replace('/*', '/.*')
+        dotted_s = dotted_s.replace('/.**/.*', '/**/.*')
+        modified = True
+    if dotted_s.startswith('*') and not dotted_s.startswith('**'):
+        dotted_s = '.' + dotted_s
+        modified = True
+    return dotted_s, modified
+
+
+def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     s = builtins.__xonsh_expand_path__(s)
     if sort_result is None:
         sort_result = builtins.__xonsh_env__.get("GLOB_SORTED")
+    if include_dotfiles is None:
+        include_dotfiles = builtins.__xonsh_env__.get("DOTGLOB")
     if ignore_case:
         s = expand_case_matching(s)
     if sys.version_info > (3, 5):
         if "**" in s and "**/*" not in s:
             s = s.replace("**", "**/*")
+        if include_dotfiles:
+            dotted_s, dotmodified = _dotglobstr(s)
         # `recursive` is only a 3.5+ kwarg.
         if sort_result:
             paths = glob.glob(s, recursive=True)
+            if include_dotfiles and dotmodified:
+                paths.extend(glob.iglob(dotted_s, recursive=True))
             paths.sort()
             paths = iter(paths)
         else:
             paths = glob.iglob(s, recursive=True)
+            if include_dotfiles and dotmodified:
+                paths = itertools.chain(glob.iglob(dotted_s, recursive=True),
+                                        paths)
         return paths, s
     else:
+        if include_dotfiles:
+            dotted_s, dotmodified = _dotglobstr(s)
         if sort_result:
             paths = glob.glob(s)
+            if include_dotfiles and dotmodified:
+                paths.extend(glob.iglob(dotted_s))
             paths.sort()
             paths = iter(paths)
         else:
             paths = glob.iglob(s)
+            if include_dotfiles and dotmodified:
+                paths = itertools.chain(glob.iglob(dotted_s), paths)
         return paths, s
 
 
-def iglobpath(s, ignore_case=False, sort_result=None):
+def iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     """Simple wrapper around iglob that also expands home and env vars."""
     try:
-        return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)[0]
+        return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result,
+                          include_dotfiles=include_dotfiles)[0]
     except IndexError:
         # something went wrong in the actual iglob() call
         return iter(())
