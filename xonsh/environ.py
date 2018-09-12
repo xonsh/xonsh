@@ -553,10 +553,12 @@ def DEFAULT_DOCS():
             "for confirmation."
         ),
         "DIRSTACK_SIZE": VarDocs("Maximum size of the directory stack."),
-        "DOTGLOB": VarDocs('Globbing files with "*" or "**" will also match '
-                           "dotfiles, or those 'hidden' files whose names "
-                           "begin with a literal '.'. Such files are filtered "
-                           "out by default."),
+        "DOTGLOB": VarDocs(
+            'Globbing files with "*" or "**" will also match '
+            "dotfiles, or those 'hidden' files whose names "
+            "begin with a literal '.'. Such files are filtered "
+            "out by default."
+        ),
         "DYNAMIC_CWD_WIDTH": VarDocs(
             "Maximum length in number of characters "
             "or as a percentage for the ``cwd`` prompt variable. For example, "

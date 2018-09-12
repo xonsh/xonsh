@@ -1604,34 +1604,34 @@ def test_deprecated_past_expiry_raises_assertion_error(expired_version):
 @skip_if_on_windows
 def test_iglobpath_no_dotfiles(xonsh_builtins):
     d = os.path.dirname(__file__)
-    g = d + '/*'
+    g = d + "/*"
     files = list(iglobpath(g, include_dotfiles=False))
-    assert d + '/.somedotfile' not in files
+    assert d + "/.somedotfile" not in files
 
 
 @skip_if_on_windows
 def test_iglobpath_dotfiles(xonsh_builtins):
     d = os.path.dirname(__file__)
-    g = d + '/*'
+    g = d + "/*"
     files = list(iglobpath(g, include_dotfiles=True))
-    assert d + '/.somedotfile' in files
+    assert d + "/.somedotfile" in files
 
 
 @skip_if_on_windows
 def test_iglobpath_no_dotfiles_recursive(xonsh_builtins):
     d = os.path.dirname(__file__)
-    g = d + '/**'
+    g = d + "/**"
     files = list(iglobpath(g, include_dotfiles=False))
-    assert d + '/bin/.someotherdotfile' not in files
+    assert d + "/bin/.someotherdotfile" not in files
 
 
 @skip_if_py34
 @skip_if_on_windows
 def test_iglobpath_dotfiles_recursive(xonsh_builtins):
     d = os.path.dirname(__file__)
-    g = d + '/**'
+    g = d + "/**"
     files = list(iglobpath(g, include_dotfiles=True))
-    assert d + '/bin/.someotherdotfile' in files
+    assert d + "/bin/.someotherdotfile" in files
 
 
 def test_iglobpath_empty_str(monkeypatch, xonsh_builtins):

@@ -149,8 +149,11 @@ def globsearch(s):
     glob_sorted = builtins.__xonsh_env__.get("GLOB_SORTED")
     dotglob = builtins.__xonsh_env__.get("DOTGLOB")
     return globpath(
-        s, ignore_case=(not csc), return_empty=True, sort_result=glob_sorted,
-        include_dotfiles=dotglob
+        s,
+        ignore_case=(not csc),
+        return_empty=True,
+        sort_result=glob_sorted,
+        include_dotfiles=dotglob,
     )
 
 
