@@ -5,15 +5,18 @@ import textwrap
 from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.utils import DummyContext
-from prompt_toolkit.shortcuts import (create_prompt_application,
-                                      create_eventloop, create_asyncio_eventloop, create_output)
+from prompt_toolkit.shortcuts import (
+    create_prompt_application,
+    create_eventloop,
+    create_asyncio_eventloop,
+    create_output,
+)
 
 from xonsh.platform import ptk_version_info
 import xonsh.tools as xt
 
 
 class Prompter(object):
-
     def __init__(self, cli=None, *args, **kwargs):
         """Implements a prompt that statefully holds a command-line
         interface.  When used as a context manager, it will return itself
@@ -35,7 +38,7 @@ class Prompter(object):
     def __exit__(self, exc_type, exc_value, traceback):
         pass
 
-    def prompt(self, message='', **kwargs):
+    def prompt(self, message="", **kwargs):
         """Get input from the user and return it.
 
         This is a wrapper around a lot of prompt_toolkit functionality and
@@ -60,24 +63,25 @@ class Prompter(object):
         This method was forked from the mainline prompt-toolkit repo.
         Copyright (c) 2014, Jonathan Slenders, All rights reserved.
         """
-        patch_stdout = kwargs.pop('patch_stdout', False)
-        return_asyncio_coroutine = kwargs.pop('return_asyncio_coroutine', False)
+        patch_stdout = kwargs.pop("patch_stdout", False)
+        return_asyncio_coroutine = kwargs.pop("return_asyncio_coroutine", False)
         if return_asyncio_coroutine:
             eventloop = create_asyncio_eventloop()
         else:
-            eventloop = kwargs.pop('eventloop', None) or create_eventloop()
+            eventloop = kwargs.pop("eventloop", None) or create_eventloop()
 
         # Create CommandLineInterface.
         if self.cli is None:
-            if builtins.__xonsh__.env.get('VI_MODE'):
+            if builtins.__xonsh__.env.get("VI_MODE"):
                 editing_mode = EditingMode.VI
             else:
                 editing_mode = EditingMode.EMACS
-            kwargs['editing_mode'] = editing_mode
+            kwargs["editing_mode"] = editing_mode
             cli = CommandLineInterface(
                 application=create_prompt_application(message, **kwargs),
                 eventloop=eventloop,
-                output=create_output())
+                output=create_output(),
+            )
             self.cli = cli
         else:
             cli = self.cli
@@ -88,8 +92,10 @@ class Prompter(object):
         # Read input and return it.
         if return_asyncio_coroutine:
             # Create an asyncio coroutine and call it.
-            exec_context = {'patch_context': patch_context, 'cli': cli}
-            exec(textwrap.dedent('''
+            exec_context = {"patch_context": patch_context, "cli": cli}
+            exec(
+                textwrap.dedent(
+                    """
             import asyncio
             @asyncio.coroutine
             def prompt_coro():
@@ -97,8 +103,11 @@ class Prompter(object):
                     document = yield from cli.run_async(reset_current_buffer=False)
                     if document:
                         return document.text
-            '''), exec_context)
-            return exec_context['prompt_coro']()
+            """
+                ),
+                exec_context,
+            )
+            return exec_context["prompt_coro"]()
         else:
             # Note: We pass `reset_current_buffer=False`, because that way
             # it's easy to give DEFAULT_BUFFER a default value, without it
@@ -113,7 +122,7 @@ class Prompter(object):
                 xt.print_exception()
                 # return something to prevent xonsh crash when any
                 # exceptions raise
-                return ''
+                return ""
             finally:
                 eventloop.close()
 

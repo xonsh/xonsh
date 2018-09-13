@@ -25,6 +25,7 @@ from xonsh.platform import ON_WINDOWS
 def _HAVE_RESOURCE():
     try:
         import resource as r
+
         have = True
     except ImportError:
         # There is no distinction of user/system time under windows, so we
@@ -36,17 +37,20 @@ def _HAVE_RESOURCE():
 @lazyobject
 def resource():
     import resource as r
+
     return r
 
 
 @lazyobject
 def clocku():
     if _HAVE_RESOURCE:
+
         def clocku():
             """clocku() -> floating point number
             Return the *USER* CPU time in seconds since the start of the
             process."""
             return resource.getrusage(resource.RUSAGE_SELF)[0]
+
     else:
         clocku = time.perf_counter
     return clocku
@@ -55,11 +59,13 @@ def clocku():
 @lazyobject
 def clocks():
     if _HAVE_RESOURCE:
+
         def clocks():
             """clocks() -> floating point number
             Return the *SYSTEM* CPU time in seconds since the start of the
             process."""
             return resource.getrusage(resource.RUSAGE_SELF)[1]
+
     else:
         clocks = time.perf_counter
     return clocks
@@ -68,12 +74,14 @@ def clocks():
 @lazyobject
 def clock():
     if _HAVE_RESOURCE:
+
         def clock():
             """clock() -> floating point number
             Return the *TOTAL USER+SYSTEM* CPU time in seconds since the
             start of the process."""
             u, s = resource.getrusage(resource.RUSAGE_SELF)[:2]
             return u + s
+
     else:
         clock = time.perf_counter
     return clock
@@ -82,15 +90,19 @@ def clock():
 @lazyobject
 def clock2():
     if _HAVE_RESOURCE:
+
         def clock2():
             """clock2() -> (t_user,t_system)
             Similar to clock(), but return a tuple of user/system times."""
             return resource.getrusage(resource.RUSAGE_SELF)[:2]
+
     else:
+
         def clock2():
             """Under windows, system CPU time can't be measured.
             This just returns perf_counter() and zero."""
             return time.perf_counter(), 0.0
+
     return clock2
 
 
@@ -105,7 +117,7 @@ def format_time(timespan, precision=3):
             value = int(leftover / length)
             if value > 0:
                 leftover = leftover % length
-                time.append('{0}{1}'.format(str(value), suffix))
+                time.append("{0}{1}".format(str(value), suffix))
             if leftover < 1:
                 break
         return " ".join(time)
@@ -114,11 +126,11 @@ def format_time(timespan, precision=3):
     # See bug: https://bugs.launchpad.net/ipython/+bug/348466
     # Try to prevent crashes by being more secure than it needs to
     # E.g. eclipse is able to print a mu, but has no sys.stdout.encoding set.
-    units = ["s", "ms", 'us', "ns"]  # the save value
-    if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding:
+    units = ["s", "ms", "us", "ns"]  # the save value
+    if hasattr(sys.stdout, "encoding") and sys.stdout.encoding:
         try:
-            '\xb5'.encode(sys.stdout.encoding)
-            units = ["s", "ms", '\xb5s', "ns"]
+            "\xb5".encode(sys.stdout.encoding)
+            units = ["s", "ms", "\xb5s", "ns"]
         except Exception:
             pass
     scaling = [1, 1e3, 1e6, 1e9]
@@ -127,8 +139,7 @@ def format_time(timespan, precision=3):
         order = min(-int(math.floor(math.log10(timespan)) // 3), 3)
     else:
         order = 3
-    return "{1:.{0}g} {2}".format(precision, timespan * scaling[order],
-                                  units[order])
+    return "{1:.{0}g} {2}".format(precision, timespan * scaling[order], units[order])
 
 
 class Timer(timeit.Timer):
@@ -136,6 +147,7 @@ class Timer(timeit.Timer):
     which is an undocumented implementation detail of CPython,
     not shared by PyPy.
     """
+
     # Timer.timeit copied from CPython 3.4.2
     def timeit(self, number=timeit.default_number):
         """Time 'number' executions of the main statement.
@@ -178,19 +190,20 @@ def timeit_alias(args, stdin=None):
     # setup
     ctx = builtins.__xonsh__.ctx
     timer = Timer(timer=clock)
-    stmt = ' '.join(args)
+    stmt = " ".join(args)
     innerstr = INNER_TEMPLATE.format(stmt=stmt)
     # Track compilation time so it can be reported if too long
     # Minimum time above which compilation time will be reported
     tc_min = 0.1
     t0 = clock()
-    innercode = builtins.compilex(innerstr, filename='<xonsh-timeit>',
-                                  mode='exec', glbs=ctx)
+    innercode = builtins.compilex(
+        innerstr, filename="<xonsh-timeit>", mode="exec", glbs=ctx
+    )
     tc = clock() - t0
     # get inner func
     ns = {}
-    builtins.execx(innercode, glbs=ctx, locs=ns, mode='exec')
-    timer.inner = ns['inner']
+    builtins.execx(innercode, glbs=ctx, locs=ns, mode="exec")
+    timer.inner = ns["inner"]
     # Check if there is a huge difference between the best and worst timings.
     worst_tuning = 0
     if number == 0:
@@ -215,27 +228,37 @@ def timeit_alias(args, stdin=None):
         # we assume that it does not really matter if the fastest
         # timing is 4 times faster than the slowest timing or not.
         if worst > 4 * best and best > 0 and worst > 1e-5:
-            print(('The slowest run took {0:0.2f} times longer than the '
-                   'fastest. This could mean that an intermediate result '
-                   'is being cached.').format(worst / best))
-        print("{0} loops, best of {1}: {2} per loop"
-              .format(number, repeat, format_time(best, precision)))
+            print(
+                (
+                    "The slowest run took {0:0.2f} times longer than the "
+                    "fastest. This could mean that an intermediate result "
+                    "is being cached."
+                ).format(worst / best)
+            )
+        print(
+            "{0} loops, best of {1}: {2} per loop".format(
+                number, repeat, format_time(best, precision)
+            )
+        )
         if tc > tc_min:
             print("Compiler time: {0:.2f} s".format(tc))
     return
 
 
-_timings = {'start': clock()}
+_timings = {"start": clock()}
 
 
 def setup_timings():
     global _timings
-    if '--timings' in sys.argv:
-        events.doc('on_timingprobe', """
+    if "--timings" in sys.argv:
+        events.doc(
+            "on_timingprobe",
+            """
         on_timingprobe(name: str) -> None
 
         Fired to insert some timings into the startuptime list
-        """)
+        """,
+        )
 
         @events.on_timingprobe
         def timing_on_timingprobe(name, **kw):
@@ -245,67 +268,67 @@ def setup_timings():
         @events.on_post_cmdloop
         def timing_on_post_cmdloop(**kw):
             global _timings
-            _timings['on_post_cmdloop'] = clock()
+            _timings["on_post_cmdloop"] = clock()
 
         @events.on_post_init
         def timing_on_post_init(**kw):
             global _timings
-            _timings['on_post_init'] = clock()
+            _timings["on_post_init"] = clock()
 
         @events.on_post_rc
         def timing_on_post_rc(**kw):
             global _timings
-            _timings['on_post_rc'] = clock()
+            _timings["on_post_rc"] = clock()
 
         @events.on_postcommand
         def timing_on_postcommand(**kw):
             global _timings
-            _timings['on_postcommand'] = clock()
+            _timings["on_postcommand"] = clock()
 
         @events.on_pre_cmdloop
         def timing_on_pre_cmdloop(**kw):
             global _timings
-            _timings['on_pre_cmdloop'] = clock()
+            _timings["on_pre_cmdloop"] = clock()
 
         @events.on_pre_rc
         def timing_on_pre_rc(**kw):
             global _timings
-            _timings['on_pre_rc'] = clock()
+            _timings["on_pre_rc"] = clock()
 
         @events.on_precommand
         def timing_on_precommand(**kw):
             global _timings
-            _timings['on_precommand'] = clock()
+            _timings["on_precommand"] = clock()
 
         @events.on_ptk_create
         def timing_on_ptk_create(**kw):
             global _timings
-            _timings['on_ptk_create'] = clock()
+            _timings["on_ptk_create"] = clock()
 
         @events.on_chdir
         def timing_on_chdir(**kw):
             global _timings
-            _timings['on_chdir'] = clock()
+            _timings["on_chdir"] = clock()
 
         @events.on_post_prompt
         def timing_on_post_prompt(**kw):
             global _timings
-            _timings = {'on_post_prompt': clock()}
+            _timings = {"on_post_prompt": clock()}
 
         @events.on_pre_prompt
         def timing_on_pre_prompt(**kw):
             global _timings
-            _timings['on_pre_prompt'] = clock()
+            _timings["on_pre_prompt"] = clock()
             times = list(_timings.items())
             times = sorted(times, key=lambda x: x[1])
             width = max(len(s) for s, _ in times) + 2
-            header_format = '|{{:<{}}}|{{:^11}}|{{:^11}}|'.format(width)
-            entry_format = '|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|'.format(width)
-            sepline = '|{}|{}|{}|'.format('-'*width, '-'*11, '-'*11)
+            header_format = "|{{:<{}}}|{{:^11}}|{{:^11}}|".format(width)
+            entry_format = "|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|".format(width)
+            sepline = "|{}|{}|{}|".format("-" * width, "-" * 11, "-" * 11)
             # Print result table
-            print(' Debug level: {}'.format(os.getenv('XONSH_DEBUG', 'Off')))
+            print(" Debug level: {}".format(os.getenv("XONSH_DEBUG", "Off")))
             print(sepline)
-            print(header_format.format('Event name', 'Time (s)', 'Delta (s)'))
+            print(header_format.format("Event name", "Time (s)", "Delta (s)"))
             print(sepline)
             prevtime = tstart = times[0][1]
             for name, ts in times:

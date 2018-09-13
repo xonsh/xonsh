@@ -17,7 +17,7 @@ _unc_tempDrives = {}
 """ drive: sharePath for temp drive letters we create for UNC mapping"""
 
 
-def _unc_check_enabled()->bool:
+def _unc_check_enabled() -> bool:
     """Check whether CMD.EXE is enforcing no-UNC-as-working-directory check.
 
     Check can be disabled by setting {HKCU, HKLM}/SOFTWARE\Microsoft\Command Processor\DisableUNCCheck:REG_DWORD=1
@@ -34,16 +34,20 @@ def _unc_check_enabled()->bool:
     wval = None
 
     try:
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'software\microsoft\command processor')
-        wval, wtype = winreg.QueryValueEx(key, 'DisableUNCCheck')
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER, r"software\microsoft\command processor"
+        )
+        wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
         winreg.CloseKey(key)
     except OSError as e:
         pass
 
     if wval is None:
         try:
-            key2 = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
-            wval, wtype = winreg.QueryValueEx(key2, 'DisableUNCCheck')
+            key2 = winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE, r"software\microsoft\command processor"
+            )
+            wval, wtype = winreg.QueryValueEx(key2, "DisableUNCCheck")
             winreg.CloseKey(key2)
         except OSError as e:  # NOQA
             pass
@@ -51,12 +55,16 @@ def _unc_check_enabled()->bool:
     return False if wval else True
 
 
-def _is_unc_path(some_path)->bool:
+def _is_unc_path(some_path) -> bool:
     """True if path starts with 2 backward (or forward, due to python path hacking) slashes."""
-    return len(some_path) > 1 and some_path[0] == some_path[1] and some_path[0] in (os.sep, os.altsep)
+    return (
+        len(some_path) > 1
+        and some_path[0] == some_path[1]
+        and some_path[0] in (os.sep, os.altsep)
+    )
 
 
-def _unc_map_temp_drive(unc_path)->str:
+def _unc_map_temp_drive(unc_path) -> str:
 
     """Map a new temporary drive letter for each distinct share,
     unless `CMD.EXE` is not insisting on non-UNC working directory.
@@ -84,10 +92,12 @@ def _unc_map_temp_drive(unc_path)->str:
             if _unc_tempDrives[d] == unc_share:
                 return os.path.join(d, rem_path)
 
-        for dord in range(ord('z'), ord('a'), -1):
-            d = chr(dord) + ':'
+        for dord in range(ord("z"), ord("a"), -1):
+            d = chr(dord) + ":"
             if not os.path.isdir(d):  # find unused drive letter starting from z:
-                subprocess.check_output(['NET', 'USE', d, unc_share], universal_newlines=True)
+                subprocess.check_output(
+                    ["NET", "USE", d, unc_share], universal_newlines=True
+                )
                 _unc_tempDrives[d] = unc_share
                 return os.path.join(d, rem_path)
 
@@ -104,22 +114,27 @@ def _unc_unmap_temp_drive(left_drive, cwd):
 
     global _unc_tempDrives
 
-    if left_drive not in _unc_tempDrives:   # if not one we've mapped, don't unmap it
+    if left_drive not in _unc_tempDrives:  # if not one we've mapped, don't unmap it
         return
 
-    for p in DIRSTACK + [cwd]:              # if still in use , don't unmap it.
+    for p in DIRSTACK + [cwd]:  # if still in use , don't unmap it.
         if p.casefold().startswith(left_drive):
             return
 
     _unc_tempDrives.pop(left_drive)
-    subprocess.check_output(['NET', 'USE', left_drive, '/delete'], universal_newlines=True)
+    subprocess.check_output(
+        ["NET", "USE", left_drive, "/delete"], universal_newlines=True
+    )
 
 
-events.doc('on_chdir', """
+events.doc(
+    "on_chdir",
+    """
 on_chdir(olddir: str, newdir: str) -> None
 
 Fires when the current directory is changed for any reason.
-""")
+""",
+)
 
 
 def _get_cwd():
@@ -130,8 +145,13 @@ def _get_cwd():
 
 
 def _change_working_directory(newdir, follow_symlinks=False):
+<<<<<<< HEAD
     env = builtins.__xonsh__.env
     old = env['PWD']
+=======
+    env = builtins.__xonsh_env__
+    old = env["PWD"]
+>>>>>>> master
     new = os.path.join(old, newdir)
     absnew = os.path.abspath(new)
 
@@ -143,17 +163,17 @@ def _change_working_directory(newdir, follow_symlinks=False):
     except (OSError, FileNotFoundError):
         if new.endswith(get_sep()):
             new = new[:-1]
-        if os.path.basename(new) == '..':
-            env['PWD'] = new
+        if os.path.basename(new) == "..":
+            env["PWD"] = new
     else:
         if old is not None:
-            env['OLDPWD'] = old
+            env["OLDPWD"] = old
         if new is not None:
-            env['PWD'] = absnew
+            env["PWD"] = absnew
 
     # Fire event if the path actually changed
-    if old != env['PWD']:
-        events.on_chdir.fire(olddir=old, newdir=env['PWD'])
+    if old != env["PWD"]:
+        events.on_chdir.fire(olddir=old, newdir=env["PWD"])
 
 
 def _try_cdpath(apath):
@@ -165,8 +185,13 @@ def _try_cdpath(apath):
     # a second $ cd xonsh has no effects, to move in the nested xonsh
     # in bash a full $ cd ./xonsh is needed.
     # In xonsh a relative folder is always preferred.
+<<<<<<< HEAD
     env = builtins.__xonsh__.env
     cdpaths = env.get('CDPATH')
+=======
+    env = builtins.__xonsh_env__
+    cdpaths = env.get("CDPATH")
+>>>>>>> master
     for cdp in cdpaths:
         globber = builtins.__xonsh__.expand_path(os.path.join(cdp, apath))
         for cdpath_prefixed_path in glob.iglob(globber):
@@ -180,58 +205,80 @@ def cd(args, stdin=None):
     If no directory is specified (i.e. if `args` is None) then this
     changes to the current user's home directory.
     """
+<<<<<<< HEAD
     env = builtins.__xonsh__.env
     oldpwd = env.get('OLDPWD', None)
     cwd = env['PWD']
+=======
+    env = builtins.__xonsh_env__
+    oldpwd = env.get("OLDPWD", None)
+    cwd = env["PWD"]
+>>>>>>> master
 
     follow_symlinks = False
-    if len(args) > 0 and args[0] == '-P':
+    if len(args) > 0 and args[0] == "-P":
         follow_symlinks = True
         del args[0]
 
     if len(args) == 0:
-        d = os.path.expanduser('~')
+        d = os.path.expanduser("~")
     elif len(args) == 1:
         d = os.path.expanduser(args[0])
         if not os.path.isdir(d):
-            if d == '-':
+            if d == "-":
                 if oldpwd is not None:
                     d = oldpwd
                 else:
-                    return '', 'cd: no previous directory stored\n', 1
-            elif d.startswith('-'):
+                    return "", "cd: no previous directory stored\n", 1
+            elif d.startswith("-"):
                 try:
                     num = int(d[1:])
                 except ValueError:
-                    return '', 'cd: Invalid destination: {0}\n'.format(d), 1
+                    return "", "cd: Invalid destination: {0}\n".format(d), 1
                 if num == 0:
                     return None, None, 0
                 elif num < 0:
-                    return '', 'cd: Invalid destination: {0}\n'.format(d), 1
+                    return "", "cd: Invalid destination: {0}\n".format(d), 1
                 elif num > len(DIRSTACK):
-                    e = 'cd: Too few elements in dirstack ({0} elements)\n'
-                    return '', e.format(len(DIRSTACK)), 1
+                    e = "cd: Too few elements in dirstack ({0} elements)\n"
+                    return "", e.format(len(DIRSTACK)), 1
                 else:
                     d = DIRSTACK[num - 1]
             else:
                 d = _try_cdpath(d)
     else:
-        return '', ('cd takes 0 or 1 arguments, not {0}. An additional `-P` '
-                    'flag can be passed in first position to follow symlinks.'
-                    '\n'.format(len(args))), 1
+        return (
+            "",
+            (
+                "cd takes 0 or 1 arguments, not {0}. An additional `-P` "
+                "flag can be passed in first position to follow symlinks."
+                "\n".format(len(args))
+            ),
+            1,
+        )
     if not os.path.exists(d):
-        return '', 'cd: no such file or directory: {0}\n'.format(d), 1
+        return "", "cd: no such file or directory: {0}\n".format(d), 1
     if not os.path.isdir(d):
-        return '', 'cd: {0} is not a directory\n'.format(d), 1
+        return "", "cd: {0} is not a directory\n".format(d), 1
     if not os.access(d, os.X_OK):
-        return '', 'cd: permission denied: {0}\n'.format(d), 1
-    if ON_WINDOWS and _is_unc_path(d) and _unc_check_enabled() and (not env.get('AUTO_PUSHD')):
-        return '', "cd: can't cd to UNC path on Windows, unless $AUTO_PUSHD set or reg entry " \
-               + r'HKCU\SOFTWARE\MICROSOFT\Command Processor\DisableUNCCheck:DWORD = 1' + '\n', 1
+        return "", "cd: permission denied: {0}\n".format(d), 1
+    if (
+        ON_WINDOWS
+        and _is_unc_path(d)
+        and _unc_check_enabled()
+        and (not env.get("AUTO_PUSHD"))
+    ):
+        return (
+            "",
+            "cd: can't cd to UNC path on Windows, unless $AUTO_PUSHD set or reg entry "
+            + r"HKCU\SOFTWARE\MICROSOFT\Command Processor\DisableUNCCheck:DWORD = 1"
+            + "\n",
+            1,
+        )
 
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
-    if cwd is not None and env.get('AUTO_PUSHD'):
-        pushd(['-n', '-q', cwd])
+    if cwd is not None and env.get("AUTO_PUSHD"):
+        pushd(["-n", "-q", cwd])
         if ON_WINDOWS and _is_unc_path(d):
             d = _unc_map_temp_drive(d)
     _change_working_directory(d, follow_symlinks)
@@ -241,17 +288,21 @@ def cd(args, stdin=None):
 @lazyobject
 def pushd_parser():
     parser = argparse.ArgumentParser(prog="pushd")
-    parser.add_argument('dir', nargs='?')
-    parser.add_argument('-n',
-                        dest='cd',
-                        help='Suppresses the normal change of directory when'
-                        ' adding directories to the stack, so that only the'
-                        ' stack is manipulated.',
-                        action='store_false')
-    parser.add_argument('-q',
-                        dest='quiet',
-                        help='Do not call dirs, regardless of $PUSHD_SILENT',
-                        action='store_true')
+    parser.add_argument("dir", nargs="?")
+    parser.add_argument(
+        "-n",
+        dest="cd",
+        help="Suppresses the normal change of directory when"
+        " adding directories to the stack, so that only the"
+        " stack is manipulated.",
+        action="store_false",
+    )
+    parser.add_argument(
+        "-q",
+        dest="quiet",
+        help="Do not call dirs, regardless of $PUSHD_SILENT",
+        action="store_true",
+    )
     return parser
 
 
@@ -274,20 +325,20 @@ def pushd(args, stdin=None):
 
     env = builtins.__xonsh__.env
 
-    pwd = env['PWD']
+    pwd = env["PWD"]
 
-    if env.get('PUSHD_MINUS', False):
-        BACKWARD = '-'
-        FORWARD = '+'
+    if env.get("PUSHD_MINUS", False):
+        BACKWARD = "-"
+        FORWARD = "+"
     else:
-        BACKWARD = '+'
-        FORWARD = '-'
+        BACKWARD = "+"
+        FORWARD = "-"
 
     if args.dir is None:
         try:
             new_pwd = DIRSTACK.pop(0)
         except IndexError:
-            e = 'pushd: Directory stack is empty\n'
+            e = "pushd: Directory stack is empty\n"
             return None, e, 1
     elif os.path.isdir(args.dir):
         new_pwd = args.dir
@@ -295,15 +346,15 @@ def pushd(args, stdin=None):
         try:
             num = int(args.dir[1:])
         except ValueError:
-            e = 'Invalid argument to pushd: {0}\n'
+            e = "Invalid argument to pushd: {0}\n"
             return None, e.format(args.dir), 1
 
         if num < 0:
-            e = 'Invalid argument to pushd: {0}\n'
+            e = "Invalid argument to pushd: {0}\n"
             return None, e.format(args.dir), 1
 
         if num > len(DIRSTACK):
-            e = 'Too few elements in dirstack ({0} elements)\n'
+            e = "Too few elements in dirstack ({0} elements)\n"
             return None, e.format(len(DIRSTACK)), 1
         elif args.dir.startswith(FORWARD):
             if num == len(DIRSTACK):
@@ -316,7 +367,7 @@ def pushd(args, stdin=None):
             else:
                 new_pwd = DIRSTACK.pop(num - 1)
         else:
-            e = 'Invalid argument to pushd: {0}\n'
+            e = "Invalid argument to pushd: {0}\n"
             return None, e.format(args.dir), 1
     if new_pwd is not None:
         if ON_WINDOWS and _is_unc_path(new_pwd):
@@ -327,11 +378,11 @@ def pushd(args, stdin=None):
         else:
             DIRSTACK.insert(0, os.path.expanduser(new_pwd))
 
-    maxsize = env.get('DIRSTACK_SIZE')
+    maxsize = env.get("DIRSTACK_SIZE")
     if len(DIRSTACK) > maxsize:
         DIRSTACK = DIRSTACK[:maxsize]
 
-    if not args.quiet and not env.get('PUSHD_SILENT'):
+    if not args.quiet and not env.get("PUSHD_SILENT"):
         return dirs([], None)
 
     return None, None, 0
@@ -340,17 +391,21 @@ def pushd(args, stdin=None):
 @lazyobject
 def popd_parser():
     parser = argparse.ArgumentParser(prog="popd")
-    parser.add_argument('dir', nargs='?')
-    parser.add_argument('-n',
-                        dest='cd',
-                        help='Suppresses the normal change of directory when'
-                        ' adding directories to the stack, so that only the'
-                        ' stack is manipulated.',
-                        action='store_false')
-    parser.add_argument('-q',
-                        dest='quiet',
-                        help='Do not call dirs, regardless of $PUSHD_SILENT',
-                        action='store_true')
+    parser.add_argument("dir", nargs="?")
+    parser.add_argument(
+        "-n",
+        dest="cd",
+        help="Suppresses the normal change of directory when"
+        " adding directories to the stack, so that only the"
+        " stack is manipulated.",
+        action="store_false",
+    )
+    parser.add_argument(
+        "-q",
+        dest="quiet",
+        help="Do not call dirs, regardless of $PUSHD_SILENT",
+        action="store_true",
+    )
     return parser
 
 
@@ -369,32 +424,32 @@ def popd(args, stdin=None):
 
     env = builtins.__xonsh__.env
 
-    if env.get('PUSHD_MINUS'):
-        BACKWARD = '-'
-        FORWARD = '+'
+    if env.get("PUSHD_MINUS"):
+        BACKWARD = "-"
+        FORWARD = "+"
     else:
-        BACKWARD = '-'
-        FORWARD = '+'
+        BACKWARD = "-"
+        FORWARD = "+"
 
     if args.dir is None:
         try:
             new_pwd = DIRSTACK.pop(0)
         except IndexError:
-            e = 'popd: Directory stack is empty\n'
+            e = "popd: Directory stack is empty\n"
             return None, e, 1
     else:
         try:
             num = int(args.dir[1:])
         except ValueError:
-            e = 'Invalid argument to popd: {0}\n'
+            e = "Invalid argument to popd: {0}\n"
             return None, e.format(args.dir), 1
 
         if num < 0:
-            e = 'Invalid argument to popd: {0}\n'
+            e = "Invalid argument to popd: {0}\n"
             return None, e.format(args.dir), 1
 
         if num > len(DIRSTACK):
-            e = 'Too few elements in dirstack ({0} elements)\n'
+            e = "Too few elements in dirstack ({0} elements)\n"
             return None, e.format(len(DIRSTACK)), 1
         elif args.dir.startswith(FORWARD):
             if num == len(DIRSTACK):
@@ -409,14 +464,19 @@ def popd(args, stdin=None):
                 new_pwd = None
                 DIRSTACK.pop(num - 1)
         else:
-            e = 'Invalid argument to popd: {0}\n'
+            e = "Invalid argument to popd: {0}\n"
             return None, e.format(args.dir), 1
 
     if new_pwd is not None:
         e = None
         if args.cd:
+<<<<<<< HEAD
             env = builtins.__xonsh__.env
             pwd = env['PWD']
+=======
+            env = builtins.__xonsh_env__
+            pwd = env["PWD"]
+>>>>>>> master
 
             _change_working_directory(new_pwd)
 
@@ -424,7 +484,7 @@ def popd(args, stdin=None):
                 drive, rem_path = os.path.splitdrive(pwd)
                 _unc_unmap_temp_drive(drive.casefold(), new_pwd)
 
-    if not args.quiet and not env.get('PUSHD_SILENT'):
+    if not args.quiet and not env.get("PUSHD_SILENT"):
         return dirs([], None)
 
     return None, None, 0
@@ -433,28 +493,34 @@ def popd(args, stdin=None):
 @lazyobject
 def dirs_parser():
     parser = argparse.ArgumentParser(prog="dirs")
-    parser.add_argument('N', nargs='?')
-    parser.add_argument('-c',
-                        dest='clear',
-                        help='Clears the directory stack by deleting all of'
-                        ' the entries.',
-                        action='store_true')
-    parser.add_argument('-p',
-                        dest='print_long',
-                        help='Print the directory stack with one entry per'
-                        ' line.',
-                        action='store_true')
-    parser.add_argument('-v',
-                        dest='verbose',
-                        help='Print the directory stack with one entry per'
-                        ' line, prefixing each entry with its index in the'
-                        ' stack.',
-                        action='store_true')
-    parser.add_argument('-l',
-                        dest='long',
-                        help='Produces a longer listing; the default listing'
-                        ' format uses a tilde to denote the home directory.',
-                        action='store_true')
+    parser.add_argument("N", nargs="?")
+    parser.add_argument(
+        "-c",
+        dest="clear",
+        help="Clears the directory stack by deleting all of" " the entries.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-p",
+        dest="print_long",
+        help="Print the directory stack with one entry per" " line.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-v",
+        dest="verbose",
+        help="Print the directory stack with one entry per"
+        " line, prefixing each entry with its index in the"
+        " stack.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-l",
+        dest="long",
+        help="Produces a longer listing; the default listing"
+        " format uses a tilde to denote the home directory.",
+        action="store_true",
+    )
     return parser
 
 
@@ -470,15 +536,20 @@ def dirs(args, stdin=None):
     except SystemExit:
         return None, None
 
+<<<<<<< HEAD
     env = builtins.__xonsh__.env
     dirstack = [os.path.expanduser(env['PWD'])] + DIRSTACK
+=======
+    env = builtins.__xonsh_env__
+    dirstack = [os.path.expanduser(env["PWD"])] + DIRSTACK
+>>>>>>> master
 
-    if env.get('PUSHD_MINUS'):
-        BACKWARD = '-'
-        FORWARD = '+'
+    if env.get("PUSHD_MINUS"):
+        BACKWARD = "-"
+        FORWARD = "+"
     else:
-        BACKWARD = '-'
-        FORWARD = '+'
+        BACKWARD = "-"
+        FORWARD = "+"
 
     if args.clear:
         DIRSTACK = []
@@ -487,35 +558,35 @@ def dirs(args, stdin=None):
     if args.long:
         o = dirstack
     else:
-        d = os.path.expanduser('~')
-        o = [i.replace(d, '~') for i in dirstack]
+        d = os.path.expanduser("~")
+        o = [i.replace(d, "~") for i in dirstack]
 
     if args.verbose:
-        out = ''
+        out = ""
         pad = len(str(len(o) - 1))
         for (ix, e) in enumerate(o):
-            blanks = ' ' * (pad - len(str(ix)))
-            out += '\n{0}{1} {2}'.format(blanks, ix, e)
+            blanks = " " * (pad - len(str(ix)))
+            out += "\n{0}{1} {2}".format(blanks, ix, e)
         out = out[1:]
     elif args.print_long:
-        out = '\n'.join(o)
+        out = "\n".join(o)
     else:
-        out = ' '.join(o)
+        out = " ".join(o)
 
     N = args.N
     if N is not None:
         try:
             num = int(N[1:])
         except ValueError:
-            e = 'Invalid argument to dirs: {0}\n'
+            e = "Invalid argument to dirs: {0}\n"
             return None, e.format(N), 1
 
         if num < 0:
-            e = 'Invalid argument to dirs: {0}\n'
+            e = "Invalid argument to dirs: {0}\n"
             return None, e.format(len(o)), 1
 
         if num >= len(o):
-            e = 'Too few elements in dirstack ({0} elements)\n'
+            e = "Too few elements in dirstack ({0} elements)\n"
             return None, e.format(len(o)), 1
 
         if N.startswith(BACKWARD):
@@ -523,9 +594,9 @@ def dirs(args, stdin=None):
         elif N.startswith(FORWARD):
             idx = len(o) - 1 - num
         else:
-            e = 'Invalid argument to dirs: {0}\n'
+            e = "Invalid argument to dirs: {0}\n"
             return None, e.format(N), 1
 
         out = o[idx]
 
-    return out + '\n', None, 0
+    return out + "\n", None, 0

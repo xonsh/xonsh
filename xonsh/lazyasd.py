@@ -10,11 +10,10 @@ import importlib
 import importlib.util
 import collections.abc as cabc
 
-__version__ = '0.1.3'
+__version__ = "0.1.3"
 
 
 class LazyObject(object):
-
     def __init__(self, load, ctx, name):
         """Lazily loads an object via the load function the first time an
         attribute is accessed. Once loaded it will replace itself in the
@@ -37,25 +36,20 @@ class LazyObject(object):
             Name in the context to give the loaded object. This *should*
             be the name on the LHS of the assignment.
         """
-        self._lasdo = {
-            'loaded': False,
-            'load': load,
-            'ctx': ctx,
-            'name': name,
-            }
+        self._lasdo = {"loaded": False, "load": load, "ctx": ctx, "name": name}
 
     def _lazy_obj(self):
         d = self._lasdo
-        if d['loaded']:
-            obj = d['obj']
+        if d["loaded"]:
+            obj = d["obj"]
         else:
-            obj = d['load']()
-            d['ctx'][d['name']] = d['obj'] = obj
-            d['loaded'] = True
+            obj = d["load"]()
+            d["ctx"][d["name"]] = d["obj"] = obj
+            d["loaded"] = True
         return obj
 
     def __getattribute__(self, name):
-        if name == '_lasdo' or name == '_lazy_obj':
+        if name == "_lasdo" or name == "_lazy_obj":
             return super().__getattribute__(name)
         obj = self._lazy_obj()
         return getattr(obj, name)
@@ -129,7 +123,6 @@ def lazyobject(f):
 
 
 class LazyDict(cabc.MutableMapping):
-
     def __init__(self, loaders, ctx, name):
         """Dictionary like object that lazily loads its values from an initial
         dict of key-loader function pairs.  Each key is loaded when its value
@@ -204,7 +197,6 @@ def lazydict(f):
 
 
 class LazyBool(object):
-
     def __init__(self, load, ctx, name):
         """Boolean like object that lazily computes it boolean value when it is
         first asked. Once loaded, this result will replace itself
@@ -249,31 +241,29 @@ def lazybool(f):
 # Background module loaders
 #
 
+
 class BackgroundModuleProxy(types.ModuleType):
     """Proxy object for modules loaded in the background that block attribute
     access until the module is loaded..
     """
 
     def __init__(self, modname):
-        self.__dct__ = {
-            'loaded': False,
-            'modname': modname,
-            }
+        self.__dct__ = {"loaded": False, "modname": modname}
 
     def __getattribute__(self, name):
-        passthrough = frozenset({'__dct__', '__class__', '__spec__'})
+        passthrough = frozenset({"__dct__", "__class__", "__spec__"})
         if name in passthrough:
             return super().__getattribute__(name)
         dct = self.__dct__
-        modname = dct['modname']
-        if dct['loaded']:
+        modname = dct["modname"]
+        if dct["loaded"]:
             mod = sys.modules[modname]
         else:
             delay_types = (BackgroundModuleProxy, type(None))
             while isinstance(sys.modules.get(modname, None), delay_types):
                 time.sleep(0.001)
             mod = sys.modules[modname]
-            dct['loaded'] = True
+            dct["loaded"] = True
         # some modules may do construction after import, give them a second
         stall = 0
         while not hasattr(mod, name) and stall < 1000:
@@ -318,8 +308,9 @@ class BackgroundModuleLoader(threading.Thread):
                 setattr(targmod, varname, mod)
 
 
-def load_module_in_background(name, package=None, debug='DEBUG', env=None,
-                              replacements=None):
+def load_module_in_background(
+    name, package=None, debug="DEBUG", env=None, replacements=None
+):
     """Entry point for loading modules in background thread.
 
     Parameters
@@ -350,7 +341,8 @@ def load_module_in_background(name, package=None, debug='DEBUG', env=None,
     if modname in sys.modules:
         return sys.modules[modname]
     if env is None:
-        env = getattr(builtins, '__xonsh__.env', os.environ)
+        xonsh_obj = getattr(builtins, "__xonsh__", None)
+        env = os.environ if xonsh_obj is None else getattr(xonsh_obj, "env", os.environ)
     if env.get(debug, None):
         mod = importlib.import_module(name, package=package)
         return mod

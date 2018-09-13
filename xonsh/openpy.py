@@ -21,10 +21,12 @@ from xonsh.tokenize import detect_encoding, tokopen
 
 cookie_comment_re = LazyObject(
     lambda: re.compile(r"^\s*#.*coding[:=]\s*([-\w.]+)", re.UNICODE),
-    globals(), 'cookie_comment_re')
+    globals(),
+    "cookie_comment_re",
+)
 
 
-def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
+def source_to_unicode(txt, errors="replace", skip_encoding_cookie=True):
     """Converts a bytes string with python source code to unicode.
 
     Unicode strings are passed through unchanged. Byte strings are checked
@@ -44,7 +46,7 @@ def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
         encoding = "ascii"
     buf.seek(0)
     text = io.TextIOWrapper(buf, encoding, errors=errors, line_buffering=True)
-    text.mode = 'r'
+    text.mode = "r"
     if skip_encoding_cookie:
         return u"".join(strip_encoding_cookie(text))
     else:
@@ -92,7 +94,7 @@ def read_py_file(filename, skip_encoding_cookie=True):
             return f.read()
 
 
-def read_py_url(url, errors='replace', skip_encoding_cookie=True):
+def read_py_url(url, errors="replace", skip_encoding_cookie=True):
     """Read a Python file from a URL, using the encoding declared inside the file.
 
     Parameters

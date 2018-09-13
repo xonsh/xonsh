@@ -1,4 +1,11 @@
 cloud_sptheme
-numpydoc==0.5
-Sphinx==1.5.6
-prompt_toolkit<2
+numpydoc
+Sphinx
+prompt_toolkit
+pygments>=2.2
+ply
+psutil
+pyzmq
+matplotlib
+doctr
+tornado

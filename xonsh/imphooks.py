@@ -31,12 +31,12 @@ def find_source_encoding(src):
     no encoding is found, UTF-8 will be returned as per the docs
     https://docs.python.org/3/howto/unicode.html#unicode-literals-in-python-source-code
     """
-    utf8 = 'UTF-8'
-    first, _, rest = src.partition(b'\n')
+    utf8 = "UTF-8"
+    first, _, rest = src.partition(b"\n")
     m = ENCODING_LINE.match(first)
     if m is not None:
         return m.group(1).decode(utf8)
-    second, _, _ = rest.partition(b'\n')
+    second, _, _ = rest.partition(b"\n")
     m = ENCODING_LINE.match(second)
     if m is not None:
         return m.group(1).decode(utf8)
@@ -53,8 +53,13 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     @property
     def execer(self):
+<<<<<<< HEAD
         if hasattr(builtins.__xonsh__, 'execer'):
             execer = builtins.__xonsh__.execer
+=======
+        if hasattr(builtins, "__xonsh_execer__"):
+            execer = builtins.__xonsh_execer__
+>>>>>>> master
             if self._execer is not None:
                 self._execer = None
         elif self._execer is None:
@@ -68,13 +73,13 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
     #
     def find_spec(self, fullname, path, target=None):
         """Finds the spec for a xonsh module if it exists."""
-        dot = '.'
+        dot = "."
         spec = None
         path = sys.path if path is None else path
         if dot not in fullname and dot not in path:
             path = [dot] + path
         name = fullname.rsplit(dot, 1)[-1]
-        fname = name + '.xsh'
+        fname = name + ".xsh"
         for p in path:
             if not isinstance(p, str):
                 continue
@@ -95,7 +100,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         mod = types.ModuleType(spec.name)
         mod.__file__ = self.get_filename(spec.name)
         mod.__loader__ = self
-        mod.__package__ = spec.parent or ''
+        mod.__package__ = spec.parent or ""
         return mod
 
     def get_filename(self, fullname):
@@ -112,11 +117,11 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         if filename is None:
             msg = "xonsh file {0!r} could not be found".format(fullname)
             raise ImportError(msg)
-        with open(filename, 'rb') as f:
+        with open(filename, "rb") as f:
             src = f.read()
         enc = find_source_encoding(src)
         src = src.decode(encoding=enc)
-        src = src if src.endswith('\n') else src + '\n'
+        src = src if src.endswith("\n") else src + "\n"
         execer = self.execer
         execer.filename = filename
         ctx = {}  # dummy for modules
@@ -127,7 +132,9 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 #
 # Import events
 #
-events.doc('on_import_pre_find_spec', """
+events.doc(
+    "on_import_pre_find_spec",
+    """
 on_import_pre_find_spec(fullname: str, path: str, target: module or None) -> None
 
 Fires before any import find_spec() calls have been executed. The parameters
@@ -137,9 +144,12 @@ here are the same as importlib.abc.MetaPathFinder.find_spec(). Namely,
 :``path``: None if a top-level import, otherwise the ``__path__`` of the parent
           package.
 :``target``: Target module used to make a better guess about the package spec.
-""")
+""",
+)
 
-events.doc('on_import_post_find_spec', """
+events.doc(
+    "on_import_post_find_spec",
+    """
 on_import_post_find_spec(spec, fullname, path, target) -> None
 
 Fires after all import find_spec() calls have been executed. The parameters
@@ -150,44 +160,59 @@ here the spec and the arguments importlib.abc.MetaPathFinder.find_spec(). Namely
 :``path``: None if a top-level import, otherwise the ``__path__`` of the parent
           package.
 :``target``: Target module used to make a better guess about the package spec.
-""")
+""",
+)
 
-events.doc('on_import_pre_create_module', """
+events.doc(
+    "on_import_pre_create_module",
+    """
 on_import_pre_create_module(spec: ModuleSpec) -> None
 
 Fires right before a module is created by its loader. The only parameter
 is the spec object. See importlib for more details.
-""")
+""",
+)
 
-events.doc('on_import_post_create_module', """
+events.doc(
+    "on_import_post_create_module",
+    """
 on_import_post_create_module(module: Module, spec: ModuleSpec) -> None
 
 Fires after a module is created by its loader but before the loader returns it.
 The parameters here are the module object itself and the spec object.
 See importlib for more details.
-""")
+""",
+)
 
-events.doc('on_import_pre_exec_module', """
+events.doc(
+    "on_import_pre_exec_module",
+    """
 on_import_pre_exec_module(module: Module) -> None
 
 Fires right before a module is executed by its loader. The only parameter
 is the module itself. See importlib for more details.
-""")
+""",
+)
 
-events.doc('on_import_post_exec_module', """
+events.doc(
+    "on_import_post_exec_module",
+    """
 on_import_post_create_module(module: Module) -> None
 
 Fires after a module is executed by its loader but before the loader returns it.
 The only parameter is the module itself. See importlib for more details.
-""")
+""",
+)
 
 
 def _should_dispatch_xonsh_import_event_loader():
     """Figures out if we should dispatch to a load event"""
-    return (len(events.on_import_pre_create_module) > 0 or
-            len(events.on_import_post_create_module) > 0 or
-            len(events.on_import_pre_exec_module) > 0 or
-            len(events.on_import_post_exec_module) > 0)
+    return (
+        len(events.on_import_pre_create_module) > 0
+        or len(events.on_import_post_create_module) > 0
+        or len(events.on_import_pre_exec_module) > 0
+        or len(events.on_import_post_exec_module) > 0
+    )
 
 
 class XonshImportEventHook(MetaPathFinder):
@@ -218,8 +243,9 @@ class XonshImportEventHook(MetaPathFinder):
         npost = len(events.on_import_post_find_spec)
         dispatch_load = _should_dispatch_xonsh_import_event_loader()
         if npre > 0:
-            events.on_import_pre_find_spec.fire(fullname=fullname, path=path,
-                                                target=target)
+            events.on_import_pre_find_spec.fire(
+                fullname=fullname, path=path, target=target
+            )
         elif npost == 0 and not dispatch_load:
             # no events to fire, proceed normally and prevent recursion
             return None
@@ -228,9 +254,10 @@ class XonshImportEventHook(MetaPathFinder):
             spec = importlib.util.find_spec(fullname)
         # fire post event
         if npost > 0:
-            events.on_import_post_find_spec.fire(spec=spec, fullname=fullname,
-                                                 path=path, target=target)
-        if dispatch_load and spec is not None and hasattr(spec.loader, 'create_module'):
+            events.on_import_post_find_spec.fire(
+                spec=spec, fullname=fullname, path=path, target=target
+            )
+        if dispatch_load and spec is not None and hasattr(spec.loader, "create_module"):
             spec.loader = XonshImportEventLoader(spec.loader)
         return spec
 

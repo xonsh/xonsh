@@ -14,11 +14,16 @@ import xonsh.tools as xt
 
 
 def _xh_sqlite_get_file_name():
+<<<<<<< HEAD
     envs = builtins.__xonsh__.env
     file_name = envs.get('XONSH_HISTORY_SQLITE_FILE')
+=======
+    envs = builtins.__xonsh_env__
+    file_name = envs.get("XONSH_HISTORY_SQLITE_FILE")
+>>>>>>> master
     if not file_name:
-        data_dir = envs.get('XONSH_DATA_DIR')
-        file_name = os.path.join(data_dir, 'xonsh-history.sqlite')
+        data_dir = envs.get("XONSH_DATA_DIR")
+        file_name = os.path.join(data_dir, "xonsh-history.sqlite")
     return xt.expanduser_abs_path(file_name)
 
 
@@ -34,7 +39,8 @@ def _xh_sqlite_create_history_table(cursor):
     Columns:
         info - JSON formatted, reserved for future extension.
     """
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS xonsh_history
              (inp TEXT,
               rtn INTEGER,
@@ -44,65 +50,60 @@ def _xh_sqlite_create_history_table(cursor):
               out TEXT,
               info TEXT
              )
-    """)
+    """
+    )
 
 
 def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout):
-    sql = 'INSERT INTO xonsh_history (inp, rtn, tsb, tse, sessionid'
-    tss = cmd.get('ts', [None, None])
-    params = [
-        cmd['inp'].rstrip(),
-        cmd['rtn'],
-        tss[0],
-        tss[1],
-        sessionid,
-    ]
-    if store_stdout and 'out' in cmd:
-        sql += ', out'
-        params.append(cmd['out'])
-    if 'info' in cmd:
-        sql += ', info'
-        info = json.dumps(cmd['info'])
+    sql = "INSERT INTO xonsh_history (inp, rtn, tsb, tse, sessionid"
+    tss = cmd.get("ts", [None, None])
+    params = [cmd["inp"].rstrip(), cmd["rtn"], tss[0], tss[1], sessionid]
+    if store_stdout and "out" in cmd:
+        sql += ", out"
+        params.append(cmd["out"])
+    if "info" in cmd:
+        sql += ", info"
+        info = json.dumps(cmd["info"])
         params.append(info)
-    sql += ') VALUES (' + ('?, ' * len(params)).rstrip(', ') + ')'
+    sql += ") VALUES (" + ("?, " * len(params)).rstrip(", ") + ")"
     cursor.execute(sql, tuple(params))
 
 
 def _xh_sqlite_get_count(cursor, sessionid=None):
-    sql = 'SELECT count(*) FROM xonsh_history '
+    sql = "SELECT count(*) FROM xonsh_history "
     params = []
     if sessionid is not None:
-        sql += 'WHERE sessionid = ? '
+        sql += "WHERE sessionid = ? "
         params.append(str(sessionid))
     cursor.execute(sql, tuple(params))
     return cursor.fetchone()[0]
 
 
-def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, reverse=False):
-    sql = 'SELECT inp, tsb, rtn FROM xonsh_history '
+def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, newest_first=False):
+    sql = "SELECT inp, tsb, rtn FROM xonsh_history "
     params = []
     if sessionid is not None:
-        sql += 'WHERE sessionid = ? '
+        sql += "WHERE sessionid = ? "
         params.append(sessionid)
-    sql += 'ORDER BY tsb '
-    if reverse:
-        sql += 'DESC '
+    sql += "ORDER BY tsb "
+    if newest_first:
+        sql += "DESC "
     if limit is not None:
-        sql += 'LIMIT %d ' % limit
+        sql += "LIMIT %d " % limit
     cursor.execute(sql, tuple(params))
     return cursor.fetchall()
 
 
 def _xh_sqlite_delete_records(cursor, size_to_keep):
-    sql = 'SELECT min(tsb) FROM ('
-    sql += 'SELECT tsb FROM xonsh_history ORDER BY tsb DESC '
-    sql += 'LIMIT %d)' % size_to_keep
+    sql = "SELECT min(tsb) FROM ("
+    sql += "SELECT tsb FROM xonsh_history ORDER BY tsb DESC "
+    sql += "LIMIT %d)" % size_to_keep
     cursor.execute(sql)
     result = cursor.fetchone()
     if not result:
         return
     max_tsb = result[0]
-    sql = 'DELETE FROM xonsh_history WHERE tsb < ?'
+    sql = "DELETE FROM xonsh_history WHERE tsb < ?"
     result = cursor.execute(sql, (max_tsb,))
     return result.rowcount
 
@@ -121,11 +122,11 @@ def xh_sqlite_get_count(sessionid=None, filename=None):
         return _xh_sqlite_get_count(c, sessionid=sessionid)
 
 
-def xh_sqlite_items(sessionid=None, filename=None):
+def xh_sqlite_items(sessionid=None, filename=None, newest_first=False):
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        return _xh_sqlite_get_records(c, sessionid=sessionid)
+        return _xh_sqlite_get_records(c, sessionid=sessionid, newest_first=newest_first)
 
 
 def xh_sqlite_delete_items(size_to_keep, filename=None):
@@ -138,8 +139,7 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
 class SqliteHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
-    def __init__(self, wait_for_shell=True, size=None, filename=None,
-                 *args, **kwargs):
+    def __init__(self, wait_for_shell=True, size=None, filename=None, *args, **kwargs):
         """Thread responsible for garbage collecting old history.
 
         May wait for shell (and for xonshrc to have been loaded) to start work.
@@ -157,11 +157,22 @@ class SqliteHistoryGC(threading.Thread):
         if self.size is not None:
             hsize, units = xt.to_history_tuple(self.size)
         else:
+<<<<<<< HEAD
             envs = builtins.__xonsh__.env
             hsize, units = envs.get('XONSH_HISTORY_SIZE')
         if units != 'commands':
             print('sqlite backed history gc currently only supports '
                   '"commands" as units', file=sys.stderr)
+=======
+            envs = builtins.__xonsh_env__
+            hsize, units = envs.get("XONSH_HISTORY_SIZE")
+        if units != "commands":
+            print(
+                "sqlite backed history gc currently only supports "
+                '"commands" as units',
+                file=sys.stderr,
+            )
+>>>>>>> master
             return
         if hsize < 0:
             return
@@ -184,43 +195,53 @@ class SqliteHistory(History):
         self.tss = []
 
     def append(self, cmd):
+<<<<<<< HEAD
         envs = builtins.__xonsh__.env
         opts = envs.get('HISTCONTROL')
         inp = cmd['inp'].rstrip()
+=======
+        envs = builtins.__xonsh_env__
+        opts = envs.get("HISTCONTROL")
+        inp = cmd["inp"].rstrip()
+>>>>>>> master
         self.inps.append(inp)
-        store_stdout = envs.get('XONSH_STORE_STDOUT', False)
+        store_stdout = envs.get("XONSH_STORE_STDOUT", False)
         if store_stdout:
-            self.outs.append(cmd.get('out'))
+            self.outs.append(cmd.get("out"))
         else:
             self.outs.append(None)
-        self.rtns.append(cmd['rtn'])
-        self.tss.append(cmd.get('ts', (None, None)))
+        self.rtns.append(cmd["rtn"])
+        self.tss.append(cmd.get("ts", (None, None)))
 
-        opts = envs.get('HISTCONTROL')
-        if 'ignoredups' in opts and inp == self._last_hist_inp:
+        opts = envs.get("HISTCONTROL")
+        if "ignoredups" in opts and inp == self._last_hist_inp:
             # Skipping dup cmd
             return
-        if 'ignoreerr' in opts and cmd['rtn'] != 0:
+        if "ignoreerr" in opts and cmd["rtn"] != 0:
             # Skipping failed cmd
             return
         self._last_hist_inp = inp
         xh_sqlite_append_history(
-            cmd, str(self.sessionid), store_stdout,
-            filename=self.filename)
+            cmd, str(self.sessionid), store_stdout, filename=self.filename
+        )
 
-    def all_items(self):
+    def all_items(self, newest_first=False):
         """Display all history items."""
-        for item in xh_sqlite_items(filename=self.filename):
-            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
+        for item in xh_sqlite_items(filename=self.filename, newest_first=newest_first):
+            yield {"inp": item[0], "ts": item[1], "rtn": item[2]}
 
-    def items(self):
+    def items(self, newest_first=False):
         """Display history items of current session."""
         for item in xh_sqlite_items(
-                sessionid=str(self.sessionid), filename=self.filename):
-            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
+            sessionid=str(self.sessionid),
+            filename=self.filename,
+            newest_first=newest_first,
+        ):
+            yield {"inp": item[0], "ts": item[1], "rtn": item[2]}
 
     def info(self):
         data = collections.OrderedDict()
+<<<<<<< HEAD
         data['backend'] = 'sqlite'
         data['sessionid'] = str(self.sessionid)
         data['filename'] = self.filename
@@ -229,6 +250,17 @@ class SqliteHistory(History):
         data['all items'] = xh_sqlite_get_count(filename=self.filename)
         envs = builtins.__xonsh__.env
         data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
+=======
+        data["backend"] = "sqlite"
+        data["sessionid"] = str(self.sessionid)
+        data["filename"] = self.filename
+        data["session items"] = xh_sqlite_get_count(
+            sessionid=self.sessionid, filename=self.filename
+        )
+        data["all items"] = xh_sqlite_get_count(filename=self.filename)
+        envs = builtins.__xonsh_env__
+        data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
+>>>>>>> master
         return data
 
     def run_gc(self, size=None, blocking=True):

@@ -7,7 +7,7 @@ $ACTIVITIES = ['version_bump', 'changelog', 'pytest',
 
 $VERSION_BUMP_PATTERNS = [
     ('.appveyor.yml', 'version:.*', 'version: $VERSION.{build}'),
-    ('xonsh/__init__.py', '__version__\s*=.*', "__version__ = '$VERSION'"),
+    ('xonsh/__init__.py', '__version__\s*=.*', '__version__ = "$VERSION"'),
     ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
@@ -22,7 +22,8 @@ with open('requirements-tests.txt') as f:
     conda_deps = f.read().split()
 with open('requirements-docs.txt') as f:
     conda_deps += f.read().split()
-conda_deps = {d.lower().split('=')[0] for d in set(conda_deps)}
+for delimiter in '=<>':
+    conda_deps = {d.lower().split(delimiter)[0] for d in conda_deps}
 conda_deps.discard('prompt-toolkit')
 conda_deps |= {'prompt_toolkit', 'pip', 'psutil', 'numpy', 'matplotlib'}
 $DOCKER_CONDA_DEPS = sorted(conda_deps)

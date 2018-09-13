@@ -51,6 +51,7 @@ class History:
     In all of these sequences, index 0 is the oldest and -1 (the last item)
     is the newest.
     """
+
     def __init__(self, sessionid=None, **kwargs):
         """Represents a xonsh session's history.
 
@@ -79,23 +80,32 @@ class History:
         """Retrieve history entries, see ``History`` docs for more info."""
         if isinstance(item, int):
             if item >= len(self):
-                raise IndexError('history index out of range')
-            return HistoryEntry(cmd=self.inps[item], out=self.outs[item],
-                                rtn=self.rtns[item], ts=self.tss[item])
+                raise IndexError("history index out of range")
+            return HistoryEntry(
+                cmd=self.inps[item],
+                out=self.outs[item],
+                rtn=self.rtns[item],
+                ts=self.tss[item],
+            )
         elif isinstance(item, slice):
             cmds = self.inps[item]
             outs = self.outs[item]
             rtns = self.rtns[item]
             tss = self.tss[item]
-            return [HistoryEntry(cmd=c, out=o, rtn=r, ts=t)
-                    for c, o, r, t in zip(cmds, outs, rtns, tss)]
+            return [
+                HistoryEntry(cmd=c, out=o, rtn=r, ts=t)
+                for c, o, r, t in zip(cmds, outs, rtns, tss)
+            ]
         else:
-            raise TypeError('history indices must be integers '
-                            'or slices, not {}'.format(type(item)))
+            raise TypeError(
+                "history indices must be integers "
+                "or slices, not {}".format(type(item))
+            )
 
     def __setitem__(self, *args):
-        raise PermissionError('You cannot change history! '
-                              'you can create new though.')
+        raise PermissionError(
+            "You cannot change history! " "you can create new though."
+        )
 
     def append(self, cmd):
         """Append a command item into history.
@@ -114,11 +124,11 @@ class History:
         """Flush the history items to disk from a buffer."""
         pass
 
-    def items(self):
+    def items(self, newest_first=False):
         """Get history items of current session."""
         raise NotImplementedError
 
-    def all_items(self):
+    def all_items(self, newest_first=False):
         """Get all history items."""
         raise NotImplementedError
 

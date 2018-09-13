@@ -1,4 +1,3 @@
-import inspect
 import builtins
 import collections
 
@@ -7,29 +6,40 @@ import xonsh.lazyasd as xl
 from xonsh.completers.tools import justify
 
 
-VALID_ACTIONS = xl.LazyObject(lambda: frozenset({'add', 'remove', 'list'}),
-                              globals(), 'VALID_ACTIONS')
+VALID_ACTIONS = xl.LazyObject(
+    lambda: frozenset({"add", "remove", "list"}), globals(), "VALID_ACTIONS"
+)
 
 
-def _add_one_completer(name, func, loc='end'):
+def _add_one_completer(name, func, loc="end"):
     new = collections.OrderedDict()
-    if loc == 'start':
+    if loc == "start":
         new[name] = func
         for (k, v) in builtins.__xonsh__.completers.items():
             new[k] = v
+<<<<<<< HEAD
     elif loc == 'end':
         for (k, v) in builtins.__xonsh__.completers.items():
+=======
+    elif loc == "end":
+        for (k, v) in builtins.__xonsh_completers__.items():
+>>>>>>> master
             new[k] = v
         new[name] = func
     else:
         direction, rel = loc[0], loc[1:]
         found = False
+<<<<<<< HEAD
         for (k, v) in builtins.__xonsh__.completers.items():
             if rel == k and direction == '<':
+=======
+        for (k, v) in builtins.__xonsh_completers__.items():
+            if rel == k and direction == "<":
+>>>>>>> master
                 new[name] = func
                 found = True
             new[k] = v
-            if rel == k and direction == '>':
+            if rel == k and direction == ">":
                 new[name] = func
                 found = True
         if not found:
@@ -38,56 +48,67 @@ def _add_one_completer(name, func, loc='end'):
     builtins.__xonsh__.completers.update(new)
 
 
-def _list_completers(args, stdin=None):
+def _list_completers(args, stdin=None, stack=None):
     o = "Registered Completer Functions: \n"
     _comp = builtins.__xonsh__.completers
     ml = max((len(i) for i in _comp), default=0)
     _strs = []
     for c in _comp:
         if _comp[c].__doc__ is None:
-            doc = 'No description provided'
+            doc = "No description provided"
         else:
-            doc = ' '.join(_comp[c].__doc__.split())
+            doc = " ".join(_comp[c].__doc__.split())
         doc = justify(doc, 80, ml + 3)
-        _strs.append('{: >{}} : {}'.format(c, ml, doc))
-    return o + '\n'.join(_strs) + '\n'
+        _strs.append("{: >{}} : {}".format(c, ml, doc))
+    return o + "\n".join(_strs) + "\n"
 
 
-def _remove_completer(args, stdin=None):
+def _remove_completer(args, stdin=None, stack=None):
     err = None
     if len(args) != 1:
         err = "completer remove takes exactly 1 argument."
     else:
         name = args[0]
+<<<<<<< HEAD
         if name not in builtins.__xonsh__.completers:
             err = ("The name %s is not a registered "
                    "completer function.") % name
+=======
+        if name not in builtins.__xonsh_completers__:
+            err = ("The name %s is not a registered " "completer function.") % name
+>>>>>>> master
     if err is None:
         del builtins.__xonsh__.completers[name]
         return
     else:
-        return None, err + '\n', 1
+        return None, err + "\n", 1
 
 
-def _register_completer(args, stdin=None):
+def _register_completer(args, stdin=None, stack=None):
     err = None
     if len(args) not in {2, 3}:
-        err = ("completer add takes either 2 or 3 arguments.\n"
-               "For help, run:  completer help add")
+        err = (
+            "completer add takes either 2 or 3 arguments.\n"
+            "For help, run:  completer help add"
+        )
     else:
         name = args[0]
         func_name = args[1]
+<<<<<<< HEAD
         if name in builtins.__xonsh__.completers:
             err = ("The name %s is already a registered "
                    "completer function.") % name
+=======
+        if name in builtins.__xonsh_completers__:
+            err = ("The name %s is already a registered " "completer function.") % name
+>>>>>>> master
         else:
             if func_name in builtins.__xonsh__.ctx:
                 func = builtins.__xonsh__.ctx[func_name]
                 if not callable(func):
                     err = "%s is not callable" % func_name
             else:
-                print(inspect.stack(context=0))
-                for frame_info in inspect.stack(context=0):
+                for frame_info in stack:
                     frame = frame_info[0]
                     if func_name in frame.f_locals:
                         func = frame.f_locals[func_name]
@@ -101,35 +122,40 @@ def _register_completer(args, stdin=None):
         position = "start" if len(args) == 2 else args[2]
         _add_one_completer(name, func, position)
     else:
-        return None, err + '\n', 1
+        return None, err + "\n", 1
 
 
-def completer_alias(args, stdin=None):
+def completer_alias(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
     err = None
-    if len(args) == 0 or args[0] not in (VALID_ACTIONS | {'help'}):
-        err = ('Please specify an action.  Valid actions are: '
-               '"add", "remove", "list", or "help".')
-    elif args[0] == 'help':
+    if len(args) == 0 or args[0] not in (VALID_ACTIONS | {"help"}):
+        err = (
+            "Please specify an action.  Valid actions are: "
+            '"add", "remove", "list", or "help".'
+        )
+    elif args[0] == "help":
         if len(args) == 1 or args[1] not in VALID_ACTIONS:
-            return ('Valid actions are: add, remove, list.  For help with a '
-                    'specific action, run: completer help ACTION\n')
-        elif args[1] == 'add':
+            return (
+                "Valid actions are: add, remove, list.  For help with a "
+                "specific action, run: completer help ACTION\n"
+            )
+        elif args[1] == "add":
             return COMPLETER_ADD_HELP_STR
-        elif args[1] == 'remove':
+        elif args[1] == "remove":
             return COMPLETER_REMOVE_HELP_STR
-        elif args[1] == 'list':
+        elif args[1] == "list":
             return COMPLETER_LIST_HELP_STR
 
     if err is not None:
-        return None, err + '\n', 1
+        return None, err + "\n", 1
 
-    if args[0] == 'add':
+    if args[0] == "add":
         func = _register_completer
-    elif args[0] == 'remove':
+    elif args[0] == "remove":
         func = _remove_completer
-    elif args[0] == 'list':
+    elif args[0] == "list":
         func = _list_completers
-    return func(args[1:], stdin=stdin)
+    return func(args[1:], stdin=stdin, stack=stack)
+
 
 COMPLETER_LIST_HELP_STR = """completer list: ordered list the active completers
 

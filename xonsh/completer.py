@@ -6,6 +6,7 @@ import collections.abc as cabc
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
+
     def complete(self, prefix, line, begidx, endidx, ctx=None):
         """Complete the string, given a possible execution context.
 
@@ -41,6 +42,9 @@ class Completer(object):
                 res = out
                 lprefix = len(prefix)
             if res is not None and len(res) != 0:
-                def sortkey(s): return s.lstrip(''''"''').lower()
+
+                def sortkey(s):
+                    return s.lstrip(''''"''').lower()
+
                 return tuple(sorted(res, key=sortkey)), lprefix
         return set(), lprefix

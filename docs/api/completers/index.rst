@@ -5,7 +5,7 @@ Completers API
 =================
 All of the ways that xonsh completes you.
 
-**Stock Xonsh COmpleters:**
+**Stock Xonsh Completers:**
 
 .. toctree::
     :maxdepth: 2

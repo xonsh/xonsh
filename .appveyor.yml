@@ -1,4 +1,4 @@
-version: 0.6.10.{build}
+version: 0.7.8.{build}
 os: Windows Server 2012 R2
 environment:
 
@@ -7,10 +7,12 @@ environment:
     - PYTHON: "C:\\Python34"
     - PYTHON: "C:\\Python35"
     - PYTHON: "C:\\Python36"
+    - PYTHON: "C:\\Python37"
     - PYTHON: "C:\\Python34-x64"
       DISTUTILS_USE_SDK: "1"
     - PYTHON: "C:\\Python35-x64"
     - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python37-x64"
     - XONSH_TEST_ENV: "MSYS2"
       MSYS2_PATH: "C:\\msys64"
     # TODO: Miniconda

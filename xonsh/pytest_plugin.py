@@ -24,7 +24,7 @@ def _limited_traceback(excinfo):
     tb = extract_tb(excinfo.tb)
     try:
         idx = [__file__ in e for e in tb].index(True)
-        return format_list(tb[idx+1:])
+        return format_list(tb[idx + 1 :])
     except ValueError:
         return format_list(tb)
 
@@ -39,12 +39,13 @@ class XshFile(pytest.File):
         sys.path.append(self.fspath.dirname)
         mod = importlib.import_module(self.fspath.purebasename)
         sys.path.pop(0)
-        tests = [t for t in dir(mod) if t.startswith('test_')]
+        tests = [t for t in dir(mod) if t.startswith("test_")]
         for test_name in tests:
             obj = getattr(mod, test_name)
-            if hasattr(obj, '__call__'):
-                yield XshFunction(name=test_name, parent=self,
-                                  test_func=obj, test_module=mod)
+            if hasattr(obj, "__call__"):
+                yield XshFunction(
+                    name=test_name, parent=self, test_func=obj, test_module=mod
+                )
 
 
 class XshFunction(pytest.Item):
@@ -60,7 +61,7 @@ class XshFunction(pytest.Item):
         """ called when self.runtest() raises an exception. """
         formatted_tb = _limited_traceback(excinfo)
         formatted_tb.insert(0, "xonsh execution failed\n")
-        formatted_tb.append('{}: {}'.format(excinfo.type.__name__, excinfo.value))
+        formatted_tb.append("{}: {}".format(excinfo.type.__name__, excinfo.value))
         return "".join(formatted_tb)
 
     def reportinfo(self):

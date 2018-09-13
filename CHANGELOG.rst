@@ -4,6 +4,269 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.8
+====================
+
+**Added:**
+
+* ``xonsh.lib.collections.ChainDB``, a chain map which merges mergable fields
+
+
+**Fixed:**
+
+* Pass all params to voxapi.create
+* PTK tab-completion now auto-accepts completion if only one option is present
+  (note that fix is only for PTK2)
+
+
+
+
+v0.7.7
+====================
+
+**Added:**
+
+* A xontrib which adds support for autojump to xonsh
+* Added new env-var ``XONSH_HISTORY_MATCH_ANYWHERE``. If set to ``True`` then
+  up-arrow history matching will match existing history entries with the search
+  term located anywhere, not just at the beginning of the line. Default value is
+  ``False``
+
+
+**Changed:**
+
+* Improved iteration over virtual environments in ``Vox.__iter__``
+
+
+**Fixed:**
+
+* Fix for ``Enter`` not returning from Control-R search buffer
+* Fixed automatic wrapping of many subprocesses that spanned multiple lines via
+  line continuation characters with logical operators separating the commands.
+  For example, the following now works:
+
+  .. code-block:: sh
+
+        echo 'a' \
+        and echo 'b'
+* Environment swapping would not properly reraise errors due to weird
+  Python name binding issue.
+
+
+
+
+v0.7.6
+====================
+
+**Added:**
+
+* Callable aliases may now accept a ``stack`` argument. If they do, then the
+  stack, as computed from the aliases call site, is provided as a list of
+  ``FrameInfo`` objects (as detailed in the standard library ``inspect``
+  module). Otherwise, the ``stack`` parameter is ``None``.
+* ``SubprocSpec`` now has a ``stack`` attribute, for passing the call stack
+  to callable aliases. This defaults to ``None`` if the spec does not
+  need the stack. The ``resolve_stack()`` method computes the ``stack``
+  attribute.
+
+
+**Changed:**
+
+* xonsh/environ.py
+  Exceptions are caught in the code executed under Env.swap()
+
+
+**Fixed:**
+
+* Scripts are now cached by their realpath, not just abspath.
+* Fixed a potential crash (``AssertionError: wrong color format``) on Python 3.5 and prompt_toolkit 1.
+* The ``completer`` command now correctly finds completion functions
+  when nested inside of other functions.
+* Fixed a crash when using the ``$XONSH_STDERR_PREFIX/POSTFIX`` with
+  prompt_toolkit and Pygments 2.2.
+
+
+
+
+v0.7.5
+====================
+
+**Fixed:**
+
+* Recent command history in ptk2 prompt now returns most recently executed
+  commands first (as expected)
+* Fixed a regression taat prevented the readline backend from beeing used. This
+  regression was caused by the new ansi-color names, which are incompatible with
+  pygments 2.2.
+
+
+
+
+v0.7.4
+====================
+
+**Added:**
+
+* New ``xonsh-cat`` command line utility, which is a xonsh replacement
+  for the standard UNIX ``cat`` command.
+* The new ``xonsh.xoreutils.cat.cat_main()`` enables the ``xonsh.xoreutils.cat``
+  module to be run as a command line utility.
+* New ``CommandsCache.is_only_functional_alias()`` and
+  ``CommandsCache.lazy_is_only_functional_alias()`` methods for determining if
+  if a command name is only implemented as a function, and thus has no
+  underlying binary command to execute.
+* ``xonsh.xontribs.xontribs_load()`` is a new first-class API for loading
+  xontribs via a Python function.
+* ``$COMPLETIONS_DISPLAY`` now supports readline-like behavior on
+  prompt-toolkit v2.
+
+
+**Changed:**
+
+* The xonsh Jupyter kernel now will properly redirect the output of commands
+  such as ``git log``, ``man``, ``less`` and other paged commands to the client.
+  This is done by setting ``$PAGER = 'cat'``. If ``cat`` is not available
+  on the system, ``xonsh-cat`` is used instead.
+* The ``setup()`` function for starting up a working xonsh has ``aliases``,
+  ``xontribs``, and ``threadable_predictors`` as new additional keyword
+  arguments for customizing the loading of xonsh.
+
+
+**Fixed:**
+
+* Fixed a bug with converting new PTK2 colors names to old names when using PTK1 or Jupyter
+    as the shell type.
+* ``CommandsCache.locate_binary()`` will now properly return None when
+  ``ignore_alias=False`` and the command is only a functional alias,
+  such as with ``cd``. Previously, it would return the name of the
+  command.
+* Fixed issue with ``$COMPLETIONS_DISPLAY`` raising an error on
+  prompt-toolkit v2 when the value was not set to ``multi``.
+* ValueError when executing ``vox list``
+
+
+
+
+v0.7.3
+====================
+
+**Added:**
+
+* Add the ``PROMPT_TOOLKIT_COLOR_DEPTH`` environment to xonsh default environment.
+  Possible values are ``DEPTH_1_BIT``/``MONOCHROME``,
+  ``DEPTH_4_BIT``/``ANSI_COLORS_ONLY``, ``DEPTH_8_BIT``/``DEFAULT``, or ``DEPTH_24_BIT``/``TRUE_COLOR``.
+  Note: not all terminals support all color depths.
+* New way to fix unreadable default terminal colors on Windows 10. Windows 10
+  now supports true color in the terminal, so if prompt toolkit 2 is
+  installed Xonsh will use a style with hard coded colors instead of the
+  default terminal colors. This will give the same color experience as on linux an mac.
+  The behaviour can be disabled with ``$INTENSIFY_COLORS_ON_WIN``
+  environment variable.
+* New ``JupyterShell`` for interactive interfacing with Jupyter.
+
+
+**Changed:**
+
+* All ansicolor names used in styles have ben updated to the color names used by prompt_toolkit 2.
+  The new names are are much easier to understand
+  (e.g. ``ansicyan``/``ansibrightcyan`` vs. the old ``#ansiteal``/``#ansiturquoise``). The names are automatically
+  translated back when using prompt_toolkit 1.
+
+
+**Removed:**
+
+* Removed support for pygments < 2.2.
+
+
+**Fixed:**
+
+* New ansi-color names fixes the problem with darker colors using prompt_toolkit 2 on windows.
+* Fixed a problem with the color styles on prompt toolkit 2. The default pygment
+  style is no longer merged into style selected in xonsh.
+* The JupyterKernel has been fixed from a rather broken state.
+
+
+
+
+v0.7.2
+====================
+
+**Added:**
+
+* ``history show`` builtin now supports optional ``-0`` parameter that switches
+  the output to null-delimited. Useful for piping history to external filters.
+
+
+**Fixed:**
+
+* If exception is raised in indir context manager, return to original directory
+* Fixed issue that autocomplete menu does not display
+  at terminal's maximum height
+
+
+
+
+v0.7.1
+====================
+
+**Added:**
+
+* Added feature to aliases.
+* ``xonsh.lib.os.rmtree()`` an rmtree which works on windows properly (even with
+  git)
+
+
+**Changed:**
+
+* set default value of ``$AUTO_SUGGEST_IN_COMPLETIONS=False``
+* Use the ``pygments_cache.get_all_styles()`` function instead of
+  interacting directly with pygments.
+
+
+**Fixed:**
+
+* Fixed issue with ``$ARG<N>`` varaibles not being passed to subprocesses correctly.
+* Fixed issue with multiline string inside of ``@(expr)`` in
+  unwrapped subprocesses. For example, the following now works::
+
+    echo @("""hello
+    mom""")
+* ``CommandPipeline.output`` now does properly lazy, non-blocking creation of
+  output string. ``CommandPipeline.out`` remains blocking.
+* Fix regression in ``INTENSIFY_COLORS_ON_WIN`` functionality due to prompt_toolkit 2 update.
+* Fixed issue that can't insert quotation marks and double quotes
+  for completion.
+* Fixed issue with ``SyntaxErrors`` being reported on the wrong line
+  when a block of code contained multiple implicit subprocesses.
+* ``prompt_toolkit >= 2`` will start up even if Pygments isn't present
+* Fixed a regression with ``xonfig styles`` reporting ``AttributeError: module 'pygments' has no attribute 'styles'``
+* ptk dependent xontribs (that use custom keybindings) now work with both ptk1
+  and ptk2
+* Fixed async tokenizing issue on Python v3.7.
+
+
+
+
+v0.7.0
+====================
+
+**Added:**
+
+* Added a hook for printing a spcial display method on an object.
+* Support for ``prompt_toolkit 2.0``
+* The ``--shell-type`` (``$SHELL_TYPE``) may now be specified using
+  shortcuts, such as ``rl`` for ``readline`` and ``ptk2`` for
+  ``prompt_toolkit2``. See ``xonsh --help`` for a full listing
+  of available aliases.
+
+
+**Fixed:**
+
+- Restored AUGASSIGN_OPS definition, which was inadvertently removed.
+
+
+
+
 v0.6.10
 ====================
 
@@ -182,7 +445,7 @@ v0.6.3
   do not end in a newline from writing over the next prompt and vice versa.
 * Fix bug on Windows when ``PATHEXT`` environment variable did not exist.
   This also fixes building the xonsh documentation on Windows.
-* Fixed a bug in the `free_cwd <http://xon.sh/xontribs.html#free-cwd>`__ Windows Xontrib, which caused the prompt to error if the current directory is 
+* Fixed a bug in the `free_cwd <http://xon.sh/xontribs.html#free-cwd>`__ Windows Xontrib, which caused the prompt to error if the current directory is
   deleted/renamed from an other process.
 * Fixed issue with ``$XONSH_SHOW_TRACEBACK`` not being respected in subprocess
   mode when the command could not be found or had incorrect permissions.
@@ -393,7 +656,7 @@ v0.5.10
 * Add "fzf-widgets" xontrib which provides fuzzy search productivity widgets
   with on custom keybindings to xontrib list.
 * New ``free_cwd`` xontrib for Windows, which prevent the current directory from being locked when the prompt is shown.
-  This allows the other programs or Windows explorer to delete the current or parent directory. This is accomplished by 
+  This allows the other programs or Windows explorer to delete the current or parent directory. This is accomplished by
   resetting the CWD to the users home directory temporarily while the prompt is displayed. The directory is still locked
   while any commands are processed so xonsh still can't remove it own working directory.
 
@@ -465,7 +728,7 @@ v0.5.8
 * Fixed a bug on py34 where os.scandir was used by accident.
 * Line continuations (``\\``) is subproc mode will no longer consume the
   surrounding whitespace.
-* Fixed a bug if foreign_shell name was not written in lower case in 
+* Fixed a bug if foreign_shell name was not written in lower case in
   the static configuration file ``config.json``
 * Fixed a regression on Windows where caused ``which`` reported that the
   ``PATH`` environment variable could not be found.

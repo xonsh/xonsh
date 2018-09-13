@@ -5,6 +5,14 @@ Xonsh API
 =================
 For those of you who want the gritty details.
 
+**Xonsh Standard Library:**
+
+.. toctree::
+    :maxdepth: 2
+
+    lib/index
+
+
 **Language:**
 
 .. toctree::
@@ -36,10 +44,10 @@ For those of you who want the gritty details.
     shell
     base_shell
     readline_shell
-    ptk/shell
-    ptk/history
-    ptk/completer
-    ptk/key_bindings
+    ptk2/shell
+    ptk2/history
+    ptk2/completer
+    ptk2/key_bindings
     pretty
     replay
     diff_history
@@ -65,6 +73,7 @@ For those of you who want the gritty details.
     color_tools
     pyghooks
     jupyter_kernel
+    jupyter_shell
     wizard
     xonfig
     codecache
@@ -79,3 +88,12 @@ For those of you who want the gritty details.
     mplhooks
     vox
 
+**Pending Deprecation:**
+
+.. toctree::
+    :maxdepth: 1
+
+    ptk/shell
+    ptk/history
+    ptk/completer
+    ptk/key_bindings

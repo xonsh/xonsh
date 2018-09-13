@@ -1,6 +1,8 @@
 """Xonsh extension of the standard library subprocess module, using xonsh for
 subprocess calls"""
-from xonsh.tools import XonshCalledProcessError as CalledProcessError
+from subprocess import CalledProcessError
+
+from xonsh.tools import XonshCalledProcessError
 from xonsh.lib.os import indir
 
 

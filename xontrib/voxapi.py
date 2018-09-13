@@ -234,13 +234,10 @@ class Vox(collections.abc.Mapping):
         """List available virtual environments found in $VIRTUALENV_HOME.
         """
         bin_, lib, inc = _subdir_names()
-        for dirpath, dirnames, _ in os.walk(self.venvdir):
-            if bin_ in dirnames and lib in dirnames:
-                yield dirpath[len(self.venvdir)+1:]  # +1 is to remove the separator
-                # Don't recurse in to the special dirs
-                dirnames.remove(bin_)
-                dirnames.remove(lib)  # This one in particular is likely to be quite large.
-                dirnames.remove(inc)
+        for dirpath, dirnames, filenames in os.walk(self.venvdir):
+            if 'pyvenv.cfg' in filenames:
+                yield dirpath[len(self.venvdir) + 1:]  # +1 is to remove the separator
+                dirnames.clear()
 
     def __len__(self):
         """Counts known virtual environments, using the same rules as iter().

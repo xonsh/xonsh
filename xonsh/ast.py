@@ -4,19 +4,105 @@
 # pylint: disable=unused-import
 import sys
 from ast import (
-    Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert,
-    BinOp, Add, Sub, Mult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt,
-    LtE, GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And,
-    Subscript, Load, Slice, ExtSlice, List, Tuple, Set, Dict, AST, NameConstant,
-    Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp,
-    Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert, Delete,
-    Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield,
-    YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword,
-    Attribute, Global, Nonlocal, If, While, For, withitem, With, Try,
-    ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer,
-    Interactive, Expression, Index, literal_eval, dump, walk, increment_lineno
+    Module,
+    Num,
+    Expr,
+    Str,
+    Bytes,
+    UnaryOp,
+    UAdd,
+    USub,
+    Invert,
+    BinOp,
+    Add,
+    Sub,
+    Mult,
+    Div,
+    FloorDiv,
+    Mod,
+    Pow,
+    Compare,
+    Lt,
+    Gt,
+    LtE,
+    GtE,
+    Eq,
+    NotEq,
+    In,
+    NotIn,
+    Is,
+    IsNot,
+    Not,
+    BoolOp,
+    Or,
+    And,
+    Subscript,
+    Load,
+    Slice,
+    ExtSlice,
+    List,
+    Tuple,
+    Set,
+    Dict,
+    AST,
+    NameConstant,
+    Name,
+    GeneratorExp,
+    Store,
+    comprehension,
+    ListComp,
+    SetComp,
+    DictComp,
+    Assign,
+    AugAssign,
+    BitXor,
+    BitAnd,
+    BitOr,
+    LShift,
+    RShift,
+    Assert,
+    Delete,
+    Del,
+    Pass,
+    Raise,
+    Import,
+    alias,
+    ImportFrom,
+    Continue,
+    Break,
+    Yield,
+    YieldFrom,
+    Return,
+    IfExp,
+    Lambda,
+    arguments,
+    arg,
+    Call,
+    keyword,
+    Attribute,
+    Global,
+    Nonlocal,
+    If,
+    While,
+    For,
+    withitem,
+    With,
+    Try,
+    ExceptHandler,
+    FunctionDef,
+    ClassDef,
+    Starred,
+    NodeTransformer,
+    Interactive,
+    Expression,
+    Index,
+    literal_eval,
+    dump,
+    walk,
+    increment_lineno,
 )
 from ast import Ellipsis as EllipsisNode
+
 # pylint: enable=unused-import
 import textwrap
 import itertools
@@ -38,9 +124,29 @@ if PYTHON_VERSION_INFO >= (3, 6, 0):
 else:
     JoinedStr = FormattedValue = None
 
-STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
-              While, If, With, Raise, Try, Assert, Import, ImportFrom, Global,
-              Nonlocal, Expr, Pass, Break, Continue)
+STATEMENTS = (
+    FunctionDef,
+    ClassDef,
+    Return,
+    Delete,
+    Assign,
+    AugAssign,
+    For,
+    While,
+    If,
+    With,
+    Raise,
+    Try,
+    Assert,
+    Import,
+    ImportFrom,
+    Global,
+    Nonlocal,
+    Expr,
+    Pass,
+    Break,
+    Continue,
+)
 
 
 def leftmostname(node):
@@ -72,7 +178,7 @@ def leftmostname(node):
 
 def get_lineno(node, default=0):
     """Gets the lineno of a node or returns the default."""
-    return getattr(node, 'lineno', default)
+    return getattr(node, "lineno", default)
 
 
 def min_line(node):
@@ -88,7 +194,7 @@ def max_line(node):
 
 def get_col(node, default=-1):
     """Gets the col_offset of a node, or returns the default"""
-    return getattr(node, 'col_offset', default)
+    return getattr(node, "col_offset", default)
 
 
 def min_col(node):
@@ -98,7 +204,7 @@ def min_col(node):
 
 def max_col(node):
     """Returns the maximum col_offset of the node and all sub-nodes."""
-    col = getattr(node, 'max_col', None)
+    col = getattr(node, "max_col", None)
     if col is not None:
         return col
     highest = max(walk(node), key=get_col)
@@ -120,7 +226,7 @@ def node_len(node):
 
 def get_id(node, default=None):
     """Gets the id attribute of a node, or returns a default."""
-    return getattr(node, 'id', default)
+    return getattr(node, "id", default)
 
 
 def gather_names(node):
@@ -132,7 +238,7 @@ def gather_names(node):
 
 def get_id_ctx(node):
     """Gets the id and attribute of a node, or returns a default."""
-    nid = getattr(node, 'id', None)
+    nid = getattr(node, "id", None)
     if nid is None:
         return (None, None)
     return (nid, node.ctx)
@@ -156,7 +262,7 @@ def gather_load_store_names(node):
 
 def has_elts(x):
     """Tests if x is an AST node with elements."""
-    return isinstance(x, AST) and hasattr(x, 'elts')
+    return isinstance(x, AST) and hasattr(x, "elts")
 
 
 def load_attribute_chain(name, lineno=None, col=None):
@@ -172,12 +278,25 @@ def load_attribute_chain(name, lineno=None, col=None):
 
 
 def xonsh_call(name, args, lineno=None, col=None):
+<<<<<<< HEAD
     """Creates the AST node for calling a function of a given name.
     Functions names may contain attribute access, e.g. __xonsh__.env.
     """
     return Call(func=load_attribute_chain(name, lineno=lineno, col=col),
                 args=args, keywords=[], starargs=None, kwargs=None,
                 lineno=lineno, col_offset=col)
+=======
+    """Creates the AST node for calling a function of a given name."""
+    return Call(
+        func=Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
+        args=args,
+        keywords=[],
+        starargs=None,
+        kwargs=None,
+        lineno=lineno,
+        col_offset=col,
+    )
+>>>>>>> master
 
 
 def isdescendable(node):
@@ -207,10 +326,10 @@ class CtxAwareTransformer(NodeTransformer):
         self.lines = None
         self.mode = None
         self._nwith = 0
-        self.filename = '<xonsh-code>'
+        self.filename = "<xonsh-code>"
         self.debug_level = 0
 
-    def ctxvisit(self, node, inp, ctx, mode='exec', filename=None, debug_level=0):
+    def ctxvisit(self, node, inp, ctx, mode="exec", filename=None, debug_level=0):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -260,36 +379,48 @@ class CtxAwareTransformer(NodeTransformer):
     def try_subproc_toks(self, node, strip_expr=False):
         """Tries to parse the line of the node as a subprocess."""
         line, nlogical, idx = get_logical_line(self.lines, node.lineno - 1)
-        if self.mode == 'eval':
+        if self.mode == "eval":
             mincol = len(line) - len(line.lstrip())
             maxcol = None
         else:
             mincol = max(min_col(node) - 1, 0)
             maxcol = max_col(node)
             if mincol == maxcol:
-                maxcol = find_next_break(line, mincol=mincol,
-                                         lexer=self.parser.lexer)
+                maxcol = find_next_break(line, mincol=mincol, lexer=self.parser.lexer)
             elif nlogical > 1:
                 maxcol = None
-            elif maxcol < len(line) and line[maxcol] == ';':
+            elif maxcol < len(line) and line[maxcol] == ";":
                 pass
             else:
                 maxcol += 1
-        spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,
-                              returnline=False, lexer=self.parser.lexer)
+        spline = subproc_toks(
+            line,
+            mincol=mincol,
+            maxcol=maxcol,
+            returnline=False,
+            lexer=self.parser.lexer,
+        )
         if spline is None or len(spline) < len(line[mincol:maxcol]) + 2:
             # failed to get something consistent, try greedy wrap
             # The +2 comes from "![]" being length 3, minus 1 since maxcol
             # is one beyond the total length for slicing
-            spline = subproc_toks(line, mincol=mincol, maxcol=maxcol,
-                                  returnline=False, lexer=self.parser.lexer,
-                                  greedy=True)
+            spline = subproc_toks(
+                line,
+                mincol=mincol,
+                maxcol=maxcol,
+                returnline=False,
+                lexer=self.parser.lexer,
+                greedy=True,
+            )
         if spline is None:
             return node
         try:
-            newnode = self.parser.parse(spline, mode=self.mode,
-                                        filename=self.filename,
-                                        debug_level=(self.debug_level > 2))
+            newnode = self.parser.parse(
+                spline,
+                mode=self.mode,
+                filename=self.filename,
+                debug_level=(self.debug_level > 2),
+            )
             newnode = newnode.body
             if not isinstance(newnode, AST):
                 # take the first (and only) Expr
@@ -297,11 +428,9 @@ class CtxAwareTransformer(NodeTransformer):
             increment_lineno(newnode, n=node.lineno - 1)
             newnode.col_offset = node.col_offset
             if self.debug_level > 1:
-                msg = ('{0}:{1}:{2}{3} - {4}\n'
-                       '{0}:{1}:{2}{3} + {5}')
-                mstr = '' if maxcol is None else ':' + str(maxcol)
-                msg = msg.format(self.filename, node.lineno,
-                                 mincol, mstr, line, spline)
+                msg = "{0}:{1}:{2}{3} - {4}\n" "{0}:{1}:{2}{3} + {5}"
+                mstr = "" if maxcol is None else ":" + str(maxcol)
+                msg = msg.format(self.filename, node.lineno, mincol, mstr, line, spline)
                 print(msg, file=sys.stderr)
         except SyntaxError:
             newnode = node
@@ -346,10 +475,10 @@ class CtxAwareTransformer(NodeTransformer):
         else:
             newnode = self.try_subproc_toks(node)
             if not isinstance(newnode, Expr):
-                newnode = Expr(value=newnode,
-                               lineno=node.lineno,
-                               col_offset=node.col_offset)
-                if hasattr(node, 'max_lineno'):
+                newnode = Expr(
+                    value=newnode, lineno=node.lineno, col_offset=node.col_offset
+                )
+                if hasattr(node, "max_lineno"):
                     newnode.max_lineno = node.max_lineno
                     newnode.max_col = node.max_col
             return newnode
@@ -480,9 +609,9 @@ class CtxAwareTransformer(NodeTransformer):
 def pdump(s, **kwargs):
     """performs a pretty dump of an AST node."""
     if isinstance(s, AST):
-        s = dump(s, **kwargs).replace(',', ',\n')
-    openers = '([{'
-    closers = ')]}'
+        s = dump(s, **kwargs).replace(",", ",\n")
+    openers = "([{"
+    closers = ")]}"
     lens = len(s) + 1
     if lens == 1:
         return s
@@ -492,12 +621,12 @@ def pdump(s, **kwargs):
     closer = closers[openers.find(s[i])]
     j = s.rfind(closer)
     if j == -1 or j <= i:
-        return s[:i+1] + '\n' + textwrap.indent(pdump(s[i+1:]), ' ')
-    pre = s[:i+1] + '\n'
-    mid = s[i+1:j]
-    post = '\n' + s[j:]
-    mid = textwrap.indent(pdump(mid), ' ')
-    if '(' in post or '[' in post or '{' in post:
+        return s[: i + 1] + "\n" + textwrap.indent(pdump(s[i + 1 :]), " ")
+    pre = s[: i + 1] + "\n"
+    mid = s[i + 1 : j]
+    post = "\n" + s[j:]
+    mid = textwrap.indent(pdump(mid), " ")
+    if "(" in post or "[" in post or "{" in post:
         post = pdump(post)
     return pre + mid + post
 
@@ -511,10 +640,16 @@ def pprint_ast(s, *, sep=None, end=None, file=None, flush=False, **kwargs):
 # Private helpers
 #
 
+
 def _getblockattr(name, lineno, col):
     """calls getattr(name, '__xonsh_block__', False)."""
-    return xonsh_call('getattr', args=[
-        Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
-        Str(s='__xonsh_block__', lineno=lineno, col_offset=col),
-        NameConstant(value=False, lineno=lineno, col_offset=col)],
-        lineno=lineno, col=col)
+    return xonsh_call(
+        "getattr",
+        args=[
+            Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
+            Str(s="__xonsh_block__", lineno=lineno, col_offset=col),
+            NameConstant(value=False, lineno=lineno, col_offset=col),
+        ],
+        lineno=lineno,
+        col=col,
+    )

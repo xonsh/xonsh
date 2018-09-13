@@ -43,6 +43,7 @@ the xonsh shell
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
         "This fix was trickier than expected",
+        "The unholy cross of Bash/Python",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);

@@ -16,7 +16,11 @@ def get_filter_function():
     Return an appropriate filtering function for completions, given the valid
     of $CASE_SENSITIVE_COMPLETIONS
     """
+<<<<<<< HEAD
     csc = builtins.__xonsh__.env.get('CASE_SENSITIVE_COMPLETIONS')
+=======
+    csc = builtins.__xonsh_env__.get("CASE_SENSITIVE_COMPLETIONS")
+>>>>>>> master
     if csc:
         return _filter_normal
     else:
@@ -29,5 +33,5 @@ def justify(s, max_length, left_pad=0):
     characters long, padding all lines but the first on the left with the
     string left_pad.
     """
-    txt = textwrap.wrap(s, width=max_length, subsequent_indent=' '*left_pad)
-    return '\n'.join(txt)
+    txt = textwrap.wrap(s, width=max_length, subsequent_indent=" " * left_pad)
+    return "\n".join(txt)

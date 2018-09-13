@@ -54,7 +54,7 @@ def test_validator(events):
 
     @first.validator
     def v(n):
-        return n == 'spam'
+        return n == "spam"
 
     @events.on_test
     def second(n, **_):
@@ -63,24 +63,24 @@ def test_validator(events):
         return False
 
     called = 0
-    events.on_test.fire(n='egg')
+    events.on_test.fire(n="egg")
     assert called == 1
 
     called = 0
-    events.on_test.fire(n='spam')
+    events.on_test.fire(n="spam")
     assert called == 2
 
 
 def test_eventdoc(events):
     docstring = "Test event"
-    events.doc('on_test', docstring)
+    events.doc("on_test", docstring)
 
     assert inspect.getdoc(events.on_test) == docstring
 
 
 def test_transmogrify(events):
     docstring = "Test event"
-    events.doc('on_test', docstring)
+    events.doc("on_test", docstring)
 
     @events.on_test
     def func(**_):
@@ -90,7 +90,7 @@ def test_transmogrify(events):
     assert len(events.on_test) == 1
     assert inspect.getdoc(events.on_test) == docstring
 
-    events.transmogrify('on_test', LoadEvent)
+    events.transmogrify("on_test", LoadEvent)
 
     assert isinstance(events.on_test, LoadEvent)
     assert len(events.on_test) == 1
@@ -99,7 +99,7 @@ def test_transmogrify(events):
 
 def test_transmogrify_by_string(events):
     docstring = "Test event"
-    events.doc('on_test', docstring)
+    events.doc("on_test", docstring)
 
     @events.on_test
     def func(**_):
@@ -109,7 +109,7 @@ def test_transmogrify_by_string(events):
     assert len(events.on_test) == 1
     assert inspect.getdoc(events.on_test) == docstring
 
-    events.transmogrify('on_test', 'LoadEvent')
+    events.transmogrify("on_test", "LoadEvent")
 
     assert isinstance(events.on_test, LoadEvent)
     assert len(events.on_test) == 1
@@ -117,7 +117,7 @@ def test_transmogrify_by_string(events):
 
 
 def test_load(events):
-    events.transmogrify('on_test', 'LoadEvent')
+    events.transmogrify("on_test", "LoadEvent")
     called = 0
 
     @events.on_test
@@ -137,8 +137,9 @@ def test_load(events):
 
     assert called == 2
 
+
 def test_load_2nd_call(events):
-    events.transmogrify('on_test', 'LoadEvent')
+    events.transmogrify("on_test", "LoadEvent")
     called = 0
 
     @events.on_test
@@ -157,6 +158,6 @@ def test_load_2nd_call(events):
 
 def test_typos(xonsh_builtins):
     for name, ev in vars(xonsh_builtins.events).items():
-        if 'pytest' in name:
+        if "pytest" in name:
             continue
         assert inspect.getdoc(ev)

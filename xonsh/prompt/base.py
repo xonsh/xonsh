@@ -14,13 +14,13 @@ import xonsh.tools as xt
 import xonsh.platform as xp
 
 from xonsh.prompt.cwd import (
-    _collapsed_pwd, _replace_home_cwd, _dynamically_collapsed_pwd
+    _collapsed_pwd,
+    _replace_home_cwd,
+    _dynamically_collapsed_pwd,
 )
 from xonsh.prompt.job import _current_job
-from xonsh.prompt.env import (env_name, vte_new_tab_cwd)
-from xonsh.prompt.vc import (
-    current_branch, branch_color, branch_bg_color
-)
+from xonsh.prompt.env import env_name, vte_new_tab_cwd
+from xonsh.prompt.vc import current_branch, branch_color, branch_bg_color
 from xonsh.prompt.gitstatus import gitstatus_prompt
 
 
@@ -40,7 +40,7 @@ class PromptFormatter:
     def __call__(self, template=DEFAULT_PROMPT, fields=None):
         """Formats a xonsh prompt template string."""
         if fields is None:
-            self.fields = builtins.__xonsh__.env.get('PROMPT_FIELDS', PROMPT_FIELDS)
+            self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
         else:
             self.fields = fields
         try:
@@ -59,12 +59,12 @@ class PromptFormatter:
             entry = self._format_field(field, spec, conv)
             if entry is not None:
                 toks.append(entry)
-        return ''.join(toks)
+        return "".join(toks)
 
     def _format_field(self, field, spec, conv):
         if field is None:
             return
-        elif field.startswith('$'):
+        elif field.startswith("$"):
             val = builtins.__xonsh__.env[field[1:]]
             return _format_value(val, spec, conv)
         elif field in self.fields:
@@ -72,7 +72,7 @@ class PromptFormatter:
             return _format_value(val, spec, conv)
         else:
             # color or unknown field, return as is
-            return '{' + field + '}'
+            return "{" + field + "}"
 
     def _get_field_value(self, field):
         field_value = self.fields[field]
@@ -82,19 +82,18 @@ class PromptFormatter:
             value = field_value() if callable(field_value) else field_value
             self.cache[field_value] = value
         except Exception:
-            print('prompt: error: on field {!r}'
-                  ''.format(field), file=sys.stderr)
+            print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
-            value = '(ERROR:{})'.format(field)
+            value = "(ERROR:{})".format(field)
         return value
 
 
 @xl.lazyobject
 def PROMPT_FIELDS():
     return dict(
-        user=xp.os_environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
-        prompt_end='#' if xt.is_superuser() else '$',
-        hostname=socket.gethostname().split('.', 1)[0],
+        user=xp.os_environ.get("USERNAME" if xp.ON_WINDOWS else "USER", "<user>"),
+        prompt_end="#" if xt.is_superuser() else "$",
+        hostname=socket.gethostname().split(".", 1)[0],
         cwd=_dynamically_collapsed_pwd,
         cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
         cwd_base=lambda: os.path.basename(_replace_home_cwd()),
@@ -117,18 +116,24 @@ def _FORMATTER():
 def default_prompt():
     """Creates a new instance of the default prompt."""
     if xp.ON_CYGWIN or xp.ON_MSYS:
-        dp = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
-              '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
-    elif xp.ON_WINDOWS:
-        dp = ('{env_name:{} }'
-              '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
-              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-              '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
+        dp = (
+            "{env_name:{} }{BOLD_GREEN}{user}@{hostname}"
+            "{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} "
+        )
+    elif xp.ON_WINDOWS and not xp.win_ansi_support():
+        dp = (
+            "{env_name:{} }"
+            "{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} "
+            "{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} "
+            "{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} "
+        )
     else:
-        dp = ('{env_name:{} }'
-              '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-              '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
+        dp = (
+            "{env_name:{} }"
+            "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
+            "{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} "
+            "{BOLD_BLUE}{prompt_end}{NO_COLOR} "
+        )
     return dp
 
 
@@ -140,42 +145,42 @@ def _failover_template_format(template):
             return template()
         except Exception:
             xt.print_exception()
-            return '$ '
+            return "$ "
     return template
 
 
 @xt.lazyobject
 def RE_HIDDEN():
-    return re.compile('\001.*?\002')
+    return re.compile("\001.*?\002")
 
 
-def multiline_prompt(curr=''):
+def multiline_prompt(curr=""):
     """Returns the filler text for the prompt in multiline scenarios."""
-    line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
-    line = RE_HIDDEN.sub('', line)  # gets rid of colors
+    line = curr.rsplit("\n", 1)[1] if "\n" in curr else curr
+    line = RE_HIDDEN.sub("", line)  # gets rid of colors
     # most prompts end in whitespace, head is the part before that.
     head = line.rstrip()
     headlen = len(head)
     # tail is the trailing whitespace
     tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
     # now to construct the actual string
-    dots = builtins.__xonsh__.env.get('MULTILINE_PROMPT')
+    dots = builtins.__xonsh__.env.get("MULTILINE_PROMPT")
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
-        return ''
+        return ""
     tokstr = xt.format_color(dots, hide=True)
     baselen = 0
     basetoks = []
-    for x in tokstr.split('\001'):
-        pre, sep, post = x.partition('\002')
+    for x in tokstr.split("\001"):
+        pre, sep, post = x.partition("\002")
         if len(sep) == 0:
-            basetoks.append(('', pre))
+            basetoks.append(("", pre))
             baselen += len(pre)
         else:
-            basetoks.append(('\001' + pre + '\002', post))
+            basetoks.append(("\001" + pre + "\002", post))
             baselen += len(post)
     if baselen == 0:
-        return xt.format_color('{NO_COLOR}' + tail, hide=True)
+        return xt.format_color("{NO_COLOR}" + tail, hide=True)
     toks = basetoks * (headlen // baselen)
     n = headlen % baselen
     count = 0
@@ -187,12 +192,12 @@ def multiline_prompt(curr=''):
         elif newcount <= n:
             toks.append(tok)
         else:
-            toks.append((tok[0], tok[1][:n - count]))
+            toks.append((tok[0], tok[1][: n - count]))
         count = newcount
         if n <= count:
             break
-    toks.append((xt.format_color('{NO_COLOR}', hide=True), tail))
-    rtn = ''.join(itertools.chain.from_iterable(toks))
+    toks.append((xt.format_color("{NO_COLOR}", hide=True), tail))
+    rtn = "".join(itertools.chain.from_iterable(toks))
     return rtn
 
 
@@ -205,7 +210,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
         return False
     included_names.discard(None)
     if PROMPT_FIELDS is None:
-        fmtter = builtins.__xonsh__.env.get('PROMPT_FIELDS', PROMPT_FIELDS)
+        fmtter = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
     else:
         fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())
@@ -221,7 +226,7 @@ def _format_value(val, spec, conv):
     'current_job' returns None, the result is ''.
     """
     if val is None:
-        return ''
+        return ""
     val = _FORMATTER.convert_field(val, conv)
     if spec:
         val = _FORMATTER.format(spec, val)

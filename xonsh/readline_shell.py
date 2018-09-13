@@ -23,13 +23,27 @@ import collections
 
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.base_shell import BaseShell
-from xonsh.ansi_colors import (ansi_partial_color_format, ansi_color_style_names,
-                               ansi_color_style)
+from xonsh.ansi_colors import (
+    ansi_partial_color_format,
+    ansi_color_style_names,
+    ansi_color_style,
+)
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import (print_exception, check_for_partial_string, to_bool,
-                         columnize, carriage_return)
-from xonsh.platform import (ON_WINDOWS, ON_CYGWIN, ON_MSYS, ON_DARWIN, ON_POSIX,
-                            os_environ)
+from xonsh.tools import (
+    print_exception,
+    check_for_partial_string,
+    to_bool,
+    columnize,
+    carriage_return,
+)
+from xonsh.platform import (
+    ON_WINDOWS,
+    ON_CYGWIN,
+    ON_MSYS,
+    ON_DARWIN,
+    ON_POSIX,
+    os_environ,
+)
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.events import events
 
@@ -42,55 +56,59 @@ RL_VARIABLE_VALUE = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
 
-_RL_PREV_CASE_SENSITIVE_COMPLETIONS = 'to-be-set'
+_RL_PREV_CASE_SENSITIVE_COMPLETIONS = "to-be-set"
 
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, \
-        readline, RL_COMPLETION_QUERY_ITEMS
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline, RL_COMPLETION_QUERY_ITEMS
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
-    for _rlmod_name in ('gnureadline', 'readline'):
+    for _rlmod_name in ("gnureadline", "readline"):
         try:
             readline = importlib.import_module(_rlmod_name)
-            sys.modules['readline'] = readline
+            sys.modules["readline"] = readline
         except ImportError:
             pass
         else:
             break
 
     if readline is None:
-        print("""Skipping setup. Because no `readline` implementation available.
+        print(
+            """Skipping setup. Because no `readline` implementation available.
             Please install a backend (`readline`, `prompt-toolkit`, etc) to use
             `xonsh` interactively.
-            See https://github.com/xonsh/xonsh/issues/1170""")
+            See https://github.com/xonsh/xonsh/issues/1170"""
+        )
         return
 
     import ctypes
     import ctypes.util
-    uses_libedit = readline.__doc__ and 'libedit' in readline.__doc__
-    readline.set_completer_delims(' \t\n')
+
+    uses_libedit = readline.__doc__ and "libedit" in readline.__doc__
+    readline.set_completer_delims(" \t\n")
     # Cygwin seems to hang indefinitely when querying the readline lib
-    if (not ON_CYGWIN) and (not ON_MSYS) and (not readline.__file__.endswith('.py')):
+    if (not ON_CYGWIN) and (not ON_MSYS) and (not readline.__file__.endswith(".py")):
         RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
         try:
             RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(
-                lib, 'rl_completion_suppress_append')
+                lib, "rl_completion_suppress_append"
+            )
         except ValueError:
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_SUPPRESS_APPEND = None
         try:
             RL_COMPLETION_QUERY_ITEMS = ctypes.c_int.in_dll(
-                lib, 'rl_completion_query_items')
+                lib, "rl_completion_query_items"
+            )
         except ValueError:
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_QUERY_ITEMS = None
         try:
-            RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
+            RL_STATE = ctypes.c_int.in_dll(lib, "rl_readline_state")
         except Exception:
             pass
-        RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
+        RL_CAN_RESIZE = hasattr(lib, "rl_reset_screen_size")
     env = builtins.__xonsh__.env
     # reads in history
     readline.set_history_length(-1)
@@ -99,34 +117,42 @@ def setup_readline():
     readline.parse_and_bind('"\e[B": history-search-forward')
     readline.parse_and_bind('"\e[A": history-search-backward')
     # Setup Shift-Tab to indent
-    readline.parse_and_bind('"\e[Z": "{0}"'.format(env.get('INDENT')))
+    readline.parse_and_bind('"\e[Z": "{0}"'.format(env.get("INDENT")))
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997
     if uses_libedit and ON_DARWIN:
         readline.parse_and_bind("bind ^I rl_complete")
-        print('\n'.join(['', "*" * 78,
-                         "libedit detected - readline will not be well behaved, including but not limited to:",
-                         "   * crashes on tab completion",
-                         "   * incorrect history navigation",
-                         "   * corrupting long-lines",
-                         "   * failure to wrap or indent lines properly",
-                         "",
-                         "It is highly recommended that you install gnureadline, which is installable with:",
-                         "     xpip install gnureadline",
-                         "*" * 78]), file=sys.stderr)
+        print(
+            "\n".join(
+                [
+                    "",
+                    "*" * 78,
+                    "libedit detected - readline will not be well behaved, including but not limited to:",
+                    "   * crashes on tab completion",
+                    "   * incorrect history navigation",
+                    "   * corrupting long-lines",
+                    "   * failure to wrap or indent lines properly",
+                    "",
+                    "It is highly recommended that you install gnureadline, which is installable with:",
+                    "     xpip install gnureadline",
+                    "*" * 78,
+                ]
+            ),
+            file=sys.stderr,
+        )
     else:
         readline.parse_and_bind("tab: complete")
     # try to load custom user settings
-    inputrc_name = os_environ.get('INPUTRC')
+    inputrc_name = os_environ.get("INPUTRC")
     if inputrc_name is None:
         if uses_libedit:
-            inputrc_name = '.editrc'
+            inputrc_name = ".editrc"
         else:
-            inputrc_name = '.inputrc'
-        inputrc_name = os.path.join(os.path.expanduser('~'), inputrc_name)
+            inputrc_name = ".inputrc"
+        inputrc_name = os.path.join(os.path.expanduser("~"), inputrc_name)
     if (not ON_WINDOWS) and (not os.path.isfile(inputrc_name)):
-        inputrc_name = '/etc/inputrc'
+        inputrc_name = "/etc/inputrc"
     if ON_WINDOWS:
         winutils.enable_virtual_terminal_processing()
     if os.path.isfile(inputrc_name):
@@ -134,7 +160,7 @@ def setup_readline():
             readline.read_init_file(inputrc_name)
         except Exception:
             # this seems to fail with libedit
-            print_exception('xonsh: could not load readline default init file.')
+            print_exception("xonsh: could not load readline default init file.")
     # properly reset input typed before the first prompt
     readline.set_startup_hook(carriage_return)
 
@@ -151,7 +177,7 @@ def _rebind_case_sensitive_completions():
     # handle case sensitive, see Github issue #1342 for details
     global _RL_PREV_CASE_SENSITIVE_COMPLETIONS
     env = builtins.__xonsh__.env
-    case_sensitive = env.get('CASE_SENSITIVE_COMPLETIONS')
+    case_sensitive = env.get("CASE_SENSITIVE_COMPLETIONS")
     if case_sensitive is _RL_PREV_CASE_SENSITIVE_COMPLETIONS:
         return
     if case_sensitive:
@@ -201,7 +227,7 @@ def rl_completion_query_items(val=None):
     if RL_COMPLETION_QUERY_ITEMS is None:
         return
     if val is None:
-        val = builtins.__xonsh__.env.get('COMPLETION_QUERY_LIMIT')
+        val = builtins.__xonsh__.env.get("COMPLETION_QUERY_LIMIT")
     RL_COMPLETION_QUERY_ITEMS.value = val
 
 
@@ -217,10 +243,11 @@ def rl_variable_value(variable):
     global RL_VARIABLE_VALUE
     if RL_VARIABLE_VALUE is None:
         import ctypes
+
         RL_VARIABLE_VALUE = RL_LIB.rl_variable_value
         RL_VARIABLE_VALUE.restype = ctypes.c_char_p
     env = builtins.__xonsh__.env
-    enc, errors = env.get('XONSH_ENCODING'), env.get('XONSH_ENCODING_ERRORS')
+    enc, errors = env.get("XONSH_ENCODING"), env.get("XONSH_ENCODING_ERRORS")
     if isinstance(variable, str):
         variable = variable.encode(encoding=enc, errors=errors)
     rtn = RL_VARIABLE_VALUE(variable)
@@ -230,14 +257,16 @@ def rl_variable_value(variable):
 @lazyobject
 def rl_on_new_line():
     """Grabs one of a few possible redisplay functions in readline."""
-    names = ['rl_on_new_line', 'rl_forced_update_display', 'rl_redisplay']
+    names = ["rl_on_new_line", "rl_forced_update_display", "rl_redisplay"]
     for name in names:
         func = getattr(RL_LIB, name, None)
         if func is not None:
             break
     else:
+
         def print_for_newline():
             print()
+
         func = print_for_newline
     return func
 
@@ -252,22 +281,21 @@ def _insert_text_func(s, readline):
     return inserter
 
 
-DEDENT_TOKENS = LazyObject(lambda: frozenset(['raise', 'return', 'pass',
-                                              'break', 'continue']),
-                           globals(), 'DEDENT_TOKENS')
+DEDENT_TOKENS = LazyObject(
+    lambda: frozenset(["raise", "return", "pass", "break", "continue"]),
+    globals(),
+    "DEDENT_TOKENS",
+)
 
 
 class ReadlineShell(BaseShell, cmd.Cmd):
     """The readline based xonsh shell."""
 
-    def __init__(self, completekey='tab', stdin=None, stdout=None, **kwargs):
-        super().__init__(completekey=completekey,
-                         stdin=stdin,
-                         stdout=stdout,
-                         **kwargs)
+    def __init__(self, completekey="tab", stdin=None, stdout=None, **kwargs):
+        super().__init__(completekey=completekey, stdin=stdin, stdout=stdout, **kwargs)
         setup_readline()
-        self._current_indent = ''
-        self._current_prompt = ''
+        self._current_indent = ""
+        self._current_prompt = ""
         self._force_hide = None
         self._complete_only_last_table = {
             # Truth table for completions, keys are:
@@ -305,7 +333,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             (False, False, False, True, False): False,
             (False, False, False, False, True): False,
             (False, False, False, False, False): False,
-            }
+        }
         self.cmdqueue = collections.deque()
 
     def __del__(self):
@@ -331,7 +359,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
     def parseline(self, line):
         """Overridden to no-op."""
-        return '', line, line
+        return "", line, line
 
     def _querycompletions(self, completions, loc):
         """Returns whether or not we should show completions. 0 means that prefixes
@@ -341,13 +369,13 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """
         if os.path.commonprefix([c[loc:] for c in completions]):
             return 1
-        elif len(completions) <= builtins.__xonsh__.env.get('COMPLETION_QUERY_LIMIT'):
+        elif len(completions) <= builtins.__xonsh__.env.get("COMPLETION_QUERY_LIMIT"):
             return 2
-        msg = '\nDisplay all {} possibilities? '.format(len(completions))
-        msg += '({GREEN}y{NO_COLOR} or {RED}n{NO_COLOR})'
-        self.print_color(msg, end='', flush=True, file=sys.stderr)
-        yn = 'x'
-        while yn not in 'yn':
+        msg = "\nDisplay all {} possibilities? ".format(len(completions))
+        msg += "({GREEN}y{NO_COLOR} or {RED}n{NO_COLOR})"
+        self.print_color(msg, end="", flush=True, file=sys.stderr)
+        yn = "x"
+        while yn not in "yn":
             yn = sys.stdin.read(1)
         show_completions = to_bool(yn)
         print()
@@ -356,19 +384,21 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             return 0
         w, h = shutil.get_terminal_size()
         lines = columnize(completions, width=w)
-        more_msg = self.format_color('{YELLOW}==={NO_COLOR} more or '
-                                     '{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit '
-                                     '{YELLOW}==={NO_COLOR}')
+        more_msg = self.format_color(
+            "{YELLOW}==={NO_COLOR} more or "
+            "{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit "
+            "{YELLOW}==={NO_COLOR}"
+        )
         while len(lines) > h - 1:
-            print(''.join(lines[:h-1]), end='', flush=True, file=sys.stderr)
-            lines = lines[h-1:]
-            print(more_msg, end='', flush=True, file=sys.stderr)
+            print("".join(lines[: h - 1]), end="", flush=True, file=sys.stderr)
+            lines = lines[h - 1 :]
+            print(more_msg, end="", flush=True, file=sys.stderr)
             q = sys.stdin.read(1).lower()
             print(flush=True, file=sys.stderr)
-            if q == 'q':
+            if q == "q":
                 rl_on_new_line()
                 return 0
-        print(''.join(lines), end='', flush=True, file=sys.stderr)
+        print("".join(lines), end="", flush=True, file=sys.stderr)
         rl_on_new_line()
         return 0
 
@@ -379,9 +409,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
-        completions, l = self.completer.complete(prefix, line,
-                                                 begidx, endidx,
-                                                 ctx=self.ctx)
+        completions, l = self.completer.complete(
+            prefix, line, begidx, endidx, ctx=self.ctx
+        )
         chopped = prefix[:-l]
         if chopped:
             rtn_completions = [chopped + i for i in completions]
@@ -392,11 +422,16 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         prefix_ends_quote = prefix.endswith("'") or prefix.endswith('"')
         for i in rtn_completions:
             i_ends_quote = i.endswith("'") or i.endswith('"')
-            last = i.rsplit(' ', 1)[-1]
+            last = i.rsplit(" ", 1)[-1]
             last_starts_prefix = last.startswith(prefix)
-            i_has_space = ' ' in i
-            key = (prefix_begs_quote, prefix_ends_quote, i_ends_quote,
-                   last_starts_prefix, i_has_space)
+            i_has_space = " " in i
+            key = (
+                prefix_begs_quote,
+                prefix_ends_quote,
+                i_ends_quote,
+                last_starts_prefix,
+                i_has_space,
+            )
             rtn.append(last if self._complete_only_last_table[key] else i)
         # return based on show completions
         show_completions = self._querycompletions(completions, endidx - begidx)
@@ -407,20 +442,20 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif show_completions == 2:
             return completions
         else:
-            raise ValueError('query completions flag not understood.')
+            raise ValueError("query completions flag not understood.")
 
     # tab complete on first index too
     completenames = completedefault
 
     def _load_remaining_input_into_queue(self):
-        buf = b''
+        buf = b""
         while True:
             r, w, x = select.select([self.stdin], [], [], 1e-6)
             if len(r) == 0:
                 break
             buf += os.read(self.stdin.fileno(), 1024)
         if len(buf) > 0:
-            buf = buf.decode().replace('\r\n', '\n').replace('\r', '\n')
+            buf = buf.decode().replace("\r\n", "\n").replace("\r", "\n")
             self.cmdqueue.extend(buf.splitlines(keepends=True))
 
     def postcmd(self, stop, line):
@@ -434,19 +469,19 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         if self.need_more_lines:
             if len(line.strip()) == 0:
                 readline.set_pre_input_hook(None)
-                self._current_indent = ''
-            elif line.rstrip()[-1] == ':':
-                ind = line[:len(line) - len(line.lstrip())]
-                ind += builtins.__xonsh__.env.get('INDENT')
+                self._current_indent = ""
+            elif line.rstrip()[-1] == ":":
+                ind = line[: len(line) - len(line.lstrip())]
+                ind += builtins.__xonsh__.env.get("INDENT")
                 readline.set_pre_input_hook(_insert_text_func(ind, readline))
                 self._current_indent = ind
             elif line.split(maxsplit=1)[0] in DEDENT_TOKENS:
                 env = builtins.__xonsh__.env
-                ind = self._current_indent[:-len(env.get('INDENT'))]
+                ind = self._current_indent[: -len(env.get("INDENT"))]
                 readline.set_pre_input_hook(_insert_text_func(ind, readline))
                 self._current_indent = ind
             else:
-                ind = line[:len(line) - len(line.lstrip())]
+                ind = line[: len(line) - len(line.lstrip())]
                 if ind != self._current_indent:
                     insert_func = _insert_text_func(ind, readline)
                     readline.set_pre_input_hook(insert_func)
@@ -467,6 +502,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         if self.use_rawinput and self.completekey:
             try:
                 import readline
+
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
                 readline.parse_and_bind(self.completekey + ": complete")
@@ -484,21 +520,21 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 exec_now = False
                 if len(self.cmdqueue) > 0:
                     line = self.cmdqueue.popleft()
-                    exec_now = line.endswith('\n')
+                    exec_now = line.endswith("\n")
                 if self.use_rawinput and not exec_now:
-                    inserter = None if line is None \
-                        else _insert_text_func(line, readline)
+                    inserter = (
+                        None if line is None else _insert_text_func(line, readline)
+                    )
                     if inserter is not None:
                         readline.set_pre_input_hook(inserter)
                     try:
                         line = self.singleline()
                     except EOFError:
                         if builtins.__xonsh__.env.get("IGNOREEOF"):
-                            self.stdout.write('Use "exit" to leave the shell.'
-                                              '\n')
-                            line = ''
+                            self.stdout.write('Use "exit" to leave the shell.' "\n")
+                            line = ""
                         else:
-                            line = 'EOF'
+                            line = "EOF"
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
@@ -508,10 +544,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     if not exec_now:
                         line = self.stdin.readline()
                     if len(line) == 0:
-                        line = 'EOF'
+                        line = "EOF"
                     else:
-                        line = line.rstrip('\r\n')
-                    if have_readline and line != 'EOF':
+                        line = line.rstrip("\r\n")
+                    if have_readline and line != "EOF":
                         readline.add_history(line)
                 if not ON_WINDOWS:
                     # select() is not fully functional on windows
@@ -526,6 +562,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             if self.use_rawinput and self.completekey:
                 try:
                     import readline
+
                     readline.set_completer(self.old_completer)
                 except ImportError:
                     pass
@@ -554,17 +591,16 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     self.mlprompt = multiline_prompt(curr=self._current_prompt)
                 except Exception:  # pylint: disable=broad-except
                     print_exception()
-                    self.mlprompt = '<multiline prompt error> '
+                    self.mlprompt = "<multiline prompt error> "
             return self.mlprompt
         env = builtins.__xonsh__.env  # pylint: disable=no-member
-        p = env.get('PROMPT')
+        p = env.get("PROMPT")
         try:
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         hide = True if self._force_hide is None else self._force_hide
-        p = ansi_partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
-                                      hide=hide)
+        p = ansi_partial_color_format(p, style=env.get("XONSH_COLOR_STYLE"), hide=hide)
         self._current_prompt = p
         self.settitle()
         return p
@@ -574,7 +610,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         codes.
         """
         hide = hide if self._force_hide is None else self._force_hide
-        style = builtins.__xonsh__.env.get('XONSH_COLOR_STYLE')
+        style = builtins.__xonsh__.env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
@@ -583,7 +619,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         else:
             # assume this is a list of (Token, str) tuples and format it
             env = builtins.__xonsh__.env
-            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()
@@ -595,7 +631,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
     def color_style(self):
         """Returns the current color map."""
-        style = style = builtins.__xonsh__.env.get('XONSH_COLOR_STYLE')
+        style = style = builtins.__xonsh__.env.get("XONSH_COLOR_STYLE")
         return ansi_color_style(style=style)
 
     def restore_tty_sanity(self):
@@ -605,7 +641,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """
         if not ON_POSIX:
             return
-        stty, _ = builtins.__xonsh__.commands_cache.lazyget('stty', None)
+        stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", None)
         if stty is None:
             return
         # If available, we should just call the stty utility. This call should
@@ -616,7 +652,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         # under the covers. This effectively hides the true TTY stdin handle
         # from stty. To get around this we have to use the lower level
         # os.system() function.
-        os.system(stty + ' sane')
+        os.system(stty + " sane")
 
 
 class ReadlineHistoryAdder(threading.Thread):
@@ -640,7 +676,7 @@ class ReadlineHistoryAdder(threading.Thread):
             return
         i = 1
         for h in hist.all_items():
-            line = h['inp'].rstrip()
+            line = h["inp"].rstrip()
             if i == 1:
                 pass
             elif line == readline.get_history_item(i - 1):
