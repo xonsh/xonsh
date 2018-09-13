@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from xonsh.built_ins import ensure_list_of_strs, enter_macro
+from xonsh.built_ins import ensure_list_of_strs, enter_macro, XonshSession
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
@@ -27,8 +27,10 @@ def xonsh_execer(monkeypatch):
         "xonsh.built_ins.load_builtins.__code__",
         (lambda *args, **kwargs: None).__code__,
     )
+    if not hasattr(builtins, "__xonsh__"):
+        builtins.__xonsh__ = XonshSession()
     execer = Execer(unload=False)
-    builtins.__xonsh_execer__ = execer
+    builtins.__xonsh__.execer = execer
     return execer
 
 
@@ -46,27 +48,28 @@ def xonsh_events():
 def xonsh_builtins(xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = set(dir(builtins))
-    builtins.__xonsh_env__ = DummyEnv()
+    execer = getattr(getattr(builtins, "__xonsh__", None), "execer", None)
+    builtins.__xonsh__ = XonshSession(execer=execer, ctx={})
+    builtins.__xonsh__.env = DummyEnv()
     if ON_WINDOWS:
-        builtins.__xonsh_env__["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
-    builtins.__xonsh_ctx__ = {}
-    builtins.__xonsh_shell__ = DummyShell()
-    builtins.__xonsh_help__ = lambda x: x
-    builtins.__xonsh_glob__ = glob.glob
-    builtins.__xonsh_exit__ = False
-    builtins.__xonsh_superhelp__ = lambda x: x
-    builtins.__xonsh_regexpath__ = lambda x: []
-    builtins.__xonsh_expand_path__ = lambda x: x
-    builtins.__xonsh_subproc_captured__ = sp
-    builtins.__xonsh_subproc_uncaptured__ = sp
-    builtins.__xonsh_stdout_uncaptured__ = None
-    builtins.__xonsh_stderr_uncaptured__ = None
-    builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    builtins.__xonsh_commands_cache__ = DummyCommandsCache()
-    builtins.__xonsh_all_jobs__ = {}
-    builtins.__xonsh_history__ = DummyHistory()
-    builtins.__xonsh_subproc_captured_hiddenobject__ = sp
-    builtins.__xonsh_enter_macro__ = enter_macro
+        builtins.__xonsh__.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
+    builtins.__xonsh__.shell = DummyShell()
+    builtins.__xonsh__.help = lambda x: x
+    builtins.__xonsh__.glob = glob.glob
+    builtins.__xonsh__.exit = False
+    builtins.__xonsh__.superhelp = lambda x: x
+    builtins.__xonsh__.regexpath = lambda x: []
+    builtins.__xonsh__.expand_path = lambda x: x
+    builtins.__xonsh__.subproc_captured = sp
+    builtins.__xonsh__.subproc_uncaptured = sp
+    builtins.__xonsh__.stdout_uncaptured = None
+    builtins.__xonsh__.stderr_uncaptured = None
+    builtins.__xonsh__.ensure_list_of_strs = ensure_list_of_strs
+    builtins.__xonsh__.commands_cache = DummyCommandsCache()
+    builtins.__xonsh__.all_jobs = {}
+    builtins.__xonsh__.history = DummyHistory()
+    builtins.__xonsh__.subproc_captured_hiddenobject = sp
+    builtins.__xonsh__.enter_macro = enter_macro
     builtins.evalx = eval
     builtins.execx = None
     builtins.compilex = None

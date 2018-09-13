@@ -106,14 +106,14 @@ def test_non_exist_is_only_functional_alias(xonsh_builtins):
 
 @skip_if_on_windows
 def test_bash_is_only_functional_alias(xonsh_builtins):
-    builtins.__xonsh_env__["PATH"] = os.environ["PATH"].split(os.pathsep)
+    builtins.__xonsh__.env["PATH"] = os.environ["PATH"].split(os.pathsep)
     cc = CommandsCache()
     assert not cc.is_only_functional_alias("bash")
 
 
 @skip_if_on_windows
 def test_bash_and_is_alias_is_only_functional_alias(xonsh_builtins):
-    builtins.__xonsh_env__["PATH"] = os.environ["PATH"].split(os.pathsep)
+    builtins.__xonsh__.env["PATH"] = os.environ["PATH"].split(os.pathsep)
     cc = CommandsCache()
     builtins.aliases["bash"] = lambda args: os.chdir(args[0])
     assert not cc.is_only_functional_alias("bash")

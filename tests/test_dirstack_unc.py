@@ -94,11 +94,11 @@ def shares_setup(tmpdir_factory):
 def test_pushdpopd(xonsh_builtins):
     """Simple non-UNC push/pop to verify we didn't break nonUNC case.
     """
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
 
     dirstack.cd([PARENT])
     owd = os.getcwd()
-    assert owd.casefold() == xonsh_builtins.__xonsh_env__["PWD"].casefold()
+    assert owd.casefold() == xonsh_builtins.__xonsh__.env["PWD"].casefold()
     dirstack.pushd([HERE])
     wd = os.getcwd()
     assert wd.casefold() == HERE.casefold()
@@ -107,7 +107,7 @@ def test_pushdpopd(xonsh_builtins):
 
 
 def test_cd_dot(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(PWD=os.getcwd())
+    xonsh_builtins.__xonsh__.env = Env(PWD=os.getcwd())
 
     owd = os.getcwd().casefold()
     dirstack.cd(["."])
@@ -118,10 +118,10 @@ def test_cd_dot(xonsh_builtins):
 def test_uncpushd_simple_push_pop(xonsh_builtins, shares_setup):
     if shares_setup is None:
         return
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
     dirstack.cd([PARENT])
     owd = os.getcwd()
-    assert owd.casefold() == xonsh_builtins.__xonsh_env__["PWD"].casefold()
+    assert owd.casefold() == xonsh_builtins.__xonsh__.env["PWD"].casefold()
     dirstack.pushd([r"\\localhost\uncpushd_test_HERE"])
     wd = os.getcwd()
     assert os.path.splitdrive(wd)[0].casefold() == TEMP_DRIVE[0]
@@ -135,11 +135,11 @@ def test_uncpushd_simple_push_pop(xonsh_builtins, shares_setup):
 def test_uncpushd_push_to_same_share(xonsh_builtins, shares_setup):
     if shares_setup is None:
         return
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
 
     dirstack.cd([PARENT])
     owd = os.getcwd()
-    assert owd.casefold() == xonsh_builtins.__xonsh_env__["PWD"].casefold()
+    assert owd.casefold() == xonsh_builtins.__xonsh__.env["PWD"].casefold()
     dirstack.pushd([r"\\localhost\uncpushd_test_HERE"])
     wd = os.getcwd()
     assert os.path.splitdrive(wd)[0].casefold() == TEMP_DRIVE[0]
@@ -169,11 +169,11 @@ def test_uncpushd_push_other_push_same(xonsh_builtins, shares_setup):
        Then push to a again. Pop (check b unmapped and a still mapped), pop, pop (check a is unmapped)"""
     if shares_setup is None:
         return
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
 
     dirstack.cd([PARENT])
     owd = os.getcwd()
-    assert owd.casefold() == xonsh_builtins.__xonsh_env__["PWD"].casefold()
+    assert owd.casefold() == xonsh_builtins.__xonsh__.env["PWD"].casefold()
     dirstack.pushd([r"\\localhost\uncpushd_test_HERE"])
     assert os.getcwd().casefold() == TEMP_DRIVE[0] + "\\"
     assert len(_unc_tempDrives) == 1
@@ -285,15 +285,15 @@ def with_unc_check_disabled():  # just like the above, but value is 1 to *disabl
 
 @pytest.fixture()
 def xonsh_builtins_cd(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__["CDPATH"] = PARENT
-    xonsh_builtins.__xonsh_env__["PWD"] = os.getcwd()
-    xonsh_builtins.__xonsh_env__["DIRSTACK_SIZE"] = 20
+    xonsh_builtins.__xonsh__.env["CDPATH"] = PARENT
+    xonsh_builtins.__xonsh__.env["PWD"] = os.getcwd()
+    xonsh_builtins.__xonsh__.env["DIRSTACK_SIZE"] = 20
     return xonsh_builtins
 
 
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_cd_unc_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
-    xonsh_builtins_cd.__xonsh_env__["AUTO_PUSHD"] = True
+    xonsh_builtins_cd.__xonsh__.env["AUTO_PUSHD"] = True
     so, se, rc = dirstack.cd([r"\\localhost\uncpushd_test_PARENT"])
     if rc != 0:
         return

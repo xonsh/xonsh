@@ -21,7 +21,7 @@ def hist():
 
 def test_hist_append(hist, xonsh_builtins):
     """Verify appending to the history works."""
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     hf = hist.append({"inp": "still alive", "rtn": 1})
     assert hf is None
     items = list(hist.items())
@@ -37,7 +37,7 @@ def test_hist_append(hist, xonsh_builtins):
 
 
 def test_hist_attrs(hist, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     hf = hist.append({"inp": "ls foo", "rtn": 1})
     assert hf is None
     assert "ls foo" == hist.inps[0]
@@ -76,8 +76,8 @@ CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
 def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
     """Verify that CLI history commands work."""
     base_idx, step = offset
-    xonsh_builtins.__xonsh_history__ = hist
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.history = hist
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
@@ -95,7 +95,7 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
 def test_histcontrol(hist, xonsh_builtins):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
 
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = "ignoredups,ignoreerr"
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "ignoredups,ignoreerr"
     assert len(hist) == 0
 
     # An error, items() remains empty
@@ -181,8 +181,8 @@ def test_histcontrol(hist, xonsh_builtins):
     ],
 )
 def test_history_getitem(index, exp, hist, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
-    xonsh_builtins.__xonsh_env__["XONSH_STORE_STDOUT"] = True
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["XONSH_STORE_STDOUT"] = True
     attrs = ("inp", "out", "rtn", "ts")
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history

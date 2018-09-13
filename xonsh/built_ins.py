@@ -1208,6 +1208,8 @@ def load_builtins(execer=None, ctx=None):
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
+    if not hasattr(builtins, "__xonsh__"):
+        builtins.__xonsh__ = XonshSession(ctx=ctx)
     builtins.__xonsh__.load(execer=execer)
     builtins.__xonsh__.link_builtins(execer=execer)
     BUILTINS_LOADED = True
@@ -1253,11 +1255,31 @@ class XonshSession:
 
     """
 
-    def __init__(self):
-        self.ctx = {}
+    def __init__(self, execer=None, ctx=None):
+        """
+        Paramters
+        ---------
+        execer : Execer, optional
+            Xonsh execution object, may be None to start
+        ctx : Mapping, optional
+            Context to start xonsh session with.
+        """
+        self.execer = execer
+        self.ctx = {} if ctx is None else ctx
 
-    def load(self, execer=None):
+    def load(self, execer=None, ctx=None):
+        """Loads the session with deafult values.
+
+        Paramters
+        ---------
+        execer : Execer, optional
+            Xonsh execution object, may be None to start
+        ctx : Mapping, optional
+            Context to start xonsh session with.
+        """
         self.config__ = {}
+        if ctx is not None:
+            self.ctx = ctx
         self.env = Env(default_env())
         self.help = helper
         self.superhelp = superhelper
@@ -1283,7 +1305,8 @@ class XonshSession:
         self.subproc_captured_object = subproc_captured_object
         self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
         self.subproc_uncaptured = subproc_uncaptured
-        self.execer = execer
+        if execer is not None:
+            self.execer = execer
         self.commands_cache = CommandsCache()
         self.all_jobs = {}
         self.ensure_list_of_strs = ensure_list_of_strs

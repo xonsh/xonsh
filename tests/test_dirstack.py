@@ -27,7 +27,7 @@ def chdir(adir):
 
 
 def test_simple(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=PARENT)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=PARENT)
     with chdir(PARENT):
         assert os.getcwd() != HERE
         dirstack.cd(["tests"])
@@ -35,7 +35,7 @@ def test_simple(xonsh_builtins):
 
 
 def test_cdpath_simple(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
     with chdir(os.path.normpath("/")):
         assert os.getcwd() != HERE
         dirstack.cd(["tests"])
@@ -43,7 +43,7 @@ def test_cdpath_simple(xonsh_builtins):
 
 
 def test_cdpath_collision(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
     sub_tests = os.path.join(HERE, "tests")
     if not os.path.exists(sub_tests):
         os.mkdir(sub_tests)
@@ -54,7 +54,7 @@ def test_cdpath_collision(xonsh_builtins):
 
 
 def test_cdpath_expansion(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(HERE=HERE, CDPATH=("~", "$HERE"))
+    xonsh_builtins.__xonsh__.env = Env(HERE=HERE, CDPATH=("~", "$HERE"))
     test_dirs = (
         os.path.join(HERE, "xonsh-test-cdpath-here"),
         os.path.expanduser("~/xonsh-test-cdpath-home"),
@@ -73,7 +73,7 @@ def test_cdpath_expansion(xonsh_builtins):
 
 
 def test_cdpath_events(xonsh_builtins, tmpdir):
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd())
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=os.getcwd())
     target = str(tmpdir)
 
     ev = None
@@ -96,7 +96,7 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
 
 
 def test_cd_autopush(xonsh_builtins, tmpdir):
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
+    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
     target = str(tmpdir)
 
     old_dir = os.getcwd()

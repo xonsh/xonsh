@@ -146,10 +146,10 @@ def test_locate_binary_on_windows(xonsh_builtins):
             fpath = os.path.join(tmpdir, fname)
             with open(fpath, "w") as f:
                 f.write(fpath)
-        xonsh_builtins.__xonsh_env__.update(
+        xonsh_builtins.__xonsh__.env.update(
             {"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]}
         )
-        xonsh_builtins.__xonsh_commands_cache__ = CommandsCache()
+        xonsh_builtins.__xonsh__.commands_cache = CommandsCache()
         assert locate_binary("file1") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file1.exe") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file2") == os.path.join(tmpdir, "FILE2.BAT")
@@ -159,7 +159,7 @@ def test_locate_binary_on_windows(xonsh_builtins):
 
 def test_event_on_envvar_change(xonsh_builtins):
     env = Env(TEST=0)
-    xonsh_builtins.__xonsh_env__ = env
+    xonsh_builtins.__xonsh__.env = env
     share = []
     # register
     @xonsh_builtins.events.on_envvar_change
@@ -174,7 +174,7 @@ def test_event_on_envvar_change(xonsh_builtins):
 
 def test_event_on_envvar_new(xonsh_builtins):
     env = Env()
-    xonsh_builtins.__xonsh_env__ = env
+    xonsh_builtins.__xonsh__.env = env
     share = []
     # register
     @xonsh_builtins.events.on_envvar_new
@@ -189,7 +189,7 @@ def test_event_on_envvar_new(xonsh_builtins):
 
 def test_event_on_envvar_change_from_none_value(xonsh_builtins):
     env = Env(TEST=None)
-    xonsh_builtins.__xonsh_env__ = env
+    xonsh_builtins.__xonsh__.env = env
     share = []
     # register
     @xonsh_builtins.events.on_envvar_change
@@ -205,7 +205,7 @@ def test_event_on_envvar_change_from_none_value(xonsh_builtins):
 @pytest.mark.parametrize("val", [1, None, True, "ok"])
 def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
     env = Env(TEST=val)
-    xonsh_builtins.__xonsh_env__ = env
+    xonsh_builtins.__xonsh__.env = env
     share = []
     # register
     @xonsh_builtins.events.on_envvar_change
@@ -220,7 +220,7 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
 
 def test_events_on_envvar_called_in_right_order(xonsh_builtins):
     env = Env()
-    xonsh_builtins.__xonsh_env__ = env
+    xonsh_builtins.__xonsh__.env = env
     share = []
     # register
     @xonsh_builtins.events.on_envvar_new

@@ -96,7 +96,8 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
 def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
-    env = getattr(builtins.__xonsh__, "env", os_environ)
+    session = getattr(builtins, "__xonsh__", None)
+    env = os_environ if session is None else getattr(session, "env", os_environ)
     if env.get("EXPAND_ENV_VARS", False):
         s = expandvars(s)
     if expand_user:
@@ -117,7 +118,8 @@ def _expandpath(path):
     """Performs environment variable / user expansion on a given path
     if EXPAND_ENV_VARS is set.
     """
-    env = getattr(builtins.__xonsh__, "env", os_environ)
+    session = getattr(builtins, "__xonsh__", None)
+    env = os_environ if session is None else getattr(session, "env", os_environ)
     expand_user = env.get("EXPAND_ENV_VARS", False)
     return expand_path(path, expand_user=expand_user)
 
@@ -126,7 +128,8 @@ def decode_bytes(b):
     """Tries to decode the bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
     """
-    env = getattr(builtins.__xonsh__, "env", os_environ)
+    session = getattr(builtins, "__xonsh__", None)
+    env = os_environ if session is None else getattr(session, "env", os_environ)
     enc = env.get("XONSH_ENCODING") or DEFAULT_ENCODING
     err = env.get("XONSH_ENCODING_ERRORS") or "strict"
     return b.decode(encoding=enc, errors=err)
@@ -2115,7 +2118,7 @@ def _dotglobstr(s):
 
 
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
-    s = builtins.__xonsh_expand_path__(s)
+    s = builtins.__xonsh__.expand_path(s)
     if sort_result is None:
         sort_result = builtins.__xonsh__.env.get("GLOB_SORTED")
     if include_dotfiles is None:

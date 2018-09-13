@@ -33,7 +33,7 @@ def test_hist_init(hist):
 
 def test_hist_append(hist, xonsh_builtins):
     """Verify appending to the history works."""
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     hf = hist.append({"inp": "still alive", "rtn": 0})
     assert hf is None
     assert "still alive" == hist.buffer[0]["inp"]
@@ -53,7 +53,7 @@ def test_hist_flush(hist, xonsh_builtins):
     """Verify explicit flushing of the history works."""
     hf = hist.flush()
     assert hf is None
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     hist.append({"inp": "still alive?", "rtn": 0, "out": "yes"})
     hf = hist.flush()
     assert hf is not None
@@ -70,8 +70,8 @@ def test_hist_flush_with_store_stdout(hist, xonsh_builtins):
     """Verify explicit flushing of the history works."""
     hf = hist.flush()
     assert hf is None
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
-    xonsh_builtins.__xonsh_env__["XONSH_STORE_STDOUT"] = True
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["XONSH_STORE_STDOUT"] = True
     hist.append({"inp": "still alive?", "rtn": 0, "out": "yes"})
     hf = hist.flush()
     assert hf is not None
@@ -87,7 +87,7 @@ def test_hist_flush_with_hist_control(hist, xonsh_builtins):
     """Verify explicit flushing of the history works."""
     hf = hist.flush()
     assert hf is None
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = "ignoredups,ignoreerr"
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "ignoredups,ignoreerr"
     hist.append({"inp": "ls foo1", "rtn": 0})
     hist.append({"inp": "ls foo1", "rtn": 1})
     hist.append({"inp": "ls foo1", "rtn": 0})
@@ -107,7 +107,7 @@ def test_hist_flush_with_hist_control(hist, xonsh_builtins):
 
 def test_cmd_field(hist, xonsh_builtins):
     # in-memory
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     hf = hist.append({"inp": "ls foo", "rtn": 1})
     assert hf is None
     assert 1 == hist.rtns[0]
@@ -139,8 +139,8 @@ def test_cmd_field(hist, xonsh_builtins):
 def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
     """Verify that CLI history commands work."""
     base_idx, step = offset
-    xonsh_builtins.__xonsh_history__ = hist
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.history = hist
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
@@ -158,7 +158,7 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
 def test_histcontrol(hist, xonsh_builtins):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
 
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = "ignoredups,ignoreerr"
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "ignoredups,ignoreerr"
     assert len(hist.buffer) == 0
 
     # An error, buffer remains empty
@@ -281,7 +281,7 @@ def test_parser_show(args, exp):
     ],
 )
 def test_history_getitem(index, exp, hist, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__["HISTCONTROL"] = set()
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
     attrs = ("inp", "out", "rtn", "ts")
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
@@ -296,15 +296,15 @@ def test_history_getitem(index, exp, hist, xonsh_builtins):
 
 
 def test_construct_history_str(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__["XONSH_HISTORY_BACKEND"] = "dummy"
+    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = "dummy"
     assert isinstance(construct_history(), DummyHistory)
 
 
 def test_construct_history_class(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__["XONSH_HISTORY_BACKEND"] = DummyHistory
+    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = DummyHistory
     assert isinstance(construct_history(), DummyHistory)
 
 
 def test_construct_history_instance(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__["XONSH_HISTORY_BACKEND"] = DummyHistory()
+    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = DummyHistory()
     assert isinstance(construct_history(), DummyHistory)

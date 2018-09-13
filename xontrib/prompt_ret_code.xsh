@@ -2,8 +2,8 @@ from xonsh.tools import ON_WINDOWS as _ON_WINDOWS
 
 
 def _ret_code_color():
-    if __xonsh_history__.rtns:
-        color = 'blue' if __xonsh_history__.rtns[-1] == 0 else 'red'
+    if __xonsh__.history.rtns:
+        color = 'blue' if __xonsh__.history.rtns[-1] == 0 else 'red'
     else:
         color = 'blue'
     if _ON_WINDOWS:
@@ -19,8 +19,8 @@ def _ret_code_color():
 
 
 def _ret_code():
-    if __xonsh_history__.rtns:
-        return_code = __xonsh_history__.rtns[-1]
+    if __xonsh__.history.rtns:
+        return_code = __xonsh__.history.rtns[-1]
         if return_code != 0:
             return '[{}]'.format(return_code)
     return None

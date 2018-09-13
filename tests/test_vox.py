@@ -16,7 +16,7 @@ def test_crud(xonsh_builtins, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
-    xonsh_builtins.__xonsh_env__["VIRTUALENV_HOME"] = str(tmpdir)
+    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     last_event = None
 
@@ -54,9 +54,9 @@ def test_activate(xonsh_builtins, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
-    xonsh_builtins.__xonsh_env__["VIRTUALENV_HOME"] = str(tmpdir)
+    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
     # I consider the case that the user doesn't have a PATH set to be unreasonable
-    xonsh_builtins.__xonsh_env__.setdefault("PATH", [])
+    xonsh_builtins.__xonsh__.env.setdefault("PATH", [])
 
     last_event = None
 
@@ -73,10 +73,10 @@ def test_activate(xonsh_builtins, tmpdir):
     vox = Vox()
     vox.create("spam")
     vox.activate("spam")
-    assert xonsh_builtins.__xonsh_env__["VIRTUAL_ENV"] == vox["spam"].env
+    assert xonsh_builtins.__xonsh__.env["VIRTUAL_ENV"] == vox["spam"].env
     assert last_event == ("activate", "spam")
     vox.deactivate()
-    assert "VIRTUAL_ENV" not in xonsh_builtins.__xonsh_env__
+    assert "VIRTUAL_ENV" not in xonsh_builtins.__xonsh__.env
     assert last_event == ("deactivate", "spam")
 
 
@@ -86,21 +86,21 @@ def test_path(xonsh_builtins, tmpdir):
     """
     Test to make sure Vox properly activates and deactivates by examining $PATH
     """
-    xonsh_builtins.__xonsh_env__["VIRTUALENV_HOME"] = str(tmpdir)
+    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
     # I consider the case that the user doesn't have a PATH set to be unreasonable
-    xonsh_builtins.__xonsh_env__.setdefault("PATH", [])
+    xonsh_builtins.__xonsh__.env.setdefault("PATH", [])
 
-    oldpath = list(xonsh_builtins.__xonsh_env__["PATH"])
+    oldpath = list(xonsh_builtins.__xonsh__.env["PATH"])
     vox = Vox()
     vox.create("eggs")
 
     vox.activate("eggs")
 
-    assert oldpath != xonsh_builtins.__xonsh_env__["PATH"]
+    assert oldpath != xonsh_builtins.__xonsh__.env["PATH"]
 
     vox.deactivate()
 
-    assert oldpath == xonsh_builtins.__xonsh_env__["PATH"]
+    assert oldpath == xonsh_builtins.__xonsh__.env["PATH"]
 
 
 @skip_if_on_msys
@@ -109,7 +109,7 @@ def test_crud_subdir(xonsh_builtins, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
-    xonsh_builtins.__xonsh_env__["VIRTUALENV_HOME"] = str(tmpdir)
+    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     vox = Vox()
     vox.create("spam/eggs")
@@ -163,7 +163,7 @@ def test_crud_subdir(xonsh_builtins, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
-    xonsh_builtins.__xonsh_env__["VIRTUALENV_HOME"] = str(tmpdir)
+    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     vox = Vox()
     with pytest.raises(ValueError):

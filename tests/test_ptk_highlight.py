@@ -128,7 +128,7 @@ def test_path(tmpdir):
     )
     check_token("cd X={}".format(test_dir), [(Name.Constant, test_dir)])
 
-    with builtins.__xonsh_env__.swap(AUTO_CD=True):
+    with builtins.__xonsh__.env.swap(AUTO_CD=True):
         check_token(test_dir, [(Name.Constant, test_dir)])
 
 
