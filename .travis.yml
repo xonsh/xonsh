@@ -64,7 +64,8 @@ script:
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs dev;
       git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
-      pip install --upgrade .;
+      git clean -fdx
+      pip install --upgrade --force-reinstall .;
       cd docs;
       make clean html;
       cd ..;
