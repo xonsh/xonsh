@@ -105,14 +105,17 @@ class XonshLexer(PythonLexer):
     filenames = ["*.xsh", "*xonshrc"]
 
     def __init__(self, *args, **kwargs):
-        # If the lexor is loaded as a pygment plugin, we have to mock
-        # __xonsh_env__ and __xonsh_commands_cache__
+        # If the lexer is loaded as a pygment plugin, we have to mock
+        # __xonsh__.env and __xonsh__.commands_cache
+        if not hasattr(builtins, "__xonsh__"):
+            from argparse import Namespace
+            setattr(builtins, "__xonsh__", Namespace())
         if not hasattr(builtins.__xonsh__, "env"):
             setattr(builtins.__xonsh__, "env", {})
             if ON_WINDOWS:
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
                 builtins.__xonsh__.env["PATHEXT"] = pathext.split(os.pathsep)
-        if not hasattr(builtins, "__xonsh_commands_cache__"):
+        if not hasattr(builtins.__xonsh__, "commands_cache"):
             setattr(builtins.__xonsh__, "commands_cache", CommandsCache())
         _ = builtins.__xonsh__.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)

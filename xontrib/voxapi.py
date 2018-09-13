@@ -107,12 +107,12 @@ class Vox(collections.abc.Mapping):
     """
 
     def __init__(self):
-        if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
+        if not builtins.__xonsh__.env.get('VIRTUALENV_HOME'):
             home_path = os.path.expanduser('~')
             self.venvdir = os.path.join(home_path, '.virtualenvs')
-            builtins.__xonsh_env__['VIRTUALENV_HOME'] = self.venvdir
+            builtins.__xonsh__.env['VIRTUALENV_HOME'] = self.venvdir
         else:
-            self.venvdir = builtins.__xonsh_env__['VIRTUALENV_HOME']
+            self.venvdir = builtins.__xonsh__.env['VIRTUALENV_HOME']
 
     def create(self, name, *, system_site_packages=False, symlinks=False,
                with_pip=True):
@@ -197,7 +197,7 @@ class Vox(collections.abc.Mapping):
             the current one (throws a KeyError if there isn't one).
         """
         if name is ...:
-            env_paths = [builtins.__xonsh_env__['VIRTUAL_ENV']]
+            env_paths = [builtins.__xonsh__.env['VIRTUAL_ENV']]
         elif isinstance(name, PathLike):
             env_paths = [fspath(name)]
         else:
@@ -254,9 +254,9 @@ class Vox(collections.abc.Mapping):
 
         Returns None if no environment is active.
         """
-        if 'VIRTUAL_ENV' not in builtins.__xonsh_env__:
+        if 'VIRTUAL_ENV' not in builtins.__xonsh__.env:
             return
-        env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
+        env_path = builtins.__xonsh__.env['VIRTUAL_ENV']
         if env_path.startswith(self.venvdir):
             name = env_path[len(self.venvdir):]
             if name[0] in '/\\':
@@ -274,7 +274,7 @@ class Vox(collections.abc.Mapping):
         name : str
             Virtual environment name or absolute path.
         """
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         ve = self[name]
         if 'VIRTUAL_ENV' in env:
             self.deactivate()
@@ -291,7 +291,7 @@ class Vox(collections.abc.Mapping):
         """
         Deactivate the active virtual environment. Returns its name.
         """
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         if 'VIRTUAL_ENV' not in env:
             raise NoEnvironmentActive('No environment currently active.')
 

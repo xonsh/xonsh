@@ -21,6 +21,7 @@ from xonsh.tools import setup_win_unicode_console, print_color, to_bool_or_int
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import print_welcome_screen
+from xonsh.xontribs import xontribs_load
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events

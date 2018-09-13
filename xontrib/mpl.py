@@ -32,7 +32,7 @@ def pylab_helpers():
 def interactive_pyplot(module=None, **kwargs):
     """This puts pyplot in interactive mode once it is imported."""
     if module.__name__ != 'matplotlib.pyplot' or \
-       not __xonsh_env__.get('XONSH_INTERACTIVE'):
+       not __xonsh__.env.get('XONSH_INTERACTIVE'):
         return
     # Since we are in interactive mode, let's monkey-patch plt.show
     # to try to never block.
