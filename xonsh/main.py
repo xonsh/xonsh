@@ -24,7 +24,7 @@ from xonsh.xonfig import print_welcome_screen
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
-from xonsh.environ import xonshrc_context
+from xonsh.environ import xonshrc_context, make_args_env
 from xonsh.built_ins import XonshSession
 
 

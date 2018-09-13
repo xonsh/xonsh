@@ -95,7 +95,7 @@ def test_custom_rc_with_script(shell, tmpdir):
 
 
 def test_premain_no_rc(shell, tmpdir):
-    xonsh.main.premain(["--no-rc"])
+    xonsh.main.premain(["--no-rc", "-i"])
     assert not builtins.__xonsh__.env.get("XONSHRC")
 
 
