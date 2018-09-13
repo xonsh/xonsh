@@ -144,7 +144,11 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    if hasattr(builtins, "__xonsh__") and builtins.__xonsh__.execer is not None:
+    if (
+        hasattr(builtins, "__xonsh__")
+        and hasattr(builtins.__xonsh__, "execer")
+        and builtins.__xonsh__.execer is not None
+    ):
         builtins.__xonsh__.execer.debug_level = val
     return val
 

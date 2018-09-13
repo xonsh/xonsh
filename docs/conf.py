@@ -24,6 +24,8 @@ from xonsh.commands_cache import CommandsCache
 if not hasattr(builtins, "__xonsh__"):
     from argparse import Namespace
     builtins.__xonsh__ = Namespace()
+    builtins.__xonsh__.load = lambda *a, **kw: None
+    builtins.__xonsh__.link_builtins = lambda *a, **kw: None
 
 spec = importlib.util.find_spec('prompt_toolkit')
 if spec is not None:
