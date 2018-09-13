@@ -1209,8 +1209,8 @@ def load_builtins(execer=None, ctx=None):
     """
     global BUILTINS_LOADED
     if not hasattr(builtins, "__xonsh__"):
-        builtins.__xonsh__ = XonshSession(ctx=ctx)
-    builtins.__xonsh__.load(execer=execer)
+        builtins.__xonsh__ = XonshSession(execer=execer, ctx=ctx)
+    builtins.__xonsh__.load(execer=execer, ctx=ctx)
     builtins.__xonsh__.link_builtins(execer=execer)
     BUILTINS_LOADED = True
 
@@ -1226,13 +1226,16 @@ def unload_builtins():
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED
+    if not hasattr(builtins, "__xonsh__"):
+        BUILTINS_LOADED = False
+        return
     env = getattr(builtins.__xonsh__, "env", None)
     if isinstance(env, Env):
         env.undo_replace_env()
     if hasattr(builtins.__xonsh__, "pyexit"):
-        builtins.exit = builtins.__xonsh_pyexit__
+        builtins.exit = builtins.__xonsh__.pyexit
     if hasattr(builtins.__xonsh__, "pyquit"):
-        builtins.quit = builtins.__xonsh_pyquit__
+        builtins.quit = builtins.__xonsh__.pyquit
     if not BUILTINS_LOADED:
         return
     builtins.__xonsh__.unlink_builtins()

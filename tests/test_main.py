@@ -19,7 +19,7 @@ def Shell(*args, **kwargs):
 
 
 @pytest.fixture
-def shell(xonsh_builtins, xonsh_execer, monkeypatch):
+def shell(xonsh_builtins, monkeypatch):
     """Xonsh Shell Mock"""
     Shell.shell_type_aliases = {"rl": "readline"}
     monkeypatch.setattr(xonsh.main, "Shell", Shell)
