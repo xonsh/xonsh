@@ -177,6 +177,7 @@ def DEFAULT_ENSURERS():
         "COMPLETIONS_MENU_ROWS": (is_int, int, str),
         "COMPLETION_QUERY_LIMIT": (is_int, int, str),
         "DIRSTACK_SIZE": (is_int, int, str),
+        "DOTGLOB": (is_bool, to_bool, bool_to_str),
         "DYNAMIC_CWD_WIDTH": (
             is_dynamic_cwd_width,
             to_dynamic_cwd_tuple,
@@ -185,6 +186,7 @@ def DEFAULT_ENSURERS():
         "DYNAMIC_CWD_ELISION_CHAR": (is_string, ensure_string, ensure_string),
         "EXPAND_ENV_VARS": (is_bool, to_bool, bool_to_str),
         "FORCE_POSIX_PATHS": (is_bool, to_bool, bool_to_str),
+        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": (is_bool, to_bool, bool_to_str),
         "FOREIGN_ALIASES_OVERRIDE": (is_bool, to_bool, bool_to_str),
         "FUZZY_PATH_COMPLETION": (is_bool, to_bool, bool_to_str),
         "GLOB_SORTED": (is_bool, to_bool, bool_to_str),
@@ -356,10 +358,12 @@ def DEFAULT_VALUES():
         "COMPLETIONS_MENU_ROWS": 5,
         "COMPLETION_QUERY_LIMIT": 100,
         "DIRSTACK_SIZE": 20,
+        "DOTGLOB": False,
         "DYNAMIC_CWD_WIDTH": (float("inf"), "c"),
         "DYNAMIC_CWD_ELISION_CHAR": "",
         "EXPAND_ENV_VARS": True,
         "FORCE_POSIX_PATHS": False,
+        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": False,
         "FOREIGN_ALIASES_OVERRIDE": False,
         "PROMPT_FIELDS": dict(prompt.PROMPT_FIELDS),
         "FUZZY_PATH_COMPLETION": True,
@@ -551,6 +555,12 @@ def DEFAULT_DOCS():
             "for confirmation."
         ),
         "DIRSTACK_SIZE": VarDocs("Maximum size of the directory stack."),
+        "DOTGLOB": VarDocs(
+            'Globbing files with "*" or "**" will also match '
+            "dotfiles, or those 'hidden' files whose names "
+            "begin with a literal '.'. Such files are filtered "
+            "out by default."
+        ),
         "DYNAMIC_CWD_WIDTH": VarDocs(
             "Maximum length in number of characters "
             "or as a percentage for the ``cwd`` prompt variable. For example, "
@@ -569,6 +579,12 @@ def DEFAULT_DOCS():
             "Forces forward slashes (``/``) on Windows systems when using auto "
             "completion if set to anything truthy.",
             configurable=ON_WINDOWS,
+        ),
+        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": VarDocs(
+            "Whether or not foreign aliases should suppress the message "
+            "that informs the user when a foreign alias has been skipped "
+            "because it already exists in xonsh.",
+            configurable=True,
         ),
         "FOREIGN_ALIASES_OVERRIDE": VarDocs(
             "Whether or not foreign aliases should override xonsh aliases "

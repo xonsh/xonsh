@@ -147,8 +147,13 @@ def regexsearch(s):
 def globsearch(s):
     csc = builtins.__xonsh__.env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = builtins.__xonsh__.env.get("GLOB_SORTED")
+    dotglob = builtins.__xonsh__.env.get("DOTGLOB")
     return globpath(
-        s, ignore_case=(not csc), return_empty=True, sort_result=glob_sorted
+        s,
+        ignore_case=(not csc),
+        return_empty=True,
+        sort_result=glob_sorted,
+        include_dotfiles=dotglob,
     )
 
 
