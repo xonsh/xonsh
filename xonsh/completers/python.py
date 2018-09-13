@@ -227,11 +227,7 @@ def attr_complete(prefix, ctx, filter_func):
         if _val_ is None and _ctx_ is None:
             continue
         a = getattr(val, opt)
-<<<<<<< HEAD
-        if builtins.__xonsh__.env['COMPLETIONS_BRACKETS']:
-=======
-        if builtins.__xonsh_env__["COMPLETIONS_BRACKETS"]:
->>>>>>> master
+        if builtins.__xonsh__.env["COMPLETIONS_BRACKETS"]:
             if callable(a):
                 rpl = opt + "("
             elif isinstance(a, (cabc.Sequence, cabc.Mapping)):

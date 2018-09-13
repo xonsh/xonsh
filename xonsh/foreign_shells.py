@@ -276,13 +276,8 @@ def foreign_shell_data(
         tmpfile.write(command.encode("utf8"))
         tmpfile.close()
         cmd.append(tmpfile.name)
-<<<<<<< HEAD
-    if currenv is None and hasattr(builtins.__xonsh__, 'env'):
+    if currenv is None and hasattr(builtins.__xonsh__, "env"):
         currenv = builtins.__xonsh__.env.detype()
-=======
-    if currenv is None and hasattr(builtins, "__xonsh_env__"):
-        currenv = builtins.__xonsh_env__.detype()
->>>>>>> master
     elif currenv is not None:
         currenv = dict(currenv)
     try:
@@ -463,12 +458,6 @@ class ForeignShellFunctionAlias(object):
 
     def __call__(self, args, stdin=None):
         args, streaming = self._is_streaming(args)
-<<<<<<< HEAD
-        input = self.INPUT.format(sourcer=self.sourcer, filename=self.filename,
-                                  funcname=self.name, args=' '.join(args))
-        cmd = [self.shell] + list(self.extra_args) + ['-c', input]
-        env = builtins.__xonsh__.env
-=======
         input = self.INPUT.format(
             sourcer=self.sourcer,
             filename=self.filename,
@@ -476,8 +465,7 @@ class ForeignShellFunctionAlias(object):
             args=" ".join(args),
         )
         cmd = [self.shell] + list(self.extra_args) + ["-c", input]
-        env = builtins.__xonsh_env__
->>>>>>> master
+        env = builtins.__xonsh__.env
         denv = env.detype()
         if streaming:
             subprocess.check_call(cmd, env=denv)
@@ -623,28 +611,16 @@ def load_foreign_aliases(shells):
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
-<<<<<<< HEAD
-        if not builtins.__xonsh__.env.get('FOREIGN_ALIASES_OVERRIDE'):
+        if not builtins.__xonsh__.env.get("FOREIGN_ALIASES_OVERRIDE"):
             shaliases = {} if shaliases is None else shaliases
             for alias in set(shaliases) & set(xonsh_aliases):
                 del shaliases[alias]
-                if builtins.__xonsh__.env.get('XONSH_DEBUG') > 1:
-                    print('aliases: ignoring alias {!r} of shell {!r} '
-                          'which tries to override xonsh alias.'
-                          ''.format(alias, shell['shell']),
-                          file=sys.stderr)
-=======
-        if not builtins.__xonsh_env__.get("FOREIGN_ALIASES_OVERRIDE"):
-            shaliases = {} if shaliases is None else shaliases
-            for alias in set(shaliases) & set(xonsh_aliases):
-                del shaliases[alias]
-                if builtins.__xonsh_env__.get("XONSH_DEBUG") > 1:
+                if builtins.__xonsh__.env.get("XONSH_DEBUG") > 1:
                     print(
                         "aliases: ignoring alias {!r} of shell {!r} "
                         "which tries to override xonsh alias."
                         "".format(alias, shell["shell"]),
                         file=sys.stderr,
                     )
->>>>>>> master
         aliases.update(shaliases)
     return aliases

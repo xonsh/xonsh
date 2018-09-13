@@ -269,26 +269,21 @@ def load_attribute_chain(name, lineno=None, col=None):
     """Creates an AST that loads variable name that may (or may not)
     have attribute chains. For example, "a.b.c"
     """
-    names = name.split('.')
+    names = name.split(".")
     node = Name(id=names.pop(0), ctx=Load(), lineno=lineno, col_offset=col)
     for attr in names:
-        node = Attribute(value=node, attr=attr, ctx=Load(), lineno=lineno,
-                         col_offset=col)
+        node = Attribute(
+            value=node, attr=attr, ctx=Load(), lineno=lineno, col_offset=col
+        )
     return node
 
 
 def xonsh_call(name, args, lineno=None, col=None):
-<<<<<<< HEAD
     """Creates the AST node for calling a function of a given name.
     Functions names may contain attribute access, e.g. __xonsh__.env.
     """
-    return Call(func=load_attribute_chain(name, lineno=lineno, col=col),
-                args=args, keywords=[], starargs=None, kwargs=None,
-                lineno=lineno, col_offset=col)
-=======
-    """Creates the AST node for calling a function of a given name."""
     return Call(
-        func=Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
+        func=load_attribute_chain(name, lineno=lineno, col=col),
         args=args,
         keywords=[],
         starargs=None,
@@ -296,7 +291,6 @@ def xonsh_call(name, args, lineno=None, col=None):
         lineno=lineno,
         col_offset=col,
     )
->>>>>>> master
 
 
 def isdescendable(node):

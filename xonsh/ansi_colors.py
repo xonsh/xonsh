@@ -57,13 +57,8 @@ def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=F
         except Exception:
             msg = "Could not find color style {0!r}, using default."
             print(msg.format(style), file=sys.stderr)
-<<<<<<< HEAD
-            builtins.__xonsh__.env['XONSH_COLOR_STYLE'] = 'default'
-            cmap = ANSI_STYLES['default']
-=======
-            builtins.__xonsh_env__["XONSH_COLOR_STYLE"] = "default"
+            builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = "default"
             cmap = ANSI_STYLES["default"]
->>>>>>> master
     formatter = string.Formatter()
     esc = ("\001" if hide else "") + "\033["
     m = "m" + ("\002" if hide else "")

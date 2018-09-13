@@ -68,11 +68,7 @@ def _xhj_get_history_files(sort=True, newest_first=False):
     """Find and return the history files. Optionally sort files by
     modify time.
     """
-<<<<<<< HEAD
-    data_dir = builtins.__xonsh__.env.get('XONSH_DATA_DIR')
-=======
-    data_dir = builtins.__xonsh_env__.get("XONSH_DATA_DIR")
->>>>>>> master
+    data_dir = builtins.__xonsh__.env.get("XONSH_DATA_DIR")
     data_dir = xt.expanduser_abs_path(data_dir)
     try:
         files = [
@@ -82,11 +78,7 @@ def _xhj_get_history_files(sort=True, newest_first=False):
         ]
     except OSError:
         files = []
-<<<<<<< HEAD
-        if builtins.__xonsh__.env.get('XONSH_DEBUG'):
-=======
-        if builtins.__xonsh_env__.get("XONSH_DEBUG"):
->>>>>>> master
+        if builtins.__xonsh__.env.get("XONSH_DEBUG"):
             xt.print_exception("Could not collect xonsh history files.")
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
@@ -203,11 +195,7 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
-<<<<<<< HEAD
-        opts = builtins.__xonsh__.env.get('HISTCONTROL')
-=======
-        opts = builtins.__xonsh_env__.get("HISTCONTROL")
->>>>>>> master
+        opts = builtins.__xonsh__.env.get("HISTCONTROL")
         last_inp = None
         cmds = []
         for cmd in self.buffer:
@@ -224,20 +212,11 @@ class JsonHistoryFlusher(threading.Thread):
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
         if self.at_exit:
-<<<<<<< HEAD
-            hist['ts'][1] = time.time()  # apply end time
-            hist['locked'] = False
-        if not builtins.__xonsh__.env.get('XONSH_STORE_STDOUT', False):
-            [cmd.pop('out') for cmd in hist['cmds'][load_hist_len:]
-                if 'out' in cmd]
-        with open(self.filename, 'w', newline='\n') as f:
-=======
             hist["ts"][1] = time.time()  # apply end time
             hist["locked"] = False
-        if not builtins.__xonsh_env__.get("XONSH_STORE_STDOUT", False):
+        if not builtins.__xonsh__.env.get("XONSH_STORE_STDOUT", False):
             [cmd.pop("out") for cmd in hist["cmds"][load_hist_len:] if "out" in cmd]
         with open(self.filename, "w", newline="\n") as f:
->>>>>>> master
             xlj.ljdump(hist, f, sort_keys=True)
 
 
@@ -326,11 +305,7 @@ class JsonHistory(History):
         super().__init__(sessionid=sessionid, **meta)
         if filename is None:
             # pylint: disable=no-member
-<<<<<<< HEAD
-            data_dir = builtins.__xonsh__.env.get('XONSH_DATA_DIR')
-=======
-            data_dir = builtins.__xonsh_env__.get("XONSH_DATA_DIR")
->>>>>>> master
+            data_dir = builtins.__xonsh__.env.get("XONSH_DATA_DIR")
             data_dir = os.path.expanduser(data_dir)
             self.filename = os.path.join(
                 data_dir, "xonsh-{0}.json".format(self.sessionid)
@@ -431,13 +406,8 @@ class JsonHistory(History):
                 commands = json_file.load()["cmds"]
             except json.decoder.JSONDecodeError:
                 # file is corrupted somehow
-<<<<<<< HEAD
-                if builtins.__xonsh__.env.get('XONSH_DEBUG') > 0:
-                    msg = 'xonsh history file {0!r} is not valid JSON'
-=======
-                if builtins.__xonsh_env__.get("XONSH_DEBUG") > 0:
+                if builtins.__xonsh__.env.get("XONSH_DEBUG") > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
->>>>>>> master
                     print(msg.format(f), file=sys.stderr)
                 continue
             if newest_first:
@@ -449,25 +419,14 @@ class JsonHistory(History):
 
     def info(self):
         data = collections.OrderedDict()
-<<<<<<< HEAD
-        data['backend'] = 'json'
-        data['sessionid'] = str(self.sessionid)
-        data['filename'] = self.filename
-        data['length'] = len(self)
-        data['buffersize'] = self.buffersize
-        data['bufferlength'] = len(self.buffer)
-        envs = builtins.__xonsh__.env__
-        data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
-=======
         data["backend"] = "json"
         data["sessionid"] = str(self.sessionid)
         data["filename"] = self.filename
         data["length"] = len(self)
         data["buffersize"] = self.buffersize
         data["bufferlength"] = len(self.buffer)
-        envs = builtins.__xonsh_env__
+        envs = builtins.__xonsh__.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
->>>>>>> master
         return data
 
     def run_gc(self, size=None, blocking=True):

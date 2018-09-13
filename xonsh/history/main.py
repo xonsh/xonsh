@@ -21,13 +21,8 @@ HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": Sqlite
 
 def construct_history(**kwargs):
     """Construct the history backend object."""
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    backend = env.get('XONSH_HISTORY_BACKEND')
-=======
-    env = builtins.__xonsh_env__
     backend = env.get("XONSH_HISTORY_BACKEND")
->>>>>>> master
     if isinstance(backend, str) and backend in HISTORY_BACKENDS:
         kls_history = HISTORY_BACKENDS[backend]
     elif xt.is_class(backend):
@@ -46,25 +41,15 @@ def construct_history(**kwargs):
 def _xh_session_parser(hist=None, newest_first=False, **kwargs):
     """Returns history items of current session."""
     if hist is None:
-<<<<<<< HEAD
         hist = builtins.__xonsh__.history
     return hist.items()
-=======
-        hist = builtins.__xonsh_history__
-    return hist.items(newest_first=newest_first)
->>>>>>> master
 
 
 def _xh_all_parser(hist=None, newest_first=False, **kwargs):
     """Returns all history items."""
     if hist is None:
-<<<<<<< HEAD
         hist = builtins.__xonsh__.history
     return hist.all_items()
-=======
-        hist = builtins.__xonsh_history__
-    return hist.all_items(newest_first=newest_first)
->>>>>>> master
 
 
 def _xh_find_histfile_var(file_list, default=None):

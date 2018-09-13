@@ -346,15 +346,9 @@ def source_alias(args, stdin=None):
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
     """
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    encoding = env.get('XONSH_ENCODING')
-    errors = env.get('XONSH_ENCODING_ERRORS')
-=======
-    env = builtins.__xonsh_env__
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
->>>>>>> master
     for i, fname in enumerate(args):
         fpath = fname
         if not os.path.isfile(fpath):
@@ -377,19 +371,11 @@ def source_alias(args, stdin=None):
             )
         with open(fpath, "r", encoding=encoding, errors=errors) as fp:
             src = fp.read()
-<<<<<<< HEAD
-        if not src.endswith('\n'):
-            src += '\n'
-        ctx = builtins.__xonsh__.ctx
-        updates = {'__file__': fpath, '__name__': os.path.abspath(fpath)}
-        with env.swap(ARGS=args[i+1:]), swap_values(ctx, updates):
-=======
         if not src.endswith("\n"):
             src += "\n"
-        ctx = builtins.__xonsh_ctx__
+        ctx = builtins.__xonsh__.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
         with env.swap(**make_args_env(args[i + 1 :])), swap_values(ctx, updates):
->>>>>>> master
             try:
                 builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
@@ -414,16 +400,6 @@ def source_cmd(args, stdin=None):
     prevcmd = "call "
     prevcmd += " ".join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
-<<<<<<< HEAD
-    args.append('--prevcmd={}'.format(prevcmd))
-    args.insert(0, 'cmd')
-    args.append('--interactive=0')
-    args.append('--sourcer=call')
-    args.append('--envcmd=set')
-    args.append('--seterrpostcmd=if errorlevel 1 exit 1')
-    args.append('--use-tmpfile=1')
-    with builtins.__xonsh__.env.swap(PROMPT='$P$G'):
-=======
     args.append("--prevcmd={}".format(prevcmd))
     args.insert(0, "cmd")
     args.append("--interactive=0")
@@ -431,8 +407,7 @@ def source_cmd(args, stdin=None):
     args.append("--envcmd=set")
     args.append("--seterrpostcmd=if errorlevel 1 exit 1")
     args.append("--use-tmpfile=1")
-    with builtins.__xonsh_env__.swap(PROMPT="$P$G"):
->>>>>>> master
+    with builtins.__xonsh__.env.swap(PROMPT="$P$G"):
         return source_foreign(args, stdin=stdin)
 
 

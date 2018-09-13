@@ -145,13 +145,8 @@ def _get_cwd():
 
 
 def _change_working_directory(newdir, follow_symlinks=False):
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    old = env['PWD']
-=======
-    env = builtins.__xonsh_env__
     old = env["PWD"]
->>>>>>> master
     new = os.path.join(old, newdir)
     absnew = os.path.abspath(new)
 
@@ -185,13 +180,8 @@ def _try_cdpath(apath):
     # a second $ cd xonsh has no effects, to move in the nested xonsh
     # in bash a full $ cd ./xonsh is needed.
     # In xonsh a relative folder is always preferred.
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    cdpaths = env.get('CDPATH')
-=======
-    env = builtins.__xonsh_env__
     cdpaths = env.get("CDPATH")
->>>>>>> master
     for cdp in cdpaths:
         globber = builtins.__xonsh__.expand_path(os.path.join(cdp, apath))
         for cdpath_prefixed_path in glob.iglob(globber):
@@ -205,15 +195,9 @@ def cd(args, stdin=None):
     If no directory is specified (i.e. if `args` is None) then this
     changes to the current user's home directory.
     """
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    oldpwd = env.get('OLDPWD', None)
-    cwd = env['PWD']
-=======
-    env = builtins.__xonsh_env__
     oldpwd = env.get("OLDPWD", None)
     cwd = env["PWD"]
->>>>>>> master
 
     follow_symlinks = False
     if len(args) > 0 and args[0] == "-P":
@@ -470,13 +454,8 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
-<<<<<<< HEAD
             env = builtins.__xonsh__.env
-            pwd = env['PWD']
-=======
-            env = builtins.__xonsh_env__
             pwd = env["PWD"]
->>>>>>> master
 
             _change_working_directory(new_pwd)
 
@@ -536,13 +515,8 @@ def dirs(args, stdin=None):
     except SystemExit:
         return None, None
 
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    dirstack = [os.path.expanduser(env['PWD'])] + DIRSTACK
-=======
-    env = builtins.__xonsh_env__
     dirstack = [os.path.expanduser(env["PWD"])] + DIRSTACK
->>>>>>> master
 
     if env.get("PUSHD_MINUS"):
         BACKWARD = "-"

@@ -60,16 +60,10 @@ def _path_from_partial_string(inp, pos=None):
     except SyntaxError:
         return None
     if isinstance(val, bytes):
-<<<<<<< HEAD
         env = builtins.__xonsh__.env
-        val = val.decode(encoding=env.get('XONSH_ENCODING'),
-                         errors=env.get('XONSH_ENCODING_ERRORS'))
-=======
-        env = builtins.__xonsh_env__
         val = val.decode(
             encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
         )
->>>>>>> master
     return string + _post, val + _post, quote, end
 
 
@@ -87,13 +81,8 @@ def _normpath(p):
     if initial_dotslash and p != ".":
         p = os.path.join(os.curdir, p)
     if trailing_slash:
-<<<<<<< HEAD
-        p = os.path.join(p, '')
-    if xp.ON_WINDOWS and builtins.__xonsh__.env.get('FORCE_POSIX_PATHS'):
-=======
         p = os.path.join(p, "")
-    if xp.ON_WINDOWS and builtins.__xonsh_env__.get("FORCE_POSIX_PATHS"):
->>>>>>> master
+    if xp.ON_WINDOWS and builtins.__xonsh__.env.get("FORCE_POSIX_PATHS"):
         p = p.replace(os.sep, os.altsep)
     return p
 
@@ -111,15 +100,9 @@ def _startswithnorm(x, start, startlow=None):
 def _env(prefix):
     if prefix.startswith("$"):
         key = prefix[1:]
-<<<<<<< HEAD
-        return {'$' + k
-                for k in builtins.__xonsh__.env
-                if get_filter_function()(k, key)}
-=======
         return {
-            "$" + k for k in builtins.__xonsh_env__ if get_filter_function()(k, key)
+            "$" + k for k in builtins.__xonsh__.env if get_filter_function()(k, key)
         }
->>>>>>> master
     return ()
 
 
@@ -137,16 +120,7 @@ def _dots(prefix):
 
 def _add_cdpaths(paths, prefix):
     """Completes current prefix using CDPATH"""
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    csc = env.get('CASE_SENSITIVE_COMPLETIONS')
-    glob_sorted = env.get('GLOB_SORTED')
-    for cdp in env.get('CDPATH'):
-        test_glob = os.path.join(cdp, prefix) + '*'
-        for s in xt.iglobpath(test_glob, ignore_case=(not csc),
-                              sort_result=glob_sorted):
-=======
-    env = builtins.__xonsh_env__
     csc = env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = env.get("GLOB_SORTED")
     for cdp in env.get("CDPATH"):
@@ -154,7 +128,6 @@ def _add_cdpaths(paths, prefix):
         for s in xt.iglobpath(
             test_glob, ignore_case=(not csc), sort_result=glob_sorted
         ):
->>>>>>> master
             if os.path.isdir(s):
                 paths.add(os.path.basename(s))
 
@@ -277,11 +250,7 @@ def _subsequence_match_iter(ref, typed):
 
 def _expand_one(sofar, nextone, csc):
     out = set()
-<<<<<<< HEAD
-    glob_sorted = builtins.__xonsh__.env.get('GLOB_SORTED')
-=======
-    glob_sorted = builtins.__xonsh_env__.get("GLOB_SORTED")
->>>>>>> master
+    glob_sorted = builtins.__xonsh__.env.get("GLOB_SORTED")
     for i in sofar:
         _glob = os.path.join(_joinpath(i), "*") if i is not None else "*"
         for j in xt.iglobpath(_glob, sort_result=glob_sorted):
@@ -308,15 +277,9 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
             append_end = False
     tilde = "~"
     paths = set()
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    csc = env.get('CASE_SENSITIVE_COMPLETIONS')
-    glob_sorted = env.get('GLOB_SORTED')
-=======
-    env = builtins.__xonsh_env__
     csc = env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = env.get("GLOB_SORTED")
->>>>>>> master
     prefix = glob.escape(prefix)
     for s in xt.iglobpath(prefix + "*", ignore_case=(not csc), sort_result=glob_sorted):
         paths.add(s)

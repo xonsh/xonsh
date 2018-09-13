@@ -17,25 +17,15 @@ def _add_one_completer(name, func, loc="end"):
         new[name] = func
         for (k, v) in builtins.__xonsh__.completers.items():
             new[k] = v
-<<<<<<< HEAD
-    elif loc == 'end':
-        for (k, v) in builtins.__xonsh__.completers.items():
-=======
     elif loc == "end":
-        for (k, v) in builtins.__xonsh_completers__.items():
->>>>>>> master
+        for (k, v) in builtins.__xonsh__.completers.items():
             new[k] = v
         new[name] = func
     else:
         direction, rel = loc[0], loc[1:]
         found = False
-<<<<<<< HEAD
         for (k, v) in builtins.__xonsh__.completers.items():
-            if rel == k and direction == '<':
-=======
-        for (k, v) in builtins.__xonsh_completers__.items():
             if rel == k and direction == "<":
->>>>>>> master
                 new[name] = func
                 found = True
             new[k] = v
@@ -69,14 +59,8 @@ def _remove_completer(args, stdin=None, stack=None):
         err = "completer remove takes exactly 1 argument."
     else:
         name = args[0]
-<<<<<<< HEAD
         if name not in builtins.__xonsh__.completers:
-            err = ("The name %s is not a registered "
-                   "completer function.") % name
-=======
-        if name not in builtins.__xonsh_completers__:
             err = ("The name %s is not a registered " "completer function.") % name
->>>>>>> master
     if err is None:
         del builtins.__xonsh__.completers[name]
         return
@@ -94,14 +78,8 @@ def _register_completer(args, stdin=None, stack=None):
     else:
         name = args[0]
         func_name = args[1]
-<<<<<<< HEAD
         if name in builtins.__xonsh__.completers:
-            err = ("The name %s is already a registered "
-                   "completer function.") % name
-=======
-        if name in builtins.__xonsh_completers__:
             err = ("The name %s is already a registered " "completer function.") % name
->>>>>>> master
         else:
             if func_name in builtins.__xonsh__.ctx:
                 func = builtins.__xonsh__.ctx[func_name]

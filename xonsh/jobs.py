@@ -273,13 +273,8 @@ def add_job(info):
     info["started"] = time.time()
     info["status"] = "running"
     tasks.appendleft(num)
-<<<<<<< HEAD
     builtins.__xonsh__.all_jobs[num] = info
-    if info['bg'] and builtins.__xonsh__.env.get('XONSH_INTERACTIVE'):
-=======
-    builtins.__xonsh_all_jobs__[num] = info
-    if info["bg"] and builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
->>>>>>> master
+    if info["bg"] and builtins.__xonsh__.env.get("XONSH_INTERACTIVE"):
         print_one_job(num)
 
 
@@ -292,11 +287,7 @@ def clean_jobs():
     warning if any exist, and return False. Otherwise, return True.
     """
     jobs_clean = True
-<<<<<<< HEAD
-    if builtins.__xonsh__.env['XONSH_INTERACTIVE']:
-=======
-    if builtins.__xonsh_env__["XONSH_INTERACTIVE"]:
->>>>>>> master
+    if builtins.__xonsh__.env["XONSH_INTERACTIVE"]:
         _clear_dead_jobs()
 
         if builtins.__xonsh__.all_jobs:
@@ -314,21 +305,12 @@ def clean_jobs():
                 # unfinished jobs in this case.
                 kill_all_jobs()
             else:
-<<<<<<< HEAD
                 if len(builtins.__xonsh__.all_jobs) > 1:
-                    msg = 'there are unfinished jobs'
-=======
-                if len(builtins.__xonsh_all_jobs__) > 1:
                     msg = "there are unfinished jobs"
->>>>>>> master
                 else:
                     msg = "there is an unfinished job"
 
-<<<<<<< HEAD
-                if builtins.__xonsh__.env['SHELL_TYPE'] != 'prompt_toolkit':
-=======
-                if "prompt_toolkit" not in builtins.__xonsh_env__["SHELL_TYPE"]:
->>>>>>> master
+                if builtins.__xonsh__.env["SHELL_TYPE"] != "prompt_toolkit":
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
@@ -395,13 +377,8 @@ def fg(args, stdin=None):
         except (ValueError, IndexError):
             return "", "Invalid job: {}\n".format(args[0])
 
-<<<<<<< HEAD
         if tid not in builtins.__xonsh__.all_jobs:
-            return '', 'Invalid job: {}\n'.format(args[0])
-=======
-        if tid not in builtins.__xonsh_all_jobs__:
             return "", "Invalid job: {}\n".format(args[0])
->>>>>>> master
     else:
         return "", "fg expects 0 or 1 arguments, not {}\n".format(len(args))
 
@@ -410,15 +387,9 @@ def fg(args, stdin=None):
     tasks.appendleft(tid)
 
     job = get_task(tid)
-<<<<<<< HEAD
-    job['bg'] = False
-    job['status'] = "running"
-    if builtins.__xonsh__.env.get('XONSH_INTERACTIVE'):
-=======
     job["bg"] = False
     job["status"] = "running"
-    if builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
->>>>>>> master
+    if builtins.__xonsh__.env.get("XONSH_INTERACTIVE"):
         print_one_job(tid)
     pipeline = job["pipeline"]
     pipeline.resume(job)

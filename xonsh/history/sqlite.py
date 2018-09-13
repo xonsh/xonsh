@@ -14,13 +14,8 @@ import xonsh.tools as xt
 
 
 def _xh_sqlite_get_file_name():
-<<<<<<< HEAD
     envs = builtins.__xonsh__.env
-    file_name = envs.get('XONSH_HISTORY_SQLITE_FILE')
-=======
-    envs = builtins.__xonsh_env__
     file_name = envs.get("XONSH_HISTORY_SQLITE_FILE")
->>>>>>> master
     if not file_name:
         data_dir = envs.get("XONSH_DATA_DIR")
         file_name = os.path.join(data_dir, "xonsh-history.sqlite")
@@ -157,14 +152,7 @@ class SqliteHistoryGC(threading.Thread):
         if self.size is not None:
             hsize, units = xt.to_history_tuple(self.size)
         else:
-<<<<<<< HEAD
             envs = builtins.__xonsh__.env
-            hsize, units = envs.get('XONSH_HISTORY_SIZE')
-        if units != 'commands':
-            print('sqlite backed history gc currently only supports '
-                  '"commands" as units', file=sys.stderr)
-=======
-            envs = builtins.__xonsh_env__
             hsize, units = envs.get("XONSH_HISTORY_SIZE")
         if units != "commands":
             print(
@@ -172,7 +160,6 @@ class SqliteHistoryGC(threading.Thread):
                 '"commands" as units',
                 file=sys.stderr,
             )
->>>>>>> master
             return
         if hsize < 0:
             return
@@ -195,15 +182,9 @@ class SqliteHistory(History):
         self.tss = []
 
     def append(self, cmd):
-<<<<<<< HEAD
         envs = builtins.__xonsh__.env
-        opts = envs.get('HISTCONTROL')
-        inp = cmd['inp'].rstrip()
-=======
-        envs = builtins.__xonsh_env__
         opts = envs.get("HISTCONTROL")
         inp = cmd["inp"].rstrip()
->>>>>>> master
         self.inps.append(inp)
         store_stdout = envs.get("XONSH_STORE_STDOUT", False)
         if store_stdout:
@@ -241,16 +222,6 @@ class SqliteHistory(History):
 
     def info(self):
         data = collections.OrderedDict()
-<<<<<<< HEAD
-        data['backend'] = 'sqlite'
-        data['sessionid'] = str(self.sessionid)
-        data['filename'] = self.filename
-        data['session items'] = xh_sqlite_get_count(
-            sessionid=self.sessionid, filename=self.filename)
-        data['all items'] = xh_sqlite_get_count(filename=self.filename)
-        envs = builtins.__xonsh__.env
-        data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
-=======
         data["backend"] = "sqlite"
         data["sessionid"] = str(self.sessionid)
         data["filename"] = self.filename
@@ -258,9 +229,8 @@ class SqliteHistory(History):
             sessionid=self.sessionid, filename=self.filename
         )
         data["all items"] = xh_sqlite_get_count(filename=self.filename)
-        envs = builtins.__xonsh_env__
+        envs = builtins.__xonsh__.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
->>>>>>> master
         return data
 
     def run_gc(self, size=None, blocking=True):

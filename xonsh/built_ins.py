@@ -145,18 +145,11 @@ def regexsearch(s):
 
 
 def globsearch(s):
-<<<<<<< HEAD
-    csc = builtins.__xonsh__.env.get('CASE_SENSITIVE_COMPLETIONS')
-    glob_sorted = builtins.__xonsh__.env.get('GLOB_SORTED')
-    return globpath(s, ignore_case=(not csc), return_empty=True,
-                    sort_result=glob_sorted)
-=======
-    csc = builtins.__xonsh_env__.get("CASE_SENSITIVE_COMPLETIONS")
-    glob_sorted = builtins.__xonsh_env__.get("GLOB_SORTED")
+    csc = builtins.__xonsh__.env.get("CASE_SENSITIVE_COMPLETIONS")
+    glob_sorted = builtins.__xonsh__.env.get("GLOB_SORTED")
     return globpath(
         s, ignore_case=(not csc), return_empty=True, sort_result=glob_sorted
     )
->>>>>>> master
 
 
 def pathsearch(func, s, pymode=False, pathobj=False):
@@ -224,11 +217,7 @@ def get_script_subproc_command(fname, args):
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-<<<<<<< HEAD
-        if ext.upper() in builtins.__xonsh__.env.get('PATHEXT'):
-=======
-        if ext.upper() in builtins.__xonsh_env__.get("PATHEXT"):
->>>>>>> master
+        if ext.upper() in builtins.__xonsh__.env.get("PATHEXT"):
             return [fname] + args
     # find interpreter
     with open(fname, "rb") as f:
@@ -556,13 +545,8 @@ class SubprocSpec:
             raise XonshError(e.format(self.cmd[0]))
         except FileNotFoundError:
             cmd0 = self.cmd[0]
-<<<<<<< HEAD
-            e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd0)
-            env = builtins.__xonsh__.env
-=======
             e = "xonsh: subprocess mode: command not found: {0}".format(cmd0)
-            env = builtins.__xonsh_env__
->>>>>>> master
+            env = builtins.__xonsh__.env
             sug = suggest_commands(cmd0, env, builtins.aliases)
             if len(sug.strip()) > 0:
                 e += "\n" + suggest_commands(cmd0, env, builtins.aliases)
@@ -582,11 +566,7 @@ class SubprocSpec:
         """Prepares the 'preexec_fn' keyword argument"""
         if not ON_POSIX:
             return
-<<<<<<< HEAD
-        if not builtins.__xonsh__.env.get('XONSH_INTERACTIVE'):
-=======
-        if not builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
->>>>>>> master
+        if not builtins.__xonsh__.env.get("XONSH_INTERACTIVE"):
             return
         if pipeline_group is None:
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
@@ -675,21 +655,13 @@ class SubprocSpec:
 
     def resolve_auto_cd(self):
         """Implements AUTO_CD functionality."""
-<<<<<<< HEAD
-        if not (self.alias is None and
-                self.binary_loc is None and
-                len(self.cmd) == 1 and
-                builtins.__xonsh__.env.get('AUTO_CD') and
-                os.path.isdir(self.cmd[0])):
-=======
         if not (
             self.alias is None
             and self.binary_loc is None
             and len(self.cmd) == 1
-            and builtins.__xonsh_env__.get("AUTO_CD")
+            and builtins.__xonsh__.env.get("AUTO_CD")
             and os.path.isdir(self.cmd[0])
         ):
->>>>>>> master
             return
         self.cmd.insert(0, "cd")
         self.alias = builtins.aliases.get("cd", None)
@@ -770,16 +742,10 @@ def _update_last_spec(last):
     if callable_alias:
         pass
     else:
-<<<<<<< HEAD
         cmds_cache = builtins.__xonsh__.commands_cache
-        thable = (cmds_cache.predict_threadable(last.args) and
-                  cmds_cache.predict_threadable(last.cmd))
-=======
-        cmds_cache = builtins.__xonsh_commands_cache__
         thable = cmds_cache.predict_threadable(
             last.args
         ) and cmds_cache.predict_threadable(last.cmd)
->>>>>>> master
         if captured and thable:
             last.cls = PopenThread
         elif not thable:
@@ -798,15 +764,9 @@ def _update_last_spec(last):
     elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
         r, w = os.pipe()
-<<<<<<< HEAD
-        last.stdout = safe_open(w, 'wb')
-        last.captured_stdout = safe_open(r, 'rb')
-    elif builtins.__xonsh__.stdout_uncaptured is not None:
-=======
         last.stdout = safe_open(w, "wb")
         last.captured_stdout = safe_open(r, "rb")
-    elif builtins.__xonsh_stdout_uncaptured__ is not None:
->>>>>>> master
+    elif builtins.__xonsh__.stdout_uncaptured is not None:
         last.universal_newlines = True
         last.stdout = builtins.__xonsh__.stdout_uncaptured
         last.captured_stdout = last.stdout
@@ -826,17 +786,10 @@ def _update_last_spec(last):
         pass
     elif captured == "object":
         r, w = os.pipe()
-<<<<<<< HEAD
-        last.stderr = safe_open(w, 'w')
-        last.captured_stderr = safe_open(r, 'r')
-    elif builtins.__xonsh__.stderr_uncaptured is not None:
-        last.stderr = builtins.__xonsh__.stderr_uncaptured
-=======
         last.stderr = safe_open(w, "w")
         last.captured_stderr = safe_open(r, "r")
-    elif builtins.__xonsh_stderr_uncaptured__ is not None:
-        last.stderr = builtins.__xonsh_stderr_uncaptured__
->>>>>>> master
+    elif builtins.__xonsh__.stderr_uncaptured is not None:
+        last.stderr = builtins.__xonsh__.stderr_uncaptured
         last.captured_stderr = last.stderr
     elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
@@ -891,21 +844,13 @@ def cmds_to_specs(cmds, captured=False):
 
 
 def _should_set_title(captured=False):
-<<<<<<< HEAD
     env = builtins.__xonsh__.env
-    return (env.get('XONSH_INTERACTIVE') and
-            not env.get('XONSH_STORE_STDOUT') and
-            captured not in STDOUT_CAPTURE_KINDS and
-            hasattr(builtins.__xonsh__, 'shell'))
-=======
-    env = builtins.__xonsh_env__
     return (
         env.get("XONSH_INTERACTIVE")
         and not env.get("XONSH_STORE_STDOUT")
         and captured not in STDOUT_CAPTURE_KINDS
-        and hasattr(builtins, "__xonsh_shell__")
+        and hasattr(builtins.__xonsh__, "shell")
     )
->>>>>>> master
 
 
 def run_subproc(cmds, captured=False):
@@ -973,13 +918,8 @@ def subproc_captured_inject(*cmds):
     The string is split using xonsh's lexer, rather than Python's str.split()
     or shlex.split().
     """
-<<<<<<< HEAD
-    s = run_subproc(cmds, captured='stdout')
-    toks = builtins.__xonsh__.execer.parser.lexer.split(s.strip())
-=======
     s = run_subproc(cmds, captured="stdout")
-    toks = builtins.__xonsh_execer__.parser.lexer.split(s.strip())
->>>>>>> master
+    toks = builtins.__xonsh__.execer.parser.lexer.split(s.strip())
     return toks
 
 
@@ -1088,13 +1028,8 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
     if kind is str or kind is None:
         return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
-<<<<<<< HEAD
     execer = builtins.__xonsh__.execer
-    filename = macroname + '(' + name + ')'
-=======
-    execer = builtins.__xonsh_execer__
     filename = macroname + "(" + name + ")"
->>>>>>> master
     if kind is AST:
         ctx = set(dir(builtins)) | set(glbs.keys())
         if locs is not None:
@@ -1203,13 +1138,8 @@ def _eval_regular_args(raw_args, glbs, locs):
     if not raw_args:
         return [], {}
     arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
-<<<<<<< HEAD
-    kwarglist = raw_args[len(arglist):]
-    execer = builtins.__xonsh__.execer
-=======
     kwarglist = raw_args[len(arglist) :]
-    execer = builtins.__xonsh_execer__
->>>>>>> master
+    execer = builtins.__xonsh__.execer
     if not arglist:
         args = arglist
         kwargstr = "dict({})".format(", ".join(kwarglist))
@@ -1273,75 +1203,15 @@ def load_builtins(execer=None, ctx=None):
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
-<<<<<<< HEAD
-
     builtins.__xonsh__.load(execer=execer)
     builtins.__xonsh__.link_builtins(execer=execer)
-
-=======
-    # private built-ins
-    builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = Env(default_env())
-    builtins.__xonsh_help__ = helper
-    builtins.__xonsh_superhelp__ = superhelper
-    builtins.__xonsh_pathsearch__ = pathsearch
-    builtins.__xonsh_globsearch__ = globsearch
-    builtins.__xonsh_regexsearch__ = regexsearch
-    builtins.__xonsh_glob__ = globpath
-    builtins.__xonsh_expand_path__ = expand_path
-    builtins.__xonsh_exit__ = False
-    builtins.__xonsh_stdout_uncaptured__ = None
-    builtins.__xonsh_stderr_uncaptured__ = None
-    if hasattr(builtins, "exit"):
-        builtins.__xonsh_pyexit__ = builtins.exit
-        del builtins.exit
-    if hasattr(builtins, "quit"):
-        builtins.__xonsh_pyquit__ = builtins.quit
-        del builtins.quit
-    builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
-    builtins.__xonsh_subproc_captured_inject__ = subproc_captured_inject
-    builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
-    builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
-    builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
-    builtins.__xonsh_execer__ = execer
-    builtins.__xonsh_commands_cache__ = CommandsCache()
-    builtins.__xonsh_all_jobs__ = {}
-    builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
-    builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
-    builtins.__xonsh_call_macro__ = call_macro
-    builtins.__xonsh_enter_macro__ = enter_macro
-    builtins.__xonsh_path_literal__ = path_literal
-    # public built-ins
-    builtins.XonshError = XonshError
-    builtins.XonshCalledProcessError = XonshCalledProcessError
-    builtins.evalx = None if execer is None else execer.eval
-    builtins.execx = None if execer is None else execer.exec
-    builtins.compilex = None if execer is None else execer.compile
-    builtins.events = events
-
-    # sneak the path search functions into the aliases
-    # Need this inline/lazy import here since we use locate_binary that
-    # relies on __xonsh_env__ in default aliases
-    builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
-    builtins.__xonsh_history__ = None
-    atexit.register(_lastflush)
-    for sig in AT_EXIT_SIGNALS:
-        resetting_signal_handle(sig, _lastflush)
->>>>>>> master
     BUILTINS_LOADED = True
 
 
 def _lastflush(s=None, f=None):
-<<<<<<< HEAD
-    if hasattr(builtins, '__xonsh__'):
+    if hasattr(builtins, "__xonsh__"):
         if builtins.__xonsh__.history is not None:
             builtins.__xonsh__.history.flush(at_exit=True)
-=======
-    if hasattr(builtins, "__xonsh_history__"):
-        if builtins.__xonsh_history__ is not None:
-            builtins.__xonsh_history__.flush(at_exit=True)
->>>>>>> master
 
 
 def unload_builtins():
@@ -1349,71 +1219,17 @@ def unload_builtins():
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED
-<<<<<<< HEAD
-    env = getattr(builtins.__xonsh__, 'env', None)
+    env = getattr(builtins.__xonsh__, "env", None)
     if isinstance(env, Env):
         env.undo_replace_env()
-    if hasattr(builtins.__xonsh__, 'pyexit'):
+    if hasattr(builtins.__xonsh__, "pyexit"):
         builtins.exit = builtins.__xonsh_pyexit__
-    if hasattr(builtins.__xonsh__, 'pyquit'):
+    if hasattr(builtins.__xonsh__, "pyquit"):
         builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return
     builtins.__xonsh__.unlink_builtins()
-    delattr(builtins, '__xonsh__')
-
-=======
-    env = getattr(builtins, "__xonsh_env__", None)
-    if isinstance(env, Env):
-        env.undo_replace_env()
-    if hasattr(builtins, "__xonsh_pyexit__"):
-        builtins.exit = builtins.__xonsh_pyexit__
-    if hasattr(builtins, "__xonsh_pyquit__"):
-        builtins.quit = builtins.__xonsh_pyquit__
-    if not BUILTINS_LOADED:
-        return
-    names = [
-        "__xonsh_config__",
-        "__xonsh_env__",
-        "__xonsh_ctx__",
-        "__xonsh_help__",
-        "__xonsh_superhelp__",
-        "__xonsh_pathsearch__",
-        "__xonsh_globsearch__",
-        "__xonsh_regexsearch__",
-        "__xonsh_glob__",
-        "__xonsh_expand_path__",
-        "__xonsh_exit__",
-        "__xonsh_stdout_uncaptured__",
-        "__xonsh_stderr_uncaptured__",
-        "__xonsh_pyexit__",
-        "__xonsh_pyquit__",
-        "__xonsh_subproc_captured_stdout__",
-        "__xonsh_subproc_captured_inject__",
-        "__xonsh_subproc_captured_object__",
-        "__xonsh_subproc_captured_hiddenobject__",
-        "__xonsh_subproc_uncaptured__",
-        "__xonsh_execer__",
-        "__xonsh_commands_cache__",
-        "__xonsh_completers__",
-        "__xonsh_call_macro__",
-        "__xonsh_enter_macro__",
-        "__xonsh_path_literal__",
-        "XonshError",
-        "XonshCalledProcessError",
-        "evalx",
-        "execx",
-        "compilex",
-        "default_aliases",
-        "__xonsh_all_jobs__",
-        "__xonsh_ensure_list_of_strs__",
-        "__xonsh_list_of_strs_or_callables__",
-        "__xonsh_history__",
-    ]
-    for name in names:
-        if hasattr(builtins, name):
-            delattr(builtins, name)
->>>>>>> master
+    delattr(builtins, "__xonsh__")
     BUILTINS_LOADED = False
 
 
@@ -1449,11 +1265,11 @@ class XonshSession:
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
 
-        if hasattr(builtins, 'exit'):
+        if hasattr(builtins, "exit"):
             self.pyexit = builtins.exit
             del builtins.exit
 
-        if hasattr(builtins, 'quit'):
+        if hasattr(builtins, "quit"):
             self.pyquit = builtins.quit
             del builtins.quit
 
@@ -1495,13 +1311,13 @@ class XonshSession:
 
     def unlink_builtins(self):
         names = [
-                 'XonshError',
-                 'XonshCalledProcessError',
-                 'evalx',
-                 'execx',
-                 'compilex',
-                 'default_aliases',
-                 ]
+            "XonshError",
+            "XonshCalledProcessError",
+            "evalx",
+            "execx",
+            "compilex",
+            "default_aliases",
+        ]
 
         for name in names:
             if hasattr(builtins, name):
@@ -1509,7 +1325,6 @@ class XonshSession:
 
 
 class _BuiltIns:
-
     def __init__(self, execer=None):
         # public built-ins
         self.XonshError = XonshError

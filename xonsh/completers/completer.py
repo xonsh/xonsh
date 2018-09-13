@@ -23,13 +23,7 @@ def complete_completer(prefix, line, start, end, ctx):
         if args[1] != "add":
             raise StopIteration
         if curix == 3:
-<<<<<<< HEAD
-            possible = {i
-                        for i, j in builtins.__xonsh__.ctx.items()
-                        if callable(j)}
-=======
-            possible = {i for i, j in builtins.__xonsh_ctx__.items() if callable(j)}
->>>>>>> master
+            possible = {i for i, j in builtins.__xonsh__.ctx.items() if callable(j)}
         elif curix == 4:
             possible = (
                 {"start", "end"}

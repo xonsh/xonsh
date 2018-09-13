@@ -45,24 +45,13 @@ def should_use_cache(execer, mode):
     Return ``True`` if caching has been enabled for this mode (through command
     line flags or environment variables)
     """
-<<<<<<< HEAD
-    if mode == 'exec':
-        return ((execer.scriptcache or
-                 execer.cacheall) and
-                (builtins.__xonsh__.env['XONSH_CACHE_SCRIPTS'] or
-                    builtins.__xonsh__.env['XONSH_CACHE_EVERYTHING']))
-    else:
-        return (execer.cacheall or
-                builtins.__xonsh__.env['XONSH_CACHE_EVERYTHING'])
-=======
     if mode == "exec":
         return (execer.scriptcache or execer.cacheall) and (
-            builtins.__xonsh_env__["XONSH_CACHE_SCRIPTS"]
-            or builtins.__xonsh_env__["XONSH_CACHE_EVERYTHING"]
+            builtins.__xonsh__.env["XONSH_CACHE_SCRIPTS"]
+            or builtins.__xonsh__.env["XONSH_CACHE_EVERYTHING"]
         )
     else:
-        return execer.cacheall or builtins.__xonsh_env__["XONSH_CACHE_EVERYTHING"]
->>>>>>> master
+        return execer.cacheall or builtins.__xonsh__.env["XONSH_CACHE_EVERYTHING"]
 
 
 def run_compiled_code(code, glb, loc, mode):
@@ -88,15 +77,10 @@ def get_cache_filename(fname, code=True):
     The ``code`` switch should be true if we should use the code store rather
     than the script store.
     """
-<<<<<<< HEAD
-    datadir = builtins.__xonsh__.env['XONSH_DATA_DIR']
-    cachedir = os.path.join(datadir, 'xonsh_code_cache' if code else 'xonsh_script_cache')
-=======
-    datadir = builtins.__xonsh_env__["XONSH_DATA_DIR"]
+    datadir = builtins.__xonsh__.env["XONSH_DATA_DIR"]
     cachedir = os.path.join(
         datadir, "xonsh_code_cache" if code else "xonsh_script_cache"
     )
->>>>>>> master
     cachefname = os.path.join(cachedir, *_cache_renamer(fname, code=code))
     return cachefname
 

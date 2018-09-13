@@ -14,19 +14,12 @@ def complete_command(cmd, line, start, end, ctx):
     """
     Returns a list of valid commands starting with the first argument
     """
-<<<<<<< HEAD
-    space = ' '
-    out = {s + space
-           for s in builtins.__xonsh__.commands_cache
-           if get_filter_function()(s, cmd)}
-=======
     space = " "
     out = {
         s + space
-        for s in builtins.__xonsh_commands_cache__
+        for s in builtins.__xonsh__.commands_cache
         if get_filter_function()(s, cmd)
     }
->>>>>>> master
     if xp.ON_WINDOWS:
         out |= {i for i in xt.executables_in(".") if i.startswith(cmd)}
     base = os.path.basename(cmd)

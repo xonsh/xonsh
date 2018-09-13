@@ -66,15 +66,9 @@ class _TeeStdBuf(io.RawIOBase):
         """
         self.stdbuf = stdbuf
         self.membuf = membuf
-<<<<<<< HEAD
         env = builtins.__xonsh__.env
-        self.encoding = env.get('XONSH_ENCODING') if encoding is None else encoding
-        self.errors = env.get('XONSH_ENCODING_ERRORS') if errors is None else errors
-=======
-        env = builtins.__xonsh_env__
         self.encoding = env.get("XONSH_ENCODING") if encoding is None else encoding
         self.errors = env.get("XONSH_ENCODING_ERRORS") if errors is None else errors
->>>>>>> master
         self.prestd = prestd
         self.poststd = poststd
         self._std_is_binary = not hasattr(stdbuf, "encoding")
@@ -257,18 +251,6 @@ class Tee:
         write_through=False,
     ):
         self.buffer = io.BytesIO() if buffer is None else buffer
-<<<<<<< HEAD
-        self.memory = io.TextIOWrapper(self.buffer, encoding=encoding,
-                                       errors=errors, newline=newline,
-                                       line_buffering=line_buffering,
-                                       write_through=write_through)
-        self.stdout = _TeeStd('stdout', self.memory)
-        env = builtins.__xonsh__.env
-        prestderr = format_std_prepost(env.get('XONSH_STDERR_PREFIX'))
-        poststderr = format_std_prepost(env.get('XONSH_STDERR_POSTFIX'))
-        self.stderr = _TeeStd('stderr', self.memory, prestd=prestderr,
-                              poststd=poststderr)
-=======
         self.memory = io.TextIOWrapper(
             self.buffer,
             encoding=encoding,
@@ -278,13 +260,12 @@ class Tee:
             write_through=write_through,
         )
         self.stdout = _TeeStd("stdout", self.memory)
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         prestderr = format_std_prepost(env.get("XONSH_STDERR_PREFIX"))
         poststderr = format_std_prepost(env.get("XONSH_STDERR_POSTFIX"))
         self.stderr = _TeeStd(
             "stderr", self.memory, prestd=prestderr, poststd=poststderr
         )
->>>>>>> master
 
     @property
     def line_buffering(self):
@@ -330,14 +311,9 @@ class BaseShell(object):
         if self._styler is DefaultNotGiven:
             if HAS_PYGMENTS:
                 from xonsh.pyghooks import XonshStyle
-<<<<<<< HEAD
-                env = builtins.__xonsh__.env
-                self._styler = XonshStyle(env.get('XONSH_COLOR_STYLE'))
-=======
 
-                env = builtins.__xonsh_env__
+                env = builtins.__xonsh__.env
                 self._styler = XonshStyle(env.get("XONSH_COLOR_STYLE"))
->>>>>>> master
             else:
                 self._styler = None
         return self._styler
@@ -415,13 +391,8 @@ class BaseShell(object):
         This also handles on_postcommand because this is the place where all the
         information is available.
         """
-<<<<<<< HEAD
         hist = builtins.__xonsh__.history  # pylint: disable=no-member
-        info['rtn'] = hist.last_cmd_rtn if hist is not None else None
-=======
-        hist = builtins.__xonsh_history__  # pylint: disable=no-member
         info["rtn"] = hist.last_cmd_rtn if hist is not None else None
->>>>>>> master
         tee_out = tee_out or None
         last_out = hist.last_cmd_out if hist is not None else None
         if last_out is None and tee_out is None:
@@ -528,13 +499,8 @@ class BaseShell(object):
 
     def settitle(self):
         """Sets terminal title."""
-<<<<<<< HEAD
         env = builtins.__xonsh__.env  # pylint: disable=no-member
-        term = env.get('TERM', None)
-=======
-        env = builtins.__xonsh_env__  # pylint: disable=no-member
         term = env.get("TERM", None)
->>>>>>> master
         # Shells running in emacs sets TERM to "dumb" or "eterm-color".
         # Do not set title for these to avoid garbled prompt.
         if (term is None and not ON_WINDOWS) or term in [
@@ -567,13 +533,8 @@ class BaseShell(object):
                     print_exception()
                     self.mlprompt = "<multiline prompt error> "
             return self.mlprompt
-<<<<<<< HEAD
         env = builtins.__xonsh__.env  # pylint: disable=no-member
-        p = env.get('PROMPT')
-=======
-        env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get("PROMPT")
->>>>>>> master
         try:
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
@@ -585,11 +546,7 @@ class BaseShell(object):
         """Formats the colors in a string. ``BaseShell``'s default implementation
         of this method uses colors based on ANSI color codes.
         """
-<<<<<<< HEAD
-        style = builtins.__xonsh__env.get('XONSH_COLOR_STYLE')
-=======
-        style = builtins.__xonsh_env__.get("XONSH_COLOR_STYLE")
->>>>>>> master
+        style = builtins.__xonsh__env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
@@ -602,13 +559,8 @@ class BaseShell(object):
             s = self.format_color(string, hide=hide)
         elif HAS_PYGMENTS:
             # assume this is a list of (Token, str) tuples and format it
-<<<<<<< HEAD
             env = builtins.__xonsh__.env
-            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
-=======
-            env = builtins.__xonsh_env__
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
->>>>>>> master
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()
