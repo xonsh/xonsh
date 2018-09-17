@@ -2063,6 +2063,7 @@ def test_nested_madness():
 def test_atparens_intoken():
     check_xonsh_ast({}, "![echo /x/@(y)/z]", False)
 
+
 def test_ls_dot_nesting():
     check_xonsh_ast({}, '$(ls @(None or "."))', False)
 

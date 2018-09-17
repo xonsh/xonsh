@@ -3123,7 +3123,9 @@ class BaseParser(object):
             # has an expanding function call, such as @(x)
             p0 = xonsh_call(
                 "__xonsh_list_of_list_of_strs_outer_product__",
-                args=[ensure_has_elts(p1)], lineno=p1[0].lineno, col=p1[0].col_offset
+                args=[ensure_has_elts(p1)],
+                lineno=p1[0].lineno,
+                col=p1[0].col_offset,
             )
             p0._cliarg_action = "extend"
         elif hasglobstar(p1):
@@ -3192,7 +3194,7 @@ class BaseParser(object):
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
         }
-        ts = "\n                 | ".join(sorted([t.lower() + '_tok' for t in toks]))
+        ts = "\n                 | ".join(sorted([t.lower() + "_tok" for t in toks]))
         doc = "subproc_arg_part : " + ts + "\n"
         self.p_subproc_arg_part.__func__.__doc__ = doc
 
