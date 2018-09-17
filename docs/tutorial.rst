@@ -1324,10 +1324,13 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 
     @uncapturable
     @unthreadable
-    def _myvi():
-        vi my.txt
+    def _binvi(args, stdin=None):
+        vi -b @(args)  # Edit binary files
 
-    aliases['myvi'] = _myvi
+    aliases['bvi'] = _binvi
+
+Note that ``@()`` is required to pass the python list ``args`` to subprocess
+a subprocess command.
 
 -------------
 
