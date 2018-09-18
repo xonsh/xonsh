@@ -14,7 +14,7 @@ import platform
 import functools
 import subprocess
 
-__version__ = "0.2.2"
+__version__ = "0.2.4"
 
 
 @functools.lru_cache(1)
@@ -310,7 +310,7 @@ def bash_completions(
     lprefix : int
         Length of the prefix to be replaced in the completion.
     """
-    source = _get_bash_completions_source(paths) or set()
+    source = _get_bash_completions_source(paths) or ""
 
     if prefix.startswith("$"):  # do not complete env variables
         return set(), 0
