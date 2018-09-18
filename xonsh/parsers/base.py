@@ -3154,7 +3154,10 @@ class BaseParser(object):
         if isinstance(p1, ast.Str) and isinstance(p2, ast.Str):
             p0 = ast.Str(p1.s + p2.s, lineno=p1.lineno, col_offset=p1.col_offset)
         elif isinstance(p1, list):
-            p1.append(p2)
+            if isinstance(p2, list):
+                p1.extend(p2)
+            else:
+                p1.append(p2)
             p0 = p1
         elif isinstance(p2, list):
             p2.insert(0, p1)
