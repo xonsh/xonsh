@@ -526,6 +526,28 @@ feed them to a subprocess as needed.  For example:
     for i in range(20):
         $[touch @('file%02d' % i)]
 
+The ``@()`` syntax may also be used inside of subprocess
+arguments, not just as a stand-alone argument. For example:
+
+  .. code-block:: xonshcon
+
+    >>> x = 'hello'
+    >>> echo /path/to/@(x)
+    /path/to/hello
+
+When used inside of a subprocess argument and ``<expr>`` evaluates to a
+non-string iterable, ``@()`` will expand to the outer product of all
+given values:
+
+  .. code-block:: sh
+
+    >>> echo /path/to/@(['hello', 'world'])
+    /path/to/hello /path/to/world
+
+    >>> echo @(['a', 'b']):@('x', 'y')
+    a:x a:y b:x b:y
+
+
 Command Substitution with ``@$()``
 ==================================
 

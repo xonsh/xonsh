@@ -972,6 +972,19 @@ def list_of_strs_or_callables(x):
     return rtn
 
 
+def list_of_list_of_strs_outer_product(x):
+    """Takes an outer product of a list of strings"""
+    lolos = map(ensure_list_of_strs, x)
+    rtn = []
+    for los in itertools.product(*lolos):
+        s = "".join(los)
+        if "*" in s:
+            rtn.extend(builtins.__xonsh_glob__(s))
+        else:
+            rtn.append(builtins.__xonsh_expand_path__(s))
+    return rtn
+
+
 @lazyobject
 def MACRO_FLAG_KINDS():
     return {
@@ -1237,6 +1250,9 @@ def load_builtins(execer=None, ctx=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
+    builtins.__xonsh_list_of_list_of_strs_outer_product__ = (
+        list_of_list_of_strs_outer_product
+    )
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
     builtins.__xonsh_call_macro__ = call_macro
     builtins.__xonsh_enter_macro__ = enter_macro
@@ -1316,6 +1332,7 @@ def unload_builtins():
         "__xonsh_all_jobs__",
         "__xonsh_ensure_list_of_strs__",
         "__xonsh_list_of_strs_or_callables__",
+        "__xonsh_list_of_list_of_strs_outer_product__",
         "__xonsh_history__",
     ]
     for name in names:
