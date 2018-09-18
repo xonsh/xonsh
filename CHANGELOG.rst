@@ -4,6 +4,53 @@ Xonsh Change Log
 
 .. current developments
 
+v0.7.9
+====================
+
+**Added:**
+
+* The python-mode ``@(expr)`` syntax may now be used inside of subprocess
+  arguments, not just as a stand-alone argument. For example:
+
+  .. code-block:: sh
+
+    $ x = 'hello'
+    $ echo /path/to/@(x)
+    /path/to/hello
+
+  This syntax will even properly expand to the outer product if the ``expr``
+  is a list (or other non-string iterable) of values:
+
+  .. code-block:: sh
+
+    $ echo /path/to/@(['hello', 'world'])
+    /path/to/hello /path/to/world
+
+    $ echo @(['a', 'b']):@('x', 'y')
+    a:x a:y b:x b:y
+
+  Previously this was not possible.
+* New ``$DOTGLOB`` environment variable enables globs to match
+  "hidden" files which start with a literal ``.``. Set this
+  variable to ``True`` to get this matching behavior.
+  Cooresponding API changes have been made to
+  ``xonsh.tools.globpath()`` and ``xonsh.tools.iglobpath()``
+* New environment variable ``$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE``
+  enables the removal of skipping foreign alias messages.
+* New ``--suppress-skip-message`` command line option for skipping
+  foreign alias messages when sourcing foreign shells.
+
+
+**Fixed:**
+
+* In Bash completions, if there are no files to source, a ``set()`` will
+  no longer be inserted into the completion script.
+* Fixed issue with TAB completion in readline not replacing values
+  with spaces properly when the prefix was unquoted.
+
+
+
+
 v0.7.8
 ====================
 
