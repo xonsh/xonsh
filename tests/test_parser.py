@@ -122,6 +122,13 @@ def test_f_literal():
     check_ast('F"{yo}"', run=False)
 
 
+@skip_if_lt_py36
+def test_f_env_var():
+    check_xonsh_ast({}, 'f"{$HOME}"', run=False)
+    check_xonsh_ast({}, "f'{$XONSH_DEBUG}'", run=False)
+    check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
+
+
 def test_raw_bytes_literal():
     check_ast('br"hell\o"')
     check_ast('RB"hell\o"')
