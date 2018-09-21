@@ -1,4 +1,4 @@
-**Added:** None
+**Added:**
 
 * 'off' can be passed as falsy value to all flags accepting boolean argument.
 
