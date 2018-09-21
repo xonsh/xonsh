@@ -57,7 +57,7 @@ def _path_from_partial_string(inp, pos=None):
         _string = _string + end
     try:
         val = ast.literal_eval(_string)
-    except SyntaxError:
+    except (SyntaxError, ValueError):
         return None
     if isinstance(val, bytes):
         env = builtins.__xonsh_env__
