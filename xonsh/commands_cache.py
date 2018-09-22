@@ -382,6 +382,7 @@ def default_threadable_predictors():
     """
     # alphabetical, for what it is worth.
     predictors = {
+        "aurman": predict_false,
         "bash": predict_shell,
         "csh": predict_shell,
         "clear": predict_false,
