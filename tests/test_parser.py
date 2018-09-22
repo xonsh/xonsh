@@ -9,6 +9,7 @@ import pytest
 
 from xonsh.ast import AST, With, Pass, pdump
 from xonsh.parser import Parser
+from xonsh.parsers.base import sub_env_vars
 
 from tools import VER_FULL, skip_if_py34, skip_if_lt_py36, nodes_equal
 
@@ -127,6 +128,17 @@ def test_f_env_var():
     check_xonsh_ast({}, 'f"{$HOME}"', run=False)
     check_xonsh_ast({}, "f'{$XONSH_DEBUG}'", run=False)
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
+
+
+@pytest.mark.parametrize('inp, exp', [
+    ('f"{$HOME}"', 'f"{__xonsh_env__.detype()[\'HOME\']}"'),
+    ('f"{ $HOME }"', 'f"{__xonsh_env__.detype()[\'HOME\'] }"'),
+    ('f"{\'$HOME\'}"', 'f"{\'$HOME\'}"'),
+    ('f"$HOME"', 'f"$HOME"'),
+])
+def test_sub_env_vars(inp, exp):
+    obs = sub_env_vars(inp)
+    assert exp == obs
 
 
 def test_raw_bytes_literal():

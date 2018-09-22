@@ -26,7 +26,7 @@ RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCH
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
-RE_ENVVAR = LazyObject(lambda: re.compile("\$(\w+)"), globals(), "RE_ENVVAR")
+RE_FSTR_ENVVAR = LazyObject(lambda: re.compile("\{\s*\$(\w+)"), globals(), "RE_FSTR_ENVVAR")
 
 
 class Location(object):
@@ -210,11 +210,11 @@ def hasglobstar(x):
 
 
 def _repl_sub_env_vars_single(matchobj):
-    return "__xonsh_env__.detype()['" + matchobj.group(1) + "']"
+    return "{__xonsh_env__.detype()['" + matchobj.group(1) + "']"
 
 
 def _repl_sub_env_vars_double(matchobj):
-    return '__xonsh_env__.detype()["' + matchobj.group(1) + '"]'
+    return '{__xonsh_env__.detype()["' + matchobj.group(1) + '"]'
 
 
 def sub_env_vars(fstring):
@@ -226,7 +226,7 @@ def sub_env_vars(fstring):
     repl = (
         _repl_sub_env_vars_single if fstring[-1] == '"' else _repl_sub_env_vars_double
     )
-    return RE_ENVVAR.sub(repl, fstring)
+    return RE_FSTR_ENVVAR.sub(repl, fstring)
 
 
 class YaccLoader(Thread):
