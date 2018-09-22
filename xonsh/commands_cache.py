@@ -374,7 +374,7 @@ def predict_hg(args):
     Also predict False for certain commands, such as split.
     """
     ns, _ = HG_PREDICTOR_PARSER.parse_known_args(args)
-    if hg.command == "split":
+    if ns.command == "split":
         return False
     else:
         return not ns.interactive
