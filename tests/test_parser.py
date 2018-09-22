@@ -130,12 +130,15 @@ def test_f_env_var():
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
 
 
-@pytest.mark.parametrize('inp, exp', [
-    ('f"{$HOME}"', 'f"{__xonsh_env__.detype()[\'HOME\']}"'),
-    ('f"{ $HOME }"', 'f"{__xonsh_env__.detype()[\'HOME\'] }"'),
-    ('f"{\'$HOME\'}"', 'f"{\'$HOME\'}"'),
-    ('f"$HOME"', 'f"$HOME"'),
-])
+@pytest.mark.parametrize(
+    "inp, exp",
+    [
+        ('f"{$HOME}"', "f\"{__xonsh_env__.detype()['HOME']}\""),
+        ('f"{ $HOME }"', "f\"{__xonsh_env__.detype()['HOME'] }\""),
+        ("f\"{'$HOME'}\"", "f\"{'$HOME'}\""),
+        ('f"$HOME"', 'f"$HOME"'),
+    ],
+)
 def test_sub_env_vars(inp, exp):
     obs = sub_env_vars(inp)
     assert exp == obs

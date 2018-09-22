@@ -26,7 +26,9 @@ RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCH
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
-RE_FSTR_ENVVAR = LazyObject(lambda: re.compile("\{\s*\$(\w+)"), globals(), "RE_FSTR_ENVVAR")
+RE_FSTR_ENVVAR = LazyObject(
+    lambda: re.compile("\{\s*\$(\w+)"), globals(), "RE_FSTR_ENVVAR"
+)
 
 
 class Location(object):
