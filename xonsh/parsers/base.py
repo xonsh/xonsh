@@ -26,6 +26,9 @@ RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCH
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
+RE_FSTR_ENVVAR = LazyObject(
+    lambda: re.compile("\{\s*\$(\w+)"), globals(), "RE_FSTR_ENVVAR"
+)
 
 
 class Location(object):
@@ -206,6 +209,26 @@ def hasglobstar(x):
             return False
     else:
         return False
+
+
+def _repl_sub_env_vars_single(matchobj):
+    return "{__xonsh_env__.detype()['" + matchobj.group(1) + "']"
+
+
+def _repl_sub_env_vars_double(matchobj):
+    return '{__xonsh_env__.detype()["' + matchobj.group(1) + '"]'
+
+
+def sub_env_vars(fstring):
+    """Takes an fstring that may contain environment variables and
+    substitues them for a valid environment lookup call. Roughly,
+    for example, this will take f"{$HOME}" and transform it to
+    be f"{__xonsh_env__.detype()['HOME']}".
+    """
+    repl = (
+        _repl_sub_env_vars_single if fstring[-1] == '"' else _repl_sub_env_vars_double
+    )
+    return RE_FSTR_ENVVAR.sub(repl, fstring)
 
 
 class YaccLoader(Thread):
@@ -2382,7 +2405,8 @@ class BaseParser(object):
                 "__xonsh_path_literal__", [s], lineno=p1.lineno, col=p1.lexpos
             )
         elif "f" in prefix or "F" in prefix:
-            s = pyparse(p1.value).body[0].value
+            s = sub_env_vars(p1.value)
+            s = pyparse(s).body[0].value
             s = ast.increment_lineno(s, p1.lineno - 1)
             p[0] = s
         else:
