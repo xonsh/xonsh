@@ -175,6 +175,8 @@ def DEFAULT_ENSURERS():
             str,
         ),
         "COMPLETIONS_MENU_ROWS": (is_int, int, str),
+        "COMPLETIONS_SELECTED_STYLE": (is_string, ensure_string, ensure_string),
+        "COMPLETIONS_STYLE": (is_string, ensure_string, ensure_string),
         "COMPLETION_QUERY_LIMIT": (is_int, int, str),
         "DIRSTACK_SIZE": (is_int, int, str),
         "DOTGLOB": (is_bool, to_bool, bool_to_str),
@@ -356,6 +358,8 @@ def DEFAULT_VALUES():
         "COMPLETIONS_CONFIRM": False,
         "COMPLETIONS_DISPLAY": "multi",
         "COMPLETIONS_MENU_ROWS": 5,
+        "COMPLETIONS_SELECTED_STYLE": "",
+        "COMPLETIONS_STYLE": "",
         "COMPLETION_QUERY_LIMIT": 100,
         "DIRSTACK_SIZE": 20,
         "DOTGLOB": False,
@@ -549,6 +553,14 @@ def DEFAULT_DOCS():
             "Number of rows to reserve for tab-completions menu if "
             "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
             "prompt-toolkit shell."
+        ),
+        "COMPLETIONS_SELECTED_STYLE": VarDocs(
+            "Style string for a selected completion used by prompt toolkit 2."
+            "Run ``xonfig styles`` to see the available styles."
+        ),
+        "COMPLETIONS_STYLE": VarDocs(
+            "Style string for completions used by prompt toolkit 2."
+            "Run ``xonfig styles`` to see the available styles."
         ),
         "COMPLETION_QUERY_LIMIT": VarDocs(
             "The number of completions to display before the user is asked "
