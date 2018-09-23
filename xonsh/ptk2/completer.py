@@ -77,8 +77,8 @@ class PromptToolkitCompleter(Completer):
             # do not display quote
             disp = comp[pre:].strip("'\"")
             yield Completion(comp, -l, display=disp,
-                    style=env.get("COMPLETIONS_STYLE"),
-                    selected_style=env.get("COMPLETIONS_SELECTED_STYLE"))
+                             style=env.get("COMPLETIONS_STYLE"),
+                             selected_style=env.get("COMPLETIONS_SELECTED_STYLE"))
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""
