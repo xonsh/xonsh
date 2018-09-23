@@ -176,6 +176,37 @@ jobs:
       - run:
           command: |
             /home/circleci/miniconda/envs/py37-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh
+  build_black:
+    machine: true
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - miniconda-v1-black
+      - run:
+          name: install miniconda
+          command: |
+              if [ ! -d "/home/circleci/miniconda" ]; then
+                wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+                bash miniconda.sh -b -p $HOME/miniconda
+                export PATH="$HOME/miniconda/bin:$PATH"
+                conda config --set always_yes yes --set changeps1 no
+              fi
+              sudo chown -R $USER.$USER $HOME
+      - run:
+          name: configure conda
+          command: |
+              export PATH="$HOME/miniconda/bin:$PATH"
+              pip install black
+      - save_cache:
+          key: miniconda-v1-black
+          paths:
+            - "/home/circleci/miniconda"
+      - run:
+          command: |
+            export PATH="$HOME/miniconda/bin:$PATH"
+            cd xonsh/
+            black --exclude ply *.py --check
 
 workflows:
   version: 2
@@ -184,6 +215,7 @@ workflows:
       - build_34
       - build_35
       - build_36
+      - build_black
       # conda-foge does not yet have all Python 3.7 packages available
       # uncomment when it does
       #- build_37
