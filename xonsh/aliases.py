@@ -13,7 +13,14 @@ from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
-from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD, ON_NETBSD
+from xonsh.platform import (
+    ON_ANACONDA,
+    ON_DARWIN,
+    ON_WINDOWS,
+    ON_FREEBSD,
+    ON_NETBSD,
+    ON_DRAGONFLY,
+)
 from xonsh.tools import unthreadable, print_color
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
@@ -96,7 +103,7 @@ class Aliases(cabc.MutableMapping):
         if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):
             word_idx = line.find(word)
             expansion = " ".join(self.get(word))
-            line = line[:word_idx] + expansion + line[word_idx + len(word) :]
+            line = line[:word_idx] + expansion + line[word_idx + len(word):]
         return line
 
     #
@@ -391,7 +398,7 @@ def source_alias(args, stdin=None):
             src += "\n"
         ctx = builtins.__xonsh_ctx__
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
-        with env.swap(**make_args_env(args[i + 1 :])), swap_values(ctx, updates):
+        with env.swap(**make_args_env(args[i + 1:])), swap_values(ctx, updates):
             try:
                 builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
@@ -526,9 +533,7 @@ def detect_xpip_alias():
     """
     if not getattr(sys, "executable", None):
         return lambda args, stdin=None: (
-            "",
-            "Sorry, unable to run pip on your system (missing sys.executable)",
-            1,
+            "", "Sorry, unable to run pip on your system (missing sys.executable)", 1
         )
 
     basecmd = [sys.executable, "-m", "pip"]
@@ -631,7 +636,7 @@ def make_default_aliases():
             default_aliases["sudo"] = sudo
     elif ON_DARWIN:
         default_aliases["ls"] = ["ls", "-G"]
-    elif ON_FREEBSD:
+    elif ON_FREEBSD or ON_DRAGONFLY:
         default_aliases["grep"] = ["grep", "--color=auto"]
         default_aliases["egrep"] = ["egrep", "--color=auto"]
         default_aliases["fgrep"] = ["fgrep", "--color=auto"]
