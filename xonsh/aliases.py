@@ -103,7 +103,7 @@ class Aliases(cabc.MutableMapping):
         if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):
             word_idx = line.find(word)
             expansion = " ".join(self.get(word))
-            line = line[:word_idx] + expansion + line[word_idx + len(word):]
+            line = line[:word_idx] + expansion + line[word_idx + len(word) :]
         return line
 
     #
@@ -398,7 +398,7 @@ def source_alias(args, stdin=None):
             src += "\n"
         ctx = builtins.__xonsh_ctx__
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
-        with env.swap(**make_args_env(args[i + 1:])), swap_values(ctx, updates):
+        with env.swap(**make_args_env(args[i + 1 :])), swap_values(ctx, updates):
             try:
                 builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
@@ -533,7 +533,9 @@ def detect_xpip_alias():
     """
     if not getattr(sys, "executable", None):
         return lambda args, stdin=None: (
-            "", "Sorry, unable to run pip on your system (missing sys.executable)", 1
+            "",
+            "Sorry, unable to run pip on your system (missing sys.executable)",
+            1,
         )
 
     basecmd = [sys.executable, "-m", "pip"]
