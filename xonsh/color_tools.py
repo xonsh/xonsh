@@ -353,7 +353,7 @@ def rgb_to_256(rgb):
     rgb = rgb.lstrip("#")
     if len(rgb) == 0:
         return "0", "000000"
-    incs = (0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff)
+    incs = (0x00, 0x5F, 0x87, 0xAF, 0xD7, 0xFF)
     # Break 6-char RGB code into 3 integer vals.
     parts = rgb_to_ints(rgb)
     res = []

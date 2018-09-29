@@ -379,7 +379,7 @@ class CtxAwareTransformer(NodeTransformer):
             returnline=False,
             lexer=self.parser.lexer,
         )
-        if spline is None or spline != '![{}]'.format(line[mincol:maxcol].strip()):
+        if spline is None or spline != "![{}]".format(line[mincol:maxcol].strip()):
             # failed to get something consistent, try greedy wrap
             spline = subproc_toks(
                 line,
