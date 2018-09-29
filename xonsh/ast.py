@@ -379,10 +379,8 @@ class CtxAwareTransformer(NodeTransformer):
             returnline=False,
             lexer=self.parser.lexer,
         )
-        if spline is None or len(spline) < len(line[mincol:maxcol]) + 2:
+        if spline is None or spline != "![{}]".format(line[mincol:maxcol].strip()):
             # failed to get something consistent, try greedy wrap
-            # The +2 comes from "![]" being length 3, minus 1 since maxcol
-            # is one beyond the total length for slicing
             spline = subproc_toks(
                 line,
                 mincol=mincol,
