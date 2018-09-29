@@ -114,3 +114,11 @@ def test_unmodified(inp):
     obs = check_parse(inp)
 
     assert nodes_equal(exp, obs)
+
+@pytest.mark.parametrize("test_input", [
+    "echo; echo && echo\n",
+    "echo; echo && echo a\n",
+    "true && false && true\n",
+])
+def test_whitespace_subproc(test_input):
+    assert check_parse(test_input)
