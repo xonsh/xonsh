@@ -1473,20 +1473,20 @@ def load_proxies():
                 'events', '__xonsh__.builtins.events'),
             ]
 
-        for obj, badname, goodname in mapping:
-            proxy = ProxyWarning(obj, badname, goodname)
-            setattr(builtins, badname, proxy)
+    for obj, badname, goodname in mapping:
+        proxy = ProxyWarning(obj, badname, goodname)
+        setattr(builtins, badname, proxy)
 
-        if hasattr(builtins.__xonsh__, "pyexit"):
-            builtins.__xonsh_pyexit__ = ProxyWarning(
-                    builtins.__xonsh__.pyexit,
-                    'builtins.__xonsh_pyexit__',
-                    'builtins.__xonsh__.pyexit')
-        if hasattr(builtins.__xonsh__, "quit"):
-            builtins.__xonsh_pyquit__ = ProxyWarning(
-                    builtins.__xonsh__.pyquit,
-                    'builtins.__xonsh_pyquit__',
-                    'builtins.__xonsh__.pyquit')
+    if hasattr(builtins.__xonsh__, "pyexit"):
+        builtins.__xonsh_pyexit__ = ProxyWarning(
+                builtins.__xonsh__.pyexit,
+                'builtins.__xonsh_pyexit__',
+                'builtins.__xonsh__.pyexit')
+    if hasattr(builtins.__xonsh__, "quit"):
+        builtins.__xonsh_pyquit__ = ProxyWarning(
+                builtins.__xonsh__.pyquit,
+                'builtins.__xonsh_pyquit__',
+                'builtins.__xonsh__.pyquit')
 
 
 def unload_proxies():
