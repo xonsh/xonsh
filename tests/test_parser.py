@@ -9,6 +9,7 @@ import pytest
 
 from xonsh.ast import AST, With, Pass, pdump
 from xonsh.parser import Parser
+from xonsh.parsers.base import sub_env_vars
 
 from tools import VER_FULL, skip_if_py34, skip_if_lt_py36, nodes_equal
 
@@ -120,6 +121,27 @@ def test_raw_literal():
 def test_f_literal():
     check_ast('f"wakka{yo}yakka{42}"', run=False)
     check_ast('F"{yo}"', run=False)
+
+
+@skip_if_lt_py36
+def test_f_env_var():
+    check_xonsh_ast({}, 'f"{$HOME}"', run=False)
+    check_xonsh_ast({}, "f'{$XONSH_DEBUG}'", run=False)
+    check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
+
+
+@pytest.mark.parametrize(
+    "inp, exp",
+    [
+        ('f"{$HOME}"', "f\"{__xonsh_env__.detype()['HOME']}\""),
+        ('f"{ $HOME }"', "f\"{__xonsh_env__.detype()['HOME'] }\""),
+        ("f\"{'$HOME'}\"", "f\"{'$HOME'}\""),
+        ('f"$HOME"', 'f"$HOME"'),
+    ],
+)
+def test_sub_env_vars(inp, exp):
+    obs = sub_env_vars(inp)
+    assert exp == obs
 
 
 def test_raw_bytes_literal():
@@ -2058,6 +2080,10 @@ def test_nested_madness():
         "$(@$(which echo) ls | @(lambda a, s=None: $(@(s.strip()) @(a[1]))) foo -la baz)",
         False,
     )
+
+
+def test_atparens_intoken():
+    check_xonsh_ast({}, "![echo /x/@(y)/z]", False)
 
 
 def test_ls_dot_nesting():

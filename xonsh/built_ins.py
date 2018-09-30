@@ -972,6 +972,19 @@ def list_of_strs_or_callables(x):
     return rtn
 
 
+def list_of_list_of_strs_outer_product(x):
+    """Takes an outer product of a list of strings"""
+    lolos = map(ensure_list_of_strs, x)
+    rtn = []
+    for los in itertools.product(*lolos):
+        s = "".join(los)
+        if "*" in s:
+            rtn.extend(builtins.__xonsh_glob__(s))
+        else:
+            rtn.append(builtins.__xonsh_expand_path__(s))
+    return rtn
+
+
 @lazyobject
 def MACRO_FLAG_KINDS():
     return {

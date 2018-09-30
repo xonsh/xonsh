@@ -26,6 +26,9 @@ RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCH
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
+RE_FSTR_ENVVAR = LazyObject(
+    lambda: re.compile("\{\s*\$(\w+)"), globals(), "RE_FSTR_ENVVAR"
+)
 
 
 class Location(object):
@@ -192,6 +195,40 @@ def lopen_loc(x):
     lineno = x._lopen_lineno if hasattr(x, "_lopen_lineno") else x.lineno
     col = x._lopen_col if hasattr(x, "_lopen_col") else x.col_offset
     return lineno, col
+
+
+def hasglobstar(x):
+    """Returns True if a node has literal '*' for globbing."""
+    if isinstance(x, ast.Str):
+        return "*" in x.s
+    elif isinstance(x, list):
+        for e in x:
+            if hasglobstar(e):
+                return True
+        else:
+            return False
+    else:
+        return False
+
+
+def _repl_sub_env_vars_single(matchobj):
+    return "{__xonsh_env__.detype()['" + matchobj.group(1) + "']"
+
+
+def _repl_sub_env_vars_double(matchobj):
+    return '{__xonsh_env__.detype()["' + matchobj.group(1) + '"]'
+
+
+def sub_env_vars(fstring):
+    """Takes an fstring that may contain environment variables and
+    substitues them for a valid environment lookup call. Roughly,
+    for example, this will take f"{$HOME}" and transform it to
+    be f"{__xonsh_env__.detype()['HOME']}".
+    """
+    repl = (
+        _repl_sub_env_vars_single if fstring[-1] == '"' else _repl_sub_env_vars_double
+    )
+    return RE_FSTR_ENVVAR.sub(repl, fstring)
 
 
 class YaccLoader(Thread):
@@ -386,6 +423,44 @@ class BaseParser(object):
             "dedent",
             "newline",
             "lambda",
+            "ampersandequal",
+            "as",
+            "atdollar",
+            "atequal",
+            "break",
+            "continue",
+            "divequal",
+            "dollar_name",
+            "double_question",
+            "doubledivequal",
+            "elif",
+            "else",
+            "eq",
+            "equals",
+            "errortoken",
+            "finally",
+            "ge",
+            "in",
+            "is",
+            "le",
+            "lshiftequal",
+            "minusequal",
+            "modequal",
+            "ne",
+            "pass",
+            "period",
+            "pipeequal",
+            "plusequal",
+            "pow",
+            "powequal",
+            "question",
+            "rarrow",
+            "rshiftequal",
+            "semi",
+            "tilde",
+            "timesequal",
+            "while",
+            "xorequal",
         ]
         for rule in tok_rules:
             self._tok_rule(rule)
@@ -2330,7 +2405,8 @@ class BaseParser(object):
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
             )
         elif "f" in prefix or "F" in prefix:
-            s = pyparse(p1.value).body[0].value
+            s = sub_env_vars(p1.value)
+            s = pyparse(s).body[0].value
             s = ast.increment_lineno(s, p1.lineno - 1)
             p[0] = s
         else:
@@ -3002,7 +3078,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_pyeval(self, p):
-        """subproc_atom : at_lparen_tok testlist_comp RPAREN"""
+        """subproc_atom : at_lparen_tok testlist_comp RPAREN
+           subproc_arg_part : at_lparen_tok testlist_comp RPAREN
+        """
         p1 = p[1]
         p0 = xonsh_call(
             "__xonsh__.list_of_strs_or_callables",
@@ -3059,15 +3137,25 @@ class BaseParser(object):
     def p_subproc_atom_arg(self, p):
         """subproc_atom : subproc_arg"""
         p1 = p[1]
-        p0 = ast.Str(s=p[1], lineno=self.lineno, col_offset=self.col)
-        if "*" in p1:
+        if isinstance(p1, list):
+            # has an expanding function call, such as @(x)
             p0 = xonsh_call(
-                "__xonsh__.glob", args=[p0], lineno=self.lineno, col=self.col
+                "__xonsh_list_of_list_of_strs_outer_product__",
+                args=[ensure_has_elts(p1)],
+                lineno=p1[0].lineno,
+                col=p1[0].col_offset,
+            )
+            p0._cliarg_action = "extend"
+        elif hasglobstar(p1):
+            # globbed literal argument
+            p0 = xonsh_call(
+                "__xonsh__.glob", args=[p1], lineno=p1.lineno, col=p1.col_offset
             )
             p0._cliarg_action = "extend"
         else:
+            # literal str argument
             p0 = xonsh_call(
-                "__xonsh__.expand_path", args=[p0], lineno=self.lineno, col=self.col
+                "__xonsh__.expand_path", args=[p1], lineno=p1.lineno, col=p1.col_offset
             )
             p0._cliarg_action = "append"
         p[0] = p0
@@ -3079,7 +3167,22 @@ class BaseParser(object):
     def p_subproc_arg_many(self, p):
         """subproc_arg : subproc_arg subproc_arg_part"""
         # This glues the string together after parsing
-        p[0] = p[1] + p[2]
+        p1 = p[1]
+        p2 = p[2]
+        if isinstance(p1, ast.Str) and isinstance(p2, ast.Str):
+            p0 = ast.Str(p1.s + p2.s, lineno=p1.lineno, col_offset=p1.col_offset)
+        elif isinstance(p1, list):
+            if isinstance(p2, list):
+                p1.extend(p2)
+            else:
+                p1.append(p2)
+            p0 = p1
+        elif isinstance(p2, list):
+            p2.insert(0, p1)
+            p0 = p2
+        else:
+            p0 = [p1, p2]
+        p[0] = p0
 
     def _attach_subproc_arg_part_rules(self):
         toks = set(self.tokens)
@@ -3112,14 +3215,15 @@ class BaseParser(object):
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
         }
-        ts = "\n                 | ".join(sorted(toks))
+        ts = "\n                 | ".join(sorted([t.lower() + "_tok" for t in toks]))
         doc = "subproc_arg_part : " + ts + "\n"
         self.p_subproc_arg_part.__func__.__doc__ = doc
 
     def p_subproc_arg_part(self, p):
         # Many tokens cannot be part of this rule, such as $, ', ", ()
         # Use a string atom instead. See above attachment functions
-        p[0] = p[1]
+        p1 = p[1]
+        p[0] = ast.Str(s=p1.value, lineno=p1.lineno, col_offset=p1.lexpos)
 
     #
     # Helpers

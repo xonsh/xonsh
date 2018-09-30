@@ -147,7 +147,7 @@ _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
 def _dump_xonfig_foreign_shell(path, value):
     shell = value["shell"]
     shell = CANON_SHELL_NAMES.get(shell, shell)
-    cmd = [_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND.get(shell)]
+    cmd = [_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND[shell]]
     interactive = value.get("interactive", None)
     if interactive is not None:
         cmd.extend(["--interactive", str(interactive)])

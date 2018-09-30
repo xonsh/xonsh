@@ -1188,7 +1188,9 @@ def logfile_opt_to_str(x):
 
 
 _FALSES = LazyObject(
-    lambda: frozenset(["", "0", "n", "f", "no", "none", "false"]), globals(), "_FALSES"
+    lambda: frozenset(["", "0", "n", "f", "no", "none", "false", "off"]),
+    globals(),
+    "_FALSES",
 )
 
 

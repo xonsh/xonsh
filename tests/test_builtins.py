@@ -17,6 +17,7 @@ from xonsh.built_ins import (
     superhelper,
     ensure_list_of_strs,
     list_of_strs_or_callables,
+    list_of_list_of_strs_outer_product,
     regexsearch,
     globsearch,
     expand_path,
@@ -139,6 +140,19 @@ f = lambda x: 20
 )
 def test_list_of_strs_or_callables(exp, inp):
     obs = list_of_strs_or_callables(inp)
+    assert exp == obs
+
+
+@pytest.mark.parametrize(
+    "inp, exp",
+    [
+        (["x", ["y", "z"]], ["xy", "xz"]),
+        (["x", ["y", "z"], ["a"]], ["xya", "xza"]),
+        ([["y", "z"], ["a", "b"]], ["ya", "yb", "za", "zb"]),
+    ],
+)
+def test_list_of_list_of_strs_outer_product(xonsh_builtins, inp, exp):
+    obs = list_of_list_of_strs_outer_product(inp)
     assert exp == obs
 
 
