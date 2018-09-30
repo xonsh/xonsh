@@ -979,9 +979,9 @@ def list_of_list_of_strs_outer_product(x):
     for los in itertools.product(*lolos):
         s = "".join(los)
         if "*" in s:
-            rtn.extend(builtins.__xonsh_glob__(s))
+            rtn.extend(builtins.__xonsh__.glob(s))
         else:
-            rtn.append(builtins.__xonsh_expand_path__(s))
+            rtn.append(builtins.__xonsh__.expand_path(s))
     return rtn
 
 
@@ -1262,7 +1262,11 @@ def xonsh_builtins(execer=None):
     scope. Likely useful in testing.
     """
     load_builtins(execer=execer)
+    # temporary shims for old __xonsh_*__ builtins
+    load_proxies()
     yield
+    # temporary shims for old __xonsh_*__ builtins
+    unload_proxies()
     unload_builtins()
 
 
@@ -1321,12 +1325,16 @@ class XonshSession:
         self.subproc_captured_object = subproc_captured_object
         self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
         self.subproc_uncaptured = subproc_uncaptured
-        if execer is not None:
-            self.execer = execer
+        self.execer = execer
         self.commands_cache = CommandsCache()
         self.all_jobs = {}
         self.ensure_list_of_strs = ensure_list_of_strs
         self.list_of_strs_or_callables = list_of_strs_or_callables
+
+        self.list_of_list_of_strs_outer_product = (
+            list_of_list_of_strs_outer_product
+        )
+
         self.completers = xonsh.completers.init.default_completers()
         self.call_macro = call_macro
         self.enter_macro = enter_macro
@@ -1377,3 +1385,155 @@ class _BuiltIns:
         self.execx = None if execer is None else execer.exec
         self.compilex = None if execer is None else execer.compile
         self.events = events
+
+
+class ProxyWarning:
+    def __init__(self, obj, badname, goodname):
+        self.obj = obj
+        self.badname = badname
+        self.goodname = goodname
+
+    def __getattr__(self, name):
+        print("{} has been deprecated, please use {} instead.".format(
+            self.badname,
+            self.goodname)
+        return getattr(self.obj, name)
+
+
+def load_proxies():
+    """Put temporary shims in place for `__xonsh_*__` builtins.
+
+    """
+    mapping = [
+            (builtins.__xonsh__.config,
+                '__xonsh_config__', '__xonsh__.config'),
+            (builtins.__xonsh__.help,
+                '__xonsh_help__', '__xonsh__.help'),
+            (builtins.__xonsh__.superhelp,
+                'builtins', 'builtins.superhelp'),
+            (builtins.__xonsh__.pathsearch,
+                '__xonsh_pathsearch__', '__xonsh__.pathsearch'),
+            (builtins.__xonsh__.globsearch,
+                '__xonsh_globsearch__', '__xonsh__.globsearch'),
+            (builtins.__xonsh__.regexsearch,
+                '__xonsh_regexsearch__', '__xonsh__.regexsearch'),
+            (builtins.__xonsh__.glob,
+                '__xonsh_glob__', '__xonsh__.glob'),
+            (builtins.__xonsh__.expand_path,
+                '__xonsh_expand_path__', '__xonsh__.expand_path'),
+            (builtins.__xonsh__.exit,
+                '__xonsh_exit__', '__xonsh__.exit'),
+            (builtins.__xonsh__.stdout_uncaptured,
+                '__xonsh_stdout_uncaptured__', '__xonsh__.stdout_uncaptured'),
+            (builtins.__xonsh__.stderr_uncaptured,
+                '__xonsh_stderr_uncaptured__', '__xonsh__.stderr_uncaptured'),
+            (builtins.__xonsh__.subproc_captured_stdout,
+                '__xonsh_subproc_captured_stdout__', '__xonsh__.subproc_captured_stdout'),
+            (builtins.__xonsh__.subproc_captured_inject,
+                '__xonsh_subproc_captured_inject__', '__xonsh__.subproc_captured_inject'),
+            (builtins.__xonsh__.subproc_captured_object,
+                '__xonsh_subproc_captured_object__', '__xonsh__.subproc_captured_object'),
+            (builtins.__xonsh__.subproc_captured_hiddenobject,
+                '__xonsh_subproc_captured_hiddenobject__', '__xonsh__.subproc_captured_hiddenobject'),
+            (builtins.__xonsh__.subproc_uncaptured,
+                '__xonsh_subproc_uncaptured__', '__xonsh__.subproc_uncaptured'),
+            (builtins.__xonsh__.execer,
+                '__xonsh_execer__', '__xonsh__.execer'),
+            (builtins.__xonsh__.commands_cache,
+                '__xonsh_commands_cache__', '__xonsh__.commands_cache'),
+            (builtins.__xonsh__.all_jobs,
+                '__xonsh_all_jobs__', '__xonsh__.all_jobs'),
+            (builtins.__xonsh__.ensure_list_of_strs,
+                '__xonsh_ensure_list_of_strs__', '__xonsh__.ensure_list_of_strs'),
+            (builtins.__xonsh__.list_of_strs_or_callables,
+                '__xonsh_list_of_strs_or_callables__', '__xonsh__.list_of_strs_or_callables'),
+            (builtins.__xonsh__.list_of_list_of_strs_outer_product,
+                '__xonsh_list_of_list_of_strs_outer_product__', '__xonsh__.list_of_list_of_strs_outer_product'),
+            (builtins.__xonsh__.completers,
+                '__xonsh_completers__', '__xonsh__.completers'),
+            (builtins.__xonsh__.call_macro,
+                '__xonsh_call_macro__', '__xonsh__.call_macro'),
+            (builtins.__xonsh__.enter_macro,
+                '__xonsh_enter_macro__', '__xonsh__.enter_macro'),
+            (builtins.__xonsh__.path_literal,
+                '__xonsh_path_literal__', '__xonsh__.path_literal'),
+            (builtins.__xonsh__.builtins.XonshError,
+                'XonshError', '__xonsh__.builtins.XonshError'),
+            (builtins.__xonsh__.builtins.XonshCalledProcessError,
+                'XonshCalledProcessError', '__xonsh__.builtins.XonshCalledProcessError'),
+            (builtins.__xonsh__.builtins.evalx,
+                'evalx', '__xonsh__.builtins.evalx'),
+            (builtins.__xonsh__.builtins.evalc,
+                'evalc', '__xonsh__.builtins.evalc'),
+            (builtins.__xonsh__.builtins.compilex,
+                'compilex', '__xonsh__.builtins.compilex'),
+            (builtins.__xonsh__.builtins.events,
+                'events', '__xonsh__.builtins.events'),
+            ]
+
+        for obj, badname, goodname in mapping:
+            proxy = ProxyWarning(obj, badname, goodname)
+            setattr(builtins, badname, proxy)
+
+        if hasattr(builtins.__xonsh__, "pyexit"):
+            builtins.__xonsh_pyexit__ = ProxyWarning(
+                    builtins.__xonsh__.pyexit,
+                    'builtins.__xonsh_pyexit__',
+                    'builtins.__xonsh__.pyexit')
+        if hasattr(builtins.__xonsh__, "quit"):
+            builtins.__xonsh_pyquit__ = ProxyWarning(
+                    builtins.__xonsh__.pyquit,
+                    'builtins.__xonsh_pyquit__',
+                    'builtins.__xonsh__.pyquit')
+
+
+def unload_proxies():
+    """Removes the xonsh builtins (proxies) from the Python builtins.
+    """
+    if hasattr(builtins, "__xonsh_pyexit__"):
+        builtins.exit = builtins.__xonsh_pyexit__
+    if hasattr(builtins, "__xonsh_pyquit__"):
+        builtins.quit = builtins.__xonsh_pyquit__
+
+    names = [
+        "__xonsh_config__",
+        "__xonsh_env__",
+        "__xonsh_ctx__",
+        "__xonsh_help__",
+        "__xonsh_superhelp__",
+        "__xonsh_pathsearch__",
+        "__xonsh_globsearch__",
+        "__xonsh_regexsearch__",
+        "__xonsh_glob__",
+        "__xonsh_expand_path__",
+        "__xonsh_exit__",
+        "__xonsh_stdout_uncaptured__",
+        "__xonsh_stderr_uncaptured__",
+        "__xonsh_pyexit__",
+        "__xonsh_pyquit__",
+        "__xonsh_subproc_captured_stdout__",
+        "__xonsh_subproc_captured_inject__",
+        "__xonsh_subproc_captured_object__",
+        "__xonsh_subproc_captured_hiddenobject__",
+        "__xonsh_subproc_uncaptured__",
+        "__xonsh_execer__",
+        "__xonsh_commands_cache__",
+        "__xonsh_completers__",
+        "__xonsh_call_macro__",
+        "__xonsh_enter_macro__",
+        "__xonsh_path_literal__",
+        "XonshError",
+        "XonshCalledProcessError",
+        "evalx",
+        "execx",
+        "compilex",
+        "default_aliases",
+        "__xonsh_all_jobs__",
+        "__xonsh_ensure_list_of_strs__",
+        "__xonsh_list_of_strs_or_callables__",
+        "__xonsh_list_of_list_of_strs_outer_product__",
+        "__xonsh_history__",
+    ]
+    for name in names:
+        if hasattr(builtins, name):
+            delattr(builtins, name)
