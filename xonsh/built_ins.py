@@ -14,6 +14,7 @@ import signal
 import atexit
 import pathlib
 import inspect
+import warnings
 import builtins
 import itertools
 import subprocess
@@ -53,6 +54,7 @@ import xonsh.completers.init
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), "INSPECTOR")
 
+warnings.filterwarnings("once", category=DeprecationWarning)
 
 @lazyobject
 def AT_EXIT_SIGNALS():
@@ -1394,33 +1396,33 @@ class ProxyWarning:
         super().__setattr__('goodname', goodname)
 
     def __getattr__(self, name):
-        print("{} has been deprecated, please use {} instead.".format(
+        warnings.warn("{} has been deprecated, please use {} instead.".format(
             self.badname,
-            self.goodname))
+            self.goodname), DeprecationWarning)
         return getattr(self.obj, name)
 
     def __setattr__(self, name, value):
-        print("{} has been deprecated, please use {} instead.".format(
+        warnings.warn("{} has been deprecated, please use {} instead.".format(
             self.badname,
-            self.goodname))
+            self.goodname), DeprecationWarning)
         return super().__setattr__(self.obj, name, value)
 
     def __getitem__(self, item):
-        print("{} has been deprecated, please use {} instead.".format(
+        warnings.warn("{} has been deprecated, please use {} instead.".format(
             self.badname,
-            self.goodname))
+            self.goodname), DeprecationWarning)
         return self.obj.__getitem__(item)
 
     def __setitem__(self, item, value):
-        print("{} has been deprecated, please use {} instead.".format(
+        warnings.warn("{} has been deprecated, please use {} instead.".format(
             self.badname,
-            self.goodname))
+            self.goodname), DeprecationWarning)
         return self.obj.__setitem__(item, value)
 
     def __call__(self, value):
-        print("{} has been deprecated, please use {} instead.".format(
+        warnings.warn("{} has been deprecated, please use {} instead.".format(
             self.badname,
-            self.goodname))
+            self.goodname), DeprecationWarning)
         return self.obj.__call__(value)
 
 
