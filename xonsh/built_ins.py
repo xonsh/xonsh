@@ -1297,7 +1297,7 @@ class XonshSession:
         ctx : Mapping, optional
             Context to start xonsh session with.
         """
-        self.config__ = {}
+        self.config = {}
         if ctx is not None:
             self.ctx = ctx
         self.env = Env(default_env())
@@ -1355,7 +1355,7 @@ class XonshSession:
 
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that
-        # relies on __xonsh_env__ in default aliases
+        # relies on __xonsh__.env in default aliases
         builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
         atexit.register(_lastflush)
         for sig in AT_EXIT_SIGNALS:
@@ -1389,9 +1389,9 @@ class _BuiltIns:
 
 class ProxyWarning:
     def __init__(self, obj, badname, goodname):
-        self.obj = obj
-        self.badname = badname
-        self.goodname = goodname
+        super().__setattr__('obj', obj)
+        super().__setattr__('badname', badname)
+        super().__setattr__('goodname', goodname)
 
     def __getattr__(self, name):
         print("{} has been deprecated, please use {} instead.".format(
@@ -1399,12 +1399,40 @@ class ProxyWarning:
             self.goodname))
         return getattr(self.obj, name)
 
+    def __setattr__(self, name, value):
+        print("{} has been deprecated, please use {} instead.".format(
+            self.badname,
+            self.goodname))
+        return super().__setattr__(self.obj, name, value)
+
+    def __getitem__(self, item):
+        print("{} has been deprecated, please use {} instead.".format(
+            self.badname,
+            self.goodname))
+        return self.obj.__getitem__(item)
+
+    def __setitem__(self, item, value):
+        print("{} has been deprecated, please use {} instead.".format(
+            self.badname,
+            self.goodname))
+        return self.obj.__setitem__(item, value)
+
+    def __call__(self, value):
+        print("{} has been deprecated, please use {} instead.".format(
+            self.badname,
+            self.goodname))
+        return self.obj.__call__(value)
+
 
 def load_proxies():
     """Put temporary shims in place for `__xonsh_*__` builtins.
 
     """
     mapping = [
+        (builtins.__xonsh__.env,
+            '__xonsh_env__', '__xonsh__.env'),
+        (builtins.__xonsh__.history,
+            '__xonsh_history__', '__xonsh__.history'),
         (builtins.__xonsh__.ctx,
             '__xonsh_ctx__', '__xonsh__.ctx'),
         (builtins.__xonsh__.config,
@@ -1465,8 +1493,8 @@ def load_proxies():
             'XonshCalledProcessError', '__xonsh__.builtins.XonshCalledProcessError'),
         (builtins.__xonsh__.builtins.evalx,
             'evalx', '__xonsh__.builtins.evalx'),
-        (builtins.__xonsh__.builtins.evalc,
-            'evalc', '__xonsh__.builtins.evalc'),
+        (builtins.__xonsh__.builtins.execx,
+            'execx', '__xonsh__.builtins.execx'),
         (builtins.__xonsh__.builtins.compilex,
             'compilex', '__xonsh__.builtins.compilex'),
         (builtins.__xonsh__.builtins.events,
