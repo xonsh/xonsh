@@ -133,8 +133,8 @@ def test_f_env_var():
 @pytest.mark.parametrize(
     "inp, exp",
     [
-        ('f"{$HOME}"', "f\"{__xonsh_env__.detype()['HOME']}\""),
-        ('f"{ $HOME }"', "f\"{__xonsh_env__.detype()['HOME'] }\""),
+        ('f"{$HOME}"', "f\"{__xonsh__.env.detype()['HOME']}\""),
+        ('f"{ $HOME }"', "f\"{__xonsh__.env.detype()['HOME'] }\""),
         ("f\"{'$HOME'}\"", "f\"{'$HOME'}\""),
         ('f"$HOME"', 'f"$HOME"'),
     ],
