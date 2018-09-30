@@ -1668,7 +1668,7 @@ def _token_attr_from_stylemap(stylemap):
     """yields tokens attr, and index from a stylemap """
     import prompt_toolkit as ptk
 
-    if builtins.__xonsh_shell__.shell_type == "prompt_toolkit1":
+    if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
         style = ptk.styles.style_from_dict(stylemap)
         for token in stylemap:
             yield token, style.token_to_attrs[token]
@@ -1683,7 +1683,7 @@ def _token_attr_from_stylemap(stylemap):
 
 def _get_color_lookup_table():
     """Returns the prompt_toolkit win32 ColorLookupTable """
-    if builtins.__xonsh_shell__.shell_type == "prompt_toolkit1":
+    if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
         from prompt_toolkit.terminal.win32_output import ColorLookupTable
     else:
         from prompt_toolkit.output.win32 import ColorLookupTable

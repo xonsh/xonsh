@@ -61,13 +61,13 @@ class StdJupyterRedirect(io.TextIOBase):
     @property
     def encoding(self):
         """The encoding of the stream"""
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         return getattr(self.std, "encoding", env.get("XONSH_ENCODING"))
 
     @property
     def errors(self):
         """The encoding errors of the stream"""
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         return getattr(self.std, "errors", env.get("XONSH_ENCODING_ERRORS"))
 
     @property

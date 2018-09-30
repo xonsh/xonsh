@@ -132,7 +132,7 @@ class JsonHistoryGC(threading.Thread):
         (timestamp, number of cmds, file name) tuples.
         """
         # pylint: disable=no-member
-        env = getattr(builtins, "__xonsh_env__", None)
+        env = getattr(builtins, "__xonsh__.env", None)
         if env is None:
             return []
         boot = uptime.boottime()

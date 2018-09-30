@@ -161,8 +161,8 @@ def xonsh_exit(args, stdin=None):
 
 
 def xonsh_reset(args, stdin=None):
-    """ Clears __xonsh_ctx__"""
-    builtins.__xonsh_ctx__.clear()
+    """ Clears __xonsh__.ctx"""
+    builtins.__xonsh__.ctx.clear()
 
 
 @lazyobject

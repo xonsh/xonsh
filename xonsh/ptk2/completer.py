@@ -25,7 +25,7 @@ class PromptToolkitCompleter(Completer):
 
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         should_complete = complete_event.completion_requested or env.get(
             "UPDATE_COMPLETIONS_ON_KEYPRESS"
         )
@@ -96,7 +96,7 @@ class PromptToolkitCompleter(Completer):
 
         if window and window.render_info:
             h = window.render_info.content_height
-            r = builtins.__xonsh_env__.get("COMPLETIONS_MENU_ROWS")
+            r = builtins.__xonsh__.env.get("COMPLETIONS_MENU_ROWS")
             size = h + r
             last_h = render._last_screen.height if render._last_screen else 0
             last_h = max(render._min_available_height, last_h)

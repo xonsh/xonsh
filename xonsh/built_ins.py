@@ -1405,6 +1405,8 @@ def load_proxies():
 
     """
     mapping = [
+            (builtins.__xonsh__.ctx,
+                '__xonsh_ctx__', '__xonsh__.ctx'),
             (builtins.__xonsh__.config,
                 '__xonsh_config__', '__xonsh__.config'),
             (builtins.__xonsh__.help,

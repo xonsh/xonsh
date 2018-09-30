@@ -212,18 +212,18 @@ def hasglobstar(x):
 
 
 def _repl_sub_env_vars_single(matchobj):
-    return "{__xonsh_env__.detype()['" + matchobj.group(1) + "']"
+    return "{__xonsh__.env.detype()['" + matchobj.group(1) + "']"
 
 
 def _repl_sub_env_vars_double(matchobj):
-    return '{__xonsh_env__.detype()["' + matchobj.group(1) + '"]'
+    return '{__xonsh__.env.detype()["' + matchobj.group(1) + '"]'
 
 
 def sub_env_vars(fstring):
     """Takes an fstring that may contain environment variables and
     substitues them for a valid environment lookup call. Roughly,
     for example, this will take f"{$HOME}" and transform it to
-    be f"{__xonsh_env__.detype()['HOME']}".
+    be f"{__xonsh__.env.detype()['HOME']}".
     """
     repl = (
         _repl_sub_env_vars_single if fstring[-1] == '"' else _repl_sub_env_vars_double
@@ -3140,7 +3140,7 @@ class BaseParser(object):
         if isinstance(p1, list):
             # has an expanding function call, such as @(x)
             p0 = xonsh_call(
-                "__xonsh_list_of_list_of_strs_outer_product__",
+                "__xonsh__.xonsh_list_of_list_of_strs_outer_product",
                 args=[ensure_has_elts(p1)],
                 lineno=p1[0].lineno,
                 col=p1[0].col_offset,

@@ -468,11 +468,11 @@ if __name__ == "__main__":
         xontribs=["coreutils"],
         threadable_predictors={"git": predict_true, "man": predict_true},
     )
-    if builtins.__xonsh_commands_cache__.is_only_functional_alias("cat"):
+    if builtins.__xonsh__.commands_cache.is_only_functional_alias("cat"):
         # this is needed if the underlying system doesn't have cat
         # we supply our own, because we can
         builtins.aliases["cat"] = "xonsh-cat"
-        builtins.__xonsh_env__["PAGER"] = "xonsh-cat"
-    shell = builtins.__xonsh_shell__
+        builtins.__xonsh__.env["PAGER"] = "xonsh-cat"
+    shell = builtins.__xonsh__.shell
     kernel = shell.kernel = XonshKernel()
     kernel.start()

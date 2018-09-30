@@ -87,8 +87,8 @@ def can_compile(src):
     src = transform_command(src, show_diff=False)
     src = src.lstrip()
     try:
-        builtins.__xonsh_execer__.compile(
-            src, mode="single", glbs=None, locs=builtins.__xonsh_ctx__
+        builtins.__xonsh__.execer.compile(
+            src, mode="single", glbs=None, locs=builtins.__xonsh__.ctx
         )
         rtn = True
     except SyntaxError:

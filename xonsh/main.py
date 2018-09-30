@@ -519,5 +519,5 @@ def setup(
     builtins.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
-    tp = builtins.__xonsh_commands_cache__.threadable_predictors
+    tp = builtins.__xonsh__.commands_cache.threadable_predictors
     tp.update(threadable_predictors)

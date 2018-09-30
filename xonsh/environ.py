@@ -765,7 +765,7 @@ def DEFAULT_DOCS():
         "UPDATE_OS_ENVIRON": VarDocs(
             "If True ``os_environ`` will always be updated "
             "when the xonsh environment changes. The environment can be reset to "
-            "the default value by calling ``__xonsh_env__.undo_replace_env()``"
+            "the default value by calling ``__xonsh__.env.undo_replace_env()``"
         ),
         "UPDATE_PROMPT_ON_KEYPRESS": VarDocs(
             "Disables caching the prompt between commands, "

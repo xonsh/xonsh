@@ -22,7 +22,7 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         """Loads synchronous history strings"""
         if not self.load_prev:
             return
-        hist = builtins.__xonsh_history__
+        hist = builtins.__xonsh__.history
         if hist is None:
             return
         for cmd in hist.all_items(newest_first=True):
