@@ -1396,7 +1396,7 @@ class ProxyWarning:
     def __getattr__(self, name):
         print("{} has been deprecated, please use {} instead.".format(
             self.badname,
-            self.goodname)
+            self.goodname))
         return getattr(self.obj, name)
 
 
