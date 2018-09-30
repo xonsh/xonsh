@@ -139,7 +139,7 @@ Very nice.
 The Environment Itself ``${...}``
 ---------------------------------
 
-All environment variables live in the built-in ``${...}`` (aka ``__xonsh_env__``) mapping.
+All environment variables live in the built-in ``${...}`` (aka ``__xonsh__.env``) mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -1060,7 +1060,7 @@ regex globbing:
 
 .. code-block:: xonshcon
 
-    >>> __xonsh_regexsearch__??
+    >>> __xonsh__.regexsearch??
     Type:         function
     String form:  <function regexsearch at 0x7efc8b367d90>
     File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
@@ -1175,7 +1175,7 @@ may have one of the following signatures:
         # built-ins if you 'import builtins'.  For example, if you need the
         # environment, you could do to following:
         import builtins
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
 
         # The return value of the function can either be None,
         return

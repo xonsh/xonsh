@@ -233,11 +233,11 @@ parts of xonsh for more test isolation. For a list of the various fixtures::
 
     $ py.test --fixtures
 
-when writing tests it's best to use pytest features i.e parametrization::
+when writing tests it's best to use pytest features i.e. parametrization::
 
     @pytest.mark.parametrize('env', [test_env1, test_env2])
     def test_one(env, xonsh_builtins):
-        xonsh_builtins.__xonsh_env__ = env
+        xonsh_builtins.__xonsh__.env = env
         ...
 
 this will run the test two times each time with the respective `test_env`.

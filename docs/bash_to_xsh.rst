@@ -50,7 +50,7 @@ will help you put a finger on how to do the equivalent task in xonsh.
       - Set temporary environment variable(s) and execute for command.
         Use an indented block to execute many commands in the same context.
     * - ``!$``
-      - ``__xonsh_history__[-1, -1]``
+      - ``__xonsh__.history[-1, -1]``
       - Get the last argument of the last command
     * - ``$<n>``
       - ``$ARG<n>``
