@@ -6,7 +6,7 @@ import time
 import textwrap
 from threading import Thread
 from ast import parse as pyparse
-from collections import Iterable, Sequence, Mapping
+from collections.abc import Iterable, Sequence, Mapping
 
 try:
     from ply import yacc

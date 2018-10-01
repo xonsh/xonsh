@@ -109,6 +109,7 @@ class XonshLexer(PythonLexer):
         # __xonsh__.env and __xonsh__.commands_cache
         if not hasattr(builtins, "__xonsh__"):
             from argparse import Namespace
+
             setattr(builtins, "__xonsh__", Namespace())
         if not hasattr(builtins.__xonsh__, "env"):
             setattr(builtins.__xonsh__, "env", {})

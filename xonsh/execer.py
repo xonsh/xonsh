@@ -15,12 +15,7 @@ from xonsh.tools import (
     replace_logical_line,
     balanced_parens,
 )
-from xonsh.built_ins import (
-    load_builtins,
-    unload_builtins,
-    load_proxies,
-    unload_proxies
-)
+from xonsh.built_ins import load_builtins, unload_builtins, load_proxies, unload_proxies
 
 
 class Execer(object):

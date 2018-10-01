@@ -56,6 +56,7 @@ INSPECTOR = LazyObject(Inspector, globals(), "INSPECTOR")
 
 warnings.filterwarnings("once", category=DeprecationWarning)
 
+
 @lazyobject
 def AT_EXIT_SIGNALS():
     sigs = (
@@ -1332,9 +1333,7 @@ class XonshSession:
         self.ensure_list_of_strs = ensure_list_of_strs
         self.list_of_strs_or_callables = list_of_strs_or_callables
 
-        self.list_of_list_of_strs_outer_product = (
-            list_of_list_of_strs_outer_product
-        )
+        self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
 
         self.completers = xonsh.completers.init.default_completers()
         self.call_macro = call_macro
@@ -1390,13 +1389,13 @@ class _BuiltIns:
 
 class ProxyWarning:
     def __init__(self, badname, goodname):
-        super().__setattr__('badname', badname)
-        super().__setattr__('goodname', goodname)
+        super().__setattr__("badname", badname)
+        super().__setattr__("goodname", goodname)
 
     @property
     def obj(self):
         """Dynamically grabs object"""
-        names = self.goodname.split('.')
+        names = self.goodname.split(".")
         obj = builtins
         for name in names:
             obj = getattr(obj, name)
@@ -1404,9 +1403,12 @@ class ProxyWarning:
 
     def warn(self):
         """Issues deprecation warning."""
-        warnings.warn("{} has been deprecated, please use {} instead.".format(
-            self.badname,
-            self.goodname), DeprecationWarning)
+        warnings.warn(
+            "{} has been deprecated, please use {} instead.".format(
+                self.badname, self.goodname
+            ),
+            DeprecationWarning,
+        )
 
     def __getattr__(self, name):
         self.warn()
@@ -1434,40 +1436,40 @@ def load_proxies():
 
     """
     mapping = {
-            '__xonsh_env__': '__xonsh__.env',
-            '__xonsh_history__': '__xonsh__.history',
-            '__xonsh_ctx__': '__xonsh__.ctx',
-            '__xonsh_help__': '__xonsh__.help',
-            'builtins': 'builtins.superhelp',
-            '__xonsh_pathsearch__': '__xonsh__.pathsearch',
-            '__xonsh_globsearch__': '__xonsh__.globsearch',
-            '__xonsh_regexsearch__': '__xonsh__.regexsearch',
-            '__xonsh_glob__': '__xonsh__.glob',
-            '__xonsh_expand_path__': '__xonsh__.expand_path',
-            '__xonsh_exit__': '__xonsh__.exit',
-            '__xonsh_stdout_uncaptured__': '__xonsh__.stdout_uncaptured',
-            '__xonsh_stderr_uncaptured__': '__xonsh__.stderr_uncaptured',
-            '__xonsh_subproc_captured_stdout__': '__xonsh__.subproc_captured_stdout',
-            '__xonsh_subproc_captured_inject__': '__xonsh__.subproc_captured_inject',
-            '__xonsh_subproc_captured_object__': '__xonsh__.subproc_captured_object',
-            '__xonsh_subproc_captured_hiddenobject__': '__xonsh__.subproc_captured_hiddenobject',
-            '__xonsh_subproc_uncaptured__': '__xonsh__.subproc_uncaptured',
-            '__xonsh_execer__': '__xonsh__.execer',
-            '__xonsh_commands_cache__': '__xonsh__.commands_cache',
-            '__xonsh_all_jobs__': '__xonsh__.all_jobs',
-            '__xonsh_ensure_list_of_strs__': '__xonsh__.ensure_list_of_strs',
-            '__xonsh_list_of_strs_or_callables__': '__xonsh__.list_of_strs_or_callables',
-            '__xonsh_list_of_list_of_strs_outer_product__': '__xonsh__.list_of_list_of_strs_outer_product',
-            '__xonsh_completers__': '__xonsh__.completers',
-            '__xonsh_call_macro__': '__xonsh__.call_macro',
-            '__xonsh_enter_macro__': '__xonsh__.enter_macro',
-            '__xonsh_path_literal__': '__xonsh__.path_literal',
-            'XonshError': '__xonsh__.builtins.XonshError',
-            'XonshCalledProcessError': '__xonsh__.builtins.XonshCalledProcessError',
-            'evalx': '__xonsh__.builtins.evalx',
-            'execx': '__xonsh__.builtins.execx',
-            'compilex': '__xonsh__.builtins.compilex',
-            'events': '__xonsh__.builtins.events',
+        "__xonsh_env__": "__xonsh__.env",
+        "__xonsh_history__": "__xonsh__.history",
+        "__xonsh_ctx__": "__xonsh__.ctx",
+        "__xonsh_help__": "__xonsh__.help",
+        "builtins": "builtins.superhelp",
+        "__xonsh_pathsearch__": "__xonsh__.pathsearch",
+        "__xonsh_globsearch__": "__xonsh__.globsearch",
+        "__xonsh_regexsearch__": "__xonsh__.regexsearch",
+        "__xonsh_glob__": "__xonsh__.glob",
+        "__xonsh_expand_path__": "__xonsh__.expand_path",
+        "__xonsh_exit__": "__xonsh__.exit",
+        "__xonsh_stdout_uncaptured__": "__xonsh__.stdout_uncaptured",
+        "__xonsh_stderr_uncaptured__": "__xonsh__.stderr_uncaptured",
+        "__xonsh_subproc_captured_stdout__": "__xonsh__.subproc_captured_stdout",
+        "__xonsh_subproc_captured_inject__": "__xonsh__.subproc_captured_inject",
+        "__xonsh_subproc_captured_object__": "__xonsh__.subproc_captured_object",
+        "__xonsh_subproc_captured_hiddenobject__": "__xonsh__.subproc_captured_hiddenobject",
+        "__xonsh_subproc_uncaptured__": "__xonsh__.subproc_uncaptured",
+        "__xonsh_execer__": "__xonsh__.execer",
+        "__xonsh_commands_cache__": "__xonsh__.commands_cache",
+        "__xonsh_all_jobs__": "__xonsh__.all_jobs",
+        "__xonsh_ensure_list_of_strs__": "__xonsh__.ensure_list_of_strs",
+        "__xonsh_list_of_strs_or_callables__": "__xonsh__.list_of_strs_or_callables",
+        "__xonsh_list_of_list_of_strs_outer_product__": "__xonsh__.list_of_list_of_strs_outer_product",
+        "__xonsh_completers__": "__xonsh__.completers",
+        "__xonsh_call_macro__": "__xonsh__.call_macro",
+        "__xonsh_enter_macro__": "__xonsh__.enter_macro",
+        "__xonsh_path_literal__": "__xonsh__.path_literal",
+        "XonshError": "__xonsh__.builtins.XonshError",
+        "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
+        "evalx": "__xonsh__.builtins.evalx",
+        "execx": "__xonsh__.builtins.execx",
+        "compilex": "__xonsh__.builtins.compilex",
+        "events": "__xonsh__.builtins.events",
     }
 
     for badname, goodname in mapping.items():
@@ -1476,12 +1478,12 @@ def load_proxies():
 
     if hasattr(builtins.__xonsh__, "pyexit"):
         builtins.__xonsh_pyexit__ = ProxyWarning(
-            'builtins.__xonsh_pyexit__',
-            'builtins.__xonsh__.pyexit')
+            "builtins.__xonsh_pyexit__", "builtins.__xonsh__.pyexit"
+        )
     if hasattr(builtins.__xonsh__, "quit"):
         builtins.__xonsh_pyquit__ = ProxyWarning(
-            'builtins.__xonsh_pyquit__',
-            'builtins.__xonsh__.pyquit')
+            "builtins.__xonsh_pyquit__", "builtins.__xonsh__.pyquit"
+        )
 
 
 def unload_proxies():
