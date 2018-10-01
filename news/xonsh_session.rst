@@ -1,11 +1,11 @@
 **Added:** None
 
-**Changed:** None
+**Changed:**
 
 * All ``__xonsh_*__`` builtins have been migrated to a ``XonshSession`` instance at
   ``__xonsh__``. E.g. ``__xonsh_env__`` is now ``__xonsh__.env``.
 
-**Deprecated:** None
+**Deprecated:**
 
 * All ``__xonsh_*__`` builtins are deprected. Instead, the corresponding
   ``__xonsh__.*`` accessor should be used. The existing ``__xonsh_*__`` accessors
