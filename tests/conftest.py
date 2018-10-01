@@ -4,7 +4,21 @@ import os
 
 import pytest
 
-from xonsh.built_ins import ensure_list_of_strs, enter_macro, XonshSession
+from xonsh.tools import XonshError
+from xonsh.built_ins import (
+    ensure_list_of_strs,
+    enter_macro,
+    XonshSession,
+    pathsearch,
+    globsearch,
+    regexsearch,
+    list_of_strs_or_callables,
+    list_of_list_of_strs_outer_product,
+    call_macro,
+    enter_macro,
+    path_literal,
+    _BuiltIns,
+)
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
@@ -58,6 +72,9 @@ def xonsh_builtins(xonsh_events):
     builtins.__xonsh__.glob = glob.glob
     builtins.__xonsh__.exit = False
     builtins.__xonsh__.superhelp = lambda x: x
+    builtins.__xonsh__.pathsearch = pathsearch
+    builtins.__xonsh__.globsearch = globsearch
+    builtins.__xonsh__.regexsearch = regexsearch
     builtins.__xonsh__.regexpath = lambda x: []
     builtins.__xonsh__.expand_path = lambda x: x
     builtins.__xonsh__.subproc_captured = sp
@@ -67,9 +84,21 @@ def xonsh_builtins(xonsh_events):
     builtins.__xonsh__.ensure_list_of_strs = ensure_list_of_strs
     builtins.__xonsh__.commands_cache = DummyCommandsCache()
     builtins.__xonsh__.all_jobs = {}
+    builtins.__xonsh__.list_of_strs_or_callables = list_of_strs_or_callables
+    builtins.__xonsh__.list_of_list_of_strs_outer_product = (
+        list_of_list_of_strs_outer_product
+    )
     builtins.__xonsh__.history = DummyHistory()
+    builtins.__xonsh__.subproc_captured_stdout = sp
+    builtins.__xonsh__.subproc_captured_inject = sp
+    builtins.__xonsh__.subproc_captured_object = sp
     builtins.__xonsh__.subproc_captured_hiddenobject = sp
     builtins.__xonsh__.enter_macro = enter_macro
+    builtins.__xonsh__.completers = None
+    builtins.__xonsh__.call_macro = call_macro
+    builtins.__xonsh__.enter_macro = enter_macro
+    builtins.__xonsh__.path_literal = path_literal
+    builtins.__xonsh__.builtins = _BuiltIns(execer=execer)
     builtins.evalx = eval
     builtins.execx = None
     builtins.compilex = None
