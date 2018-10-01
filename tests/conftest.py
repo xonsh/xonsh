@@ -4,10 +4,8 @@ import os
 
 import pytest
 
-from xonsh.tools import XonshError
 from xonsh.built_ins import (
     ensure_list_of_strs,
-    enter_macro,
     XonshSession,
     pathsearch,
     globsearch,
