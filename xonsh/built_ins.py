@@ -1500,7 +1500,7 @@ def load_proxies():
             'events', '__xonsh__.builtins.events'),
     ]
 
-    #print([s for s in dir(builtins) if s.startswith('_')])
+    print([s for s in dir(builtins) if s.startswith('_')])
     for obj, badname, goodname in mapping:
         proxy = ProxyWarning(obj, badname, goodname)
         setattr(builtins, badname, proxy)
