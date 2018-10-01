@@ -1299,7 +1299,6 @@ class XonshSession:
         ctx : Mapping, optional
             Context to start xonsh session with.
         """
-        self.config = {}
         if ctx is not None:
             self.ctx = ctx
         self.env = Env(default_env())
@@ -1437,8 +1436,6 @@ def load_proxies():
             '__xonsh_history__', '__xonsh__.history'),
         (builtins.__xonsh__.ctx,
             '__xonsh_ctx__', '__xonsh__.ctx'),
-        (builtins.__xonsh__.config,
-            '__xonsh_config__', '__xonsh__.config'),
         (builtins.__xonsh__.help,
             '__xonsh_help__', '__xonsh__.help'),
         (builtins.__xonsh__.superhelp,
@@ -1528,7 +1525,6 @@ def unload_proxies():
         builtins.quit = builtins.__xonsh_pyquit__
 
     names = [
-        "__xonsh_config__",
         "__xonsh_env__",
         "__xonsh_ctx__",
         "__xonsh_help__",
