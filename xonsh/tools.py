@@ -149,7 +149,7 @@ def findfirst(s, substrs):
     return i, result
 
 
-class EnvPath(collections.MutableSequence):
+class EnvPath(cabc.MutableSequence):
     """A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
     relevant env variable has been set.
@@ -167,7 +167,7 @@ class EnvPath(collections.MutableSequence):
                 # decode bytes to a string and then split based on
                 # the default path separator
                 self._l = decode_bytes(args).split(os.pathsep)
-            elif isinstance(args, collections.Iterable):
+            elif isinstance(args, cabc.Iterable):
                 # put everything in a list -before- performing the type check
                 # in order to be able to retrieve it later, for cases such as
                 # when a generator expression was passed as an argument

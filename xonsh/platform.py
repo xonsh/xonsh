@@ -12,6 +12,7 @@ import platform
 import functools
 import subprocess
 import collections
+import collections.abc as cabc
 import importlib.util
 
 from xonsh.lazyasd import LazyBool, lazyobject, lazybool
@@ -415,7 +416,7 @@ def windows_bash_command():
 
 if ON_WINDOWS:
 
-    class OSEnvironCasePreserving(collections.MutableMapping):
+    class OSEnvironCasePreserving(cabc.MutableMapping):
         """ Case-preserving wrapper for os.environ on Windows.
             It uses nt.environ to get the correct cased keys on
             initialization. It also preserves the case of any variables
