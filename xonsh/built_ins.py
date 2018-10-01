@@ -1389,129 +1389,97 @@ class _BuiltIns:
 
 
 class ProxyWarning:
-    def __init__(self, obj, badname, goodname):
-        super().__setattr__('obj', obj)
+    def __init__(self, badname, goodname):
         super().__setattr__('badname', badname)
         super().__setattr__('goodname', goodname)
 
-    def __getattr__(self, name):
+    @property
+    def obj(self):
+        """Dynamically grabs object"""
+        names = self.goodname.split('.')
+        obj = builtins
+        for name in names:
+            obj = getattr(obj, name)
+        return obj
+
+    def warn(self):
+        """Issues deprecation warning."""
         warnings.warn("{} has been deprecated, please use {} instead.".format(
             self.badname,
             self.goodname), DeprecationWarning)
+
+    def __getattr__(self, name):
+        self.warn()
         return getattr(self.obj, name)
 
     def __setattr__(self, name, value):
-        warnings.warn("{} has been deprecated, please use {} instead.".format(
-            self.badname,
-            self.goodname), DeprecationWarning)
+        self.warn()
         return super().__setattr__(self.obj, name, value)
 
     def __getitem__(self, item):
-        warnings.warn("{} has been deprecated, please use {} instead.".format(
-            self.badname,
-            self.goodname), DeprecationWarning)
+        self.warn()
         return self.obj.__getitem__(item)
 
     def __setitem__(self, item, value):
-        warnings.warn("{} has been deprecated, please use {} instead.".format(
-            self.badname,
-            self.goodname), DeprecationWarning)
+        self.warn()
         return self.obj.__setitem__(item, value)
 
-    def __call__(self, value):
-        warnings.warn("{} has been deprecated, please use {} instead.".format(
-            self.badname,
-            self.goodname), DeprecationWarning)
-        return self.obj.__call__(value)
+    def __call__(self, *args, **kwargs):
+        self.warn()
+        return self.obj.__call__(*args, **kwargs)
 
 
 def load_proxies():
     """Put temporary shims in place for `__xonsh_*__` builtins.
 
     """
-    mapping = [
-        (builtins.__xonsh__.env,
-            '__xonsh_env__', '__xonsh__.env'),
-        (builtins.__xonsh__.history,
-            '__xonsh_history__', '__xonsh__.history'),
-        (builtins.__xonsh__.ctx,
-            '__xonsh_ctx__', '__xonsh__.ctx'),
-        (builtins.__xonsh__.help,
-            '__xonsh_help__', '__xonsh__.help'),
-        (builtins.__xonsh__.superhelp,
-            'builtins', 'builtins.superhelp'),
-        (builtins.__xonsh__.pathsearch,
-            '__xonsh_pathsearch__', '__xonsh__.pathsearch'),
-        (builtins.__xonsh__.globsearch,
-            '__xonsh_globsearch__', '__xonsh__.globsearch'),
-        (builtins.__xonsh__.regexsearch,
-            '__xonsh_regexsearch__', '__xonsh__.regexsearch'),
-        (builtins.__xonsh__.glob,
-            '__xonsh_glob__', '__xonsh__.glob'),
-        (builtins.__xonsh__.expand_path,
-            '__xonsh_expand_path__', '__xonsh__.expand_path'),
-        (builtins.__xonsh__.exit,
-            '__xonsh_exit__', '__xonsh__.exit'),
-        (builtins.__xonsh__.stdout_uncaptured,
-            '__xonsh_stdout_uncaptured__', '__xonsh__.stdout_uncaptured'),
-        (builtins.__xonsh__.stderr_uncaptured,
-            '__xonsh_stderr_uncaptured__', '__xonsh__.stderr_uncaptured'),
-        (builtins.__xonsh__.subproc_captured_stdout,
-            '__xonsh_subproc_captured_stdout__', '__xonsh__.subproc_captured_stdout'),
-        (builtins.__xonsh__.subproc_captured_inject,
-            '__xonsh_subproc_captured_inject__', '__xonsh__.subproc_captured_inject'),
-        (builtins.__xonsh__.subproc_captured_object,
-            '__xonsh_subproc_captured_object__', '__xonsh__.subproc_captured_object'),
-        (builtins.__xonsh__.subproc_captured_hiddenobject,
-            '__xonsh_subproc_captured_hiddenobject__', '__xonsh__.subproc_captured_hiddenobject'),
-        (builtins.__xonsh__.subproc_uncaptured,
-            '__xonsh_subproc_uncaptured__', '__xonsh__.subproc_uncaptured'),
-        (builtins.__xonsh__.execer,
-            '__xonsh_execer__', '__xonsh__.execer'),
-        (builtins.__xonsh__.commands_cache,
-            '__xonsh_commands_cache__', '__xonsh__.commands_cache'),
-        (builtins.__xonsh__.all_jobs,
-            '__xonsh_all_jobs__', '__xonsh__.all_jobs'),
-        (builtins.__xonsh__.ensure_list_of_strs,
-            '__xonsh_ensure_list_of_strs__', '__xonsh__.ensure_list_of_strs'),
-        (builtins.__xonsh__.list_of_strs_or_callables,
-            '__xonsh_list_of_strs_or_callables__', '__xonsh__.list_of_strs_or_callables'),
-        (builtins.__xonsh__.list_of_list_of_strs_outer_product,
-            '__xonsh_list_of_list_of_strs_outer_product__', '__xonsh__.list_of_list_of_strs_outer_product'),
-        (builtins.__xonsh__.completers,
-            '__xonsh_completers__', '__xonsh__.completers'),
-        (builtins.__xonsh__.call_macro,
-            '__xonsh_call_macro__', '__xonsh__.call_macro'),
-        (builtins.__xonsh__.enter_macro,
-            '__xonsh_enter_macro__', '__xonsh__.enter_macro'),
-        (builtins.__xonsh__.path_literal,
-            '__xonsh_path_literal__', '__xonsh__.path_literal'),
-        (builtins.__xonsh__.builtins.XonshError,
-            'XonshError', '__xonsh__.builtins.XonshError'),
-        (builtins.__xonsh__.builtins.XonshCalledProcessError,
-            'XonshCalledProcessError', '__xonsh__.builtins.XonshCalledProcessError'),
-        (builtins.__xonsh__.builtins.evalx,
-            'evalx', '__xonsh__.builtins.evalx'),
-        (builtins.__xonsh__.builtins.execx,
-            'execx', '__xonsh__.builtins.execx'),
-        (builtins.__xonsh__.builtins.compilex,
-            'compilex', '__xonsh__.builtins.compilex'),
-        (builtins.__xonsh__.builtins.events,
-            'events', '__xonsh__.builtins.events'),
-    ]
+    mapping = {
+            '__xonsh_env__': '__xonsh__.env',
+            '__xonsh_history__': '__xonsh__.history',
+            '__xonsh_ctx__': '__xonsh__.ctx',
+            '__xonsh_help__': '__xonsh__.help',
+            'builtins': 'builtins.superhelp',
+            '__xonsh_pathsearch__': '__xonsh__.pathsearch',
+            '__xonsh_globsearch__': '__xonsh__.globsearch',
+            '__xonsh_regexsearch__': '__xonsh__.regexsearch',
+            '__xonsh_glob__': '__xonsh__.glob',
+            '__xonsh_expand_path__': '__xonsh__.expand_path',
+            '__xonsh_exit__': '__xonsh__.exit',
+            '__xonsh_stdout_uncaptured__': '__xonsh__.stdout_uncaptured',
+            '__xonsh_stderr_uncaptured__': '__xonsh__.stderr_uncaptured',
+            '__xonsh_subproc_captured_stdout__': '__xonsh__.subproc_captured_stdout',
+            '__xonsh_subproc_captured_inject__': '__xonsh__.subproc_captured_inject',
+            '__xonsh_subproc_captured_object__': '__xonsh__.subproc_captured_object',
+            '__xonsh_subproc_captured_hiddenobject__': '__xonsh__.subproc_captured_hiddenobject',
+            '__xonsh_subproc_uncaptured__': '__xonsh__.subproc_uncaptured',
+            '__xonsh_execer__': '__xonsh__.execer',
+            '__xonsh_commands_cache__': '__xonsh__.commands_cache',
+            '__xonsh_all_jobs__': '__xonsh__.all_jobs',
+            '__xonsh_ensure_list_of_strs__': '__xonsh__.ensure_list_of_strs',
+            '__xonsh_list_of_strs_or_callables__': '__xonsh__.list_of_strs_or_callables',
+            '__xonsh_list_of_list_of_strs_outer_product__': '__xonsh__.list_of_list_of_strs_outer_product',
+            '__xonsh_completers__': '__xonsh__.completers',
+            '__xonsh_call_macro__': '__xonsh__.call_macro',
+            '__xonsh_enter_macro__': '__xonsh__.enter_macro',
+            '__xonsh_path_literal__': '__xonsh__.path_literal',
+            'XonshError': '__xonsh__.builtins.XonshError',
+            'XonshCalledProcessError': '__xonsh__.builtins.XonshCalledProcessError',
+            'evalx': '__xonsh__.builtins.evalx',
+            'execx': '__xonsh__.builtins.execx',
+            'compilex': '__xonsh__.builtins.compilex',
+            'events': '__xonsh__.builtins.events',
+    }
 
-    for obj, badname, goodname in mapping:
-        proxy = ProxyWarning(obj, badname, goodname)
+    for badname, goodname in mapping.items():
+        proxy = ProxyWarning(badname, goodname)
         setattr(builtins, badname, proxy)
 
     if hasattr(builtins.__xonsh__, "pyexit"):
         builtins.__xonsh_pyexit__ = ProxyWarning(
-            builtins.__xonsh__.pyexit,
             'builtins.__xonsh_pyexit__',
             'builtins.__xonsh__.pyexit')
     if hasattr(builtins.__xonsh__, "quit"):
         builtins.__xonsh_pyquit__ = ProxyWarning(
-            builtins.__xonsh__.pyquit,
             'builtins.__xonsh_pyquit__',
             'builtins.__xonsh__.pyquit')
 
