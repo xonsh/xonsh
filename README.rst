@@ -31,3 +31,5 @@ Projects that use xonsh
 ***********************
 
 - `gitsome <https://github.com/donnemartin/gitsome>`_: A supercharged Git/shell autocompleter with GitHub integration.
+- `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
+- `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
