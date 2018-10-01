@@ -108,7 +108,8 @@ def xonsh_builtins(xonsh_events):
     builtins.events = xonsh_events
     yield builtins
     for attr in set(dir(builtins)) - old_builtins:
-        delattr(builtins, attr)
+        if hasattr(builtins, attr):
+            delattr(builtins, attr)
     tasks.clear()  # must to this to enable resetting all_jobs
 
 

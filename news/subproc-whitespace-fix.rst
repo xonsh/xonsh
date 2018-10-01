@@ -14,7 +14,7 @@
 
   .. code-block:: sh
 
-    $ true && false || echo a                                                                                           
+    $ true && false || echo a
     xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
     NameError: name 'false' is not defined
 
@@ -27,7 +27,7 @@
 
   .. code-block:: sh
 
-    $ true && false || echo a 
+    $ true && false || echo a
     a
 
     $ echo; echo && echo a
