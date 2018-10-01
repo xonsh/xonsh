@@ -71,10 +71,7 @@ def carriage_return(b, cli, *, autoindent=True):
     elif current_line_blank and in_partial_string:
         b.newline(copy_margin=autoindent)
     else:
-        try:
-            b.accept_action.validate_and_handle(cli, b)
-        except AttributeError:  # PTK 2.0
-            b.validate_and_handle()
+        b.validate_and_handle()
 
 
 def _is_blank(l):
@@ -154,10 +151,7 @@ def ctrl_d_condition():
         raise EOFError
     else:
         app = get_app()
-        try:
-            buffer_name = app.current_buffer_name
-        except AttributeError:  # PTK 2.0
-            buffer_name = app.current_buffer.name
+        buffer_name = app.current_buffer.name
 
         return buffer_name == DEFAULT_BUFFER and not app.current_buffer.text
 
@@ -307,10 +301,7 @@ def load_xonsh_bindings(key_bindings):
     def call_exit_alias(event):
         """Use xonsh exit function"""
         b = event.cli.current_buffer
-        try:
-            b.accept_action.validate_and_handle(event.cli, b)
-        except AttributeError:  # PTK 2.0
-            b.validate_and_handle()
+        b.validate_and_handle()
         xonsh_exit([])
 
     @handle(Keys.ControlJ, filter=IsMultiline())
@@ -335,10 +326,7 @@ def load_xonsh_bindings(key_bindings):
     def execute_block_now(event):
         """Execute a block of text irrespective of cursor position"""
         b = event.cli.current_buffer
-        try:
-            b.accept_action.validate_and_handle(event.cli, b)
-        except AttributeError:  # PTK 2.0
-            b.validate_and_handle()
+        b.validate_and_handle()
 
     @handle(Keys.Left, filter=beginning_of_line)
     def wrap_cursor_back(event):
