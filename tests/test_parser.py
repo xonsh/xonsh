@@ -113,8 +113,8 @@ def test_bytes_literal():
 
 
 def test_raw_literal():
-    check_ast('r"hell\o"')
-    check_ast('R"hell\o"')
+    check_ast('r"hell\\o"')
+    check_ast('R"hell\\o"')
 
 
 @skip_if_lt_py36
@@ -145,10 +145,10 @@ def test_sub_env_vars(inp, exp):
 
 
 def test_raw_bytes_literal():
-    check_ast('br"hell\o"')
-    check_ast('RB"hell\o"')
-    check_ast('Br"hell\o"')
-    check_ast('rB"hell\o"')
+    check_ast('br"hell\\o"')
+    check_ast('RB"hell\\o"')
+    check_ast('Br"hell\\o"')
+    check_ast('rB"hell\\o"')
 
 
 def test_unary_plus():
@@ -1976,8 +1976,8 @@ def test_function_blank_line():
         "def foo():\n"
         "    ascii_art = [\n"
         '        "(╯°□°）╯︵ ┻━┻",\n'
-        '        "¯\\_(ツ)_/¯",\n'
-        '        "┻━┻︵ \\(°□°)/ ︵ ┻━┻",\n'
+        r'        "¯\\_(ツ)_/¯",' '\n'
+        r'        "┻━┻︵ \\(°□°)/ ︵ ┻━┻",' '\n'
         "    ]\n"
         "\n"
         "    import random\n"

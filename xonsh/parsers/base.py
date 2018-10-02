@@ -27,7 +27,7 @@ RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
 RE_FSTR_ENVVAR = LazyObject(
-    lambda: re.compile("\{\s*\$(\w+)"), globals(), "RE_FSTR_ENVVAR"
+    lambda: re.compile(r"\{\s*\$(\w+)"), globals(), "RE_FSTR_ENVVAR"
 )
 
 
