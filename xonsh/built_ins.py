@@ -1387,15 +1387,60 @@ class _BuiltIns:
         self.events = events
 
 
-class ProxyWarning:
-    def __init__(self, badname, goodname):
-        super().__setattr__("badname", badname)
-        super().__setattr__("goodname", goodname)
+class DynamicAccessProxy:
+    """Proxies access dynamically."""
+
+    def __init__(self, refname, objname):
+        """
+        Parameters
+        ----------
+        refname : str
+            '.'-separated string that represents the new, reference name that
+            the user will access.
+        objname : str
+            '.'-separated string that represents the name where the target
+            object actually lives that refname points to.
+        """
+        super().__setattr__("refname", refname)
+        super().__setattr__("objname", objname)
 
     @property
     def obj(self):
         """Dynamically grabs object"""
-        names = self.goodname.split(".")
+        names = self.objname.split(".")
+        obj = builtins
+        for name in names:
+            obj = getattr(obj, name)
+        return obj
+
+    def __getattr__(self, name):
+        return getattr(self.obj, name)
+
+    def __setattr__(self, name, value):
+        return super().__setattr__(self.obj, name, value)
+
+    def __getitem__(self, item):
+        return self.obj.__getitem__(item)
+
+    def __setitem__(self, item, value):
+        return self.obj.__setitem__(item, value)
+
+    def __call__(self, *args, **kwargs):
+        return self.obj.__call__(*args, **kwargs)
+
+
+
+class DeprecationWarningProxy:
+    """Proxies access, but warns in the process."""
+
+    def __init__(self, oldname, newname):
+        super().__setattr__("oldname", oldname)
+        super().__setattr__("newname", newname)
+
+    @property
+    def obj(self):
+        """Dynamically grabs object"""
+        names = self.newname.split(".")
         obj = builtins
         for name in names:
             obj = getattr(obj, name)
@@ -1405,7 +1450,7 @@ class ProxyWarning:
         """Issues deprecation warning."""
         warnings.warn(
             "{} has been deprecated, please use {} instead.".format(
-                self.badname, self.goodname
+                self.oldname, self.newname
             ),
             DeprecationWarning,
         )
@@ -1432,15 +1477,27 @@ class ProxyWarning:
 
 
 def load_proxies():
-    """Put temporary shims in place for `__xonsh_*__` builtins.
-
+    """Loads builtin dynamic access proxies.
+    Also puts temporary shims in place for `__xonsh_*__` builtins.
     """
-    mapping = {
+    proxy_mapping = {
+        "XonshError": "__xonsh__.builtins.XonshError",
+        "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
+        "evalx": "__xonsh__.builtins.evalx",
+        "execx": "__xonsh__.builtins.execx",
+        "compilex": "__xonsh__.builtins.compilex",
+        "events": "__xonsh__.builtins.events",
+    }
+    for refname, objname in proxy_mapping.items():
+        proxy = DynamicAccessProxy(refname, objname)
+        setattr(builtins, refname, proxy)
+
+    deprecated_mapping = {
         "__xonsh_env__": "__xonsh__.env",
         "__xonsh_history__": "__xonsh__.history",
         "__xonsh_ctx__": "__xonsh__.ctx",
         "__xonsh_help__": "__xonsh__.help",
-        "builtins": "builtins.superhelp",
+        "__xonsh_superhelp__": "__xonsh__.superhelp",
         "__xonsh_pathsearch__": "__xonsh__.pathsearch",
         "__xonsh_globsearch__": "__xonsh__.globsearch",
         "__xonsh_regexsearch__": "__xonsh__.regexsearch",
@@ -1464,24 +1521,17 @@ def load_proxies():
         "__xonsh_call_macro__": "__xonsh__.call_macro",
         "__xonsh_enter_macro__": "__xonsh__.enter_macro",
         "__xonsh_path_literal__": "__xonsh__.path_literal",
-        "XonshError": "__xonsh__.builtins.XonshError",
-        "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
-        "evalx": "__xonsh__.builtins.evalx",
-        "execx": "__xonsh__.builtins.execx",
-        "compilex": "__xonsh__.builtins.compilex",
-        "events": "__xonsh__.builtins.events",
     }
-
-    for badname, goodname in mapping.items():
-        proxy = ProxyWarning(badname, goodname)
+    for badname, goodname in deprecated_mapping.items():
+        proxy = DeprecationWarningProxy(badname, goodname)
         setattr(builtins, badname, proxy)
 
     if hasattr(builtins.__xonsh__, "pyexit"):
-        builtins.__xonsh_pyexit__ = ProxyWarning(
+        builtins.__xonsh_pyexit__ = DeprecationWarningProxy(
             "builtins.__xonsh_pyexit__", "builtins.__xonsh__.pyexit"
         )
     if hasattr(builtins.__xonsh__, "quit"):
-        builtins.__xonsh_pyquit__ = ProxyWarning(
+        builtins.__xonsh_pyquit__ = DeprecationWarningProxy(
             "builtins.__xonsh_pyquit__", "builtins.__xonsh__.pyquit"
         )
 
