@@ -72,7 +72,7 @@ class Prompter(object):
 
         # Create CommandLineInterface.
         if self.cli is None:
-            if builtins.__xonsh_env__.get("VI_MODE"):
+            if builtins.__xonsh__.env.get("VI_MODE"):
                 editing_mode = EditingMode.VI
             else:
                 editing_mode = EditingMode.EMACS

@@ -14,7 +14,7 @@ import xonsh.tools as xt
 
 
 def _xh_sqlite_get_file_name():
-    envs = builtins.__xonsh_env__
+    envs = builtins.__xonsh__.env
     file_name = envs.get("XONSH_HISTORY_SQLITE_FILE")
     if not file_name:
         data_dir = envs.get("XONSH_DATA_DIR")
@@ -152,7 +152,7 @@ class SqliteHistoryGC(threading.Thread):
         if self.size is not None:
             hsize, units = xt.to_history_tuple(self.size)
         else:
-            envs = builtins.__xonsh_env__
+            envs = builtins.__xonsh__.env
             hsize, units = envs.get("XONSH_HISTORY_SIZE")
         if units != "commands":
             print(
@@ -182,7 +182,7 @@ class SqliteHistory(History):
         self.tss = []
 
     def append(self, cmd):
-        envs = builtins.__xonsh_env__
+        envs = builtins.__xonsh__.env
         opts = envs.get("HISTCONTROL")
         inp = cmd["inp"].rstrip()
         self.inps.append(inp)
@@ -229,7 +229,7 @@ class SqliteHistory(History):
             sessionid=self.sessionid, filename=self.filename
         )
         data["all items"] = xh_sqlite_get_count(filename=self.filename)
-        envs = builtins.__xonsh_env__
+        envs = builtins.__xonsh__.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         return data
 

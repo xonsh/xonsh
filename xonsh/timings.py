@@ -188,7 +188,7 @@ def timeit_alias(args, stdin=None):
     repeat = 3
     precision = 3
     # setup
-    ctx = builtins.__xonsh_ctx__
+    ctx = builtins.__xonsh__.ctx
     timer = Timer(timer=clock)
     stmt = " ".join(args)
     innerstr = INNER_TEMPLATE.format(stmt=stmt)

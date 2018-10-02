@@ -66,7 +66,7 @@ class _TeeStdBuf(io.RawIOBase):
         """
         self.stdbuf = stdbuf
         self.membuf = membuf
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         self.encoding = env.get("XONSH_ENCODING") if encoding is None else encoding
         self.errors = env.get("XONSH_ENCODING_ERRORS") if errors is None else errors
         self.prestd = prestd
@@ -260,7 +260,7 @@ class Tee:
             write_through=write_through,
         )
         self.stdout = _TeeStd("stdout", self.memory)
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         prestderr = format_std_prepost(env.get("XONSH_STDERR_PREFIX"))
         poststderr = format_std_prepost(env.get("XONSH_STDERR_POSTFIX"))
         self.stderr = _TeeStd(
@@ -312,7 +312,7 @@ class BaseShell(object):
             if HAS_PYGMENTS:
                 from xonsh.pyghooks import XonshStyle
 
-                env = builtins.__xonsh_env__
+                env = builtins.__xonsh__.env
                 self._styler = XonshStyle(env.get("XONSH_COLOR_STYLE"))
             else:
                 self._styler = None
@@ -349,8 +349,8 @@ class BaseShell(object):
 
         events.on_precommand.fire(cmd=src)
 
-        env = builtins.__xonsh_env__
-        hist = builtins.__xonsh_history__  # pylint: disable=no-member
+        env = builtins.__xonsh__.env
+        hist = builtins.__xonsh__.history  # pylint: disable=no-member
         ts1 = None
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
@@ -382,7 +382,7 @@ class BaseShell(object):
                 print(os.linesep, end="")
             tee.close()
             self._fix_cwd()
-        if builtins.__xonsh_exit__:  # pylint: disable=no-member
+        if builtins.__xonsh__.exit:  # pylint: disable=no-member
             return True
 
     def _append_history(self, tee_out=None, **info):
@@ -391,7 +391,7 @@ class BaseShell(object):
         This also handles on_postcommand because this is the place where all the
         information is available.
         """
-        hist = builtins.__xonsh_history__  # pylint: disable=no-member
+        hist = builtins.__xonsh__.history  # pylint: disable=no-member
         info["rtn"] = hist.last_cmd_rtn if hist is not None else None
         tee_out = tee_out or None
         last_out = hist.last_cmd_out if hist is not None else None
@@ -412,7 +412,7 @@ class BaseShell(object):
 
     def _fix_cwd(self):
         """Check if the cwd changed out from under us."""
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh__.env
         try:
             cwd = os.getcwd()
         except (FileNotFoundError, OSError):
@@ -499,7 +499,7 @@ class BaseShell(object):
 
     def settitle(self):
         """Sets terminal title."""
-        env = builtins.__xonsh_env__  # pylint: disable=no-member
+        env = builtins.__xonsh__.env  # pylint: disable=no-member
         term = env.get("TERM", None)
         # Shells running in emacs sets TERM to "dumb" or "eterm-color".
         # Do not set title for these to avoid garbled prompt.
@@ -533,7 +533,7 @@ class BaseShell(object):
                     print_exception()
                     self.mlprompt = "<multiline prompt error> "
             return self.mlprompt
-        env = builtins.__xonsh_env__  # pylint: disable=no-member
+        env = builtins.__xonsh__.env  # pylint: disable=no-member
         p = env.get("PROMPT")
         try:
             p = self.prompt_formatter(p)
@@ -546,7 +546,7 @@ class BaseShell(object):
         """Formats the colors in a string. ``BaseShell``'s default implementation
         of this method uses colors based on ANSI color codes.
         """
-        style = builtins.__xonsh_env__.get("XONSH_COLOR_STYLE")
+        style = builtins.__xonsh__env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
@@ -559,7 +559,7 @@ class BaseShell(object):
             s = self.format_color(string, hide=hide)
         elif HAS_PYGMENTS:
             # assume this is a list of (Token, str) tuples and format it
-            env = builtins.__xonsh_env__
+            env = builtins.__xonsh__.env
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)

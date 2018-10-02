@@ -75,7 +75,7 @@ def _which_create_parser():
 
 def print_global_object(arg, stdout):
     """Print the object."""
-    obj = builtins.__xonsh_ctx__.get(arg)
+    obj = builtins.__xonsh__.ctx.get(arg)
     print("global object of {}".format(type(obj)), file=stdout)
 
 
@@ -87,7 +87,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
         p, f = os.path.split(abs_name)
         f = next(s.name for s in xp.scandir(p) if s.name.lower() == f.lower())
         abs_name = os.path.join(p, f)
-        if builtins.__xonsh_env__.get("FORCE_POSIX_PATHS", False):
+        if builtins.__xonsh__.env.get("FORCE_POSIX_PATHS", False):
             abs_name.replace(os.sep, os.altsep)
     if verbose:
         print("{} ({})".format(abs_name, from_where), file=stdout)
@@ -106,7 +106,7 @@ def print_alias(arg, stdout, verbose=False):
     else:
         print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
         if callable(builtins.aliases[arg]):
-            builtins.__xonsh_superhelp__(builtins.aliases[arg])
+            builtins.__xonsh__.superhelp(builtins.aliases[arg])
 
 
 def which(args, stdin=None, stdout=None, stderr=None, spec=None):
@@ -133,13 +133,13 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         if pargs.exts:
             exts = pargs.exts
         else:
-            exts = builtins.__xonsh_env__["PATHEXT"]
+            exts = builtins.__xonsh__.env["PATHEXT"]
     else:
         exts = None
     failures = []
     for arg in pargs.args:
         nmatches = 0
-        if pargs.all and arg in builtins.__xonsh_ctx__:
+        if pargs.all and arg in builtins.__xonsh__.ctx:
             print_global_object(arg, stdout)
             nmatches += 1
         if arg in builtins.aliases and not pargs.skip:
@@ -151,7 +151,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         # from os.environ so we temporarily override it with
         # __xosnh_env__['PATH']
         original_os_path = xp.os_environ["PATH"]
-        xp.os_environ["PATH"] = builtins.__xonsh_env__.detype()["PATH"]
+        xp.os_environ["PATH"] = builtins.__xonsh__.env.detype()["PATH"]
         matches = _which.whichgen(arg, exts=exts, verbose=verbose)
         for abs_name, from_where in matches:
             print_path(abs_name, from_where, stdout, verbose, captured)

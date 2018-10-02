@@ -12,6 +12,7 @@ import platform
 import functools
 import subprocess
 import collections
+import collections.abc as cabc
 import importlib.util
 
 from xonsh.lazyasd import LazyBool, lazyobject, lazybool
@@ -382,7 +383,7 @@ def windows_bash_command():
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     wbc = "bash"
-    cmd_cache = builtins.__xonsh_commands_cache__
+    cmd_cache = builtins.__xonsh__.commands_cache
     bash_on_path = cmd_cache.lazy_locate_binary("bash", ignore_alias=True)
     if bash_on_path:
         try:
@@ -415,7 +416,7 @@ def windows_bash_command():
 
 if ON_WINDOWS:
 
-    class OSEnvironCasePreserving(collections.MutableMapping):
+    class OSEnvironCasePreserving(cabc.MutableMapping):
         """ Case-preserving wrapper for os.environ on Windows.
             It uses nt.environ to get the correct cased keys on
             initialization. It also preserves the case of any variables

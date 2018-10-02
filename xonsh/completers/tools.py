@@ -16,7 +16,7 @@ def get_filter_function():
     Return an appropriate filtering function for completions, given the valid
     of $CASE_SENSITIVE_COMPLETIONS
     """
-    csc = builtins.__xonsh_env__.get("CASE_SENSITIVE_COMPLETIONS")
+    csc = builtins.__xonsh__.env.get("CASE_SENSITIVE_COMPLETIONS")
     if csc:
         return _filter_normal
     else:

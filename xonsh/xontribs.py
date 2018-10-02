@@ -60,10 +60,10 @@ def prompt_xontrib_install(names):
 
 def update_context(name, ctx=None):
     """Updates a context in place from a xontrib. If ctx is not provided,
-    then __xonsh_ctx__ is updated.
+    then __xonsh__.ctx is updated.
     """
     if ctx is None:
-        ctx = builtins.__xonsh_ctx__
+        ctx = builtins.__xonsh__.ctx
     if not hasattr(update_context, "bad_imports"):
         update_context.bad_imports = []
     modctx = xontrib_context(name)
@@ -83,7 +83,7 @@ def xontrib_metadata():
 
 def xontribs_load(names, verbose=False):
     """Load xontribs from a list of names"""
-    ctx = builtins.__xonsh_ctx__
+    ctx = builtins.__xonsh__.ctx
     for name in names:
         if verbose:
             print("loading xontrib {0!r}".format(name))

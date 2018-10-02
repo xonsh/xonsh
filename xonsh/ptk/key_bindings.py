@@ -16,7 +16,7 @@ from xonsh.aliases import xonsh_exit
 from xonsh.tools import check_for_partial_string, get_line_continuation
 from xonsh.shell import transform_command
 
-env = builtins.__xonsh_env__
+env = builtins.__xonsh__.env
 DEDENT_TOKENS = frozenset(["raise", "return", "pass", "break", "continue"])
 
 
@@ -81,8 +81,8 @@ def can_compile(src):
     src = transform_command(src, show_diff=False)
     src = src.lstrip()
     try:
-        builtins.__xonsh_execer__.compile(
-            src, mode="single", glbs=None, locs=builtins.__xonsh_ctx__
+        builtins.__xonsh__.execer.compile(
+            src, mode="single", glbs=None, locs=builtins.__xonsh__.ctx
         )
         rtn = True
     except SyntaxError:
@@ -132,7 +132,7 @@ def end_of_line(cli):
 def should_confirm_completion(cli):
     """Check if completion needs confirmation"""
     return (
-        builtins.__xonsh_env__.get("COMPLETIONS_CONFIRM")
+        builtins.__xonsh__.env.get("COMPLETIONS_CONFIRM")
         and cli.current_buffer.complete_state
     )
 
@@ -143,7 +143,7 @@ def ctrl_d_condition(cli):
     """Ctrl-D binding is only active when the default buffer is selected and
     empty.
     """
-    if builtins.__xonsh_env__.get("IGNOREEOF"):
+    if builtins.__xonsh__.env.get("IGNOREEOF"):
         raise EOFError
     else:
         return cli.current_buffer_name == DEFAULT_BUFFER and not cli.current_buffer.text
@@ -152,7 +152,7 @@ def ctrl_d_condition(cli):
 @Condition
 def autopair_condition(cli):
     """Check if XONSH_AUTOPAIR is set"""
-    return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
+    return builtins.__xonsh__.env.get("XONSH_AUTOPAIR", False)
 
 
 @Condition

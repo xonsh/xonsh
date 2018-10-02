@@ -22,8 +22,8 @@ def has_kwargs(func):
 
 
 def debug_level():
-    if hasattr(builtins, "__xonsh_env__"):
-        return builtins.__xonsh_env__.get("XONSH_DEBUG")
+    if hasattr(builtins.__xonsh__, "env"):
+        return builtins.__xonsh__.env.get("XONSH_DEBUG")
     # FIXME: Under py.test, return 1(?)
     else:
         return 0  # Optimize for speed, not guaranteed correctness

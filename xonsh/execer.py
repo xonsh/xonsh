@@ -15,7 +15,7 @@ from xonsh.tools import (
     replace_logical_line,
     balanced_parens,
 )
-from xonsh.built_ins import load_builtins, unload_builtins
+from xonsh.built_ins import load_builtins, unload_builtins, load_proxies, unload_proxies
 
 
 class Execer(object):
@@ -42,7 +42,7 @@ class Execer(object):
         unload : bool, optional
             Whether or not to unload xonsh builtins upon deletion.
         xonsh_ctx : dict or None, optional
-            Xonsh xontext to load as builtins.__xonsh_ctx__
+            Xonsh xontext to load as builtins.__xonsh__.ctx
         scriptcache : bool, optional
             Whether or not to use a precompiled bytecode cache when execing
             code, default: True.
@@ -59,9 +59,11 @@ class Execer(object):
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
         load_builtins(execer=self, ctx=xonsh_ctx)
+        load_proxies()
 
     def __del__(self):
         if self.unload:
+            unload_proxies()
             unload_builtins()
 
     def parse(self, input, ctx, mode="exec", filename=None, transform=True):

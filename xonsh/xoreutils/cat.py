@@ -6,7 +6,7 @@ from xonsh.xoreutils.util import arg_handler
 
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     enc = env.get("XONSH_ENCODING")
     if fname == "-":
         f = stdin

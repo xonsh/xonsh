@@ -18,7 +18,7 @@ def test_pattern_need_quotes():
 
 
 def test_complete_path(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = {
+    xonsh_builtins.__xonsh__.env = {
         "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
@@ -31,7 +31,7 @@ def test_complete_path(xonsh_builtins):
 
 @patch("xonsh.completers.path._add_cdpaths")
 def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = {
+    xonsh_builtins.__xonsh__.env = {
         "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,

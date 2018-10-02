@@ -12,11 +12,11 @@ __all__ = ()
 
 @events.on_transform_command
 def bash_preproc(cmd, **kw):
-    if not __xonsh_history__.inps:
+    if not __xonsh__.history.inps:
         if cmd.strip() == '!!':
             return ''
         return cmd
-    return cmd.replace('!!', __xonsh_history__.inps[-1].strip())
+    return cmd.replace('!!', __xonsh__.history.inps[-1].strip())
 
 
 @events.on_ptk_create
@@ -30,12 +30,12 @@ def custom_keybindings(bindings, **kw):
 
     @Condition
     def last_command_exists():
-        return len(__xonsh_history__) > 0
+        return len(__xonsh__.history) > 0
 
     @handler(Keys.Escape, '.', filter=last_command_exists &
              insert_mode)
     def recall_last_arg(event):
-        arg = __xonsh_history__[-1].cmd.split()[-1]
+        arg = __xonsh__.history[-1].cmd.split()[-1]
         event.current_buffer.insert_text(arg)
 
 

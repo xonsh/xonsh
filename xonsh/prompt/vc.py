@@ -13,7 +13,7 @@ import xonsh.tools as xt
 
 
 def _get_git_branch(q):
-    denv = builtins.__xonsh_env__.detype()
+    denv = builtins.__xonsh__.env.detype()
     try:
         branches = xt.decode_bytes(
             subprocess.check_output(
@@ -42,7 +42,7 @@ def get_git_branch():
     be determined (timeout, not in a git repo, etc.) then this returns None.
     """
     branch = None
-    timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
+    timeout = builtins.__xonsh__.env.get("VC_BRANCH_TIMEOUT")
     q = queue.Queue()
 
     t = threading.Thread(target=_get_git_branch, args=(q,))
@@ -56,7 +56,7 @@ def get_git_branch():
 
 
 def _get_hg_root(q):
-    _curpwd = builtins.__xonsh_env__["PWD"]
+    _curpwd = builtins.__xonsh__.env["PWD"]
     while True:
         if not os.path.isdir(_curpwd):
             return False
@@ -74,7 +74,7 @@ def get_hg_branch(root=None):
     """Try to get the mercurial branch of the current directory,
     return None if not in a repo or subprocess.TimeoutExpired if timed out.
     """
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     timeout = env["VC_BRANCH_TIMEOUT"]
     q = queue.Queue()
     t = threading.Thread(target=_get_hg_root, args=(q,))
@@ -115,7 +115,7 @@ _FIRST_BRANCH_TIMEOUT = True
 
 def _first_branch_timeout_message():
     global _FIRST_BRANCH_TIMEOUT
-    sbtm = builtins.__xonsh_env__["SUPPRESS_BRANCH_TIMEOUT_MESSAGE"]
+    sbtm = builtins.__xonsh__.env["SUPPRESS_BRANCH_TIMEOUT_MESSAGE"]
     if not _FIRST_BRANCH_TIMEOUT or sbtm:
         return
     _FIRST_BRANCH_TIMEOUT = False
@@ -138,7 +138,7 @@ def current_branch():
     '<branch-timeout>' is returned.
     """
     branch = None
-    cmds = builtins.__xonsh_commands_cache__
+    cmds = builtins.__xonsh__.commands_cache
     # check for binary only once
     if cmds.is_empty():
         has_git = bool(cmds.locate_binary("git", ignore_alias=True))
@@ -158,7 +158,7 @@ def current_branch():
 
 def _git_dirty_working_directory(q, include_untracked):
     status = None
-    denv = builtins.__xonsh_env__.detype()
+    denv = builtins.__xonsh__.env.detype()
     try:
         cmd = ["git", "status", "--porcelain"]
         if include_untracked:
@@ -176,7 +176,7 @@ def git_dirty_working_directory(include_untracked=False):
     """Returns whether or not the git directory is dirty. If this could not
     be determined (timeout, file not found, etc.) then this returns None.
     """
-    timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
+    timeout = builtins.__xonsh__.env.get("VC_BRANCH_TIMEOUT")
     q = queue.Queue()
     t = threading.Thread(
         target=_git_dirty_working_directory, args=(q, include_untracked)
@@ -193,7 +193,7 @@ def hg_dirty_working_directory():
     """Computes whether or not the mercurial working directory is dirty or not.
     If this cannot be determined, None is returned.
     """
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     cwd = env["PWD"]
     denv = env.detype()
     vcbt = env["VC_BRANCH_TIMEOUT"]
@@ -223,7 +223,7 @@ def dirty_working_directory():
     None. Currently supports git and hg.
     """
     dwd = None
-    cmds = builtins.__xonsh_commands_cache__
+    cmds = builtins.__xonsh__.commands_cache
     if cmds.lazy_locate_binary("git", ignore_alias=True):
         dwd = git_dirty_working_directory()
     if cmds.lazy_locate_binary("hg", ignore_alias=True) and dwd is None:

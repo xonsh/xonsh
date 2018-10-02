@@ -9,7 +9,7 @@ def complete_completer(prefix, line, start, end, ctx):
     if len(args) == 0 or args[0] != "completer":
         return None
     curix = args.index(prefix)
-    compnames = set(builtins.__xonsh_completers__.keys())
+    compnames = set(builtins.__xonsh__.completers.keys())
     if curix == 1:
         possible = {"list", "help", "add", "remove"}
     elif curix == 2:
@@ -23,7 +23,7 @@ def complete_completer(prefix, line, start, end, ctx):
         if args[1] != "add":
             raise StopIteration
         if curix == 3:
-            possible = {i for i, j in builtins.__xonsh_ctx__.items() if callable(j)}
+            possible = {i for i, j in builtins.__xonsh__.ctx.items() if callable(j)}
         elif curix == 4:
             possible = (
                 {"start", "end"}

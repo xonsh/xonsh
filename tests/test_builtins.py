@@ -46,8 +46,8 @@ def test_reglob_tests(testfile):
 
 @pytest.fixture
 def home_env(xonsh_builtins):
-    """Set `__xonsh_env__ ` to a new Env instance on `xonsh_builtins`"""
-    xonsh_builtins.__xonsh_env__ = Env(HOME=HOME_PATH)
+    """Set `__xonsh__.env ` to a new Env instance on `xonsh_builtins`"""
+    xonsh_builtins.__xonsh__.env = Env(HOME=HOME_PATH)
     return xonsh_builtins
 
 

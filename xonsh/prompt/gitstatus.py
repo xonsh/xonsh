@@ -28,13 +28,13 @@ GitStatus = collections.namedtuple(
 def _check_output(*args, **kwargs):
     kwargs.update(
         dict(
-            env=builtins.__xonsh_env__.detype(),
+            env=builtins.__xonsh__.env.detype(),
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             universal_newlines=True,
         )
     )
-    timeout = builtins.__xonsh_env__["VC_BRANCH_TIMEOUT"]
+    timeout = builtins.__xonsh__.env["VC_BRANCH_TIMEOUT"]
     # See https://docs.python.org/3/library/subprocess.html#subprocess.Popen.communicate
     with subprocess.Popen(*args, **kwargs) as proc:
         try:
@@ -80,7 +80,7 @@ def _DEFS():
 
 
 def _get_def(key):
-    def_ = builtins.__xonsh_env__.get("XONSH_GITSTATUS_" + key)
+    def_ = builtins.__xonsh__.env.get("XONSH_GITSTATUS_" + key)
     return def_ if def_ is not None else _DEFS[key]
 
 

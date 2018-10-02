@@ -40,7 +40,7 @@ class PromptFormatter:
     def __call__(self, template=DEFAULT_PROMPT, fields=None):
         """Formats a xonsh prompt template string."""
         if fields is None:
-            self.fields = builtins.__xonsh_env__.get("PROMPT_FIELDS", PROMPT_FIELDS)
+            self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
         else:
             self.fields = fields
         try:
@@ -65,7 +65,7 @@ class PromptFormatter:
         if field is None:
             return
         elif field.startswith("$"):
-            val = builtins.__xonsh_env__[field[1:]]
+            val = builtins.__xonsh__.env[field[1:]]
             return _format_value(val, spec, conv)
         elif field in self.fields:
             val = self._get_field_value(field)
@@ -164,7 +164,7 @@ def multiline_prompt(curr=""):
     # tail is the trailing whitespace
     tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
     # now to construct the actual string
-    dots = builtins.__xonsh_env__.get("MULTILINE_PROMPT")
+    dots = builtins.__xonsh__.env.get("MULTILINE_PROMPT")
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ""
@@ -210,7 +210,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
         return False
     included_names.discard(None)
     if PROMPT_FIELDS is None:
-        fmtter = builtins.__xonsh_env__.get("PROMPT_FIELDS", PROMPT_FIELDS)
+        fmtter = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
     else:
         fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())

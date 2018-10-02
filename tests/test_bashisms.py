@@ -7,6 +7,6 @@ def test_preproc(inp, exp, xonsh_builtins):
     """Test the bash preprocessor."""
     from xontrib.bashisms import bash_preproc
 
-    xonsh_builtins.__xonsh_history__.inps = ["ls\n"]
+    xonsh_builtins.__xonsh__.history.inps = ["ls\n"]
     obs = bash_preproc(inp)
     assert exp == obs

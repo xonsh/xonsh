@@ -19,7 +19,7 @@ def Shell(*args, **kwargs):
 
 
 @pytest.fixture
-def shell(xonsh_builtins, xonsh_execer, monkeypatch):
+def shell(xonsh_builtins, monkeypatch):
     """Xonsh Shell Mock"""
     Shell.shell_type_aliases = {"rl": "readline"}
     monkeypatch.setattr(xonsh.main, "Shell", Shell)
@@ -28,38 +28,38 @@ def shell(xonsh_builtins, xonsh_execer, monkeypatch):
 def test_premain_no_arg(shell, monkeypatch):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     xonsh.main.premain([])
-    assert builtins.__xonsh_env__.get("XONSH_LOGIN")
+    assert builtins.__xonsh__.env.get("XONSH_LOGIN")
 
 
 def test_premain_interactive(shell):
     xonsh.main.premain(["-i"])
-    assert builtins.__xonsh_env__.get("XONSH_INTERACTIVE")
+    assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
 
 
 def test_premain_login_command(shell):
     xonsh.main.premain(["-l", "-c", 'echo "hi"'])
-    assert builtins.__xonsh_env__.get("XONSH_LOGIN")
+    assert builtins.__xonsh__.env.get("XONSH_LOGIN")
 
 
 def test_premain_login(shell):
     xonsh.main.premain(["-l"])
-    assert builtins.__xonsh_env__.get("XONSH_LOGIN")
+    assert builtins.__xonsh__.env.get("XONSH_LOGIN")
 
 
 def test_premain_D(shell):
     xonsh.main.premain(["-DTEST1=1616", "-DTEST2=LOL"])
-    assert builtins.__xonsh_env__.get("TEST1") == "1616"
-    assert builtins.__xonsh_env__.get("TEST2") == "LOL"
+    assert builtins.__xonsh__.env.get("TEST1") == "1616"
+    assert builtins.__xonsh__.env.get("TEST2") == "LOL"
 
 
 def test_premain_custom_rc(shell, tmpdir, monkeypatch):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-    builtins.__xonsh_env__ = Env(XONSH_CACHE_SCRIPTS=False)
+    builtins.__xonsh__.env = Env(XONSH_CACHE_SCRIPTS=False)
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["--rc", f.strpath])
     assert args.mode == XonshMode.interactive
-    assert f.strpath in builtins.__xonsh_env__.get("XONSHRC")
+    assert f.strpath in builtins.__xonsh__.env.get("XONSHRC")
 
 
 def test_no_rc_with_script(shell, tmpdir):
@@ -69,19 +69,19 @@ def test_no_rc_with_script(shell, tmpdir):
 
 def test_force_interactive_rc_with_script(shell, tmpdir):
     args = xonsh.main.premain(["-i", "tests/sample.xsh"])
-    assert builtins.__xonsh_env__.get("XONSH_INTERACTIVE")
+    assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
 
 
 def test_force_interactive_custom_rc_with_script(shell, tmpdir):
     """Calling a custom RC file on a script-call with the interactive flag
     should run interactively
     """
-    builtins.__xonsh_env__ = Env(XONSH_CACHE_SCRIPTS=False)
+    builtins.__xonsh__.env = Env(XONSH_CACHE_SCRIPTS=False)
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
     assert args.mode == XonshMode.interactive
-    assert f.strpath in builtins.__xonsh_env__.get("XONSHRC")
+    assert f.strpath in builtins.__xonsh__.env.get("XONSHRC")
 
 
 def test_custom_rc_with_script(shell, tmpdir):
@@ -95,8 +95,8 @@ def test_custom_rc_with_script(shell, tmpdir):
 
 
 def test_premain_no_rc(shell, tmpdir):
-    xonsh.main.premain(["--no-rc"])
-    assert not builtins.__xonsh_env__.get("XONSHRC")
+    xonsh.main.premain(["--no-rc", "-i"])
+    assert not builtins.__xonsh__.env.get("XONSHRC")
 
 
 @pytest.mark.parametrize(
@@ -104,12 +104,12 @@ def test_premain_no_rc(shell, tmpdir):
 )
 def test_premain_with_file_argument(arg, shell):
     xonsh.main.premain(["tests/sample.xsh", arg])
-    assert not (builtins.__xonsh_env__.get("XONSH_INTERACTIVE"))
+    assert not (builtins.__xonsh__.env.get("XONSH_INTERACTIVE"))
 
 
 def test_premain_interactive__with_file_argument(shell):
     xonsh.main.premain(["-i", "tests/sample.xsh"])
-    assert builtins.__xonsh_env__.get("XONSH_INTERACTIVE")
+    assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
 
 
 @pytest.mark.parametrize("case", ["----", "--hep", "-TT", "--TTTT"])

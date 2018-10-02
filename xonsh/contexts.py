@@ -93,7 +93,7 @@ class Functor(Block):
         fstr = fstr.format(name=name, sig=sig, body=body, rtn=rtn)
         glbs = self.glbs
         locs = self.locs
-        execer = builtins.__xonsh_execer__
+        execer = builtins.__xonsh__.execer
         execer.exec(fstr, glbs=glbs, locs=locs)
         if locs is not None and name in locs:
             func = locs[name]

@@ -228,7 +228,7 @@ def get_next_task():
 
 
 def get_task(tid):
-    return builtins.__xonsh_all_jobs__[tid]
+    return builtins.__xonsh__.all_jobs[tid]
 
 
 def _clear_dead_jobs():
@@ -239,13 +239,13 @@ def _clear_dead_jobs():
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
-        del builtins.__xonsh_all_jobs__[job]
+        del builtins.__xonsh__.all_jobs[job]
 
 
 def print_one_job(num, outfile=sys.stdout):
     """Print a line describing job number ``num``."""
     try:
-        job = builtins.__xonsh_all_jobs__[num]
+        job = builtins.__xonsh__.all_jobs[num]
     except KeyError:
         return
     pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
@@ -262,7 +262,7 @@ def get_next_job_number():
     """
     _clear_dead_jobs()
     i = 1
-    while i in builtins.__xonsh_all_jobs__:
+    while i in builtins.__xonsh__.all_jobs:
         i += 1
     return i
 
@@ -273,8 +273,8 @@ def add_job(info):
     info["started"] = time.time()
     info["status"] = "running"
     tasks.appendleft(num)
-    builtins.__xonsh_all_jobs__[num] = info
-    if info["bg"] and builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
+    builtins.__xonsh__.all_jobs[num] = info
+    if info["bg"] and builtins.__xonsh__.env.get("XONSH_INTERACTIVE"):
         print_one_job(num)
 
 
@@ -287,12 +287,12 @@ def clean_jobs():
     warning if any exist, and return False. Otherwise, return True.
     """
     jobs_clean = True
-    if builtins.__xonsh_env__["XONSH_INTERACTIVE"]:
+    if builtins.__xonsh__.env["XONSH_INTERACTIVE"]:
         _clear_dead_jobs()
 
-        if builtins.__xonsh_all_jobs__:
+        if builtins.__xonsh__.all_jobs:
             global _last_exit_time
-            hist = builtins.__xonsh_history__
+            hist = builtins.__xonsh__.history
             if hist is not None and len(hist.tss) > 0:
                 last_cmd_start = hist.tss[-1][0]
             else:
@@ -305,12 +305,12 @@ def clean_jobs():
                 # unfinished jobs in this case.
                 kill_all_jobs()
             else:
-                if len(builtins.__xonsh_all_jobs__) > 1:
+                if len(builtins.__xonsh__.all_jobs) > 1:
                     msg = "there are unfinished jobs"
                 else:
                     msg = "there is an unfinished job"
 
-                if "prompt_toolkit" not in builtins.__xonsh_env__["SHELL_TYPE"]:
+                if builtins.__xonsh__.env["SHELL_TYPE"] != "prompt_toolkit":
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
@@ -335,7 +335,7 @@ def kill_all_jobs():
     Send SIGKILL to all child processes (called when exiting xonsh).
     """
     _clear_dead_jobs()
-    for job in builtins.__xonsh_all_jobs__.values():
+    for job in builtins.__xonsh__.all_jobs.values():
         _kill(job)
 
 
@@ -377,7 +377,7 @@ def fg(args, stdin=None):
         except (ValueError, IndexError):
             return "", "Invalid job: {}\n".format(args[0])
 
-        if tid not in builtins.__xonsh_all_jobs__:
+        if tid not in builtins.__xonsh__.all_jobs:
             return "", "Invalid job: {}\n".format(args[0])
     else:
         return "", "fg expects 0 or 1 arguments, not {}\n".format(len(args))
@@ -389,7 +389,7 @@ def fg(args, stdin=None):
     job = get_task(tid)
     job["bg"] = False
     job["status"] = "running"
-    if builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
+    if builtins.__xonsh__.env.get("XONSH_INTERACTIVE"):
         print_one_job(tid)
     pipeline = job["pipeline"]
     pipeline.resume(job)

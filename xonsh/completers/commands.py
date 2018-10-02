@@ -17,7 +17,7 @@ def complete_command(cmd, line, start, end, ctx):
     space = " "
     out = {
         s + space
-        for s in builtins.__xonsh_commands_cache__
+        for s in builtins.__xonsh__.commands_cache
         if get_filter_function()(s, cmd)
     }
     if xp.ON_WINDOWS:
@@ -51,7 +51,7 @@ def complete_skipper(cmd, line, start, end, ctx):
     if len(parts) == skip_part_num + 1:
         comp_func = complete_command
     else:
-        comp = builtins.__xonsh_shell__.shell.completer
+        comp = builtins.__xonsh__.shell.shell.completer
         comp_func = comp.complete
 
     skip_len = len(" ".join(line[:skip_part_num])) + 1

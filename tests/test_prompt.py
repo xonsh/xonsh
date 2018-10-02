@@ -77,7 +77,7 @@ def test_format_prompt_with_broken_template_in_func(inp, formatter):
 
 
 def test_format_prompt_with_invalid_func(formatter, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env()
+    xonsh_builtins.__xonsh__.env = Env()
 
     def p():
         foo = bar  # raises exception # noqa
@@ -87,7 +87,7 @@ def test_format_prompt_with_invalid_func(formatter, xonsh_builtins):
 
 
 def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env()
+    xonsh_builtins.__xonsh__.env = Env()
     template = "tt {zerodiv} tt"
     exp = "tt (ERROR:zerodiv) tt"
     fields = {"zerodiv": lambda: 1 / 0}
@@ -156,7 +156,7 @@ def test_no_repo(xonsh_builtins):
     import queue
 
     temp_dir = tempfile.mkdtemp()
-    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=2, PWD=temp_dir)
+    xonsh_builtins.__xonsh__.env = Env(VC_BRANCH_TIMEOUT=2, PWD=temp_dir)
     q = queue.Queue()
     try:
         vc._get_hg_root(q)
@@ -165,7 +165,7 @@ def test_no_repo(xonsh_builtins):
 
 
 def test_vc_get_branch(test_repo, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=2)
+    xonsh_builtins.__xonsh__.env = Env(VC_BRANCH_TIMEOUT=2)
     # get corresponding function from vc module
     fun = "get_{}_branch".format(test_repo["name"])
     obs = getattr(vc, fun)()
@@ -174,8 +174,8 @@ def test_vc_get_branch(test_repo, xonsh_builtins):
 
 
 def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins):
-    cache = xonsh_builtins.__xonsh_commands_cache__
-    xonsh_builtins.__xonsh_env__ = DummyEnv(VC_BRANCH_TIMEOUT=1)
+    cache = xonsh_builtins.__xonsh__.commands_cache
+    xonsh_builtins.__xonsh__.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
     cache.is_empty = Mock(return_value=True)
     cache.locate_binary = Mock(return_value="")
     vc.current_branch()
@@ -185,8 +185,8 @@ def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins)
 def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
     xonsh_builtins
 ):
-    cache = xonsh_builtins.__xonsh_commands_cache__
-    xonsh_builtins.__xonsh_env__ = DummyEnv(VC_BRANCH_TIMEOUT=1)
+    cache = xonsh_builtins.__xonsh__.commands_cache
+    xonsh_builtins.__xonsh__.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
     cache.is_empty = Mock(return_value=False)
     cache.locate_binary = Mock(return_value="")
     # make lazy locate return nothing to avoid running vc binaries

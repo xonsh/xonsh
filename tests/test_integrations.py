@@ -76,13 +76,13 @@ def check_run_xonsh(cmd, fmt, exp):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
     """
-    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
+    out, err, rtn = run_xonsh(cmd, stderr=sp.PIPE)
     if callable(fmt):
         out = fmt(out)
     if callable(exp):
         exp = exp()
-    assert out == exp
-    assert rtn == 0
+    assert out == exp, err
+    assert rtn == 0, err
 
 
 #

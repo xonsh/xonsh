@@ -186,7 +186,7 @@ def _dump_xonfig_foreign_shell(path, value):
 
 def _dump_xonfig_env(path, value):
     name = os.path.basename(path.rstrip("/"))
-    ensurer = builtins.__xonsh_env__.get_ensurer(name)
+    ensurer = builtins.__xonsh__.env.get_ensurer(name)
     dval = ensurer.detype(value)
     return "${name} = {val!r}".format(name=name, val=dval)
 
@@ -285,7 +285,7 @@ ENVVAR_PROMPT = "{BOLD_GREEN}>>>{NO_COLOR} "
 
 def make_exit_message():
     """Creates a message for how to exit the wizard."""
-    shell_type = builtins.__xonsh_shell__.shell_type
+    shell_type = builtins.__xonsh__.shell.shell_type
     keyseq = "Ctrl-D" if shell_type == "readline" else "Ctrl-C"
     msg = "To exit the wizard at any time, press {BOLD_UNDERLINE_CYAN}"
     msg += keyseq + "{NO_COLOR}.\n"
@@ -295,7 +295,7 @@ def make_exit_message():
 
 def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     vd = env.get_docs(name)
     if not vd.configurable:
         return
@@ -341,7 +341,7 @@ def _make_flat_wiz(kidfunc, *args):
 
 def make_env_wiz():
     """Makes an environment variable wizard."""
-    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh_env__._docs.keys()))
+    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh__.env._docs.keys()))
     return w
 
 
@@ -444,8 +444,8 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
 
 
 def _wizard(ns):
-    env = builtins.__xonsh_env__
-    shell = builtins.__xonsh_shell__.shell
+    env = builtins.__xonsh__.env
+    shell = builtins.__xonsh__.shell.shell
     fname = env.get("XONSHRC")[-1] if ns.file is None else ns.file
     no_wiz = os.path.join(env.get("XONSH_CONFIG_DIR"), "no-wizard")
     w = make_xonfig_wizard(
@@ -492,7 +492,7 @@ def _xonfig_format_json(data):
 
 
 def _info(ns):
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     try:
         ply.__version__ = ply.__version__
     except AttributeError:
@@ -534,7 +534,7 @@ def _info(ns):
 
 
 def _styles(ns):
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     curr = env.get("XONSH_COLOR_STYLE")
     styles = sorted(color_style_names())
     if ns.json:
@@ -598,13 +598,13 @@ def _tok_colors(cmap, cols):
 def _colors(args):
     columns, _ = shutil.get_terminal_size()
     columns -= int(ON_WINDOWS)
-    style_stash = builtins.__xonsh_env__["XONSH_COLOR_STYLE"]
+    style_stash = builtins.__xonsh__.env["XONSH_COLOR_STYLE"]
 
     if args.style is not None:
         if args.style not in color_style_names():
             print("Invalid style: {}".format(args.style))
             return
-        builtins.__xonsh_env__["XONSH_COLOR_STYLE"] = args.style
+        builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = args.style
 
     color_map = color_style()
     akey = next(iter(color_map))
@@ -613,7 +613,7 @@ def _colors(args):
     else:
         s = _tok_colors(color_map, columns)
     print_color(s)
-    builtins.__xonsh_env__["XONSH_COLOR_STYLE"] = style_stash
+    builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = style_stash
 
 
 def _tutorial(args):

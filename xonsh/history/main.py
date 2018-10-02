@@ -21,7 +21,7 @@ HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": Sqlite
 
 def construct_history(**kwargs):
     """Construct the history backend object."""
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     backend = env.get("XONSH_HISTORY_BACKEND")
     if isinstance(backend, str) and backend in HISTORY_BACKENDS:
         kls_history = HISTORY_BACKENDS[backend]
@@ -41,14 +41,14 @@ def construct_history(**kwargs):
 def _xh_session_parser(hist=None, newest_first=False, **kwargs):
     """Returns history items of current session."""
     if hist is None:
-        hist = builtins.__xonsh_history__
-    return hist.items(newest_first=newest_first)
+        hist = builtins.__xonsh__.history
+    return hist.items()
 
 
 def _xh_all_parser(hist=None, newest_first=False, **kwargs):
     """Returns all history items."""
     if hist is None:
-        hist = builtins.__xonsh_history__
+        hist = builtins.__xonsh__.history
     return hist.all_items(newest_first=newest_first)
 
 
@@ -342,7 +342,7 @@ def _xh_create_parser():
         help="makes the gc non-blocking, and thus return sooner",
     )
 
-    hist = builtins.__xonsh_history__
+    hist = builtins.__xonsh__.history
     if isinstance(hist, JsonHistory):
         # add actions belong only to JsonHistory
         diff = subp.add_parser("diff", help="diff two xonsh history files")
@@ -384,7 +384,7 @@ def _xh_parse_args(args):
 
 def history_main(args=None, stdin=None, stdout=None, stderr=None):
     """This is the history command entry point."""
-    hist = builtins.__xonsh_history__
+    hist = builtins.__xonsh__.history
     ns = _xh_parse_args(args)
     if not ns or not ns.action:
         return

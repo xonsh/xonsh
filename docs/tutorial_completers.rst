@@ -29,7 +29,7 @@ Structure
 ==========
 
 xonsh's built-in completers live in the ``xonsh.completers`` package, and they
-are managed through an instance of ``OrderedDict`` (``__xonsh_completers__``)
+are managed through an instance of ``OrderedDict`` (``__xonsh__.completers``)
 that maps unique identifiers to completion functions.
 
 When the "tab" key is pressed, xonsh loops over the completion functions in
@@ -121,7 +121,7 @@ active completers via the ``completer add`` command::
 
 If ``POS`` is not provided, it defaults to ``"start"``.
 
-.. note:: It is also possible to manipulate ``__xonsh_completers__`` directly,
+.. note:: It is also possible to manipulate ``__xonsh__.completers`` directly,
           but this is the preferred method.
 
 Removing a Completer

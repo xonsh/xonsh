@@ -10,7 +10,7 @@ from xonsh.shell import transform_command
 def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatch):
     asubdir = str(tmpdir_factory.mktemp("asubdir"))
     cur_wd = os.getcwd()
-    xonsh_builtins.__xonsh_env__ = Env(
+    xonsh_builtins.__xonsh__.env = Env(
         PWD=cur_wd, XONSH_CACHE_SCRIPTS=False, XONSH_CACHE_EVERYTHING=False
     )
 
@@ -23,11 +23,11 @@ def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatc
 
     assert os.path.abspath(os.getcwd()) == os.path.abspath(asubdir)
     assert os.path.abspath(os.getcwd()) == os.path.abspath(
-        xonsh_builtins.__xonsh_env__["PWD"]
+        xonsh_builtins.__xonsh__.env["PWD"]
     )
-    assert "OLDPWD" in xonsh_builtins.__xonsh_env__
+    assert "OLDPWD" in xonsh_builtins.__xonsh__.env
     assert os.path.abspath(cur_wd) == os.path.abspath(
-        xonsh_builtins.__xonsh_env__["OLDPWD"]
+        xonsh_builtins.__xonsh__.env["OLDPWD"]
     )
 
 

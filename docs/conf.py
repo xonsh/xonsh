@@ -21,10 +21,16 @@ from xonsh.xontribs import xontrib_metadata
 from xonsh import main
 from xonsh.commands_cache import CommandsCache
 
+if not hasattr(builtins, "__xonsh__"):
+    from argparse import Namespace
+    builtins.__xonsh__ = Namespace()
+    builtins.__xonsh__.load = lambda *a, **kw: None
+    builtins.__xonsh__.link_builtins = lambda *a, **kw: None
+
 spec = importlib.util.find_spec('prompt_toolkit')
 if spec is not None:
     # hacky runaround to import PTK-specific events
-    builtins.__xonsh_env__ = Env()
+    builtins.__xonsh__.env = Env()
     from xonsh.platform import ptk_version_info
     if ptk_version_info()[0] < 2:
         from xonsh.ptk.shell import events
@@ -413,6 +419,6 @@ make_envvars()
 make_xontribs()
 make_events()
 
-builtins.__xonsh_history__ = None
-builtins.__xonsh_env__ = {}
-builtins.__xonsh_commands_cache__ = CommandsCache()
+builtins.__xonsh__.history = None
+builtins.__xonsh__.env = {}
+builtins.__xonsh__.commands_cache = CommandsCache()

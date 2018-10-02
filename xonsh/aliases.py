@@ -80,7 +80,7 @@ class Aliases(cabc.MutableMapping):
             else:
                 return value
         else:
-            expand_path = builtins.__xonsh_expand_path__
+            expand_path = builtins.__xonsh__.expand_path
             token, *rest = map(expand_path, value)
             if token in seen_tokens or token not in self._raw:
                 # ^ Making sure things like `egrep=egrep --color=auto` works,
@@ -155,14 +155,14 @@ def xonsh_exit(args, stdin=None):
     if not clean_jobs():
         # Do not exit if jobs not cleaned up
         return None, None
-    builtins.__xonsh_exit__ = True
+    builtins.__xonsh__.exit = True
     print()  # gimme a newline
     return None, None
 
 
 def xonsh_reset(args, stdin=None):
-    """ Clears __xonsh_ctx__"""
-    builtins.__xonsh_ctx__.clear()
+    """ Clears __xonsh__.ctx"""
+    builtins.__xonsh__.ctx.clear()
 
 
 @lazyobject
@@ -294,7 +294,7 @@ def _SOURCE_FOREIGN_PARSER():
 
 def source_foreign(args, stdin=None, stdout=None, stderr=None):
     """Sources a file written in a foreign shell language."""
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     ns = _SOURCE_FOREIGN_PARSER.parse_args(args)
     ns.suppress_skip_message = (
         env.get("FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE")
@@ -369,7 +369,7 @@ def source_alias(args, stdin=None):
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
     """
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
     for i, fname in enumerate(args):
@@ -396,7 +396,7 @@ def source_alias(args, stdin=None):
             src = fp.read()
         if not src.endswith("\n"):
             src += "\n"
-        ctx = builtins.__xonsh_ctx__
+        ctx = builtins.__xonsh__.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
         with env.swap(**make_args_env(args[i + 1 :])), swap_values(ctx, updates):
             try:
@@ -430,7 +430,7 @@ def source_cmd(args, stdin=None):
     args.append("--envcmd=set")
     args.append("--seterrpostcmd=if errorlevel 1 exit 1")
     args.append("--use-tmpfile=1")
-    with builtins.__xonsh_env__.swap(PROMPT="$P$G"):
+    with builtins.__xonsh__.env.swap(PROMPT="$P$G"):
         return source_foreign(args, stdin=stdin)
 
 
@@ -461,7 +461,7 @@ def xexec(args, stdin=None):
     elif args[0] == "-h" or args[0] == "--help":
         return inspect.getdoc(xexec)
     else:
-        denv = builtins.__xonsh_env__.detype()
+        denv = builtins.__xonsh__.env.detype()
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:

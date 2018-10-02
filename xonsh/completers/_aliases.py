@@ -15,16 +15,16 @@ def _add_one_completer(name, func, loc="end"):
     new = collections.OrderedDict()
     if loc == "start":
         new[name] = func
-        for (k, v) in builtins.__xonsh_completers__.items():
+        for (k, v) in builtins.__xonsh__.completers.items():
             new[k] = v
     elif loc == "end":
-        for (k, v) in builtins.__xonsh_completers__.items():
+        for (k, v) in builtins.__xonsh__.completers.items():
             new[k] = v
         new[name] = func
     else:
         direction, rel = loc[0], loc[1:]
         found = False
-        for (k, v) in builtins.__xonsh_completers__.items():
+        for (k, v) in builtins.__xonsh__.completers.items():
             if rel == k and direction == "<":
                 new[name] = func
                 found = True
@@ -34,13 +34,13 @@ def _add_one_completer(name, func, loc="end"):
                 found = True
         if not found:
             new[name] = func
-    builtins.__xonsh_completers__.clear()
-    builtins.__xonsh_completers__.update(new)
+    builtins.__xonsh__.completers.clear()
+    builtins.__xonsh__.completers.update(new)
 
 
 def _list_completers(args, stdin=None, stack=None):
     o = "Registered Completer Functions: \n"
-    _comp = builtins.__xonsh_completers__
+    _comp = builtins.__xonsh__.completers
     ml = max((len(i) for i in _comp), default=0)
     _strs = []
     for c in _comp:
@@ -59,10 +59,10 @@ def _remove_completer(args, stdin=None, stack=None):
         err = "completer remove takes exactly 1 argument."
     else:
         name = args[0]
-        if name not in builtins.__xonsh_completers__:
+        if name not in builtins.__xonsh__.completers:
             err = ("The name %s is not a registered " "completer function.") % name
     if err is None:
-        del builtins.__xonsh_completers__[name]
+        del builtins.__xonsh__.completers[name]
         return
     else:
         return None, err + "\n", 1
@@ -78,11 +78,11 @@ def _register_completer(args, stdin=None, stack=None):
     else:
         name = args[0]
         func_name = args[1]
-        if name in builtins.__xonsh_completers__:
+        if name in builtins.__xonsh__.completers:
             err = ("The name %s is already a registered " "completer function.") % name
         else:
-            if func_name in builtins.__xonsh_ctx__:
-                func = builtins.__xonsh_ctx__[func_name]
+            if func_name in builtins.__xonsh__.ctx:
+                func = builtins.__xonsh__.ctx[func_name]
                 if not callable(func):
                     err = "%s is not callable" % func_name
             else:

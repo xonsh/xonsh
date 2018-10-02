@@ -14,6 +14,7 @@ import signal
 import atexit
 import pathlib
 import inspect
+import warnings
 import builtins
 import itertools
 import subprocess
@@ -52,6 +53,8 @@ import xonsh.completers.init
 
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), "INSPECTOR")
+
+warnings.filterwarnings("once", category=DeprecationWarning)
 
 
 @lazyobject
@@ -145,9 +148,9 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = builtins.__xonsh_env__.get("CASE_SENSITIVE_COMPLETIONS")
-    glob_sorted = builtins.__xonsh_env__.get("GLOB_SORTED")
-    dotglob = builtins.__xonsh_env__.get("DOTGLOB")
+    csc = builtins.__xonsh__.env.get("CASE_SENSITIVE_COMPLETIONS")
+    glob_sorted = builtins.__xonsh__.env.get("GLOB_SORTED")
+    dotglob = builtins.__xonsh__.env.get("DOTGLOB")
     return globpath(
         s,
         ignore_case=(not csc),
@@ -222,7 +225,7 @@ def get_script_subproc_command(fname, args):
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-        if ext.upper() in builtins.__xonsh_env__.get("PATHEXT"):
+        if ext.upper() in builtins.__xonsh__.env.get("PATHEXT"):
             return [fname] + args
     # find interpreter
     with open(fname, "rb") as f:
@@ -551,7 +554,7 @@ class SubprocSpec:
         except FileNotFoundError:
             cmd0 = self.cmd[0]
             e = "xonsh: subprocess mode: command not found: {0}".format(cmd0)
-            env = builtins.__xonsh_env__
+            env = builtins.__xonsh__.env
             sug = suggest_commands(cmd0, env, builtins.aliases)
             if len(sug.strip()) > 0:
                 e += "\n" + suggest_commands(cmd0, env, builtins.aliases)
@@ -560,7 +563,7 @@ class SubprocSpec:
 
     def prep_env(self, kwargs):
         """Prepares the environment to use in the subprocess."""
-        denv = builtins.__xonsh_env__.detype()
+        denv = builtins.__xonsh__.env.detype()
         if ON_WINDOWS:
             # Over write prompt variable as xonsh's $PROMPT does
             # not make much sense for other subprocs
@@ -571,7 +574,7 @@ class SubprocSpec:
         """Prepares the 'preexec_fn' keyword argument"""
         if not ON_POSIX:
             return
-        if not builtins.__xonsh_env__.get("XONSH_INTERACTIVE"):
+        if not builtins.__xonsh__.env.get("XONSH_INTERACTIVE"):
             return
         if pipeline_group is None:
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
@@ -664,7 +667,7 @@ class SubprocSpec:
             self.alias is None
             and self.binary_loc is None
             and len(self.cmd) == 1
-            and builtins.__xonsh_env__.get("AUTO_CD")
+            and builtins.__xonsh__.env.get("AUTO_CD")
             and os.path.isdir(self.cmd[0])
         ):
             return
@@ -747,7 +750,7 @@ def _update_last_spec(last):
     if callable_alias:
         pass
     else:
-        cmds_cache = builtins.__xonsh_commands_cache__
+        cmds_cache = builtins.__xonsh__.commands_cache
         thable = cmds_cache.predict_threadable(
             last.args
         ) and cmds_cache.predict_threadable(last.cmd)
@@ -771,9 +774,9 @@ def _update_last_spec(last):
         r, w = os.pipe()
         last.stdout = safe_open(w, "wb")
         last.captured_stdout = safe_open(r, "rb")
-    elif builtins.__xonsh_stdout_uncaptured__ is not None:
+    elif builtins.__xonsh__.stdout_uncaptured is not None:
         last.universal_newlines = True
-        last.stdout = builtins.__xonsh_stdout_uncaptured__
+        last.stdout = builtins.__xonsh__.stdout_uncaptured
         last.captured_stdout = last.stdout
     elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
@@ -793,8 +796,8 @@ def _update_last_spec(last):
         r, w = os.pipe()
         last.stderr = safe_open(w, "w")
         last.captured_stderr = safe_open(r, "r")
-    elif builtins.__xonsh_stderr_uncaptured__ is not None:
-        last.stderr = builtins.__xonsh_stderr_uncaptured__
+    elif builtins.__xonsh__.stderr_uncaptured is not None:
+        last.stderr = builtins.__xonsh__.stderr_uncaptured
         last.captured_stderr = last.stderr
     elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
@@ -849,12 +852,12 @@ def cmds_to_specs(cmds, captured=False):
 
 
 def _should_set_title(captured=False):
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     return (
         env.get("XONSH_INTERACTIVE")
         and not env.get("XONSH_STORE_STDOUT")
         and captured not in STDOUT_CAPTURE_KINDS
-        and hasattr(builtins, "__xonsh_shell__")
+        and hasattr(builtins.__xonsh__, "shell")
     )
 
 
@@ -892,7 +895,7 @@ def run_subproc(cmds, captured=False):
         )
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
-        pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
+        pause_call_resume(proc, builtins.__xonsh__.shell.settitle)
     # create command or return if backgrounding.
     if background:
         return
@@ -924,7 +927,7 @@ def subproc_captured_inject(*cmds):
     or shlex.split().
     """
     s = run_subproc(cmds, captured="stdout")
-    toks = builtins.__xonsh_execer__.parser.lexer.split(s.strip())
+    toks = builtins.__xonsh__.execer.parser.lexer.split(s.strip())
     return toks
 
 
@@ -979,9 +982,9 @@ def list_of_list_of_strs_outer_product(x):
     for los in itertools.product(*lolos):
         s = "".join(los)
         if "*" in s:
-            rtn.extend(builtins.__xonsh_glob__(s))
+            rtn.extend(builtins.__xonsh__.glob(s))
         else:
-            rtn.append(builtins.__xonsh_expand_path__(s))
+            rtn.append(builtins.__xonsh__.expand_path(s))
     return rtn
 
 
@@ -1046,7 +1049,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
     if kind is str or kind is None:
         return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
-    execer = builtins.__xonsh_execer__
+    execer = builtins.__xonsh__.execer
     filename = macroname + "(" + name + ")"
     if kind is AST:
         ctx = set(dir(builtins)) | set(glbs.keys())
@@ -1157,7 +1160,7 @@ def _eval_regular_args(raw_args, glbs, locs):
         return [], {}
     arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
     kwarglist = raw_args[len(arglist) :]
-    execer = builtins.__xonsh_execer__
+    execer = builtins.__xonsh__.execer
     if not arglist:
         args = arglist
         kwargstr = "dict({})".format(", ".join(kwarglist))
@@ -1221,65 +1224,17 @@ def load_builtins(execer=None, ctx=None):
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
-    # private built-ins
-    builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = Env(default_env())
-    builtins.__xonsh_help__ = helper
-    builtins.__xonsh_superhelp__ = superhelper
-    builtins.__xonsh_pathsearch__ = pathsearch
-    builtins.__xonsh_globsearch__ = globsearch
-    builtins.__xonsh_regexsearch__ = regexsearch
-    builtins.__xonsh_glob__ = globpath
-    builtins.__xonsh_expand_path__ = expand_path
-    builtins.__xonsh_exit__ = False
-    builtins.__xonsh_stdout_uncaptured__ = None
-    builtins.__xonsh_stderr_uncaptured__ = None
-    if hasattr(builtins, "exit"):
-        builtins.__xonsh_pyexit__ = builtins.exit
-        del builtins.exit
-    if hasattr(builtins, "quit"):
-        builtins.__xonsh_pyquit__ = builtins.quit
-        del builtins.quit
-    builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
-    builtins.__xonsh_subproc_captured_inject__ = subproc_captured_inject
-    builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
-    builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
-    builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
-    builtins.__xonsh_execer__ = execer
-    builtins.__xonsh_commands_cache__ = CommandsCache()
-    builtins.__xonsh_all_jobs__ = {}
-    builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
-    builtins.__xonsh_list_of_list_of_strs_outer_product__ = (
-        list_of_list_of_strs_outer_product
-    )
-    builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
-    builtins.__xonsh_call_macro__ = call_macro
-    builtins.__xonsh_enter_macro__ = enter_macro
-    builtins.__xonsh_path_literal__ = path_literal
-    # public built-ins
-    builtins.XonshError = XonshError
-    builtins.XonshCalledProcessError = XonshCalledProcessError
-    builtins.evalx = None if execer is None else execer.eval
-    builtins.execx = None if execer is None else execer.exec
-    builtins.compilex = None if execer is None else execer.compile
-    builtins.events = events
-
-    # sneak the path search functions into the aliases
-    # Need this inline/lazy import here since we use locate_binary that
-    # relies on __xonsh_env__ in default aliases
-    builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
-    builtins.__xonsh_history__ = None
-    atexit.register(_lastflush)
-    for sig in AT_EXIT_SIGNALS:
-        resetting_signal_handle(sig, _lastflush)
+    if not hasattr(builtins, "__xonsh__"):
+        builtins.__xonsh__ = XonshSession(execer=execer, ctx=ctx)
+    builtins.__xonsh__.load(execer=execer, ctx=ctx)
+    builtins.__xonsh__.link_builtins(execer=execer)
     BUILTINS_LOADED = True
 
 
 def _lastflush(s=None, f=None):
-    if hasattr(builtins, "__xonsh_history__"):
-        if builtins.__xonsh_history__ is not None:
-            builtins.__xonsh_history__.flush(at_exit=True)
+    if hasattr(builtins, "__xonsh__"):
+        if builtins.__xonsh__.history is not None:
+            builtins.__xonsh__.history.flush(at_exit=True)
 
 
 def unload_builtins():
@@ -1287,17 +1242,259 @@ def unload_builtins():
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED
-    env = getattr(builtins, "__xonsh_env__", None)
+    if not hasattr(builtins, "__xonsh__"):
+        BUILTINS_LOADED = False
+        return
+    env = getattr(builtins.__xonsh__, "env", None)
     if isinstance(env, Env):
         env.undo_replace_env()
+    if hasattr(builtins.__xonsh__, "pyexit"):
+        builtins.exit = builtins.__xonsh__.pyexit
+    if hasattr(builtins.__xonsh__, "pyquit"):
+        builtins.quit = builtins.__xonsh__.pyquit
+    if not BUILTINS_LOADED:
+        return
+    builtins.__xonsh__.unlink_builtins()
+    delattr(builtins, "__xonsh__")
+    BUILTINS_LOADED = False
+
+
+@contextlib.contextmanager
+def xonsh_builtins(execer=None):
+    """A context manager for using the xonsh builtins only in a limited
+    scope. Likely useful in testing.
+    """
+    load_builtins(execer=execer)
+    # temporary shims for old __xonsh_*__ builtins
+    load_proxies()
+    yield
+    # temporary shims for old __xonsh_*__ builtins
+    unload_proxies()
+    unload_builtins()
+
+
+class XonshSession:
+    """All components defining a xonsh session.
+
+    """
+
+    def __init__(self, execer=None, ctx=None):
+        """
+        Parameters
+        ---------
+        execer : Execer, optional
+            Xonsh execution object, may be None to start
+        ctx : Mapping, optional
+            Context to start xonsh session with.
+        """
+        self.execer = execer
+        self.ctx = {} if ctx is None else ctx
+
+    def load(self, execer=None, ctx=None):
+        """Loads the session with default values.
+
+        Parameters
+        ---------
+        execer : Execer, optional
+            Xonsh execution object, may be None to start
+        ctx : Mapping, optional
+            Context to start xonsh session with.
+        """
+        if ctx is not None:
+            self.ctx = ctx
+        self.env = Env(default_env())
+        self.help = helper
+        self.superhelp = superhelper
+        self.pathsearch = pathsearch
+        self.globsearch = globsearch
+        self.regexsearch = regexsearch
+        self.glob = globpath
+        self.expand_path = expand_path
+        self.exit = False
+        self.stdout_uncaptured = None
+        self.stderr_uncaptured = None
+
+        if hasattr(builtins, "exit"):
+            self.pyexit = builtins.exit
+            del builtins.exit
+
+        if hasattr(builtins, "quit"):
+            self.pyquit = builtins.quit
+            del builtins.quit
+
+        self.subproc_captured_stdout = subproc_captured_stdout
+        self.subproc_captured_inject = subproc_captured_inject
+        self.subproc_captured_object = subproc_captured_object
+        self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
+        self.subproc_uncaptured = subproc_uncaptured
+        self.execer = execer
+        self.commands_cache = CommandsCache()
+        self.all_jobs = {}
+        self.ensure_list_of_strs = ensure_list_of_strs
+        self.list_of_strs_or_callables = list_of_strs_or_callables
+
+        self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
+
+        self.completers = xonsh.completers.init.default_completers()
+        self.call_macro = call_macro
+        self.enter_macro = enter_macro
+        self.path_literal = path_literal
+
+        self.builtins = _BuiltIns(execer)
+
+        self.history = None
+
+    def link_builtins(self, execer=None):
+        # public built-ins
+        builtins.XonshError = self.builtins.XonshError
+        builtins.XonshCalledProcessError = self.builtins.XonshCalledProcessError
+        builtins.evalx = None if execer is None else execer.eval
+        builtins.execx = None if execer is None else execer.exec
+        builtins.compilex = None if execer is None else execer.compile
+        builtins.events = self.builtins.events
+
+        # sneak the path search functions into the aliases
+        # Need this inline/lazy import here since we use locate_binary that
+        # relies on __xonsh__.env in default aliases
+        builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
+        atexit.register(_lastflush)
+        for sig in AT_EXIT_SIGNALS:
+            resetting_signal_handle(sig, _lastflush)
+
+    def unlink_builtins(self):
+        names = [
+            "XonshError",
+            "XonshCalledProcessError",
+            "evalx",
+            "execx",
+            "compilex",
+            "default_aliases",
+        ]
+
+        for name in names:
+            if hasattr(builtins, name):
+                delattr(builtins, name)
+
+
+class _BuiltIns:
+    def __init__(self, execer=None):
+        # public built-ins
+        self.XonshError = XonshError
+        self.XonshCalledProcessError = XonshCalledProcessError
+        self.evalx = None if execer is None else execer.eval
+        self.execx = None if execer is None else execer.exec
+        self.compilex = None if execer is None else execer.compile
+        self.events = events
+
+
+class ProxyWarning:
+    def __init__(self, badname, goodname):
+        super().__setattr__("badname", badname)
+        super().__setattr__("goodname", goodname)
+
+    @property
+    def obj(self):
+        """Dynamically grabs object"""
+        names = self.goodname.split(".")
+        obj = builtins
+        for name in names:
+            obj = getattr(obj, name)
+        return obj
+
+    def warn(self):
+        """Issues deprecation warning."""
+        warnings.warn(
+            "{} has been deprecated, please use {} instead.".format(
+                self.badname, self.goodname
+            ),
+            DeprecationWarning,
+        )
+
+    def __getattr__(self, name):
+        self.warn()
+        return getattr(self.obj, name)
+
+    def __setattr__(self, name, value):
+        self.warn()
+        return super().__setattr__(self.obj, name, value)
+
+    def __getitem__(self, item):
+        self.warn()
+        return self.obj.__getitem__(item)
+
+    def __setitem__(self, item, value):
+        self.warn()
+        return self.obj.__setitem__(item, value)
+
+    def __call__(self, *args, **kwargs):
+        self.warn()
+        return self.obj.__call__(*args, **kwargs)
+
+
+def load_proxies():
+    """Put temporary shims in place for `__xonsh_*__` builtins.
+
+    """
+    mapping = {
+        "__xonsh_env__": "__xonsh__.env",
+        "__xonsh_history__": "__xonsh__.history",
+        "__xonsh_ctx__": "__xonsh__.ctx",
+        "__xonsh_help__": "__xonsh__.help",
+        "builtins": "builtins.superhelp",
+        "__xonsh_pathsearch__": "__xonsh__.pathsearch",
+        "__xonsh_globsearch__": "__xonsh__.globsearch",
+        "__xonsh_regexsearch__": "__xonsh__.regexsearch",
+        "__xonsh_glob__": "__xonsh__.glob",
+        "__xonsh_expand_path__": "__xonsh__.expand_path",
+        "__xonsh_exit__": "__xonsh__.exit",
+        "__xonsh_stdout_uncaptured__": "__xonsh__.stdout_uncaptured",
+        "__xonsh_stderr_uncaptured__": "__xonsh__.stderr_uncaptured",
+        "__xonsh_subproc_captured_stdout__": "__xonsh__.subproc_captured_stdout",
+        "__xonsh_subproc_captured_inject__": "__xonsh__.subproc_captured_inject",
+        "__xonsh_subproc_captured_object__": "__xonsh__.subproc_captured_object",
+        "__xonsh_subproc_captured_hiddenobject__": "__xonsh__.subproc_captured_hiddenobject",
+        "__xonsh_subproc_uncaptured__": "__xonsh__.subproc_uncaptured",
+        "__xonsh_execer__": "__xonsh__.execer",
+        "__xonsh_commands_cache__": "__xonsh__.commands_cache",
+        "__xonsh_all_jobs__": "__xonsh__.all_jobs",
+        "__xonsh_ensure_list_of_strs__": "__xonsh__.ensure_list_of_strs",
+        "__xonsh_list_of_strs_or_callables__": "__xonsh__.list_of_strs_or_callables",
+        "__xonsh_list_of_list_of_strs_outer_product__": "__xonsh__.list_of_list_of_strs_outer_product",
+        "__xonsh_completers__": "__xonsh__.completers",
+        "__xonsh_call_macro__": "__xonsh__.call_macro",
+        "__xonsh_enter_macro__": "__xonsh__.enter_macro",
+        "__xonsh_path_literal__": "__xonsh__.path_literal",
+        "XonshError": "__xonsh__.builtins.XonshError",
+        "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
+        "evalx": "__xonsh__.builtins.evalx",
+        "execx": "__xonsh__.builtins.execx",
+        "compilex": "__xonsh__.builtins.compilex",
+        "events": "__xonsh__.builtins.events",
+    }
+
+    for badname, goodname in mapping.items():
+        proxy = ProxyWarning(badname, goodname)
+        setattr(builtins, badname, proxy)
+
+    if hasattr(builtins.__xonsh__, "pyexit"):
+        builtins.__xonsh_pyexit__ = ProxyWarning(
+            "builtins.__xonsh_pyexit__", "builtins.__xonsh__.pyexit"
+        )
+    if hasattr(builtins.__xonsh__, "quit"):
+        builtins.__xonsh_pyquit__ = ProxyWarning(
+            "builtins.__xonsh_pyquit__", "builtins.__xonsh__.pyquit"
+        )
+
+
+def unload_proxies():
+    """Removes the xonsh builtins (proxies) from the Python builtins.
+    """
     if hasattr(builtins, "__xonsh_pyexit__"):
         builtins.exit = builtins.__xonsh_pyexit__
     if hasattr(builtins, "__xonsh_pyquit__"):
         builtins.quit = builtins.__xonsh_pyquit__
-    if not BUILTINS_LOADED:
-        return
+
     names = [
-        "__xonsh_config__",
         "__xonsh_env__",
         "__xonsh_ctx__",
         "__xonsh_help__",
@@ -1338,14 +1535,3 @@ def unload_builtins():
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
-    BUILTINS_LOADED = False
-
-
-@contextlib.contextmanager
-def xonsh_builtins(execer=None):
-    """A context manager for using the xonsh builtins only in a limited
-    scope. Likely useful in testing.
-    """
-    load_builtins(execer=execer)
-    yield
-    unload_builtins()

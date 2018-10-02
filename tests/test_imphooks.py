@@ -16,7 +16,7 @@ imphooks.install_import_hooks()
 @pytest.yield_fixture(autouse=True)
 def imp_env():
     execer = Execer(unload=False)
-    builtins.__xonsh_env__ = Env({"PATH": [], "PATHEXT": []})
+    builtins.__xonsh__.env = Env({"PATH": [], "PATHEXT": []})
     yield
     unload_builtins()
 

@@ -160,12 +160,12 @@ class DummyEnv(MutableMapping):
 def check_exec(input, **kwargs):
     if not input.endswith("\n"):
         input += "\n"
-    builtins.__xonsh_execer__.exec(input, **kwargs)
+    builtins.__xonsh__.execer.exec(input, **kwargs)
     return True
 
 
 def check_eval(input):
-    builtins.__xonsh_env__ = Env(
+    builtins.__xonsh__.env = Env(
         {
             "AUTO_CD": False,
             "XONSH_ENCODING": "utf-8",
@@ -174,13 +174,13 @@ def check_eval(input):
         }
     )
     if ON_WINDOWS:
-        builtins.__xonsh_env__["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
-    builtins.__xonsh_execer__.eval(input)
+        builtins.__xonsh__.env["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
+    builtins.__xonsh__.execer.eval(input)
     return True
 
 
 def check_parse(input):
-    tree = builtins.__xonsh_execer__.parse(input, ctx=None)
+    tree = builtins.__xonsh__.execer.parse(input, ctx=None)
     return tree
 
 

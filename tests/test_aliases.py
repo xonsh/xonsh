@@ -52,5 +52,5 @@ def test_eval_recursive(xonsh_builtins):
 
 @skip_if_on_windows
 def test_eval_recursive_callable_partial(xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(HOME=os.path.expanduser("~"))
+    xonsh_builtins.__xonsh__.env = Env(HOME=os.path.expanduser("~"))
     assert ALIASES.get("indirect_cd")(["arg2", "arg3"]) == ["..", "arg2", "arg3"]

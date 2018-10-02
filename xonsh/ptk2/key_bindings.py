@@ -19,7 +19,6 @@ from xonsh.aliases import xonsh_exit
 from xonsh.tools import check_for_partial_string, get_line_continuation
 from xonsh.shell import transform_command
 
-env = builtins.__xonsh_env__
 DEDENT_TOKENS = frozenset(["raise", "return", "pass", "break", "continue"])
 
 
@@ -39,6 +38,7 @@ def carriage_return(b, cli, *, autoindent=True):
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
     current_line_blank = _is_blank(doc.current_line)
 
+    env = builtins.__xonsh__.env
     indent = env.get("INDENT") if autoindent else ""
 
     partial_string_info = check_for_partial_string(doc.text)
@@ -84,8 +84,8 @@ def can_compile(src):
     src = transform_command(src, show_diff=False)
     src = src.lstrip()
     try:
-        builtins.__xonsh_execer__.compile(
-            src, mode="single", glbs=None, locs=builtins.__xonsh_ctx__
+        builtins.__xonsh__.execer.compile(
+            src, mode="single", glbs=None, locs=builtins.__xonsh__.ctx
         )
         rtn = True
     except SyntaxError:
@@ -136,7 +136,7 @@ def end_of_line():
 def should_confirm_completion():
     """Check if completion needs confirmation"""
     return (
-        builtins.__xonsh_env__.get("COMPLETIONS_CONFIRM")
+        builtins.__xonsh__.env.get("COMPLETIONS_CONFIRM")
         and get_app().current_buffer.complete_state
     )
 
@@ -147,7 +147,7 @@ def ctrl_d_condition():
     """Ctrl-D binding is only active when the default buffer is selected and
     empty.
     """
-    if builtins.__xonsh_env__.get("IGNOREEOF"):
+    if builtins.__xonsh__.env.get("IGNOREEOF"):
         raise EOFError
     else:
         app = get_app()
@@ -159,7 +159,7 @@ def ctrl_d_condition():
 @Condition
 def autopair_condition():
     """Check if XONSH_AUTOPAIR is set"""
-    return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
+    return builtins.__xonsh__.env.get("XONSH_AUTOPAIR", False)
 
 
 @Condition
@@ -200,6 +200,7 @@ def load_xonsh_bindings(key_bindings):
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
+        env = builtins.__xonsh__.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
@@ -214,6 +215,7 @@ def load_xonsh_bindings(key_bindings):
         if b.complete_state:
             b.complete_previous()
         else:
+            env = builtins.__xonsh__.env
             event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     @handle("(", filter=autopair_condition & whitespace_or_bracket_after)

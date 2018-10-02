@@ -29,7 +29,7 @@ def complete_from_man(prefix, line, start, end, ctx):
     """
     global OPTIONS, OPTIONS_PATH
     if OPTIONS is None:
-        datadir = builtins.__xonsh_env__["XONSH_DATA_DIR"]
+        datadir = builtins.__xonsh__.env["XONSH_DATA_DIR"]
         OPTIONS_PATH = os.path.join(datadir, "man_completions_cache")
         try:
             with open(OPTIONS_PATH, "rb") as f:

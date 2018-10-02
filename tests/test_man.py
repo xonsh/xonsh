@@ -12,7 +12,7 @@ def test_man_completion(monkeypatch, tmpdir, xonsh_builtins):
     monkeypatch.setitem(
         os.environ, "MANPATH", os.path.dirname(os.path.abspath(__file__))
     )
-    xonsh_builtins.__xonsh_env__.update({"XONSH_DATA_DIR": str(tempdir)})
-    completions = complete_from_man("--", "yes --", 4, 6, xonsh_builtins.__xonsh_env__)
+    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tempdir)})
+    completions = complete_from_man("--", "yes --", 4, 6, xonsh_builtins.__xonsh__.env)
     assert "--version" in completions
     assert "--help" in completions

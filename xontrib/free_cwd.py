@@ -35,7 +35,7 @@ def _cwd_release_wrapper(func):
         displayed. This works by temporarily setting
         the workdir to the users home directory.
     """
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     if env.get('UPDATE_PROMPT_ON_KEYPRESS'):
         return func if not hasattr(func, '_orgfunc') else func._orgfunc
 
@@ -56,7 +56,7 @@ def _cwd_release_wrapper(func):
                 except (FileNotFoundError, NotADirectoryError):
                     print_exception()
                     newpath = _chdir_up(pwd)
-                    builtins.__xonsh_env__['PWD'] = newpath
+                    builtins.__xonsh__.env['PWD'] = newpath
                     raise KeyboardInterrupt
             return out
         wrapper._orgfunc = func
@@ -68,7 +68,7 @@ def _cwd_restore_wrapper(func):
         directory. Designed to wrap completer callbacks from the
         prompt_toolkit or readline.
     """
-    env = builtins.__xonsh_env__
+    env = builtins.__xonsh__.env
     if env.get('UPDATE_PROMPT_ON_KEYPRESS'):
         return func if not hasattr(func, '_orgfunc') else func._orgfunc
 

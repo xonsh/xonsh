@@ -10,6 +10,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.buffer import Buffer
 
 from xonsh.tools import ON_WINDOWS
+from xonsh.built_ins import XonshSession
 
 from tools import DummyEnv, skip_if_lt_ptk2
 
@@ -20,8 +21,9 @@ Context = namedtuple("Context", ["indent", "buffer", "accept", "cli", "cr"])
 @pytest.yield_fixture(scope="module")
 def ctx():
     """Context in which the ptk multiline functionality will be tested."""
-    builtins.__xonsh_env__ = DummyEnv()
-    builtins.__xonsh_env__["INDENT"] = "    "
+    builtins.__xonsh__ = XonshSession()
+    builtins.__xonsh__.env = DummyEnv()
+    builtins.__xonsh__.env["INDENT"] = "    "
     from xonsh.ptk2.key_bindings import carriage_return
 
     ptk_buffer = Buffer()
@@ -34,7 +36,8 @@ def ctx():
         cli=cli,
         cr=carriage_return,
     )
-    del builtins.__xonsh_env__
+    del builtins.__xonsh__.env
+    del builtins.__xonsh__
 
 
 @skip_if_lt_ptk2

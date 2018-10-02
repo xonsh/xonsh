@@ -711,8 +711,8 @@ class PromptVisitor(StateVisitor):
             singleline() method. See BaseShell for mor details.
         """
         super().__init__(tree=tree, state=state)
-        self.env = builtins.__xonsh_env__
-        self.shell = builtins.__xonsh_shell__.shell
+        self.env = builtins.__xonsh__.env
+        self.shell = builtins.__xonsh__.shell.shell
         self.shell_kwargs = kwargs
 
     def visit_wizard(self, node):

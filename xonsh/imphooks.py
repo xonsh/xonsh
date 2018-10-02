@@ -53,8 +53,12 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     @property
     def execer(self):
-        if hasattr(builtins, "__xonsh_execer__"):
-            execer = builtins.__xonsh_execer__
+        if (
+            hasattr(builtins, "__xonsh__")
+            and hasattr(builtins.__xonsh__, "execer")
+            and builtins.__xonsh__.execer is not None
+        ):
+            execer = builtins.__xonsh__.execer
             if self._execer is not None:
                 self._execer = None
         elif self._execer is None:

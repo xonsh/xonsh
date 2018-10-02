@@ -82,7 +82,7 @@ the ``show`` action, see below.
     >>> history
 
 Also note that the history object itself can be accessed through the xonsh built-in variable
-``__xonsh_history__``.
+``__xonsh__.history``.
 
 
 ``show`` action
@@ -384,7 +384,7 @@ you could run the following command:
 
 History Indexing
 =======================
-History object (``__xonsh_history__``) acts like a sequence that can be indexed in a special way
+History object (``__xonsh__.history``) acts like a sequence that can be indexed in a special way
 that adds extra functionality. At the moment only history from the
 current session can be retrieved. Note that the most recent command
 is the last item in history.
@@ -417,11 +417,11 @@ examples:
 
     >>> echo mkdir with/a/huge/name/
     mkdir with/a/huge/name
-    >>> __xonsh_history__[-1, -1]
+    >>> __xonsh__.history[-1, -1]
     'with/a/huge/name/'
-    >>> __xonsh_history__['mkdir']
+    >>> __xonsh__.history['mkdir']
     'echo mkdir with/a/huge/name'
-    >>> __xonsh_history__[0, 1:]
+    >>> __xonsh__.history[0, 1:]
     'mkdir with/a/huge/name'
 
 

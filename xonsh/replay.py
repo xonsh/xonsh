@@ -47,7 +47,7 @@ class Replayer(object):
         target : str, optional
             Path to new history file.
         """
-        shell = builtins.__xonsh_shell__
+        shell = builtins.__xonsh__.shell
         re_env = self._lj["env"].load()
         new_env = self._merge_envs(merge_envs, re_env)
         new_hist = xhm.construct_history(
@@ -57,14 +57,14 @@ class Replayer(object):
             gc=False,
             filename=target,
         )
-        with swap(builtins, "__xonsh_env__", new_env), swap(
-            builtins, "__xonsh_history__", new_hist
+        with swap(builtins.__xonsh__, "env", new_env), swap(
+            builtins.__xonsh__, "history", new_hist
         ):
             for cmd in self._lj["cmds"]:
                 inp = cmd["inp"]
                 shell.default(inp)
-                if builtins.__xonsh_exit__:  # prevent premature exit
-                    builtins.__xonsh_exit__ = False
+                if builtins.__xonsh__.exit:  # prevent premature exit
+                    builtins.__xonsh__.exit = False
         new_hist.flush(at_exit=True)
         return new_hist
 
@@ -74,7 +74,7 @@ class Replayer(object):
             if e == "replay":
                 new_env.update(re_env)
             elif e == "native":
-                new_env.update(builtins.__xonsh_env__)
+                new_env.update(builtins.__xonsh__.env)
             elif isinstance(e, cabc.Mapping):
                 new_env.update(e)
             else:

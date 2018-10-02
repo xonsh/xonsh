@@ -31,7 +31,7 @@ class Completer(object):
             Length of the prefix to be replaced in the completion.
         """
         ctx = ctx or {}
-        for func in builtins.__xonsh_completers__.values():
+        for func in builtins.__xonsh__.completers.values():
             try:
                 out = func(prefix, line, begidx, endidx, ctx)
             except StopIteration:
