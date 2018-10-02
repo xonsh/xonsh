@@ -392,6 +392,7 @@ def default_threadable_predictors():
         "clear": predict_false,
         "cls": predict_false,
         "cmd": predict_shell,
+        "cryptop": predict_false,
         "curl": predict_true,
         "ex": predict_false,
         "emacsclient": predict_false,
