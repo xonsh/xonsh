@@ -1429,7 +1429,6 @@ class DynamicAccessProxy:
         return self.obj.__call__(*args, **kwargs)
 
 
-
 class DeprecationWarningProxy:
     """Proxies access, but warns in the process."""
 
