@@ -27,5 +27,11 @@ jobs:
       installOptions: '-c conda-forge'
       updateConda: false
   - script: |
-      pytest --timeout=10
+      pytest --timeout=10 --junitxml=junit/test-results.xml
     displayName: 'pytest'
+
+# Publish build results
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/test-*.xml'
+    testRunTitle: 'Publish test results for Python $(python.version)'
