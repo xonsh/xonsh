@@ -1280,7 +1280,7 @@ class XonshSession:
 
     def __init__(self, execer=None, ctx=None):
         """
-        Paramters
+        Parameters
         ---------
         execer : Execer, optional
             Xonsh execution object, may be None to start
@@ -1291,9 +1291,9 @@ class XonshSession:
         self.ctx = {} if ctx is None else ctx
 
     def load(self, execer=None, ctx=None):
-        """Loads the session with deafult values.
+        """Loads the session with default values.
 
-        Paramters
+        Parameters
         ---------
         execer : Execer, optional
             Xonsh execution object, may be None to start

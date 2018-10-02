@@ -1680,7 +1680,7 @@ class BaseParser(object):
             loccall = xonsh_call("locals", [], lineno=l, col=c)
             margs = [expr, p5, gblcall, loccall]
             item.context_expr = xonsh_call(
-                "__xonsh__.enter_macro_", margs, lineno=l, col=c
+                "__xonsh__.enter_macro", margs, lineno=l, col=c
             )
         body = [ast.Pass(lineno=p5.lineno, col_offset=p5.col_offset)]
         p[0] = [

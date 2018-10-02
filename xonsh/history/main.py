@@ -49,7 +49,7 @@ def _xh_all_parser(hist=None, newest_first=False, **kwargs):
     """Returns all history items."""
     if hist is None:
         hist = builtins.__xonsh__.history
-    return hist.all_items()
+    return hist.all_items(newest_first=newest_first)
 
 
 def _xh_find_histfile_var(file_list, default=None):
