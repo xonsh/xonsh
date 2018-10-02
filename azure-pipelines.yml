@@ -31,7 +31,7 @@ jobs:
     displayName: 'pytest'
 
 # Publish build results
-- task: PublishTestResults@2
-  inputs:
-    testResultsFiles: '**/test-*.xml'
-    testRunTitle: 'Publish test results for Python $(python.version)'
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      testRunTitle: 'Publish test results for Python $(python.version)'
