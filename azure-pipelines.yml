@@ -25,12 +25,7 @@ jobs:
     inputs:
       packageSpecs: 'python=$(python.version) pygments prompt_toolkit ply pytest pytest-timeout numpy psutil matplotlib flake8 coverage pyflakes pytest-cov pytest-flake8 codecov'
       installOptions: '-c conda-forge'
+      updateConda: false
   - script: |
       pytest --timeout=10
     displayName: 'pytest'
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/test-results.xml'
-      testRunTitle: 'Python $(python.version)'
-    condition: succeededOrFailed()
