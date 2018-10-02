@@ -1,0 +1,31 @@
+jobs:
+
+- job: 'xonsh_windows'
+  pool:
+    vmImage: 'VS2017-Win2016'
+  strategy:
+    matrix:
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+    maxParallel: 4
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+
+  # Conda Environment
+# Create and activate a Conda environment.
+  - task: CondaEnvironment@1
+    inputs:
+      packageSpecs: 'python=$(python.version) pygments prompt_toolkit ply pytest pytest-timeout numpy psutil matplotlib flake8 coverage pyflakes pytest-cov pytest-flake8 codecov'
+      installOptions: '-c conda-forge'
+      updateConda: false
+  - script: |
+      pytest --timeout=10
+    displayName: 'pytest'
