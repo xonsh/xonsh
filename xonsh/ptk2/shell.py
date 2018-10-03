@@ -25,6 +25,7 @@ from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
+from prompt_toolkit.styles import merge_styles, Style
 from prompt_toolkit.styles.pygments import (
     style_from_pygments_cls,
     style_from_pygments_dict,
@@ -145,6 +146,14 @@ class PromptToolkit2Shell(BaseShell):
                 style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
 
             prompt_args["style"] = style
+
+            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES")
+            if style_overrides_env:
+                try:
+                    style_overrides = Style.from_dict(style_overrides_env)
+                    prompt_args["style"] = merge_styles([style, style_overrides])
+                except Exception:  # pylint: disable=broad-except
+                    print_exception()
 
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()

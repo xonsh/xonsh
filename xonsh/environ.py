@@ -433,6 +433,7 @@ def DEFAULT_VALUES():
         "XONSH_STDERR_POSTFIX": "",
         "XONSH_STORE_STDIN": False,
         "XONSH_STORE_STDOUT": False,
+        "XONSH_STYLE_OVERRIDES": dict(),
         "XONSH_TRACEBACK_LOGFILE": None,
         "XONSH_DATETIME_FORMAT": "%Y-%m-%d %H:%M",
     }
@@ -947,6 +948,9 @@ def DEFAULT_DOCS():
         "XONSH_STORE_STDOUT": VarDocs(
             "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
             "history files."
+        ),
+        "XONSH_STYLE_OVERRIDES": VarDocs(
+            "A dictionary containing custom prompt_toolkit style definitions."
         ),
         "XONSH_TRACEBACK_LOGFILE": VarDocs(
             "Specifies a file to store the traceback log to, regardless of whether "
