@@ -1195,7 +1195,7 @@ def test_is_slice_as_str(inp, exp):
         ([1, 2, 3], False),
         ((1, 2), False),
         (("wrong", "parameter"), False),
-        skip_if_on_windows(("/dev/null", True)),
+        pytest.param("/dev/null", True, marks=skip_if_on_windows),
     ],
 )
 def test_is_logfile_opt(inp, exp):
@@ -1211,14 +1211,13 @@ def test_is_logfile_opt(inp, exp):
         (1, None),
         (None, None),
         ("throwback.log", "throwback.log"),
-        skip_if_on_windows(("/dev/null", "/dev/null")),
-        skip_if_on_windows(
-            (
-                "/dev/nonexistent_dev",
-                "/dev/nonexistent_dev"
-                if is_writable_file("/dev/nonexistent_dev")
-                else None,
-            )
+        pytest.param("/dev/null", "/dev/null", marks=skip_if_on_windows),
+        pytest.param(
+            "/dev/nonexistent_dev",
+            "/dev/nonexistent_dev"
+            if is_writable_file("/dev/nonexistent_dev")
+            else None,
+            marks=skip_if_on_windows,
         ),
     ],
 )
