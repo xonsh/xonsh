@@ -147,7 +147,7 @@ class PromptToolkit2Shell(BaseShell):
 
             prompt_args["style"] = style
 
-            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES")
+            style_overrides_env = env.get("PTK_STYLE_OVERRIDES")
             if style_overrides_env:
                 try:
                     style_overrides = Style.from_dict(style_overrides_env)

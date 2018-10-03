@@ -390,6 +390,7 @@ def DEFAULT_VALUES():
         "PRETTY_PRINT_RESULTS": True,
         "PROMPT": prompt.default_prompt(),
         "PROMPT_TOOLKIT_COLOR_DEPTH": "",
+        "PTK_STYLE_OVERRIDES": dict(),
         "PUSHD_MINUS": False,
         "PUSHD_SILENT": False,
         "RAISE_SUBPROC_ERROR": False,
@@ -433,7 +434,6 @@ def DEFAULT_VALUES():
         "XONSH_STDERR_POSTFIX": "",
         "XONSH_STORE_STDIN": False,
         "XONSH_STORE_STDOUT": False,
-        "XONSH_STYLE_OVERRIDES": dict(),
         "XONSH_TRACEBACK_LOGFILE": None,
         "XONSH_DATETIME_FORMAT": "%Y-%m-%d %H:%M",
     }
@@ -675,6 +675,9 @@ def DEFAULT_DOCS():
             "The color depth used by prompt toolkit 2. Possible values are: "
             "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
             "colors. Default is an empty string which means that prompt toolkit decide."
+        ),
+        "PTK_STYLE_OVERRIDES": VarDocs(
+            "A dictionary containing custom prompt_toolkit style definitions."
         ),
         "PUSHD_MINUS": VarDocs(
             "Flag for directory pushing functionality. False is the normal " "behavior."
@@ -948,9 +951,6 @@ def DEFAULT_DOCS():
         "XONSH_STORE_STDOUT": VarDocs(
             "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
             "history files."
-        ),
-        "XONSH_STYLE_OVERRIDES": VarDocs(
-            "A dictionary containing custom prompt_toolkit style definitions."
         ),
         "XONSH_TRACEBACK_LOGFILE": VarDocs(
             "Specifies a file to store the traceback log to, regardless of whether "
