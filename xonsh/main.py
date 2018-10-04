@@ -512,7 +512,7 @@ def setup(
     builtins.__xonsh__.ctx = ctx
     builtins.__xonsh__.execer = Execer(xonsh_ctx=ctx)
     builtins.__xonsh__.shell = Shell(
-        builtins.__xonsh__.execer, ctx=ctx, shell_type="none"
+        builtins.__xonsh__.execer, ctx=ctx, shell_type=shell_type
     )
     builtins.__xonsh__.env.update(env)
     install_import_hooks()
