@@ -26,6 +26,8 @@ from xonsh.platform import (
     os_environ,
 )
 
+from xonsh.style_tools import PTK2_STYLE
+
 from xonsh.tools import (
     always_true,
     always_false,
@@ -390,7 +392,7 @@ def DEFAULT_VALUES():
         "PRETTY_PRINT_RESULTS": True,
         "PROMPT": prompt.default_prompt(),
         "PROMPT_TOOLKIT_COLOR_DEPTH": "",
-        "PTK_STYLE_OVERRIDES": dict(),
+        "PTK_STYLE_OVERRIDES": dict(PTK2_STYLE),
         "PUSHD_MINUS": False,
         "PUSHD_SILENT": False,
         "RAISE_SUBPROC_ERROR": False,
