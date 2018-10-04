@@ -1343,6 +1343,7 @@ class XonshSession:
         self.builtins = _BuiltIns(execer)
 
         self.history = None
+        self.shell = None
 
     def link_builtins(self, execer=None):
         # public built-ins
