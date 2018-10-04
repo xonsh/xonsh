@@ -509,14 +509,12 @@ def setup(
     """
     ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
-    if not hasattr(builtins, '__xonsh__'):
+    if not hasattr(builtins, "__xonsh__"):
         execer = Execer(xonsh_ctx=ctx)
         builtins.__xonsh__ = XonshSession(ctx=ctx, execer=execer)
         load_builtins(ctx=ctx, execer=execer)
         load_proxies()
-        builtins.__xonsh__.shell = Shell(
-            execer, ctx=ctx, shell_type=shell_type
-        )
+        builtins.__xonsh__.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
     builtins.__xonsh__.env.update(env)
     install_import_hooks()
     builtins.aliases.update(aliases)
