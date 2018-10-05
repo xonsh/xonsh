@@ -435,17 +435,13 @@ DEFAULT_STYLE_DICT = LazyObject(
     "DEFAULT_STYLE_DICT",
 )
 
-PTK2_STYLE = LazyObject(
-    lambda: {
-        "completion-menu": "bg:ansigray ansiblack",
-        "completion-menu.completion": "",
-        "completion-menu.completion.current": "bg:ansibrightblack ansiwhite",
-        "scrollbar.background": "bg:ansibrightblack",
-        "scrollbar.arrow": "bg:ansiblack ansiwhite bold" ,
-        "scrollbar.button": "bg:ansiblack",
-        "auto-suggestion": "ansibrightblack",
-        "aborting": "ansibrightblack",
-    },
-    globals(),
-    "PTK2_STYLE",
-)
+PTK2_STYLE = {
+    "completion-menu": "bg:ansigray ansiblack",
+    "completion-menu.completion": "",
+    "completion-menu.completion.current": "bg:ansibrightblack ansiwhite",
+    "scrollbar.background": "bg:ansibrightblack",
+    "scrollbar.arrow": "bg:ansiblack ansiwhite bold" ,
+    "scrollbar.button": "bg:ansiblack",
+    "auto-suggestion": "ansibrightblack",
+    "aborting": "ansibrightblack",
+}
