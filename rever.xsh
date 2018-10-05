@@ -7,7 +7,7 @@ $ACTIVITIES = ['version_bump', 'changelog', 'pytest',
 
 $VERSION_BUMP_PATTERNS = [
     ('.appveyor.yml', 'version:.*', 'version: $VERSION.{build}'),
-    ('xonsh/__init__.py', '__version__\s*=.*', '__version__ = "$VERSION"'),
+    ('xonsh/__init__.py', r'__version__\s*=.*', '__version__ = "$VERSION"'),
     ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'

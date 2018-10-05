@@ -293,7 +293,7 @@ END_TOK_TYPES = LazyObject(
     lambda: frozenset(["SEMI", "AND", "OR", "RPAREN"]), globals(), "END_TOK_TYPES"
 )
 RE_END_TOKS = LazyObject(
-    lambda: re.compile("(;|and|\&\&|or|\|\||\))"), globals(), "RE_END_TOKS"
+    lambda: re.compile(r"(;|and|\&\&|or|\|\||\))"), globals(), "RE_END_TOKS"
 )
 LPARENS = LazyObject(
     lambda: frozenset(
@@ -1613,7 +1613,7 @@ def dynamic_cwd_tuple_to_str(x):
 
 
 RE_HISTORY_TUPLE = LazyObject(
-    lambda: re.compile("([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)"),
+    lambda: re.compile(r"([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)"),
     globals(),
     "RE_HISTORY_TUPLE",
 )
