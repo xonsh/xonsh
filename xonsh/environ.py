@@ -26,6 +26,8 @@ from xonsh.platform import (
     os_environ,
 )
 
+from xonsh.style_tools import PTK2_STYLE
+
 from xonsh.tools import (
     always_true,
     always_false,
@@ -72,6 +74,9 @@ from xonsh.tools import (
     to_itself,
     swap_values,
     ptk2_color_depth_setter,
+    is_str_str_dict,
+    to_str_str_dict,
+    dict_to_str,
 )
 import xonsh.prompt.base as prompt
 
@@ -226,6 +231,7 @@ def DEFAULT_ENSURERS():
         ),
         "PUSHD_MINUS": (is_bool, to_bool, bool_to_str),
         "PUSHD_SILENT": (is_bool, to_bool, bool_to_str),
+        "PTK_STYLE_OVERRIDES": (is_str_str_dict, to_str_str_dict, dict_to_str),
         "RAISE_SUBPROC_ERROR": (is_bool, to_bool, bool_to_str),
         "RIGHT_PROMPT": (is_string_or_callable, ensure_string, ensure_string),
         "BOTTOM_TOOLBAR": (is_string_or_callable, ensure_string, ensure_string),
@@ -390,6 +396,7 @@ def DEFAULT_VALUES():
         "PRETTY_PRINT_RESULTS": True,
         "PROMPT": prompt.default_prompt(),
         "PROMPT_TOOLKIT_COLOR_DEPTH": "",
+        "PTK_STYLE_OVERRIDES": dict(PTK2_STYLE),
         "PUSHD_MINUS": False,
         "PUSHD_SILENT": False,
         "RAISE_SUBPROC_ERROR": False,
@@ -674,6 +681,9 @@ def DEFAULT_DOCS():
             "The color depth used by prompt toolkit 2. Possible values are: "
             "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
             "colors. Default is an empty string which means that prompt toolkit decide."
+        ),
+        "PTK_STYLE_OVERRIDES": VarDocs(
+            "A dictionary containing custom prompt_toolkit style definitions."
         ),
         "PUSHD_MINUS": VarDocs(
             "Flag for directory pushing functionality. False is the normal " "behavior."

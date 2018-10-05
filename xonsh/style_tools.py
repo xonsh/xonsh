@@ -434,3 +434,14 @@ DEFAULT_STYLE_DICT = LazyObject(
     globals(),
     "DEFAULT_STYLE_DICT",
 )
+
+PTK2_STYLE = {
+    "completion-menu": "bg:ansigray ansiblack",
+    "completion-menu.completion": "",
+    "completion-menu.completion.current": "bg:ansibrightblack ansiwhite",
+    "scrollbar.background": "bg:ansibrightblack",
+    "scrollbar.arrow": "bg:ansiblack ansiwhite bold",
+    "scrollbar.button": "bg:ansiblack",
+    "auto-suggestion": "ansibrightblack",
+    "aborting": "ansibrightblack",
+}

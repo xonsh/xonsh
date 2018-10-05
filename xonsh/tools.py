@@ -36,6 +36,7 @@ import threading
 import traceback
 import warnings
 import operator
+import ast
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -1470,6 +1471,45 @@ def to_completions_display_value(x):
         warnings.warn(msg, RuntimeWarning)
         x = "multi"
     return x
+
+
+def is_str_str_dict(x):
+    """Tests if something is a str:str dictionary"""
+    return isinstance(x, dict) and all(
+        isinstance(k, str) and isinstance(v, str) for k, v in x.items()
+    )
+
+
+def to_dict(x):
+    """Converts a string to a dictionary"""
+    if isinstance(x, dict):
+        return x
+    try:
+        x = ast.literal_eval(x)
+    except (ValueError, SyntaxError):
+        msg = '"{}" can not be converted to Python dictionary.'.format(x)
+        warnings.warn(msg, RuntimeWarning)
+        x = dict()
+    return x
+
+
+def to_str_str_dict(x):
+    """Converts a string to str:str dictionary"""
+    if is_str_str_dict(x):
+        return x
+    x = to_dict(x)
+    if not is_str_str_dict(x):
+        msg = '"{}" can not be converted to str:str dictionary.'.format(x)
+        warnings.warn(msg, RuntimeWarning)
+        x = dict()
+    return x
+
+
+def dict_to_str(x):
+    """Converts a dictionary to a string"""
+    if not x or len(x) == 0:
+        return ""
+    return str(x)
 
 
 def setup_win_unicode_console(enable):
