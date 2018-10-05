@@ -546,7 +546,7 @@ class BaseShell(object):
         """Formats the colors in a string. ``BaseShell``'s default implementation
         of this method uses colors based on ANSI color codes.
         """
-        style = builtins.__xonsh__env.get("XONSH_COLOR_STYLE")
+        style = builtins.__xonsh__.env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
