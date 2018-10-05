@@ -36,7 +36,7 @@ import threading
 import traceback
 import warnings
 import operator
-from ast import literal_eval
+import ast
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -1485,7 +1485,7 @@ def to_dict(x):
     if isinstance(x, dict):
         return x
     try:
-        x = literal_eval(x)
+        x = ast.literal_eval(x)
     except (ValueError, SyntaxError):
         msg = '"{}" can not be converted to Python dictionary.'.format(x)
         warnings.warn(msg, RuntimeWarning)
