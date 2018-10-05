@@ -3,7 +3,7 @@
 from __future__ import unicode_literals, print_function
 import os
 import sys
-from collections import Sequence
+from collections.abc import Sequence
 
 sys.path.insert(0, os.path.abspath(".."))  # FIXME
 from pprint import pformat

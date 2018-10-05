@@ -45,9 +45,9 @@ def ver_news(ver):
     news += merge_news()
     return news
 VERSION_UPDATE_PATTERNS = [
-    ('__version__\s*=.*', (lambda ver: "__version__ = '{0}'".format(ver)),
+    (r'__version__\s*=.*', (lambda ver: "__version__ = '{0}'".format(ver)),
         [PROJECT, '__init__.py']),
-    ('version:\s*', (lambda ver: 'version: {0}.{{build}}'.format(ver)),
+    (r'version:\s*', (lambda ver: 'version: {0}.{{build}}'.format(ver)),
         ['.appveyor.yml']),
     ('.. current developments', ver_news, ['CHANGELOG.rst']),
 ]
