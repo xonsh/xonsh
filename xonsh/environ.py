@@ -74,6 +74,9 @@ from xonsh.tools import (
     to_itself,
     swap_values,
     ptk2_color_depth_setter,
+    is_str_str_dict,
+    to_str_str_dict,
+    dict_to_str,
 )
 import xonsh.prompt.base as prompt
 
@@ -228,6 +231,7 @@ def DEFAULT_ENSURERS():
         ),
         "PUSHD_MINUS": (is_bool, to_bool, bool_to_str),
         "PUSHD_SILENT": (is_bool, to_bool, bool_to_str),
+        "PTK_STYLE_OVERRIDES": (is_str_str_dict, to_str_str_dict, dict_to_str),
         "RAISE_SUBPROC_ERROR": (is_bool, to_bool, bool_to_str),
         "RIGHT_PROMPT": (is_string_or_callable, ensure_string, ensure_string),
         "BOTTOM_TOOLBAR": (is_string_or_callable, ensure_string, ensure_string),
