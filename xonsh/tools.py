@@ -1472,9 +1472,13 @@ def to_completions_display_value(x):
         x = "multi"
     return x
 
+
 def is_str_str_dict(x):
     """Tests if something is a str:str dictionary"""
-    return isinstance(x, dict) and all(isinstance(k, str) and isinstance(v, str) for k,v in x.items())
+    return isinstance(x, dict) and all(
+        isinstance(k, str) and isinstance(v, str) for k, v in x.items()
+    )
+
 
 def to_dict(x):
     """Converts a string to a dictionary"""
@@ -1488,6 +1492,7 @@ def to_dict(x):
         x = dict()
     return x
 
+
 def to_str_str_dict(x):
     """Converts a string to str:str dictionary"""
     if is_str_str_dict(x):
@@ -1499,11 +1504,13 @@ def to_str_str_dict(x):
         x = dict()
     return x
 
+
 def dict_to_str(x):
     """Converts a dictionary to a string"""
     if not x or len(x) == 0:
         return ""
     return str(x)
+
 
 def setup_win_unicode_console(enable):
     """"Enables or disables unicode display on windows."""
