@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* Fixed deprecation warnings from unallowed escape sequences as well as importing abstract base classes directly from `collections` 
+* Fixed deprecation warnings from unallowed escape sequences as well as importing abstract base classes directly from ``collections`` 
 
 **Security:** None
