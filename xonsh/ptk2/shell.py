@@ -152,7 +152,7 @@ class PromptToolkit2Shell(BaseShell):
                 try:
                     style_overrides = Style.from_dict(style_overrides_env)
                     prompt_args["style"] = merge_styles([style, style_overrides])
-                except Exception:  # pylint: disable=broad-except
+                except (AttributeError, TypeError, ValueError):
                     print_exception()
 
         line = self.prompter.prompt(**prompt_args)
