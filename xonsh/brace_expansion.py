@@ -1,8 +1,9 @@
 import glob
 import itertools
 import re
+
 # regex to be used for splitting on braced regions
-BRACED = re.compile(r'(?<!\\)(\{.*?(?<!\\)\})')
+BRACED = re.compile(r"(?<!\\)(\{.*?(?<!\\)\})")
 
 
 def split(string, splitter):
@@ -23,19 +24,19 @@ def int_range(p1, p2):
     """
     n1, n2 = int(p1), int(p2)
     pad = len(p1)
-    return ('{:0{}d}'.format(n, pad) for n in range(n1, n2+1))
+    return ("{:0{}d}".format(n, pad) for n in range(n1, n2 + 1))
 
 
 def range_expand(string):
     """for one comma-separated item from a brace expansion, determine
     whether or not it is a range and expand accordingly.
     """
-    parts = split(string, '..')
+    parts = split(string, "..")
     # no range. return a list containing the original string.
     if len(parts) == 1:
         return parts
     # ensure range has only two parts.
-    assert len(parts) == 2, 'range %s has too many parts' % string
+    assert len(parts) == 2, "range %s has too many parts" % string
 
     # attempt to parse as a range of integers
     try:
@@ -50,11 +51,10 @@ def range_expand(string):
 
 def inner_brace_expand(string):
     """parse a brace expansion in a way similar to Bash. Input string
-    should not
-    include braces.
+    should not include braces.
     """
     # split on commas.
-    return itertools.chain(*map(range_expand, split(string, ',')))
+    return itertools.chain(*map(range_expand, split(string, ",")))
 
 
 def brace_expand(string, globbing=True):
@@ -73,9 +73,9 @@ def brace_expand(string, globbing=True):
             continue
 
         # remove backslashes from escaped braces
-        unescaped = part.replace('\{', '{').replace('\}', '}')
+        unescaped = part.replace("\{", "{").replace("\}", "}")
         # part requires brace expansion.
-        if part[0] == '{':
+        if part[0] == "{":
             newparts.append(inner_brace_expand(unescaped[1:-1]))
         else:
             # if it's not a candidate for brace expansion, look for glob chars
@@ -84,9 +84,8 @@ def brace_expand(string, globbing=True):
             newparts.append([unescaped])
     # generate and join the cartesian product of all expansions
     product = itertools.product(*(p for p in newparts if p))
-    strings = (''.join(i) for i in product)
+    strings = ("".join(i) for i in product)
     # apply globbing if glob charaters were found. Else, return strings
     if isglob and globbing == True:
-        return itertools.chain(
-            *(glob.iglob(s, recursive=True) for s in strings))
+        return itertools.chain(*(glob.iglob(s, recursive=True) for s in strings))
     return strings
