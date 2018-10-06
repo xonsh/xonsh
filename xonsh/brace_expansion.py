@@ -10,6 +10,8 @@ def split(string, splitter):
     """string-splitting function that ignores the first and last
     characters of the string.
     """
+    if len(string) <= 1:
+        return [string]
     new = string[1:-1].split(splitter)
     if len(new) == 1:
         return [string]
