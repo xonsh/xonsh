@@ -73,7 +73,7 @@ def brace_expand(string, globbing=True):
             continue
 
         # remove backslashes from escaped braces
-        unescaped = part.replace("\{", "{").replace("\}", "}")
+        unescaped = part.replace(r"\{", "{").replace(r"\}", "}")
         # part requires brace expansion.
         if part[0] == "{":
             newparts.append(inner_brace_expand(unescaped[1:-1]))
