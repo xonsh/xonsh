@@ -60,7 +60,7 @@ def inner_brace_expand(string):
 def brace_expand(string, globbing=True):
     """takes a string as input and interprets in a way similar to Bash
     arguments with brace expansion and globbing. returns an iterator.
-    
+
     >>> list(brace_expand('{a,b}{c..e}{09..10}'))
     ['ac09', 'ac10', 'ad09', 'ad10', 'ae09', 'ae10', 'bc09', 'bc10', 'bd09', 'bd10', 'be09', 'be10']
     """
@@ -86,6 +86,6 @@ def brace_expand(string, globbing=True):
     product = itertools.product(*(p for p in newparts if p))
     strings = ("".join(i) for i in product)
     # apply globbing if glob charaters were found. Else, return strings
-    if isglob and globbing == True:
+    if isglob and globbing:
         return itertools.chain(*(glob.iglob(s, recursive=True) for s in strings))
     return strings
