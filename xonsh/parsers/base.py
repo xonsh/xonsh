@@ -3140,7 +3140,7 @@ class BaseParser(object):
         if isinstance(p1, list):
             # has an expanding function call, such as @(x)
             p0 = xonsh_call(
-                "__xonsh__.xonsh_list_of_list_of_strs_outer_product",
+                "__xonsh__.list_of_list_of_strs_outer_product",
                 args=[ensure_has_elts(p1)],
                 lineno=p1[0].lineno,
                 col=p1[0].col_offset,
