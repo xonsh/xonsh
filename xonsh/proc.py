@@ -1002,12 +1002,18 @@ class FileThreadDispatcher:
         """Registers a file handle for the current thread. Returns self so
         that this method can be used in a with-statement.
         """
+        if handle is self:
+            # prevent weird recurssion errors
+            return self
         self.registry[threading.get_ident()] = handle
         return self
 
     def deregister(self):
         """Removes the current thread from the registry."""
-        del self.registry[threading.get_ident()]
+        ident = threading.get_ident()
+        if ident in self.registry:
+            # don't remove if we have already been deregistered
+            del self.registry[threading.get_ident()]
 
     @property
     def available(self):
