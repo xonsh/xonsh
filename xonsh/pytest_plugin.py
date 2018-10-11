@@ -6,11 +6,11 @@ from traceback import format_list, extract_tb
 
 import pytest
 
-from xonsh.imphooks import install_import_hooks
+from xonsh.main import setup
 
 
 def pytest_configure(config):
-    install_import_hooks()
+    setup()
 
 
 def pytest_collection_modifyitems(items):

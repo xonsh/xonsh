@@ -61,7 +61,12 @@ def xonsh_builtins(xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = set(dir(builtins))
     execer = getattr(getattr(builtins, "__xonsh__", None), "execer", None)
-    builtins.__xonsh__ = XonshSession(execer=execer, ctx={})
+    session = XonshSession(execer=execer, ctx={})
+    builtins.__xonsh__ = session
+    if not hasattr(builtins, '__xonsh__'):
+        # I have no idea why pytest fails to assign into the builtins module
+        # sometimes, but the following globals trick seems to work -scopatz
+        globals()['__builtins__']['__xonsh__'] = session
     builtins.__xonsh__.env = DummyEnv()
     if ON_WINDOWS:
         builtins.__xonsh__.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]

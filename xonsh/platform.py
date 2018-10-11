@@ -348,7 +348,7 @@ def linux_distro():
     if ON_LINUX:
         if distro:
             ld = distro.id()
-        elif PYTHON_VERSION_INFO < (3, 7, 0):
+        elif PYTHON_VERSION_INFO < (3, 6, 6):
             ld = platform.linux_distribution()[0] or "unknown"
         elif "-ARCH-" in platform.platform():
             ld = "arch"  # that's the only one we need to know for now
