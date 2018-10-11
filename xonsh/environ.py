@@ -173,7 +173,7 @@ def DEFAULT_ENSURERS():
         "AUTO_SUGGEST_IN_COMPLETIONS": (is_bool, to_bool, bool_to_str),
         "BASH_COMPLETIONS": (is_env_path, str_to_env_path, env_path_to_str),
         "CASE_SENSITIVE_COMPLETIONS": (is_bool, to_bool, bool_to_str),
-        re.compile("\w*DIRS$"): (is_env_path, str_to_env_path, env_path_to_str),
+        re.compile(r"\w*DIRS$"): (is_env_path, str_to_env_path, env_path_to_str),
         "COLOR_INPUT": (is_bool, to_bool, bool_to_str),
         "COLOR_RESULTS": (is_bool, to_bool, bool_to_str),
         "COMPLETIONS_BRACKETS": (is_bool, to_bool, bool_to_str),
@@ -216,7 +216,7 @@ def DEFAULT_ENSURERS():
         "LOADED_RC_FILES": (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
         "MOUSE_SUPPORT": (is_bool, to_bool, bool_to_str),
         "MULTILINE_PROMPT": (is_string_or_callable, ensure_string, ensure_string),
-        re.compile("\w*PATH$"): (is_env_path, str_to_env_path, env_path_to_str),
+        re.compile(r"\w*PATH$"): (is_env_path, str_to_env_path, env_path_to_str),
         "PATHEXT": (
             is_nonstring_seq_of_strings,
             pathsep_to_upper_seq,

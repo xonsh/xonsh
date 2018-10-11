@@ -33,11 +33,19 @@ def source_path():
 
 
 def ensure_attached_session(session):
-    builtins.__xonsh__ = session
-    if not hasattr(builtins, '__xonsh__'):
+    for i in range(1, 11):
+        builtins.__xonsh__ = session
+        if hasattr(builtins, "__xonsh__"):
+            break
         # I have no idea why pytest fails to assign into the builtins module
         # sometimes, but the following globals trick seems to work -scopatz
-        globals()['__builtins__']['__xonsh__'] = session
+        globals()["__builtins__"]["__xonsh__"] = session
+        if hasattr(builtins, "__xonsh__"):
+            break
+    else:
+        raise RuntimeError(
+            "Could not attach xonsh session to builtins " "after many tries!"
+        )
 
 
 @pytest.fixture

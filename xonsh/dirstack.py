@@ -65,8 +65,7 @@ def _is_unc_path(some_path) -> bool:
 
 
 def _unc_map_temp_drive(unc_path) -> str:
-
-    """Map a new temporary drive letter for each distinct share,
+    r"""Map a new temporary drive letter for each distinct share,
     unless `CMD.EXE` is not insisting on non-UNC working directory.
 
     Emulating behavior of `CMD.EXE` `pushd`, create a new mapped drive (starting from Z: towards A:, skipping existing
@@ -110,7 +109,7 @@ def _unc_unmap_temp_drive(left_drive, cwd):
     Args:
         left_drive: driveletter (and colon) of working directory we just left
         cwd: full path of new current working directory
-"""
+    """
 
     global _unc_tempDrives
 
