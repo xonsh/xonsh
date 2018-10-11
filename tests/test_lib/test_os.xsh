@@ -15,6 +15,7 @@ def test_indir():
         except Exception:
             assert ![pwd].output.strip() != tmpdir
 
+
 def test_rmtree():
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
@@ -22,12 +23,12 @@ def test_rmtree():
             pushd rmtree_test
             git init
             touch thing.txt
-            git add thing
+            git add thing.txt
             git commit -am "add thing"
             popd
             assert os.path.exists('rmtree_test')
             assert os.path.exists('rmtree_test/thing.txt')
-            rmtree('rmtree_test')
+            rmtree('rmtree_test', force=True)
             assert not os.path.exists('rmtree_test')
             assert not os.path.exists('rmtree_test/thing.txt')
 
