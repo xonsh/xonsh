@@ -10,6 +10,8 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Fixed further raw string deprecation warnings thoughout the code base.
 
 **Security:** None

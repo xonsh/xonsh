@@ -40,7 +40,6 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            #python setup.py install
             pip install . --no-deps
       - run:
           command: |
@@ -85,7 +84,6 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            #python setup.py install
             pip install . --no-deps
       - run:
           command: |
@@ -130,7 +128,6 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            #python setup.py install
             pip install . --no-deps
       - run:
           command: |
@@ -175,7 +172,6 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            #python setup.py install
             pip install . --no-deps
       - run:
           command: |
