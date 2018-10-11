@@ -40,7 +40,8 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            python setup.py install
+            #python setup.py install
+            pip install . --no-deps
       - run:
           command: |
             /home/circleci/miniconda/envs/py34-xonsh-test/bin/pytest --timeout=10
@@ -84,7 +85,8 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            python setup.py install
+            #python setup.py install
+            pip install . --no-deps
       - run:
           command: |
             /home/circleci/miniconda/envs/py35-xonsh-test/bin/pytest --timeout=10
@@ -128,7 +130,8 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            python setup.py install
+            #python setup.py install
+            pip install . --no-deps
       - run:
           command: |
             /home/circleci/miniconda/envs/py36-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh
@@ -172,7 +175,8 @@ jobs:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
             source activate ${ENV_NAME}
-            python setup.py install
+            #python setup.py install
+            pip install . --no-deps
       - run:
           command: |
             /home/circleci/miniconda/envs/py37-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh

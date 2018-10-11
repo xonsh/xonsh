@@ -22,6 +22,8 @@ def test_rmtree():
             mkdir rmtree_test
             pushd rmtree_test
             git init
+            git config user.email "test@example.com"
+            git config user.name "Code Monkey"
             touch thing.txt
             git add thing.txt
             git commit -am "add thing"
