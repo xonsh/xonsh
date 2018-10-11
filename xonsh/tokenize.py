@@ -345,7 +345,7 @@ Operator = group(
     r"!\[",
     r"\$\(",
     r"\$\[",
-    "\${",
+    r"\${",
     r"\?\?",
     r"\?",
     AUGASSIGN_OPS,

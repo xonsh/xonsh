@@ -32,6 +32,22 @@ def source_path():
     return os.path.dirname(pwd)
 
 
+def ensure_attached_session(session):
+    for i in range(1, 11):
+        builtins.__xonsh__ = session
+        if hasattr(builtins, "__xonsh__"):
+            break
+        # I have no idea why pytest fails to assign into the builtins module
+        # sometimes, but the following globals trick seems to work -scopatz
+        globals()["__builtins__"]["__xonsh__"] = session
+        if hasattr(builtins, "__xonsh__"):
+            break
+    else:
+        raise RuntimeError(
+            "Could not attach xonsh session to builtins " "after many tries!"
+        )
+
+
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
@@ -40,7 +56,7 @@ def xonsh_execer(monkeypatch):
         (lambda *args, **kwargs: None).__code__,
     )
     if not hasattr(builtins, "__xonsh__"):
-        builtins.__xonsh__ = XonshSession()
+        ensure_attached_session(XonshSession())
     execer = Execer(unload=False)
     builtins.__xonsh__.execer = execer
     return execer
@@ -62,11 +78,7 @@ def xonsh_builtins(xonsh_events):
     old_builtins = set(dir(builtins))
     execer = getattr(getattr(builtins, "__xonsh__", None), "execer", None)
     session = XonshSession(execer=execer, ctx={})
-    builtins.__xonsh__ = session
-    if not hasattr(builtins, '__xonsh__'):
-        # I have no idea why pytest fails to assign into the builtins module
-        # sometimes, but the following globals trick seems to work -scopatz
-        globals()['__builtins__']['__xonsh__'] = session
+    ensure_attached_session(session)
     builtins.__xonsh__.env = DummyEnv()
     if ON_WINDOWS:
         builtins.__xonsh__.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]

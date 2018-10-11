@@ -18,7 +18,7 @@ _unc_tempDrives = {}
 
 
 def _unc_check_enabled() -> bool:
-    """Check whether CMD.EXE is enforcing no-UNC-as-working-directory check.
+    r"""Check whether CMD.EXE is enforcing no-UNC-as-working-directory check.
 
     Check can be disabled by setting {HKCU, HKLM}/SOFTWARE\Microsoft\Command Processor\DisableUNCCheck:REG_DWORD=1
 
@@ -65,8 +65,7 @@ def _is_unc_path(some_path) -> bool:
 
 
 def _unc_map_temp_drive(unc_path) -> str:
-
-    """Map a new temporary drive letter for each distinct share,
+    r"""Map a new temporary drive letter for each distinct share,
     unless `CMD.EXE` is not insisting on non-UNC working directory.
 
     Emulating behavior of `CMD.EXE` `pushd`, create a new mapped drive (starting from Z: towards A:, skipping existing
@@ -110,7 +109,7 @@ def _unc_unmap_temp_drive(left_drive, cwd):
     Args:
         left_drive: driveletter (and colon) of working directory we just left
         cwd: full path of new current working directory
-"""
+    """
 
     global _unc_tempDrives
 
@@ -291,7 +290,7 @@ def pushd_parser():
 
 
 def pushd(args, stdin=None):
-    """xonsh command: pushd
+    r"""xonsh command: pushd
 
     Adds a directory to the top of the directory stack, or rotates the stack,
     making the new top of the stack the current working directory.
