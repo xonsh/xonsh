@@ -250,7 +250,7 @@ def get_script_subproc_command(fname, args):
 
 @lazyobject
 def _REDIR_REGEX():
-    name = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
+    name = r"(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
     return re.compile("{r}(>?>|<){r}$".format(r=name))
 
 
@@ -1147,7 +1147,7 @@ def call_macro(f, raw_args, glbs, locs):
 
 @lazyobject
 def KWARG_RE():
-    return re.compile("([A-Za-z_]\w*=|\*\*)")
+    return re.compile(r"([A-Za-z_]\w*=|\*\*)")
 
 
 def _starts_as_arg(s):

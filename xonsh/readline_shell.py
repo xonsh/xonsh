@@ -114,10 +114,10 @@ def setup_readline():
     readline.set_history_length(-1)
     ReadlineHistoryAdder()
     # sets up IPython-like history matching with up and down
-    readline.parse_and_bind('"\e[B": history-search-forward')
-    readline.parse_and_bind('"\e[A": history-search-backward')
+    readline.parse_and_bind('"\\e[B": history-search-forward')
+    readline.parse_and_bind('"\\e[A": history-search-backward')
     # Setup Shift-Tab to indent
-    readline.parse_and_bind('"\e[Z": "{0}"'.format(env.get("INDENT")))
+    readline.parse_and_bind('"\\e[Z": "{0}"'.format(env.get("INDENT")))
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997

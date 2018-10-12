@@ -30,9 +30,9 @@ def rmtree(dirname, force=False):
     if force:
         cmd_args += 'f'
     try:
-        rm @(cmd_args) @(dirname)
+        ![rm @(cmd_args) @(dirname)]
     except PermissionError:
         if sys.platform == "win32":
-            del /F/S/Q @(dirname)
+            ![del /F/S/Q @(dirname)]
         else:
             raise
