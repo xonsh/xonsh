@@ -83,7 +83,7 @@ RE_HIDDEN_BYTES = LazyObject(
 
 @lazyobject
 def RE_VT100_ESCAPE():
-    return re.compile(b"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
+    return re.compile(b"(\x9B|\x1B\\[)[0-?]*[ -\\/]*[@-~]")
 
 
 @lazyobject
@@ -825,7 +825,7 @@ class PopenThread(threading.Thread):
     #
 
     def _signal_quit(self, signum, frame):
-        """Signal handler for quiting SIGQUIT - Ctrl+\ may have been pressed.
+        r"""Signal handler for quiting SIGQUIT - Ctrl+\ may have been pressed.
         """
         self.send_signal(signum)
         self._restore_sigquit(frame=frame)

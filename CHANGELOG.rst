@@ -4,6 +4,125 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.0
+====================
+
+**Added:**
+
+* Windows CI jobs on Azure Pipelines
+* The ``cryptop`` command will no longer have its output captured
+  by default.
+* Added new env-var ``PTK_STYLE_OVERRIDES``. The variable is
+  a dictionary containing custom prompt_toolkit style definitions.
+  For instance::
+
+    $PTK_STYLE_OVERRIDES['completion-menu'] = 'bg:#333333 #EEEEEE'
+
+  will provide for more visually pleasing completion menu style whereas::
+
+    $PTK_STYLE_OVERRIDES['bottom-toolbar'] = 'noreverse'
+
+  will prevent prompt_toolkit from inverting the bottom toolbar colors
+  (useful for powerline extension users)
+
+  Note: This only works with prompt_toolkit 2 prompter.
+
+
+**Changed:**
+
+* All ``__xonsh_*__`` builtins have been migrated to a ``XonshSession`` instance at
+  ``__xonsh__``. E.g. ``__xonsh_env__`` is now ``__xonsh__.env``.
+* Other xonsh-specific builtins (such as ``XonshError``) have been proxied to
+  the ``__xonsh__`` session object as well.
+
+
+**Deprecated:**
+
+* All ``__xonsh_*__`` builtins are deprected. Instead, the corresponding
+  ``__xonsh__.*`` accessor should be used. The existing ``__xonsh_*__`` accessors
+  still work, but issue annoying warnings.
+
+
+**Fixed:**
+
+* Fixed deprecation warnings from unallowed escape sequences as well as importing abstract base classes directly from ``collections``
+* Fix for string index error in stripped prefix
+* bash_completions to include special characters in lprefix
+
+  Previously, glob expansion characters would not be included in lprefix for replacement
+
+  .. code-block:: sh
+
+    $ touch /tmp/abc
+    $ python
+    >>> from bash_completion import bash_completions
+    >>>
+    >>> def get_completions(line):
+    ...     split = line.split()
+    ...     if len(split) > 1 and not line.endswith(' '):
+    ...         prefix = split[-1]
+    ...         begidx = len(line.rsplit(prefix)[0])
+    ...     else:
+    ...         prefix = ''
+    ...         begidx = len(line)
+    ...     endidx = len(line)
+    ...     return bash_completions(prefix, line, begidx, endidx)
+    ...
+    >>> get_completions('ls /tmp/a*')
+    ({'/tmp/abc '}, 0)
+
+  Now, lprefix begins at the first special character:
+
+  .. code-block:: sh
+
+    $ python
+    >>> from bash_completion import bash_completions
+    >>>
+    >>> def get_completions(line):
+    ...     split = line.split()
+    ...     if len(split) > 1 and not line.endswith(' '):
+    ...         prefix = split[-1]
+    ...         begidx = len(line.rsplit(prefix)[0])
+    ...     else:
+    ...         prefix = ''
+    ...         begidx = len(line)
+    ...     endidx = len(line)
+    ...     return bash_completions(prefix, line, begidx, endidx)
+    ...
+    >>> get_completions('ls /tmp/a*')
+    ({'/tmp/abc '}, 7)
+* The ``xonsh.main.setup()`` function now correctly passes the
+  ``shell_type`` argument to the shell instance.
+* try_subproc_toks now works for subprocs with trailing and leading whitespace
+
+  Previously, non-greedy wrapping of commands would fail if they had leading and trailing whitespace:
+
+  .. code-block:: sh
+
+    $ true && false || echo a
+    xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
+    NameError: name 'false' is not defined
+
+    $ echo; echo && echo a
+
+    xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
+    NameError: name 'echo' is not defined
+
+  Now, the commands are parsed as expected:
+
+  .. code-block:: sh
+
+    $ true && false || echo a
+    a
+
+    $ echo; echo && echo a
+
+
+    a
+
+
+
+
 v0.7.10
 ====================
 
