@@ -1420,11 +1420,17 @@ class DynamicAccessProxy:
     def __setattr__(self, name, value):
         return super().__setattr__(self.obj, name, value)
 
+    def __delattr__(self, name):
+        return delattr(self.obj, name)
+
     def __getitem__(self, item):
         return self.obj.__getitem__(item)
 
     def __setitem__(self, item, value):
         return self.obj.__setitem__(item, value)
+
+    def __delitem__(self, item):
+        del self.obj[item]
 
     def __call__(self, *args, **kwargs):
         return self.obj.__call__(*args, **kwargs)
@@ -1463,6 +1469,10 @@ class DeprecationWarningProxy:
         self.warn()
         return super().__setattr__(self.obj, name, value)
 
+    def __delattr__(self, name):
+        self.warn()
+        return delattr(self.obj, name)
+
     def __getitem__(self, item):
         self.warn()
         return self.obj.__getitem__(item)
@@ -1470,6 +1480,10 @@ class DeprecationWarningProxy:
     def __setitem__(self, item, value):
         self.warn()
         return self.obj.__setitem__(item, value)
+
+    def __delitem__(self, item):
+        self.warn()
+        del self.obj[item]
 
     def __call__(self, *args, **kwargs):
         self.warn()
