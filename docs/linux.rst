@@ -40,7 +40,7 @@ Debian/Ubuntu users can install xonsh from the repository with:
     $ apt install xonsh
 
 
-Xonsh is available on bionic bever (version 0.6.0) and artful aardvark 
+Xonsh is available on bionic bever (version 0.6.0) and artful aardvark
 (version 0.5.12).
 
 Fedora users can install xonsh from the repository with:
@@ -54,23 +54,11 @@ Fedora users can install xonsh from the repository with:
 
 Arch Linux users can install xonsh from the Arch User Repository with:
 
-**yaourt:**
+**pacman:**
 
 .. code-block:: console
 
-    $ yaourt -Sa xonsh
-
-**aura:**
-
-.. code-block:: console
-
-    $ aura -A xonsh
-
-**pacaur:**
-
-.. code-block:: console
-
-    $ pacaur -S xonsh
+    $ pacman -S xonsh
 
 Note that some of these may require ``sudo``.
 If you run into any problems, please let us know!
