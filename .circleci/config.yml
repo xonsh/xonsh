@@ -197,7 +197,7 @@ jobs:
           name: configure conda
           command: |
               export PATH="$HOME/miniconda/bin:$PATH"
-              pip install black
+              pip install black==18.9b0
       - save_cache:
           key: miniconda-v1-black
           paths:
