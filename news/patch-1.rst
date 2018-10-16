@@ -1,8 +1,8 @@
 **Added:** None
 
-**Changed:** None
+**Changed:**
 
-* Removed `fish` from list of supported foreign shells in the wizard.
+* Removed ``fish`` from list of supported foreign shells in the wizard.
 
 **Deprecated:** None
 
