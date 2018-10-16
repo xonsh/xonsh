@@ -1,6 +1,8 @@
 **Added:** None
 
-**Changed:** Updated Linux Guide as Xonsh is now available in Arch Linux official repositories.
+**Changed:**
+
+* Updated Linux Guide as Xonsh is now available in Arch Linux official repositories.
 
 **Deprecated:** None
 
