@@ -2419,7 +2419,10 @@ def pause_call_resume(p, f, *args, **kwargs):
         hasattr(p, "send_signal") and ON_POSIX and not ON_MSYS and not ON_CYGWIN
     )
     if can_send_signal:
-        p.send_signal(signal.SIGSTOP)
+        try:
+            p.send_signal(signal.SIGSTOP)
+        except PermissionError:
+            pass
     try:
         f(*args, **kwargs)
     except Exception:
