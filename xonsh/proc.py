@@ -1002,12 +1002,18 @@ class FileThreadDispatcher:
         """Registers a file handle for the current thread. Returns self so
         that this method can be used in a with-statement.
         """
+        if handle is self:
+            # prevent weird recurssion errors
+            return self
         self.registry[threading.get_ident()] = handle
         return self
 
     def deregister(self):
         """Removes the current thread from the registry."""
-        del self.registry[threading.get_ident()]
+        ident = threading.get_ident()
+        if ident in self.registry:
+            # don't remove if we have already been deregistered
+            del self.registry[threading.get_ident()]
 
     @property
     def available(self):
@@ -2413,7 +2419,10 @@ def pause_call_resume(p, f, *args, **kwargs):
         hasattr(p, "send_signal") and ON_POSIX and not ON_MSYS and not ON_CYGWIN
     )
     if can_send_signal:
-        p.send_signal(signal.SIGSTOP)
+        try:
+            p.send_signal(signal.SIGSTOP)
+        except PermissionError:
+            pass
     try:
         f(*args, **kwargs)
     except Exception:

@@ -425,6 +425,8 @@ class SubprocSpec:
         threadable : bool
             Whether or not the subprocess is able to be run in a background
             thread, rather than the main thread.
+        pipeline_index : int or None
+            The index number of this sepc into the pipeline that is being setup.
         last_in_pipeline : bool
             Whether the subprocess is the last in the execution pipeline.
         captured_stdout : file-like
@@ -451,6 +453,7 @@ class SubprocSpec:
         self.is_proxy = False
         self.background = False
         self.threadable = True
+        self.pipeline_index = None
         self.last_in_pipeline = False
         self.captured_stdout = None
         self.captured_stderr = None
@@ -823,6 +826,7 @@ def cmds_to_specs(cmds, captured=False):
     ready to be executed.
     """
     # first build the subprocs independently and separate from the redirects
+    i = 0
     specs = []
     redirects = []
     for cmd in cmds:
@@ -833,7 +837,9 @@ def cmds_to_specs(cmds, captured=False):
                 cmd = cmd[:-1]
                 redirects.append("&")
             spec = SubprocSpec.build(cmd, captured=captured)
+            spec.pipeline_index = i
             specs.append(spec)
+            i += 1
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
         if redirect == "|":
@@ -1420,11 +1426,17 @@ class DynamicAccessProxy:
     def __setattr__(self, name, value):
         return super().__setattr__(self.obj, name, value)
 
+    def __delattr__(self, name):
+        return delattr(self.obj, name)
+
     def __getitem__(self, item):
         return self.obj.__getitem__(item)
 
     def __setitem__(self, item, value):
         return self.obj.__setitem__(item, value)
+
+    def __delitem__(self, item):
+        del self.obj[item]
 
     def __call__(self, *args, **kwargs):
         return self.obj.__call__(*args, **kwargs)
@@ -1463,6 +1475,10 @@ class DeprecationWarningProxy:
         self.warn()
         return super().__setattr__(self.obj, name, value)
 
+    def __delattr__(self, name):
+        self.warn()
+        return delattr(self.obj, name)
+
     def __getitem__(self, item):
         self.warn()
         return self.obj.__getitem__(item)
@@ -1470,6 +1486,10 @@ class DeprecationWarningProxy:
     def __setitem__(self, item, value):
         self.warn()
         return self.obj.__setitem__(item, value)
+
+    def __delitem__(self, item):
+        self.warn()
+        del self.obj[item]
 
     def __call__(self, *args, **kwargs):
         self.warn()
