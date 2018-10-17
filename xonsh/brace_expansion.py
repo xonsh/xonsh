@@ -1,9 +1,10 @@
-import glob
 import itertools
 import re
 
+from xonsh.lazyasd import LazyObject
+
 # regex to be used for splitting on braced regions
-BRACED = re.compile(r"(?<!\\)(\{.*?(?<!\\)\})")
+BRACED = LazyObject(re.compile(r"(?<!\\)(\{.*?(?<!\\)\})"), globals(), BRACED)
 
 
 def split(string, splitter):
@@ -59,14 +60,13 @@ def inner_brace_expand(string):
     return itertools.chain(*map(range_expand, split(string, ",")))
 
 
-def brace_expand(string, globbing=True):
+def brace_expand(string):
     """takes a string as input and interprets in a way similar to Bash
     arguments with brace expansion and globbing. returns an iterator.
 
     >>> list(brace_expand('{a,b}{c..e}{09..10}'))
     ['ac09', 'ac10', 'ad09', 'ad10', 'ae09', 'ae10', 'bc09', 'bc10', 'bd09', 'bd10', 'be09', 'be10']
     """
-    isglob = False
     parts = BRACED.split(string)
     newparts = []
 
@@ -80,14 +80,8 @@ def brace_expand(string, globbing=True):
         if part[0] == "{":
             newparts.append(inner_brace_expand(unescaped[1:-1]))
         else:
-            # if it's not a candidate for brace expansion, look for glob chars
-            if glob.has_magic(part):
-                isglob = True
             newparts.append([unescaped])
     # generate and join the cartesian product of all expansions
     product = itertools.product(*(p for p in newparts if p))
     strings = ("".join(i) for i in product)
-    # apply globbing if glob charaters were found. Else, return strings
-    if isglob and globbing:
-        return itertools.chain(*(glob.iglob(s, recursive=True) for s in strings))
     return strings

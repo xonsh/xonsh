@@ -40,6 +40,7 @@ import ast
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
+from xonsh import brace_expansion
 from xonsh import __version__
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (
@@ -2132,18 +2133,28 @@ def expand_case_matching(s):
 
 
 def globpath(
-    s, ignore_case=False, return_empty=False, sort_result=None, include_dotfiles=None
+    s,
+    ignore_case=False,
+    return_empty=False,
+    sort_result=None,
+    include_dotfiles=None,
+    expand_braces=True,
 ):
     """Simple wrapper around glob that also expands home and env vars."""
-    o, s = _iglobpath(
-        s,
-        ignore_case=ignore_case,
-        sort_result=sort_result,
-        include_dotfiles=include_dotfiles,
-    )
-    o = list(o)
-    no_match = [] if return_empty else [s]
-    return o if len(o) != 0 else no_match
+    strings = brace_expansion.brace_expand(s) if expand_braces else [s]
+    expanded_strings = []
+    matches = []
+    for s in strings:
+        o, s = _iglobpath(
+            s,
+            ignore_case=ignore_case,
+            sort_result=sort_result,
+            include_dotfiles=include_dotfiles,
+        )
+        matches.extend(o)
+        expanded_strings.append(s)
+    no_match = [] if return_empty else expanded_strings
+    return matches if len(matches) else no_match
 
 
 def _dotglobstr(s):
