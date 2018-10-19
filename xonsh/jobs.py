@@ -352,7 +352,7 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
 
 
 @unthreadable
-def fg(args, stdin=None):
+def fg(args, stdin=None, *, wording=('fg','fore')):
     """
     xonsh command: fg
 
@@ -362,7 +362,7 @@ def fg(args, stdin=None):
     """
     _clear_dead_jobs()
     if len(tasks) == 0:
-        return "", "Cannot bring nonexistent job to foreground.\n"
+        return "", "Cannot run nonexistent job in {}ground.\n".format(wording[1])
 
     if len(args) == 0:
         tid = tasks[0]  # take the last manipulated task by default
@@ -380,7 +380,7 @@ def fg(args, stdin=None):
         if tid not in builtins.__xonsh__.all_jobs:
             return "", "Invalid job: {}\n".format(args[0])
     else:
-        return "", "fg expects 0 or 1 arguments, not {}\n".format(len(args))
+        return "", "{} expects 0 or 1 arguments, not {}\n".format(len(args), wording[0])
 
     # Put this one on top of the queue
     tasks.remove(tid)
@@ -401,7 +401,7 @@ def bg(args, stdin=None):
     Resume execution of the currently active job in the background, or, if a
     single number is given as an argument, resume that job in the background.
     """
-    res = fg(args, stdin)
+    res = fg(args, stdin, wording=('bg','back'))
     if res is None:
         curtask = get_task(tasks[0])
         curtask["bg"] = True
