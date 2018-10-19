@@ -352,7 +352,7 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
 
 
 @unthreadable
-def fg(args, stdin=None, *, wording=('fg','fore')):
+def fg(args, stdin=None, *, wording=("fg", "fore")):
     """
     xonsh command: fg
 
@@ -401,7 +401,7 @@ def bg(args, stdin=None):
     Resume execution of the currently active job in the background, or, if a
     single number is given as an argument, resume that job in the background.
     """
-    res = fg(args, stdin, wording=('bg','back'))
+    res = fg(args, stdin, wording=("bg", "back"))
     if res is None:
         curtask = get_task(tasks[0])
         curtask["bg"] = True
