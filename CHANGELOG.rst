@@ -4,6 +4,48 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.1
+====================
+
+**Added:**
+
+* ``SubprocSpec`` has a new ``pipeline_index`` integer attribute that indicates
+  the commands position in a pipeline. For example, in
+
+  .. code-block:: sh
+
+    p = ![ls -l | grep x]
+
+  The ``ls`` command would have a pipeline index of 0
+  (``p.specs[0].pipeline_index == 0``) and ``grep`` would have a pipeline index
+  of 1 (``p.specs[1].pipeline_index == 1``).  This may be usefule in callable
+  alaises which recieve the spec as an argument.
+
+
+**Changed:**
+
+* Removed ``fish`` from list of supported foreign shells in the wizard.
+* Circle CI config updated to use a pinned version of ``black`` (18.9b0)
+* Pytest plugin now uses ``xonsh.main.setup()`` to setup test environment.
+* Linux platform discovery will no longer use ``platform.linux_distribution()``
+  on Python >=3.6.6. due to pending deprecation warning.
+* Updated Linux Guide as Xonsh is now available in Arch Linux official repositories.
+
+
+**Fixed:**
+
+* Builtin dynamic proxies and deprecation warning proxies were not deleting
+  attributes and items properly.
+* Fixed stdout/sdterr writing infinite recurssion error that would occur in
+  long pipelines of callable aliases.
+* Fixed a bug which under very rare conditions could cause the shell
+  to die with PermissionError exception while sending SIGSTOP signal
+  to a child process.
+* Fixed further raw string deprecation warnings thoughout the code base.
+
+
+
+
 v0.8.0
 ====================
 
