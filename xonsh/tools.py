@@ -2213,13 +2213,18 @@ def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
 
 def iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     """Simple wrapper around iglob that also expands home and env vars."""
+    strings = brace_expansion.brace_expand(s)
     try:
-        return _iglobpath(
-            s,
-            ignore_case=ignore_case,
-            sort_result=sort_result,
-            include_dotfiles=include_dotfiles,
-        )[0]
+        matches = (
+            _iglobpath(
+                s,
+                ignore_case=ignore_case,
+                sort_result=sort_result,
+                include_dotfiles=include_dotfiles,
+            )[0]
+            for s in strings
+        )
+        return itertools.chain(*matches)
     except IndexError:
         # something went wrong in the actual iglob() call
         return iter(())
