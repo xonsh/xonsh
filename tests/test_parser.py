@@ -9,7 +9,7 @@ import pytest
 
 from xonsh.ast import AST, With, Pass, pdump
 from xonsh.parser import Parser
-from xonsh.parsers.base import sub_env_vars
+from xonsh.parsers.base import eval_fstr_fields
 
 from tools import VER_FULL, skip_if_py34, skip_if_lt_py36, nodes_equal
 
@@ -133,14 +133,16 @@ def test_f_env_var():
 @pytest.mark.parametrize(
     "inp, exp",
     [
-        ('f"{$HOME}"', "f\"{__xonsh__.env.detype()['HOME']}\""),
-        ('f"{ $HOME }"', "f\"{__xonsh__.env.detype()['HOME'] }\""),
-        ("f\"{'$HOME'}\"", "f\"{'$HOME'}\""),
+        ('f"{}"', 'f"{}"'),
         ('f"$HOME"', 'f"$HOME"'),
+        ('f"{0} - {1}"', 'f"{0} - {1}"'),
+        ('f"{$HOME}"', "f\"{__xonsh__.execer.eval(r'$HOME', glbs=globals(), locs=locals())}\""),
+        ('f"{ $HOME }"', 'f"{__xonsh__.execer.eval(r\'$HOME \', glbs=globals(), locs=locals())}"'),
+        ("f\"{'$HOME'}\"", 'f"{__xonsh__.execer.eval(r\'\\\'$HOME\\\'\', glbs=globals(), locs=locals())}"'),
     ],
 )
-def test_sub_env_vars(inp, exp):
-    obs = sub_env_vars(inp)
+def test_eval_fstr_fields(inp, exp):
+    obs = eval_fstr_fields(inp, 'f"')
     assert exp == obs
 
 

@@ -17,7 +17,10 @@
 
 **Fixed:**
 
-* <news item>
+* f-strings (``f"{expr}"``) are now fully capable of executing xonsh expressions.
+  The one exception to this is that ``![cmd]`` and ``!(cmd)`` do work because
+  the ``!`` character interferes with Python string formatting. If you need to
+  run subprocesses inside of f-strings, use ``$[cmd]`` and ``$(cmd)`` instead.
 
 **Security:**
 
