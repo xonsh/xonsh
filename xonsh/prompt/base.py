@@ -6,7 +6,6 @@ import itertools
 import os
 import re
 import socket
-import string
 import sys
 
 import xonsh.lazyasd as xl

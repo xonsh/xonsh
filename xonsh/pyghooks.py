@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import string
 import builtins
 from collections import ChainMap
 from collections.abc import MutableMapping

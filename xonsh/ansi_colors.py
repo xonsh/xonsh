@@ -1,6 +1,5 @@
 """Tools for helping with ANSI color codes."""
 import sys
-import string
 import warnings
 import builtins
 
