@@ -31,7 +31,7 @@ RE_STRINGPREFIX = LazyObject(
 
 @lazyobject
 def RE_FSTR_EVAL_CHARS():
-    return re.compile('.*?[!@$`]')
+    return re.compile(".*?[!@$`]")
 
 
 class Location(object):
@@ -215,12 +215,12 @@ def hasglobstar(x):
 
 
 def _wrap_fstr_field(field, spec, conv):
-    rtn = '{' + field
+    rtn = "{" + field
     if conv:
-        rtn += '!' + conv
+        rtn += "!" + conv
     if spec:
-        rtn += ':' + spec
-    rtn += '}'
+        rtn += ":" + spec
+    rtn += "}"
     return rtn
 
 
@@ -232,7 +232,7 @@ def eval_fstr_fields(fstring, prefix, filename=None):
     be f"{__xonsh__.execer.eval(r'$HOME')}".
     """
     last = fstring[-1]
-    q, r = ("'", r"\'") if last == '"' else ('"', r'\"')
+    q, r = ("'", r"\'") if last == '"' else ('"', r"\"")
     prelen = len(prefix)
     postlen = len(fstring) - len(fstring.rstrip(last))
     template = fstring[prelen:-postlen]
@@ -246,12 +246,12 @@ def eval_fstr_fields(fstring, prefix, filename=None):
             repl += _wrap_fstr_field(field, spec, conv)
         else:
             # the field has a special xonsh character, so we must eval it
-            eval_field = '__xonsh__.execer.eval(r' + q
+            eval_field = "__xonsh__.execer.eval(r" + q
             eval_field += field.lstrip().replace(q, r)
-            eval_field += q + ', glbs=globals(), locs=locals()'
+            eval_field += q + ", glbs=globals(), locs=locals()"
             if filename is not None:
-                eval_field += ', filename=' + q + filename + q
-            eval_field += ')'
+                eval_field += ", filename=" + q + filename + q
+            eval_field += ")"
             repl += _wrap_fstr_field(eval_field, spec, conv)
     repl += last * postlen
     return repl

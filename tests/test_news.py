@@ -46,7 +46,7 @@ def check_news_file(fname):
                 form += "3"
             else:
                 form += "2"
-        elif l.startswith('* <news item>'):
+        elif l.startswith("* <news item>"):
             form += "4"
         elif l.startswith("* ") or l.startswith("- ") or l.startswith("  "):
             form += "1"

@@ -274,6 +274,7 @@ class EnvPath(cabc.MutableSequence):
             self._l.remove(data)
             self._l.insert(0 if front else len(self._l), data)
 
+
 @lazyobject
 def FORMATTER():
     return string.Formatter()
