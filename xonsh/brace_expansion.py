@@ -4,8 +4,7 @@ import re
 from xonsh.lazyasd import LazyObject
 
 # regex to be used for splitting on braced regions
-BRACED = LazyObject(
-    lambda: re.compile(r"(?<!\\)(\{.*?(?<!\\)\})"), globals(), 'BRACED')
+BRACED = LazyObject(lambda: re.compile(r"(?<!\\)(\{.*?(?<!\\)\})"), globals(), "BRACED")
 
 
 def split(string, splitter):
