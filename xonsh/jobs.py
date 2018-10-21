@@ -350,6 +350,7 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
         print_one_job(j, outfile=stdout)
     return None, None
 
+
 @unthreadable
 def resume_job(args, wording):
     """
