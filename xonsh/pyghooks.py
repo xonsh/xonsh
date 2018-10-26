@@ -329,7 +329,7 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if hasattr(builtins.__xonsh__, "shell"):
+    if builtins.__xonsh__.shell is not None:
         styles = __xonsh__.shell.shell.styler.styles
     else:
         styles = None

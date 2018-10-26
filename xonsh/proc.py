@@ -2136,7 +2136,7 @@ class CommandPipeline:
             return
         if give_terminal_to(pgid):  # if gave term succeed
             self.term_pgid = pgid
-            if hasattr(builtins.__xonsh__, "shell"):
+            if builtins.__xonsh__.shell is not None:
                 # restoring sanity could probably be called whenever we return
                 # control to the shell. But it only seems to matter after a
                 # ^Z event. This *has* to be called after we give the terminal
