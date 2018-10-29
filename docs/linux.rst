@@ -52,7 +52,7 @@ Fedora users can install xonsh from the repository with:
     $ dnf install xonsh
 
 
-Arch Linux users can install xonsh from the Arch User Repository with:
+Arch Linux users can install xonsh from the official community repository with:
 
 **pacman:**
 
