@@ -8,5 +8,5 @@ prompt-toolkit
 pygments>=2.2
 codecov
 flake8
-pyflakes<1.7.0,>=1.5.0
+pyflakes
 coverage

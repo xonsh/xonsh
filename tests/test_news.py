@@ -46,6 +46,8 @@ def check_news_file(fname):
                 form += "3"
             else:
                 form += "2"
+        elif l.startswith("* <news item>"):
+            form += "4"
         elif l.startswith("* ") or l.startswith("- ") or l.startswith("  "):
             form += "1"
         elif l.strip() == "":
@@ -55,8 +57,9 @@ def check_news_file(fname):
     # The file should have:
     #   empty lines around categories
     #   at least one content line in a non null category
-    reg = re.compile(r"^(3(0|$)|201(1|0)*0)+$")
+    reg = re.compile(r"^(3(0|$)|20(1|4)(1|0|4)*0|204$)+$")
     if not reg.match(form):
+        print(form)
         pytest.fail("{}: invalid rst".format(name), pytrace=False)
 
 

@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import string
 import builtins
 from collections import ChainMap
 from collections.abc import MutableMapping
@@ -36,6 +35,7 @@ from xonsh.tools import (
     ANSICOLOR_NAMES_MAP,
     PTK_NEW_OLD_COLOR_MAP,
     hardcode_colors_for_win10,
+    FORMATTER,
 )
 
 from xonsh.color_tools import (
@@ -344,7 +344,6 @@ def partial_color_tokenize(template):
 
 
 def _partial_color_tokenize_main(template, styles):
-    formatter = string.Formatter()
     bopen = "{"
     bclose = "}"
     colon = ":"
@@ -353,7 +352,7 @@ def _partial_color_tokenize_main(template, styles):
     fg = bg = None
     value = ""
     toks = []
-    for literal, field, spec, conv in formatter.parse(template):
+    for literal, field, spec, conv in FORMATTER.parse(template):
         if field is None:
             value += literal
         elif field in KNOWN_COLORS or "#" in field:

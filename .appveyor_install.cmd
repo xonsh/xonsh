@@ -7,5 +7,5 @@ IF "%XONSH_TEST_ENV%" == "MSYS2" (
     %MSYS2_PATH%\usr\bin\bash.exe -c "/usr/bin/pip install -r requirements-tests.txt"
 ) ELSE (
     echo "Windows Environment"
-    %PYTHON%\Scripts\pip install -r requirements-tests.txt
+    %PYTHON%\Scripts\pip install -r requirements-tests.txt --upgrade --upgrade-strategy eager
 )

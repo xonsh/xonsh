@@ -37,6 +37,7 @@ import traceback
 import warnings
 import operator
 import ast
+import string
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -272,6 +273,11 @@ class EnvPath(cabc.MutableSequence):
         elif replace:
             self._l.remove(data)
             self._l.insert(0 if front else len(self._l), data)
+
+
+@lazyobject
+def FORMATTER():
+    return string.Formatter()
 
 
 class DefaultNotGivenType(object):

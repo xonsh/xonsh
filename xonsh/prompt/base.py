@@ -6,7 +6,6 @@ import itertools
 import os
 import re
 import socket
-import string
 import sys
 
 import xonsh.lazyasd as xl
@@ -54,7 +53,7 @@ class PromptFormatter:
     def _format_prompt(self, template=DEFAULT_PROMPT):
         template = template() if callable(template) else template
         toks = []
-        for literal, field, spec, conv in _FORMATTER.parse(template):
+        for literal, field, spec, conv in xt.FORMATTER.parse(template):
             toks.append(literal)
             entry = self._format_field(field, spec, conv)
             if entry is not None:
@@ -106,11 +105,6 @@ def PROMPT_FIELDS():
         vte_new_tab_cwd=vte_new_tab_cwd,
         gitstatus=gitstatus_prompt,
     )
-
-
-@xl.lazyobject
-def _FORMATTER():
-    return string.Formatter()
 
 
 def default_prompt():
@@ -205,7 +199,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
     """Returns whether or not the string is a valid template."""
     template = template() if callable(template) else template
     try:
-        included_names = set(i[1] for i in _FORMATTER.parse(template))
+        included_names = set(i[1] for i in xt.FORMATTER.parse(template))
     except ValueError:
         return False
     included_names.discard(None)
@@ -227,9 +221,9 @@ def _format_value(val, spec, conv):
     """
     if val is None:
         return ""
-    val = _FORMATTER.convert_field(val, conv)
+    val = xt.FORMATTER.convert_field(val, conv)
     if spec:
-        val = _FORMATTER.format(spec, val)
+        val = xt.FORMATTER.format(spec, val)
     if not isinstance(val, str):
         val = str(val)
     return val

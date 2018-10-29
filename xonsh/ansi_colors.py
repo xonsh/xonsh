@@ -1,6 +1,5 @@
 """Tools for helping with ANSI color codes."""
 import sys
-import string
 import warnings
 import builtins
 
@@ -14,6 +13,7 @@ from xonsh.color_tools import (
     rgb2short,
     rgb_to_256,
 )
+from xonsh.tools import FORMATTER
 
 
 def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
@@ -59,7 +59,6 @@ def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=F
             print(msg.format(style), file=sys.stderr)
             builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = "default"
             cmap = ANSI_STYLES["default"]
-    formatter = string.Formatter()
     esc = ("\001" if hide else "") + "\033["
     m = "m" + ("\002" if hide else "")
     bopen = "{"
@@ -67,7 +66,7 @@ def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=F
     colon = ":"
     expl = "!"
     toks = []
-    for literal, field, spec, conv in formatter.parse(template):
+    for literal, field, spec, conv in FORMATTER.parse(template):
         toks.append(literal)
         if field is None:
             pass
