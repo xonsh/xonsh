@@ -22,7 +22,7 @@ def ctx():
     execer = Execer(xonsh_ctx=ctx)
     builtins.__xonsh__.shell = Shell(execer=execer, ctx=ctx, shell_type="none")
     yield
-    builtins.__xonsh__ = None
+    builtins.__xonsh__.shell = None
 
 
 @skip_if_on_darwin
