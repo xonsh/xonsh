@@ -442,7 +442,6 @@ class ForeignShellFunctionAlias(object):
     def __eq__(self, other):
         if (
             not hasattr(other, "name")
-            or not hasattr(other, "shell")
             or not hasattr(other, "filename")
             or not hasattr(other, "sourcer")
             or not hasattr(other, "exta_args")

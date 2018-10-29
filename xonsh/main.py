@@ -461,8 +461,7 @@ def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
     if ON_WINDOWS:
         setup_win_unicode_console(enable=False)
-    if hasattr(builtins.__xonsh__, "shell"):
-        del builtins.__xonsh__.shell
+    builtins.__xonsh__.shell = None
 
 
 @contextlib.contextmanager
