@@ -4,6 +4,26 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.2
+====================
+
+**Changed:**
+
+* Now there is only a single instance of ``string.Formatter()`` in the
+  code base, which is called ``xonsh.tools.FORMATTER``.
+
+
+**Fixed:**
+
+* f-strings (``f"{expr}"``) are now fully capable of executing xonsh expressions.
+  The one exception to this is that ``![cmd]`` and ``!(cmd)`` don't work because
+  the ``!`` character interferes with Python string formatting. If you need to
+  run subprocesses inside of f-strings, use ``$[cmd]`` and ``$(cmd)`` instead.
+* Fixed occasional "no attribute 'settitle' error"
+
+
+
+
 v0.8.1
 ====================
 
