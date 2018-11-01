@@ -84,7 +84,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
                 continue
             if not os.path.isdir(p) or not os.access(p, os.R_OK):
                 continue
-            if fname not in (x.name for x in scandir(p)):
+            if fname not in {x.name for x in scandir(p)}:
                 continue
             spec = ModuleSpec(fullname, self)
             self._filenames[fullname] = os.path.join(p, fname)
