@@ -32,8 +32,7 @@ def custom_keybindings(bindings, **kw):
     def last_command_exists():
         return len(__xonsh__.history) > 0
 
-    @handler(Keys.Escape, '.', filter=last_command_exists &
-             insert_mode)
+    @handler(Keys.Escape, '.', filter=last_command_exists & insert_mode)
     def recall_last_arg(event):
         arg = __xonsh__.history[-1].cmd.split()[-1]
         event.current_buffer.insert_text(arg)
