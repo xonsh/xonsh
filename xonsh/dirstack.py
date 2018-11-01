@@ -39,7 +39,7 @@ def _unc_check_enabled() -> bool:
         )
         wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
         winreg.CloseKey(key)
-    except OSError as e:
+    except OSError:
         pass
 
     if wval is None:

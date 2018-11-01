@@ -1406,7 +1406,7 @@ class ProcProxyThread(threading.Thread):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec, spec.stack)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
-        except OSError as e:
+        except OSError:
             status = still_writable(self.c2pwrite) and still_writable(self.errwrite)
             if status:
                 # stdout and stderr are still writable, so error must
