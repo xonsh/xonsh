@@ -354,7 +354,7 @@ class Inspector(object):
         exception is suppressed.
         """
         try:
-            hdef = oname + inspect.formatargspec(*getargspec(obj))
+            hdef = oname + inspect.signature(*getargspec(obj))
             return cast_unicode(hdef)
         except:  # pylint:disable=bare-except
             return None
