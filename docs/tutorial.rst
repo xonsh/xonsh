@@ -52,7 +52,7 @@ simple:
           xonsh input. This follows the Python convention and helps trick
           syntax highlighting, though ``$`` is more traditional for shells.
 
-Since this is just Python, we are able import modules, print values,
+Since this is just Python, we are able to import modules, print values,
 and use other built-in Python functionality:
 
 .. code-block:: xonshcon
