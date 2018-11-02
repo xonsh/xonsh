@@ -1169,9 +1169,9 @@ def to_logfile_opt(x):
     the filepath if it is a writable file or None if the filepath is not
     valid, informing the user on stderr about the invalid choice.
     """
-    superclass = os.PathLike
-    if PYTHON_VERSION_INFO < (3, 6, 0):
-        superclass = pathlib.PurePath
+    superclass = pathlib.PurePath
+    if PYTHON_VERSION_INFO >= (3, 6, 0):
+        superclass = os.PathLike
     if isinstance(x, superclass):
         x = str(x)
     if is_logfile_opt(x):
