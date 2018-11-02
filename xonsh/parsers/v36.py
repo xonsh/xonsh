@@ -2,7 +2,7 @@
 """Implements the xonsh parser for Python v3.6."""
 import xonsh.ast as ast
 from xonsh.parsers.v35 import Parser as ThreeFiveParser
-from xonsh.parsers.base import store_ctx, ensure_has_elts
+from xonsh.parsers.base import store_ctx, ensure_has_elts, lopen_loc
 
 
 class Parser(ThreeFiveParser):
