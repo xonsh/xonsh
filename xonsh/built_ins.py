@@ -1464,7 +1464,7 @@ class DeprecationWarningProxy:
             "{} has been deprecated, please use {} instead.".format(
                 self.oldname, self.newname
             ),
-            DeprecationWarning,
+            DeprecationWarning, stacklevel=3
         )
 
     def __getattr__(self, name):
