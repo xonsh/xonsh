@@ -351,7 +351,6 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     return None, None
 
 
-@unthreadable
 def resume_job(args, wording):
     """
     used by fg and bg to resume a job either in the foreground or in the background.
@@ -391,6 +390,7 @@ def resume_job(args, wording):
     pipeline.resume(job)
 
 
+@unthreadable
 def fg(args, stdin=None):
     """
     xonsh command: fg
