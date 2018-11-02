@@ -54,7 +54,6 @@ from ast import (
     SetComp,
     DictComp,
     Assign,
-    AnnAssign,
     AugAssign,
     BitXor,
     BitAnd,
@@ -121,9 +120,9 @@ else:
 if PYTHON_VERSION_INFO >= (3, 6, 0):
     # pylint: disable=unused-import
     # pylint: disable=no-name-in-module
-    from ast import JoinedStr, FormattedValue
+    from ast import JoinedStr, FormattedValue, AnnAssign
 else:
-    JoinedStr = FormattedValue = None
+    JoinedStr = FormattedValue = AnnAssign = None
 
 STATEMENTS = (
     FunctionDef,
@@ -131,7 +130,6 @@ STATEMENTS = (
     Return,
     Delete,
     Assign,
-    AnnAssign,
     AugAssign,
     For,
     While,
@@ -149,6 +147,8 @@ STATEMENTS = (
     Break,
     Continue,
 )
+if PYTHON_VERSION_INFO >= (3, 6, 0):
+    STATEMENTS += (AnnAssign,)
 
 
 def leftmostname(node):

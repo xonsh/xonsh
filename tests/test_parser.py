@@ -1354,6 +1354,7 @@ def test_equals_attr():
     check_stmts("class X(object):\n  pass\nx = X()\nx.a = 65")
 
 
+@skip_if_lt_py36
 def test_equals_annotation():
     check_stmts("x : int = 42")
 

@@ -1207,23 +1207,6 @@ class BaseParser(object):
                 targets=p1 + p2[:-1], value=p2[-1], lineno=lineno, col_offset=col
             )
 
-    def p_expr_stmt_annassign(self, p):
-        """expr_stmt : testlist_star_expr COLON test EQUALS test"""
-        p1 = p[1][0]
-        lineno, col = lopen_loc(p1)
-        if len(p[1]) > 1 or not isinstance(p1, ast.Name):
-            loc = self.currloc(lineno, col)
-            self._parse_error("only single target can be annotated", loc)
-        store_ctx(p1)
-        p[0] = ast.AnnAssign(
-            target=p1,
-            annotation=p[3],
-            value=p[5],
-            simple=1,
-            lineno=lineno,
-            col_offset=col,
-        )
-
     def p_expr_stmt_augassign(self, p):
         """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist"""
         p1, p2 = p[1], p[2]
