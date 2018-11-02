@@ -1486,6 +1486,14 @@ def test_from_x_import_star():
     check_stmts("from x import *", False)
 
 
+def test_from_x_import_group_x_y_z():
+    check_stmts("from x import (x, y, z)", False)
+
+
+def test_from_x_import_group_x_y_z_comma():
+    check_stmts("from x import (x, y, z,)", False)
+
+
 def test_from_x_import_y_as_z():
     check_stmts("from x import y as z", False)
 
