@@ -4,8 +4,8 @@
 
 **Changed:**
 
-* ``$XONSH_TRACEBACK_LOGFILE`` now beside strings also accepts ``pathlib``
-  path objects.
+* ``$XONSH_TRACEBACK_LOGFILE`` now beside strings also accepts ``os.PathLike``
+  objects.
 
 **Deprecated:**
 
