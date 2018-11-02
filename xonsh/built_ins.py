@@ -1465,6 +1465,7 @@ class DeprecationWarningProxy:
                 self.oldname, self.newname
             ),
             DeprecationWarning,
+            stacklevel=3,
         )
 
     def __getattr__(self, name):
