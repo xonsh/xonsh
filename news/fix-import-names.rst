@@ -18,6 +18,7 @@
 
 * xonsh can now properly parse import statements with trailing comma within
   parentheses, e.g.::
+  
     from x import (y, z,)
 
 **Security:**
