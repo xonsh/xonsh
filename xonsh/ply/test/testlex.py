@@ -514,6 +514,26 @@ class LexBuildOptionTests(unittest.TestCase):
         except OSError:
             pass
 
+    def test_lex_optimize4(self):
+
+        # Regression test to make sure that reflags works correctly
+        # on Python 3.
+
+        for extension in ['py', 'pyc']:
+            try:
+                os.remove("opt4tab.{0}".format(extension))
+            except OSError:
+                pass
+
+        run_import("lex_optimize4")
+        run_import("lex_optimize4")
+
+        for extension in ['py', 'pyc']:
+            try:
+                os.remove("opt4tab.{0}".format(extension))
+            except OSError:
+                pass
+
     def test_lex_opt_alias(self):
         try:
             os.remove("aliastab.py")

@@ -17,7 +17,7 @@ PLY is extremely easy to use and provides very extensive error checking.
 It is compatible with both Python 2 and Python 3.
 """,
             license="""BSD""",
-            version = "3.10",
+            version = "3.11",
             author = "David Beazley",
             author_email = "dave@dabeaz.com",
             maintainer = "David Beazley",
