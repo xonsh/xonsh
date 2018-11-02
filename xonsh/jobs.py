@@ -351,18 +351,13 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     return None, None
 
 
-@unthreadable
-def fg(args, stdin=None):
+def resume_job(args, wording):
     """
-    xonsh command: fg
-
-    Bring the currently active job to the foreground, or, if a single number is
-    given as an argument, bring that job to the foreground. Additionally,
-    specify "+" for the most recent job and "-" for the second most recent job.
+    used by fg and bg to resume a job either in the foreground or in the background.
     """
     _clear_dead_jobs()
     if len(tasks) == 0:
-        return "", "Cannot bring nonexistent job to foreground.\n"
+        return "", "There are currently no suspended jobs"
 
     if len(args) == 0:
         tid = tasks[0]  # take the last manipulated task by default
@@ -380,7 +375,7 @@ def fg(args, stdin=None):
         if tid not in builtins.__xonsh__.all_jobs:
             return "", "Invalid job: {}\n".format(args[0])
     else:
-        return "", "fg expects 0 or 1 arguments, not {}\n".format(len(args))
+        return "", "{} expects 0 or 1 arguments, not {}\n".format(wording, len(args))
 
     # Put this one on top of the queue
     tasks.remove(tid)
@@ -395,13 +390,25 @@ def fg(args, stdin=None):
     pipeline.resume(job)
 
 
+@unthreadable
+def fg(args, stdin=None):
+    """
+    xonsh command: fg
+
+    Bring the currently active job to the foreground, or, if a single number is
+    given as an argument, bring that job to the foreground. Additionally,
+    specify "+" for the most recent job and "-" for the second most recent job.
+    """
+    return resume_job(args, wording="fg")
+
+
 def bg(args, stdin=None):
     """xonsh command: bg
 
     Resume execution of the currently active job in the background, or, if a
     single number is given as an argument, resume that job in the background.
     """
-    res = fg(args, stdin)
+    res = resume_job(args, wording="bg")
     if res is None:
         curtask = get_task(tasks[0])
         curtask["bg"] = True
