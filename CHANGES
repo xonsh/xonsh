@@ -1,5 +1,22 @@
+Version 3.11
+---------------------
+02/15/18  beazley
+          Fixed some minor bugs related to re flags and token order.  
+          Github pull requests #151 and #153.
+
+02/15/18  beazley
+          Added a set_lexpos() method to grammar symbols.  Github issue #148.
+
+
+04/13/17  beazley
+          Mostly minor bug fixes and small code cleanups.
+
 Version 3.10
 ---------------------
+01/31/17: beazley
+          Changed grammar signature computation to not involve hashing
+          functions. Parts are just combined into a big string.
+
 10/07/16: beazley
           Fixed Issue #101: Incorrect shift-reduce conflict resolution with
           precedence specifier.

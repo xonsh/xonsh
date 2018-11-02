@@ -3,5 +3,6 @@ conditions.  To run:
 
   $ python testlex.py 
   $ python testyacc.py 
+  $ python testcpp.py
 
 The script 'cleanup.sh' cleans up this directory to its original state.

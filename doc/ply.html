@@ -12,13 +12,13 @@ dave@dabeaz.com<br>
 </b>
 
 <p>
-<b>PLY Version: 3.10</b>
+<b>PLY Version: 3.11</b>
 <p>
 
 <!-- INDEX -->
 <div class="sectiontoc">
 <ul>
-<li><a href="#ply_nn1">Preface and Requirements</a>
+<li><a href="#ply_nn0">Preface and Requirements</a>
 <li><a href="#ply_nn1">Introduction</a>
 <li><a href="#ply_nn2">PLY Overview</a>
 <li><a href="#ply_nn3">Lex</a>
@@ -34,7 +34,7 @@ dave@dabeaz.com<br>
 <li><a href="#ply_nn12">Error handling</a>
 <li><a href="#ply_nn14">EOF Handling</a>
 <li><a href="#ply_nn13">Building and using the lexer</a>
-<li><a href="#ply_nn14">The @TOKEN decorator</a>
+<li><a href="#ply_nn14b">The @TOKEN decorator</a>
 <li><a href="#ply_nn15">Optimized mode</a>
 <li><a href="#ply_nn16">Debugging</a>
 <li><a href="#ply_nn17">Alternative specification of lexers</a>
@@ -42,7 +42,7 @@ dave@dabeaz.com<br>
 <li><a href="#ply_nn19">Lexer cloning</a>
 <li><a href="#ply_nn20">Internal lexer state</a>
 <li><a href="#ply_nn21">Conditional lexing and start conditions</a>
-<li><a href="#ply_nn21">Miscellaneous Issues</a>
+<li><a href="#ply_nn21b">Miscellaneous Issues</a>
 </ul>
 <li><a href="#ply_nn22">Parsing basics</a>
 <li><a href="#ply_nn23">Yacc</a>
@@ -50,10 +50,10 @@ dave@dabeaz.com<br>
 <li><a href="#ply_nn24">An example</a>
 <li><a href="#ply_nn25">Combining Grammar Rule Functions</a>
 <li><a href="#ply_nn26">Character Literals</a>
-<li><a href="#ply_nn26">Empty Productions</a>
+<li><a href="#ply_nn26b">Empty Productions</a>
 <li><a href="#ply_nn28">Changing the starting symbol</a>
 <li><a href="#ply_nn27">Dealing With Ambiguous Grammars</a>
-<li><a href="#ply_nn28">The parser.out file</a>
+<li><a href="#ply_nn28b">The parser.out file</a>
 <li><a href="#ply_nn29">Syntax Error Handling</a>
 <ul>
 <li><a href="#ply_nn30">Recovery and resynchronization with error rules</a>
@@ -64,11 +64,11 @@ dave@dabeaz.com<br>
 </ul>
 <li><a href="#ply_nn33">Line Number and Position Tracking</a>
 <li><a href="#ply_nn34">AST Construction</a>
-<li><a href="#ply_nn35">Embedded Actions</a>
+<li><a href="#ply_nn35b">Embedded Actions</a>
 <li><a href="#ply_nn36">Miscellaneous Yacc Notes</a>
 </ul>
 <li><a href="#ply_nn37">Multiple Parsers and Lexers</a>
-<li><a href="#ply_nn38">Using Python's Optimized Mode</a>
+<li><a href="#ply_nn38b">Using Python's Optimized Mode</a>
 <li><a href="#ply_nn44">Advanced Debugging</a>
 <ul>
 <li><a href="#ply_nn45">Debugging the lex() and yacc() commands</a>
@@ -85,7 +85,7 @@ dave@dabeaz.com<br>
 
 
 
-<H2><a name="ply_nn1"></a>1. Preface and Requirements</H2>
+<H2><a name="ply_nn0"></a>1. Preface and Requirements</H2>
 
 
 <p>
@@ -552,21 +552,18 @@ Within the rule, the <tt>lineno</tt> attribute of the underlying lexer <tt>t.lex
 After the line number is updated, the token is simply discarded since nothing is returned.
 
 <p>
-<tt>lex.py</tt> does not perform and kind of automatic column tracking.  However, it does record positional
+<tt>lex.py</tt> does not perform any kind of automatic column tracking.  However, it does record positional
 information related to each token in the <tt>lexpos</tt> attribute.   Using this, it is usually possible to compute 
 column information as a separate step.   For instance, just count backwards until you reach a newline.
 
 <blockquote>
 <pre>
-# Compute column. 
+# Compute column.
 #     input is the input text string
 #     token is a token instance
-def find_column(input,token):
-    last_cr = input.rfind('\n',0,token.lexpos)
-    if last_cr < 0:
-	last_cr = 0
-    column = (token.lexpos - last_cr) + 1
-    return column
+def find_column(input, token):
+    line_start = input.rfind('\n', 0, token.lexpos) + 1
+    return (token.lexpos - line_start) + 1
 </pre>
 </blockquote>
 
@@ -718,7 +715,7 @@ be used to control the lexer.
 None if the end of the input text has been reached.
 </ul>
 
-<H3><a name="ply_nn14"></a>4.12 The @TOKEN decorator</H3>
+<H3><a name="ply_nn14b"></a>4.12 The @TOKEN decorator</H3>
 
 
 In some applications, you may want to define build tokens from as a series of
@@ -1418,7 +1415,7 @@ However, if the closing right brace is encountered, the rule <tt>t_ccode_rbrace<
 position), stores it, and returns a token 'CCODE' containing all of that text.  When returning the token, the lexing state is restored back to its
 initial state.
 
-<H3><a name="ply_nn21"></a>4.20 Miscellaneous Issues</H3>
+<H3><a name="ply_nn21b"></a>4.20 Miscellaneous Issues</H3>
 
 
 <P>
@@ -1438,9 +1435,12 @@ well as for input text.
 
 <blockquote>
 <pre>
-lex.lex(reflags=re.UNICODE)
+lex.lex(reflags=re.UNICODE | re.VERBOSE)
 </pre>
 </blockquote>
+
+Note: by default, <tt>reflags</tt> is set to <tt>re.VERBOSE</tt>.  If you provide
+your own flags, you may need to include this for PLY to preserve its normal behavior.
 
 <p>
 <li>Since the lexer is written entirely in Python, its performance is
@@ -1890,7 +1890,7 @@ literals = ['+','-','*','/' ]
 <b>Character literals are limited to a single character</b>.  Thus, it is not legal to specify literals such as <tt>'&lt;='</tt> or <tt>'=='</tt>.  For this, use
 the normal lexing rules (e.g., define a rule such as <tt>t_EQ = r'=='</tt>).
 
-<H3><a name="ply_nn26"></a>6.4 Empty Productions</H3>
+<H3><a name="ply_nn26b"></a>6.4 Empty Productions</H3>
 
 
 <tt>yacc.py</tt> can handle empty productions by defining a rule like this:
@@ -2208,7 +2208,7 @@ the contents of the
 <tt>parser.out</tt> debugging file with an appropriately high level of
 caffeination.
 
-<H3><a name="ply_nn28"></a>6.7 The parser.out file</H3>
+<H3><a name="ply_nn28b"></a>6.7 The parser.out file</H3>
 
 
 Tracking down shift/reduce and reduce/reduce conflicts is one of the finer pleasures of using an LR
@@ -2950,7 +2950,7 @@ def p_expression_binop(p):
 </pre>
 </blockquote>
 
-<H3><a name="ply_nn35"></a>6.11 Embedded Actions</H3>
+<H3><a name="ply_nn35b"></a>6.11 Embedded Actions</H3>
 
 
 The parsing technique used by yacc only allows actions to be executed at the end of a rule.  For example,
@@ -3140,7 +3140,7 @@ each time it runs (which may take awhile depending on how large your grammar is)
 
 <blockquote>
 <pre>
-parser = yacc.parse(debug=True)     
+parser.parse(input_text, debug=True)     
 </pre>
 </blockquote>
 
@@ -3270,7 +3270,7 @@ If necessary, arbitrary attributes can be attached to the lexer or parser object
 For example, if you wanted to have different parsing modes, you could attach a mode
 attribute to the parser object and look at it later.
 
-<H2><a name="ply_nn38"></a>8. Using Python's Optimized Mode</H2>
+<H2><a name="ply_nn38b"></a>8. Using Python's Optimized Mode</H2>
 
 
 Because PLY uses information from doc-strings, parsing and lexing
