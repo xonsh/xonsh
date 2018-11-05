@@ -120,9 +120,9 @@ else:
 if PYTHON_VERSION_INFO >= (3, 6, 0):
     # pylint: disable=unused-import
     # pylint: disable=no-name-in-module
-    from ast import JoinedStr, FormattedValue
+    from ast import JoinedStr, FormattedValue, AnnAssign
 else:
-    JoinedStr = FormattedValue = None
+    JoinedStr = FormattedValue = AnnAssign = None
 
 STATEMENTS = (
     FunctionDef,
@@ -147,6 +147,8 @@ STATEMENTS = (
     Break,
     Continue,
 )
+if PYTHON_VERSION_INFO >= (3, 6, 0):
+    STATEMENTS += (AnnAssign,)
 
 
 def leftmostname(node):
@@ -163,7 +165,7 @@ def leftmostname(node):
         rtn = leftmostname(node.operand)
     elif isinstance(node, BoolOp):
         rtn = leftmostname(node.values[0])
-    elif isinstance(node, Assign):
+    elif isinstance(node, (Assign, AnnAssign)):
         rtn = leftmostname(node.targets[0])
     elif isinstance(node, (Str, Bytes, JoinedStr)):
         # handles case of "./my executable"
@@ -516,6 +518,8 @@ class CtxAwareTransformer(NodeTransformer):
                 ups.add(leftmostname(targ))
         self.ctxupdate(ups)
         return node
+
+    visit_AnnAssign = visit_Assign
 
     def visit_Import(self, node):
         """Handle visiting a import statement."""

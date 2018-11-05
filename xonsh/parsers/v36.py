@@ -2,7 +2,7 @@
 """Implements the xonsh parser for Python v3.6."""
 import xonsh.ast as ast
 from xonsh.parsers.v35 import Parser as ThreeFiveParser
-from xonsh.parsers.base import store_ctx, ensure_has_elts
+from xonsh.parsers.base import store_ctx, ensure_has_elts, lopen_loc
 
 
 class Parser(ThreeFiveParser):
@@ -24,3 +24,20 @@ class Parser(ThreeFiveParser):
             comps += p5.get("comps", [])
             comp.ifs += p5.get("if", [])
         p[0] = p0
+
+    def p_expr_stmt_annassign(self, p):
+        """expr_stmt : testlist_star_expr COLON test EQUALS test"""
+        p1 = p[1][0]
+        lineno, col = lopen_loc(p1)
+        if len(p[1]) > 1 or not isinstance(p1, ast.Name):
+            loc = self.currloc(lineno, col)
+            self._parse_error("only single target can be annotated", loc)
+        store_ctx(p1)
+        p[0] = ast.AnnAssign(
+            target=p1,
+            annotation=p[3],
+            value=p[5],
+            simple=1,
+            lineno=lineno,
+            col_offset=col,
+        )
