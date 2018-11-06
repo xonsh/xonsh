@@ -326,7 +326,11 @@ Building the Website
 Building the website/documentation requires the following dependencies:
 
 #. `Sphinx <http://sphinx-doc.org/>`_
-#. `Cloud Sphinx Theme <https://pythonhosted.org/cloud_sptheme/cloud_theme.html>`_
+#. `Cloud Sphinx Theme <https://cloud-sptheme.readthedocs.io/>`_
+#. `numpydoc <https://numpydoc.readthedocs.io/>`_
+
+Note that xonsh itself needs to be installed too.
+
 
 -----------------------------------
 Procedure for modifying the website
