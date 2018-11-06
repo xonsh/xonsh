@@ -1354,6 +1354,11 @@ def test_equals_attr():
     check_stmts("class X(object):\n  pass\nx = X()\nx.a = 65")
 
 
+@skip_if_lt_py36
+def test_equals_annotation():
+    check_stmts("x : int = 42")
+
+
 def test_dict_keys():
     check_stmts('x = {"x": 1}\nx.keys()')
 
@@ -1484,6 +1489,14 @@ def test_from_dot_import_x_as_y():
 
 def test_from_x_import_star():
     check_stmts("from x import *", False)
+
+
+def test_from_x_import_group_x_y_z():
+    check_stmts("from x import (x, y, z)", False)
+
+
+def test_from_x_import_group_x_y_z_comma():
+    check_stmts("from x import (x, y, z,)", False)
 
 
 def test_from_x_import_y_as_z():

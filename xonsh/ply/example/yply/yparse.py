@@ -22,18 +22,18 @@ def p_defsection(p):
     '''defsection : definitions SECTION
                   | SECTION'''
     p.lexer.lastsection = 1
-    print "tokens = ", repr(tokenlist)
-    print
-    print "precedence = ", repr(preclist)
-    print
-    print "# -------------- RULES ----------------"
-    print
+    print("tokens = ", repr(tokenlist))
+    print()
+    print("precedence = ", repr(preclist))
+    print()
+    print("# -------------- RULES ----------------")
+    print()
 
 
 def p_rulesection(p):
     '''rulesection : rules SECTION'''
 
-    print "# -------------- RULES END ----------------"
+    print("# -------------- RULES END ----------------")
     print_code(p[2], 0)
 
 
@@ -49,7 +49,7 @@ def p_definition_literal(p):
 
 def p_definition_start(p):
     '''definition : START ID'''
-    print "start = '%s'" % p[2]
+    print("start = '%s'" % p[2])
 
 
 def p_definition_token(p):
@@ -138,7 +138,7 @@ def p_rules(p):
     rulecount = 1
     for r in rule[1]:
         # r contains one of the rule possibilities
-        print "def p_%s_%d(p):" % (rulename, rulecount)
+        print("def p_%s_%d(p):" % (rulename, rulecount))
         prod = []
         prodcode = ""
         for i in range(len(r)):
@@ -155,17 +155,17 @@ def p_rules(p):
                     embed_count += 1
             else:
                 prod.append(item)
-        print "    '''%s : %s'''" % (rulename, " ".join(prod))
+        print("    '''%s : %s'''" % (rulename, " ".join(prod)))
         # Emit code
         print_code(prodcode, 4)
-        print
+        print()
         rulecount += 1
 
     for e, code in embedded:
-        print "def p_%s(p):" % e
-        print "    '''%s : '''" % e
+        print("def p_%s(p):" % e)
+        print("    '''%s : '''" % e)
         print_code(code, 4)
-        print
+        print()
 
 
 def p_rule(p):
@@ -204,7 +204,7 @@ def p_morerules(p):
         p[0] = p[1]
         p[0].append(p[3])
 
-#   print "morerules", len(p), p[0]
+#   print("morerules", len(p), p[0])
 
 
 def p_rulelist(p):
@@ -241,4 +241,4 @@ def print_code(code, indent):
         return
     codelines = code.splitlines()
     for c in codelines:
-        print "%s# %s" % (" " * indent, c)
+        print("%s# %s" % (" " * indent, c))

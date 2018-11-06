@@ -15,6 +15,7 @@ help:
 	* xonsh/ply: Pull down most recent ply
 	""")
 
+.PHONY: xonsh/ply
 xonsh/ply:
 	git subtree pull --prefix xonsh/ply https://github.com/dabeaz/ply.git master --squash
 

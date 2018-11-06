@@ -1425,7 +1425,7 @@ class BaseParser(object):
         p[0] = p[1]
 
     def p_import_from_post_paren(self, p):
-        """import_from_post : LPAREN import_as_names RPAREN"""
+        """import_from_post : LPAREN import_as_names"""
         p[0] = p[2]
 
     def p_import_from(self, p):
@@ -1459,6 +1459,10 @@ class BaseParser(object):
         """
         p[0] = [p[2]]
 
+    def p_comma_import_as_name_tail(self, p):
+        """comma_import_as_name : comma_opt RPAREN"""
+        p[0] = list()
+
     def p_dotted_as_name(self, p):
         """dotted_as_name : dotted_name as_name_opt"""
         p0 = ast.alias(name=p[1], asname=p[2])
@@ -1469,8 +1473,7 @@ class BaseParser(object):
         p[0] = [p[2]]
 
     def p_import_as_names(self, p):
-        """import_as_names : import_as_name comma_import_as_name_list_opt comma_opt
-        """
+        """import_as_names : import_as_name comma_import_as_name_list_opt"""
         p1, p2 = p[1], p[2]
         p0 = [p1]
         if p2 is not None:
