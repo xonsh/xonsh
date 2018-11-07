@@ -4,6 +4,39 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.3
+====================
+
+**Added:**
+
+* Dociumentation paragrapgh about gow to run xonsh in Emacs shell
+
+
+**Changed:**
+
+* Updated what pip requirements are needed to build the documnetaion
+* ``$XONSH_TRACEBACK_LOGFILE`` now beside strings also accepts ``os.PathLike``
+  objects.
+* Updated vended version of ``ply`` to 3.11
+* Deprecation warnings now print from stacklevel 3.
+
+
+**Fixed:**
+
+* Annotation assignment statements (e.g. ``x : int = 42``) are now supported.
+* Fixed error output wording for fg and bg commands
+* Flake8 errors
+* xonsh can now properly parse import statements with trailing comma within
+  parentheses, e.g.::
+  
+    from x import (y, z,)
+* ResourceWarning: unclosed scandir iterator in imphooks.py
+* Removed use of deprecated ``inspect.formatargspec()`` for ``inspect.signature()``
+* ``Makefile`` directive that updates vended version of ``ply``
+
+
+
+
 v0.8.2
 ====================
 
