@@ -165,7 +165,10 @@ def test_atdollar_expression():
 
 
 def test_and():
-    assert check_token("and", ["AND", "and", 0])
+    # no preceding whitespace or other tokens, so this
+    # resolves to NAME, since it doesn't make sense for
+    # Python code to start with "and"
+    assert check_token("and", ["NAME", "and", 0])
 
 
 def test_ampersand():

@@ -116,24 +116,37 @@ def token_map():
     return tm
 
 
+NEED_WHITESPACE = frozenset(["and", "or"])
+
+
 def handle_name(state, token):
     """Function for handling name tokens"""
     typ = "NAME"
+    prev = state["last"]
+    state["last"] = token
+    next_tok = next(state["stream"])
+    has_whitespace = (prev is not None and
+                      prev.end != token.start
+                      and token.end != next_tok.start)
+                      #)
+    print(state)
     if state["pymode"][-1][0]:
-        if token.string in kwmod.kwlist:
+        if not has_whitespace and token.string in NEED_WHITESPACE:
+            pass
+        elif token.string in kwmod.kwlist:
             typ = token.string.upper()
-        state["last"] = token
+        print("transformed to ", typ)
         yield _new_token(typ, token.string, token.start)
     else:
-        prev = state["last"]
-        state["last"] = token
-        has_whitespace = prev.end != token.start
         if token.string == "and" and has_whitespace:
             yield _new_token("AND", token.string, token.start)
         elif token.string == "or" and has_whitespace:
             yield _new_token("OR", token.string, token.start)
         else:
             yield _new_token("NAME", token.string, token.start)
+    print('\n\n')
+    #yield from handle_token(state, next_tok)
+    yield _new_token(next_tok.type, next_tok.string, next_tok.start)
 
 
 def _end_delimiter(state, token):
