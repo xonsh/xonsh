@@ -4,6 +4,7 @@
 Written using a hybrid of ``tokenize`` and PLY.
 """
 import io
+import re
 
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
@@ -119,34 +120,34 @@ def token_map():
 NEED_WHITESPACE = frozenset(["and", "or"])
 
 
+@lazyobject
+def RE_NEED_WHITESPACE():
+    pattern = "\s?(" + "|".join(NEED_WHITESPACE) + r")(\s|[\\]$)"
+    return re.compile(pattern)
+
+
 def handle_name(state, token):
     """Function for handling name tokens"""
     typ = "NAME"
     prev = state["last"]
     state["last"] = token
-    next_tok = next(state["stream"])
-    has_whitespace = (prev is not None and
-                      prev.end != token.start
-                      and token.end != next_tok.start)
-                      #)
-    print(state)
+    needs_whitespace = token.string in NEED_WHITESPACE
+    has_whitespace = needs_whitespace and RE_NEED_WHITESPACE.match(
+        token.line[max(0, token.start[1] - 1) :]
+    )
     if state["pymode"][-1][0]:
-        if not has_whitespace and token.string in NEED_WHITESPACE:
+        if needs_whitespace and not has_whitespace:
             pass
         elif token.string in kwmod.kwlist:
             typ = token.string.upper()
-        print("transformed to ", typ)
         yield _new_token(typ, token.string, token.start)
     else:
-        if token.string == "and" and has_whitespace:
+        if has_whitespace and token.string == "and":
             yield _new_token("AND", token.string, token.start)
-        elif token.string == "or" and has_whitespace:
+        elif has_whitespace and token.string == "or":
             yield _new_token("OR", token.string, token.start)
         else:
             yield _new_token("NAME", token.string, token.start)
-    print('\n\n')
-    #yield from handle_token(state, next_tok)
-    yield _new_token(next_tok.type, next_tok.string, next_tok.start)
 
 
 def _end_delimiter(state, token):
