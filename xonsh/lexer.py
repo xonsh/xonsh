@@ -129,7 +129,6 @@ def RE_NEED_WHITESPACE():
 def handle_name(state, token):
     """Function for handling name tokens"""
     typ = "NAME"
-    prev = state["last"]
     state["last"] = token
     needs_whitespace = token.string in NEED_WHITESPACE
     has_whitespace = needs_whitespace and RE_NEED_WHITESPACE.match(
