@@ -122,7 +122,7 @@ NEED_WHITESPACE = frozenset(["and", "or"])
 
 @lazyobject
 def RE_NEED_WHITESPACE():
-    pattern = "\s?(" + "|".join(NEED_WHITESPACE) + r")(\s|[\\]$)"
+    pattern = r"\s?(" + "|".join(NEED_WHITESPACE) + r")(\s|[\\]$)"
     return re.compile(pattern)
 
 
