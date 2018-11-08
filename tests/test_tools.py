@@ -387,6 +387,8 @@ def test_subproc_toks_pyeval_nested():
     'or-y',
     'x-and-y',
     'x-or-y',
+    'in/and/path',
+    'in/or/path',
 ])
 def test_subproc_toks_and_or(phrase):
     s = "echo " + phrase
