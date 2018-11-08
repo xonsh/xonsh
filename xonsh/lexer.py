@@ -4,6 +4,7 @@
 Written using a hybrid of ``tokenize`` and PLY.
 """
 import io
+import re
 
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
@@ -116,21 +117,33 @@ def token_map():
     return tm
 
 
+NEED_WHITESPACE = frozenset(["and", "or"])
+
+
+@lazyobject
+def RE_NEED_WHITESPACE():
+    pattern = r"\s?(" + "|".join(NEED_WHITESPACE) + r")(\s|[\\]$)"
+    return re.compile(pattern)
+
+
 def handle_name(state, token):
     """Function for handling name tokens"""
     typ = "NAME"
+    state["last"] = token
+    needs_whitespace = token.string in NEED_WHITESPACE
+    has_whitespace = needs_whitespace and RE_NEED_WHITESPACE.match(
+        token.line[max(0, token.start[1] - 1) :]
+    )
     if state["pymode"][-1][0]:
-        if token.string in kwmod.kwlist:
+        if needs_whitespace and not has_whitespace:
+            pass
+        elif token.string in kwmod.kwlist:
             typ = token.string.upper()
-        state["last"] = token
         yield _new_token(typ, token.string, token.start)
     else:
-        prev = state["last"]
-        state["last"] = token
-        has_whitespace = prev.end != token.start
-        if token.string == "and" and has_whitespace:
+        if has_whitespace and token.string == "and":
             yield _new_token("AND", token.string, token.start)
-        elif token.string == "or" and has_whitespace:
+        elif has_whitespace and token.string == "or":
             yield _new_token("OR", token.string, token.start)
         else:
             yield _new_token("NAME", token.string, token.start)
