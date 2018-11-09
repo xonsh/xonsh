@@ -3,10 +3,11 @@ import sys
 
 if len(sys.argv) == 1:
     f = sys.stdin.buffer
+    doc = f.read()
 else:
-    f = open(sys.argv[1], 'rb')
+    with open(sys.argv[1], 'rb') as f:
+        doc = f.read()
 
-doc = f.read()
 lines = len(doc.splitlines())
 words = len(doc.split())
 bytes = len(doc)

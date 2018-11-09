@@ -1,6 +1,7 @@
 import builtins
 import glob
 import os
+import sys
 
 import pytest
 
@@ -60,6 +61,14 @@ def xonsh_execer(monkeypatch):
     execer = Execer(unload=False)
     builtins.__xonsh__.execer = execer
     return execer
+
+
+@pytest.fixture
+def monkeypatch_stderr(monkeypatch):
+    """Monkeypath sys.stderr with no ResourceWarning."""
+    with open(os.devnull, "w") as fd:
+        monkeypatch.setattr(sys, "stderr", fd)
+        yield
 
 
 @pytest.yield_fixture

@@ -119,9 +119,8 @@ def test_premain_invalid_arguments(shell, case, capsys):
     assert "unrecognized argument" in capsys.readouterr()[1]
 
 
-def test_xonsh_failback(shell, monkeypatch):
+def test_xonsh_failback(shell, monkeypatch, monkeypatch_stderr):
     failback_checker = []
-    monkeypatch.setattr(sys, "stderr", open(os.devnull, "w"))
 
     def mocked_main(*args):
         raise Exception("A fake failure")
@@ -146,7 +145,7 @@ def test_xonsh_failback(shell, monkeypatch):
     assert failback_checker == ["/bin/xshell", "/bin/xshell"]
 
 
-def test_xonsh_failback_single(shell, monkeypatch):
+def test_xonsh_failback_single(shell, monkeypatch, monkeypatch_stderr):
     class FakeFailureError(Exception):
         pass
 
@@ -155,13 +154,12 @@ def test_xonsh_failback_single(shell, monkeypatch):
 
     monkeypatch.setattr(xonsh.main, "main_xonsh", mocked_main)
     monkeypatch.setattr(sys, "argv", ["xonsh", "-c", "echo", "foo"])
-    monkeypatch.setattr(sys, "stderr", open(os.devnull, "w"))
 
     with pytest.raises(FakeFailureError):
         xonsh.main.main()
 
 
-def test_xonsh_failback_script_from_file(shell, monkeypatch):
+def test_xonsh_failback_script_from_file(shell, monkeypatch, monkeypatch_stderr):
     checker = []
 
     def mocked_execlp(f, *args):
@@ -171,7 +169,6 @@ def test_xonsh_failback_script_from_file(shell, monkeypatch):
 
     script = os.path.join(TEST_DIR, "scripts", "raise.xsh")
     monkeypatch.setattr(sys, "argv", ["xonsh", script])
-    monkeypatch.setattr(sys, "stderr", open(os.devnull, "w"))
     with pytest.raises(Exception):
         xonsh.main.main()
     assert len(checker) == 0

@@ -21,7 +21,8 @@ class TestWhich:
         for app in self.testapps:
             for d in self.testdirs:
                 path = os.path.join(d.name, app)
-                open(path, "wb").write(b"")
+                with open(path, "wb") as f:
+                    f.write(b"")
                 os.chmod(path, 0o755)
 
     def teardown_module(self):
