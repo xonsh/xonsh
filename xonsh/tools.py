@@ -756,7 +756,7 @@ def _yield_accessible_unix_file_names(path):
         try:
             if file_.is_file() and os.access(file_.path, os.X_OK):
                 yield file_.name
-        except (FileNotFoundError, NotADirectoryError):
+        except OSError:
             # broken Symlink are neither dir not files
             pass
 
