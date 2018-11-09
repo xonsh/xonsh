@@ -2,7 +2,7 @@
 import ast as pyast
 
 from xonsh import ast
-from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, pdump
+from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, pdump, isexpression
 
 import pytest
 
@@ -115,10 +115,28 @@ def test_unmodified(inp):
 
     assert nodes_equal(exp, obs)
 
-@pytest.mark.parametrize("test_input", [
-    "echo; echo && echo\n",
-    "echo; echo && echo a\n",
-    "true && false && true\n",
-])
+
+@pytest.mark.parametrize(
+    "test_input",
+    ["echo; echo && echo\n", "echo; echo && echo a\n", "true && false && true\n"],
+)
 def test_whitespace_subproc(test_input):
     assert check_parse(test_input)
+
+
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        ("1+1", True),
+        ("1+1;", True),
+        ("1+1\n", True),
+        ("1+1; 2+2", False),
+        ("1+1; 2+2;", False),
+        ("1+1; 2+2\n", False),
+        ("1+1; 2+2;\n", False),
+        ("x = 42", False),
+    ],
+)
+def test_isexpression(xonsh_execer, inp, exp):
+    obs = isexpression(inp)
+    assert exp is obs
