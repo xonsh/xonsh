@@ -1,6 +1,8 @@
 **Added:**
 
 * New ``xonsh.aliases.ExecAlias`` class enables multi-statement aliases.
+* New ``xonsh.ast.isexpression()`` function will return a boolean of whether
+  code is a simple xonsh expression or not.
 
 **Changed:**
 
