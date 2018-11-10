@@ -121,7 +121,8 @@ class Aliases(cabc.MutableMapping):
                 self._raw[key] = lexer.split(val)
             else:
                 # need to exec alias
-                self._raw[key] = ExecAlias(val)
+                f = "<exec-alias:" + key + ">"
+                self._raw[key] = ExecAlias(val, filename=f)
         else:
             self._raw[key] = val
 
