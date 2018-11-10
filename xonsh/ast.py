@@ -3,6 +3,7 @@
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
 import sys
+import builtins
 from ast import (
     Module,
     Num,
