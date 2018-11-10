@@ -23,7 +23,13 @@ from xonsh.platform import (
 from xonsh.tools import unthreadable, print_color
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
-from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool, swap_values
+from xonsh.tools import (
+    argvquote,
+    escape_windows_cmd_string,
+    to_bool,
+    swap_values,
+    strip_simple_quotes,
+)
 from xonsh.xontribs import xontribs_main
 from xonsh.ast import isexpression
 
@@ -118,7 +124,7 @@ class Aliases(cabc.MutableMapping):
             if isexpression(val):
                 # expansion substitution
                 lexer = __xonsh__.execer.parser.lexer
-                self._raw[key] = lexer.split(val)
+                self._raw[key] = list(map(strip_simple_quotes, lexer.split(val)))
             else:
                 # need to exec alias
                 f = "<exec-alias:" + key + ">"
