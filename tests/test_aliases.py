@@ -27,7 +27,7 @@ ALIASES = Aliases(
 RAW = ALIASES._raw
 
 
-def test_imports(xonsh_execer):
+def test_imports(xonsh_builtins):
     expected = {
         "o": ["omg", "lala"],
         "ls": ["ls", "-  -"],
