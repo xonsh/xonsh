@@ -120,6 +120,8 @@ def test_premain_invalid_arguments(shell, case, capsys):
         xonsh.main.premain([case])
     assert "unrecognized argument" in capsys.readouterr()[1]
 
+def test_premain_timings_arg(shell):
+    xonsh.main.premain(['--timings'])
 
 def test_xonsh_failback(shell, monkeypatch, monkeypatch_stderr):
     failback_checker = []
