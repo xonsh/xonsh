@@ -6,8 +6,8 @@
 
 * test which determines whether a directory is a virtualenv
 
-  previously it used to check the existence of `pyvenv.cfg`
-  now it checks if `bin/activate` is executable
+  previously it used to check the existence of 'pyvenv.cfg'
+  now it checks if 'bin/python' is executable
 
 **Deprecated:**
 
