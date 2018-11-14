@@ -6,4 +6,3 @@
     :maxdepth: 3
 
     the xonsh shell <index>
-    API <api/index>

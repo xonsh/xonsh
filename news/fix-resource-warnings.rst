@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Flake8 errors
+* Several ResourceWarnings: unclosed file in tests
 
 **Security:**
 

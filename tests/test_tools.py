@@ -374,6 +374,29 @@ def test_subproc_toks_pyeval_nested():
     assert exp == obs
 
 
+@pytest.mark.parametrize('phrase', [
+    'xandy',
+    'xory',
+    'xand',
+    'andy',
+    'xor',
+    'ory',
+    'x-and',
+    'x-or',
+    'and-y',
+    'or-y',
+    'x-and-y',
+    'x-or-y',
+    'in/and/path',
+    'in/or/path',
+])
+def test_subproc_toks_and_or(phrase):
+    s = "echo " + phrase
+    exp = "![{0}]".format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert exp == obs
+
+
 def test_subproc_toks_pyeval_nested_parens():
     s = "echo @(min(1, 42))"
     inp = "({0})".format(s)

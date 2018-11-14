@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Updated vended version of ``ply`` to 3.11
+* <news item>
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* ``Makefile`` directive that updates vended version of ``ply``
+* fix no candidates if no permission files in PATH
 
 **Security:**
 
