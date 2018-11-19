@@ -40,7 +40,7 @@ To activate an environment, run ``vox activate <envname>``::
 
 Instead of ``activate``, you can call ``workon`` or ``enter``.
 
-If you want to activate an environment which is stored somewhere else (maybe because it was created by another tool) you can pass to ``vox deactivate`` a path to a virtual environment::
+If you want to activate an environment which is stored somewhere else (maybe because it was created by another tool) you can pass to ``vox activate`` a path to a virtual environment::
 
     $ vox activate /home/user/myenv
     Activated "/home/user/myenv".
