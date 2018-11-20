@@ -22,7 +22,7 @@ from xonsh.built_ins import load_builtins, unload_builtins
 from xonsh.pyghooks import XonshLexer
 
 
-@pytest.yield_fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def load_command_cache():
     load_builtins()
     if ON_WINDOWS:

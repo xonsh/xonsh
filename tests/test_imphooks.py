@@ -13,7 +13,7 @@ from xonsh.built_ins import unload_builtins
 imphooks.install_import_hooks()
 
 
-@pytest.yield_fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def imp_env():
     execer = Execer(unload=False)
     builtins.__xonsh__.env = Env({"PATH": [], "PATHEXT": []})

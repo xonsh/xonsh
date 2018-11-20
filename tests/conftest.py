@@ -71,7 +71,7 @@ def monkeypatch_stderr(monkeypatch):
         yield
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def xonsh_events():
     yield events
     for name, oldevent in vars(events).items():
@@ -81,7 +81,7 @@ def xonsh_events():
         setattr(events, name, newevent)
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def xonsh_builtins(xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = set(dir(builtins))

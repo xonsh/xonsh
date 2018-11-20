@@ -15,7 +15,7 @@ from tools import skip_if_on_darwin
 HISTDIR = os.path.join(os.path.dirname(__file__), "histories")
 
 
-@pytest.yield_fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def ctx():
     """Create a global Shell instance to use in all the test."""
     ctx = {"PATH": []}

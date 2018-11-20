@@ -15,7 +15,7 @@ from xonsh.history.main import history_main, _xh_parse_args, construct_history
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def hist():
     h = JsonHistory(
         filename="xonsh-HISTORY-TEST.json", here="yup", sessionid="SESSIONID", gc=False

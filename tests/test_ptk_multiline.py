@@ -18,7 +18,7 @@ from tools import DummyEnv, skip_if_lt_ptk2
 Context = namedtuple("Context", ["indent", "buffer", "accept", "cli", "cr"])
 
 
-@pytest.yield_fixture(scope="module")
+@pytest.fixture(scope="module")
 def ctx():
     """Context in which the ptk multiline functionality will be tested."""
     builtins.__xonsh__ = XonshSession()
