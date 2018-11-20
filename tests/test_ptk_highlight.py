@@ -23,7 +23,7 @@ from xonsh.pyghooks import XonshLexer
 
 
 @pytest.fixture(autouse=True)
-def load_command_cache():
+def load_command_cache(xonsh_builtins):
     load_builtins()
     if ON_WINDOWS:
         for key in ("cd", "bash"):
