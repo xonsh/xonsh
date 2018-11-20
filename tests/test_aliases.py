@@ -28,7 +28,7 @@ def make_aliases():
     return ales
 
 
-def test_imports(xonsh_builtins):
+def test_imports(xonsh_execer, xonsh_builtins):
     ales = make_aliases()
     expected = {
         "o": ["omg", "lala"],
@@ -41,23 +41,23 @@ def test_imports(xonsh_builtins):
     assert raw == expected
 
 
-def test_eval_normal(xonsh_builtins):
+def test_eval_normal(xonsh_execer, xonsh_builtins):
     ales = make_aliases()
     assert ales.get("o") == ["omg", "lala"]
 
 
-def test_eval_self_reference(xonsh_builtins):
+def test_eval_self_reference(xonsh_execer, xonsh_builtins):
     ales = make_aliases()
     assert ales.get("ls") == ["ls", "-  -"]
 
 
-def test_eval_recursive(xonsh_builtins):
+def test_eval_recursive(xonsh_execer, xonsh_builtins):
     ales = make_aliases()
     assert ales.get("color_ls") == ["ls", "-  -", "--color=true"]
 
 
 @skip_if_on_windows
-def test_eval_recursive_callable_partial(xonsh_builtins):
+def test_eval_recursive_callable_partial(xonsh_execer, xonsh_builtins):
     ales = make_aliases()
     xonsh_builtins.__xonsh__.env = Env(HOME=os.path.expanduser("~"))
     assert ales.get("indirect_cd")(["arg2", "arg3"]) == ["..", "arg2", "arg3"]
