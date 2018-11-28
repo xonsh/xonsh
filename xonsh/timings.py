@@ -248,9 +248,9 @@ def timeit_alias(args, stdin=None):
 _timings = {"start": clock()}
 
 
-def setup_timings():
+def setup_timings(argv):
     global _timings
-    if "--timings" in sys.argv:
+    if "--timings" in argv:
         events.doc(
             "on_timingprobe",
             """

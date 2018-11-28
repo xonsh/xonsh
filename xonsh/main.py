@@ -307,11 +307,11 @@ def premain(argv=None):
     """Setup for main xonsh entry point. Returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
-    setup_timings()
+    builtins.__xonsh__ = XonshSession()
+    setup_timings(argv)
     setproctitle = get_setproctitle()
     if setproctitle is not None:
         setproctitle(" ".join(["xonsh"] + argv))
-    builtins.__xonsh__ = XonshSession()
     args = parser.parse_args(argv)
     if args.help:
         parser.print_help()
