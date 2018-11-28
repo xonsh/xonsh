@@ -1,11 +1,22 @@
 =====================
-Customizing ``xonsh``
+Updating and customizing xonsh
 =====================
 
 .. contents::
    :local:
 
-How do I...
+Updating xonsh
+===========
+
+You can update xonsh from within itself with the following command:
+
+.. code-block:: console
+
+   $ xpip install --update xonsh
+
+``xpip`` is a predefined alias pointing to the pip command assosiated with the python executable running this xonsh.
+
+Customizing xonsh - How do I...
 ===========
 
 .. _change_theme:
