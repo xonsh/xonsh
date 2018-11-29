@@ -14,7 +14,7 @@ You can update xonsh from within itself with the following command:
 
    $ xpip install --update xonsh
 
-``xpip`` is a predefined alias pointing to the pip command assosiated with the python executable running this xonsh.
+``xpip`` is a predefined alias pointing to the pip command associated with the python executable running this xonsh.
 
 Customizing xonsh - How do I...
 ===========
