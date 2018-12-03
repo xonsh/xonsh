@@ -23,7 +23,7 @@ To create a new environment with vox, run ``vox new <envname>``::
     Creating environment...
     Environment "myenv" created. Activate it with "vox activate myenv".
 
-By default, environments are stored in ``~/.virtualenvs``, but you can override it by setting the ``$VIRTUALENV_HOME`` environment variable.
+Vox uses under the hood Python 3's ``venv`` module. By default, environments are stored in ``~/.virtualenvs``, but you can override it by setting the ``$VIRTUALENV_HOME`` environment variable.
 
 To see all existing environments, run ``vox list``::
 
@@ -39,6 +39,11 @@ To activate an environment, run ``vox activate <envname>``::
     Activated "myenv".
 
 Instead of ``activate``, you can call ``workon`` or ``enter``.
+
+If you want to activate an environment which is stored somewhere else (maybe because it was created by another tool) you can pass to ``vox activate`` a path to a virtual environment::
+
+    $ vox activate /home/user/myenv
+    Activated "/home/user/myenv".
 
 To exit the currently active environment, run ``vox deactivate`` or ``vox exit``::
 
@@ -67,7 +72,7 @@ To see all available commands, run ``vox help``, ``vox --help``, or ``vox -h``::
             Deactivate current virtual environment
 
         vox list (ls)
-            List all available environments
+            List environments available in $VIRTUALENV_HOME
 
         vox remove (rm, delete, del) <env> <env2> ...
             Remove virtual environments

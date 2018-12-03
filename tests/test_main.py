@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 from contextlib import contextmanager
 
 import builtins
+import os
 import os.path
 import sys
 
@@ -21,6 +22,7 @@ def Shell(*args, **kwargs):
 @pytest.fixture
 def shell(xonsh_builtins, monkeypatch):
     """Xonsh Shell Mock"""
+    del builtins.__xonsh__
     Shell.shell_type_aliases = {"rl": "readline"}
     monkeypatch.setattr(xonsh.main, "Shell", Shell)
 
@@ -54,7 +56,7 @@ def test_premain_D(shell):
 
 def test_premain_custom_rc(shell, tmpdir, monkeypatch):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-    builtins.__xonsh__.env = Env(XONSH_CACHE_SCRIPTS=False)
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", 'False')
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["--rc", f.strpath])
@@ -72,11 +74,11 @@ def test_force_interactive_rc_with_script(shell, tmpdir):
     assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
 
 
-def test_force_interactive_custom_rc_with_script(shell, tmpdir):
+def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch):
     """Calling a custom RC file on a script-call with the interactive flag
     should run interactively
     """
-    builtins.__xonsh__.env = Env(XONSH_CACHE_SCRIPTS=False)
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", 'False')
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
@@ -118,6 +120,8 @@ def test_premain_invalid_arguments(shell, case, capsys):
         xonsh.main.premain([case])
     assert "unrecognized argument" in capsys.readouterr()[1]
 
+def test_premain_timings_arg(shell):
+    xonsh.main.premain(['--timings'])
 
 def test_xonsh_failback(shell, monkeypatch, monkeypatch_stderr):
     failback_checker = []
