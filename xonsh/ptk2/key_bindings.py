@@ -148,7 +148,7 @@ def ctrl_d_condition():
     empty.
     """
     if builtins.__xonsh__.env.get("IGNOREEOF"):
-        raise EOFError
+        return False
     else:
         app = get_app()
         buffer_name = app.current_buffer.name
