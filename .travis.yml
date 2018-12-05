@@ -71,6 +71,6 @@ script:
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs .;
     else
-      py.test --timeout=10;
+      xonsh run-tests.xsh --timeout=10;
     fi
 
