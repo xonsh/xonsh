@@ -2,7 +2,7 @@
 $RAISE_SUBPROC_ERROR = True
 
 if 'TF_BUILD' in ${...}:
-    print('TF_BUILD', $TF_BUILD)
+    print('TF_BUILD', repr($TF_BUILD))
 else:
     print('TF_BUILD not found')
 

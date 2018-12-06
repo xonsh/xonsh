@@ -9,6 +9,6 @@ IF "%XONSH_TEST_ENV%" == "MSYS2" (
 ) ELSE (
     echo "Windows Environment"
     %PYTHON%\Scripts\pip install -r requirements-tests.txt --upgrade --upgrade-strategy eager
-    where python
-    python setup.py install
+    %PYTHON%\python.exe --version
+    %PYTHON%\python.exe setup.py install
 )
