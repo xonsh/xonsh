@@ -25,8 +25,6 @@ from xonsh.pyghooks import XonshLexer
 
 @pytest.fixture(autouse=True)
 def load_command_cache(xonsh_builtins):
-    if builtins.__xonsh__.execer is None:
-        builtins.__xonsh__.execer = Execer(unload=False)
     load_builtins()
     if ON_WINDOWS:
         for key in ("cd", "bash"):
@@ -61,10 +59,12 @@ def test_bin_ls():
     check_token("/bin/ls -al", [(Name.Builtin, "/bin/ls")])
 
 
+@skip_if_on_windows
 def test_py_print():
     check_token('print("hello")', [(Keyword, "print"), (String.Double, "hello")])
 
 
+@skip_if_on_windows
 def test_invalid_cmd():
     check_token("non-existance-cmd -al", [(Name, "non")])  # parse as python
     check_token(
@@ -74,6 +74,7 @@ def test_invalid_cmd():
     check_token("(1, )", [(Punctuation, "("), (Number.Integer, "1")])
 
 
+@skip_if_on_windows
 def test_multi_cmd():
     check_token(
         "cd && cd", [(Name.Builtin, "cd"), (Operator, "&&"), (Name.Builtin, "cd")]
@@ -84,6 +85,7 @@ def test_multi_cmd():
     )
 
 
+@skip_if_on_windows
 def test_nested():
     check_token(
         'echo @("hello")',
@@ -120,6 +122,7 @@ def test_nested():
     )
 
 
+@skip_if_on_windows
 def test_path(tmpdir):
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
     check_token(
@@ -135,10 +138,12 @@ def test_path(tmpdir):
         check_token(test_dir, [(Name.Constant, test_dir)])
 
 
+@skip_if_on_windows
 def test_subproc_args():
     check_token("cd 192.168.0.1", [(Text, "192.168.0.1")])
 
 
+@skip_if_on_windows
 def test_backtick():
     check_token(
         r"echo g`.*\w+`",
@@ -152,6 +157,7 @@ def test_backtick():
     )
 
 
+@skip_if_on_windows
 def test_macro():
     check_token(
         r"g!(42, *, 65)",
