@@ -2,8 +2,10 @@ import os
 import tempfile
 from xonsh.lib.os import indir, rmtree
 
-from tools import skip_if_on_azure_pipelines
+from tools import skip_if_on_azure_pipelines, ON_AZURE_PIPELINES
 
+def test_on_azure():
+    assert ON_AZURE_PIPELINES, os.environ["TF_BUILD"]
 
 @skip_if_on_azure_pipelines
 def test_indir():

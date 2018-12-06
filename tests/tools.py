@@ -30,9 +30,9 @@ ON_CONDA = True in [
     conda in pytest.__file__.lower() for conda in ["conda", "anaconda", "miniconda"]
 ]
 ON_TRAVIS = "TRAVIS" in os.environ and "CI" in os.environ
-ON_AZURE_PIPELINES = "TF_BUILD" in os.environ and os.environ["TF_BUILD"] == "True"
+ON_AZURE_PIPELINES = os.environ.get("TF_BUILD", "") == "True"
 print("ON_AZURE_PIPELINES", repr(ON_AZURE_PIPELINES))
-print("os.environ['TF_BUILD']", repr(os.environ["TF_BUILD"]))
+print("os.environ['TF_BUILD']", repr(os.environ.get("TF_BUILD", ""))
 TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
