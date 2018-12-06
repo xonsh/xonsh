@@ -3,11 +3,14 @@ import tempfile
 
 from xonsh.lib.os import indir, rmtree
 
-from tools import skip_if_on_windows
+import pytest
+
+from tools import ON_WINDOWS
 
 
-@skip_if_on_windows
 def test_indir():
+    if ON_WINDOWS:
+        pytest.skip("On Windows")
     with tempfile.TemporaryDirectory() as tmpdir:
         assert ![pwd].output.strip() != tmpdir
         with indir(tmpdir):
