@@ -19,11 +19,14 @@ from tools import skip_if_on_windows
 
 from xonsh.platform import ON_WINDOWS
 from xonsh.built_ins import load_builtins, unload_builtins
+from xonsh.execer import Execer
 from xonsh.pyghooks import XonshLexer
 
 
 @pytest.fixture(autouse=True)
 def load_command_cache(xonsh_builtins):
+    if builtins.__xonsh__.execer is None:
+        builtins.__xonsh__.execer = Execer(unload=False)
     load_builtins()
     if ON_WINDOWS:
         for key in ("cd", "bash"):
