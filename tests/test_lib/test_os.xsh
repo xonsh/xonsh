@@ -1,5 +1,6 @@
 import os
 import tempfile
+
 from xonsh.lib.os import indir, rmtree
 
 from tools import skip_if_on_windows
