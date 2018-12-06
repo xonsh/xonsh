@@ -27,6 +27,7 @@ jobs:
       installOptions: '-c conda-forge'
       updateConda: false
   - script: |
+      pip install .
       xonsh run-test.xsh --timeout=10 --junitxml=junit/test-results.xml
     displayName: 'Tests'
 

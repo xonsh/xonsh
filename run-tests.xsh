@@ -1,6 +1,9 @@
 #!/usr/bin/env xonsh
 $RAISE_SUBPROC_ERROR = True
 
+echo $ARGS
+exit
+
 run_separately = [
     'tests/test_ptk_highlight.py',
     ]
