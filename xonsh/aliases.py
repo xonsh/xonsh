@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
 import os
+import re
 import sys
 import inspect
 import argparse
@@ -36,6 +37,11 @@ from xonsh.ast import isexpression
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
+
+
+@lazyobject
+def SUB_EXEC_ALIAS_RE():
+    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[")
 
 
 class Aliases(cabc.MutableMapping):
@@ -121,13 +127,16 @@ class Aliases(cabc.MutableMapping):
 
     def __setitem__(self, key, val):
         if isinstance(val, str):
-            if isexpression(val):
+            f = "<exec-alias:" + key + ">"
+            if SUB_EXEC_ALIAS_RE.search(val) is not None:
+                # We have a sub-command, e.g. $(cmd), to evaluate
+                self._raw[key] = ExecAlias(val, filename=f)
+            elif isexpression(val):
                 # expansion substitution
-                lexer = __xonsh__.execer.parser.lexer
+                lexer = builtins.__xonsh__.execer.parser.lexer
                 self._raw[key] = list(map(strip_simple_quotes, lexer.split(val)))
             else:
                 # need to exec alias
-                f = "<exec-alias:" + key + ">"
                 self._raw[key] = ExecAlias(val, filename=f)
         else:
             self._raw[key] = val
