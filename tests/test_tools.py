@@ -64,6 +64,7 @@ from xonsh.tools import (
     is_balanced,
     subexpr_before_unbalanced,
     swap_values,
+    get_line_continuation,
     get_logical_line,
     replace_logical_line,
     check_quotes,
@@ -74,7 +75,7 @@ from xonsh.tools import (
 )
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows, skip_if_on_unix, skip_if_py34, skip_if_on_azure_pipelines
+from tools import skip_if_on_windows, skip_if_on_unix, skip_if_py34
 
 LEXER = Lexer()
 LEXER.build()
@@ -505,7 +506,6 @@ mom"""
 ]
 
 
-@skip_if_on_azure_pipelines
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
 def test_get_logical_line(src, idx, exp_line, exp_n):
     lines = src.splitlines()
@@ -522,7 +522,8 @@ def test_replace_logical_line(src, idx, exp_line, exp_n):
         idx -= 1
     replace_logical_line(lines, logical, idx, exp_n)
     exp = src.replace("\\\n", "").strip()
-    obs = "\n".join(lines).replace("\\\n", "").strip()
+    lc = get_line_continuation() + "\n"
+    obs = "\n".join(lines).replace(lc, "").strip()
     assert exp == obs
 
 

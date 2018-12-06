@@ -2,10 +2,10 @@ import os
 import tempfile
 from xonsh.lib.os import indir, rmtree
 
-from tools import skip_if_on_azure_pipelines
+from tools import skip_if_on_windows
 
 
-@skip_if_on_azure_pipelines
+@skip_if_on_windows
 def test_indir():
     with tempfile.TemporaryDirectory() as tmpdir:
         assert ![pwd].output.strip() != tmpdir
