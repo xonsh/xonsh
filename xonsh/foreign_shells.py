@@ -362,6 +362,48 @@ def parse_aliases(s):
     return aliases
 
 
+def _fs_is_streaming(args):
+    """Test and modify args if --xonsh-stream is present."""
+    if "--xonsh-stream" not in args:
+            return args, False
+    args = list(args)
+    args.remove("--xonsh-stream")
+    return args, True
+
+
+class ForeignShellExecAlias:
+    """Provides a callable alias for source code in a foreign shell."""
+
+    def __init__(self, src, shell, filename="<foreign-shell-exec-alias>", extra_args=()):
+        """
+        Parameters
+        ----------
+        src : str
+            Source code that will be
+        shell : str
+            Name or path to shell
+        extra_args : tuple of str, optional
+            Additional command line options to pass into the shell.
+        """
+        self.src = src if src.endswith("\n") else src + "\n"
+        self.shell = shell
+        self.filename = filename
+        self.extra_args = extra_args
+
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
+        execer = builtins.__xonsh__.execer
+        frame = stack[0][0]  # execute as though we are at the call site
+        execer.exec(
+            self.src, glbs=frame.f_globals, locs=frame.f_locals, filename=self.filename
+        )
+
+    def __repr__(self):
+        return "ForeignShellExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
+
+
+
 @lazyobject
 def FUNCS_RE():
     return re.compile(
@@ -456,7 +498,7 @@ class ForeignShellFunctionAlias(object):
         )
 
     def __call__(self, args, stdin=None):
-        args, streaming = self._is_streaming(args)
+        args, streaming = _fs_is_streaming(args)
         input = self.INPUT.format(
             sourcer=self.sourcer,
             filename=self.filename,
@@ -477,14 +519,6 @@ class ForeignShellFunctionAlias(object):
             )
             out = out.replace("\r\n", "\n")
         return out
-
-    def _is_streaming(self, args):
-        """Test and modify args if --xonsh-stream is present."""
-        if "--xonsh-stream" not in args:
-            return args, False
-        args = list(args)
-        args.remove("--xonsh-stream")
-        return args, True
 
 
 @lazyobject
