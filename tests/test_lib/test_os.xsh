@@ -1,13 +1,14 @@
 import os
 import tempfile
+
 from xonsh.lib.os import indir, rmtree
 
-from tools import skip_if_on_azure_pipelines, ON_AZURE_PIPELINES
+import pytest
 
-def test_on_azure():
-    assert ON_AZURE_PIPELINES, os.environ["TF_BUILD"]
+from tools import ON_AZURE_PIPELINES
 
-@skip_if_on_azure_pipelines
+
+@pytest.mark.skipif(ON_AZURE_PIPELINES)
 def test_indir():
     with tempfile.TemporaryDirectory() as tmpdir:
         assert ![pwd].output.strip() != tmpdir
