@@ -51,7 +51,7 @@ install:
       python setup.py install;
     else
       pip install --upgrade -r requirements-tests.txt;
-      pip install .;
+      python setup.py install;
     fi
 
 before_script:
