@@ -8,8 +8,9 @@ import pytest
 from tools import ON_AZURE_PIPELINES
 
 
-@pytest.mark.skipif(ON_AZURE_PIPELINES)
 def test_indir():
+    if ON_AZURE_PIPELINES:
+        pytest.skip("Not supported")
     with tempfile.TemporaryDirectory() as tmpdir:
         assert ![pwd].output.strip() != tmpdir
         with indir(tmpdir):
