@@ -1,8 +1,10 @@
 #!/usr/bin/env xonsh
 $RAISE_SUBPROC_ERROR = True
 
-echo $ARGS
-exit
+if 'TF_BUILD' in ${...}:
+    print('TF_BUILD', $TF_BUILD)
+else:
+    print('TF_BUILD not found')
 
 run_separately = [
     'tests/test_ptk_highlight.py',
