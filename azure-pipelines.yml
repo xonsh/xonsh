@@ -28,7 +28,7 @@ jobs:
       updateConda: false
   - script: |
       pip install .
-      xonsh run-test.xsh --timeout=10 --junitxml=junit/test-results.xml
+      xonsh run-tests.xsh --timeout=10 --junitxml=junit/test-results.xml
     displayName: 'Tests'
 
 # Publish build results
