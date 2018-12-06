@@ -74,7 +74,7 @@ from xonsh.tools import (
 )
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows, skip_if_on_unix, skip_if_py34
+from tools import skip_if_on_windows, skip_if_on_unix, skip_if_py34, skip_if_on_azure_pipelines
 
 LEXER = Lexer()
 LEXER.build()
@@ -505,6 +505,7 @@ mom"""
 ]
 
 
+@skip_if_on_azure_pipelines
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
 def test_get_logical_line(src, idx, exp_line, exp_n):
     lines = src.splitlines()

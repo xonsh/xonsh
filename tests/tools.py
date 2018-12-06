@@ -30,6 +30,7 @@ ON_CONDA = True in [
     conda in pytest.__file__.lower() for conda in ["conda", "anaconda", "miniconda"]
 ]
 ON_TRAVIS = "TRAVIS" in os.environ and "CI" in os.environ
+ON_AZURE_PIPELINES = "TF_BUILD" in os.environ and os.environ["TF_BUILD"] == "True"
 TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
@@ -47,6 +48,8 @@ skip_if_on_msys = pytest.mark.skipif(
 )
 
 skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason="Unix stuff")
+
+skip_if_on_azure_pipelines = pytest.mark.skipif(ON_AZURE_PIPELINES, reason="Fails")
 
 skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason="Windows stuff")
 

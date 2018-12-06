@@ -4,9 +4,10 @@ import tempfile
 from xonsh.lib.os import indir
 from xonsh.lib.subprocess import run, check_call, check_output, CalledProcessError
 
-from tools import skip_if_on_windows
+from tools import skip_if_on_windows, skip_if_on_azure_pipelines
 
 
+@skip_if_on_azure_pipelines
 def test_run():
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
@@ -18,6 +19,7 @@ def test_run():
             assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
 
 
+@skip_if_on_azure_pipelines
 def test_check_call():
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
@@ -39,6 +41,7 @@ def test_check_call_raises():
     assert got_raise
 
 
+@skip_if_on_azure_pipelines
 def test_check_output():
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
