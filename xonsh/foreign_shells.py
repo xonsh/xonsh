@@ -298,7 +298,7 @@ def foreign_shell_data(
         if use_tmpfile:
             os.remove(tmpfile.name)
     env = parse_env(s)
-    aliases = parse_aliases(s)
+    aliases = parse_aliases(s, shell=shell, sourcer=sourcer, extra_args=extra_args)
     funcs = parse_funcs(s, shell=shell, sourcer=sourcer, extra_args=extra_args)
     aliases.update(funcs)
     return env, aliases
@@ -332,7 +332,12 @@ def ALIAS_RE():
     )
 
 
-def parse_aliases(s):
+@lazyobject
+def FS_EXEC_ALIAS_RE():
+    return re.compile(";|`|\$\(")
+
+
+def parse_aliases(s, shell, sourcer=None, extra_args=()):
     """Parses the aliases portion of string into a dict."""
     m = ALIAS_RE.search(s)
     if m is None:
@@ -352,7 +357,20 @@ def parse_aliases(s):
             # strip one single quote at the start and end of value
             if value[0] == "'" and value[-1] == "'":
                 value = value[1:-1]
-            value = shlex.split(value)
+            # now compute actual alias
+            if FS_EXEC_ALIAS_RE.search(value) is None:
+                # simple list of args alias
+                value = shlex.split(value)
+            else:
+                # alias is more complex, use ExecAlias, but via shell
+                filename = "<foreign-shell-exec-alias:" + key + ">"
+                value = ForeignShellExecAlias(
+                    src=value,
+                    shell=shell,
+                    filename=filename,
+                    sourcer=sourcer,
+                    extra_args=extra_args,
+                )
         except ValueError as exc:
             warnings.warn(
                 'could not parse alias "{0}": {1!r}'.format(key, exc), RuntimeWarning
@@ -360,48 +378,6 @@ def parse_aliases(s):
             continue
         aliases[key] = value
     return aliases
-
-
-def _fs_is_streaming(args):
-    """Test and modify args if --xonsh-stream is present."""
-    if "--xonsh-stream" not in args:
-            return args, False
-    args = list(args)
-    args.remove("--xonsh-stream")
-    return args, True
-
-
-class ForeignShellExecAlias:
-    """Provides a callable alias for source code in a foreign shell."""
-
-    def __init__(self, src, shell, filename="<foreign-shell-exec-alias>", extra_args=()):
-        """
-        Parameters
-        ----------
-        src : str
-            Source code that will be
-        shell : str
-            Name or path to shell
-        extra_args : tuple of str, optional
-            Additional command line options to pass into the shell.
-        """
-        self.src = src if src.endswith("\n") else src + "\n"
-        self.shell = shell
-        self.filename = filename
-        self.extra_args = extra_args
-
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        execer = builtins.__xonsh__.execer
-        frame = stack[0][0]  # execute as though we are at the call site
-        execer.exec(
-            self.src, glbs=frame.f_globals, locs=frame.f_locals, filename=self.filename
-        )
-
-    def __repr__(self):
-        return "ForeignShellExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
-
 
 
 @lazyobject
@@ -452,19 +428,17 @@ def parse_funcs(s, shell, sourcer=None, extra_args=()):
     return funcs
 
 
-class ForeignShellFunctionAlias(object):
+class ForeignShellBaseAlias(object):
     """This class is responsible for calling foreign shell functions as if
     they were aliases. This does not currently support taking stdin.
     """
 
-    INPUT = '{sourcer} "{filename}"\n' "{funcname} {args}\n"
+    INPUT = "echo ForeignShellBaseAlias {shell} {filename} {args}\n"
 
-    def __init__(self, name, shell, filename, sourcer=None, extra_args=()):
+    def __init__(self, shell, filename, sourcer=None, extra_args=()):
         """
         Parameters
         ----------
-        name : str
-            function name
         shell : str
             Name or path to shell
         filename : str
@@ -475,36 +449,29 @@ class ForeignShellFunctionAlias(object):
             Additional command line options to pass into the shell.
         """
         sourcer = DEFAULT_SOURCERS.get(shell, "source") if sourcer is None else sourcer
-        self.name = name
         self.shell = shell
         self.filename = filename
         self.sourcer = sourcer
         self.extra_args = extra_args
 
-    def __eq__(self, other):
-        if (
-            not hasattr(other, "name")
-            or not hasattr(other, "filename")
-            or not hasattr(other, "sourcer")
-            or not hasattr(other, "exta_args")
-        ):
-            return NotImplemented
-        return (
-            (self.name == other.name)
-            and (self.shell == other.shell)
-            and (self.filename == other.filename)
-            and (self.sourcer == other.sourcer)
-            and (self.extra_args == other.extra_args)
-        )
+    def _input_kwargs(self):
+        return {
+            "shell": self.shell,
+            "filename": self.filename,
+            "sourcer": self.sourcer,
+            "extra_args": self.extra_args,
+        }
 
-    def __call__(self, args, stdin=None):
-        args, streaming = _fs_is_streaming(args)
-        input = self.INPUT.format(
-            sourcer=self.sourcer,
-            filename=self.filename,
-            funcname=self.name,
-            args=" ".join(args),
-        )
+    def __eq__(self, other):
+        if not hasattr(other, "_input_kwargs") or not callable(other._input_kwargs):
+            return NotImplemented
+        return self._input_kwargs == other._input_kwargs
+
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
+        args, streaming = self._is_streaming(args)
+        input = self.INPUT.format(args=" ".join(args), **self._input_kwargs())
         cmd = [self.shell] + list(self.extra_args) + ["-c", input]
         env = builtins.__xonsh__.env
         denv = env.detype()
@@ -519,6 +486,99 @@ class ForeignShellFunctionAlias(object):
             )
             out = out.replace("\r\n", "\n")
         return out
+
+    def __repr__(self):
+        return (
+            self.__class__.__name__
+            + "("
+            + ", ".join(
+                [
+                    "{k}={v!r}".format(k=k, v=v)
+                    for k, v in sorted(self._input_kwargs().items())
+                ]
+            )
+            + ")"
+        )
+
+    @staticmethod
+    def _is_streaming(args):
+        """Test and modify args if --xonsh-stream is present."""
+        if "--xonsh-stream" not in args:
+            return args, False
+        args = list(args)
+        args.remove("--xonsh-stream")
+        return args, True
+
+
+class ForeignShellFunctionAlias(ForeignShellBaseAlias):
+    """This class is responsible for calling foreign shell functions as if
+    they were aliases. This does not currently support taking stdin.
+    """
+
+    INPUT = '{sourcer} "{filename}"\n' "{funcname} {args}\n"
+
+    def __init__(self, funcname, shell, filename, sourcer=None, extra_args=()):
+        """
+        Parameters
+        ----------
+        funcname : str
+            function name
+        shell : str
+            Name or path to shell
+        filename : str
+            Where the function is defined, path to source.
+        sourcer : str or None, optional
+            Command to source foreign files with.
+        extra_args : tuple of str, optional
+            Additional command line options to pass into the shell.
+        """
+        super().__init__(
+            shell=shell, filename=filename, sourcer=sourcer, extra_args=extra_args
+        )
+        self.funcname = funcname
+
+    def _input_kwargs(self):
+        inp = super()._input_kwargs()
+        inp["funcname"] = self.funcname
+        return inp
+
+
+class ForeignShellExecAlias(ForeignShellBaseAlias):
+    """Provides a callable alias for source code in a foreign shell."""
+
+    INPUT = "{src} {args}\n"
+
+    def __init__(
+        self,
+        src,
+        shell,
+        filename="<foreign-shell-exec-alias>",
+        sourcer=None,
+        extra_args=(),
+    ):
+        """
+        Parameters
+        ----------
+        src : str
+            Source code in the shell language
+        shell : str
+            Name or path to shell
+        filename : str
+            Where the function is defined, path to source.
+        sourcer : str or None, optional
+            Command to source foreign files with.
+        extra_args : tuple of str, optional
+            Additional command line options to pass into the shell.
+        """
+        super().__init__(
+            shell=shell, filename=filename, sourcer=sourcer, extra_args=extra_args
+        )
+        self.src = src.strip()
+
+    def _input_kwargs(self):
+        inp = super()._input_kwargs()
+        inp["src"] = self.src
+        return inp
 
 
 @lazyobject
