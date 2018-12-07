@@ -43,7 +43,9 @@ jobs:
             pip install . --no-deps
       - run:
           command: |
-            /home/circleci/miniconda/envs/py34-xonsh-test/bin/pytest --timeout=10
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            xonsh run-tests.xsh --timeout=10
   build_35:
     machine: true
     environment:
@@ -87,7 +89,9 @@ jobs:
             pip install . --no-deps
       - run:
           command: |
-            /home/circleci/miniconda/envs/py35-xonsh-test/bin/pytest --timeout=10
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            xonsh run-tests.xsh --timeout=10
   build_36:
     machine: true
     environment:
@@ -131,7 +135,9 @@ jobs:
             pip install . --no-deps
       - run:
           command: |
-            /home/circleci/miniconda/envs/py36-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            xonsh run-tests.xsh --timeout=10 --flake8 --cov=./xonsh
   build_37:
     machine: true
     environment:
@@ -175,7 +181,9 @@ jobs:
             pip install . --no-deps
       - run:
           command: |
-            /home/circleci/miniconda/envs/py37-xonsh-test/bin/pytest --timeout=10 --flake8 --cov=./xonsh
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source activate ${ENV_NAME}
+            xonsh run-tests.xsh --timeout=10 --flake8 --cov=./xonsh
   build_black:
     machine: true
     steps:

@@ -20,15 +20,16 @@ jobs:
       architecture: 'x64'
 
   # Conda Environment
-# Create and activate a Conda environment.
+  # Create and activate a Conda environment.
   - task: CondaEnvironment@1
     inputs:
       packageSpecs: 'python=$(python.version) pygments prompt_toolkit ply pytest pytest-timeout numpy psutil matplotlib flake8 coverage pyflakes pytest-cov pytest-flake8 codecov'
       installOptions: '-c conda-forge'
       updateConda: false
   - script: |
-      pytest --timeout=10 --junitxml=junit/test-results.xml
-    displayName: 'pytest'
+      pip install .
+      xonsh run-tests.xsh --timeout=10 --junitxml=junit/test-results.xml
+    displayName: 'Tests'
 
 # Publish build results
   - task: PublishTestResults@2

@@ -1122,7 +1122,14 @@ matching only occurs for the first element of a subprocess command.
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
 The values are lists of strings, where the first element is the command, and
 the rest are the arguments. You can also set the value to a string, in which
-case it will be converted to a list automatically with ``shlex.split``.
+one of two things will happen:
+
+1. If the string is a xonsh expression, it will be converted to a list
+   automatically with xonsh's ``Lexer.split()`` method.
+2. If the string is more complex (representing a block of xonsh code),
+   the alias will be registered as an ``ExecAlias``, which is a callable
+   alias. This block of code will then be executed whenever the alias is
+   run.
 
 For example, the following creates several aliases for the ``git``
 version control software.  Both styles (list of strings and single
