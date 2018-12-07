@@ -4,6 +4,48 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.4
+====================
+
+**Added:**
+
+* Added the possibility of arbitrary paths to the help strings in ``vox activate`` and
+  ``vox remove``; also updated the documentation accordingly.
+* New ``xonsh.aliases.ExecAlias`` class enables multi-statement aliases.
+* New ``xonsh.ast.isexpression()`` function will return a boolean of whether
+  code is a simple xonsh expression or not.
+* Added top-level ``run-tests.xsh`` script for safely running the test suite.
+
+
+**Changed:**
+
+* String aliases are no longer split with ``shlex.split()``, but instead use
+  ``xonsh.lexer.Lexer.split()``.
+* Update xonsh/prompt/cwd.py _collapsed_pwd to print 2 chars if a directory begins with "."
+* test which determines whether a directory is a virtualenv
+
+  previously it used to check the existence of 'pyvenv.cfg'
+  now it checks if 'bin/python' is executable
+
+
+**Fixed:**
+
+* Fixed issue with ``and`` & ``or`` being incoreectly tokenized in implicit
+  subprocesses. Auto-wrapping of certain subprocesses will now correctly work.
+  For example::
+
+      $ echo x-and-y
+      x-and-y
+* Fix EOFError when press `control+d`
+* fix no candidates if no permission files in PATH
+* Fixed interpretation of color names with PTK2 and Pygments 2.3.
+* Several ResourceWarnings: unclosed file in tests
+* AttributeError crash when using --timings flag
+* issue #2929
+
+
+
+
 v0.8.3
 ====================
 
