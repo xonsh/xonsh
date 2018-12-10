@@ -465,7 +465,7 @@ class ForeignShellBaseAlias(object):
     def __eq__(self, other):
         if not hasattr(other, "_input_kwargs") or not callable(other._input_kwargs):
             return NotImplemented
-        return self._input_kwargs == other._input_kwargs
+        return self._input_kwargs() == other._input_kwargs()
 
     def __call__(
         self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
