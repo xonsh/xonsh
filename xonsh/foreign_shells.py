@@ -418,7 +418,7 @@ def parse_funcs(s, shell, sourcer=None, extra_args=()):
         if not os.path.isabs(filename):
             filename = os.path.abspath(filename)
         wrapper = ForeignShellFunctionAlias(
-            name=funcname,
+            funcname=funcname,
             shell=shell,
             sourcer=sourcer,
             filename=filename,
