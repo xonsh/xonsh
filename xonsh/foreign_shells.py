@@ -334,7 +334,7 @@ def ALIAS_RE():
 
 @lazyobject
 def FS_EXEC_ALIAS_RE():
-    return re.compile(";|`|\$\(")
+    return re.compile(r";|`|\$\(")
 
 
 def parse_aliases(s, shell, sourcer=None, extra_args=()):
