@@ -64,7 +64,7 @@ def test_parse_aliases():
         "__XONSH_ALIAS_END__\n"
         "more filth"
     )
-    obs = parse_aliases(s)
+    obs = parse_aliases(s, 'bash')
     assert exp == obs
 
 
