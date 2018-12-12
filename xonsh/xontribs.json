@@ -28,6 +28,11 @@
     "its behavior. To see the modifications as they are applied (in unified diff",
     "format), please set ``$XONSH_DEBUG`` to ``2`` or higher."]
  },
+ {"name": "base16_shell",
+  "package": "xontrib-base16-shell",
+  "url": "https://github.com/ErickTucto/xontrib-base16-shell",
+  "description": ["Change base16 shell themes"]
+ },
  {"name": "coreutils",
   "package": "xonsh",
   "url": "http://xon.sh",
