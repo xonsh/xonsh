@@ -17,7 +17,7 @@
 **Fixed:**
 
 * Fixed issues where the prompt-toolkit v2 shell would print an extra newline
-  after Python evalutions in interactive mode.
+  after Python evaluations in interactive mode.
 
 **Security:**
 
