@@ -119,6 +119,8 @@ class Shell(object):
     shell_type_aliases = {
         "b": "best",
         "best": "best",
+        "d": "dumb",
+        "dumb": "dumb",
         "ptk": "prompt_toolkit",
         "ptk1": "prompt_toolkit1",
         "ptk2": "prompt_toolkit2",
@@ -166,6 +168,8 @@ class Shell(object):
         shell_type = self.shell_type_aliases.get(shell_type, shell_type)
         if shell_type == "best" or shell_type is None:
             shell_type = best_shell_type()
+        elif env.get("TERM", "") == "dumb":
+            shell_type = "dumb"
         elif shell_type == "random":
             shell_type = random.choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
@@ -195,6 +199,8 @@ class Shell(object):
             from xonsh.readline_shell import ReadlineShell as shell_class
         elif shell_type == "jupyter":
             from xonsh.jupyter_shell import JupyterShell as shell_class
+        elif shell_type == "dumb":
+            from xonsh.dumb_shell import DumbShell as shell_class
         else:
             raise XonshError("{} is not recognized as a shell type".format(shell_type))
         self.shell = shell_class(execer=self.execer, ctx=self.ctx, **kwargs)

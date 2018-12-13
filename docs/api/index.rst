@@ -74,6 +74,7 @@ For those of you who want the gritty details.
     pyghooks
     jupyter_kernel
     jupyter_shell
+    dumb_shell
     wizard
     xonfig
     codecache

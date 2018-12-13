@@ -194,7 +194,9 @@ def ptk_below_max_supported():
 
 @functools.lru_cache(1)
 def best_shell_type():
-    if ON_WINDOWS or has_prompt_toolkit():
+    if builtins.__xonsh__.env.get("TERM", "") == "dumb":
+        return "dumb"
+    elif ON_WINDOWS or has_prompt_toolkit():
         return "prompt_toolkit"
     else:
         return "readline"
