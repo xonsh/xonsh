@@ -5,6 +5,28 @@ import builtins
 from xonsh.xoreutils.util import arg_handler
 
 
+def _cat_line(f, sep, last_was_blank, line_count, opts, out):
+        _r = r = f.readline()
+        if isinstance(_r, str):
+            _r = r = _r.encode()
+        if r == b"":
+            last_was_blank, line_count, True
+        if r.endswith(sep):
+            _r = _r[: -len(sep)]
+        this_one_blank = _r == b""
+        if last_was_blank and this_one_blank and opts["squeeze_blank"]:
+            last_was_blank, line_count, False
+        last_was_blank = this_one_blank
+        if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
+            start = ("%6d " % line_count).encode()
+            _r = start + _r
+            line_count += 1
+        if opts["show_ends"]:
+            _r = _r + b"$"
+        print(_r.decode(enc), flush=True, file=out)
+        return last_was_blank, line_count, False
+
+
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     env = builtins.__xonsh__.env
     enc = env.get("XONSH_ENCODING")
@@ -21,26 +43,15 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     sep = os.linesep.encode()
     last_was_blank = False
     while True:
-        _r = r = f.readline()
-        if isinstance(_r, str):
-            _r = r = _r.encode()
-        if r == b"":
-            break
-        if r.endswith(sep):
-            _r = _r[: -len(sep)]
-        this_one_blank = _r == b""
-        if last_was_blank and this_one_blank and opts["squeeze_blank"]:
-            continue
-        last_was_blank = this_one_blank
-        if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
-            start = ("%6d " % line_count).encode()
-            _r = start + _r
-            line_count += 1
-        if opts["show_ends"]:
-            _r = _r + b"$"
         try:
-            print(_r.decode(enc), flush=True, file=out)
-        except:
+            last_was_blank, line_count, endnow = _cat_line(f, sep, last_was_blank, line_count, opts, out)
+            if endnow:
+                break
+        except KeyboardInterrupt:
+            print("got except", flush=True, file=out)
+            break
+        except Exception as e:
+            print(e, flush=True, file=out)
             pass
     return False, line_count
 
