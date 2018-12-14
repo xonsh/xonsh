@@ -2,11 +2,12 @@
 import os
 import builtins
 
+import xonsh.proc as xproc
 from xonsh.xoreutils.util import arg_handler
 
 
-def _cat_line(f, sep, last_was_blank, line_count, opts, out):
-        _r = r = f.readline()
+def _cat_line(f, sep, last_was_blank, line_count, opts, out, enc):
+        _r = r = f.readline(size=80)
         if isinstance(_r, str):
             _r = r = _r.encode()
         if r == b"":
@@ -23,7 +24,9 @@ def _cat_line(f, sep, last_was_blank, line_count, opts, out):
             line_count += 1
         if opts["show_ends"]:
             _r = _r + b"$"
-        print(_r.decode(enc), flush=True, file=out)
+        #print(_r.decode(enc), flush=True, file=out)
+        out.buffer.write(_r)
+        out.flush()
         return last_was_blank, line_count, False
 
 
@@ -39,19 +42,20 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         print("cat: No such file or directory: {}".format(fname), file=err)
         return True, line_count
     else:
-        f = open(fname, "rb")
+        fobj = open(fname, "rb")
+        f = xproc.NonBlockingFDReader(fobj.fileno(), timeout=0.1)
     sep = os.linesep.encode()
     last_was_blank = False
     while True:
         try:
-            last_was_blank, line_count, endnow = _cat_line(f, sep, last_was_blank, line_count, opts, out)
+            last_was_blank, line_count, endnow = _cat_line(f, sep, last_was_blank, line_count, opts, out, enc)
             if endnow:
                 break
         except KeyboardInterrupt:
             print("got except", flush=True, file=out)
             break
         except Exception as e:
-            print(e, flush=True, file=out)
+            print("xonsh:", e, flush=True, file=out)
             pass
     return False, line_count
 
