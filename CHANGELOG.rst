@@ -107,7 +107,7 @@ v0.8.4
 
 **Fixed:**
 
-* Fixed issue with ``and`` & ``or`` being incoreectly tokenized in implicit
+* Fixed issue with ``and`` & ``or`` being incorrectly tokenized in implicit
   subprocesses. Auto-wrapping of certain subprocesses will now correctly work.
   For example::
 
