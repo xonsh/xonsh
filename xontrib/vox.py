@@ -50,18 +50,18 @@ class VoxHandler:
             help='Activate virtual environment'
         )
         activate.add_argument('name', metavar='ENV',
-                              help='The environment to activate. ENV can be '+
-                                   'either a name from the venvs shown by '+
-                                   'vox list or the path to an arbitrary venv')
+                              help=('The environment to activate. ENV can be '
+                                    'either a name from the venvs shown by vox'
+                                    'list or the path to an arbitrary venv'))
         subparsers.add_parser('deactivate', aliases=['exit'], help='Deactivate current virtual environment')
         subparsers.add_parser('list', aliases=['ls'],
-                              help='List environments available in '+
-                              '$VIRTUALENV_HOME')
+                              help=('List environments available in '
+                                    '$VIRTUALENV_HOME'))
         remove = subparsers.add_parser('remove', aliases=['rm', 'delete', 'del'], help='Remove virtual environment')
         remove.add_argument('names', metavar='ENV', nargs='+',
-                            help='The environments to remove. ENV can be '+
-                                   'either a name from the venvs shown by '+
-                                   'vox list or the path to an arbitrary venv')
+                            help=('The environments to remove. ENV can be '
+                                  'either a name from the venvs shown by vox'
+                                  'list or the path to an arbitrary venv'))
         subparsers.add_parser('help', help='Show this help message')
         return parser
 

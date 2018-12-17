@@ -37,7 +37,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-@pytest.yield_fixture(scope="module")
+@pytest.fixture(scope="module")
 def shares_setup(tmpdir_factory):
     """create some shares to play with on current machine.
 
@@ -218,8 +218,8 @@ def test_uncpushd_push_base_push_rempath(xonsh_builtins):
     pass
 
 
-# really?  Need to cut-and-paste 2 flavors of this? yield_fixture requires yield in defined function body, not callee
-@pytest.yield_fixture()
+# really?  Need to cut-and-paste 2 flavors of this? fixture requires yield in defined function body, not callee
+@pytest.fixture()
 def with_unc_check_enabled():
     if not ON_WINDOWS:
         return
@@ -251,7 +251,7 @@ def with_unc_check_enabled():
     winreg.CloseKey(key)
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def with_unc_check_disabled():  # just like the above, but value is 1 to *disable* unc check
     if not ON_WINDOWS:
         return

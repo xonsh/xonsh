@@ -33,8 +33,24 @@ def source_path():
     return os.path.dirname(pwd)
 
 
-def ensure_attached_session(session):
+def ensure_attached_session(monkeypatch, session):
     for i in range(1, 11):
+
+        # next try to monkey patch with raising.
+        try:
+            monkeypatch.setattr(builtins, "__xonsh__", session, raising=True)
+        except AttributeError:
+            pass
+        if hasattr(builtins, "__xonsh__"):
+            break
+        # first try to monkey patch without raising.
+        try:
+            monkeypatch.setattr(builtins, "__xonsh__", session, raising=False)
+        except AttributeError:
+            pass
+        if hasattr(builtins, "__xonsh__"):
+            break
+        # now just try to apply it
         builtins.__xonsh__ = session
         if hasattr(builtins, "__xonsh__"):
             break
@@ -56,11 +72,15 @@ def xonsh_execer(monkeypatch):
         "xonsh.built_ins.load_builtins.__code__",
         (lambda *args, **kwargs: None).__code__,
     )
+    added_session = False
     if not hasattr(builtins, "__xonsh__"):
-        ensure_attached_session(XonshSession())
+        added_session = True
+        ensure_attached_session(monkeypatch, XonshSession())
     execer = Execer(unload=False)
     builtins.__xonsh__.execer = execer
-    return execer
+    yield execer
+    if added_session:
+        monkeypatch.delattr(builtins, "__xonsh__", raising=False)
 
 
 @pytest.fixture
@@ -71,7 +91,7 @@ def monkeypatch_stderr(monkeypatch):
         yield
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def xonsh_events():
     yield events
     for name, oldevent in vars(events).items():
@@ -81,13 +101,13 @@ def xonsh_events():
         setattr(events, name, newevent)
 
 
-@pytest.yield_fixture
-def xonsh_builtins(xonsh_events):
+@pytest.fixture
+def xonsh_builtins(monkeypatch, xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = set(dir(builtins))
     execer = getattr(getattr(builtins, "__xonsh__", None), "execer", None)
     session = XonshSession(execer=execer, ctx={})
-    ensure_attached_session(session)
+    ensure_attached_session(monkeypatch, session)
     builtins.__xonsh__.env = DummyEnv()
     if ON_WINDOWS:
         builtins.__xonsh__.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
@@ -131,6 +151,7 @@ def xonsh_builtins(xonsh_events):
     # be firing events on the global instance.
     builtins.events = xonsh_events
     yield builtins
+    monkeypatch.delattr(builtins, "__xonsh__", raising=False)
     for attr in set(dir(builtins)) - old_builtins:
         if hasattr(builtins, attr):
             delattr(builtins, attr)

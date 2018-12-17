@@ -10,7 +10,7 @@ from xonsh.history.main import history_main
 import pytest
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def hist():
     h = SqliteHistory(
         filename="xonsh-HISTORY-TEST.sqlite", sessionid="SESSIONID", gc=False

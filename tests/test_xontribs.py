@@ -9,7 +9,7 @@ def test_load_xontrib_metadata():
     xontrib_metadata()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def tmpmod(tmpdir):
     """
     Same as tmpdir but also adds/removes it to the front of sys.path.

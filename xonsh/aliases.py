@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
 import os
+import re
 import sys
-import shlex
 import inspect
 import argparse
 import builtins
@@ -24,12 +24,24 @@ from xonsh.platform import (
 from xonsh.tools import unthreadable, print_color
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
-from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool, swap_values
+from xonsh.tools import (
+    argvquote,
+    escape_windows_cmd_string,
+    to_bool,
+    swap_values,
+    strip_simple_quotes,
+)
 from xonsh.xontribs import xontribs_main
+from xonsh.ast import isexpression
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
+
+
+@lazyobject
+def SUB_EXEC_ALIAS_RE():
+    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[")
 
 
 class Aliases(cabc.MutableMapping):
@@ -115,7 +127,17 @@ class Aliases(cabc.MutableMapping):
 
     def __setitem__(self, key, val):
         if isinstance(val, str):
-            self._raw[key] = shlex.split(val)
+            f = "<exec-alias:" + key + ">"
+            if SUB_EXEC_ALIAS_RE.search(val) is not None:
+                # We have a sub-command, e.g. $(cmd), to evaluate
+                self._raw[key] = ExecAlias(val, filename=f)
+            elif isexpression(val):
+                # expansion substitution
+                lexer = builtins.__xonsh__.execer.parser.lexer
+                self._raw[key] = list(map(strip_simple_quotes, lexer.split(val)))
+            else:
+                # need to exec alias
+                self._raw[key] = ExecAlias(val, filename=f)
         else:
             self._raw[key] = val
 
@@ -148,6 +170,37 @@ class Aliases(cabc.MutableMapping):
             elif len(self):
                 p.break_()
                 p.pretty(dict(self))
+
+
+class ExecAlias:
+    """Provides a callable alias for xonsh source code."""
+
+    def __init__(self, src, filename="<exec-alias>"):
+        """
+        Parameters
+        ----------
+        src : str
+            Source code that will be
+        """
+        self.src = src if src.endswith("\n") else src + "\n"
+        self.filename = filename
+
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
+        execer = builtins.__xonsh__.execer
+        frame = stack[0][0]  # execute as though we are at the call site
+        execer.exec(
+            self.src, glbs=frame.f_globals, locs=frame.f_locals, filename=self.filename
+        )
+
+    def __repr__(self):
+        return "ExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
+
+
+#
+# Actual aliases below
+#
 
 
 def xonsh_exit(args, stdin=None):

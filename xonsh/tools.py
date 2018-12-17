@@ -1979,6 +1979,38 @@ def RE_COMPLETE_STRING():
     return re.compile(ptrn, re.DOTALL)
 
 
+def strip_simple_quotes(s):
+    """Gets rid of single quotes, double quotes, single triple quotes, and
+    single double quotes from a string, if present front and back of a string.
+    Otherwiswe, does nothing.
+    """
+    starts_single = s.startswith("'")
+    starts_double = s.startswith('"')
+    if not starts_single and not starts_double:
+        return s
+    elif starts_single:
+        ends_single = s.endswith("'")
+        if not ends_single:
+            return s
+        elif s.startswith("'''") and s.endswith("'''") and len(s) >= 6:
+            return s[3:-3]
+        elif len(s) >= 2:
+            return s[1:-1]
+        else:
+            return s
+    else:
+        # starts double
+        ends_double = s.endswith('"')
+        if not ends_double:
+            return s
+        elif s.startswith('"""') and s.endswith('"""') and len(s) >= 6:
+            return s[3:-3]
+        elif len(s) >= 2:
+            return s[1:-1]
+        else:
+            return s
+
+
 def check_for_partial_string(x):
     """Returns the starting index (inclusive), ending index (exclusive), and
     starting quote string of the most recent Python string found in the input.

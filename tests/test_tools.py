@@ -64,6 +64,7 @@ from xonsh.tools import (
     is_balanced,
     subexpr_before_unbalanced,
     swap_values,
+    get_line_continuation,
     get_logical_line,
     replace_logical_line,
     check_quotes,
@@ -521,7 +522,8 @@ def test_replace_logical_line(src, idx, exp_line, exp_n):
         idx -= 1
     replace_logical_line(lines, logical, idx, exp_n)
     exp = src.replace("\\\n", "").strip()
-    obs = "\n".join(lines).replace("\\\n", "").strip()
+    lc = get_line_continuation() + "\n"
+    obs = "\n".join(lines).replace(lc, "").strip()
     assert exp == obs
 
 
