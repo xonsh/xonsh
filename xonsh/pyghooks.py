@@ -1431,7 +1431,7 @@ def XonshTerminal256Formatter():
         ptk_version_info()
         and ptk_version_info() > (2, 0)
         and pygments_version_info()
-        and (2, 2, 0) <= pygments_version_info() <= (2, 3, 0)
+        and (2, 2, 0) <= pygments_version_info() < (2, 4, 0)
     ):
         # Monky patch pygments' dict of console codes
         # with the new color names used by PTK2
