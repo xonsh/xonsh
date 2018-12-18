@@ -14,6 +14,12 @@ will help you put a finger on how to do the equivalent task in xonsh.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
+    * - ``export NAME=Peter``
+      - ``$NAME = 'Peter'``
+      - Setting an environment variable. 
+    * - ``unset NAME``
+      - ``del $NAME``
+      - Unsetting/deleting an environment variable. 
     * - ``echo "$HOME/hello"``
       - ``echo "$HOME/hello"``
       - Construct an argument using an environment variable.
