@@ -1,12 +1,12 @@
-=====================
+==============================
 Updating and customizing xonsh
-=====================
+==============================
 
 .. contents::
    :local:
 
 Updating xonsh
-===========
+==============
 
 How to update xonsh depend on the install method.
 
@@ -20,7 +20,7 @@ command:
 
    $ xpip install --update xonsh
 
-``xpip`` (note the "x" at the  begining of ``xpip``) is a predefined alias pointing to the ``pip`` command associated with the Python executable running this xonsh.
+``xpip`` (note the "x" at the  beginning of ``xpip``) is a predefined alias pointing to the ``pip`` command associated with the Python executable running this xonsh.
 
 **xonsh installed via a package manager**
 
@@ -31,7 +31,7 @@ If you have installed via a package manager, it is recommended to update xonsh t
    $ brew upgrade xonsh
 
 Customizing xonsh - How do I...
-===========
+===============================
 
 .. _change_theme:
 
