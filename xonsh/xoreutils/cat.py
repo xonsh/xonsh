@@ -6,28 +6,30 @@ import xonsh.proc as xproc
 from xonsh.xoreutils.util import arg_handler
 
 
-def _cat_line(f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size):
-        _r = r = f.readline(size=80)
-        if isinstance(_r, str):
-            _r = r = _r.encode(enc, enc_errors)
-        if r == b"":
-            last_was_blank, line_count, read_size, True
-        if r.endswith(sep):
-            _r = _r[: -len(sep)]
-        this_one_blank = _r == b""
-        if last_was_blank and this_one_blank and opts["squeeze_blank"]:
-            last_was_blank, line_count, read_size, False
-        last_was_blank = this_one_blank
-        if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
-            start = ("%6d " % line_count).encode(enc, enc_errors)
-            _r = start + _r
-            line_count += 1
-        if opts["show_ends"]:
-            _r = _r + b"$"
-        out.buffer.write(_r)
-        out.flush()
-        read_size += len(_r)
-        return last_was_blank, line_count, read_size, False
+def _cat_line(
+    f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size
+):
+    _r = r = f.readline(size=80)
+    if isinstance(_r, str):
+        _r = r = _r.encode(enc, enc_errors)
+    if r == b"":
+        last_was_blank, line_count, read_size, True
+    if r.endswith(sep):
+        _r = _r[: -len(sep)]
+    this_one_blank = _r == b""
+    if last_was_blank and this_one_blank and opts["squeeze_blank"]:
+        last_was_blank, line_count, read_size, False
+    last_was_blank = this_one_blank
+    if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
+        start = ("%6d " % line_count).encode(enc, enc_errors)
+        _r = start + _r
+        line_count += 1
+    if opts["show_ends"]:
+        _r = _r + b"$"
+    out.buffer.write(_r)
+    out.flush()
+    read_size += len(_r)
+    return last_was_blank, line_count, read_size, False
 
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
@@ -54,7 +56,17 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     last_was_blank = False
     while file_size is None or read_size < file_size:
         try:
-            last_was_blank, line_count, read_size, endnow = _cat_line(f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size)
+            last_was_blank, line_count, read_size, endnow = _cat_line(
+                f,
+                sep,
+                last_was_blank,
+                line_count,
+                opts,
+                out,
+                enc,
+                enc_errors,
+                read_size,
+            )
             if endnow:
                 break
         except KeyboardInterrupt:
