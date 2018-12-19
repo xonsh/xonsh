@@ -1,5 +1,6 @@
 """Implements a cat command for xonsh."""
 import os
+import time
 import builtins
 
 import xonsh.proc as xproc
@@ -28,7 +29,7 @@ def _cat_line(
         _r = _r + b"$"
     out.buffer.write(_r)
     out.flush()
-    read_size += len(_r)
+    read_size += len(r)
     return last_was_blank, line_count, read_size, False
 
 
@@ -69,6 +70,8 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
             )
             if endnow:
                 break
+            if last_was_blank:
+                time.sleep(1e-3)
         except KeyboardInterrupt:
             print("got except", flush=True, file=out)
             break
