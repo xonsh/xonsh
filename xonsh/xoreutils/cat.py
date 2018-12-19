@@ -6,33 +6,36 @@ import xonsh.proc as xproc
 from xonsh.xoreutils.util import arg_handler
 
 
-def _cat_line(f, sep, last_was_blank, line_count, opts, out, enc):
+def _cat_line(f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size):
         _r = r = f.readline(size=80)
         if isinstance(_r, str):
-            _r = r = _r.encode()
+            _r = r = _r.encode(enc, enc_errors)
         if r == b"":
-            last_was_blank, line_count, True
+            last_was_blank, line_count, read_size, True
         if r.endswith(sep):
             _r = _r[: -len(sep)]
         this_one_blank = _r == b""
         if last_was_blank and this_one_blank and opts["squeeze_blank"]:
-            last_was_blank, line_count, False
+            last_was_blank, line_count, read_size, False
         last_was_blank = this_one_blank
         if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
-            start = ("%6d " % line_count).encode()
+            start = ("%6d " % line_count).encode(enc, enc_errors)
             _r = start + _r
             line_count += 1
         if opts["show_ends"]:
             _r = _r + b"$"
-        #print(_r.decode(enc), flush=True, file=out)
         out.buffer.write(_r)
         out.flush()
-        return last_was_blank, line_count, False
+        read_size += len(_r)
+        return last_was_blank, line_count, read_size, False
 
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     env = builtins.__xonsh__.env
     enc = env.get("XONSH_ENCODING")
+    enc_errors = env.get("XONSH_ENCODING_ERRORS")
+    read_size = 0
+    file_size = fobj = None
     if fname == "-":
         f = stdin
     elif os.path.isdir(fname):
@@ -42,13 +45,16 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         print("cat: No such file or directory: {}".format(fname), file=err)
         return True, line_count
     else:
+        file_size = os.stat(fname).st_size
+        if file_size == 0:
+            file_size = None
         fobj = open(fname, "rb")
         f = xproc.NonBlockingFDReader(fobj.fileno(), timeout=0.1)
-    sep = os.linesep.encode()
+    sep = os.linesep.encode(enc, enc_errors)
     last_was_blank = False
-    while True:
+    while file_size is None or read_size < file_size:
         try:
-            last_was_blank, line_count, endnow = _cat_line(f, sep, last_was_blank, line_count, opts, out, enc)
+            last_was_blank, line_count, read_size, endnow = _cat_line(f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size)
             if endnow:
                 break
         except KeyboardInterrupt:
@@ -57,6 +63,8 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         except Exception as e:
             print("xonsh:", e, flush=True, file=out)
             pass
+    if fobj is not None:
+        fobj.close()
     return False, line_count
 
 
