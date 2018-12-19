@@ -1,4 +1,4 @@
-__version__ = "0.8.4"
+__version__ = "0.8.5"
 
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
@@ -86,6 +86,8 @@ else:
         _sys.modules["xonsh.tracer"] = __amalgam__
         aliases = __amalgam__
         _sys.modules["xonsh.aliases"] = __amalgam__
+        dumb_shell = __amalgam__
+        _sys.modules["xonsh.dumb_shell"] = __amalgam__
         built_ins = __amalgam__
         _sys.modules["xonsh.built_ins"] = __amalgam__
         execer = __amalgam__

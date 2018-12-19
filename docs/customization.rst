@@ -1,12 +1,37 @@
-=====================
-Customizing ``xonsh``
-=====================
+==============================
+Updating and customizing xonsh
+==============================
 
 .. contents::
    :local:
 
-How do I...
-===========
+Updating xonsh
+==============
+
+How to update xonsh depend on the install method.
+
+**xonsh installed via pip**
+
+If you have installed via pip (possibly into a virtual environment),
+then you can update xonsh from within itself with the following
+command:
+
+.. code-block:: console
+
+   $ xpip install --update xonsh
+
+``xpip`` (note the "x" at the  beginning of ``xpip``) is a predefined alias pointing to the ``pip`` command associated with the Python executable running this xonsh.
+
+**xonsh installed via a package manager**
+
+If you have installed via a package manager, it is recommended to update xonsh through the  package manager's appropriate command. For example, on macOS if you have installed via homebrew, you should update like this:
+
+.. code-block:: console
+
+   $ brew upgrade xonsh
+
+Customizing xonsh - How do I...
+===============================
 
 .. _change_theme:
 

@@ -16,8 +16,7 @@
 
 **Fixed:**
 
-* Fixed issues where the prompt-toolkit v2 shell would print an extra newline
-  after Python evaluations in interactive mode.
+* Fixed interpretation of color names with PTK2 and Pygments 2.3.1.
 
 **Security:**
 

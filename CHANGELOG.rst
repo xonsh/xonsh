@@ -4,6 +4,83 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.5
+====================
+
+**Added:**
+
+* Add alias to `base16 shell <https://github.com/chriskempson/base16-shell>`_
+
+* Installation / Usage
+    1. To install use pip
+
+    .. code-block:: bash
+
+        python3 -m pip install xontrib-base16-shell
+
+    2. Add on ``~/.xonshrc``
+
+    .. code:: python
+        :number-lines:
+
+        $BASE16_SHELL = $HOME + "/.config/base16-shell/"
+        xontrib load base16_shell
+
+
+    3. See image
+
+    .. image:: https://raw.githubusercontent.com/ErickTucto/xontrib-base16-shell/master/docs/terminal.png
+        :width: 600px
+        :alt: terminal.png
+* New ``DumbShell`` class that kicks in whenever ``$TERM == "dumb"``.
+  This usually happens in emacs. Currently, this class inherits from
+  the ``ReadlineShell`` but adds some light customization to make
+  sure that xonsh looks good in the resultant terminal emulator.
+* Aliases from foreign shells (e.g. Bash) that are more than single expressions,
+  or contain sub-shell executions, are now evaluated and run in the foreign shell.
+  Previously, xonsh would attempt to translate the alias from sh-lang into
+  xonsh. These restrictions have been removed.  For example, the following now
+  works:
+
+  .. code-block:: sh
+
+      $ source-bash 'alias eee="echo aaa \$(echo b)"'
+      $ eee
+      aaa b
+
+* New ``ForeignShellBaseAlias``, ``ForeignShellFunctionAlias``, and
+  ``ForeignShellExecAlias`` classes have been added which manage foreign shell
+  alias execution.
+
+
+**Changed:**
+
+* String aliases will now first be checked to see if they contain sub-expressions
+  that require evaluations, such as ``@(expr)``, ``$[cmd]``, etc. If they do,
+  then an ``ExecAlias`` will be constructed, rather than a simple list-of-strs
+  substitutiuon alias being used. For example:
+
+  .. code-block:: sh
+
+      $ aliases['uuu'] = "echo ccc $(echo ddd)"
+      $ aliases['uuu']
+      ExecAlias('echo ccc $(echo ddd)\n', filename='<exec-alias:uuu>')
+      $ uuu
+      ccc ddd
+
+* The ``parse_aliases()`` function now requires the shell name.
+* ``ForeignShellFunctionAlias`` now inherits from ``ForeignShellBaseAlias``
+  rather than ``object``.
+
+
+**Fixed:**
+
+* Fixed issues where the prompt-toolkit v2 shell would print an extra newline
+  after Python evaluations in interactive mode.
+
+
+
+
 v0.8.4
 ====================
 
@@ -30,7 +107,7 @@ v0.8.4
 
 **Fixed:**
 
-* Fixed issue with ``and`` & ``or`` being incoreectly tokenized in implicit
+* Fixed issue with ``and`` & ``or`` being incorrectly tokenized in implicit
   subprocesses. Auto-wrapping of certain subprocesses will now correctly work.
   For example::
 
