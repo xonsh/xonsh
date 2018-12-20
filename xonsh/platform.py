@@ -75,6 +75,10 @@ def ON_BEOS():
     """True if we are on BeOS or Haiku."""
     return sys.platform == "beos5" or sys.platform == "haiku1"
 
+@lazybool
+def ON_WSL():
+    """True if we are on Windows Subsystem for Linux (WSL)"""
+    return "Microsoft" in platform.release()
 
 #
 # Python & packages
