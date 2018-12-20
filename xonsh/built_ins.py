@@ -249,6 +249,11 @@ def get_script_subproc_command(fname, args):
 
 
 @lazyobject
+def CMD_SPEC_ENV_VAR_RE():
+    return re.compile(r"\$(\w+):?=(.*)")
+
+
+@lazyobject
 def _REDIR_REGEX():
     name = r"(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
     return re.compile("{r}(>?>|<){r}$".format(r=name))
@@ -377,7 +382,7 @@ class SubprocSpec:
     executed.
     """
 
-    kwnames = ("stdin", "stdout", "stderr", "universal_newlines")
+    kwnames = ("stdin", "stdout", "stderr", "universal_newlines", "env")
 
     def __init__(
         self,
@@ -436,6 +441,10 @@ class SubprocSpec:
         stack : list of FrameInfo namedtuples or None
             The stack of the call-site of alias, if the alias requires it.
             None otherwise.
+        env : dict of str-str
+            Evironment variables that are set for only this command. This is
+            combined with the inherited environment. Environemt variables in
+            present in this mapping will supercede the calling environment.
         """
         self._stdin = self._stdout = self._stderr = None
         # args
@@ -458,6 +467,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
+        self.env = {}
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
@@ -567,6 +577,9 @@ class SubprocSpec:
     def prep_env(self, kwargs):
         """Prepares the environment to use in the subprocess."""
         denv = builtins.__xonsh__.env.detype()
+        if len(self.env) > 0:
+            denv = denv.copy()
+            denv.update(self.env)
         if ON_WINDOWS:
             # Over write prompt variable as xonsh's $PROMPT does
             # not make much sense for other subprocs
@@ -611,6 +624,7 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        spec.parse_env()
         # perform initial redirects
         spec.redirect_leading()
         spec.redirect_trailing()
@@ -622,6 +636,18 @@ class SubprocSpec:
         spec.resolve_alias_cls()
         spec.resolve_stack()
         return spec
+
+    def parse_env(self):
+        """Parses custom environment variables from command and into env."""
+        cmd = self.cmd
+        env = self.env
+        for i in range(len(cmd)):
+            m = CMD_SPEC_ENV_VAR_RE.match(cmd[i])
+            if m is None:
+                break
+            key, val = m.groups()
+            env[key] = val
+        self.cmd = cmd[i:]
 
     def redirect_leading(self):
         """Manage leading redirects such as with '< input.txt COMMAND'. """
