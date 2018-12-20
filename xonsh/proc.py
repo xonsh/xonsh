@@ -2247,13 +2247,12 @@ class CommandPipeline:
         spec = self.spec
         rtn = self.returncode
         if (
-            not spec.is_proxy
-            and rtn is not None
+            rtn is not None
             and rtn > 0
             and builtins.__xonsh__.env.get("RAISE_SUBPROC_ERROR")
         ):
             try:
-                raise subprocess.CalledProcessError(rtn, spec.cmd, output=self.output)
+                raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
             finally:
                 # this is need to get a working terminal in interactive mode
                 self._return_terminal()

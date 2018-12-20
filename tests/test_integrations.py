@@ -52,7 +52,7 @@ def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
     env["PATH"] = PATH
     env["XONSH_DEBUG"] = "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
-    env["RAISE_SUBPROC_ERROR"] = "1"
+    env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""
     xonsh = "xonsh.bat" if ON_WINDOWS else "xon.sh"
     xonsh = shutil.which(xonsh, path=PATH)
