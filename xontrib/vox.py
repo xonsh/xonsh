@@ -27,8 +27,12 @@ class VoxHandler:
                             help='Give the virtual environment access to the '
                                  'system site-packages dir.')
 
-        create.add_argument('--interpreter', default=sys.executable,
-                            help='The Python interpreter used to create the virtual env.')
+        create.add_argument(
+            "-p",
+            "--interpreter",
+            default=voxapi.VOX_DEFAULT_INTERPRETER,
+            help=f"The Python interpreter used to create the virtual environment default: {voxapi.VOX_DEFAULT_INTERPRETER}",
+        )
 
         from xonsh.platform import ON_WINDOWS
         group = create.add_mutually_exclusive_group()
@@ -47,13 +51,6 @@ class VoxHandler:
                             help='Skips installing or upgrading pip in the '
                                  'virtual environment (pip is bootstrapped '
                                  'by default)')
-
-        create.add_argument(
-            "-p",
-            "--interpreter",
-            default=voxapi.DEFAULT_VOX_INTERPRETER,
-            help=f"The Python interpreter used to create the virtual environment default: {voxapi.DEFAULT_VOX_INTERPRETER}",
-        )
 
         activate = subparsers.add_parser(
             'activate', aliases=['workon', 'enter'],

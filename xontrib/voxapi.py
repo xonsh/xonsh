@@ -23,8 +23,8 @@ from xonsh.fs import PathLike, fspath
 # FIXME: Is there a better way?
 from xonsh.events import events
 
-DEFAULT_VOX_INTERPRETER = builtins.__xonsh__.env.get(
-    "DEFAULT_VOX_INTERPRETER", sys.executable
+VOX_DEFAULT_INTERPRETER = builtins.__xonsh__.env.get(
+    "VOX_DEFAULT_INTERPRETER", sys.executable
 )
 
 
@@ -123,7 +123,7 @@ class Vox(collections.abc.Mapping):
         self,
         name,
         *,
-        interpreter=DEFAULT_VOX_INTERPRETER,
+        interpreter=VOX_DEFAULT_INTERPRETER,
         system_site_packages=False,
         symlinks=False,
         with_pip=True,
@@ -167,7 +167,7 @@ class Vox(collections.abc.Mapping):
         *,
         symlinks=False,
         with_pip=True,
-        interpreter=DEFAULT_VOX_INTERPRETER,
+        interpreter=VOX_DEFAULT_INTERPRETER,
     ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
