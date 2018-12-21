@@ -10,7 +10,9 @@ Vox defines several events related to the life cycle of virtual environments:
 """
 import os
 import sys
+import shlex
 import shutil
+import logging
 import builtins
 import collections.abc
 import subprocess as sp
@@ -22,10 +24,6 @@ from xonsh.fs import PathLike, fspath
 # This is because builtins aren't globally created during testing.
 # FIXME: Is there a better way?
 from xonsh.events import events
-
-VOX_DEFAULT_INTERPRETER = builtins.__xonsh__.env.get(
-    "VOX_DEFAULT_INTERPRETER", sys.executable
-)
 
 
 events.doc('vox_on_create', """
@@ -123,7 +121,7 @@ class Vox(collections.abc.Mapping):
         self,
         name,
         *,
-        interpreter=VOX_DEFAULT_INTERPRETER,
+        interpreter=None,
         system_site_packages=False,
         symlinks=False,
         with_pip=True,
@@ -145,6 +143,9 @@ class Vox(collections.abc.Mapping):
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
         """
+        interpreter = (
+            _get_vox_default_interpreter() if interpreter is None else interpreter
+        )
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
         if isinstance(name, PathLike):
@@ -161,14 +162,7 @@ class Vox(collections.abc.Mapping):
         self._create(env_path, interpreter, symlinks=symlinks, with_pip=with_pip)
         events.vox_on_create.fire(name=name)
 
-    def upgrade(
-        self,
-        name,
-        *,
-        symlinks=False,
-        with_pip=True,
-        interpreter=VOX_DEFAULT_INTERPRETER,
-    ):
+    def upgrade(self, name, *, symlinks=False, with_pip=True, interpreter=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         WARNING: If a virtual environment was created with symlinks or without PIP, you must
@@ -186,6 +180,9 @@ class Vox(collections.abc.Mapping):
         with_pip : bool
             If True, ensure pip is installed in the virtual environment.
         """
+        interpreter = (
+            _get_vox_default_interpreter() if interpreter is None else interpreter
+        )
         # venv doesn't reload this, so we have to do it ourselves.
         # Is there a bug for this in Python? There should be.
         env_path, bin_path = self[name]
@@ -206,7 +203,7 @@ class Vox(collections.abc.Mapping):
         # END things we shouldn't be doing.
 
         # Ok, do what we came here to do.
-        self_.create(env_path, interpreter, upgrade=True, **flags)
+        self._create(env_path, interpreter, upgrade=True, **flags)
 
     @staticmethod
     def _create(
@@ -218,12 +215,11 @@ class Vox(collections.abc.Mapping):
         with_pip=True,
         upgrade=False,
     ):
-        interpreter_major_version = int(
-            sp.run([interpreter, "--version"], stderr=sp.PIPE)
-            .stderr.decode()
-            .split()[-1]
-            .split(".")[0]
+        version_output = sp.check_output(
+            [interpreter, "--version"], stderr=sp.STDOUT, universal_newlines=True
         )
+
+        interpreter_major_version = int(version_output.split()[-1].split(".")[0])
         module = "venv" if interpreter_major_version >= 3 else "virtualenv"
         system_site_packages = "--system-site-packages" if system_site_packages else ""
         symlinks = "--symlinks" if symlinks and interpreter_major_version >= 3 else ""
@@ -231,15 +227,17 @@ class Vox(collections.abc.Mapping):
         upgrade = "--upgrade" if upgrade else ""
 
         cmd = shlex.split(
-            f"{interpreter} -m {module} {env_path} {system_site_packages} {symlinks} {with_pip} {upgrade}"
+            "{interpreter} -m {module} {env_path} {system_site_packages} {symlinks} {with_pip} {upgrade}".format(
+                **locals()
+            )
         )
 
         logging.debug(cmd)
 
-        process = sp.run(cmd)
+        return_code = sp.call(cmd)
 
-        if process.returncode != 0:
-            raise SystemExit(process.returncode)
+        if return_code != 0:
+            raise SystemExit(return_code)
 
     @staticmethod
     def _check_reserved(name):
@@ -387,3 +385,8 @@ class Vox(collections.abc.Mapping):
         shutil.rmtree(env_path)
 
         events.vox_on_delete.fire(name=name)
+
+
+def _get_vox_default_interpreter():
+    """Return the interpreter set by the $VOX_DEFAULT_INTERPRETER if set else sys.executable"""
+    return builtins.__xonsh__.env.get("VOX_DEFAULT_INTERPRETER", sys.executable)

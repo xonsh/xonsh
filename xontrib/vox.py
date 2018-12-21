@@ -1,6 +1,7 @@
 """Python virtual environment manager for xonsh."""
 
 import sys
+import textwrap
 import xontrib.voxapi as voxapi
 import xonsh.lazyasd as lazyasd
 
@@ -30,8 +31,13 @@ class VoxHandler:
         create.add_argument(
             "-p",
             "--interpreter",
-            default=voxapi.VOX_DEFAULT_INTERPRETER,
-            help=f"The Python interpreter used to create the virtual environment default: {voxapi.VOX_DEFAULT_INTERPRETER}",
+            default=None,
+            help=textwrap.dedent(
+                """
+                The Python interpreter used to create the virtual environment. 
+                Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
+                """
+            ).strip(),
         )
 
         from xonsh.platform import ON_WINDOWS
