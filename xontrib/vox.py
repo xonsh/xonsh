@@ -27,6 +27,9 @@ class VoxHandler:
                             help='Give the virtual environment access to the '
                                  'system site-packages dir.')
 
+        create.add_argument('--interpreter', default=sys.executable,
+                            help='The Python interpreter used to create the virtual env.')
+
         from xonsh.platform import ON_WINDOWS
         group = create.add_mutually_exclusive_group()
         group.add_argument('--symlinks', default=not ON_WINDOWS,
@@ -44,6 +47,12 @@ class VoxHandler:
                             help='Skips installing or upgrading pip in the '
                                  'virtual environment (pip is bootstrapped '
                                  'by default)')
+
+        create.add_argument(
+            "--interpreter",
+            default=voxapi.DEFAULT_VOX_INTERPRETER,
+            help=f"The Python interpreter used to create the virtual environment default: {voxapi.DEFAULT_VOX_INTERPRETER}",
+        )
 
         activate = subparsers.add_parser(
             'activate', aliases=['workon', 'enter'],
@@ -94,11 +103,14 @@ class VoxHandler:
     def cmd_new(self, args, stdin=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
         """
-        print('Creating environment...')
-        self.vox.create(args.name,
-                        system_site_packages=args.system_site_packages,
-                        symlinks=args.symlinks,
-                        with_pip=args.with_pip)
+        print("Creating environment...")
+        self.vox.create(
+            args.name,
+            system_site_packages=args.system_site_packages,
+            symlinks=args.symlinks,
+            with_pip=args.with_pip,
+            interpreter=args.interpreter,
+        )
         msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
         print(msg.format(args.name))
 
