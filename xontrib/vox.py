@@ -49,6 +49,7 @@ class VoxHandler:
                                  'by default)')
 
         create.add_argument(
+            "-p",
             "--interpreter",
             default=voxapi.DEFAULT_VOX_INTERPRETER,
             help=f"The Python interpreter used to create the virtual environment default: {voxapi.DEFAULT_VOX_INTERPRETER}",
