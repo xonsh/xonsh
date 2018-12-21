@@ -1,4 +1,4 @@
-__version__ = "0.8.5"
+__version__ = "0.8.6"
 
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
