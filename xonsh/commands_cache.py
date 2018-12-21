@@ -403,6 +403,7 @@ def default_threadable_predictors():
         "ipython": predict_shell,
         "ksh": predict_shell,
         "less": predict_help_ver,
+        "ls": predict_true,
         "man": predict_help_ver,
         "more": predict_help_ver,
         "mvim": predict_help_ver,
