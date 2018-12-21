@@ -4,6 +4,31 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.6
+====================
+
+**Added:**
+
+* Doco about how to update xonsh and how to set and unset environment variables
+
+
+**Fixed:**
+
+* Updated behavior of the ``cat`` coreutils function so that it properly
+  handles as vareity of cases such as:
+
+    * Exits after concatenating normal files which have a finite size
+    * Continues to run for special files which do not have a size,
+      such as ``/dev/random``
+    * Is interruptable in all cases with Crtl-C.
+* Callable aliases were not properly raising a ``CalledProcessError`` when they
+  returned a non-zero exist status when ``$RAISE_SUBPROC_ERROR = True``. This has
+  been fixed.
+* Fixed interpretation of color names with PTK2 and Pygments 2.3.1.
+
+
+
+
 v0.8.5
 ====================
 
