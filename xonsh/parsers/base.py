@@ -2960,6 +2960,8 @@ class BaseParser(object):
                 x = ensure_list_from_str_or_list(arg, lineno=lineno, col=col)
                 cliargs = binop(cliargs, ast.Add(), x, lineno=lineno, col=col)
                 currlist = None
+            elif action == "skip":
+                pass
             else:
                 raise ValueError("action not understood: " + action)
             del arg._cliarg_action
@@ -3044,6 +3046,17 @@ class BaseParser(object):
         s = self.source_slice(beg, end).strip()
         node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
         p[2][-1].elts.append(node)
+
+    def p_subproc_atom_envvar(self, p):
+        """subproc_atom_envvar : dollar_name_tok equals_tok test"""
+        env = {p[1].value[1:]: p[3]}
+        print(env)
+        class O:
+            pass
+        o = O()
+        o.env = env
+        o._cliarg_action = "skip"
+        p[0] = o
 
     def p_subproc_atom_uncaptured(self, p):
         """subproc_atom : dollar_lbracket_tok subproc RBRACKET"""
