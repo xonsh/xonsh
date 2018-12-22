@@ -6,14 +6,3 @@
 
 * If we are on wsl, avoid to use xonsh_preexec_fn when pipe.
 
-**Deprecated:**
-
-
-**Removed:**
-
-
-**Fixed:**
-
-
-**Security:**
-
