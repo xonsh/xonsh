@@ -34,7 +34,7 @@ class VoxHandler:
             default=None,
             help=textwrap.dedent(
                 """
-                The Python interpreter used to create the virtual environment. 
+                The Python interpreter used to create the virtual environment.
                 Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
                 """
             ).strip(),

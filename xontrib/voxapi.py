@@ -120,7 +120,6 @@ class Vox(collections.abc.Mapping):
     def create(
         self,
         name,
-        *,
         interpreter=None,
         system_site_packages=False,
         symlinks=False,
@@ -162,7 +161,7 @@ class Vox(collections.abc.Mapping):
         self._create(env_path, interpreter, symlinks=symlinks, with_pip=with_pip)
         events.vox_on_create.fire(name=name)
 
-    def upgrade(self, name, *, symlinks=False, with_pip=True, interpreter=None):
+    def upgrade(self, name, symlinks=False, with_pip=True, interpreter=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         WARNING: If a virtual environment was created with symlinks or without PIP, you must
@@ -209,7 +208,6 @@ class Vox(collections.abc.Mapping):
     def _create(
         env_path,
         interpreter,
-        *,
         system_site_packages=False,
         symlinks=False,
         with_pip=True,
