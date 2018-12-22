@@ -29,7 +29,7 @@ def check_news_file(fname):
                 pytest.fail(
                     "{}:{}: single grave accents"
                     " are not valid rst".format(name, i + 1),
-                    pytrace=False,
+                    pytrace=True,
                 )
 
         # determine the form of line
@@ -40,7 +40,7 @@ def check_news_file(fname):
                     "{}:{}: {!r} not a proper category "
                     "must be one of {}"
                     "".format(name, i + 1, cat, list(CATEGORIES)),
-                    pytrace=False,
+                    pytrace=True,
                 )
             if l.endswith("None"):
                 form += "3"
@@ -53,14 +53,14 @@ def check_news_file(fname):
         elif l.strip() == "":
             form += "0"
         else:
-            pytest.fail("{}:{}: invalid rst".format(name, i + 1), pytrace=False)
+            pytest.fail("{}:{}: invalid rst".format(name, i + 1), pytrace=True)
     # The file should have:
     #   empty lines around categories
     #   at least one content line in a non null category
     reg = re.compile(r"^(3(0|$)|20(1|4)(1|0|4)*0|204$)+$")
     if not reg.match(form):
         print(form)
-        pytest.fail("{}: invalid rst".format(name), pytrace=False)
+        pytest.fail("{}: invalid rst".format(name), pytrace=True)
 
 
 @pytest.mark.parametrize("fname", list(scandir(NEWSDIR)))
