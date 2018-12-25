@@ -2422,8 +2422,18 @@ class BaseParser(object):
     def p_string_literal(self, p):
         """string_literal : string_tok"""
         p1 = p[1]
-        prefix = RE_STRINGPREFIX.match(p1.value).group()
-        if "p" in prefix:
+        prefix = RE_STRINGPREFIX.match(p1.value).group().lower()
+        if "p" in prefix and "f" in prefix:
+            new_pref = prefix.replace("p", "")
+            value_without_p = new_pref + p1.value[len(prefix):]
+            s = eval_fstr_fields(value_without_p, new_pref, filename=self.lexer.fname)
+            s = pyparse(s).body[0].value
+            s = ast.increment_lineno(s, p1.lineno - 1)
+            p[0] = xonsh_call(
+                "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
+            )
+
+        elif "p" in prefix:
             value_without_p = prefix.replace("p", "") + p1.value[len(prefix) :]
             s = ast.Str(
                 s=ast.literal_eval(value_without_p),
@@ -2433,14 +2443,14 @@ class BaseParser(object):
             p[0] = xonsh_call(
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
             )
-        elif "f" in prefix or "F" in prefix:
+        elif "f" in prefix:
             s = eval_fstr_fields(p1.value, prefix, filename=self.lexer.fname)
             s = pyparse(s).body[0].value
             s = ast.increment_lineno(s, p1.lineno - 1)
             p[0] = s
         else:
             s = ast.literal_eval(p1.value)
-            is_bytes = "b" in prefix or "B" in prefix
+            is_bytes = "b" in prefix
             cls = ast.Bytes if is_bytes else ast.Str
             p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
 
