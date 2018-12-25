@@ -2042,6 +2042,17 @@ def test_path_literal():
     check_xonsh_ast({}, 'Rp"/foo"', False)
 
 
+def test_path_fstring_literal():
+    check_xonsh_ast({}, 'pf"/foo"', False)
+    check_xonsh_ast({}, 'fp"/foo"', False)
+    check_xonsh_ast({}, 'pF"/foo"', False)
+    check_xonsh_ast({}, 'Fp"/foo"', False)
+    check_xonsh_ast({}, 'pf"/foo{1+1}"', False)
+    check_xonsh_ast({}, 'fp"/foo{1+1}"', False)
+    check_xonsh_ast({}, 'pF"/foo{1+1}"', False)
+    check_xonsh_ast({}, 'Fp"/foo{1+1}"', False)
+
+
 def test_dollar_name():
     check_xonsh_ast({"WAKKA": 42}, "$WAKKA")
 

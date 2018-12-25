@@ -384,6 +384,17 @@ def test_path_string_literal():
     assert check_token('rp"/foo"', ["STRING", 'rp"/foo"', 0])
 
 
+def test_path_fstring_literal():
+    assert check_token("pf'/foo'", ["STRING", "pf'/foo'", 0])
+    assert check_token('pf"/foo"', ["STRING", 'pf"/foo"', 0])
+    assert check_token("fp'/foo'", ["STRING", "fp'/foo'", 0])
+    assert check_token('fp"/foo"', ["STRING", 'fp"/foo"', 0])
+    assert check_token("pF'/foo'", ["STRING", "pF'/foo'", 0])
+    assert check_token('pF"/foo"', ["STRING", 'pF"/foo"', 0])
+    assert check_token("Fp'/foo'", ["STRING", "Fp'/foo'", 0])
+    assert check_token('Fp"/foo"', ["STRING", 'Fp"/foo"', 0])
+
+
 def test_regex_globs():
     for i in (".*", r"\d*", ".*#{1,2}"):
         for p in ("", "r", "g", "@somethingelse", "p", "pg"):
