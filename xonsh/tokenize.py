@@ -273,7 +273,7 @@ Floatnumber = group(Pointfloat, Expfloat)
 Imagnumber = group(r"[0-9](?:_?[0-9])*[jJ]", Floatnumber + r"[jJ]")
 Number = group(Imagnumber, Floatnumber, Intnumber)
 
-StringPrefix = r"(?:[bBp][rR]?|[rR][bBpfF]?|[uU]|[fF][rR]?)?"
+StringPrefix = r"(?:[bB][rR]?|[p][fFrR]?|[rR][bBpfF]?|[uU]|[fF][rR]?[p]?)?"
 
 # Tail end of ' string.
 Single = r"[^'\\]*(?:\\.[^'\\]*)*'"
@@ -394,6 +394,8 @@ endpats = {
     'br"""': Double3,
     "fr'''": Single3,
     'fr"""': Double3,
+    "fp'''": Single3,
+    'fp"""': Double3,
     "bR'''": Single3,
     'bR"""': Double3,
     "Br'''": Single3,
@@ -408,6 +410,8 @@ endpats = {
     'Rb"""': Double3,
     "Fr'''": Single3,
     'Fr"""': Double3,
+    "Fp'''": Single3,
+    'Fp"""': Double3,
     "rB'''": Single3,
     'rB"""': Double3,
     "rF'''": Single3,
@@ -424,6 +428,10 @@ endpats = {
     'p"""': Double3,
     "pr'''": Single3,
     'pr"""': Double3,
+    "pf'''": Single3,
+    'pf"""': Double3,
+    "pF'''": Single3,
+    'pF"""': Double3,
     "pR'''": Single3,
     'pR"""': Double3,
     "rp'''": Single3,
@@ -503,6 +511,14 @@ for t in (
     'rp""""',
     "Rp'''",
     'Rp""""',
+    "pf'''",
+    'pf""""',
+    "pF'''",
+    'pF""""',
+    "fp'''",
+    'fp""""',
+    "Fp'''",
+    'Fp""""',
 ):
     triple_quoted[t] = t
 single_quoted = {}
@@ -567,6 +583,14 @@ for t in (
     'rp"',
     "Rp'",
     'Rp"',
+    "pf'",
+    'pf"',
+    "pF'",
+    'pF"',
+    "fp'",
+    'fp"',
+    "Fp'",
+    'Fp"',
 ):
     single_quoted[t] = t
 
