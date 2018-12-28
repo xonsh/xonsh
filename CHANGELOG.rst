@@ -14,6 +14,7 @@ v0.8.7
   Usage:
 
   .. code-block:: bash
+
        gil@bad_cat ~ $ repos = 'github.com'
        gil@bad_cat ~ $ pf"~/{repos}"
        PosixPath('/home/gil/github.com')
@@ -199,7 +200,7 @@ v0.8.3
 * Flake8 errors
 * xonsh can now properly parse import statements with trailing comma within
   parentheses, e.g.::
-  
+
     from x import (y, z,)
 * ResourceWarning: unclosed scandir iterator in imphooks.py
 * Removed use of deprecated ``inspect.formatargspec()`` for ``inspect.signature()``
