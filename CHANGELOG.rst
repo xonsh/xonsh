@@ -4,6 +4,33 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.7
+====================
+
+**Added:**
+
+* New xonsh syntax ``pf`` strings -- combining path strings with f-strings.
+
+  Usage:
+
+  .. code-block:: bash
+       gil@bad_cat ~ $ repos = 'github.com'
+       gil@bad_cat ~ $ pf"~/{repos}"
+       PosixPath('/home/gil/github.com')
+       gil@bad_cat ~ $ pf"{$HOME}"
+       PosixPath('/home/gil')
+       gil@bad_cat ~ $ pf"/home/${'US' + 'ER'}"
+       PosixPath('/home/gil')
+
+
+**Fixed:**
+
+* Set ``ls`` to ``predict_true`` in ``default_threadable_predictors``.  This prevents ``ls`` on OSX
+  from being flagged on OSX as unthreadable (incorrectly) because it relies on ``ncurses``.
+
+
+
+
 v0.8.6
 ====================
 
