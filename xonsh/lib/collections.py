@@ -2,7 +2,7 @@
 
 import itertools
 
-from collections import ChainMap
+from collections import ChainMap, MutableSet
 from collections.abc import MutableMapping, MutableSequence
 
 
@@ -22,7 +22,7 @@ ChainDBDefault = ChainDBDefaultType()
 
 class ChainDB(ChainMap):
     """ A ChainMap who's ``_getitem__`` returns either a ChainDB or
-    the result"""
+    the result. The results resolve to the outermost mapping."""
 
     def __getitem__(self, key):
         res = None
@@ -37,8 +37,14 @@ class ChainDB(ChainMap):
                     res = ChainDB(result)
                 else:
                     res.maps.append(result)
-        elif all([isinstance(result, MutableSequence) for result in results]):
-            return list(itertools.chain(*results))
+        elif all([isinstance(result, (MutableSequence,
+                                      MutableSet)) for result in results]):
+            results_chain = itertools.chain(*results)
+            # if all reults have the same type, cast into that type
+            if all([isinstance(result, type(results[0])) for result in results]):
+                return type(results[0])(results_chain)
+            else:
+                return list(results_chain)
         else:
             for result in reversed(results):
                 if result is not ChainDBDefault:
