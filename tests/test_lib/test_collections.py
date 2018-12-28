@@ -156,3 +156,11 @@ def test_dicts_in_lists_mutation():
     extend_list = z["a"]["b"]
     extend_list.extend([{"hi": "world"}, {"spam": "eggs"}])
     assert z["a"]["b"] != extend_list
+
+def test_sets():
+    m1 = {"a": {"b": {1, 2}}
+    m2 = {"a": {"b": {3, 4}}
+    z = ChainDB(m1)
+    z.maps.append(m2)
+    assert isinstance(z['a']['b'], set)
+    assert z['a']['b'] = {1, 2, 3, 4}
