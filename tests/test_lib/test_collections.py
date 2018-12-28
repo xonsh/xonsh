@@ -172,5 +172,5 @@ def test_mixed_types():
     m2 = {"a": {"b": [3, 4]}}
     z = ChainDB(m1)
     z.maps.append(m2)
-    assert isinstance(z["a"]["b"], set)
+    assert isinstance(z["a"]["b"], list)
     assert z["a"]["b"] == [1, 2, 3, 4]
