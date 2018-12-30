@@ -10,7 +10,6 @@ Vox defines several events related to the life cycle of virtual environments:
 """
 import os
 import sys
-import shlex
 import shutil
 import logging
 import builtins
@@ -224,11 +223,16 @@ class Vox(collections.abc.Mapping):
         with_pip = "" if with_pip else "--without-pip"
         upgrade = "--upgrade" if upgrade else ""
 
-        cmd = shlex.split(
-            "{interpreter} -m {module} {env_path} {system_site_packages} {symlinks} {with_pip} {upgrade}".format(
-                **locals()
-            )
-        )
+        cmd = [
+            interpreter,
+            "-m",
+            module,
+            env_path,
+            system_site_packages,
+            symlinks,
+            with_pip,
+            upgrade,
+        ]
 
         logging.debug(cmd)
 
