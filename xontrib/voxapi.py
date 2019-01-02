@@ -233,6 +233,7 @@ class Vox(collections.abc.Mapping):
             with_pip,
             upgrade,
         ]
+        cmd = [arg for arg in cmd if arg]  # remove empty args
 
         logging.debug(cmd)
 
