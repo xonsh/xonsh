@@ -1,6 +1,7 @@
 """Python virtual environment manager for xonsh."""
 
 import sys
+import textwrap
 import xontrib.voxapi as voxapi
 import xonsh.lazyasd as lazyasd
 
@@ -26,6 +27,18 @@ class VoxHandler:
                             action='store_true', dest='system_site_packages',
                             help='Give the virtual environment access to the '
                                  'system site-packages dir.')
+
+        create.add_argument(
+            "-p",
+            "--interpreter",
+            default=None,
+            help=textwrap.dedent(
+                """
+                The Python interpreter used to create the virtual environment.
+                Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
+                """
+            ).strip(),
+        )
 
         from xonsh.platform import ON_WINDOWS
         group = create.add_mutually_exclusive_group()
@@ -94,11 +107,14 @@ class VoxHandler:
     def cmd_new(self, args, stdin=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
         """
-        print('Creating environment...')
-        self.vox.create(args.name,
-                        system_site_packages=args.system_site_packages,
-                        symlinks=args.symlinks,
-                        with_pip=args.with_pip)
+        print("Creating environment...")
+        self.vox.create(
+            args.name,
+            system_site_packages=args.system_site_packages,
+            symlinks=args.symlinks,
+            with_pip=args.with_pip,
+            interpreter=args.interpreter,
+        )
         msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
         print(msg.format(args.name))
 

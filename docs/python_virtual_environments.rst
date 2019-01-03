@@ -23,7 +23,17 @@ To create a new environment with vox, run ``vox new <envname>``::
     Creating environment...
     Environment "myenv" created. Activate it with "vox activate myenv".
 
-Vox uses under the hood Python 3's ``venv`` module. By default, environments are stored in ``~/.virtualenvs``, but you can override it by setting the ``$VIRTUALENV_HOME`` environment variable.
+The interpreter ``vox`` uses to create a virtualenv is configured via the ``$VOX_DEFAULT_INTERPRETER`` environment variable.
+
+You may also set the interpreter used to create the virtual environment by passing it explicitly to ``vox new`` i.e.::
+
+    $ vox new python2-env -p /usr/local/bin/python2
+
+Under the hood, vox uses Python 3's ``venv`` module to create Python 3 virtualenvs. [this is the default]
+
+If a Python 2 intrepreter is chosen, it will use the Python 2 interpreter's ``virtualenv`` module. 
+
+By default, environments are stored in ``~/.virtualenvs``, but you can override it by setting the ``$VIRTUALENV_HOME`` environment variable.
 
 To see all existing environments, run ``vox list``::
 

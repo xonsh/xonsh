@@ -10,10 +10,12 @@ Vox defines several events related to the life cycle of virtual environments:
 """
 import os
 import sys
-import venv
 import shutil
+import logging
 import builtins
 import collections.abc
+import subprocess as sp
+
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.fs import PathLike, fspath
@@ -114,14 +116,22 @@ class Vox(collections.abc.Mapping):
         else:
             self.venvdir = builtins.__xonsh__.env['VIRTUALENV_HOME']
 
-    def create(self, name, *, system_site_packages=False, symlinks=False,
-               with_pip=True):
+    def create(
+        self,
+        name,
+        interpreter=None,
+        system_site_packages=False,
+        symlinks=False,
+        with_pip=True,
+    ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         Parameters
         ----------
         name : str
             Virtual environment name
+        interpreter: str
+            Python interpreter used to create the virtual environment.
         system_site_packages : bool
             If True, the system (global) site-packages dir is available to
             created environments.
@@ -131,6 +141,9 @@ class Vox(collections.abc.Mapping):
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
         """
+        interpreter = (
+            _get_vox_default_interpreter() if interpreter is None else interpreter
+        )
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
         if isinstance(name, PathLike):
@@ -138,14 +151,16 @@ class Vox(collections.abc.Mapping):
         else:
             env_path = os.path.join(self.venvdir, name)
         if not self._check_reserved(env_path):
-            raise ValueError("venv can't contain reserved names ({})".format(', '.join(_subdir_names())))
-        venv.create(
-            env_path,
-            system_site_packages=system_site_packages, symlinks=symlinks,
-            with_pip=with_pip)
+            raise ValueError(
+                "venv can't contain reserved names ({})".format(
+                    ", ".join(_subdir_names())
+                )
+            )
+
+        self._create(env_path, interpreter, symlinks=symlinks, with_pip=with_pip)
         events.vox_on_create.fire(name=name)
 
-    def upgrade(self, name, *, symlinks=False, with_pip=True):
+    def upgrade(self, name, symlinks=False, with_pip=True, interpreter=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         WARNING: If a virtual environment was created with symlinks or without PIP, you must
@@ -155,33 +170,77 @@ class Vox(collections.abc.Mapping):
         ----------
         name : str
             Virtual environment name
+        interpreter: str
+            The Python interpreter used to create the virtualenv
         symlinks : bool
             If True, attempt to symlink rather than copy files into virtual
             environment.
         with_pip : bool
             If True, ensure pip is installed in the virtual environment.
         """
+        interpreter = (
+            _get_vox_default_interpreter() if interpreter is None else interpreter
+        )
         # venv doesn't reload this, so we have to do it ourselves.
         # Is there a bug for this in Python? There should be.
         env_path, bin_path = self[name]
-        cfgfile = os.path.join(env_path, 'pyvenv.cfg')
+        cfgfile = os.path.join(env_path, "pyvenv.cfg")
         cfgops = {}
         with open(cfgfile) as cfgfile:
             for l in cfgfile:
                 l = l.strip()
-                if '=' not in l:
+                if "=" not in l:
                     continue
-                k, v = l.split('=', 1)
+                k, v = l.split("=", 1)
                 cfgops[k.strip()] = v.strip()
         flags = {
-            'system_site_packages': cfgops['include-system-site-packages'] == 'true',
-            'symlinks': symlinks,
-            'with_pip': with_pip,
+            "system_site_packages": cfgops["include-system-site-packages"] == "true",
+            "symlinks": symlinks,
+            "with_pip": with_pip,
         }
         # END things we shouldn't be doing.
 
         # Ok, do what we came here to do.
-        venv.create(env_path, upgrade=True, **flags)
+        self._create(env_path, interpreter, upgrade=True, **flags)
+
+    @staticmethod
+    def _create(
+        env_path,
+        interpreter,
+        system_site_packages=False,
+        symlinks=False,
+        with_pip=True,
+        upgrade=False,
+    ):
+        version_output = sp.check_output(
+            [interpreter, "--version"], stderr=sp.STDOUT, universal_newlines=True
+        )
+
+        interpreter_major_version = int(version_output.split()[-1].split(".")[0])
+        module = "venv" if interpreter_major_version >= 3 else "virtualenv"
+        system_site_packages = "--system-site-packages" if system_site_packages else ""
+        symlinks = "--symlinks" if symlinks and interpreter_major_version >= 3 else ""
+        with_pip = "" if with_pip else "--without-pip"
+        upgrade = "--upgrade" if upgrade else ""
+
+        cmd = [
+            interpreter,
+            "-m",
+            module,
+            env_path,
+            system_site_packages,
+            symlinks,
+            with_pip,
+            upgrade,
+        ]
+        cmd = [arg for arg in cmd if arg]  # remove empty args
+
+        logging.debug(cmd)
+
+        return_code = sp.call(cmd)
+
+        if return_code != 0:
+            raise SystemExit(return_code)
 
     @staticmethod
     def _check_reserved(name):
@@ -329,3 +388,8 @@ class Vox(collections.abc.Mapping):
         shutil.rmtree(env_path)
 
         events.vox_on_delete.fire(name=name)
+
+
+def _get_vox_default_interpreter():
+    """Return the interpreter set by the $VOX_DEFAULT_INTERPRETER if set else sys.executable"""
+    return builtins.__xonsh__.env.get("VOX_DEFAULT_INTERPRETER", sys.executable)
