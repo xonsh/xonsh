@@ -4,6 +4,22 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.8
+====================
+
+**Added:**
+
+* ``vox new`` has an added ``-p --interpreter`` flag for choosing the python interpreter to use for virtualenv creation
+* The default Python intrepreter vox uses to create virtual environments can be set using the ``$VOX_DEFAULT_INTERPRETER`` environment variable.
+
+
+**Changed:**
+
+* ``lib.ChainDB`` now resolves results to the type of the inputs if possible
+
+
+
+
 v0.8.7
 ====================
 
