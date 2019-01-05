@@ -52,6 +52,11 @@
     "tools avoid the need for a full subprocess call. Additionally, these ",
     "tools are cross-platform."]
  },
+ {"name": "direnv",
+  "package": "xonsh-direnv",
+  "url": "https://github.com/74th/xonsh-direnv",
+  "description": ["Supports direnv."]
+ },
  {"name": "distributed",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -203,6 +208,13 @@
    "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
    "install": {
     "pip": "xpip install xonsh-apt-tabcomplete"
+   }
+  },
+  "xonsh-direnv": {
+   "license": "MIT",
+   "url": "https://github.com/74th/xonsh-direnv",
+   "install": {
+    "pip": "xpip install xonsh-direnv"
    }
   },
   "xonsh-docker-tabcomplete": {
