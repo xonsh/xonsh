@@ -790,13 +790,17 @@ def _executables_in_windows(path):
                     yield fname
     else:
         for x in scandir(path):
-            if x.is_file():
-                fname = x.name
-            else:
-                continue
-            base_name, ext = os.path.splitext(fname)
-            if ext.upper() in extensions:
-                yield fname
+            try:
+                if x.is_file():
+                    fname = x.name
+                else:
+                    continue
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+            except OSError:
+                # broken Symlink are neither dir not files
+                pass
 
 
 def executables_in(path):
