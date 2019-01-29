@@ -102,6 +102,8 @@ def PROMPT_FIELDS():
         branch_bg_color=branch_bg_color,
         current_job=_current_job,
         env_name=env_name,
+        env_prefix="(",
+        env_postfix=") ",
         vte_new_tab_cwd=vte_new_tab_cwd,
         gitstatus=gitstatus_prompt,
     )
@@ -111,19 +113,20 @@ def default_prompt():
     """Creates a new instance of the default prompt."""
     if xp.ON_CYGWIN or xp.ON_MSYS:
         dp = (
-            "{env_name:{} }{BOLD_GREEN}{user}@{hostname}"
+            "{env_name}"
+            "{BOLD_GREEN}{user}@{hostname}"
             "{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} "
         )
     elif xp.ON_WINDOWS and not xp.win_ansi_support():
         dp = (
-            "{env_name:{} }"
+            "{env_name}"
             "{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} "
             "{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} "
             "{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} "
         )
     else:
         dp = (
-            "{env_name:{} }"
+            "{env_name}"
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
             "{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} "
             "{BOLD_BLUE}{prompt_end}{NO_COLOR} "

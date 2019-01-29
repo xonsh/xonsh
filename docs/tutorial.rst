@@ -1423,6 +1423,10 @@ By default, the following variables are available for use:
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
     ``/path/to/xonsh``.
   * ``env_name``: The name of active virtual environment, if any.
+  * ``env_prefix``: The prefix characters if there is an active virtual environment,
+    defaults to ``"("``.
+  * ``env_postfix``: The postfix characters if there is an active virtual environment,
+    defaults to ``") "``.
   * ``curr_branch``: The name of the current git branch, if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
     otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
