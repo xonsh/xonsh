@@ -1,6 +1,6 @@
 <!--- Provide a general summary of the issue in the Title above -->
 <!--- If you have a question along the lines of "How do I do this Bash command in xonsh"
-please first look over the Bash to Xonsh translation guide: http://xon.sh/bash_to_xsh.html
+please first look over the Bash to Xonsh translation guide: https://xon.sh/bash_to_xsh.html
 If you don't find an answer there, please do open an issue! -->
 
 ## xonfig
