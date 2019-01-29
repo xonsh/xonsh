@@ -5,9 +5,8 @@
 
 **Changed:**
 
-* ``env_name`` prompt filed no longer includes the pre- and post-fix characters
-  itself.
-* The default prompt now starts with ``"{env_prefix}{env_name}{env_postfix}"``.
+* ``env_name`` prompt field now looks up the pre- and post-fix characters,
+  rather than relying on hard-coded values/
 
 **Deprecated:**
 
