@@ -13,6 +13,7 @@ import shlex
 import signal
 import atexit
 import pathlib
+import platform
 import inspect
 import warnings
 import builtins
@@ -27,7 +28,7 @@ from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.jobs import add_job
-from xonsh.platform import ON_POSIX, ON_WINDOWS
+from xonsh.platform import ON_POSIX, ON_WINDOWS, ON_WSL
 from xonsh.proc import (
     PopenThread,
     ProcProxyThread,
@@ -579,7 +580,9 @@ class SubprocSpec:
             return
         if not builtins.__xonsh__.env.get("XONSH_INTERACTIVE"):
             return
-        if pipeline_group is None:
+        if pipeline_group is None or ON_WSL:
+            # If there is no pipeline group
+            # or the platform is windows subsystem for linux (WSL)
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
         else:
 
