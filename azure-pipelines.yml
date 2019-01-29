@@ -23,15 +23,24 @@ jobs:
   # Create and activate a Conda environment.
   - task: CondaEnvironment@1
     inputs:
+      packageSpecs: 'python=$(python.version) conda=4.5.11 pygments prompt_toolkit ply pytest pytest-timeout numpy psutil matplotlib flake8 coverage pyflakes pytest-cov pytest-flake8 codecov'
+      installOptions: '-c conda-forge/label/cf201901'
+      updateConda: false
+    condition: eq(variables['python.version'], '3.5')
+    displayName: 'Conda Environment (conda-forge/label/cf201901)'
+  - task: CondaEnvironment@1
+    inputs:
       packageSpecs: 'python=$(python.version) pygments prompt_toolkit ply pytest pytest-timeout numpy psutil matplotlib flake8 coverage pyflakes pytest-cov pytest-flake8 codecov'
       installOptions: '-c conda-forge'
       updateConda: false
+    condition: ne(variables['python.version'], '3.5')
+    displayName: 'Conda Environment (conda-forge)'
   - script: |
       pip install .
       xonsh run-tests.xsh --timeout=10 --junitxml=junit/test-results.xml
     displayName: 'Tests'
 
-# Publish build results
+  # Publish build results
   - task: PublishTestResults@2
     inputs:
       testResultsFiles: '**/test-*.xml'

@@ -790,7 +790,11 @@ def _executables_in_windows(path):
                     yield fname
     else:
         for x in scandir(path):
-            if x.is_file():
+            try:
+                is_file = x.is_file()
+            except OSError:
+                continue
+            if is_file:
                 fname = x.name
             else:
                 continue
