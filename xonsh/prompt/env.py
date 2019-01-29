@@ -23,13 +23,21 @@ def env_name():
     ``{env_prefix}`` and ``{env_postfix}`` fields.
     """
     env_name = find_env_name()
-    if not env_name:
-        # no environment, just return
+    if (
+        builtins.__xonsh__.env.get("VIRTUAL_ENV_DISABLE_PROMPT")
+        or not env_name
+    ):
+        # env name prompt printing disabled, or no environment; just return
         return
-    pf = builtins.__xonsh__.shell.prompt_formatter
-    pre = pf._get_field_value("env_prefix")
-    post = pf._get_field_value("env_postfix")
-    return pre + env_name + post
+
+    venv_prompt = builtins.__xonsh__.env.get("VIRTUAL_ENV_PROMPT")
+    if venv_prompt is not None:
+        return venv_prompt
+    else:
+        pf = builtins.__xonsh__.shell.prompt_formatter
+        pre = pf._get_field_value("env_prefix")
+        post = pf._get_field_value("env_postfix")
+        return pre + env_name + post
 
 
 def vte_new_tab_cwd():
