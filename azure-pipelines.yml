@@ -23,10 +23,9 @@ jobs:
   # Create and activate a Conda environment.
   - task: CondaEnvironment@1
     inputs:
-      updateConda: true
       packageSpecs: 'python=$(python.version) pygments prompt_toolkit ply pytest pytest-timeout numpy psutil matplotlib flake8 coverage pyflakes pytest-cov pytest-flake8 codecov'
       installOptions: '-c conda-forge/label/cf201901'
-      updateConda: false
+      updateConda: true
     condition: eq(variables['python.version'], '3.5')
     displayName: 'Conda Environment (conda-forge/label/cf201901)'
   - task: CondaEnvironment@1
