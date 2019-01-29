@@ -184,37 +184,32 @@ def _xh_show_history(hist, ns, stdout=None, stderr=None):
             end_time=ns.end_time,
             datetime_format=ns.datetime_format,
         )
-    except ValueError as err:
+    except Exception as err:
         print("history: error: {}".format(err), file=stderr)
         return
     if ns.reverse:
         commands = reversed(list(commands))
+    end = "\0" if ns.null_byte else "\n"
     if ns.numerate and ns.timestamp:
         for c in commands:
             dt = datetime.datetime.fromtimestamp(c["ts"])
             print(
                 "{}:({}) {}".format(c["ind"], xt.format_datetime(dt), c["inp"]),
                 file=stdout,
-                end="\n" if not ns.null_byte else "\0",
+                end=end,
             )
     elif ns.numerate:
         for c in commands:
-            print(
-                "{}: {}".format(c["ind"], c["inp"]),
-                file=stdout,
-                end="\n" if not ns.null_byte else "\0",
-            )
+            print("{}: {}".format(c["ind"], c["inp"]), file=stdout, end=end)
     elif ns.timestamp:
         for c in commands:
             dt = datetime.datetime.fromtimestamp(c["ts"])
             print(
-                "({}) {}".format(xt.format_datetime(dt), c["inp"]),
-                file=stdout,
-                end="\n" if not ns.null_byte else "\0",
+                "({}) {}".format(xt.format_datetime(dt), c["inp"]), file=stdout, end=end
             )
     else:
         for c in commands:
-            print(c["inp"], file=stdout, end="\n" if not ns.null_byte else "\0")
+            print(c["inp"], file=stdout, end=end)
 
 
 @xla.lazyobject
@@ -382,7 +377,9 @@ def _xh_parse_args(args):
     return ns
 
 
-def history_main(args=None, stdin=None, stdout=None, stderr=None):
+def history_main(
+    args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+):
     """This is the history command entry point."""
     hist = builtins.__xonsh__.history
     ns = _xh_parse_args(args)

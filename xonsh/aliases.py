@@ -84,9 +84,18 @@ class Aliases(cabc.MutableMapping):
         if callable(value):
             if acc_args:  # Partial application
 
-                def _alias(args, stdin=None):
+                def _alias(
+                    args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+                ):
                     args = list(acc_args) + args
-                    return value(args, stdin=stdin)
+                    return value(
+                        args,
+                        stdin=stdin,
+                        stdout=stdout,
+                        stderr=stderr,
+                        spec=spec,
+                        stack=stack,
+                    )
 
                 return _alias
             else:

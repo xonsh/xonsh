@@ -13,7 +13,7 @@ from xonsh.environ import Env
 from tools import skip_if_on_windows
 
 
-def cd(args, stdin=None):
+def cd(args, stdin=None, **kwargs):
     return args
 
 
@@ -61,3 +61,18 @@ def test_eval_recursive_callable_partial(xonsh_execer, xonsh_builtins):
     ales = make_aliases()
     xonsh_builtins.__xonsh__.env = Env(HOME=os.path.expanduser("~"))
     assert ales.get("indirect_cd")(["arg2", "arg3"]) == ["..", "arg2", "arg3"]
+
+
+def _return_to_sender(args, **kwargs):
+    return args, kwargs
+
+
+def test_recursive_callable_partial_(xonsh_execer, xonsh_builtins):
+    ales = Aliases({"rtn": _return_to_sender, "rtn-recurse": ["rtn", "arg1"]})
+    alias = ales.get("rtn-recurse")
+    assert callable(alias)
+    args, obs = alias(["arg2"], stdin="a", stdout="b", stderr="c", spec="d", stack="e")
+    assert args == ["arg1", "arg2"]
+    assert len(obs) == 5
+    exp = {"stdin": "a", "stdout": "b", "stderr": "c", "spec": "d", "stack": "e"}
+    assert obs == exp
