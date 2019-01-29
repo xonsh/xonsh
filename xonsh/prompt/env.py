@@ -7,16 +7,36 @@ import builtins
 import xonsh.platform as xp
 
 
-def env_name(pre_chars="(", post_chars=")"):
-    """Extract the current environment name from $VIRTUAL_ENV or
-    $CONDA_DEFAULT_ENV if that is set
+def find_env_name():
+    """Finds the current environment name from $VIRTUAL_ENV or
+    $CONDA_DEFAULT_ENV if that is set.
     """
     env_path = builtins.__xonsh__.env.get("VIRTUAL_ENV", "")
     if len(env_path) == 0 and xp.ON_ANACONDA:
         env_path = builtins.__xonsh__.env.get("CONDA_DEFAULT_ENV", "")
     env_name = os.path.basename(env_path)
+    return env_name
+
+
+def env_name():
+    """Returns the current env_name if it non-empty."""
+    env_name = find_env_name()
     if env_name:
-        return pre_chars + env_name + post_chars
+        return env_name
+
+
+def env_prefix(chars="("):
+    """Returns prefix characters if the environment name is non-empty."""
+    env_name = find_env_name()
+    if env_name:
+        return chars
+
+
+def env_postfix(chars=") "):
+    """Returns postfix characters if the environment name is non-empty."""
+    env_name = find_env_name()
+    if env_name:
+        return chars
 
 
 def vte_new_tab_cwd():
