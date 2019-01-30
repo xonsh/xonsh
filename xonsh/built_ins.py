@@ -905,7 +905,7 @@ def run_subproc(cmds, captured=False):
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh__.shell.settitle)
-    p.send_signal(signal.SIGCONT)
+    proc.send_signal(signal.SIGCONT)
     # create command or return if backgrounding.
     if background:
         return
