@@ -1422,7 +1422,9 @@ By default, the following variables are available for use:
     ``/path/to/xonsh``.
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
     ``/path/to/xonsh``.
-  * ``env_name``: The name of active virtual environment, if any.
+  * ``env_name``: The name of active virtual environment, if any. The rendering
+    of this variable is affected by the ``$VIRTUAL_ENV_PROMPT`` and
+    ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variables; see below.
   * ``env_prefix``: The prefix characters if there is an active virtual environment,
     defaults to ``"("``.
   * ``env_postfix``: The postfix characters if there is an active virtual environment,
@@ -1440,6 +1442,33 @@ By default, the following variables are available for use:
     current working directory on some linux terminals. This is not usually needed.
   * ``gitstatus``: Informative git status, like ``[master|MERGING|+1…2]``, you
     may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
+
+xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
+`as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
+#envvar-VIRTUAL_ENV_DISABLE_PROMPT>`__. If this variable is truthy, xonsh
+will *always* substitute an empty string for ``{env_name}``. Note that unlike
+with other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
+after being set---it is not necessary to re-activate the environment.
+
+xonsh also allows for an explicit override of the rendering of ``{env_name}``,
+via the ``$VIRTUAL_ENV_PROMPT`` environment variable. If this variable is
+defined and has any value other than ``None``, ``{env_name}`` will *always*
+render as ``str($VIRTUAL_ENV_PROMPT)`` when an environment is activated.
+It will still render as an empty string when no environment is active.
+``$VIRTUAL_ENV_PROMPT`` is overridden by ``$VIRTUAL_ENV_DISABLE_PROMPT``.
+
+For example:
+
+.. code-block:: xonshcon
+
+    >>> $PROMPT = '{env_name}>>> '
+    >>> source env/bin/activate.xsh
+    (env) >>> $VIRTUAL_ENV_PROMPT = '~~ACTIVE~~ '
+    ~~ACTIVE~~ >>> $VIRTUAL_ENV_DISABLE_PROMPT = 1
+    >>> del $VIRTUAL_ENV_PROMPT
+    >>> del $VIRTUAL_ENV_DISABLE_PROMPT
+    (env) >>>
+
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
