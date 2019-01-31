@@ -4,6 +4,51 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.9
+====================
+
+**Added:**
+
+* New ``env_prefix`` & ``env_postfix`` prompt fields for rendering the pre- and
+  post-fix characters of the an active virtual environment.
+* ON_WSL attribute in platform.py
+* Rendering of ``{env_name}`` in ``$PROMPT`` is now suppressed if
+  the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable is
+  defined and truthy.
+* Rendering of ``{env_name}`` in ``$PROMPT`` is now overridden by
+  the value of ``str($VIRTUAL_ENV_PROMPT)`` if that environment variable
+  is defined and ``not None``. ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes precedence
+  over ``$VIRTUAL_ENV_PROMPT``.
+* A xontrib which adds support for `direnv <https://direnv.net/>`_
+
+**Changed:**
+
+* ``env_name`` prompt field now looks up the pre- and post-fix characters,
+  rather than relying on hard-coded values.
+* Some minor ``history show`` efficiency improvements.
+* If we are on wsl, avoid to use xonsh_preexec_fn when pipe.
+
+**Fixed:**
+
+* Made ``$PATH`` searching more robust to broken symlinks on Windows.
+* undesirable SIGSTOP by putting in a SIGCONT
+* Fixed issue with recursive aliases not being passes all keyword arguments
+  that are part of the callable alias spec. This allows commands like
+  ``aliases['hsa'] = "history show all"; hsa | head`` to no longer fail
+  with strange errors.
+
+**Authors:**
+
+* Anthony Scopatz
+* Sagar Tewari
+* Brian Skinn
+* Yohei Tamura
+* anatoly techtonik
+* 74th
+* Chad Kennedy
+
+
+
 v0.8.8
 ====================
 
