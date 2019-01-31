@@ -1455,6 +1455,7 @@ via the ``$VIRTUAL_ENV_PROMPT`` environment variable. If this variable is
 defined and has any value other than ``None``, ``{env_name}`` will *always*
 render as ``str($VIRTUAL_ENV_PROMPT)`` when an environment is activated.
 It will still render as an empty string when no environment is active.
+``$VIRTUAL_ENV_PROMPT`` is overridden by ``$VIRTUAL_ENV_DISABLE_PROMPT``.
 
 For example:
 
