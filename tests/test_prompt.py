@@ -106,7 +106,7 @@ def test_format_prompt_with_no_env(formatter, xonsh_builtins, live_fields):
     xonsh_builtins.__xonsh__.shell.prompt_formatter = formatter
 
     env = Env()
-    env.pop('VIRTUAL_ENV')
+    env.pop('VIRTUAL_ENV', None)
     xonsh_builtins.__xonsh__.env = env
 
     assert formatter('{env_name}', fields=live_fields) == ''
