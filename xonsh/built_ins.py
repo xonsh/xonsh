@@ -13,7 +13,6 @@ import shlex
 import signal
 import atexit
 import pathlib
-import platform
 import inspect
 import warnings
 import builtins
