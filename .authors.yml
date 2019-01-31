@@ -3,15 +3,20 @@
 - name: vaaaaanquish
   email: 6syun9@gmail.com
   aliases:
-    - '@vaaaaanquish'
+  - '@vaaaaanquish'
 - name: Dan Allan
   email: dallan@bnl.gov
 - name: Lucas Inojosa
   email: lucas.inojosa@gmail.com
   alternate_emails:
-    - linojosa@lalinojosa.home
+  - linojosa@lalinojosa.home
 - name: Jamie Bliss
-  email: jamie.bliss@ilq.com
+  email: astronouth7303@gmail.com
+  aliases:
+    - James Bliss
+  alternate_emails:
+    - jamie.bliss@ilq.com
+    - jbliss@nextgenerationenrollment.com
 - name: Cody Scott
   email: cody.j.b.scott@gmail.com
 - name: Mark Wiebe
@@ -23,9 +28,9 @@
 - name: Gil Forsyth
   email: gilforsyth@gmail.com
   alternate_emails:
-    - gforsyth@users.noreply.github.com
-    - Gilbert.Forsyth@capitalone.com
-    - gforsyth@gwu.edu
+  - gforsyth@users.noreply.github.com
+  - Gilbert.Forsyth@capitalone.com
+  - gforsyth@gwu.edu
 - name: Morten Enemark Lund
   email: melund@gmail.com
 - name: Ned Letcher
@@ -39,7 +44,7 @@
 - name: Konstantin Molchanov
   email: kmolchanov@machinezone.com
   alternate_emails:
-    - moigagoo@live.com
+  - moigagoo@live.com
 - name: BlahGeek
   email: i@BlahGeek.com
 - name: Nickolay Bukreyev
@@ -51,11 +56,11 @@
 - name: Alessio Bogon
   email: youtux@gmail.com
   alternate_emails:
-    - youtux@users.noreply.github.com
+  - youtux@users.noreply.github.com
 - name: Konstantinos Tsakiltzidis
   email: laerusk@gmail.com
   aliases:
-    - laerus
+  - laerus
 - name: Hirotomo Moriwaki
   email: hirotomo.moriwaki@gmail.com
 - name: Phil Elson
@@ -65,15 +70,15 @@
 - name: Burak Yiğit Kaya
   email: ben@byk.im
   aliases:
-    - Burak Yigit Kaya
+  - Burak Yigit Kaya
 - name: Guillaume Leclerc
   email: guillaume.leclerc@epfl.ch
   alternate_emails:
-    - guillaume.leclerc.work@gmail.com
+  - guillaume.leclerc.work@gmail.com
 - name: Sagar Tewari
   email: sagartewari01@gmail.com
   alternate_emails:
-    - sagartewariym@yahoo.com
+  - sagartewariym@yahoo.com
 - name: JuanPablo
   email: jpabloaj@gmail.com
 - name: Alexey
@@ -81,11 +86,11 @@
 - name: Alexandre Ferland
   email: aferlandqc@gmail.com
   aliases:
-    - admiralobvious
+  - admiralobvious
 - name: K.-Michael Aye
   email: kmichael.aye@gmail.com
   alternate_emails:
-    - michaelaye@users.noreply.github.com
+  - michaelaye@users.noreply.github.com
 - name: Michael Droettboom
   email: mdboom@gmail.com
 - name: Erin Call
@@ -109,13 +114,13 @@
 - name: Bernardas Ališauskas
   email: bernardas.alisauskas@gmail.com
   aliases:
-    - Bernardas
+  - Bernardas
 - name: Ollie Terrance
   email: ollie.terrance@live.co.uk
 - name: neruok
   email: codywentz@gmail.com
   alternate_emails:
-    - 6155000+neruok@users.noreply.github.com
+  - 6155000+neruok@users.noreply.github.com
 - name: Gordon Ball
   email: gordon@chronitis.net
 - name: Tzu-ping Chung
@@ -139,7 +144,7 @@
 - name: halloleo
   email: git@halloleo.dot.hailmail.dot.net
   alternate_emails:
-    - halloleo@users.noreply.github.com
+  - halloleo@users.noreply.github.com
 - name: Aaron Meurer
   email: asmeurer@gmail.com
 - name: metamind
@@ -151,7 +156,7 @@
 - name: Rob Brewer
   email: rwb123@gmail.com
   aliases:
-    - Robert W. Brewer
+  - Robert W. Brewer
 - name: Matteo Bertini
   email: matteo@naufraghi.net
 - name: Jake Hedman
@@ -161,7 +166,7 @@
 - name: Klaus Alexander Seistrup
   email: klaus@seistrup.dk
   alternate_emails:
-    - kseistrup@users.noreply.github.com
+  - kseistrup@users.noreply.github.com
 - name: Marcel Bollmann
   email: bollmann@linguistics.rub.de
 - name: mdraw
@@ -173,7 +178,7 @@
 - name: David Strobach
   email: lalochcz@gmail.com
   aliases:
-    - laloch
+  - laloch
 - name: Nico Lehmann
   email: nlehmann@dcc.uchile.cl
 - name: traverseda
@@ -181,16 +186,16 @@
 - name: Jean-Benoist Leger
   email: jb@leger.tf
   alternate_emails:
-    - jbleger@gertrude
-    - jbleger@hds.utc.fr
+  - jbleger@gertrude
+  - jbleger@hds.utc.fr
 - name: Nigel Tea
   email: nigelbtea@gmail.com
 - name: JohnLunzer
   email: lunzer@gmail.com
   aliases:
-    - jlunz
+  - jlunz
   alternate_emails:
-    - lunz8748@usroc1miniwaas.corp.exelisinc.com
+  - lunz8748@usroc1miniwaas.corp.exelisinc.com
 - name: Qiushi Pan
   email: qiu.gits@gmail.com
 - name: Mattias Ugelvik
@@ -198,7 +203,7 @@
 - name: Frank Sachsenheim
   email: funkyfuture@riseup.net
   alternate_emails:
-    - funkyfuture@users.noreply.github.com
+  - funkyfuture@users.noreply.github.com
 - name: Anthony Scopatz
   email: scopatz@gmail.com
 - name: anatoly techtonik
@@ -240,11 +245,11 @@
 - name: Andre Weltsch
   email: andre.t.weltsch@campus.tu-berlin.de
   alternate_emails:
-    - andre@weltsch.de
+  - andre@weltsch.de
 - name: yuqing
   email: waywardson@126.com
   alternate_emails:
-    - yuqing@cmcm.com
+  - yuqing@cmcm.com
 - name: Pedro Rodriguez
   email: ski.rodriguez@gmail.com
 - name: Jeremy Donahue
@@ -290,7 +295,7 @@
 - name: Nathan Goldbaum
   email: ngoldbau@illinois.edu
   alternate_emails:
-    - goldbaum@ucolick.org
+  - goldbaum@ucolick.org
 - name: Andrea D'Amore
   email: anddam@brapi.net
 - name: Raphael Das Gupta
@@ -304,7 +309,7 @@
 - name: Paul Barton
   email: pablo.barton@gmail.com
   aliases:
-    - Pablo Barton
+  - Pablo Barton
 - name: Mark Harfouche
   email: mark.harfouche@gmail.com
 - name: Carol Willing
@@ -326,7 +331,7 @@
 - name: Michał Zając
   email: michal.zajac@swmansion.com
   alternate_emails:
-    - emzajac@gmail.com
+  - emzajac@gmail.com
 - name: 74th
   email: site@74th.tech
 - name: Mickaël Schoentgen
@@ -353,10 +358,6 @@
   email: e4r7hbug@gmail.com
 - name: Steven Silvester
   email: steven.silvester@ieee.org
-- name: James Bliss
-  email: astronouth7303@gmail.com
-  alternate_emails:
-    - jbliss@nextgenerationenrollment.com
 - name: David
   email: auscompgeek@users.noreply.github.com
 - name: Romain Bignon
@@ -377,8 +378,10 @@
   email: dmrtzn@gmail.com
 - name: Adam Hartz
   email: hartz@mit.edu
- alternate_emails:
-    - hartz@mit.edu
+  aliases:
+    - adam j hartz
+  alternate_emails:
+  - hartz@mit.edu
 - name: Justin Calamari
   email: justin.calamari@gmail.com
 - name: Brian Skinn
