@@ -428,7 +428,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2372
+  num_commits: 2373
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -792,6 +792,7 @@
   email: mel@anybodytech.com
   num_commits: 6
   first_commit: 2015-06-26 08:51:45
+  github: melund
 - name: Michael Ensslin
   email: michael@ensslin.cc
   num_commits: 1
