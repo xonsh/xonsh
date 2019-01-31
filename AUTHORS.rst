@@ -15,13 +15,16 @@ Authors are sorted by number of commits.
 * christopher
 * Aaron Griffin
 * Rob Brewer
+* Burak Yiğit Kaya
 * Sagar Tewari
 * Matthias Bussonnier
+* David Strobach
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
 * Travis Shirk
 * Joel Gerber
+* Bernardas Ališauskas
 * Derek Thomas
 * VHarisop
 * Jean-Benoist Leger
@@ -43,6 +46,7 @@ Authors are sorted by number of commits.
 * Oleh Prypin
 * Brian Skinn
 * Will S
+* vaaaaanquish
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -71,6 +75,7 @@ Authors are sorted by number of commits.
 * Randy Syring
 * Lucas Inojosa
 * Alexey
+* Alexandre Ferland
 * Marvin Steadfast
 * Aaron Meurer
 * Matteo Bertini
@@ -78,6 +83,7 @@ Authors are sorted by number of commits.
 * AaronV77
 * Erick Tucto
 * Tyler Goodlet
+* Paul Barton
 * 74th
 * Mickaël Schoentgen
 * Steven Silvester
@@ -106,7 +112,6 @@ Authors are sorted by number of commits.
 * Sébastien Pierre
 * Mark Wiebe
 * Nathan Hoad
-* Burak Yiğit Kaya
 * Eric Dill
 * neruok
 * Domenic Barbuzzi
@@ -118,14 +123,12 @@ Authors are sorted by number of commits.
 * Min RK
 * Nicolas Avrutin
 * Kevin Yokley
-* Paul Barton
 * Ollie Ford
 * Mark Bestley
 * Michał Zając
 * Emre Ates
 * Romain Bignon
 * Owen Campbell
-* vaaaaanquish
 * Dan Allan
 * adam j hartz
 * Ned Letcher
@@ -134,16 +137,13 @@ Authors are sorted by number of commits.
 * Hirotomo Moriwaki
 * Phil Elson
 * Samuel Dion-Girardeau
-* Alexandre Ferland
 * Erin Call
 * Trevor Bekolay
-* Bernardas Ališauskas
 * Tzu-ping Chung
 * Andrew Toskin
 * torgny
 * William Woodall
 * ariel faigon
-* David Strobach
 * Nigel Tea
 * Mark Szumowski
 * The Gitter Badger

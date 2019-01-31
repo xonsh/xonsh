@@ -7,7 +7,7 @@
   email: 6syun9@gmail.com
   aliases:
   - '@vaaaaanquish'
-  num_commits: 1
+  num_commits: 7
   first_commit: 2018-07-17 01:14:04
   github: vaaaaanquish
 - name: Dan Allan
@@ -122,7 +122,7 @@
   email: laerusk@gmail.com
   aliases:
   - laerus
-  num_commits: 266
+  num_commits: 339
   first_commit: 2016-06-17 07:08:58
   github: Carreau
 - name: Hirotomo Moriwaki
@@ -144,7 +144,7 @@
   email: ben@byk.im
   aliases:
   - Burak Yigit Kaya
-  num_commits: 2
+  num_commits: 34
   first_commit: 2015-06-18 04:00:34
   github: BYK
 - name: Guillaume Leclerc
@@ -175,7 +175,7 @@
   email: aferlandqc@gmail.com
   aliases:
   - admiralobvious
-  num_commits: 1
+  num_commits: 4
   first_commit: 2015-03-16 23:33:04
 - name: K.-Michael Aye
   email: kmichael.aye@gmail.com
@@ -238,7 +238,7 @@
   email: bernardas.alisauskas@gmail.com
   aliases:
   - Bernardas
-  num_commits: 1
+  num_commits: 20
   first_commit: 2016-06-27 09:39:26
   github: Granitosaurus
 - name: Ollie Terrance
@@ -378,7 +378,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 1
+  num_commits: 32
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -428,7 +428,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2373
+  num_commits: 2374
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -665,7 +665,7 @@
   email: pablo.barton@gmail.com
   aliases:
   - Pablo Barton
-  num_commits: 2
+  num_commits: 4
   first_commit: 2015-03-17 09:46:52
   github: SavinaRoja
 - name: Mark Harfouche
