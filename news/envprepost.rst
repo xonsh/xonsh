@@ -6,7 +6,7 @@
 **Changed:**
 
 * ``env_name`` prompt field now looks up the pre- and post-fix characters,
-  rather than relying on hard-coded values/
+  rather than relying on hard-coded values.
 
 **Deprecated:**
 
