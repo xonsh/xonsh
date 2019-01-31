@@ -905,6 +905,12 @@ def run_subproc(cmds, captured=False):
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh__.shell.settitle)
+    else:
+        # for some reason, some programs are in a stopped state when the flow
+        # reaches this point, hence a SIGCONT should be sent to `proc` to make
+        # sure that the shell doesn't hang. This `pause_call_resume` invocation
+        # does this
+        pause_call_resume(proc, int)
     # create command or return if backgrounding.
     if background:
         return
