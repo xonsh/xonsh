@@ -1,0 +1,435 @@
+- name: Randy Syring
+  email: randy@thesyrings.us
+- name: vaaaaanquish
+  email: 6syun9@gmail.com
+  aliases:
+    - '@vaaaaanquish'
+- name: Dan Allan
+  email: dallan@bnl.gov
+- name: Lucas Inojosa
+  email: lucas.inojosa@gmail.com
+  alternate_emails:
+    - linojosa@lalinojosa.home
+- name: Jamie Bliss
+  email: jamie.bliss@ilq.com
+- name: Cody Scott
+  email: cody.j.b.scott@gmail.com
+- name: Mark Wiebe
+  email: mwwiebe@gmail.com
+- name: adam j hartz
+  email: adam@smatz.net
+- name: Travis Shirk
+  email: travis@pobox.com
+- name: Gil Forsyth
+  email: gilforsyth@gmail.com
+  alternate_emails:
+    - gforsyth@users.noreply.github.com
+    - Gilbert.Forsyth@capitalone.com
+    - gforsyth@gwu.edu
+- name: Morten Enemark Lund
+  email: melund@gmail.com
+- name: Ned Letcher
+  email: nletcher@gmail.com
+- name: Jan Schulz
+  email: jasc@gmx.net
+- name: Zach Crownover
+  email: zachary.crownover@gmail.com
+- name: Nathan Hoad
+  email: nathan@getoffmalawn.com
+- name: Konstantin Molchanov
+  email: kmolchanov@machinezone.com
+  alternate_emails:
+    - moigagoo@live.com
+- name: BlahGeek
+  email: i@BlahGeek.com
+- name: Nickolay Bukreyev
+  email: buknik95@yandex.ru
+- name: Miguel de Val-Borro
+  email: miguel@archlinux.net
+- name: Andrew Hundt
+  email: ATHundt@gmail.com
+- name: Alessio Bogon
+  email: youtux@gmail.com
+  alternate_emails:
+    - youtux@users.noreply.github.com
+- name: Konstantinos Tsakiltzidis
+  email: laerusk@gmail.com
+  aliases:
+    - laerus
+- name: Hirotomo Moriwaki
+  email: hirotomo.moriwaki@gmail.com
+- name: Phil Elson
+  email: pelson.pub@gmail.com
+- name: Samuel Dion-Girardeau
+  email: samuel.diongirardeau@gmail.com
+- name: Burak Yiğit Kaya
+  email: ben@byk.im
+  aliases:
+    - Burak Yigit Kaya
+- name: Guillaume Leclerc
+  email: guillaume.leclerc@epfl.ch
+  alternate_emails:
+    - guillaume.leclerc.work@gmail.com
+- name: Sagar Tewari
+  email: sagartewari01@gmail.com
+  alternate_emails:
+    - sagartewariym@yahoo.com
+- name: JuanPablo
+  email: jpabloaj@gmail.com
+- name: Alexey
+  email: forestbiiird@gmail.com
+- name: Alexandre Ferland
+  email: aferlandqc@gmail.com
+  aliases:
+    - admiralobvious
+- name: K.-Michael Aye
+  email: kmichael.aye@gmail.com
+  alternate_emails:
+    - michaelaye@users.noreply.github.com
+- name: Michael Droettboom
+  email: mdboom@gmail.com
+- name: Erin Call
+  email: erincall@github.com
+- name: Yohei Tamura
+  email: tamuhey@gmail.com
+- name: Eric Dill
+  email: edill@bnl.gov
+- name: Trevor Bekolay
+  email: tbekolay@gmail.com
+- name: Matthias Bussonnier
+  email: bussonniermatthias@gmail.com
+- name: Jonathan Slenders
+  email: jonathan@slenders.be
+- name: guillearch
+  email: gcastellano@protonmail.com
+- name: VHarisop
+  email: the.machine.headed@gmail.com
+- name: javValverde
+  email: jav.valve@gmail.com
+- name: Bernardas Ališauskas
+  email: bernardas.alisauskas@gmail.com
+  aliases:
+    - Bernardas
+- name: Ollie Terrance
+  email: ollie.terrance@live.co.uk
+- name: neruok
+  email: codywentz@gmail.com
+  alternate_emails:
+    - 6155000+neruok@users.noreply.github.com
+- name: Gordon Ball
+  email: gordon@chronitis.net
+- name: Tzu-ping Chung
+  email: uranusjr@gmail.com
+- name: Joel Gerber
+  email: joel@grrbrr.ca
+- name: Domenic Barbuzzi
+  email: dbarbuzzi@gmail.com
+- name: Andrew Toskin
+  email: andrew@tosk.in
+- name: Shahin
+  email: me@5hah.in
+- name: Jason R. Coombs
+  email: jaraco@jaraco.com
+- name: torgny
+  email: torgny.andersson@gmail.com
+- name: Maximilian Köhl
+  email: mail@koehlma.de
+- name: Marvin Steadfast
+  email: marvin@xsteadfastx.org
+- name: halloleo
+  email: git@halloleo.dot.hailmail.dot.net
+  alternate_emails:
+    - halloleo@users.noreply.github.com
+- name: Aaron Meurer
+  email: asmeurer@gmail.com
+- name: metamind
+  email: metamind@Metafoot
+- name: Will Wykeham
+  email: will@wykeham.net
+- name: William Woodall
+  email: william@osrfoundation.org
+- name: Rob Brewer
+  email: rwb123@gmail.com
+  aliases:
+    - Robert W. Brewer
+- name: Matteo Bertini
+  email: matteo@naufraghi.net
+- name: Jake Hedman
+  email: jake@hedman.email
+- name: Alexander Sosedkin
+  email: monk@unboiled.info
+- name: Klaus Alexander Seistrup
+  email: klaus@seistrup.dk
+  alternate_emails:
+    - kseistrup@users.noreply.github.com
+- name: Marcel Bollmann
+  email: bollmann@linguistics.rub.de
+- name: mdraw
+  email: mdraw.gh@gmail.com
+- name: ariel faigon
+  email: github.2009@yendor.com
+- name: Hugo Wang
+  email: w@mitnk.com
+- name: David Strobach
+  email: lalochcz@gmail.com
+  aliases:
+    - laloch
+- name: Nico Lehmann
+  email: nlehmann@dcc.uchile.cl
+- name: traverseda
+  email: traverse.da@gmail.com
+- name: Jean-Benoist Leger
+  email: jb@leger.tf
+  alternate_emails:
+    - jbleger@gertrude
+    - jbleger@hds.utc.fr
+- name: Nigel Tea
+  email: nigelbtea@gmail.com
+- name: JohnLunzer
+  email: lunzer@gmail.com
+  aliases:
+    - jlunz
+  alternate_emails:
+    - lunz8748@usroc1miniwaas.corp.exelisinc.com
+- name: Qiushi Pan
+  email: qiu.gits@gmail.com
+- name: Mattias Ugelvik
+  email: uglemat@gmail.com
+- name: Frank Sachsenheim
+  email: funkyfuture@riseup.net
+  alternate_emails:
+    - funkyfuture@users.noreply.github.com
+- name: Anthony Scopatz
+  email: scopatz@gmail.com
+- name: anatoly techtonik
+  email: techtonik@gmail.com
+- name: Mark Szumowski
+  email: mark@szumowski.net
+- name: Ryan Gonzalez
+  email: rymg19@gmail.com
+- name: The Gitter Badger
+  email: badger@gitter.im
+- name: Cameron Bates
+  email: cameron.r.bates@gmail.com
+- name: Kermit Alexander II
+  email: tuxfreak@tuxfamily.org
+- name: Richard Kim
+  email: emacs18@gmail.com
+- name: Brian S. Corbin
+  email: brian.corbin@pokitdok.com
+- name: Oleh Prypin
+  email: oleh@pryp.in
+- name: Erez Shinan
+  email: erezshin+git@gmail.com
+- name: Paul Goelz
+  email: s8pagoel@stud.uni-saarland.de
+- name: Nakada Takumi
+  email: usrNeko@kerorin.local
+- name: Sebastian Wagner
+  email: sebix@sebix.at
+- name: Ross Nomann
+  email: rossnomann@protonmail.com
+- name: eyalzek
+  email: eyal.ez@gmail.com
+- name: josh
+  email: josh.sarver@gmail.com
+- name: AaronV77
+  email: aaronvaloroso77@gmail.com
+- name: Kurtis Rader
+  email: krader@skepticism.us
+- name: Andre Weltsch
+  email: andre.t.weltsch@campus.tu-berlin.de
+  alternate_emails:
+    - andre@weltsch.de
+- name: yuqing
+  email: waywardson@126.com
+  alternate_emails:
+    - yuqing@cmcm.com
+- name: Pedro Rodriguez
+  email: ski.rodriguez@gmail.com
+- name: Jeremy Donahue
+  email: jeremydonahue@gmail.com
+- name: Justin Moen
+  email: jamoen7@gmail.com
+- name: TobalJackson
+  email: Tobaljackson@gmail.com
+- name: Eric Harris
+  email: ericmharris@gmail.com
+- name: Erick Tucto
+  email: erick.tucto@outlook.com
+- name: goodboy
+  email: tgoodlet@users.noreply.github.com
+- name: Greg Thole
+  email: gthole@gmail.com
+- name: Min RK
+  email: benjaminrk@gmail.com
+- name: Raphael Gaschignard
+  email: raphael@rtpg.co
+- name: Tyler Goodlet
+  email: tgoodlet@gmail.com
+- name: Nicolas Avrutin
+  email: rasputin@google.com
+- name: Stephan Fitzpatrick
+  email: knowsuchagency@gmail.com
+- name: Kevin Yokley
+  email: kyokley2@gmail.com
+- name: Rahiel Kasim
+  email: rahielkasim@gmail.com
+- name: Austin Bingham
+  email: austin.bingham@gmail.com
+- name: jlunz
+  email: lunz8748@ak.(none)
+- name: David Gros
+  email: dngros@live.com
+- name: dragon788
+  email: dragon788@users.noreply.github.com
+- name: Jonathan Hogg
+  email: jonathan@significant-whitespace.com
+- name: cryzed
+  email: cryzed@googlemail.com
+- name: Nathan Goldbaum
+  email: ngoldbau@illinois.edu
+  alternate_emails:
+    - goldbaum@ucolick.org
+- name: Andrea D'Amore
+  email: anddam@brapi.net
+- name: Raphael Das Gupta
+  email: raphael.das.gupta@hsr.ch
+- name: Andrei
+  email: fizicars@gmail.com
+- name: Daniel Hahler
+  email: git@thequod.de
+- name: SanketDG
+  email: sanketdasgupta@gmail.com
+- name: Paul Barton
+  email: pablo.barton@gmail.com
+  aliases:
+    - Pablo Barton
+- name: Mark Harfouche
+  email: mark.harfouche@gmail.com
+- name: Carol Willing
+  email: carolcode@willingconsulting.com
+- name: Kilte Leichnam
+  email: nwotnbm@gmail.com
+- name: Ollie Ford
+  email: me@ojford.com
+- name: christopher
+  email: cjwright4242@gmail.com
+- name: Raniere Silva
+  email: raniere@rgaiacs.com
+- name: Derek Thomas
+  email: derekathomas@gmail.com
+- name: Leonardo Santagada
+  email: santagada@gmail.com
+- name: Mark Bestley
+  email: 37385+bestlem@users.noreply.github.com
+- name: Michał Zając
+  email: michal.zajac@swmansion.com
+  alternate_emails:
+    - emzajac@gmail.com
+- name: 74th
+  email: site@74th.tech
+- name: Mickaël Schoentgen
+  email: contact@tiger-222.fr
+- name: Brian Visel
+  email: eode@eptitude.net
+- name: Thomas Kluyver
+  email: takowl@gmail.com
+- name: James Elías
+  email: jamiees2@gmail.com
+- name: Emre Ates
+  email: ates@bu.edu
+- name: Donne Martin
+  email: donne.martin@gmail.com
+- name: Aaron Griffin
+  email: aig787@gmail.com
+- name: Alexey Shrub
+  email: ashrub@yandex.ru
+- name: Jean-Christophe Fillion-Robin
+  email: jchris.fillionr@kitware.com
+- name: Charlie Arnold
+  email: charlie.arnold@gmail.com
+- name: Nate Tangsurat
+  email: e4r7hbug@gmail.com
+- name: Steven Silvester
+  email: steven.silvester@ieee.org
+- name: James Bliss
+  email: astronouth7303@gmail.com
+  alternate_emails:
+    - jbliss@nextgenerationenrollment.com
+- name: David
+  email: auscompgeek@users.noreply.github.com
+- name: Romain Bignon
+  email: romain@symlink.me
+- name: mel
+  email: mel@anybodytech.com
+- name: Michael Ensslin
+  email: michael@ensslin.cc
+- name: Robert DeFriesse
+  email: Robert.DEFRIESSE@3ds.com
+- name: dbxnr
+  email: dbxnr@users.noreply.github.com
+- name: sushobhana
+  email: sushobhanapatra@gmail.com
+- name: Florian Mounier
+  email: florian.mounier@kozea.fr
+- name: Danmou
+  email: dmrtzn@gmail.com
+- name: Adam Hartz
+  email: hartz@mit.edu
+ alternate_emails:
+    - hartz@mit.edu
+- name: Justin Calamari
+  email: justin.calamari@gmail.com
+- name: Brian Skinn
+  email: brian.skinn@gmail.com
+- name: Glen Zangirolami
+  email: glenbot@gmail.com
+- name: Niklas Hambüchen
+  email: mail@nh2.me
+- name: Owen Campbell
+  email: owen.campbell@tanti.org.uk
+- name: adamheins
+  email: adam@pebble.com
+- name: Jared Crawford
+  email: jmcrawford45@gmail.com
+- name: Will S
+  email: wsha.code@gmail.com
+- name: Atsushi Morimoto
+  email: atsushi.morimoto@dena.com
+- name: Thomas Marquart
+  email: thomas@marquart.se
+- name: David Dotson
+  email: dotsdl@gmail.com
+- name: anula
+  email: anula.szy@gmail.com
+- name: Benjamin Pollack
+  email: benjamin@bitquabit.com
+- name: Joseph Paul
+  email: mail@jsph.pl
+- name: Sébastien Pierre
+  email: sebastien.pierre@gmail.com
+- name: Sardorbek Imomaliev
+  email: sardorbek.imomaliev@gmail.com
+- name: zajaczajac
+  email: emzajac@gmail.com
+- name: Daniel Milde
+  email: daniel@milde.cz
+- name: Katriel Cohn-Gordon
+  email: me@katriel.co.uk
+- name: Chad Kennedy
+  email: chadkennedyonline@users.noreply.github.com
+- name: stonebig
+  email: stonebig34@gmail.com
+- name: Ronny Pfannschmidt
+  email: opensource@ronnypfannschmidt.de
+- name: Jakub Nowak
+  email: jakub.jakub.nowak@gmail.com
+- name: Jay Tuckey
+  email: jay.tuckey@gmail.com
+- name: selepo
+  email: po.lenhoff@gmail.com
+- name: Bob Hyman
+  email: bob.hyman@bobssoftwareworks.com
+- name: Fabien Dubosson
+  email: fabien.dubosson@gmail.com

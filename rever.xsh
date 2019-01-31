@@ -1,10 +1,12 @@
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
-$ACTIVITIES = ['version_bump', 'changelog', 'pytest',
+$ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest',
                'tag', 'push_tag', 'ghrelease', 'sphinx',
                'ghpages', 'pypi', 'conda_forge',
                ]
 
+
+$AUTHORS_FILENAME = "AUTHORS.rst"
 $VERSION_BUMP_PATTERNS = [
     ('.appveyor.yml', 'version:.*', 'version: $VERSION.{build}'),
     ('xonsh/__init__.py', r'__version__\s*=.*', '__version__ = "$VERSION"'),
