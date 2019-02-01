@@ -180,7 +180,9 @@ else:
             else:
                 raise
         finally:
-            _pthread_sigmask(signal.SIG_SETMASK, oldmask)
+            if oldmask:
+                # only reset the mask if it is non-empty! See #2989
+                _pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
     def wait_for_active_job(last_task=None, backgrounded=False):
         """
