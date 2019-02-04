@@ -210,7 +210,7 @@ class Execer(object):
             filename = self.filename
         if logical_input:
             beg_spaces = starting_whitespace(input)
-            input = input[len(beg_spaces):]
+            input = input[len(beg_spaces) :]
         while not parsed:
             try:
                 tree = self.parser.parse(
