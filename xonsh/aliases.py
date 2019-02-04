@@ -21,16 +21,19 @@ from xonsh.platform import (
     ON_NETBSD,
     ON_DRAGONFLY,
 )
-from xonsh.tools import unthreadable, print_color
-from xonsh.replay import replay_main
-from xonsh.timings import timeit_alias
 from xonsh.tools import (
+    XonshError,
     argvquote,
     escape_windows_cmd_string,
     to_bool,
     swap_values,
     strip_simple_quotes,
+    ALIAS_KWARG_NAMES,
+    unthreadable,
+    print_color,
 )
+from xonsh.replay import replay_main
+from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
 from xonsh.ast import isexpression
 
@@ -70,36 +73,19 @@ class Aliases(cabc.MutableMapping):
 
     def eval_alias(self, value, seen_tokens=frozenset(), acc_args=()):
         """
-        "Evaluates" the alias `value`, by recursively looking up the leftmost
+        "Evaluates" the alias ``value``, by recursively looking up the leftmost
         token and "expanding" if it's also an alias.
 
-        A value like ["cmd", "arg"] might transform like this:
-        > ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()
-        where `cmd=ls -al` and `ls` is an alias with its value being a
+        A value like ``["cmd", "arg"]`` might transform like this:
+        ``> ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()``
+        where ``cmd=ls -al`` and ``ls`` is an alias with its value being a
         callable.  The resulting callable will be "partially applied" with
-        ["-al", "arg"].
+        ``["-al", "arg"]``.
         """
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if callable(value):
-            if acc_args:  # Partial application
-
-                def _alias(
-                    args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-                ):
-                    args = list(acc_args) + args
-                    return value(
-                        args,
-                        stdin=stdin,
-                        stdout=stdout,
-                        stderr=stderr,
-                        spec=spec,
-                        stack=stack,
-                    )
-
-                return _alias
-            else:
-                return value
+            return partial_eval_alias(value, acc_args=acc_args)
         else:
             expand_path = builtins.__xonsh__.expand_path
             token, *rest = map(expand_path, value)
@@ -205,6 +191,111 @@ class ExecAlias:
 
     def __repr__(self):
         return "ExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
+
+
+class PartialEvalAliasBase:
+    """Partially evaluated alias."""
+
+    def __init__(self, f, acc_args=()):
+        """
+        Parameters
+        ----------
+        f : callable
+            A function to dispatch to.
+        acc_args : sequence of strings, optional
+            Additional arguments to prepent to the argument list passed in
+            when the alias is called.
+        """
+        self.f = f
+        self.acc_args = acc_args
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr, spec, stack)
+
+    def __repr__(self):
+        return "{name}({f!r}, acc_args={acc_args!r})".format(name=self.__class__.__name__, f=self.f, acc_args=self.acc_args)
+
+
+class PartialEvalAlias0(PartialEvalAliasBase):
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        if args:
+            msg = "callable alias {f!r} takes no arguments, but {args!f} provided. "
+            msg += "Of these {acc_args!r} were partially applied."
+            raise XonshError(msg.format(f=self.f, args=args, acc_args=self.acc_args))
+        return self.f()
+
+
+class PartialEvalAlias1(PartialEvalAliasBase):
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        return self.f(args)
+
+
+class PartialEvalAlias2(PartialEvalAliasBase):
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin)
+
+
+class PartialEvalAlias3(PartialEvalAliasBase):
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout)
+
+
+class PartialEvalAlias4(PartialEvalAliasBase):
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr)
+
+
+class PartialEvalAlias5(PartialEvalAliasBase):
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr, spec)
+
+
+class PartialEvalAlias6(PartialEvalAliasBase):
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr, spec, stack)
+
+
+PARTIAL_EVAL_ALIASES = (PartialEvalAlias0, PartialEvalAlias1, PartialEvalAlias2, PartialEvalAlias3, PartialEvalAlias4, PartialEvalAlias5, PartialEvalAlias6)
+
+
+def partial_eval_alias(f, acc_args=()):
+    """Dispatches the appropriate eval alias based on the number of args to the original callable alias
+    and how many arguments to apply.
+    """
+    # no partial needed if no extra args
+    if not acc_args:
+        return f
+    # need to dispatch
+    numargs = 0
+    for name, param in inspect.signature(f).parameters.items():
+        if (
+            param.kind == param.POSITIONAL_ONLY
+            or param.kind == param.POSITIONAL_OR_KEYWORD
+        ):
+            numargs += 1
+        elif name in ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
+            numargs += 1
+    if numargs < 7:
+        return PARTIAL_EVAL_ALIASES[numargs](f, acc_args=acc_args)
+    else:
+        e = "Expected proxy with 6 or fewer arguments for {}, not {}"
+        raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
+
 
 
 #
