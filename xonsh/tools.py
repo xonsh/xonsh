@@ -616,6 +616,16 @@ def subexpr_before_unbalanced(expr, ltok, rtok):
     return subexpr
 
 
+@lazyobject
+def STARTING_WHITESPACE_RE():
+    return re.compile(r"^(\s*)")
+
+
+def starting_whitespace(s):
+    """Returns the whitespace at the start of a string"""
+    return STARTING_WHITESPACE_RE.match(s).group(1)
+
+
 def decode(s, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
     return s.decode(encoding, "replace")
