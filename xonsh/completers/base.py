@@ -11,19 +11,21 @@ def complete_base(prefix, line, start, end, ctx):
     and paths.  If we are completing the first argument, complete based on
     valid commands and python names.
     """
+    # get and unpack python completions
+    python_comps = complete_python(prefix, line, start, end, ctx)
+    if isinstance(python_comps, cabc.Sequence):
+        python_comps, python_comps_len = python_comps
+    else:
+        python_comps_len = None
+    # add command completions
+    out = python_comps | complete_command(prefix, line, start, end, ctx)
+    # add paths, if needed
     if line.strip() == "":
-        out = complete_python(prefix, line, start, end, ctx) | complete_command(
-            prefix, line, start, end, ctx
-        )
         paths = complete_path(prefix, line, start, end, ctx, False)
         return (out | paths[0]), paths[1]
     elif prefix == line:
-        python_comps = complete_python(prefix, line, start, end, ctx)
-        if isinstance(python_comps, cabc.Sequence):
-            return (
-                python_comps[0] | complete_command(prefix, line, start, end, ctx),
-                python_comps[1],
-            )
+        if python_comps_len is None:
+            return out
         else:
-            return python_comps | complete_command(prefix, line, start, end, ctx)
+            return out, python_comps_len
     return set()
