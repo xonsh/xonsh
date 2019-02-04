@@ -64,7 +64,16 @@ def test_eval_recursive_callable_partial(xonsh_execer, xonsh_builtins):
 
 
 def _return_to_sender_all(args, stdin, stdout, stderr, spec, stack):
-    return args, {"stdin": stdin, "stdout": stdout, "stderr": stderr, "spec": spec, "stack": stack}
+    return (
+        args,
+        {
+            "stdin": stdin,
+            "stdout": stdout,
+            "stderr": stderr,
+            "spec": spec,
+            "stack": stack,
+        },
+    )
 
 
 def test_recursive_callable_partial_all(xonsh_execer, xonsh_builtins):

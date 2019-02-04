@@ -209,17 +209,22 @@ class PartialEvalAliasBase:
         self.f = f
         self.acc_args = acc_args
 
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
     def __repr__(self):
-        return "{name}({f!r}, acc_args={acc_args!r})".format(name=self.__class__.__name__, f=self.f, acc_args=self.acc_args)
+        return "{name}({f!r}, acc_args={acc_args!r})".format(
+            name=self.__class__.__name__, f=self.f, acc_args=self.acc_args
+        )
 
 
 class PartialEvalAlias0(PartialEvalAliasBase):
-
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         if args:
             msg = "callable alias {f!r} takes no arguments, but {args!f} provided. "
@@ -229,48 +234,62 @@ class PartialEvalAlias0(PartialEvalAliasBase):
 
 
 class PartialEvalAlias1(PartialEvalAliasBase):
-
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         return self.f(args)
 
 
 class PartialEvalAlias2(PartialEvalAliasBase):
-
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         return self.f(args, stdin)
 
 
 class PartialEvalAlias3(PartialEvalAliasBase):
-
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout)
 
 
 class PartialEvalAlias4(PartialEvalAliasBase):
-
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr)
 
 
 class PartialEvalAlias5(PartialEvalAliasBase):
-
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec)
 
 
 class PartialEvalAlias6(PartialEvalAliasBase):
-
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
 
-PARTIAL_EVAL_ALIASES = (PartialEvalAlias0, PartialEvalAlias1, PartialEvalAlias2, PartialEvalAlias3, PartialEvalAlias4, PartialEvalAlias5, PartialEvalAlias6)
+PARTIAL_EVAL_ALIASES = (
+    PartialEvalAlias0,
+    PartialEvalAlias1,
+    PartialEvalAlias2,
+    PartialEvalAlias3,
+    PartialEvalAlias4,
+    PartialEvalAlias5,
+    PartialEvalAlias6,
+)
 
 
 def partial_eval_alias(f, acc_args=()):
@@ -295,7 +314,6 @@ def partial_eval_alias(f, acc_args=()):
     else:
         e = "Expected proxy with 6 or fewer arguments for {}, not {}"
         raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
-
 
 
 #
