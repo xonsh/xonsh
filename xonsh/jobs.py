@@ -184,7 +184,7 @@ else:
                 # only reset the mask if it is non-empty! See #2989
                 _pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
-    def wait_for_active_job(last_task=None, backgrounded=False):
+    def wait_for_active_job(last_task=None, backgrounded=False, _nochild=False):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -199,7 +199,12 @@ else:
         try:
             _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         except ChildProcessError:  # No child processes
-            return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
+            if _nochild:
+                return active_task
+            else:
+                return wait_for_active_job(
+                    last_task=active_task, backgrounded=backgrounded, _nochild=True
+                )
         if os.WIFSTOPPED(wcode):
             print("^Z")
             active_task["status"] = "stopped"
