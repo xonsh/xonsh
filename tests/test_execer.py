@@ -133,6 +133,7 @@ def test_echo_line_cont():
         "echo a and \\\necho b\n",
         "echo a \\\n or echo b\n",
         "echo a \\\n or echo b and \\\n echo c\n",
+        "if True:\\\n    echo a \\\n    b\n",
     ],
 )
 def test_two_echo_line_cont(code):

@@ -14,6 +14,7 @@ from xonsh.tools import (
     get_logical_line,
     replace_logical_line,
     balanced_parens,
+    starting_whitespace,
 )
 from xonsh.built_ins import load_builtins, unload_builtins, load_proxies, unload_proxies
 
@@ -207,6 +208,9 @@ class Execer(object):
         greedy = False
         if filename is None:
             filename = self.filename
+        if logical_input:
+            beg_spaces = starting_whitespace(input)
+            input = input[len(beg_spaces) :]
         while not parsed:
             try:
                 tree = self.parser.parse(
@@ -313,4 +317,6 @@ class Execer(object):
                 replace_logical_line(lines, sbpline, idx, nlogical)
                 last_error_col += 3
                 input = "\n".join(lines)
+        if logical_input:
+            input = beg_spaces + input
         return tree, input
