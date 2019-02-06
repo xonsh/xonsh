@@ -495,9 +495,10 @@ def test_xonsh_no_close_fds():
         "a:\n"
         "\tsleep 1\n"
         "b:\n"
-        "\tsleep 1\n")
+        "\tsleep 1\n"
+    )
     with tempfile.TemporaryDirectory() as d, indir(d):
-        with open('Makefile', 'w') as f:
+        with open("Makefile", "w") as f:
             f.write(makefile)
-        out = sp.check_output(['make', '-sj2', 'SHELL=xonsh'], universal_newlines=True)
+        out = sp.check_output(["make", "-sj2", "SHELL=xonsh"], universal_newlines=True)
         assert "warning" not in out
