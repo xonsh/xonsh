@@ -382,7 +382,6 @@ class SubprocSpec:
     def __init__(
         self,
         cmd,
-        *,
         cls=subprocess.Popen,
         stdin=None,
         stdout=None,
