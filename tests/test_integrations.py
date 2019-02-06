@@ -1,12 +1,15 @@
 import os
 import sys
+import time
 import shutil
+import tempfile
 import subprocess as sp
 
 import pytest
 
 import xonsh
 from xonsh.platform import ON_WINDOWS
+from xonsh.lib.os import indir
 
 from tools import (
     skip_if_on_windows,
@@ -43,7 +46,13 @@ PATH = (
 
 
 skip_if_no_xonsh = pytest.mark.skipif(
-    shutil.which("xonsh", path=PATH) is None, reason="xonsh not on path"
+    shutil.which("xonsh", path=PATH) is None, reason="xonsh not on PATH"
+)
+skip_if_no_make = pytest.mark.skipif(
+    shutil.which("make", path=PATH) is None, reason="make command not on PATH"
+)
+skip_if_no_sleep = pytest.mark.skipif(
+    shutil.which("sleep", path=PATH) is None, reason="sleep command not on PATH"
 )
 
 
@@ -470,3 +479,27 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
     if callable(exp):
         exp = exp()
     assert content == exp
+
+
+@skip_if_no_make
+@skip_if_no_xonsh
+@skip_if_no_sleep
+@skip_if_on_windows
+def test_xonsh_no_close_fds():
+    # see issue https://github.com/xonsh/xonsh/issues/2984
+    makefile = (
+        "default: all\n"
+        "all:\n"
+        "\t$(MAKE) s\n"
+        "s:\n"
+        "\t$(MAKE) a b\n"
+        "a:\n"
+        "\tsleep 1\n"
+        "b:\n"
+        "\tsleep 1\n"
+    )
+    with tempfile.TemporaryDirectory() as d, indir(d):
+        with open("Makefile", "w") as f:
+            f.write(makefile)
+        out = sp.check_output(["make", "-sj2", "SHELL=xonsh"], universal_newlines=True)
+        assert "warning" not in out

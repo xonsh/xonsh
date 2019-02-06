@@ -377,18 +377,18 @@ class SubprocSpec:
     executed.
     """
 
-    kwnames = ("stdin", "stdout", "stderr", "universal_newlines")
+    kwnames = ("stdin", "stdout", "stderr", "universal_newlines", "close_fds")
 
     def __init__(
         self,
         cmd,
-        *,
         cls=subprocess.Popen,
         stdin=None,
         stdout=None,
         stderr=None,
         universal_newlines=False,
-        captured=False
+        close_fds=False,
+        captured=False,
     ):
         """
         Parameters
@@ -405,6 +405,9 @@ class SubprocSpec:
             Popen file descriptor or flag for stderr.
         universal_newlines : bool
             Whether or not to use universal newlines.
+        close_fds : bool
+            Whether or not to close the file descriptiors when the
+            process exits.
         captured : bool or str, optional
             The flag for if the subprocess is captured, may be one of:
             False for $[], 'stdout' for $(), 'hiddenobject' for ![], or
@@ -445,6 +448,7 @@ class SubprocSpec:
         self.stdout = stdout
         self.stderr = stderr
         self.universal_newlines = universal_newlines
+        self.close_fds = close_fds
         self.captured = captured
         # pure attrs
         self.args = list(cmd)
