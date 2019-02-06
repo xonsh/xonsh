@@ -63,12 +63,21 @@ def test_eval_recursive_callable_partial(xonsh_execer, xonsh_builtins):
     assert ales.get("indirect_cd")(["arg2", "arg3"]) == ["..", "arg2", "arg3"]
 
 
-def _return_to_sender(args, **kwargs):
-    return args, kwargs
+def _return_to_sender_all(args, stdin, stdout, stderr, spec, stack):
+    return (
+        args,
+        {
+            "stdin": stdin,
+            "stdout": stdout,
+            "stderr": stderr,
+            "spec": spec,
+            "stack": stack,
+        },
+    )
 
 
-def test_recursive_callable_partial_(xonsh_execer, xonsh_builtins):
-    ales = Aliases({"rtn": _return_to_sender, "rtn-recurse": ["rtn", "arg1"]})
+def test_recursive_callable_partial_all(xonsh_execer, xonsh_builtins):
+    ales = Aliases({"rtn": _return_to_sender_all, "rtn-recurse": ["rtn", "arg1"]})
     alias = ales.get("rtn-recurse")
     assert callable(alias)
     args, obs = alias(["arg2"], stdin="a", stdout="b", stderr="c", spec="d", stack="e")
@@ -76,3 +85,31 @@ def test_recursive_callable_partial_(xonsh_execer, xonsh_builtins):
     assert len(obs) == 5
     exp = {"stdin": "a", "stdout": "b", "stderr": "c", "spec": "d", "stack": "e"}
     assert obs == exp
+
+
+def _return_to_sender_handles(args, stdin, stdout, stderr):
+    return args, {"stdin": stdin, "stdout": stdout, "stderr": stderr}
+
+
+def test_recursive_callable_partial_handles(xonsh_execer, xonsh_builtins):
+    ales = Aliases({"rtn": _return_to_sender_handles, "rtn-recurse": ["rtn", "arg1"]})
+    alias = ales.get("rtn-recurse")
+    assert callable(alias)
+    args, obs = alias(["arg2"], stdin="a", stdout="b", stderr="c")
+    assert args == ["arg1", "arg2"]
+    assert len(obs) == 3
+    exp = {"stdin": "a", "stdout": "b", "stderr": "c"}
+    assert obs == exp
+
+
+def _return_to_sender_none():
+    return "wakka", {}
+
+
+def test_recursive_callable_partial_none(xonsh_execer, xonsh_builtins):
+    ales = Aliases({"rtn": _return_to_sender_none, "rtn-recurse": ["rtn"]})
+    alias = ales.get("rtn-recurse")
+    assert callable(alias)
+    args, obs = alias()
+    assert args == "wakka"
+    assert len(obs) == 0
