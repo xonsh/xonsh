@@ -1261,6 +1261,7 @@ class ProcProxyThread(threading.Thread):
         stdout=None,
         stderr=None,
         universal_newlines=False,
+        close_fds=False,
         env=None,
     ):
         """Parameters
@@ -1285,6 +1286,9 @@ class ProcProxyThread(threading.Thread):
             set to `None`, then `sys.stderr` is used.
         universal_newlines : bool, optional
             Whether or not to use universal newlines.
+        close_fds : bool, optional
+            Whether or not to close file descriptors. This is here for Popen
+            compatability and currently does nothing.
         env : Mapping, optional
             Environment mapping.
         """
@@ -1309,6 +1313,7 @@ class ProcProxyThread(threading.Thread):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
+        self.close_fds = close_fds
         self.env = env or builtins.__xonsh__.env
         self._interrupted = False
 
@@ -1658,6 +1663,7 @@ class ProcProxy(object):
         stdout=None,
         stderr=None,
         universal_newlines=False,
+        close_fds=False,
         env=None,
     ):
         self.orig_f = f
@@ -1669,6 +1675,7 @@ class ProcProxy(object):
         self.stdout = stdout
         self.stderr = stderr
         self.universal_newlines = universal_newlines
+        self.close_fds = close_fds
         self.env = env
 
     def poll(self):
