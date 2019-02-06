@@ -6,8 +6,6 @@
 
 .. include:: installation.rst
 
-.. include:: dependencies.rst
-
 .. include:: news.rst
 
 .. include:: guides.rst

@@ -41,6 +41,7 @@ from xonsh.tools import (
     on_main_thread,
     XonshError,
     format_std_prepost,
+    ALIAS_KWARG_NAMES,
 )
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job, give_terminal_to, _continue
@@ -1224,7 +1225,6 @@ def proxy_five(f, args, stdin, stdout, stderr, spec, stack):
 
 
 PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four, proxy_five)
-PROXY_KWARG_NAMES = frozenset(["args", "stdin", "stdout", "stderr", "spec", "stack"])
 
 
 def partial_proxy(f):
@@ -1236,7 +1236,7 @@ def partial_proxy(f):
             or param.kind == param.POSITIONAL_OR_KEYWORD
         ):
             numargs += 1
-        elif name in PROXY_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
+        elif name in ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
             numargs += 1
     if numargs < 6:
         return functools.partial(PROXIES[numargs], f)
@@ -1245,7 +1245,7 @@ def partial_proxy(f):
         return f
     else:
         e = "Expected proxy with 6 or fewer arguments for {}, not {}"
-        raise XonshError(e.format(", ".join(PROXY_KWARG_NAMES), numargs))
+        raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
 
 
 class ProcProxyThread(threading.Thread):
