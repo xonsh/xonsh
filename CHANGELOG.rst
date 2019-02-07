@@ -4,6 +4,53 @@ Xonsh Change Log
 
 .. current developments
 
+v0.8.10
+====================
+
+**Added:**
+
+* New ``xonsh.aliases.partial_eval_alias()`` function and related classes
+  for dispatching and evaluating partial alias applications for callable
+  aliases.
+
+**Changed:**
+
+* Subprocesses will no longer close file descriptors automatically.
+  This was causing issues with other commands that expected file
+  descriptors to remain open, such as ``make``.
+* The ``xonsh.Aliases.eval_alaises()`` method updated to use
+  ``xonsh.aliases.partial_eval_alias()``.
+
+**Fixed:**
+
+* Fixed ``xonsh.completers.base.complete_base()`` to no longer throw an
+  error caused by ``complete_python()`` sometimes returning a tuple.
+  This fixes cases such as ``ls &&<TAB>``.
+* Fixed regression with line continuations in implicit subprocess mode within
+  indented blocks of code, such as if-statements.
+* Resolved issue where setting empty signal masks was causing the
+  terminal to close. This was problematic for certain command
+  pipelines. For example, ``pv /dev/urandom | head`` now works.
+* Prevents recurssive errors from being raised when there is no child process
+  in ``xonsh.jobs.wait_for_active_job()``.
+* Tweaked ``xonsh.completers.commands.complete_skipper()`` to insert a space following
+  certain tokens (``&&``, ``||``, ``|``, ``and``, ``or``) to avoid overwriting existing tokens
+  with completer output.
+* Fixed bug with evaluating recurssive aliases that did not implement
+  the full callable alias signature.
+
+**Security:**
+
+* <news item>,
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Troy de Freitas
+
+
+
 v0.8.9
 ====================
 
