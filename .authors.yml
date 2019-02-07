@@ -57,7 +57,7 @@
   - gforsyth@users.noreply.github.com
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
-  num_commits: 498
+  num_commits: 501
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -428,7 +428,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2374
+  num_commits: 2389
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -952,3 +952,8 @@
   num_commits: 4
   first_commit: 2017-02-21 05:46:12
   github: StreakyCobra
+- name: Troy de Freitas
+  email: 9503857+ntdef@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2019-02-05 19:03:06
+  github: ntdef

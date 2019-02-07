@@ -185,6 +185,7 @@ Authors are sorted by number of commits.
 * Chad Kennedy
 * stonebig
 * Ronny Pfannschmidt
+* Troy de Freitas
 * goodboy
 * Atsushi Morimoto
 
