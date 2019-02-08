@@ -39,10 +39,6 @@ v0.8.10
 * Fixed bug with evaluating recurssive aliases that did not implement
   the full callable alias signature.
 
-**Security:**
-
-* <news item>,
-
 **Authors:**
 
 * Anthony Scopatz
