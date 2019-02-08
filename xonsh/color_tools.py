@@ -413,8 +413,3 @@ def make_palette(strings):
             t, _, s = t.partition(" ")
             palette[t] = rgb_to_ints(t)
     return palette
-
-
-@deprecated(deprecated_in="0.5.10", removed_in="0.6.0")
-def make_pallete(*args, **kwargs):
-    make_palette(*args, **kwargs)

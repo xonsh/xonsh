@@ -1,10 +1,11 @@
 """Tools for helping with ANSI color codes."""
+import re
 import sys
 import warnings
 import builtins
 
 from xonsh.platform import HAS_PYGMENTS
-from xonsh.lazyasd import LazyDict
+from xonsh.lazyasd import LazyDict, lazyobject
 from xonsh.color_tools import (
     RE_BACKGROUND,
     BASE_XONSH_COLORS,
@@ -112,6 +113,74 @@ def ansi_color_style(style="default"):
         warnings.warn(msg, RuntimeWarning)
         cmap = ANSI_STYLES["default"]
     return cmap
+
+
+def ansi_reverse_style(style='default', return_style=False):
+    """Reverses an ANSI color style mapping so that escape codes map to
+    colors. Style may either be string or mapping. May also return
+    the style it looked up.
+    """
+    style = ansi_style_by_name(style) if isinstance(style, str) else style
+    reversed_style = {v: k for k, v in style.items()}
+    # add keys to make this more useful
+    updates = {
+        '1': 'BOLD_',
+        '4': 'UNDERLINE_',
+        '1;4': 'BOLD_UNDERLINE_',
+        '4;1': 'BOLD_UNDERLINE_',
+    }
+    for ec, name in reversed_style.items():
+        no_left_zero = ec.lstrip('0')
+        if no_left_zero.startswith(';'):
+            updates[no_left_zero[1:]] = name
+        elif no_left_zero != ec:
+            updates[no_left_zero] = name
+    reversed_style.update(updates)
+    # return results
+    if return_style:
+        return style, reversed_style
+    else:
+        return reversed_style
+
+
+@lazyobject
+def ANSI_ESCAPE_CODE_RE():
+    return re.compile(r'\001?(\033\[)?([0-9;]+)m?\002?')
+
+
+def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=None):
+    """Converts an ASNI color code escape sequence to a tuple of color names
+    in the provided style ('default', by default). For example,
+    '0' becomes ('NO_COLOR',) and '32;41' becomes ('GREEN', 'BACKGROUND_RED').
+    The style keyword may either be a string, in which the style is looked up,
+    or an actual style dict.  You can also provide a reversed style mapping,
+    too, which is just the keys/values of the style dict swapped. If reversed
+    style is not provided, it is computed.
+    """
+    if reversed_style is None:
+        style, reversed_style = ansi_reverse_style(style, return_style=True)
+    # strip some actual escape codes, if needed.
+    ec = ANSI_ESCAPE_CODE_RE.match(escape_code).group(2)
+    names = [reversed_style[e.lstrip('0')] for e in ec.split(';')]
+    # normalize names
+    n = ''
+    norm_names = []
+    for name in names:
+        if name == 'NO_COLOR':
+            # skip '0' entries
+            continue
+        n = n + name if n else name
+        if n == 'UNDERLINE_BOLD_':
+            n = 'BOLD_UNDERLINE_'
+        if n.endswith('_'):
+            continue
+        norm_names.append(n)
+        n = ''
+    # return
+    if len(norm_names) == 0:
+        return ('NO_COLOR',)
+    else:
+        return tuple(norm_names)
 
 
 def _ansi_expand_style(cmap):
