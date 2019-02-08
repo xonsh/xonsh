@@ -32,6 +32,7 @@ from xonsh.style_tools import PTK2_STYLE
 from xonsh.tools import (
     always_true,
     always_false,
+    detype,
     ensure_string,
     is_env_path,
     str_to_env_path,
@@ -335,7 +336,7 @@ class LsColors(cabc.MutableMapping):
         if self._detyped is None:
             self._detyped = ":".join(
                 [
-                    key + "=" + ";".join([style[v] for v in val])
+                    key + "=" + ";".join([style[v] or '0' for v in val])
                     for key, val in sorted(self._d.items())
                 ]
             )
@@ -391,13 +392,13 @@ class LsColors(cabc.MutableMapping):
         if filename is not None:
             cmd.append(filename)
         # get env
-        if hasattr(builtins, "__xonsh__"):
+        if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, 'env'):
             denv = builtins.__xonsh__.env.detype()
         else:
             denv = None
         # run dircolors
         try:
-            out = subprocess.check_output(cmd, env=denv, universal_newlines=True)
+            out = subprocess.check_output(cmd, env=denv, universal_newlines=True, stderr=subprocess.DEVNULL)
         except (subprocess.CalledProcessError, FileNotFoundError):
             return cls(cls.default_settings)
         s = out.splitlines()[0]
@@ -405,6 +406,22 @@ class LsColors(cabc.MutableMapping):
         s, _, _ = s.rpartition("'")
         return cls.fromstring(s)
 
+    @classmethod
+    def convert(cls, x):
+        """Converts an object to LsColors, if needed."""
+        if isinstance(x, cls):
+            return x
+        elif isinstance(x, str):
+            return cls.fromstring(x)
+        elif isinstance(x, bytes):
+            return cls.fromstring(x.decode())
+        else:
+            return cls(x)
+
+
+def is_lscolors(x):
+    """Checks if an object is an instance of LsColors"""
+    return isinstance(x, LsColors)
 
 #
 # Ensurerers
@@ -465,6 +482,7 @@ def DEFAULT_ENSURERS():
         "LC_MONETARY": (always_false, locale_convert("LC_MONETARY"), ensure_string),
         "LC_NUMERIC": (always_false, locale_convert("LC_NUMERIC"), ensure_string),
         "LC_TIME": (always_false, locale_convert("LC_TIME"), ensure_string),
+        "LS_COLORS": (is_lscolors, LsColors.convert, detype),
         "LOADED_RC_FILES": (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
         "MOUSE_SUPPORT": (is_bool, to_bool, bool_to_str),
         "MULTILINE_PROMPT": (is_string_or_callable, ensure_string, ensure_string),
@@ -599,6 +617,16 @@ def xonsh_append_newline(env):
     return env.get("XONSH_INTERACTIVE", False)
 
 
+@default_value
+def default_lscolors(env):
+    """Gets a default instanse of LsColors"""
+    inherited_lscolors = os_environ.get('LS_COLORS', None)
+    if inherited_lscolors is None:
+        return LsColors.fromdircolors()
+    else:
+        return LsColors.fromstring(inherited_lscolors)
+
+
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
@@ -640,6 +668,7 @@ def DEFAULT_VALUES():
         "LC_TIME": locale.setlocale(locale.LC_TIME),
         "LC_MONETARY": locale.setlocale(locale.LC_MONETARY),
         "LC_NUMERIC": locale.setlocale(locale.LC_NUMERIC),
+        "LS_COLORS": default_lscolors,
         "LOADED_RC_FILES": (),
         "MOUSE_SUPPORT": False,
         "MULTILINE_PROMPT": ".",
@@ -893,6 +922,7 @@ def DEFAULT_DOCS():
             configurable=ON_WINDOWS,
         ),
         "LANG": VarDocs("Fallback locale setting for systems where it matters"),
+        "LS_COLORS": VarDoc("Color settings for ``ls`` command line utility"),
         "LOADED_RC_FILES": VarDocs(
             "Whether or not any of the xonsh run control files were loaded at "
             "startup. This is a sequence of bools in Python that is converted "
@@ -1494,6 +1524,7 @@ def locate_binary(name):
 BASE_ENV = LazyObject(
     lambda: {
         "BASH_COMPLETIONS": list(DEFAULT_VALUES["BASH_COMPLETIONS"]),
+        "LS_COLORS": default_lscolors({}),
         "PROMPT_FIELDS": dict(DEFAULT_VALUES["PROMPT_FIELDS"]),
         "XONSH_VERSION": XONSH_VERSION,
     },
