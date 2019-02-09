@@ -1297,22 +1297,19 @@ class Env(cabc.MutableMapping):
             self._d["PATH"] = list(PATH_DEFAULT)
         self._detyped = None
 
-    @staticmethod
-    def detypeable(val):
-        return not (callable(val) or isinstance(val, cabc.MutableMapping))
-
     def detype(self):
         if self._detyped is not None:
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
-            if key not in self._ensurers and not self.detypeable(val):
-                continue
             if not isinstance(key, str):
                 key = str(key)
             ensurer = self.get_ensurer(key)
-            val = ensurer.detype(val)
-            ctx[key] = val
+            if not ensurer.detype or not callable(ensurer.detype):
+                # cannot actually detype this var.
+                continue
+            deval = ensurer.detype(val)
+            ctx[key] = deval
         self._detyped = ctx
         return ctx
 
@@ -1334,7 +1331,20 @@ class Env(cabc.MutableMapping):
             os_environ.update(self._orig_env)
             self._orig_env = None
 
-    def get_ensurer(self, key, default=Ensurer(always_true, None, ensure_string)):
+    @staticmethod
+    def detypeable(val):
+        return not (callable(val) or isinstance(val, cabc.MutableMapping))
+
+    def _get_default_ensurer(self, val, default=None):
+        if default is not None:
+            return default
+        if self.detypeable(val):
+            default = Ensurer(always_true, None, ensure_string)
+        else:
+            default = Ensurer(always_true, None, False)
+        return default
+
+    def get_ensurer(self, key, val=None, default=None):
         """Gets an ensurer for the given key."""
         if key in self._ensurers:
             return self._ensurers[key]
@@ -1344,7 +1354,7 @@ class Env(cabc.MutableMapping):
             if k.match(key) is not None:
                 break
         else:
-            ensurer = default
+            ensurer = self._get_default_ensurer(val=val, default=default)
         self._ensurers[key] = ensurer
         return ensurer
 

@@ -125,9 +125,17 @@ def ansi_reverse_style(style='default', return_style=False):
     # add keys to make this more useful
     updates = {
         '1': 'BOLD_',
+        '2': 'FAINT_',
         '4': 'UNDERLINE_',
+        '5': 'SLOWBLINK_',
         '1;4': 'BOLD_UNDERLINE_',
         '4;1': 'BOLD_UNDERLINE_',
+        '38': 'SET_FOREGROUND_',
+        '48': 'SET_BACKGROUND_',
+        '38;2': 'SET_FOREGROUND_RGB_',
+        '48;2': 'SET_BACKGROUND_RGB_',
+        '38;5': 'SET_FOREGROUND_SHORT_',
+        '48;5': 'SET_BACKGROUND_SHORT_',
     }
     for ec, name in reversed_style.items():
         no_left_zero = ec.lstrip('0')
@@ -146,6 +154,17 @@ def ansi_reverse_style(style='default', return_style=False):
 @lazyobject
 def ANSI_ESCAPE_CODE_RE():
     return re.compile(r'\001?(\033\[)?([0-9;]+)m?\002?')
+
+
+@lazyobject
+def ANSI_REVERSE_COLOR_NAME_TRANSLATIONS():
+    return {
+        'UNDERLINE_BOLD_': 'BOLD_UNDERLINE_',
+        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_RGB_',
+        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_RGB_',
+        'SET_FOREGROUND_SLOWBLINK_': 'SET_FOREGROUND_SHORT_',
+        'SET_BACKGROUND_SLOWBLINK_': 'SET_BACKGROUND_SHORT_',
+    }
 
 
 def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=None):
@@ -170,8 +189,7 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
             # skip '0' entries
             continue
         n = n + name if n else name
-        if n == 'UNDERLINE_BOLD_':
-            n = 'BOLD_UNDERLINE_'
+        n = ANSI_REVERSE_COLOR_NAME_TRANSLATIONS.get(n, n)
         if n.endswith('_'):
             continue
         norm_names.append(n)
