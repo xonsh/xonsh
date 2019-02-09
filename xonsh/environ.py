@@ -1306,7 +1306,7 @@ class Env(cabc.MutableMapping):
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
-            if not self.detypeable(val):
+            if key not in self._ensurers and not self.detypeable(val):
                 continue
             if not isinstance(key, str):
                 key = str(key)
@@ -1416,13 +1416,6 @@ class Env(cabc.MutableMapping):
 
     def __getitem__(self, key):
         # remove this block on next release
-        if key == "FORMATTER_DICT":
-            print(
-                "PendingDeprecationWarning: FORMATTER_DICT is an alias of "
-                "PROMPT_FIELDS and will be removed in the next release",
-                file=sys.stderr,
-            )
-            return self["PROMPT_FIELDS"]
         if key is Ellipsis:
             return self
         elif key in self._d:
