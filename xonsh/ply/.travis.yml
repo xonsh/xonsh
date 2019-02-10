@@ -6,6 +6,5 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-install:
-  - "pip install . "
+install: true
 script: "cd test && python testlex.py && python testyacc.py"
