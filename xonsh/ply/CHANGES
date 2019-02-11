@@ -1,3 +1,22 @@
+Current Version
+---------------
+IMPORTANT NOTE (2018-12-22): PLY is no longer be released in any
+package-installable format. If you want to use the latest version, you
+need to COPY the contents of the ply/ directory into your own project
+and use it. Although PLY is no longer distributed as a package, it is
+maintained as a mature library.  No new features are planned, but 
+issues and pull requests for bugs are still welcome. Any changes to the 
+software will be noted here.
+
+01/19/19  Some improvements to the preprocessor module contributed by
+          Rob Reilink.  Issue #195 fixes the evaluation of expressions
+          such as #if a != b.   Issue #196 fixes some some issues
+          related to the lack of a specified Unicode encoding on reading
+          text files.
+
+12/22/18  Incorporated some minor changes to eliminate warning messages
+          related to open() calls.
+
 Version 3.11
 ---------------------
 02/15/18  beazley

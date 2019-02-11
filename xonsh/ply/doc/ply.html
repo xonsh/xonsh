@@ -353,7 +353,7 @@ while True:
 
 The <tt>tok.type</tt> and <tt>tok.value</tt> attributes contain the
 type and value of the token itself. 
-<tt>tok.line</tt> and <tt>tok.lexpos</tt> contain information about
+<tt>tok.lineno</tt> and <tt>tok.lexpos</tt> contain information about
 the location of the token.  <tt>tok.lexpos</tt> is the index of the
 token relative to the start of the input text.
 
@@ -3463,7 +3463,7 @@ large grammar, you should probably reconsider--the parsing tables are meant to d
 </p>
 
 <p>
-During operation, is is normal for PLY to produce diagnostic error
+During operation, it is normal for PLY to produce diagnostic error
 messages (usually printed to standard error).  These are generated
 entirely using the <tt>logging</tt> module.  If you want to redirect
 these messages or silence them, you can provide your own logging

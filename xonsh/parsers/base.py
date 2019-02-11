@@ -8,10 +8,7 @@ from threading import Thread
 from ast import parse as pyparse
 from collections.abc import Iterable, Sequence, Mapping
 
-try:
-    from ply import yacc
-except ImportError:
-    from xonsh.ply.ply import yacc
+from xonsh.ply.ply import yacc
 
 from xonsh.tools import FORMATTER
 from xonsh import ast

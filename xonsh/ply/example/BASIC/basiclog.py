@@ -23,7 +23,8 @@ import basinterp
 # If a runtime error occurs, we bail out and enter
 # interactive mode below
 if len(sys.argv) == 2:
-    data = open(sys.argv[1]).read()
+    with open(sys.argv[1]) as f:
+        data = f.read()
     prog = basparse.parse(data, debug=log)
     if not prog:
         raise SystemExit

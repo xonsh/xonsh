@@ -21,7 +21,6 @@ args = parser.parse_args()
 docker_script = """
 from python:{python_version}
 RUN pip install --upgrade pip && pip install \\
-  ply \\
   prompt-toolkit=={ptk_version} \\
   pygments
 RUN mkdir /xonsh
@@ -37,7 +36,6 @@ if args.pypy:
 from pypy:{python_version}
 RUN pypy3 -m ensurepip
 RUN pip install --upgrade pip && pip install \\
-  ply \\
   prompt-toolkit=={ptk_version} \\
   pygments
 RUN mkdir /xonsh

@@ -1,8 +1,8 @@
-# PLY (Python Lex-Yacc)                   Version 3.11
+# PLY (Python Lex-Yacc)
 
 [![Build Status](https://travis-ci.org/dabeaz/ply.svg?branch=master)](https://travis-ci.org/dabeaz/ply)
 
-Copyright (C) 2001-2018
+Copyright (C) 2001-2019
 David M. Beazley (Dabeaz LLC)
 All rights reserved.
 
@@ -77,16 +77,16 @@ within the 'ply' directory which may also be used as a Python package.
 To use PLY, simply copy the 'ply' directory to your project and import
 lex and yacc from the associated 'ply' package.  For example:
 
-     import ply.lex as lex
-     import ply.yacc as yacc
+     from .ply import lex
+     from .ply import yacc
 
 Alternatively, you can copy just the files lex.py and yacc.py
-individually and use them as modules.  For example:
+individually and use them as modules however you see fit.  For example:
 
      import lex
      import yacc
 
-The file setup.py can be used to install ply using distutils.
+PLY has no third-party dependencies. 
 
 The file doc/ply.html contains complete documentation on how to use
 the system.
@@ -118,7 +118,7 @@ The GitHub page for PLY can be found at:
 
      https://github.com/dabeaz/ply
 
-An old and relatively inactive discussion group for PLY is found at:
+An old and inactive discussion group for PLY is found at:
 
      http://groups.google.com/group/ply-hack
 
@@ -257,11 +257,10 @@ Bug Reports and Patches
 My goal with PLY is to simply have a decent lex/yacc implementation
 for Python.  As a general rule, I don't spend huge amounts of time
 working on it unless I receive very specific bug reports and/or
-patches to fix problems. I also try to incorporate submitted feature
-requests and enhancements into each new version.  Please visit the PLY
-github page at https://github.com/dabeaz/ply to submit issues and pull
-requests.  To contact me about bugs and/or new features, please send
-email to dave@dabeaz.com.
+patches to fix problems. At this time, PLY is mature software and new
+features are no longer being added.  If you think you have found a
+bug, please visit the PLY Github page at https://github.com/dabeaz/ply
+to report an issue.
  
 -- Dave
 

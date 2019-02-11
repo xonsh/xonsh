@@ -10,10 +10,7 @@ from pprint import pformat
 
 import pytest
 
-try:
-    from ply.lex import LexToken
-except ImportError:
-    from xonsh.ply.ply.lex import LexToken
+from xonsh.ply.ply.lex import LexToken
 
 
 from xonsh.lexer import Lexer
