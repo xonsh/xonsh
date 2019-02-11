@@ -396,6 +396,11 @@ def rgb_to_ints(rgb):
         return tuple([int(h * 2, 16) for h in RE_RGB3.split(rgb)[1:4]])
 
 
+def short_to_ints(short):
+    """Coverts a short (256) color to a 3-tuple of ints."""
+    return rgb_to_ints(short2rgb(short))
+
+
 def color_dist(x, y):
     return math.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2 + (x[2] - y[2]) ** 2)
 

@@ -13,6 +13,8 @@ from xonsh.color_tools import (
     find_closest_color,
     rgb2short,
     rgb_to_256,
+    rgb_to_ints,
+    short_to_ints,
 )
 from xonsh.tools import FORMATTER
 
@@ -132,8 +134,8 @@ def ansi_reverse_style(style='default', return_style=False):
         '4;1': 'BOLD_UNDERLINE_',
         '38': 'SET_FOREGROUND_',
         '48': 'SET_BACKGROUND_',
-        '38;2': 'SET_FOREGROUND_RGB_',
-        '48;2': 'SET_BACKGROUND_RGB_',
+        '38;2': 'SET_FOREGROUND_3INTS_',
+        '48;2': 'SET_BACKGROUND_3INTS_',
         '38;5': 'SET_FOREGROUND_SHORT_',
         '48;5': 'SET_BACKGROUND_SHORT_',
     }
@@ -160,11 +162,21 @@ def ANSI_ESCAPE_CODE_RE():
 def ANSI_REVERSE_COLOR_NAME_TRANSLATIONS():
     return {
         'UNDERLINE_BOLD_': 'BOLD_UNDERLINE_',
-        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_RGB_',
-        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_RGB_',
+        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_3INTS_',
+        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_3INTS_',
         'SET_FOREGROUND_SLOWBLINK_': 'SET_FOREGROUND_SHORT_',
         'SET_BACKGROUND_SLOWBLINK_': 'SET_BACKGROUND_SHORT_',
     }
+
+
+@lazyobject
+def ANSI_COLOR_NAME_SET_3INTS_RE():
+    return re.compile(r'(\w+_)?SET_(FORE|BACK)GROUND_SHORT_(\d+)_(\d+)_(\d+)')
+
+
+@lazyobject
+def ANSI_COLOR_NAME_SET_SHORT_RE():
+    return re.compile(r'(\w+_)?SET_(FORE|BACK)GROUND_SHORT_(\d+)')
 
 
 def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=None):
@@ -192,6 +204,12 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
         n = ANSI_REVERSE_COLOR_NAME_TRANSLATIONS.get(n, n)
         if n.endswith('_'):
             continue
+        elif ANSI_COLOR_NAME_SET_SHORT_RE.match(n) is not None:
+            pre, fore_back, short = ANSI_COLOR_NAME_SET_SHORT_RE.match(n).groups()
+            new_name = find_closest_color(short_to_ints(short), BASE_XONSH_COLORS)
+            if fore_back == 'BACK':
+                new_name = 'BACKGROUND_' + new_name
+            n = new_name if pre is None else pre + new_name
         norm_names.append(n)
         n = ''
     # return
