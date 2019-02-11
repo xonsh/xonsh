@@ -5,7 +5,6 @@ Xonsh currently has the following external dependencies,
 *Run Time:*
 
     #. Python v3.4+
-    #. PLY (optional, included with xonsh)
 
 Pip supports "extra" dependencies in the form of ``xonsh[ptk,linux]``, where
 the list in the brackets identify the optional features

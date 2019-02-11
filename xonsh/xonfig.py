@@ -14,10 +14,7 @@ import itertools
 import contextlib
 import collections
 
-try:
-    import ply
-except ImportError:
-    from xonsh.ply import ply
+from xonsh.ply import ply
 
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
@@ -493,10 +490,6 @@ def _xonfig_format_json(data):
 
 def _info(ns):
     env = builtins.__xonsh__.env
-    try:
-        ply.__version__ = ply.__version__
-    except AttributeError:
-        ply.__version__ = "3.8"
     data = [("xonsh", XONSH_VERSION)]
     hash_, date_ = githash()
     if hash_:

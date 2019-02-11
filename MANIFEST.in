@@ -7,7 +7,7 @@ include README.rst
 recursive-include xonsh/ply/example *
 recursive-include xonsh/ply/doc *
 recursive-include xonsh/ply/test *
-include xonsh/ply/ANNOUNCE
+include xonsh/ply/CONTRIBUTING.md
 include xonsh/ply/README.md
 include xonsh/ply/CHANGES
 global-exclude *.pyc

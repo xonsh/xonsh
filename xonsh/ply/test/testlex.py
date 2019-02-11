@@ -479,8 +479,10 @@ class LexBuildOptionTests(unittest.TestCase):
         
         os.mkdir("lexdir")
         os.mkdir("lexdir/sub")
-        open("lexdir/__init__.py","w").write("")
-        open("lexdir/sub/__init__.py","w").write("")
+        with open("lexdir/__init__.py","w") as f:
+            f.write("")
+        with open("lexdir/sub/__init__.py","w") as f:
+            f.write("")
         run_import("lex_optimize3")
         result = sys.stdout.getvalue()
         self.assert_(check_expected(result,

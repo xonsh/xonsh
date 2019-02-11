@@ -6,7 +6,6 @@ dependencies:
   - python=3.5
   - pygments
   - prompt_toolkit
-  - ply
   - pytest
   - pytest-timeout
   - numpy
