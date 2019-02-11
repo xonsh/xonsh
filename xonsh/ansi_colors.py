@@ -160,18 +160,24 @@ def ANSI_ESCAPE_CODE_RE():
 
 @lazyobject
 def ANSI_REVERSE_COLOR_NAME_TRANSLATIONS():
-    return {
-        'UNDERLINE_BOLD_': 'BOLD_UNDERLINE_',
+    base = {
         'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_3INTS_',
-        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_3INTS_',
+        'SET_BACKGROUND_FAINT_': 'SET_BACKGROUND_3INTS_',
         'SET_FOREGROUND_SLOWBLINK_': 'SET_FOREGROUND_SHORT_',
         'SET_BACKGROUND_SLOWBLINK_': 'SET_BACKGROUND_SHORT_',
     }
+    data = {'UNDERLINE_BOLD_': 'BOLD_UNDERLINE_'}
+    data.update(base)
+    data.update({'BOLD_' + k: 'BOLD_' + v for k, v in base.items()})
+    data.update({'UNDERLINE_' + k: 'UNDERLINE_' + v for k, v in base.items()})
+    data.update({'BOLD_UNDERLINE_' + k: 'BOLD_UNDERLINE_' + v for k, v in base.items()})
+    data.update({'UNDERLINE_BOLD_' + k: 'BOLD_UNDERLINE_' + v for k, v in base.items()})
+    return data
 
 
 @lazyobject
 def ANSI_COLOR_NAME_SET_3INTS_RE():
-    return re.compile(r'(\w+_)?SET_(FORE|BACK)GROUND_SHORT_(\d+)_(\d+)_(\d+)')
+    return re.compile(r'(\w+_)?SET_(FORE|BACK)GROUND_3INTS_(\d+)_(\d+)_(\d+)')
 
 
 @lazyobject
@@ -201,15 +207,21 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
     # strip some actual escape codes, if needed.
     ec = ANSI_ESCAPE_CODE_RE.match(escape_code).group(2)
     names = []
+    seen_set_foreback = False
     for e in ec.split(';'):
-        no_left_zero = e.lstrip('0')
-        names.append(reversed_style.get(no_left_zero, no_left_zero))
+        if '38' == e or '48' == e:
+            seen_set_foreback = True
+        no_left_zero = e.lstrip('0') if len(e) > 1 else e
+        if seen_set_foreback and e == '0':
+            names.append(e)
+        else:
+            names.append(reversed_style.get(no_left_zero, no_left_zero))
     # normalize names
     n = ''
     norm_names = []
     for name in names:
         if name == 'NO_COLOR':
-            # skip '0' entries
+            # skip most '0' entries
             continue
         n = n + name if n else name
         n = ANSI_REVERSE_COLOR_NAME_TRANSLATIONS.get(n, n)
@@ -227,6 +239,7 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
                                       prefix=pre)
         elif 'GROUND_3INTS_' in n:
             # have 1 or 2, but not 3 ints
+            n += '_'
             continue
         norm_names.append(n)
         n = ''
