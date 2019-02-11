@@ -207,18 +207,22 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
     # strip some actual escape codes, if needed.
     ec = ANSI_ESCAPE_CODE_RE.match(escape_code).group(2)
     names = []
-    seen_set_foreback = False
+    seen_set_foreback = seen_faint_slowblink = False
     for e in ec.split(';'):
-        if '38' == e or '48' == e:
-            seen_set_foreback = True
         no_left_zero = e.lstrip('0') if len(e) > 1 else e
-        if seen_set_foreback and e == '0':
+        if seen_set_foreback and seen_faint_slowblink:
             names.append(e)
         else:
             names.append(reversed_style.get(no_left_zero, no_left_zero))
+        # set the flags for next time
+        if '38' == e or '48' == e:
+            seen_set_foreback = True
+        elif '2' == e or '5' == e:
+            seen_faint_slowblink = True
     # normalize names
     n = ''
     norm_names = []
+    colors = set(reversed_style.values())
     for name in names:
         if name == 'NO_COLOR':
             # skip most '0' entries
@@ -241,6 +245,9 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
             # have 1 or 2, but not 3 ints
             n += '_'
             continue
+        if n not in colors:
+            print(escape_code, names, name, n)
+            raise ValueError
         norm_names.append(n)
         n = ''
     # return
