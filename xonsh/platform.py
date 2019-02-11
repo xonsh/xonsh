@@ -97,7 +97,7 @@ def PYTHON_VERSION_INFO_BYTES():
 
 
 ON_ANACONDA = LazyBool(
-    lambda: any(s in sys.version for s in {"Anaconda", "Continuum", "conda-forge"}),
+    lambda: pathlib.Path(sys.prefix).joinpath("conda-meta").exists(),
     globals(),
     "ON_ANACONDA",
 )
