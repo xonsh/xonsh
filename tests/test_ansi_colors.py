@@ -28,6 +28,10 @@ def test_ansi_reverse_style(key, value):
     ('31;42', ('RED', 'BACKGROUND_GREEN')),
     ('42;31', ('BACKGROUND_GREEN', 'RED')),
     ('40', ('BACKGROUND_BLACK',)),
+    ('38;5;89', ('PURPLE',),),
+    ('48;5;89', ('BACKGROUND_PURPLE',),),
+    ('38;2;170;0;0', ('RED',),),
+    ('48;2;170;0;0', ('BACKGROUND_RED',),),
 ])
 def test_ansi_color_escape_code_to_name(inp, exp):
     obs = ansi_color_escape_code_to_name(inp, reversed_style=RS)

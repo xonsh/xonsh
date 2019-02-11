@@ -179,6 +179,14 @@ def ANSI_COLOR_NAME_SET_SHORT_RE():
     return re.compile(r'(\w+_)?SET_(FORE|BACK)GROUND_SHORT_(\d+)')
 
 
+def _color_name_from_ints(ints, background=False, prefix=None):
+    name = find_closest_color(ints, BASE_XONSH_COLORS)
+    if background:
+        name = 'BACKGROUND_' + name
+    name = name if prefix is None else prefix + name
+    return name
+
+
 def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=None):
     """Converts an ASNI color code escape sequence to a tuple of color names
     in the provided style ('default', by default). For example,
@@ -192,7 +200,10 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
         style, reversed_style = ansi_reverse_style(style, return_style=True)
     # strip some actual escape codes, if needed.
     ec = ANSI_ESCAPE_CODE_RE.match(escape_code).group(2)
-    names = [reversed_style[e.lstrip('0')] for e in ec.split(';')]
+    names = []
+    for e in ec.split(';'):
+        no_left_zero = e.lstrip('0')
+        names.append(reversed_style.get(no_left_zero, no_left_zero))
     # normalize names
     n = ''
     norm_names = []
@@ -206,10 +217,17 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
             continue
         elif ANSI_COLOR_NAME_SET_SHORT_RE.match(n) is not None:
             pre, fore_back, short = ANSI_COLOR_NAME_SET_SHORT_RE.match(n).groups()
-            new_name = find_closest_color(short_to_ints(short), BASE_XONSH_COLORS)
-            if fore_back == 'BACK':
-                new_name = 'BACKGROUND_' + new_name
-            n = new_name if pre is None else pre + new_name
+            n = _color_name_from_ints(short_to_ints(short),
+                                      background=(fore_back == 'BACK'),
+                                      prefix=pre)
+        elif ANSI_COLOR_NAME_SET_3INTS_RE.match(n) is not None:
+            pre, fore_back, r, g, b = ANSI_COLOR_NAME_SET_3INTS_RE.match(n).groups()
+            n = _color_name_from_ints((int(r), int(g), int(b)),
+                                      background=(fore_back == 'BACK'),
+                                      prefix=pre)
+        elif 'GROUND_3INTS_' in n:
+            # have 1 or 2, but not 3 ints
+            continue
         norm_names.append(n)
         n = ''
     # return
