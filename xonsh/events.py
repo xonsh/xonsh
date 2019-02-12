@@ -22,7 +22,7 @@ def has_kwargs(func):
 
 
 def debug_level():
-    if hasattr(builtins.__xonsh__, "env"):
+    if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, "env"):
         return builtins.__xonsh__.env.get("XONSH_DEBUG")
     # FIXME: Under py.test, return 1(?)
     else:
@@ -299,6 +299,13 @@ class EventManager:
 
         for handler in oldevent:
             newevent.add(handler)
+
+    def exists(self, name):
+        """Checks if an event with a given name exist. If it does not exist, it
+        will not be created. That is what makes this different than
+        ``hasattr(events, name)``, which will create the event.
+        """
+        return name in self.__dict__
 
     def __getattr__(self, name):
         """Get an event, if it doesn't already exist."""

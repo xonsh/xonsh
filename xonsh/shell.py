@@ -60,7 +60,7 @@ Parameters:
 events.doc(
     "on_pre_prompt",
     """
-on_first_prompt() -> None
+on_pre_prompt() -> None
 
 Fires just before the prompt is shown
 """,
@@ -69,7 +69,7 @@ Fires just before the prompt is shown
 events.doc(
     "on_post_prompt",
     """
-on_first_prompt() -> None
+on_post_prompt() -> None
 
 Fires just after the prompt returns
 """,

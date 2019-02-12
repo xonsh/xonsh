@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import time
 import pprint
 import textwrap
 import locale
@@ -109,6 +110,17 @@ on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
 Fires after an environment variable is changed.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
+""",
+)
+
+
+events.doc(
+    "on_pre_spec_run_ls",
+    """
+on_pre_spec_run_ls(spec: xonsh.built_ins.SubprocSpec) -> None
+
+Fires right before a SubprocSpec.run() is called for the ls
+command.
 """,
 )
 
@@ -440,6 +452,20 @@ class LsColors(cabc.MutableMapping):
 def is_lscolors(x):
     """Checks if an object is an instance of LsColors"""
     return isinstance(x, LsColors)
+
+
+@events.on_pre_spec_run_ls
+def ensure_ls_colors_in_env(spec=None, **kwargs):
+    """This ensures that the $LS_COLORS environment variable is in the
+    environment. This fires exactly once upon the first time the
+    ls command is called.
+    """
+    env = builtins.__xonsh__.env
+    if 'LS_COLORS' not in env._d:
+        # this adds it to the env too
+        default_lscolors(env)
+    events.on_pre_spec_run_ls.discard(ensure_ls_colors_in_env)
+
 
 #
 # Ensurerers
