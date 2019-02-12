@@ -193,32 +193,45 @@ def _color_name_from_ints(ints, background=False, prefix=None):
     return name
 
 
-def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=None):
+_ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE = {}
+
+
+def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     """Converts an ASNI color code escape sequence to a tuple of color names
-    in the provided style ('default', by default). For example,
+    in the provided style ('default' should almost be the style). For example,
     '0' becomes ('NO_COLOR',) and '32;41' becomes ('GREEN', 'BACKGROUND_RED').
     The style keyword may either be a string, in which the style is looked up,
     or an actual style dict.  You can also provide a reversed style mapping,
     too, which is just the keys/values of the style dict swapped. If reversed
     style is not provided, it is computed.
     """
+    key = (escape_code, style)
+    if key in _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE:
+        return _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE[key]
     if reversed_style is None:
         style, reversed_style = ansi_reverse_style(style, return_style=True)
     # strip some actual escape codes, if needed.
     ec = ANSI_ESCAPE_CODE_RE.match(escape_code).group(2)
     names = []
-    seen_set_foreback = seen_faint_slowblink = False
+    n_ints = 0
+    seen_set_foreback = False
     for e in ec.split(';'):
         no_left_zero = e.lstrip('0') if len(e) > 1 else e
-        if seen_set_foreback and seen_faint_slowblink:
+        if seen_set_foreback and n_ints > 0:
             names.append(e)
+            n_ints -= 1
+            if n_ints == 0:
+                seen_set_foreback = False
+            continue
         else:
             names.append(reversed_style.get(no_left_zero, no_left_zero))
         # set the flags for next time
         if '38' == e or '48' == e:
             seen_set_foreback = True
-        elif '2' == e or '5' == e:
-            seen_faint_slowblink = True
+        elif '2' == e:
+            n_ints = 3
+        elif '5' == e:
+            n_ints = 1
     # normalize names
     n = ''
     norm_names = []
@@ -245,9 +258,12 @@ def ansi_color_escape_code_to_name(escape_code, style='default', reversed_style=
             # have 1 or 2, but not 3 ints
             n += '_'
             continue
+        # error check
         if n not in colors:
-            print(escape_code, names, name, n)
-            raise ValueError
+            msg = ("Could not translate ANSI color code {escape_code!r} "
+                   "into a known color in the palette. Specifically, the {n!r} "
+                   "portion of {name!r} in {names!r} seems to missing.")
+            raise ValueError(msg.format(escape_code=escape_code, names=names, name=name, n=n))
         norm_names.append(n)
         n = ''
     # return

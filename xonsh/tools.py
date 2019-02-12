@@ -1138,6 +1138,11 @@ def always_false(x):
     return False
 
 
+def always_none(x):
+    """Returns None"""
+    return None
+
+
 def ensure_string(x):
     """Returns a string if x is not a string, and x if it already is."""
     return str(x)
@@ -2119,7 +2124,9 @@ def expandvars(path):
             name = match.group("envvar")
             if name in env:
                 ensurer = env.get_ensurer(name)
-                value = ensurer.detype(env[name])
+                val = env[name]
+                value = str(val) if ensurer.detype is None else ensurer.detype(val)
+                value = str(val) if value is None else value
                 path = POSIX_ENVVAR_REGEX.sub(value, path, count=1)
     return path
 

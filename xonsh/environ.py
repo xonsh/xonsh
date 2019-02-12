@@ -32,6 +32,7 @@ from xonsh.style_tools import PTK2_STYLE
 from xonsh.tools import (
     always_true,
     always_false,
+    always_none,
     detype,
     ensure_string,
     is_env_path,
@@ -330,6 +331,23 @@ class LsColors(cabc.MutableMapping):
     def __iter__(self):
         yield from self._d
 
+    def __str__(self):
+        return str(self._d)
+
+    def __repr__(self):
+        return "{0}.{1}(...)".format(
+            self.__class__.__module__, self.__class__.__name__, self._d
+        )
+
+    def _repr_pretty_(self, p, cycle):
+        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
+        with p.group(0, name + "(", ")"):
+            if cycle:
+                p.text("...")
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
+
     def detype(self):
         """De-types the instance, allowing it to be exported to the environment."""
         style = self.style
@@ -377,7 +395,7 @@ class LsColors(cabc.MutableMapping):
                 # not a valid item
                 continue
             data[key] = ansi_color_escape_code_to_name(
-                esc, reversed_style=reversed_default
+                esc, "default", reversed_style=reversed_default
             )
         obj._d = data
         return obj
@@ -494,6 +512,7 @@ def DEFAULT_ENSURERS():
         ),
         "PRETTY_PRINT_RESULTS": (is_bool, to_bool, bool_to_str),
         "PROMPT": (is_string_or_callable, ensure_string, ensure_string),
+        "PROMPT_FIELDS": (always_true, None, None),
         "PROMPT_TOOLKIT_COLOR_DEPTH": (
             always_false,
             ptk2_color_depth_setter,
@@ -622,9 +641,12 @@ def default_lscolors(env):
     """Gets a default instanse of LsColors"""
     inherited_lscolors = os_environ.get('LS_COLORS', None)
     if inherited_lscolors is None:
-        return LsColors.fromdircolors()
+        lsc = LsColors.fromdircolors()
     else:
-        return LsColors.fromstring(inherited_lscolors)
+        lsc = LsColors.fromstring(inherited_lscolors)
+    # have to place this in the env, so it is applied
+    env['LS_COLORS'] = lsc
+    return lsc
 
 
 # Default values should generally be immutable, that way if a user wants
@@ -1305,10 +1327,13 @@ class Env(cabc.MutableMapping):
             if not isinstance(key, str):
                 key = str(key)
             ensurer = self.get_ensurer(key)
-            if not ensurer.detype or not callable(ensurer.detype):
-                # cannot actually detype this var.
+            if ensurer.detype is None:
+                # cannot be detyped
                 continue
             deval = ensurer.detype(val)
+            if deval is None:
+                # cannot be detyped
+                continue
             ctx[key] = deval
         self._detyped = ctx
         return ctx
@@ -1331,20 +1356,14 @@ class Env(cabc.MutableMapping):
             os_environ.update(self._orig_env)
             self._orig_env = None
 
-    @staticmethod
-    def detypeable(val):
-        return not (callable(val) or isinstance(val, cabc.MutableMapping))
-
-    def _get_default_ensurer(self, val, default=None):
+    def _get_default_ensurer(self, default=None):
         if default is not None:
             return default
-        if self.detypeable(val):
-            default = Ensurer(always_true, None, ensure_string)
         else:
-            default = Ensurer(always_true, None, False)
+            default = Ensurer(always_true, None, ensure_string)
         return default
 
-    def get_ensurer(self, key, val=None, default=None):
+    def get_ensurer(self, key, default=None):
         """Gets an ensurer for the given key."""
         if key in self._ensurers:
             return self._ensurers[key]
@@ -1354,7 +1373,7 @@ class Env(cabc.MutableMapping):
             if k.match(key) is not None:
                 break
         else:
-            ensurer = self._get_default_ensurer(val=val, default=default)
+            ensurer = self._get_default_ensurer(default=default)
         self._ensurers[key] = ensurer
         return ensurer
 
@@ -1450,24 +1469,26 @@ class Env(cabc.MutableMapping):
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
-        if self.detypeable(val):
-            self._detyped = None
-            if self.get("UPDATE_OS_ENVIRON"):
-                if self._orig_env is None:
-                    self.replace_env()
-                else:
-                    os_environ[key] = ensurer.detype(val)
+        self._detyped = None
+        if self.get("UPDATE_OS_ENVIRON"):
+            if self._orig_env is None:
+                self.replace_env()
+            elif ensurer.detype is None:
+                pass
+            else:
+                deval = ensurer.detype(val)
+                if deval is not None:
+                    os_environ[key] = deval
         if old_value is self._no_value:
             events.on_envvar_new.fire(name=key, value=val)
         elif old_value != val:
             events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
 
     def __delitem__(self, key):
-        val = self._d.pop(key)
-        if self.detypeable(val):
-            self._detyped = None
-            if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
-                del os_environ[key]
+        del self._d[key]
+        self._detyped = None
+        if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
+            del os_environ[key]
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
@@ -1527,7 +1548,6 @@ def locate_binary(name):
 BASE_ENV = LazyObject(
     lambda: {
         "BASH_COMPLETIONS": list(DEFAULT_VALUES["BASH_COMPLETIONS"]),
-        "LS_COLORS": default_lscolors({}),
         "PROMPT_FIELDS": dict(DEFAULT_VALUES["PROMPT_FIELDS"]),
         "XONSH_VERSION": XONSH_VERSION,
     },
@@ -1599,7 +1619,9 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
 def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
+    t0 = time.monotonic()
     ctx = dict(BASE_ENV)
+    print("base env took:", time.monotonic() - t0)
     ctx.update(os_environ)
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
