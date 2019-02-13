@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import time
 import pprint
 import textwrap
 import locale
@@ -970,7 +969,7 @@ def DEFAULT_DOCS():
             configurable=ON_WINDOWS,
         ),
         "LANG": VarDocs("Fallback locale setting for systems where it matters"),
-        "LS_COLORS": VarDoc("Color settings for ``ls`` command line utility"),
+        "LS_COLORS": VarDocs("Color settings for ``ls`` command line utility"),
         "LOADED_RC_FILES": VarDocs(
             "Whether or not any of the xonsh run control files were loaded at "
             "startup. This is a sequence of bools in Python that is converted "
@@ -1645,9 +1644,7 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
 def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
-    t0 = time.monotonic()
     ctx = dict(BASE_ENV)
-    print("base env took:", time.monotonic() - t0)
     ctx.update(os_environ)
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
