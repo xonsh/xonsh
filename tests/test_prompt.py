@@ -106,74 +106,65 @@ def test_format_prompt_with_no_env(formatter, xonsh_builtins, live_fields):
     xonsh_builtins.__xonsh__.shell.prompt_formatter = formatter
 
     env = Env()
-    env.pop('VIRTUAL_ENV', None)        # For virtualenv
-    env.pop('CONDA_DEFAULT_ENV', None)  # For conda/CircleCI
+    env.pop("VIRTUAL_ENV", None)  # For virtualenv
+    env.pop("CONDA_DEFAULT_ENV", None)  # For conda/CircleCI
     xonsh_builtins.__xonsh__.env = env
 
-    assert formatter('{env_name}', fields=live_fields) == ''
+    assert formatter("{env_name}", fields=live_fields) == ""
 
 
-@pytest.mark.parametrize('envname', ['env', 'foo', 'bar'])
-def test_format_prompt_with_various_envs(formatter, xonsh_builtins, live_fields, envname):
+@pytest.mark.parametrize("envname", ["env", "foo", "bar"])
+def test_format_prompt_with_various_envs(
+    formatter, xonsh_builtins, live_fields, envname
+):
     xonsh_builtins.__xonsh__.shell.prompt_formatter = formatter
 
     env = Env(VIRTUAL_ENV=envname)
     xonsh_builtins.__xonsh__.env = env
 
-    exp = live_fields['env_prefix'] + envname + live_fields['env_postfix']
-    assert formatter('{env_name}', fields=live_fields) == exp
+    exp = live_fields["env_prefix"] + envname + live_fields["env_postfix"]
+    assert formatter("{env_name}", fields=live_fields) == exp
 
 
-@pytest.mark.parametrize('pre', ['(', '[[', '', '   '])
-@pytest.mark.parametrize('post', [')', ']]', '', '   '])
+@pytest.mark.parametrize("pre", ["(", "[[", "", "   "])
+@pytest.mark.parametrize("post", [")", "]]", "", "   "])
 def test_format_prompt_with_various_prepost(
-    formatter,
-    xonsh_builtins,
-    live_fields,
-    pre,
-    post,
+    formatter, xonsh_builtins, live_fields, pre, post
 ):
     xonsh_builtins.__xonsh__.shell.prompt_formatter = formatter
 
-    env = Env(VIRTUAL_ENV='env')
+    env = Env(VIRTUAL_ENV="env")
     xonsh_builtins.__xonsh__.env = env
 
-    live_fields.update({'env_prefix': pre, 'env_postfix': post})
+    live_fields.update({"env_prefix": pre, "env_postfix": post})
 
-    exp = pre + 'env' + post
-    assert formatter('{env_name}', fields=live_fields) == exp
+    exp = pre + "env" + post
+    assert formatter("{env_name}", fields=live_fields) == exp
 
 
 def test_noenv_with_disable_set(formatter, xonsh_builtins, live_fields):
     xonsh_builtins.__xonsh__.shell.prompt_formatter = formatter
 
-    env = Env(VIRTUAL_ENV='env', VIRTUAL_ENV_DISABLE_PROMPT=1)
+    env = Env(VIRTUAL_ENV="env", VIRTUAL_ENV_DISABLE_PROMPT=1)
     xonsh_builtins.__xonsh__.env = env
 
-    exp = ''
-    assert formatter('{env_name}', fields=live_fields) == exp
+    exp = ""
+    assert formatter("{env_name}", fields=live_fields) == exp
 
 
-@pytest.mark.parametrize('disable', [0, 1])
-def test_custom_env_overrides_default(
-    formatter,
-    xonsh_builtins,
-    live_fields,
-    disable,
-):
+@pytest.mark.parametrize("disable", [0, 1])
+def test_custom_env_overrides_default(formatter, xonsh_builtins, live_fields, disable):
     xonsh_builtins.__xonsh__.shell.prompt_formatter = formatter
 
-    prompt = '!venv active! '
+    prompt = "!venv active! "
 
     env = Env(
-        VIRTUAL_ENV='env',
-        VIRTUAL_ENV_PROMPT=prompt,
-        VIRTUAL_ENV_DISABLE_PROMPT=disable,
+        VIRTUAL_ENV="env", VIRTUAL_ENV_PROMPT=prompt, VIRTUAL_ENV_DISABLE_PROMPT=disable
     )
     xonsh_builtins.__xonsh__.env = env
 
-    exp = '' if disable else prompt
-    assert formatter('{env_name}', fields=live_fields) == exp
+    exp = "" if disable else prompt
+    assert formatter("{env_name}", fields=live_fields) == exp
 
 
 def test_promptformatter_cache(formatter):

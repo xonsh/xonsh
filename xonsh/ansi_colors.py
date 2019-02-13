@@ -117,7 +117,7 @@ def ansi_color_style(style="default"):
     return cmap
 
 
-def ansi_reverse_style(style='default', return_style=False):
+def ansi_reverse_style(style="default", return_style=False):
     """Reverses an ANSI color style mapping so that escape codes map to
     colors. Style may either be string or mapping. May also return
     the style it looked up.
@@ -126,22 +126,22 @@ def ansi_reverse_style(style='default', return_style=False):
     reversed_style = {v: k for k, v in style.items()}
     # add keys to make this more useful
     updates = {
-        '1': 'BOLD_',
-        '2': 'FAINT_',
-        '4': 'UNDERLINE_',
-        '5': 'SLOWBLINK_',
-        '1;4': 'BOLD_UNDERLINE_',
-        '4;1': 'BOLD_UNDERLINE_',
-        '38': 'SET_FOREGROUND_',
-        '48': 'SET_BACKGROUND_',
-        '38;2': 'SET_FOREGROUND_3INTS_',
-        '48;2': 'SET_BACKGROUND_3INTS_',
-        '38;5': 'SET_FOREGROUND_SHORT_',
-        '48;5': 'SET_BACKGROUND_SHORT_',
+        "1": "BOLD_",
+        "2": "FAINT_",
+        "4": "UNDERLINE_",
+        "5": "SLOWBLINK_",
+        "1;4": "BOLD_UNDERLINE_",
+        "4;1": "BOLD_UNDERLINE_",
+        "38": "SET_FOREGROUND_",
+        "48": "SET_BACKGROUND_",
+        "38;2": "SET_FOREGROUND_3INTS_",
+        "48;2": "SET_BACKGROUND_3INTS_",
+        "38;5": "SET_FOREGROUND_SHORT_",
+        "48;5": "SET_BACKGROUND_SHORT_",
     }
     for ec, name in reversed_style.items():
-        no_left_zero = ec.lstrip('0')
-        if no_left_zero.startswith(';'):
+        no_left_zero = ec.lstrip("0")
+        if no_left_zero.startswith(";"):
             updates[no_left_zero[1:]] = name
         elif no_left_zero != ec:
             updates[no_left_zero] = name
@@ -155,40 +155,40 @@ def ansi_reverse_style(style='default', return_style=False):
 
 @lazyobject
 def ANSI_ESCAPE_CODE_RE():
-    return re.compile(r'\001?(\033\[)?([0-9;]+)m?\002?')
+    return re.compile(r"\001?(\033\[)?([0-9;]+)m?\002?")
 
 
 @lazyobject
 def ANSI_REVERSE_COLOR_NAME_TRANSLATIONS():
     base = {
-        'SET_FOREGROUND_FAINT_': 'SET_FOREGROUND_3INTS_',
-        'SET_BACKGROUND_FAINT_': 'SET_BACKGROUND_3INTS_',
-        'SET_FOREGROUND_SLOWBLINK_': 'SET_FOREGROUND_SHORT_',
-        'SET_BACKGROUND_SLOWBLINK_': 'SET_BACKGROUND_SHORT_',
+        "SET_FOREGROUND_FAINT_": "SET_FOREGROUND_3INTS_",
+        "SET_BACKGROUND_FAINT_": "SET_BACKGROUND_3INTS_",
+        "SET_FOREGROUND_SLOWBLINK_": "SET_FOREGROUND_SHORT_",
+        "SET_BACKGROUND_SLOWBLINK_": "SET_BACKGROUND_SHORT_",
     }
-    data = {'UNDERLINE_BOLD_': 'BOLD_UNDERLINE_'}
+    data = {"UNDERLINE_BOLD_": "BOLD_UNDERLINE_"}
     data.update(base)
-    data.update({'BOLD_' + k: 'BOLD_' + v for k, v in base.items()})
-    data.update({'UNDERLINE_' + k: 'UNDERLINE_' + v for k, v in base.items()})
-    data.update({'BOLD_UNDERLINE_' + k: 'BOLD_UNDERLINE_' + v for k, v in base.items()})
-    data.update({'UNDERLINE_BOLD_' + k: 'BOLD_UNDERLINE_' + v for k, v in base.items()})
+    data.update({"BOLD_" + k: "BOLD_" + v for k, v in base.items()})
+    data.update({"UNDERLINE_" + k: "UNDERLINE_" + v for k, v in base.items()})
+    data.update({"BOLD_UNDERLINE_" + k: "BOLD_UNDERLINE_" + v for k, v in base.items()})
+    data.update({"UNDERLINE_BOLD_" + k: "BOLD_UNDERLINE_" + v for k, v in base.items()})
     return data
 
 
 @lazyobject
 def ANSI_COLOR_NAME_SET_3INTS_RE():
-    return re.compile(r'(\w+_)?SET_(FORE|BACK)GROUND_3INTS_(\d+)_(\d+)_(\d+)')
+    return re.compile(r"(\w+_)?SET_(FORE|BACK)GROUND_3INTS_(\d+)_(\d+)_(\d+)")
 
 
 @lazyobject
 def ANSI_COLOR_NAME_SET_SHORT_RE():
-    return re.compile(r'(\w+_)?SET_(FORE|BACK)GROUND_SHORT_(\d+)')
+    return re.compile(r"(\w+_)?SET_(FORE|BACK)GROUND_SHORT_(\d+)")
 
 
 def _color_name_from_ints(ints, background=False, prefix=None):
     name = find_closest_color(ints, BASE_XONSH_COLORS)
     if background:
-        name = 'BACKGROUND_' + name
+        name = "BACKGROUND_" + name
     name = name if prefix is None else prefix + name
     return name
 
@@ -215,8 +215,8 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     names = []
     n_ints = 0
     seen_set_foreback = False
-    for e in ec.split(';'):
-        no_left_zero = e.lstrip('0') if len(e) > 1 else e
+    for e in ec.split(";"):
+        no_left_zero = e.lstrip("0") if len(e) > 1 else e
         if seen_set_foreback and n_ints > 0:
             names.append(e)
             n_ints -= 1
@@ -226,49 +226,53 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
         else:
             names.append(reversed_style.get(no_left_zero, no_left_zero))
         # set the flags for next time
-        if '38' == e or '48' == e:
+        if "38" == e or "48" == e:
             seen_set_foreback = True
-        elif '2' == e:
+        elif "2" == e:
             n_ints = 3
-        elif '5' == e:
+        elif "5" == e:
             n_ints = 1
     # normalize names
-    n = ''
+    n = ""
     norm_names = []
     colors = set(reversed_style.values())
     for name in names:
-        if name == 'NO_COLOR':
+        if name == "NO_COLOR":
             # skip most '0' entries
             continue
         n = n + name if n else name
         n = ANSI_REVERSE_COLOR_NAME_TRANSLATIONS.get(n, n)
-        if n.endswith('_'):
+        if n.endswith("_"):
             continue
         elif ANSI_COLOR_NAME_SET_SHORT_RE.match(n) is not None:
             pre, fore_back, short = ANSI_COLOR_NAME_SET_SHORT_RE.match(n).groups()
-            n = _color_name_from_ints(short_to_ints(short),
-                                      background=(fore_back == 'BACK'),
-                                      prefix=pre)
+            n = _color_name_from_ints(
+                short_to_ints(short), background=(fore_back == "BACK"), prefix=pre
+            )
         elif ANSI_COLOR_NAME_SET_3INTS_RE.match(n) is not None:
             pre, fore_back, r, g, b = ANSI_COLOR_NAME_SET_3INTS_RE.match(n).groups()
-            n = _color_name_from_ints((int(r), int(g), int(b)),
-                                      background=(fore_back == 'BACK'),
-                                      prefix=pre)
-        elif 'GROUND_3INTS_' in n:
+            n = _color_name_from_ints(
+                (int(r), int(g), int(b)), background=(fore_back == "BACK"), prefix=pre
+            )
+        elif "GROUND_3INTS_" in n:
             # have 1 or 2, but not 3 ints
-            n += '_'
+            n += "_"
             continue
         # error check
         if n not in colors:
-            msg = ("Could not translate ANSI color code {escape_code!r} "
-                   "into a known color in the palette. Specifically, the {n!r} "
-                   "portion of {name!r} in {names!r} seems to missing.")
-            raise ValueError(msg.format(escape_code=escape_code, names=names, name=name, n=n))
+            msg = (
+                "Could not translate ANSI color code {escape_code!r} "
+                "into a known color in the palette. Specifically, the {n!r} "
+                "portion of {name!r} in {names!r} seems to missing."
+            )
+            raise ValueError(
+                msg.format(escape_code=escape_code, names=names, name=name, n=n)
+            )
         norm_names.append(n)
-        n = ''
+        n = ""
     # return
     if len(norm_names) == 0:
-        return ('NO_COLOR',)
+        return ("NO_COLOR",)
     else:
         return tuple(norm_names)
 

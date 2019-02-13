@@ -365,7 +365,7 @@ class LsColors(cabc.MutableMapping):
         if self._detyped is None:
             self._detyped = ":".join(
                 [
-                    key + "=" + ";".join([style[v] or '0' for v in val])
+                    key + "=" + ";".join([style[v] or "0" for v in val])
                     for key, val in sorted(self._d.items())
                 ]
             )
@@ -421,13 +421,15 @@ class LsColors(cabc.MutableMapping):
         if filename is not None:
             cmd.append(filename)
         # get env
-        if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, 'env'):
+        if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, "env"):
             denv = builtins.__xonsh__.env.detype()
         else:
             denv = None
         # run dircolors
         try:
-            out = subprocess.check_output(cmd, env=denv, universal_newlines=True, stderr=subprocess.DEVNULL)
+            out = subprocess.check_output(
+                cmd, env=denv, universal_newlines=True, stderr=subprocess.DEVNULL
+            )
         except (subprocess.CalledProcessError, FileNotFoundError):
             return cls(cls.default_settings)
         s = out.splitlines()[0]
@@ -460,7 +462,7 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
     ls command is called.
     """
     env = builtins.__xonsh__.env
-    if 'LS_COLORS' not in env._d:
+    if "LS_COLORS" not in env._d:
         # this adds it to the env too
         default_lscolors(env)
     events.on_pre_spec_run_ls.discard(ensure_ls_colors_in_env)
@@ -664,13 +666,13 @@ def xonsh_append_newline(env):
 @default_value
 def default_lscolors(env):
     """Gets a default instanse of LsColors"""
-    inherited_lscolors = os_environ.get('LS_COLORS', None)
+    inherited_lscolors = os_environ.get("LS_COLORS", None)
     if inherited_lscolors is None:
         lsc = LsColors.fromdircolors()
     else:
         lsc = LsColors.fromstring(inherited_lscolors)
     # have to place this in the env, so it is applied
-    env['LS_COLORS'] = lsc
+    env["LS_COLORS"] = lsc
     return lsc
 
 

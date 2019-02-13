@@ -1088,6 +1088,7 @@ def swap_values(d, updates, default=_DEFAULT_SENTINEL):
 # Validators and converters
 #
 
+
 def detype(x):
     """This assumes that the object has a detype method, and calls that."""
     return x.detype()
