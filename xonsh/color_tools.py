@@ -9,7 +9,6 @@ import re
 import math
 
 from xonsh.lazyasd import lazyobject, LazyObject
-from xonsh.tools import deprecated
 
 
 RE_BACKGROUND = LazyObject(

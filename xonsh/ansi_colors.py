@@ -13,7 +13,6 @@ from xonsh.color_tools import (
     find_closest_color,
     rgb2short,
     rgb_to_256,
-    rgb_to_ints,
     short_to_ints,
 )
 from xonsh.tools import FORMATTER

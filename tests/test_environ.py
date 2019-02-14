@@ -6,13 +6,14 @@ import tempfile
 import builtins
 import itertools
 from tempfile import TemporaryDirectory
-from xonsh.tools import ON_WINDOWS
+from xonsh.tools import ON_WINDOWS, always_true
 
 import pytest
 
 from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
+    Ensurer,
     locate_binary,
     DEFAULT_ENSURERS,
     DEFAULT_VALUES,
@@ -67,6 +68,7 @@ def test_env_detype_mutable_access_clear(path1, path2):
 
 def test_env_detype_no_dict():
     env = Env(YO={"hey": 42})
+    env.get_ensurer('YO', default=Ensurer(always_true, None, None))
     det = env.detype()
     assert "YO" not in det
 

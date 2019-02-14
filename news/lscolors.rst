@@ -30,9 +30,7 @@
   ``detype()`` method in order to detype it.
 * New ``xonsh.tools.always_none()`` function that simply returns None.
 
-
 **Changed:**
-
 
 * The black and white style ``bw`` now uses actual black and white
   ANSI colore codes for its colors, rather than just empty color

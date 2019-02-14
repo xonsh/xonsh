@@ -32,7 +32,6 @@ from xonsh.style_tools import PTK2_STYLE
 from xonsh.tools import (
     always_true,
     always_false,
-    always_none,
     detype,
     ensure_string,
     is_env_path,
