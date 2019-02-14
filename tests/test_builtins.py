@@ -5,7 +5,7 @@ import os
 import re
 import builtins
 import types
-from ast import AST
+from ast import AST, Module, Interactive, Expression
 
 import pytest
 
@@ -324,6 +324,61 @@ def test_call_macro_raw_kwargs(arg):
 
     rtn = call_macro(f, ["*", '**{"x" :' + arg + "}"], {"x": 42, "y": 0}, None)
     assert rtn == 42
+
+
+def test_call_macro_ast_eval_expr():
+    def f(x: ("ast", "eval")):
+        return x
+
+    rtn = call_macro(f, ["x == 5"], {}, None)
+    assert isinstance(rtn, Expression)
+
+
+def test_call_macro_ast_single_expr():
+    def f(x: ("ast", "single")):
+        return x
+
+    rtn = call_macro(f, ["x == 5"], {}, None)
+    assert isinstance(rtn, Interactive)
+
+
+def test_call_macro_ast_exec_expr():
+    def f(x: ("ast", "exec")):
+        return x
+
+    rtn = call_macro(f, ["x == 5"], {}, None)
+    assert isinstance(rtn, Module)
+
+
+def test_call_macro_ast_eval_statement():
+    def f(x: ("ast", "eval")):
+        return x
+
+    try:
+        rtn = call_macro(f, ["x = 5"], {}, None)
+        assert False
+    except SyntaxError:
+        # It doesn't make sense to pass a statement to
+        # something that expects to be evaled
+        assert True
+    else:
+        assert False
+
+
+def test_call_macro_ast_single_statement():
+    def f(x: ("ast", "single")):
+        return x
+
+    rtn = call_macro(f, ["x = 5"], {}, None)
+    assert isinstance(rtn, Interactive)
+
+
+def test_call_macro_ast_exec_statement():
+    def f(x: ("ast", "exec")):
+        return x
+
+    rtn = call_macro(f, ["x = 5"], {}, None)
+    assert isinstance(rtn, Module)
 
 
 def test_enter_macro():

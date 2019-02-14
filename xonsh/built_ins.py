@@ -1074,6 +1074,8 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
         if locs is not None:
             ctx |= set(locs.keys())
         mode = mode or "eval"
+        if mode != "eval" and not raw_arg.endswith("\n"):
+            raw_arg += "\n"
         arg = execer.parse(raw_arg, ctx, mode=mode, filename=filename)
     elif kind is types.CodeType or kind is compile:  # NOQA
         mode = mode or "eval"
