@@ -68,7 +68,7 @@ def test_env_detype_mutable_access_clear(path1, path2):
 
 def test_env_detype_no_dict():
     env = Env(YO={"hey": 42})
-    env.get_ensurer('YO', default=Ensurer(always_true, None, None))
+    env.set_ensurer('YO', Ensurer(always_true, None, None))
     det = env.detype()
     assert "YO" not in det
 

@@ -1403,6 +1403,11 @@ class Env(cabc.MutableMapping):
         self._ensurers[key] = ensurer
         return ensurer
 
+    def set_ensurer(self, key, value):
+        """Sets an ensurer."""
+        self._detyped = None
+        self._ensurers[key] = value
+
     def get_docs(self, key, default=VarDocs("<no documentation>")):
         """Gets the documentation for the environment variable."""
         vd = self._docs.get(key, None)

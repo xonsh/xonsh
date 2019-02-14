@@ -29,6 +29,7 @@
 * New ``xonsh.tools.detype()`` function that simply calls an objects own
   ``detype()`` method in order to detype it.
 * New ``xonsh.tools.always_none()`` function that simply returns None.
+* New ``Env.set_ensurer()`` method for setting an ensurer on an environment.
 
 **Changed:**
 
