@@ -184,7 +184,7 @@ else:
                 # only reset the mask if it is non-empty! See #2989
                 _pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
-    def wait_for_active_job(last_task=None, backgrounded=False, _nochild=False):
+    def wait_for_active_job(last_task=None, backgrounded=False, return_error=False):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -198,12 +198,12 @@ else:
         backgrounded = False
         try:
             _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
-        except ChildProcessError:  # No child processes
-            if _nochild:
-                return active_task
+        except ChildProcessError as e:  # No child processes
+            if return_error:
+                return e
             else:
-                return wait_for_active_job(
-                    last_task=active_task, backgrounded=backgrounded, _nochild=True
+                return _safe_wait_for_active_job(
+                    last_task=active_task, backgrounded=backgrounded,
                 )
         if os.WIFSTOPPED(wcode):
             print("^Z")
@@ -217,6 +217,19 @@ else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
         return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
+
+
+def _safe_wait_for_active_job(last_task=None, backgrounded=False):
+    """Safely call wait_for_active_job()"""
+    have_error = True
+    while have_error:
+        try:
+            rtn = wait_for_active_job(last_task=last_task, backgrounded=backgrounded,
+                                      return_error=True)
+        except ChildProcessError as e:
+            rtn = e
+        have_error = isinstance(e, ChildProcessError)
+    return rtn
 
 
 def get_next_task():
