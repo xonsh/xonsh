@@ -203,7 +203,7 @@ else:
                 return e
             else:
                 return _safe_wait_for_active_job(
-                    last_task=active_task, backgrounded=backgrounded,
+                    last_task=active_task, backgrounded=backgrounded
                 )
         if os.WIFSTOPPED(wcode):
             print("^Z")
@@ -224,8 +224,9 @@ def _safe_wait_for_active_job(last_task=None, backgrounded=False):
     have_error = True
     while have_error:
         try:
-            rtn = wait_for_active_job(last_task=last_task, backgrounded=backgrounded,
-                                      return_error=True)
+            rtn = wait_for_active_job(
+                last_task=last_task, backgrounded=backgrounded, return_error=True
+            )
         except ChildProcessError as e:
             rtn = e
         have_error = isinstance(e, ChildProcessError)
