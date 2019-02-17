@@ -184,7 +184,8 @@ def _dump_xonfig_foreign_shell(path, value):
 def _dump_xonfig_env(path, value):
     name = os.path.basename(path.rstrip("/"))
     ensurer = builtins.__xonsh__.env.get_ensurer(name)
-    dval = ensurer.detype(value)
+    dval = str(value) if ensurer.detype is None else ensurer.detype(value)
+    dval = str(value) if dval is None else dval
     return "${name} = {val!r}".format(name=name, val=dval)
 
 

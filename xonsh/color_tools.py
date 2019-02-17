@@ -9,7 +9,6 @@ import re
 import math
 
 from xonsh.lazyasd import lazyobject, LazyObject
-from xonsh.tools import deprecated
 
 
 RE_BACKGROUND = LazyObject(
@@ -396,6 +395,11 @@ def rgb_to_ints(rgb):
         return tuple([int(h * 2, 16) for h in RE_RGB3.split(rgb)[1:4]])
 
 
+def short_to_ints(short):
+    """Coverts a short (256) color to a 3-tuple of ints."""
+    return rgb_to_ints(short2rgb(short))
+
+
 def color_dist(x, y):
     return math.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2 + (x[2] - y[2]) ** 2)
 
@@ -413,8 +417,3 @@ def make_palette(strings):
             t, _, s = t.partition(" ")
             palette[t] = rgb_to_ints(t)
     return palette
-
-
-@deprecated(deprecated_in="0.5.10", removed_in="0.6.0")
-def make_pallete(*args, **kwargs):
-    make_palette(*args, **kwargs)

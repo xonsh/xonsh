@@ -535,6 +535,8 @@ class SubprocSpec:
 
     def run(self, *, pipeline_group=None):
         """Launches the subprocess and returns the object."""
+        event_name = self._cmd_event_name()
+        self._pre_run_event_fire(event_name)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         self.prep_env(kwargs)
         self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
@@ -549,6 +551,7 @@ class SubprocSpec:
         p.last_in_pipeline = self.last_in_pipeline
         p.captured_stdout = self.captured_stdout
         p.captured_stderr = self.captured_stderr
+        self._post_run_event_fire(event_name, p)
         return p
 
     def _run_binary(self, kwargs):
@@ -603,6 +606,26 @@ class SubprocSpec:
         cmd = self.cmd
         for i in range(len(cmd)):
             cmd[i] = cmd[i].replace("\0", "\\0")
+
+    def _cmd_event_name(self):
+        if callable(self.alias):
+            return self.alias.__name__
+        elif self.binary_loc is None:
+            return "<not-found>"
+        else:
+            return os.path.basename(self.binary_loc)
+
+    def _pre_run_event_fire(self, name):
+        event_name = "on_pre_spec_run_" + name
+        if events.exists(event_name):
+            event = getattr(events, event_name)
+            event.fire(spec=self)
+
+    def _post_run_event_fire(self, name, proc):
+        event_name = "on_post_spec_run_" + name
+        if events.exists(event_name):
+            event = getattr(events, event_name)
+            event.fire(spec=self, proc=proc)
 
     #
     # Building methods

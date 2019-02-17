@@ -51,7 +51,9 @@ skip_if_on_msys = pytest.mark.skipif(
 
 skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason="Unix stuff")
 
-skip_if_on_azure_pipelines = pytest.mark.skipif(ON_AZURE_PIPELINES, reason="not suitable for azure")
+skip_if_on_azure_pipelines = pytest.mark.skipif(
+    ON_AZURE_PIPELINES, reason="not suitable for azure"
+)
 
 skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason="Windows stuff")
 
@@ -201,9 +203,11 @@ def nodes_equal(x, y):
         type(y),
     )
     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-        assert x.lineno == y.lineno, (
-            "Ast nodes do not have the same line number : %s != %s"
-            % (x.lineno, y.lineno)
+        assert (
+            x.lineno == y.lineno
+        ), "Ast nodes do not have the same line number : %s != %s" % (
+            x.lineno,
+            y.lineno,
         )
         assert x.col_offset == y.col_offset, (
             "Ast nodes do not have the same column offset number : %s != %s"

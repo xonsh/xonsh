@@ -22,7 +22,7 @@ def has_kwargs(func):
 
 
 def debug_level():
-    if hasattr(builtins.__xonsh__, "env"):
+    if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, "env"):
         return builtins.__xonsh__.env.get("XONSH_DEBUG")
     # FIXME: Under py.test, return 1(?)
     else:
@@ -118,6 +118,9 @@ class Event(AbstractEvent):
     # Wish I could just pull from set...
     def __init__(self):
         self._handlers = set()
+        self._firing = False
+        self._delayed_adds = None
+        self._delayed_discards = None
 
     def __len__(self):
         return len(self._handlers)
@@ -134,7 +137,12 @@ class Event(AbstractEvent):
 
         This has no effect if the element is already present.
         """
-        self._handlers.add(item)
+        if self._firing:
+            if self._delayed_adds is None:
+                self._delayed_adds = set()
+            self._delayed_adds.add(item)
+        else:
+            self._handlers.add(item)
 
     def discard(self, item):
         """
@@ -142,7 +150,12 @@ class Event(AbstractEvent):
 
         If the element is not a member, do nothing.
         """
-        self._handlers.discard(item)
+        if self._firing:
+            if self._delayed_discards is None:
+                self._delayed_discards = set()
+            self._delayed_discards.add(item)
+        else:
+            self._handlers.discard(item)
 
     def fire(self, **kwargs):
         """
@@ -163,6 +176,7 @@ class Event(AbstractEvent):
             appear multiple times.
         """
         vals = []
+        self._firing = True
         for handler in self._filterhandlers(self._handlers, **kwargs):
             try:
                 rv = handler(**kwargs)
@@ -170,6 +184,14 @@ class Event(AbstractEvent):
                 print_exception("Exception raised in event handler; ignored.")
             else:
                 vals.append(rv)
+        # clean up
+        self._firing = False
+        if self._delayed_adds is not None:
+            self._handlers.update(self._delayed_adds)
+            self._delayed_adds = None
+        if self._delayed_discards is not None:
+            self._handlers.difference_update(self._delayed_discards)
+            self._delayed_discards = None
         return vals
 
 
@@ -299,6 +321,13 @@ class EventManager:
 
         for handler in oldevent:
             newevent.add(handler)
+
+    def exists(self, name):
+        """Checks if an event with a given name exist. If it does not exist, it
+        will not be created. That is what makes this different than
+        ``hasattr(events, name)``, which will create the event.
+        """
+        return name in self.__dict__
 
     def __getattr__(self, name):
         """Get an event, if it doesn't already exist."""
