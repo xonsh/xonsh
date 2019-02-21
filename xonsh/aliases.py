@@ -208,6 +208,7 @@ class PartialEvalAliasBase:
         """
         self.f = f
         self.acc_args = acc_args
+        self.__name__ = getattr(f, "__name__", self.__class__.__name__)
 
     def __call__(
         self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
