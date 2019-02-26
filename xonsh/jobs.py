@@ -229,7 +229,7 @@ def _safe_wait_for_active_job(last_task=None, backgrounded=False):
             )
         except ChildProcessError as e:
             rtn = e
-        have_error = isinstance(e, ChildProcessError)
+        have_error = isinstance(rtn, ChildProcessError)
     return rtn
 
 
