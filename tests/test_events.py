@@ -161,3 +161,9 @@ def test_typos(xonsh_builtins):
         if "pytest" in name:
             continue
         assert inspect.getdoc(ev)
+
+
+def test_exists(events):
+    events.doc("on_test", "Test event")
+    assert events.exists("on_test")
+    assert not events.exists("on_best")

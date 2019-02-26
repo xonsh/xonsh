@@ -56,7 +56,7 @@ def test_premain_D(shell):
 
 def test_premain_custom_rc(shell, tmpdir, monkeypatch):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", 'False')
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["--rc", f.strpath])
@@ -78,7 +78,7 @@ def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch):
     """Calling a custom RC file on a script-call with the interactive flag
     should run interactively
     """
-    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", 'False')
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
@@ -120,8 +120,10 @@ def test_premain_invalid_arguments(shell, case, capsys):
         xonsh.main.premain([case])
     assert "unrecognized argument" in capsys.readouterr()[1]
 
+
 def test_premain_timings_arg(shell):
-    xonsh.main.premain(['--timings'])
+    xonsh.main.premain(["--timings"])
+
 
 def test_xonsh_failback(shell, monkeypatch, monkeypatch_stderr):
     failback_checker = []

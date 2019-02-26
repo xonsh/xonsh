@@ -11,6 +11,7 @@ import warnings
 import contextlib
 import collections
 import collections.abc as cabc
+import subprocess
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -31,6 +32,7 @@ from xonsh.style_tools import PTK2_STYLE
 from xonsh.tools import (
     always_true,
     always_false,
+    detype,
     ensure_string,
     is_env_path,
     str_to_env_path,
@@ -78,6 +80,11 @@ from xonsh.tools import (
     to_str_str_dict,
     dict_to_str,
 )
+from xonsh.ansi_colors import (
+    ansi_color_escape_code_to_name,
+    ansi_reverse_style,
+    ansi_style_by_name,
+)
 import xonsh.prompt.base as prompt
 
 
@@ -101,6 +108,17 @@ on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
 Fires after an environment variable is changed.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
+""",
+)
+
+
+events.doc(
+    "on_pre_spec_run_ls",
+    """
+on_pre_spec_run_ls(spec: xonsh.built_ins.SubprocSpec) -> None
+
+Fires right before a SubprocSpec.run() is called for the ls
+command.
 """,
 )
 
@@ -158,6 +176,301 @@ def to_debug(x):
     return val
 
 
+#
+# $LS_COLORS tools
+#
+
+
+class LsColors(cabc.MutableMapping):
+    """Helps convert to/from $LS_COLORS format, respecting the xonsh color style.
+    This accepts the same inputs as dict().
+    """
+
+    default_settings = {
+        "*.7z": ("BOLD_RED",),
+        "*.Z": ("BOLD_RED",),
+        "*.aac": ("CYAN",),
+        "*.ace": ("BOLD_RED",),
+        "*.alz": ("BOLD_RED",),
+        "*.arc": ("BOLD_RED",),
+        "*.arj": ("BOLD_RED",),
+        "*.asf": ("BOLD_PURPLE",),
+        "*.au": ("CYAN",),
+        "*.avi": ("BOLD_PURPLE",),
+        "*.bmp": ("BOLD_PURPLE",),
+        "*.bz": ("BOLD_RED",),
+        "*.bz2": ("BOLD_RED",),
+        "*.cab": ("BOLD_RED",),
+        "*.cgm": ("BOLD_PURPLE",),
+        "*.cpio": ("BOLD_RED",),
+        "*.deb": ("BOLD_RED",),
+        "*.dl": ("BOLD_PURPLE",),
+        "*.dwm": ("BOLD_RED",),
+        "*.dz": ("BOLD_RED",),
+        "*.ear": ("BOLD_RED",),
+        "*.emf": ("BOLD_PURPLE",),
+        "*.esd": ("BOLD_RED",),
+        "*.flac": ("CYAN",),
+        "*.flc": ("BOLD_PURPLE",),
+        "*.fli": ("BOLD_PURPLE",),
+        "*.flv": ("BOLD_PURPLE",),
+        "*.gif": ("BOLD_PURPLE",),
+        "*.gl": ("BOLD_PURPLE",),
+        "*.gz": ("BOLD_RED",),
+        "*.jar": ("BOLD_RED",),
+        "*.jpeg": ("BOLD_PURPLE",),
+        "*.jpg": ("BOLD_PURPLE",),
+        "*.lha": ("BOLD_RED",),
+        "*.lrz": ("BOLD_RED",),
+        "*.lz": ("BOLD_RED",),
+        "*.lz4": ("BOLD_RED",),
+        "*.lzh": ("BOLD_RED",),
+        "*.lzma": ("BOLD_RED",),
+        "*.lzo": ("BOLD_RED",),
+        "*.m2v": ("BOLD_PURPLE",),
+        "*.m4a": ("CYAN",),
+        "*.m4v": ("BOLD_PURPLE",),
+        "*.mid": ("CYAN",),
+        "*.midi": ("CYAN",),
+        "*.mjpeg": ("BOLD_PURPLE",),
+        "*.mjpg": ("BOLD_PURPLE",),
+        "*.mka": ("CYAN",),
+        "*.mkv": ("BOLD_PURPLE",),
+        "*.mng": ("BOLD_PURPLE",),
+        "*.mov": ("BOLD_PURPLE",),
+        "*.mp3": ("CYAN",),
+        "*.mp4": ("BOLD_PURPLE",),
+        "*.mp4v": ("BOLD_PURPLE",),
+        "*.mpc": ("CYAN",),
+        "*.mpeg": ("BOLD_PURPLE",),
+        "*.mpg": ("BOLD_PURPLE",),
+        "*.nuv": ("BOLD_PURPLE",),
+        "*.oga": ("CYAN",),
+        "*.ogg": ("CYAN",),
+        "*.ogm": ("BOLD_PURPLE",),
+        "*.ogv": ("BOLD_PURPLE",),
+        "*.ogx": ("BOLD_PURPLE",),
+        "*.opus": ("CYAN",),
+        "*.pbm": ("BOLD_PURPLE",),
+        "*.pcx": ("BOLD_PURPLE",),
+        "*.pgm": ("BOLD_PURPLE",),
+        "*.png": ("BOLD_PURPLE",),
+        "*.ppm": ("BOLD_PURPLE",),
+        "*.qt": ("BOLD_PURPLE",),
+        "*.ra": ("CYAN",),
+        "*.rar": ("BOLD_RED",),
+        "*.rm": ("BOLD_PURPLE",),
+        "*.rmvb": ("BOLD_PURPLE",),
+        "*.rpm": ("BOLD_RED",),
+        "*.rz": ("BOLD_RED",),
+        "*.sar": ("BOLD_RED",),
+        "*.spx": ("CYAN",),
+        "*.svg": ("BOLD_PURPLE",),
+        "*.svgz": ("BOLD_PURPLE",),
+        "*.swm": ("BOLD_RED",),
+        "*.t7z": ("BOLD_RED",),
+        "*.tar": ("BOLD_RED",),
+        "*.taz": ("BOLD_RED",),
+        "*.tbz": ("BOLD_RED",),
+        "*.tbz2": ("BOLD_RED",),
+        "*.tga": ("BOLD_PURPLE",),
+        "*.tgz": ("BOLD_RED",),
+        "*.tif": ("BOLD_PURPLE",),
+        "*.tiff": ("BOLD_PURPLE",),
+        "*.tlz": ("BOLD_RED",),
+        "*.txz": ("BOLD_RED",),
+        "*.tz": ("BOLD_RED",),
+        "*.tzo": ("BOLD_RED",),
+        "*.tzst": ("BOLD_RED",),
+        "*.vob": ("BOLD_PURPLE",),
+        "*.war": ("BOLD_RED",),
+        "*.wav": ("CYAN",),
+        "*.webm": ("BOLD_PURPLE",),
+        "*.wim": ("BOLD_RED",),
+        "*.wmv": ("BOLD_PURPLE",),
+        "*.xbm": ("BOLD_PURPLE",),
+        "*.xcf": ("BOLD_PURPLE",),
+        "*.xpm": ("BOLD_PURPLE",),
+        "*.xspf": ("CYAN",),
+        "*.xwd": ("BOLD_PURPLE",),
+        "*.xz": ("BOLD_RED",),
+        "*.yuv": ("BOLD_PURPLE",),
+        "*.z": ("BOLD_RED",),
+        "*.zip": ("BOLD_RED",),
+        "*.zoo": ("BOLD_RED",),
+        "*.zst": ("BOLD_RED",),
+        "bd": ("BACKGROUND_BLACK", "YELLOW"),
+        "ca": ("BLACK", "BACKGROUND_RED"),
+        "cd": ("BACKGROUND_BLACK", "YELLOW"),
+        "di": ("BOLD_BLUE",),
+        "do": ("BOLD_PURPLE",),
+        "ex": ("BOLD_GREEN",),
+        "ln": ("BOLD_CYAN",),
+        "mh": ("NO_COLOR",),
+        "mi": ("NO_COLOR",),
+        "or": ("BACKGROUND_BLACK", "RED"),
+        "ow": ("BLUE", "BACKGROUND_GREEN"),
+        "pi": ("BACKGROUND_BLACK", "YELLOW"),
+        "rs": ("NO_COLOR",),
+        "sg": ("BLACK", "BACKGROUND_YELLOW"),
+        "so": ("BOLD_PURPLE",),
+        "st": ("WHITE", "BACKGROUND_BLUE"),
+        "su": ("WHITE", "BACKGROUND_RED"),
+        "tw": ("BLACK", "BACKGROUND_GREEN"),
+    }
+
+    def __init__(self, *args, **kwargs):
+        self._d = dict(*args, **kwargs)
+        self._style = self._style_name = None
+        self._detyped = None
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __setitem__(self, key, value):
+        self._detyped = None
+        self._d[key] = value
+
+    def __delitem__(self, key):
+        self._detyped = None
+        del self._d[key]
+
+    def __len__(self):
+        return len(self._d)
+
+    def __iter__(self):
+        yield from self._d
+
+    def __str__(self):
+        return str(self._d)
+
+    def __repr__(self):
+        return "{0}.{1}(...)".format(
+            self.__class__.__module__, self.__class__.__name__, self._d
+        )
+
+    def _repr_pretty_(self, p, cycle):
+        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
+        with p.group(0, name + "(", ")"):
+            if cycle:
+                p.text("...")
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
+
+    def detype(self):
+        """De-types the instance, allowing it to be exported to the environment."""
+        style = self.style
+        if self._detyped is None:
+            self._detyped = ":".join(
+                [
+                    key + "=" + ";".join([style[v] or "0" for v in val])
+                    for key, val in sorted(self._d.items())
+                ]
+            )
+        return self._detyped
+
+    @property
+    def style_name(self):
+        """Current XONSH_COLOR_STYLE value"""
+        env = builtins.__xonsh__.env
+        env_style_name = env.get("XONSH_COLOR_STYLE")
+        if self._style_name is None or self._style_name != env_style_name:
+            self._style_name = env_style_name
+            self._style = self._dtyped = None
+        return self._style_name
+
+    @property
+    def style(self):
+        """The ANSI color style for the current XONSH_COLOR_STYLE"""
+        style_name = self.style_name
+        if self._style is None:
+            self._style = ansi_style_by_name(style_name)
+            self._detyped = None
+        return self._style
+
+    @classmethod
+    def fromstring(cls, s):
+        """Creates a new instance of the LsColors class from a colon-separated
+        string of dircolor-valid keys to ANSI color escape sequences.
+        """
+        obj = cls()
+        # string inputs always use default codes, so translating into
+        # xonsh names should be done from defaults
+        reversed_default = ansi_reverse_style(style="default")
+        data = {}
+        for item in s.split(":"):
+            key, eq, esc = item.partition("=")
+            if not eq:
+                # not a valid item
+                continue
+            data[key] = ansi_color_escape_code_to_name(
+                esc, "default", reversed_style=reversed_default
+            )
+        obj._d = data
+        return obj
+
+    @classmethod
+    def fromdircolors(cls, filename=None):
+        """Constructs an LsColors instance by running dircolors.
+        If a filename is provided, it is passed down to the dircolors command.
+        """
+        # assemble command
+        cmd = ["dircolors", "-b"]
+        if filename is not None:
+            cmd.append(filename)
+        # get env
+        if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, "env"):
+            denv = builtins.__xonsh__.env.detype()
+        else:
+            denv = None
+        # run dircolors
+        try:
+            out = subprocess.check_output(
+                cmd, env=denv, universal_newlines=True, stderr=subprocess.DEVNULL
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return cls(cls.default_settings)
+        s = out.splitlines()[0]
+        _, _, s = s.partition("'")
+        s, _, _ = s.rpartition("'")
+        return cls.fromstring(s)
+
+    @classmethod
+    def convert(cls, x):
+        """Converts an object to LsColors, if needed."""
+        if isinstance(x, cls):
+            return x
+        elif isinstance(x, str):
+            return cls.fromstring(x)
+        elif isinstance(x, bytes):
+            return cls.fromstring(x.decode())
+        else:
+            return cls(x)
+
+
+def is_lscolors(x):
+    """Checks if an object is an instance of LsColors"""
+    return isinstance(x, LsColors)
+
+
+@events.on_pre_spec_run_ls
+def ensure_ls_colors_in_env(spec=None, **kwargs):
+    """This ensures that the $LS_COLORS environment variable is in the
+    environment. This fires exactly once upon the first time the
+    ls command is called.
+    """
+    env = builtins.__xonsh__.env
+    if "LS_COLORS" not in env._d:
+        # this adds it to the env too
+        default_lscolors(env)
+    events.on_pre_spec_run_ls.discard(ensure_ls_colors_in_env)
+
+
+#
+# Ensurerers
+#
+
 Ensurer = collections.namedtuple("Ensurer", ["validate", "convert", "detype"])
 Ensurer.__doc__ = """Named tuples whose elements are functions that
 represent environment variable validation, conversion, detyping.
@@ -213,6 +526,7 @@ def DEFAULT_ENSURERS():
         "LC_MONETARY": (always_false, locale_convert("LC_MONETARY"), ensure_string),
         "LC_NUMERIC": (always_false, locale_convert("LC_NUMERIC"), ensure_string),
         "LC_TIME": (always_false, locale_convert("LC_TIME"), ensure_string),
+        "LS_COLORS": (is_lscolors, LsColors.convert, detype),
         "LOADED_RC_FILES": (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
         "MOUSE_SUPPORT": (is_bool, to_bool, bool_to_str),
         "MULTILINE_PROMPT": (is_string_or_callable, ensure_string, ensure_string),
@@ -224,6 +538,7 @@ def DEFAULT_ENSURERS():
         ),
         "PRETTY_PRINT_RESULTS": (is_bool, to_bool, bool_to_str),
         "PROMPT": (is_string_or_callable, ensure_string, ensure_string),
+        "PROMPT_FIELDS": (always_true, None, None),
         "PROMPT_TOOLKIT_COLOR_DEPTH": (
             always_false,
             ptk2_color_depth_setter,
@@ -347,6 +662,19 @@ def xonsh_append_newline(env):
     return env.get("XONSH_INTERACTIVE", False)
 
 
+@default_value
+def default_lscolors(env):
+    """Gets a default instanse of LsColors"""
+    inherited_lscolors = os_environ.get("LS_COLORS", None)
+    if inherited_lscolors is None:
+        lsc = LsColors.fromdircolors()
+    else:
+        lsc = LsColors.fromstring(inherited_lscolors)
+    # have to place this in the env, so it is applied
+    env["LS_COLORS"] = lsc
+    return lsc
+
+
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
@@ -388,6 +716,7 @@ def DEFAULT_VALUES():
         "LC_TIME": locale.setlocale(locale.LC_TIME),
         "LC_MONETARY": locale.setlocale(locale.LC_MONETARY),
         "LC_NUMERIC": locale.setlocale(locale.LC_NUMERIC),
+        "LS_COLORS": default_lscolors,
         "LOADED_RC_FILES": (),
         "MOUSE_SUPPORT": False,
         "MULTILINE_PROMPT": ".",
@@ -641,6 +970,7 @@ def DEFAULT_DOCS():
             configurable=ON_WINDOWS,
         ),
         "LANG": VarDocs("Fallback locale setting for systems where it matters"),
+        "LS_COLORS": VarDocs("Color settings for ``ls`` command line utility"),
         "LOADED_RC_FILES": VarDocs(
             "Whether or not any of the xonsh run control files were loaded at "
             "startup. This is a sequence of bools in Python that is converted "
@@ -1015,22 +1345,22 @@ class Env(cabc.MutableMapping):
             self._d["PATH"] = list(PATH_DEFAULT)
         self._detyped = None
 
-    @staticmethod
-    def detypeable(val):
-        return not (callable(val) or isinstance(val, cabc.MutableMapping))
-
     def detype(self):
         if self._detyped is not None:
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
-            if not self.detypeable(val):
-                continue
             if not isinstance(key, str):
                 key = str(key)
             ensurer = self.get_ensurer(key)
-            val = ensurer.detype(val)
-            ctx[key] = val
+            if ensurer.detype is None:
+                # cannot be detyped
+                continue
+            deval = ensurer.detype(val)
+            if deval is None:
+                # cannot be detyped
+                continue
+            ctx[key] = deval
         self._detyped = ctx
         return ctx
 
@@ -1052,7 +1382,14 @@ class Env(cabc.MutableMapping):
             os_environ.update(self._orig_env)
             self._orig_env = None
 
-    def get_ensurer(self, key, default=Ensurer(always_true, None, ensure_string)):
+    def _get_default_ensurer(self, default=None):
+        if default is not None:
+            return default
+        else:
+            default = Ensurer(always_true, None, ensure_string)
+        return default
+
+    def get_ensurer(self, key, default=None):
         """Gets an ensurer for the given key."""
         if key in self._ensurers:
             return self._ensurers[key]
@@ -1062,9 +1399,14 @@ class Env(cabc.MutableMapping):
             if k.match(key) is not None:
                 break
         else:
-            ensurer = default
+            ensurer = self._get_default_ensurer(default=default)
         self._ensurers[key] = ensurer
         return ensurer
+
+    def set_ensurer(self, key, value):
+        """Sets an ensurer."""
+        self._detyped = None
+        self._ensurers[key] = value
 
     def get_docs(self, key, default=VarDocs("<no documentation>")):
         """Gets the documentation for the environment variable."""
@@ -1134,13 +1476,6 @@ class Env(cabc.MutableMapping):
 
     def __getitem__(self, key):
         # remove this block on next release
-        if key == "FORMATTER_DICT":
-            print(
-                "PendingDeprecationWarning: FORMATTER_DICT is an alias of "
-                "PROMPT_FIELDS and will be removed in the next release",
-                file=sys.stderr,
-            )
-            return self["PROMPT_FIELDS"]
         if key is Ellipsis:
             return self
         elif key in self._d:
@@ -1165,24 +1500,26 @@ class Env(cabc.MutableMapping):
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
-        if self.detypeable(val):
-            self._detyped = None
-            if self.get("UPDATE_OS_ENVIRON"):
-                if self._orig_env is None:
-                    self.replace_env()
-                else:
-                    os_environ[key] = ensurer.detype(val)
+        self._detyped = None
+        if self.get("UPDATE_OS_ENVIRON"):
+            if self._orig_env is None:
+                self.replace_env()
+            elif ensurer.detype is None:
+                pass
+            else:
+                deval = ensurer.detype(val)
+                if deval is not None:
+                    os_environ[key] = deval
         if old_value is self._no_value:
             events.on_envvar_new.fire(name=key, value=val)
         elif old_value != val:
             events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
 
     def __delitem__(self, key):
-        val = self._d.pop(key)
-        if self.detypeable(val):
-            self._detyped = None
-            if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
-                del os_environ[key]
+        del self._d[key]
+        self._detyped = None
+        if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
+            del os_environ[key]
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
