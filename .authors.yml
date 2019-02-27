@@ -62,7 +62,7 @@
   github: gforsyth
 - name: Morten Enemark Lund
   email: melund@gmail.com
-  num_commits: 453
+  num_commits: 460
   first_commit: 2015-07-10 07:54:10
   github: melund
 - name: Ned Letcher
@@ -428,7 +428,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2389
+  num_commits: 2414
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
