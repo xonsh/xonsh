@@ -6,7 +6,7 @@
  },
  {"name": "autojump",
   "package": "xontrib-autojump",
-  "url": "https://github.com/gsaga/autojump-xonsh",
+  "url": "https://github.com/sagartewari01/autojump-xonsh",
   "description": ["autojump support for xonsh"]
  },
  {"name": "autoxsh",
