@@ -39,6 +39,35 @@ def BASE_XONSH_COLORS():
 
 
 @lazyobject
+def RE_XONSH_COLOR():
+    hex = "[0-9a-fA-F]"
+    s = (
+        # background
+        r"((?P<background>BACKGROUND_)|(?P<modifiers>"
+        # modifiers, only apply to foreground
+        r"BOLD_|FAINT_|ITALIC_|UNDERLINE_|SLOWBLINK_|FASTBLINK_|INVERT_|CONCEAL_|"
+        r"STRIKETHROUGH_)+)?"
+        # colors
+        r"(?P<color>BLACK|RED|GREEN|YELLOW|BLUE|PURPLE|CYAN|WHITE|INTENSE_BLACK|"
+        r"INTENSE_RED|INTENSE_GREEN|INTENSE_YELLOW|INTENSE_BLUE|INTENSE_PURPLE|"
+        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex +"{6})"
+    )
+    bghex = (
+        "bg#" + hex + "{3}|"
+        "bg#" + hex + "{6}|"
+        "BG#" + hex + "{3}|"
+        "BG#" + hex + "{6}"
+    )
+    s = "^((?P<nocolor>NO_COLOR)|(?P<bghex>" + bghex + ")|" + s + ")$"
+    return re.compile(s)
+
+
+def iscolor(s):
+    """Tests if a string is a valid color"""
+    return RE_XONSH_COLOR.match(s) is not None
+
+
+@lazyobject
 def CLUT():
     """color look-up table"""
     return [
