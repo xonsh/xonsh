@@ -95,6 +95,7 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         else:
             mods.append(cmap[color])
         res = ";".join(mods)
+    cmap[name] = res
     return res
 
 
