@@ -281,11 +281,15 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     # normalize names
     n = ""
     norm_names = []
+    prefixes = ""
     colors = set(reversed_style.values())
     for name in names:
         if name == "NO_COLOR":
             # skip most '0' entries
             continue
+        elif "BACKGROUND_" in name and n:
+            prefixes += n
+            n = ""
         n = n + name if n else name
         if n.endswith("_"):
             continue
@@ -315,6 +319,16 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
             )
         norm_names.append(n)
         n = ""
+    # check if we have pre- & post-fixes to apply to the last, non-background element
+    prefixes += n
+    if prefixes.endswith("_"):
+        for i in range(-1, -len(norm_names)-1, -1):
+            if "BACKGROUND_" not in norm_names[i]:
+                norm_names[i] = prefixes + norm_names[i]
+                break
+        else:
+            # only have background colors, so select WHITE as default color
+            norm_names.append(prefixes + "WHITE")
     # return
     if len(norm_names) == 0:
         return ("NO_COLOR",)

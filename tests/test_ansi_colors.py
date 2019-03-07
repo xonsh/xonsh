@@ -79,6 +79,7 @@ def test_ansi_reverse_style(key, value):
     "inp, exp",
     [
         ("0", ("NO_COLOR",)),
+        ("1", ("BOLD_WHITE",)),
         ("\0010\002", ("NO_COLOR",)),
         ("\033[0m", ("NO_COLOR",)),
         ("\001\033[0m\002", ("NO_COLOR",)),
@@ -99,6 +100,19 @@ def test_ansi_reverse_style(key, value):
         ("1;38;5;40", ("BOLD_GREEN",)),
         ("48;5;16;38;5;184", ("BACKGROUND_BLACK", "INTENSE_YELLOW")),
         ("01;05;37;41", ("BOLD_SLOWBLINK_WHITE", "BACKGROUND_RED")),
+        ("38;5;113;1", ("BOLD_INTENSE_GREEN",)),
+        ("48;5;196;38;5;232;1", ("BACKGROUND_RED", "BOLD_BLACK")),
+        ("48;5;3;38;5;0", ("BACKGROUND_YELLOW", "BLACK")),
+        (
+            "38;5;220;1;3;100",
+            ("BOLD_ITALIC_INTENSE_YELLOW", "BACKGROUND_INTENSE_BLACK"),
+        ),
+        (
+            "38;5;220;1;3;100;1",
+            ("BOLD_ITALIC_BOLD_INTENSE_YELLOW", "BACKGROUND_INTENSE_BLACK"),
+        ),
+        ("48;5;235;38;5;139;3", ("BACKGROUND_BLACK", "ITALIC_WHITE")),
+        ("38;5;111;4", ("UNDERLINE_WHITE",)),
     ],
 )
 def test_ansi_color_escape_code_to_name(inp, exp):
