@@ -8,14 +8,91 @@ from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict, lazyobject
 from xonsh.color_tools import (
     RE_BACKGROUND,
+    RE_XONSH_COLOR,
     BASE_XONSH_COLORS,
     make_palette,
     find_closest_color,
     rgb2short,
     rgb_to_256,
     short_to_ints,
+    iscolor,
 )
 from xonsh.tools import FORMATTER
+
+
+def _ensure_color_map(style="default", cmap=None):
+    if cmap is not None:
+        pass
+    elif style in ANSI_STYLES:
+        cmap = ANSI_STYLES[style]
+    else:
+        try:  # dynamically loading the style
+            cmap = ansi_style_by_name(style)
+        except Exception:
+            msg = "Could not find color style {0!r}, using default."
+            print(msg.format(style), file=sys.stderr)
+            builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = "default"
+            cmap = ANSI_STYLES["default"]
+    return cmap
+
+
+@lazyobject
+def ANSI_ESCAPE_MODIFIERS():
+    return {
+        "BOLD": "1",
+        "FAINT": "2",
+        "ITALIC": "3",
+        "UNDERLINE": "4",
+        "SLOWBLINK": "5",
+        "FASTBLINK": "6",
+        "INVERT": "7",
+        "CONCEAL": "8",
+        "STRIKETHROUGH": "9",
+    }
+
+
+def ansi_color_name_to_escape_code(name, style="default", cmap=None):
+    """Converts a color name to the inner part of an ANSI escape code"""
+    cmap = _ensure_color_map(style=style, cmap=cmap)
+    if name in cmap:
+        return cmap[name]
+    m = RE_XONSH_COLOR.match(name)
+    if m is None:
+        raise ValueError("{!r} is not a color!".format(name))
+    parts = m.groupdict()
+    # convert regex match into actual ANSI colors
+    if parts["nocolor"] is not None:
+        res = "0"
+    elif parts["bghex"] is not None:
+        res = "48;5;" + rgb_to_256(parts["bghex"][3:])
+    elif parts["background"] is not None:
+        color = parts["color"]
+        if "#" in color:
+            res = "48;5;" + rgb_to_256(color[1:])
+        else:
+            fgcolor = cmap[color]
+            if fgcolor.isdecimal():
+                res = str(int(fgcolor) + 10)
+            elif fgcolor.startswith("38;"):
+                res = "4" + fgcolor[1:]
+            else:
+                msg = (
+                    "when converting {!r}, did not recognize {!r} within "
+                    "the following color map as a valid color:\n\n{!r}"
+                )
+                raise ValueError(msg.format(name, fgcolor, cmap))
+    else:
+        # have regular, non-background color
+        mods = parts["modifiers"] or ""
+        mods = mods.strip("_").split("_")
+        mods = [ANSI_ESCAPE_MODIFIERS[mod] for mod in mods]
+        color = parts["color"]
+        if "#" in color:
+            mods.append("38;5;" + rgb_to_256(color[1:]))
+        else:
+            mods.append(cmap[color])
+        res = ";".join(mods)
+    return res
 
 
 def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
@@ -49,18 +126,7 @@ def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
 
 
 def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=False):
-    if cmap is not None:
-        pass
-    elif style in ANSI_STYLES:
-        cmap = ANSI_STYLES[style]
-    else:
-        try:  # dynamically loading the style
-            cmap = ansi_style_by_name(style)
-        except Exception:
-            msg = "Could not find color style {0!r}, using default."
-            print(msg.format(style), file=sys.stderr)
-            builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = "default"
-            cmap = ANSI_STYLES["default"]
+    cmap = _ensure_color_map(style=style, cmap=cmap)
     esc = ("\001" if hide else "") + "\033["
     m = "m" + ("\002" if hide else "")
     bopen = "{"
@@ -74,18 +140,9 @@ def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=F
             pass
         elif field in cmap:
             toks.extend([esc, cmap[field], m])
-        elif "#" in field:
-            field = field.lower()
-            pre, _, post = field.partition("#")
-            f_or_b = "38" if RE_BACKGROUND.search(pre) is None else "48"
-            rgb, _, post = post.partition("_")
-            c256, _ = rgb_to_256(rgb)
-            color = f_or_b + ";5;" + c256
-            mods = pre + "_" + post
-            if "underline" in mods:
-                color = "4;" + color
-            if "bold" in mods:
-                color = "1;" + color
+        elif iscolor(field):
+            color = ansi_color_name_to_escape_code(field, cmap=cmap)
+            cmap[field] = color
             toks.extend([esc, color, m])
         elif field is not None:
             toks.append(bopen)
@@ -281,21 +338,6 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
         return tuple(norm_names)
 
 
-@lazyobject
-def ANSI_ESCAPE_MODIFIERS():
-    return {
-        "BOLD_": "1",
-        "FAINT_": "2",
-        "ITALIC_": "3",
-        "UNDERLINE_": "4",
-        "SLOWBLINK_": "5",
-        "FASTBLINK_": "6",
-        "INVERT_": "7",
-        "CONCEAL_": "8",
-        "STRIKETHROUGH_": "9",
-    }
-
-
 def _ansi_expand_style(cmap):
     """Expands a style in order to more quickly make color map changes."""
     for key, val in list(cmap.items()):
@@ -396,7 +438,6 @@ def _default_style():
         "BACKGROUND_INTENSE_CYAN": "0;106",  # CYAN
         "BACKGROUND_INTENSE_WHITE": "0;107",  # WHITE
     }
-    _ansi_expand_style(style)
     return style
 
 

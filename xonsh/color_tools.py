@@ -43,10 +43,10 @@ def RE_XONSH_COLOR():
     hex = "[0-9a-fA-F]"
     s = (
         # background
-        r"((?P<background>BACKGROUND_)|(?P<modifiers>"
+        r"((?P<background>BACKGROUND_)|(?P<modifiers>("
         # modifiers, only apply to foreground
         r"BOLD_|FAINT_|ITALIC_|UNDERLINE_|SLOWBLINK_|FASTBLINK_|INVERT_|CONCEAL_|"
-        r"STRIKETHROUGH_)+)?"
+        r"STRIKETHROUGH_)+))?"
         # colors
         r"(?P<color>BLACK|RED|GREEN|YELLOW|BLUE|PURPLE|CYAN|WHITE|INTENSE_BLACK|"
         r"INTENSE_RED|INTENSE_GREEN|INTENSE_YELLOW|INTENSE_BLUE|INTENSE_PURPLE|"
@@ -298,7 +298,7 @@ def CLUT():
         ("220", "ffd700"),
         ("221", "ffd75f"),
         ("222", "ffd787"),
-        ("223", "ffd7af"),
+        ("223", "ffd7aff"),
         ("224", "ffd7d7"),
         ("225", "ffd7ff"),
         ("226", "ffff00"),
