@@ -64,11 +64,11 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
     if parts["nocolor"] is not None:
         res = "0"
     elif parts["bghex"] is not None:
-        res = "48;5;" + rgb_to_256(parts["bghex"][3:])
+        res = "48;5;" + rgb_to_256(parts["bghex"][3:])[0]
     elif parts["background"] is not None:
         color = parts["color"]
         if "#" in color:
-            res = "48;5;" + rgb_to_256(color[1:])
+            res = "48;5;" + rgb_to_256(color[1:])[0]
         else:
             fgcolor = cmap[color]
             if fgcolor.isdecimal():
@@ -83,12 +83,15 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
                 raise ValueError(msg.format(name, fgcolor, cmap))
     else:
         # have regular, non-background color
-        mods = parts["modifiers"] or ""
-        mods = mods.strip("_").split("_")
-        mods = [ANSI_ESCAPE_MODIFIERS[mod] for mod in mods]
+        mods = parts["modifiers"]
+        if mods is None:
+            mods = []
+        else:
+            mods = mods.strip("_").split("_")
+            mods = [ANSI_ESCAPE_MODIFIERS[mod] for mod in mods]
         color = parts["color"]
         if "#" in color:
-            mods.append("38;5;" + rgb_to_256(color[1:]))
+            mods.append("38;5;" + rgb_to_256(color[1:])[0])
         else:
             mods.append(cmap[color])
         res = ";".join(mods)
@@ -338,41 +341,6 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
         return tuple(norm_names)
 
 
-def _ansi_expand_style(cmap):
-    """Expands a style in order to more quickly make color map changes."""
-    for key, val in list(cmap.items()):
-        if key == "NO_COLOR":
-            continue
-        elif "BACKGROUND_" in key:
-            continue
-        elif len(val) == 0:
-            # set background
-            bg_key = "BACKGROUND_" + key
-            if bg_key not in cmap:
-                cmap[bg_key] = val
-            # set all other colors
-            for mod_items in all_permutations(ANSI_ESCAPE_MODIFIERS.items()):
-                key_prefix = "".join(m[0] for m in mod_items)
-                total_key = key_prefix + key
-                if total_key in cmap:
-                    continue
-                val_prefix = ";".join(m[1] for m in mod_items)
-                cmap[total_key] = val_prefix
-        else:
-            # set background
-            bg_key = "BACKGROUND_" + key
-            if bg_key not in cmap:
-                cmap[bg_key] = val.replace("38", "48", 1)
-            # set all other colors
-            for mod_items in all_permutations(ANSI_ESCAPE_MODIFIERS.items()):
-                key_prefix = "".join(m[0] for m in mod_items)
-                total_key = key_prefix + key
-                if total_key in cmap:
-                    continue
-                val_prefix = ";".join(m[1] for m in mod_items)
-                cmap[total_key] = val_prefix + ";" + val
-
-
 def _bw_style():
     style = {
         "BLACK": "0;30",
@@ -393,7 +361,6 @@ def _bw_style():
         "WHITE": "0;37",
         "YELLOW": "0;37",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -461,7 +428,6 @@ def _monokai_style():
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;186",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -490,7 +456,6 @@ def _algol_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;09",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -514,7 +479,6 @@ def _algol_nu_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;09",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -538,7 +502,6 @@ def _autumn_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -562,7 +525,6 @@ def _borland_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;124",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -586,7 +548,6 @@ def _colorful_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -610,7 +571,6 @@ def _emacs_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -634,7 +594,6 @@ def _friendly_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -658,7 +617,6 @@ def _fruity_style():
         "WHITE": "38;5;187",
         "YELLOW": "38;5;202",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -682,7 +640,6 @@ def _igor_style():
         "WHITE": "38;5;163",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -706,7 +663,6 @@ def _lovelace_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -730,7 +686,6 @@ def _manni_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -754,7 +709,6 @@ def _murphy_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -778,7 +732,6 @@ def _native_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;124",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -802,7 +755,6 @@ def _paraiso_dark_style():
         "WHITE": "38;5;79",
         "YELLOW": "38;5;214",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -826,7 +778,6 @@ def _paraiso_light_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;214",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -850,7 +801,6 @@ def _pastie_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -874,7 +824,6 @@ def _perldoc_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -898,7 +847,6 @@ def _rrt_style():
         "WHITE": "38;5;117",
         "YELLOW": "38;5;09",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -922,7 +870,6 @@ def _tango_style():
         "WHITE": "38;5;15",
         "YELLOW": "38;5;94",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -946,7 +893,6 @@ def _trac_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;100",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -970,7 +916,6 @@ def _vim_style():
         "WHITE": "38;5;188",
         "YELLOW": "38;5;160",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -994,7 +939,6 @@ def _vs_style():
         "WHITE": "38;5;31",
         "YELLOW": "38;5;124",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -1018,7 +962,6 @@ def _xcode_style():
         "WHITE": "38;5;60",
         "YELLOW": "38;5;94",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -1097,10 +1040,6 @@ def make_ansi_style(palette):
             closest = "".join([a * 2 for a in closest])
         short = rgb2short(closest)[0]
         style[name] = "38;5;" + short
-        style["BOLD_" + name] = "1;38;5;" + short
-        style["UNDERLINE_" + name] = "4;38;5;" + short
-        style["BOLD_UNDERLINE_" + name] = "1;4;38;5;" + short
-        style["BACKGROUND_" + name] = "48;5;" + short
     return style
 
 

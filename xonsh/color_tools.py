@@ -376,7 +376,8 @@ def rgb_to_256(rgb):
 
     Returns
     -------
-    String between 0 and 255, compatible with xterm.
+    Tuple of String between 0 and 255 (compatible with xterm) and
+    hex code (length-6).
     """
     rgb = rgb.lstrip("#")
     if len(rgb) == 0:
