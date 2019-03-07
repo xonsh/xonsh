@@ -7,7 +7,6 @@ import builtins
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict, lazyobject
 from xonsh.color_tools import (
-    RE_BACKGROUND,
     RE_XONSH_COLOR,
     BASE_XONSH_COLORS,
     make_palette,
@@ -282,7 +281,6 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     n = ""
     norm_names = []
     prefixes = ""
-    colors = set(reversed_style.values())
     for name in names:
         if name == "NO_COLOR":
             # skip most '0' entries

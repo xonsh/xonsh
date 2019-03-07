@@ -52,18 +52,19 @@ DEFAULT_CMAP = {
         ("UNDERLINE_RED", "4;0;31"),
         ("BOLD_UNDERLINE_RED", "1;4;0;31"),
         ("UNDERLINE_BOLD_RED", "4;1;0;31"),
-        ("#000", "38;5;16"),
-        ("#000000", "38;5;16"),
-        ("BACKGROUND_#000", "48;5;16"),
-        ("BACKGROUND_#000000", "48;5;16"),
-        ("BG#000", "48;5;16"),
-        ("bg#000000", "48;5;16"),
+        # The hex code #000 can map to ANSI-256 0 or 16
+        ("#000", {"38;5;0", "38;5;16"}),
+        ("#000000", {"38;5;0", "38;5;16"}),
+        ("BACKGROUND_#000", {"48;5;0", "48;5;16"}),
+        ("BACKGROUND_#000000", {"48;5;0", "48;5;16"}),
+        ("BG#000", {"48;5;0", "48;5;16"}),
+        ("bg#000000", {"48;5;0", "48;5;16"}),
     ],
 )
 def test_ansi_color_name_to_escape_code_default(name, exp):
     cmap = DEFAULT_CMAP.copy()
     obs = ansi_color_name_to_escape_code(name, cmap=cmap)
-    assert obs == exp
+    assert obs in exp
 
 
 RS = ansi_reverse_style(style="default")
