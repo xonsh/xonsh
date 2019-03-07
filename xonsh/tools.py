@@ -1713,6 +1713,12 @@ def history_tuple_to_str(x):
     return "{0} {1}".format(*x)
 
 
+def all_permutations(iterable):
+    """Yeilds all permutations, not just those of a specified length"""
+    for r in range(1, len(iterable) + 1):
+        yield from itertools.permutations(iterable, r=r)
+
+
 def format_color(string, **kwargs):
     """Formats strings that may contain colors. This simply dispatches to the
     shell instances method of the same name. The results of this function should

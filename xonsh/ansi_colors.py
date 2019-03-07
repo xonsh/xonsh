@@ -127,8 +127,13 @@ def ansi_reverse_style(style="default", return_style=False):
     updates = {
         "1": "BOLD_",
         "2": "FAINT_",
+        "3": "ITALIC_",
         "4": "UNDERLINE_",
         "5": "SLOWBLINK_",
+        "6": "FASTBLINK_",
+        "7": "INVERT_",
+        "8": "CONCEAL_",
+        "9": "STRIKETHROUGH_",
         "1;4": "BOLD_UNDERLINE_",
         "4;1": "BOLD_UNDERLINE_",
         "38": "SET_FOREGROUND_",
@@ -276,21 +281,54 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
         return tuple(norm_names)
 
 
+@lazyobject
+def ANSI_ESCAPE_MODIFIERS():
+    return {
+        "BOLD_": "1",
+        "FAINT_": "2",
+        "ITALIC_": "3",
+        "UNDERLINE_": "4",
+        "SLOWBLINK_": "5",
+        "FASTBLINK_": "6",
+        "INVERT_": "7",
+        "CONCEAL_": "8",
+        "STRIKETHROUGH_": "9",
+    }
+
+
 def _ansi_expand_style(cmap):
     """Expands a style in order to more quickly make color map changes."""
     for key, val in list(cmap.items()):
         if key == "NO_COLOR":
             continue
+        elif "BACKGROUND_" in key:
+            continue
         elif len(val) == 0:
-            cmap["BOLD_" + key] = "1"
-            cmap["UNDERLINE_" + key] = "4"
-            cmap["BOLD_UNDERLINE_" + key] = "1;4"
-            cmap["BACKGROUND_" + key] = val
+            # set background
+            bg_key = "BACKGROUND_" + key
+            if bg_key not in cmap:
+                cmap[bg_key] = val
+            # set all other colors
+            for mod_items in all_permutations(ANSI_ESCAPE_MODIFIERS.items()):
+                key_prefix = "".join(m[0] for m in mod_items)
+                total_key = key_prefix + key
+                if total_key in cmap:
+                    continue
+                val_prefix = ";".join(m[1] for m in mod_items)
+                cmap[total_key] = val_prefix
         else:
-            cmap["BOLD_" + key] = "1;" + val
-            cmap["UNDERLINE_" + key] = "4;" + val
-            cmap["BOLD_UNDERLINE_" + key] = "1;4;" + val
-            cmap["BACKGROUND_" + key] = val.replace("38", "48", 1)
+            # set background
+            bg_key = "BACKGROUND_" + key
+            if bg_key not in cmap:
+                cmap[bg_key] = val.replace("38", "48", 1)
+            # set all other colors
+            for mod_items in all_permutations(ANSI_ESCAPE_MODIFIERS.items()):
+                key_prefix = "".join(m[0] for m in mod_items)
+                total_key = key_prefix + key
+                if total_key in cmap:
+                    continue
+                val_prefix = ";".join(m[1] for m in mod_items)
+                cmap[total_key] = val_prefix + ";" + val
 
 
 def _bw_style():
@@ -330,33 +368,6 @@ def _default_style():
         "PURPLE": "0;35",  # PURPLE
         "CYAN": "0;36",  # CYAN
         "WHITE": "0;37",  # WHITE
-        # Bold
-        "BOLD_BLACK": "1;30",  # BLACK
-        "BOLD_RED": "1;31",  # RED
-        "BOLD_GREEN": "1;32",  # GREEN
-        "BOLD_YELLOW": "1;33",  # YELLOW
-        "BOLD_BLUE": "1;34",  # BLUE
-        "BOLD_PURPLE": "1;35",  # PURPLE
-        "BOLD_CYAN": "1;36",  # CYAN
-        "BOLD_WHITE": "1;37",  # WHITE
-        # Underline
-        "UNDERLINE_BLACK": "4;30",  # BLACK
-        "UNDERLINE_RED": "4;31",  # RED
-        "UNDERLINE_GREEN": "4;32",  # GREEN
-        "UNDERLINE_YELLOW": "4;33",  # YELLOW
-        "UNDERLINE_BLUE": "4;34",  # BLUE
-        "UNDERLINE_PURPLE": "4;35",  # PURPLE
-        "UNDERLINE_CYAN": "4;36",  # CYAN
-        "UNDERLINE_WHITE": "4;37",  # WHITE
-        # Bold, Underline
-        "BOLD_UNDERLINE_BLACK": "1;4;30",  # BLACK
-        "BOLD_UNDERLINE_RED": "1;4;31",  # RED
-        "BOLD_UNDERLINE_GREEN": "1;4;32",  # GREEN
-        "BOLD_UNDERLINE_YELLOW": "1;4;33",  # YELLOW
-        "BOLD_UNDERLINE_BLUE": "1;4;34",  # BLUE
-        "BOLD_UNDERLINE_PURPLE": "1;4;35",  # PURPLE
-        "BOLD_UNDERLINE_CYAN": "1;4;36",  # CYAN
-        "BOLD_UNDERLINE_WHITE": "1;4;37",  # WHITE
         # Background
         "BACKGROUND_BLACK": "40",  # BLACK
         "BACKGROUND_RED": "41",  # RED
@@ -375,33 +386,6 @@ def _default_style():
         "INTENSE_PURPLE": "0;95",  # PURPLE
         "INTENSE_CYAN": "0;96",  # CYAN
         "INTENSE_WHITE": "0;97",  # WHITE
-        # Bold High Intensity
-        "BOLD_INTENSE_BLACK": "1;90",  # BLACK
-        "BOLD_INTENSE_RED": "1;91",  # RED
-        "BOLD_INTENSE_GREEN": "1;92",  # GREEN
-        "BOLD_INTENSE_YELLOW": "1;93",  # YELLOW
-        "BOLD_INTENSE_BLUE": "1;94",  # BLUE
-        "BOLD_INTENSE_PURPLE": "1;95",  # PURPLE
-        "BOLD_INTENSE_CYAN": "1;96",  # CYAN
-        "BOLD_INTENSE_WHITE": "1;97",  # WHITE
-        # Underline High Intensity
-        "UNDERLINE_INTENSE_BLACK": "4;90",  # BLACK
-        "UNDERLINE_INTENSE_RED": "4;91",  # RED
-        "UNDERLINE_INTENSE_GREEN": "4;92",  # GREEN
-        "UNDERLINE_INTENSE_YELLOW": "4;93",  # YELLOW
-        "UNDERLINE_INTENSE_BLUE": "4;94",  # BLUE
-        "UNDERLINE_INTENSE_PURPLE": "4;95",  # PURPLE
-        "UNDERLINE_INTENSE_CYAN": "4;96",  # CYAN
-        "UNDERLINE_INTENSE_WHITE": "4;97",  # WHITE
-        # Bold Underline High Intensity
-        "BOLD_UNDERLINE_INTENSE_BLACK": "1;4;90",  # BLACK
-        "BOLD_UNDERLINE_INTENSE_RED": "1;4;91",  # RED
-        "BOLD_UNDERLINE_INTENSE_GREEN": "1;4;92",  # GREEN
-        "BOLD_UNDERLINE_INTENSE_YELLOW": "1;4;93",  # YELLOW
-        "BOLD_UNDERLINE_INTENSE_BLUE": "1;4;94",  # BLUE
-        "BOLD_UNDERLINE_INTENSE_PURPLE": "1;4;95",  # PURPLE
-        "BOLD_UNDERLINE_INTENSE_CYAN": "1;4;96",  # CYAN
-        "BOLD_UNDERLINE_INTENSE_WHITE": "1;4;97",  # WHITE
         # High Intensity backgrounds
         "BACKGROUND_INTENSE_BLACK": "0;100",  # BLACK
         "BACKGROUND_INTENSE_RED": "0;101",  # RED
@@ -412,6 +396,7 @@ def _default_style():
         "BACKGROUND_INTENSE_CYAN": "0;106",  # CYAN
         "BACKGROUND_INTENSE_WHITE": "0;107",  # WHITE
     }
+    _ansi_expand_style(style)
     return style
 
 

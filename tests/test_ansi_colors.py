@@ -35,6 +35,7 @@ def test_ansi_reverse_style(key, value):
         ("4;1;38;2;170;0;0", ("BOLD_UNDERLINE_RED",)),
         ("1;38;5;40", ("BOLD_GREEN",)),
         ("48;5;16;38;5;184", ("BACKGROUND_BLACK", "INTENSE_YELLOW")),
+        ("01;05;37;41", ("BACKGROUND_BLACK", "INTENSE_YELLOW")),
     ],
 )
 def test_ansi_color_escape_code_to_name(inp, exp):
