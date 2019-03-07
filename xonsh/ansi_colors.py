@@ -322,7 +322,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     # check if we have pre- & post-fixes to apply to the last, non-background element
     prefixes += n
     if prefixes.endswith("_"):
-        for i in range(-1, -len(norm_names)-1, -1):
+        for i in range(-1, -len(norm_names) - 1, -1):
             if "BACKGROUND_" not in norm_names[i]:
                 norm_names[i] = prefixes + norm_names[i]
                 break

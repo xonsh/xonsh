@@ -50,7 +50,7 @@ def RE_XONSH_COLOR():
         # colors
         r"(?P<color>BLACK|RED|GREEN|YELLOW|BLUE|PURPLE|CYAN|WHITE|INTENSE_BLACK|"
         r"INTENSE_RED|INTENSE_GREEN|INTENSE_YELLOW|INTENSE_BLUE|INTENSE_PURPLE|"
-        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex +"{6})"
+        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex + "{6})"
     )
     bghex = (
         "bg#" + hex + "{3}|"
@@ -298,7 +298,7 @@ def CLUT():
         ("220", "ffd700"),
         ("221", "ffd75f"),
         ("222", "ffd787"),
-        ("223", "ffd7aff"),
+        ("223", "ffd7af"),
         ("224", "ffd7d7"),
         ("225", "ffd7ff"),
         ("226", "ffff00"),
