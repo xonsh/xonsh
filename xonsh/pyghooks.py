@@ -41,6 +41,7 @@ from xonsh.tools import (
 from xonsh.color_tools import (
     RE_BACKGROUND,
     BASE_XONSH_COLORS,
+    RE_XONSH_COLOR,
     make_palette,
     find_closest_color,
 )
@@ -276,6 +277,62 @@ def color_by_name(name, fg=None, bg=None):
         tokname = fg + "__" + bg
     tok = getattr(Color, tokname)
     return tok, fg, bg
+
+
+@lazyobject
+def PYGMENTS_MODIFIERS():
+    # pygments doesn't support all modifiers.
+    # use None to represent unsupported
+    return {
+        "BOLD": "bold",
+        "FAINT": None,
+        "ITALIC": "italic",
+        "UNDERLINE": "underline",
+        "SLOWBLINK": None,
+        "FASTBLINK": None,
+        "INVERT": None,
+        "CONCEAL": None,
+        "STRIKETHROUGH": None,
+    }
+
+
+def color_name_to_pygments_code(name, styles):
+    """Converts a xonsh color name to a pygments color code."""
+    if name in styles:
+        return styles[name]
+    m = RE_XONSH_COLOR.match(name)
+    if m is None:
+        raise ValueError("{!r} is not a color!".format(name))
+    parts = m.groupdict()
+    # convert regex match into actual pygments colors
+    if parts["nocolor"] is not None:
+        res = "noinherit"
+    elif parts["bghex"] is not None:
+        res = "bg:#" + parts["bghex"][3:]
+    elif parts["background"] is not None:
+        color = parts["color"]
+        if "#" in color:
+            fgcolor = color
+        else:
+            fgcolor = styles[color]
+        res = "bg:" + fgcolor
+    else:
+        # have regular, non-background color
+        mods = parts["modifiers"]
+        if mods is None:
+            mods = []
+        else:
+            mods = mods.strip("_").split("_")
+            mods = [PYGMENTS_MODIFIERS[mod] for mod in mods]
+        mods = list(filter(None, mods))  # remove unsupported entries
+        color = parts["color"]
+        if "#" in color:
+            mods.append(color)
+        else:
+            mods.append(styles[color])
+        res = " ".join(mods)
+    styles[name] = res
+    return res
 
 
 def code_by_name(name, styles):
