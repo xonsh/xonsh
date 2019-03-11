@@ -7,15 +7,95 @@ import builtins
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict, lazyobject
 from xonsh.color_tools import (
-    RE_BACKGROUND,
+    RE_XONSH_COLOR,
     BASE_XONSH_COLORS,
     make_palette,
     find_closest_color,
     rgb2short,
     rgb_to_256,
     short_to_ints,
+    iscolor,
 )
 from xonsh.tools import FORMATTER
+
+
+def _ensure_color_map(style="default", cmap=None):
+    if cmap is not None:
+        pass
+    elif style in ANSI_STYLES:
+        cmap = ANSI_STYLES[style]
+    else:
+        try:  # dynamically loading the style
+            cmap = ansi_style_by_name(style)
+        except Exception:
+            msg = "Could not find color style {0!r}, using default."
+            print(msg.format(style), file=sys.stderr)
+            builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = "default"
+            cmap = ANSI_STYLES["default"]
+    return cmap
+
+
+@lazyobject
+def ANSI_ESCAPE_MODIFIERS():
+    return {
+        "BOLD": "1",
+        "FAINT": "2",
+        "ITALIC": "3",
+        "UNDERLINE": "4",
+        "SLOWBLINK": "5",
+        "FASTBLINK": "6",
+        "INVERT": "7",
+        "CONCEAL": "8",
+        "STRIKETHROUGH": "9",
+    }
+
+
+def ansi_color_name_to_escape_code(name, style="default", cmap=None):
+    """Converts a color name to the inner part of an ANSI escape code"""
+    cmap = _ensure_color_map(style=style, cmap=cmap)
+    if name in cmap:
+        return cmap[name]
+    m = RE_XONSH_COLOR.match(name)
+    if m is None:
+        raise ValueError("{!r} is not a color!".format(name))
+    parts = m.groupdict()
+    # convert regex match into actual ANSI colors
+    if parts["nocolor"] is not None:
+        res = "0"
+    elif parts["bghex"] is not None:
+        res = "48;5;" + rgb_to_256(parts["bghex"][3:])[0]
+    elif parts["background"] is not None:
+        color = parts["color"]
+        if "#" in color:
+            res = "48;5;" + rgb_to_256(color[1:])[0]
+        else:
+            fgcolor = cmap[color]
+            if fgcolor.isdecimal():
+                res = str(int(fgcolor) + 10)
+            elif fgcolor.startswith("38;"):
+                res = "4" + fgcolor[1:]
+            else:
+                msg = (
+                    "when converting {!r}, did not recognize {!r} within "
+                    "the following color map as a valid color:\n\n{!r}"
+                )
+                raise ValueError(msg.format(name, fgcolor, cmap))
+    else:
+        # have regular, non-background color
+        mods = parts["modifiers"]
+        if mods is None:
+            mods = []
+        else:
+            mods = mods.strip("_").split("_")
+            mods = [ANSI_ESCAPE_MODIFIERS[mod] for mod in mods]
+        color = parts["color"]
+        if "#" in color:
+            mods.append("38;5;" + rgb_to_256(color[1:])[0])
+        else:
+            mods.append(cmap[color])
+        res = ";".join(mods)
+    cmap[name] = res
+    return res
 
 
 def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
@@ -49,18 +129,7 @@ def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
 
 
 def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=False):
-    if cmap is not None:
-        pass
-    elif style in ANSI_STYLES:
-        cmap = ANSI_STYLES[style]
-    else:
-        try:  # dynamically loading the style
-            cmap = ansi_style_by_name(style)
-        except Exception:
-            msg = "Could not find color style {0!r}, using default."
-            print(msg.format(style), file=sys.stderr)
-            builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = "default"
-            cmap = ANSI_STYLES["default"]
+    cmap = _ensure_color_map(style=style, cmap=cmap)
     esc = ("\001" if hide else "") + "\033["
     m = "m" + ("\002" if hide else "")
     bopen = "{"
@@ -74,18 +143,9 @@ def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=F
             pass
         elif field in cmap:
             toks.extend([esc, cmap[field], m])
-        elif "#" in field:
-            field = field.lower()
-            pre, _, post = field.partition("#")
-            f_or_b = "38" if RE_BACKGROUND.search(pre) is None else "48"
-            rgb, _, post = post.partition("_")
-            c256, _ = rgb_to_256(rgb)
-            color = f_or_b + ";5;" + c256
-            mods = pre + "_" + post
-            if "underline" in mods:
-                color = "4;" + color
-            if "bold" in mods:
-                color = "1;" + color
+        elif iscolor(field):
+            color = ansi_color_name_to_escape_code(field, cmap=cmap)
+            cmap[field] = color
             toks.extend([esc, color, m])
         elif field is not None:
             toks.append(bopen)
@@ -127,16 +187,19 @@ def ansi_reverse_style(style="default", return_style=False):
     updates = {
         "1": "BOLD_",
         "2": "FAINT_",
+        "3": "ITALIC_",
         "4": "UNDERLINE_",
         "5": "SLOWBLINK_",
-        "1;4": "BOLD_UNDERLINE_",
-        "4;1": "BOLD_UNDERLINE_",
+        "6": "FASTBLINK_",
+        "7": "INVERT_",
+        "8": "CONCEAL_",
+        "9": "STRIKETHROUGH_",
         "38": "SET_FOREGROUND_",
         "48": "SET_BACKGROUND_",
-        "38;2": "SET_FOREGROUND_3INTS_",
-        "48;2": "SET_BACKGROUND_3INTS_",
-        "38;5": "SET_FOREGROUND_SHORT_",
-        "48;5": "SET_BACKGROUND_SHORT_",
+        "38;2": "SET_FOREGROUND_FAINT_",
+        "48;2": "SET_BACKGROUND_FAINT_",
+        "38;5": "SET_FOREGROUND_SLOWBLINK_",
+        "48;5": "SET_BACKGROUND_SLOWBLINK_",
     }
     for ec, name in reversed_style.items():
         no_left_zero = ec.lstrip("0")
@@ -158,30 +221,13 @@ def ANSI_ESCAPE_CODE_RE():
 
 
 @lazyobject
-def ANSI_REVERSE_COLOR_NAME_TRANSLATIONS():
-    base = {
-        "SET_FOREGROUND_FAINT_": "SET_FOREGROUND_3INTS_",
-        "SET_BACKGROUND_FAINT_": "SET_BACKGROUND_3INTS_",
-        "SET_FOREGROUND_SLOWBLINK_": "SET_FOREGROUND_SHORT_",
-        "SET_BACKGROUND_SLOWBLINK_": "SET_BACKGROUND_SHORT_",
-    }
-    data = {"UNDERLINE_BOLD_": "BOLD_UNDERLINE_"}
-    data.update(base)
-    data.update({"BOLD_" + k: "BOLD_" + v for k, v in base.items()})
-    data.update({"UNDERLINE_" + k: "UNDERLINE_" + v for k, v in base.items()})
-    data.update({"BOLD_UNDERLINE_" + k: "BOLD_UNDERLINE_" + v for k, v in base.items()})
-    data.update({"UNDERLINE_BOLD_" + k: "BOLD_UNDERLINE_" + v for k, v in base.items()})
-    return data
-
-
-@lazyobject
 def ANSI_COLOR_NAME_SET_3INTS_RE():
-    return re.compile(r"(\w+_)?SET_(FORE|BACK)GROUND_3INTS_(\d+)_(\d+)_(\d+)")
+    return re.compile(r"(\w+_)?SET_(FORE|BACK)GROUND_FAINT_(\d+)_(\d+)_(\d+)")
 
 
 @lazyobject
 def ANSI_COLOR_NAME_SET_SHORT_RE():
-    return re.compile(r"(\w+_)?SET_(FORE|BACK)GROUND_SHORT_(\d+)")
+    return re.compile(r"(\w+_)?SET_(FORE|BACK)GROUND_SLOWBLINK_(\d+)")
 
 
 def _color_name_from_ints(ints, background=False, prefix=None):
@@ -234,13 +280,15 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     # normalize names
     n = ""
     norm_names = []
-    colors = set(reversed_style.values())
+    prefixes = ""
     for name in names:
         if name == "NO_COLOR":
             # skip most '0' entries
             continue
+        elif "BACKGROUND_" in name and n:
+            prefixes += n
+            n = ""
         n = n + name if n else name
-        n = ANSI_REVERSE_COLOR_NAME_TRANSLATIONS.get(n, n)
         if n.endswith("_"):
             continue
         elif ANSI_COLOR_NAME_SET_SHORT_RE.match(n) is not None:
@@ -253,12 +301,12 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
             n = _color_name_from_ints(
                 (int(r), int(g), int(b)), background=(fore_back == "BACK"), prefix=pre
             )
-        elif "GROUND_3INTS_" in n:
+        elif "GROUND_FAINT_" in n:
             # have 1 or 2, but not 3 ints
             n += "_"
             continue
         # error check
-        if n not in colors:
+        if not iscolor(n):
             msg = (
                 "Could not translate ANSI color code {escape_code!r} "
                 "into a known color in the palette. Specifically, the {n!r} "
@@ -269,28 +317,21 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
             )
         norm_names.append(n)
         n = ""
+    # check if we have pre- & post-fixes to apply to the last, non-background element
+    prefixes += n
+    if prefixes.endswith("_"):
+        for i in range(-1, -len(norm_names) - 1, -1):
+            if "BACKGROUND_" not in norm_names[i]:
+                norm_names[i] = prefixes + norm_names[i]
+                break
+        else:
+            # only have background colors, so select WHITE as default color
+            norm_names.append(prefixes + "WHITE")
     # return
     if len(norm_names) == 0:
         return ("NO_COLOR",)
     else:
         return tuple(norm_names)
-
-
-def _ansi_expand_style(cmap):
-    """Expands a style in order to more quickly make color map changes."""
-    for key, val in list(cmap.items()):
-        if key == "NO_COLOR":
-            continue
-        elif len(val) == 0:
-            cmap["BOLD_" + key] = "1"
-            cmap["UNDERLINE_" + key] = "4"
-            cmap["BOLD_UNDERLINE_" + key] = "1;4"
-            cmap["BACKGROUND_" + key] = val
-        else:
-            cmap["BOLD_" + key] = "1;" + val
-            cmap["UNDERLINE_" + key] = "4;" + val
-            cmap["BOLD_UNDERLINE_" + key] = "1;4;" + val
-            cmap["BACKGROUND_" + key] = val.replace("38", "48", 1)
 
 
 def _bw_style():
@@ -313,7 +354,6 @@ def _bw_style():
         "WHITE": "0;37",
         "YELLOW": "0;37",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -330,33 +370,6 @@ def _default_style():
         "PURPLE": "0;35",  # PURPLE
         "CYAN": "0;36",  # CYAN
         "WHITE": "0;37",  # WHITE
-        # Bold
-        "BOLD_BLACK": "1;30",  # BLACK
-        "BOLD_RED": "1;31",  # RED
-        "BOLD_GREEN": "1;32",  # GREEN
-        "BOLD_YELLOW": "1;33",  # YELLOW
-        "BOLD_BLUE": "1;34",  # BLUE
-        "BOLD_PURPLE": "1;35",  # PURPLE
-        "BOLD_CYAN": "1;36",  # CYAN
-        "BOLD_WHITE": "1;37",  # WHITE
-        # Underline
-        "UNDERLINE_BLACK": "4;30",  # BLACK
-        "UNDERLINE_RED": "4;31",  # RED
-        "UNDERLINE_GREEN": "4;32",  # GREEN
-        "UNDERLINE_YELLOW": "4;33",  # YELLOW
-        "UNDERLINE_BLUE": "4;34",  # BLUE
-        "UNDERLINE_PURPLE": "4;35",  # PURPLE
-        "UNDERLINE_CYAN": "4;36",  # CYAN
-        "UNDERLINE_WHITE": "4;37",  # WHITE
-        # Bold, Underline
-        "BOLD_UNDERLINE_BLACK": "1;4;30",  # BLACK
-        "BOLD_UNDERLINE_RED": "1;4;31",  # RED
-        "BOLD_UNDERLINE_GREEN": "1;4;32",  # GREEN
-        "BOLD_UNDERLINE_YELLOW": "1;4;33",  # YELLOW
-        "BOLD_UNDERLINE_BLUE": "1;4;34",  # BLUE
-        "BOLD_UNDERLINE_PURPLE": "1;4;35",  # PURPLE
-        "BOLD_UNDERLINE_CYAN": "1;4;36",  # CYAN
-        "BOLD_UNDERLINE_WHITE": "1;4;37",  # WHITE
         # Background
         "BACKGROUND_BLACK": "40",  # BLACK
         "BACKGROUND_RED": "41",  # RED
@@ -375,33 +388,6 @@ def _default_style():
         "INTENSE_PURPLE": "0;95",  # PURPLE
         "INTENSE_CYAN": "0;96",  # CYAN
         "INTENSE_WHITE": "0;97",  # WHITE
-        # Bold High Intensity
-        "BOLD_INTENSE_BLACK": "1;90",  # BLACK
-        "BOLD_INTENSE_RED": "1;91",  # RED
-        "BOLD_INTENSE_GREEN": "1;92",  # GREEN
-        "BOLD_INTENSE_YELLOW": "1;93",  # YELLOW
-        "BOLD_INTENSE_BLUE": "1;94",  # BLUE
-        "BOLD_INTENSE_PURPLE": "1;95",  # PURPLE
-        "BOLD_INTENSE_CYAN": "1;96",  # CYAN
-        "BOLD_INTENSE_WHITE": "1;97",  # WHITE
-        # Underline High Intensity
-        "UNDERLINE_INTENSE_BLACK": "4;90",  # BLACK
-        "UNDERLINE_INTENSE_RED": "4;91",  # RED
-        "UNDERLINE_INTENSE_GREEN": "4;92",  # GREEN
-        "UNDERLINE_INTENSE_YELLOW": "4;93",  # YELLOW
-        "UNDERLINE_INTENSE_BLUE": "4;94",  # BLUE
-        "UNDERLINE_INTENSE_PURPLE": "4;95",  # PURPLE
-        "UNDERLINE_INTENSE_CYAN": "4;96",  # CYAN
-        "UNDERLINE_INTENSE_WHITE": "4;97",  # WHITE
-        # Bold Underline High Intensity
-        "BOLD_UNDERLINE_INTENSE_BLACK": "1;4;90",  # BLACK
-        "BOLD_UNDERLINE_INTENSE_RED": "1;4;91",  # RED
-        "BOLD_UNDERLINE_INTENSE_GREEN": "1;4;92",  # GREEN
-        "BOLD_UNDERLINE_INTENSE_YELLOW": "1;4;93",  # YELLOW
-        "BOLD_UNDERLINE_INTENSE_BLUE": "1;4;94",  # BLUE
-        "BOLD_UNDERLINE_INTENSE_PURPLE": "1;4;95",  # PURPLE
-        "BOLD_UNDERLINE_INTENSE_CYAN": "1;4;96",  # CYAN
-        "BOLD_UNDERLINE_INTENSE_WHITE": "1;4;97",  # WHITE
         # High Intensity backgrounds
         "BACKGROUND_INTENSE_BLACK": "0;100",  # BLACK
         "BACKGROUND_INTENSE_RED": "0;101",  # RED
@@ -435,7 +421,6 @@ def _monokai_style():
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;186",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -464,7 +449,6 @@ def _algol_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;09",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -488,7 +472,6 @@ def _algol_nu_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;09",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -512,7 +495,6 @@ def _autumn_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -536,7 +518,6 @@ def _borland_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;124",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -560,7 +541,6 @@ def _colorful_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -584,7 +564,6 @@ def _emacs_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -608,7 +587,6 @@ def _friendly_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -632,7 +610,6 @@ def _fruity_style():
         "WHITE": "38;5;187",
         "YELLOW": "38;5;202",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -656,7 +633,6 @@ def _igor_style():
         "WHITE": "38;5;163",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -680,7 +656,6 @@ def _lovelace_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -704,7 +679,6 @@ def _manni_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -728,7 +702,6 @@ def _murphy_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -752,7 +725,6 @@ def _native_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;124",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -776,7 +748,6 @@ def _paraiso_dark_style():
         "WHITE": "38;5;79",
         "YELLOW": "38;5;214",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -800,7 +771,6 @@ def _paraiso_light_style():
         "WHITE": "38;5;102",
         "YELLOW": "38;5;214",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -824,7 +794,6 @@ def _pastie_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;130",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -848,7 +817,6 @@ def _perldoc_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;166",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -872,7 +840,6 @@ def _rrt_style():
         "WHITE": "38;5;117",
         "YELLOW": "38;5;09",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -896,7 +863,6 @@ def _tango_style():
         "WHITE": "38;5;15",
         "YELLOW": "38;5;94",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -920,7 +886,6 @@ def _trac_style():
         "WHITE": "38;5;145",
         "YELLOW": "38;5;100",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -944,7 +909,6 @@ def _vim_style():
         "WHITE": "38;5;188",
         "YELLOW": "38;5;160",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -968,7 +932,6 @@ def _vs_style():
         "WHITE": "38;5;31",
         "YELLOW": "38;5;124",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -992,7 +955,6 @@ def _xcode_style():
         "WHITE": "38;5;60",
         "YELLOW": "38;5;94",
     }
-    _ansi_expand_style(style)
     return style
 
 
@@ -1071,10 +1033,6 @@ def make_ansi_style(palette):
             closest = "".join([a * 2 for a in closest])
         short = rgb2short(closest)[0]
         style[name] = "38;5;" + short
-        style["BOLD_" + name] = "1;38;5;" + short
-        style["UNDERLINE_" + name] = "4;38;5;" + short
-        style["BOLD_UNDERLINE_" + name] = "1;4;38;5;" + short
-        style["BACKGROUND_" + name] = "48;5;" + short
     return style
 
 

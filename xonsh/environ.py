@@ -82,6 +82,7 @@ from xonsh.tools import (
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
+    ansi_color_name_to_escape_code,
     ansi_reverse_style,
     ansi_style_by_name,
 )
@@ -364,7 +365,11 @@ class LsColors(cabc.MutableMapping):
         if self._detyped is None:
             self._detyped = ":".join(
                 [
-                    key + "=" + ";".join([style[v] or "0" for v in val])
+                    key
+                    + "="
+                    + ";".join(
+                        [ansi_color_name_to_escape_code(v, cmap=style) for v in val]
+                    )
                     for key, val in sorted(self._d.items())
                 ]
             )

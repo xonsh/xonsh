@@ -39,22 +39,51 @@ def BASE_XONSH_COLORS():
 
 
 @lazyobject
+def RE_XONSH_COLOR():
+    hex = "[0-9a-fA-F]"
+    s = (
+        # background
+        r"((?P<background>BACKGROUND_)|(?P<modifiers>("
+        # modifiers, only apply to foreground
+        r"BOLD_|FAINT_|ITALIC_|UNDERLINE_|SLOWBLINK_|FASTBLINK_|INVERT_|CONCEAL_|"
+        r"STRIKETHROUGH_)+))?"
+        # colors
+        r"(?P<color>BLACK|RED|GREEN|YELLOW|BLUE|PURPLE|CYAN|WHITE|INTENSE_BLACK|"
+        r"INTENSE_RED|INTENSE_GREEN|INTENSE_YELLOW|INTENSE_BLUE|INTENSE_PURPLE|"
+        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex + "{6})"
+    )
+    bghex = (
+        "bg#" + hex + "{3}|"
+        "bg#" + hex + "{6}|"
+        "BG#" + hex + "{3}|"
+        "BG#" + hex + "{6}"
+    )
+    s = "^((?P<nocolor>NO_COLOR)|(?P<bghex>" + bghex + ")|" + s + ")$"
+    return re.compile(s)
+
+
+def iscolor(s):
+    """Tests if a string is a valid color"""
+    return RE_XONSH_COLOR.match(s) is not None
+
+
+@lazyobject
 def CLUT():
     """color look-up table"""
     return [
         #    8-bit, RGB hex
         # Primary 3-bit (8 colors). Unique representation!
-        ("00", "000000"),
-        ("01", "800000"),
-        ("02", "008000"),
-        ("03", "808000"),
-        ("04", "000080"),
-        ("05", "800080"),
-        ("06", "008080"),
-        ("07", "c0c0c0"),
+        ("0", "000000"),
+        ("1", "800000"),
+        ("2", "008000"),
+        ("3", "808000"),
+        ("4", "000080"),
+        ("5", "800080"),
+        ("6", "008080"),
+        ("7", "c0c0c0"),
         # Equivalent "bright" versions of original 8 colors.
-        ("08", "808080"),
-        ("09", "ff0000"),
+        ("8", "808080"),
+        ("9", "ff0000"),
         ("10", "00ff00"),
         ("11", "ffff00"),
         ("12", "0000ff"),
@@ -347,7 +376,8 @@ def rgb_to_256(rgb):
 
     Returns
     -------
-    String between 0 and 255, compatible with xterm.
+    Tuple of String between 0 and 255 (compatible with xterm) and
+    hex code (length-6).
     """
     rgb = rgb.lstrip("#")
     if len(rgb) == 0:

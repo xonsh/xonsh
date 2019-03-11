@@ -1495,13 +1495,30 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   and ``BACKGROUND_#123456`` can both be used.
 * ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
   Thus you can set ``bg#0012ab`` or the uppercase version.
-* ``BOLD_`` is a prefix qualifier that may be used with any foreground color.
+* ``BOLD_`` is a prefix modifier that increases the intesnity of the font.
+  It may be used with any foreground color.
   For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
+* ``FAINT_`` is a prefix modifier that decreases the intesnity of the font.
+  For example, ``FAINT_YELLOW``.
+* ``ITALIC_`` is a prefix modifier that switches to an italic font.
+  For example, ``ITALIC_BLUE``.
 * ``UNDERLINE_`` is a prefix qualifier that also may be used with any
   foreground color. For example, ``UNDERLINE_GREEN``.
-* Or any other combination of qualifiers, such as
+* ``SLOWBLINK_`` is a prefix modifier makes the text blink, slowly.
+  For example, ``SLOWBLINK_PURPLE``.
+* ``FASTBLINK_`` is a prefix modifier makes the text blink, quickly.
+  For example, ``FASTBLINK_CYAN``.
+* ``INVERT_`` is a prefix modifier swaps the foreground and background colors.
+  For example, ``INVERT_WHITE``.
+* ``CONCEAL_`` is a prefix modifier which hides the text. This may not be
+  widely supported. For example, ``CONCEAL_BLACK``.
+* ``STRIKETHROUGH_`` is a prefix modifier which draws a line through the text.
+  For example, ``STRIKETHROUGH_RED``.
+* Or any other combination of modifiers, such as
   ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
   can use!
+
+.. note:: Not all color modifier comboninations have been implemented on prompt-toolkit.
 
 You can make use of additional variables beyond these by adding them to the
 ``PROMPT_FIELDS`` environment variable.  The values in this dictionary

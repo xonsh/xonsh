@@ -72,6 +72,7 @@ from xonsh.tools import (
     is_writable_file,
     balanced_parens,
     iglobpath,
+    all_permutations,
 )
 from xonsh.environ import Env
 
@@ -1676,3 +1677,25 @@ def test_iglobpath_empty_str(monkeypatch, xonsh_builtins):
     monkeypatch.setattr(os, "listdir", mocklistdir)
     paths = list(iglobpath("some/path"))
     assert len(paths) == 0
+
+
+def test_all_permutations():
+    obs = {"".join(p) for p in all_permutations("ABC")}
+    exp = {
+        "A",
+        "B",
+        "C",
+        "AB",
+        "AC",
+        "BA",
+        "BC",
+        "CA",
+        "CB",
+        "ACB",
+        "CBA",
+        "BAC",
+        "CAB",
+        "BCA",
+        "ABC",
+    }
+    assert obs == exp
