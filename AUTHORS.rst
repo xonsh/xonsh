@@ -129,6 +129,7 @@ Authors are sorted by number of commits.
 * Emre Ates
 * Romain Bignon
 * Owen Campbell
+* virus
 * Dan Allan
 * adam j hartz
 * Ned Letcher

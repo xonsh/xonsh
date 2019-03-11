@@ -428,7 +428,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2414
+  num_commits: 2427
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -957,3 +957,8 @@
   num_commits: 1
   first_commit: 2019-02-05 19:03:06
   github: ntdef
+- name: virus
+  email: virusbb001a@gmail.com
+  num_commits: 2
+  first_commit: 2019-03-06 10:36:26
+  github: virusbb001
