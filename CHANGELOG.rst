@@ -636,7 +636,7 @@ v0.7.10
 **Added:**
 
 * 'off' can be passed as falsy value to all flags accepting boolean argument.
-- DragonFly BSD support
+* DragonFly BSD support
 * Format strings (f-strings) now allow environment variables to be looked up.
   For example, ``f"{$HOME}"`` will yield ``"/home/user"``. Note that this will
   look up and fill in the ``detype()``-ed version of the environment variable,
