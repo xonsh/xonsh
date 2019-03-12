@@ -1347,7 +1347,7 @@ To make an alias uncapturable, decorate its
 function with the ``xonsh.tools.uncapturable`` decorator. This is probably
 best used in conjunction with the ``unthreadable`` decorator.  For example:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     from xonsh.tools import unthreadable, uncapturable
 
