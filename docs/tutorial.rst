@@ -1518,8 +1518,6 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
   can use!
 
-.. note:: Not all color modifier comboninations have been implemented on prompt-toolkit.
-
 You can make use of additional variables beyond these by adding them to the
 ``PROMPT_FIELDS`` environment variable.  The values in this dictionary
 should be strings (which will be inserted into the prompt verbatim), or

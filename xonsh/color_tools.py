@@ -27,7 +27,7 @@ def KNOWN_XONSH_COLORS():
         "RED",
         "GREEN",
         "YELLOW",
-        "BLUE", 1
+        "BLUE",
         "PURPLE",
         "CYAN",
         "WHITE",

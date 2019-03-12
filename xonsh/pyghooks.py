@@ -299,8 +299,9 @@ def PYGMENTS_MODIFIERS():
 
 def color_name_to_pygments_code(name, styles):
     """Converts a xonsh color name to a pygments color code."""
-    if name in styles:
-        return styles[name]
+    token = getattr(Color, norm_name(name))
+    if token in styles:
+        return styles[token]
     m = RE_XONSH_COLOR.match(name)
     if m is None:
         raise ValueError("{!r} is not a color!".format(name))
@@ -315,7 +316,7 @@ def color_name_to_pygments_code(name, styles):
         if "#" in color:
             fgcolor = color
         else:
-            fgcolor = styles[color]
+            fgcolor = styles[getattr(Color, color)]
         res = "bg:" + fgcolor
     else:
         # have regular, non-background color
@@ -330,9 +331,9 @@ def color_name_to_pygments_code(name, styles):
         if "#" in color:
             mods.append(color)
         else:
-            mods.append(styles[color])
+            mods.append(styles[getattr(Color, color)])
         res = " ".join(mods)
-    styles[name] = res
+    styles[token] = res
     return res
 
 
@@ -352,7 +353,7 @@ def code_by_name(name, styles):
         Pygments style color code.
     """
     fg, _, bg = name.upper().replace('HEX', '#').partition("__")
-    if fg.startswith("BACKGROUND_") or fg.startwith("BG#"):
+    if fg.startswith("BACKGROUND_") or fg.startswith("BG#"):
         # swap fore & back if needed.
         fg, bg = bg, fg
     # convert names to codes
@@ -360,7 +361,7 @@ def code_by_name(name, styles):
         code = "noinherit"
     elif len(fg) == 0:
         code = color_name_to_pygments_code(bg, styles)
-    elif len(fg) == 0:
+    elif len(bg) == 0:
         code = color_name_to_pygments_code(fg, styles)
     else:
         # have both colors
@@ -1295,10 +1296,6 @@ def make_pygments_style(palette):
     for name, t in BASE_XONSH_COLORS.items():
         color = find_closest_color(t, palette)
         style[getattr(Color, name)] = "#" + color
-        style[getattr(Color, "BOLD_" + name)] = "bold #" + color
-        style[getattr(Color, "UNDERLINE_" + name)] = "underline #" + color
-        style[getattr(Color, "BOLD_UNDERLINE_" + name)] = "bold underline #" + color
-        style[getattr(Color, "BACKGROUND_" + name)] = "bg:#" + color
     return style
 
 
