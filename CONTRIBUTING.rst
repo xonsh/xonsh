@@ -327,7 +327,7 @@ Building the website/documentation requires the following dependencies:
 
 #. `Sphinx <http://sphinx-doc.org/>`_
 #. `Cloud Sphinx Theme <https://cloud-sptheme.readthedocs.io/>`_
-#. `numpydoc <https://numpydoc.readthedocs.io/>`_
+#. `numpydoc <https://numpydoc.readthedocs.io/>`__
 
 Note that xonsh itself needs to be installed too.
 
