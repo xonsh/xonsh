@@ -352,7 +352,7 @@ def code_by_name(name, styles):
     code : str
         Pygments style color code.
     """
-    fg, _, bg = name.upper().replace('HEX', '#').partition("__")
+    fg, _, bg = name.upper().replace("HEX", "#").partition("__")
     if fg.startswith("BACKGROUND_") or fg.startswith("BG#"):
         # swap fore & back if needed.
         fg, bg = bg, fg

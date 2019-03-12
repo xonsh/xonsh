@@ -1,11 +1,7 @@
 """Tests pygments hooks."""
 import pytest
 
-from xonsh.pyghooks import (
-    Color,
-    color_name_to_pygments_code,
-    code_by_name,
-)
+from xonsh.pyghooks import Color, color_name_to_pygments_code, code_by_name
 
 
 DEFAULT_STYLES = {
