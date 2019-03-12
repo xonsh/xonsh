@@ -17,6 +17,32 @@ RE_BACKGROUND = LazyObject(
 
 
 @lazyobject
+def KNOWN_XONSH_COLORS():
+    """These are the minimum number of colors that need to be implemented by
+    any style.
+    """
+    return frozenset([
+        "NO_COLOR",
+        "BLACK",
+        "RED",
+        "GREEN",
+        "YELLOW",
+        "BLUE", 1
+        "PURPLE",
+        "CYAN",
+        "WHITE",
+        "INTENSE_BLACK",
+        "INTENSE_RED",
+        "INTENSE_GREEN",
+        "INTENSE_YELLOW",
+        "INTENSE_BLUE",
+        "INTENSE_PURPLE",
+        "INTENSE_CYAN",
+        "INTENSE_WHITE",
+    ])
+
+
+@lazyobject
 def BASE_XONSH_COLORS():
     return {
         "BLACK": (0, 0, 0),

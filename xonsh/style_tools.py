@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyObject
-from xonsh.color_tools import RE_BACKGROUND
+from xonsh.color_tools import RE_BACKGROUND, iscolor
 from xonsh.tools import FORMATTER
 
 
@@ -92,7 +92,7 @@ def _partial_color_tokenize_main(template, styles):
     for literal, field, spec, conv in FORMATTER.parse(template):
         if field is None:
             value += literal
-        elif field in KNOWN_COLORS or "#" in field:
+        elif iscolor(field):
             value += literal
             next_color, fg, bg = color_by_name(field, fg, bg)
             if next_color is not color:
@@ -164,98 +164,8 @@ def color_by_name(name, fg=None, bg=None):
 
 def norm_name(name):
     """Normalizes a color name."""
-    return name.replace("#", "HEX").replace("BGHEX", "BACKGROUND_HEX")
+    return name.upper().replace("#", "HEX")
 
-
-KNOWN_COLORS = LazyObject(
-    lambda: frozenset(
-        [
-            "BACKGROUND_BLACK",
-            "BACKGROUND_BLUE",
-            "BACKGROUND_CYAN",
-            "BACKGROUND_GREEN",
-            "BACKGROUND_INTENSE_BLACK",
-            "BACKGROUND_INTENSE_BLUE",
-            "BACKGROUND_INTENSE_CYAN",
-            "BACKGROUND_INTENSE_GREEN",
-            "BACKGROUND_INTENSE_PURPLE",
-            "BACKGROUND_INTENSE_RED",
-            "BACKGROUND_INTENSE_WHITE",
-            "BACKGROUND_INTENSE_YELLOW",
-            "BACKGROUND_PURPLE",
-            "BACKGROUND_RED",
-            "BACKGROUND_WHITE",
-            "BACKGROUND_YELLOW",
-            "BLACK",
-            "BLUE",
-            "BOLD_BLACK",
-            "BOLD_BLUE",
-            "BOLD_CYAN",
-            "BOLD_GREEN",
-            "BOLD_INTENSE_BLACK",
-            "BOLD_INTENSE_BLUE",
-            "BOLD_INTENSE_CYAN",
-            "BOLD_INTENSE_GREEN",
-            "BOLD_INTENSE_PURPLE",
-            "BOLD_INTENSE_RED",
-            "BOLD_INTENSE_WHITE",
-            "BOLD_INTENSE_YELLOW",
-            "BOLD_PURPLE",
-            "BOLD_RED",
-            "BOLD_UNDERLINE_BLACK",
-            "BOLD_UNDERLINE_BLUE",
-            "BOLD_UNDERLINE_CYAN",
-            "BOLD_UNDERLINE_GREEN",
-            "BOLD_UNDERLINE_INTENSE_BLACK",
-            "BOLD_UNDERLINE_INTENSE_BLUE",
-            "BOLD_UNDERLINE_INTENSE_CYAN",
-            "BOLD_UNDERLINE_INTENSE_GREEN",
-            "BOLD_UNDERLINE_INTENSE_PURPLE",
-            "BOLD_UNDERLINE_INTENSE_RED",
-            "BOLD_UNDERLINE_INTENSE_WHITE",
-            "BOLD_UNDERLINE_INTENSE_YELLOW",
-            "BOLD_UNDERLINE_PURPLE",
-            "BOLD_UNDERLINE_RED",
-            "BOLD_UNDERLINE_WHITE",
-            "BOLD_UNDERLINE_YELLOW",
-            "BOLD_WHITE",
-            "BOLD_YELLOW",
-            "CYAN",
-            "GREEN",
-            "INTENSE_BLACK",
-            "INTENSE_BLUE",
-            "INTENSE_CYAN",
-            "INTENSE_GREEN",
-            "INTENSE_PURPLE",
-            "INTENSE_RED",
-            "INTENSE_WHITE",
-            "INTENSE_YELLOW",
-            "NO_COLOR",
-            "PURPLE",
-            "RED",
-            "UNDERLINE_BLACK",
-            "UNDERLINE_BLUE",
-            "UNDERLINE_CYAN",
-            "UNDERLINE_GREEN",
-            "UNDERLINE_INTENSE_BLACK",
-            "UNDERLINE_INTENSE_BLUE",
-            "UNDERLINE_INTENSE_CYAN",
-            "UNDERLINE_INTENSE_GREEN",
-            "UNDERLINE_INTENSE_PURPLE",
-            "UNDERLINE_INTENSE_RED",
-            "UNDERLINE_INTENSE_WHITE",
-            "UNDERLINE_INTENSE_YELLOW",
-            "UNDERLINE_PURPLE",
-            "UNDERLINE_RED",
-            "UNDERLINE_WHITE",
-            "UNDERLINE_YELLOW",
-            "WHITE",
-            "YELLOW",
-        ]
-    ),
-    globals(),
-    "KNOWN_COLORS",
-)
 
 DEFAULT_STYLE_DICT = LazyObject(
     lambda: defaultdict(
