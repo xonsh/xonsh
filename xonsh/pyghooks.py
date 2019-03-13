@@ -41,8 +41,10 @@ from xonsh.tools import (
 from xonsh.color_tools import (
     RE_BACKGROUND,
     BASE_XONSH_COLORS,
+    RE_XONSH_COLOR,
     make_palette,
     find_closest_color,
+    iscolor,
 )
 from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256
@@ -278,6 +280,63 @@ def color_by_name(name, fg=None, bg=None):
     return tok, fg, bg
 
 
+@lazyobject
+def PYGMENTS_MODIFIERS():
+    # pygments doesn't support all modifiers.
+    # use None to represent unsupported
+    return {
+        "BOLD": "bold",
+        "FAINT": None,
+        "ITALIC": "italic",
+        "UNDERLINE": "underline",
+        "SLOWBLINK": None,
+        "FASTBLINK": None,
+        "INVERT": None,
+        "CONCEAL": None,
+        "STRIKETHROUGH": None,
+    }
+
+
+def color_name_to_pygments_code(name, styles):
+    """Converts a xonsh color name to a pygments color code."""
+    token = getattr(Color, norm_name(name))
+    if token in styles:
+        return styles[token]
+    m = RE_XONSH_COLOR.match(name)
+    if m is None:
+        raise ValueError("{!r} is not a color!".format(name))
+    parts = m.groupdict()
+    # convert regex match into actual pygments colors
+    if parts["nocolor"] is not None:
+        res = "noinherit"
+    elif parts["bghex"] is not None:
+        res = "bg:#" + parts["bghex"][3:]
+    elif parts["background"] is not None:
+        color = parts["color"]
+        if "#" in color:
+            fgcolor = color
+        else:
+            fgcolor = styles[getattr(Color, color)]
+        res = "bg:" + fgcolor
+    else:
+        # have regular, non-background color
+        mods = parts["modifiers"]
+        if mods is None:
+            mods = []
+        else:
+            mods = mods.strip("_").split("_")
+            mods = [PYGMENTS_MODIFIERS[mod] for mod in mods]
+        mods = list(filter(None, mods))  # remove unsupported entries
+        color = parts["color"]
+        if "#" in color:
+            mods.append(color)
+        else:
+            mods.append(styles[getattr(Color, color)])
+        res = " ".join(mods)
+    styles[token] = res
+    return res
+
+
 def code_by_name(name, styles):
     """Converts a token name into a pygments-style color code.
 
@@ -293,34 +352,22 @@ def code_by_name(name, styles):
     code : str
         Pygments style color code.
     """
-    fg, _, bg = name.lower().partition("__")
-    if fg.startswith("background_"):
+    fg, _, bg = name.upper().replace("HEX", "#").partition("__")
+    if fg.startswith("BACKGROUND_") or fg.startswith("BG#"):
+        # swap fore & back if needed.
         fg, bg = bg, fg
-    codes = []
-    # foreground color
-    if len(fg) == 0:
-        pass
-    elif "hex" in fg:
-        for p in fg.split("_"):
-            codes.append("#" + p[3:] if p.startswith("hex") else p)
+    # convert names to codes
+    if len(fg) == 0 and len(bg) == 0:
+        code = "noinherit"
+    elif len(fg) == 0:
+        code = color_name_to_pygments_code(bg, styles)
+    elif len(bg) == 0:
+        code = color_name_to_pygments_code(fg, styles)
     else:
-        fgtok = getattr(Color, fg.upper())
-        if fgtok in styles:
-            codes.append(styles[fgtok])
-        else:
-            codes += fg.split("_")
-    # background color
-    if len(bg) == 0:
-        pass
-    elif bg.startswith("background_hex"):
-        codes.append("bg:#" + bg[14:])
-    else:
-        bgtok = getattr(Color, bg.upper())
-        if bgtok in styles:
-            codes.append(styles[bgtok])
-        else:
-            codes.append(bg.replace("background_", "bg:"))
-    code = " ".join(codes)
+        # have both colors
+        code = color_name_to_pygments_code(bg, styles)
+        code += " "
+        code += color_name_to_pygments_code(fg, styles)
     return code
 
 
@@ -355,7 +402,7 @@ def _partial_color_tokenize_main(template, styles):
     for literal, field, spec, conv in FORMATTER.parse(template):
         if field is None:
             value += literal
-        elif field in KNOWN_COLORS or "#" in field:
+        elif iscolor(field):
             value += literal
             next_color, fg, bg = color_by_name(field, fg, bg)
             if next_color is not color:
@@ -577,112 +624,6 @@ XONSH_BASE_STYLE = LazyObject(
 )
 
 
-KNOWN_COLORS = LazyObject(
-    lambda: frozenset(
-        [
-            "BACKGROUND_BLACK",
-            "BACKGROUND_BLUE",
-            "BACKGROUND_CYAN",
-            "BACKGROUND_GREEN",
-            "BACKGROUND_INTENSE_BLACK",
-            "BACKGROUND_INTENSE_BLUE",
-            "BACKGROUND_INTENSE_CYAN",
-            "BACKGROUND_INTENSE_GREEN",
-            "BACKGROUND_INTENSE_PURPLE",
-            "BACKGROUND_INTENSE_RED",
-            "BACKGROUND_INTENSE_WHITE",
-            "BACKGROUND_INTENSE_YELLOW",
-            "BACKGROUND_PURPLE",
-            "BACKGROUND_RED",
-            "BACKGROUND_WHITE",
-            "BACKGROUND_YELLOW",
-            "BLACK",
-            "BLUE",
-            "BOLD_BLACK",
-            "BOLD_BLUE",
-            "BOLD_CYAN",
-            "BOLD_GREEN",
-            "BOLD_INTENSE_BLACK",
-            "BOLD_INTENSE_BLUE",
-            "BOLD_INTENSE_CYAN",
-            "BOLD_INTENSE_GREEN",
-            "BOLD_INTENSE_PURPLE",
-            "BOLD_INTENSE_RED",
-            "BOLD_INTENSE_WHITE",
-            "BOLD_INTENSE_YELLOW",
-            "BOLD_PURPLE",
-            "BOLD_RED",
-            "BOLD_UNDERLINE_BLACK",
-            "BOLD_UNDERLINE_BLUE",
-            "BOLD_UNDERLINE_CYAN",
-            "BOLD_UNDERLINE_GREEN",
-            "BOLD_UNDERLINE_INTENSE_BLACK",
-            "BOLD_UNDERLINE_INTENSE_BLUE",
-            "BOLD_UNDERLINE_INTENSE_CYAN",
-            "BOLD_UNDERLINE_INTENSE_GREEN",
-            "BOLD_UNDERLINE_INTENSE_PURPLE",
-            "BOLD_UNDERLINE_INTENSE_RED",
-            "BOLD_UNDERLINE_INTENSE_WHITE",
-            "BOLD_UNDERLINE_INTENSE_YELLOW",
-            "BOLD_UNDERLINE_PURPLE",
-            "BOLD_UNDERLINE_RED",
-            "BOLD_UNDERLINE_WHITE",
-            "BOLD_UNDERLINE_YELLOW",
-            "BOLD_WHITE",
-            "BOLD_YELLOW",
-            "CYAN",
-            "GREEN",
-            "INTENSE_BLACK",
-            "INTENSE_BLUE",
-            "INTENSE_CYAN",
-            "INTENSE_GREEN",
-            "INTENSE_PURPLE",
-            "INTENSE_RED",
-            "INTENSE_WHITE",
-            "INTENSE_YELLOW",
-            "NO_COLOR",
-            "PURPLE",
-            "RED",
-            "UNDERLINE_BLACK",
-            "UNDERLINE_BLUE",
-            "UNDERLINE_CYAN",
-            "UNDERLINE_GREEN",
-            "UNDERLINE_INTENSE_BLACK",
-            "UNDERLINE_INTENSE_BLUE",
-            "UNDERLINE_INTENSE_CYAN",
-            "UNDERLINE_INTENSE_GREEN",
-            "UNDERLINE_INTENSE_PURPLE",
-            "UNDERLINE_INTENSE_RED",
-            "UNDERLINE_INTENSE_WHITE",
-            "UNDERLINE_INTENSE_YELLOW",
-            "UNDERLINE_PURPLE",
-            "UNDERLINE_RED",
-            "UNDERLINE_WHITE",
-            "UNDERLINE_YELLOW",
-            "WHITE",
-            "YELLOW",
-        ]
-    ),
-    globals(),
-    "KNOWN_COLORS",
-)
-
-
-def _expand_style(cmap):
-    """Expands a style in order to more quickly make color map changes."""
-    for key, val in list(cmap.items()):
-        if key is Color.NO_COLOR:
-            continue
-        _, _, key = str(key).rpartition(".")
-        cmap[getattr(Color, "BOLD_" + key)] = "bold " + val
-        cmap[getattr(Color, "UNDERLINE_" + key)] = "underline " + val
-        cmap[getattr(Color, "BOLD_UNDERLINE_" + key)] = "bold underline " + val
-        if val == "noinherit":
-            cmap[getattr(Color, "BACKGROUND_" + key)] = val
-        else:
-            cmap[getattr(Color, "BACKGROUND_" + key)] = "bg:" + val
-
-
 def _bw_style():
     style = {
         Color.BLACK: "noinherit",
@@ -703,7 +644,6 @@ def _bw_style():
         Color.WHITE: "noinherit",
         Color.YELLOW: "noinherit",
     }
-    _expand_style(style)
     return style
 
 
@@ -727,7 +667,6 @@ def _default_style():
         Color.WHITE: "ansigray",
         Color.YELLOW: "ansiyellow",
     }
-    _expand_style(style)
     return style
 
 
@@ -751,7 +690,6 @@ def _monokai_style():
         Color.WHITE: "#d7d7d7",
         Color.YELLOW: "#e2e22e",
     }
-    _expand_style(style)
     return style
 
 
@@ -778,7 +716,6 @@ def _algol_style():
         Color.WHITE: "#888",
         Color.YELLOW: "#FF0000",
     }
-    _expand_style(style)
     return style
 
 
@@ -802,7 +739,6 @@ def _algol_nu_style():
         Color.WHITE: "#888",
         Color.YELLOW: "#FF0000",
     }
-    _expand_style(style)
     return style
 
 
@@ -826,7 +762,6 @@ def _autumn_style():
         Color.WHITE: "#aaaaaa",
         Color.YELLOW: "#aa5500",
     }
-    _expand_style(style)
     return style
 
 
@@ -850,7 +785,6 @@ def _borland_style():
         Color.WHITE: "#aaaaaa",
         Color.YELLOW: "#a61717",
     }
-    _expand_style(style)
     return style
 
 
@@ -874,7 +808,6 @@ def _colorful_style():
         Color.WHITE: "#bbbbbb",
         Color.YELLOW: "#A60",
     }
-    _expand_style(style)
     return style
 
 
@@ -898,7 +831,6 @@ def _emacs_style():
         Color.WHITE: "#bbbbbb",
         Color.YELLOW: "#BB6622",
     }
-    _expand_style(style)
     return style
 
 
@@ -922,7 +854,6 @@ def _friendly_style():
         Color.WHITE: "#bbbbbb",
         Color.YELLOW: "#c65d09",
     }
-    _expand_style(style)
     return style
 
 
@@ -946,7 +877,6 @@ def _fruity_style():
         Color.WHITE: "#cdcaa9",
         Color.YELLOW: "#fb660a",
     }
-    _expand_style(style)
     return style
 
 
@@ -970,7 +900,6 @@ def _igor_style():
         Color.WHITE: "#CC00A3",
         Color.YELLOW: "#C34E00",
     }
-    _expand_style(style)
     return style
 
 
@@ -994,7 +923,6 @@ def _lovelace_style():
         Color.WHITE: "#888888",
         Color.YELLOW: "#b85820",
     }
-    _expand_style(style)
     return style
 
 
@@ -1018,7 +946,6 @@ def _manni_style():
         Color.WHITE: "#AAAAAA",
         Color.YELLOW: "#CC3300",
     }
-    _expand_style(style)
     return style
 
 
@@ -1042,7 +969,6 @@ def _murphy_style():
         Color.WHITE: "#bbbbbb",
         Color.YELLOW: "#c65d09",
     }
-    _expand_style(style)
     return style
 
 
@@ -1066,7 +992,6 @@ def _native_style():
         Color.WHITE: "#aaaaaa",
         Color.YELLOW: "#a61717",
     }
-    _expand_style(style)
     return style
 
 
@@ -1090,7 +1015,6 @@ def _paraiso_dark_style():
         Color.WHITE: "#5bc4bf",
         Color.YELLOW: "#f99b15",
     }
-    _expand_style(style)
     return style
 
 
@@ -1114,7 +1038,6 @@ def _paraiso_light_style():
         Color.WHITE: "#8d8687",
         Color.YELLOW: "#f99b15",
     }
-    _expand_style(style)
     return style
 
 
@@ -1138,7 +1061,6 @@ def _pastie_style():
         Color.WHITE: "#bbbbbb",
         Color.YELLOW: "#aa6600",
     }
-    _expand_style(style)
     return style
 
 
@@ -1162,7 +1084,6 @@ def _perldoc_style():
         Color.WHITE: "#a7a7a7",
         Color.YELLOW: "#cb6c20",
     }
-    _expand_style(style)
     return style
 
 
@@ -1186,7 +1107,6 @@ def _rrt_style():
         Color.WHITE: "#87ceeb",
         Color.YELLOW: "#ff0000",
     }
-    _expand_style(style)
     return style
 
 
@@ -1210,7 +1130,6 @@ def _tango_style():
         Color.WHITE: "#f8f8f8",
         Color.YELLOW: "#8f5902",
     }
-    _expand_style(style)
     return style
 
 
@@ -1234,7 +1153,6 @@ def _trac_style():
         Color.WHITE: "#aaaaaa",
         Color.YELLOW: "#808000",
     }
-    _expand_style(style)
     return style
 
 
@@ -1258,7 +1176,6 @@ def _vim_style():
         Color.WHITE: "#cccccc",
         Color.YELLOW: "#cd0000",
     }
-    _expand_style(style)
     return style
 
 
@@ -1282,7 +1199,6 @@ def _vs_style():
         Color.WHITE: "#2b91af",
         Color.YELLOW: "#a31515",
     }
-    _expand_style(style)
     return style
 
 
@@ -1306,7 +1222,6 @@ def _xcode_style():
         Color.WHITE: "#3F6E75",
         Color.YELLOW: "#836C28",
     }
-    _expand_style(style)
     return style
 
 
@@ -1381,10 +1296,6 @@ def make_pygments_style(palette):
     for name, t in BASE_XONSH_COLORS.items():
         color = find_closest_color(t, palette)
         style[getattr(Color, name)] = "#" + color
-        style[getattr(Color, "BOLD_" + name)] = "bold #" + color
-        style[getattr(Color, "UNDERLINE_" + name)] = "underline #" + color
-        style[getattr(Color, "BOLD_UNDERLINE_" + name)] = "bold underline #" + color
-        style[getattr(Color, "BACKGROUND_" + name)] = "bg:#" + color
     return style
 
 
