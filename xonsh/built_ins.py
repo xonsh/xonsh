@@ -1324,7 +1324,7 @@ class XonshSession:
     def __init__(self, execer=None, ctx=None):
         """
         Parameters
-        ---------
+        ----------
         execer : Execer, optional
             Xonsh execution object, may be None to start
         ctx : Mapping, optional
@@ -1337,7 +1337,7 @@ class XonshSession:
         """Loads the session with default values.
 
         Parameters
-        ---------
+        ----------
         execer : Execer, optional
             Xonsh execution object, may be None to start
         ctx : Mapping, optional

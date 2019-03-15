@@ -151,8 +151,8 @@ class CommandsCache(cabc.Mapping):
     def locate_binary(self, name, ignore_alias=False):
         """Locates an executable on the file system using the cache.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         name : str
                 name of binary to search for
         ignore_alias : bool, optional
@@ -166,8 +166,8 @@ class CommandsCache(cabc.Mapping):
     def lazy_locate_binary(self, name, ignore_alias=False):
         """Locates an executable in the cache, without checking its validity.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         name : str
                 name of binary to search for
         ignore_alias : bool, optional
