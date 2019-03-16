@@ -29,7 +29,7 @@ def bash_preproc(cmd, **kw):
             try:
                 return bang_previous[arg](inputs[-1])
             except IndexError:
-                print(f"xonsh: no history for '!{arg}'")
+                print("xonsh: no history for '!{}'".format(arg))
                 return ''
 
         # Look back in history for a matching command.
@@ -37,7 +37,7 @@ def bash_preproc(cmd, **kw):
             try:
                 return next((x for x in reversed(inputs) if x.startswith(arg)))
             except StopIteration:
-                print(f"xonsh: no previous commands match '!{arg}'")
+                print("xonsh: no previous commands match '!{}'".format(arg))
                 return ''
 
     return re.sub(r'!([!$^*]|[\w]+)', replace_bang, cmd.strip())
