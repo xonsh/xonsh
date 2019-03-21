@@ -1,6 +1,7 @@
 """Bash-like interface extensions for xonsh."""
 import shlex
 import sys
+import re
 
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
@@ -12,11 +13,34 @@ __all__ = ()
 
 @events.on_transform_command
 def bash_preproc(cmd, **kw):
-    if not __xonsh__.history.inps:
-        if cmd.strip() == '!!':
-            return ''
-        return cmd
-    return cmd.replace('!!', __xonsh__.history.inps[-1].strip())
+    bang_previous = {
+            '!': lambda x: x,
+            '$': lambda x: shlex.split(x)[-1],
+            '^': lambda x: shlex.split(x)[0],
+            '*': lambda x: ' '.join(shlex.split(x)[1:]),
+    }
+
+    def replace_bang(m):
+        arg = m.group(1)
+        inputs = __xonsh__.history.inps
+
+        # Dissect the previous command.
+        if arg in bang_previous:
+            try:
+                return bang_previous[arg](inputs[-1])
+            except IndexError:
+                print("xonsh: no history for '!{}'".format(arg))
+                return ''
+
+        # Look back in history for a matching command.
+        else:
+            try:
+                return next((x for x in reversed(inputs) if x.startswith(arg)))
+            except StopIteration:
+                print("xonsh: no previous commands match '!{}'".format(arg))
+                return ''
+
+    return re.sub(r'!([!$^*]|[\w]+)', replace_bang, cmd.strip())
 
 
 @events.on_ptk_create
