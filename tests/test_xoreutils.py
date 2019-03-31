@@ -122,6 +122,7 @@ class TestCat:
         content = "this is a content\nfor testing xoreutil's cat"
         with open(self.tempfile, "w") as f:
             f.write(content)
+        expected_content = content.replace("\n", os.linesep)
 
         stdin = io.StringIO()
         stdout_buf = io.BytesIO()
@@ -132,7 +133,7 @@ class TestCat:
         cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr)
         stdout.flush()
         stderr.flush()
-        assert stdout_buf.getvalue() == bytes(content, "utf-8")
+        assert stdout_buf.getvalue() == bytes(expected_content, "utf-8")
         assert stderr_buf.getvalue() == b''
 
     def test_cat_empty_file(self):
