@@ -111,6 +111,7 @@ class TestCat:
         import tempfile
         tmpfile = tempfile.mkstemp()
         self.tempfile = tmpfile[1]
+        os.close(tmpfile[0])
 
     def teardown_method(self, _method):
         os.remove(self.tempfile)
