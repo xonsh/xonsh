@@ -1,8 +1,10 @@
 import os
 import tempfile
+import pytest
 
 from xonsh.xoreutils import _which
 from xonsh.xoreutils import uptime
+from xonsh.xoreutils import cat
 from xonsh.tools import ON_WINDOWS
 
 
@@ -100,3 +102,52 @@ def test_boottime():
     assert bt > 0.0
     assert uptime._BOOTTIME is not None
     assert uptime._BOOTTIME > 0.0
+
+
+class TestCat:
+    tempfile = None
+
+    def setup_method(self, _method):
+        import tempfile
+        tmpfile = tempfile.mkstemp()
+        self.tempfile = tmpfile[1]
+
+    def teardown_method(self, _method):
+        os.remove(self.tempfile)
+
+    def test_cat_single_file_work_exist_content(self):
+        import io
+
+        content = "this is a content\nfor testing xoreutil's cat"
+        with open(self.tempfile, "w") as f:
+            f.write(content)
+
+        stdin = io.StringIO()
+        stdout_buf = io.BytesIO()
+        stderr_buf = io.BytesIO()
+        stdout = io.TextIOWrapper(stdout_buf)
+        stderr = io.TextIOWrapper(stderr_buf)
+        opts = cat._cat_parse_args([])
+        cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr)
+        stdout.flush()
+        stderr.flush()
+        assert stdout_buf.getvalue() == bytes(content, "utf-8")
+        assert stderr_buf.getvalue() == b''
+
+    def test_cat_empty_file(self):
+        import io
+
+        with open(self.tempfile, "w") as f:
+            f.write("")
+
+        stdin = io.StringIO()
+        stdout_buf = io.BytesIO()
+        stderr_buf = io.BytesIO()
+        stdout = io.TextIOWrapper(stdout_buf)
+        stderr = io.TextIOWrapper(stderr_buf)
+        opts = cat._cat_parse_args([])
+        cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr)
+        stdout.flush()
+        stderr.flush()
+        assert stdout_buf.getvalue() == b''
+        assert stderr_buf.getvalue() == b''
