@@ -9,7 +9,7 @@ v0.8.12
 
 **Added:**
 
-* Support for more ANSI escape sequece modifers allowed in color names.
+* Support for more ANSI escape sequence modifers allowed in color names.
   The current modifiers now allowed are: BOLD, FAINT, ITALIC, UNDERLINE,
   SLOWBLINK, FASTBLINK, INVERT, CONCEAL, and STRIKETHROUGH.
 * New ``ansi_tools.ansi_color_name_to_escape_code()`` function for
@@ -18,13 +18,13 @@ v0.8.12
   xonsh color names.
 * ``color_tools.iscolor()`` is a simple function for testing whether a
   string is a valid color name or not.
-* The ``tools.all_permutations()`` function yeilds all possible permutations
+* The ``tools.all_permutations()`` function yields all possible permutations
   of an iterable, including removals.
 
 **Changed:**
 
 * change url of xontrib-autojump
-* ANSI color styles may now defined simply by their plain and intense colors.
+* ANSI color styles may now be defined simply by their plain and intense colors.
 * ``SET_FOREGROUND_3INTS_`` renamed to ``SET_FOREGROUND_FAINT_``,
   ``SET_BACKGROUND_3INTS_`` renamed to ``SET_BACKGROUND_FAINT_``,
   ``SET_FOREGROUND_SHORT_`` renamed to ``SET_FOREGROUND_SLOWBLINK_``, and
@@ -53,7 +53,7 @@ v0.8.11
 
 * New ``xonsh.color_tools.short_to_ints()`` function for directly
   converting a short (0 - 256) color into a 3-tuple of ints
-  represeting its RGB value.
+  representing its RGB value.
 * New ``xonsh.ansi_colors.ansi_reverse_style()`` function for
   converting a mapping of color names to ANSI escape codes into
   a mapping from escape codes into color names. This is not a
@@ -61,8 +61,8 @@ v0.8.11
 * New ``xonsh.ansi_colors.ansi_color_escape_code_to_name()`` function
   for converting an ANSI color escape code into the closest xonsh
   color name for a given style.
-* New ``xonsh.events.EventManager.exists()`` method enables the checking
-  of whether events actually exist with out making the event if it
+* New ``xonsh.events.EventManager.exists()`` method enables checking
+  whether events actually exist without making the event if it
   doesn't exist.
 * New command-specific event categories called ``on_pre_spec_run_<cmd-name>``
   and ``on_post_spec_run_<cmd-name>`` will be fired before and after
@@ -77,9 +77,9 @@ v0.8.11
 * The ``on_pre_spec_run_ls`` event is initialized with a default handler
   that ensures that ``$LS_COLORS`` is set in the actual environment prior
   to running an ``ls`` command.
-* New ``xonsh.tools.detype()`` function that simply calls an objects own
+* New ``xonsh.tools.detype()`` function that simply calls an object's own
   ``detype()`` method in order to detype it.
-* New ``xonsh.tools.always_none()`` function that simply returns None.
+* New ``xonsh.tools.always_none()`` function that simply returns ``None``.
 * New ``Env.set_ensurer()`` method for setting an ensurer on an environment.
 
 **Changed:**
@@ -87,7 +87,7 @@ v0.8.11
 * The black and white style ``bw`` now uses actual black and white
   ANSI colore codes for its colors, rather than just empty color
   sequences.
-* An environment variable ``detype`` operation no longer needs to be
+* An environment variable ``detype`` operation no longer needs to be a
   function, but may also be ``None``. If ``None``, this variable is
   considered not detypeable, and will not be exported to subprocess
   environments via the ``Env.detype()`` function.
@@ -102,13 +102,12 @@ v0.8.11
 * The ``xonsh.xonfig.make_xonfig_wizard()`` function has been updated to respect
   the new ``None`` types when detyping.
 * Event handlers may now be added and discarded during event firing for
-  normal events.  Such modifications will not be applied to until the
+  normal events.  Such modifications will not be applied until the
   current firing operation is concluded. Thus you won't see newly added
   events fired.
-* xonsh now uses its own vended version of ply. Any installed versions will no longer be used. This reflects that ply is no
-  longer distributed as an installable packages.
-
-* Updated to used ply version 3.11.
+* xonsh now uses its own vendored version of ply. Any installed versions will no longer be used. This reflects that ply is no
+  longer distributed as an installable package.
+* Updated to use ply version 3.11.
 * Reverted change in ``give_to_terminal`` to restore working version of
   ``cmake``, ``rm -i``, etc.  This breaks ``pv | head``.
 
@@ -131,7 +130,7 @@ v0.8.11
   properly for long enough.
 * Fixed environments not showing in the prompt when using Anaconda Python.
 
-* Fixed regression with anaconda activate/deactivate scripts not wokring on Windows.
+* Fixed regression with anaconda activate/deactivate scripts not working on Windows.
 
 **Authors:**
 
@@ -154,7 +153,7 @@ v0.8.10
 * Subprocesses will no longer close file descriptors automatically.
   This was causing issues with other commands that expected file
   descriptors to remain open, such as ``make``.
-* The ``xonsh.Aliases.eval_alaises()`` method updated to use
+* The ``xonsh.Aliases.eval_alias()`` method updated to use
   ``xonsh.aliases.partial_eval_alias()``.
 
 **Fixed:**
@@ -167,12 +166,12 @@ v0.8.10
 * Resolved issue where setting empty signal masks was causing the
   terminal to close. This was problematic for certain command
   pipelines. For example, ``pv /dev/urandom | head`` now works.
-* Prevents recurssive errors from being raised when there is no child process
+* Prevents recursive errors from being raised when there is no child process
   in ``xonsh.jobs.wait_for_active_job()``.
 * Tweaked ``xonsh.completers.commands.complete_skipper()`` to insert a space following
   certain tokens (``&&``, ``||``, ``|``, ``and``, ``or``) to avoid overwriting existing tokens
   with completer output.
-* Fixed bug with evaluating recurssive aliases that did not implement
+* Fixed bug with evaluating recursive aliases that did not implement
   the full callable alias signature.
 
 **Authors:**
@@ -211,7 +210,7 @@ v0.8.9
 
 * Made ``$PATH`` searching more robust to broken symlinks on Windows.
 * undesirable SIGSTOP by putting in a SIGCONT
-* Fixed issue with recursive aliases not being passes all keyword arguments
+* Fixed issue with recursive aliases not being passed all keyword arguments
   that are part of the callable alias spec. This allows commands like
   ``aliases['hsa'] = "history show all"; hsa | head`` to no longer fail
   with strange errors.
@@ -233,7 +232,7 @@ v0.8.8
 
 **Added:**
 
-* ``vox new`` has an added ``-p --interpreter`` flag for choosing the python interpreter to use for virtualenv creation
+* ``vox new`` has an added ``-p --interpreter`` flag for choosing the Python interpreter to use for virtualenv creation
 * The default Python intrepreter vox uses to create virtual environments can be set using the ``$VOX_DEFAULT_INTERPRETER`` environment variable.
 
 
@@ -501,7 +500,7 @@ v0.8.1
 
 * Builtin dynamic proxies and deprecation warning proxies were not deleting
   attributes and items properly.
-* Fixed stdout/sdterr writing infinite recurssion error that would occur in
+* Fixed stdout/sdterr writing infinite recursion error that would occur in
   long pipelines of callable aliases.
 * Fixed a bug which under very rare conditions could cause the shell
   to die with PermissionError exception while sending SIGSTOP signal
