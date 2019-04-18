@@ -426,6 +426,7 @@ def default_threadable_predictors():
         "sudo": predict_help_ver,
         "tcsh": predict_shell,
         "telnet": predict_false,
+        "tput": predict_false,
         "top": predict_help_ver,
         "vi": predict_false,
         "view": predict_false,
