@@ -33,7 +33,7 @@ def test_rmtree():
             git config user.name "Code Monkey"
             touch thing.txt
             git add thing.txt
-            git commit -am "add thing"
+            git commit -a --no-gpg-sign -m "add thing"
             popd
             assert os.path.exists('rmtree_test')
             assert os.path.exists('rmtree_test/thing.txt')
