@@ -209,7 +209,7 @@ def test_repo(request):
         with open("test-file", "w"):
             pass
         sp.call(["git", "add", "test-file"])
-        sp.call(["git", "commit", "-m", "test commit"])
+        sp.call(["git", "commit", "--no-gpg-sign", "-m", "test commit"])
     return {"name": vc, "dir": temp_dir}
 
 
