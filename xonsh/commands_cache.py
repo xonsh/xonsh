@@ -213,11 +213,11 @@ class CommandsCache(cabc.Mapping):
             val == (name, True) and self.locate_binary(name, ignore_alias=True) is None
         )
 
-    def predict_threadable(self, cmd):
-        """Predicts whether a command list is able to be run on a background
-        thread, rather than the main thread.
+    def predictor_threadable(self, cmd0):
+        """Return the predictor whether a command list is able to be run on a
+        background thread, rather than the main thread.
         """
-        name = self.cached_name(cmd[0])
+        name = self.cached_name(cmd0)
         predictors = self.threadable_predictors
         if ON_WINDOWS:
             # On all names (keys) are stored in upper case so instead
@@ -232,8 +232,15 @@ class CommandsCache(cabc.Mapping):
                 if pre in predictors:
                     predictors[name] = predictors[pre]
         if name not in predictors:
-            predictors[name] = self.default_predictor(name, cmd[0])
+            predictors[name] = self.default_predictor(name, cmd0)
         predictor = predictors[name]
+        return predictor
+
+    def predict_threadable(self, cmd):
+        """Predicts whether a command list is able to be run on a background
+        thread, rather than the main thread.
+        """
+        predictor = self.predictor_threadable(cmd[0])
         return predictor(cmd[1:])
 
     #
