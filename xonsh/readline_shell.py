@@ -641,7 +641,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """
         if not ON_POSIX:
             return
-        stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", None)
+        stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
         if stty is None:
             return
         # If available, we should just call the stty utility. This call should
