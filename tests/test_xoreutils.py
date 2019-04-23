@@ -6,6 +6,7 @@ from xonsh.xoreutils import _which
 from xonsh.xoreutils import uptime
 from xonsh.xoreutils import cat
 from xonsh.tools import ON_WINDOWS
+from xonsh.platform import DEFAULT_ENCODING
 
 
 class TestWhich:
@@ -104,6 +105,14 @@ def test_boottime():
     assert uptime._BOOTTIME > 0.0
 
 
+@pytest.fixture
+def cat_env_fixture(xonsh_builtins):
+    with xonsh_builtins.__xonsh__.env.swap(
+            XONSH_ENCODING=DEFAULT_ENCODING,
+            XONSH_ENCODING_ERRORS="surrogateescape"):
+        yield xonsh_builtins
+
+
 class TestCat:
     tempfile = None
 
@@ -116,7 +125,7 @@ class TestCat:
     def teardown_method(self, _method):
         os.remove(self.tempfile)
 
-    def test_cat_single_file_work_exist_content(self):
+    def test_cat_single_file_work_exist_content(self, cat_env_fixture):
         import io
 
         content = "this is a content\nfor testing xoreutil's cat"
@@ -136,9 +145,8 @@ class TestCat:
         assert stdout_buf.getvalue() == bytes(expected_content, "utf-8")
         assert stderr_buf.getvalue() == b''
 
-    def test_cat_empty_file(self):
+    def test_cat_empty_file(self, cat_env_fixture):
         import io
-
         with open(self.tempfile, "w") as f:
             f.write("")
 
