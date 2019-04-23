@@ -60,14 +60,17 @@ def _get_hg_root(q):
     while True:
         if not os.path.isdir(_curpwd):
             return False
-        if any([b.name == ".hg" for b in xt.scandir(_curpwd)]):
-            q.put(_curpwd)
-            break
-        else:
-            _oldpwd = _curpwd
-            _curpwd = os.path.split(_curpwd)[0]
-            if _oldpwd == _curpwd:
-                return False
+        try:
+            if any([b.name == ".hg" for b in xt.scandir(_curpwd)]):
+                q.put(_curpwd)
+                break
+            else:
+                _oldpwd = _curpwd
+                _curpwd = os.path.split(_curpwd)[0]
+                if _oldpwd == _curpwd:
+                    return False
+        except OSError:
+            return False
 
 
 def get_hg_branch(root=None):
