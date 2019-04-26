@@ -387,6 +387,7 @@ def default_threadable_predictors():
     # alphabetical, for what it is worth.
     predictors = {
         "aurman": predict_false,
+        "asciinema": predict_help_ver,
         "bash": predict_shell,
         "csh": predict_shell,
         "clear": predict_false,
@@ -426,6 +427,7 @@ def default_threadable_predictors():
         "sudo": predict_help_ver,
         "tcsh": predict_shell,
         "telnet": predict_false,
+        "tput": predict_false,
         "top": predict_help_ver,
         "vi": predict_false,
         "view": predict_false,

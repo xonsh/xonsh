@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 from contextlib import contextmanager
 
 import builtins
+import gc
 import os
 import os.path
 import sys
@@ -22,7 +23,13 @@ def Shell(*args, **kwargs):
 @pytest.fixture
 def shell(xonsh_builtins, monkeypatch):
     """Xonsh Shell Mock"""
-    del builtins.__xonsh__
+    if hasattr(builtins, "__xonsh__"):
+        builtins.__xonsh__.unlink_builtins()
+        del builtins.__xonsh__
+    for xarg in dir(builtins):
+        if "__xonsh_" in xarg:
+            delattr(builtins, xarg)
+    gc.collect()
     Shell.shell_type_aliases = {"rl": "readline"}
     monkeypatch.setattr(xonsh.main, "Shell", Shell)
 
