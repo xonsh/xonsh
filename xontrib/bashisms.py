@@ -14,10 +14,10 @@ __all__ = ()
 @events.on_transform_command
 def bash_preproc(cmd, **kw):
     bang_previous = {
-            '!': lambda x: x,
-            '$': lambda x: shlex.split(x)[-1],
-            '^': lambda x: shlex.split(x)[0],
-            '*': lambda x: ' '.join(shlex.split(x)[1:]),
+        "!": lambda x: x,
+        "$": lambda x: shlex.split(x)[-1],
+        "^": lambda x: shlex.split(x)[0],
+        "*": lambda x: " ".join(shlex.split(x)[1:]),
     }
 
     def replace_bang(m):
@@ -30,7 +30,7 @@ def bash_preproc(cmd, **kw):
                 return bang_previous[arg](inputs[-1])
             except IndexError:
                 print("xonsh: no history for '!{}'".format(arg))
-                return ''
+                return ""
 
         # Look back in history for a matching command.
         else:
@@ -38,14 +38,14 @@ def bash_preproc(cmd, **kw):
                 return next((x for x in reversed(inputs) if x.startswith(arg)))
             except StopIteration:
                 print("xonsh: no previous commands match '!{}'".format(arg))
-                return ''
+                return ""
 
-    return re.sub(r'!([!$^*]|[\w]+)', replace_bang, cmd.strip())
+    return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd.strip())
 
 
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
-    if ptk_shell_type() == 'prompt_toolkit2':
+    if ptk_shell_type() == "prompt_toolkit2":
         handler = bindings.add
     else:
         handler = bindings.registry.add_binding
@@ -56,7 +56,7 @@ def custom_keybindings(bindings, **kw):
     def last_command_exists():
         return len(__xonsh__.history) > 0
 
-    @handler(Keys.Escape, '.', filter=last_command_exists & insert_mode)
+    @handler(Keys.Escape, ".", filter=last_command_exists & insert_mode)
     def recall_last_arg(event):
         arg = __xonsh__.history[-1].cmd.split()[-1]
         event.current_buffer.insert_text(arg)
@@ -67,21 +67,21 @@ def alias(args, stdin=None):
 
     if args:
         for arg in args:
-            if '=' in arg:
+            if "=" in arg:
                 # shlex.split to remove quotes, e.g. "foo='echo hey'" into
                 # "foo=echo hey"
-                name, cmd = shlex.split(arg)[0].split('=', 1)
+                name, cmd = shlex.split(arg)[0].split("=", 1)
                 aliases[name] = shlex.split(cmd)
             elif arg in aliases:
-                print('{}={}'.format(arg, aliases[arg]))
+                print("{}={}".format(arg, aliases[arg]))
             else:
                 print("alias: {}: not found".format(arg), file=sys.stderr)
                 ret = 1
     else:
         for alias, cmd in aliases.items():
-            print('{}={}'.format(alias, cmd))
+            print("{}={}".format(alias, cmd))
 
     return ret
 
 
-aliases['alias'] = alias
+aliases["alias"] = alias

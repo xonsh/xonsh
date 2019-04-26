@@ -17,7 +17,7 @@ def custom_keybindings(bindings, **kw):
     # Alt+Left and Alt+Right still jump over smaller word segments.
     # See https://github.com/xonsh/xonsh/issues/2403
 
-    if ptk_shell_type() == 'prompt_toolkit2':
+    if ptk_shell_type() == "prompt_toolkit2":
         handler = bindings.add
     else:
         handler = bindings.registry.add_binding
