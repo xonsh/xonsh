@@ -13,10 +13,11 @@ __all__ = ()
 def mpl(args, stdin=None):
     """Hooks to matplotlib"""
     from xontrib.mplhooks import show
+
     show()
 
 
-aliases['mpl'] = mpl
+aliases["mpl"] = mpl
 
 
 @lazyobject
@@ -31,8 +32,9 @@ def pylab_helpers():
 @events.on_import_post_exec_module
 def interactive_pyplot(module=None, **kwargs):
     """This puts pyplot in interactive mode once it is imported."""
-    if module.__name__ != 'matplotlib.pyplot' or \
-       not __xonsh__.env.get('XONSH_INTERACTIVE'):
+    if module.__name__ != "matplotlib.pyplot" or not __xonsh__.env.get(
+        "XONSH_INTERACTIVE"
+    ):
         return
     # Since we are in interactive mode, let's monkey-patch plt.show
     # to try to never block.

@@ -36,13 +36,14 @@ def _cwd_release_wrapper(func):
         the workdir to the users home directory.
     """
     env = builtins.__xonsh__.env
-    if env.get('UPDATE_PROMPT_ON_KEYPRESS'):
-        return func if not hasattr(func, '_orgfunc') else func._orgfunc
+    if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
+        return func if not hasattr(func, "_orgfunc") else func._orgfunc
 
-    if hasattr(func, '_orgfunc'):
+    if hasattr(func, "_orgfunc"):
         # Already wrapped
         return func
     else:
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             anchor = Path(os.getcwd()).anchor
@@ -51,14 +52,15 @@ def _cwd_release_wrapper(func):
                 out = func(*args, **kwargs)
             finally:
                 try:
-                    pwd = env.get('PWD', anchor)
+                    pwd = env.get("PWD", anchor)
                     os.chdir(pwd)
                 except (FileNotFoundError, NotADirectoryError):
                     print_exception()
                     newpath = _chdir_up(pwd)
-                    builtins.__xonsh__.env['PWD'] = newpath
+                    builtins.__xonsh__.env["PWD"] = newpath
                     raise KeyboardInterrupt
             return out
+
         wrapper._orgfunc = func
         return wrapper
 
@@ -69,20 +71,22 @@ def _cwd_restore_wrapper(func):
         prompt_toolkit or readline.
     """
     env = builtins.__xonsh__.env
-    if env.get('UPDATE_PROMPT_ON_KEYPRESS'):
-        return func if not hasattr(func, '_orgfunc') else func._orgfunc
+    if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
+        return func if not hasattr(func, "_orgfunc") else func._orgfunc
 
-    if hasattr(func, '_orgfunc'):
+    if hasattr(func, "_orgfunc"):
         # Already wrapped
         return func
     else:
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             workdir = os.getcwd()
-            _chdir_up(env.get('PWD', workdir))
+            _chdir_up(env.get("PWD", workdir))
             out = func(*args, **kwargs)
             _chdir_up(workdir)
             return out
+
         wrapper._orgfunc = func
         return wrapper
 
@@ -93,4 +97,6 @@ def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
         prompter.prompt = _cwd_release_wrapper(prompter.prompt)
         if completer.completer:
             # Temporarily restore cwd for callbacks to the completer
-            completer.completer.complete = _cwd_restore_wrapper(completer.completer.complete)
+            completer.completer.complete = _cwd_restore_wrapper(
+                completer.completer.complete
+            )

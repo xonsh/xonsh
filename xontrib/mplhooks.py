@@ -46,7 +46,9 @@ def figure_to_rgb_array(fig, shape=None):
 
     Note: the method will throw an exception if the given shape is wrong.
     """
-    array = np.frombuffer(_get_buffer(fig, dpi=fig.dpi, format='raw').read(), dtype='uint8')
+    array = np.frombuffer(
+        _get_buffer(fig, dpi=fig.dpi, format="raw").read(), dtype="uint8"
+    )
     if shape is None:
         w, h = fig.canvas.get_width_height()
         shape = (h, w, 4)
@@ -81,7 +83,7 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         dpi = dpi_fig
         subplotpars = {
             k: getattr(fig.subplotpars, k)
-            for k in ['wspace', 'hspace', 'bottom', 'top', 'left', 'right']
+            for k in ["wspace", "hspace", "bottom", "top", "left", "right"]
         }
 
         # set the figure dimensions to the terminal size
@@ -95,8 +97,8 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         fig.subplots_adjust(bottom=1 / height, top=1 - 1 / height, left=0, right=1)
 
         # reduce font size in order to reduce text impact on the image
-        font_size = matplotlib.rcParams['font.size']
-        matplotlib.rcParams.update({'font.size': 0})
+        font_size = matplotlib.rcParams["font.size"]
+        matplotlib.rcParams.update({"font.size": 0})
     else:
         dpi = min([width * fig.dpi // w, height * fig.dpi // h])
         fig.dpi = dpi
@@ -108,7 +110,7 @@ def figure_to_tight_array(fig, width, height, minimal=True):
     if minimal:
         # cleanup after tight layout
         # clean up rcParams
-        matplotlib.rcParams.update({'font.size': font_size})
+        matplotlib.rcParams.update({"font.size": font_size})
 
         # reset the axis positions and figure dimensions
         fig.set_size_inches(w / dpi, h / dpi, forward=True)
@@ -121,8 +123,8 @@ def figure_to_tight_array(fig, width, height, minimal=True):
 
 def buf_to_color_str(buf):
     """Converts an RGB array to a xonsh color string."""
-    space = ' '
-    pix = '{{bg#{0:02x}{1:02x}{2:02x}}} '
+    space = " "
+    pix = "{{bg#{0:02x}{1:02x}{2:02x}}} "
     pixels = []
     for h in range(buf.shape[0]):
         last = None
@@ -133,9 +135,9 @@ def buf_to_color_str(buf):
             else:
                 pixels.append(pix.format(*rgb))
             last = rgb
-        pixels.append('{NO_COLOR}\n')
+        pixels.append("{NO_COLOR}\n")
     pixels[-1] = pixels[-1].rstrip()
-    return ''.join(pixels)
+    return "".join(pixels)
 
 
 def display_figure_with_iterm2(fig):
@@ -146,13 +148,13 @@ def display_figure_with_iterm2(fig):
     fig : matplotlib.figure.Figure
         the figure to be plotted
     """
-    print(display_image_bytes(_get_buffer(fig, format='png', dpi=fig.dpi).read()))
+    print(display_image_bytes(_get_buffer(fig, format="png", dpi=fig.dpi).read()))
 
 
 def show():
-    '''Run the mpl display sequence by printing the most recent figure to console'''
+    """Run the mpl display sequence by printing the most recent figure to console"""
     try:
-        minimal = __xonsh__.env['XONTRIB_MPL_MINIMAL']
+        minimal = __xonsh__.env["XONTRIB_MPL_MINIMAL"]
     except KeyError:
         minimal = XONTRIB_MPL_MINIMAL_DEFAULT
     fig = plt.gcf()
