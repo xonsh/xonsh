@@ -14,10 +14,10 @@ __all__ = ()
 @events.on_transform_command
 def bash_preproc(cmd, **kw):
     bang_previous = {
-            '!': lambda x: x,
-            '$': lambda x: shlex.split(x)[-1],
-            '^': lambda x: shlex.split(x)[0],
-            '*': lambda x: ' '.join(shlex.split(x)[1:]),
+        '!': lambda x: x,
+        '$': lambda x: shlex.split(x)[-1],
+        '^': lambda x: shlex.split(x)[0],
+        '*': lambda x: ' '.join(shlex.split(x)[1:]),
     }
 
     def replace_bang(m):
