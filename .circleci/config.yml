@@ -215,6 +215,9 @@ jobs:
             export PATH="$HOME/miniconda/bin:$PATH"
             cd xonsh/
             black --exclude ply *.py --check
+            cd ../xontrib/
+            black *.py --check
+
 
 workflows:
   version: 2
