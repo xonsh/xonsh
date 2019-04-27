@@ -50,7 +50,7 @@ def complete_skipper(cmd, line, start, end, ctx):
 
     # If there's no space following an END_PROC_TOKEN, insert one
     if parts[-1] in END_PROC_TOKENS:
-        return(set(" "), 0)
+        return (set(" "), 0)
 
     if len(parts) == skip_part_num + 1:
         comp_func = complete_command

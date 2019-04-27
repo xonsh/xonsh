@@ -2422,7 +2422,7 @@ class BaseParser(object):
         prefix = RE_STRINGPREFIX.match(p1.value).group().lower()
         if "p" in prefix and "f" in prefix:
             new_pref = prefix.replace("p", "")
-            value_without_p = new_pref + p1.value[len(prefix):]
+            value_without_p = new_pref + p1.value[len(prefix) :]
             s = eval_fstr_fields(value_without_p, new_pref, filename=self.lexer.fname)
             s = pyparse(s).body[0].value
             s = ast.increment_lineno(s, p1.lineno - 1)
