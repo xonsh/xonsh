@@ -17,6 +17,7 @@
 **Fixed:**
 
 * Fixed crash while converting ANSI color codes with leading zeroes
+* Fixed crash while parsing invalid ANSI color code
 
 **Security:**
 

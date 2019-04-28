@@ -256,7 +256,14 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     if reversed_style is None:
         style, reversed_style = ansi_reverse_style(style, return_style=True)
     # strip some actual escape codes, if needed.
-    ec = ANSI_ESCAPE_CODE_RE.match(escape_code).group(2)
+    match = ANSI_ESCAPE_CODE_RE.match(escape_code)
+    if not match:
+        msg = 'Invalid ANSI color sequence "{0}", using "NO_COLOR" instead.'.format(
+            escape_code
+        )
+        warnings.warn(msg, RuntimeWarning)
+        return ("NO_COLOR",)
+    ec = match.group(2)
     names = []
     n_ints = 0
     seen_set_foreback = False
