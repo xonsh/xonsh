@@ -89,7 +89,7 @@ def _uptime_beos():
     if not hasattr(xp.LIBC, "system_time"):
         return None
     xp.LIBC.system_time.restype = ctypes.c_int64
-    return xp.LIBC.system_time() / 1000000.
+    return xp.LIBC.system_time() / 1000000.0
 
 
 def _uptime_bsd():
@@ -110,8 +110,8 @@ def _uptime_bsd():
     sec, usec = struct.unpack_from("@LL", buf.raw)
     # OS X disagrees what that second value is.
     if usec > 1000000:
-        usec = 0.
-    _BOOTTIME = sec + usec / 1000000.
+        usec = 0.0
+    _BOOTTIME = sec + usec / 1000000.0
     up = time.time() - _BOOTTIME
     if up < 0:
         up = None
@@ -225,11 +225,11 @@ def _uptime_windows():
     if hasattr(xp.LIBC, "GetTickCount64"):
         # Vista/Server 2008 or later.
         xp.LIBC.GetTickCount64.restype = ctypes.c_uint64
-        return xp.LIBC.GetTickCount64() / 1000.
+        return xp.LIBC.GetTickCount64() / 1000.0
     if hasattr(xp.LIBC, "GetTickCount"):
         # WinCE and Win2k or later; gives wrong answers after 49.7 days.
         xp.LIBC.GetTickCount.restype = ctypes.c_uint32
-        return xp.LIBC.GetTickCount() / 1000.
+        return xp.LIBC.GetTickCount() / 1000.0
     return None
 
 

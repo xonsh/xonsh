@@ -213,10 +213,7 @@ jobs:
       - run:
           command: |
             export PATH="$HOME/miniconda/bin:$PATH"
-            cd xonsh/
-            black --exclude ply *.py --check
-            cd ../xontrib/
-            black *.py --check
+            black --check --exclude=xonsh/ply/ xonsh/ xontrib/
 
 
 workflows:

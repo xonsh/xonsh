@@ -6,6 +6,9 @@
 
 * Circle now runs ``black`` checks on contents of bundled xontribs
 
+* The ``black`` checks no longer skip some files buried deeper in the directory
+  tree.
+
 **Deprecated:**
 
 * <news item>

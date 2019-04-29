@@ -23,10 +23,7 @@ def env_name():
     ``{env_prefix}`` and ``{env_postfix}`` fields.
     """
     env_name = find_env_name()
-    if (
-        builtins.__xonsh__.env.get("VIRTUAL_ENV_DISABLE_PROMPT")
-        or not env_name
-    ):
+    if builtins.__xonsh__.env.get("VIRTUAL_ENV_DISABLE_PROMPT") or not env_name:
         # env name prompt printing disabled, or no environment; just return
         return
 
