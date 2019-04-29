@@ -273,3 +273,19 @@ def test_make_args_env():
         "ARG3": "3",
     }
     assert exp == obs
+
+def test_delitem():
+    env = Env(VAR="a value")
+    assert env['VAR'] == 'a value'
+    del env['VAR']
+    with pytest.raises(Exception):
+        a = env['VAR']
+
+def test_delitem_default():
+    env = Env()
+    a_key,a_value = next(env._defaults.items().__iter__())
+    del env[a_key]
+    assert env[a_key] == a_value
+    del env[a_key]
+    assert env[a_key] == a_value
+

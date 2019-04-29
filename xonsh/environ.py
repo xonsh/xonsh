@@ -1521,10 +1521,14 @@ class Env(cabc.MutableMapping):
             events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
 
     def __delitem__(self, key):
-        del self._d[key]
-        self._detyped = None
-        if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
-            del os_environ[key]
+        if key in self._d:
+            del self._d[key]
+            self._detyped = None
+            if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
+                del os_environ[key]
+        elif key not in self._defaults:
+            e = "Unknown environment variable: ${}"
+            raise KeyError(e.format(key))
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
