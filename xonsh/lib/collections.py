@@ -2,8 +2,8 @@
 
 import itertools
 
-from collections import ChainMap, MutableSet
-from collections.abc import MutableMapping, MutableSequence
+from collections import ChainMap
+from collections.abc import MutableMapping, MutableSequence, MutableSet
 
 
 class ChainDBDefaultType(object):
