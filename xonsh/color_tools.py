@@ -385,6 +385,9 @@ def RGB_TO_SHORT():
 
 
 def short2rgb(short):
+    short = short.lstrip("0")
+    if short == "":
+        short = "0"
     return SHORT_TO_RGB[short]
 
 
