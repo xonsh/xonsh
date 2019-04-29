@@ -380,6 +380,15 @@ def predict_hg(args):
         return not ns.interactive
 
 
+def predict_env(args):
+    """Predict if env is launching a threadable command or not"""
+
+    for i in range(len(args)):
+        if args[i] and args[i][0] != "-" and "=" not in args[i]:
+            return builtins.__xonsh__.commands_cache.predict_threadable(args[i:])
+    return True
+
+
 def default_threadable_predictors():
     """Generates a new defaultdict for known threadable predictors.
     The default is to predict true.
@@ -395,6 +404,7 @@ def default_threadable_predictors():
         "cmd": predict_shell,
         "cryptop": predict_false,
         "curl": predict_true,
+        "env": predict_env,
         "ex": predict_false,
         "emacsclient": predict_false,
         "fish": predict_shell,
