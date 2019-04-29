@@ -1,10 +1,24 @@
 #!/usr/bin/env xonsh
+import sys
+args = sys.argv[1:]
+
+
+def replace_args(num):
+    """
+    Replace %d to num for avoid overwrite files
+
+    Example of args: --junitxml=junit/test-results.%d.xml
+    """
+    return [
+        (arg % num) if "%d" in arg else arg
+        for arg in args]
+
 $RAISE_SUBPROC_ERROR = True
 
 run_separately = [
     'tests/test_ptk_highlight.py',
     ]
 
-![pytest  @($ARGS[1:]) --ignore @(run_separately)]
-for fname in run_separately:
-    ![pytest  @($ARGS[1:]) @(fname)]
+![pytest @(replace_args(0)) --ignore @(run_separately)]
+for index, fname in enumerate(run_separately):
+    ![pytest @(replace_args(index+1)) @(fname)]
