@@ -3165,7 +3165,7 @@ class BaseParser(object):
 
     def p_subproc_atom_str(self, p):
         """subproc_atom : string_literal"""
-        if hasattr(p[1], "is_raw") and p[1].is_raw == True:
+        if hasattr(p[1], "is_raw") and p[1].is_raw:
             p0 = p[1]
         else:
             p0 = xonsh_call(
