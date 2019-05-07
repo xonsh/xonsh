@@ -609,7 +609,7 @@ class SubprocSpec:
 
     def _cmd_event_name(self):
         if callable(self.alias):
-            return self.alias.__name__
+            return getattr(self.alias, "__name__", repr(self.alias))
         elif self.binary_loc is None:
             return "<not-found>"
         else:
