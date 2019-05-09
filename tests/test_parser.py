@@ -7,7 +7,7 @@ import itertools
 
 import pytest
 
-from xonsh.ast import AST, With, Pass, pdump
+from xonsh.ast import AST, With, Pass, pdump, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.base import eval_fstr_fields
 
@@ -2887,6 +2887,20 @@ def test_withbang_as_many_suite(body):
         assert item.optional_vars.id == targ
         s = item.context_expr.args[1].s
         assert s == body
+
+
+def test_subproc_raw_str_literal():
+    tree = check_xonsh_ast({}, "!(echo '$foo')", run=False, return_obs=True)
+    assert isinstance(tree, AST)
+    subproc = tree.body
+    assert isinstance(subproc.args[0].elts[1], Call)
+    assert subproc.args[0].elts[1].func.attr == "expand_path"
+
+    tree = check_xonsh_ast({}, "!(echo r'$foo')", run=False, return_obs=True)
+    assert isinstance(tree, AST)
+    subproc = tree.body
+    assert isinstance(subproc.args[0].elts[1], Str)
+    assert subproc.args[0].elts[1].s == "$foo"
 
 
 # test invalid expressions
