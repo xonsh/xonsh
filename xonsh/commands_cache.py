@@ -381,10 +381,14 @@ def predict_hg(args):
 
 
 def predict_env(args):
-    """Predict if env is launching a threadable command or not"""
+    """Predict if env is launching a threadable command or not.
+    The launched command is extracted from env args, and the predictor of
+    lauched command is used."""
 
     for i in range(len(args)):
         if args[i] and args[i][0] != "-" and "=" not in args[i]:
+            # args[i] is the command and the following is its arguments
+            # so args[i:] is used to predict if the command is threadable
             return builtins.__xonsh__.commands_cache.predict_threadable(args[i:])
     return True
 
