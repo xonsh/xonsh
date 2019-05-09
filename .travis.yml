@@ -29,6 +29,9 @@ matrix:
         - os: osx
           language: generic
           env: PYTHON="3.7" MINICONDA_OS="MacOSX"
+        - os: osx
+          language: generic
+          env: PYTHON="3.8" MINICONDA_OS="MacOSX"
     allow_failures:
         - python: "nightly"
         - python: "pypy3"
