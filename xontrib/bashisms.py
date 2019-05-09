@@ -47,11 +47,14 @@ def bash_preproc(cmd, **kw):
 def custom_keybindings(bindings, **kw):
     if ptk_shell_type() == "prompt_toolkit2":
         handler = bindings.add
+
         @Condition
         def last_command_exists():
             return len(__xonsh__.history) > 0
+
     else:
         handler = bindings.registry.add_binding
+
         @Condition
         def last_command_exists(cli):
             return len(__xonsh__.history) > 0
