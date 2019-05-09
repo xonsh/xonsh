@@ -13,12 +13,13 @@ Authors are sorted by number of commits.
 * Leonardo Santagada
 * Bob Hyman
 * christopher
+* Jean-Benoist Leger
 * Aaron Griffin
 * Rob Brewer
 * Burak Yiğit Kaya
+* David Strobach
 * Sagar Tewari
 * Matthias Bussonnier
-* David Strobach
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
@@ -27,9 +28,9 @@ Authors are sorted by number of commits.
 * Bernardas Ališauskas
 * Derek Thomas
 * VHarisop
-* Jean-Benoist Leger
 * JohnLunzer
 * Paul Goelz
+* virus
 * David Dotson
 * Frank Sachsenheim
 * Kurtis Rader
@@ -50,8 +51,10 @@ Authors are sorted by number of commits.
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
+* Carmen Bianca Bakker
 * Cody Scott
 * Jake Hedman
+* Alexander Sosedkin
 * traverseda
 * Andre Weltsch
 * Jeremy Donahue
@@ -62,7 +65,6 @@ Authors are sorted by number of commits.
 * JuanPablo
 * K.-Michael Aye
 * Ollie Terrance
-* Alexander Sosedkin
 * Marcel Bollmann
 * mdraw
 * Mattias Ugelvik
@@ -95,8 +97,12 @@ Authors are sorted by number of commits.
 * Jakub Nowak
 * selepo
 * Fabien Dubosson
+* Kale Kundert
+* Ad115
+* Andrés García García
 * Jan Schulz
 * Nickolay Bukreyev
+* Samuel Dion-Girardeau
 * Michael Droettboom
 * guillearch
 * javValverde
@@ -129,7 +135,7 @@ Authors are sorted by number of commits.
 * Emre Ates
 * Romain Bignon
 * Owen Campbell
-* virus
+* Steven Kryskalla
 * Dan Allan
 * adam j hartz
 * Ned Letcher
@@ -137,7 +143,6 @@ Authors are sorted by number of commits.
 * Miguel de Val-Borro
 * Hirotomo Moriwaki
 * Phil Elson
-* Samuel Dion-Girardeau
 * Erin Call
 * Trevor Bekolay
 * Tzu-ping Chung
@@ -187,6 +192,7 @@ Authors are sorted by number of commits.
 * stonebig
 * Ronny Pfannschmidt
 * Troy de Freitas
+* Rodrigo Oliveira
 * goodboy
 * Atsushi Morimoto
 
