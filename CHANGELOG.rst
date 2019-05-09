@@ -4,6 +4,89 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.0
+====================
+
+**Added:**
+
+* Implemented the following "bang command" bashisms: ``!$``, ``$*``, ``!^``, 
+  and ``!<str>``.  These are in addition to ``!!``, which was already 
+  implemented.
+* asciinema (terminal recorder) added in not threadable commands.
+* tput added in not threadable commands.
+* New ``color_tools.KNOWN_XONSH_COLORS`` frozenset.
+* New ``pyghooks.PYGMENTS_MODIFIERS`` mapping from color modifier names to
+  pygments colors.
+* New ``pyghooks.color_name_to_pygments_code()`` function for converting
+  color names into pygments color codes.
+
+**Changed:**
+
+* Circle now runs ``black`` checks on contents of bundled xontribs
+
+* The ``black`` checks no longer skip some files buried deeper in the directory
+  tree.
+* Errors while formatting the prompt are highlighted for easier debugging.
+* Pygments styles only define the standard set of colors, by default.
+  Additional colors are computed as needed.
+* PTYs created for running threadable command have now size set to same size
+  than main terminal.
+* <news item>
+* Update documentation pointing to the minimal required version of
+  Python (3.5).
+
+**Deprecated:**
+
+* Drop support for Python 3.4.
+
+**Removed:**
+
+* ``pyghooks.KNOWN_COLORS`` is no longer needed or useful as pygments colors
+  are computed automatically.
+* ``style_tools.KNOWN_COLORS`` was never used, redundant with
+  ``pyghooks.KNOWN_COLORS`` and has thus been removed.
+
+**Fixed:**
+
+* Fixed a DeprecationWarning that would show up during an import of MutableSet.
+* Fixed error with aliases composed of functions wrapped in functools.partial.
+* ``black`` formatted all xontribs
+* deleting a non existing environement variable with default value do nothing
+  instead of raising a exception trying to deleting it in existing values dict.
+* Fixed crash while converting ANSI color codes with leading zeroes
+* Fixed crash while parsing invalid ANSI color code
+* fix causing infinite loop when doing ``cat`` empty file
+* Fixed issue which occurs when user doesn't have access to parent directory and
+  xonsh scan all parents directory to find if we are in a Hg repository.
+* Fixed issue with pygments-cache not properly generating a cache the first
+  time when using prompt-toolkit when using ``ptk2``.
+  This was due to a lingering lazy import of ``pkg_resources``
+  that has been removed.
+* Minor update for Python v3.8.
+* Fixed a "'NoneType' object is not iterable" bug when looking up ``stty``
+  in command cache.
+* The release tarball now includes all test files.
+* Arguments passed to python in 'scripts/xonsh' and in 'scripts/xonsh-cat' are
+  now passed by a portable hack in sh, not anymore by /usr/bin/env.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Jean-Benoist Leger
+* David Strobach
+* virus
+* Carmen Bianca Bakker
+* Alexander Sosedkin
+* Kale Kundert
+* Andrés García García
+* Andrés García García
+* Samuel Dion-Girardeau
+* Steven Kryskalla
+* Rodrigo Oliveira
+
+
+
 v0.8.12
 ====================
 
