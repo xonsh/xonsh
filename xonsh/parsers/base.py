@@ -711,7 +711,10 @@ class BaseParser(object):
 
     def p_file_input(self, p):
         """file_input : file_stmts"""
-        p[0] = ast.Module(body=p[1])
+        if PYTHON_VERSION_INFO < (3, 8, 0):
+            p[0] = ast.Module(body=p[1])
+        else:
+            p[0] = ast.Module(body=p[1], type_ignores=[])
 
     def p_file_stmts_nl(self, p):
         """file_stmts : newline_or_stmt"""
