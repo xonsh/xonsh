@@ -962,3 +962,17 @@
   num_commits: 2
   first_commit: 2019-03-06 10:36:26
   github: virusbb001
+- name: Steven Kryskalla
+  email: skryskalla@gmail.com
+- name: Kale Kundert
+  email: kale@thekunderts.net
+- name: Ad115
+  email: a.garcia230395@gmail.com
+- name: Rodrigo Oliveira
+  email: rodrigo.oliveira@byne.com.br
+- name: Carmen Bianca Bakker
+  email: carmen@carmenbianca.eu
+- name: Andrés García García
+  email: a.garcia230395@gmail.com
+  aliases:
+    - Ad115
