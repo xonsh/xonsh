@@ -213,7 +213,14 @@ class CommandsCache(cabc.Mapping):
             val == (name, True) and self.locate_binary(name, ignore_alias=True) is None
         )
 
-    def predictor_threadable(self, cmd0):
+    def predict_threadable(self, cmd):
+        """Predicts whether a command list is able to be run on a background
+        thread, rather than the main thread.
+        """
+        predictor = self.get_predictor_threadable(cmd[0])
+        return predictor(cmd[1:])
+
+    def get_predictor_threadable(self, cmd0):
         """Return the predictor whether a command list is able to be run on a
         background thread, rather than the main thread.
         """
@@ -235,13 +242,6 @@ class CommandsCache(cabc.Mapping):
             predictors[name] = self.default_predictor(name, cmd0)
         predictor = predictors[name]
         return predictor
-
-    def predict_threadable(self, cmd):
-        """Predicts whether a command list is able to be run on a background
-        thread, rather than the main thread.
-        """
-        predictor = self.predictor_threadable(cmd[0])
-        return predictor(cmd[1:])
 
     #
     # Background Predictors (as methods)
