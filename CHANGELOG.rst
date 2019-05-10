@@ -9,8 +9,8 @@ v0.9.0
 
 **Added:**
 
-* Implemented the following "bang command" bashisms: ``!$``, ``$*``, ``!^``, 
-  and ``!<str>``.  These are in addition to ``!!``, which was already 
+* Implemented the following "bang command" bashisms: ``!$``, ``$*``, ``!^``,
+  and ``!<str>``.  These are in addition to ``!!``, which was already
   implemented.
 * asciinema (terminal recorder) added in not threadable commands.
 * tput added in not threadable commands.
@@ -31,7 +31,6 @@ v0.9.0
   Additional colors are computed as needed.
 * PTYs created for running threadable command have now size set to same size
   than main terminal.
-* <news item>
 * Update documentation pointing to the minimal required version of
   Python (3.5).
 
@@ -79,7 +78,6 @@ v0.9.0
 * Carmen Bianca Bakker
 * Alexander Sosedkin
 * Kale Kundert
-* Andrés García García
 * Andrés García García
 * Samuel Dion-Girardeau
 * Steven Kryskalla

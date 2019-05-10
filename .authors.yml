@@ -971,10 +971,6 @@
   num_commits: 4
   first_commit: 2019-03-16 01:36:28
   github: kalekundert
-- name: Ad115
-  email: a.garcia230395@gmail.com
-  num_commits: 4
-  first_commit: &id001 2019-05-06 14:17:57
 - name: Rodrigo Oliveira
   email: rodrigo.oliveira@byne.com.br
   num_commits: 1
@@ -990,5 +986,4 @@
   aliases:
   - Ad115
   num_commits: 4
-  first_commit: *id001
   github: Ad115
