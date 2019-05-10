@@ -256,20 +256,7 @@ class CommandsCache(cabc.Mapping):
         if not os.path.isabs(cmd0) and os.sep not in cmd0:
             alss = getattr(builtins, "aliases", dict())
             if cmd0 in alss:
-                alias_recursion_limit = 10
-                first_args = []
-                while cmd0 in alss:
-                    alias_name = alss[cmd0]
-                    if not isinstance(alias_name, list):
-                        return predict_true
-                    cmd0 = alias_name[0]
-                    for arg in alias_name[:0:-1]:
-                        first_args.insert(0, arg)
-                    alias_recursion_limit -= 1
-                    if alias_recursion_limit == 0:
-                        return predict_true
-                predictor_cmd0 = self.predictor_threadable(cmd0)
-                return lambda cmd1: predictor_cmd0(first_args + cmd1)
+                return self.default_predictor_alias(cmd0)
 
         # other default stuff
         if ON_POSIX:
@@ -278,6 +265,28 @@ class CommandsCache(cabc.Mapping):
             )
         else:
             return predict_true
+
+    def default_predictor_alias(self, cmd0):
+        alias_recursion_limit = (
+            10
+        )  # this limit is se to handle infinite loops in aliases definition
+        first_args = []  # contains in reverse order args passed to the aliased command
+        alss = getattr(builtins, "aliases", dict())
+        while cmd0 in alss:
+            alias_name = alss[cmd0]
+            if not isinstance(alias_name, list):
+                return predict_true
+            for arg in alias_name[:0:-1]:
+                first_args.insert(0, arg)
+            if cmd0 == alias_name[0]:
+                # it is a self-alias stop recursion immediatly
+                return predict_true
+            cmd0 = alias_name[0]
+            alias_recursion_limit -= 1
+            if alias_recursion_limit == 0:
+                return predict_true
+        predictor_cmd0 = self.get_predictor_threadable(cmd0)
+        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1)
 
     def default_predictor_readbin(self, name, cmd0, timeout, failure):
         """Make a default predictor by
