@@ -40,7 +40,7 @@ def bash_preproc(cmd, **kw):
                 print("xonsh: no previous commands match '!{}'".format(arg))
                 return ""
 
-    return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd.strip())
+    return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd)
 
 
 @events.on_ptk_create
