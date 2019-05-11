@@ -4,6 +4,24 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.1
+====================
+
+**Changed:**
+
+* We no longer manually check the Python version in ``setup.py``,
+  but instead use the setuptools ``python_requires`` feature.
+
+**Fixed:**
+
+* Updates for integrating with new colors styles in Pygments v2.4.0.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
 v0.9.0
 ====================
 
