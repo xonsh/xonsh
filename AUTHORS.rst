@@ -98,7 +98,6 @@ Authors are sorted by number of commits.
 * selepo
 * Fabien Dubosson
 * Kale Kundert
-* Ad115
 * Andrés García García
 * Jan Schulz
 * Nickolay Bukreyev
