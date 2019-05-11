@@ -516,7 +516,11 @@ class XonshStyle(Style):
         self._style_name = value
         # Convert new ansicolor names to old PTK1 names
         # Can be remvoed when PTK1 support is dropped.
-        if builtins.__xonsh__.shell.shell_type != "prompt_toolkit2":
+        if (
+            builtins.__xonsh__.shell.shell_type != "prompt_toolkit2"
+            and pygments_version_info()
+            and pygments_version_info() < (2, 4, 0)
+        ):
             for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
                 smap.update(ansicolors_to_ptk1_names(smap))
         if ON_WINDOWS and "prompt_toolkit" in builtins.__xonsh__.shell.shell_type:
@@ -548,7 +552,8 @@ def xonsh_style_proxy(styler):
     # Monky patch pygments' list of known ansi colors
     # with the new ansi color names used by PTK2
     # Can be removed once pygment names get fixed.
-    pygments.style.ansicolors.update(ANSICOLOR_NAMES_MAP)
+    if pygments_version_info() and pygments_version_info() < (2, 4, 0):
+        pygments.style.ansicolors.update(ANSICOLOR_NAMES_MAP)
 
     class XonshStyleProxy(Style):
         """Simple proxy class to fool prompt toolkit."""
@@ -1314,6 +1319,9 @@ def _monkey_patch_pygments_codes():
     """ Monky patch pygments' dict of console codes,
         with new color names
     """
+    if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
+        return
+
     import pygments.console
 
     if "brightblack" in pygments.console.codes:
