@@ -1,0 +1,21 @@
+name: py34-xonsh-test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.4
+  - pygments
+  - prompt_toolkit
+  - pytest
+  - pytest-timeout
+  - numpy
+  - psutil
+  - matplotlib
+  - flake8
+  - coverage
+  - pyflakes
+  - pytest-cov
+  - codecov
+  # conda forge doesn't have the following for Python v3.4
+  - pip:
+    - pytest-flake8

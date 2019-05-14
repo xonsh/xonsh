@@ -11,7 +11,7 @@ from xonsh.ast import AST, With, Pass, pdump
 from xonsh.parser import Parser
 from xonsh.parsers.base import eval_fstr_fields
 
-from tools import VER_FULL, skip_if_lt_py36, nodes_equal
+from tools import VER_FULL, skip_if_py34, skip_if_lt_py36, nodes_equal
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
@@ -186,6 +186,7 @@ def test_binop_times():
     check_ast("42 * 65")
 
 
+@skip_if_py34
 def test_binop_matmult():
     check_ast("x @ y", False)
 
@@ -681,46 +682,57 @@ def test_dict_three():
     check_ast("{42: 65, 6: 28, 1: 2}")
 
 
+@skip_if_py34
 def test_dict_from_dict_two_xy():
     check_ast('{"x": 1, **{"y": 2}}')
 
 
+@skip_if_py34
 def test_dict_from_dict_two_x_first():
     check_ast('{"x": 1, **{"x": 2}}')
 
 
+@skip_if_py34
 def test_dict_from_dict_two_x_second():
     check_ast('{**{"x": 2}, "x": 1}')
 
 
+@skip_if_py34
 def test_unpack_range_tuple():
     check_stmts("*range(4),")
 
 
+@skip_if_py34
 def test_unpack_range_tuple_4():
     check_stmts("*range(4), 4")
 
 
+@skip_if_py34
 def test_unpack_range_tuple_parens():
     check_ast("(*range(4),)")
 
 
+@skip_if_py34
 def test_unpack_range_tuple_parens_4():
     check_ast("(*range(4), 4)")
 
 
+@skip_if_py34
 def test_unpack_range_list():
     check_ast("[*range(4)]")
 
 
+@skip_if_py34
 def test_unpack_range_list_4():
     check_ast("[*range(4), 4]")
 
 
+@skip_if_py34
 def test_unpack_range_set():
     check_ast("{*range(4)}")
 
 
+@skip_if_py34
 def test_unpack_range_set_4():
     check_ast("{*range(4), 4}")
 
@@ -1085,14 +1097,17 @@ def test_call_dict_kwargs():
     check_ast('dict(**{"base": 8})')
 
 
+@skip_if_py34
 def test_call_list_many_star_args():
     check_ast("min(*[1, 2], 3, *[4, 5])")
 
 
+@skip_if_py34
 def test_call_list_many_starstar_args():
     check_ast('dict(**{"a": 2}, v=3, **{"c": 5})')
 
 
+@skip_if_py34
 def test_call_list_many_star_and_starstar_args():
     check_ast('x(*[("a", 2)], *[("v", 3)], **{"c": 5})', False)
 
@@ -1238,6 +1253,7 @@ def test_times_eq():
     check_stmts("x = 42; x *= 2")
 
 
+@skip_if_py34
 def test_matmult_eq():
     check_stmts("x @= y", False)
 
@@ -1633,6 +1649,7 @@ def test_for_else():
     check_stmts("for x in range(6):\n  pass\nelse:  pass")
 
 
+@skip_if_py34
 def test_async_for():
     check_stmts("async def f():\n    async for x in y:\n        pass\n", False)
 
@@ -1661,6 +1678,7 @@ def test_with_in_func():
     check_stmts("def f():\n    with x:\n        pass\n")
 
 
+@skip_if_py34
 def test_async_with():
     check_stmts("async def f():\n    async with x as y:\n        pass\n", False)
 
@@ -1996,14 +2014,17 @@ def test_function_blank_line():
     check_stmts(code, False)
 
 
+@skip_if_py34
 def test_async_func():
     check_stmts("async def f():\n  pass\n")
 
 
+@skip_if_py34
 def test_async_decorator():
     check_stmts("@g\nasync def f():\n  pass", False)
 
 
+@skip_if_py34
 def test_async_await():
     check_stmts("async def f():\n    await fut\n", False)
 

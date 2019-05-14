@@ -10,4 +10,6 @@ def Parser():
         from xonsh.parsers.v36 import Parser as p
     elif PYTHON_VERSION_INFO > (3, 5):
         from xonsh.parsers.v35 import Parser as p
+    else:
+        from xonsh.parsers.v34 import Parser as p
     return p
