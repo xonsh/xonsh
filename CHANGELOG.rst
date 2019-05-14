@@ -14,7 +14,7 @@ v0.9.2
 
 **Fixed:**
 
-* Updated setup.py to require Python 3.4 using the `python_requires` keyword.
+* Updated setup.py to require Python 3.4 using the ``python_requires`` keyword.
   This rectifies issues with pip installing xonsh. Python 3.4 support will
   be removed on the following release.
 
