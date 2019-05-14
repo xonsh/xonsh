@@ -440,24 +440,25 @@ v0.8.5
 * Installation / Usage
     1. To install use pip
 
-    .. code-block:: bash
+       .. code-block:: bash
 
-        python3 -m pip install xontrib-base16-shell
+            python3 -m pip install xontrib-base16-shell
 
     2. Add on ``~/.xonshrc``
 
-    .. code:: python
-        :number-lines:
+       .. code:: python
+            :number-lines:
 
-        $BASE16_SHELL = $HOME + "/.config/base16-shell/"
-        xontrib load base16_shell
+            $BASE16_SHELL = $HOME + "/.config/base16-shell/"
+            xontrib load base16_shell
 
 
     3. See image
 
-    .. image:: https://raw.githubusercontent.com/ErickTucto/xontrib-base16-shell/master/docs/terminal.png
-        :width: 600px
-        :alt: terminal.png
+       .. image:: https://raw.githubusercontent.com/ErickTucto/xontrib-base16-shell/master/docs/terminal.png
+            :width: 600px
+            :alt: terminal.png
+
 * New ``DumbShell`` class that kicks in whenever ``$TERM == "dumb"``.
   This usually happens in emacs. Currently, this class inherits from
   the ``ReadlineShell`` but adds some light customization to make
