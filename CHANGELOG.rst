@@ -4,6 +4,27 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.2
+====================
+
+**Changed:**
+
+* For aliases, predictor is build with the predictor of original command, in
+  place of default predictor.
+
+**Fixed:**
+
+* Updated setup.py to require Python 3.4 using the `python_requires` keyword.
+  This rectifies issues with pip installing xonsh. Python 3.4 support will
+  be removed on the following release.
+
+**Authors:**
+
+* Anthony Scopatz
+* Jean-Benoist Leger
+
+
+
 v0.9.1
 ====================
 
