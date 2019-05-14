@@ -12,8 +12,8 @@ Authors are sorted by number of commits.
 * Klaus Alexander Seistrup
 * Leonardo Santagada
 * Bob Hyman
-* christopher
 * Jean-Benoist Leger
+* christopher
 * Aaron Griffin
 * Rob Brewer
 * Burak Yiğit Kaya
