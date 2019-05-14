@@ -403,7 +403,7 @@ def main():
             "linux": ["distro"],
             "proctitle": ["setproctitle"],
         }
-        skw["python_requires"] = ">=3.4"
+        skw["python_requires"] = ">=3.5"
     setup(**skw)
 
 
