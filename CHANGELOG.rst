@@ -4,6 +4,20 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.3
+====================
+
+**Deprecated:**
+
+* Python v3.4 has been fully, completely, and (hopefully) correctly
+  deprecated. Please migrate to an officially supported version of Python.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
 v0.9.2
 ====================
 
