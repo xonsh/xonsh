@@ -11,7 +11,6 @@ import time
 import builtins
 import argparse
 import collections.abc as cabc
-from typing import Callable, List
 
 from xonsh.platform import ON_WINDOWS, ON_POSIX, pathbasename
 from xonsh.tools import executables_in
@@ -221,7 +220,7 @@ class CommandsCache(cabc.Mapping):
         predictor = self.get_predictor_threadable(cmd[0])
         return predictor(cmd[1:])
 
-    def get_predictor_threadable(self, cmd0: str) -> Callable[[List[str]], bool]:
+    def get_predictor_threadable(self, cmd0):
         """Return the predictor whether a command list is able to be run on a
         background thread, rather than the main thread.
         """
