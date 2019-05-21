@@ -232,7 +232,7 @@ class CommandsCache(cabc.Mapping):
             # we get the original cmd or alias name
             path, _ = self.lazyget(name, (None, None))
             if path is None:
-                return True
+                return predict_true
             else:
                 name = pathbasename(path)
             if name not in predictors:
