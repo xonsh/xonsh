@@ -4,14 +4,12 @@ env:
        - secure: "pvQHCsdcIRjwNvsBrZxP8cZWEwug0+PLg1T8841ZLkMdCaO3YheqmxF1xGjAqty6hLppz6vX1LFEKmPjKurLL0/i+be6MhT8/ZikFpSan7TdNUqISxeFx31ls+QpuFKzCV7ZEx7C1ms8LPWEGmzMMN6bCtOBVtGznD9KKWZmLlA="
 matrix:
     include:
-        # Travis does not yet support Python 3.7 on Linux
-        # uncomment the following when it does
-        #- os: linux
-        #  python: 3.7
-        #  env:
-        #    - MINICONDA_OS="Linux"
-        #    - CI=true
-        #    - TRAVIS=true
+        - os: linux
+          dist: xenial  # required for Python >= 3.7
+          python: 3.7
+          env:
+            - MINICONDA_OS="Linux"
+            - BUILD_DOCS=false
         - os: linux
           python: 3.6
           env:
@@ -19,6 +17,7 @@ matrix:
             - BUILD_DOCS=true
         - os: linux
           python: "nightly"
+          dist: xenial  # required for Python >= 3.7
         - os: linux
           python: "pypy3"
           env:
@@ -74,4 +73,3 @@ script:
     else
       xonsh run-tests.xsh --timeout=10;
     fi
-
