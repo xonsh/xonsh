@@ -1,7 +1,4 @@
-#!/bin/sh
-''''exec python3 -u "$0" "$@"
-'''#'
-# Portable trick to pass option [-u] to python3, more portable than /usr/bin/env.
+#!/usr/bin/env python3 -u
 
 from xonsh.xoreutils.cat import cat_main as main
 main()
