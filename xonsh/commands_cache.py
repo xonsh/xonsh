@@ -479,6 +479,7 @@ def default_threadable_predictors():
         "ssh": predict_false,
         "startx": predict_false,
         "sudo": predict_help_ver,
+        "sudoedit": predict_help_ver,
         "tcsh": predict_shell,
         "telnet": predict_false,
         "tput": predict_false,
