@@ -23,7 +23,7 @@ def test_commands_cache_lazy(xonsh_builtins):
 def test_predict_threadable_unknown_command(xonsh_builtins):
     cc = CommandsCache()
     result = cc.predict_threadable(["command_should_not_found"])
-    assert type(result) == bool
+    assert isinstance(result, bool)
 
 
 TRUE_SHELL_ARGS = [
