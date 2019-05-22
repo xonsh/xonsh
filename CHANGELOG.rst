@@ -4,6 +4,51 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.4
+====================
+
+**Added:**
+
+* Add processing ``%d`` for avoid overwriting in ``run-tests.xsh``
+
+**Changed:**
+
+* Xonsh now does not attempt to expand raw strings, so now::
+
+    $ echo "$HOME"
+    /home/user
+    $ echo r"$HOME"
+    $HOME
+* sudoedit now runs unthreaded
+
+**Fixed:**
+
+* threadable predictor for 'env' command based on predictor from the executed
+  command. Fixes #2759 and #3103.
+* An error in the 'xon.sh' executable that only popped up during testing has
+  been fixed.  Specifically: It now directly calls 'python3' without invoking
+  'env'.
+* bashisms extension can be used again with prompt_toolkit v1
+* Fix a crash when setting ``$INTENSIFY_COLORS_ON_WIN`` in certain situations.
+* Fix issue with bashsisms xontrib causing syntax errors for some Python statements
+* portable trick to pass args which replace '/usr/bin/env' is removed and
+  '/usr/bin/env' is used. Fixes bug when a python3 used is outside the default
+  'PATH'.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* Jean-Benoist Leger
+* David Strobach
+* virus
+* Carmen Bianca Bakker
+* con-f-use
+* cclauss
+* Eddie Peters
+
+
+
 v0.9.3
 ====================
 
