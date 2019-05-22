@@ -9,15 +9,15 @@ Authors are sorted by number of commits.
 * Jamie Bliss
 * Hugo Wang
 * BlahGeek
+* Jean-Benoist Leger
 * Klaus Alexander Seistrup
 * Leonardo Santagada
 * Bob Hyman
-* Jean-Benoist Leger
+* David Strobach
 * christopher
 * Aaron Griffin
 * Rob Brewer
 * Burak Yiğit Kaya
-* David Strobach
 * Sagar Tewari
 * Matthias Bussonnier
 * Konstantin Molchanov
@@ -36,6 +36,7 @@ Authors are sorted by number of commits.
 * Kurtis Rader
 * cryzed
 * Brian Visel
+* Carmen Bianca Bakker
 * Andrew Hundt
 * Jonathan Slenders
 * Justin Moen
@@ -51,7 +52,6 @@ Authors are sorted by number of commits.
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
-* Carmen Bianca Bakker
 * Cody Scott
 * Jake Hedman
 * Alexander Sosedkin
@@ -135,6 +135,9 @@ Authors are sorted by number of commits.
 * Romain Bignon
 * Owen Campbell
 * Steven Kryskalla
+* con-f-use
+* cclauss
+* Eddie Peters
 * Dan Allan
 * adam j hartz
 * Ned Letcher
