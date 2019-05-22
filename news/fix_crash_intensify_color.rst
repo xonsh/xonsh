@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fix a crash when setting `$INTENSIFY_COLORS_ON_WIN` in certain situations. 
+* Fix a crash when setting ``$INTENSIFY_COLORS_ON_WIN`` in certain situations. 
 
 **Security:**
 
