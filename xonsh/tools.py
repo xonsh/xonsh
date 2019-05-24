@@ -51,6 +51,7 @@ from xonsh.platform import (
     PYTHON_VERSION_INFO,
     expanduser,
     os_environ,
+    pygments_version_info,
 )
 
 
@@ -1894,6 +1895,8 @@ def hardcode_colors_for_win10(style_map):
 def ansicolors_to_ptk1_names(stylemap):
     """Converts ansicolor names in a stylemap to old PTK1 color names
     """
+    if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
+        return stylemap
     modified_stylemap = {}
     for token, style_str in stylemap.items():
         for color, ptk1_color in ANSICOLOR_NAMES_MAP.items():
@@ -1929,9 +1932,12 @@ def intensify_colors_on_win_setter(enable):
     environment variable.
     """
     enable = to_bool(enable)
-    if builtins.__xonsh__.shell is not None:
-        if hasattr(builtins.__xonsh__.shell.shell.styler, "style_name"):
-            delattr(builtins.__xonsh__.shell.shell.styler, "style_name")
+    if (
+        hasattr(builtins.__xonsh__, "shell")
+        and builtins.__xonsh__.shell is not None
+        and hasattr(builtins.__xonsh__.shell.shell.styler, "style_name")
+    ):
+        delattr(builtins.__xonsh__.shell.shell.styler, "style_name")
     return enable
 
 

@@ -57,12 +57,12 @@
   - gforsyth@users.noreply.github.com
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
-  num_commits: 501
+  num_commits: 504
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
   email: melund@gmail.com
-  num_commits: 460
+  num_commits: 464
   first_commit: 2015-07-10 07:54:10
   github: melund
 - name: Ned Letcher
@@ -137,7 +137,7 @@
   github: pelson
 - name: Samuel Dion-Girardeau
   email: samuel.diongirardeau@gmail.com
-  num_commits: 1
+  num_commits: 3
   first_commit: 2018-01-13 14:24:46
   github: samueldg
 - name: Burak Yiğit Kaya
@@ -344,7 +344,7 @@
   github: JakeHedman
 - name: Alexander Sosedkin
   email: monk@unboiled.info
-  num_commits: 5
+  num_commits: 6
   first_commit: 2016-09-24 02:35:09
   github: t184256
 - name: Klaus Alexander Seistrup
@@ -378,7 +378,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 32
+  num_commits: 41
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -395,7 +395,7 @@
   alternate_emails:
   - jbleger@gertrude
   - jbleger@hds.utc.fr
-  num_commits: 18
+  num_commits: 49
   first_commit: 2017-01-01 19:27:34
 - name: Nigel Tea
   email: nigelbtea@gmail.com
@@ -428,7 +428,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2427
+  num_commits: 2457
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -959,6 +959,46 @@
   github: ntdef
 - name: virus
   email: virusbb001a@gmail.com
-  num_commits: 2
+  num_commits: 18
   first_commit: 2019-03-06 10:36:26
   github: virusbb001
+- name: Steven Kryskalla
+  email: skryskalla@gmail.com
+  num_commits: 2
+  first_commit: 2019-03-24 11:00:24
+- name: Kale Kundert
+  email: kale@thekunderts.net
+  num_commits: 4
+  first_commit: 2019-03-16 01:36:28
+  github: kalekundert
+- name: Rodrigo Oliveira
+  email: rodrigo.oliveira@byne.com.br
+  num_commits: 1
+  first_commit: 2019-05-06 14:48:58
+  github: rodrigogolive
+- name: Carmen Bianca Bakker
+  email: carmen@carmenbianca.eu
+  num_commits: 13
+  first_commit: 2019-04-07 16:33:01
+  github: carmenbianca
+- name: Andrés García García
+  email: a.garcia230395@gmail.com
+  aliases:
+  - Ad115
+  num_commits: 4
+  github: Ad115
+  first_commit: 2019-05-06 14:17:57
+- name: con-f-use
+  email: con-f-use@users.noreply.github.com
+  num_commits: 2
+  first_commit: 2019-05-15 04:53:37
+- name: cclauss
+  email: cclauss@me.com
+  num_commits: 2
+  first_commit: 2019-05-02 07:35:11
+  github: cclauss
+- name: Eddie Peters
+  email: edward.paul.peters@gmail.com
+  num_commits: 2
+  first_commit: 2019-05-10 06:18:40
+  github: eppeters

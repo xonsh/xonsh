@@ -2451,8 +2451,9 @@ class BaseParser(object):
         else:
             s = ast.literal_eval(p1.value)
             is_bytes = "b" in prefix
+            is_raw = "r" in prefix
             cls = ast.Bytes if is_bytes else ast.Str
-            p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
+            p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos, is_raw=is_raw)
 
     def p_string_literal_list(self, p):
         """string_literal_list : string_literal
@@ -3167,9 +3168,12 @@ class BaseParser(object):
 
     def p_subproc_atom_str(self, p):
         """subproc_atom : string_literal"""
-        p0 = xonsh_call(
-            "__xonsh__.expand_path", args=[p[1]], lineno=self.lineno, col=self.col
-        )
+        if hasattr(p[1], "is_raw") and p[1].is_raw:
+            p0 = p[1]
+        else:
+            p0 = xonsh_call(
+                "__xonsh__.expand_path", args=[p[1]], lineno=self.lineno, col=self.col
+            )
         p0._cliarg_action = "append"
         p[0] = p0
 

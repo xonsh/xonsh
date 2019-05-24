@@ -1,6 +1,6 @@
 **Added:**
 
-* asciinema (terminal recorder) added in not threadable commands.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,8 @@
 
 **Fixed:**
 
-* <news item>
+* Fix causing error in ``get_predictor_threadable`` on windows when try to run not exist command
+
 
 **Security:**
 

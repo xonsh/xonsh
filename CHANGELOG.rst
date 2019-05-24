@@ -4,6 +4,185 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.4
+====================
+
+**Added:**
+
+* Add processing ``%d`` for avoid overwriting in ``run-tests.xsh``
+
+**Changed:**
+
+* Xonsh now does not attempt to expand raw strings, so now::
+
+    $ echo "$HOME"
+    /home/user
+    $ echo r"$HOME"
+    $HOME
+* sudoedit now runs unthreaded
+
+**Fixed:**
+
+* threadable predictor for 'env' command based on predictor from the executed
+  command. Fixes #2759 and #3103.
+* An error in the 'xon.sh' executable that only popped up during testing has
+  been fixed.  Specifically: It now directly calls 'python3' without invoking
+  'env'.
+* bashisms extension can be used again with prompt_toolkit v1
+* Fix a crash when setting ``$INTENSIFY_COLORS_ON_WIN`` in certain situations.
+* Fix issue with bashsisms xontrib causing syntax errors for some Python statements
+* portable trick to pass args which replace '/usr/bin/env' is removed and
+  '/usr/bin/env' is used. Fixes bug when a python3 used is outside the default
+  'PATH'.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* Jean-Benoist Leger
+* David Strobach
+* virus
+* Carmen Bianca Bakker
+* con-f-use
+* cclauss
+* Eddie Peters
+
+
+
+v0.9.3
+====================
+
+**Deprecated:**
+
+* Python v3.4 has been fully, completely, and (hopefully) correctly
+  deprecated. Please migrate to an officially supported version of Python.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
+v0.9.2
+====================
+
+**Changed:**
+
+* For aliases, predictor is build with the predictor of original command, in
+  place of default predictor.
+
+**Fixed:**
+
+* Updated setup.py to require Python 3.4 using the ``python_requires`` keyword.
+  This rectifies issues with pip installing xonsh. Python 3.4 support will
+  be removed on the following release.
+
+**Authors:**
+
+* Anthony Scopatz
+* Jean-Benoist Leger
+
+
+
+v0.9.1
+====================
+
+**Changed:**
+
+* We no longer manually check the Python version in ``setup.py``,
+  but instead use the setuptools ``python_requires`` feature.
+
+**Fixed:**
+
+* Updates for integrating with new colors styles in Pygments v2.4.0.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
+v0.9.0
+====================
+
+**Added:**
+
+* Implemented the following "bang command" bashisms: ``!$``, ``$*``, ``!^``,
+  and ``!<str>``.  These are in addition to ``!!``, which was already
+  implemented.
+* asciinema (terminal recorder) added in not threadable commands.
+* tput added in not threadable commands.
+* New ``color_tools.KNOWN_XONSH_COLORS`` frozenset.
+* New ``pyghooks.PYGMENTS_MODIFIERS`` mapping from color modifier names to
+  pygments colors.
+* New ``pyghooks.color_name_to_pygments_code()`` function for converting
+  color names into pygments color codes.
+
+**Changed:**
+
+* Circle now runs ``black`` checks on contents of bundled xontribs
+
+* The ``black`` checks no longer skip some files buried deeper in the directory
+  tree.
+* Errors while formatting the prompt are highlighted for easier debugging.
+* Pygments styles only define the standard set of colors, by default.
+  Additional colors are computed as needed.
+* PTYs created for running threadable command have now size set to same size
+  than main terminal.
+* Update documentation pointing to the minimal required version of
+  Python (3.5).
+
+**Deprecated:**
+
+* Drop support for Python 3.4.
+
+**Removed:**
+
+* ``pyghooks.KNOWN_COLORS`` is no longer needed or useful as pygments colors
+  are computed automatically.
+* ``style_tools.KNOWN_COLORS`` was never used, redundant with
+  ``pyghooks.KNOWN_COLORS`` and has thus been removed.
+
+**Fixed:**
+
+* Fixed a DeprecationWarning that would show up during an import of MutableSet.
+* Fixed error with aliases composed of functions wrapped in functools.partial.
+* ``black`` formatted all xontribs
+* deleting a non existing environement variable with default value do nothing
+  instead of raising a exception trying to deleting it in existing values dict.
+* Fixed crash while converting ANSI color codes with leading zeroes
+* Fixed crash while parsing invalid ANSI color code
+* fix causing infinite loop when doing ``cat`` empty file
+* Fixed issue which occurs when user doesn't have access to parent directory and
+  xonsh scan all parents directory to find if we are in a Hg repository.
+* Fixed issue with pygments-cache not properly generating a cache the first
+  time when using prompt-toolkit when using ``ptk2``.
+  This was due to a lingering lazy import of ``pkg_resources``
+  that has been removed.
+* Minor update for Python v3.8.
+* Fixed a "'NoneType' object is not iterable" bug when looking up ``stty``
+  in command cache.
+* The release tarball now includes all test files.
+* Arguments passed to python in 'scripts/xonsh' and in 'scripts/xonsh-cat' are
+  now passed by a portable hack in sh, not anymore by /usr/bin/env.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Jean-Benoist Leger
+* David Strobach
+* virus
+* Carmen Bianca Bakker
+* Alexander Sosedkin
+* Kale Kundert
+* Andrés García García
+* Samuel Dion-Girardeau
+* Steven Kryskalla
+* Rodrigo Oliveira
+
+
+
 v0.8.12
 ====================
 
@@ -306,24 +485,25 @@ v0.8.5
 * Installation / Usage
     1. To install use pip
 
-    .. code-block:: bash
+       .. code-block:: bash
 
-        python3 -m pip install xontrib-base16-shell
+            python3 -m pip install xontrib-base16-shell
 
     2. Add on ``~/.xonshrc``
 
-    .. code:: python
-        :number-lines:
+       .. code:: python
+            :number-lines:
 
-        $BASE16_SHELL = $HOME + "/.config/base16-shell/"
-        xontrib load base16_shell
+            $BASE16_SHELL = $HOME + "/.config/base16-shell/"
+            xontrib load base16_shell
 
 
     3. See image
 
-    .. image:: https://raw.githubusercontent.com/ErickTucto/xontrib-base16-shell/master/docs/terminal.png
-        :width: 600px
-        :alt: terminal.png
+       .. image:: https://raw.githubusercontent.com/ErickTucto/xontrib-base16-shell/master/docs/terminal.png
+            :width: 600px
+            :alt: terminal.png
+
 * New ``DumbShell`` class that kicks in whenever ``$TERM == "dumb"``.
   This usually happens in emacs. Currently, this class inherits from
   the ``ReadlineShell`` but adds some light customization to make

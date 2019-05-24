@@ -39,7 +39,7 @@ jobs:
   - script: |
       call activate conda-test-$(python.version)
       pip install .
-      xonsh run-tests.xsh --timeout=10 --junitxml=junit/test-results.xml
+      xonsh run-tests.xsh --timeout=10 --junitxml=junit/test-results.%%d.xml
     displayName: 'Tests'
 
   # Publish build results

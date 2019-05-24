@@ -40,21 +40,26 @@ def bash_preproc(cmd, **kw):
                 print("xonsh: no previous commands match '!{}'".format(arg))
                 return ""
 
-    return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd.strip())
+    return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd)
 
 
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
     if ptk_shell_type() == "prompt_toolkit2":
         handler = bindings.add
+
+        @Condition
+        def last_command_exists():
+            return len(__xonsh__.history) > 0
+
     else:
         handler = bindings.registry.add_binding
 
-    insert_mode = ViInsertMode() | EmacsInsertMode()
+        @Condition
+        def last_command_exists(cli):
+            return len(__xonsh__.history) > 0
 
-    @Condition
-    def last_command_exists():
-        return len(__xonsh__.history) > 0
+    insert_mode = ViInsertMode() | EmacsInsertMode()
 
     @handler(Keys.Escape, ".", filter=last_command_exists & insert_mode)
     def recall_last_arg(event):
