@@ -9,12 +9,12 @@ import xonsh.lazyasd as xl
 
 @xl.lazyobject
 def PIP_RE():
-    return re.compile(r"pip(?:\d|\.)*")
+    return re.compile(r"\bx?pip(?:\d|\.)*")
 
 
 @xl.lazyobject
 def PIP_LIST_RE():
-    return re.compile(r"pip(?:\d|\.)* (?:uninstall|show)")
+    return re.compile(r"\bx?pip(?:\d|\.)* (?:uninstall|show)")
 
 
 @xl.lazyobject
