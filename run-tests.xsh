@@ -16,6 +16,7 @@ def replace_args(num):
 $RAISE_SUBPROC_ERROR = True
 
 run_separately = [
+    'tests/test_main.py',
     'tests/test_ptk_highlight.py',
     ]
 
