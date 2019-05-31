@@ -274,7 +274,9 @@ class CommandsCache(cabc.Mapping):
         alss = getattr(builtins, "aliases", dict())
         while cmd0 in alss:
             alias_name = alss[cmd0]
-            if not isinstance(alias_name, list):
+            if isinstance(alias_name, (str, bytes)) or not isinstance(
+                alias_name, cabc.Sequence
+            ):
                 return predict_true
             for arg in alias_name[:0:-1]:
                 first_args.insert(0, arg)
