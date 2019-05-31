@@ -4,6 +4,27 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.5
+====================
+
+**Fixed:**
+
+* Style 'bw'. Background colors was added in the style description.
+* Fix causing error in ``get_predictor_threadable`` on windows when try to run not exist command
+* ``pip`` completer no longer fires when ``pip`` happens to appear within a word
+  like ``bagpipes``
+* Fixed issue with ``history gc`` command not running properly.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Jean-Benoist Leger
+* virus
+* con-f-use
+
+
+
 v0.9.4
 ====================
 
