@@ -24,13 +24,13 @@ Authors are sorted by number of commits.
 * Guillaume Leclerc
 * Gordon Ball
 * Travis Shirk
+* virus
 * Joel Gerber
 * Bernardas Ališauskas
 * Derek Thomas
 * VHarisop
 * JohnLunzer
 * Paul Goelz
-* virus
 * David Dotson
 * Frank Sachsenheim
 * Kurtis Rader
@@ -115,6 +115,7 @@ Authors are sorted by number of commits.
 * Danmou
 * Niklas Hambüchen
 * Sébastien Pierre
+* con-f-use
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -135,7 +136,6 @@ Authors are sorted by number of commits.
 * Romain Bignon
 * Owen Campbell
 * Steven Kryskalla
-* con-f-use
 * cclauss
 * Eddie Peters
 * Dan Allan
