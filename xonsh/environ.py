@@ -1158,7 +1158,8 @@ def DEFAULT_DOCS():
             ),
         ),
         "XONSH_APPEND_NEWLINE": VarDocs(
-            "Append new line when a partial line is preserved in output."
+            "Append new line when a partial line is preserved in output.",
+            default="``$XONSH_INTERACTIVE``"
         ),
         "XONSH_AUTOPAIR": VarDocs(
             "Whether Xonsh will auto-insert matching parentheses, brackets, and "
