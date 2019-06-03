@@ -975,7 +975,10 @@ def DEFAULT_DOCS():
             configurable=ON_WINDOWS,
         ),
         "LANG": VarDocs("Fallback locale setting for systems where it matters"),
-        "LS_COLORS": VarDocs("Color settings for ``ls`` command line utility"),
+        "LS_COLORS": VarDocs(
+            "Color settings for ``ls`` command line utility",
+            default="``" + LsColors(LsColors.default_settings).detype() + "``"
+        ),
         "LOADED_RC_FILES": VarDocs(
             "Whether or not any of the xonsh run control files were loaded at "
             "startup. This is a sequence of bools in Python that is converted "
