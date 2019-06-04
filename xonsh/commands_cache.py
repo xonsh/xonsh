@@ -380,9 +380,9 @@ def predict_shell(args):
 @lazyobject
 def HELP_VER_PREDICTOR_PARSER():
     p = argparse.ArgumentParser("cmd", add_help=False)
-    p.add_argument("-h", "--help", dest="help", action="store_true", default=None)
+    p.add_argument("-h", "--help", dest="help", nargs="?", action="store", default=None)
     p.add_argument(
-        "-v", "-V", "--version", dest="version", action="store_true", default=None
+        "-v", "-V", "--version", dest="version", nargs="?", action="store", default=None
     )
     return p
 
