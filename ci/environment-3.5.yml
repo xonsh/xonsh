@@ -10,7 +10,6 @@ dependencies:
   - pytest-timeout
   - numpy
   - psutil
-  - matplotlib
   - flake8
   - coverage
   - pyflakes
