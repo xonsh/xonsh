@@ -1001,7 +1001,19 @@ def DEFAULT_DOCS():
             "Used to represent a previous present working directory.",
             configurable=False,
         ),
-        "PATH": VarDocs("List of strings representing where to look for executables."),
+        "PATH": VarDocs(
+            "List of strings representing where to look for executables.",
+            default="On Windows: it is ``Path`` value of register's "
+            "``HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment``. "
+            "On Mac OSX: ``('/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin')`` "
+            "On Linux & on Cygwin & on MSYS, when detected that the distro "
+            "is like arch, the default PATH is "
+            "``('/usr/local/sbin', '/usr/local/bin', '/usr/bin', "
+            "'/usr/bin/site_perl', '/usr/bin/vendor_perl', '/usr/bin/core_perl')``"
+            " and otherwise is "
+            "``('~/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin',"
+            "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``"
+        ),
         "PATHEXT": VarDocs(
             "Sequence of extension strings (eg, ``.EXE``) for "
             "filtering valid executables by. Each element must be "
