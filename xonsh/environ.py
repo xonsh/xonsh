@@ -977,7 +977,7 @@ def DEFAULT_DOCS():
         "LANG": VarDocs("Fallback locale setting for systems where it matters"),
         "LS_COLORS": VarDocs(
             "Color settings for ``ls`` command line utility",
-            default="``" + LsColors(LsColors.default_settings).detype() + "``"
+            default="``" + LsColors(LsColors.default_settings).detype() + "``",
         ),
         "LOADED_RC_FILES": VarDocs(
             "Whether or not any of the xonsh run control files were loaded at "
@@ -1012,7 +1012,7 @@ def DEFAULT_DOCS():
             "'/usr/bin/site_perl', '/usr/bin/vendor_perl', '/usr/bin/core_perl')``"
             " and otherwise is "
             "``('~/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin',"
-            "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``"
+            "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``",
         ),
         "PATHEXT": VarDocs(
             "Sequence of extension strings (eg, ``.EXE``) for "
@@ -1174,7 +1174,7 @@ def DEFAULT_DOCS():
         ),
         "XONSH_APPEND_NEWLINE": VarDocs(
             "Append new line when a partial line is preserved in output.",
-            default="``$XONSH_INTERACTIVE``"
+            default="``$XONSH_INTERACTIVE``",
         ),
         "XONSH_AUTOPAIR": VarDocs(
             "Whether Xonsh will auto-insert matching parentheses, brackets, and "
