@@ -1953,6 +1953,7 @@ def format_std_prepost(template, env=None):
         # shell hasn't fully started up (probably still in xonshrc)
         from xonsh.prompt.base import PromptFormatter
         from xonsh.ansi_colors import ansi_partial_color_format
+
         pf = PromptFormatter()
         s = pf(template)
         style = env.get("XONSH_COLOR_STYLE")
