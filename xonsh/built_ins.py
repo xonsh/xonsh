@@ -992,8 +992,12 @@ def subproc_captured_inject(*cmds):
     The string is split using xonsh's lexer, rather than Python's str.split()
     or shlex.split().
     """
-    s = run_subproc(cmds, captured="stdout")
-    toks = builtins.__xonsh__.execer.parser.lexer.split(s.strip())
+    o = run_subproc(cmds, captured="object")
+    o.end()
+    toks = []
+    for line in o:
+        line = line.rstrip(os.linesep)
+        toks.extend(builtins.__xonsh__.execer.parser.lexer.split(line))
     return toks
 
 
