@@ -279,6 +279,7 @@ class BaseParser(object):
         yacc_table="xonsh.parser_table",
         yacc_debug=False,
         outputdir=None,
+        lexer=None,
     ):
         """Parameters
         ----------
@@ -295,8 +296,10 @@ class BaseParser(object):
         outputdir : str or None, optional
             The directory to place generated tables within. Defaults to the root
             xonsh dir.
+        lexer : Lexer instance or None:
+            optional lexer object to pass in.
         """
-        self.lexer = lexer = Lexer()
+        self.lexer = lexer = Lexer() if lexer is None else lexer
         self.tokens = lexer.tokens
 
         self._lines = None

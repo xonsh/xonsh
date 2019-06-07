@@ -15,6 +15,7 @@ class Parser(BaseParser):
         yacc_table="xonsh.parser_table",
         yacc_debug=False,
         outputdir=None,
+        lexer=None,
     ):
         """Parameters
         ----------
@@ -30,6 +31,8 @@ class Parser(BaseParser):
             Dumps extra debug info.
         outputdir : str or None, optional
             The directory to place generated tables within.
+        lexer : Lexer instance or None:
+            optional lexer object to pass in.
         """
         # Rule creation and modification *must* take place before super()
         tok_rules = ["await", "async"]
@@ -42,6 +45,7 @@ class Parser(BaseParser):
             yacc_table=yacc_table,
             yacc_debug=yacc_debug,
             outputdir=outputdir,
+            lexer=lexer,
         )
 
     def p_classdef_or_funcdef(self, p):
