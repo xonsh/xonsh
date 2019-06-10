@@ -20,11 +20,11 @@ Authors are sorted by number of commits.
 * Burak Yiğit Kaya
 * Sagar Tewari
 * Matthias Bussonnier
+* virus
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
 * Travis Shirk
-* virus
 * Joel Gerber
 * Bernardas Ališauskas
 * Derek Thomas
@@ -116,6 +116,7 @@ Authors are sorted by number of commits.
 * Niklas Hambüchen
 * Sébastien Pierre
 * con-f-use
+* shadow-light
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
