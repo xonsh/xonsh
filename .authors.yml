@@ -378,7 +378,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 41
+  num_commits: 42
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -428,7 +428,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2465
+  num_commits: 2472
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -959,7 +959,7 @@
   github: ntdef
 - name: virus
   email: virusbb001a@gmail.com
-  num_commits: 24
+  num_commits: 30
   first_commit: 2019-03-06 10:36:26
   github: virusbb001
 - name: Steven Kryskalla
@@ -1002,3 +1002,7 @@
   num_commits: 2
   first_commit: 2019-05-10 06:18:40
   github: eppeters
+- name: shadow-light
+  email: 42055707+shadow-light@users.noreply.github.com
+  num_commits: 3
+  first_commit: 2018-09-16 22:50:24
