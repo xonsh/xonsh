@@ -4,6 +4,28 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.6
+====================
+
+**Fixed:**
+
+* Fixed exception in help/version threadable predictor
+* Fixed gitstatus prompt so that it also now reports deleted files
+* Fixed issue where the prompt-toolkit2 shell could not display and
+  would end up in an infinite error loop if ``$MULTILINE_PROMPT``
+  was a suitably "false" value, such as ``None`` or an empty string.
+* Fixed issue where setting ``$XONSH_STDERR_PREFIX`` and ``$XONSH_STDERR_POSTFIX``
+  and running a command in the ``xonshrc`` file would throw an error.
+
+**Authors:**
+
+* Anthony Scopatz
+* David Strobach
+* virus
+* shadow-light
+
+
+
 v0.9.5
 ====================
 
