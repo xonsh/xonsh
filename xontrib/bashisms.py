@@ -3,10 +3,6 @@ import shlex
 import sys
 import re
 
-from prompt_toolkit.keys import Keys
-from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
-
-from xonsh.platform import ptk_shell_type
 
 __all__ = ()
 
@@ -41,30 +37,6 @@ def bash_preproc(cmd, **kw):
                 return ""
 
     return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd)
-
-
-@events.on_ptk_create
-def custom_keybindings(bindings, **kw):
-    if ptk_shell_type() == "prompt_toolkit2":
-        handler = bindings.add
-
-        @Condition
-        def last_command_exists():
-            return len(__xonsh__.history) > 0
-
-    else:
-        handler = bindings.registry.add_binding
-
-        @Condition
-        def last_command_exists(cli):
-            return len(__xonsh__.history) > 0
-
-    insert_mode = ViInsertMode() | EmacsInsertMode()
-
-    @handler(Keys.Escape, ".", filter=last_command_exists & insert_mode)
-    def recall_last_arg(event):
-        arg = __xonsh__.history[-1].cmd.split()[-1]
-        event.current_buffer.insert_text(arg)
 
 
 def alias(args, stdin=None):
