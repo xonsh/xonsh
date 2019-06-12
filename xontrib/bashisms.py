@@ -3,7 +3,6 @@ import shlex
 import sys
 import re
 
-from xonsh.platform import ptk_shell_type
 
 __all__ = ()
 
