@@ -3,7 +3,6 @@ import shlex
 import sys
 import re
 
-from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
 
 from xonsh.platform import ptk_shell_type
@@ -53,13 +52,9 @@ def custom_keybindings(bindings, **kw):
             return len(__xonsh__.history) > 0
 
     else:
-        handler = bindings.registry.add_binding
-
         @Condition
         def last_command_exists(cli):
             return len(__xonsh__.history) > 0
-
-    insert_mode = ViInsertMode() | EmacsInsertMode()
 
 
 def alias(args, stdin=None):
