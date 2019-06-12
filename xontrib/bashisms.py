@@ -61,11 +61,6 @@ def custom_keybindings(bindings, **kw):
 
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
-    @handler(Keys.Escape, ".", filter=last_command_exists & insert_mode)
-    def recall_last_arg(event):
-        arg = __xonsh__.history[-1].cmd.split()[-1]
-        event.current_buffer.insert_text(arg)
-
 
 def alias(args, stdin=None):
     ret = 0
