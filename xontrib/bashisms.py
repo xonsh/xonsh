@@ -3,8 +3,6 @@ import shlex
 import sys
 import re
 
-from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
-
 from xonsh.platform import ptk_shell_type
 
 __all__ = ()
@@ -40,21 +38,6 @@ def bash_preproc(cmd, **kw):
                 return ""
 
     return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd)
-
-
-@events.on_ptk_create
-def custom_keybindings(bindings, **kw):
-    if ptk_shell_type() == "prompt_toolkit2":
-        handler = bindings.add
-
-        @Condition
-        def last_command_exists():
-            return len(__xonsh__.history) > 0
-
-    else:
-        @Condition
-        def last_command_exists(cli):
-            return len(__xonsh__.history) > 0
 
 
 def alias(args, stdin=None):
