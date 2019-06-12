@@ -101,4 +101,5 @@ class PromptToolkitCompleter(Completer):
             last_h = render._last_screen.height if render._last_screen else 0
             last_h = max(render._min_available_height, last_h)
             if last_h < size:
-                render._last_screen.height = size
+                if render._last_screen:
+                    render._last_screen.height = size
