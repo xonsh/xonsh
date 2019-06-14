@@ -4,6 +4,7 @@ import sys
 import inspect
 import builtins
 import importlib
+import warnings
 import collections.abc as cabc
 
 import xonsh.tools as xt
@@ -184,6 +185,20 @@ def complete_python_mode(prefix, line, start, end, ctx):
     return set(prefix_start + i for i in python_matches)
 
 
+def _turn_off_warning(func):
+    """
+    Decorator to turn off warning temporarily.
+    """
+
+    def wrapper(*args, **kwargs):
+        warnings.filterwarnings('ignore')
+        r = func(*args, **kwargs)
+        warnings.filterwarnings("once", category=DeprecationWarning)
+        return r
+
+    return wrapper
+
+
 def _safe_eval(expr, ctx):
     """Safely tries to evaluate an expression. If this fails, it will return
     a (None, None) tuple.
@@ -202,6 +217,7 @@ def _safe_eval(expr, ctx):
     return val, _ctx
 
 
+@_turn_off_warning
 def attr_complete(prefix, ctx, filter_func):
     """Complete attributes of an object."""
     attrs = set()
@@ -243,6 +259,7 @@ def attr_complete(prefix, ctx, filter_func):
     return attrs
 
 
+@_turn_off_warning
 def python_signature_complete(prefix, line, end, ctx, filter_func):
     """Completes a python function (or other callable) call by completing
     argument and keyword argument names.
