@@ -327,7 +327,7 @@ Building the website/documentation requires the following dependencies:
 
 #. `Sphinx <http://sphinx-doc.org/>`_
 #. `Cloud Sphinx Theme <https://cloud-sptheme.readthedocs.io/>`_
-#. `numpydoc <https://numpydoc.readthedocs.io/>`_
+#. `numpydoc <https://numpydoc.readthedocs.io/>`__
 
 Note that xonsh itself needs to be installed too.
 
@@ -427,4 +427,4 @@ Portions of this page have been forked from the PyNE documentation,
 Copyright 2011-2015, the PyNE Development Team. All rights reserved.
 
 .. _PEP8: https://www.python.org/dev/peps/pep-0008/
-.. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+.. _numpydoc: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard

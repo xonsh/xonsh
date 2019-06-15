@@ -9,7 +9,7 @@ from xonsh.environ import Env
 from xonsh.prompt.base import PromptFormatter, PROMPT_FIELDS
 from xonsh.prompt import vc
 
-from tools import skip_if_py34, DummyEnv
+from tools import DummyEnv
 
 
 @pytest.fixture
@@ -94,7 +94,7 @@ def test_format_prompt_with_invalid_func(formatter, xonsh_builtins):
 def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
     xonsh_builtins.__xonsh__.env = Env()
     template = "tt {zerodiv} tt"
-    exp = "tt (ERROR:zerodiv) tt"
+    exp = "tt {BACKGROUND_RED}{ERROR:zerodiv}{NO_COLOR} tt"
     fields = {"zerodiv": lambda: 1 / 0}
     obs = formatter(template, fields)
     assert exp == obs
@@ -209,7 +209,7 @@ def test_repo(request):
         with open("test-file", "w"):
             pass
         sp.call(["git", "add", "test-file"])
-        sp.call(["git", "commit", "-m", "test commit"])
+        sp.call(["git", "commit", "--no-gpg-sign", "-m", "test commit"])
     return {"name": vc, "dir": temp_dir}
 
 

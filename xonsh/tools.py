@@ -51,6 +51,7 @@ from xonsh.platform import (
     PYTHON_VERSION_INFO,
     expanduser,
     os_environ,
+    pygments_version_info,
 )
 
 
@@ -1713,6 +1714,12 @@ def history_tuple_to_str(x):
     return "{0} {1}".format(*x)
 
 
+def all_permutations(iterable):
+    """Yeilds all permutations, not just those of a specified length"""
+    for r in range(1, len(iterable) + 1):
+        yield from itertools.permutations(iterable, r=r)
+
+
 def format_color(string, **kwargs):
     """Formats strings that may contain colors. This simply dispatches to the
     shell instances method of the same name. The results of this function should
@@ -1888,6 +1895,8 @@ def hardcode_colors_for_win10(style_map):
 def ansicolors_to_ptk1_names(stylemap):
     """Converts ansicolor names in a stylemap to old PTK1 color names
     """
+    if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
+        return stylemap
     modified_stylemap = {}
     for token, style_str in stylemap.items():
         for color, ptk1_color in ANSICOLOR_NAMES_MAP.items():
@@ -1923,9 +1932,12 @@ def intensify_colors_on_win_setter(enable):
     environment variable.
     """
     enable = to_bool(enable)
-    if builtins.__xonsh__.shell is not None:
-        if hasattr(builtins.__xonsh__.shell.shell.styler, "style_name"):
-            delattr(builtins.__xonsh__.shell.shell.styler, "style_name")
+    if (
+        hasattr(builtins.__xonsh__, "shell")
+        and builtins.__xonsh__.shell is not None
+        and hasattr(builtins.__xonsh__.shell.shell.styler, "style_name")
+    ):
+        delattr(builtins.__xonsh__.shell.shell.styler, "style_name")
     return enable
 
 
@@ -1936,16 +1948,27 @@ def format_std_prepost(template, env=None):
     if not template:
         return ""
     env = builtins.__xonsh__.env if env is None else env
-    shell = builtins.__xonsh__.shell.shell
-    try:
-        s = shell.prompt_formatter(template)
-    except Exception:
-        print_exception()
-    # \001\002 is there to fool pygments into not returning an empty string
-    # for potentially empty input. This happens when the template is just a
-    # color code with no visible text.
     invis = "\001\002"
-    s = shell.format_color(invis + s + invis, force_string=True)
+    if builtins.__xonsh__.shell is None:
+        # shell hasn't fully started up (probably still in xonshrc)
+        from xonsh.prompt.base import PromptFormatter
+        from xonsh.ansi_colors import ansi_partial_color_format
+
+        pf = PromptFormatter()
+        s = pf(template)
+        style = env.get("XONSH_COLOR_STYLE")
+        s = ansi_partial_color_format(invis + s + invis, hide=False, style=style)
+    else:
+        # shell has fully started. do the normal thing
+        shell = builtins.__xonsh__.shell.shell
+        try:
+            s = shell.prompt_formatter(template)
+        except Exception:
+            print_exception()
+        # \001\002 is there to fool pygments into not returning an empty string
+        # for potentially empty input. This happens when the template is just a
+        # color code with no visible text.
+        s = shell.format_color(invis + s + invis, force_string=True)
     s = s.replace(invis, "")
     return s
 

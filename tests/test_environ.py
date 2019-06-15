@@ -68,7 +68,7 @@ def test_env_detype_mutable_access_clear(path1, path2):
 
 def test_env_detype_no_dict():
     env = Env(YO={"hey": 42})
-    env.set_ensurer('YO', Ensurer(always_true, None, None))
+    env.set_ensurer("YO", Ensurer(always_true, None, None))
     det = env.detype()
     assert "YO" not in det
 
@@ -273,3 +273,22 @@ def test_make_args_env():
         "ARG3": "3",
     }
     assert exp == obs
+
+
+def test_delitem():
+    env = Env(VAR="a value")
+    assert env["VAR"] == "a value"
+    del env["VAR"]
+    with pytest.raises(Exception):
+        a = env["VAR"]
+
+
+def test_delitem_default():
+    env = Env()
+    a_key, a_value = next(
+        (k, v) for (k, v) in env._defaults.items() if isinstance(v, str)
+    )
+    del env[a_key]
+    assert env[a_key] == a_value
+    del env[a_key]
+    assert env[a_key] == a_value

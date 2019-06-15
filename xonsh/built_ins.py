@@ -45,7 +45,7 @@ from xonsh.tools import (
     XonshError,
     XonshCalledProcessError,
 )
-from xonsh.lazyimps import pty, termios
+from xonsh.lazyimps import pty, termios, fcntl
 from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
 
@@ -609,7 +609,7 @@ class SubprocSpec:
 
     def _cmd_event_name(self):
         if callable(self.alias):
-            return self.alias.__name__
+            return getattr(self.alias, "__name__", repr(self.alias))
         elif self.binary_loc is None:
             return "<not-found>"
         else:
@@ -771,6 +771,17 @@ def _safe_pipe_properties(fd, use_tty=False):
     props = termios.tcgetattr(fd)
     props[1] = props[1] & (~termios.ONLCR) | termios.ONLRET
     termios.tcsetattr(fd, termios.TCSANOW, props)
+    # newly created PTYs have a stardard size (24x80), set size to the same size
+    # than the current terminal
+    winsize = None
+    if sys.stdin.isatty():
+        winsize = fcntl.ioctl(sys.stdin.fileno(), termios.TIOCGWINSZ, b"0000")
+    elif sys.stdout.isatty():
+        winsize = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, b"0000")
+    elif sys.stderr.isatty():
+        winsize = fcntl.ioctl(sys.stderr.fileno(), termios.TIOCGWINSZ, b"0000")
+    if winsize is not None:
+        fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 
 def _update_last_spec(last):
@@ -1324,7 +1335,7 @@ class XonshSession:
     def __init__(self, execer=None, ctx=None):
         """
         Parameters
-        ---------
+        ----------
         execer : Execer, optional
             Xonsh execution object, may be None to start
         ctx : Mapping, optional
@@ -1337,7 +1348,7 @@ class XonshSession:
         """Loads the session with default values.
 
         Parameters
-        ---------
+        ----------
         execer : Execer, optional
             Xonsh execution object, may be None to start
         ctx : Mapping, optional

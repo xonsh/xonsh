@@ -25,32 +25,46 @@ from xonsh.fs import PathLike, fspath
 from xonsh.events import events
 
 
-events.doc('vox_on_create', """
+events.doc(
+    "vox_on_create",
+    """
 vox_on_create(env: str) -> None
 
 Fired after an environment is created.
-""")
+""",
+)
 
-events.doc('vox_on_activate', """
+events.doc(
+    "vox_on_activate",
+    """
 vox_on_activate(env: str) -> None
 
 Fired after an environment is activated.
-""")
+""",
+)
 
-events.doc('vox_on_deactivate', """
+events.doc(
+    "vox_on_deactivate",
+    """
 vox_on_deactivate(env: str) -> None
 
 Fired after an environment is deactivated.
-""")
+""",
+)
 
-events.doc('vox_on_delete', """
+events.doc(
+    "vox_on_delete",
+    """
 vox_on_delete(env: str) -> None
 
 Fired after an environment is deleted (through vox).
-""")
+""",
+)
 
 
-VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin', 'lib', 'inc'])
+VirtualEnvironment = collections.namedtuple(
+    "VirtualEnvironment", ["env", "bin", "lib", "inc"]
+)
 
 
 def _subdir_names():
@@ -61,11 +75,11 @@ def _subdir_names():
     may additional logic to get to useful places.
     """
     if ON_WINDOWS:
-        return 'Scripts', 'Lib', 'Include'
+        return "Scripts", "Lib", "Include"
     elif ON_POSIX:
-        return 'bin', 'lib', 'include'
+        return "bin", "lib", "include"
     else:
-        raise OSError('This OS is not supported.')
+        raise OSError("This OS is not supported.")
 
 
 def _mkvenv(env_dir):
@@ -76,17 +90,17 @@ def _mkvenv(env_dir):
     """
     env_dir = os.path.normpath(env_dir)
     if ON_WINDOWS:
-        binname = os.path.join(env_dir, 'Scripts')
-        incpath = os.path.join(env_dir, 'Include')
-        libpath = os.path.join(env_dir, 'Lib', 'site-packages')
+        binname = os.path.join(env_dir, "Scripts")
+        incpath = os.path.join(env_dir, "Include")
+        libpath = os.path.join(env_dir, "Lib", "site-packages")
     elif ON_POSIX:
-        binname = os.path.join(env_dir, 'bin')
-        incpath = os.path.join(env_dir, 'include')
-        libpath = os.path.join(env_dir, 'lib',
-                               'python%d.%d' % sys.version_info[:2],
-                               'site-packages')
+        binname = os.path.join(env_dir, "bin")
+        incpath = os.path.join(env_dir, "include")
+        libpath = os.path.join(
+            env_dir, "lib", "python%d.%d" % sys.version_info[:2], "site-packages"
+        )
     else:
-        raise OSError('This OS is not supported.')
+        raise OSError("This OS is not supported.")
 
     return VirtualEnvironment(env_dir, binname, libpath, incpath)
 
@@ -109,12 +123,12 @@ class Vox(collections.abc.Mapping):
     """
 
     def __init__(self):
-        if not builtins.__xonsh__.env.get('VIRTUALENV_HOME'):
-            home_path = os.path.expanduser('~')
-            self.venvdir = os.path.join(home_path, '.virtualenvs')
-            builtins.__xonsh__.env['VIRTUALENV_HOME'] = self.venvdir
+        if not builtins.__xonsh__.env.get("VIRTUALENV_HOME"):
+            home_path = os.path.expanduser("~")
+            self.venvdir = os.path.join(home_path, ".virtualenvs")
+            builtins.__xonsh__.env["VIRTUALENV_HOME"] = self.venvdir
         else:
-            self.venvdir = builtins.__xonsh__.env['VIRTUALENV_HOME']
+            self.venvdir = builtins.__xonsh__.env["VIRTUALENV_HOME"]
 
     def create(
         self,
@@ -244,7 +258,9 @@ class Vox(collections.abc.Mapping):
 
     @staticmethod
     def _check_reserved(name):
-        return os.path.basename(name) not in _subdir_names()  # FIXME: Check the middle components, too
+        return (
+            os.path.basename(name) not in _subdir_names()
+        )  # FIXME: Check the middle components, too
 
     def __getitem__(self, name):
         """Get information about a virtual environment.
@@ -256,7 +272,7 @@ class Vox(collections.abc.Mapping):
             the current one (throws a KeyError if there isn't one).
         """
         if name is ...:
-            env_paths = [builtins.__xonsh__.env['VIRTUAL_ENV']]
+            env_paths = [builtins.__xonsh__.env["VIRTUAL_ENV"]]
         elif isinstance(name, PathLike):
             env_paths = [fspath(name)]
         else:
@@ -294,11 +310,11 @@ class Vox(collections.abc.Mapping):
         """
         bin_, lib, inc = _subdir_names()
         for dirpath, dirnames, filenames in os.walk(self.venvdir):
-            python_exec = os.path.join(dirpath, bin_, 'python')
+            python_exec = os.path.join(dirpath, bin_, "python")
             if ON_WINDOWS:
-                python_exec += '.exe'
+                python_exec += ".exe"
             if os.access(python_exec, os.X_OK):
-                yield dirpath[len(self.venvdir) + 1:]  # +1 is to remove the separator
+                yield dirpath[len(self.venvdir) + 1 :]  # +1 is to remove the separator
                 dirnames.clear()
 
     def __len__(self):
@@ -316,12 +332,12 @@ class Vox(collections.abc.Mapping):
 
         Returns None if no environment is active.
         """
-        if 'VIRTUAL_ENV' not in builtins.__xonsh__.env:
+        if "VIRTUAL_ENV" not in builtins.__xonsh__.env:
             return
-        env_path = builtins.__xonsh__.env['VIRTUAL_ENV']
+        env_path = builtins.__xonsh__.env["VIRTUAL_ENV"]
         if env_path.startswith(self.venvdir):
-            name = env_path[len(self.venvdir):]
-            if name[0] in '/\\':
+            name = env_path[len(self.venvdir) :]
+            if name[0] in "/\\":
                 name = name[1:]
             return name
         else:
@@ -338,14 +354,14 @@ class Vox(collections.abc.Mapping):
         """
         env = builtins.__xonsh__.env
         ve = self[name]
-        if 'VIRTUAL_ENV' in env:
+        if "VIRTUAL_ENV" in env:
             self.deactivate()
 
-        type(self).oldvars = {'PATH': list(env['PATH'])}
-        env['PATH'].insert(0, ve.bin)
-        env['VIRTUAL_ENV'] = ve.env
-        if 'PYTHONHOME' in env:
-            type(self).oldvars['PYTHONHOME'] = env.pop('PYTHONHOME')
+        type(self).oldvars = {"PATH": list(env["PATH"])}
+        env["PATH"].insert(0, ve.bin)
+        env["VIRTUAL_ENV"] = ve.env
+        if "PYTHONHOME" in env:
+            type(self).oldvars["PYTHONHOME"] = env.pop("PYTHONHOME")
 
         events.vox_on_activate.fire(name=name)
 
@@ -354,17 +370,17 @@ class Vox(collections.abc.Mapping):
         Deactivate the active virtual environment. Returns its name.
         """
         env = builtins.__xonsh__.env
-        if 'VIRTUAL_ENV' not in env:
-            raise NoEnvironmentActive('No environment currently active.')
+        if "VIRTUAL_ENV" not in env:
+            raise NoEnvironmentActive("No environment currently active.")
 
         env_name = self.active()
 
-        if hasattr(type(self), 'oldvars'):
+        if hasattr(type(self), "oldvars"):
             for k, v in type(self).oldvars.items():
                 env[k] = v
             del type(self).oldvars
 
-        env.pop('VIRTUAL_ENV')
+        env.pop("VIRTUAL_ENV")
 
         events.vox_on_deactivate.fire(name=env_name)
         return env_name
@@ -381,7 +397,9 @@ class Vox(collections.abc.Mapping):
         env_path = self[name].env
         try:
             if self[...].env == env_path:
-                raise EnvironmentInUse('The "%s" environment is currently active.' % name)
+                raise EnvironmentInUse(
+                    'The "%s" environment is currently active.' % name
+                )
         except KeyError:
             # No current venv, ... fails
             pass

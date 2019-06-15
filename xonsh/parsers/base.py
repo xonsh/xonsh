@@ -711,7 +711,10 @@ class BaseParser(object):
 
     def p_file_input(self, p):
         """file_input : file_stmts"""
-        p[0] = ast.Module(body=p[1])
+        if PYTHON_VERSION_INFO < (3, 8, 0):
+            p[0] = ast.Module(body=p[1])
+        else:
+            p[0] = ast.Module(body=p[1], type_ignores=[])
 
     def p_file_stmts_nl(self, p):
         """file_stmts : newline_or_stmt"""
@@ -2422,7 +2425,7 @@ class BaseParser(object):
         prefix = RE_STRINGPREFIX.match(p1.value).group().lower()
         if "p" in prefix and "f" in prefix:
             new_pref = prefix.replace("p", "")
-            value_without_p = new_pref + p1.value[len(prefix):]
+            value_without_p = new_pref + p1.value[len(prefix) :]
             s = eval_fstr_fields(value_without_p, new_pref, filename=self.lexer.fname)
             s = pyparse(s).body[0].value
             s = ast.increment_lineno(s, p1.lineno - 1)
@@ -2448,8 +2451,9 @@ class BaseParser(object):
         else:
             s = ast.literal_eval(p1.value)
             is_bytes = "b" in prefix
+            is_raw = "r" in prefix
             cls = ast.Bytes if is_bytes else ast.Str
-            p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
+            p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos, is_raw=is_raw)
 
     def p_string_literal_list(self, p):
         """string_literal_list : string_literal
@@ -3164,9 +3168,12 @@ class BaseParser(object):
 
     def p_subproc_atom_str(self, p):
         """subproc_atom : string_literal"""
-        p0 = xonsh_call(
-            "__xonsh__.expand_path", args=[p[1]], lineno=self.lineno, col=self.col
-        )
+        if hasattr(p[1], "is_raw") and p[1].is_raw:
+            p0 = p[1]
+        else:
+            p0 = xonsh_call(
+                "__xonsh__.expand_path", args=[p[1]], lineno=self.lineno, col=self.col
+            )
         p0._cliarg_action = "append"
         p[0] = p0
 

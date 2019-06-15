@@ -325,8 +325,6 @@ if HAVE_SETUPTOOLS:
 
 def main():
     """The main entry point."""
-    if sys.version_info[:2] < (3, 4):
-        sys.exit("xonsh currently requires Python 3.4+")
     try:
         if "--name" not in sys.argv:
             logo_fname = os.path.join(os.path.dirname(__file__), "logo.txt")
@@ -405,6 +403,7 @@ def main():
             "linux": ["distro"],
             "proctitle": ["setproctitle"],
         }
+        skw["python_requires"] = ">=3.5"
     setup(**skw)
 
 

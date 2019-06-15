@@ -72,10 +72,11 @@ from xonsh.tools import (
     is_writable_file,
     balanced_parens,
     iglobpath,
+    all_permutations,
 )
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows, skip_if_on_unix, skip_if_py34
+from tools import skip_if_on_windows, skip_if_on_unix
 
 LEXER = Lexer()
 LEXER.build()
@@ -1652,7 +1653,6 @@ def test_iglobpath_no_dotfiles_recursive(xonsh_builtins):
     assert d + "/bin/.someotherdotfile" not in files
 
 
-@skip_if_py34
 @skip_if_on_windows
 def test_iglobpath_dotfiles_recursive(xonsh_builtins):
     d = os.path.dirname(__file__)
@@ -1676,3 +1676,25 @@ def test_iglobpath_empty_str(monkeypatch, xonsh_builtins):
     monkeypatch.setattr(os, "listdir", mocklistdir)
     paths = list(iglobpath("some/path"))
     assert len(paths) == 0
+
+
+def test_all_permutations():
+    obs = {"".join(p) for p in all_permutations("ABC")}
+    exp = {
+        "A",
+        "B",
+        "C",
+        "AB",
+        "AC",
+        "BA",
+        "BC",
+        "CA",
+        "CB",
+        "ACB",
+        "CBA",
+        "BAC",
+        "CAB",
+        "BCA",
+        "ABC",
+    }
+    assert obs == exp

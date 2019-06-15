@@ -4,6 +4,363 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.6
+====================
+
+**Fixed:**
+
+* Fixed exception in help/version threadable predictor
+* Fixed gitstatus prompt so that it also now reports deleted files
+* Fixed issue where the prompt-toolkit2 shell could not display and
+  would end up in an infinite error loop if ``$MULTILINE_PROMPT``
+  was a suitably "false" value, such as ``None`` or an empty string.
+* Fixed issue where setting ``$XONSH_STDERR_PREFIX`` and ``$XONSH_STDERR_POSTFIX``
+  and running a command in the ``xonshrc`` file would throw an error.
+
+**Authors:**
+
+* Anthony Scopatz
+* David Strobach
+* virus
+* shadow-light
+
+
+
+v0.9.5
+====================
+
+**Fixed:**
+
+* Style 'bw'. Background colors was added in the style description.
+* Fix causing error in ``get_predictor_threadable`` on windows when try to run not exist command
+* ``pip`` completer no longer fires when ``pip`` happens to appear within a word
+  like ``bagpipes``
+* Fixed issue with ``history gc`` command not running properly.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Jean-Benoist Leger
+* virus
+* con-f-use
+
+
+
+v0.9.4
+====================
+
+**Added:**
+
+* Add processing ``%d`` for avoid overwriting in ``run-tests.xsh``
+
+**Changed:**
+
+* Xonsh now does not attempt to expand raw strings, so now::
+
+    $ echo "$HOME"
+    /home/user
+    $ echo r"$HOME"
+    $HOME
+* sudoedit now runs unthreaded
+
+**Fixed:**
+
+* threadable predictor for 'env' command based on predictor from the executed
+  command. Fixes #2759 and #3103.
+* An error in the 'xon.sh' executable that only popped up during testing has
+  been fixed.  Specifically: It now directly calls 'python3' without invoking
+  'env'.
+* bashisms extension can be used again with prompt_toolkit v1
+* Fix a crash when setting ``$INTENSIFY_COLORS_ON_WIN`` in certain situations.
+* Fix issue with bashsisms xontrib causing syntax errors for some Python statements
+* portable trick to pass args which replace '/usr/bin/env' is removed and
+  '/usr/bin/env' is used. Fixes bug when a python3 used is outside the default
+  'PATH'.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* Jean-Benoist Leger
+* David Strobach
+* virus
+* Carmen Bianca Bakker
+* con-f-use
+* cclauss
+* Eddie Peters
+
+
+
+v0.9.3
+====================
+
+**Deprecated:**
+
+* Python v3.4 has been fully, completely, and (hopefully) correctly
+  deprecated. Please migrate to an officially supported version of Python.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
+v0.9.2
+====================
+
+**Changed:**
+
+* For aliases, predictor is build with the predictor of original command, in
+  place of default predictor.
+
+**Fixed:**
+
+* Updated setup.py to require Python 3.4 using the ``python_requires`` keyword.
+  This rectifies issues with pip installing xonsh. Python 3.4 support will
+  be removed on the following release.
+
+**Authors:**
+
+* Anthony Scopatz
+* Jean-Benoist Leger
+
+
+
+v0.9.1
+====================
+
+**Changed:**
+
+* We no longer manually check the Python version in ``setup.py``,
+  but instead use the setuptools ``python_requires`` feature.
+
+**Fixed:**
+
+* Updates for integrating with new colors styles in Pygments v2.4.0.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
+v0.9.0
+====================
+
+**Added:**
+
+* Implemented the following "bang command" bashisms: ``!$``, ``$*``, ``!^``,
+  and ``!<str>``.  These are in addition to ``!!``, which was already
+  implemented.
+* asciinema (terminal recorder) added in not threadable commands.
+* tput added in not threadable commands.
+* New ``color_tools.KNOWN_XONSH_COLORS`` frozenset.
+* New ``pyghooks.PYGMENTS_MODIFIERS`` mapping from color modifier names to
+  pygments colors.
+* New ``pyghooks.color_name_to_pygments_code()`` function for converting
+  color names into pygments color codes.
+
+**Changed:**
+
+* Circle now runs ``black`` checks on contents of bundled xontribs
+
+* The ``black`` checks no longer skip some files buried deeper in the directory
+  tree.
+* Errors while formatting the prompt are highlighted for easier debugging.
+* Pygments styles only define the standard set of colors, by default.
+  Additional colors are computed as needed.
+* PTYs created for running threadable command have now size set to same size
+  than main terminal.
+* Update documentation pointing to the minimal required version of
+  Python (3.5).
+
+**Deprecated:**
+
+* Drop support for Python 3.4.
+
+**Removed:**
+
+* ``pyghooks.KNOWN_COLORS`` is no longer needed or useful as pygments colors
+  are computed automatically.
+* ``style_tools.KNOWN_COLORS`` was never used, redundant with
+  ``pyghooks.KNOWN_COLORS`` and has thus been removed.
+
+**Fixed:**
+
+* Fixed a DeprecationWarning that would show up during an import of MutableSet.
+* Fixed error with aliases composed of functions wrapped in functools.partial.
+* ``black`` formatted all xontribs
+* deleting a non existing environement variable with default value do nothing
+  instead of raising a exception trying to deleting it in existing values dict.
+* Fixed crash while converting ANSI color codes with leading zeroes
+* Fixed crash while parsing invalid ANSI color code
+* fix causing infinite loop when doing ``cat`` empty file
+* Fixed issue which occurs when user doesn't have access to parent directory and
+  xonsh scan all parents directory to find if we are in a Hg repository.
+* Fixed issue with pygments-cache not properly generating a cache the first
+  time when using prompt-toolkit when using ``ptk2``.
+  This was due to a lingering lazy import of ``pkg_resources``
+  that has been removed.
+* Minor update for Python v3.8.
+* Fixed a "'NoneType' object is not iterable" bug when looking up ``stty``
+  in command cache.
+* The release tarball now includes all test files.
+* Arguments passed to python in 'scripts/xonsh' and in 'scripts/xonsh-cat' are
+  now passed by a portable hack in sh, not anymore by /usr/bin/env.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Jean-Benoist Leger
+* David Strobach
+* virus
+* Carmen Bianca Bakker
+* Alexander Sosedkin
+* Kale Kundert
+* Andrés García García
+* Samuel Dion-Girardeau
+* Steven Kryskalla
+* Rodrigo Oliveira
+
+
+
+v0.8.12
+====================
+
+**Added:**
+
+* Support for more ANSI escape sequence modifers allowed in color names.
+  The current modifiers now allowed are: BOLD, FAINT, ITALIC, UNDERLINE,
+  SLOWBLINK, FASTBLINK, INVERT, CONCEAL, and STRIKETHROUGH.
+* New ``ansi_tools.ansi_color_name_to_escape_code()`` function for
+  converting a color name to an ANSI escape code.
+* ``color_tools.RE_XONSH_COLOR`` is a regular expression for matching
+  xonsh color names.
+* ``color_tools.iscolor()`` is a simple function for testing whether a
+  string is a valid color name or not.
+* The ``tools.all_permutations()`` function yields all possible permutations
+  of an iterable, including removals.
+
+**Changed:**
+
+* change url of xontrib-autojump
+* ANSI color styles may now be defined simply by their plain and intense colors.
+* ``SET_FOREGROUND_3INTS_`` renamed to ``SET_FOREGROUND_FAINT_``,
+  ``SET_BACKGROUND_3INTS_`` renamed to ``SET_BACKGROUND_FAINT_``,
+  ``SET_FOREGROUND_SHORT_`` renamed to ``SET_FOREGROUND_SLOWBLINK_``, and
+  ``SET_BACKGROUND_SHORT_`` renamed to ``SET_BACKGROUND_SLOWBLINK_``.
+
+**Removed:**
+
+* ``ansi_tools.ANSI_REVERSE_COLOR_NAME_TRANSLATIONS`` removed, as it is
+  no longer needed.
+
+**Fixed:**
+
+* Fixed issues where ``$LS_COLORS`` could not convert valid ANSI colors.
+
+**Authors:**
+
+* Anthony Scopatz
+* virus
+
+
+
+v0.8.11
+====================
+
+**Added:**
+
+* New ``xonsh.color_tools.short_to_ints()`` function for directly
+  converting a short (0 - 256) color into a 3-tuple of ints
+  representing its RGB value.
+* New ``xonsh.ansi_colors.ansi_reverse_style()`` function for
+  converting a mapping of color names to ANSI escape codes into
+  a mapping from escape codes into color names. This is not a
+  round-trippable operation.
+* New ``xonsh.ansi_colors.ansi_color_escape_code_to_name()`` function
+  for converting an ANSI color escape code into the closest xonsh
+  color name for a given style.
+* New ``xonsh.events.EventManager.exists()`` method enables checking
+  whether events actually exist without making the event if it
+  doesn't exist.
+* New command-specific event categories called ``on_pre_spec_run_<cmd-name>``
+  and ``on_post_spec_run_<cmd-name>`` will be fired before and after
+  ``SubpocSpec.run()`` is called.  This allows for command specific
+  events to be executed.  For example, ``on_pre_spec_run_ls`` would
+  be run prior to an invocation of ``ls``.
+* New ``xonsh.environ.LsColors`` class for managing the ``$LS_COLORS``
+  environment variable. This ensures that the ``ls`` command respects the
+  ``$XONSH_COLOR_STYLE`` setting. An instance of this class is added to the
+  environment when either the ``$LS_COLORS`` class is first accessed or
+  the ``ls`` command is executed.
+* The ``on_pre_spec_run_ls`` event is initialized with a default handler
+  that ensures that ``$LS_COLORS`` is set in the actual environment prior
+  to running an ``ls`` command.
+* New ``xonsh.tools.detype()`` function that simply calls an object's own
+  ``detype()`` method in order to detype it.
+* New ``xonsh.tools.always_none()`` function that simply returns ``None``.
+* New ``Env.set_ensurer()`` method for setting an ensurer on an environment.
+
+**Changed:**
+
+* The black and white style ``bw`` now uses actual black and white
+  ANSI colore codes for its colors, rather than just empty color
+  sequences.
+* An environment variable ``detype`` operation no longer needs to be a
+  function, but may also be ``None``. If ``None``, this variable is
+  considered not detypeable, and will not be exported to subprocess
+  environments via the ``Env.detype()`` function.
+* An environment variable ``detype`` function no longer needs to return
+  a string, but may also return ``None``. If ``None`` is returned, this
+  variable is  considered not detypeable, and will not be exported to
+  subprocess environments via the ``Env.detype()`` function.
+* The ``Env.detype()`` method has been updated to respect the new
+  ``None`` types when detyping.
+* The ``xonsh.tools.expandvars()`` function has been updated to respect
+  the new ``None`` types when detyping.
+* The ``xonsh.xonfig.make_xonfig_wizard()`` function has been updated to respect
+  the new ``None`` types when detyping.
+* Event handlers may now be added and discarded during event firing for
+  normal events.  Such modifications will not be applied until the
+  current firing operation is concluded. Thus you won't see newly added
+  events fired.
+* xonsh now uses its own vendored version of ply. Any installed versions will no longer be used. This reflects that ply is no
+  longer distributed as an installable package.
+* Updated to use ply version 3.11.
+* Reverted change in ``give_to_terminal`` to restore working version of
+  ``cmake``, ``rm -i``, etc.  This breaks ``pv | head``.
+
+**Deprecated:**
+
+* The ``xonsh.color_tools.make_pallete()`` function is no
+  longer deprecated, as it is actually needed in other parts of
+  xonsh still, such as ``pyghooks``.
+
+**Removed:**
+
+* All code references to ``$FORMATTER_DICT`` have been removed.
+
+**Fixed:**
+
+* Resolved issues where macro functions were not able to properly
+  accept single-line statements in ``exec`` and ``single`` mode.
+* Minor fixes to ``xonsh.events.debug_level()``.
+* Fixed a regression where some interactive commands were not waited for
+  properly for long enough.
+* Fixed environments not showing in the prompt when using Anaconda Python.
+
+* Fixed regression with anaconda activate/deactivate scripts not working on Windows.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+
+
+
 v0.8.10
 ====================
 
@@ -18,7 +375,7 @@ v0.8.10
 * Subprocesses will no longer close file descriptors automatically.
   This was causing issues with other commands that expected file
   descriptors to remain open, such as ``make``.
-* The ``xonsh.Aliases.eval_alaises()`` method updated to use
+* The ``xonsh.Aliases.eval_alias()`` method updated to use
   ``xonsh.aliases.partial_eval_alias()``.
 
 **Fixed:**
@@ -31,12 +388,12 @@ v0.8.10
 * Resolved issue where setting empty signal masks was causing the
   terminal to close. This was problematic for certain command
   pipelines. For example, ``pv /dev/urandom | head`` now works.
-* Prevents recurssive errors from being raised when there is no child process
+* Prevents recursive errors from being raised when there is no child process
   in ``xonsh.jobs.wait_for_active_job()``.
 * Tweaked ``xonsh.completers.commands.complete_skipper()`` to insert a space following
   certain tokens (``&&``, ``||``, ``|``, ``and``, ``or``) to avoid overwriting existing tokens
   with completer output.
-* Fixed bug with evaluating recurssive aliases that did not implement
+* Fixed bug with evaluating recursive aliases that did not implement
   the full callable alias signature.
 
 **Authors:**
@@ -75,7 +432,7 @@ v0.8.9
 
 * Made ``$PATH`` searching more robust to broken symlinks on Windows.
 * undesirable SIGSTOP by putting in a SIGCONT
-* Fixed issue with recursive aliases not being passes all keyword arguments
+* Fixed issue with recursive aliases not being passed all keyword arguments
   that are part of the callable alias spec. This allows commands like
   ``aliases['hsa'] = "history show all"; hsa | head`` to no longer fail
   with strange errors.
@@ -97,7 +454,7 @@ v0.8.8
 
 **Added:**
 
-* ``vox new`` has an added ``-p --interpreter`` flag for choosing the python interpreter to use for virtualenv creation
+* ``vox new`` has an added ``-p --interpreter`` flag for choosing the Python interpreter to use for virtualenv creation
 * The default Python intrepreter vox uses to create virtual environments can be set using the ``$VOX_DEFAULT_INTERPRETER`` environment variable.
 
 
@@ -171,24 +528,25 @@ v0.8.5
 * Installation / Usage
     1. To install use pip
 
-    .. code-block:: bash
+       .. code-block:: bash
 
-        python3 -m pip install xontrib-base16-shell
+            python3 -m pip install xontrib-base16-shell
 
     2. Add on ``~/.xonshrc``
 
-    .. code:: python
-        :number-lines:
+       .. code:: python
+            :number-lines:
 
-        $BASE16_SHELL = $HOME + "/.config/base16-shell/"
-        xontrib load base16_shell
+            $BASE16_SHELL = $HOME + "/.config/base16-shell/"
+            xontrib load base16_shell
 
 
     3. See image
 
-    .. image:: https://raw.githubusercontent.com/ErickTucto/xontrib-base16-shell/master/docs/terminal.png
-        :width: 600px
-        :alt: terminal.png
+       .. image:: https://raw.githubusercontent.com/ErickTucto/xontrib-base16-shell/master/docs/terminal.png
+            :width: 600px
+            :alt: terminal.png
+
 * New ``DumbShell`` class that kicks in whenever ``$TERM == "dumb"``.
   This usually happens in emacs. Currently, this class inherits from
   the ``ReadlineShell`` but adds some light customization to make
@@ -365,7 +723,7 @@ v0.8.1
 
 * Builtin dynamic proxies and deprecation warning proxies were not deleting
   attributes and items properly.
-* Fixed stdout/sdterr writing infinite recurssion error that would occur in
+* Fixed stdout/sdterr writing infinite recursion error that would occur in
   long pipelines of callable aliases.
 * Fixed a bug which under very rare conditions could cause the shell
   to die with PermissionError exception while sending SIGSTOP signal
@@ -500,7 +858,7 @@ v0.7.10
 **Added:**
 
 * 'off' can be passed as falsy value to all flags accepting boolean argument.
-- DragonFly BSD support
+* DragonFly BSD support
 * Format strings (f-strings) now allow environment variables to be looked up.
   For example, ``f"{$HOME}"`` will yield ``"/home/user"``. Note that this will
   look up and fill in the ``detype()``-ed version of the environment variable,

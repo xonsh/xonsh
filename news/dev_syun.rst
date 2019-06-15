@@ -16,8 +16,7 @@
 
 **Fixed:**
 
-* Resolved issues where macro functions were not able to properly
-  accept single-line statements in ``exec`` and ``single`` mode.
+* Fixed that occurs when type a command before rendering.
 
 **Security:**
 

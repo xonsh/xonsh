@@ -2,8 +2,8 @@
 
 import itertools
 
-from collections import ChainMap, MutableSet
-from collections.abc import MutableMapping, MutableSequence
+from collections import ChainMap
+from collections.abc import MutableMapping, MutableSequence, MutableSet
 
 
 class ChainDBDefaultType(object):
@@ -37,8 +37,9 @@ class ChainDB(ChainMap):
                     res = ChainDB(result)
                 else:
                     res.maps.append(result)
-        elif all([isinstance(result, (MutableSequence,
-                                      MutableSet)) for result in results]):
+        elif all(
+            [isinstance(result, (MutableSequence, MutableSet)) for result in results]
+        ):
             results_chain = itertools.chain(*results)
             # if all reults have the same type, cast into that type
             if all([isinstance(result, type(results[0])) for result in results]):

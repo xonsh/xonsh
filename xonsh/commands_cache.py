@@ -151,8 +151,8 @@ class CommandsCache(cabc.Mapping):
     def locate_binary(self, name, ignore_alias=False):
         """Locates an executable on the file system using the cache.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         name : str
                 name of binary to search for
         ignore_alias : bool, optional
@@ -166,8 +166,8 @@ class CommandsCache(cabc.Mapping):
     def lazy_locate_binary(self, name, ignore_alias=False):
         """Locates an executable in the cache, without checking its validity.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         name : str
                 name of binary to search for
         ignore_alias : bool, optional
@@ -217,14 +217,21 @@ class CommandsCache(cabc.Mapping):
         """Predicts whether a command list is able to be run on a background
         thread, rather than the main thread.
         """
-        name = self.cached_name(cmd[0])
+        predictor = self.get_predictor_threadable(cmd[0])
+        return predictor(cmd[1:])
+
+    def get_predictor_threadable(self, cmd0):
+        """Return the predictor whether a command list is able to be run on a
+        background thread, rather than the main thread.
+        """
+        name = self.cached_name(cmd0)
         predictors = self.threadable_predictors
         if ON_WINDOWS:
             # On all names (keys) are stored in upper case so instead
             # we get the original cmd or alias name
             path, _ = self.lazyget(name, (None, None))
             if path is None:
-                return True
+                return predict_true
             else:
                 name = pathbasename(path)
             if name not in predictors:
@@ -232,21 +239,56 @@ class CommandsCache(cabc.Mapping):
                 if pre in predictors:
                     predictors[name] = predictors[pre]
         if name not in predictors:
-            predictors[name] = self.default_predictor(name, cmd[0])
+            predictors[name] = self.default_predictor(name, cmd0)
         predictor = predictors[name]
-        return predictor(cmd[1:])
+        return predictor
 
     #
     # Background Predictors (as methods)
     #
 
     def default_predictor(self, name, cmd0):
+        """Default predictor, using predictor from original command if the
+        command is an alias, elseif build a predictor based on binary analysis
+        on POSIX, else return predict_true.
+        """
+        # alias stuff
+        if not os.path.isabs(cmd0) and os.sep not in cmd0:
+            alss = getattr(builtins, "aliases", dict())
+            if cmd0 in alss:
+                return self.default_predictor_alias(cmd0)
+
+        # other default stuff
         if ON_POSIX:
             return self.default_predictor_readbin(
                 name, cmd0, timeout=0.1, failure=predict_true
             )
         else:
             return predict_true
+
+    def default_predictor_alias(self, cmd0):
+        alias_recursion_limit = (
+            10
+        )  # this limit is se to handle infinite loops in aliases definition
+        first_args = []  # contains in reverse order args passed to the aliased command
+        alss = getattr(builtins, "aliases", dict())
+        while cmd0 in alss:
+            alias_name = alss[cmd0]
+            if isinstance(alias_name, (str, bytes)) or not isinstance(
+                alias_name, cabc.Sequence
+            ):
+                return predict_true
+            for arg in alias_name[:0:-1]:
+                first_args.insert(0, arg)
+            if cmd0 == alias_name[0]:
+                # it is a self-alias stop recursion immediatly
+                return predict_true
+            cmd0 = alias_name[0]
+            alias_recursion_limit -= 1
+            if alias_recursion_limit == 0:
+                return predict_true
+        predictor_cmd0 = self.get_predictor_threadable(cmd0)
+        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1)
 
     def default_predictor_readbin(self, name, cmd0, timeout, failure):
         """Make a default predictor by
@@ -338,9 +380,9 @@ def predict_shell(args):
 @lazyobject
 def HELP_VER_PREDICTOR_PARSER():
     p = argparse.ArgumentParser("cmd", add_help=False)
-    p.add_argument("-h", "--help", dest="help", action="store_true", default=None)
+    p.add_argument("-h", "--help", dest="help", nargs="?", action="store", default=None)
     p.add_argument(
-        "-v", "-V", "--version", dest="version", action="store_true", default=None
+        "-v", "-V", "--version", dest="version", nargs="?", action="store", default=None
     )
     return p
 
@@ -380,6 +422,19 @@ def predict_hg(args):
         return not ns.interactive
 
 
+def predict_env(args):
+    """Predict if env is launching a threadable command or not.
+    The launched command is extracted from env args, and the predictor of
+    lauched command is used."""
+
+    for i in range(len(args)):
+        if args[i] and args[i][0] != "-" and "=" not in args[i]:
+            # args[i] is the command and the following is its arguments
+            # so args[i:] is used to predict if the command is threadable
+            return builtins.__xonsh__.commands_cache.predict_threadable(args[i:])
+    return True
+
+
 def default_threadable_predictors():
     """Generates a new defaultdict for known threadable predictors.
     The default is to predict true.
@@ -387,6 +442,7 @@ def default_threadable_predictors():
     # alphabetical, for what it is worth.
     predictors = {
         "aurman": predict_false,
+        "asciinema": predict_help_ver,
         "bash": predict_shell,
         "csh": predict_shell,
         "clear": predict_false,
@@ -394,6 +450,7 @@ def default_threadable_predictors():
         "cmd": predict_shell,
         "cryptop": predict_false,
         "curl": predict_true,
+        "env": predict_env,
         "ex": predict_false,
         "emacsclient": predict_false,
         "fish": predict_shell,
@@ -424,8 +481,10 @@ def default_threadable_predictors():
         "ssh": predict_false,
         "startx": predict_false,
         "sudo": predict_help_ver,
+        "sudoedit": predict_help_ver,
         "tcsh": predict_shell,
         "telnet": predict_false,
+        "tput": predict_false,
         "top": predict_help_ver,
         "vi": predict_false,
         "view": predict_false,

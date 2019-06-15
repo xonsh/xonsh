@@ -22,9 +22,9 @@ from xonsh.xoreutils.yes import yes
 
 __all__ = ()
 
-aliases['cat'] = cat
-aliases['echo'] = echo
-aliases['pwd'] = pwd
-aliases['tee'] = tee
-aliases['tty'] = tty
-aliases['yes'] = yes
+aliases["cat"] = cat
+aliases["echo"] = echo
+aliases["pwd"] = pwd
+aliases["tee"] = tee
+aliases["tty"] = tty
+aliases["yes"] = yes

@@ -83,7 +83,7 @@ class PromptFormatter:
         except Exception:
             print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
-            value = "(ERROR:{})".format(field)
+            value = "{{BACKGROUND_RED}}{{ERROR:{}}}{{NO_COLOR}}".format(field)
         return value
 
 
