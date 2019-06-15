@@ -186,16 +186,12 @@ def complete_python_mode(prefix, line, start, end, ctx):
 
 
 def _turn_off_warning(func):
-    """
-    Decorator to turn off warning temporarily.
-    """
-
+    """Decorator to turn off warning temporarily."""
     def wrapper(*args, **kwargs):
         warnings.filterwarnings('ignore')
         r = func(*args, **kwargs)
         warnings.filterwarnings("once", category=DeprecationWarning)
         return r
-
     return wrapper
 
 
