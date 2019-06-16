@@ -103,6 +103,11 @@
   "url": "http://xon.sh",
   "description": ["Adds return code info to the prompt"]
   },
+ {"name": "readable-traceback",
+  "package": "xontrib-readable-traceback",
+  "url": "https://github.com/6syun9/xontrib-readable-traceback",
+  "description": ["Make traceback easier to see for xonsh."]
+  },
   {"name": "free_cwd",
     "package": "xonsh",
     "url": "http://xon.sh",
@@ -321,6 +326,13 @@
    "url": "https://github.com/astronouth7303/xontrib-schedule",
    "install": {
     "pip": "xpip install xontrib-schedule"
+   }
+  },
+  "xontrib-readable-traceback": {
+   "license": "MIT",
+   "url": "https://github.com/6syun9/xontrib-readable-traceback",
+   "install": {
+    "pip": "xpip install xontrib-readable-traceback"
    }
   }
  }
