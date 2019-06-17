@@ -92,12 +92,12 @@ def xontrib_metadata():
                 pass
 
     if impres:
-        with impres.open_text('xonsh', 'xontribs.json') as f:
+        with impres.open_text("xonsh", "xontribs.json") as f:
             md = json.load(f)
     elif pkg_resources:
         # Despite the name, this is a bytes
-        bytesdata = pkg_resources.resource_string('xonsh', 'xontribs.json')
-        md = json.loads(bytesdata.decode('utf-8'))
+        bytesdata = pkg_resources.resource_string("xonsh", "xontribs.json")
+        md = json.loads(bytesdata.decode("utf-8"))
     else:
         path = os.path.join(os.path.dirname(__file__), "xontribs.json")
         with open(path, "r") as f:
