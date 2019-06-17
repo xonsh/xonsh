@@ -402,6 +402,7 @@ def main():
             "mac": ["gnureadline"],
             "linux": ["distro"],
             "proctitle": ["setproctitle"],
+            "zipapp": ['importlib_resources; python_version < "3.7"'],
         }
         skw["python_requires"] = ">=3.5"
     setup(**skw)

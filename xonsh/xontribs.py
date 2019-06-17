@@ -11,11 +11,6 @@ import importlib.util
 from xonsh.tools import print_color, unthreadable
 
 
-@functools.lru_cache(1)
-def xontribs_json():
-    return os.path.join(os.path.dirname(__file__), "xontribs.json")
-
-
 def find_xontrib(name):
     """Finds a xontribution from its name."""
     if name.startswith("."):
@@ -76,8 +71,38 @@ def update_context(name, ctx=None):
 @functools.lru_cache()
 def xontrib_metadata():
     """Loads and returns the xontribs.json file."""
-    with open(xontribs_json(), "r") as f:
-        md = json.load(f)
+    impres = None
+    pkg_resources = None
+
+    # NOTE: Reduce all of these alternate implementations when the minimum Python
+    #       is >=3.7
+    try:
+        # Python 3.7
+        import importlib.resources as impres
+    except ImportError:
+        try:
+            # Optional backport for <3.7
+            import importlib_resources as impres
+        except ImportError:
+            try:
+                # Try the slower and clunkier pkg_resources
+                # This is only available if setuptools is part of the environment
+                import pkg_resources
+            except ImportError:
+                pass
+
+    if impres:
+        with impres.open_text('xonsh', 'xontribs.json') as f:
+            md = json.load(f)
+    elif pkg_resources:
+        # Despite the name, this is a bytes
+        bytesdata = pkg_resources.resource_string('xonsh', 'xontribs.json')
+        md = json.loads(bytesdata.decode('utf-8'))
+    else:
+        path = os.path.join(os.path.dirname(__file__), "xontribs.json")
+        with open(path, "r") as f:
+            md = json.load(f)
+
     return md
 
 
