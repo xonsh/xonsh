@@ -190,6 +190,11 @@
   "package": "xontrib-schedule",
   "url": "https://github.com/astronouth7303/xontrib-schedule",
   "description": ["Xonsh Task Scheduling"]
+ },
+ {"name": "ssh_agent",
+  "package": "xontrib-ssh-agent",
+  "url": "https://bitbucket.org/dyuri/xontrib-ssh-agent",
+  "description": ["ssh-agent integration"]
  }
  ],
  "packages": {
@@ -333,6 +338,13 @@
    "url": "https://github.com/6syun9/xontrib-readable-traceback",
    "install": {
     "pip": "xpip install xontrib-readable-traceback"
+   }
+  },
+  "xontrib-ssh-agent": {
+   "license": "MIT",
+   "url": "https://bitbucket.org/dyuri/xontrib-ssh-agent",
+   "install": {
+    "pip": "xpip install xontrib-ssh-agent"
    }
   }
  }
