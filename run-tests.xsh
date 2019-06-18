@@ -16,13 +16,13 @@ def replace_args(num):
 $RAISE_SUBPROC_ERROR = True
 
 run_separately = [
-    'tests/test_main.py',
+    #'tests/test_main.py',
     'tests/test_ptk_highlight.py',
     ]
 ignores = []
 for fname in run_separately:
     ignores.append('--ignore')
     ignores.append(fname)
-![pytest @(replace_args(0)) @(ignores)]
+![pytest --assert=plain @(replace_args(0)) @(ignores)]
 for index, fname in enumerate(run_separately):
-    ![pytest @(replace_args(index+1)) @(fname)]
+    ![pytest --assert=plain @(replace_args(index+1)) @(fname)]
