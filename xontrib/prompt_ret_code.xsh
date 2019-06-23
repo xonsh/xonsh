@@ -2,20 +2,31 @@ from xonsh.tools import ON_WINDOWS as _ON_WINDOWS
 
 
 def _ret_code_color():
+    try:
+	color_bg = $PROMPT_RET_CODE_BACKGROUND
+    except:
+	color_bg = False
+
+    if color_bg:
+	prefix = 'BACKGROUND'
+    else:
+	prefix = 'BOLD'
+
     if __xonsh__.history.rtns:
         color = 'blue' if __xonsh__.history.rtns[-1] == 0 else 'red'
     else:
         color = 'blue'
+
     if _ON_WINDOWS:
         if color == 'blue':
-            return '{BOLD_INTENSE_CYAN}'
+            return '{%s_INTENSE_CYAN}' % prefix
         elif color == 'red':
-            return '{BOLD_INTENSE_RED}'
+            return '{%s_INTENSE_RED}' % prefix
     else:
         if color == 'blue':
-            return '{BOLD_BLUE}'
+            return '{%s_BLUE}' % prefix
         elif color == 'red':
-            return '{BOLD_RED}'
+            return '{%s_RED}' % prefix
 
 
 def _ret_code():
