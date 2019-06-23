@@ -1,32 +1,35 @@
 from xonsh.tools import ON_WINDOWS as _ON_WINDOWS
+from xonsh.tools import is_string, ensure_string
+from xonsh.environ import Ensurer
+
+
+${...}.set_ensurer("XONTRIB_PROMPT_RET_CODE_COLOR_ZERO",
+    Ensurer(is_string, ensure_string, ensure_string))
+
+${...}.set_ensurer("XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
+    Ensurer(is_string, ensure_string, ensure_string))
 
 
 def _ret_code_color():
-    try:
-	color_bg = $PROMPT_RET_CODE_BACKGROUND
-    except:
-	color_bg = False
-
-    if color_bg:
-	prefix = 'BACKGROUND'
-    else:
-	prefix = 'BOLD'
-
     if __xonsh__.history.rtns:
-        color = 'blue' if __xonsh__.history.rtns[-1] == 0 else 'red'
+        ret_code = True if __xonsh__.history.rtns[-1] == 0 else False
     else:
-        color = 'blue'
+        ret_code = True
 
     if _ON_WINDOWS:
-        if color == 'blue':
-            return '{%s_INTENSE_CYAN}' % prefix
-        elif color == 'red':
-            return '{%s_INTENSE_RED}' % prefix
+        if ret_code:
+            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_ZERO",
+                    '{BOLD_INTENSE_CYAN}')
+        else:
+            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
+                    '{BOLD_INTENSE_RED}')
     else:
-        if color == 'blue':
-            return '{%s_BLUE}' % prefix
-        elif color == 'red':
-            return '{%s_RED}' % prefix
+        if ret_code:
+            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_ZERO",
+                    '{BOLD_BLUE}')
+        else:
+            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
+                    '{BOLD_RED}')
 
 
 def _ret_code():
@@ -38,7 +41,7 @@ def _ret_code():
 
 
 $PROMPT = $PROMPT.replace('{prompt_end}{NO_COLOR}',
-                          '{ret_code_color}{ret_code}{prompt_end}{NO_COLOR}')
+        '{ret_code_color}{ret_code}{prompt_end}{NO_COLOR}')
 
 
 $PROMPT_FIELDS['ret_code_color'] = _ret_code_color
