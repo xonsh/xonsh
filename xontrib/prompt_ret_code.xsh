@@ -10,26 +10,27 @@ ${...}.set_ensurer("XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
     Ensurer(is_string, ensure_string, ensure_string))
 
 
+if _ON_WINDOWS:
+    $XONTRIB_PROMPT_RET_CODE_COLOR_ZERO = ${...}.get(
+            "XONTRIB_PROMPT_RET_CODE_COLOR_ZERO",
+            '{BOLD_INTENSE_CYAN}')
+    $XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO = ${...}.get(
+            "XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
+            '{BOLD_INTENSE_RED}')
+
+
 def _ret_code_color():
     if __xonsh__.history.rtns:
         ret_code = True if __xonsh__.history.rtns[-1] == 0 else False
     else:
         ret_code = True
 
-    if _ON_WINDOWS:
-        if ret_code:
-            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_ZERO",
-                    '{BOLD_INTENSE_CYAN}')
-        else:
-            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
-                    '{BOLD_INTENSE_RED}')
+    if ret_code:
+	return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_ZERO",
+		'{BOLD_BLUE}')
     else:
-        if ret_code:
-            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_ZERO",
-                    '{BOLD_BLUE}')
-        else:
-            return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
-                    '{BOLD_RED}')
+	return ${...}.get("XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO",
+		'{BOLD_RED}')
 
 
 def _ret_code():
