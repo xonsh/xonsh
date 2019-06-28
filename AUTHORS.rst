@@ -48,6 +48,7 @@ Authors are sorted by number of commits.
 * Oleh Prypin
 * Brian Skinn
 * Will S
+* con-f-use
 * vaaaaanquish
 * Alessio Bogon
 * Yohei Tamura
@@ -115,7 +116,6 @@ Authors are sorted by number of commits.
 * Danmou
 * Niklas Hambüchen
 * Sébastien Pierre
-* con-f-use
 * shadow-light
 * Mark Wiebe
 * Nathan Hoad
@@ -196,6 +196,7 @@ Authors are sorted by number of commits.
 * Ronny Pfannschmidt
 * Troy de Freitas
 * Rodrigo Oliveira
+* Gyuri Horak
 * goodboy
 * Atsushi Morimoto
 

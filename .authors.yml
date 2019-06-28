@@ -32,7 +32,7 @@
   - jamie.bliss@ilq.com
   - jbliss@nextgenerationenrollment.com
   - jamie@ivyleav.es
-  num_commits: 188
+  num_commits: 191
   first_commit: 2016-07-20 14:05:08
   github: astronouth7303
 - name: Cody Scott
@@ -431,7 +431,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2472
+  num_commits: 2481
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -993,7 +993,7 @@
   first_commit: 2019-05-06 14:17:57
 - name: con-f-use
   email: con-f-use@users.noreply.github.com
-  num_commits: 3
+  num_commits: 8
   first_commit: 2019-05-15 04:53:37
 - name: cclauss
   email: cclauss@me.com
@@ -1009,3 +1009,8 @@
   email: 42055707+shadow-light@users.noreply.github.com
   num_commits: 3
   first_commit: 2018-09-16 22:50:24
+- name: Gyuri Horak
+  email: dyuri@horak.hu
+  num_commits: 1
+  first_commit: 2019-06-18 12:00:16
+  github: dyuri
