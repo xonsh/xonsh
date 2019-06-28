@@ -4,6 +4,38 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.7
+====================
+
+**Added:**
+
+* add xontrib (xontrib-readable-traceback)
+* Registered kitty xontrib.
+* The zipapp extra was added to install the importlib.resources backport on <3.7
+
+**Changed:**
+
+* turn off warning on completer
+* xontrib metadata loading is now zipapp safe when possible
+
+**Fixed:**
+
+* Updated py-bash-completion that is vended with xonsh to v0.2.6 which
+  includes a fix completion which uses a subshell environment and a
+  fix for string index error in stripped prefix.
+* Removed obsolte "Alt+." keybinding in xontrib-bashisms that was causing built-in binding to malfunction.
+* Fixed that occurs when type a command before rendering.
+
+**Authors:**
+
+* Anthony Scopatz
+* Jamie Bliss
+* con-f-use
+* vaaaaanquish
+* Gyuri Horak
+
+
+
 v0.9.6
 ====================
 
