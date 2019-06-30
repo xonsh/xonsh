@@ -87,7 +87,7 @@ class PromptToolkit2Shell(BaseShell):
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
-        refresh_interval = refresh_interval if refresh_interval>0 else None
+        refresh_interval = refresh_interval if refresh_interval > 0 else None
         completions_display = env.get("COMPLETIONS_DISPLAY")
         complete_style = self.completion_displays_to_styles[completions_display]
 
