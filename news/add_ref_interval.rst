@@ -1,6 +1,6 @@
 **Added:**
 
-* $PROMPT_REFRESH_INTERVAL: Automatically invalidate the PROMPT every so many.
+* $PROMPT_REFRESH_INTERVAL: Automatically invalidate the PROMPT every so many seconds.
 
 **Changed:**
 

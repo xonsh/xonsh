@@ -86,6 +86,7 @@ class PromptToolkit2Shell(BaseShell):
         env = builtins.__xonsh__.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
+        refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
         completions_display = env.get("COMPLETIONS_DISPLAY")
         complete_style = self.completion_displays_to_styles[completions_display]
 
@@ -137,6 +138,7 @@ class PromptToolkit2Shell(BaseShell):
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
             "include_default_pygments_style": False,
+            "refresh_interval": refresh_interval,
         }
         if builtins.__xonsh__.env.get("COLOR_INPUT"):
             if HAS_PYGMENTS:
@@ -154,11 +156,6 @@ class PromptToolkit2Shell(BaseShell):
                     prompt_args["style"] = merge_styles([style, style_overrides])
                 except (AttributeError, TypeError, ValueError):
                     print_exception()
-
-        prompt_refresh_interval = builtins.__xonsh__.env.get(
-            "PROMPT_REFRESH_INTERVAL")
-        if prompt_refresh_interval.replace('.', '').isdigit():
-            prompt_args["refresh_interval"] = float(prompt_refresh_interval)
 
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()

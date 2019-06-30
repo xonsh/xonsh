@@ -544,6 +544,7 @@ def DEFAULT_ENSURERS():
         "PRETTY_PRINT_RESULTS": (is_bool, to_bool, bool_to_str),
         "PROMPT": (is_string_or_callable, ensure_string, ensure_string),
         "PROMPT_FIELDS": (always_true, None, None),
+        "PROMPT_REFRESH_INTERVAL": (is_float, float, str),
         "PROMPT_TOOLKIT_COLOR_DEPTH": (
             always_false,
             ptk2_color_depth_setter,
@@ -729,6 +730,7 @@ def DEFAULT_VALUES():
         "PATHEXT": [".COM", ".EXE", ".BAT", ".CMD"] if ON_WINDOWS else [],
         "PRETTY_PRINT_RESULTS": True,
         "PROMPT": prompt.default_prompt(),
+        "PROMPT_REFRESH_INTERVAL": None,
         "PROMPT_TOOLKIT_COLOR_DEPTH": "",
         "PTK_STYLE_OVERRIDES": dict(PTK2_STYLE),
         "PUSHD_MINUS": False,
@@ -1051,6 +1053,11 @@ def DEFAULT_DOCS():
             "http://xon.sh/tutorial.html#customizing-the-prompt. "
             "This value is never inherited from parent processes.",
             default="``xonsh.environ.DEFAULT_PROMPT``",
+        ),
+        "PROMPT_REFRESH_INTERVAL": VarDocs(
+            "Evaluate $PROMPT, $RIGHT_PROMPT and $BOTTOM_TOOLBAR every so many seconds."
+            "This param default is None."
+            "And if using this param, $UPDATE_COMPLETIONS_ON_KEYPRESS must be True."
         ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": VarDocs(
             "The color depth used by prompt toolkit 2. Possible values are: "
