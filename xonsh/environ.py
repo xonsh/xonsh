@@ -730,7 +730,7 @@ def DEFAULT_VALUES():
         "PATHEXT": [".COM", ".EXE", ".BAT", ".CMD"] if ON_WINDOWS else [],
         "PRETTY_PRINT_RESULTS": True,
         "PROMPT": prompt.default_prompt(),
-        "PROMPT_REFRESH_INTERVAL": None,
+        "PROMPT_REFRESH_INTERVAL": 0,
         "PROMPT_TOOLKIT_COLOR_DEPTH": "",
         "PTK_STYLE_OVERRIDES": dict(PTK2_STYLE),
         "PUSHD_MINUS": False,
@@ -1056,7 +1056,7 @@ def DEFAULT_DOCS():
         ),
         "PROMPT_REFRESH_INTERVAL": VarDocs(
             "Evaluate $PROMPT, $RIGHT_PROMPT and $BOTTOM_TOOLBAR every so many seconds."
-            "This param default is None."
+            "This param default is zero."
             "And if using this param, $UPDATE_COMPLETIONS_ON_KEYPRESS must be True."
         ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": VarDocs(
