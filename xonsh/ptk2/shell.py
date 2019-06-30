@@ -155,6 +155,11 @@ class PromptToolkit2Shell(BaseShell):
                 except (AttributeError, TypeError, ValueError):
                     print_exception()
 
+        prompt_refresh_interval = builtins.__xonsh__.env.get(
+            "PROMPT_REFRESH_INTERVAL")
+        if prompt_refresh_interval.replace('.', '').isdigit():
+            prompt_args["refresh_interval"] = float(prompt_refresh_interval)
+
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()
         return line
