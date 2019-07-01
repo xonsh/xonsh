@@ -32,7 +32,7 @@ echo __XONSH_FUNCS_END__
 {seterrpostcmd}"""
 
 DEFAULT_BASH_FUNCSCMD = r"""# get function names from declare
-declstr=$(declare -F)
+declstr=$(echo $(declare -F))
 read -r -a decls <<< $declstr
 funcnames=""
 for((n=0;n<${#decls[@]};n++)); do
