@@ -1,6 +1,5 @@
 """Implements a cat command for xonsh."""
 import os
-import stat
 import time
 import builtins
 
@@ -39,7 +38,7 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     enc = env.get("XONSH_ENCODING")
     enc_errors = env.get("XONSH_ENCODING_ERRORS")
     read_size = 0
-    file_size = fobj = None
+    fobj = None
     if fname == "-":
         f = stdin
     elif os.path.isdir(fname):
@@ -49,15 +48,11 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         print("cat: No such file or directory: {}".format(fname), file=err)
         return True, line_count
     else:
-        fstat = os.stat(fname)
-        file_size = fstat.st_size
-        if file_size == 0 and not stat.S_ISREG(fstat.st_mode):
-            file_size = None
         fobj = open(fname, "rb")
         f = xproc.NonBlockingFDReader(fobj.fileno(), timeout=0.1)
     sep = os.linesep.encode(enc, enc_errors)
     last_was_blank = False
-    while file_size is None or read_size < file_size:
+    while True:
         try:
             last_was_blank, line_count, read_size, endnow = _cat_line(
                 f,
