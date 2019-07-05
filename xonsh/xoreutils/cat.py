@@ -15,12 +15,12 @@ def _cat_line(
     if isinstance(_r, str):
         _r = r = _r.encode(enc, enc_errors)
     if r == b"":
-        last_was_blank, line_count, read_size, True
+        return last_was_blank, line_count, read_size, True
     if r.endswith(sep):
         _r = _r[: -len(sep)]
     this_one_blank = _r == b""
     if last_was_blank and this_one_blank and opts["squeeze_blank"]:
-        last_was_blank, line_count, read_size, False
+        return last_was_blank, line_count, read_size, False
     last_was_blank = this_one_blank
     if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
         start = ("%6d " % line_count).encode(enc, enc_errors)
