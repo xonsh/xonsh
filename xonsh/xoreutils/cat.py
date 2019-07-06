@@ -11,12 +11,14 @@ def _cat_line(
     f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size
 ):
     _r = r = f.readline(size=80)
+    restore_newline = False
     if isinstance(_r, str):
         _r = r = _r.encode(enc, enc_errors)
     if r == b"":
         return last_was_blank, line_count, read_size, True
     if r.endswith(sep):
         _r = _r[: -len(sep)]
+        restore_newline = True
     this_one_blank = _r == b""
     if last_was_blank and this_one_blank and opts["squeeze_blank"]:
         return last_was_blank, line_count, read_size, False
@@ -27,6 +29,8 @@ def _cat_line(
         line_count += 1
     if opts["show_ends"]:
         _r = _r + b"$"
+    if restore_newline:
+        _r = _r + sep
     out.buffer.write(_r)
     out.flush()
     read_size += len(r)
