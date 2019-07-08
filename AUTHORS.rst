@@ -32,6 +32,7 @@ Authors are sorted by number of commits.
 * JohnLunzer
 * Paul Goelz
 * David Dotson
+* vaaaaanquish
 * Frank Sachsenheim
 * Kurtis Rader
 * cryzed
@@ -49,7 +50,6 @@ Authors are sorted by number of commits.
 * Brian Skinn
 * Will S
 * con-f-use
-* vaaaaanquish
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
