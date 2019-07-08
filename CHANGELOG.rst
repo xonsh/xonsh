@@ -4,6 +4,22 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.8
+====================
+
+**Fixed:**
+
+* Fixed a bug in sourcing Bash functions, where ``delare -F`` contained
+  newlines, meaning that the ``read`` command that followed it would only
+  pick up the first function declaration. ``echo`` is used to normalize
+  whitespace.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
 v0.9.7
 ====================
 
