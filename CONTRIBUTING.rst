@@ -101,15 +101,14 @@ is open to interpretation.
 * Use absolute imports (``import xonsh.tools``) rather than explicit
   relative imports (``import .tools``). Implicit relative imports
   (``import tools``) are never allowed.
-* Use ``'single quotes'`` for string literals, and
-  ``"""triple double quotes"""`` for docstrings. Double quotes are allowed to
-  prevent single quote escaping, e.g. ``"Y'all c'mon o'er here!"``
+* Use ``"double quotes"`` for string literals, and
+  ``"""triple double quotes"""`` for docstrings.
 * We use sphinx with the numpydoc extension to autogenerate API documentation. Follow
   the `numpydoc`_ standard for docstrings.
 * Simple functions should have simple docstrings.
 * Lines should be at most 80 characters long. The 72 and 79 character
   recommendations from PEP8 are not required here.
-* All Python code should be compliant with Python 3.4+.  At some
+* All Python code should be compliant with Python 3.5+.  At some
   unforeseen date in the future, Python 2.7 support *may* be supported.
 * Tests should be written with pytest using a procedural style. Do not use
   unittest directly or write tests in an object-oriented style.
