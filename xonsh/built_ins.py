@@ -1490,3 +1490,6 @@ class DynamicAccessProxy:
 
     def __call__(self, *args, **kwargs):
         return self.obj.__call__(*args, **kwargs)
+
+    def __dir__(self):
+        return self.obj.__dir__()

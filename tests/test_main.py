@@ -13,7 +13,7 @@ import xonsh.main
 from xonsh.main import XonshMode
 from xonsh.environ import Env
 import pytest
-from tools import TEST_DIR
+from tools import TEST_DIR, skip_if_on_windows
 
 
 def Shell(*args, **kwargs):
@@ -132,6 +132,7 @@ def test_premain_timings_arg(shell):
     xonsh.main.premain(["--timings"])
 
 
+@skip_if_on_windows
 def test_xonsh_failback(shell, monkeypatch, monkeypatch_stderr):
     failback_checker = []
 
