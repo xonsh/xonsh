@@ -1573,7 +1573,6 @@ def unload_proxies():
         "execx",
         "compilex",
         "default_aliases",
-        "events",
     ]
     for name in names:
         if hasattr(builtins, name):
