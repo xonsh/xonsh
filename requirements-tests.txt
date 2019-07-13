@@ -9,3 +9,4 @@ pygments>=2.2
 codecov
 coverage
 black
+pre-commit

@@ -9,3 +9,4 @@ matplotlib
 doctr
 tornado
 black
+pre-commit

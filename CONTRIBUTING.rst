@@ -130,6 +130,10 @@ our tests)::
 
     $ black --check --exclude=xonsh/ply/ xonsh/ xontrib/
 
+To add this as a git pre-commit hook::
+
+    $ pre-commit install
+
 **********
 Imports
 **********
