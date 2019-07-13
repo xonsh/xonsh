@@ -1319,11 +1319,7 @@ def xonsh_builtins(execer=None):
     scope. Likely useful in testing.
     """
     load_builtins(execer=execer)
-    # temporary shims for old __xonsh_*__ builtins
-    load_proxies()
     yield
-    # temporary shims for old __xonsh_*__ builtins
-    unload_proxies()
     unload_builtins()
 
 
@@ -1401,12 +1397,17 @@ class XonshSession:
 
     def link_builtins(self, execer=None):
         # public built-ins
-        builtins.XonshError = self.builtins.XonshError
-        builtins.XonshCalledProcessError = self.builtins.XonshCalledProcessError
-        builtins.evalx = None if execer is None else execer.eval
-        builtins.execx = None if execer is None else execer.exec
-        builtins.compilex = None if execer is None else execer.compile
-        builtins.events = self.builtins.events
+        proxy_mapping = {
+            "XonshError": "__xonsh__.builtins.XonshError",
+            "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
+            "evalx": "__xonsh__.builtins.evalx",
+            "execx": "__xonsh__.builtins.execx",
+            "compilex": "__xonsh__.builtins.compilex",
+            "events": "__xonsh__.builtins.events",
+        }
+        for refname, objname in proxy_mapping.items():
+            proxy = DynamicAccessProxy(refname, objname)
+            setattr(builtins, refname, proxy)
 
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that
@@ -1424,6 +1425,7 @@ class XonshSession:
             "execx",
             "compilex",
             "default_aliases",
+            "events",
         ]
 
         for name in names:
@@ -1488,92 +1490,3 @@ class DynamicAccessProxy:
 
     def __call__(self, *args, **kwargs):
         return self.obj.__call__(*args, **kwargs)
-
-
-class DeprecationWarningProxy:
-    """Proxies access, but warns in the process."""
-
-    def __init__(self, oldname, newname):
-        super().__setattr__("oldname", oldname)
-        super().__setattr__("newname", newname)
-
-    @property
-    def obj(self):
-        """Dynamically grabs object"""
-        names = self.newname.split(".")
-        obj = builtins
-        for name in names:
-            obj = getattr(obj, name)
-        return obj
-
-    def warn(self):
-        """Issues deprecation warning."""
-        warnings.warn(
-            "{} has been deprecated, please use {} instead.".format(
-                self.oldname, self.newname
-            ),
-            DeprecationWarning,
-            stacklevel=3,
-        )
-
-    def __getattr__(self, name):
-        self.warn()
-        return getattr(self.obj, name)
-
-    def __setattr__(self, name, value):
-        self.warn()
-        return super().__setattr__(self.obj, name, value)
-
-    def __delattr__(self, name):
-        self.warn()
-        return delattr(self.obj, name)
-
-    def __getitem__(self, item):
-        self.warn()
-        return self.obj.__getitem__(item)
-
-    def __setitem__(self, item, value):
-        self.warn()
-        return self.obj.__setitem__(item, value)
-
-    def __delitem__(self, item):
-        self.warn()
-        del self.obj[item]
-
-    def __call__(self, *args, **kwargs):
-        self.warn()
-        return self.obj.__call__(*args, **kwargs)
-
-
-def load_proxies():
-    """Loads builtin dynamic access proxies.
-    Also puts temporary shims in place for `__xonsh_*__` builtins.
-    """
-    proxy_mapping = {
-        "XonshError": "__xonsh__.builtins.XonshError",
-        "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
-        "evalx": "__xonsh__.builtins.evalx",
-        "execx": "__xonsh__.builtins.execx",
-        "compilex": "__xonsh__.builtins.compilex",
-        "events": "__xonsh__.builtins.events",
-    }
-    for refname, objname in proxy_mapping.items():
-        proxy = DynamicAccessProxy(refname, objname)
-        setattr(builtins, refname, proxy)
-
-
-def unload_proxies():
-    """Removes the xonsh builtins (proxies) from the Python builtins.
-    """
-
-    names = [
-        "XonshError",
-        "XonshCalledProcessError",
-        "evalx",
-        "execx",
-        "compilex",
-        "default_aliases",
-    ]
-    for name in names:
-        if hasattr(builtins, name):
-            delattr(builtins, name)

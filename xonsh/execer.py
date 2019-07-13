@@ -16,7 +16,7 @@ from xonsh.tools import (
     balanced_parens,
     starting_whitespace,
 )
-from xonsh.built_ins import load_builtins, unload_builtins, load_proxies, unload_proxies
+from xonsh.built_ins import load_builtins, unload_builtins
 
 
 class Execer(object):
@@ -60,11 +60,9 @@ class Execer(object):
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
         load_builtins(execer=self, ctx=xonsh_ctx)
-        load_proxies()
 
     def __del__(self):
         if self.unload:
-            unload_proxies()
             unload_builtins()
 
     def parse(self, input, ctx, mode="exec", filename=None, transform=True):

@@ -26,7 +26,7 @@ from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context, make_args_env
-from xonsh.built_ins import XonshSession, load_builtins, load_proxies
+from xonsh.built_ins import XonshSession, load_builtins
 
 
 events.transmogrify("on_post_init", "LoadEvent")
@@ -513,7 +513,6 @@ def setup(
         execer = Execer(xonsh_ctx=ctx)
         builtins.__xonsh__ = XonshSession(ctx=ctx, execer=execer)
         load_builtins(ctx=ctx, execer=execer)
-        load_proxies()
         builtins.__xonsh__.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
     builtins.__xonsh__.env.update(env)
     install_import_hooks()
