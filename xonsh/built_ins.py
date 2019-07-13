@@ -1561,95 +1561,18 @@ def load_proxies():
         proxy = DynamicAccessProxy(refname, objname)
         setattr(builtins, refname, proxy)
 
-    deprecated_mapping = {
-        "__xonsh_env__": "__xonsh__.env",
-        "__xonsh_history__": "__xonsh__.history",
-        "__xonsh_ctx__": "__xonsh__.ctx",
-        "__xonsh_help__": "__xonsh__.help",
-        "__xonsh_superhelp__": "__xonsh__.superhelp",
-        "__xonsh_pathsearch__": "__xonsh__.pathsearch",
-        "__xonsh_globsearch__": "__xonsh__.globsearch",
-        "__xonsh_regexsearch__": "__xonsh__.regexsearch",
-        "__xonsh_glob__": "__xonsh__.glob",
-        "__xonsh_expand_path__": "__xonsh__.expand_path",
-        "__xonsh_exit__": "__xonsh__.exit",
-        "__xonsh_stdout_uncaptured__": "__xonsh__.stdout_uncaptured",
-        "__xonsh_stderr_uncaptured__": "__xonsh__.stderr_uncaptured",
-        "__xonsh_subproc_captured_stdout__": "__xonsh__.subproc_captured_stdout",
-        "__xonsh_subproc_captured_inject__": "__xonsh__.subproc_captured_inject",
-        "__xonsh_subproc_captured_object__": "__xonsh__.subproc_captured_object",
-        "__xonsh_subproc_captured_hiddenobject__": "__xonsh__.subproc_captured_hiddenobject",
-        "__xonsh_subproc_uncaptured__": "__xonsh__.subproc_uncaptured",
-        "__xonsh_execer__": "__xonsh__.execer",
-        "__xonsh_commands_cache__": "__xonsh__.commands_cache",
-        "__xonsh_all_jobs__": "__xonsh__.all_jobs",
-        "__xonsh_ensure_list_of_strs__": "__xonsh__.ensure_list_of_strs",
-        "__xonsh_list_of_strs_or_callables__": "__xonsh__.list_of_strs_or_callables",
-        "__xonsh_list_of_list_of_strs_outer_product__": "__xonsh__.list_of_list_of_strs_outer_product",
-        "__xonsh_completers__": "__xonsh__.completers",
-        "__xonsh_call_macro__": "__xonsh__.call_macro",
-        "__xonsh_enter_macro__": "__xonsh__.enter_macro",
-        "__xonsh_path_literal__": "__xonsh__.path_literal",
-    }
-    for badname, goodname in deprecated_mapping.items():
-        proxy = DeprecationWarningProxy(badname, goodname)
-        setattr(builtins, badname, proxy)
-
-    if hasattr(builtins.__xonsh__, "pyexit"):
-        builtins.__xonsh_pyexit__ = DeprecationWarningProxy(
-            "builtins.__xonsh_pyexit__", "builtins.__xonsh__.pyexit"
-        )
-    if hasattr(builtins.__xonsh__, "quit"):
-        builtins.__xonsh_pyquit__ = DeprecationWarningProxy(
-            "builtins.__xonsh_pyquit__", "builtins.__xonsh__.pyquit"
-        )
-
 
 def unload_proxies():
     """Removes the xonsh builtins (proxies) from the Python builtins.
     """
-    if hasattr(builtins, "__xonsh_pyexit__"):
-        builtins.exit = builtins.__xonsh_pyexit__
-    if hasattr(builtins, "__xonsh_pyquit__"):
-        builtins.quit = builtins.__xonsh_pyquit__
 
     names = [
-        "__xonsh_env__",
-        "__xonsh_ctx__",
-        "__xonsh_help__",
-        "__xonsh_superhelp__",
-        "__xonsh_pathsearch__",
-        "__xonsh_globsearch__",
-        "__xonsh_regexsearch__",
-        "__xonsh_glob__",
-        "__xonsh_expand_path__",
-        "__xonsh_exit__",
-        "__xonsh_stdout_uncaptured__",
-        "__xonsh_stderr_uncaptured__",
-        "__xonsh_pyexit__",
-        "__xonsh_pyquit__",
-        "__xonsh_subproc_captured_stdout__",
-        "__xonsh_subproc_captured_inject__",
-        "__xonsh_subproc_captured_object__",
-        "__xonsh_subproc_captured_hiddenobject__",
-        "__xonsh_subproc_uncaptured__",
-        "__xonsh_execer__",
-        "__xonsh_commands_cache__",
-        "__xonsh_completers__",
-        "__xonsh_call_macro__",
-        "__xonsh_enter_macro__",
-        "__xonsh_path_literal__",
         "XonshError",
         "XonshCalledProcessError",
         "evalx",
         "execx",
         "compilex",
         "default_aliases",
-        "__xonsh_all_jobs__",
-        "__xonsh_ensure_list_of_strs__",
-        "__xonsh_list_of_strs_or_callables__",
-        "__xonsh_list_of_list_of_strs_outer_product__",
-        "__xonsh_history__",
     ]
     for name in names:
         if hasattr(builtins, name):
