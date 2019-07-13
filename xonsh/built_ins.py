@@ -563,6 +563,11 @@ class SubprocSpec:
             raise XonshError(e.format(self.cmd[0]))
         except FileNotFoundError:
             cmd0 = self.cmd[0]
+            if len(self.cmd) == 1 and cmd0.endswith("?"):
+                with contextlib.suppress(OSError):
+                    return self.cls(
+                        ["man", cmd0.rstrip("?")], bufsize=bufsize, **kwargs
+                    )
             e = "xonsh: subprocess mode: command not found: {0}".format(cmd0)
             env = builtins.__xonsh__.env
             sug = suggest_commands(cmd0, env, builtins.aliases)
