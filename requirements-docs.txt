@@ -8,3 +8,4 @@ pyzmq
 matplotlib
 doctr
 tornado
+black

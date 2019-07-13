@@ -125,6 +125,11 @@ If you want to lint the entire code base run::
 
     $ pylint $(find tests xonsh -name \*.py | sort)
 
+We also use ``black`` for formatting the code base (which includes running in
+our tests)::
+
+    $ black --check --exclude=xonsh/ply/ xonsh/ xontrib/
+
 **********
 Imports
 **********
