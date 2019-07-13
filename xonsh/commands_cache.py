@@ -512,6 +512,6 @@ def default_threadable_predictors():
         "yes": predict_false,
         "zip": predict_true,
         "zipinfo": predict_true,
-        "zsh": predict_shell
+        "zsh": predict_shell,
     }
     return predictors
