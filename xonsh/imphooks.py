@@ -108,7 +108,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     def get_data(self, path):
         """Gets the bytes for a path."""
-        raise NotImplementedError
+        raise OSError
 
     def get_code(self, fullname):
         """Gets the code object for a xonsh file."""
@@ -116,16 +116,22 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         if filename is None:
             msg = "xonsh file {0!r} could not be found".format(fullname)
             raise ImportError(msg)
-        with open(filename, "rb") as f:
-            src = f.read()
-        enc = find_source_encoding(src)
-        src = src.decode(encoding=enc)
-        src = src if src.endswith("\n") else src + "\n"
+        src = self.get_source(filename)
         execer = self.execer
         execer.filename = filename
         ctx = {}  # dummy for modules
         code = execer.compile(src, glbs=ctx, locs=ctx)
         return code
+
+    def get_source(self, fullpath):
+        if fullpath is None:
+            raise ImportError("could not find fullpath to module")
+        with open(fullpath, "rb") as f:
+            src = f.read()
+        enc = find_source_encoding(src)
+        src = src.decode(encoding=enc)
+        src = src if src.endswith("\n") else src + "\n"
+        return src
 
 
 #
