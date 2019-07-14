@@ -119,6 +119,9 @@ class XonshConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         json.dump(output, self.wfile)
 
 
+where = os.path.dirname(sys.argv[0])
+os.chdir(where)
+
 PORT = 8000
 while PORT <= 9000:
     try:
@@ -137,7 +140,19 @@ if PORT > 9000:
     sys.exit(-1)
 
 
-webbrowser.open("http://localhost:%d" % PORT)
+url = "http://localhost:{0}".format(PORT)
 
-print("serving at port", PORT)
-httpd.serve_forever()
+print("Web config started at '{0}'. Hit enter to stop.".format(url))
+webbrowser.open(url)
+
+# Select on stdin and httpd
+stdin_no = sys.stdin.fileno()
+while True:
+    ready_read = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
+    if ready_read[0][0] < 1:
+        print("Shutting down.")
+        # Consume the newline so it doesn't get printed by the caller
+        sys.stdin.readline()
+        break
+    else:
+        httpd.handle_request()
