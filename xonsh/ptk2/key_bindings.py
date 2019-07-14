@@ -304,8 +304,8 @@ def load_xonsh_bindings(key_bindings):
         b.validate_and_handle()
         xonsh_exit([])
 
-    @handle(Keys.ControlJ, filter=IsMultiline())
-    @handle(Keys.ControlM, filter=IsMultiline())
+    @handle(Keys.ControlJ, filter=IsMultiline() & insert_mode)
+    @handle(Keys.ControlM, filter=IsMultiline() & insert_mode)
     def multiline_carriage_return(event):
         """ Wrapper around carriage_return multiline parser """
         b = event.cli.current_buffer
