@@ -54,6 +54,7 @@ class Execer(object):
         parser_args = parser_args or {}
         self.parser = Parser(**parser_args)
         self.filename = filename
+        self._default_filename = filename
         self.debug_level = debug_level
         self.unload = unload
         self.scriptcache = scriptcache
@@ -127,6 +128,7 @@ class Execer(object):
         """
         if filename is None:
             filename = self.filename
+            self.filename = self._default_filename
         if glbs is None or locs is None:
             frame = inspect.stack()[stacklevel][0]
             glbs = frame.f_globals if glbs is None else glbs
