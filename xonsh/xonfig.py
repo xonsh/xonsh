@@ -616,6 +616,12 @@ def _tutorial(args):
     webbrowser.open("http://xon.sh/tutorial.html")
 
 
+def _web(args):
+    import os
+
+    os.system("python web_config/webconfig.py")
+
+
 @functools.lru_cache(1)
 def _xonfig_create_parser():
     p = argparse.ArgumentParser(
@@ -647,6 +653,7 @@ def _xonfig_create_parser():
         "style", nargs="?", default=None, help="style to preview, default: <current>"
     )
     subp.add_parser("tutorial", help="Launch tutorial in browser.")
+    subp.add_parser("web", help="Launch configurator in browser.")
     return p
 
 
@@ -655,6 +662,7 @@ _XONFIG_MAIN_ACTIONS = {
     "wizard": _wizard,
     "styles": _styles,
     "colors": _colors,
+    "web": _web,
     "tutorial": _tutorial,
 }
 
