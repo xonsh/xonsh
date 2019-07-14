@@ -84,7 +84,6 @@ if ON_WINDOWS:
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
         """
-        _clear_dead_jobs()
         active_task = get_next_task()
         # Return when there are no foreground active task
         if active_task is None:
@@ -187,7 +186,6 @@ else:
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
         """
-        _clear_dead_jobs()
         active_task = get_next_task()
         # Return when there are no foreground active task
         if active_task is None:
@@ -233,6 +231,7 @@ def _safe_wait_for_active_job(last_task=None, backgrounded=False):
 
 def get_next_task():
     """ Get the next active task and put it on top of the queue"""
+    _clear_dead_jobs()
     selected_task = None
     for tid in tasks:
         task = get_task(tid)
