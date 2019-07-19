@@ -28,10 +28,10 @@ Authors are sorted by number of commits.
 * Joel Gerber
 * Bernardas Ališauskas
 * Derek Thomas
+* David Dotson
 * VHarisop
 * JohnLunzer
 * Paul Goelz
-* David Dotson
 * vaaaaanquish
 * Frank Sachsenheim
 * Kurtis Rader
@@ -100,6 +100,7 @@ Authors are sorted by number of commits.
 * Fabien Dubosson
 * Kale Kundert
 * Andrés García García
+* Alexander Steffen
 * Jan Schulz
 * Nickolay Bukreyev
 * Samuel Dion-Girardeau
@@ -197,6 +198,8 @@ Authors are sorted by number of commits.
 * Troy de Freitas
 * Rodrigo Oliveira
 * Gyuri Horak
+* Ke Zhang
+* Daniel Smith
 * goodboy
 * Atsushi Morimoto
 

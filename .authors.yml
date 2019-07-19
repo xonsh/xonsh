@@ -9,7 +9,7 @@
   - '@vaaaaanquish'
   - vaaaaanquish
   - 6syun9
-  num_commits: 14
+  num_commits: 15
   first_commit: 2018-07-17 01:14:04
   github: vaaaaanquish
 - name: Dan Allan
@@ -61,7 +61,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 505
+  num_commits: 509
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -432,7 +432,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2485
+  num_commits: 2491
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -884,7 +884,7 @@
   first_commit: 2015-03-17 03:34:36
 - name: David Dotson
   email: dotsdl@gmail.com
-  num_commits: 15
+  num_commits: 19
   first_commit: 2018-07-14 12:53:07
   github: dotsdl
 - name: anula
@@ -1019,3 +1019,14 @@
   email: kezhang@bnl.gov
   aliases:
   - ke-zhang-rd
+  num_commits: 1
+  first_commit: 2019-07-13 15:02:41
+- name: Daniel Smith
+  email: malorian@me.com
+  num_commits: 1
+  first_commit: 2019-07-13 12:11:59
+- name: Alexander Steffen
+  email: devel.20.webmeister@spamgourmet.com
+  num_commits: 4
+  first_commit: 2019-07-13 04:44:55
+  github: webmeister
