@@ -503,6 +503,7 @@ def DEFAULT_ENSURERS():
         ),
         "COMPLETIONS_MENU_ROWS": (is_int, int, str),
         "COMPLETION_QUERY_LIMIT": (is_int, int, str),
+        "COMPLETION_IN_THREAD": (is_bool, to_bool, bool_to_str),
         "DIRSTACK_SIZE": (is_int, int, str),
         "DOTGLOB": (is_bool, to_bool, bool_to_str),
         "DYNAMIC_CWD_WIDTH": (
@@ -700,6 +701,7 @@ def DEFAULT_VALUES():
         "COMPLETIONS_DISPLAY": "multi",
         "COMPLETIONS_MENU_ROWS": 5,
         "COMPLETION_QUERY_LIMIT": 100,
+        "COMPLETION_IN_THREAD": False,
         "DIRSTACK_SIZE": 20,
         "DOTGLOB": False,
         "DYNAMIC_CWD_WIDTH": (float("inf"), "c"),
@@ -898,6 +900,11 @@ def DEFAULT_DOCS():
         "COMPLETION_QUERY_LIMIT": VarDocs(
             "The number of completions to display before the user is asked "
             "for confirmation."
+        ),
+        "COMPLETION_IN_THREAD": VarDocs(
+            "When generating the completions takes a lot of time, "
+            "it’s better to do this in a background thed."
+            "When this is True, background theads is used for completion."
         ),
         "DIRSTACK_SIZE": VarDocs("Maximum size of the directory stack."),
         "DOTGLOB": VarDocs(
