@@ -193,7 +193,7 @@ Dependencies
 
 Prep your environment for running the tests::
 
-    $ pip install -r requirements-tests.txt
+    $ pip install -r requirements/tests.txt
 
 
 ----------------------------------
