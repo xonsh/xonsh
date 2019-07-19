@@ -16,7 +16,7 @@ from xonsh.tools import (
     balanced_parens,
     starting_whitespace,
 )
-from xonsh.built_ins import load_builtins, unload_builtins, load_proxies, unload_proxies
+from xonsh.built_ins import load_builtins, unload_builtins
 
 
 class Execer(object):
@@ -54,17 +54,16 @@ class Execer(object):
         parser_args = parser_args or {}
         self.parser = Parser(**parser_args)
         self.filename = filename
+        self._default_filename = filename
         self.debug_level = debug_level
         self.unload = unload
         self.scriptcache = scriptcache
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
         load_builtins(execer=self, ctx=xonsh_ctx)
-        load_proxies()
 
     def __del__(self):
         if self.unload:
-            unload_proxies()
             unload_builtins()
 
     def parse(self, input, ctx, mode="exec", filename=None, transform=True):
@@ -127,6 +126,7 @@ class Execer(object):
         """
         if filename is None:
             filename = self.filename
+            self.filename = self._default_filename
         if glbs is None or locs is None:
             frame = inspect.stack()[stacklevel][0]
             glbs = frame.f_globals if glbs is None else glbs

@@ -9,7 +9,7 @@
   - '@vaaaaanquish'
   - vaaaaanquish
   - 6syun9
-  num_commits: 7
+  num_commits: 14
   first_commit: 2018-07-17 01:14:04
   github: vaaaaanquish
 - name: Dan Allan
@@ -431,7 +431,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2481
+  num_commits: 2485
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
