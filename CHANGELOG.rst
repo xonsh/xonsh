@@ -4,6 +4,49 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.9
+====================
+
+**Added:**
+
+* $COMPLETION_IN_THREAD: When this is True, background theads is used for completion.
+* Open man page when requesting help for subprocess commands, e.g. using ``sh?``
+* Add several cmds/tools for predict list
+
+**Changed:**
+
+* Changed ``XonshSession.link_builtins`` to set a ``DynamicAccessProxy`` for each ``builtin`` link
+* ``events`` is now unlinked from ``builtins``
+
+**Removed:**
+
+* Removed ``DeprecationWarningProxy``; no longer needed
+* Removed ``load_proxies`` and ``unload_proxies``; moved functionality to ``XonshSession.link_builtins``, ``XonshSession.unlink_builtins``, respectively.
+* Removed deprecated ``builtin.__xonsh_*__`` alises, please use ``builtins.__xonsh__.*`` instead.
+
+**Fixed:**
+
+* Added proxied ``__dir__`` method to ``DynamicAccessProxy`` to restore
+  tab-completion for objects that use the proxy (especially ``events``)
+* Avoid displaying finished tasks in title.
+* ``inspect.getsource`` now works correctly and the ``__xonsh__.execer`` resets
+  ``<filename>`` correctly.  This was causing several very strange buggy
+  behaviors.
+* Hitting ``Enter`` while ``$VI_MODE=True`` now executes the current code block
+  irrespective of cursor position
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* David Dotson
+* vaaaaanquish
+* Alexander Steffen
+* Ke Zhang
+* Daniel Smith
+
+
+
 v0.9.8
 ====================
 
