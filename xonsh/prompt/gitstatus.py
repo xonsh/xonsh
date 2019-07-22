@@ -187,20 +187,23 @@ def gitstatus_prompt():
     if s.operations:
         ret += _get_def("OPERATION") + "|" + "|".join(s.operations)
     ret += "|"
-    if s.staged > 0:
-        ret += _get_def("STAGED") + str(s.staged) + "{NO_COLOR}"
-    if s.conflicts > 0:
-        ret += _get_def("CONFLICTS") + str(s.conflicts) + "{NO_COLOR}"
-    if s.changed > 0:
-        ret += _get_def("CHANGED") + str(s.changed) + "{NO_COLOR}"
-    if s.deleted > 0:
-        ret += _get_def("DELETED") + str(s.deleted) + "{NO_COLOR}"
-    if s.untracked > 0:
-        ret += _get_def("UNTRACKED") + str(s.untracked) + "{NO_COLOR}"
-    if s.stashed > 0:
-        ret += _get_def("STASHED") + str(s.stashed) + "{NO_COLOR}"
+    for category in (
+        "staged",
+        "conflicts",
+        "changed",
+        "deleted",
+        "untracked",
+        "stashed",
+    ):
+        symbol = _get_def(category.upper())
+        value = getattr(s, category)
+        if symbol and value > 0:
+            ret += symbol + str(value) + "{NO_COLOR}"
     if s.staged + s.conflicts + s.changed + s.deleted + s.untracked + s.stashed == 0:
-        ret += _get_def("CLEAN") + "{NO_COLOR}"
+        symbol = _get_def("CLEAN")
+        if symbol:
+            ret += symbol + "{NO_COLOR}"
+    ret = ret.rstrip("|")
     ret += "{NO_COLOR}"
 
     return ret
