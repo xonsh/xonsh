@@ -24,4 +24,4 @@ In addition, xonsh integrates with Jupyter, an in-browser REPL, enabling the use
 Development Dependencies
 ------------------------
 
-If you want to develop xonsh, it is extremely recommended to install the dependencies listed in `requirements-docs.txt <https://github.com/xonsh/xonsh/blob/master/requirements-docs.txt>`_ (to generate documentation) and `requirements-tests.txt <https://github.com/xonsh/xonsh/blob/master/requirements-tests.txt>`_ (to run the test suite).
+If you want to develop xonsh, it is extremely recommended to install the dependencies listed in `requirements/docs.txt <https://github.com/xonsh/xonsh/blob/master/requirements/docs.txt>`_ (to generate documentation) and `requirements/tests.txt <https://github.com/xonsh/xonsh/blob/master/requirements/tests.txt>`_ (to run the test suite).

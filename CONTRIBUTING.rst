@@ -125,6 +125,15 @@ If you want to lint the entire code base run::
 
     $ pylint $(find tests xonsh -name \*.py | sort)
 
+We also use ``black`` for formatting the code base (which includes running in
+our tests)::
+
+    $ black --check --exclude=xonsh/ply/ xonsh/ xontrib/
+
+To add this as a git pre-commit hook::
+
+    $ pre-commit install
+
 **********
 Imports
 **********
@@ -184,7 +193,7 @@ Dependencies
 
 Prep your environment for running the tests::
 
-    $ pip install -r requirements-tests.txt
+    $ pip install -r requirements/tests.txt
 
 
 ----------------------------------

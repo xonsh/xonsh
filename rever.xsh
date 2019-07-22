@@ -22,9 +22,9 @@ $TAG_TARGET = 'master'
 $GHPAGES_REPO = 'git@github.com:xonsh/xonsh-docs.git'
 
 $DOCKER_APT_DEPS = ['man']
-with open('requirements-tests.txt') as f:
+with open('requirements/tests.txt') as f:
     conda_deps = f.read().split()
-with open('requirements-docs.txt') as f:
+with open('requirements/docs.txt') as f:
     conda_deps += f.read().split()
 for delimiter in '=<>':
     conda_deps = {d.lower().split(delimiter)[0] for d in conda_deps}
