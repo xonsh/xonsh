@@ -1,6 +1,5 @@
 """Implements a cat command for xonsh."""
 import os
-import stat
 import time
 import builtins
 
@@ -12,15 +11,17 @@ def _cat_line(
     f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size
 ):
     _r = r = f.readline(size=80)
+    restore_newline = False
     if isinstance(_r, str):
         _r = r = _r.encode(enc, enc_errors)
     if r == b"":
-        last_was_blank, line_count, read_size, True
+        return last_was_blank, line_count, read_size, True
     if r.endswith(sep):
         _r = _r[: -len(sep)]
+        restore_newline = True
     this_one_blank = _r == b""
     if last_was_blank and this_one_blank and opts["squeeze_blank"]:
-        last_was_blank, line_count, read_size, False
+        return last_was_blank, line_count, read_size, False
     last_was_blank = this_one_blank
     if opts["number_all"] or (opts["number_nonblank"] and not this_one_blank):
         start = ("%6d " % line_count).encode(enc, enc_errors)
@@ -28,6 +29,8 @@ def _cat_line(
         line_count += 1
     if opts["show_ends"]:
         _r = _r + b"$"
+    if restore_newline:
+        _r = _r + sep
     out.buffer.write(_r)
     out.flush()
     read_size += len(r)
@@ -49,9 +52,8 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         print("cat: No such file or directory: {}".format(fname), file=err)
         return True, line_count
     else:
-        fstat = os.stat(fname)
-        file_size = fstat.st_size
-        if file_size == 0 and not stat.S_ISREG(fstat.st_mode):
+        file_size = os.stat(fname).st_size
+        if file_size == 0:
             file_size = None
         fobj = open(fname, "rb")
         f = xproc.NonBlockingFDReader(fobj.fileno(), timeout=0.1)
