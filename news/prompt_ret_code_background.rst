@@ -4,8 +4,7 @@
 
 **Changed:**
 
-* added $PROMPT_RET_CODE_BACKGROUND which causes the prompt_ret_code xontrib to
-  change background rather than foreground color when true.
+* added ``$XONTRIB_PROMPT_RET_CODE_COLOR_ZERO`` and ``$XONTRIB_PROMPT_RET_CODE_COLOR_NONZERO`` which can be used to set the color format for the prompt_ret_code xontrib.
 
 **Deprecated:**
 
