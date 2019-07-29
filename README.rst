@@ -14,10 +14,6 @@ xonsh
 .. image:: https://circleci.com/gh/xonsh/xonsh.svg?style=shield
     :target: https://circleci.com/gh/xonsh/xonsh
 
-.. image:: https://landscape.io/github/xonsh/xonsh/master/landscape.svg?style=flat
-    :target: https://landscape.io/github/xonsh/xonsh/master
-    :alt: Code Health
-
 .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/xonsh/xonsh
 
