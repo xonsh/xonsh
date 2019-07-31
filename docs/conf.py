@@ -440,3 +440,7 @@ make_events()
 builtins.__xonsh__.history = None
 builtins.__xonsh__.env = {}
 builtins.__xonsh__.commands_cache = CommandsCache()
+
+
+def setup(app):
+    app.add_stylesheet("custom.css")
