@@ -155,6 +155,7 @@ if not on_rtd:
         'sidebarwidth': '322px',
         'sidebarbgcolor': '#e7e7ff',
         #'googleanalytics_id': 'UA-41934829-1',
+        "inline_admonitions": True,
         'stickysidebar': False,
         'highlighttoc': False,
         'externalrefs': False,
