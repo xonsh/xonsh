@@ -830,14 +830,21 @@ def command_not_found(cmd):
     """Uses the debian/ubuntu command-not-found utility to suggest packages for a
     command that cannot currently be found.
     """
+    import shutil
+
     if not ON_LINUX:
         return ""
-    elif not os.path.isfile("/usr/lib/command-not-found"):
+
+    cnf = shutil.which("command-not-found")
+    if cnf is None:
         # utility is not on PATH
         return ""
-    c = "/usr/lib/command-not-found {0}; exit 0"
+    c = "{0} {1}; exit 0"
     s = subprocess.check_output(
-        c.format(cmd), universal_newlines=True, stderr=subprocess.STDOUT, shell=True
+        c.format(cnf, cmd),
+        universal_newlines=True,
+        stderr=subprocess.STDOUT,
+        shell=True,
     )
     s = "\n".join(s.rstrip().splitlines()).strip()
     return s
