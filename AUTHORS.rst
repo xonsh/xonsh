@@ -202,5 +202,6 @@ Authors are sorted by number of commits.
 * Daniel Smith
 * goodboy
 * Atsushi Morimoto
+* Caleb Hattingh
 
 
