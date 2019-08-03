@@ -358,7 +358,7 @@ class Vox(collections.abc.Mapping):
             self.deactivate()
 
         type(self).oldvars = {"PATH": list(env["PATH"])}
-        env["PATH"].insert(0, ve.bin)
+        env["PATH"].insert(0, os.path.abspath(ve.bin))
         env["VIRTUAL_ENV"] = ve.env
         if "PYTHONHOME" in env:
             type(self).oldvars["PYTHONHOME"] = env.pop("PYTHONHOME")
