@@ -88,7 +88,7 @@ def _mkvenv(env_dir):
 
     This only cares about the platform. No filesystem calls are made.
     """
-    env_dir = os.path.normpath(env_dir)
+    env_dir = os.path.abspath(env_dir)
     if ON_WINDOWS:
         binname = os.path.join(env_dir, "Scripts")
         incpath = os.path.join(env_dir, "Include")
@@ -358,7 +358,7 @@ class Vox(collections.abc.Mapping):
             self.deactivate()
 
         type(self).oldvars = {"PATH": list(env["PATH"])}
-        env["PATH"].insert(0, os.path.abspath(ve.bin))
+        env["PATH"].insert(0, ve.bin)
         env["VIRTUAL_ENV"] = ve.env
         if "PYTHONHOME" in env:
             type(self).oldvars["PYTHONHOME"] = env.pop("PYTHONHOME")
