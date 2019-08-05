@@ -86,6 +86,9 @@ class PromptToolkit2Shell(BaseShell):
         env = builtins.__xonsh__.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
+        refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
+        refresh_interval = refresh_interval if refresh_interval > 0 else None
+        complete_in_thread = env.get("COMPLETION_IN_THREAD")
         completions_display = env.get("COMPLETIONS_DISPLAY")
         complete_style = self.completion_displays_to_styles[completions_display]
 
@@ -137,6 +140,8 @@ class PromptToolkit2Shell(BaseShell):
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
             "include_default_pygments_style": False,
+            "refresh_interval": refresh_interval,
+            "complete_in_thread": complete_in_thread,
         }
         if builtins.__xonsh__.env.get("COLOR_INPUT"):
             if HAS_PYGMENTS:
@@ -252,8 +257,8 @@ class PromptToolkit2Shell(BaseShell):
         width = width - 1
         dots = builtins.__xonsh__.env.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
-        if dots is None:
-            return [(Token, " " * (width + 1))]
+        if not dots:
+            return ""
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:

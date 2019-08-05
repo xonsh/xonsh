@@ -231,7 +231,7 @@ class CommandsCache(cabc.Mapping):
             # we get the original cmd or alias name
             path, _ = self.lazyget(name, (None, None))
             if path is None:
-                return True
+                return predict_true
             else:
                 name = pathbasename(path)
             if name not in predictors:
@@ -274,7 +274,9 @@ class CommandsCache(cabc.Mapping):
         alss = getattr(builtins, "aliases", dict())
         while cmd0 in alss:
             alias_name = alss[cmd0]
-            if not isinstance(alias_name, list):
+            if isinstance(alias_name, (str, bytes)) or not isinstance(
+                alias_name, cabc.Sequence
+            ):
                 return predict_true
             for arg in alias_name[:0:-1]:
                 first_args.insert(0, arg)
@@ -378,9 +380,9 @@ def predict_shell(args):
 @lazyobject
 def HELP_VER_PREDICTOR_PARSER():
     p = argparse.ArgumentParser("cmd", add_help=False)
-    p.add_argument("-h", "--help", dest="help", action="store_true", default=None)
+    p.add_argument("-h", "--help", dest="help", nargs="?", action="store", default=None)
     p.add_argument(
-        "-v", "-V", "--version", dest="version", action="store_true", default=None
+        "-v", "-V", "--version", dest="version", nargs="?", action="store", default=None
     )
     return p
 
@@ -439,19 +441,24 @@ def default_threadable_predictors():
     """
     # alphabetical, for what it is worth.
     predictors = {
-        "aurman": predict_false,
         "asciinema": predict_help_ver,
+        "aurman": predict_false,
+        "awk": predict_true,
         "bash": predict_shell,
-        "csh": predict_shell,
+        "cat": predict_false,
         "clear": predict_false,
         "cls": predict_false,
         "cmd": predict_shell,
         "cryptop": predict_false,
+        "cryptsetup": predict_true,
+        "csh": predict_shell,
         "curl": predict_true,
+        "emacsclient": predict_false,
         "env": predict_env,
         "ex": predict_false,
-        "emacsclient": predict_false,
         "fish": predict_shell,
+        "gawk": predict_true,
+        "git": predict_true,
         "gvim": predict_help_ver,
         "hg": predict_hg,
         "htop": predict_help_ver,
@@ -460,38 +467,51 @@ def default_threadable_predictors():
         "less": predict_help_ver,
         "ls": predict_true,
         "man": predict_help_ver,
+        "mc": predict_false,
         "more": predict_help_ver,
-        "mvim": predict_help_ver,
         "mutt": predict_help_ver,
+        "mvim": predict_help_ver,
         "nano": predict_help_ver,
+        "nmcli": predict_true,
         "nvim": predict_false,
         "ponysay": predict_help_ver,
         "psql": predict_false,
+        "push": predict_shell,
+        "pv": predict_false,
         "python": predict_shell,
         "python2": predict_shell,
         "python3": predict_shell,
-        "repo": predict_help_ver,
         "ranger": predict_help_ver,
+        "repo": predict_help_ver,
         "rview": predict_false,
         "rvim": predict_false,
+        "rwt": predict_shell,
         "scp": predict_false,
         "sh": predict_shell,
         "ssh": predict_false,
         "startx": predict_false,
         "sudo": predict_help_ver,
+        "sudoedit": predict_help_ver,
+        "systemctl": predict_true,
         "tcsh": predict_shell,
         "telnet": predict_false,
-        "tput": predict_false,
         "top": predict_help_ver,
+        "tput": predict_false,
+        "udisksctl": predict_true,
+        "unzip": predict_true,
         "vi": predict_false,
         "view": predict_false,
         "vim": predict_false,
         "vimpager": predict_help_ver,
         "weechat": predict_help_ver,
+        "wget": predict_true,
         "xclip": predict_help_ver,
         "xo": predict_help_ver,
-        "xonsh": predict_shell,
         "xon.sh": predict_shell,
+        "xonsh": predict_shell,
+        "yes": predict_false,
+        "zip": predict_true,
+        "zipinfo": predict_true,
         "zsh": predict_shell,
     }
     return predictors

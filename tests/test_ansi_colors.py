@@ -5,6 +5,7 @@ from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
     ansi_reverse_style,
     ansi_color_name_to_escape_code,
+    ansi_color_style_names,
 )
 
 
@@ -119,3 +120,16 @@ def test_ansi_reverse_style(key, value):
 def test_ansi_color_escape_code_to_name(inp, exp):
     obs = ansi_color_escape_code_to_name(inp, "default", reversed_style=RS)
     assert obs == exp
+
+
+@pytest.mark.parametrize(
+    "color, style",
+    [
+        (color, style)
+        for color in DEFAULT_CMAP.keys()
+        for style in ansi_color_style_names()
+    ],
+)
+def test_ansi_color_name_to_escape_code_for_all_styles(color, style):
+    escape_code = ansi_color_name_to_escape_code(color, style)
+    assert len(escape_code) > 0

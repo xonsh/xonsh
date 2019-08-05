@@ -563,6 +563,11 @@ class SubprocSpec:
             raise XonshError(e.format(self.cmd[0]))
         except FileNotFoundError:
             cmd0 = self.cmd[0]
+            if len(self.cmd) == 1 and cmd0.endswith("?"):
+                with contextlib.suppress(OSError):
+                    return self.cls(
+                        ["man", cmd0.rstrip("?")], bufsize=bufsize, **kwargs
+                    )
             e = "xonsh: subprocess mode: command not found: {0}".format(cmd0)
             env = builtins.__xonsh__.env
             sug = suggest_commands(cmd0, env, builtins.aliases)
@@ -1319,11 +1324,7 @@ def xonsh_builtins(execer=None):
     scope. Likely useful in testing.
     """
     load_builtins(execer=execer)
-    # temporary shims for old __xonsh_*__ builtins
-    load_proxies()
     yield
-    # temporary shims for old __xonsh_*__ builtins
-    unload_proxies()
     unload_builtins()
 
 
@@ -1401,12 +1402,17 @@ class XonshSession:
 
     def link_builtins(self, execer=None):
         # public built-ins
-        builtins.XonshError = self.builtins.XonshError
-        builtins.XonshCalledProcessError = self.builtins.XonshCalledProcessError
-        builtins.evalx = None if execer is None else execer.eval
-        builtins.execx = None if execer is None else execer.exec
-        builtins.compilex = None if execer is None else execer.compile
-        builtins.events = self.builtins.events
+        proxy_mapping = {
+            "XonshError": "__xonsh__.builtins.XonshError",
+            "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
+            "evalx": "__xonsh__.builtins.evalx",
+            "execx": "__xonsh__.builtins.execx",
+            "compilex": "__xonsh__.builtins.compilex",
+            "events": "__xonsh__.builtins.events",
+        }
+        for refname, objname in proxy_mapping.items():
+            proxy = DynamicAccessProxy(refname, objname)
+            setattr(builtins, refname, proxy)
 
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that
@@ -1424,6 +1430,7 @@ class XonshSession:
             "execx",
             "compilex",
             "default_aliases",
+            "events",
         ]
 
         for name in names:
@@ -1489,168 +1496,5 @@ class DynamicAccessProxy:
     def __call__(self, *args, **kwargs):
         return self.obj.__call__(*args, **kwargs)
 
-
-class DeprecationWarningProxy:
-    """Proxies access, but warns in the process."""
-
-    def __init__(self, oldname, newname):
-        super().__setattr__("oldname", oldname)
-        super().__setattr__("newname", newname)
-
-    @property
-    def obj(self):
-        """Dynamically grabs object"""
-        names = self.newname.split(".")
-        obj = builtins
-        for name in names:
-            obj = getattr(obj, name)
-        return obj
-
-    def warn(self):
-        """Issues deprecation warning."""
-        warnings.warn(
-            "{} has been deprecated, please use {} instead.".format(
-                self.oldname, self.newname
-            ),
-            DeprecationWarning,
-            stacklevel=3,
-        )
-
-    def __getattr__(self, name):
-        self.warn()
-        return getattr(self.obj, name)
-
-    def __setattr__(self, name, value):
-        self.warn()
-        return super().__setattr__(self.obj, name, value)
-
-    def __delattr__(self, name):
-        self.warn()
-        return delattr(self.obj, name)
-
-    def __getitem__(self, item):
-        self.warn()
-        return self.obj.__getitem__(item)
-
-    def __setitem__(self, item, value):
-        self.warn()
-        return self.obj.__setitem__(item, value)
-
-    def __delitem__(self, item):
-        self.warn()
-        del self.obj[item]
-
-    def __call__(self, *args, **kwargs):
-        self.warn()
-        return self.obj.__call__(*args, **kwargs)
-
-
-def load_proxies():
-    """Loads builtin dynamic access proxies.
-    Also puts temporary shims in place for `__xonsh_*__` builtins.
-    """
-    proxy_mapping = {
-        "XonshError": "__xonsh__.builtins.XonshError",
-        "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
-        "evalx": "__xonsh__.builtins.evalx",
-        "execx": "__xonsh__.builtins.execx",
-        "compilex": "__xonsh__.builtins.compilex",
-        "events": "__xonsh__.builtins.events",
-    }
-    for refname, objname in proxy_mapping.items():
-        proxy = DynamicAccessProxy(refname, objname)
-        setattr(builtins, refname, proxy)
-
-    deprecated_mapping = {
-        "__xonsh_env__": "__xonsh__.env",
-        "__xonsh_history__": "__xonsh__.history",
-        "__xonsh_ctx__": "__xonsh__.ctx",
-        "__xonsh_help__": "__xonsh__.help",
-        "__xonsh_superhelp__": "__xonsh__.superhelp",
-        "__xonsh_pathsearch__": "__xonsh__.pathsearch",
-        "__xonsh_globsearch__": "__xonsh__.globsearch",
-        "__xonsh_regexsearch__": "__xonsh__.regexsearch",
-        "__xonsh_glob__": "__xonsh__.glob",
-        "__xonsh_expand_path__": "__xonsh__.expand_path",
-        "__xonsh_exit__": "__xonsh__.exit",
-        "__xonsh_stdout_uncaptured__": "__xonsh__.stdout_uncaptured",
-        "__xonsh_stderr_uncaptured__": "__xonsh__.stderr_uncaptured",
-        "__xonsh_subproc_captured_stdout__": "__xonsh__.subproc_captured_stdout",
-        "__xonsh_subproc_captured_inject__": "__xonsh__.subproc_captured_inject",
-        "__xonsh_subproc_captured_object__": "__xonsh__.subproc_captured_object",
-        "__xonsh_subproc_captured_hiddenobject__": "__xonsh__.subproc_captured_hiddenobject",
-        "__xonsh_subproc_uncaptured__": "__xonsh__.subproc_uncaptured",
-        "__xonsh_execer__": "__xonsh__.execer",
-        "__xonsh_commands_cache__": "__xonsh__.commands_cache",
-        "__xonsh_all_jobs__": "__xonsh__.all_jobs",
-        "__xonsh_ensure_list_of_strs__": "__xonsh__.ensure_list_of_strs",
-        "__xonsh_list_of_strs_or_callables__": "__xonsh__.list_of_strs_or_callables",
-        "__xonsh_list_of_list_of_strs_outer_product__": "__xonsh__.list_of_list_of_strs_outer_product",
-        "__xonsh_completers__": "__xonsh__.completers",
-        "__xonsh_call_macro__": "__xonsh__.call_macro",
-        "__xonsh_enter_macro__": "__xonsh__.enter_macro",
-        "__xonsh_path_literal__": "__xonsh__.path_literal",
-    }
-    for badname, goodname in deprecated_mapping.items():
-        proxy = DeprecationWarningProxy(badname, goodname)
-        setattr(builtins, badname, proxy)
-
-    if hasattr(builtins.__xonsh__, "pyexit"):
-        builtins.__xonsh_pyexit__ = DeprecationWarningProxy(
-            "builtins.__xonsh_pyexit__", "builtins.__xonsh__.pyexit"
-        )
-    if hasattr(builtins.__xonsh__, "quit"):
-        builtins.__xonsh_pyquit__ = DeprecationWarningProxy(
-            "builtins.__xonsh_pyquit__", "builtins.__xonsh__.pyquit"
-        )
-
-
-def unload_proxies():
-    """Removes the xonsh builtins (proxies) from the Python builtins.
-    """
-    if hasattr(builtins, "__xonsh_pyexit__"):
-        builtins.exit = builtins.__xonsh_pyexit__
-    if hasattr(builtins, "__xonsh_pyquit__"):
-        builtins.quit = builtins.__xonsh_pyquit__
-
-    names = [
-        "__xonsh_env__",
-        "__xonsh_ctx__",
-        "__xonsh_help__",
-        "__xonsh_superhelp__",
-        "__xonsh_pathsearch__",
-        "__xonsh_globsearch__",
-        "__xonsh_regexsearch__",
-        "__xonsh_glob__",
-        "__xonsh_expand_path__",
-        "__xonsh_exit__",
-        "__xonsh_stdout_uncaptured__",
-        "__xonsh_stderr_uncaptured__",
-        "__xonsh_pyexit__",
-        "__xonsh_pyquit__",
-        "__xonsh_subproc_captured_stdout__",
-        "__xonsh_subproc_captured_inject__",
-        "__xonsh_subproc_captured_object__",
-        "__xonsh_subproc_captured_hiddenobject__",
-        "__xonsh_subproc_uncaptured__",
-        "__xonsh_execer__",
-        "__xonsh_commands_cache__",
-        "__xonsh_completers__",
-        "__xonsh_call_macro__",
-        "__xonsh_enter_macro__",
-        "__xonsh_path_literal__",
-        "XonshError",
-        "XonshCalledProcessError",
-        "evalx",
-        "execx",
-        "compilex",
-        "default_aliases",
-        "__xonsh_all_jobs__",
-        "__xonsh_ensure_list_of_strs__",
-        "__xonsh_list_of_strs_or_callables__",
-        "__xonsh_list_of_list_of_strs_outer_product__",
-        "__xonsh_history__",
-    ]
-    for name in names:
-        if hasattr(builtins, name):
-            delattr(builtins, name)
+    def __dir__(self):
+        return self.obj.__dir__()

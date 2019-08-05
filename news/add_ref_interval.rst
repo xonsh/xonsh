@@ -1,15 +1,10 @@
 **Added:**
 
-* <news item>
+* $PROMPT_REFRESH_INTERVAL: Automatically invalidate the PROMPT every so many seconds.
 
 **Changed:**
 
-* Xonsh now does not attempt to expand raw strings, so now::
-
-    $ echo "$HOME"
-    /home/user
-    $ echo r"$HOME"
-    $HOME
+* <news item>
 
 **Deprecated:**
 

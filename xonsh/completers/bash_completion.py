@@ -14,7 +14,7 @@ import platform
 import functools
 import subprocess
 
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 
 
 @functools.lru_cache(1)
@@ -228,6 +228,18 @@ function _get_complete_statement {{
     complete -p {cmd} 2> /dev/null || echo "-F _minimal"
 }}
 
+function getarg {{
+    find=$1
+    shift 1
+    prev=""
+    for i in $* ; do
+        if [ "$prev" = "$find" ] ; then
+            echo $i
+        fi
+        prev=$i
+    done
+}}
+
 _complete_stmt=$(_get_complete_statement)
 if echo "$_complete_stmt" | grep --quiet -e "_minimal"
 then
@@ -235,15 +247,20 @@ then
     _complete_stmt=$(_get_complete_statement)
 fi
 
-_func=$(echo "$_complete_stmt" | grep -o -e '-F \w\+' | cut -d ' ' -f 2)
-declare -f "$_func" > /dev/null || exit 1
+# Is -C (subshell) or -F (function) completion used?
+if [[ $_complete_stmt =~ "-C" ]] ; then
+    _func=$(eval getarg "-C" $_complete_stmt)
+else
+    _func=$(eval getarg "-F" $_complete_stmt)
+    declare -f "$_func" > /dev/null || exit 1
+fi
 
 echo "$_complete_stmt"
-COMP_WORDS=({line})
-COMP_LINE={comp_line}
-COMP_POINT=${{#COMP_LINE}}
-COMP_COUNT={end}
-COMP_CWORD={n}
+export COMP_WORDS=({line})
+export COMP_LINE={comp_line}
+export COMP_POINT=${{#COMP_LINE}}
+export COMP_COUNT={end}
+export COMP_CWORD={n}
 $_func {cmd} {prefix} {prev}
 
 # print out completions, right-stripped if they contain no internal spaces

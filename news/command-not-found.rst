@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* bashisms extension can be used again with prompt_toolkit v1
+* command-not-found: now works on non-Debian bansed distributions
 
 **Security:**
 

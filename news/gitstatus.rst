@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* Allow disabling individual items in gitstatus prompt
 
 **Changed:**
 
@@ -16,8 +16,7 @@
 
 **Fixed:**
 
-* threadable predictor for 'env' command based on predictor from the executed
-  command. Fixes #2759 and #3103.
+* <news item>
 
 **Security:**
 

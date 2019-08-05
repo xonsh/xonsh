@@ -17,6 +17,7 @@ GitStatus = collections.namedtuple(
         "num_behind",
         "untracked",
         "changed",
+        "deleted",
         "conflicts",
         "staged",
         "stashed",
@@ -70,6 +71,7 @@ def _DEFS():
         "STAGED": "{RED}●",
         "CONFLICTS": "{RED}×",
         "CHANGED": "{BLUE}+",
+        "DELETED": "{RED}-",
         "UNTRACKED": "…",
         "STASHED": "⚑",
         "CLEAN": "{BOLD_GREEN}✓",
@@ -114,12 +116,12 @@ def _gitoperation(gitdir):
 def gitstatus():
     """Return namedtuple with fields:
     branch name, number of ahead commit, number of behind commit,
-    untracked number, changed number, conflicts number,
+    untracked number, changed number, deleted number, conflicts number,
     staged number, stashed number, operation."""
     status = _check_output(["git", "status", "--porcelain", "--branch"])
     branch = ""
     num_ahead, num_behind = 0, 0
-    untracked, changed, conflicts, staged = 0, 0, 0, 0
+    untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
     for line in status.splitlines():
         if line.startswith("##"):
             line = line[2:].strip()
@@ -142,9 +144,11 @@ def gitstatus():
         elif line.startswith("??"):
             untracked += 1
         else:
-            if len(line) > 1 and line[1] == "M":
-                changed += 1
-
+            if len(line) > 1:
+                if line[1] == "M":
+                    changed += 1
+                elif line[1] == "D":
+                    deleted += 1
             if len(line) > 0 and line[0] == "U":
                 conflicts += 1
             elif len(line) > 0 and line[0] != " ":
@@ -160,6 +164,7 @@ def gitstatus():
         num_behind,
         untracked,
         changed,
+        deleted,
         conflicts,
         staged,
         stashed,
@@ -182,18 +187,23 @@ def gitstatus_prompt():
     if s.operations:
         ret += _get_def("OPERATION") + "|" + "|".join(s.operations)
     ret += "|"
-    if s.staged > 0:
-        ret += _get_def("STAGED") + str(s.staged) + "{NO_COLOR}"
-    if s.conflicts > 0:
-        ret += _get_def("CONFLICTS") + str(s.conflicts) + "{NO_COLOR}"
-    if s.changed > 0:
-        ret += _get_def("CHANGED") + str(s.changed) + "{NO_COLOR}"
-    if s.untracked > 0:
-        ret += _get_def("UNTRACKED") + str(s.untracked) + "{NO_COLOR}"
-    if s.stashed > 0:
-        ret += _get_def("STASHED") + str(s.stashed) + "{NO_COLOR}"
-    if s.staged + s.conflicts + s.changed + s.untracked + s.stashed == 0:
-        ret += _get_def("CLEAN") + "{NO_COLOR}"
+    for category in (
+        "staged",
+        "conflicts",
+        "changed",
+        "deleted",
+        "untracked",
+        "stashed",
+    ):
+        symbol = _get_def(category.upper())
+        value = getattr(s, category)
+        if symbol and value > 0:
+            ret += symbol + str(value) + "{NO_COLOR}"
+    if s.staged + s.conflicts + s.changed + s.deleted + s.untracked + s.stashed == 0:
+        symbol = _get_def("CLEAN")
+        if symbol:
+            ret += symbol + "{NO_COLOR}"
+    ret = ret.rstrip("|")
     ret += "{NO_COLOR}"
 
     return ret

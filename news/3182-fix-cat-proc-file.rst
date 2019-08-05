@@ -1,6 +1,6 @@
 **Added:**
 
-* Add processing ``%d`` for avoid overwriting in ``run-tests.xsh``
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fix ``cat`` can't read pseudo files with zero size such as /proc/\* or /sys/\* (#3182, #3199)
 
 **Security:**
 

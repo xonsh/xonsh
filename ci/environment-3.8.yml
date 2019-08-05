@@ -1,15 +1,16 @@
-name: py35-xonsh-test
+name: py38-xonsh-test
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.5
+  - python=3.8
   - pygments
   - prompt_toolkit
   - pytest
   - pytest-timeout
   - numpy
   - psutil
+  - matplotlib
   - flake8
   - coverage
   - pyflakes

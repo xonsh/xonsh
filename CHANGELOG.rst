@@ -4,6 +4,185 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.9
+====================
+
+**Added:**
+
+* $COMPLETION_IN_THREAD: When this is True, background theads is used for completion.
+* Open man page when requesting help for subprocess commands, e.g. using ``sh?``
+* Add several cmds/tools for predict list
+
+**Changed:**
+
+* Changed ``XonshSession.link_builtins`` to set a ``DynamicAccessProxy`` for each ``builtin`` link
+* ``events`` is now unlinked from ``builtins``
+
+**Removed:**
+
+* Removed ``DeprecationWarningProxy``; no longer needed
+* Removed ``load_proxies`` and ``unload_proxies``; moved functionality to ``XonshSession.link_builtins``, ``XonshSession.unlink_builtins``, respectively.
+* Removed deprecated ``builtin.__xonsh_*__`` alises, please use ``builtins.__xonsh__.*`` instead.
+
+**Fixed:**
+
+* Added proxied ``__dir__`` method to ``DynamicAccessProxy`` to restore
+  tab-completion for objects that use the proxy (especially ``events``)
+* Avoid displaying finished tasks in title.
+* ``inspect.getsource`` now works correctly and the ``__xonsh__.execer`` resets
+  ``<filename>`` correctly.  This was causing several very strange buggy
+  behaviors.
+* Hitting ``Enter`` while ``$VI_MODE=True`` now executes the current code block
+  irrespective of cursor position
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* David Dotson
+* vaaaaanquish
+* Alexander Steffen
+* Ke Zhang
+* Daniel Smith
+
+
+
+v0.9.8
+====================
+
+**Fixed:**
+
+* Fixed a bug in sourcing Bash functions, where ``delare -F`` contained
+  newlines, meaning that the ``read`` command that followed it would only
+  pick up the first function declaration. ``echo`` is used to normalize
+  whitespace.
+
+**Authors:**
+
+* Anthony Scopatz
+
+
+
+v0.9.7
+====================
+
+**Added:**
+
+* add xontrib (xontrib-readable-traceback)
+* Registered kitty xontrib.
+* The zipapp extra was added to install the importlib.resources backport on <3.7
+
+**Changed:**
+
+* turn off warning on completer
+* xontrib metadata loading is now zipapp safe when possible
+
+**Fixed:**
+
+* Updated py-bash-completion that is vended with xonsh to v0.2.6 which
+  includes a fix completion which uses a subshell environment and a
+  fix for string index error in stripped prefix.
+* Removed obsolte "Alt+." keybinding in xontrib-bashisms that was causing built-in binding to malfunction.
+* Fixed that occurs when type a command before rendering.
+
+**Authors:**
+
+* Anthony Scopatz
+* Jamie Bliss
+* con-f-use
+* vaaaaanquish
+* Gyuri Horak
+
+
+
+v0.9.6
+====================
+
+**Fixed:**
+
+* Fixed exception in help/version threadable predictor
+* Fixed gitstatus prompt so that it also now reports deleted files
+* Fixed issue where the prompt-toolkit2 shell could not display and
+  would end up in an infinite error loop if ``$MULTILINE_PROMPT``
+  was a suitably "false" value, such as ``None`` or an empty string.
+* Fixed issue where setting ``$XONSH_STDERR_PREFIX`` and ``$XONSH_STDERR_POSTFIX``
+  and running a command in the ``xonshrc`` file would throw an error.
+
+**Authors:**
+
+* Anthony Scopatz
+* David Strobach
+* virus
+* shadow-light
+
+
+
+v0.9.5
+====================
+
+**Fixed:**
+
+* Style 'bw'. Background colors was added in the style description.
+* Fix causing error in ``get_predictor_threadable`` on windows when try to run not exist command
+* ``pip`` completer no longer fires when ``pip`` happens to appear within a word
+  like ``bagpipes``
+* Fixed issue with ``history gc`` command not running properly.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Jean-Benoist Leger
+* virus
+* con-f-use
+
+
+
+v0.9.4
+====================
+
+**Added:**
+
+* Add processing ``%d`` for avoid overwriting in ``run-tests.xsh``
+
+**Changed:**
+
+* Xonsh now does not attempt to expand raw strings, so now::
+
+    $ echo "$HOME"
+    /home/user
+    $ echo r"$HOME"
+    $HOME
+* sudoedit now runs unthreaded
+
+**Fixed:**
+
+* threadable predictor for 'env' command based on predictor from the executed
+  command. Fixes #2759 and #3103.
+* An error in the 'xon.sh' executable that only popped up during testing has
+  been fixed.  Specifically: It now directly calls 'python3' without invoking
+  'env'.
+* bashisms extension can be used again with prompt_toolkit v1
+* Fix a crash when setting ``$INTENSIFY_COLORS_ON_WIN`` in certain situations.
+* Fix issue with bashsisms xontrib causing syntax errors for some Python statements
+* portable trick to pass args which replace '/usr/bin/env' is removed and
+  '/usr/bin/env' is used. Fixes bug when a python3 used is outside the default
+  'PATH'.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* Jean-Benoist Leger
+* David Strobach
+* virus
+* Carmen Bianca Bakker
+* con-f-use
+* cclauss
+* Eddie Peters
+
+
+
 v0.9.3
 ====================
 
