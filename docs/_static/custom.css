@@ -1,0 +1,24 @@
+
+th > p:first-child,
+td > p:first-child,
+li > p:first-child,
+dt > p:first-child,
+dd > p:first-child {
+    margin-top: 0px;
+}
+
+th > p:last-child,
+td > p:last-child, 
+li > p:last-child,
+dt > p:last-child,
+dd > p:last-child {
+    margin-bottom: 0px;
+}
+
+li > p:first-child {
+    margin-top: 0px;
+}
+li > p:last-child {
+    margin-bottom: 0px;
+}
+
