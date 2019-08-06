@@ -184,7 +184,8 @@ def to_debug(x):
 
 class LsColors(cabc.MutableMapping):
     """Helps convert to/from $LS_COLORS format, respecting the xonsh color style.
-    This accepts the same inputs as dict().
+    This accepts the same inputs as dict(). The link ``target`` is represented
+    by the special ``"TARGET"`` color.
     """
 
     default_settings = {
@@ -368,7 +369,7 @@ class LsColors(cabc.MutableMapping):
                     key
                     + "="
                     + ";".join(
-                        [ansi_color_name_to_escape_code(v, cmap=style) for v in val]
+                        ["target" if v == "TARGET" else ansi_color_name_to_escape_code(v, cmap=style) for v in val]
                     )
                     for key, val in sorted(self._d.items())
                 ]
@@ -408,10 +409,13 @@ class LsColors(cabc.MutableMapping):
             key, eq, esc = item.partition("=")
             if not eq:
                 # not a valid item
-                continue
-            data[key] = ansi_color_escape_code_to_name(
-                esc, "default", reversed_style=reversed_default
-            )
+                pass
+            elif esc == "target":
+                data[key] = ("TARGET",)
+            else:
+                data[key] = ansi_color_escape_code_to_name(
+                    esc, "default", reversed_style=reversed_default
+                )
         obj._d = data
         return obj
 
