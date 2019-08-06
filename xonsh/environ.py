@@ -369,7 +369,12 @@ class LsColors(cabc.MutableMapping):
                     key
                     + "="
                     + ";".join(
-                        ["target" if v == "TARGET" else ansi_color_name_to_escape_code(v, cmap=style) for v in val]
+                        [
+                            "target"
+                            if v == "TARGET"
+                            else ansi_color_name_to_escape_code(v, cmap=style)
+                            for v in val
+                        ]
                     )
                     for key, val in sorted(self._d.items())
                 ]
