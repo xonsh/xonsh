@@ -904,9 +904,8 @@ def DEFAULT_DOCS():
             "for confirmation."
         ),
         "COMPLETION_IN_THREAD": VarDocs(
-            "When generating the completions takes a lot of time, "
-            "it’s better to do this in a background thed."
-            "When this is True, background theads is used for completion."
+            "Generating completions takes time, it's better to process them in background. "
+            "If ``True``, then a background thread is used for completion."
         ),
         "DIRSTACK_SIZE": VarDocs("Maximum size of the directory stack."),
         "DOTGLOB": VarDocs(
