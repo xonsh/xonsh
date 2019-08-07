@@ -211,10 +211,9 @@ def parser():
     p.add_argument(
         "--shell-type",
         help="What kind of shell should be used. "
-        "Possible options: readline, prompt_toolkit, random. "
         "Warning! If set this overrides $SHELL_TYPE variable.",
         dest="shell_type",
-        choices=tuple(Shell.shell_type_aliases.keys()),
+        choices=sorted(set(Shell.shell_type_aliases.values())),
         default=None,
     )
     p.add_argument(

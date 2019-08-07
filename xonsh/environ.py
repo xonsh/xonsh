@@ -1103,7 +1103,6 @@ def DEFAULT_DOCS():
             "Which shell is used. Currently two base shell types are supported:\n\n"
             "    - ``readline`` that is backed by Python's readline module\n"
             "    - ``prompt_toolkit`` that uses external library of the same name\n"
-            "    - ``random`` selects a random shell from the above on startup\n"
             "    - ``best`` selects the most feature-rich shell available on the\n"
             "       user's system\n\n"
             "To use the ``prompt_toolkit`` shell you need to have the "

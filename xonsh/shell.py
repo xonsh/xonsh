@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
 import sys
-import random
 import time
 import difflib
 import builtins
@@ -128,8 +127,8 @@ class Shell(object):
         "prompt_toolkit": "prompt_toolkit",
         "prompt-toolkit1": "prompt_toolkit1",
         "prompt-toolkit2": "prompt_toolkit2",
-        "rand": "random",
-        "random": "random",
+        "rand": "best",  # DEPRECATED
+        "random": "best",  # DEPRECATED
         "rl": "readline",
         "readline": "readline",
     }
@@ -146,8 +145,7 @@ class Shell(object):
             this no additional context is computed and this is used
             directly.
         shell_type : str, optional
-            The shell type to start, such as 'readline', 'prompt_toolkit1',
-            or 'random'.
+            The shell type to start, such as 'readline' or 'prompt_toolkit2'.
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
@@ -170,8 +168,6 @@ class Shell(object):
             shell_type = best_shell_type()
         elif env.get("TERM", "") == "dumb":
             shell_type = "dumb"
-        elif shell_type == "random":
-            shell_type = random.choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
             if not has_prompt_toolkit():
                 warnings.warn(
