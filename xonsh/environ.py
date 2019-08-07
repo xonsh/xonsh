@@ -904,7 +904,7 @@ def DEFAULT_DOCS():
             "for confirmation."
         ),
         "COMPLETION_IN_THREAD": VarDocs(
-            "When generating the completions takes a lot of time, "
+            "When generating the completions takes time, "
             "it’s better to do this in a background thread. "
             "When this is True, background threads is used for completion."
         ),
@@ -1355,8 +1355,8 @@ def DEFAULT_DOCS():
             "Logging to a file is not enabled by default."
         ),
         "XONSH_DATETIME_FORMAT": VarDocs(
-            "The format that is used for ``datetime.strptime()`` in various places"
-            "i.e the history timestamp option"
+            "The format that is used for ``datetime.strptime()`` in various places, "
+            "i.e the history timestamp option."
         ),
     }
 
