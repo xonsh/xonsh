@@ -830,15 +830,16 @@ def command_not_found(cmd):
     """Uses the debian/ubuntu command-not-found utility to suggest packages for a
     command that cannot currently be found.
     """
-    import shutil
-
     if not ON_LINUX:
         return ""
 
-    cnf = shutil.which("command-not-found")
-    if cnf is None:
-        # utility is not on PATH
+    cnf = builtins.__xonsh__.commands_cache.lazyget(
+        "command-not-found", ("/usr/lib/command-not-found",)
+    )[0]
+
+    if not os.path.isfile(cnf):
         return ""
+
     c = "{0} {1}; exit 0"
     s = subprocess.check_output(
         c.format(cnf, cmd),
