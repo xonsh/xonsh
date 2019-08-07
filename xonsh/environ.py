@@ -876,15 +876,15 @@ def DEFAULT_DOCS():
             "completions, auto-suggestions, etc.\n\nChanging it at runtime will "
             "take immediate effect, so you can quickly disable and enable "
             "completions during shell sessions.\n\n"
-            "- If ``$COMPLETIONS_DISPLAY`` is ``none`` or ``false``, do not display\n"
-            "  those completions.\n"
+            "- If ``$COMPLETIONS_DISPLAY`` is ``none`` or ``false``, do not display"
+            " those completions.\n"
             "- If ``$COMPLETIONS_DISPLAY`` is ``single``, display completions in a\n"
             "  single column while typing.\n"
-            "- If ``$COMPLETIONS_DISPLAY`` is ``multi`` or ``true``, display completions\n"
-            "  in multiple columns while typing.\n\n"
+            "- If ``$COMPLETIONS_DISPLAY`` is ``multi`` or ``true``, display completions"
+            " in multiple columns while typing.\n\n"
             "- If ``$COMPLETIONS_DISPLAY`` is ``readline``, display completions\n"
             "  will emulate the behavior of readline.\n\n"
-            "These option values are not case- or type-sensitive, so e.g."
+            "These option values are not case- or type-sensitive, so e.g. "
             "writing ``$COMPLETIONS_DISPLAY = None`` "
             "and ``$COMPLETIONS_DISPLAY = 'none'`` are equivalent. Only usable with "
             "``$SHELL_TYPE=prompt_toolkit``"
@@ -904,8 +904,9 @@ def DEFAULT_DOCS():
             "for confirmation."
         ),
         "COMPLETION_IN_THREAD": VarDocs(
-            "Generating completions takes time, it's better to process them in background. "
-            "If ``True``, then a background thread is used for completion."
+            "When generating the completions takes time, "
+            "it’s better to do this in a background thread. "
+            "When this is True, background threads is used for completion."
         ),
         "DIRSTACK_SIZE": VarDocs("Maximum size of the directory stack."),
         "DOTGLOB": VarDocs(
