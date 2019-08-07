@@ -38,11 +38,6 @@
   "url": "https://github.com/ErickTucto/xontrib-base16-shell",
   "description": ["Change base16 shell themes"]
  },
- {"name": "click_tabcomplete",
-  "package": "xonsh-click-tabcomplete",
-  "url": "https://github.com/Granitosaurus/xonsh-click-tabcomplete",
-  "description": ["Adds tabcomplete functionality to click based python applications inside of xonsh."]
- },
  {"name": "coreutils",
   "package": "xonsh",
   "url": "http://xon.sh",
