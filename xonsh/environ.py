@@ -1355,8 +1355,8 @@ def DEFAULT_DOCS():
             "Logging to a file is not enabled by default."
         ),
         "XONSH_DATETIME_FORMAT": VarDocs(
-            "The format that is used for ``datetime.strptime()`` in various places"
-            "i.e the history timestamp option"
+            "The format that is used for ``datetime.strptime()`` in various places, "
+            "i.e the history timestamp option."
         ),
     }
 
