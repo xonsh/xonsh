@@ -19,6 +19,7 @@ from xonsh.environ import (
     DEFAULT_VALUES,
     default_env,
     make_args_env,
+    LsColors,
 )
 
 from tools import skip_if_on_unix
@@ -292,3 +293,9 @@ def test_delitem_default():
     assert env[a_key] == a_value
     del env[a_key]
     assert env[a_key] == a_value
+
+
+def test_lscolors_target():
+    lsc = LsColors.fromstring("ln=target")
+    assert lsc["ln"] == ("TARGET",)
+    assert lsc.detype() == "ln=target"
