@@ -4,6 +4,39 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.10
+====================
+
+**Added:**
+
+* $PROMPT_REFRESH_INTERVAL: Automatically invalidate the PROMPT every so many seconds.
+* Allow disabling individual items in gitstatus prompt
+
+**Fixed:**
+
+* Fix ``cat`` can't read pseudo files with zero size such as /proc/\* or /sys/\* (#3182, #3199)
+* command-not-found: now works on non-Debian bansed distributions
+* Implemented ``'target'`` psuedo-color in ``$LS_COLORS`` for link coloring based
+  off of the link target. This was causing issues on some systems where this is
+  the default.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Morten Enemark Lund
+* virus
+* vaaaaanquish
+* K.-Michael Aye
+* Alexander Steffen
+* Jan Chren
+* Sean Farley
+* László Vaskó
+* Nils ANDRÉ-CHANG
+* chengxuncc
+
+
+
 v0.9.9
 ====================
 
