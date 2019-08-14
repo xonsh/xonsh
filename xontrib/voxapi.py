@@ -363,7 +363,7 @@ class Vox(collections.abc.Mapping):
         if "PYTHONHOME" in env:
             type(self).oldvars["PYTHONHOME"] = env.pop("PYTHONHOME")
 
-        events.vox_on_activate.fire(name=name)
+        events.vox_on_activate.fire(name=name, path=ve.env)
 
     def deactivate(self):
         """
@@ -382,7 +382,7 @@ class Vox(collections.abc.Mapping):
 
         env.pop("VIRTUAL_ENV")
 
-        events.vox_on_deactivate.fire(name=env_name)
+        events.vox_on_deactivate.fire(name=env_name, path=self[env_name].env)
         return env_name
 
     def __delitem__(self, name):

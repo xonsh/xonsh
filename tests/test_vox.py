@@ -95,12 +95,12 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
     @xonsh_builtins.events.vox_on_activate
     def activate(name, **_):
         nonlocal last_event
-        last_event = "activate", name
+        last_event = "activate", name, _['path']
 
     @xonsh_builtins.events.vox_on_deactivate
     def deactivate(name, **_):
         nonlocal last_event
-        last_event = "deactivate", name
+        last_event = "deactivate", name, _['path']
 
     with tmpdir.as_cwd():
         venv_dirname = 'venv'
@@ -114,12 +114,12 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
     assert env["PATH"][0] == vxv.bin
     assert os.path.isabs(vxv.env)
     assert env["VIRTUAL_ENV"] == vxv.env
-    assert last_event == ("activate", venv_dirname)
+    assert last_event == ("activate", venv_dirname, str(pathlib.Path(tmpdir) / 'venv'))
 
     vox.deactivate()
     assert not env["PATH"]
     assert "VIRTUAL_ENV" not in env
-    assert last_event == ("deactivate", tmpdir.join(venv_dirname))
+    assert last_event == ("deactivate", tmpdir.join(venv_dirname), str(pathlib.Path(tmpdir) / 'venv'))
 
 
 @skip_if_on_msys
