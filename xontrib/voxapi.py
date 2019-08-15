@@ -4,8 +4,8 @@ API for Vox, the Python virtual environment manager for xonsh.
 Vox defines several events related to the life cycle of virtual environments:
 
 * ``vox_on_create(env: str) -> None``
-* ``vox_on_activate(env: str) -> None``
-* ``vox_on_deactivate(env: str) -> None``
+* ``vox_on_activate(env: str, path: pathlib.Path) -> None``
+* ``vox_on_deactivate(env: str, path: pathlib.Path) -> None``
 * ``vox_on_delete(env: str) -> None``
 """
 import os
@@ -37,7 +37,7 @@ Fired after an environment is created.
 events.doc(
     "vox_on_activate",
     """
-vox_on_activate(env: str) -> None
+vox_on_activate(env: str, path: pathlib.Path) -> None
 
 Fired after an environment is activated.
 """,
@@ -46,7 +46,7 @@ Fired after an environment is activated.
 events.doc(
     "vox_on_deactivate",
     """
-vox_on_deactivate(env: str) -> None
+vox_on_deactivate(env: str, path: pathlib.Path) -> None
 
 Fired after an environment is deactivated.
 """,
