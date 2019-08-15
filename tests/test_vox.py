@@ -93,14 +93,14 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
     last_event = None
 
     @xonsh_builtins.events.vox_on_activate
-    def activate(name, **_):
+    def activate(name, path, **_):
         nonlocal last_event
-        last_event = "activate", name, _['path']
+        last_event = "activate", name, path
 
     @xonsh_builtins.events.vox_on_deactivate
-    def deactivate(name, **_):
+    def deactivate(name, path, **_):
         nonlocal last_event
-        last_event = "deactivate", name, _['path']
+        last_event = "deactivate", name, path
 
     with tmpdir.as_cwd():
         venv_dirname = 'venv'
