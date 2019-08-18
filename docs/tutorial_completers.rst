@@ -92,10 +92,10 @@ xonsh actually uses, in the ``xonsh.completers`` module.
 
     def unbeliever_completer(prefix, line, begidx, endidx, ctx):
         '''
-        Replaces "lou carcolh" with "snail" if tab is pressed after typing
-        "lou" and when typing "carcolh"
+        Replaces "lou carcolh" with "snail" if tab is pressed after at least
+        typing the "lou " part.
         '''
-        if 'carcolh'.startswith(prefix) or 'lou' in line[:begidx].split()[-1:]:
+        if  'carcolh'.startswith(prefix) and 'lou' in line[:begidx].split()[-1:]:
             return ({'snail'}, len('lou ') + len(prefix))
 
 
