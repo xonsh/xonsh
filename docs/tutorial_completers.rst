@@ -55,7 +55,7 @@ Completers are implemented as Python functions that take five arguments:
 * ``prefix``: the string to be matched (the last whitespace-separated token in the current line)
 * ``line``: a string representing the entire current line
 * ``begidx``: the index at which ``prefix`` starts in ``line``
-* ``endidx``: the index at which ``prefix`` ends in ``line``
+* ``endidx``: the length of the ``prefix`` in ``line``
 * ``ctx``: the current Python environment, as a dictionary mapping names to values
 
 This function should return a Python set of possible completions for ``prefix``
@@ -95,7 +95,7 @@ xonsh actually uses, in the ``xonsh.completers`` module.
         Replaces "lou carcolh" with "snail" if tab is pressed after typing
         "lou" and when typing "carcolh"
         '''
-        if 'carcolh'.startswith(prefix) and line[:begidx].split()[-1] == 'lou':
+        if 'carcolh'.startswith(prefix) or 'lou' in line[:begidx].split()[-1:]:
             return ({'snail'}, len('lou ') + len(prefix))
 
 
