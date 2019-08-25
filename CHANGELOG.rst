@@ -4,6 +4,31 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.11
+====================
+
+**Changed:**
+
+* ``vox activate`` will now prepend the absolute path of the virtualenv ``bin/`` directory (or ``Scripts/`` on Windows) to ``$PATH``; before this was a relative path.
+
+**Fixed:**
+
+* "lou carcolh" example and description of ``endidx`` in completer tutorial
+* Logical operators in aliases are now executed as expected, e.g.
+  ``aliases['echocat'] = 'echo "hi" and echo "there"'`` will, when run, return
+
+  .. code-block::
+     hi
+     there
+
+**Authors:**
+
+* Gil Forsyth
+* con-f-use
+* Caleb Hattingh
+
+
+
 v0.9.10
 ====================
 
