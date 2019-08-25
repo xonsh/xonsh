@@ -7,7 +7,7 @@ import os
 import pytest
 
 import xonsh.built_ins as built_ins
-from xonsh.aliases import Aliases
+from xonsh.aliases import Aliases, ExecAlias
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows
@@ -113,3 +113,18 @@ def test_recursive_callable_partial_none(xonsh_execer, xonsh_builtins):
     args, obs = alias()
     assert args == "wakka"
     assert len(obs) == 0
+
+@pytest.mark.parametrize(
+    "alias",
+    [
+        "echo 'hi' and echo 'there'",
+        "echo 'hi' or echo 'there'",
+        "echo 'hi' && echo 'there'",
+        "echo 'hi' || echo 'there'",
+        "echo 'hi';  echo 'there'",
+    ],
+)
+def test_subprocess_logical_operators(xonsh_execer, xonsh_builtins, alias):
+    ales = make_aliases()
+    ales["echocat"] = alias
+    assert isinstance(ales["echocat"], ExecAlias)
