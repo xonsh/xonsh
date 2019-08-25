@@ -1,9 +1,10 @@
 """Vox tests"""
 
-import builtins
 import stat
 import os
+import subprocess as sp
 import pytest
+import sys
 from xontrib.voxapi import Vox
 
 from tools import skip_if_on_conda, skip_if_on_msys
@@ -78,6 +79,55 @@ def test_activate(xonsh_builtins, tmpdir):
     vox.deactivate()
     assert "VIRTUAL_ENV" not in xonsh_builtins.__xonsh__.env
     assert last_event == ("deactivate", "spam")
+
+
+@skip_if_on_msys
+@skip_if_on_conda
+def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
+    """
+    Create a virtual environment using Python's built-in venv module
+    (not in VIRTUALENV_HOME) and verify that vox can activate it correctly.
+    """
+    xonsh_builtins.__xonsh__.env.setdefault("PATH", [])
+
+    last_event = None
+
+    @xonsh_builtins.events.vox_on_activate
+    def activate(name, path, **_):
+        nonlocal last_event
+        last_event = "activate", name, path
+
+    @xonsh_builtins.events.vox_on_deactivate
+    def deactivate(name, path, **_):
+        nonlocal last_event
+        last_event = "deactivate", name, path
+
+    with tmpdir.as_cwd():
+        venv_dirname = 'venv'
+        sp.run([sys.executable, '-m', 'venv', venv_dirname])
+        vox = Vox()
+        vox.activate(venv_dirname)
+        vxv = vox[venv_dirname]
+
+    env = xonsh_builtins.__xonsh__.env
+    assert os.path.isabs(vxv.bin)
+    assert env["PATH"][0] == vxv.bin
+    assert os.path.isabs(vxv.env)
+    assert env["VIRTUAL_ENV"] == vxv.env
+    assert last_event == (
+        "activate",
+        venv_dirname,
+        str(pathlib.Path(str(tmpdir)) / 'venv')
+    )
+
+    vox.deactivate()
+    assert not env["PATH"]
+    assert "VIRTUAL_ENV" not in env
+    assert last_event == (
+        "deactivate",
+        tmpdir.join(venv_dirname),
+        str(pathlib.Path(str(tmpdir)) / 'venv')
+    )
 
 
 @skip_if_on_msys

@@ -2,6 +2,7 @@
 branch = true
 source =
   xonsh/
+  xontrib/
 omit =
   */__amalgam__.py
   xonsh/lazyasd.py

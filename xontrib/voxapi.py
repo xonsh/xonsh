@@ -4,8 +4,8 @@ API for Vox, the Python virtual environment manager for xonsh.
 Vox defines several events related to the life cycle of virtual environments:
 
 * ``vox_on_create(env: str) -> None``
-* ``vox_on_activate(env: str) -> None``
-* ``vox_on_deactivate(env: str) -> None``
+* ``vox_on_activate(env: str, path: pathlib.Path) -> None``
+* ``vox_on_deactivate(env: str, path: pathlib.Path) -> None``
 * ``vox_on_delete(env: str) -> None``
 """
 import os
@@ -37,7 +37,7 @@ Fired after an environment is created.
 events.doc(
     "vox_on_activate",
     """
-vox_on_activate(env: str) -> None
+vox_on_activate(env: str, path: pathlib.Path) -> None
 
 Fired after an environment is activated.
 """,
@@ -46,7 +46,7 @@ Fired after an environment is activated.
 events.doc(
     "vox_on_deactivate",
     """
-vox_on_deactivate(env: str) -> None
+vox_on_deactivate(env: str, path: pathlib.Path) -> None
 
 Fired after an environment is deactivated.
 """,
@@ -88,7 +88,7 @@ def _mkvenv(env_dir):
 
     This only cares about the platform. No filesystem calls are made.
     """
-    env_dir = os.path.normpath(env_dir)
+    env_dir = os.path.abspath(env_dir)
     if ON_WINDOWS:
         binname = os.path.join(env_dir, "Scripts")
         incpath = os.path.join(env_dir, "Include")
@@ -363,7 +363,7 @@ class Vox(collections.abc.Mapping):
         if "PYTHONHOME" in env:
             type(self).oldvars["PYTHONHOME"] = env.pop("PYTHONHOME")
 
-        events.vox_on_activate.fire(name=name)
+        events.vox_on_activate.fire(name=name, path=ve.env)
 
     def deactivate(self):
         """
@@ -382,7 +382,7 @@ class Vox(collections.abc.Mapping):
 
         env.pop("VIRTUAL_ENV")
 
-        events.vox_on_deactivate.fire(name=env_name)
+        events.vox_on_deactivate.fire(name=env_name, path=self[env_name].env)
         return env_name
 
     def __delitem__(self, name):

@@ -207,5 +207,6 @@ Authors are sorted by number of commits.
 * chengxuncc
 * goodboy
 * Atsushi Morimoto
+* Caleb Hattingh
 
 
