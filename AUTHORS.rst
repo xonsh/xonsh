@@ -41,7 +41,9 @@ Authors are sorted by number of commits.
 * Andrew Hundt
 * Jonathan Slenders
 * Justin Moen
+* con-f-use
 * Stephan Fitzpatrick
+* Caleb Hattingh
 * Raphael Das Gupta
 * K.-Michael Aye
 * Jason R. Coombs
@@ -50,7 +52,6 @@ Authors are sorted by number of commits.
 * Oleh Prypin
 * Brian Skinn
 * Will S
-* con-f-use
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -207,6 +208,5 @@ Authors are sorted by number of commits.
 * chengxuncc
 * goodboy
 * Atsushi Morimoto
-* Caleb Hattingh
 
 
