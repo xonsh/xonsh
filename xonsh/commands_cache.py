@@ -422,6 +422,21 @@ def predict_hg(args):
         return not ns.interactive
 
 
+@lazyobject
+def GIT_PREDICTOR_PARSER():
+    p = argparse.ArgumentParser("git", add_help=False)
+    p.add_argument("command")
+    return p
+
+
+def predict_git(args):
+    """For some subcommands git may spawn an editor; in this case we do not want to
+    mark it as threadable
+    """
+    ns, _ = GIT_PREDICTOR_PARSER.parse_known_args(args)
+    return ns.command not in {"commit", "merge", "pull", "rebase"}
+
+
 def predict_env(args):
     """Predict if env is launching a threadable command or not.
     The launched command is extracted from env args, and the predictor of
@@ -458,7 +473,7 @@ def default_threadable_predictors():
         "ex": predict_false,
         "fish": predict_shell,
         "gawk": predict_true,
-        "git": predict_true,
+        "git": predict_git,
         "gvim": predict_help_ver,
         "hg": predict_hg,
         "htop": predict_help_ver,
