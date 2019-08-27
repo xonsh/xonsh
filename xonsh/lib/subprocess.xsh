@@ -26,9 +26,9 @@ def check_call(cmd, cwd=None):
 def check_output(cmd, cwd=None):
     """Drop in replacement for ``subprocess.check_output`` like functionality"""
     if cwd is None:
-        with ${...}.swap(RAISE_SUBPROC_ERROR=check):
+        with ${...}.swap(RAISE_SUBPROC_ERROR=True):
             output = $(@(cmd))
     else:
-        with indir(cwd), ${...}.swap(RAISE_SUBPROC_ERROR=check):
+        with indir(cwd), ${...}.swap(RAISE_SUBPROC_ERROR=True):
             output = $(@(cmd))
     return output.encode('utf-8')
