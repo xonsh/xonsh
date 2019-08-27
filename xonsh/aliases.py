@@ -44,7 +44,7 @@ import xonsh.xoreutils.which as xxw
 
 @lazyobject
 def SUB_EXEC_ALIAS_RE():
-    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||and|or")
+    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+")
 
 
 class Aliases(cabc.MutableMapping):
