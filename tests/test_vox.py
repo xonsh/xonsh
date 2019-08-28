@@ -159,9 +159,9 @@ else:
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_crud_subdir(xonsh_builtins, tmpdir):
+def test_reserved_names(xonsh_builtins, tmpdir):
     """
-    Creates a virtual environment, gets it, enumerates it, and then deletes it.
+    Tests that reserved words are disallowed.
     """
     xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
 
