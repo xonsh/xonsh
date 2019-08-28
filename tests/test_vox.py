@@ -6,7 +6,7 @@ import os
 import pytest
 from xontrib.voxapi import Vox
 
-from tools import skip_if_on_conda, skip_if_on_msys
+from tools import skip_if_on_conda, skip_if_on_msys, skip_if_lt_py36
 from xonsh.platform import ON_WINDOWS
 
 
@@ -181,6 +181,7 @@ def test_reserved_names(xonsh_builtins, tmpdir):
 
 @skip_if_on_msys
 @skip_if_on_conda
+@skip_if_lt_py36
 def test_autovox(xonsh_builtins, tmpdir):
     """
     Tests that autovox works
