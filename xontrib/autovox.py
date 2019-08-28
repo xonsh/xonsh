@@ -71,7 +71,7 @@ def check_for_new_venv(curdir):
         if newve is None:
             vox.deactivate()
         else:
-            vox.activate(newve)
+            vox.activate(newve.env)
 
 
 # Core mechanism: Check for venv when the current directory changes
