@@ -102,3 +102,19 @@ Simply add the ``'{env_name}'`` variable to your ``$PROMPT``::
 
 Note that you do **not** need to load the ``vox`` xontrib for this to work.
 For more details see :ref:`customprompt`.
+
+
+Automatically Switching Environments
+------------------------------------
+
+Automatic environment switching based on the current directory is managed with the ``autovox`` xontrib (``xontrib load autovox``). Third-party xontribs may register various policies for use with autovox. Pick and choose xontribs that implement policies that match your work style.
+
+Implementing policies is easy! Just register with the ``autovox_policy`` event and return a ``Path`` if there is a matching venv. For example, this policy implements handling if there is a ``.venv`` directory in the project::
+
+    @events.autovox_policy
+    def dotvenv_policy(path, **_):
+        venv = path / '.venv'
+        if venv.exists():
+            return venv
+
+Note that you should only return if there is an environment for this directory exactly. Scanning parent directories is managed by autovox. You should also make the policy check relatively cheap. (Local IO is ok, but probably shouldn't call out to network services.)
