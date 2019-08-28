@@ -42,7 +42,6 @@ class MultipleVenvsWarning(RuntimeWarning):
 def get_venv(vox, dirpath):
     # Search up the directory tree until a venv is found, or none
     for path in itertools.chain((dirpath,), dirpath.parents):
-        print(f"Checking {path}")
         venvs = [
             vox[p]
             for p in events.autovox_policy.fire(path=path)
