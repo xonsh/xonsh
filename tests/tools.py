@@ -161,6 +161,9 @@ class DummyEnv(MutableMapping):
             else:
                 self[k] = v
 
+    def is_manually_set(self, key):
+        return False
+
 
 #
 # Execer tools
