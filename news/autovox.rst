@@ -1,6 +1,6 @@
 **Added:**
 
-* Added `autovox` xontrib
+* Added ``autovox`` xontrib
 
 **Changed:**
 
