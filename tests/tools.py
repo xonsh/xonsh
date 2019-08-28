@@ -122,12 +122,17 @@ class DummyEnv(MutableMapping):
         return {k: str(v) for k, v in self._d.items()}
 
     def __getitem__(self, k):
-        return self._d[k]
+        if k is ...:
+            return self
+        else:
+            return self._d[k]
 
     def __setitem__(self, k, v):
+        assert k is not ...
         self._d[k] = v
 
     def __delitem__(self, k):
+        assert k is not ...
         del self._d[k]
 
     def __len__(self):
