@@ -177,3 +177,50 @@ def test_reserved_names(xonsh_builtins, tmpdir):
             vox.create("spameggs/Scripts")
         else:
             vox.create("spameggs/bin")
+
+
+@skip_if_on_msys
+@skip_if_on_conda
+def test_autovox(xonsh_builtins, tmpdir):
+    """
+    Tests that autovox works
+    """
+    import importlib
+    from xonsh.lib import subprocess
+    import xonsh.dirstack
+
+    # Set up an isolated venv home
+    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
+
+    # Makes sure that event handlers are registered
+    import xontrib.autovox
+    importlib.reload(xontrib.autovox)
+
+    # Set up enough environment for xonsh to function
+    xonsh_builtins.__xonsh__.env['PWD'] = os.getcwd()
+    xonsh_builtins.__xonsh__.env['DIRSTACK_SIZE'] = 10
+    xonsh_builtins.__xonsh__.env['PATH'] = []
+
+    xonsh_builtins.__xonsh__.env['XONSH_SHOW_TRACEBACK'] = True
+
+    @xonsh_builtins.events.autovox_policy
+    def policy(path, **_):
+        print("Checking", repr(path), vox.active())
+        if str(path) == str(tmpdir):
+            return "myenv"
+
+    vox = Vox()
+
+    print(xonsh_builtins.__xonsh__.env['PWD'])
+    xonsh.dirstack.pushd([str(tmpdir)])
+    print(xonsh_builtins.__xonsh__.env['PWD'])
+    assert vox.active() is None
+    xonsh.dirstack.popd([])
+    print(xonsh_builtins.__xonsh__.env['PWD'])
+
+    vox.create('myenv')
+    xonsh.dirstack.pushd([str(tmpdir)])
+    print(xonsh_builtins.__xonsh__.env['PWD'])
+    assert vox.active() == 'myenv'
+    xonsh.dirstack.popd([])
+    print(xonsh_builtins.__xonsh__.env['PWD'])
