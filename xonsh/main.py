@@ -447,6 +447,8 @@ def main_xonsh(args):
                 )
             else:
                 print("xonsh: {0}: No such file or directory.".format(args.file))
+                events.on_exit.fire()
+                sys.exit(1)
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
             code = sys.stdin.read()
