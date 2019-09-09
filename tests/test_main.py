@@ -186,3 +186,9 @@ def test_xonsh_failback_script_from_file(shell, monkeypatch, monkeypatch_stderr)
     with pytest.raises(Exception):
         xonsh.main.main()
     assert len(checker) == 0
+
+
+def test_xonsh_no_file_returncode(shell, monkeypatch, monkeypatch_stderr):
+    monkeypatch.setattr(sys, "argv", ["xonsh", "foobazbarzzznotafileatall.xsh"])
+    with pytest.raises(SystemExit):
+        xonsh.main.main()
