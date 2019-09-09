@@ -9,6 +9,11 @@
   "url": "https://github.com/sagartewari01/autojump-xonsh",
   "description": ["autojump support for xonsh"]
  },
+ {"name": "autovox",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Manages automatic activation of virtual environments."]
+ },
  {"name": "autoxsh",
   "package": "xonsh-autoxsh",
   "url": "https://github.com/Granitas/xonsh-autoxsh",
