@@ -12,6 +12,3 @@ def test_list():
 def test_string():
     assert as_iterable("my string") == ("my string",)
 
-
-def test_dict():
-    assert as_iterable({"a": 1}) == ({"a": 1},)

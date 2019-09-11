@@ -21,13 +21,11 @@ def as_iterable(iterable_or_scalar):
    [1, 2, 3]
    >>> as_iterable("my string")
    ("my string", )
-   >>> as_iterable({'a': 1})
-   ({'a': 1}, )
    """
 
     if iterable_or_scalar is None:
         return ()
-    elif isinstance(iterable_or_scalar, (str, bytes, dict)):
+    elif isinstance(iterable_or_scalar, (str, bytes)):
         return (iterable_or_scalar,)
     elif hasattr(iterable_or_scalar, "__iter__"):
         return iterable_or_scalar
