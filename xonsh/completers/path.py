@@ -129,7 +129,7 @@ def _add_cdpaths(paths, prefix):
             test_glob, ignore_case=(not csc), sort_result=glob_sorted
         ):
             if os.path.isdir(s):
-                paths.add(os.path.basename(s))
+                paths.add(os.path.relpath(s, cdp))
 
 
 def _quote_to_use(x):
@@ -141,7 +141,15 @@ def _quote_to_use(x):
         return single
 
 
-def _quote_paths(paths, start, end, append_end=True):
+def _is_directory_in_cdpath(path):
+    env = builtins.__xonsh__.env
+    for cdp in env.get("CDPATH"):
+        if os.path.isdir(os.path.join(cdp, path)):
+            return True
+    return False
+
+
+def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     expand_path = builtins.__xonsh__.expand_path
     out = set()
     space = " "
@@ -161,7 +169,8 @@ def _quote_paths(paths, start, end, append_end=True):
         end = orig_end
         if start == "" and need_quotes:
             start = end = _quote_to_use(s)
-        if os.path.isdir(expand_path(s)):
+        expanded = expand_path(s)
+        if os.path.isdir(expanded) or (cdpath and _is_directory_in_cdpath(expanded)):
             _tail = slash
         elif end == "":
             _tail = space
@@ -315,7 +324,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
     paths, _ = _quote_paths(
-        {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end
+        {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
     )
     paths.update(filter(filtfunc, _dots(prefix)))
     paths.update(filter(filtfunc, _env(prefix)))
