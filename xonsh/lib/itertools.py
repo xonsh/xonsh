@@ -11,8 +11,8 @@ def as_iterable(iterable_or_scalar):
        Otherwise return `obj`
    Notes
    -----
-   Although both string types and dictionaries are iterable in Python, we are treating them as not iterable in this
-   method.  Thus, as_iterable(dict()) returns (dict, ) and as_iterable(string) returns (string, )
+   Although string types are iterable in Python, we are treating them as not iterable in this
+   method.  Thus, as_iterable(string) returns (string, )
    Examples
    ---------
    >>> as_iterable(1)
