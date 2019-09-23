@@ -11,3 +11,4 @@ largely written in xonsh itself.
 
     os
     subprocess
+    itertools
