@@ -409,7 +409,7 @@ class BaseShell(object):
             rtn=info["rtn"],
             out=info.get("out", None),
             ts=info["ts"],
-            cwd=info["cwd"]
+            cwd=info["cwd"],
         )
         if hist is not None:
             hist.append(info)
