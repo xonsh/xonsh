@@ -393,6 +393,7 @@ class BaseShell(object):
         """
         hist = builtins.__xonsh__.history  # pylint: disable=no-member
         info["rtn"] = hist.last_cmd_rtn if hist is not None else None
+        info["cwd"] = os.getcwd()
         tee_out = tee_out or None
         last_out = hist.last_cmd_out if hist is not None else None
         if last_out is None and tee_out is None:
@@ -404,7 +405,11 @@ class BaseShell(object):
         else:
             info["out"] = tee_out + "\n" + last_out
         events.on_postcommand.fire(
-            cmd=info["inp"], rtn=info["rtn"], out=info.get("out", None), ts=info["ts"]
+            cmd=info["inp"],
+            rtn=info["rtn"],
+            out=info.get("out", None),
+            ts=info["ts"],
+            cwd=info["cwd"]
         )
         if hist is not None:
             hist.append(info)

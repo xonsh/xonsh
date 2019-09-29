@@ -44,7 +44,7 @@ Fires just before a command is executed.
 events.doc(
     "on_postcommand",
     """
-on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
+on_postcommand(cmd: str, rtn: int, out: str or None, ts: list, cwd: str) -> None
 
 Fires just after a command is executed. The arguments are the same as history.
 
@@ -54,6 +54,7 @@ Parameters:
 * ``rtn``: The result of the command executed (``0`` for success)
 * ``out``: If xonsh stores command output, this is the output
 * ``ts``: Timestamps, in the order of ``[starting, ending]``
+* ``cwd``: The absolute path to where command executed
 """,
 )
 
