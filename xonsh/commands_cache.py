@@ -474,6 +474,7 @@ def default_threadable_predictors():
         "nano": predict_help_ver,
         "nmcli": predict_true,
         "nvim": predict_false,
+        "percol": predict_false,
         "ponysay": predict_help_ver,
         "psql": predict_false,
         "push": predict_shell,
