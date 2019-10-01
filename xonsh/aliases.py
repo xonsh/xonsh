@@ -536,6 +536,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
             print(msg.format(k, ns.shell), file=stderr)
 
 
+@unthreadable
 def source_alias(args, stdin=None):
     """Executes the contents of the provided files in the current context.
     If sourced file isn't found in cwd, search for file along $PATH to source
