@@ -100,14 +100,16 @@ class PromptToolkit2Shell(BaseShell):
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         completer = None if completions_display == "none" else self.pt_completer
 
+        get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
+
         if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
-            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
         else:
             get_prompt_tokens = self.prompt_tokens()
             get_rprompt_tokens = self.rprompt_tokens()
-            get_bottom_toolbar_tokens = self.bottom_toolbar_tokens()
+            if get_bottom_toolbar_tokens:
+                get_bottom_toolbar_tokens = get_bottom_toolbar_tokens()
 
         if env.get("VI_MODE"):
             editing_mode = EditingMode.VI
@@ -236,7 +238,7 @@ class PromptToolkit2Shell(BaseShell):
         toks = partial_color_tokenize(p)
         return PygmentsTokens(toks)
 
-    def bottom_toolbar_tokens(self):
+    def _bottom_toolbar_tokens(self):
         """Returns a list of (token, str) tuples for the current bottom
         toolbar.
         """
@@ -249,6 +251,13 @@ class PromptToolkit2Shell(BaseShell):
             print_exception()
         toks = partial_color_tokenize(p)
         return PygmentsTokens(toks)
+
+    @property
+    def bottom_toolbar_tokens(self):
+        """Returns self._bottom_toolbar_tokens if it would yield a result
+        """
+        if builtins.__xonsh__.env.get("BOTTOM_TOOLBAR"):
+            return self._bottom_toolbar_tokens
 
     def continuation_tokens(self, width, line_number, is_soft_wrap=False):
         """Displays dots in multiline prompt"""
