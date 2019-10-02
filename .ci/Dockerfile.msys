@@ -12,6 +12,7 @@ RUN powershell -Command \
     Expand-7zip msys2.tar C:/ ; \
     Write-Output 'Done'
 
+RUN C:\msys64\usr\bin\pacman-key --init
 RUN C:\msys64\usr\bin\pacman -Syu
 
 FROM mcr.microsoft.com/windows/nanoserver:1809
