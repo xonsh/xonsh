@@ -3,7 +3,7 @@
 ************************************
 Tutorial: Xonsh Projects
 ************************************
-Bam! Suppose you want to get beyond scriptiung and write a whole
+Bam! Suppose you want to get beyond scripting and write a whole
 library, utility, or other big project in xonsh. Here is how you do
 that. Spoiler alert: it is easy, powerful, and fun!
 
@@ -11,7 +11,7 @@ Overview
 ================================
 Xonsh is fully interoperable with Python. Writing a xonsh library is
 very similar to writing a Python library, using all of the same tooling
-and infrastucture for packaging pure Python code.
+and infrastructure for packaging pure Python code.
 
 Structure
 ==========
@@ -30,7 +30,7 @@ Here is a sample file system layout would be::
           |- b.xsh     # "mypkg.subpkg.b", full module name
 
 To ensure that these files are installed, you need to provide the
-approriate information in ``setup.py`` file for your project.
+appropriate information in ``setup.py`` file for your project.
 For the above structure, this looks like the following.
 
 **setup.py**::
@@ -52,7 +52,7 @@ the exact setup depends on the execution context. To simplify the process
 of constructing the session properly, xonsh provides the ``xonsh.main.setup()``
 function specifically for use in 3rd party packages.
 
-While ``xonsh.main.setup()`` is safely reentrant, it is a good idea to add the following
+While ``xonsh.main.setup()`` is safely re-entrant, it is a good idea to add the following
 snippet to the root-level ``__init__.py`` of your project. With the ``mypkg`` example
 above, the session setup is as follows:
 
