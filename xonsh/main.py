@@ -487,9 +487,15 @@ def setup(
     threadable_predictors=(),
 ):
     """Starts up a new xonsh shell. Calling this in function in another
-    packages __init__.py will allow xonsh to be fully used in the
+    packages ``__init__.py`` will allow xonsh to be fully used in the
     package in headless or headed mode. This function is primarily indended to
     make starting up xonsh for 3rd party packages easier.
+
+    Here is example of using this at the top of an ``__init__.py``::
+
+        from xonsh.main import setup
+        setup()
+        del setup
 
     Parameters
     ----------
