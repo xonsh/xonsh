@@ -1,3 +1,4 @@
+# From https://github.com/StefanScherer/dockerfiles-windows/blob/master/msys2/Dockerfile
 FROM mcr.microsoft.com/windows/servercore:1809 AS builder
 
 RUN powershell -Command \
