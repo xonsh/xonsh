@@ -1,5 +1,5 @@
 # From https://github.com/StefanScherer/dockerfiles-windows/blob/master/msys2/Dockerfile
-FROM mcr.microsoft.com/windows/servercore:2019 AS builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2019 AS builder
 
 RUN powershell -Command \
     $ProgressPreference = 'SilentlyContinue' ; \
@@ -15,6 +15,6 @@ RUN powershell -Command \
 RUN C:\msys64\usr\bin\pacman-key --init
 RUN C:\msys64\usr\bin\pacman -Syu
 
-FROM mcr.microsoft.com/windows/nanoserver:2019
+FROM mcr.microsoft.com/windows/nanoserver:1903
 COPY --from=builder C:/Windows/system32/netapi32.dll C:/Windows/system32/netapi32.dll
 COPY --from=builder C:/msys64 C:/msys64
