@@ -377,14 +377,14 @@ def _default_style():
         # Reset
         "NO_COLOR": "0",  # Text Reset
         # Regular Colors
-        "BLACK": "0;30",  # BLACK
-        "RED": "0;31",  # RED
-        "GREEN": "0;32",  # GREEN
-        "YELLOW": "0;33",  # YELLOW
-        "BLUE": "0;34",  # BLUE
-        "PURPLE": "0;35",  # PURPLE
-        "CYAN": "0;36",  # CYAN
-        "WHITE": "0;37",  # WHITE
+        "BLACK": "30",  # BLACK
+        "RED": "31",  # RED
+        "GREEN": "32",  # GREEN
+        "YELLOW": "33",  # YELLOW
+        "BLUE": "34",  # BLUE
+        "PURPLE": "35",  # PURPLE
+        "CYAN": "36",  # CYAN
+        "WHITE": "37",  # WHITE
         # Background
         "BACKGROUND_BLACK": "40",  # BLACK
         "BACKGROUND_RED": "41",  # RED
@@ -395,23 +395,23 @@ def _default_style():
         "BACKGROUND_CYAN": "46",  # CYAN
         "BACKGROUND_WHITE": "47",  # WHITE
         # High Intensity
-        "INTENSE_BLACK": "0;90",  # BLACK
-        "INTENSE_RED": "0;91",  # RED
-        "INTENSE_GREEN": "0;92",  # GREEN
-        "INTENSE_YELLOW": "0;93",  # YELLOW
-        "INTENSE_BLUE": "0;94",  # BLUE
-        "INTENSE_PURPLE": "0;95",  # PURPLE
-        "INTENSE_CYAN": "0;96",  # CYAN
-        "INTENSE_WHITE": "0;97",  # WHITE
+        "INTENSE_BLACK": "90",  # BLACK
+        "INTENSE_RED": "91",  # RED
+        "INTENSE_GREEN": "92",  # GREEN
+        "INTENSE_YELLOW": "93",  # YELLOW
+        "INTENSE_BLUE": "94",  # BLUE
+        "INTENSE_PURPLE": "95",  # PURPLE
+        "INTENSE_CYAN": "96",  # CYAN
+        "INTENSE_WHITE": "97",  # WHITE
         # High Intensity backgrounds
-        "BACKGROUND_INTENSE_BLACK": "0;100",  # BLACK
-        "BACKGROUND_INTENSE_RED": "0;101",  # RED
-        "BACKGROUND_INTENSE_GREEN": "0;102",  # GREEN
-        "BACKGROUND_INTENSE_YELLOW": "0;103",  # YELLOW
-        "BACKGROUND_INTENSE_BLUE": "0;104",  # BLUE
-        "BACKGROUND_INTENSE_PURPLE": "0;105",  # PURPLE
-        "BACKGROUND_INTENSE_CYAN": "0;106",  # CYAN
-        "BACKGROUND_INTENSE_WHITE": "0;107",  # WHITE
+        "BACKGROUND_INTENSE_BLACK": "100",  # BLACK
+        "BACKGROUND_INTENSE_RED": "101",  # RED
+        "BACKGROUND_INTENSE_GREEN": "102",  # GREEN
+        "BACKGROUND_INTENSE_YELLOW": "103",  # YELLOW
+        "BACKGROUND_INTENSE_BLUE": "104",  # BLUE
+        "BACKGROUND_INTENSE_PURPLE": "105",  # PURPLE
+        "BACKGROUND_INTENSE_CYAN": "106",  # CYAN
+        "BACKGROUND_INTENSE_WHITE": "107",  # WHITE
     }
     return style
 
