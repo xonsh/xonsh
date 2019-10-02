@@ -4,13 +4,14 @@ test_task:
         matrix:
           - image: python:3.6
           - image: python:3.7
-          - image: python:3.8
+          - image: python:3.8-rc
           - image: pypy:3.6
     - windows_container:
         matrix:
-          - image: python:3.6
+          # Python 3.6 container was not built for windows
+          # - image: python:3.6
           - image: python:3.7
-          - image: python:3.8
+          - image: python:3.8-rc
   setup_script:
     - pip install -r requirements/tests.txt
     - pip install .
@@ -42,7 +43,7 @@ mac_test_task:
 
 black_task:
   container:
-    image: python:3-slim
+    image: python:3
   setup_script:
     - pip install black==18.9b0
   lint_script:
@@ -51,7 +52,7 @@ black_task:
 
 docs_task:
   container:
-    image: python:3-slim
+    image: python:3
   setup_script:
     - pip install -r requirements/docs.txt
   build_script:
