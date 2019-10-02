@@ -33,7 +33,8 @@ windows_test_task:
 
 msys_test_task:
   windows_container:
-    dockerfile: .ci/Dockerfile.msys
+    # This includes msys
+    image: cirrusci/windowsservercore:cmake
     os_version: 2019
   # TODO: Multiple python versions
   msys_script:
