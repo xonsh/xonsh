@@ -31,6 +31,21 @@ windows_test_task:
     - xonsh run-tests.xsh
 
 
+msys_test_task:
+  windows_container:
+    image: chocolateyfest/chocolatey:latest
+    os_version: 2019
+  # TODO: Multiple python versions
+  msys_script:
+    - choco install msys2
+    - C:\msys64\usr\bin\pacman -S python python-pip
+  setup_script:
+    - C:\msys64\usr\bin\bash pip install -r requirements/tests.txt
+    - C:\msys64\usr\bin\bash pip install .
+  test_script:
+    - C:\msys64\usr\bin\bash xonsh run-tests.xsh
+
+
 mac_test_task:
   osx_instance:
     image: mojave-base
