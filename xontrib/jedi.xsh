@@ -31,10 +31,13 @@ def complete_jedi(prefix, line, start, end, ctx):
     src = builtins.__xonsh__.shell.shell.accumulated_inputs + line
     script = jedi.api.Interpreter(src, [ctx], column=end)
     if builtins.__xonsh__.env.get('CASE_SENSITIVE_COMPLETIONS'):
-        rtn = {x.name_with_symbols for x in script.completions()
-               if x.name_with_symbols.startswith(prefix)}
+       rtn = {x.name_with_symbols for x in script.completions()
+              if x.name_with_symbols.startswith(prefix)}
     else:
-        rtn = {x.name_with_symbols for x in script.completions()}
+        try:
+            rtn = {x.name_with_symbols for x in script.completions()}
+        except Exception:
+            rtn = set()
     return rtn
 
 
