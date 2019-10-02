@@ -54,9 +54,9 @@ docs_task:
     image: python:3-slim
   setup_script:
     - pip install -r requirements/docs.txt
-  docs_script:
+  build_script:
     - cd docs && make html
-  docs_artifacts:
+  upload_artifacts:
     path: docs/_build/*
 
 # TODO: Docs deploy
