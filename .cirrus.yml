@@ -33,11 +33,10 @@ windows_test_task:
 
 msys_test_task:
   windows_container:
-    image: chocolateyfest/chocolatey:latest
+    dockerfile: .ci/Dockerfile.msys
     os_version: 2019
   # TODO: Multiple python versions
   msys_script:
-    - choco install msys2
     - C:\msys64\usr\bin\pacman -S python python-pip
   setup_script:
     - C:\msys64\usr\bin\bash pip install -r requirements/tests.txt
