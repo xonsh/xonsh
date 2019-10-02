@@ -11,7 +11,9 @@ test_task:
           # Python 3.6 container was not built for windows
           # - image: python:3.6
           - image: python:3.7
+            os_version: 2019
           - image: python:3.8-rc
+            os_version: 2019
   setup_script:
     - pip install -r requirements/tests.txt
     - pip install .
