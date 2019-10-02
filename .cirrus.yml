@@ -5,6 +5,7 @@ test_task:
           - image: python:3.6
           - image: python:3.7
           - image: python:3.8
+          - image: pypy:3.6
     - windows_container:
         matrix:
           - image: python:3.6
@@ -16,24 +17,44 @@ test_task:
   test_script:
     - xonsh run-tests.xsh
 
-# mac_test_task:
-#   osx_instance:
-#     image: mojave-base
+
+mac_test_task:
+  osx_instance:
+    image: mojave-base
+  env:
+    PATH: "$HOME/miniconda/bin:$PATH"
+    matrix:
+      - PYTHON: "3.6"
+      - PYTHON: "3.7"
+      - PYTHON: "3.8"
+  conda_script:
+    - wget "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -O miniconda.sh;
+    - bash miniconda.sh -b -p $HOME/miniconda;
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q conda
+    - conda info -a
+  setup_script:
+    - pip install -r requirements/tests.txt
+    - pip install .
+  test_script:
+    - xonsh run-tests.xsh
+
 
 black_task:
   container:
     image: python:3-slim
   setup_script:
     - pip install black==18.9b0
-  lint_task:
+  lint_script:
     - black --check --exclude=xonsh/ply/ xonsh/ xontrib/
+
 
 docs_task:
   container:
     image: python:3-slim
   setup_script:
     - pip install -r requirements/docs.txt
-  docs_task:
+  docs_script:
     - cd docs && make html
   docs_artifacts:
     path: docs/_build/*
