@@ -55,6 +55,7 @@ docs_task:
     image: python:3
   setup_script:
     - pip install -r requirements/docs.txt
+    - pip install .
   build_script:
     - cd docs && make html
   upload_artifacts:
