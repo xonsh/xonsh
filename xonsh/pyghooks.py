@@ -294,6 +294,14 @@ def PYGMENTS_MODIFIERS():
         "INVERT": None,
         "CONCEAL": None,
         "STRIKETHROUGH": None,
+        "BOLDOFF": None,
+        "FAINTOFF": None,
+        "ITALICOFF": None,
+        "UNDERLINEOFF": None,
+        "BLINKOFF": None,
+        "INVERTOFF": None,
+        "REVEALOFF": None,
+        "STRIKETHROUGHOFF": None,
     }
 
 
