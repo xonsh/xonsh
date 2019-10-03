@@ -276,7 +276,6 @@ ISPEED = 4
 OSPEED = 5
 CC = 6
 
-
 #
 # Dev release info
 #

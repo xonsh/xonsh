@@ -1849,9 +1849,11 @@ class CommandPipeline:
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
+        self._tcmode = None
 
         background = self.spec.background
         pipeline_group = None
+        self._disable_suspend_signal()
         for spec in specs:
             if self.starttime is None:
                 self.starttime = time.time()
@@ -2141,6 +2143,7 @@ class CommandPipeline:
     def _return_terminal(self):
         if ON_WINDOWS or not ON_POSIX:
             return
+        self._restore_suspend_signal()
         pgid = os.getpgid(0)
         if self.term_pgid is None or pgid == self.term_pgid:
             return
@@ -2266,6 +2269,25 @@ class CommandPipeline:
             finally:
                 # this is need to get a working terminal in interactive mode
                 self._return_terminal()
+
+    def _disable_suspend_signal(self):
+        if ON_WINDOWS:
+            return
+        self._tcmode = termios.tcgetattr(0)[:]  # only makes sense for stdin
+        new_cc = self._tcmode[CC][:]
+        new_cc[termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
+        new_mode = self._tcmode[:]
+        new_mode[CC] = new_cc
+        termios.tcsetattr(0, termios.TCSANOW, new_mode)
+
+    def _restore_suspend_signal(self):
+        if ON_WINDOWS:
+            return
+        print(self._tcmode[CC][termios.VSUSP])
+        try:
+            termios.tcsetattr(0, termios.TCSANOW, self._tcmode)
+        except termios.error:
+            pass
 
     #
     # Properties
