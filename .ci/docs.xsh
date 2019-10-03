@@ -13,7 +13,7 @@ ARTIFACTS_URL = f"https://api.cirrus-ci.com/v1/artifact/build/{$CIRRUS_BUILD_ID}
 DEST_REPO_URL = f"https://github.com/xonsh/xonsh-docs.git"
 
 
-branch_name = 'gh-pages' if $CIRRUS_TAG else 'dev'
+branch_name = 'gh-pages' if 'CIRRUS_TAG' in ${...} else 'dev'
 
 
 with tempfile.TemporaryDirectory() as td:
