@@ -56,7 +56,7 @@ def test_repath_backslash(home_env):
     exp = os.listdir(HOME_PATH)
     exp = {p for p in exp if re.match(r"\w\w.*", p)}
     exp = {os.path.join(HOME_PATH, p) for p in exp}
-    obs = set(pathsearch(regexsearch, r"~/\w\w.*"))
+    obs = set(pathsearch(regexsearch, r"~/\w\w.*", pymode=True))
     assert exp == obs
 
 
