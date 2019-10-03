@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory() as td:
 
     print("Cloning destination")
     git clone -b gh-pages --depth 1 @(DEST_REPO_URL) dest
-    cp -R docs/_build/html dest/
+    cp -R docs/_build/html/* dest/
 
     # TODO: Commit & push
     cd dest
