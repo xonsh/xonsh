@@ -72,7 +72,7 @@ docs_task:
   build_script:
     - cd docs && make html
   upload_artifacts:
-    path: docs/_build/*
+    path: docs/_build/**/*
 
 docs_upload_task:
   # only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_TAG != ''
