@@ -38,14 +38,17 @@ msys_test_task:
     os_version: 2019
   # TODO: Multiple python versions
   env:
-    MSYS: C:\tools\msys64\usr\bin\bash
+    ROOT: C:\tools\msys64
+    BIN: $ROOT\usr\bin
+    BASH: $BIN\bash.exe
+    PACMAN: $BIN\pacman.exe
   msys_script:
-    - "%MSYS% pacman -S python python-pip"
+    - "%PACMAN% -S python3-pip"
   setup_script:
-    - "%MSYS% pip install -r requirements/tests.txt"
-    - "%MSYS% pip install ."
+    - "%BASH% pip3 install -r requirements/tests.txt"
+    - "%BASH% pip3 install ."
   test_script:
-    - "%MSYS% xonsh run-tests.xsh"
+    - "%BASH% xonsh run-tests.xsh"
 
 
 mac_test_task:
