@@ -1849,7 +1849,7 @@ class CommandPipeline:
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
-        self._tcmode = None
+        self._tc_cc_susp = None
 
         background = self.spec.background
         pipeline_group = None
@@ -2273,19 +2273,36 @@ class CommandPipeline:
     def _disable_suspend_signal(self):
         if ON_WINDOWS:
             return
-        self._tcmode = termios.tcgetattr(0)[:]  # only makes sense for stdin
-        new_cc = self._tcmode[CC][:]
-        new_cc[termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
-        new_mode = self._tcmode[:]
-        new_mode[CC] = new_cc
-        termios.tcsetattr(0, termios.TCSANOW, new_mode)
+        #stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
+        #if stty is None:
+        #    return
+        #os.system(stty + " sane -isig")
+        #os.system(stty + " -a")
+        #return
+        mode = termios.tcgetattr(0)  # only makes sense for stdin
+        self._tc_cc_susp = mode[CC][termios.VSUSP]
+        #new_cc = self._tcmode[CC][:]
+        #new_cc[termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
+        mode[CC][termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
+        #new_mode = self._tcmode[:]
+        #new_mode[CC] = new_cc
+        termios.tcsetattr(0, termios.TCSANOW, mode)
 
     def _restore_suspend_signal(self):
         if ON_WINDOWS:
             return
-        print(self._tcmode[CC][termios.VSUSP])
+        #stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
+        #if stty is None:
+        #    return
+        #os.system(stty + " sane")
+        #os.system(stty + " -a")
+        #return
+        mode = termios.tcgetattr(0)  # only makes sense for stdin
+        #mode[CC][termios.VSUSP] = self._tc_cc_susp  # set ^Z (ie SIGSTOP) to undefined
+        mode[CC][termios.VSUSP] = b"\x1a"  # set ^Z (ie SIGSTOP) to undefined
+        print(self._tc_cc_susp)
         try:
-            termios.tcsetattr(0, termios.TCSANOW, self._tcmode)
+            termios.tcsetattr(0, termios.TCSANOW, mode)
         except termios.error:
             pass
 
