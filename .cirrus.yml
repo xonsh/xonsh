@@ -74,4 +74,13 @@ docs_task:
   upload_artifacts:
     path: docs/_build/*
 
-# TODO: Docs deploy
+docs_upload_task:
+  # only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_TAG != ''
+  depends_on:
+    - docs
+  # env:
+  #   GITHUB_TOKEN: ...
+  container:
+    image: xonsh/xonsh:slim
+  script:
+    - xonsh .ci/docs.xsh
