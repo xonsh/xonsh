@@ -53,6 +53,7 @@ DEFAULT_CMAP = {
         ("UNDERLINE_RED", "4;0;31"),
         ("BOLD_UNDERLINE_RED", "1;4;0;31"),
         ("UNDERLINE_BOLD_RED", "4;1;0;31"),
+        ("ITALIC_REVEALOFF_WHITE", "3;28;0;37"),
         # The hex code #000 can map to ANSI-256 0 or 16
         ("#000", {"38;5;0", "38;5;16"}),
         ("#000000", {"38;5;0", "38;5;16"}),
@@ -88,6 +89,7 @@ def test_ansi_reverse_style(key, value):
         ("00;36", ("CYAN",)),
         ("01;31", ("BOLD_RED",)),
         ("04;31", ("UNDERLINE_RED",)),
+        ("3;28", ("ITALIC_REVEALOFF_WHITE",)),
         ("1;4;31", ("BOLD_UNDERLINE_RED",)),
         ("4;1;31", ("UNDERLINE_BOLD_RED",)),
         ("31;42", ("RED", "BACKGROUND_GREEN")),
