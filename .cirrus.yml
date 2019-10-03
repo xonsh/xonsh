@@ -1,19 +1,29 @@
-test_task:
-  matrix:
-    - container:
-        matrix:
-          - image: python:3.6
-          - image: python:3.7
-          - image: python:3.8-rc
-          - image: pypy:3.6
-    - windows_container:
-        matrix:
-          # Python 3.6 container was not built for windows
-          # - image: python:3.6
-          - image: python:3.7
-            os_version: 2019
-          - image: python:3.8-rc
-            os_version: 2019
+linux_test_task:
+  container:
+    matrix:
+      - image: python:3.6
+      - image: python:3.7
+      - image: python:3.8-rc
+      - image: pypy:3.6
+  install_script:
+    # Needed for some tests
+    - apt-get install -y man-db
+  setup_script:
+    - pip install -r requirements/tests.txt
+    - pip install .
+  test_script:
+    - xonsh run-tests.xsh
+
+
+windows_test_task:
+  windows_container:
+    matrix:
+      # Python 3.6 container was not built for windows
+      # - image: python:3.6
+      - image: python:3.7
+        os_version: 2019
+      - image: python:3.8-rc
+        os_version: 2019
   setup_script:
     - pip install -r requirements/tests.txt
     - pip install .
