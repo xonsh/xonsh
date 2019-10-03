@@ -33,6 +33,27 @@ with tempfile.TemporaryDirectory() as td:
     git clone -b gh-pages --depth 1 @(DEST_REPO_URL) dest
     cp -R docs/_build/html/* dest/
 
-    # TODO: Commit & push
+    # Ok, time for all the git stuff
+
     cd dest
+
+    git config user.name "Lou Carcolh"
+    git config user.email "nobody@xon.sh"
+
     git status
+
+    git add .
+
+    msg = f"""
+Automatic Docs Build.
+
+Cirrus Build: https://cirrus-ci.com/build/{$CIRRUS_BUILD_ID}
+Cirrus Task: https://cirrus-ci.com/task/{$CIRRUS_TASK_ID}
+Git Commit: {$CIRRUS_CHANGE_IN_REPO}
+Message:
+
+{$CIRRUS_CHANGE_MESSAGE}
+"""
+
+    git commit -m @(msg)
+    # git push
