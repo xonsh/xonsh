@@ -809,8 +809,11 @@ class PopenThread(threading.Thread):
         """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed.
         """
         self.suspended = True
+        print("x")
         self.send_signal(signum)
+        print("y")
         self._restore_sigtstp(frame=frame)
+        print("z")
 
     def _restore_sigtstp(self, frame=None):
         old = self.old_tstp_handler

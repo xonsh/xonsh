@@ -67,7 +67,9 @@ def AT_EXIT_SIGNALS():
         signal.SIGTERM,
     )
     if ON_POSIX:
-        sigs += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
+        sigs += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP,
+                #signal.SIGSTOP
+                )
     return sigs
 
 
