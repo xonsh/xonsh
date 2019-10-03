@@ -9,7 +9,8 @@ import zipfile
 $RAISE_SUBPROC_ERROR = True
 
 ARTIFACTS_URL = f"https://api.cirrus-ci.com/v1/artifact/build/{$CIRRUS_BUILD_ID}/docs/upload.zip"
-DEST_REPO_URL = f"https://{$GITHUB_TOKEN}@github.com/xonsh/xonsh-docs.git"
+# DEST_REPO_URL = f"https://{$GITHUB_TOKEN}@github.com/xonsh/xonsh-docs.git"
+DEST_REPO_URL = f"https://github.com/xonsh/xonsh-docs.git"
 
 
 branch_name = 'gh-pages' if $CIRRUS_TAG else 'dev'
