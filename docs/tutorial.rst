@@ -1514,6 +1514,23 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   widely supported. For example, ``CONCEAL_BLACK``.
 * ``STRIKETHROUGH_`` is a prefix modifier which draws a line through the text.
   For example, ``STRIKETHROUGH_RED``.
+* ``BOLDOFF_`` is a prefix modifier for removing the intesnity of the font.
+  It may be used with any foreground color.
+  For example, ``BOLDOFF_RED`` and ``BOLD_#112233`` are OK!
+* ``FAINTOFF_`` is a prefix modifier for removing the faintness of the font.
+  For example, ``FAINTOFF_YELLOW``.
+* ``ITALICOFF_`` is a prefix modifier that removes an italic font.
+  For example, ``ITALICOFF_BLUE``.
+* ``UNDERLINEOFF_`` is a prefix qualifier for removing the underline of a
+  foreground color. For example, ``UNDERLINEOFF_GREEN``.
+* ``BLINKOFF_`` is a prefix modifier removing the text blinking,
+  whether that is slow or fast. For example, ``BLINKOFF_PURPLE``.
+* ``INVERTOFF_`` is a prefix modifier restoring the foreground and background colors.
+  For example, ``INVERTOFF_WHITE``.
+* ``CONCEALOFF_`` is a prefix modifier which shows the text. This may not be
+  widely supported. For example, ``CONCEALOFF_BLACK``.
+* ``STRIKETHROUGHOFF_`` is a prefix modifier removing lines through the text.
+  For example, ``STRIKETHROUGHOFF_RED``.
 * Or any other combination of modifiers, such as
   ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
   can use!
