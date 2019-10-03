@@ -370,7 +370,7 @@ print(check_output(["echo", "hello"]).decode("utf8"))
         """
 import sys
 
-if sys.version_tuple[:2] >= (3, 7):
+if sys.version_info[:2] >= (3, 7):
     with open("sourced-file.xsh", "w") as f:
         f.write('''
 from contextvars import ContextVar
