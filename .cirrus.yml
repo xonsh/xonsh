@@ -45,10 +45,10 @@ msys_test_task:
   msys_script:
     - "%PACMAN% --noconfirm -S python3-pip"
   setup_script:
-    - "%BASH% pip3 install -r requirements/tests.txt"
-    - "%BASH% pip3 install ."
+    - "%BASH% -c 'pip3 install -r requirements/tests.txt'"
+    - "%BASH% -c 'pip3 install .'"
   test_script:
-    - "%BASH% xonsh run-tests.xsh"
+    - "%BASH% -c 'xonsh run-tests.xsh'"
 
 
 mac_test_task:
