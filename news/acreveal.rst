@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed missing ANSI color modifiers which causes traceback when they were used by `$LS_COLORS`.  
 
 **Security:**
 
