@@ -38,11 +38,11 @@ with tempfile.TemporaryDirectory() as td:
     cd dest
 
     git config user.name "Lou Carcolh"
-    git config user.email "nobody@xon.sh"
-
-    git status
+    git config user.email "snail@xon.sh"
 
     git add .
+
+    git status
 
     msg = f"""
 Automatic Docs Build.
