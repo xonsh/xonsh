@@ -43,7 +43,7 @@ msys_test_task:
     BASH: $BIN\bash.exe
     PACMAN: $BIN\pacman.exe
   msys_script:
-    - "%PACMAN% -S python3-pip"
+    - "%PACMAN% --noconfirm -S python3-pip"
   setup_script:
     - "%BASH% pip3 install -r requirements/tests.txt"
     - "%BASH% pip3 install ."
