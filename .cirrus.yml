@@ -75,12 +75,15 @@ docs_task:
     path: docs/_build/html/**/*
 
 docs_upload_task:
-  # only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_TAG != ''
+  # only_if: $CIRRUS_TAG != ''
   depends_on:
     - docs
-  # env:
-  #   GITHUB_TOKEN: ...
+  env:
+    GITHUB_KEY: "ENCRYPTED[106330abbf702222a885536266b89ec82665775a98cc0dbc4ad004990feb11922a0259a7df6a49ed9f94474156da588e]"
   container:
     image: xonsh/xonsh
+  ssh_key_file:
+    path: $HOME/.ssh/id_ed25519
+    variable_name: GITHUB_KEY
   script:
     - xonsh .ci/docs-upload.xsh
