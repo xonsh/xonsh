@@ -83,4 +83,4 @@ docs_upload_task:
   container:
     image: xonsh/xonsh
   script:
-    - xonsh .ci/docs.xsh
+    - xonsh .ci/docs-upload.xsh
