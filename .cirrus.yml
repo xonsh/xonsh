@@ -81,6 +81,6 @@ docs_upload_task:
   # env:
   #   GITHUB_TOKEN: ...
   container:
-    image: xonsh/xonsh:slim
+    image: xonsh/xonsh
   script:
     - xonsh .ci/docs.xsh
