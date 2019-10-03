@@ -40,12 +40,12 @@ msys_test_task:
   env:
     MSYS: C:\tools\msys64\usr\bin\bash
   msys_script:
-    - $MSYS pacman -S python python-pip
+    - "%MSYS% pacman -S python python-pip"
   setup_script:
-    - $MSYS pip install -r requirements/tests.txt
-    - $MSYS pip install .
+    - "%MSYS% pip install -r requirements/tests.txt"
+    - "%MSYS% pip install ."
   test_script:
-    - $MSYS xonsh run-tests.xsh
+    - "%MSYS% xonsh run-tests.xsh"
 
 
 mac_test_task:
