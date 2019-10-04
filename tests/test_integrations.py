@@ -363,6 +363,34 @@ print(check_output(["echo", "hello"]).decode("utf8"))
         "hello\n\n",
         0,
     ),
+    #
+    # test contextvars
+    #
+    (
+        """
+import sys
+
+if sys.version_info[:2] >= (3, 7):
+    with open("sourced-file.xsh", "w") as f:
+        f.write('''
+from contextvars import ContextVar
+
+var = ContextVar('var', default='spam')
+var.set('foo')
+        ''')
+
+    source sourced-file.xsh
+
+    print("Var " + var.get())
+
+    import os
+    os.remove('sourced-file.xsh')
+else:
+    print("Var foo")
+""",
+        "Var foo\n",
+        0,
+    ),
 ]
 
 
