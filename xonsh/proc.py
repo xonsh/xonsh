@@ -209,6 +209,8 @@ def populate_fd_queue(reader, fd, queue):
     If this ends or fails, it flags the calling reader object as closed.
     """
     while True:
+        if reader.closed:
+            break
         try:
             c = os.read(fd, 1024)
         except OSError:
@@ -237,6 +239,7 @@ class NonBlockingFDReader(QueueReader):
             The queue reading timeout.
         """
         super().__init__(fd, timeout=timeout)
+        self.closed = False
         # start reading from stream
         self.thread = threading.Thread(
             target=populate_fd_queue, args=(self, self.fd, self.queue)
@@ -254,6 +257,8 @@ def populate_buffer(reader, fd, buffer, chunksize):
     """
     offset = 0
     while True:
+        if reader.closed:
+            break
         try:
             buf = os.pread(fd, chunksize, offset)
         except OSError:
@@ -641,6 +646,11 @@ class PopenThread(threading.Thread):
         # loop over reads while process is running.
         i = j = cnt = 1
         while proc.poll() is None:
+            _, wcode = os.waitpid(self.pid, os.WNOHANG)
+            if os.WIFSTOPPED(wcode):
+                if procout is not None:
+                    os.close(procout.fd)
+                    procout.closed = True
             # this is here for CPU performance reasons.
             if i + j == 0:
                 cnt = min(cnt + 1, 1000)
@@ -1875,6 +1885,7 @@ class CommandPipeline:
                 pipeline_group = proc.pid
                 if update_fg_process_group(pipeline_group, background):
                     self.term_pgid = pipeline_group
+            print("PROC", pipeline_group, proc.pid, self.term_pgid)
             self.procs.append(proc)
         self.proc = self.procs[-1]
 
