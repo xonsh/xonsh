@@ -361,7 +361,9 @@ def _redirect_streams(r, loc=None):
 
 def default_signal_pauser(n, f):
     """Pauses a signal, as needed."""
+    print("got hree")
     signal.pause()
+    print("got hbere")
 
 
 def no_pg_xonsh_preexec_fn():
@@ -369,7 +371,9 @@ def no_pg_xonsh_preexec_fn():
     pipeline group.
     """
     os.setpgrp()
+    print("running first")
     signal.signal(signal.SIGTSTP, default_signal_pauser)
+    print("running first", 2)
 
 
 class SubprocSpec:
@@ -594,14 +598,17 @@ class SubprocSpec:
         if pipeline_group is None or ON_WSL:
             # If there is no pipeline group
             # or the platform is windows subsystem for linux (WSL)
+            print("don't have pipeline group")
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
         else:
+            print("have pipeline group")
 
             def xonsh_preexec_fn():
                 """Preexec function bound to a pipeline group."""
                 os.setpgid(0, pipeline_group)
                 signal.signal(signal.SIGTSTP, default_signal_pauser)
 
+        signal.signal(signal.SIGTSTP, default_signal_pauser)
         kwargs["preexec_fn"] = xonsh_preexec_fn
 
     def _fix_null_cmd_bytes(self):
