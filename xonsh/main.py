@@ -421,7 +421,7 @@ def main_xonsh(args):
         if args.mode == XonshMode.interactive:
             # enter the shell
             env["XONSH_INTERACTIVE"] = True
-            ignore_sigtstp()
+            #ignore_sigtstp()
             if env["XONSH_INTERACTIVE"] and not any(
                 os.path.isfile(i) for i in env["XONSHRC"]
             ):

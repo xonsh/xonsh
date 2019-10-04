@@ -54,6 +54,7 @@ elif ON_CYGWIN or ON_MSYS:
 else:
 
     def _send_signal(job, signal):
+        print("sending ", signal)
         pgrp = job["pgrp"]
         if pgrp is None:
             for pid in job["pids"]:
@@ -114,7 +115,10 @@ else:
     _shell_pgrp = os.getpgrp()
 
     _block_when_giving = LazyObject(
-        lambda: (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP, signal.SIGCHLD),
+        lambda: (signal.SIGTTOU,
+            signal.SIGTTIN,
+            #signal.SIGTSTP,
+            signal.SIGCHLD),
         globals(),
         "_block_when_giving",
     )
@@ -202,7 +206,7 @@ else:
                     last_task=active_task, backgrounded=backgrounded
                 )
         if os.WIFSTOPPED(wcode):
-            print("^Z")
+            print("YASS^Z")
             active_task["status"] = "stopped"
             backgrounded = True
         elif os.WIFSIGNALED(wcode):

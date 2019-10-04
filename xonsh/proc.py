@@ -209,6 +209,8 @@ def populate_fd_queue(reader, fd, queue):
     If this ends or fails, it flags the calling reader object as closed.
     """
     while True:
+        if reader.closed:
+            break
         try:
             c = os.read(fd, 1024)
         except OSError:
@@ -627,6 +629,7 @@ class PopenThread(threading.Thread):
             procout = None
         else:
             procout = NonBlockingFDReader(capout.fileno(), timeout=self.timeout)
+        self.procout = procout
         # get non-blocking stderr
         stderr = self.stderr.buffer if self.universal_newlines else self.stderr
         caperr = spec.captured_stderr
@@ -634,6 +637,7 @@ class PopenThread(threading.Thread):
             procerr = None
         else:
             procerr = NonBlockingFDReader(caperr.fileno(), timeout=self.timeout)
+        self.procerr = procerr
         # initial read from buffer
         self._read_write(procout, stdout, sys.__stdout__)
         self._read_write(procerr, stderr, sys.__stderr__)
@@ -808,8 +812,15 @@ class PopenThread(threading.Thread):
     def _signal_tstp(self, signum, frame):
         """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed.
         """
+        print("Intercepting SIGTSTP for ", self.pid)
+        print("procout", self.procout)
+        print("procerr", self.procerr)
+        if self.procout is not None:
+            self.procout.closed = True
+        if self.procerr is not None:
+            self.procerr.closed = True
         self.suspended = True
-        self.send_signal(signum)
+        #self.send_signal(signum)
         self._restore_sigtstp(frame=frame)
 
     def _restore_sigtstp(self, frame=None):
@@ -817,7 +828,7 @@ class PopenThread(threading.Thread):
         if old is not None:
             if on_main_thread():
                 signal.signal(signal.SIGTSTP, old)
-            self.old_tstp_handler = None
+            #self.old_tstp_handler = None
         if frame is not None:
             self._disable_cbreak_stdin()
 
@@ -938,6 +949,7 @@ class PopenThread(threading.Thread):
         if self.proc is None:
             return
         try:
+            print("Sending signal ", signal)
             rtn = self.proc.send_signal(signal)
         except ProcessLookupError:
             # This can happen in the case of !(cmd) when the command has ended
