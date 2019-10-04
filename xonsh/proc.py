@@ -579,6 +579,7 @@ class PopenThread(threading.Thread):
             os.set_inheritable(stdout.fileno(), False)
 
         try:
+            print(kwargs)
             self.proc = proc = subprocess.Popen(
                 *args, stdin=stdin, stdout=stdout, stderr=stderr, **kwargs
             )
@@ -808,6 +809,7 @@ class PopenThread(threading.Thread):
     def _signal_tstp(self, signum, frame):
         """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed.
         """
+        print("w")
         self.suspended = True
         print("x")
         self.send_signal(signum)
@@ -2271,6 +2273,7 @@ class CommandPipeline:
                 self._return_terminal()
 
     def _disable_suspend_signal(self):
+        return
         if ON_WINDOWS:
             return
         #stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
@@ -2289,6 +2292,7 @@ class CommandPipeline:
         termios.tcsetattr(0, termios.TCSANOW, mode)
 
     def _restore_suspend_signal(self):
+        return
         if ON_WINDOWS:
             return
         #stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
@@ -2300,10 +2304,11 @@ class CommandPipeline:
         mode = termios.tcgetattr(0)  # only makes sense for stdin
         #mode[CC][termios.VSUSP] = self._tc_cc_susp  # set ^Z (ie SIGSTOP) to undefined
         mode[CC][termios.VSUSP] = b"\x1a"  # set ^Z (ie SIGSTOP) to undefined
-        print(self._tc_cc_susp)
         try:
             termios.tcsetattr(0, termios.TCSANOW, mode)
+            print("reset worked")
         except termios.error:
+            print("reset failed")
             pass
 
     #
