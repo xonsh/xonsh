@@ -571,6 +571,7 @@ def DEFAULT_ENSURERS():
         "SUGGEST_MAX_NUM": (is_int, int, str),
         "SUGGEST_THRESHOLD": (is_int, int, str),
         "SUPPRESS_BRANCH_TIMEOUT_MESSAGE": (is_bool, to_bool, bool_to_str),
+        "THREAD_SUBPROCS": (is_bool, to_bool, bool_to_str),
         "UPDATE_COMPLETIONS_ON_KEYPRESS": (is_bool, to_bool, bool_to_str),
         "UPDATE_OS_ENVIRON": (is_bool, to_bool, bool_to_str),
         "UPDATE_PROMPT_ON_KEYPRESS": (is_bool, to_bool, bool_to_str),
@@ -755,6 +756,7 @@ def DEFAULT_VALUES():
         "SUGGEST_COMMANDS": True,
         "SUGGEST_MAX_NUM": 5,
         "SUGGEST_THRESHOLD": 3,
+        "THREAD_SUBPROCS": True,
         "TITLE": DEFAULT_TITLE,
         "UPDATE_COMPLETIONS_ON_KEYPRESS": False,
         "UPDATE_OS_ENVIRON": False,
@@ -1158,6 +1160,26 @@ def DEFAULT_DOCS():
             "Ideally, your terminal emulator will set this correctly but that does "
             "not always happen.",
             configurable=False,
+        ),
+        "THREAD_SUBPROCS": VarDocs(
+            "Whether or not to try to run subrocess mode in a Python thread, "
+            "when applicable. There are various trade-offs, which normally "
+            "affects only interactive sessions.\n\nWhen True:\n\n"
+            "* Xonsh is able capture & store the stdin, stdout, and stderr \n"
+            "  of threadable subprocesses.\n"
+            "* However, stopping threaded suprocs with ^Z (i.e. ``SIGTSTP``)\n"
+            "  is disabled as it causes deadlocked terminals.\n"
+            "  ``SIGTSTP`` may still be issued and only the physical pressing\n"
+            "  of ``Ctrl+Z`` is ignored.\n"
+            "* Thredable commands are run with ``PopenThread`` and threadable \n"
+            "  alias are run with ``ProcProxyThread``.\n\n"
+            "When False:\n\n"
+            "* Xonsh may not be able to capture stdin, stdout, and stderr streams \n"
+            "  unless explicitly asked to do so.\n"
+            "* Stopping the thread with yields to job control.\n"
+            "* Thredable commands are run with ``Popen`` and threadable \n"
+            "  alias are run with ``ProcProxy``.\n\n"
+            "The desired effect is often up to the command, user, or use case."
         ),
         "TITLE": VarDocs(
             "The title text for the window in which xonsh is running. Formatted "
