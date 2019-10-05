@@ -827,7 +827,10 @@ class PopenThread(threading.Thread):
     def  _disable_suspend_keybind(self):
         if ON_WINDOWS:
             return
-        mode = termios.tcgetattr(0)  # only makes sense for stdin
+        try:
+            mode = termios.tcgetattr(0)  # only makes sense for stdin
+        except termios.error:
+            return
         self._tc_cc_vsusp = mode[CC][termios.VSUSP]
         mode[CC][termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
         termios.tcsetattr(0, termios.TCSANOW, mode)
@@ -835,7 +838,10 @@ class PopenThread(threading.Thread):
     def _restore_suspend_keybind(self):
         if ON_WINDOWS:
             return
-        mode = termios.tcgetattr(0)  # only makes sense for stdin
+        try:
+            mode = termios.tcgetattr(0)  # only makes sense for stdin
+        except termios.error:
+            return
         mode[CC][termios.VSUSP] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
         try:
             # this usually doesn't work in interactive mode,
