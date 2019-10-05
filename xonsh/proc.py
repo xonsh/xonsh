@@ -579,9 +579,8 @@ class PopenThread(threading.Thread):
             os.set_inheritable(stdout.fileno(), False)
 
         try:
-            args0 = [sys.executable, "-c", "import subprocess; subprocess.run({!r})".format(args[0])]
-            self.proc = proc = subprocess.Popen(args0,
-                *args[1:], stdin=stdin, stdout=stdout, stderr=stderr, **kwargs
+            self.proc = proc = subprocess.Popen(
+                *args, stdin=stdin, stdout=stdout, stderr=stderr, **kwargs
             )
         except Exception:
             self._clean_up()
@@ -615,8 +614,7 @@ class PopenThread(threading.Thread):
         stdin = self.stdin
         if self.orig_stdin is None:
             origin = None
-        #elif ON_POSIX and self.store_stdin:
-        elif ON_POSIX:
+        elif ON_POSIX and self.store_stdin:
             origin = self.orig_stdin
             origfd = origin if isinstance(origin, int) else origin.fileno()
             origin = BufferedFDParallelReader(origfd, buffer=stdin)
@@ -701,10 +699,6 @@ class PopenThread(threading.Thread):
         i = -1
         for i, chunk in enumerate(iter(reader.read_queue, b"")):
             self._alt_mode_switch(chunk, writer, stdbuf)
-            if b"^Z" in chunk or b"\x1a" in chunk:
-                self._alt_mode_writer(b"^Z was pressed OMG", writer, stdbuf)
-                reader.closed = True
-                break
         if i >= 0:
             writer.flush()
             stdbuf.flush()
@@ -814,13 +808,9 @@ class PopenThread(threading.Thread):
     def _signal_tstp(self, signum, frame):
         """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed.
         """
-        print("SIGTSTP", 1)
         self.suspended = True
-        print("SIGTSTP", 2)
         self.send_signal(signum)
-        print("SIGTSTP", 3)
         self._restore_sigtstp(frame=frame)
-        print("SIGTSTP", 4)
 
     def _restore_sigtstp(self, frame=None):
         old = self.old_tstp_handler
@@ -1857,11 +1847,11 @@ class CommandPipeline:
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
-        self._tc_cc_susp = None
+        self._tc_cc_vsusp = b"\x1a"  # default is usually ^Z
 
         background = self.spec.background
         pipeline_group = None
-        self._disable_suspend_signal()
+        self._disable_suspend_keybind()
         for spec in specs:
             if self.starttime is None:
                 self.starttime = time.time()
@@ -2162,7 +2152,7 @@ class CommandPipeline:
                 # ^Z event. This *has* to be called after we give the terminal
                 # back to the shell.
                 builtins.__xonsh__.shell.shell.restore_tty_sanity()
-        self._restore_suspend_signal()
+        self._restore_suspend_keybind()
 
     def resume(self, job, tee_output=True):
         self.ended = False
@@ -2279,41 +2269,19 @@ class CommandPipeline:
                 self._return_terminal()
 
 
-    def  _disable_suspend_signal(self):
+    def  _disable_suspend_keybind(self):
         if ON_WINDOWS:
             return
-        #stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
-        #if stty is None:
-        #    return
-        #os.system(stty + " sane -isig")
-        #os.system(stty + " sane susp undef swtch ^Z")
-        #os.system(stty + " sane susp undef dsusp ^Z")
-        #os.system(stty + " -a")
-        #return
         mode = termios.tcgetattr(0)  # only makes sense for stdin
-        self._tc_cc_susp = mode[CC][termios.VSUSP]
-        #new_cc = self._tcmode[CC][:]
-        #new_cc[termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
-        #mode[CC][termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
-        #mode[LFLAG] &= ~termios.ECHOCTL
-        #new_mode = self._tcmode[:]
-        #new_mode[CC] = new_cc
+        self._tc_cc_vsusp = mode[CC][termios.VSUSP]
+        mode[CC][termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
         termios.tcsetattr(0, termios.TCSANOW, mode)
 
-    def _restore_suspend_signal(self):
+    def _restore_suspend_keybind(self):
         if ON_WINDOWS:
             return
-        #stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
-        #if stty is None:
-        #    return
-        #os.system(stty + " sane")
-        #os.system(stty + " -a")
-        #return
         mode = termios.tcgetattr(0)  # only makes sense for stdin
-        #mode[CC][termios.VSUSP] = self._tc_cc_susp  # set ^Z (ie SIGSTOP) to undefined
-        mode[CC][termios.VSUSP] = b"\x1a"  # set ^Z (ie SIGSTOP) to undefined
-        #mode[LFLAG] |= termios.ECHOCTL
-        print(self._tc_cc_susp)
+        mode[CC][termios.VSUSP] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
         try:
             termios.tcsetattr(0, termios.TCSANOW, mode)
         except termios.error:
