@@ -554,6 +554,8 @@ class PopenThread(threading.Thread):
         self.timeout = env.get("XONSH_PROC_FREQUENCY")
         self.in_alt_mode = False
         self.stdin_mode = None
+        self._tc_cc_vsusp = b"\x1a"  # default is usually ^Z
+        self._disable_suspend_keybind()
         # stdout setup
         self.orig_stdout = stdout
         self.stdout_fd = 1 if stdout is None else stdout.fileno()
@@ -820,6 +822,27 @@ class PopenThread(threading.Thread):
             self.old_tstp_handler = None
         if frame is not None:
             self._disable_cbreak_stdin()
+        self._restore_suspend_keybind()
+
+    def  _disable_suspend_keybind(self):
+        if ON_WINDOWS:
+            return
+        mode = termios.tcgetattr(0)  # only makes sense for stdin
+        self._tc_cc_vsusp = mode[CC][termios.VSUSP]
+        mode[CC][termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
+        termios.tcsetattr(0, termios.TCSANOW, mode)
+
+    def _restore_suspend_keybind(self):
+        if ON_WINDOWS:
+            return
+        mode = termios.tcgetattr(0)  # only makes sense for stdin
+        mode[CC][termios.VSUSP] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
+        try:
+            # this usually doesn't work in interactive mode,
+            # but we should try it anyway.
+            termios.tcsetattr(0, termios.TCSANOW, mode)
+        except termios.error:
+            pass
 
     #
     # SIGQUIT handler
@@ -1847,11 +1870,9 @@ class CommandPipeline:
         self.lines = []
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
-        self._tc_cc_vsusp = b"\x1a"  # default is usually ^Z
 
         background = self.spec.background
         pipeline_group = None
-        self._disable_suspend_keybind()
         for spec in specs:
             if self.starttime is None:
                 self.starttime = time.time()
@@ -2152,7 +2173,6 @@ class CommandPipeline:
                 # ^Z event. This *has* to be called after we give the terminal
                 # back to the shell.
                 builtins.__xonsh__.shell.shell.restore_tty_sanity()
-        self._restore_suspend_keybind()
 
     def resume(self, job, tee_output=True):
         self.ended = False
@@ -2267,25 +2287,6 @@ class CommandPipeline:
             finally:
                 # this is need to get a working terminal in interactive mode
                 self._return_terminal()
-
-
-    def  _disable_suspend_keybind(self):
-        if ON_WINDOWS:
-            return
-        mode = termios.tcgetattr(0)  # only makes sense for stdin
-        self._tc_cc_vsusp = mode[CC][termios.VSUSP]
-        mode[CC][termios.VSUSP] =  b'\x00'  # set ^Z (ie SIGSTOP) to undefined
-        termios.tcsetattr(0, termios.TCSANOW, mode)
-
-    def _restore_suspend_keybind(self):
-        if ON_WINDOWS:
-            return
-        mode = termios.tcgetattr(0)  # only makes sense for stdin
-        mode[CC][termios.VSUSP] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
-        try:
-            termios.tcsetattr(0, termios.TCSANOW, mode)
-        except termios.error:
-            pass
 
     #
     # Properties
