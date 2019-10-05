@@ -350,3 +350,10 @@ def load_xonsh_bindings(key_bindings):
     @handle(Keys.ControlJ, filter=IsSearching())
     def accept_search(event):
         search.accept_search()
+
+    @handle(Keys.ControlZ)
+    def skip_control_z(event):
+        """Prevents the writing of ^Z to the prompt, if Ctrl+Z was pressed
+        during the previous command.
+        """
+        pass
