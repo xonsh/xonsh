@@ -10,11 +10,11 @@ Authors are sorted by number of commits.
 * Hugo Wang
 * BlahGeek
 * Jean-Benoist Leger
+* christopher
 * Klaus Alexander Seistrup
 * Leonardo Santagada
 * Bob Hyman
 * David Strobach
-* christopher
 * Aaron Griffin
 * Rob Brewer
 * virus
@@ -33,17 +33,17 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
+* Carmen Bianca Bakker
 * Frank Sachsenheim
 * Kurtis Rader
 * cryzed
 * Brian Visel
-* Carmen Bianca Bakker
 * Andrew Hundt
 * Jonathan Slenders
 * Justin Moen
 * con-f-use
-* Stephan Fitzpatrick
 * Caleb Hattingh
+* Stephan Fitzpatrick
 * Raphael Das Gupta
 * K.-Michael Aye
 * Jason R. Coombs
@@ -102,6 +102,7 @@ Authors are sorted by number of commits.
 * Fabien Dubosson
 * Kale Kundert
 * Andrés García García
+* Sean Farley
 * Jan Schulz
 * Nickolay Bukreyev
 * Samuel Dion-Girardeau
@@ -143,8 +144,9 @@ Authors are sorted by number of commits.
 * cclauss
 * Eddie Peters
 * Ke Zhang
-* Sean Farley
 * László Vaskó
+* Allan Crooks
+* micimize
 * Dan Allan
 * adam j hartz
 * Ned Letcher
@@ -206,7 +208,7 @@ Authors are sorted by number of commits.
 * Daniel Smith
 * Nils ANDRÉ-CHANG
 * chengxuncc
+* nedsociety
+* fanosta
 * goodboy
 * Atsushi Morimoto
-
-

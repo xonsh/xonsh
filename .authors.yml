@@ -32,7 +32,7 @@
   - jamie.bliss@ilq.com
   - jbliss@nextgenerationenrollment.com
   - jamie@ivyleav.es
-  num_commits: 191
+  num_commits: 203
   first_commit: 2016-07-20 14:05:08
   github: astronouth7303
 - name: Cody Scott
@@ -61,12 +61,12 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 511
+  num_commits: 512
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
   email: melund@gmail.com
-  num_commits: 468
+  num_commits: 471
   first_commit: 2015-07-10 07:54:10
   github: melund
 - name: Ned Letcher
@@ -432,7 +432,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2501
+  num_commits: 2517
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -694,7 +694,7 @@
   github: OJFord
 - name: christopher
   email: cjwright4242@gmail.com
-  num_commits: 41
+  num_commits: 49
   first_commit: 2018-04-24 14:59:31
 - name: Raniere Silva
   email: raniere@rgaiacs.com
@@ -982,7 +982,7 @@
   github: rodrigogolive
 - name: Carmen Bianca Bakker
   email: carmen@carmenbianca.eu
-  num_commits: 13
+  num_commits: 15
   first_commit: 2019-04-07 16:33:01
   github: carmenbianca
 - name: Andrés García García
@@ -1032,8 +1032,9 @@
   github: webmeister
 - name: Sean Farley
   email: sean@farley.io
-  num_commits: 2
+  num_commits: 4
   first_commit: 2019-07-13 15:09:39
+  github: seanfarley
 - name: Nils ANDRÉ-CHANG
   email: nils@nilsand.re
   num_commits: 1
@@ -1056,6 +1057,25 @@
   github: chengxuncc
 - name: Caleb Hattingh
   email: caleb.hattingh@gmail.com
-  num_commits: 10
+  num_commits: 12
   first_commit: 2019-08-02 22:11:22
   github: cjrh
+- name: nedsociety
+  email: nedsociety@gmail.com
+  num_commits: 1
+  first_commit: 2019-10-01 02:14:59
+  github: nedsociety
+- name: fanosta
+  email: github@nageler.org
+  num_commits: 1
+  first_commit: 2019-09-17 16:36:49
+  github: fanosta
+- name: Allan Crooks
+  email: allan.crooks@sixtyten.org
+  num_commits: 2
+  first_commit: 2019-10-02 16:45:15
+- name: micimize
+  email: rosenthalm93@gmail.com
+  num_commits: 2
+  first_commit: 2019-09-15 21:36:37
+  github: micimize
