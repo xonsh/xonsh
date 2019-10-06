@@ -63,4 +63,4 @@ def alias(args, stdin=None):
 
 
 aliases["alias"] = alias
-builtins.__xonsh__.env['THREAD_SUBPROCS'] = False
+builtins.__xonsh__.env["THREAD_SUBPROCS"] = False
