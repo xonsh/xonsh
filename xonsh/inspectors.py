@@ -36,7 +36,8 @@ _object_init_docstring = LazyObject(
 
 _builtin_type_docstrings = LazyObject(
     lambda: {
-        inspect.getdoc(t) for t in (types.ModuleType, types.MethodType, types.FunctionType, property)
+        inspect.getdoc(t)
+        for t in (types.ModuleType, types.MethodType, types.FunctionType, property)
     },
     globals(),
     "_builtin_type_docstrings",
