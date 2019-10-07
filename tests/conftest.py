@@ -156,17 +156,3 @@ def xonsh_builtins(monkeypatch, xonsh_events):
         if hasattr(builtins, attr):
             delattr(builtins, attr)
     tasks.clear()  # must to this to enable resetting all_jobs
-
-
-if ON_WINDOWS:
-    try:
-        import win_unicode_console
-    except ImportError:
-        pass
-    else:
-
-        @pytest.fixture(autouse=True)
-        def disable_win_unicode_console(monkeypatch):
-            """ Disable win_unicode_console if it is present since it collides with
-            pytests ouptput capture"""
-            monkeypatch.setattr(win_unicode_console, "enable", lambda: None)

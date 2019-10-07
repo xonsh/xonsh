@@ -65,11 +65,11 @@ Next, run xonsh:
 .. _conemu: https://conemu.github.io/
 
 
-Usage
+Tips and Tricks
 ================
 
-Color style
---------------------------------
+Nice colors
+----------------------
 
 The dark red and blue colors are completely unreadable in Windows' default
 terminal.
@@ -79,46 +79,42 @@ terminal.
    :alt: intensify-colors-win-false
    :align: center
 
-There are ways to configure the colors (see below), but to give new users the
+There are ways to `configure the colors`_ of the old terminal, but to give new users the
 best experience Xonsh has some tricks to fix colors. This is controlled by the
 :ref:`$INTENSIFY_COLORS_ON_WIN <intensify_colors_on_win>`
 environment variable which is ``True`` by default. 
 
-**On Windows 10**
+.. _configure the colors: https://blogs.msdn.microsoft.com/commandline/2017/08/11/introducing-the-windows-console-colortool/
 
-Windows 10 supports true color in the terminal, so on Win 10 Xonsh will use
-a style with hard coded colors instead of the terminal colors.
+:ref:`$INTENSIFY_COLORS_ON_WIN <intensify_colors_on_win>` has the following effect:b 
 
-.. image:: _static/better_colors_windows.png
-   :width: 600 px
-   :alt: better_colors_windows
-   :align: center
+On Windows 10:
+    Windows 10 supports true color in the terminal, so on Windows 10 Xonsh will use
+    a style with hard coded colors instead of the terminal colors.
+
+On older Windows:
+    Xonsh replaces some of the unreadable dark colors with more readable
+    alternatives (e.g. blue becomes cyan).
+
    
-**On older Windows** 
+**The new Windows terminal**
 
-On older windows installations Xonsh takes an other
-approach and replaces some of the unreadable dark colors with more readable
-alternatives (e.g. blue becomes cyan).
+The best option on windows is to use the new `Windows Terminal
+<https://github.com/microsoft/terminal>`__ developed by Microsoft as an open
+source project. The new terminal supports has many nice features including
+Unicode rendering. 
 
-**Configure the terminal colors**
-
-It is possible to configure the Windows console with readable default colors,
-but it is tedious to do manually. The Microsoft console team has made a `handy tool
-to configure colors`_ in the terminal
-
-* `Download Colortool`_ from from GitHub
-
-With better colors configured, ``$INTENSIFY_COLORS_ON_WIN`` should be set to 
-``False`` to allow the console to control the colors.
-You can do this by adding the following to the xonsh run control file ``.xonshrc``: 
-
-.. code-block:: xonshcon
-
-    $INTENSIFY_COLORS_ON_WIN = False
+It is highly recommended and can easily be `installed from the Windows Store`_:
 
 
-.. _handy tool to configure colors: https://blogs.msdn.microsoft.com/commandline/2017/08/11/introducing-the-windows-console-colortool/
-.. _Download Colortool: https://github.com/Microsoft/console/tree/master/tools/ColorTool
+.. image:: _static/windows_terminal2.png
+   :alt: Unicode support in Windows terminal
+   :align: center
+
+
+.. _installed from the Windows Store: https://blogs.msdn.microsoft.com/commandline/2017/08/11/introducing-the-windows-console-colortool/
+
+
 
 Avoid locking the working directory
 -----------------------------------
@@ -176,17 +172,12 @@ available when xonsh starts.
 Unicode support for Windows
 ----------------------------
 
-Python's utf-8 unicode is not compatible with the default shell 'cmd.exe' on Windows. The package ``win_unicode_console`` fixes this. Xonsh will use ``win_unicode_console`` if it is installed. This can be disabled/enabled with the :ref:`$WIN_UNICODE_CONSOLE <win_unicode_console>` environment variable.
+Python's utf-8 unicode is not compatible with the default console "conhost" on Windows.
 
-.. note:: Even with unicode support enabled the symbols available will depend on the font used in cmd.exe.
+Luckily, Microsoft is developing a new `Windows terminal <https://github.com/microsoft/terminal>`__ as an open source project. The new terminal supports all the nice features of 
+that you find in linux terminals. It is highly recommended and can easily be `installed from the Windows Store`_:
 
-The packages ``win_unicode_console`` can be installed along with xonsh by using the package name ``xonsh[win]`` or separately using pip or conda.
+.. image:: _static/windows_terminal.png
+   :alt: Unicode support in Windows terminal
+   :align: center
 
-.. code-block:: bat
-
-  > pip install win_unicode_console
-
-
-.. code-block:: bat
-
-  > conda install --channel xonsh win_unicode_console

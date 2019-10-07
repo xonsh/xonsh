@@ -170,6 +170,7 @@ if not on_rtd:
         "externalrefs": False,
         "collapsiblesidebar": True,
         "default_layout_text_size": "100%",  # prevents division by zero error
+        "fontcssurl": "https://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono",
     }
 
     # Add any paths that contain custom themes here, relative to this directory.
