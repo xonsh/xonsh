@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fix coreutils `cat` behaviour on empty input "cat -". 
+* Fix coreutils ``cat`` behaviour on empty input (e.g. ``cat -``). 
 
 * Fix Ctrl-C event causing Atribute error on Windows.
 
