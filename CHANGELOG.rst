@@ -4,6 +4,63 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.12
+====================
+
+**Added:**
+
+* Added ``autovox`` xontrib
+* ``xonsh.lib.itertools.as_iterable`` for making sure that strings are turned into iterables
+* The ``percol`` command no longer predicts as threadable.
+
+**Changed:**
+
+* The ``source`` alias is now unthreaded, enabling ``contextvars`` to be used
+  correctly in sourced files.
+* Changed the ``ExecAlias`` to only be applied when the logical operators
+  (``and``, ``or``) are surrounded by whitespace.
+
+**Fixed:**
+
+* Fixed missing ANSI color modifiers which causes traceback when they were used by ``$LS_COLORS``.
+* gray empty bottom bar when using $XONSH_UPDATE_PROMPT_ON_KEYPRESS
+* ``xonsh.lib.subprocess.check_output()`` now properly captures output.
+* Correct ANSI colors for the default color scheme to stop suppressing the bold / italic / underline modifiers.
+* tab completion for cd correctly handles the CDPATH environment variable
+* On Windows, send ``CTRL_C_EVENT`` to subprocesses instead of ``SIGINT``.
+* ``xonsh`` will return a non-zero exit code if it is run in file mode and
+  cannot find the file specified, e.g.
+
+  .. code-block::
+
+     $ xonsh thisfiledoesntexist.xsh
+     xonsh: thisfiledoesntexist.xsh: No such file or directory.
+     $ _.returncode
+     1
+* Fixed issue with Jedi xontrib incorrectly raising errors
+  during tab completion.
+* Defining functions inside of the shell no longer crashes on Python 3.8.
+* The encoding for xonsh script are now always assumed to be utf-8, even on
+  Windows where the default encoding can be different. This allows for writing
+  real unicode characters in the xonsh script files.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Morten Enemark Lund
+* Jamie Bliss
+* christopher
+* Carmen Bianca Bakker
+* Caleb Hattingh
+* Sean Farley
+* Allan Crooks
+* micimize
+* nedsociety
+* fanosta
+
+
+
 v0.9.11
 ====================
 

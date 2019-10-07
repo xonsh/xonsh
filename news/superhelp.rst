@@ -16,7 +16,8 @@
 
 **Fixed:**
 
-* Defining functions inside of the shell no longer crashes on Python 3.8.
+* Fixed a regession with xonsh superhelp ``??`` operator and ``which -v`` which showed Pythons builtin
+  doc strings. 
 
 **Security:**
 

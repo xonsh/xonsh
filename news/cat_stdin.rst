@@ -16,7 +16,9 @@
 
 **Fixed:**
 
-* Correct ANSI colors for the default color scheme to stop suppressing the bold / italic / underline modifiers.
+* Fix coreutils ``cat`` behaviour on empty input (e.g. ``cat -``). 
+
+* Fix Ctrl-C event causing Atribute error on Windows.
 
 **Security:**
 

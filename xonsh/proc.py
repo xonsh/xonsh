@@ -1499,7 +1499,7 @@ class ProcProxyThread(threading.Thread):
             safe_fdclose(handle)
         if self.poll() is not None:
             self._restore_sigint(frame=frame)
-        if on_main_thread():
+        if on_main_thread() and not ON_WINDOWS:
             signal.pthread_kill(threading.get_ident(), signal.SIGINT)
 
     def _restore_sigint(self, frame=None):

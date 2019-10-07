@@ -1,5 +1,6 @@
 """Implements a cat command for xonsh."""
 import os
+import sys
 import time
 import builtins
 
@@ -10,7 +11,7 @@ from xonsh.xoreutils.util import arg_handler
 def _cat_line(
     f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size
 ):
-    _r = r = f.readline(size=80)
+    _r = r = f.readline(80)
     restore_newline = False
     if isinstance(_r, str):
         _r = r = _r.encode(enc, enc_errors)
@@ -44,7 +45,7 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     read_size = 0
     file_size = fobj = None
     if fname == "-":
-        f = stdin
+        f = stdin or sys.stdin
     elif os.path.isdir(fname):
         print("cat: {}: Is a directory.".format(fname), file=err)
         return True, line_count
