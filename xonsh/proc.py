@@ -581,8 +581,22 @@ class PopenThread(threading.Thread):
             os.set_inheritable(stdout.fileno(), False)
 
         try:
-            self.proc = proc = subprocess.Popen(
-                *args, stdin=stdin, stdout=stdout, stderr=stderr, **kwargs
+
+            s = """import signal
+import subprocess
+
+def handle_tstp(s, f):
+    print("here yo")
+    p.communicate(b'\x1a')
+    # TODO: terminate monitoring threads
+
+
+signal.signal(signal.SIGTSTP, handle_tstp)
+p=subprocess.Popen({!r})
+p.wait()
+""".format(args[0])
+            self.proc = proc = subprocess.Popen([sys.executable, "-c", s],
+                *args[1:], stdin=stdin, stdout=stdout, stderr=stderr, **kwargs
             )
         except Exception:
             self._clean_up()
@@ -820,7 +834,7 @@ class PopenThread(threading.Thread):
         if self.procerr is not None:
             self.procerr.closed = True
         self.suspended = True
-        #self.send_signal(signum)
+        self.send_signal(signum)
         self._restore_sigtstp(frame=frame)
 
     def _restore_sigtstp(self, frame=None):

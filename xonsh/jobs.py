@@ -117,7 +117,7 @@ else:
     _block_when_giving = LazyObject(
         lambda: (signal.SIGTTOU,
             signal.SIGTTIN,
-            #signal.SIGTSTP,
+            signal.SIGTSTP,
             signal.SIGCHLD),
         globals(),
         "_block_when_giving",
