@@ -1,3 +1,7 @@
+#########################
+the xonsh shell
+#########################
+
 .. include:: intro.rst
 
 .. include:: tryitnow.rst

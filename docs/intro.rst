@@ -1,5 +1,4 @@
-the xonsh shell
-===============
+
 
 .. raw:: html
 

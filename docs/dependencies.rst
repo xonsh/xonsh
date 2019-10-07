@@ -17,7 +17,6 @@ Xonsh currently has the following extras
     #. ``proctitle``: setproctitle: *change the title of terminal to reflect the current subprocess*
     #. ``linux``: distro: *linux specific platform information*
     #. ``mac``: gnureadline: *GNU's featureful version of readline*
-    #. ``win``: win_unicode_console: *enables the use of Unicode in windows consoles*
 
 In addition, xonsh integrates with Jupyter, an in-browser REPL, enabling the use of xonsh in jupyter notebooks
 
