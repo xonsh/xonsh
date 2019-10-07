@@ -117,6 +117,9 @@ def test_ansi_reverse_style(key, value):
         ),
         ("48;5;235;38;5;139;3", ("BACKGROUND_BLACK", "ITALIC_WHITE")),
         ("38;5;111;4", ("UNDERLINE_WHITE",)),
+        ("1;48;5;124", ("BACKGROUND_RED", "BOLD_WHITE")),
+        ("5;48;5;124", ("BACKGROUND_RED", "SLOWBLINK_WHITE")),
+        ("1;5;38;5;145;48;5;124", ("BOLD_SLOWBLINK_WHITE", "BACKGROUND_RED")),
     ],
 )
 def test_ansi_color_escape_code_to_name(inp, exp):

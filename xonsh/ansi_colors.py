@@ -296,9 +296,9 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
         # set the flags for next time
         if "38" == e or "48" == e:
             seen_set_foreback = True
-        elif "2" == e:
+        elif seen_set_foreback and "2" == e:
             n_ints = 3
-        elif "5" == e:
+        elif seen_set_foreback and "5" == e:
             n_ints = 1
     # normalize names
     n = ""

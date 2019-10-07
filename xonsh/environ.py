@@ -418,9 +418,13 @@ class LsColors(cabc.MutableMapping):
             elif esc == "target":
                 data[key] = ("TARGET",)
             else:
-                data[key] = ansi_color_escape_code_to_name(
-                    esc, "default", reversed_style=reversed_default
-                )
+                try:
+                    data[key] = ansi_color_escape_code_to_name(
+                        esc, "default", reversed_style=reversed_default
+                    )
+                except Exception as e:
+                    print("xonsh:warning:" + str(e), file=sys.stderr)
+                    data[key] = ("NO_COLOR",)
         obj._d = data
         return obj
 
