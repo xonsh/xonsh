@@ -17,7 +17,7 @@ from xonsh.pretty import pretty
 from xonsh.execer import Execer
 from xonsh.proc import HiddenCommandPipeline
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import setup_win_unicode_console, print_color, to_bool_or_int
+from xonsh.tools import print_color, to_bool_or_int
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import print_welcome_screen
@@ -356,8 +356,6 @@ def premain(argv=None):
     env["XONSH_INTERACTIVE"] = args.force_interactive or (
         args.mode == XonshMode.interactive
     )
-    if ON_WINDOWS:
-        setup_win_unicode_console(env.get("WIN_UNICODE_CONSOLE", True))
     return args
 
 
@@ -462,8 +460,6 @@ def main_xonsh(args):
 
 def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
-    if ON_WINDOWS:
-        setup_win_unicode_console(enable=False)
     builtins.__xonsh__.shell = None
 
 

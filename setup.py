@@ -398,7 +398,6 @@ def main():
         skw["extras_require"] = {
             "ptk": ["prompt-toolkit"],
             "pygments": ["pygments>=2.2"],
-            "win": ["win_unicode_console"],
             "mac": ["gnureadline"],
             "linux": ["distro"],
             "proctitle": ["setproctitle"],

@@ -59,7 +59,6 @@ from xonsh.tools import (
     bool_seq_to_csv,
     DefaultNotGiven,
     print_exception,
-    setup_win_unicode_console,
     intensify_colors_on_win_setter,
     is_dynamic_cwd_width,
     to_dynamic_cwd_tuple,
@@ -578,7 +577,6 @@ def DEFAULT_ENSURERS():
         "VC_HG_SHOW_BRANCH": (is_bool, to_bool, bool_to_str),
         "VI_MODE": (is_bool, to_bool, bool_to_str),
         "VIRTUAL_ENV": (is_string, ensure_string, ensure_string),
-        "WIN_UNICODE_CONSOLE": (always_false, setup_win_unicode_console, bool_to_str),
         "XONSHRC": (is_env_path, str_to_env_path, env_path_to_str),
         "XONSH_APPEND_NEWLINE": (is_bool, to_bool, bool_to_str),
         "XONSH_AUTOPAIR": (is_bool, to_bool, bool_to_str),
@@ -762,7 +760,6 @@ def DEFAULT_VALUES():
         "VC_BRANCH_TIMEOUT": 0.2 if ON_WINDOWS else 0.1,
         "VC_HG_SHOW_BRANCH": True,
         "VI_MODE": False,
-        "WIN_UNICODE_CONSOLE": True,
         "XDG_CONFIG_HOME": os.path.expanduser(os.path.join("~", ".config")),
         "XDG_DATA_HOME": os.path.expanduser(os.path.join("~", ".local", "share")),
         "XONSHRC": default_xonshrc,
@@ -1193,11 +1190,6 @@ def DEFAULT_DOCS():
         ),
         "VIRTUAL_ENV": VarDocs(
             "Path to the currently active Python environment.", configurable=False
-        ),
-        "WIN_UNICODE_CONSOLE": VarDocs(
-            "Enables unicode support in windows terminals. Requires the external "
-            "library ``win_unicode_console``.",
-            configurable=ON_WINDOWS,
         ),
         "XDG_CONFIG_HOME": VarDocs(
             "Open desktop standard configuration home dir. This is the same "
