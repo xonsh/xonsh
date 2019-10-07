@@ -544,8 +544,8 @@ class XonshStyle(Style):
             are changed to CYAN and intense red.
         """
         env = builtins.__xonsh__.env
-        # Ensure we are not using ConEmu or Visual Stuio Code
-        if "CONEMUANSI" in env or "VSCODE_PID" in env:
+        # Ensure we are not using the new Windows Terminal, ConEmu or Visual Stuio Code
+        if "WT_SESSION" in env or "CONEMUANSI" in env or "VSCODE_PID" in env:
             return
         if env.get("INTENSIFY_COLORS_ON_WIN", False):
             if win_ansi_support():
