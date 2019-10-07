@@ -156,5 +156,3 @@ def xonsh_builtins(monkeypatch, xonsh_events):
         if hasattr(builtins, attr):
             delattr(builtins, attr)
     tasks.clear()  # must to this to enable resetting all_jobs
-
-
