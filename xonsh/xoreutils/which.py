@@ -104,7 +104,11 @@ def print_alias(arg, stdout, verbose=False):
         else:
             print(arg, file=stdout)
     else:
-        print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
+        print(
+            "aliases['{}'] = {}".format(arg, builtins.aliases[arg]),
+            flush=True,
+            file=stdout,
+        )
         if callable(builtins.aliases[arg]):
             builtins.__xonsh__.superhelp(builtins.aliases[arg])
 
