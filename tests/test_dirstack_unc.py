@@ -218,37 +218,43 @@ def test_uncpushd_push_base_push_rempath(xonsh_builtins):
     pass
 
 
-# really?  Need to cut-and-paste 2 flavors of this? fixture requires yield in defined function body, not callee
+@contextmanager
+def _restore_key(hkey, subkey, value_name, value_type, value_value):
+    import winreg
+
+    old_wval = 0
+    try:
+        key = winreg.OpenKey(hkey, subkey, access=winreg.KEY_WRITE)
+    except FileNotFoundError:
+        # Key doesn't exist
+        yield None
+        return
+
+    try:
+        old_wval, old_wtype = winreg.QueryValueEx(key, value_name)
+    except OSError:
+        pass
+    winreg.SetValueEx(key, value_name, None, value_type, value_value)
+    winreg.CloseKey(key)
+
+    yield old_wval
+
+    key = winreg.OpenKey(hkey, subkey, access=winreg.KEY_WRITE)
+    winreg.SetValueEx(key, value_value, None, old_wtype, old_wval)
+    winreg.CloseKey(key)
+
+
 @pytest.fixture()
 def with_unc_check_enabled():
     if not ON_WINDOWS:
         return
 
     import winreg
-
-    old_wval = 0
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    try:
-        wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
-        old_wval = wval  # if values was defined at all
-    except OSError as e:
-        pass
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, 0)
-    winreg.CloseKey(key)
-
-    yield old_wval
-
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, old_wval)
-    winreg.CloseKey(key)
+    with _restore_key(
+        winreg.HKEY_CURRENT_USER, r"software\microsoft\command processor",
+        "DisableUNCCheck", winreg.REG_DWORD, 0
+    ) as val:
+        yield val
 
 
 @pytest.fixture()
@@ -257,30 +263,11 @@ def with_unc_check_disabled():  # just like the above, but value is 1 to *disabl
         return
 
     import winreg
-
-    old_wval = 0
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    try:
-        wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
-        old_wval = wval  # if values was defined at all
-    except OSError as e:
-        pass
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, 1)
-    winreg.CloseKey(key)
-
-    yield old_wval
-
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, old_wval)
-    winreg.CloseKey(key)
+    with _restore_key(
+        winreg.HKEY_CURRENT_USER, r"software\microsoft\command processor",
+        "DisableUNCCheck", winreg.REG_DWORD, 1
+    ) as val:
+        yield val
 
 
 @pytest.fixture()
