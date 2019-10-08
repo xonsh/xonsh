@@ -24,21 +24,21 @@ def test_indir():
 
 
 def test_rmtree():
+    # This actually tests if we're able to remove read-only files, such as those
+    # produced by git
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
-            # Get into directory
             mkdir rmtree_test
             pushd rmtree_test
-            # Put something there
-            with open('thing.txt', 'wt') as f:
-                print("hello", file=f)
-            # Get out of it
+            git init
+            git config user.email "test@example.com"
+            git config user.name "Code Monkey"
+            touch thing.txt
+            git add thing.txt
+            git commit -a --no-gpg-sign -m "add thing"
             popd
-            # Test that stuff got made
             assert os.path.exists('rmtree_test')
             assert os.path.exists('rmtree_test/thing.txt')
-            # Remove it
             rmtree('rmtree_test', force=True)
-            # Test the previously made stuff no longer exists
             assert not os.path.exists('rmtree_test')
             assert not os.path.exists('rmtree_test/thing.txt')
