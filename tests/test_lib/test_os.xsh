@@ -1,4 +1,5 @@
 import os
+import stat
 import tempfile
 
 from xonsh.lib.os import indir, rmtree
@@ -24,21 +25,24 @@ def test_indir():
 
 
 def test_rmtree():
-    # This actually tests if we're able to remove read-only files, such as those
-    # produced by git
+    # This test has to include building a read-only file
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
+            # Get into directory
             mkdir rmtree_test
             pushd rmtree_test
-            git init
-            git config user.email "test@example.com"
-            git config user.name "Code Monkey"
-            touch thing.txt
-            git add thing.txt
-            git commit -a --no-gpg-sign -m "add thing"
+            # Put something there
+            with open('thing.txt', 'wt') as f:
+                print("hello", file=f)
+            os.chmod(filename, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
+            # Get out of it
             popd
+            # Test that stuff got made
             assert os.path.exists('rmtree_test')
             assert os.path.exists('rmtree_test/thing.txt')
+            assert not os.access('rmtree_test/thing.txt', os.R_OK)
+            # Remove it
             rmtree('rmtree_test', force=True)
+            # Test the previously made stuff no longer exists
             assert not os.path.exists('rmtree_test')
             assert not os.path.exists('rmtree_test/thing.txt')
