@@ -587,7 +587,7 @@ import subprocess
 
 def handle_tstp(s, f):
     print("here yo")
-    p.communicate(b'\x1a')
+    p.send_signal(signal.SIGSTOP)
     # TODO: terminate monitoring threads
 
 
