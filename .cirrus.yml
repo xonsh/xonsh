@@ -4,6 +4,7 @@ linux_test_task:
       - image: python:3.6
       - image: python:3.7
       - image: python:3.8-rc
+      - image: pypy:3.6
   install_script:
     # Needed for some tests
     - apt-get update
