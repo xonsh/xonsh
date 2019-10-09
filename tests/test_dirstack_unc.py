@@ -222,7 +222,7 @@ def test_uncpushd_push_base_push_rempath(xonsh_builtins):
 def _restore_key(hkey, subkey, value_name, value_type, value_value):
     import winreg
 
-    old_wval = 0
+    old_wval = old_wtype = None
     try:
         key = winreg.OpenKey(hkey, subkey, access=winreg.KEY_WRITE)
     except FileNotFoundError:
@@ -240,7 +240,10 @@ def _restore_key(hkey, subkey, value_name, value_type, value_value):
     yield old_wval
 
     key = winreg.OpenKey(hkey, subkey, access=winreg.KEY_WRITE)
-    winreg.SetValueEx(key, value_value, None, old_wtype, old_wval)
+    if old_wval is old_wtype is None:
+        winreg.DeleteValue(key, value_name)
+    else:
+        winreg.SetValueEx(key, value_name, None, old_wtype, old_wval)
     winreg.CloseKey(key)
 
 
