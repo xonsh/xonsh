@@ -299,7 +299,10 @@ def test_uncpushd_cd_unc_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
 
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_cd_unc_nocheck(xonsh_builtins_cd, with_unc_check_disabled):
-    dirstack.cd([r"\\localhost\uncpushd_test_HERE"])
+    so, se, rc = dirstack.cd([r"\\localhost\uncpushd_test_HERE"])
+    assert rc == 0
+    assert not so
+    assert not se
     assert os.getcwd().casefold() == r"\\localhost\uncpushd_test_here"
 
 
@@ -307,7 +310,7 @@ def test_uncpushd_cd_unc_nocheck(xonsh_builtins_cd, with_unc_check_disabled):
 def test_uncpushd_cd_unc_no_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
     so, se, rc = dirstack.cd([r"\\localhost\uncpushd_test_PARENT"])
     assert rc != 0
-    assert so is None or len(so) == 0
+    assert not so
     assert "disableunccheck" in se.casefold() and "auto_pushd" in se.casefold()
 
 
