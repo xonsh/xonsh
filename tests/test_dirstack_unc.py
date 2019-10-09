@@ -220,6 +220,10 @@ def test_uncpushd_push_base_push_rempath(xonsh_builtins):
 
 @contextmanager
 def _restore_key(hkey, subkey, value_name, value_type, value_value):
+    """
+    Sets the given key/value to the given value, yields the old value,
+    and restores it.
+    """
     import winreg
 
     old_wval = old_wtype = None
@@ -237,14 +241,15 @@ def _restore_key(hkey, subkey, value_name, value_type, value_value):
     winreg.SetValueEx(key, value_name, None, value_type, value_value)
     winreg.CloseKey(key)
 
-    yield old_wval
-
-    key = winreg.OpenKey(hkey, subkey, access=winreg.KEY_WRITE)
-    if old_wval is old_wtype is None:
-        winreg.DeleteValue(key, value_name)
-    else:
-        winreg.SetValueEx(key, value_name, None, old_wtype, old_wval)
-    winreg.CloseKey(key)
+    try:
+        yield old_wval
+    finally:
+        key = winreg.OpenKey(hkey, subkey, access=winreg.KEY_WRITE)
+        if old_wval is old_wtype is None:
+            winreg.DeleteValue(key, value_name)
+        else:
+            winreg.SetValueEx(key, value_name, None, old_wtype, old_wval)
+        winreg.CloseKey(key)
 
 
 @pytest.fixture()
@@ -294,16 +299,12 @@ def test_uncpushd_cd_unc_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
 
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_cd_unc_nocheck(xonsh_builtins_cd, with_unc_check_disabled):
-    if with_unc_check_disabled == 0:
-        return
     dirstack.cd([r"\\localhost\uncpushd_test_HERE"])
     assert os.getcwd().casefold() == r"\\localhost\uncpushd_test_here"
 
 
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_cd_unc_no_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
-    if with_unc_check_enabled == 0:
-        return
     so, se, rc = dirstack.cd([r"\\localhost\uncpushd_test_PARENT"])
     assert rc != 0
     assert so is None or len(so) == 0
