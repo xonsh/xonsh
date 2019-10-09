@@ -1,12 +1,16 @@
 version: 0.9.11.{build}
-os: Windows Server 2012 R2
+image:
+- Visual Studio 2015
+- Visual Studio 2017
+- Visual Studio 2019
 environment:
 
   matrix:
-    # http://www.appveyor.com/docs/installed-software#python
-    - PYTHON: "C:\\Python35"
-    - PYTHON: "C:\\Python35-x64"
-      DISTUTILS_USE_SDK: "1"
+    # https://www.appveyor.com/docs/windows-images-software/#python
+    - PYTHON: "C:\\Python36"
+    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python37"
+    - PYTHON: "C:\\Python37-x64"
     - XONSH_TEST_ENV: "MSYS2"
       MSYS2_PATH: "C:\\msys64"
     # TODO: Miniconda
