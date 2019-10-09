@@ -40,7 +40,7 @@ def test_rmtree():
             # Test that stuff got made
             assert os.path.exists('rmtree_test')
             assert os.path.exists('rmtree_test/thing.txt')
-            assert not os.access('rmtree_test/thing.txt', os.R_OK)
+            assert not os.access('rmtree_test/thing.txt', os.W_OK)
             # Remove it
             rmtree('rmtree_test', force=True)
             # Test the previously made stuff no longer exists
