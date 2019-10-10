@@ -1176,7 +1176,7 @@ def DEFAULT_DOCS():
             "When False:\n\n"
             "* Xonsh may not be able to capture stdin, stdout, and stderr streams \n"
             "  unless explicitly asked to do so.\n"
-            "* Stopping the thread with yields to job control.\n"
+            "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
             "The desired effect is often up to the command, user, or use case."
