@@ -1,7 +1,7 @@
 **Added:**
 
-* New ``$TRHEAD_SUBPROCS`` environment variable allows you to
-  specify wheather threadable subprocesses should actually be
+* New ``$THREAD_SUBPROCS`` environment variable allows you to
+  specify whether threadable subprocesses should actually be
   run in a thread or not.  Default ``True``.
 
 **Changed:**
