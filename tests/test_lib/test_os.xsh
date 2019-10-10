@@ -34,7 +34,7 @@ def test_rmtree():
             # Put something there
             with open('thing.txt', 'wt') as f:
                 print("hello", file=f)
-            os.chmod('thing.txt', stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
+            os.chmod('thing.txt', stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH | ~stat.S_IWRITE)
             # Get out of it
             popd
             # Test that stuff got made
