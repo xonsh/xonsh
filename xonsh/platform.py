@@ -62,12 +62,16 @@ ON_NETBSD = LazyBool(
     lambda: (sys.platform.startswith("netbsd")), globals(), "ON_NETBSD"
 )
 """``True`` if on a NetBSD operating system, else ``False``."""
+ON_OPENBSD = LazyBool(
+    lambda: (sys.platform.startswith("openbsd")), globals(), "ON_OPENBSD"
+)
+"""``True`` if on a OpenBSD operating system, else ``False``."""
 
 
 @lazybool
 def ON_BSD():
     """``True`` if on a BSD operating system, else ``False``."""
-    return bool(ON_FREEBSD) or bool(ON_NETBSD) or bool(ON_DRAGONFLY)
+    return bool(ON_FREEBSD) or bool(ON_NETBSD) or bool(ON_OPENBSD) or bool(ON_DRAGONFLY)
 
 
 @lazybool

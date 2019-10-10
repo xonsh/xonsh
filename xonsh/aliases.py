@@ -19,6 +19,7 @@ from xonsh.platform import (
     ON_WINDOWS,
     ON_FREEBSD,
     ON_NETBSD,
+    ON_OPENBSD,
     ON_DRAGONFLY,
 )
 from xonsh.tools import (
@@ -820,6 +821,8 @@ def make_default_aliases():
         default_aliases["grep"] = ["grep", "--color=auto"]
         default_aliases["egrep"] = ["egrep", "--color=auto"]
         default_aliases["fgrep"] = ["fgrep", "--color=auto"]
+    elif ON_OPENBSD:
+        pass
     else:
         default_aliases["grep"] = ["grep", "--color=auto"]
         default_aliases["egrep"] = ["egrep", "--color=auto"]
