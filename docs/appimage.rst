@@ -10,6 +10,17 @@ AppImage allows xonsh to be run on any AppImage supported Linux distributive wit
    :alt: appimage_xonsh_demo
    :align: center 
 
+Try it now
+----------
+You can download and try `prebuilded xonsh.AppImage <https://github.com/anki-code/appimage-xonsh>`_:
+
+.. code-block:: bash
+
+	wget https://github.com/anki-code/appimage-xonsh/raw/master/xonsh-x86_64.AppImage && chmod +x xonsh-x86_64.AppImage
+	./xonsh-x86_64.AppImage
+	./xonsh-x86_64.AppImage --help
+
+
 Build xonsh.AppImage
 --------------------
 
@@ -66,5 +77,18 @@ Enjoy!
 Troubleshooting
 ---------------
 
-You can noticed that we build AppImage in docker with older version of Ubuntu (16.04) to avoid error with core libraries versions when binary compiled on modern version can't use older version of libraries. In this nasty case you can see the error like ``/xonsh-x86_64.AppImage: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.25 not found (required by /ppp/xonsh-x86_64.AppImage)``. This means you should rebuild the AppImage for older version of distributive. If you know how to fix it once and forever feel free to tell us.
+1. You can noticed that we build AppImage in docker with older version of Ubuntu (16.04) to avoid error with core libraries versions when binary compiled on modern version can't use older version of libraries. In this nasty case you can see the error like ``/xonsh-x86_64.AppImage: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.25 not found (required by /ppp/xonsh-x86_64.AppImage)``. This means you should rebuild the AppImage for older version of distributive. If you know how to fix it once and forever feel free to tell us.
 
+2. Need Windows Subsystem for Linux (WSL) support:
+
+.. code-block:: bash
+
+	wsl# ./xonsh-x86_64.AppImage
+	fuse: device not found, try 'modprobe fuse' first
+
+	Cannot mount AppImage, please check your FUSE setup.
+	You might still be able to extract the contents of this AppImage
+	if you run it with the --appimage-extract option.
+	See https://github.com/AppImage/AppImageKit/wiki/FUSE
+	for more information
+	open dir error: No such file or directory
