@@ -4,6 +4,40 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.13
+====================
+
+**Changed:**
+
+* The ``$LS_COLORS`` environment variable will no longer raise exceptions when trying
+  to convert ANSI color sequences to xonsh color names.
+
+**Removed:**
+
+* Remove built in support for "win unicode console". Full unicode support on windows is now provided by 
+  using the new `Windows terminal <https://github.com/microsoft/terminal>`__.
+
+**Fixed:**
+
+* Fixed issue converting ANSI color codes that contained both slow blink and set foreground
+  or set background sequences.
+* Fix coreutils ``cat`` behaviour on empty input (e.g. ``cat -``). 
+
+* Fix Ctrl-C event causing Atribute error on Windows.
+* Fix Added OpenBSD as a platform
+
+* Fix Corrected aliases for OpenBSD to not include ``--color=auto`` and ``-v``
+* Fixed a regession with xonsh superhelp ``??`` operator and ``which -v`` which showed Pythons builtin
+  doc strings.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* David Kalliecharan
+
+
+
 v0.9.12
 ====================
 
