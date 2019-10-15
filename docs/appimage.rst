@@ -47,7 +47,7 @@ Let's start:
 
 Not all required. Feel free to clean.
 
-3. Getting the build scripts based on `linuxdeploy plugin python` <https://github.com/niess/linuxdeploy-plugin-python>'_:
+3. Getting the build scripts based on `linuxdeploy plugin python <https://github.com/niess/linuxdeploy-plugin-python>`_:
 
 .. code-block:: bash
 
