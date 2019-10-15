@@ -4,7 +4,7 @@ $ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest',
                'tag', 'push_tag', 'ghrelease', 'sphinx',
                'ghpages', 'pypi', 'conda_forge',
                ]
-
+$PYPI_SIGN = False
 
 $AUTHORS_FILENAME = "AUTHORS.rst"
 $VERSION_BUMP_PATTERNS = [
