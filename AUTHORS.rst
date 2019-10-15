@@ -210,5 +210,6 @@ Authors are sorted by number of commits.
 * chengxuncc
 * nedsociety
 * fanosta
+* David Kalliecharan
 * goodboy
 * Atsushi Morimoto
