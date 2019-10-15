@@ -77,13 +77,17 @@ Enjoy!
 Troubleshooting
 ---------------
 
-1. You can noticed that we build AppImage in docker with older version of Ubuntu (16.04) to avoid error with core libraries versions when binary compiled on modern version can't use older version of libraries. In this nasty case you can see the error like ``/xonsh-x86_64.AppImage: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.25 not found (required by /ppp/xonsh-x86_64.AppImage)``. This means you should rebuild the AppImage for older version of distributive. If you know how to fix it once and forever feel free to tell us.
+GLIBs versions
+~~~~~~~~~~~~~~
+You can noticed that we build AppImage in docker with older version of Ubuntu (16.04) to avoid error with core libraries versions when binary compiled on modern version can't use older version of libraries. In this nasty case you can see the error like ``/xonsh-x86_64.AppImage: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.25 not found (required by /ppp/xonsh-x86_64.AppImage)``. This means you should rebuild the AppImage for older version of distributive. If you know how to fix it once and forever feel free to tell us.
 
-2. Need Windows Subsystem for Linux (WSL) support:
+Windows Subsystem for Linux v1 (WSL1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Need WSL support:
 
 .. code-block:: bash
 
-	wsl# ./xonsh-x86_64.AppImage
+	wsl1# ./xonsh-x86_64.AppImage
 	fuse: device not found, try 'modprobe fuse' first
 
 	Cannot mount AppImage, please check your FUSE setup.
@@ -92,3 +96,10 @@ Troubleshooting
 	See https://github.com/AppImage/AppImageKit/wiki/FUSE
 	for more information
 	open dir error: No such file or directory
+
+Workaround is extracting appimage and run manually:
+
+.. code-block:: bash
+
+	wsl1$ ./xonsh --appimage-extract
+	wsl1$ ./squashfs-root/usr/bin/python3.7
