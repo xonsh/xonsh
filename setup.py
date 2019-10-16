@@ -366,8 +366,14 @@ def main():
             "xonsh.history",
             "xonsh.prompt",
             "xonsh.lib",
+            "xonsh.webconfig",
         ],
-        package_dir={"xonsh": "xonsh", "xontrib": "xontrib", "xonsh.lib": "xonsh/lib"},
+        package_dir={
+            "xonsh": "xonsh",
+            "xontrib": "xontrib",
+            "xonsh.lib": "xonsh/lib",
+            "xonsh.webconfig": "xonsh/webconfig",
+        },
         package_data={
             "xonsh": ["*.json", "*.githash"],
             "xontrib": ["*.xsh"],
