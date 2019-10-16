@@ -1,6 +1,9 @@
-module Main exposing (main)
+import Browser
 
 import Html exposing (..)
+import Json.Decode
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Bootstrap.Tab as Tab
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
@@ -24,7 +27,7 @@ update msg model =
             , Cmd.none
             )
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
     Tab.config TabMsg
         --|> Tab.withAnimation
@@ -44,15 +47,12 @@ view model =
             ]
         |> Tab.view model.tabState
 
---main =
---    Grid.container []
---        [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
---       , view
-        --Grid.row []
-        --    [ Grid.col []
-        --       [ text "Some content for my view here..."]
-        --    , Grid.col [] [view tabState]
-        --    ]
---        ]
 
-main = view
+main : Program Decode.Value Model Msg
+main =
+  Browser.element
+        { init = \_ -> init
+        , view = view
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
