@@ -2,6 +2,7 @@ import Browser
 
 import Html exposing (..)
 import Html.Events exposing (onClick)
+import Http
 import String
 import Json.Decode
 import Json.Decode as Decode
@@ -15,20 +16,26 @@ import Bootstrap.ListGroup as ListGroup
 type alias Model =
     { tabState : Tab.State
     , promptValue : String
+    --, response : Maybe PostResponse
+    , error : Maybe Http.Error
     }
 
 init : ( Model, Cmd Msg )
 init =
     ( { tabState = Tab.initialState
       , promptValue = "$"
+      --, response = Nothing
+      , error = Nothing
       }
     , Cmd.none )
 
 type Msg
     = TabMsg Tab.State
     | PromptSelect String
+    | SaveClicked
+    | Response (Result Http.Error ())
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         TabMsg state ->
@@ -39,6 +46,30 @@ update msg model =
             ( { model | promptValue = value }
             , Cmd.none
             )
+        SaveClicked ->
+        --    ( { model | error = Nothing, response = Nothing }
+            ( { model | error = Nothing}
+            , saveSettings model
+            )
+        Response (Ok response) ->
+            --( { model | error = Nothing, response = Just response }, Cmd.none )
+            ( { model | error = Nothing }, Cmd.none )
+        Response (Err error) ->
+            --( { model | error = Just error, response = Nothing }, Cmd.none )
+            ( { model | error = Just error }, Cmd.none )
+
+saveSettings : Model -> Cmd Msg
+saveSettings model =
+  Http.request
+    { method = "PUT"
+    , headers = []
+    , url = "https://localhost:8001/publish"
+    , body = Http.jsonBody (Encode.object [])
+    , expect = Http.expectWhatever Response
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
 
 view : Model -> Html Msg
 view model =
