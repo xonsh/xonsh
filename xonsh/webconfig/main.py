@@ -2,10 +2,12 @@
 import os
 import sys
 import json
+import socket
 import webbrowser
 import socketserver
 from http import server
 from pprint import pprint
+from argparse import ArgumentParser
 
 
 class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
@@ -26,7 +28,17 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         self.wfile.write(b"received post request:<br>" + post_body)
 
 
-def main():
+def make_parser():
+    p = ArgumentParser("xonfig-web")
+    p.add_argument("--no-browser", action="store_false", dest="browser",
+                   default=True, help="don't open browser")
+    return p
+
+
+def main(args=None):
+    p = make_parser()
+    ns = p.parse_args(args=args)
+
     webconfig_dir = os.path.dirname(__file__)
     if webconfig_dir:
         os.chdir(webconfig_dir)
@@ -37,13 +49,16 @@ def main():
         try:
             with socketserver.TCPServer(("", port), Handler) as httpd:
                 url = "http://localhost:{0}".format(port)
-                #webbrowser.open(url)
                 print("Web config started at '{0}'. Hit Crtl+C to stop.".format(url))
+                if ns.browser:
+                    import webbrowser
+
+                    webbrowser.open(url)
                 httpd.serve_forever()
             break
         except socket.error:
             type, value = sys.exc_info()[:2]
-            if "Address already in use" not in value:
+            if "Address already in use" not in str(value):
                 raise
         port += 1
 
