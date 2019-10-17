@@ -67,14 +67,11 @@ encodeModel model =
 
 saveSettings : Model -> Cmd Msg
 saveSettings model =
-  Http.request
-    { method = "PUT"
-    , headers = []
-    , url = "https://localhost:8421/save"
-    , body = Http.jsonBody (encodeModel model)
+  Http.post
+    { url = "/save"
+    --, body = Http.jsonBody (encodeModel model)
+    , body = Http.stringBody "application/json" (Encode.encode 0 (encodeModel model))
     , expect = Http.expectWhatever Response
-    , timeout = Nothing
-    , tracker = Nothing
     }
 
 view : Model -> Html Msg
