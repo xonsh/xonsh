@@ -74,13 +74,13 @@ saveSettings model =
     , expect = Http.expectWhatever Response
     }
 
-promptButton : String -> (ListGroup.CustomItem Msg)
-promptButton value =
+promptButton : XonshData.PromptData -> (ListGroup.CustomItem Msg)
+promptButton pd =
     ListGroup.button
-        [ ListGroup.attrs [ onClick (PromptSelect value) ]
+        [ ListGroup.attrs [ onClick (PromptSelect pd.value) ]
         , ListGroup.info
         ]
-        [ text ("Prompt: " ++ value) ]
+        [ text pd.name ]
 
 view : Model -> Html Msg
 view model =
@@ -104,7 +104,7 @@ view model =
                 }
             , Tab.item
                 { id = "tabItem2"
-                , link = Tab.link [] [ text "Tab 2" ]
+                , link = Tab.link [] [ text "Colors" ]
                 , pane = Tab.pane [] [ text "Tab 2 Content" ]
                 }
             ]

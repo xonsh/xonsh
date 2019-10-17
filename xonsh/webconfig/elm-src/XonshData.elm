@@ -2,9 +2,15 @@
 module XonshData exposing (..)
 
 import List
+import String
 
-prompts : List String
+type alias PromptData =
+    { name : String
+    , value : String
+    }
+
+prompts : List PromptData
 prompts =
-    [ "$ "
-    , "# "
+    [ {name = "Just a Dollar", value = "$ "}
+    , {name = "Just a Hash", value = "# "}
     ]
