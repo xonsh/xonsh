@@ -202,7 +202,6 @@ else:
                     last_task=active_task, backgrounded=backgrounded
                 )
         if os.WIFSTOPPED(wcode):
-            print("^Z")
             active_task["status"] = "stopped"
             backgrounded = True
         elif os.WIFSIGNALED(wcode):

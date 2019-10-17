@@ -554,6 +554,8 @@ class PopenThread(threading.Thread):
         self.timeout = env.get("XONSH_PROC_FREQUENCY")
         self.in_alt_mode = False
         self.stdin_mode = None
+        self._tc_cc_vsusp = b"\x1a"  # default is usually ^Z
+        self._disable_suspend_keybind()
         # stdout setup
         self.orig_stdout = stdout
         self.stdout_fd = 1 if stdout is None else stdout.fileno()
@@ -820,6 +822,33 @@ class PopenThread(threading.Thread):
             self.old_tstp_handler = None
         if frame is not None:
             self._disable_cbreak_stdin()
+        self._restore_suspend_keybind()
+
+    def _disable_suspend_keybind(self):
+        if ON_WINDOWS:
+            return
+        try:
+            mode = termios.tcgetattr(0)  # only makes sense for stdin
+        except termios.error:
+            return
+        self._tc_cc_vsusp = mode[CC][termios.VSUSP]
+        mode[CC][termios.VSUSP] = b"\x00"  # set ^Z (ie SIGSTOP) to undefined
+        termios.tcsetattr(0, termios.TCSANOW, mode)
+
+    def _restore_suspend_keybind(self):
+        if ON_WINDOWS:
+            return
+        try:
+            mode = termios.tcgetattr(0)  # only makes sense for stdin
+        except termios.error:
+            return
+        mode[CC][termios.VSUSP] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
+        try:
+            # this usually doesn't work in interactive mode,
+            # but we should try it anyway.
+            termios.tcsetattr(0, termios.TCSANOW, mode)
+        except termios.error:
+            pass
 
     #
     # SIGQUIT handler
@@ -1749,6 +1778,7 @@ def SIGNAL_MESSAGES():
         signal.SIGILL: "Illegal instructions",
         signal.SIGTERM: "Terminated",
         signal.SIGSEGV: "Segmentation fault",
+        signal.SIGTSTP: "Stopped",
     }
     if ON_POSIX:
         sm.update(

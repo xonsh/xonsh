@@ -6,6 +6,7 @@ import re
 import builtins
 import types
 from ast import AST, Module, Interactive, Expression
+from subprocess import Popen
 
 import pytest
 
@@ -25,8 +26,10 @@ from xonsh.built_ins import (
     in_macro_call,
     call_macro,
     enter_macro,
+    cmds_to_specs,
 )
 from xonsh.environ import Env
+from xonsh.proc import PopenThread, ProcProxy, ProcProxyThread
 
 from tools import skip_if_on_windows
 
@@ -388,3 +391,28 @@ def test_enter_macro():
     assert obj.macro_block == "wakka"
     assert obj.macro_globals
     assert obj.macro_locals
+
+
+@skip_if_on_windows
+def test_cmds_to_specs_thread_subproc(xonsh_builtins):
+    env = xonsh_builtins.__xonsh__.env
+    cmds = [["pwd"]]
+    # First check that threadable subprocs become threadable
+    env['THREAD_SUBPROCS'] = True
+    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    assert specs[0].cls is PopenThread
+    # turn off threading and check we use Popen
+    env['THREAD_SUBPROCS'] = False
+    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    assert specs[0].cls is Popen
+
+    # now check the threadbility of callable aliases
+    cmds = [[lambda: "Keras Selyrian"]]
+    # check that threadable alias become threadable
+    env['THREAD_SUBPROCS'] = True
+    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    assert specs[0].cls is ProcProxyThread
+    # turn off threading and check we use ProcProxy
+    env['THREAD_SUBPROCS'] = False
+    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    assert specs[0].cls is ProcProxy

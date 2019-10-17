@@ -738,7 +738,10 @@ class SubprocSpec:
         if not callable(alias):
             return
         self.is_proxy = True
-        thable = getattr(alias, "__xonsh_threadable__", True)
+        env = builtins.__xonsh__.env
+        thable = env.get("THREAD_SUBPROCS") and getattr(
+            alias, "__xonsh_threadable__", True
+        )
         cls = ProcProxyThread if thable else ProcProxy
         self.cls = cls
         self.threadable = thable
@@ -790,6 +793,7 @@ def _safe_pipe_properties(fd, use_tty=False):
 
 
 def _update_last_spec(last):
+    env = builtins.__xonsh__.env
     captured = last.captured
     last.last_in_pipeline = True
     if not captured:
@@ -799,9 +803,11 @@ def _update_last_spec(last):
         pass
     else:
         cmds_cache = builtins.__xonsh__.commands_cache
-        thable = cmds_cache.predict_threadable(
-            last.args
-        ) and cmds_cache.predict_threadable(last.cmd)
+        thable = (
+            env.get("THREAD_SUBPROCS")
+            and cmds_cache.predict_threadable(last.args)
+            and cmds_cache.predict_threadable(last.cmd)
+        )
         if captured and thable:
             last.cls = PopenThread
         elif not thable:
