@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-from http import server
-import socketserver
+import os
+import sys
+import json
 import webbrowser
-import subprocess
-import re, json, socket, os, sys, cgi, select
+import socketserver
+from http import server
+from pprint import pprint
 
 
 class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
@@ -18,7 +20,9 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         self._set_headers()
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
-        print(post_body)
+        config = json.loads(post_body)
+        print("Web Config Values:")
+        pprint(config)
         self.wfile.write(b"received post request:<br>" + post_body)
 
 

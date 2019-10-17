@@ -69,7 +69,6 @@ saveSettings : Model -> Cmd Msg
 saveSettings model =
   Http.post
     { url = "/save"
-    --, body = Http.jsonBody (encodeModel model)
     , body = Http.stringBody "application/json" (Encode.encode 0 (encodeModel model))
     , expect = Http.expectWhatever Response
     }
