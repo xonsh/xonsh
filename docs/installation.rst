@@ -14,4 +14,5 @@ Installation
     linux
     osx
     windows
+    appimage
     customization
