@@ -1,14 +1,17 @@
 #!/usr/bin/env xonsh
 """script for compiling elm source and dumping it to the js folder."""
 import os
-from xonsh.tools import print_color
+from xonsh.tools import print_color, format_color
 
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = False
 
+# first, write out elm-src/XonshData.elm
+
+# now compile the sources
 SOURCES = [
     'App.elm',
 ]
-$RAISE_SUBPROC_ERROR = True
-$XONSH_SHOW_TRACEBACK = False
 with ${...}.swap(RAISE_SUBPROC_ERROR=False):
     HAVE_UGLIFY = bool(!(which uglifyjs e>o))
 

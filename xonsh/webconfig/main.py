@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 
 RENDERERS = []
 
+
 def renderer(f):
     """Adds decorated function to renderers list."""
     RENDERERS.append(f)
@@ -19,12 +20,11 @@ def renderer(f):
 
 @renderer
 def prompt(config):
-    return ["$PROMPT = {!r}".format(config['prompt'])]
+    return ["$PROMPT = {!r}".format(config["prompt"])]
 
 
-def config_to_xonsh(config,
-                        prefix="# XONSH WEBCONFIG START",
-                        suffix="# XONSH WEBCONFIG END",
+def config_to_xonsh(
+    config, prefix="# XONSH WEBCONFIG START", suffix="# XONSH WEBCONFIG END"
 ):
     """Turns config dict into xonsh code (str)."""
     lines = [prefix]
@@ -34,15 +34,17 @@ def config_to_xonsh(config,
     return "\n".join(lines)
 
 
-def insert_into_xonshrc(config, xonshrc="~/.xonshrc",
-                        prefix="# XONSH WEBCONFIG START",
-                        suffix="# XONSH WEBCONFIG END",
-                        ):
+def insert_into_xonshrc(
+    config,
+    xonshrc="~/.xonshrc",
+    prefix="# XONSH WEBCONFIG START",
+    suffix="# XONSH WEBCONFIG END",
+):
     """Places a config dict into the xonshrc."""
     # get current contents
     fname = os.path.expanduser(xonshrc)
     if os.path.isfile(fname):
-        with open(fname, 'r') as f:
+        with open(fname, "r") as f:
             s = f.read()
         before, _, s = s.partition(prefix)
         _, _, after = s.partition(suffix)
@@ -60,16 +62,15 @@ def insert_into_xonshrc(config, xonshrc="~/.xonshrc",
 
 
 class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
-
     def _set_headers(self):
         self.send_response(200)
-        self.send_header('Content-type', 'text/html')
+        self.send_header("Content-type", "text/html")
         self.end_headers()
 
     def do_POST(self):
-        '''Reads post request body'''
+        """Reads post request body"""
         self._set_headers()
-        content_len = int(self.headers.get('content-length', 0))
+        content_len = int(self.headers.get("content-length", 0))
         post_body = self.rfile.read(content_len)
         config = json.loads(post_body)
         print("Web Config Values:")
@@ -81,8 +82,13 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
 
 def make_parser():
     p = ArgumentParser("xonfig-web")
-    p.add_argument("--no-browser", action="store_false", dest="browser",
-                   default=True, help="don't open browser")
+    p.add_argument(
+        "--no-browser",
+        action="store_false",
+        dest="browser",
+        default=True,
+        help="don't open browser",
+    )
     return p
 
 

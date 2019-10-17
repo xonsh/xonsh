@@ -2,6 +2,8 @@ import Browser
 
 import Html exposing (..)
 import Html.Events exposing (onClick)
+import Html.Parser
+import Html.Parser.Util
 import Http
 import String
 import Json.Decode
@@ -13,6 +15,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
 import Bootstrap.ListGroup as ListGroup
 import XonshData
+
 
 -- example with animation, you can drop the subscription part when not using animations
 type alias Model =
@@ -74,13 +77,27 @@ saveSettings model =
     , expect = Http.expectWhatever Response
     }
 
+-- VIEWS
+
+textHtml : String -> List (Html.Html msg)
+textHtml t =
+    case Html.Parser.run t of
+        Ok nodes ->
+            Html.Parser.Util.toVirtualDom nodes
+
+        Err _ ->
+            []
+
 promptButton : XonshData.PromptData -> (ListGroup.CustomItem Msg)
 promptButton pd =
     ListGroup.button
         [ ListGroup.attrs [ onClick (PromptSelect pd.value) ]
         , ListGroup.info
         ]
-        [ text pd.name ]
+        [ text pd.name
+        , p [] []
+        , span [] (textHtml pd.display)
+        ]
 
 view : Model -> Html Msg
 view model =
