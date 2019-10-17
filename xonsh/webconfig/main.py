@@ -27,15 +27,21 @@ def main():
     if webconfig_dir:
         os.chdir(webconfig_dir)
 
-    PORT = 8421
-
-    url = "http://localhost:{0}".format(PORT)
-    print("Web config started at '{0}'. Hit enter to stop.".format(url))
-    #webbrowser.open(url)
-
+    port = 8421
     Handler = XonshConfigHTTPRequestHandler
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        httpd.serve_forever()
+    while port <= 9310:
+        try:
+            with socketserver.TCPServer(("", port), Handler) as httpd:
+                url = "http://localhost:{0}".format(port)
+                #webbrowser.open(url)
+                print("Web config started at '{0}'. Hit Crtl+C to stop.".format(url))
+                httpd.serve_forever()
+            break
+        except socket.error:
+            type, value = sys.exc_info()[:2]
+            if "Address already in use" not in value:
+                raise
+        port += 1
 
 
 if __name__ == "__main__":
