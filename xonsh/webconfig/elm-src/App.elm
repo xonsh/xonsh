@@ -10,6 +10,7 @@ import Json.Encode as Encode
 import Bootstrap.Tab as Tab
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
+import Bootstrap.Button as Button
 import Bootstrap.ListGroup as ListGroup
 
 -- example with animation, you can drop the subscription part when not using animations
@@ -58,18 +59,23 @@ update msg model =
             --( { model | error = Just error, response = Nothing }, Cmd.none )
             ( { model | error = Just error }, Cmd.none )
 
+encodeModel : Model -> Encode.Value
+encodeModel model =
+    Encode.object
+    [ ("prompt", Encode.string model.promptValue)
+    ]
+
 saveSettings : Model -> Cmd Msg
 saveSettings model =
   Http.request
     { method = "PUT"
     , headers = []
-    , url = "https://localhost:8001/publish"
-    , body = Http.jsonBody (Encode.object [])
+    , url = "https://localhost:8421/save"
+    , body = Http.jsonBody (encodeModel model)
     , expect = Http.expectWhatever Response
     , timeout = Nothing
     , tracker = Nothing
     }
-
 
 view : Model -> Html Msg
 view model =
@@ -83,6 +89,7 @@ view model =
                 , link = Tab.link [] [ text "Prompt" ]
                 , pane = Tab.pane [] [
                     text ("Current Prompt: " ++ model.promptValue)
+                    , p [] []
                     , ListGroup.custom [
                         ListGroup.button
                             [ ListGroup.attrs [ onClick (PromptSelect "$") ]
@@ -94,8 +101,12 @@ view model =
                             , ListGroup.warning
                             ]
                             [ text "List item 2" ]
+                        ]
+                    , p [] []
+                    , Button.button [ Button.info
+                                    , Button.attrs [ onClick SaveClicked ]
+                                    ] [ text "Save" ]
                     ]
-                ]
                 }
             , Tab.item
                 { id = "tabItem2"
