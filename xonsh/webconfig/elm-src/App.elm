@@ -12,6 +12,7 @@ import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
 import Bootstrap.ListGroup as ListGroup
+import XonshData
 
 -- example with animation, you can drop the subscription part when not using animations
 type alias Model =
@@ -73,6 +74,14 @@ saveSettings model =
     , expect = Http.expectWhatever Response
     }
 
+promptButton : String -> (ListGroup.CustomItem Msg)
+promptButton value =
+    ListGroup.button
+        [ ListGroup.attrs [ onClick (PromptSelect value) ]
+        , ListGroup.info
+        ]
+        [ text ("Prompt: " ++ value) ]
+
 view : Model -> Html Msg
 view model =
     Tab.config TabMsg
@@ -86,18 +95,7 @@ view model =
                 , pane = Tab.pane [] [
                     text ("Current Prompt: " ++ model.promptValue)
                     , p [] []
-                    , ListGroup.custom [
-                        ListGroup.button
-                            [ ListGroup.attrs [ onClick (PromptSelect "$") ]
-                            , ListGroup.info
-                            ]
-                            [ text "List item 1" ]
-                        , ListGroup.button
-                            [ ListGroup.attrs [ onClick (PromptSelect "#") ]
-                            , ListGroup.warning
-                            ]
-                            [ text "List item 2" ]
-                        ]
+                    , ListGroup.custom (List.map promptButton XonshData.prompts)
                     , p [] []
                     , Button.button [ Button.info
                                     , Button.attrs [ onClick SaveClicked ]
