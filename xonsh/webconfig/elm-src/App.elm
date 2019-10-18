@@ -2,6 +2,7 @@ import Browser
 
 import Html exposing (..)
 import Html.Events exposing (onClick)
+import Html.Attributes exposing (class, style)
 import Html.Parser
 import Html.Parser.Util
 import Http
@@ -12,6 +13,7 @@ import Json.Encode as Encode
 import Bootstrap.Tab as Tab
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Row as Row
 import Bootstrap.Button as Button
 import Bootstrap.ListGroup as ListGroup
 import XonshData
@@ -101,31 +103,40 @@ promptButton pd =
 
 view : Model -> Html Msg
 view model =
-    Tab.config TabMsg
-        --|> Tab.withAnimation
-        -- remember to wire up subscriptions when using this option
-        |> Tab.center
-        |> Tab.items
-            [ Tab.item
-                { id = "tabItemPrompt"
-                , link = Tab.link [] [ text "Prompt" ]
-                , pane = Tab.pane [] [
-                    text ("Current Prompt: " ++ model.promptValue)
-                    , p [] []
-                    , ListGroup.custom (List.map promptButton XonshData.prompts)
-                    , p [] []
-                    , Button.button [ Button.info
-                                    , Button.attrs [ onClick SaveClicked ]
-                                    ] [ text "Save" ]
-                    ]
-                }
-            , Tab.item
-                { id = "tabItem2"
-                , link = Tab.link [] [ text "Colors" ]
-                , pane = Tab.pane [] [ text "Tab 2 Content" ]
-                }
+    div []
+        [ Grid.container []
+            [ Grid.row []
+                [ Grid.col [] [ div [ style "text-align" "left"] [ h2 [] [text "xonsh"] ] ]
+                , Grid.col [] [ div [ style "text-align" "right"]
+                                [ Button.button [ Button.success
+                                , Button.attrs [ onClick SaveClicked ]
+                                ] [ text "Save" ]
+                              ] ]
+                ]
             ]
-        |> Tab.view model.tabState
+        , p [] []
+        , Tab.config TabMsg
+            --|> Tab.withAnimation
+            -- remember to wire up subscriptions when using this option
+            |> Tab.center
+            |> Tab.items
+                [ Tab.item
+                    { id = "tabItemPrompt"
+                    , link = Tab.link [] [ text "Prompt" ]
+                    , pane = Tab.pane [] [
+                        text ("Current Prompt: " ++ model.promptValue)
+                        , p [] []
+                        , ListGroup.custom (List.map promptButton XonshData.prompts)
+                        ]
+                    }
+                , Tab.item
+                    { id = "tabItem2"
+                    , link = Tab.link [] [ text "Colors" ]
+                    , pane = Tab.pane [] [ text "Tab 2 Content" ]
+                    }
+                ]
+            |> Tab.view model.tabState
+        ]
 
 
 main : Program Decode.Value Model Msg

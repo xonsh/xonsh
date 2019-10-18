@@ -47,7 +47,7 @@ from xonsh.color_tools import (
     iscolor,
 )
 from xonsh.style_tools import norm_name
-from xonsh.lazyimps import terminal256
+from xonsh.lazyimps import terminal256, html
 from xonsh.platform import (
     os_environ,
     win_ansi_support,
@@ -1381,3 +1381,41 @@ def XonshTerminal256Formatter():
             self.style_string["Token.Color.NO_COLOR"] = ("\x1b[39m", "")
 
     return XonshTerminal256FormatterProxy
+
+
+@lazyobject
+def XonshHtmlFormatter():
+
+    class XonshHtmlFormatterProxy(html.HtmlFormatter):
+        """Proxy class for xonsh HTML formatting that understands.
+        xonsh color tokens.
+        """
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # set up classes for colors
+            for t in Color.subtypes:
+                classname = str(t)[5:].replace('.', '').lower()
+                self.ttype2class[t] = classname
+                self.class2style[classname] = self._get_color_token_style(t)
+            self._update_stylesheet()
+
+        def _get_color_token_style(self, ttype):
+            webify = html.webify
+            ndef = self.style[ttype]
+            style = ''
+            if ndef['color']:
+                style += 'color: %s; ' % webify(ndef['color'])
+            if ndef['bold']:
+                style += 'font-weight: bold; '
+            if ndef['italic']:
+                style += 'font-style: italic; '
+            if ndef['underline']:
+                style += 'text-decoration: underline; '
+            if ndef['bgcolor']:
+                style += 'background-color: %s; ' % webify(ndef['bgcolor'])
+            if ndef['border']:
+                style += 'border: 1px solid %s; ' % webify(ndef['border'])
+            return (style[:-2], ttype, len(ttype))
+
+    return XonshHtmlFormatterProxy

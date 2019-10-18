@@ -3,11 +3,11 @@
 import os
 import io
 
-from pygments.formatters import HtmlFormatter
+from pygments.formatters.html import HtmlFormatter
 
 from xonsh.tools import print_color, format_color
 from xonsh.style_tools import partial_color_tokenize
-from xonsh.pyghooks import XonshStyle, xonsh_style_proxy
+from xonsh.pyghooks import XonshStyle, xonsh_style_proxy, XonshHtmlFormatter
 
 
 $RAISE_SUBPROC_ERROR = True
@@ -24,6 +24,7 @@ def escape(s):
 def html_format(s, style="default"):
     buf = io.StringIO()
     proxy_style = xonsh_style_proxy(XonshStyle(style))
+    #formatter = XonshHtmlFormatter(noclasses=True, style=proxy_style)
     formatter = HtmlFormatter(noclasses=True, style=proxy_style)
     formatter.format(partial_color_tokenize(s), buf)
     return buf.getvalue()
