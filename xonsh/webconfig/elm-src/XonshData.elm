@@ -5,6 +5,7 @@ module XonshData exposing (..)
 import List
 import String
 
+
 type alias PromptData =
     { name : String
     , value : String
@@ -13,6 +14,6 @@ type alias PromptData =
 
 prompts : List PromptData
 prompts =
-    [ { name = "Default", value = "{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{gitstatus: {}}{NO_COLOR} {BOLD_BLUE}{prompt_end}{NO_COLOR} ", display = "<div class=\"highlight\" style=\"background: #ffffff\"><pre style=\"line-height: 125%\"><span></span><span style=\"\">{env_name}</span><span style=\"color: #007f00; font-weight: bold\">{user}@{hostname}</span><span style=\"color: #00007f; font-weight: bold\"> {cwd}{gitstatus: {}}</span><span style=\"\"> </span><span style=\"color: #00007f; font-weight: bold\">{prompt_end}</span><span style=\"\"> </span></pre></div>" }
-    , { name = "Just a Dollar", value = "$ ", display = "<div class=\"highlight\" style=\"background: #ffffff\"><pre style=\"line-height: 125%\"><span></span><span style=\"\">$ </span></pre></div>" }
+    [ { name = "Default", value = "{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{branch_color}{curr_branch: {}}{NO_COLOR} {BOLD_BLUE}{prompt_end}{NO_COLOR} ", display = "<div class=\"highlight\" style=\"background: #ffffff\"><pre style=\"color: #000000; line-height: 125%\"><span></span><span style=\"\">(env) </span><span style=\"color: #007f00; font-weight: bold\">lou@carcolh</span><span style=\"color: #00007f; font-weight: bold\"> ~/snail/stuff</span><span style=\"color: #ff0000; font-weight: bold\"> branch</span><span style=\"\"> </span><span style=\"color: #00007f; font-weight: bold\">$</span><span style=\"\"> </span></pre></div>" }
+    , { name = "Just a Dollar", value = "$ ", display = "<div class=\"highlight\" style=\"background: #ffffff\"><pre style=\"color: #000000; line-height: 125%\"><span></span><span style=\"\">$ </span></pre></div>" }
     ]

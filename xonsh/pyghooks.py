@@ -516,7 +516,10 @@ class XonshStyle(Style):
             self._smap = XONSH_BASE_STYLE.copy()
         else:
             try:
-                self._smap = get_style_by_name(value)().styles.copy()
+                style_obj = get_style_by_name(value)()
+                self._smap = style_obj.styles.copy()
+                self.highlight_color = style_obj.highlight_color
+                self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
@@ -568,6 +571,8 @@ def xonsh_style_proxy(styler):
 
         target = styler
         styles = styler.styles
+        highlight_color = styler.highlight_color
+        background_color = styler.background_color
 
         def __new__(cls, *args, **kwargs):
             return cls.target
