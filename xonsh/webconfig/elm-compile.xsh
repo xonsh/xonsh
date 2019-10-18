@@ -24,8 +24,9 @@ def escape(s):
 def html_format(s, style="default"):
     buf = io.StringIO()
     proxy_style = xonsh_style_proxy(XonshStyle(style))
-    #formatter = XonshHtmlFormatter(noclasses=True, style=proxy_style)
-    formatter = HtmlFormatter(noclasses=True, style=proxy_style)
+    formatter = XonshHtmlFormatter(noclasses=True, style=proxy_style)
+    #formatter = XonshHtmlFormatter(noclasses=True, style=style)
+    #formatter = HtmlFormatter(noclasses=True, style=proxy_style)
     formatter.format(partial_color_tokenize(s), buf)
     return buf.getvalue()
 
