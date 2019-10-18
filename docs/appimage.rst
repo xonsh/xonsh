@@ -40,7 +40,9 @@ Build xonsh.AppImage
 
 	RUN mkdir -p /build /appimage
 	WORKDIR /build
-	RUN git clone --depth 1 https://github.com/niess/linuxdeploy-plugin-python
+	RUN git clone --depth 1 https://github.com/niess/linuxdeploy-plugin-python && \
+		cd linuxdeploy-plugin-python && \
+		git checkout 85d2e6fac5969d1b381f4da384248b368522ede3
 	CMD cd /build/linuxdeploy-plugin-python/appimage && ./build-python.sh xonsh && cp *.AppImage /appimage
 
 
