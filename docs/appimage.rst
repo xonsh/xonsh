@@ -29,7 +29,6 @@ Build xonsh.AppImage
 .. code-block:: bash
 
 	FROM ubuntu:16.04
-
 	RUN apt update -y && apt upgrade -y
 	RUN apt install --no-install-recommends -y -qq \
 		fuse wget mc git \
@@ -40,10 +39,9 @@ Build xonsh.AppImage
 		libexpat1-dev liblzma-dev  automake libfuse2
 
 	RUN mkdir -p /build /appimage
-
 	WORKDIR /build
 	RUN git clone --depth 1 https://github.com/niess/linuxdeploy-plugin-python
-	CMD cd /build/linuxdeploy-plugin-python-xonsh/appimage && ./build-python.sh xonsh && cp *.AppImage /appimage
+	CMD cd /build/linuxdeploy-plugin-python/appimage && ./build-python.sh xonsh && cp *.AppImage /appimage
 
 
 `build.sh`
