@@ -7,13 +7,27 @@ from pygments.formatters import HtmlFormatter
 
 from xonsh.tools import print_color, format_color
 from xonsh.style_tools import partial_color_tokenize
+from xonsh.pyghooks import XonshStyle, xonsh_style_proxy
 
 
 $RAISE_SUBPROC_ERROR = True
 $XONSH_SHOW_TRACEBACK = False
 
+#
+# helper funcs
+#
+
 def escape(s):
     return s.replace("\n", "").replace('"', '\\"')
+
+
+def html_format(s, style="default"):
+    buf = io.StringIO()
+    proxy_style = xonsh_style_proxy(XonshStyle(style))
+    formatter = HtmlFormatter(noclasses=True, style=proxy_style)
+    formatter.format(partial_color_tokenize(s), buf)
+    return buf.getvalue()
+
 
 #
 # first, write out elm-src/XonshData.elm
@@ -41,10 +55,7 @@ prompts = [
 xonsh_data.append("""prompts : List PromptData
 prompts =""")
 for i, (name, value) in enumerate(prompts):
-    buf = io.StringIO()
-    formatter = HtmlFormatter(noclasses=True, style="default")
-    formatter.format(partial_color_tokenize(value), buf)
-    display = buf.getvalue()
+    display = html_format(value)
     item = 'name = "' + name + '", '
     item += 'value = "' + escape(value) + '", '
     item += 'display = "' + escape(display) + '"'
@@ -94,5 +105,3 @@ for source in SOURCES:
           uglifyjs --mangle --output @(min_target)]
         new_files.append(min_target)
     ![ls -l @(new_files)]
-
-
