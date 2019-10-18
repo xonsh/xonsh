@@ -114,7 +114,7 @@ Need WSL support:
 
 .. code-block:: bash
 
-	wsl1# ./xonsh-x86_64.AppImage
+	wsl1# ./xonsh.AppImage
 	fuse: device not found, try 'modprobe fuse' first
 
 	Cannot mount AppImage, please check your FUSE setup.
@@ -128,5 +128,5 @@ Workaround is extracting appimage and run manually:
 
 .. code-block:: bash
 
-	wsl1$ ./xonsh --appimage-extract
+	wsl1$ ./xonsh.AppImage --appimage-extract
 	wsl1$ ./squashfs-root/usr/bin/python3.7 
