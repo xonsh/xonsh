@@ -11,7 +11,7 @@ AppImage allows xonsh to be run on any AppImage supported Linux distributive wit
 
 Try it now
 ----------
-You can download and try `prebuilded xonsh.AppImage <https://github.com/anki-code/appimage-xonsh>`_:
+You can download and try `prebuilded xonsh.AppImage <https://github.com/niess/linuxdeploy-plugin-python/releases>`_:
 
 .. code-block:: bash
 
