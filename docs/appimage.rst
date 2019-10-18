@@ -15,10 +15,10 @@ You can download and try `prebuilded xonsh.AppImage <https://github.com/anki-cod
 
 .. code-block:: bash
 
-	wget https://github.com/anki-code/appimage-xonsh/raw/master/xonsh-x86_64.AppImage && chmod +x xonsh-x86_64.AppImage
-	./xonsh-x86_64.AppImage
-	./xonsh-x86_64.AppImage -c "echo @(1+1)"
-
+	wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/continuous/xonsh-x86_64.AppImage -O xonsh.AppImage
+	chmod +x xonsh.AppImage
+	./xonsh.AppImage -c "echo @(1+1)"
+	./xonsh.AppImage
 
 Build xonsh.AppImage
 --------------------
