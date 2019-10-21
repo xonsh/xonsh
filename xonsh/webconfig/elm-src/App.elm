@@ -6,6 +6,7 @@ import Html.Attributes exposing (class, style)
 import Html.Parser
 import Html.Parser.Util
 import Http
+import Maybe exposing (withDefault)
 import String
 import Json.Decode
 import Json.Decode as Decode
@@ -17,12 +18,13 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Button as Button
 import Bootstrap.ListGroup as ListGroup
 import XonshData
+import XonshData exposing (PromptData)
 
 
 -- example with animation, you can drop the subscription part when not using animations
 type alias Model =
     { tabState : Tab.State
-    , promptValue : String
+    , promptValue : PromptData
     --, response : Maybe PostResponse
     , error : Maybe Http.Error
     }
@@ -30,7 +32,7 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { tabState = Tab.initialState
-      , promptValue = "$"
+      , promptValue = withDefault {name = "unknown", value = "$ ", display = ""} (List.head XonshData.prompts)
       --, response = Nothing
       , error = Nothing
       }
@@ -38,7 +40,7 @@ init =
 
 type Msg
     = TabMsg Tab.State
-    | PromptSelect String
+    | PromptSelect PromptData
     | SaveClicked
     | Response (Result Http.Error ())
 
@@ -68,7 +70,7 @@ update msg model =
 encodeModel : Model -> Encode.Value
 encodeModel model =
     Encode.object
-    [ ("prompt", Encode.string model.promptValue)
+    [ ("prompt", Encode.string model.promptValue.value)
     ]
 
 saveSettings : Model -> Cmd Msg
@@ -90,10 +92,10 @@ textHtml t =
         Err _ ->
             []
 
-promptButton : XonshData.PromptData -> (ListGroup.CustomItem Msg)
+promptButton : PromptData -> (ListGroup.CustomItem Msg)
 promptButton pd =
     ListGroup.button
-        [ ListGroup.attrs [ onClick (PromptSelect pd.value) ]
+        [ ListGroup.attrs [ onClick (PromptSelect pd) ]
         , ListGroup.info
         ]
         [ text pd.name
@@ -124,7 +126,7 @@ view model =
                     { id = "tabItemPrompt"
                     , link = Tab.link [] [ text "Prompt" ]
                     , pane = Tab.pane [] [
-                        text ("Current Prompt: " ++ model.promptValue)
+                        text ("Current Prompt: " ++ model.promptValue.name)
                         , p [] []
                         , ListGroup.custom (List.map promptButton XonshData.prompts)
                         ]

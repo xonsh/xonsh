@@ -92,7 +92,7 @@ def render_prompts(lines):
     lines.append(prompt_header)
     for i, (name, template) in enumerate(PROMPTS):
         display = html_format(prompt_format(template, fields=fields))
-        print(display)
+        #print(display)
         item = 'name = "' + name + '", '
         item += 'value = "' + escape(template) + '", '
         item += 'display = "' + escape(display) + '"'
