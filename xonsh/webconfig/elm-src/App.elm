@@ -126,8 +126,9 @@ view model =
                     { id = "tabItemPrompt"
                     , link = Tab.link [] [ text "Prompt" ]
                     , pane = Tab.pane [] [
-                        text ("Current Prompt: " ++ model.promptValue.name)
+                        text ("Current Selection: " ++ model.promptValue.name)
                         , p [] []
+                        , span [] (textHtml model.promptValue.display)
                         , ListGroup.custom (List.map promptButton XonshData.prompts)
                         ]
                     }
