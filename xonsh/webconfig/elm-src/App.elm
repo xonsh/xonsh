@@ -105,7 +105,7 @@ promptButton pd =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div [style "padding" "0.75em 1.25em"]
         [ Grid.container []
             [ Grid.row []
                 [ Grid.col [] [ div [ style "text-align" "left"] [ h2 [] [text "xonsh"] ] ]
@@ -128,7 +128,7 @@ view model =
                     , pane = Tab.pane [] [
                         text ("Current Selection: " ++ model.promptValue.name)
                         , p [] []
-                        , span [] (textHtml model.promptValue.display)
+                        , div [style "padding" "0.75em 1.25em"] (textHtml model.promptValue.display)
                         , ListGroup.custom (List.map promptButton XonshData.prompts)
                         ]
                     }
