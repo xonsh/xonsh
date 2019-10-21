@@ -41,9 +41,11 @@ def html_format(s, style="default"):
     # need to generate stream before creating formatter so that all tokens actually exist
     token_stream = partial_color_tokenize(s)
     formatter = XonshHtmlFormatter(
+        wrapcode=True,
         noclasses=True,
         style=proxy_style,
-        prestyles="color: #" + fgcolor,
+        prestyles="margin: 0em; padding: 0.5em 0.1em; color: #" + fgcolor,
+        cssstyles="border-style: solid; border-radius: 5px",
     )
     formatter.format(token_stream, buf)
     return buf.getvalue()
