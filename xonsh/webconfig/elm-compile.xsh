@@ -77,6 +77,20 @@ PROMPTS = [
                 '{prompt_end}{NO_COLOR} '),
     ("Robbyrussell", '{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{NO_COLOR} '),
     ("Just a Dollar", "$ "),
+    ("Simple Pythonista", "{INTENSE_RED}{user}{NO_COLOR} at {INTENSE_PURPLE}{hostname}{NO_COLOR} "
+                          "in {BOLD_GREEN}{cwd}{NO_COLOR}\\n↪ "),
+    ("Informative", "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
+                    "{BOLD_GREEN}{cwd} {gitstatus}{NO_COLOR}\\n> "),
+    ("Informative Version Control", "{YELLOW}{env_name} "
+                    "{BOLD_GREEN}{cwd} {gitstatus}{NO_COLOR} {prompt_end} "),
+    ("Classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
+    ("Classic with git status", "{gitstatus} {NO_COLOR}{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
+    ("Screen Savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{NO_COLOR}> "),
+    ("Sorin", "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{NO_COLOR} "),
+    ("Acidhub", "❰{INTENSE_GREEN}{user}{NO_COLOR}❙{YELLOW}{cwd}{NO_COLOR}{env_name}❱{gitstatus}≻ "),
+    ("Nim", "{INTENSE_GREEN}┬─[{YELLOW}{user}{NO_COLOR}@{BLUE}{hostname}{NO_COLOR}:{cwd}"
+            "{INTENSE_GREEN}]─[{localtime}]─[{NO_COLOR}G:{INTENSE_GREEN}{curr_branch}=]"
+            "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{NO_COLOR} "),
 ]
 
 prompt_header = """type alias PromptData =
@@ -100,6 +114,7 @@ def render_prompts(lines):
         curr_branch="branch",
         gitstatus="{CYAN}branch|{BOLD_BLUE}+2{NO_COLOR}⚑7",
         branch_color="{BOLD_INTENSE_RED}",
+        localtime="15:56:07",
     )
     lines.append(prompt_header)
     for i, (name, template) in enumerate(PROMPTS):
