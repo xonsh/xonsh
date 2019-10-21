@@ -1448,7 +1448,7 @@ def XonshHtmlFormatter():
             if not ndef or ttype is None:
                 ndef = ['', 0, 0, 0, '', '', 0, 0, 0]
             elif 'noinherit' in styledefs and ttype is not Token:
-                ndef = self.styles._styles[Token][:]
+                ndef = self.style._styles[Token][:]
             else:
                 ndef = ndef[:]
             self.style._styles[ttype] = ndef

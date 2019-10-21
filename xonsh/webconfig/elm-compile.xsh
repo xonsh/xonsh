@@ -2,13 +2,17 @@
 """script for compiling elm source and dumping it to the js folder."""
 import os
 import io
+from pprint import pprint
 
+import pygments
+from pygments.lexers import Python3Lexer
 from pygments.formatters.html import HtmlFormatter
 
 from xonsh.tools import print_color, format_color
 from xonsh.style_tools import partial_color_tokenize
 from xonsh.color_tools import rgb_to_ints
-from xonsh.pyghooks import XonshStyle, xonsh_style_proxy, XonshHtmlFormatter, Token
+from xonsh.pygments_cache import get_all_styles
+from xonsh.pyghooks import XonshStyle, xonsh_style_proxy, XonshHtmlFormatter, Token, XonshLexer
 from xonsh.prompt.base import PromptFormatter
 
 
@@ -39,7 +43,10 @@ def html_format(s, style="default"):
     if not fgcolor:
         fgcolor = invert_color(proxy_style.background_color[1:].strip('#'))
     # need to generate stream before creating formatter so that all tokens actually exist
-    token_stream = partial_color_tokenize(s)
+    if isinstance(s, str):
+        token_stream = partial_color_tokenize(s)
+    else:
+        token_stream = s
     formatter = XonshHtmlFormatter(
         wrapcode=True,
         noclasses=True,
@@ -128,10 +135,51 @@ def render_prompts(lines):
     lines.append("    ]")
 
 
+# render color data
+
+color_header = """
+type alias ColorData =
+    { name : String
+    , display : String
+    }
+
+colors : List ColorData
+colors ="""
+
+def render_colors(lines):
+    source = (
+        'import sys\n'
+        'def func(x=42):\n'
+        '    d = {"xonsh": True}\n'
+        '    return d.get("xonsh") and you\n\n'
+        '# This is a comment\n'
+    )
+#        '![echo "Welcome $USER on " @(sys.platform)]\n\n'
+#        '![env | uniq | sort | grep PATH]'
+    lexer = XonshLexer()
+    lexer = Python3Lexer()
+    lexer.add_filter('tokenmerge')
+    #token_stream = list(pygments.lex(source, lexer=lexer))
+    token_stream = list(lexer.get_tokens(source))
+    pprint(token_stream)
+    token_stream = [(t, s.replace("\n", "\\n")) for t, s in token_stream]
+    lines.append(color_header)
+    for i, style in enumerate(get_all_styles()):
+        display = html_format(token_stream, style=style)
+        #display = pygments.highlight(source, XonshLexer(), HtmlFormatter(noclasses=True, stye=style))
+        #print(display)
+        item = 'name = "' + style + '", '
+        item += 'display = "' + escape(display) + '"'
+        pre = "    [ " if i == 0 else "    , "
+        lines.append(pre + "{ " + item + " }")
+    lines.append("    ]")
+
+
 def write_xonsh_data():
     # write XonshData.elm
     lines = [XONSH_DATA_HEADER]
     render_prompts(lines)
+    render_colors(lines)
     src = "\n".join(lines) + "\n"
     xdelm = os.path.join('elm-src', 'XonshData.elm')
     with open(xdelm, 'w') as f:

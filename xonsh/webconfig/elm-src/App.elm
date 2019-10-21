@@ -18,13 +18,14 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Button as Button
 import Bootstrap.ListGroup as ListGroup
 import XonshData
-import XonshData exposing (PromptData)
+import XonshData exposing (PromptData, ColorData)
 
 
 -- example with animation, you can drop the subscription part when not using animations
 type alias Model =
     { tabState : Tab.State
     , promptValue : PromptData
+    , colorValue : ColorData
     --, response : Maybe PostResponse
     , error : Maybe Http.Error
     }
@@ -32,7 +33,10 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { tabState = Tab.initialState
-      , promptValue = withDefault {name = "unknown", value = "$ ", display = ""} (List.head XonshData.prompts)
+      , promptValue = withDefault {name = "unknown", value = "$ ", display = ""}
+                                  (List.head XonshData.prompts)
+      , colorValue = withDefault {name = "unknown", display = ""}
+                                 (List.head XonshData.colors)
       --, response = Nothing
       , error = Nothing
       }
@@ -41,6 +45,7 @@ init =
 type Msg
     = TabMsg Tab.State
     | PromptSelect PromptData
+    | ColorSelect ColorData
     | SaveClicked
     | Response (Result Http.Error ())
 
@@ -53,6 +58,10 @@ update msg model =
             )
         PromptSelect value ->
             ( { model | promptValue = value }
+            , Cmd.none
+            )
+        ColorSelect value ->
+            ( { model | colorValue = value }
             , Cmd.none
             )
         SaveClicked ->
@@ -103,6 +112,17 @@ promptButton pd =
         , span [] (textHtml pd.display)
         ]
 
+colorButton : ColorData -> (ListGroup.CustomItem Msg)
+colorButton cd =
+    ListGroup.button
+        [ ListGroup.attrs [ onClick (ColorSelect cd) ]
+        , ListGroup.info
+        ]
+        [ text cd.name
+        , p [] []
+        , span [] (textHtml cd.display)
+        ]
+
 view : Model -> Html Msg
 view model =
     div [style "padding" "0.75em 1.25em"]
@@ -133,9 +153,14 @@ view model =
                         ]
                     }
                 , Tab.item
-                    { id = "tabItem2"
+                    { id = "tabItemColors"
                     , link = Tab.link [] [ text "Colors" ]
-                    , pane = Tab.pane [] [ text "Tab 2 Content" ]
+                    , pane = Tab.pane [] [
+                        text ("Current Selection: " ++ model.colorValue.name)
+                        , p [] []
+                        , div [style "padding" "0.75em 1.25em"] (textHtml model.colorValue.display)
+                        , ListGroup.custom (List.map colorButton XonshData.colors)
+                        ]
                     }
                 ]
             |> Tab.view model.tabState
