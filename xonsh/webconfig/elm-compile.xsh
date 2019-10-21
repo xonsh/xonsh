@@ -68,6 +68,14 @@ PROMPTS = [
     ("Default", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
                 '{branch_color}{curr_branch: {}}{NO_COLOR} {BOLD_BLUE}'
                 '{prompt_end}{NO_COLOR} '),
+    ("Debian chroot", '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{NO_COLOR}> '),
+    ("Minimalist", '{BOLD_GREEN}{cwd_base}{NO_COLOR} ) '),
+    ("Terlar", '{env_name}{BOLD_GREEN}{user}{NO_COLOR}@{hostname}:'
+               '{BOLD_GREEN}{cwd}{NO_COLOR}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{NO_COLOR} '),
+    ("Default with git status", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
+                '{branch_color}{gitstatus: {}}{NO_COLOR} {BOLD_BLUE}'
+                '{prompt_end}{NO_COLOR} '),
+    ("Robbyrussell", '{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{NO_COLOR} '),
     ("Just a Dollar", "$ "),
 ]
 
@@ -85,10 +93,12 @@ def render_prompts(lines):
     fields = dict($PROMPT_FIELDS)
     fields.update(
         cwd="~/snail/stuff",
+        cwd_base="stuff",
         user="lou",
         hostname="carcolh",
         env_name=fields['env_prefix'] + "env" + fields["env_postfix"],
         curr_branch="branch",
+        gitstatus="{CYAN}branch|{BOLD_BLUE}+2{NO_COLOR}⚑7",
         branch_color="{BOLD_INTENSE_RED}",
     )
     lines.append(prompt_header)
