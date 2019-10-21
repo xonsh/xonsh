@@ -2,7 +2,7 @@ cloud_sptheme
 numpydoc
 Sphinx
 prompt_toolkit
-pygments>=2.2
+pygments>=2.4
 psutil
 pyzmq
 matplotlib

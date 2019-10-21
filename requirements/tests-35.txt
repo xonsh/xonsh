@@ -5,6 +5,6 @@ pytest-flake8
 pytest-cov
 pytest-timeout
 prompt-toolkit
-pygments>=2.2
+pygments>=2.4
 codecov
 coverage

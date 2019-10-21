@@ -13,7 +13,7 @@ Xonsh currently has the following extras
 
     #. ``ptk``: prompt-toolkit:
        *advanced readline library, line-editing*
-    #. ``pygments>=2.2``: *syntax-highlighting*
+    #. ``pygments>=2.4``: *syntax-highlighting*
     #. ``proctitle``: setproctitle: *change the title of terminal to reflect the current subprocess*
     #. ``linux``: distro: *linux specific platform information*
     #. ``mac``: gnureadline: *GNU's featureful version of readline*

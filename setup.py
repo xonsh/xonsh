@@ -397,7 +397,7 @@ def main():
         skw["cmdclass"]["develop"] = xdevelop
         skw["extras_require"] = {
             "ptk": ["prompt-toolkit"],
-            "pygments": ["pygments>=2.2"],
+            "pygments": ["pygments>=2.4"],
             "mac": ["gnureadline"],
             "linux": ["distro"],
             "proctitle": ["setproctitle"],
