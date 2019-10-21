@@ -1782,37 +1782,6 @@ def _get_color_indexes(style_map):
             yield token, index, rgb
 
 
-# Map of new PTK2 color names to PTK1 variants
-PTK_NEW_OLD_COLOR_MAP = LazyObject(
-    lambda: {
-        "black": "black",
-        "red": "darkred",
-        "green": "darkgreen",
-        "yellow": "brown",
-        "blue": "darkblue",
-        "magenta": "purple",
-        "cyan": "teal",
-        "gray": "lightgray",
-        "brightblack": "darkgray",
-        "brightred": "red",
-        "brightgreen": "green",
-        "brightyellow": "yellow",
-        "brightblue": "blue",
-        "brightmagenta": "fuchsia",
-        "brightcyan": "turquoise",
-        "white": "white",
-    },
-    globals(),
-    "PTK_NEW_OLD_COLOR_MAP",
-)
-
-# Map of new ansicolor names to old PTK1 names
-ANSICOLOR_NAMES_MAP = LazyObject(
-    lambda: {"ansi" + k: "#ansi" + v for k, v in PTK_NEW_OLD_COLOR_MAP.items()},
-    globals(),
-    "ANSICOLOR_NAMES_MAP",
-)
-
 
 def _win10_color_map():
     cmap = {
@@ -1885,20 +1854,6 @@ def hardcode_colors_for_win10(style_map):
     return modified_style
 
 
-def ansicolors_to_ptk1_names(stylemap):
-    """Converts ansicolor names in a stylemap to old PTK1 color names
-    """
-    if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
-        return stylemap
-    modified_stylemap = {}
-    for token, style_str in stylemap.items():
-        for color, ptk1_color in ANSICOLOR_NAMES_MAP.items():
-            if "#" + color not in style_str:
-                style_str = style_str.replace(color, ptk1_color)
-        modified_stylemap[token] = style_str
-    return modified_stylemap
-
-
 def intensify_colors_for_cmd_exe(style_map):
     """Returns a modified style to where colors that maps to dark
        colors are replaced with brighter versions.
@@ -1912,8 +1867,6 @@ def intensify_colors_for_cmd_exe(style_map):
         6: "ansibrightyellow",  # subst yellow with bright yellow
         9: "ansicyan",  # subst intense blue with dark cyan (more readable)
     }
-    if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
-        replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]
