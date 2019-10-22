@@ -161,7 +161,9 @@ def render_colors(lines):
     token_stream = list(pygments.lex(source, lexer=lexer))
     token_stream = [(t, s.replace("\n", "\\n")) for t, s in token_stream]
     lines.append(color_header)
-    for i, style in enumerate(get_all_styles()):
+    styles = sorted(get_all_styles())
+    styles.insert(0, styles.pop(styles.index("default")))
+    for i, style in enumerate(styles):
         display = html_format(token_stream, style=style)
         item = 'name = "' + style + '", '
         item += 'display = "' + escape(display) + '"'
