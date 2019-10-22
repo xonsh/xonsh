@@ -6,9 +6,10 @@ import sys
 import builtins
 from collections import ChainMap
 from collections.abc import MutableMapping
+from keyword import iskeyword
 
 from pygments.lexer import inherit, bygroups, include
-from pygments.lexers.agile import PythonLexer
+from pygments.lexers.agile import Python3Lexer
 from pygments.token import (
     Keyword,
     Name,
@@ -63,7 +64,7 @@ def _command_is_valid(cmd):
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     except (FileNotFoundError, OSError):
         return False
-    return cmd in builtins.__xonsh__.commands_cache or (
+    return (cmd in builtins.__xonsh__.commands_cache and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
     )
 
@@ -99,7 +100,7 @@ def subproc_arg_callback(_, match):
 COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`<&|;!]+(?=\s|$|\)|\]|\}|!)'
 
 
-class XonshLexer(PythonLexer):
+class XonshLexer(Python3Lexer):
     """Xonsh console lexer for pygments."""
 
     name = "Xonsh lexer"

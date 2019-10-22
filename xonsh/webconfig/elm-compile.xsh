@@ -149,25 +149,20 @@ colors ="""
 def render_colors(lines):
     source = (
         'import sys\n'
+        'echo "Welcome $USER on " @(sys.platform)\n\n'
         'def func(x=42):\n'
         '    d = {"xonsh": True}\n'
         '    return d.get("xonsh") and you\n\n'
         '# This is a comment\n'
+        '![env | uniq | sort | grep PATH]\n'
     )
-#        '![echo "Welcome $USER on " @(sys.platform)]\n\n'
-#        '![env | uniq | sort | grep PATH]'
     lexer = XonshLexer()
-    lexer = Python3Lexer()
     lexer.add_filter('tokenmerge')
-    #token_stream = list(pygments.lex(source, lexer=lexer))
-    token_stream = list(lexer.get_tokens(source))
-    pprint(token_stream)
+    token_stream = list(pygments.lex(source, lexer=lexer))
     token_stream = [(t, s.replace("\n", "\\n")) for t, s in token_stream]
     lines.append(color_header)
     for i, style in enumerate(get_all_styles()):
         display = html_format(token_stream, style=style)
-        #display = pygments.highlight(source, XonshLexer(), HtmlFormatter(noclasses=True, stye=style))
-        #print(display)
         item = 'name = "' + style + '", '
         item += 'display = "' + escape(display) + '"'
         pre = "    [ " if i == 0 else "    , "
