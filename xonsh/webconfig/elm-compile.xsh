@@ -14,6 +14,7 @@ from xonsh.color_tools import rgb_to_ints
 from xonsh.pygments_cache import get_all_styles
 from xonsh.pyghooks import XonshStyle, xonsh_style_proxy, XonshHtmlFormatter, Token, XonshLexer
 from xonsh.prompt.base import PromptFormatter
+from xonsh.xontribs import xontrib_metadata
 
 
 $RAISE_SUBPROC_ERROR = True
@@ -149,7 +150,7 @@ colors ="""
 def render_colors(lines):
     source = (
         'import sys\n'
-        'echo "Welcome $USER on " @(sys.platform)\n\n'
+        'echo "Welcome $USER on" @(sys.platform)\n\n'
         'def func(x=42):\n'
         '    d = {"xonsh": True}\n'
         '    return d.get("xonsh") and you\n\n'
@@ -172,11 +173,39 @@ def render_colors(lines):
     lines.append("    ]")
 
 
+# render xontrib data
+
+xontrib_header = """
+type alias XontribData =
+    { name : String
+    , url : String
+    , license : String
+    , description : String
+    }
+
+xontribs : List XontribData
+xontribs ="""
+
+def render_xontribs(lines):
+    lines.append(xontrib_header)
+    md = xontrib_metadata()
+    packages = md["packages"]
+    for i, xontrib in enumerate(md["xontribs"]):
+        item = 'name = "' + xontrib["name"] + '", '
+        item += 'url = "' + xontrib["url"] + '", '
+        item += 'license = "' + packages.get(xontrib["package"], {}).get("license", "") + '", '
+        item += 'description = "' + escape("".join(xontrib["description"])) + '"'
+        pre = "    [ " if i == 0 else "    , "
+        lines.append(pre + "{ " + item + " }")
+    lines.append("    ]")
+
+
 def write_xonsh_data():
     # write XonshData.elm
     lines = [XONSH_DATA_HEADER]
     render_prompts(lines)
     render_colors(lines)
+    render_xontribs(lines)
     src = "\n".join(lines) + "\n"
     xdelm = os.path.join('elm-src', 'XonshData.elm')
     with open(xdelm, 'w') as f:

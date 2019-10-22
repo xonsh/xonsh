@@ -7,18 +7,21 @@ import Html.Parser
 import Html.Parser.Util
 import Http
 import Maybe exposing (withDefault)
+import List
 import String
 import Json.Decode
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Bootstrap.Tab as Tab
 import Bootstrap.CDN as CDN
+import Bootstrap.Card as Card
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Card.Block as Block
 import Bootstrap.Button as Button
 import Bootstrap.ListGroup as ListGroup
 import XonshData
-import XonshData exposing (PromptData, ColorData)
+import XonshData exposing (PromptData, ColorData, XontribData)
 
 
 -- example with animation, you can drop the subscription part when not using animations
@@ -26,6 +29,7 @@ type alias Model =
     { tabState : Tab.State
     , promptValue : PromptData
     , colorValue : ColorData
+    , xontribs : List String
     --, response : Maybe PostResponse
     , error : Maybe Http.Error
     }
@@ -37,6 +41,7 @@ init =
                                   (List.head XonshData.prompts)
       , colorValue = withDefault {name = "unknown", display = ""}
                                  (List.head XonshData.colors)
+      , xontribs = []
       --, response = Nothing
       , error = Nothing
       }
@@ -46,6 +51,8 @@ type Msg
     = TabMsg Tab.State
     | PromptSelect PromptData
     | ColorSelect ColorData
+    | XontribAdded XontribData
+    | XontribRemoved XontribData
     | SaveClicked
     | Response (Result Http.Error ())
 
@@ -62,6 +69,14 @@ update msg model =
             )
         ColorSelect value ->
             ( { model | colorValue = value }
+            , Cmd.none
+            )
+        XontribAdded value ->
+            ( { model | xontribs = List.sort (model.xontribs ++ [value.name]) }
+            , Cmd.none
+            )
+        XontribRemoved value ->
+            ( { model | xontribs = List.filter (\x -> x /= value.name) model.xontribs }
             , Cmd.none
             )
         SaveClicked ->
@@ -124,6 +139,15 @@ colorButton cd =
         , span [] (textHtml cd.display)
         ]
 
+xontribCard : XontribData -> Card.Config Msg
+xontribCard xd =
+    Card.config []
+        |> Card.headerH3 [style "min-width" "8em"] [ text xd.name ]
+        |> Card.block []
+            [ Block.text [style "min-width" "8em"] [ text xd.description ] ]
+--        |> Card.footer []
+--            [ small [ class "text-muted" ] [ text "Last updated 3 mins ago" ] ]
+
 view : Model -> Html Msg
 view model =
     div [style "padding" "0.75em 1.25em"]
@@ -144,6 +168,16 @@ view model =
             |> Tab.center
             |> Tab.items
                 [ Tab.item
+                    { id = "tabItemColors"
+                    , link = Tab.link [] [ text "Colors" ]
+                    , pane = Tab.pane [] [
+                        text ("Current Selection: " ++ model.colorValue.name)
+                        , p [] []
+                        , div [style "padding" "0.75em 1.25em"] (textHtml model.colorValue.display)
+                        , ListGroup.custom (List.map colorButton XonshData.colors)
+                        ]
+                    }
+                , Tab.item
                     { id = "tabItemPrompt"
                     , link = Tab.link [] [ text "Prompt" ]
                     , pane = Tab.pane [] [
@@ -154,14 +188,9 @@ view model =
                         ]
                     }
                 , Tab.item
-                    { id = "tabItemColors"
-                    , link = Tab.link [] [ text "Colors" ]
-                    , pane = Tab.pane [] [
-                        text ("Current Selection: " ++ model.colorValue.name)
-                        , p [] []
-                        , div [style "padding" "0.75em 1.25em"] (textHtml model.colorValue.display)
-                        , ListGroup.custom (List.map colorButton XonshData.colors)
-                        ]
+                    { id = "tabItemXontribs"
+                    , link = Tab.link [] [ text "Xontribs" ]
+                    , pane = Tab.pane [] [ Card.deck (List.map xontribCard XonshData.xontribs) ]
                     }
                 ]
             |> Tab.view model.tabState
