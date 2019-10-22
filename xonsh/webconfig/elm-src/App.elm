@@ -80,6 +80,7 @@ encodeModel : Model -> Encode.Value
 encodeModel model =
     Encode.object
     [ ("prompt", Encode.string model.promptValue.value)
+    , ("colors", Encode.string model.colorValue.name)
     ]
 
 saveSettings : Model -> Cmd Msg

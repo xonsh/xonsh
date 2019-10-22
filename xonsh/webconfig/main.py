@@ -23,6 +23,14 @@ def prompt(config):
     return ["$PROMPT = {!r}".format(config["prompt"])]
 
 
+@renderer
+def colors(config):
+    style = config["colors"]
+    if style == "default":
+        return []
+    return ["$XONSH_COLOR_STYLE = {!r}".format(style)]
+
+
 def config_to_xonsh(
     config, prefix="# XONSH WEBCONFIG START", suffix="# XONSH WEBCONFIG END"
 ):
