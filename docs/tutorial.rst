@@ -1442,6 +1442,9 @@ By default, the following variables are available for use:
     current working directory on some linux terminals. This is not usually needed.
   * ``gitstatus``: Informative git status, like ``[master|MERGING|+1…2]``, you
     may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
+  * ``localtime``: The current, local time as given by ``time.localtime()``.
+    This is formatted with the time format string found in ``time_format``.
+  * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
 
 xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
 `as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
