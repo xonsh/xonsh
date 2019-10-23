@@ -3,9 +3,6 @@
 import time
 import builtins
 
-import xonsh.tools as xt
-import xonsh.platform as xp
-
 
 def _localtime():
     pf = builtins.__xonsh__.env.get("PROMPT_FIELDS", {})

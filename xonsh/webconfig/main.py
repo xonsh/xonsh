@@ -3,7 +3,6 @@ import os
 import sys
 import json
 import socket
-import webbrowser
 import socketserver
 from http import server
 from pprint import pprint
