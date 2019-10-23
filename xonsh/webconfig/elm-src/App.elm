@@ -7,6 +7,8 @@ import Html.Parser
 import Html.Parser.Util
 import Http
 import Maybe exposing (withDefault)
+import Set
+import Set exposing (Set)
 import List
 import String
 import Json.Decode
@@ -15,6 +17,7 @@ import Json.Encode as Encode
 import Bootstrap.Tab as Tab
 import Bootstrap.CDN as CDN
 import Bootstrap.Card as Card
+import Bootstrap.Text as Text
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Card.Block as Block
@@ -29,7 +32,7 @@ type alias Model =
     { tabState : Tab.State
     , promptValue : PromptData
     , colorValue : ColorData
-    , xontribs : List String
+    , xontribs : (Set String)
     --, response : Maybe PostResponse
     , error : Maybe Http.Error
     }
@@ -41,7 +44,7 @@ init =
                                   (List.head XonshData.prompts)
       , colorValue = withDefault {name = "unknown", display = ""}
                                  (List.head XonshData.colors)
-      , xontribs = []
+      , xontribs = Set.empty
       --, response = Nothing
       , error = Nothing
       }
@@ -72,11 +75,11 @@ update msg model =
             , Cmd.none
             )
         XontribAdded value ->
-            ( { model | xontribs = List.sort (model.xontribs ++ [value.name]) }
+            ( { model | xontribs = Set.insert value.name model.xontribs }
             , Cmd.none
             )
         XontribRemoved value ->
-            ( { model | xontribs = List.filter (\x -> x /= value.name) model.xontribs }
+            ( { model | xontribs = Set.remove value.name model.xontribs }
             , Cmd.none
             )
         SaveClicked ->
@@ -96,6 +99,7 @@ encodeModel model =
     Encode.object
     [ ("prompt", Encode.string model.promptValue.value)
     , ("colors", Encode.string model.colorValue.name)
+    , ("xontribs", Encode.set Encode.string model.xontribs)
     ]
 
 saveSettings : Model -> Cmd Msg
@@ -146,8 +150,8 @@ centeredDeck cards =
         [ class "card-deck justify-content-center" ]
         (List.map Card.view cards)
 
-xontribCard : XontribData -> Card.Config Msg
-xontribCard xd =
+xontribCard : Model -> XontribData -> Card.Config Msg
+xontribCard model xd =
     Card.config [ Card.attrs
                     [ style "min-width" "20em"
                     , style "max-width" "20em"
@@ -155,10 +159,17 @@ xontribCard xd =
                     , style "margin" "0.5em"
                     ] ]
         |> Card.headerH3 [] [ text xd.name ]
-        |> Card.block []
-            [ Block.text [] [ text xd.description ] ]
---        |> Card.footer []
---            [ small [ class "text-muted" ] [ text "Last updated 3 mins ago" ] ]
+        |> Card.block [] [ Block.text [] [ text xd.description ] ]
+        |> Card.footer []
+            [ if Set.member xd.name model.xontribs then
+                Button.button [ Button.danger
+                , Button.attrs [ onClick (XontribRemoved xd) ]
+                ] [ text "Remove" ]
+                else
+                Button.button [ Button.success
+                , Button.attrs [ onClick (XontribAdded xd) ]
+                ] [ text "Add" ]
+            ]
 
 view : Model -> Html Msg
 view model =
@@ -200,7 +211,7 @@ view model =
                 , Tab.item
                     { id = "tabItemXontribs"
                     , link = Tab.link [] [ text "Xontribs" ]
-                    , pane = Tab.pane [] [ centeredDeck (List.map xontribCard XonshData.xontribs) ]
+                    , pane = Tab.pane [] [ centeredDeck (List.map (xontribCard model) XonshData.xontribs) ]
                     }
                 ]
             |> Tab.view model.tabState
