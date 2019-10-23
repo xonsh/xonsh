@@ -1396,15 +1396,15 @@ def XonshHtmlFormatter():
     def colorformat(text):
         if text in ansicolors:
             return text
-        if text[0:1] == '#':
+        if text[0:1] == "#":
             col = text[1:]
             if len(col) == 6:
                 return col
             elif len(col) == 3:
                 return col[0] * 2 + col[1] * 2 + col[2] * 2
-        elif text == '':
-            return ''
-        elif text.startswith('var') or text.startswith('calc'):
+        elif text == "":
+            return ""
+        elif text.startswith("var") or text.startswith("calc"):
             return text
         assert False, "wrong color format %r" % text
 
@@ -1420,7 +1420,7 @@ def XonshHtmlFormatter():
             for t in Color.subtypes:
                 if t not in self.style._styles:
                     self._set_ndef_for_color_token(t)
-                classname = str(t)[5:].replace('.', '').lower()
+                classname = str(t)[5:].replace(".", "").lower()
                 self.ttype2class[t] = classname
                 self.class2style[classname] = self._get_color_token_style(t)
             del self._ndefs
@@ -1428,55 +1428,55 @@ def XonshHtmlFormatter():
         def _get_color_token_style(self, ttype):
             webify = html.webify
             ndef = self._ndefs[ttype]
-            style = ''
-            if ndef['color']:
-                style += 'color: {}; '.format(webify(ndef['color']))
-            if ndef['bold']:
-                style += 'font-weight: bold; '
-            if ndef['italic']:
-                style += 'font-style: italic; '
-            if ndef['underline']:
-                style += 'text-decoration: underline; '
-            if ndef['bgcolor']:
-                style += 'background-color: {}; '.format(webify(ndef['bgcolor']))
-            if ndef['border']:
-                style += 'border: 1px solid {}; '.format(webify(ndef['border']))
+            style = ""
+            if ndef["color"]:
+                style += "color: {}; ".format(webify(ndef["color"]))
+            if ndef["bold"]:
+                style += "font-weight: bold; "
+            if ndef["italic"]:
+                style += "font-style: italic; "
+            if ndef["underline"]:
+                style += "text-decoration: underline; "
+            if ndef["bgcolor"]:
+                style += "background-color: {}; ".format(webify(ndef["bgcolor"]))
+            if ndef["border"]:
+                style += "border: 1px solid {}; ".format(webify(ndef["border"]))
             return (style[:-2], ttype, len(ttype))
 
         def _set_ndef_for_color_token(self, ttype):
             ndef = self.style._styles.get(ttype.parent, None)
-            styledefs = self.style.styles.get(ttype, '').split()
+            styledefs = self.style.styles.get(ttype, "").split()
             if not ndef or ttype is None:
-                ndef = ['', 0, 0, 0, '', '', 0, 0, 0]
-            elif 'noinherit' in styledefs and ttype is not Token:
+                ndef = ["", 0, 0, 0, "", "", 0, 0, 0]
+            elif "noinherit" in styledefs and ttype is not Token:
                 ndef = self.style._styles[Token][:]
             else:
                 ndef = ndef[:]
             self.style._styles[ttype] = ndef
-            for styledef in self.style.styles.get(ttype, '').split():
-                if styledef == 'noinherit':
+            for styledef in self.style.styles.get(ttype, "").split():
+                if styledef == "noinherit":
                     pass
-                elif styledef == 'bold':
+                elif styledef == "bold":
                     ndef[1] = 1
-                elif styledef == 'nobold':
+                elif styledef == "nobold":
                     ndef[1] = 0
-                elif styledef == 'italic':
+                elif styledef == "italic":
                     ndef[2] = 1
-                elif styledef == 'noitalic':
+                elif styledef == "noitalic":
                     ndef[2] = 0
-                elif styledef == 'underline':
+                elif styledef == "underline":
                     ndef[3] = 1
-                elif styledef == 'nounderline':
+                elif styledef == "nounderline":
                     ndef[3] = 0
-                elif styledef[:3] == 'bg:':
+                elif styledef[:3] == "bg:":
                     ndef[4] = colorformat(styledef[3:])
-                elif styledef[:7] == 'border:':
+                elif styledef[:7] == "border:":
                     ndef[5] = colorformat(styledef[7:])
-                elif styledef == 'roman':
+                elif styledef == "roman":
                     ndef[6] = 1
-                elif styledef == 'sans':
+                elif styledef == "sans":
                     ndef[7] = 1
-                elif styledef == 'mono':
+                elif styledef == "mono":
                     ndef[8] = 1
                 else:
                     ndef[0] = colorformat(styledef)

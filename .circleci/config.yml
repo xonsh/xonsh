@@ -242,7 +242,7 @@ jobs:
               export ENV_NAME="elm-xonsh-test"
               if [ ! -d "/home/circleci/miniconda/envs/elm-xonsh-test" ]; then
                 conda update -q conda
-                conda env create -f ci/environment-${PYTHON}.yml --name=${ENV_NAME}
+                conda env create -f ci/environment-elm.yml --name=${ENV_NAME}
                 source activate ${ENV_NAME}
               fi
               conda env list

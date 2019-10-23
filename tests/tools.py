@@ -71,6 +71,9 @@ def sp(cmd):
 class DummyStyler:
     styles = defaultdict(str)
 
+    highlight_color = "#ffffff"
+    background_color = "#000000"
+
 
 class DummyBaseShell(BaseShell):
     def __init__(self):
