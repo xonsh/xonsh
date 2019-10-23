@@ -139,12 +139,24 @@ colorButton cd =
         , span [] (textHtml cd.display)
         ]
 
+
+centeredDeck : List (Card.Config msg) -> Html.Html msg
+centeredDeck cards =
+    Html.div
+        [ class "card-deck justify-content-center" ]
+        (List.map Card.view cards)
+
 xontribCard : XontribData -> Card.Config Msg
 xontribCard xd =
-    Card.config []
-        |> Card.headerH3 [style "min-width" "8em"] [ text xd.name ]
+    Card.config [ Card.attrs
+                    [ style "min-width" "20em"
+                    , style "max-width" "20em"
+                    , style "padding" "0.25em"
+                    , style "margin" "0.5em"
+                    ] ]
+        |> Card.headerH3 [] [ text xd.name ]
         |> Card.block []
-            [ Block.text [style "min-width" "8em"] [ text xd.description ] ]
+            [ Block.text [] [ text xd.description ] ]
 --        |> Card.footer []
 --            [ small [ class "text-muted" ] [ text "Last updated 3 mins ago" ] ]
 
@@ -163,15 +175,13 @@ view model =
             ]
         , p [] []
         , Tab.config TabMsg
-            --|> Tab.withAnimation
-            -- remember to wire up subscriptions when using this option
             |> Tab.center
             |> Tab.items
                 [ Tab.item
                     { id = "tabItemColors"
                     , link = Tab.link [] [ text "Colors" ]
-                    , pane = Tab.pane [] [
-                        text ("Current Selection: " ++ model.colorValue.name)
+                    , pane = Tab.pane []
+                        [ text ("Current Selection: " ++ model.colorValue.name)
                         , p [] []
                         , div [style "padding" "0.75em 1.25em"] (textHtml model.colorValue.display)
                         , ListGroup.custom (List.map colorButton XonshData.colors)
@@ -180,8 +190,8 @@ view model =
                 , Tab.item
                     { id = "tabItemPrompt"
                     , link = Tab.link [] [ text "Prompt" ]
-                    , pane = Tab.pane [] [
-                        text ("Current Selection: " ++ model.promptValue.name)
+                    , pane = Tab.pane []
+                        [ text ("Current Selection: " ++ model.promptValue.name)
                         , p [] []
                         , div [style "padding" "0.75em 1.25em"] (textHtml model.promptValue.display)
                         , ListGroup.custom (List.map promptButton XonshData.prompts)
@@ -190,7 +200,7 @@ view model =
                 , Tab.item
                     { id = "tabItemXontribs"
                     , link = Tab.link [] [ text "Xontribs" ]
-                    , pane = Tab.pane [] [ Card.deck (List.map xontribCard XonshData.xontribs) ]
+                    , pane = Tab.pane [] [ centeredDeck (List.map xontribCard XonshData.xontribs) ]
                     }
                 ]
             |> Tab.view model.tabState
