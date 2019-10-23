@@ -85,30 +85,30 @@ import String
 
 # render prompts
 PROMPTS = [
-    ("Default", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
+    ("default", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
                 '{branch_color}{curr_branch: {}}{NO_COLOR} {BOLD_BLUE}'
                 '{prompt_end}{NO_COLOR} '),
-    ("Debian chroot", '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{NO_COLOR}> '),
-    ("Minimalist", '{BOLD_GREEN}{cwd_base}{NO_COLOR} ) '),
-    ("Terlar", '{env_name}{BOLD_GREEN}{user}{NO_COLOR}@{hostname}:'
+    ("debian chroot", '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{NO_COLOR}> '),
+    ("minimalist", '{BOLD_GREEN}{cwd_base}{NO_COLOR} ) '),
+    ("terlar", '{env_name}{BOLD_GREEN}{user}{NO_COLOR}@{hostname}:'
                '{BOLD_GREEN}{cwd}{NO_COLOR}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{NO_COLOR} '),
-    ("Default with git status", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
+    ("default with git status", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
                 '{branch_color}{gitstatus: {}}{NO_COLOR} {BOLD_BLUE}'
                 '{prompt_end}{NO_COLOR} '),
-    ("Robbyrussell", '{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{NO_COLOR} '),
-    ("Just a Dollar", "$ "),
-    ("Simple Pythonista", "{INTENSE_RED}{user}{NO_COLOR} at {INTENSE_PURPLE}{hostname}{NO_COLOR} "
+    ("robbyrussell", '{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{NO_COLOR} '),
+    ("just a dollar", "$ "),
+    ("simple pythonista", "{INTENSE_RED}{user}{NO_COLOR} at {INTENSE_PURPLE}{hostname}{NO_COLOR} "
                           "in {BOLD_GREEN}{cwd}{NO_COLOR}\\n↪ "),
-    ("Informative", "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
+    ("informative", "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
                     "{BOLD_GREEN}{cwd} {gitstatus}{NO_COLOR}\\n> "),
-    ("Informative Version Control", "{YELLOW}{env_name} "
+    ("informative Version Control", "{YELLOW}{env_name} "
                     "{BOLD_GREEN}{cwd} {gitstatus}{NO_COLOR} {prompt_end} "),
-    ("Classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
-    ("Classic with git status", "{gitstatus} {NO_COLOR}{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
-    ("Screen Savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{NO_COLOR}> "),
-    ("Sorin", "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{NO_COLOR} "),
-    ("Acidhub", "❰{INTENSE_GREEN}{user}{NO_COLOR}❙{YELLOW}{cwd}{NO_COLOR}{env_name}❱{gitstatus}≻ "),
-    ("Nim", "{INTENSE_GREEN}┬─[{YELLOW}{user}{NO_COLOR}@{BLUE}{hostname}{NO_COLOR}:{cwd}"
+    ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
+    ("classic with git status", "{gitstatus} {NO_COLOR}{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
+    ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{NO_COLOR}> "),
+    ("sorin", "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{NO_COLOR} "),
+    ("acidhub", "❰{INTENSE_GREEN}{user}{NO_COLOR}❙{YELLOW}{cwd}{NO_COLOR}{env_name}❱{gitstatus}≻ "),
+    ("nim", "{INTENSE_GREEN}┬─[{YELLOW}{user}{NO_COLOR}@{BLUE}{hostname}{NO_COLOR}:{cwd}"
             "{INTENSE_GREEN}]─[{localtime}]─[{NO_COLOR}G:{INTENSE_GREEN}{curr_branch}=]"
             "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{NO_COLOR} "),
 ]

@@ -2,7 +2,7 @@ import Browser
 
 import Html exposing (..)
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (class, style, href)
 import Html.Parser
 import Html.Parser.Util
 import Http
@@ -158,7 +158,7 @@ xontribCard model xd =
                     , style "padding" "0.25em"
                     , style "margin" "0.5em"
                     ] ]
-        |> Card.headerH3 [] [ text xd.name ]
+        |> Card.headerH3 [] [ a [href xd.url] [ text xd.name ] ]
         |> Card.block [] [ Block.text [] ( textHtml xd.description ) ]
         |> Card.footer []
             [ if Set.member xd.name model.xontribs then
