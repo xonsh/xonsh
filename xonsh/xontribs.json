@@ -17,8 +17,8 @@
  {"name": "autoxsh",
   "package": "xonsh-autoxsh",
   "url": "https://github.com/Granitas/xonsh-autoxsh",
-  "description": ["Adds automatic execution of xonsh script files called",
-              "``.autoxsh`` when enterting a directory with ``cd`` function"]
+  "description": ["Adds automatic execution of xonsh script files called ",
+                  "``.autoxsh`` when enterting a directory with ``cd`` function"]
  },
  {"name": "avox",
   "package": "xontrib-avox",
@@ -54,7 +54,7 @@
     "* echo\n",
     "* pwd\n",
     "* tee\n",
-    "* tty",
+    "* tty\n",
     "* yes\n",
     "\n",
     "In many cases, these may have a lower performance overhead than the ",

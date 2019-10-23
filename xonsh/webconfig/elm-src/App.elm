@@ -159,7 +159,7 @@ xontribCard model xd =
                     , style "margin" "0.5em"
                     ] ]
         |> Card.headerH3 [] [ text xd.name ]
-        |> Card.block [] [ Block.text [] [ text xd.description ] ]
+        |> Card.block [] [ Block.text [] ( textHtml xd.description ) ]
         |> Card.footer []
             [ if Set.member xd.name model.xontribs then
                 Button.button [ Button.danger

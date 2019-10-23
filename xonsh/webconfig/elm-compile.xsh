@@ -2,6 +2,7 @@
 """script for compiling elm source and dumping it to the js folder."""
 import os
 import io
+import tempfile
 from pprint import pprint
 
 import pygments
@@ -59,6 +60,17 @@ def html_format(s, style="default"):
     return buf.getvalue()
 
 
+def rst_to_html(s):
+    template = "%(body)s"
+    with tempfile.NamedTemporaryFile('w+') as t, tempfile.NamedTemporaryFile('w+') as f:
+        t.write(template)
+        t.flush()
+        f.write(s)
+        f.flush()
+        html = $(rst2html.py --template @(t.name) @(f.name))
+    return html
+
+
 #
 # first, write out elm-src/XonshData.elm
 #
@@ -111,6 +123,7 @@ prompts : List PromptData
 prompts ="""
 
 def render_prompts(lines):
+    print_color("Rendering {GREEN}prompts{NO_COLOR}")
     prompt_format = PromptFormatter()
     fields = dict($PROMPT_FIELDS)
     fields.update(
@@ -127,7 +140,6 @@ def render_prompts(lines):
     lines.append(prompt_header)
     for i, (name, template) in enumerate(PROMPTS):
         display = html_format(prompt_format(template, fields=fields))
-        #print(display)
         item = 'name = "' + name + '", '
         item += 'value = "' + escape(template) + '", '
         item += 'display = "' + escape(display) + '"'
@@ -148,6 +160,7 @@ colors : List ColorData
 colors ="""
 
 def render_colors(lines):
+    print_color("Rendering {GREEN}color styles{NO_COLOR}")
     source = (
         'import sys\n'
         'echo "Welcome $USER on" @(sys.platform)\n\n'
@@ -187,6 +200,7 @@ xontribs : List XontribData
 xontribs ="""
 
 def render_xontribs(lines):
+    print_color("Rendering {GREEN}xontribs{NO_COLOR}")
     lines.append(xontrib_header)
     md = xontrib_metadata()
     packages = md["packages"]
@@ -194,7 +208,8 @@ def render_xontribs(lines):
         item = 'name = "' + xontrib["name"] + '", '
         item += 'url = "' + xontrib["url"] + '", '
         item += 'license = "' + packages.get(xontrib["package"], {}).get("license", "") + '", '
-        item += 'description = "' + escape("".join(xontrib["description"])) + '"'
+        d = rst_to_html("".join(xontrib["description"])).replace("\n", "\\n")
+        item += 'description = "' + escape(d) + '"'
         pre = "    [ " if i == 0 else "    , "
         lines.append(pre + "{ " + item + " }")
     lines.append("    ]")
