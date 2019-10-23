@@ -67,7 +67,7 @@ def rst_to_html(s):
         t.flush()
         f.write(s)
         f.flush()
-        html = $(rst2html.py --template @(t.name) @(f.name))
+        html = $(rst2html5.py --template @(t.name) @(f.name))
     return html
 
 
