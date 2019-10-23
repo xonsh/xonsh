@@ -97,7 +97,7 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
 
 
 def make_parser():
-    p = ArgumentParser("xonfig-web")
+    p = ArgumentParser("xonfig web")
     p.add_argument(
         "--no-browser",
         action="store_false",
@@ -133,6 +133,8 @@ def main(args=None):
             type, value = sys.exc_info()[:2]
             if "Address already in use" not in str(value):
                 raise
+        except KeyboardInterrupt:
+            break
         port += 1
 
 

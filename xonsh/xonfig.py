@@ -2,6 +2,7 @@
 import os
 import re
 import ast
+import sys
 import json
 import shutil
 import random
@@ -617,9 +618,9 @@ def _tutorial(args):
 
 
 def _web(args):
-    import os
+    import subprocess
 
-    os.system("python web_config/webconfig.py")
+    subprocess.run([sys.executable, '-m', 'xonsh.webconfig'] + args.orig_args[1:])
 
 
 @functools.lru_cache(1)
@@ -634,7 +635,15 @@ def _xonfig_create_parser():
     info.add_argument(
         "--json", action="store_true", default=False, help="reports results as json"
     )
-    wiz = subp.add_parser("wizard", help="displays configuration information")
+    web = subp.add_parser("web", help="Launch configurator in browser.")
+    web.add_argument(
+        "--no-browser",
+        action="store_false",
+        dest="browser",
+        default=True,
+        help="don't open browser",
+    )
+    wiz = subp.add_parser("wizard", help="Launch configurator in terminal")
     wiz.add_argument(
         "--file", default=None, help="config file location, default=$XONSHRC"
     )
@@ -653,16 +662,15 @@ def _xonfig_create_parser():
         "style", nargs="?", default=None, help="style to preview, default: <current>"
     )
     subp.add_parser("tutorial", help="Launch tutorial in browser.")
-    subp.add_parser("web", help="Launch configurator in browser.")
     return p
 
 
 _XONFIG_MAIN_ACTIONS = {
     "info": _info,
+    "web": _web,
     "wizard": _wizard,
     "styles": _styles,
     "colors": _colors,
-    "web": _web,
     "tutorial": _tutorial,
 }
 
@@ -675,6 +683,7 @@ def xonfig_main(args=None):
         args.insert(0, "info")
     parser = _xonfig_create_parser()
     ns = parser.parse_args(args)
+    ns.orig_args = args
     if ns.action is None:  # apply default action
         ns = parser.parse_args(["info"] + args)
     return _XONFIG_MAIN_ACTIONS[ns.action](ns)
@@ -748,10 +757,10 @@ WELCOME_MSG = [
     ("{{INTENSE_BLACK}}", "<", "-"),
     "{{GREEN}}xonfig{{NO_COLOR}} tutorial    {{INTENSE_WHITE}}->    Launch the tutorial in "
     "the browser{{NO_COLOR}}",
-    "{{GREEN}}xonfig{{NO_COLOR}} wizard      {{INTENSE_WHITE}}->    Run the configuration "
-    "wizard and claim your shell {{NO_COLOR}}",
-    "{{INTENSE_BLACK}}(Note: Run the Wizard or create a {{RED}}~/.xonshrc{{INTENSE_BLACK}} file "
-    "to suppress the welcome screen)",
+    "{{GREEN}}xonfig{{NO_COLOR}} web         {{INTENSE_WHITE}}->    Run the configuration "
+    "tool in the browser and claim your shell {{NO_COLOR}}",
+    "{{INTENSE_BLACK}}(Note: Run the configurationn tool or create a "
+    "{{RED}}~/.xonshrc{{INTENSE_BLACK}} file to suppress the welcome screen)",
     "",
 ]
 

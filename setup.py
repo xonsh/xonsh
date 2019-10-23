@@ -378,6 +378,12 @@ def main():
             "xonsh": ["*.json", "*.githash"],
             "xontrib": ["*.xsh"],
             "xonsh.lib": ["*.xsh"],
+            "xonsh.webconfig": [
+                "*.html",
+                "js/app.min.js",
+                "js/bootstrap.min.css",
+                "js/LICENSE-bootstrap",
+            ]
         },
         cmdclass=cmdclass,
         scripts=scripts,
