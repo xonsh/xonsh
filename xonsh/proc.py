@@ -1780,12 +1780,14 @@ def SIGNAL_MESSAGES():
         signal.SIGSEGV: "Segmentation fault",
     }
     if ON_POSIX:
-        sm.update({
+        sm.update(
+            {
                 signal.SIGQUIT: "Quit",
                 signal.SIGHUP: "Hangup",
                 signal.SIGKILL: "Killed",
                 signal.SIGTSTP: "Stopped",
-        })
+            }
+        )
     return sm
 
 
