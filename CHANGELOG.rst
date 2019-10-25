@@ -4,6 +4,10 @@ Xonsh Change Log
 
 .. current developments
 
+**Fixed:**
+
+* Fix Ctrl-C event causing Atribute error on Windows. (for reals this time)
+
 v0.9.13
 ====================
 
