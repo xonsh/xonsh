@@ -1778,12 +1778,14 @@ def SIGNAL_MESSAGES():
         signal.SIGILL: "Illegal instructions",
         signal.SIGTERM: "Terminated",
         signal.SIGSEGV: "Segmentation fault",
-        signal.SIGTSTP: "Stopped",
     }
     if ON_POSIX:
-        sm.update(
-            {signal.SIGQUIT: "Quit", signal.SIGHUP: "Hangup", signal.SIGKILL: "Killed"}
-        )
+        sm.update({
+                signal.SIGQUIT: "Quit",
+                signal.SIGHUP: "Hangup",
+                signal.SIGKILL: "Killed",
+                signal.SIGTSTP: "Stopped",
+        })
     return sm
 
 

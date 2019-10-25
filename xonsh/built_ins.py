@@ -600,7 +600,7 @@ class SubprocSpec:
             def xonsh_preexec_fn():
                 """Preexec function bound to a pipeline group."""
                 os.setpgid(0, pipeline_group)
-                signal.signal(signal.SIGTSTP, default_signal_pauser)
+                signal.signal(signal.SIGTERM if ON_WINDOWS else signal.SIGSTP, default_signal_pauser)
 
         kwargs["preexec_fn"] = xonsh_preexec_fn
 
