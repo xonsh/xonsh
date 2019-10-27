@@ -191,11 +191,6 @@
                   "bit of the startup time when running your favorite, minimal ",
                   "text editor."]
   },
- {"name": "xonda",
-  "package": "xonda",
-  "url": "https://github.com/gforsyth/xonda",
-  "description": ["A thin wrapper around conda with tab completion"]
- },
  {"name": "z",
   "package": "xontrib-z",
   "url": "https://github.com/astronouth7303/xontrib-z",
