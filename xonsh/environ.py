@@ -493,6 +493,16 @@ Ensurer.__doc__ = """Named tuples whose elements are functions that
 represent environment variable validation, conversion, detyping.
 """
 
+# we use this as a registry of common ensurers; valuable for user interface
+ENSURERS = {
+    'bool': (is_bool, to_bool, bool_to_str),
+    bool: (is_bool, to_bool, bool_to_str),
+    'str': (is_string, ensure_string, ensure_string),
+    str: (is_string, ensure_string, ensure_string),
+    'path': (is_env_path, str_to_env_path, env_path_to_str),
+    'float': (is_float, float, str),
+    float: (is_float, float, str),
+    }
 
 @lazyobject
 def DEFAULT_ENSURERS():
@@ -1646,6 +1656,53 @@ class Env(cabc.MutableMapping):
             elif len(self):
                 p.break_()
                 p.pretty(dict(self))
+
+    def register(self, varname, vartype, defaultval, vardoc,
+                 ens_validate=None, ens_convert=None, ens_detype=None,
+                 doc_configurable=None, doc_default=None, doc_store_as_str=None):
+        """Register an enviornment variable with type handling, default value, doc.
+
+
+
+        """
+
+        if vartype is not None:
+            ensurer = Ensurer(*ENSURERS[vartype])
+        else:
+            ensurer = Ensurer(*(ens_validate, ens_convert, ens_detype))
+
+        # set ensurer for envvar
+        set_ensurer(varname, ensurer)
+
+        # set default value for envvar
+        # TODO: add type checking?
+        self._defaults[varname] = defaultval
+
+        # set doc for envvar
+        # TODO: add type checking
+
+        self._docs[varname] = VarDocs(
+                *(val for val in (doc,
+                                  doc_configurable,
+                                  doc_default,
+                                  doc_store_as_str)
+                  if val is not None))
+
+        return varname
+
+    def deregister(self, varname):
+
+        # drop ensurer
+        self._ensurers.pop(varname)
+
+        # drop default value for envvar
+        self._defaults.pop(varname)
+
+        # drop doc for envvar
+        self._docs.pop(varname)
+
+        return varname
+        
 
 
 def _yield_executables(directory, name):
