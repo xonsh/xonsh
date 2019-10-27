@@ -496,12 +496,10 @@ represent environment variable validation, conversion, detyping.
 # we use this as a registry of common ensurers; valuable for user interface
 ENSURERS = {
     'bool': (is_bool, to_bool, bool_to_str),
-    bool: (is_bool, to_bool, bool_to_str),
     'str': (is_string, ensure_string, ensure_string),
-    str: (is_string, ensure_string, ensure_string),
     'path': (is_env_path, str_to_env_path, env_path_to_str),
     'float': (is_float, float, str),
-    float: (is_float, float, str),
+    'int': (is_int, int, str),
     }
 
 @lazyobject
@@ -1657,16 +1655,46 @@ class Env(cabc.MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
-    def register(self, varname, vartype, defaultval, vardoc,
+    def register(self, varname, vartype=None, defaultval=None, vardoc=None,
                  ens_validate=None, ens_convert=None, ens_detype=None,
                  doc_configurable=None, doc_default=None, doc_store_as_str=None):
-        """Register an enviornment variable with type handling, default value, doc.
+        """Register an enviornment variable with optional type handling,
+        default value, doc.
 
-
+        Parameters
+        ----------
+        varname : str
+            Environment variable name to register. Typically all caps.
+        vartype : str, optional,  {'bool', 'str', 'path', 'int', 'float'}
+            Variable type. If not one of the available presets, use `ens_validate`,
+            `ens_convert`, and `ens_detype` to specify type behavior.
+        defaultval : optional
+            Default value for variable. ``ValueError`` raised if type does not match
+            that specified by `vartype` (or `ens_validate`).
+        vardoc : str, optional
+            Docstring for variable.
+        ens_validate : func, optional
+            Function to validate type.
+        ens_convert : func, optional
+            Function to convert variable from a string representation to its type.
+        ens_detype : func, optional
+            Function to convert variable from its type to a string representation.
+        doc_configurable : bool, optional
+            Flag for whether the environment variable is configurable or not.
+        doc_default : str, optional
+            Custom docstring for the default value for complex defaults.
+            If this is ``DefaultNotGiven``, then the default will be looked up
+            from ``DEFAULT_VALUES`` and converted to a ``str``.
+        doc_store_as_str : bool, optional
+            Flag for whether the environment variable should be stored as a
+            string. This is used when persisting a variable that is not JSON
+            serializable to the config file. For example, sets, frozensets, and
+            potentially other non-trivial data types. default, False.
 
         """
 
-        if vartype is not None:
+        if ((vartype is not None) and 
+            (vartype in ('bool', 'str', 'path', 'int', 'float'))):
             ensurer = Ensurer(*ENSURERS[vartype])
         else:
             ensurer = Ensurer(*(ens_validate, ens_convert, ens_detype))
@@ -1675,22 +1703,30 @@ class Env(cabc.MutableMapping):
         set_ensurer(varname, ensurer)
 
         # set default value for envvar
-        # TODO: add type checking?
-        self._defaults[varname] = defaultval
+        if defaultval is not None:
+            if ensurer['validate'](defaultval):
+                self._defaults[varname] = defaultval
+            else:
+                raise ValueError("Default value does not match type specified by ensurer")
 
         # set doc for envvar
-        # TODO: add type checking
-
-        self._docs[varname] = VarDocs(
-                *(val for val in (doc,
-                                  doc_configurable,
-                                  doc_default,
-                                  doc_store_as_str)
-                  if val is not None))
-
-        return varname
+        if vardoc is not None:
+            self._docs[varname] = VarDocs(
+                    *(val for val in (vardoc,
+                                      doc_configurable,
+                                      doc_default,
+                                      doc_store_as_str)
+                      if val is not None))
 
     def deregister(self, varname):
+        """Deregister an enviornment variable and all its type handling,
+        default value, doc.
+
+        Parameters
+        ----------
+        varname : str
+            Environment variable name to deregister. Typically all caps.
+        """
 
         # drop ensurer
         self._ensurers.pop(varname)
@@ -1700,9 +1736,6 @@ class Env(cabc.MutableMapping):
 
         # drop doc for envvar
         self._docs.pop(varname)
-
-        return varname
-        
 
 
 def _yield_executables(directory, name):
