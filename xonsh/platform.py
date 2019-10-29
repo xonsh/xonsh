@@ -520,7 +520,7 @@ def BASH_COMPLETIONS_DEFAULT():
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (
             os.path.join(
-                git_for_windows_path(), "usr\\share\\bash-completion\\bash_completion"
+                git_for_windows_path(), "usr\\share\\bash-completion\\completions"
             ),
             os.path.join(
                 git_for_windows_path(),
