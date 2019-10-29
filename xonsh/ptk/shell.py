@@ -10,7 +10,7 @@ from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle, style_from_dict
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import print_exception, carriage_return
+from xonsh.tools import print_exception, carriage_return, ansicolors_to_ptk1_names
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -18,7 +18,11 @@ from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
 from xonsh.shell import transform_command
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
-from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
+from xonsh.style_tools import (
+    partial_color_tokenize,
+    _TokenType,
+    DEFAULT_STYLE_DICT as _DEFAULT_STYLE_DICT,
+)
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.pygments_cache import get_all_styles
 from xonsh.lazyasd import LazyObject
@@ -34,6 +38,14 @@ on_ptk_create(prompter: Prompter, history: PromptToolkitHistory, completer: Prom
 
 Fired after prompt toolkit has been initialized
 """,
+)
+
+# Convert new ansicolor names to names
+# understood by PTK1
+DEFAULT_STYLE_DICT = LazyObject(
+    lambda: ansicolors_to_ptk1_names(_DEFAULT_STYLE_DICT),
+    globals(),
+    "DEFAULT_STYLE_DICT",
 )
 
 
