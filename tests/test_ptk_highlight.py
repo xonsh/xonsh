@@ -15,6 +15,7 @@ from pygments.token import (
     Operator,
     Punctuation,
     Text,
+    Literal,
 )
 from tools import skip_if_on_windows
 
@@ -62,7 +63,18 @@ def test_bin_ls():
 
 @skip_if_on_windows
 def test_py_print():
-    check_token('print("hello")', [(Keyword, "print"), (String.Double, "hello")])
+    check_token(
+        'print("hello")',
+        [
+            (Name.Builtin, "print"),
+            (Punctuation, "("),
+            (Literal.String.Double, '"'),
+            (Literal.String.Double, "hello"),
+            (Literal.String.Double, '"'),
+            (Punctuation, ")"),
+            (Text, "\n"),
+        ],
+    )
 
 
 @skip_if_on_windows
@@ -101,24 +113,29 @@ def test_nested():
     check_token(
         "print($(cd))",
         [
-            (Keyword, "print"),
+            (Name.Builtin, "print"),
             (Punctuation, "("),
             (Keyword, "$"),
             (Punctuation, "("),
             (Name.Builtin, "cd"),
             (Punctuation, ")"),
             (Punctuation, ")"),
+            (Text, "\n"),
         ],
     )
     check_token(
         r'print(![echo "])\""])',
         [
-            (Keyword, "print"),
+            (Name.Builtin, "print"),
+            (Punctuation, "("),
             (Keyword, "!"),
             (Punctuation, "["),
             (Name.Builtin, "echo"),
-            (String.Double, r'"])\""'),
+            (Text, " "),
+            (Literal.String.Double, '"])\\""'),
             (Punctuation, "]"),
+            (Punctuation, ")"),
+            (Text, "\n"),
         ],
     )
 

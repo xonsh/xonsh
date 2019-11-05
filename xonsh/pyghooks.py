@@ -6,9 +6,10 @@ import sys
 import builtins
 from collections import ChainMap
 from collections.abc import MutableMapping
+from keyword import iskeyword
 
 from pygments.lexer import inherit, bygroups, include
-from pygments.lexers.agile import PythonLexer
+from pygments.lexers.agile import Python3Lexer
 from pygments.token import (
     Keyword,
     Name,
@@ -47,7 +48,7 @@ from xonsh.color_tools import (
     iscolor,
 )
 from xonsh.style_tools import norm_name
-from xonsh.lazyimps import terminal256
+from xonsh.lazyimps import terminal256, html
 from xonsh.platform import (
     os_environ,
     win_ansi_support,
@@ -63,7 +64,7 @@ def _command_is_valid(cmd):
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     except (FileNotFoundError, OSError):
         return False
-    return cmd in builtins.__xonsh__.commands_cache or (
+    return (cmd in builtins.__xonsh__.commands_cache and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
     )
 
@@ -99,7 +100,7 @@ def subproc_arg_callback(_, match):
 COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`<&|;!]+(?=\s|$|\)|\]|\}|!)'
 
 
-class XonshLexer(PythonLexer):
+class XonshLexer(Python3Lexer):
     """Xonsh console lexer for pygments."""
 
     name = "Xonsh lexer"
@@ -516,7 +517,10 @@ class XonshStyle(Style):
             self._smap = XONSH_BASE_STYLE.copy()
         else:
             try:
-                self._smap = get_style_by_name(value)().styles.copy()
+                style_obj = get_style_by_name(value)()
+                self._smap = style_obj.styles.copy()
+                self.highlight_color = style_obj.highlight_color
+                self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
@@ -568,6 +572,8 @@ def xonsh_style_proxy(styler):
 
         target = styler
         styles = styler.styles
+        highlight_color = styler.highlight_color
+        background_color = styler.background_color
 
         def __new__(cls, *args, **kwargs):
             return cls.target
@@ -1381,3 +1387,99 @@ def XonshTerminal256Formatter():
             self.style_string["Token.Color.NO_COLOR"] = ("\x1b[39m", "")
 
     return XonshTerminal256FormatterProxy
+
+
+@lazyobject
+def XonshHtmlFormatter():
+    from pygments.style import ansicolors
+
+    def colorformat(text):
+        if text in ansicolors:
+            return text
+        if text[0:1] == "#":
+            col = text[1:]
+            if len(col) == 6:
+                return col
+            elif len(col) == 3:
+                return col[0] * 2 + col[1] * 2 + col[2] * 2
+        elif text == "":
+            return ""
+        elif text.startswith("var") or text.startswith("calc"):
+            return text
+        assert False, "wrong color format %r" % text
+
+    class XonshHtmlFormatterProxy(html.HtmlFormatter):
+        """Proxy class for xonsh HTML formatting that understands.
+        xonsh color tokens.
+        """
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # set up classes for colors
+            self._ndefs = dict(self.style)
+            for t in Color.subtypes:
+                if t not in self.style._styles:
+                    self._set_ndef_for_color_token(t)
+                classname = str(t)[5:].replace(".", "").lower()
+                self.ttype2class[t] = classname
+                self.class2style[classname] = self._get_color_token_style(t)
+            del self._ndefs
+
+        def _get_color_token_style(self, ttype):
+            webify = html.webify
+            ndef = self._ndefs[ttype]
+            style = ""
+            if ndef["color"]:
+                style += "color: {}; ".format(webify(ndef["color"]))
+            if ndef["bold"]:
+                style += "font-weight: bold; "
+            if ndef["italic"]:
+                style += "font-style: italic; "
+            if ndef["underline"]:
+                style += "text-decoration: underline; "
+            if ndef["bgcolor"]:
+                style += "background-color: {}; ".format(webify(ndef["bgcolor"]))
+            if ndef["border"]:
+                style += "border: 1px solid {}; ".format(webify(ndef["border"]))
+            return (style[:-2], ttype, len(ttype))
+
+        def _set_ndef_for_color_token(self, ttype):
+            ndef = self.style._styles.get(ttype.parent, None)
+            styledefs = self.style.styles.get(ttype, "").split()
+            if not ndef or ttype is None:
+                ndef = ["", 0, 0, 0, "", "", 0, 0, 0]
+            elif "noinherit" in styledefs and ttype is not Token:
+                ndef = self.style._styles[Token][:]
+            else:
+                ndef = ndef[:]
+            self.style._styles[ttype] = ndef
+            for styledef in self.style.styles.get(ttype, "").split():
+                if styledef == "noinherit":
+                    pass
+                elif styledef == "bold":
+                    ndef[1] = 1
+                elif styledef == "nobold":
+                    ndef[1] = 0
+                elif styledef == "italic":
+                    ndef[2] = 1
+                elif styledef == "noitalic":
+                    ndef[2] = 0
+                elif styledef == "underline":
+                    ndef[3] = 1
+                elif styledef == "nounderline":
+                    ndef[3] = 0
+                elif styledef[:3] == "bg:":
+                    ndef[4] = colorformat(styledef[3:])
+                elif styledef[:7] == "border:":
+                    ndef[5] = colorformat(styledef[7:])
+                elif styledef == "roman":
+                    ndef[6] = 1
+                elif styledef == "sans":
+                    ndef[7] = 1
+                elif styledef == "mono":
+                    ndef[8] = 1
+                else:
+                    ndef[0] = colorformat(styledef)
+            self._ndefs[ttype] = self.style.style_for_token(ttype)
+
+    return XonshHtmlFormatterProxy

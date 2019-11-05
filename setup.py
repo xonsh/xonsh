@@ -366,12 +366,24 @@ def main():
             "xonsh.history",
             "xonsh.prompt",
             "xonsh.lib",
+            "xonsh.webconfig",
         ],
-        package_dir={"xonsh": "xonsh", "xontrib": "xontrib", "xonsh.lib": "xonsh/lib"},
+        package_dir={
+            "xonsh": "xonsh",
+            "xontrib": "xontrib",
+            "xonsh.lib": "xonsh/lib",
+            "xonsh.webconfig": "xonsh/webconfig",
+        },
         package_data={
             "xonsh": ["*.json", "*.githash"],
             "xontrib": ["*.xsh"],
             "xonsh.lib": ["*.xsh"],
+            "xonsh.webconfig": [
+                "*.html",
+                "js/app.min.js",
+                "js/bootstrap.min.css",
+                "js/LICENSE-bootstrap",
+            ]
         },
         cmdclass=cmdclass,
         scripts=scripts,

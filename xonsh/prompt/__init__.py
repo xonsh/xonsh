@@ -17,6 +17,8 @@ else:
         _sys.modules["xonsh.prompt.gitstatus"] = __amalgam__
         job = __amalgam__
         _sys.modules["xonsh.prompt.job"] = __amalgam__
+        times = __amalgam__
+        _sys.modules["xonsh.prompt.times"] = __amalgam__
         vc = __amalgam__
         _sys.modules["xonsh.prompt.vc"] = __amalgam__
         base = __amalgam__
