@@ -2289,7 +2289,7 @@ class CommandPipeline:
         rtn = self.returncode
         if (
             rtn is not None
-            and rtn > 0
+            and rtn != 0
             and builtins.__xonsh__.env.get("RAISE_SUBPROC_ERROR")
         ):
             try:
