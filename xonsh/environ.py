@@ -1655,7 +1655,7 @@ class Env(cabc.MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
-    def register(self, name, type=None, defaultval=None, doc=None,
+    def register(self, name, type=None, default=None, doc=None,
                  validate=None, convert=None, detype=None,
                  doc_configurable=None, doc_default=None, doc_store_as_str=None):
         """Register an enviornment variable with optional type handling,
@@ -1668,7 +1668,7 @@ class Env(cabc.MutableMapping):
         type : str, optional,  {'bool', 'str', 'path', 'int', 'float'}
             Variable type. If not one of the available presets, use `validate`,
             `convert`, and `detype` to specify type behavior.
-        defaultval : optional
+        default : optional
             Default value for variable. ``ValueError`` raised if type does not match
             that specified by `type` (or `validate`).
         doc : str, optional
@@ -1703,9 +1703,9 @@ class Env(cabc.MutableMapping):
         set_ensurer(name, ensurer)
 
         # set default value for envvar
-        if defaultval is not None:
-            if ensurer['validate'](defaultval):
-                self._defaults[name] = defaultval
+        if default is not None:
+            if ensurer['validate'](default):
+                self._defaults[name] = default
             else:
                 raise ValueError("Default value does not match type specified by ensurer")
 
