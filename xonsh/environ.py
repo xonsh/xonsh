@@ -1655,29 +1655,29 @@ class Env(cabc.MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
-    def register(self, varname, vartype=None, defaultval=None, vardoc=None,
-                 ens_validate=None, ens_convert=None, ens_detype=None,
+    def register(self, name, type=None, defaultval=None, doc=None,
+                 validate=None, convert=None, detype=None,
                  doc_configurable=None, doc_default=None, doc_store_as_str=None):
         """Register an enviornment variable with optional type handling,
         default value, doc.
 
         Parameters
         ----------
-        varname : str
+        name : str
             Environment variable name to register. Typically all caps.
-        vartype : str, optional,  {'bool', 'str', 'path', 'int', 'float'}
-            Variable type. If not one of the available presets, use `ens_validate`,
-            `ens_convert`, and `ens_detype` to specify type behavior.
+        type : str, optional,  {'bool', 'str', 'path', 'int', 'float'}
+            Variable type. If not one of the available presets, use `validate`,
+            `convert`, and `detype` to specify type behavior.
         defaultval : optional
             Default value for variable. ``ValueError`` raised if type does not match
-            that specified by `vartype` (or `ens_validate`).
-        vardoc : str, optional
+            that specified by `type` (or `validate`).
+        doc : str, optional
             Docstring for variable.
-        ens_validate : func, optional
+        validate : func, optional
             Function to validate type.
-        ens_convert : func, optional
+        convert : func, optional
             Function to convert variable from a string representation to its type.
-        ens_detype : func, optional
+        detype : func, optional
             Function to convert variable from its type to a string representation.
         doc_configurable : bool, optional
             Flag for whether the environment variable is configurable or not.
@@ -1693,49 +1693,49 @@ class Env(cabc.MutableMapping):
 
         """
 
-        if ((vartype is not None) and 
-            (vartype in ('bool', 'str', 'path', 'int', 'float'))):
-            ensurer = Ensurer(*ENSURERS[vartype])
+        if ((type is not None) and 
+            (type in ('bool', 'str', 'path', 'int', 'float'))):
+            ensurer = Ensurer(*ENSURERS[type])
         else:
-            ensurer = Ensurer(*(ens_validate, ens_convert, ens_detype))
+            ensurer = Ensurer(*(validate, convert, detype))
 
         # set ensurer for envvar
-        set_ensurer(varname, ensurer)
+        set_ensurer(name, ensurer)
 
         # set default value for envvar
         if defaultval is not None:
             if ensurer['validate'](defaultval):
-                self._defaults[varname] = defaultval
+                self._defaults[name] = defaultval
             else:
                 raise ValueError("Default value does not match type specified by ensurer")
 
         # set doc for envvar
-        if vardoc is not None:
-            self._docs[varname] = VarDocs(
-                    *(val for val in (vardoc,
+        if doc is not None:
+            self._docs[name] = VarDocs(
+                    *(val for val in (doc,
                                       doc_configurable,
                                       doc_default,
                                       doc_store_as_str)
                       if val is not None))
 
-    def deregister(self, varname):
+    def deregister(self, name):
         """Deregister an enviornment variable and all its type handling,
         default value, doc.
 
         Parameters
         ----------
-        varname : str
+        name : str
             Environment variable name to deregister. Typically all caps.
         """
 
         # drop ensurer
-        self._ensurers.pop(varname)
+        self._ensurers.pop(name)
 
         # drop default value for envvar
-        self._defaults.pop(varname)
+        self._defaults.pop(name)
 
         # drop doc for envvar
-        self._docs.pop(varname)
+        self._docs.pop(name)
 
 
 def _yield_executables(directory, name):
