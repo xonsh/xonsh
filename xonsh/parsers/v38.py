@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implements the xonsh parser for Python v3.6."""
+"""Implements the xonsh parser for Python v3.8."""
 import xonsh.ast as ast
 from xonsh.parsers.v36 import Parser as ThreeSixParser
 
