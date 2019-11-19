@@ -305,3 +305,15 @@ class Parser(ThreeSixParser):
             args = p2
         p0 = ast.Lambda(args=args, body=p4, lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = p0
+
+    def p_decorated(self, p):
+        """decorated : decorators classdef_or_funcdef"""
+        p1, p2 = p[1], p[2]
+        targ = p2[0]
+        targ.decorator_list = p1
+        # async functions take the col number of the 'def', unless they are
+        # decorated, in which case they have the col of the 'async'. WAT?
+        if hasattr(targ, "_async_tok"):
+            targ.col_offset = targ._async_tok.lexpos
+            del targ._async_tok
+        p[0] = p2
