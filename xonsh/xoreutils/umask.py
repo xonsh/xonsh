@@ -1,4 +1,4 @@
-"""Implements a umask command for tako."""
+"""Implements a umask command for xonsh."""
 
 import re
 import os
@@ -167,3 +167,7 @@ View or set the file creation mask.
 This version of umask was written in Python for tako: https://takoshell.org
 Based on the umask command from Bash:
 https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html"""
+
+if __name__ == '__main__':
+    import sys
+    umask(sys.argv, sys.stdin, sys.stdout, sys.stderr)
