@@ -44,6 +44,7 @@ import xonsh.xoreutils.which as xxw
 
 from xonsh.xoreutils.umask import umask
 
+
 @lazyobject
 def SUB_EXEC_ALIAS_RE():
     return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+")
