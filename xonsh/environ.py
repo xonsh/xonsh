@@ -1074,9 +1074,10 @@ def DEFAULT_DOCS():
             default="``xonsh.environ.DEFAULT_PROMPT``",
         ),
         "PROMPT_REFRESH_INTERVAL": VarDocs(
-            "Evaluate $PROMPT, $RIGHT_PROMPT and $BOTTOM_TOOLBAR every so many seconds."
-            "This param default is zero."
-            "And if using this param, $UPDATE_COMPLETIONS_ON_KEYPRESS must be True."
+            "Interval (in seconds) to evaluate and update ``$PROMPT``, ``$RIGHT_PROMPT`` "
+            "and ``$BOTTOM_TOOLBAR``. The default is zero (no update). "
+            "NOTE: ``$UPDATE_PROMPT_ON_KEYPRESS`` must be set to ``True`` for this "
+            "variable to take effect."
         ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": VarDocs(
             "The color depth used by prompt toolkit 2. Possible values are: "
