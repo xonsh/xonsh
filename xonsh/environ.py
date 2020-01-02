@@ -128,14 +128,15 @@ events.doc(
     """
 on_lscolors_change(key: str, oldvalue: Any, newvalue: Any) -> None
 
-Fires after a value in LS_COLORS changes, when a new key is added (oldvalue is None) 
-or when an existing key is deleted (newvalue is None).  
+Fires after a value in LS_COLORS changes, when a new key is added (oldvalue is None)
+or when an existing key is deleted (newvalue is None).
 LS_COLORS values must be (ANSI color) strings, None is unambiguous.
 Does not fire when the whole environment variable changes (see on_envvar_change).
 Does not fire for each value when LS_COLORS is first instantiated.
 Normal usage is to arm the event handler, then read (not modify) all existing values.
 """,
 )
+
 
 @lazyobject
 def HELP_TEMPLATE():

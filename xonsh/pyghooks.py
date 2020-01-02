@@ -210,7 +210,8 @@ def code_by_name(name, styles):
         code += color_name_to_pygments_code(fg, styles)
     return code
 
-def color_token_by_name( xc:tuple, styles=None) -> Color:
+
+def color_token_by_name(xc: tuple, styles=None) -> Color:
     """Returns (color) token corresponding to Xonsh color tuple, ensures token is defined in styles"""
     if not styles:
         try:
@@ -218,16 +219,17 @@ def color_token_by_name( xc:tuple, styles=None) -> Color:
         except AttributeError:
             return Color
 
-    tokName = xc[0]    
+    tokName = xc[0]
     pc = color_name_to_pygments_code(xc[0], styles)
-    
+
     if len(xc) > 1:
-        pc += ' ' + color_name_to_pygments_code( xc[1], styles)
+        pc += ' ' + color_name_to_pygments_code(xc[1], styles)
         tokName += "__" + xc[1]
-    
+
     token = getattr(Color, norm_name(tokName))
     styles[token] = pc
     return token
+
 
 def partial_color_tokenize(template):
     """Tokenizes a template string containing colors. Will return a list
@@ -1342,11 +1344,12 @@ color_file_extension_RE = LazyObject(lambda: re.compile(r'.*(\.\w+)$')
 file_color_tokens = dict()
 """Parallel to LS_COLORS, keyed by dircolors keys, but value is a Color token."""
 
+
 @events.on_pre_cmdloop
 def on_pre_cmdloop(**kwargs):
     """When new shell created, add color tokens to style for all the colors in LS_COLORS."""
     for ft, ct in builtins.__xonsh__.env["LS_COLORS"].items():
-        ret_color_token = color_token_by_name( ct)
+        ret_color_token = color_token_by_name(ct)
         file_color_tokens[ft] = ret_color_token
     pass
 
@@ -1357,17 +1360,17 @@ def on_lscolors_change_p(key, oldvalue, newvalue, **kwargs):
     if newvalue is None:
         del file_color_tokens[key]
     else:
-        file_color_tokens[key] = color_token_by_name( newvalue)
+        file_color_tokens[key] = color_token_by_name(newvalue)
 
-    
-def color_file( file_path: str, mode: int) -> (Color, str):
+
+def color_file(file_path: str, mode: int) -> (Color, str):
     """Determine color to use for file as ls -c would, given stat() results and its name.
     Parameters
     ----------
     file_path : string
         relative path of file (as user typed it).
     mode : int
-        stat() results for file_path.  
+        stat() results for file_path.
     Returns
     -------
         color token, color_key
@@ -1389,12 +1392,12 @@ def color_file( file_path: str, mode: int) -> (Color, str):
     elif stat.S_ISREG(mode):
         if (stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH)):
             color_key = 'ex'
-        elif mode & stat.S_ISUID:       ## too many tests before we get to the common case -- restructure?
+        elif mode & stat.S_ISUID:       # too many tests before we get to the common case -- restructure?
             color_key = 'su'
         elif mode & stat.S_ISGID:
             color_key = 'sg'
         else:
-            match = color_file_extension_RE.match( file_path)
+            match = color_file_extension_RE.match(file_path)
             if match:
                 ext = '*' + match.group(1)      # look for *.<fileExtension> coloring
                 if ext in lsc:
@@ -1403,9 +1406,9 @@ def color_file( file_path: str, mode: int) -> (Color, str):
                     color_key = 'rs'
             else:
                 color_key = 'rs'
-    elif stat.S_ISDIR(mode):        # ls -c doesn't colorize sticky or ow if not dirs...                
-        color_key = ('di', 'ow', 'st', 'tw') [ (mode & stat.S_ISVTX == stat.S_ISVTX) * 2        # 
-                                                + (mode & stat.S_IWOTH == stat.S_IWOTH)  ]
+    elif stat.S_ISDIR(mode):        # ls -c doesn't colorize sticky or ow if not dirs...
+        color_key = ('di', 'ow', 'st', 'tw')[(mode & stat.S_ISVTX == stat.S_ISVTX) * 2
+                                            + (mode & stat.S_IWOTH == stat.S_IWOTH)]
     elif stat.S_ISCHR(mode):
         color_key = 'cd'
     elif stat.S_ISBLK(mode):
@@ -1415,13 +1418,13 @@ def color_file( file_path: str, mode: int) -> (Color, str):
     elif stat.S_ISSOCK(mode):
         color_key = 'so'
     elif stat.S_ISDOOR(mode):
-        color_key = 'do'       #bug missing mapping for FMT based PORT and WHITEOUT ??
-   
-    ret_color_token = file_color_tokens.get( color_key, None)
-    
-    return ret_color_token, color_key        
+        color_key = 'do'       # bug missing mapping for FMT based PORT and WHITEOUT ??
 
-## pygments hooks.
+    ret_color_token = file_color_tokens.get(color_key, None)
+
+    return ret_color_token, color_key
+
+# pygments hooks.
 
 
 def _command_is_valid(cmd):
@@ -1464,9 +1467,9 @@ def subproc_arg_callback(_, match):
         pass
     except (FileNotFoundError, OSError):
         pass
-    
+
     yield (match.start(), yieldVal, text)
- 
+
 
 COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`<&|;!]+(?=\s|$|\)|\]|\}|!)'
 
@@ -1599,5 +1602,3 @@ class XonshConsoleLexer(XonshLexer):
             inherit,
         ]
     }
-
-
