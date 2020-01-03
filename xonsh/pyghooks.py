@@ -1338,7 +1338,7 @@ def XonshHtmlFormatter():
 
 
 color_file_extension_RE = LazyObject(lambda: re.compile(r'.*(\.\w+)$')
-    , globals(), "color_file_extension_RE")
+                                , globals(), "color_file_extension_RE")
 
 
 file_color_tokens = dict()
@@ -1408,7 +1408,7 @@ def color_file(file_path: str, mode: int) -> (Color, str):
                 color_key = 'rs'
     elif stat.S_ISDIR(mode):        # ls -c doesn't colorize sticky or ow if not dirs...
         color_key = ('di', 'ow', 'st', 'tw')[(mode & stat.S_ISVTX == stat.S_ISVTX) * 2
-                                            + (mode & stat.S_IWOTH == stat.S_IWOTH)]
+                                             + (mode & stat.S_IWOTH == stat.S_IWOTH)]
     elif stat.S_ISCHR(mode):
         color_key = 'cd'
     elif stat.S_ISBLK(mode):
@@ -1452,7 +1452,6 @@ def subproc_cmd_callback(_, match):
     otherwise fallback to fallback lexer.
     """
     cmd = match.group()
-    #yield match.start(), Color.BOLD_BLUE if _command_is_valid(cmd) else Error, cmd
     yield match.start(), Name.Builtin if _command_is_valid(cmd) else Error, cmd
 
 
