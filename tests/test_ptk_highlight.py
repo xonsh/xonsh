@@ -146,10 +146,10 @@ def test_nested():
 @skip_if_on_windows
 def test_path(tmpdir, xonsh_builtins):
 
-    xonsh_builtins.__xonsh__.shell = DummyShell()       # because load_command_cache zaps it.
-    xonsh_builtins.__xonsh__.shell.shell_type = 'prompt_toolkit2'
+    xonsh_builtins.__xonsh__.shell = DummyShell()  # because load_command_cache zaps it.
+    xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit2"
     lsc = LsColors(LsColors.default_settings)
-    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc     # establish LS_COLORS before style.
+    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc  # establish LS_COLORS before style.
     xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
 
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))

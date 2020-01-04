@@ -130,10 +130,16 @@ def test_code_by_name(name, exp):
         (("NO_COLOR",), Color.NO_COLOR, "noinherit"),
         (("GREEN",), Color.GREEN, "ansigreen"),
         (("BOLD_RED",), Color.BOLD_RED, "bold ansired"),
-        (("BACKGROUND_BLACK", "BOLD_GREEN"), Color.BACKGROUND_BLACK__BOLD_GREEN, "bg:ansiblack bold ansigreen",),
+        (
+            ("BACKGROUND_BLACK", "BOLD_GREEN"),
+            Color.BACKGROUND_BLACK__BOLD_GREEN,
+            "bg:ansiblack bold ansigreen",
+        ),
     ],
 )
-def test_color_token_by_name(in_tuple, exp_ct, exp_ansi_colors, xonsh_builtins_LS_COLORS):
+def test_color_token_by_name(
+    in_tuple, exp_ct, exp_ansi_colors, xonsh_builtins_LS_COLORS
+):
     from xonsh.pyghooks import XonshStyle, color_token_by_name
 
     xs = XonshStyle()
@@ -148,7 +154,9 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
     xs = XonshStyle()
     assert xs.styles
     assert type(file_color_tokens) is dict
-    assert set(file_color_tokens.keys()) == set(xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"].keys())
+    assert set(file_color_tokens.keys()) == set(
+        xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"].keys()
+    )
 
 
 _cf = {
@@ -216,10 +224,13 @@ def colorizable_files():
                 elif k == "sg":
                     os.chmod(file_path, stat.S_ISGID)
                 elif k == "st":
-                    os.chmod(file_path, stat.S_ISVTX | stat.S_IRUSR | stat.S_IWUSR)  # TempDir requires o:r
+                    os.chmod(
+                        file_path, stat.S_ISVTX | stat.S_IRUSR | stat.S_IWUSR
+                    )  # TempDir requires o:r
                 elif k == "tw":
                     os.chmod(
-                        file_path, stat.S_ISVTX | stat.S_IWOTH | stat.S_IRUSR | stat.S_IWUSR,
+                        file_path,
+                        stat.S_ISVTX | stat.S_IWOTH | stat.S_IRUSR | stat.S_IWUSR,
                     )
                 elif k == "ow":
                     os.chmod(file_path, stat.S_IWOTH | stat.S_IRUSR | stat.S_IWUSR)
@@ -231,10 +242,14 @@ def colorizable_files():
     pass  # tempdir get cleaned up here.
 
 
-@pytest.mark.parametrize("key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path])
+@pytest.mark.parametrize(
+    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path]
+)
 @skip_if_on_windows
 def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
-    xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = XonshStyle()  # default style
+    xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = (
+        XonshStyle()
+    )  # default style
     ffp = colorizable_files + "/" + file_path
     mode = (os.lstat(ffp)).st_mode
     color_token, color_key = color_file(ffp, mode)

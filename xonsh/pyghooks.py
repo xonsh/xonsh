@@ -223,7 +223,7 @@ def color_token_by_name(xc: tuple, styles=None) -> Color:
     pc = color_name_to_pygments_code(xc[0], styles)
 
     if len(xc) > 1:
-        pc += ' ' + color_name_to_pygments_code(xc[1], styles)
+        pc += " " + color_name_to_pygments_code(xc[1], styles)
         tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
@@ -378,7 +378,9 @@ class XonshStyle(Style):
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
 
-        for file_type, xonsh_color in builtins.__xonsh__.env.get("LS_COLORS", {}).items():
+        for file_type, xonsh_color in builtins.__xonsh__.env.get(
+            "LS_COLORS", {}
+        ).items():
             color_token = color_token_by_name(xonsh_color, self.styles)
             file_color_tokens[file_type] = color_token
 
@@ -1342,8 +1344,9 @@ def XonshHtmlFormatter():
     return XonshHtmlFormatterProxy
 
 
-color_file_extension_RE = LazyObject(lambda: re.compile(r'.*(\.\w+)$')
-                                    , globals(), "color_file_extension_RE")
+color_file_extension_RE = LazyObject(
+    lambda: re.compile(r".*(\.\w+)$"), globals(), "color_file_extension_RE"
+)
 
 
 file_color_tokens = dict()
@@ -1378,48 +1381,53 @@ def color_file(file_path: str, mode: int) -> (Color, str):
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
-    color_key = 'rs'
+    color_key = "rs"
 
     if stat.S_ISLNK(mode):  # must test link before S_ISREG (esp execute)
-        color_key = 'ln'
+        color_key = "ln"
         try:
             os.stat(file_path)
         except FileNotFoundError:
-            color_key = 'or'
+            color_key = "or"
     elif stat.S_ISREG(mode):
-        if (stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH)):
-            color_key = 'ex'
-        elif mode & stat.S_ISUID:       # too many tests before we get to the common case -- restructure?
-            color_key = 'su'
+        if stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
+            color_key = "ex"
+        elif (
+            mode & stat.S_ISUID
+        ):  # too many tests before we get to the common case -- restructure?
+            color_key = "su"
         elif mode & stat.S_ISGID:
-            color_key = 'sg'
+            color_key = "sg"
         else:
             match = color_file_extension_RE.match(file_path)
             if match:
-                ext = '*' + match.group(1)      # look for *.<fileExtension> coloring
+                ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
                 if ext in lsc:
                     color_key = ext
                 else:
-                    color_key = 'rs'
+                    color_key = "rs"
             else:
-                color_key = 'rs'
-    elif stat.S_ISDIR(mode):        # ls -c doesn't colorize sticky or ow if not dirs...
-        color_key = ('di', 'ow', 'st', 'tw')[(mode & stat.S_ISVTX == stat.S_ISVTX) * 2
-                                             + (mode & stat.S_IWOTH == stat.S_IWOTH)]
+                color_key = "rs"
+    elif stat.S_ISDIR(mode):  # ls -c doesn't colorize sticky or ow if not dirs...
+        color_key = ("di", "ow", "st", "tw")[
+            (mode & stat.S_ISVTX == stat.S_ISVTX) * 2
+            + (mode & stat.S_IWOTH == stat.S_IWOTH)
+        ]
     elif stat.S_ISCHR(mode):
-        color_key = 'cd'
+        color_key = "cd"
     elif stat.S_ISBLK(mode):
-        color_key = 'bd'
+        color_key = "bd"
     elif stat.S_ISFIFO(mode):
-        color_key = 'pi'
+        color_key = "pi"
     elif stat.S_ISSOCK(mode):
-        color_key = 'so'
+        color_key = "so"
     elif stat.S_ISDOOR(mode):
-        color_key = 'do'       # bug missing mapping for FMT based PORT and WHITEOUT ??
+        color_key = "do"  # bug missing mapping for FMT based PORT and WHITEOUT ??
 
     ret_color_token = file_color_tokens.get(color_key, None)
 
     return ret_color_token, color_key
+
 
 # pygments hooks.
 
