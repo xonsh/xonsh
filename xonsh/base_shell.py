@@ -95,8 +95,6 @@ class _TeeStdBuf(io.RawIOBase):
 
     def write(self, b):
         """Write bytes into both buffers."""
-        if type(b) is str:
-            raise TypeError("who dares call write() with str?")
         std_b = b
         if self.prestd:
             std_b = self.prestd + b

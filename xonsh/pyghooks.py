@@ -1343,7 +1343,7 @@ def XonshHtmlFormatter():
 
 
 color_file_extension_RE = LazyObject(lambda: re.compile(r'.*(\.\w+)$')
-                                , globals(), "color_file_extension_RE")
+                                    , globals(), "color_file_extension_RE")
 
 
 file_color_tokens = dict()
