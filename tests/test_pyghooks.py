@@ -139,12 +139,6 @@ def test_code_by_name(name, exp):
 )
 def test_color_token_by_name(in_tuple, exp_ct, exp_ansi_colors, xonsh_builtins_LS_COLORS):
     from xonsh.pyghooks import XonshStyle, color_token_by_name
-
-    # xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit2"
-    # styler = XonshStyle()  # default style
-    # xonsh_builtins.__xonsh__.shell.shell.styler = styler
-    # can't really instantiate XonshStyle separate from a shell??
-
     xs = XonshStyle()
     styles = xs.styles
     ct = color_token_by_name(in_tuple, styles)
@@ -183,11 +177,10 @@ _cf = {
     "*.ogg": "foo.ogg",
 }
 
-
-def colorizable_files(xonsh_builtins_LS_COLORS):
-    """populate temp dir with sample files and iniialize (hopefully consistent) LS_COLORS"""
-
-    xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = XonshStyle()  # default style
+@pytest.fixture(scope="module")
+def colorizable_files():
+    """populate temp dir with sample files. 
+    (too hard to emit indivual test cases when fixture invoked in mark.parametrize)"""
 
     with TemporaryDirectory() as tempdir:
         for k, v in _cf.items():
@@ -237,17 +230,20 @@ def colorizable_files(xonsh_builtins_LS_COLORS):
                 else:
                     pass  # cauterize those elseless ifs!
 
-            yield k, file_path, file_color_tokens[k]
+        yield tempdir
 
     pass  # tempdir get cleaned up here.
 
 
+@pytest.mark.parametrize(
+    "key,file_path"
+    , [(key, file_path) for key, file_path in _cf.items() if file_path]
+)
 @skip_if_on_windows
-def test_colorize_file(xonsh_builtins_LS_COLORS):
-    #    # someday, should parameterize this test, so you get all the failures in one run.
-    for (key, file_path, exp_tok) in colorizable_files(xonsh_builtins_LS_COLORS):
-        mode = (os.lstat(file_path)).st_mode
-        color_token, color_key = color_file(file_path, mode)
-
-        assert color_key == key, "File classified as expected kind"
-        assert color_token == exp_tok, "Color token is as expected"
+def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
+    xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = XonshStyle()  # default style
+    ffp = colorizable_files + '/' + file_path
+    mode = (os.lstat(ffp)).st_mode
+    color_token, color_key = color_file(ffp, mode)
+    assert color_key == key, "File classified as expected kind"
+    assert color_token == file_color_tokens[key], "Color token is as expected"

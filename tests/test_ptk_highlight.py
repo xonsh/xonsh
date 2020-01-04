@@ -148,19 +148,19 @@ def test_path(tmpdir, xonsh_builtins):
 
     xonsh_builtins.__xonsh__.shell = DummyShell()       # because load_command_cache zaps it.
     xonsh_builtins.__xonsh__.shell.shell_type = 'prompt_toolkit2'
-    xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
     lsc = LsColors(LsColors.default_settings)
-    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
+    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc     # establish LS_COLORS before style.
+    xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
 
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
     check_token(
-        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.BOLD_CYAN, test_dir)]
+        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.BOLD_BLUE, test_dir)]
     )
     check_token(
         "cd {}-xxx".format(test_dir),
         [(Name.Builtin, "cd"), (Text, "{}-xxx".format(test_dir))],
     )
-    check_token("cd X={}".format(test_dir), [(Color.BOLD_CYAN, test_dir)])
+    check_token("cd X={}".format(test_dir), [(Color.BOLD_BLUE, test_dir)])
 
     with builtins.__xonsh__.env.swap(AUTO_CD=True):
         check_token(test_dir, [(Name.Constant, test_dir)])
