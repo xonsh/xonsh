@@ -212,7 +212,7 @@ def code_by_name(name, styles):
 
 
 def color_token_by_name(xc: tuple, styles=None) -> Color:
-    """Returns (color) token corresponding to Xonsh color tuple, ensures token is defined in styles"""
+    """Returns (color) token corresponding to Xonsh color tuple, side effect: defines token is defined in styles"""
     if not styles:
         try:
             styles = builtins.__xonsh__.shell.shell.styler.styles
@@ -377,6 +377,11 @@ class XonshStyle(Style):
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
+
+        for file_type, xonsh_color in builtins.__xonsh__.env.get("LS_COLORS", {}).items():
+            color_token = color_token_by_name(xonsh_color, self.styles)
+            file_color_tokens[file_type] = color_token
+
         # Convert new ansicolor names to old PTK1 names
         # Can be remvoed when PTK1 support is dropped.
         if (
@@ -1342,16 +1347,8 @@ color_file_extension_RE = LazyObject(lambda: re.compile(r'.*(\.\w+)$')
 
 
 file_color_tokens = dict()
-"""Parallel to LS_COLORS, keyed by dircolors keys, but value is a Color token."""
-
-
-@events.on_pre_cmdloop
-def on_pre_cmdloop(**kwargs):
-    """When new shell created, add color tokens to style for all the colors in LS_COLORS."""
-    for ft, ct in builtins.__xonsh__.env["LS_COLORS"].items():
-        ret_color_token = color_token_by_name(ct)
-        file_color_tokens[ft] = ret_color_token
-    pass
+"""Parallel to LS_COLORS, keyed by dircolors keys, but value is a Color token.
+Initialized by XonshStyle."""
 
 
 @events.on_lscolors_change
@@ -1461,9 +1458,8 @@ def subproc_arg_callback(_, match):
     yieldVal = Text
     try:
         path = os.path.expanduser(text)
-        mode = (os.lstat(path)).st_mode  # stat() will raise FNF if not a real file
+        mode = (os.lstat(path)).st_mode  # lstat() will raise FNF if not a real file
         yieldVal, _ = color_file(path, mode)
-        pass
     except (FileNotFoundError, OSError):
         pass
 

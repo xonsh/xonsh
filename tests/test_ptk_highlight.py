@@ -22,7 +22,7 @@ from tools import skip_if_on_windows
 from xonsh.platform import ON_WINDOWS
 from xonsh.built_ins import load_builtins, unload_builtins
 from xonsh.execer import Execer
-from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_pre_cmdloop
+from xonsh.pyghooks import XonshLexer, Color, XonshStyle
 from xonsh.environ import LsColors
 from xonsh.events import events
 from tools import DummyShell
@@ -146,22 +146,21 @@ def test_nested():
 @skip_if_on_windows
 def test_path(tmpdir, xonsh_builtins):
 
-    xonsh_builtins.__xonsh__.shell = DummyShell()       # because load_command_cache zaps it. 
+    xonsh_builtins.__xonsh__.shell = DummyShell()       # because load_command_cache zaps it.
     xonsh_builtins.__xonsh__.shell.shell_type = 'prompt_toolkit2'
     xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
-    lsc = LsColors( LsColors.default_settings)
-    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc 
-    on_pre_cmdloop()      # to add lscolors to style
+    lsc = LsColors(LsColors.default_settings)
+    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
 
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
     check_token(
-        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.BOLD_BLUE, test_dir)]
+        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.BOLD_CYAN, test_dir)]
     )
     check_token(
         "cd {}-xxx".format(test_dir),
         [(Name.Builtin, "cd"), (Text, "{}-xxx".format(test_dir))],
     )
-    check_token("cd X={}".format(test_dir), [(Color.BOLD_BLUE, test_dir)])
+    check_token("cd X={}".format(test_dir), [(Color.BOLD_CYAN, test_dir)])
 
     with builtins.__xonsh__.env.swap(AUTO_CD=True):
         check_token(test_dir, [(Name.Constant, test_dir)])
@@ -205,4 +204,3 @@ def test_macro():
             (String, "export var=42; echo $var"),
         ],
     )
-
