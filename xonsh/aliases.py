@@ -665,7 +665,7 @@ def xexec(args, stdin=None):
         denv = builtins.__xonsh__.env.detype()
 
     try:
-        os.execvpe(args[0], args, denv)
+        os.execvpe(command, args.command, denv)
     except FileNotFoundError as e:
         return (
             None,
