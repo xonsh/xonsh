@@ -609,7 +609,7 @@ def source_cmd(args, stdin=None):
 
 
 def xexec(args, stdin=None):
-    """exec [-h|--help] command [args...]
+    """exec [-h|--help] [-cl] [-a name] command [args...]
 
     exec (also aliased as xexec) uses the os.execvpe() function to
     replace the xonsh process with the specified program. This provides
@@ -619,6 +619,13 @@ def xexec(args, stdin=None):
         bash $
 
     The '-h' and '--help' options print this message and exit.
+    If the '-l' option is supplied, the shell places a dash at the
+    beginning of the zeroth argument passed to command to simulate login
+    shell.
+    The '-c' option causes command to be executed with an empty environment.
+    If '-a' is supplied, the shell passes name as the zeroth argument
+    to the executed command.
+
 
     Notes
     -----
@@ -632,18 +639,39 @@ def xexec(args, stdin=None):
     """
     if len(args) == 0:
         return (None, "xonsh: exec: no args specified\n", 1)
-    elif args[0] == "-h" or args[0] == "--help":
+
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-h', '--help', action='store_true')
+    parser.add_argument('-l', dest='login', action='store_true')
+    parser.add_argument('-c', dest='clean', action='store_true')
+    parser.add_argument('-a', dest='name', nargs='?')
+    parser.add_argument('command', nargs=argparse.REMAINDER)
+    args = parser.parse_args(args)
+
+    if args.help:
         return inspect.getdoc(xexec)
-    else:
+
+    if len(args.command) == 0:
+        return (None, "xonsh: exec: no command specified\n", 1)
+
+    command = args.command[0]
+    if args.name is not None:
+        args.command.insert(0, args.name)
+    if args.login:
+        args.command[0] = '-{}'.format(args.command[0])
+
+    denv = {}
+    if not args.clean:
         denv = builtins.__xonsh__.env.detype()
-        try:
-            os.execvpe(args[0], args, denv)
-        except FileNotFoundError as e:
-            return (
-                None,
-                "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], args[0]),
-                1,
-            )
+
+    try:
+        os.execvpe(args[0], args, denv)
+    except FileNotFoundError as e:
+        return (
+            None,
+            "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], args[0]),
+            1,
+        )
 
 
 class AWitchAWitch(argparse.Action):
