@@ -329,7 +329,8 @@ def premain(argv=None):
         "cacheall": args.cacheall,
         "ctx": builtins.__xonsh__.ctx,
     }
-    if args.login:
+    if args.login or sys.argv[0].startswith('-'):
+        args.login = True
         shell_kwargs["login"] = True
     if args.norc:
         shell_kwargs["rc"] = ()
