@@ -8,6 +8,7 @@ import queue
 import builtins
 import threading
 import subprocess
+import re
 
 import xonsh.tools as xt
 
@@ -50,6 +51,8 @@ def get_git_branch():
     t.join(timeout=timeout)
     try:
         branch = q.get_nowait()
+        remove_ansi = re.compile(r'(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]')
+        branch = remove_ansi.sub('', branch or "")
     except queue.Empty:
         branch = None
     return branch
