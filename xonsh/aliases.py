@@ -656,7 +656,7 @@ def xexec(args, stdin=None):
 
     command = args.command[0]
     if args.name is not None:
-        args.command.insert(0, args.name)
+        args.command[0] = args.name
     if args.login:
         args.command[0] = '-{}'.format(args.command[0])
 
