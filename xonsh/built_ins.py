@@ -601,7 +601,7 @@ class SubprocSpec:
                 """Preexec function bound to a pipeline group."""
                 os.setpgid(0, pipeline_group)
                 signal.signal(
-                    signal.SIGTERM if ON_WINDOWS else signal.SIGSTP,
+                    signal.SIGTERM if ON_WINDOWS else signal.SIGTSTP,
                     default_signal_pauser,
                 )
 
