@@ -1,6 +1,6 @@
 **Added:**
 
-* Added building process of standalone rootless AppImage for xonsh.
+* <news item>
 
 **Changed:**
 
@@ -16,9 +16,8 @@
 
 **Fixed:**
 
-* <news item>
+* Avoid crash in SubprocessSpec._run_binary() when command line has 2 real subprocesses piped together. 
 
 **Security:**
 
 * <news item>
-

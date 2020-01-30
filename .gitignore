@@ -64,3 +64,9 @@ rever/
 # elm
 xonsh/webconfig/elm-stuff/
 xonsh/webconfig/js/app.js
+
+# venv (e.g, autovox)
+venv/
+
+# VS Code
+.vscode/
