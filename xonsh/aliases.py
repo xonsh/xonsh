@@ -641,11 +641,11 @@ def xexec(args, stdin=None):
         return (None, "xonsh: exec: no args specified\n", 1)
 
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('-h', '--help', action='store_true')
-    parser.add_argument('-l', dest='login', action='store_true')
-    parser.add_argument('-c', dest='clean', action='store_true')
-    parser.add_argument('-a', dest='name', nargs='?')
-    parser.add_argument('command', nargs=argparse.REMAINDER)
+    parser.add_argument("-h", "--help", action="store_true")
+    parser.add_argument("-l", dest="login", action="store_true")
+    parser.add_argument("-c", dest="clean", action="store_true")
+    parser.add_argument("-a", dest="name", nargs="?")
+    parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args(args)
 
     if args.help:
@@ -669,7 +669,7 @@ def xexec(args, stdin=None):
     except FileNotFoundError as e:
         return (
             None,
-            "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], args[0]),
+            "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], args.command[0]),
             1,
         )
 
