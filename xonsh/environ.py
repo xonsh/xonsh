@@ -383,8 +383,8 @@ class LsColors(cabc.MutableMapping):
     @property
     def style_name(self):
         """Current XONSH_COLOR_STYLE value"""
-        env = builtins.__xonsh__.env
-        env_style_name = env.get("XONSH_COLOR_STYLE")
+        env = getattr(builtins.__xonsh__, "env", {})
+        env_style_name = env.get("XONSH_COLOR_STYLE", "default")
         if self._style_name is None or self._style_name != env_style_name:
             self._style_name = env_style_name
             self._style = self._dtyped = None
