@@ -272,8 +272,6 @@ workflows:
       - build_35
       - build_36
       - build_37
+      - build_38
       - build_elm
       - build_black
-      # conda-foge does not yet have all Python 3.8 packages available
-      # uncomment when it does
-      #- build_38
