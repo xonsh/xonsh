@@ -268,8 +268,8 @@ class CommandsCache(cabc.Mapping):
 
     def default_predictor_alias(self, cmd0):
         alias_recursion_limit = (
-            10
-        )  # this limit is se to handle infinite loops in aliases definition
+            10  # this limit is se to handle infinite loops in aliases definition
+        )
         first_args = []  # contains in reverse order args passed to the aliased command
         alss = getattr(builtins, "aliases", dict())
         while cmd0 in alss:
