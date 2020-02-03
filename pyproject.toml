@@ -23,8 +23,8 @@ exclude = '''
     /(  __pycache__
      |  \.circleci
      |  \.github
-     |  \.pytest_cache
      |  \.vscode
+     |  \.pytest_cache
      |  tests
      )/
 )
