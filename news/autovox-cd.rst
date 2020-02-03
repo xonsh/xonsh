@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* The autovox xontrib now preserves activated environment on cd
 
 **Security:**
 
