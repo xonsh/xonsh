@@ -1,6 +1,6 @@
 **Added:**
 
-* Added building process of standalone rootless AppImage for xonsh.
+* <news item>
 
 **Changed:**
 
@@ -16,9 +16,8 @@
 
 **Fixed:**
 
-* <news item>
+* The autovox xontrib now preserves activated environment on cd
 
 **Security:**
 
 * <news item>
-

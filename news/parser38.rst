@@ -1,10 +1,10 @@
 **Added:**
 
-* Added building process of standalone rootless AppImage for xonsh.
+* <news item>
 
 **Changed:**
 
-* <news item>
+* Moved python 3.8 parsing out of base parser
 
 **Deprecated:**
 
@@ -21,4 +21,3 @@
 **Security:**
 
 * <news item>
-
