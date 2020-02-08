@@ -58,7 +58,9 @@ def get_git_branch():
     t.join(timeout=timeout)
     try:
         branch = q.get_nowait()
-        branch = RE_REMOVE_ANSI.sub("", branch or "")
+        # branch = RE_REMOVE_ANSI.sub("", branch or "")
+        if branch:
+            branch = RE_REMOVE_ANSI.sub("", branch)
     except queue.Empty:
         branch = None
     return branch
