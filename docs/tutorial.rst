@@ -235,7 +235,7 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
 Running Commands
 ==============================
 As a shell, xonsh is meant to make running commands easy and fun.
-Running subprocess commands should work like any other in any other shell.
+Running subprocess commands should work like in any other shell.
 
 .. code-block:: xonshcon
 
