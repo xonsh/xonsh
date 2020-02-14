@@ -1,7 +1,7 @@
 Containers
 ==========
 
-xonsh publishes a handful of containers, primarily targeting CI and automation use-cases. All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`_.
+xonsh publishes a handful of containers, primarily targeting CI and automation use-cases. All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`__.
 
 * ``xonsh/xonsh``: A base container providing basic xonsh
 * ``xonsh/interactive``: xonsh with additions for people
@@ -22,23 +22,23 @@ The container source can be found in the `container project <https://github.com/
 ``xonsh/xonsh``
 ---------------
 
-(`Docker Hub <https://hub.docker.com/r/xonsh/xonsh>`_)
+(`Docker Hub <https://hub.docker.com/r/xonsh/xonsh>`__)
 
 A basic container, including Python itself, xonsh, and the linux extras. This container is deliberately kept minimal.
 
 
 ``xonsh/interactive``
----------------
+---------------------
 
-(`Docker Hub <https://hub.docker.com/r/xonsh/interactive>`_)
+(`Docker Hub <https://hub.docker.com/r/xonsh/interactive>`__)
 
 A container made for humans (such as getting a shell inside of a pod). It includes prompt toolkit and pygments so that xonsh is more usable interactively.
 
 
 ``xonsh/action``
----------------
+----------------
 
-(`Docker Hub <https://hub.docker.com/r/xonsh/action>`_)
+(`Docker Hub <https://hub.docker.com/r/xonsh/action>`__)
 
 A container with extras for GitHub Actions.
 
