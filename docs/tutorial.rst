@@ -139,7 +139,7 @@ Very nice.
 .. note::
 
    To update ``os.environ`` when the xonsh environment changes set 
-   `$UPDATE_OS_ENVIRON <envvars.html#update-os-environ>`_ to ``True``.
+   :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
 
 The Environment Itself ``${...}``
 ---------------------------------
