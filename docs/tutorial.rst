@@ -136,6 +136,11 @@ variable in Python.  The same is true for deleting them too.
 
 Very nice.
 
+.. note::
+
+   To update ``os.environ`` when the xonsh environment changes set 
+   `$UPDATE_OS_ENVIRON <envvars.html#update-os-environ>`_ to ``True``.
+
 The Environment Itself ``${...}``
 ---------------------------------
 
