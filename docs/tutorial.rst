@@ -1026,6 +1026,15 @@ handled implicitly in subprocess mode.
     >>> echo @(mypath)
     /foo/bar
 
+Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
+
+.. code-block:: xonshcon
+   
+    >>> mypath = p'/etc'
+    >>> sorted(mypath.glob('**/*bashrc*')) 
+    [Path('/etc/bash.bashrc'), Path('/etc/skel/.bashrc')]
+    >>> [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
+    [True, True, False, Path('/'), 'root']
 
 Help & Superhelp with ``?`` & ``??``
 =====================================================
