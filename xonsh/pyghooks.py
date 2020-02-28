@@ -199,6 +199,7 @@ class XonshLexer(Python3Lexer):
         m = re.match(r"(\s*)({})".format(COMMAND_TOKEN_RE), text)
         if m is not None:
             yield m.start(1), Whitespace, m.group(1)
+            start = m.end(1)
             cmd = m.group(2)
             cmd_is_valid = _command_is_valid(cmd)
             cmd_is_autocd = _command_is_autocd(cmd)
