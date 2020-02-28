@@ -659,7 +659,7 @@ def xexec(args, stdin=None):
     if args.name is not None:
         args.command[0] = args.name
     if args.login:
-        args.command[0] = '-{}'.format(args.command[0])
+        args.command[0] = "-{}".format(args.command[0])
 
     denv = {}
     if not args.clean:
@@ -670,7 +670,8 @@ def xexec(args, stdin=None):
     except FileNotFoundError as e:
         return (
             None,
-            "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], args.command[0]),
+            "xonsh: exec: file not found: {}: {}"
+            "\n".format(e.args[1], args.command[0]),
             1,
         )
 
