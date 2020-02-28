@@ -41,6 +41,7 @@ from xonsh.ast import isexpression
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
+from xonsh.xoreutils.umask import umask
 
 
 @lazyobject
@@ -750,6 +751,7 @@ def make_default_aliases():
         "replay": replay_main,
         "trace": trace,
         "timeit": timeit_alias,
+        "umask": umask,
         "xonfig": xonfig,
         "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
         "showcmd": showcmd,
