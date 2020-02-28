@@ -24,7 +24,7 @@ def test_missing_command(mockexecvpe):
     assert xexec(["-l"]) == (None, "xonsh: exec: no command specified\n", 1)
 
 
-@pytest.mark.skipif(sys.version_info <= (3, 6) and sys.platform.startswith("win"),
+@pytest.mark.skipif(sys.version_info < (3, 7) and sys.platform.startswith("win"),
                     reason="Python <= 3.6 on Windows returns different error message")
 def test_command_not_found():
     command = "non_existing_command"
