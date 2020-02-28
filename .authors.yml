@@ -48,7 +48,9 @@
   email: adam@smatz.net
   num_commits: 1
   first_commit: 2016-05-19 14:04:42
-  github: scopatz
+  github: adqm
+  alternate_emails:
+    - hz@mit.edu
 - name: Travis Shirk
   email: travis@pobox.com
   num_commits: 24
@@ -951,6 +953,8 @@
   num_commits: 45
   first_commit: 2016-06-26 16:48:47
   github: bobhy
+  alternate_emails:
+    - bob.hyman@gmail.com
 - name: Fabien Dubosson
   email: fabien.dubosson@gmail.com
   num_commits: 4
@@ -1084,3 +1088,7 @@
   num_commits: 1
   first_commit: 2019-10-10 08:16:49
   github: ddkn
+- name: Mike Crowe
+  email: drmikecrowe@gmail.com
+  aliases:
+    - drmikecrowe
