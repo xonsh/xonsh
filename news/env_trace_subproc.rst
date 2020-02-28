@@ -1,6 +1,6 @@
 **Added:**
 
-* New ``$XONSH_TRACE_SUBPROC`` environment variable
+* New ``$XONSH_TRACE_SUBPROC`` environment variable.
 
 **Changed:**
 
