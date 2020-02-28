@@ -15,7 +15,7 @@ from importlib.abc import MetaPathFinder, SourceLoader, Loader
 
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.platform import scandir
+from xonsh.platform import ON_WINDOWS, scandir
 from xonsh.lazyasd import lazyobject
 
 
@@ -129,6 +129,8 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         filename = self.get_filename(fullname)
         with open(filename, "rb") as f:
             src = f.read()
+        if ON_WINDOWS:
+            src = src.replace(b"\r\n", b"\n")
         enc = find_source_encoding(src)
         src = src.decode(encoding=enc)
         src = src if src.endswith("\n") else src + "\n"
