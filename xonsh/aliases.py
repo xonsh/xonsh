@@ -41,7 +41,6 @@ from xonsh.ast import isexpression
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
-
 from xonsh.xoreutils.umask import umask
 
 

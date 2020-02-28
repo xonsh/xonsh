@@ -3,7 +3,13 @@
 import re
 import os
 
-symbolic_matcher = re.compile(r"([ugo]*|a)([+-=])([^\s,]*)")
+import xonsh.lazyasd import xl
+
+
+@xl.lazyobject
+def symbolic_matcher():
+    return re.compile(r"([ugo]*|a)([+-=])([^\s,]*)")
+
 
 order = "rwx"
 name_to_value = {"x": 1, "w": 2, "r": 4}
