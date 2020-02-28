@@ -1,6 +1,7 @@
 import os
 import inspect
 import pytest
+import sys
 
 from xonsh.aliases import xexec
 
@@ -23,10 +24,22 @@ def test_missing_command(mockexecvpe):
     assert xexec(["-l"]) == (None, "xonsh: exec: no command specified\n", 1)
 
 
+@pytest.mark.skipif(sys.version_info <= (3, 6) and sys.platform.startswith("win"),
+                    reason="Python <= 3.6 on Windows returns different error message")
 def test_command_not_found():
     command = "non_existing_command"
     assert xexec([command]) == (None,
                                 "xonsh: exec: file not found: {}: {}" "\n".format("No such file or directory", command),
+                                1)
+
+
+@pytest.mark.skipif((sys.version_info > (3, 6) and sys.platform.startswith("win")) or not sys.platform.startswith("win"),
+                    reason="Python > 3.6 on Windows returns unified error message")
+def test_win_py36_command_not_found():
+    command = "non_existing_command"
+    assert xexec([command]) == (None,
+                                "xonsh: exec: file not found: {}: {}" "\n".
+                                format("The system cannot find the path specified", command),
                                 1)
 
 
