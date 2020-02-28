@@ -1,0 +1,31 @@
+[tool.black]
+# better to keep default line-length than to match flake8
+exclude = '''
+(   # exclude entire contents of these top level directories...
+    /(  \.eggs
+     |  \.git
+     |  \.hg
+     |  \.mypy
+     |  _cache
+     |  \.nox
+     |  \.tox
+     |  \.venv
+     |  _build
+     |  buck-out
+     |  build
+     |  dist
+     )/
+
+)
+|
+(
+    # and these additional random rules
+    /(  __pycache__
+     |  \.circleci
+     |  \.github
+     |  \.vscode
+     |  \.pytest_cache
+     |  tests
+     )/
+)
+'''

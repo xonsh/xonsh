@@ -8,8 +8,16 @@ import queue
 import builtins
 import threading
 import subprocess
+import re
 
 import xonsh.tools as xt
+from xonsh.lazyasd import LazyObject
+
+RE_REMOVE_ANSI = LazyObject(
+    lambda: re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]"),
+    globals(),
+    "RE_REMOVE_ANSI",
+)
 
 
 def _get_git_branch(q):
@@ -50,6 +58,9 @@ def get_git_branch():
     t.join(timeout=timeout)
     try:
         branch = q.get_nowait()
+        # branch = RE_REMOVE_ANSI.sub("", branch or "")
+        if branch:
+            branch = RE_REMOVE_ANSI.sub("", branch)
     except queue.Empty:
         branch = None
     return branch

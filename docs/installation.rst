@@ -15,4 +15,5 @@ Installation
     osx
     windows
     appimage
+    containers
     customization

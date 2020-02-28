@@ -2,6 +2,7 @@
 """Testing xonsh import hooks"""
 import os
 import builtins
+from importlib import import_module
 
 import pytest
 
@@ -61,3 +62,11 @@ def test_module_dunder_file_attribute_sub():
 
     exp = os.path.join(TEST_DIR, "xpack", "sub", "sample.xsh")
     assert os.path.abspath(sample.__file__) == exp
+
+
+def test_get_source():
+    mod = import_module('sample')
+    loader = mod.__loader__
+    source = loader.get_source('sample')
+    with open(os.path.join(TEST_DIR, 'sample.xsh'), 'rt') as srcfile:
+        assert source == srcfile.read()

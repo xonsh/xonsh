@@ -136,6 +136,11 @@ variable in Python.  The same is true for deleting them too.
 
 Very nice.
 
+.. note::
+
+   To update ``os.environ`` when the xonsh environment changes set 
+   :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
+
 The Environment Itself ``${...}``
 ---------------------------------
 
@@ -235,7 +240,7 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
 Running Commands
 ==============================
 As a shell, xonsh is meant to make running commands easy and fun.
-Running subprocess commands should work like any other in any other shell.
+Running subprocess commands should work like in any other shell.
 
 .. code-block:: xonshcon
 
@@ -1021,6 +1026,15 @@ handled implicitly in subprocess mode.
     >>> echo @(mypath)
     /foo/bar
 
+Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
+
+.. code-block:: xonshcon
+   
+    >>> mypath = p'/etc'
+    >>> sorted(mypath.glob('**/*bashrc*')) 
+    [Path('/etc/bash.bashrc'), Path('/etc/skel/.bashrc')]
+    >>> [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
+    [True, True, False, Path('/'), 'root']
 
 Help & Superhelp with ``?`` & ``??``
 =====================================================

@@ -4,6 +4,96 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.14
+====================
+
+**Added:**
+
+* Added building process of standalone rootless AppImage for xonsh.
+* pyproject.toml -- so vscode can use black as python formatter interactively
+* The ``xonsh/interactive`` container has been added, in addition to the previous ``xonsh/xonsh`` and ``xonsh/action`` containers. See https://hub.docker.com/u/xonsh
+* New ``$THREAD_SUBPROCS`` environment variable allows you to
+  specify whether threadable subprocesses should actually be
+  run in a thread or not.  Default ``True``.
+* event on_lscolors_changed which fires when an item in $LS_COLORS changed.
+* dict pyghooks.file_color_tokens containing color tokens for file types defined in $LS_COLORS.
+* file pyproject.toml containing config rules for black formatter consistent with flake8
+* New ``umask`` utility to view or set the file creation mask
+* New ``xonfig web`` command that launches a web UI (in your browser) that
+  allows users to configure their ``$XONSH_COLOR_STYLE``, ``$PROMPT``, and
+  loaded xontribs in an interactive way. This is the prefered way to initialize
+  the ``~/.xonshrc`` file on a new system or for new users.  It supersedes the
+  old ``xonfig wizard`` command.
+* New ``xonsh.webconfig`` subpackage for creating and launching ``xonfig web``.
+* Added ``localtime`` entry to the ``$PROMPT_FIELDS`` dictionary, allowing users
+  to easily place the current time in their prompt. This can be formatted with
+  the ``time_format`` entry of ``$PROMPT_FIELDS``, which defaults to ``"%H:%M:%S"``.
+  These are implemented in the new ``xonsh.prompt.times`` module.
+* The ``html`` module in ``xonsh.lazyimps`` was added to lazily import
+  ``pygments.formatters.html``.
+* New ``xonsh.pyghooks.XonshHtmlFormatter`` class that enables HTML formatting of
+  xonsh color strings.
+
+**Changed:**
+
+* the feature list: subprocess mode colorizes files per $LS_COLORS, when they appear as arguments in the command line.
+  Yet another approximation of ls -c file coloring behavior.
+* file setup.cfg to declare flake8 rules for all tools (not just pytest)
+* Moved python 3.8 parsing out of base parser
+* The ``xonsh.pyghooks.XonshLexer`` now inherits from ``Python3Lexer``,
+  rather than ``PythonLexer``.
+* ``xonsh.pyghooks.XonshStyle`` now presents the ``highlight_color`` and
+  ``background_color`` from the underlying style correctly.
+
+**Removed:**
+
+* Removed deprecated ``xonda`` ``xontrib`` from list
+
+**Fixed:**
+
+-  `[color] in .gitconfig (#3427) <https://github.com/xonsh/xonsh/issues/3427>`_ now stripped from {curr\_branch} 
+
+  - `Before <https://i.imgur.com/EMhPdgU.png>`_
+  - `After <https://i.imgur.com/sJiqgsb.png>`_
+* The autovox xontrib now preserves activated environment on cd
+* setup.cfg -- duplicated flake8 config so interactive use and test runs enforce same rules. (Implementation is arguably a regression.)
+* Pressing ``Ctrl+Z`` no longer deadlocks the terminal,
+  allowing further input from the user, even for threaded
+  subprocesses.
+* ``XonshImportHook.get_source()`` now takes a dotted module name instead of a file path, as it should
+* Fixed documentation on environment variable ``$PROMPT_REFRESH_INTERVAL``.
+* Using rmtree on windows no longer attempts to use invalid ``rm`` command
+  and uses ``del`` instead.
+* Avoid crash in SubprocessSpec._run_binary() when command line has 2 real subprocesses piped together.
+* Fixed an issue on Windows where pressing ctrl-c could sometimes result
+  in a traceback if the process had already quit before being killed by xonsh.
+* Modified base_shell._TeeStdBuf to feed bytes not str to console window under VS Code.
+* Command line with leading whitespace improperly formated (PTK2/PTK3).
+* Fix Ctrl-C event causing Atribute error on Windows (for reals this time).
+* Unit test failures in test_integrations under ubuntu 19.10 with Python 3.8.0
+* .gitignore entries for venv under project root (as for autovox) and for VS Code.
+* Minor typo fixes to xontrib descriptions.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Morten Enemark Lund
+* Jamie Bliss
+* Bob Hyman
+* David Strobach
+* Burak Yiğit Kaya
+* anki-code
+* adam j hartz
+* Nickolay Bukreyev
+* Edmund Miller
+* Mike Crowe
+* Sylvain Corlay
+* Chris Lasher
+* Marcio Mazza
+
+
+
 v0.9.13
 ====================
 

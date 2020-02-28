@@ -9,16 +9,16 @@ Authors are sorted by number of commits.
 * Jamie Bliss
 * Hugo Wang
 * BlahGeek
+* Bob Hyman
 * Jean-Benoist Leger
 * christopher
 * Klaus Alexander Seistrup
 * Leonardo Santagada
-* Bob Hyman
 * David Strobach
+* Burak Yiğit Kaya
 * Aaron Griffin
 * Rob Brewer
 * virus
-* Burak Yiğit Kaya
 * Sagar Tewari
 * Matthias Bussonnier
 * Konstantin Molchanov
@@ -37,6 +37,7 @@ Authors are sorted by number of commits.
 * Frank Sachsenheim
 * Kurtis Rader
 * cryzed
+* anki-code
 * Brian Visel
 * Andrew Hundt
 * Jonathan Slenders
@@ -79,6 +80,8 @@ Authors are sorted by number of commits.
 * Alexander Steffen
 * Randy Syring
 * Lucas Inojosa
+* adam j hartz
+* Nickolay Bukreyev
 * Alexey
 * Alexandre Ferland
 * Marvin Steadfast
@@ -104,7 +107,6 @@ Authors are sorted by number of commits.
 * Andrés García García
 * Sean Farley
 * Jan Schulz
-* Nickolay Bukreyev
 * Samuel Dion-Girardeau
 * Michael Droettboom
 * guillearch
@@ -147,8 +149,8 @@ Authors are sorted by number of commits.
 * László Vaskó
 * Allan Crooks
 * micimize
+* Edmund Miller
 * Dan Allan
-* adam j hartz
 * Ned Letcher
 * Zach Crownover
 * Miguel de Val-Borro
@@ -211,5 +213,9 @@ Authors are sorted by number of commits.
 * nedsociety
 * fanosta
 * David Kalliecharan
+* Mike Crowe
+* Sylvain Corlay
+* Chris Lasher
+* Marcio Mazza
 * goodboy
 * Atsushi Morimoto

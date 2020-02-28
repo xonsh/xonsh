@@ -114,6 +114,7 @@ def test_recursive_callable_partial_none(xonsh_execer, xonsh_builtins):
     assert args == "wakka"
     assert len(obs) == 0
 
+
 @pytest.mark.parametrize(
     "alias",
     [
