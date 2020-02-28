@@ -32,7 +32,7 @@
   - jamie.bliss@ilq.com
   - jbliss@nextgenerationenrollment.com
   - jamie@ivyleav.es
-  num_commits: 203
+  num_commits: 212
   first_commit: 2016-07-20 14:05:08
   github: astronouth7303
 - name: Cody Scott
@@ -46,11 +46,11 @@
   first_commit: 2016-05-22 21:28:53
 - name: adam j hartz
   email: adam@smatz.net
-  num_commits: 1
+  num_commits: 4
   first_commit: 2016-05-19 14:04:42
   github: adqm
   alternate_emails:
-    - hz@mit.edu
+  - hz@mit.edu
 - name: Travis Shirk
   email: travis@pobox.com
   num_commits: 24
@@ -63,12 +63,12 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 512
+  num_commits: 516
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
   email: melund@gmail.com
-  num_commits: 484
+  num_commits: 486
   first_commit: 2015-07-10 07:54:10
   github: melund
 - name: Ned Letcher
@@ -104,7 +104,7 @@
   github: blahgeek
 - name: Nickolay Bukreyev
   email: buknik95@yandex.ru
-  num_commits: 3
+  num_commits: 4
   first_commit: 2016-07-30 07:34:31
   github: SirNickolas
 - name: Miguel de Val-Borro
@@ -150,7 +150,7 @@
   email: ben@byk.im
   aliases:
   - Burak Yigit Kaya
-  num_commits: 34
+  num_commits: 38
   first_commit: 2015-06-18 04:00:34
   github: BYK
 - name: Guillaume Leclerc
@@ -384,7 +384,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 42
+  num_commits: 43
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -434,7 +434,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2523
+  num_commits: 2587
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -950,11 +950,11 @@
   github: selepo
 - name: Bob Hyman
   email: bob.hyman@bobssoftwareworks.com
-  num_commits: 45
+  num_commits: 65
   first_commit: 2016-06-26 16:48:47
   github: bobhy
   alternate_emails:
-    - bob.hyman@gmail.com
+  - bob.hyman@gmail.com
 - name: Fabien Dubosson
   email: fabien.dubosson@gmail.com
   num_commits: 4
@@ -1091,4 +1091,30 @@
 - name: Mike Crowe
   email: drmikecrowe@gmail.com
   aliases:
-    - drmikecrowe
+  - drmikecrowe
+  num_commits: 1
+  first_commit: 2020-01-28 09:44:58
+  github: drmikecrowe
+- name: anki-code
+  email: anki-code@users.noreply.github.com
+  num_commits: 14
+  first_commit: 2019-10-15 18:20:58
+- name: Sylvain Corlay
+  email: sylvain.corlay@gmail.com
+  num_commits: 1
+  first_commit: 2019-11-25 18:43:13
+  github: SylvainCorlay
+- name: Chris Lasher
+  email: chris.lasher@gmail.com
+  num_commits: 1
+  first_commit: 2019-12-07 18:09:37
+  github: gotgenes
+- name: Edmund Miller
+  email: edmund.a.miller@protonmail.com
+  num_commits: 2
+  first_commit: 2019-07-14 11:37:12
+- name: Marcio Mazza
+  email: marciomazza@gmail.com
+  num_commits: 1
+  first_commit: 2020-02-05 13:38:52
+  github: marciomazza
