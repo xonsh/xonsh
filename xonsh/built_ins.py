@@ -934,6 +934,9 @@ def run_subproc(cmds, captured=False):
 
     Lastly, the captured argument affects only the last real command.
     """
+    if builtins.__xonsh__.env.get("XONSH_TRACE_SUBPROC"):
+        print("TRACE SUBPROC: %s" % cmds, file=sys.stderr)
+
     specs = cmds_to_specs(cmds, captured=captured)
     captured = specs[-1].captured
     if captured == "hiddenobject":
