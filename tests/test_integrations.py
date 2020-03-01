@@ -559,3 +559,11 @@ def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"
     check_run_xonsh(cmd, fmt, exp)
 
+
+@skip_if_on_windows
+def test_negative_exit_codes_fail():
+    # see issue 3309
+    script = 'python -c "import os; os.abort()" && echo OK\n'
+    out, err, rtn = run_xonsh(script)
+    assert "OK" is not out
+    assert "OK" is not err
