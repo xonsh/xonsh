@@ -59,12 +59,15 @@ def get_venv(vox, dirpath):
             return venvs[0]
 
 
-def check_for_new_venv(curdir):
+def check_for_new_venv(curdir, olddir):
     vox = voxapi.Vox()
-    try:
-        oldve = vox[...]
-    except KeyError:
-        oldve = None
+    if olddir is ... or olddir is None:
+        try:
+            oldve = vox[...]
+        except KeyError:
+            oldve = None
+    else:
+        oldve = get_venv(vox, olddir)
     newve = get_venv(vox, curdir)
 
     if oldve != newve:
@@ -76,8 +79,8 @@ def check_for_new_venv(curdir):
 
 # Core mechanism: Check for venv when the current directory changes
 @events.on_chdir
-def cd_handler(newdir, **_):
-    check_for_new_venv(Path(newdir))
+def cd_handler(newdir, olddir, **_):
+    check_for_new_venv(Path(newdir), Path(olddir))
 
 
 # Recalculate when venvs are created or destroyed
@@ -85,12 +88,12 @@ def cd_handler(newdir, **_):
 
 @events.vox_on_create
 def create_handler(**_):
-    check_for_new_venv(Path.cwd())
+    check_for_new_venv(Path.cwd(), ...)
 
 
 @events.vox_on_destroy
 def destroy_handler(**_):
-    check_for_new_venv(Path.cwd())
+    check_for_new_venv(Path.cwd(), ...)
 
 
 # Initial activation before first prompt
@@ -98,4 +101,4 @@ def destroy_handler(**_):
 
 @events.on_post_init
 def load_handler(**_):
-    check_for_new_venv(Path.cwd())
+    check_for_new_venv(Path.cwd(), None)

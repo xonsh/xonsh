@@ -241,6 +241,21 @@ def test_vc_get_branch(test_repo, xonsh_builtins):
     obs = getattr(vc, fun)()
     if obs is not None:
         assert obs == VC_BRANCH[test_repo["name"]]
+        if test_repo["name"] == "git":
+            with open("{}/.git/config".format(test_repo["dir"]), "a") as gc:
+                gc.write(
+                    """
+[color]
+    branch = always
+    interactive = always
+[color "branch"]
+    current = yellow reverse
+"""
+                )
+            obs = getattr(vc, fun)()
+            if obs is not None:
+                assert obs == VC_BRANCH[test_repo["name"]]
+                assert not obs.startswith(u"\u001b[")
 
 
 def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins):
@@ -253,7 +268,7 @@ def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins)
 
 
 def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
-    xonsh_builtins
+    xonsh_builtins,
 ):
     cache = xonsh_builtins.__xonsh__.commands_cache
     xonsh_builtins.__xonsh__.env = DummyEnv(VC_BRANCH_TIMEOUT=1)

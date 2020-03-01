@@ -11,70 +11,98 @@ AppImage allows xonsh to be run on any AppImage supported Linux distributive wit
 
 Try it now
 ----------
-You can download and try `prebuilded xonsh.AppImage <https://github.com/anki-code/appimage-xonsh>`_:
+You can download and try `prebuilded xonsh.AppImage <https://github.com/niess/linuxdeploy-plugin-python/releases>`_:
 
 .. code-block:: bash
 
-	wget https://github.com/anki-code/appimage-xonsh/raw/master/xonsh-x86_64.AppImage && chmod +x xonsh-x86_64.AppImage
-	./xonsh-x86_64.AppImage
-	./xonsh-x86_64.AppImage --help
-
+	wget https://github.com/niess/linuxdeploy-plugin-python/releases/download/continuous/xonsh-x86_64.AppImage -O xonsh.AppImage
+	chmod +x xonsh.AppImage
+	./xonsh.AppImage -c "echo @(1+1)"
+	./xonsh.AppImage
 
 Build xonsh.AppImage
 --------------------
 
-Let's start:
-
-1. Run docker with ``fuse``:
-
-.. code-block:: bash
-
-	sudo docker run --rm -it --privileged --device /dev/fuse -v `pwd`:/appimage ubuntu:16.04 bash
-
-
-2. Install libraries for future building:
+`Dockerfile`
+~~~~~~~~~~~~
 
 .. code-block:: bash
 
-	apt update -y && apt upgrade -y
-	apt install -y fuse wget mc \
-			build-essential python-dev python-setuptools python-pip python-smbus \
-			libncursesw5-dev libgdbm-dev libc6-dev  \
-			zlib1g-dev libsqlite3-dev tk-dev \
-			libssl-dev openssl \
-			libffi-dev autoconf libfuse-dev
+	FROM ubuntu:16.04
+	RUN apt update -y && apt upgrade -y
+	RUN apt install --no-install-recommends -y -qq \
+		fuse wget mc git \
+		build-essential python-dev python-setuptools python-pip python-smbus \
+		libncursesw5-dev lib32ncurses5-dev libgdbm-dev libc6-dev  \
+		zlib1g-dev libsqlite3-dev tk-dev libssl-dev openssl libffi-dev autoconf \
+		libfuse-dev libncurses5-dev libreadline-dev libdb5.3-dev libbz2-dev \
+		libexpat1-dev liblzma-dev  automake libfuse2
 
-Not all required. Feel free to clean.
+	RUN mkdir -p /build /appimage
+	WORKDIR /build
+	RUN git clone --depth 1 https://github.com/niess/linuxdeploy-plugin-python && \
+		cd linuxdeploy-plugin-python && \
+		git checkout 85d2e6fac5969d1b381f4da384248b368522ede3
+	CMD cd /build/linuxdeploy-plugin-python/appimage && ./build-python.sh xonsh && cp *.AppImage /appimage
 
-3. Getting the build scripts based on `linuxdeploy plugin python <https://github.com/niess/linuxdeploy-plugin-python>`_:
 
-.. code-block:: bash
-
-	mkdir -p /appimage && cd /appimage
-	wget https://github.com/anki-code/linuxdeploy-plugin-python/archive/entrypoint.zip -O linuxdeploy-plugin-python-entrypoint.zip
-	unzip linuxdeploy-plugin-python-entrypoint.zip
-
-Here we see downloading of ``entrypoint`` branch from ``anki-code/linuxdeploy-plugin-python`` because the origin ``niess/linuxdeploy-plugin-python`` repository has not yet accepted the `pull request with xonsh <https://github.com/niess/linuxdeploy-plugin-python/pull/11>`_.
-
-4. Building:
-
-.. code-block:: bash
-
-	cd linuxdeploy-plugin-python-entrypoint/appimage
-	./build-python.sh xonsh
-	cd ../ && ls -l
-
-As result you'll find executable file ``xonsh-x86_64.AppImage`` that runs xonsh and can take command line arguments like xonsh:
+`build.sh`
+~~~~~~~~~~
 
 .. code-block:: bash
 
-	# ./xonsh-x86_64.AppImage -c "echo @(1+1)"
-	2
+	docker build --no-cache -t local/appimage-xonsh .
+	docker run --rm --privileged --device /dev/fuse -v `pwd`:/appimage -it local/appimage-xonsh	
 
-Enjoy!
+As result you'll find executable file ``xonsh-x86_64.AppImage`` that runs xonsh and can take command line arguments like xonsh. Enjoy!
+
+Running portable python and pip
+-------------------------------
+
+If you need to use python and pip from portable `xonsh.AppImage` just set up directories in `~/.xonshrc`:
+
+.. code-block:: xonsh
+
+	# replace host python to xonsh.AppImage python
+	$PATH = [$PYTHONHOME + '/bin'] + $PATH
+	
+	# setting up pip packages directory
+	$PIP_TARGET='/tmp/xonsh/pip'
+	import sys
+	sys.path.append('/tmp/xonsh/pip')
+
+And magic is here:
+
+.. code-block:: xonsh
+
+	xonsh$ pip3 install tqdm
+	xonsh$ ls /tmp/xonsh/pip/
+	tqdm
+	xonsh$ python
+	>>> import tqdm
+	>>> tqdm
+	<module 'tqdm' from '/tmp/xonsh/pip/tqdm/__init__.py'>
+	>>> # nice!
 
 Troubleshooting
 ---------------
+
+Python ImportError: No module named site
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: xonsh
+
+	xonsh$ python
+	ImportError: No module named site
+
+The error above was appeared because host machine python try to find right path for `site-packages`. The fix is just using python from AppImage by setting right path to it across `$PYTHONHOME` which was set by AppImage:
+
+.. code-block:: xonsh
+
+	xonsh$ $PATH = [$PYTHONHOME + '/bin'] + $PATH
+	xonsh$ python
+	Python 3.7.3
+	>>> # success
 
 GLIBs versions
 ~~~~~~~~~~~~~~
@@ -86,7 +114,7 @@ Need WSL support:
 
 .. code-block:: bash
 
-	wsl1# ./xonsh-x86_64.AppImage
+	wsl1# ./xonsh.AppImage
 	fuse: device not found, try 'modprobe fuse' first
 
 	Cannot mount AppImage, please check your FUSE setup.
@@ -100,5 +128,5 @@ Workaround is extracting appimage and run manually:
 
 .. code-block:: bash
 
-	wsl1$ ./xonsh --appimage-extract
-	wsl1$ ./squashfs-root/usr/bin/python3.7
+	wsl1$ ./xonsh.AppImage --appimage-extract
+	wsl1$ ./squashfs-root/usr/bin/python3.7 

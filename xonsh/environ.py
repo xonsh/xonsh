@@ -123,6 +123,21 @@ command.
 )
 
 
+events.doc(
+    "on_lscolors_change",
+    """
+on_lscolors_change(key: str, oldvalue: Any, newvalue: Any) -> None
+
+Fires after a value in LS_COLORS changes, when a new key is added (oldvalue is None)
+or when an existing key is deleted (newvalue is None).
+LS_COLORS values must be (ANSI color) strings, None is unambiguous.
+Does not fire when the whole environment variable changes (see on_envvar_change).
+Does not fire for each value when LS_COLORS is first instantiated.
+Normal usage is to arm the event handler, then read (not modify) all existing values.
+""",
+)
+
+
 @lazyobject
 def HELP_TEMPLATE():
     return (
@@ -330,11 +345,16 @@ class LsColors(cabc.MutableMapping):
 
     def __setitem__(self, key, value):
         self._detyped = None
+        old_value = self._d.get(key, None)
         self._d[key] = value
+        if old_value != value:
+            events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=value)
 
     def __delitem__(self, key):
         self._detyped = None
+        old_value = self._d.get(key, None)
         del self._d[key]
+        events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=None)
 
     def __len__(self):
         return len(self._d)
@@ -383,8 +403,8 @@ class LsColors(cabc.MutableMapping):
     @property
     def style_name(self):
         """Current XONSH_COLOR_STYLE value"""
-        env = builtins.__xonsh__.env
-        env_style_name = env.get("XONSH_COLOR_STYLE")
+        env = getattr(builtins.__xonsh__, "env", {})
+        env_style_name = env.get("XONSH_COLOR_STYLE", "default")
         if self._style_name is None or self._style_name != env_style_name:
             self._style_name = env_style_name
             self._style = self._dtyped = None
@@ -606,6 +626,7 @@ def DEFAULT_ENSURERS():
         "XONSH_STDERR_POSTFIX": (is_string, ensure_string, ensure_string),
         "XONSH_STORE_STDOUT": (is_bool, to_bool, bool_to_str),
         "XONSH_STORE_STDIN": (is_bool, to_bool, bool_to_str),
+        "XONSH_TRACE_SUBPROC": (is_bool, to_bool, bool_to_str),
         "XONSH_TRACEBACK_LOGFILE": (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
         "XONSH_DATETIME_FORMAT": (is_string, ensure_string, ensure_string),
     }
@@ -785,6 +806,7 @@ def DEFAULT_VALUES():
         "XONSH_HISTORY_SIZE": (8128, "commands"),
         "XONSH_LOGIN": False,
         "XONSH_PROC_FREQUENCY": 1e-4,
+        "XONSH_TRACE_SUBPROC": False,
         "XONSH_SHOW_TRACEBACK": False,
         "XONSH_STDERR_PREFIX": "",
         "XONSH_STDERR_POSTFIX": "",
@@ -1074,9 +1096,10 @@ def DEFAULT_DOCS():
             default="``xonsh.environ.DEFAULT_PROMPT``",
         ),
         "PROMPT_REFRESH_INTERVAL": VarDocs(
-            "Evaluate $PROMPT, $RIGHT_PROMPT and $BOTTOM_TOOLBAR every so many seconds."
-            "This param default is zero."
-            "And if using this param, $UPDATE_COMPLETIONS_ON_KEYPRESS must be True."
+            "Interval (in seconds) to evaluate and update ``$PROMPT``, ``$RIGHT_PROMPT`` "
+            "and ``$BOTTOM_TOOLBAR``. The default is zero (no update). "
+            "NOTE: ``$UPDATE_PROMPT_ON_KEYPRESS`` must be set to ``True`` for this "
+            "variable to take effect."
         ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": VarDocs(
             "The color depth used by prompt toolkit 2. Possible values are: "
@@ -1341,6 +1364,9 @@ def DEFAULT_DOCS():
             "The process frequency is the time that "
             "xonsh process threads sleep for while running command pipelines. "
             "The value has units of seconds [s]."
+        ),
+        "XONSH_TRACE_SUBPROC": VarDocs(
+            "Set to ``True`` to show arguments list of every executed subprocess command."
         ),
         "XONSH_SHOW_TRACEBACK": VarDocs(
             "Controls if a traceback is shown if exceptions occur in the shell. "

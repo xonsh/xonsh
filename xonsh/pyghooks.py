@@ -4,11 +4,13 @@ import os
 import re
 import sys
 import builtins
+import stat
 from collections import ChainMap
 from collections.abc import MutableMapping
+from keyword import iskeyword
 
 from pygments.lexer import inherit, bygroups, include
-from pygments.lexers.agile import PythonLexer
+from pygments.lexers.agile import Python3Lexer
 from pygments.token import (
     Keyword,
     Name,
@@ -47,7 +49,7 @@ from xonsh.color_tools import (
     iscolor,
 )
 from xonsh.style_tools import norm_name
-from xonsh.lazyimps import terminal256
+from xonsh.lazyimps import terminal256, html
 from xonsh.platform import (
     os_environ,
     win_ansi_support,
@@ -57,176 +59,7 @@ from xonsh.platform import (
 
 from xonsh.pygments_cache import get_style_by_name
 
-
-def _command_is_valid(cmd):
-    try:
-        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (FileNotFoundError, OSError):
-        return False
-    return cmd in builtins.__xonsh__.commands_cache or (
-        os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
-    )
-
-
-def _command_is_autocd(cmd):
-    if not builtins.__xonsh__.env.get("AUTO_CD", False):
-        return False
-    try:
-        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (FileNotFoundError, OSError):
-        return False
-    return os.path.isdir(cmd_abspath)
-
-
-def subproc_cmd_callback(_, match):
-    """Yield Builtin token if match contains valid command,
-    otherwise fallback to fallback lexer.
-    """
-    cmd = match.group()
-    yield match.start(), Name.Builtin if _command_is_valid(cmd) else Error, cmd
-
-
-def subproc_arg_callback(_, match):
-    """Check if match contains valid path"""
-    text = match.group()
-    try:
-        ispath = os.path.exists(os.path.expanduser(text))
-    except (FileNotFoundError, OSError):
-        ispath = False
-    yield (match.start(), Name.Constant if ispath else Text, text)
-
-
-COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`<&|;!]+(?=\s|$|\)|\]|\}|!)'
-
-
-class XonshLexer(PythonLexer):
-    """Xonsh console lexer for pygments."""
-
-    name = "Xonsh lexer"
-    aliases = ["xonsh", "xsh"]
-    filenames = ["*.xsh", "*xonshrc"]
-
-    def __init__(self, *args, **kwargs):
-        # If the lexer is loaded as a pygment plugin, we have to mock
-        # __xonsh__.env and __xonsh__.commands_cache
-        if not hasattr(builtins, "__xonsh__"):
-            from argparse import Namespace
-
-            setattr(builtins, "__xonsh__", Namespace())
-        if not hasattr(builtins.__xonsh__, "env"):
-            setattr(builtins.__xonsh__, "env", {})
-            if ON_WINDOWS:
-                pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
-                builtins.__xonsh__.env["PATHEXT"] = pathext.split(os.pathsep)
-        if not hasattr(builtins.__xonsh__, "commands_cache"):
-            setattr(builtins.__xonsh__, "commands_cache", CommandsCache())
-        _ = builtins.__xonsh__.commands_cache.all_commands  # NOQA
-        super().__init__(*args, **kwargs)
-
-    tokens = {
-        "mode_switch_brackets": [
-            (r"(\$)(\{)", bygroups(Keyword, Punctuation), "py_curly_bracket"),
-            (r"(@)(\()", bygroups(Keyword, Punctuation), "py_bracket"),
-            (
-                r"([\!\$])(\()",
-                bygroups(Keyword, Punctuation),
-                ("subproc_bracket", "subproc_start"),
-            ),
-            (
-                r"(@\$)(\()",
-                bygroups(Keyword, Punctuation),
-                ("subproc_bracket", "subproc_start"),
-            ),
-            (
-                r"([\!\$])(\[)",
-                bygroups(Keyword, Punctuation),
-                ("subproc_square_bracket", "subproc_start"),
-            ),
-            (r"(g?)(`)", bygroups(String.Affix, String.Backtick), "backtick_re"),
-        ],
-        "subproc_bracket": [(r"\)", Punctuation, "#pop"), include("subproc")],
-        "subproc_square_bracket": [(r"\]", Punctuation, "#pop"), include("subproc")],
-        "py_bracket": [(r"\)", Punctuation, "#pop"), include("root")],
-        "py_curly_bracket": [(r"\}", Punctuation, "#pop"), include("root")],
-        "backtick_re": [
-            (r"[\.\^\$\*\+\?\[\]\|]", String.Regex),
-            (r"({[0-9]+}|{[0-9]+,[0-9]+})\??", String.Regex),
-            (r"\\([0-9]+|[AbBdDsSwWZabfnrtuUvx\\])", String.Escape),
-            (r"`", String.Backtick, "#pop"),
-            (r"[^`\.\^\$\*\+\?\[\]\|]+", String.Backtick),
-        ],
-        "root": [
-            (r"\?", Keyword),
-            (r"(?<=\w)!", Keyword),
-            (r"\$\w+", Name.Variable),
-            (r"\(", Punctuation, "py_bracket"),
-            (r"\{", Punctuation, "py_curly_bracket"),
-            include("mode_switch_brackets"),
-            inherit,
-        ],
-        "subproc_start": [
-            (r"\s+", Whitespace),
-            (COMMAND_TOKEN_RE, subproc_cmd_callback, "#pop"),
-            (r"", Whitespace, "#pop"),
-        ],
-        "subproc": [
-            include("mode_switch_brackets"),
-            (r"&&|\|\|", Operator, "subproc_start"),
-            (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
-            (r"'(\\\\|\\[0-7]+|\\.|[^'\\])*'", String.Single),
-            (r"(?<=\w|\s)!", Keyword, "subproc_macro"),
-            (r"^!", Keyword, "subproc_macro"),
-            (r";", Punctuation, "subproc_start"),
-            (r"&|=", Punctuation),
-            (r"\|", Punctuation, "subproc_start"),
-            (r"\s+", Text),
-            (r'[^=\s\[\]{}()$"\'`<&|;]+', subproc_arg_callback),
-            (r"<", Text),
-            (r"\$\w+", Name.Variable),
-        ],
-        "subproc_macro": [
-            (r"(\s*)([^\n]+)", bygroups(Whitespace, String)),
-            (r"", Whitespace, "#pop"),
-        ],
-    }
-
-    def get_tokens_unprocessed(self, text):
-        """Check first command, then call super.get_tokens_unprocessed
-        with root or subproc state"""
-        start = 0
-        state = ("root",)
-        m = re.match(r"(\s*)({})".format(COMMAND_TOKEN_RE), text)
-        if m is not None:
-            yield m.start(1), Whitespace, m.group(1)
-            cmd = m.group(2)
-            cmd_is_valid = _command_is_valid(cmd)
-            cmd_is_autocd = _command_is_autocd(cmd)
-
-            if cmd_is_valid or cmd_is_autocd:
-                yield (m.start(2), Name.Builtin if cmd_is_valid else Name.Constant, cmd)
-                start = m.end(2)
-                state = ("subproc",)
-
-        for i, t, v in super().get_tokens_unprocessed(text[start:], state):
-            yield i + start, t, v
-
-
-class XonshConsoleLexer(XonshLexer):
-    """Xonsh console lexer for pygments."""
-
-    name = "Xonsh console lexer"
-    aliases = ["xonshcon"]
-    filenames = []
-
-    tokens = {
-        "root": [
-            (r"^(>>>|\.\.\.) ", Generic.Prompt),
-            (r"\n(>>>|\.\.\.)", Generic.Prompt),
-            (r"\n(?![>.][>.][>.] )([^\n]*)", Generic.Output),
-            (r"\n(?![>.][>.][>.] )(.*?)$", Generic.Output),
-            inherit,
-        ]
-    }
+from xonsh.events import events
 
 
 #
@@ -379,6 +212,26 @@ def code_by_name(name, styles):
     return code
 
 
+def color_token_by_name(xc: tuple, styles=None) -> Color:
+    """Returns (color) token corresponding to Xonsh color tuple, side effect: defines token is defined in styles"""
+    if not styles:
+        try:
+            styles = builtins.__xonsh__.shell.shell.styler.styles
+        except AttributeError:
+            return Color
+
+    tokName = xc[0]
+    pc = color_name_to_pygments_code(xc[0], styles)
+
+    if len(xc) > 1:
+        pc += " " + color_name_to_pygments_code(xc[1], styles)
+        tokName += "__" + xc[1]
+
+    token = getattr(Color, norm_name(tokName))
+    styles[token] = pc
+    return token
+
+
 def partial_color_tokenize(template):
     """Tokenizes a template string containing colors. Will return a list
     of tuples mapping the token to the string which has that color.
@@ -516,12 +369,22 @@ class XonshStyle(Style):
             self._smap = XONSH_BASE_STYLE.copy()
         else:
             try:
-                self._smap = get_style_by_name(value)().styles.copy()
+                style_obj = get_style_by_name(value)()
+                self._smap = style_obj.styles.copy()
+                self.highlight_color = style_obj.highlight_color
+                self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
+
+        for file_type, xonsh_color in builtins.__xonsh__.env.get(
+            "LS_COLORS", {}
+        ).items():
+            color_token = color_token_by_name(xonsh_color, self.styles)
+            file_color_tokens[file_type] = color_token
+
         # Convert new ansicolor names to old PTK1 names
         # Can be remvoed when PTK1 support is dropped.
         if (
@@ -531,6 +394,7 @@ class XonshStyle(Style):
         ):
             for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
                 smap.update(ansicolors_to_ptk1_names(smap))
+
         if ON_WINDOWS and "prompt_toolkit" in builtins.__xonsh__.shell.shell_type:
             self.enhance_colors_for_cmd_exe()
 
@@ -568,6 +432,8 @@ def xonsh_style_proxy(styler):
 
         target = styler
         styles = styler.styles
+        highlight_color = styler.highlight_color
+        background_color = styler.background_color
 
         def __new__(cls, *args, **kwargs):
             return cls.target
@@ -1381,3 +1247,363 @@ def XonshTerminal256Formatter():
             self.style_string["Token.Color.NO_COLOR"] = ("\x1b[39m", "")
 
     return XonshTerminal256FormatterProxy
+
+
+@lazyobject
+def XonshHtmlFormatter():
+    from pygments.style import ansicolors
+
+    def colorformat(text):
+        if text in ansicolors:
+            return text
+        if text[0:1] == "#":
+            col = text[1:]
+            if len(col) == 6:
+                return col
+            elif len(col) == 3:
+                return col[0] * 2 + col[1] * 2 + col[2] * 2
+        elif text == "":
+            return ""
+        elif text.startswith("var") or text.startswith("calc"):
+            return text
+        assert False, "wrong color format %r" % text
+
+    class XonshHtmlFormatterProxy(html.HtmlFormatter):
+        """Proxy class for xonsh HTML formatting that understands.
+        xonsh color tokens.
+        """
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # set up classes for colors
+            self._ndefs = dict(self.style)
+            for t in Color.subtypes:
+                if t not in self.style._styles:
+                    self._set_ndef_for_color_token(t)
+                classname = str(t)[5:].replace(".", "").lower()
+                self.ttype2class[t] = classname
+                self.class2style[classname] = self._get_color_token_style(t)
+            del self._ndefs
+
+        def _get_color_token_style(self, ttype):
+            webify = html.webify
+            ndef = self._ndefs[ttype]
+            style = ""
+            if ndef["color"]:
+                style += "color: {}; ".format(webify(ndef["color"]))
+            if ndef["bold"]:
+                style += "font-weight: bold; "
+            if ndef["italic"]:
+                style += "font-style: italic; "
+            if ndef["underline"]:
+                style += "text-decoration: underline; "
+            if ndef["bgcolor"]:
+                style += "background-color: {}; ".format(webify(ndef["bgcolor"]))
+            if ndef["border"]:
+                style += "border: 1px solid {}; ".format(webify(ndef["border"]))
+            return (style[:-2], ttype, len(ttype))
+
+        def _set_ndef_for_color_token(self, ttype):
+            ndef = self.style._styles.get(ttype.parent, None)
+            styledefs = self.style.styles.get(ttype, "").split()
+            if not ndef or ttype is None:
+                ndef = ["", 0, 0, 0, "", "", 0, 0, 0]
+            elif "noinherit" in styledefs and ttype is not Token:
+                ndef = self.style._styles[Token][:]
+            else:
+                ndef = ndef[:]
+            self.style._styles[ttype] = ndef
+            for styledef in self.style.styles.get(ttype, "").split():
+                if styledef == "noinherit":
+                    pass
+                elif styledef == "bold":
+                    ndef[1] = 1
+                elif styledef == "nobold":
+                    ndef[1] = 0
+                elif styledef == "italic":
+                    ndef[2] = 1
+                elif styledef == "noitalic":
+                    ndef[2] = 0
+                elif styledef == "underline":
+                    ndef[3] = 1
+                elif styledef == "nounderline":
+                    ndef[3] = 0
+                elif styledef[:3] == "bg:":
+                    ndef[4] = colorformat(styledef[3:])
+                elif styledef[:7] == "border:":
+                    ndef[5] = colorformat(styledef[7:])
+                elif styledef == "roman":
+                    ndef[6] = 1
+                elif styledef == "sans":
+                    ndef[7] = 1
+                elif styledef == "mono":
+                    ndef[8] = 1
+                else:
+                    ndef[0] = colorformat(styledef)
+            self._ndefs[ttype] = self.style.style_for_token(ttype)
+
+    return XonshHtmlFormatterProxy
+
+
+color_file_extension_RE = LazyObject(
+    lambda: re.compile(r".*(\.\w+)$"), globals(), "color_file_extension_RE"
+)
+
+
+file_color_tokens = dict()
+"""Parallel to LS_COLORS, keyed by dircolors keys, but value is a Color token.
+Initialized by XonshStyle."""
+
+
+@events.on_lscolors_change
+def on_lscolors_change_p(key, oldvalue, newvalue, **kwargs):
+    """if LS_COLORS updated, update file_color_tokens and  corresponding color token in style"""
+    if newvalue is None:
+        del file_color_tokens[key]
+    else:
+        file_color_tokens[key] = color_token_by_name(newvalue)
+
+
+def color_file(file_path: str, mode: int) -> (Color, str):
+    """Determine color to use for file as ls -c would, given stat() results and its name.
+    Parameters
+    ----------
+    file_path : string
+        relative path of file (as user typed it).
+    mode : int
+        stat() results for file_path.
+    Returns
+    -------
+        color token, color_key
+
+    Bugs
+    ----
+    * doesn't handle CA (capability)
+    """
+
+    lsc = builtins.__xonsh__.env["LS_COLORS"]
+    color_key = "rs"
+
+    if stat.S_ISLNK(mode):  # must test link before S_ISREG (esp execute)
+        color_key = "ln"
+        try:
+            os.stat(file_path)
+        except FileNotFoundError:
+            color_key = "or"
+    elif stat.S_ISREG(mode):
+        if stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
+            color_key = "ex"
+        elif (
+            mode & stat.S_ISUID
+        ):  # too many tests before we get to the common case -- restructure?
+            color_key = "su"
+        elif mode & stat.S_ISGID:
+            color_key = "sg"
+        else:
+            match = color_file_extension_RE.match(file_path)
+            if match:
+                ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
+                if ext in lsc:
+                    color_key = ext
+                else:
+                    color_key = "rs"
+            else:
+                color_key = "rs"
+    elif stat.S_ISDIR(mode):  # ls -c doesn't colorize sticky or ow if not dirs...
+        color_key = ("di", "ow", "st", "tw")[
+            (mode & stat.S_ISVTX == stat.S_ISVTX) * 2
+            + (mode & stat.S_IWOTH == stat.S_IWOTH)
+        ]
+    elif stat.S_ISCHR(mode):
+        color_key = "cd"
+    elif stat.S_ISBLK(mode):
+        color_key = "bd"
+    elif stat.S_ISFIFO(mode):
+        color_key = "pi"
+    elif stat.S_ISSOCK(mode):
+        color_key = "so"
+    elif stat.S_ISDOOR(mode):
+        color_key = "do"  # bug missing mapping for FMT based PORT and WHITEOUT ??
+
+    ret_color_token = file_color_tokens.get(color_key, None)
+
+    return ret_color_token, color_key
+
+
+# pygments hooks.
+
+
+def _command_is_valid(cmd):
+    try:
+        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    except (FileNotFoundError, OSError):
+        return False
+    return (cmd in builtins.__xonsh__.commands_cache and not iskeyword(cmd)) or (
+        os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
+    )
+
+
+def _command_is_autocd(cmd):
+    if not builtins.__xonsh__.env.get("AUTO_CD", False):
+        return False
+    try:
+        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    except (FileNotFoundError, OSError):
+        return False
+    return os.path.isdir(cmd_abspath)
+
+
+def subproc_cmd_callback(_, match):
+    """Yield Builtin token if match contains valid command,
+    otherwise fallback to fallback lexer.
+    """
+    cmd = match.group()
+    yield match.start(), Name.Builtin if _command_is_valid(cmd) else Error, cmd
+
+
+def subproc_arg_callback(_, match):
+    """Check if match contains valid path"""
+    text = match.group()
+    yieldVal = Text
+    try:
+        path = os.path.expanduser(text)
+        mode = (os.lstat(path)).st_mode  # lstat() will raise FNF if not a real file
+        yieldVal, _ = color_file(path, mode)
+    except (FileNotFoundError, OSError):
+        pass
+
+    yield (match.start(), yieldVal, text)
+
+
+COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`<&|;!]+(?=\s|$|\)|\]|\}|!)'
+
+
+class XonshLexer(Python3Lexer):
+    """Xonsh console lexer for pygments."""
+
+    name = "Xonsh lexer"
+    aliases = ["xonsh", "xsh"]
+    filenames = ["*.xsh", "*xonshrc"]
+
+    def __init__(self, *args, **kwargs):
+        # If the lexer is loaded as a pygment plugin, we have to mock
+        # __xonsh__.env and __xonsh__.commands_cache
+        if not hasattr(builtins, "__xonsh__"):
+            from argparse import Namespace
+
+            setattr(builtins, "__xonsh__", Namespace())
+        if not hasattr(builtins.__xonsh__, "env"):
+            setattr(builtins.__xonsh__, "env", {})
+            if ON_WINDOWS:
+                pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
+                builtins.__xonsh__.env["PATHEXT"] = pathext.split(os.pathsep)
+        if not hasattr(builtins.__xonsh__, "commands_cache"):
+            setattr(builtins.__xonsh__, "commands_cache", CommandsCache())
+        _ = builtins.__xonsh__.commands_cache.all_commands  # NOQA
+        super().__init__(*args, **kwargs)
+
+    tokens = {
+        "mode_switch_brackets": [
+            (r"(\$)(\{)", bygroups(Keyword, Punctuation), "py_curly_bracket"),
+            (r"(@)(\()", bygroups(Keyword, Punctuation), "py_bracket"),
+            (
+                r"([\!\$])(\()",
+                bygroups(Keyword, Punctuation),
+                ("subproc_bracket", "subproc_start"),
+            ),
+            (
+                r"(@\$)(\()",
+                bygroups(Keyword, Punctuation),
+                ("subproc_bracket", "subproc_start"),
+            ),
+            (
+                r"([\!\$])(\[)",
+                bygroups(Keyword, Punctuation),
+                ("subproc_square_bracket", "subproc_start"),
+            ),
+            (r"(g?)(`)", bygroups(String.Affix, String.Backtick), "backtick_re"),
+        ],
+        "subproc_bracket": [(r"\)", Punctuation, "#pop"), include("subproc")],
+        "subproc_square_bracket": [(r"\]", Punctuation, "#pop"), include("subproc")],
+        "py_bracket": [(r"\)", Punctuation, "#pop"), include("root")],
+        "py_curly_bracket": [(r"\}", Punctuation, "#pop"), include("root")],
+        "backtick_re": [
+            (r"[\.\^\$\*\+\?\[\]\|]", String.Regex),
+            (r"({[0-9]+}|{[0-9]+,[0-9]+})\??", String.Regex),
+            (r"\\([0-9]+|[AbBdDsSwWZabfnrtuUvx\\])", String.Escape),
+            (r"`", String.Backtick, "#pop"),
+            (r"[^`\.\^\$\*\+\?\[\]\|]+", String.Backtick),
+        ],
+        "root": [
+            (r"\?", Keyword),
+            (r"(?<=\w)!", Keyword),
+            (r"\$\w+", Name.Variable),
+            (r"\(", Punctuation, "py_bracket"),
+            (r"\{", Punctuation, "py_curly_bracket"),
+            include("mode_switch_brackets"),
+            inherit,
+        ],
+        "subproc_start": [
+            (r"\s+", Whitespace),
+            (COMMAND_TOKEN_RE, subproc_cmd_callback, "#pop"),
+            (r"", Whitespace, "#pop"),
+        ],
+        "subproc": [
+            include("mode_switch_brackets"),
+            (r"&&|\|\|", Operator, "subproc_start"),
+            (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
+            (r"'(\\\\|\\[0-7]+|\\.|[^'\\])*'", String.Single),
+            (r"(?<=\w|\s)!", Keyword, "subproc_macro"),
+            (r"^!", Keyword, "subproc_macro"),
+            (r";", Punctuation, "subproc_start"),
+            (r"&|=", Punctuation),
+            (r"\|", Punctuation, "subproc_start"),
+            (r"\s+", Text),
+            (r'[^=\s\[\]{}()$"\'`<&|;]+', subproc_arg_callback),
+            (r"<", Text),
+            (r"\$\w+", Name.Variable),
+        ],
+        "subproc_macro": [
+            (r"(\s*)([^\n]+)", bygroups(Whitespace, String)),
+            (r"", Whitespace, "#pop"),
+        ],
+    }
+
+    def get_tokens_unprocessed(self, text):
+        """Check first command, then call super.get_tokens_unprocessed
+        with root or subproc state"""
+        start = 0
+        state = ("root",)
+        m = re.match(r"(\s*)({})".format(COMMAND_TOKEN_RE), text)
+        if m is not None:
+            yield m.start(1), Whitespace, m.group(1)
+            start = m.end(1)
+            cmd = m.group(2)
+            cmd_is_valid = _command_is_valid(cmd)
+            cmd_is_autocd = _command_is_autocd(cmd)
+
+            if cmd_is_valid or cmd_is_autocd:
+                yield (m.start(2), Name.Builtin if cmd_is_valid else Name.Constant, cmd)
+                start = m.end(2)
+                state = ("subproc",)
+
+        for i, t, v in super().get_tokens_unprocessed(text[start:], state):
+            yield i + start, t, v
+
+
+class XonshConsoleLexer(XonshLexer):
+    """Xonsh console lexer for pygments."""
+
+    name = "Xonsh console lexer"
+    aliases = ["xonshcon"]
+    filenames = []
+
+    tokens = {
+        "root": [
+            (r"^(>>>|\.\.\.) ", Generic.Prompt),
+            (r"\n(>>>|\.\.\.)", Generic.Prompt),
+            (r"\n(?![>.][>.][>.] )([^\n]*)", Generic.Output),
+            (r"\n(?![>.][>.][>.] )(.*?)$", Generic.Output),
+            inherit,
+        ]
+    }

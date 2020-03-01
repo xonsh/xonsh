@@ -268,8 +268,8 @@ class CommandsCache(cabc.Mapping):
 
     def default_predictor_alias(self, cmd0):
         alias_recursion_limit = (
-            10
-        )  # this limit is se to handle infinite loops in aliases definition
+            10  # this limit is se to handle infinite loops in aliases definition
+        )
         first_args = []  # contains in reverse order args passed to the aliased command
         alss = getattr(builtins, "aliases", dict())
         while cmd0 in alss:
@@ -453,16 +453,19 @@ def default_threadable_predictors():
         "cryptsetup": predict_true,
         "csh": predict_shell,
         "curl": predict_true,
+        "elvish": predict_shell,
         "emacsclient": predict_false,
         "env": predict_env,
         "ex": predict_false,
         "fish": predict_shell,
         "gawk": predict_true,
+        "ghci": predict_help_ver,
         "git": predict_true,
         "gvim": predict_help_ver,
         "hg": predict_hg,
         "htop": predict_help_ver,
         "ipython": predict_shell,
+        "julia": predict_shell,
         "ksh": predict_shell,
         "less": predict_help_ver,
         "ls": predict_true,

@@ -36,6 +36,7 @@ pip-selfcheck.json
 bin/
 /lib/
 include/
+venv/
 
 # Mac
 .DS_Store
@@ -59,3 +60,13 @@ tags
 rever/
 # Allow the lib
 !/xonsh/lib
+
+# elm
+xonsh/webconfig/elm-stuff/
+xonsh/webconfig/js/app.js
+
+# venv (e.g, autovox)
+venv/
+
+# VS Code
+.vscode/

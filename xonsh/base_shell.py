@@ -71,7 +71,9 @@ class _TeeStdBuf(io.RawIOBase):
         self.errors = env.get("XONSH_ENCODING_ERRORS") if errors is None else errors
         self.prestd = prestd
         self.poststd = poststd
-        self._std_is_binary = not hasattr(stdbuf, "encoding")
+        self._std_is_binary = (not hasattr(stdbuf, "encoding")) or hasattr(
+            stdbuf, "_redirect_to"
+        )  # VS Code terminal window - has encoding attr but won't accept str
 
     def fileno(self):
         """Returns the file descriptor of the std buffer."""

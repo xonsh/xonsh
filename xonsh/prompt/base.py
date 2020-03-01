@@ -21,6 +21,7 @@ from xonsh.prompt.job import _current_job
 from xonsh.prompt.env import env_name, vte_new_tab_cwd
 from xonsh.prompt.vc import current_branch, branch_color, branch_bg_color
 from xonsh.prompt.gitstatus import gitstatus_prompt
+from xonsh.prompt.times import _localtime
 
 
 @xt.lazyobject
@@ -106,6 +107,8 @@ def PROMPT_FIELDS():
         env_postfix=") ",
         vte_new_tab_cwd=vte_new_tab_cwd,
         gitstatus=gitstatus_prompt,
+        time_format="%H:%M:%S",
+        localtime=_localtime,
     )
 
 

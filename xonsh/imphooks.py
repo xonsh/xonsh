@@ -15,7 +15,7 @@ from importlib.abc import MetaPathFinder, SourceLoader, Loader
 
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.platform import scandir
+from xonsh.platform import ON_WINDOWS, scandir
 from xonsh.lazyasd import lazyobject
 
 
@@ -116,18 +116,21 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         if filename is None:
             msg = "xonsh file {0!r} could not be found".format(fullname)
             raise ImportError(msg)
-        src = self.get_source(filename)
+        src = self.get_source(fullname)
         execer = self.execer
         execer.filename = filename
         ctx = {}  # dummy for modules
         code = execer.compile(src, glbs=ctx, locs=ctx)
         return code
 
-    def get_source(self, fullpath):
-        if fullpath is None:
-            raise ImportError("could not find fullpath to module")
-        with open(fullpath, "rb") as f:
+    def get_source(self, fullname):
+        if fullname is None:
+            raise ImportError("could not find fullname to module")
+        filename = self.get_filename(fullname)
+        with open(filename, "rb") as f:
             src = f.read()
+        if ON_WINDOWS:
+            src = src.replace(b"\r\n", b"\n")
         enc = find_source_encoding(src)
         src = src.decode(encoding=enc)
         src = src if src.endswith("\n") else src + "\n"

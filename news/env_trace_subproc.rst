@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* New ``$XONSH_TRACE_SUBPROC`` environment variable.
 
 **Changed:**
 
@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* Removed deprecated ``xonda`` ``xontrib`` from list 
+* <news item>
 
 **Fixed:**
 
