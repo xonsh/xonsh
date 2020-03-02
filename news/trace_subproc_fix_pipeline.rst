@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed XONSH_TRACE_SUBPROC for pipeline command
+* Fixed XONSH_TRACE_SUBPROC for pipeline command.
 
 **Security:**
 
