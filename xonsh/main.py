@@ -292,7 +292,11 @@ def start_services(shell_kwargs, args):
     env = builtins.__xonsh__.env
     rc = shell_kwargs.get("rc", None)
     rc = env.get("XONSHRC") if rc is None else rc
-    if args.mode != XonshMode.interactive and not args.force_interactive:
+    if (
+        args.mode != XonshMode.interactive
+        and not args.force_interactive
+        and not args.login
+    ):
         #  Don't load xonshrc if not interactive shell
         rc = None
     events.on_pre_rc.fire()
@@ -329,7 +333,8 @@ def premain(argv=None):
         "cacheall": args.cacheall,
         "ctx": builtins.__xonsh__.ctx,
     }
-    if args.login:
+    if args.login or sys.argv[0].startswith("-"):
+        args.login = True
         shell_kwargs["login"] = True
     if args.norc:
         shell_kwargs["rc"] = ()

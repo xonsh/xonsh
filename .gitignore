@@ -36,6 +36,7 @@ pip-selfcheck.json
 bin/
 /lib/
 include/
+venv/
 
 # Mac
 .DS_Store
