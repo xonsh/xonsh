@@ -1,0 +1,15 @@
+name: Black
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Black Check
+      uses: "lgeiger/black-action@master"
+      with:
+        args: "--check --exclude=xonsh/ply/ xonsh/ xontrib/"

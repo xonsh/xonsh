@@ -1,4 +1,4 @@
-name: py37-xonsh-test
+name: 3.7-xonsh-test
 channels:
   - conda-forge
   - defaults

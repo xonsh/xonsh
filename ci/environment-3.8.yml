@@ -1,4 +1,4 @@
-name: py38-xonsh-test
+name: 3.8-xonsh-test
 channels:
   - conda-forge
   - defaults
