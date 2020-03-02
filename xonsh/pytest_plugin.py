@@ -13,10 +13,6 @@ def pytest_configure(config):
     setup()
 
 
-def pytest_collection_modifyitems(items):
-    items.sort(key=lambda x: 0 if isinstance(x, XshFunction) else 1)
-
-
 def _limited_traceback(excinfo):
     """ Return a formatted traceback with all the stack
         from this frame (i.e __file__) up removed
