@@ -14,7 +14,17 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(items):
-    items.sort(key=lambda x: 0 if isinstance(x, XshFunction) else 1)
+    """ Move xsh test first to work around a bug in normal
+        pytest cleanup. The order of tests are otherwise preserved.
+    """
+    xsh_items = []
+    other_items = []
+    for item in items:
+        if isinstance(item, XshFunction):
+            xsh_items.append(item)
+        else:
+            other_items.append(item)
+    items[:] = xsh_items + other_items
 
 
 def _limited_traceback(excinfo):
