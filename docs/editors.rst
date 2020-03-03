@@ -20,4 +20,4 @@ Then just add this line to your emacs configuration file:
     (require 'xonsh-mode)
 
 
-.. _MELPA repository: https://melpa.org
+.. _MELPA repository: https://melpa.org/#/xonsh-mode
