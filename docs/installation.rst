@@ -17,3 +17,4 @@ Installation
     appimage
     containers
     customization
+    editors
