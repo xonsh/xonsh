@@ -4,10 +4,9 @@
 
 **Changed:**
 
-* The xonsh pytest plugin no longer messes up the test order for pytest. 
-  The original attempt to run xsh test first was a work around 
-  for bug where certain test would not run after each other. This workaround
-  is no longer needed. 
+* The xonsh pytest plugin no longer messes up the test order for pytest. Xsh test
+  are still executed first to avoid a bug were other tests would prevent ``test_*.xsh`` 
+  files to run correctly. 
 
 **Deprecated:**
 
