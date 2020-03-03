@@ -14,7 +14,7 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(items):
-    """ Move xsh test first to work around a bug in normal 
+    """ Move xsh test first to work around a bug in normal
         pytest cleanup. The order of tests are otherwise preserved.
     """
     xsh_items = []
