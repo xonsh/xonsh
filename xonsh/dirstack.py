@@ -147,10 +147,10 @@ def _change_working_directory(newdir, follow_symlinks=False):
     env = builtins.__xonsh__.env
     old = env["PWD"]
     new = os.path.join(old, newdir)
-    absnew = os.path.abspath(new)
 
     if follow_symlinks:
-        absnew = os.path.realpath(absnew)
+        new = os.path.realpath(new)
+    absnew = os.path.abspath(new)
 
     try:
         os.chdir(absnew)
