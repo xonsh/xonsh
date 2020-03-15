@@ -119,7 +119,7 @@ as mispelled variable names, using pylint. If you're using Anaconda you'll
 need to run "conda install pylint" once. You can easily run pylint on
 the edited files in your uncommited git change::
 
-    $ pylint $(git status -s | awk '/\.py$$/ { print $$2 }' | sort)
+    $ git status -s | awk '/\.py$$/ { print $2 }' | xargs pylint
 
 If you want to lint the entire code base run::
 
