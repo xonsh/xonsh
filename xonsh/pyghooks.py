@@ -1379,6 +1379,7 @@ def color_file(file_path: str, mode: int) -> (Color, str):
     Bugs
     ----
     * doesn't handle CA (capability)
+    * doesn't handle LS TARGET mapping.
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
@@ -1425,7 +1426,7 @@ def color_file(file_path: str, mode: int) -> (Color, str):
     elif stat.S_ISDOOR(mode):
         color_key = "do"  # bug missing mapping for FMT based PORT and WHITEOUT ??
 
-    ret_color_token = file_color_tokens.get(color_key, None)
+    ret_color_token = file_color_tokens.get(color_key, Text)
 
     return ret_color_token, color_key
 
