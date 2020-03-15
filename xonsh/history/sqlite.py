@@ -12,6 +12,10 @@ import time
 from xonsh.history.base import History
 import xonsh.tools as xt
 
+XH_SQLITE_CACHE = threading.local()
+XH_SQLITE_TABLE_NAME = "xonsh_history"
+XH_SQLITE_CREATED_SQL_TBL = "CREATED_SQL_TABLE"
+
 
 def _xh_sqlite_get_file_name():
     envs = builtins.__xonsh__.env
@@ -33,35 +37,84 @@ def _xh_sqlite_create_history_table(cursor):
 
     Columns:
         info - JSON formatted, reserved for future extension.
+        frequency - in case of HISTCONTROL=erasedups,
+        it tracks the frequency of the inputs. helps in sorting autocompletion
     """
+    if not getattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False):
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS {}
+                 (inp TEXT,
+                  rtn INTEGER,
+                  tsb REAL,
+                  tse REAL,
+                  sessionid TEXT,
+                  out TEXT,
+                  info TEXT,
+                  frequency INTEGER default 1
+                 )
+        """.format(
+                XH_SQLITE_TABLE_NAME
+            )
+        )
+        # add frequency column if not exists for backward compatibility
+        try:
+            cursor.execute(
+                "ALTER TABLE "
+                + XH_SQLITE_TABLE_NAME
+                + " ADD COLUMN frequency INTEGER default 1"
+            )
+        except sqlite3.OperationalError:
+            pass
+
+        # mark that this function ran for this session
+        setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, True)
+
+
+def _xh_sqlite_get_frequency(cursor, input):
+    # type: (sqlite3.Cursor, str) -> int
+    sql = "SELECT sum(frequency) FROM {} WHERE inp=?".format(XH_SQLITE_TABLE_NAME)
+    cursor.execute(sql, (input,))
+    return cursor.fetchone()[0] or 0
+
+
+def _xh_sqlite_erase_dups(cursor, input):
+    freq = _xh_sqlite_get_frequency(cursor, input)
+    sql = "DELETE FROM {} WHERE inp=?".format(XH_SQLITE_TABLE_NAME)
+    cursor.execute(sql, (input,))
+    return freq
+
+
+def _sql_insert(cursor, values):
+    # type: (sqlite3.Cursor, dict) -> None
+    """handy function to run insert query"""
+    sql = "INSERT INTO {} ({}) VALUES ({});"
+    fields = ", ".join(values)
+    marks = ", ".join(["?"] * len(values))
     cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS xonsh_history
-             (inp TEXT,
-              rtn INTEGER,
-              tsb REAL,
-              tse REAL,
-              sessionid TEXT,
-              out TEXT,
-              info TEXT
-             )
-    """
+        sql.format(XH_SQLITE_TABLE_NAME, fields, marks), tuple(values.values())
     )
 
 
-def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout):
-    sql = "INSERT INTO xonsh_history (inp, rtn, tsb, tse, sessionid"
+def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout, remove_duplicates):
     tss = cmd.get("ts", [None, None])
-    params = [cmd["inp"].rstrip(), cmd["rtn"], tss[0], tss[1], sessionid]
+    values = collections.OrderedDict(
+        [
+            ("inp", cmd["inp"].rstrip()),
+            ("rtn", cmd["rtn"]),
+            ("tsb", tss[0]),
+            ("tse", tss[1]),
+            ("sessionid", sessionid),
+        ]
+    )
     if store_stdout and "out" in cmd:
-        sql += ", out"
-        params.append(cmd["out"])
+        values["out"] = cmd["out"]
     if "info" in cmd:
-        sql += ", info"
         info = json.dumps(cmd["info"])
-        params.append(info)
-    sql += ") VALUES (" + ("?, " * len(params)).rstrip(", ") + ")"
-    cursor.execute(sql, tuple(params))
+        values["info"] = info
+    if remove_duplicates:
+        values["frequency"] = _xh_sqlite_erase_dups(cursor, values["inp"]) + 1
+    _sql_insert(cursor, values)
 
 
 def _xh_sqlite_get_count(cursor, sessionid=None):
@@ -75,7 +128,7 @@ def _xh_sqlite_get_count(cursor, sessionid=None):
 
 
 def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, newest_first=False):
-    sql = "SELECT inp, tsb, rtn FROM xonsh_history "
+    sql = "SELECT inp, tsb, rtn, frequency FROM xonsh_history "
     params = []
     if sessionid is not None:
         sql += "WHERE sessionid = ? "
@@ -103,11 +156,13 @@ def _xh_sqlite_delete_records(cursor, size_to_keep):
     return result.rowcount
 
 
-def xh_sqlite_append_history(cmd, sessionid, store_stdout, filename=None):
+def xh_sqlite_append_history(
+    cmd, sessionid, store_stdout, filename=None, remove_duplicates=False
+):
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        _xh_sqlite_insert_command(c, cmd, sessionid, store_stdout)
+        _xh_sqlite_insert_command(c, cmd, sessionid, store_stdout, remove_duplicates)
         conn.commit()
 
 
@@ -181,9 +236,11 @@ class SqliteHistory(History):
         self.outs = []
         self.tss = []
 
+        # during init rerun create command
+        setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
+
     def append(self, cmd):
         envs = builtins.__xonsh__.env
-        opts = envs.get("HISTCONTROL")
         inp = cmd["inp"].rstrip()
         self.inps.append(inp)
         store_stdout = envs.get("XONSH_STORE_STDOUT", False)
@@ -203,22 +260,23 @@ class SqliteHistory(History):
             return
         self._last_hist_inp = inp
         xh_sqlite_append_history(
-            cmd, str(self.sessionid), store_stdout, filename=self.filename
+            cmd,
+            str(self.sessionid),
+            store_stdout,
+            filename=self.filename,
+            remove_duplicates=("erasedups" in opts),
         )
 
-    def all_items(self, newest_first=False):
+    def all_items(self, newest_first=False, session_id=None):
         """Display all history items."""
-        for item in xh_sqlite_items(filename=self.filename, newest_first=newest_first):
-            yield {"inp": item[0], "ts": item[1], "rtn": item[2]}
+        for inp, ts, rtn, freq in xh_sqlite_items(
+            filename=self.filename, newest_first=newest_first, sessionid=session_id
+        ):
+            yield {"inp": inp, "ts": ts, "rtn": rtn, "frequency": freq}
 
     def items(self, newest_first=False):
         """Display history items of current session."""
-        for item in xh_sqlite_items(
-            sessionid=str(self.sessionid),
-            filename=self.filename,
-            newest_first=newest_first,
-        ):
-            yield {"inp": item[0], "ts": item[1], "rtn": item[2]}
+        yield from self.all_items(newest_first, session_id=str(self.sessionid))
 
     def info(self):
         data = collections.OrderedDict()
