@@ -142,15 +142,21 @@ def test_nested():
         ],
     )
 
-
-@skip_if_on_windows
-def test_path(tmpdir, xonsh_builtins):
-
+@pytest.fixture
+def xonsh_builtins_LS_COLORS(xonsh_builtins):
+    x = xonsh_builtins.__xonsh__
     xonsh_builtins.__xonsh__.shell = DummyShell()  # because load_command_cache zaps it.
     xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit2"
     lsc = LsColors(LsColors.default_settings)
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc  # establish LS_COLORS before style.
     xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
+
+    yield xonsh_builtins
+    xonsh_builtins.__xonsh__ = x
+
+
+@skip_if_on_windows
+def test_path(tmpdir, xonsh_builtins_LS_COLORS):
 
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
     check_token(
@@ -165,6 +171,25 @@ def test_path(tmpdir, xonsh_builtins):
     with builtins.__xonsh__.env.swap(AUTO_CD=True):
         check_token(test_dir, [(Name.Constant, test_dir)])
 
+
+@skip_if_on_windows
+def test_color_on_lscolors_change(tmpdir, xonsh_builtins_LS_COLORS):
+    """Verify colorizer returns Token.Text if file type not defined in LS_COLORS"""
+
+    lsc = xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"]
+    test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
+
+    lsc['di'] = ('GREEN',)
+
+    check_token(
+        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.GREEN, test_dir)]
+    )
+
+    del lsc['di']       ## isn't firing on_ls_colors_change in pyghooks!
+    
+    check_token(
+        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)]
+    )
 
 @skip_if_on_windows
 def test_subproc_args():
