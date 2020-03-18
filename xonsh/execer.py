@@ -145,6 +145,7 @@ class Execer(object):
         if isinstance(input, types.CodeType):
             code = input
         else:
+            input = input.rstrip("\n")
             if filename is None:
                 filename = self.filename
             code = self.compile(
@@ -174,6 +175,8 @@ class Execer(object):
         if isinstance(input, types.CodeType):
             code = input
         else:
+            if not input.endswith("\n"):
+                input += "\n"
             if filename is None:
                 filename = self.filename
             code = self.compile(
