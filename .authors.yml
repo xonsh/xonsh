@@ -1097,6 +1097,8 @@
   github: drmikecrowe
 - name: anki-code
   email: anki-code@users.noreply.github.com
+  alternate_emails:
+    - anki-code
   num_commits: 14
   first_commit: 2019-10-15 18:20:58
 - name: Sylvain Corlay
