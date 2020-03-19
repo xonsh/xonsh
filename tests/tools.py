@@ -174,8 +174,6 @@ class DummyEnv(MutableMapping):
 
 
 def check_exec(input, **kwargs):
-    if not input.endswith("\n"):
-        input += "\n"
     builtins.__xonsh__.execer.exec(input, **kwargs)
     return True
 
