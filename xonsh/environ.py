@@ -1004,8 +1004,10 @@ def DEFAULT_DOCS():
             "that determine what commands are saved to the history list. By "
             "default all commands are saved. The option ``ignoredups`` will not "
             "save the command if it matches the previous command. The option "
-            "'ignoreerr' will cause any commands that fail (i.e. return non-zero "
-            "exit status) to not be added to the history list.",
+            "``ignoreerr`` will cause any commands that fail (i.e. return non-zero "
+            "exit status) to not be added to the history list. The option "
+            "``erasedups`` will remove all previous commands that matches and updates the frequency. "
+            "Note: ``erasedups`` is supported only in sqlite backend).",
             store_as_str=True,
         ),
         "IGNOREEOF": VarDocs("Prevents Ctrl-D from exiting the shell."),

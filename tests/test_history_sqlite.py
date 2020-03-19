@@ -169,6 +169,27 @@ def test_histcontrol(hist, xonsh_builtins):
     assert -1 == hist.rtns[-1]
 
 
+def test_histcontrol_erase_dup(hist, xonsh_builtins):
+    """Test HISTCONTROL=erasedups"""
+
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "erasedups"
+    assert len(hist) == 0
+
+    hist.append({"inp": "ls foo", "rtn": 2})
+    hist.append({"inp": "ls foobazz", "rtn": 0})
+    hist.append({"inp": "ls foo", "rtn": 0})
+    hist.append({"inp": "ls foobazz", "rtn": 0})
+    hist.append({"inp": "ls foo", "rtn": 0})
+    assert len(hist) == 2
+    assert len(hist.inps) == 5
+
+    items = list(hist.items())
+    assert "ls foo" == items[-1]["inp"]
+    assert "ls foobazz" == items[-2]["inp"]
+    assert items[-2]["frequency"] == 2
+    assert items[-1]["frequency"] == 3
+
+
 @pytest.mark.parametrize(
     "index, exp",
     [
