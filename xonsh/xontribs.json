@@ -1,4 +1,9 @@
 {"xontribs": [
+ {"name": "abbrevs",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Command abbreviations."]
+ },
  {"name": "apt_tabcomplete",
   "package": "xonsh-apt-tabcomplete",
   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
