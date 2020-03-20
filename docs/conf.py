@@ -67,6 +67,7 @@ extensions = [
     #'sphinx.ext.autosummary',
     "numpydoc",
     "cmdhelp",
+    "runthis.sphinxext",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -277,6 +278,8 @@ autosummary_generate = []
 # Prevent numpy from making silly tables
 numpydoc_show_class_members = False
 
+# runthis
+runthis_server = "https://runthis.xonsh.org:80"
 
 #
 # Auto-generate some docs
