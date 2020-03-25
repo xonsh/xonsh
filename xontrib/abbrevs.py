@@ -17,6 +17,7 @@ builtins.__xonsh__.abbrevs = dict()
 proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
 setattr(builtins, "abbrevs", proxy)
 
+
 def expand_abbrev(buffer):
     abbrevs = getattr(builtins, "abbrevs")
     if abbrevs is None:
