@@ -7,21 +7,23 @@ This expands input words from `abbrevs` disctionary as you type.
 import builtins
 from prompt_toolkit.filters import IsMultiline
 from prompt_toolkit.keys import Keys
+from xonsh.built_ins import DynamicAccessProxy
 from xonsh.platform import ptk_shell_type
 from xonsh.tools import check_for_partial_string
 
 __all__ = ()
 
-if "abbrevs" not in builtins.__xonsh__.ctx.keys():
-    builtins.__xonsh__.ctx["abbrevs"] = dict()
-
+builtins.__xonsh__.abbrevs = dict()
+proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
+setattr(builtins, "abbrevs", proxy)
 
 def expand_abbrev(buffer):
-    if "abbrevs" not in builtins.__xonsh__.ctx.keys():
+    abbrevs = getattr(builtins, "abbrevs")
+    if abbrevs is None:
         return
     document = buffer.document
     word = document.get_word_before_cursor()
-    abbrevs = builtins.__xonsh__.ctx["abbrevs"]
+    abbrevs = builtins.abbrevs
     if word in abbrevs.keys():
         partial = document.text[: document.cursor_position]
         startix, endix, quote = check_for_partial_string(partial)
