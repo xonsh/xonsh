@@ -45,5 +45,7 @@ def custom_keybindings(bindings, **kw):
     @handler(Keys.ControlM, filter=IsMultiline() & insert_mode)
     def multiline_carriage_return(event):
         buffer = event.app.current_buffer
-        expand_abbrev(buffer)
+        current_char = buffer.document.current_char
+        if not current_char or current_char.isspace():
+            expand_abbrev(buffer)
         carriage_return(buffer, event.cli)
