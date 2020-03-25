@@ -12,7 +12,8 @@ from xonsh.tools import check_for_partial_string
 
 __all__ = ()
 
-builtins.__xonsh__.ctx["abbrevs"] = dict()
+if "abbrevs" not in builtins.__xonsh__.ctx.keys():
+    builtins.__xonsh__.ctx["abbrevs"] = dict()
 
 
 def expand_abbrev(buffer):
