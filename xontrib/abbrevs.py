@@ -42,9 +42,10 @@ def custom_keybindings(bindings, **kw):
         insert_mode = ViInsertMode() | EmacsInsertMode()
     else:
         from xonsh.ptk.key_bindings import carriage_return
+        from prompt_toolkit.filters import to_filter
 
         handler = bindings.registry.add_binding
-        insert_mode = True
+        insert_mode = to_filter(True)
 
     @handler(" ", filter=IsMultiline() & insert_mode)
     def handle_space(event):
