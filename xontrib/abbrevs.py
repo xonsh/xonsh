@@ -19,12 +19,11 @@ setattr(builtins, "abbrevs", proxy)
 
 
 def expand_abbrev(buffer):
-    abbrevs = getattr(builtins, "abbrevs")
+    abbrevs = getattr(builtins, "abbrevs", None)
     if abbrevs is None:
         return
     document = buffer.document
     word = document.get_word_before_cursor()
-    abbrevs = builtins.abbrevs
     if word in abbrevs.keys():
         partial = document.text[: document.cursor_position]
         startix, endix, quote = check_for_partial_string(partial)
