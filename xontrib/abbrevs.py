@@ -4,6 +4,7 @@ import builtins
 from prompt_toolkit.filters import IsMultiline
 from prompt_toolkit.keys import Keys
 from xonsh.platform import ptk_shell_type
+from xonsh.tools import check_for_partial_string
 
 __all__ = ()
 
@@ -11,11 +12,16 @@ builtins.__xonsh__.ctx["abbrevs"] = dict()
 
 
 def expand_abbrev(buffer):
-    word = buffer.document.get_word_before_cursor()
     if "abbrevs" not in builtins.__xonsh__.ctx.keys():
         return
+    document = buffer.document
+    word = document.get_word_before_cursor()
     abbrevs = builtins.__xonsh__.ctx["abbrevs"]
     if word in abbrevs.keys():
+        partial = document.text[: document.cursor_position]
+        startix, endix, quote = check_for_partial_string(partial)
+        if startix is not None and endix is None:
+            return
         buffer.delete_before_cursor(count=len(word))
         buffer.insert_text(abbrevs[word])
 
