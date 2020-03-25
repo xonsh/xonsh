@@ -2,7 +2,15 @@
  {"name": "abbrevs",
   "package": "xonsh",
   "url": "http://xon.sh",
-  "description": ["Command abbreviations."]
+  "description": [
+    "Adds ``abbrevs`` dictionary to hold user-defined command abbreviations. ",
+    "The dictionary is searched as you type and the matching words are replaced ",
+    "at the command line by the corresponding dictionary contents once you hit ",
+    "'Space' or 'Return' key. For instance a frequently used command such as ",
+    "``git status`` can be abbreviated to ``gst`` as follows::\n\n",
+    "    $ xontrib load abbrevs\n",
+    "    $ abbrevs['gst'] = 'git status'\n",
+    "    $ gst # Once you hit <space> or <return>, 'gst' gets expanded to 'git status'.\n\n"]
  },
  {"name": "apt_tabcomplete",
   "package": "xonsh-apt-tabcomplete",

@@ -1,4 +1,8 @@
-"""Command abbreviations."""
+"""
+Command abbreviations.
+
+This expands input words from `abbrevs` disctionary as you type.
+"""
 
 import builtins
 from prompt_toolkit.filters import IsMultiline
