@@ -1,6 +1,8 @@
 """Command abbreviations."""
 
 import builtins
+from prompt_toolkit.filters import IsMultiline
+from prompt_toolkit.keys import Keys
 from xonsh.platform import ptk_shell_type
 
 __all__ = ()
@@ -22,12 +24,26 @@ def expand_abbrev(buffer):
 def custom_keybindings(bindings, **kw):
 
     if ptk_shell_type() == "prompt_toolkit2":
-        handler = bindings.add
-    else:
-        handler = bindings.registry.add_binding
+        from xonsh.ptk2.key_bindings import carriage_return
+        from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
 
-    @handler(" ")
-    def space(event):
+        handler = bindings.add
+        insert_mode = ViInsertMode() | EmacsInsertMode()
+    else:
+        from xonsh.ptk.key_bindings import carriage_return
+
+        handler = bindings.registry.add_binding
+        insert_mode = True
+
+    @handler(" ", filter=IsMultiline() & insert_mode)
+    def handle_space(event):
         buffer = event.app.current_buffer
         expand_abbrev(buffer)
         buffer.insert_text(" ")
+
+    @handler(Keys.ControlJ, filter=IsMultiline() & insert_mode)
+    @handler(Keys.ControlM, filter=IsMultiline() & insert_mode)
+    def multiline_carriage_return(event):
+        buffer = event.app.current_buffer
+        expand_abbrev(buffer)
+        carriage_return(buffer, event.cli)
