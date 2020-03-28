@@ -23,7 +23,7 @@ def expand_abbrev(buffer):
     if abbrevs is None:
         return
     document = buffer.document
-    word = document.get_word_before_cursor()
+    word = document.get_word_before_cursor(WORD=True)
     if word in abbrevs.keys():
         partial = document.text[: document.cursor_position]
         startix, endix, quote = check_for_partial_string(partial)
