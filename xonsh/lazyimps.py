@@ -83,3 +83,8 @@ def macutils():
 @lazyobject
 def terminal256():
     return importlib.import_module("pygments.formatters.terminal256")
+
+
+@lazyobject
+def html():
+    return importlib.import_module("pygments.formatters.html")

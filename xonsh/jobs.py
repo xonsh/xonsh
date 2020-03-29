@@ -71,7 +71,10 @@ if ON_WINDOWS:
         job["status"] = "running"
 
     def _kill(job):
-        subprocess.check_output(["taskkill", "/F", "/T", "/PID", str(job["obj"].pid)])
+        subprocess.check_output(
+            ["taskkill", "/F", "/T", "/PID", str(job["obj"].pid)],
+            stderr=subprocess.STDOUT,
+        )
 
     def ignore_sigtstp():
         pass
@@ -96,7 +99,10 @@ if ON_WINDOWS:
             except subprocess.TimeoutExpired:
                 pass
             except KeyboardInterrupt:
-                _kill(active_task)
+                try:
+                    _kill(active_task)
+                except subprocess.CalledProcessError:
+                    pass  # ignore error if process closed before we got here
         return wait_for_active_job(last_task=active_task)
 
 

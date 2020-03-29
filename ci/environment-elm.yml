@@ -1,0 +1,10 @@
+name: elm-xonsh-test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - pygments
+  - elm
+  - uglify-js
+  - docutils

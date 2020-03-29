@@ -101,6 +101,14 @@ def test_histcontrol_ignoreerr_ignoredups():
     assert "ignoredups" in env["HISTCONTROL"]
 
 
+def test_histcontrol_ignoreerr_ignoredups_erase_dups():
+    env = Env(HISTCONTROL="ignoreerr,ignoredups,ignoreerr,erasedups")
+    assert len(env["HISTCONTROL"]) == 3
+    assert "ignoreerr" in env["HISTCONTROL"]
+    assert "ignoredups" in env["HISTCONTROL"]
+    assert "erasedups" in env["HISTCONTROL"]
+
+
 def test_swap():
     env = Env(VAR="wakka")
     assert env["VAR"] == "wakka"
@@ -231,7 +239,7 @@ def test_events_on_envvar_called_in_right_order(xonsh_builtins):
         share[:] = ["new"]
 
     @xonsh_builtins.events.on_envvar_change
-    def handler(name, oldvalue, newvalue, **kwargs):
+    def handler1(name, oldvalue, newvalue, **kwargs):
         share[:] = ["change"]
 
     # trigger new
@@ -299,3 +307,39 @@ def test_lscolors_target():
     lsc = LsColors.fromstring("ln=target")
     assert lsc["ln"] == ("TARGET",)
     assert lsc.detype() == "ln=target"
+
+
+@pytest.mark.parametrize(
+    "key_in,old_in,new_in,test",
+    [
+        ("rs", ("NO_COLOR",), ("BLUE",), "existing key, change value"),
+        ("rs", ("NO_COLOR",), ("NO_COLOR",), "existing key, no change in value"),
+        ("tw", None, ("NO_COLOR",), "create new key"),
+        ("pi", ("BACKGROUND_BLACK", "YELLOW"), None, "delete existing key"),
+    ],
+)
+def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
+    lsc = LsColors.fromstring("rs=0:di=01;34:pi=40;33")
+    # corresponding colors: [('NO_COLOR',), ('BOLD_CYAN',), ('BOLD_CYAN',), ('BACKGROUND_BLACK', 'YELLOW')]
+
+    event_fired = False
+
+    @xonsh_builtins.events.on_lscolors_change
+    def handler(key, oldvalue, newvalue, **kwargs):
+        nonlocal old_in, new_in, key_in, event_fired
+        assert (
+            key == key_in and oldvalue == old_in and newvalue == new_in
+        ), "Old and new event values match"
+        event_fired = True
+
+    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
+
+    if new_in is None:
+        old = lsc.pop(key_in, "argle")
+    else:
+        lsc[key_in] = new_in
+
+    if old_in == new_in:
+        assert not event_fired, "No event if value doesn't change"
+    else:
+        assert event_fired

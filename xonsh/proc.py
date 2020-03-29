@@ -829,21 +829,20 @@ class PopenThread(threading.Thread):
             return
         try:
             mode = termios.tcgetattr(0)  # only makes sense for stdin
+            self._tc_cc_vsusp = mode[CC][termios.VSUSP]
+            mode[CC][termios.VSUSP] = b"\x00"  # set ^Z (ie SIGSTOP) to undefined
+            termios.tcsetattr(0, termios.TCSANOW, mode)
         except termios.error:
             return
-        self._tc_cc_vsusp = mode[CC][termios.VSUSP]
-        mode[CC][termios.VSUSP] = b"\x00"  # set ^Z (ie SIGSTOP) to undefined
-        termios.tcsetattr(0, termios.TCSANOW, mode)
 
     def _restore_suspend_keybind(self):
         if ON_WINDOWS:
             return
         try:
             mode = termios.tcgetattr(0)  # only makes sense for stdin
-        except termios.error:
-            return
-        mode[CC][termios.VSUSP] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
-        try:
+            mode[CC][
+                termios.VSUSP
+            ] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
             # this usually doesn't work in interactive mode,
             # but we should try it anyway.
             termios.tcsetattr(0, termios.TCSANOW, mode)
@@ -2289,7 +2288,7 @@ class CommandPipeline:
         rtn = self.returncode
         if (
             rtn is not None
-            and rtn > 0
+            and rtn != 0
             and builtins.__xonsh__.env.get("RAISE_SUBPROC_ERROR")
         ):
             try:

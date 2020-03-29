@@ -601,7 +601,7 @@ class SubprocSpec:
                 """Preexec function bound to a pipeline group."""
                 os.setpgid(0, pipeline_group)
                 signal.signal(
-                    signal.SIGTERM if ON_WINDOWS else signal.SIGSTP,
+                    signal.SIGTERM if ON_WINDOWS else signal.SIGTSTP,
                     default_signal_pauser,
                 )
 
@@ -934,6 +934,9 @@ def run_subproc(cmds, captured=False):
 
     Lastly, the captured argument affects only the last real command.
     """
+    if builtins.__xonsh__.env.get("XONSH_TRACE_SUBPROC"):
+        print("TRACE SUBPROC: %s" % str(cmds), file=sys.stderr)
+
     specs = cmds_to_specs(cmds, captured=captured)
     captured = specs[-1].captured
     if captured == "hiddenobject":

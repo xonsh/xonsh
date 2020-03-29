@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* Added ``abbrevs`` xontrib.
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fix Ctrl-C event causing Atribute error on Windows (for reals this time).
+* <news item>
 
 **Security:**
 

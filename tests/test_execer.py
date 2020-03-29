@@ -2,7 +2,13 @@
 """Tests the xonsh lexer."""
 import os
 
-from tools import check_eval, check_parse, skip_if_on_unix, skip_if_on_windows
+from tools import (
+    check_eval,
+    check_exec,
+    check_parse,
+    skip_if_on_unix,
+    skip_if_on_windows,
+)
 
 import pytest
 
@@ -138,3 +144,12 @@ def test_echo_line_cont():
 )
 def test_two_echo_line_cont(code):
     assert check_parse(code)
+
+
+def test_eval_eol():
+    assert check_eval("0") and check_eval("0\n")
+
+
+def test_exec_eol():
+    locs = dict()
+    assert check_exec("a=0", locs=locs) and check_exec("a=0\n", locs=locs)

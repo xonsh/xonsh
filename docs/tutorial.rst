@@ -136,6 +136,11 @@ variable in Python.  The same is true for deleting them too.
 
 Very nice.
 
+.. note::
+
+   To update ``os.environ`` when the xonsh environment changes set 
+   :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
+
 The Environment Itself ``${...}``
 ---------------------------------
 
@@ -235,7 +240,7 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
 Running Commands
 ==============================
 As a shell, xonsh is meant to make running commands easy and fun.
-Running subprocess commands should work like any other in any other shell.
+Running subprocess commands should work like in any other shell.
 
 .. code-block:: xonshcon
 
@@ -1021,6 +1026,15 @@ handled implicitly in subprocess mode.
     >>> echo @(mypath)
     /foo/bar
 
+Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
+
+.. code-block:: xonshcon
+   
+    >>> mypath = p'/etc'
+    >>> sorted(mypath.glob('**/*bashrc*')) 
+    [Path('/etc/bash.bashrc'), Path('/etc/skel/.bashrc')]
+    >>> [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
+    [True, True, False, Path('/'), 'root']
 
 Help & Superhelp with ``?`` & ``??``
 =====================================================
@@ -1442,6 +1456,9 @@ By default, the following variables are available for use:
     current working directory on some linux terminals. This is not usually needed.
   * ``gitstatus``: Informative git status, like ``[master|MERGING|+1…2]``, you
     may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
+  * ``localtime``: The current, local time as given by ``time.localtime()``.
+    This is formatted with the time format string found in ``time_format``.
+  * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
 
 xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
 `as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/

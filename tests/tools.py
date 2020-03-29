@@ -71,6 +71,9 @@ def sp(cmd):
 class DummyStyler:
     styles = defaultdict(str)
 
+    highlight_color = "#ffffff"
+    background_color = "#000000"
+
 
 class DummyBaseShell(BaseShell):
     def __init__(self):
@@ -171,8 +174,6 @@ class DummyEnv(MutableMapping):
 
 
 def check_exec(input, **kwargs):
-    if not input.endswith("\n"):
-        input += "\n"
     builtins.__xonsh__.execer.exec(input, **kwargs)
     return True
 
