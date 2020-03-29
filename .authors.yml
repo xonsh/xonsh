@@ -68,7 +68,7 @@
   github: gforsyth
 - name: Morten Enemark Lund
   email: melund@gmail.com
-  num_commits: 486
+  num_commits: 490
   first_commit: 2015-07-10 07:54:10
   github: melund
 - name: Ned Letcher
@@ -384,7 +384,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 43
+  num_commits: 47
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -434,7 +434,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2587
+  num_commits: 2593
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -1016,7 +1016,7 @@
   first_commit: 2018-09-16 22:50:24
 - name: Gyuri Horak
   email: dyuri@horak.hu
-  num_commits: 1
+  num_commits: 2
   first_commit: 2019-06-18 12:00:16
   github: dyuri
 - name: Ke Zhang
@@ -1092,12 +1092,14 @@
   email: drmikecrowe@gmail.com
   aliases:
   - drmikecrowe
-  num_commits: 1
+  num_commits: 6
   first_commit: 2020-01-28 09:44:58
   github: drmikecrowe
 - name: anki-code
   email: anki-code@users.noreply.github.com
-  num_commits: 14
+  alternate_emails:
+  - anki-code
+  num_commits: 21
   first_commit: 2019-10-15 18:20:58
 - name: Sylvain Corlay
   email: sylvain.corlay@gmail.com
@@ -1118,3 +1120,26 @@
   num_commits: 1
   first_commit: 2020-02-05 13:38:52
   github: marciomazza
+- name: Noortheen Raja
+  email: jnoortheen@gmail.com
+  num_commits: 2
+  first_commit: 2020-03-15 10:13:56
+  github: jnoortheen
+- name: Samuel Lotz
+  email: samuel.lotz@salotz.info
+  num_commits: 3
+  first_commit: 2020-03-03 11:30:33
+  github: salotz
+- name: Jerzy Drozdz
+  email: jerzy.drozdz@gmail.com
+  num_commits: 1
+  first_commit: 2020-03-01 11:56:23
+- name: Gabriel Vogel
+  email: gabriel.vogel@online.de
+  num_commits: 2
+  first_commit: 2020-03-10 19:06:59
+  github: Gobbel2000
+- name: anki
+  email: anki@code.email
+  num_commits: 2
+  first_commit: 2020-03-02 04:59:17

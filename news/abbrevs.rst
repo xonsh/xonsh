@@ -1,6 +1,6 @@
 **Added:**
 
-* Adds documentation for how to setup an emacs editing mode for xonsh.
+* Added ``abbrevs`` xontrib.
 
 **Changed:**
 

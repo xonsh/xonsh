@@ -1,4 +1,17 @@
 {"xontribs": [
+ {"name": "abbrevs",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": [
+    "Adds ``abbrevs`` dictionary to hold user-defined command abbreviations. ",
+    "The dictionary is searched as you type and the matching words are replaced ",
+    "at the command line by the corresponding dictionary contents once you hit ",
+    "'Space' or 'Return' key. For instance a frequently used command such as ",
+    "``git status`` can be abbreviated to ``gst`` as follows::\n\n",
+    "    $ xontrib load abbrevs\n",
+    "    $ abbrevs['gst'] = 'git status'\n",
+    "    $ gst # Once you hit <space> or <return>, 'gst' gets expanded to 'git status'.\n\n"]
+ },
  {"name": "apt_tabcomplete",
   "package": "xonsh-apt-tabcomplete",
   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
@@ -146,11 +159,16 @@
   "url": "https://github.com/t184256/xontrib-prompt-vi-mode",
   "description": ["vi-mode status formatter for xonsh prompt"]
  },
+ {"name": "pyenv",
+  "package": "xontrib-pyenv",
+  "url": "https://github.com/dyuri/xontrib-pyenv",
+  "description": ["pyenv integration for xonsh."]
+ },
  {"name": "readable-traceback",
   "package": "xontrib-readable-traceback",
   "url": "https://github.com/6syun9/xontrib-readable-traceback",
   "description": ["Make traceback easier to see for xonsh."]
-  },
+ },
  {"name": "schedule",
   "package": "xontrib-schedule",
   "url": "https://github.com/astronouth7303/xontrib-schedule",
@@ -299,6 +317,13 @@
     "pip": "xpip install xontrib-kitty"
    }
   },
+  "xontrib-powerline": {
+   "license": "MIT",
+   "url": "https://github.com/santagada/xontrib-powerline",
+   "install": {
+    "pip": "xpip install xontrib-powerline"
+   }
+  },
   "xontrib-prompt-ret-code": {
    "license": "MIT",
    "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
@@ -313,11 +338,11 @@
     "pip": "xpip install xontrib-prompt-vi-mode"
    }
   },
-  "xontrib-powerline": {
+  "xontrib-pyenv": {
    "license": "MIT",
-   "url": "https://github.com/santagada/xontrib-powerline",
+   "url": "https://github.com/dyuri/xontrib-pyenv",
    "install": {
-    "pip": "xpip install xontrib-powerline"
+    "pip": "xpip install xontrib-pyenv"
    }
   },
   "xontrib-readable-traceback": {

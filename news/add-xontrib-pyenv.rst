@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* Added `xontrib-pyenv <https://github.com/dyuri/xontrib-pyenv>`_ to list of registered xontribs.
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Correctly follow symlinks when using dot-dot paths with cd -P.
+* <news item>
 
 **Security:**
 

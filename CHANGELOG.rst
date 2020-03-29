@@ -4,6 +4,51 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.15
+====================
+
+**Added:**
+
+* Adds documentation for how to setup an emacs editing mode for xonsh.
+* New ``$XONSH_TRACE_SUBPROC`` environment variable.
+* Added ``-l``, ``-c`` and ``-a`` options to ``xexec``, works now like ``exec``
+  in bash/zsh
+* **$HISTCONTROL** - *errordups* support for history-sqlite backend
+
+**Changed:**
+
+* ``-l`` switch works like bash, loads environment in non-interactive shell
+* The xonsh pytest plugin no longer messes up the test order for pytest. Xsh test
+  are still executed first to avoid a bug were other tests would prevent ``test_*.xsh`` 
+  files to run correctly.
+* New repo name for xxh
+
+**Fixed:**
+
+* Correctly follow symlinks when using dot-dot paths with cd -P.
+* ``execx`` does not require the input string to be newline-terminated.
+* ``evalx`` accepts newline-terminated input string.
+* Fixed issue where negative exit codes (such as those produced
+  by core dumps) where treated as logical successes when chaining
+  processes with other boolean expressions.
+* Fixed XONSH_TRACE_SUBPROC for pipeline command.
+* updated CONTRIBUTING.rst about running pylint for changed files
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* David Strobach
+* anki-code
+* Samuel Lotz
+* Gyuri Horak
+* Noortheen Raja
+* Gabriel Vogel
+* anki
+* Jerzy Drozdz
+
+
+
 v0.9.14
 ====================
 
