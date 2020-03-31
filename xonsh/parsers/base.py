@@ -3140,7 +3140,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_subproc_inject(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc RPAREN"""
+        """subproc_atom : atdollar_lparen_tok subproc RPAREN
+           subproc_arg_part : atdollar_lparen_tok subproc RPAREN
+        """
         p1 = p[1]
         p0 = xonsh_call(
             "__xonsh__.subproc_captured_inject", p[2], lineno=p1.lineno, col=p1.lexpos
@@ -3149,12 +3151,16 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_subproc_inject_bang_empty(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN"""
+        """subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN
+           subproc_arg_part : atdollar_lparen_tok subproc bang_tok RPAREN
+        """
         self._append_subproc_bang_empty(p)
         self.p_subproc_atom_subproc_inject(p)
 
     def p_subproc_atom_subproc_inject_bang(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok"""
+        """subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+           subproc_arg_part : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        """
         self._append_subproc_bang(p)
         self.p_subproc_atom_subproc_inject(p)
 
