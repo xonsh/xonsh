@@ -2984,6 +2984,14 @@ class BaseParser(object):
         """
         p[0] = ast.Str(s="|", lineno=self.lineno, col_offset=self.col)
 
+    def p_amper(self, p):
+        """amper : AMPERSAND
+                 | WS AMPERSAND
+                 | AMPERSAND WS
+                 | WS AMPERSAND WS
+        """
+        p[0] = ast.Str(s="&", lineno=self.lineno, col_offset=self.col)
+
     def p_subproc_s2(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms WS
@@ -2991,10 +2999,10 @@ class BaseParser(object):
         p1 = p[1]
         p[0] = [self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)]
 
-    def p_subproc_amp(self, p):
-        """subproc : subproc AMPERSAND"""
+    def p_subproc_amper(self, p):
+        """subproc : subproc amper"""
         p1 = p[1]
-        p[0] = p1 + [ast.Str(s=p[2], lineno=self.lineno, col_offset=self.col)]
+        p[0] = p1 + [p[2]]
 
     def p_subproc_pipe(self, p):
         """subproc : subproc pipe subproc_atoms
@@ -3257,6 +3265,7 @@ class BaseParser(object):
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "AMPERSAND",
         }
         ts = "\n                 | ".join(sorted([t.lower() + "_tok" for t in toks]))
         doc = "subproc_arg_part : " + ts + "\n"

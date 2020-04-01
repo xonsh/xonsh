@@ -887,9 +887,6 @@ def cmds_to_specs(cmds, captured=False):
         if isinstance(cmd, str):
             redirects.append(cmd)
         else:
-            if cmd[-1] == "&":
-                cmd = cmd[:-1]
-                redirects.append("&")
             spec = SubprocSpec.build(cmd, captured=captured)
             spec.pipeline_index = i
             specs.append(spec)
@@ -903,7 +900,7 @@ def cmds_to_specs(cmds, captured=False):
             specs[i].stdout = w
             specs[i + 1].stdin = r
         elif redirect == "&" and i == len(redirects) - 1:
-            specs[-1].background = True
+            specs[i].background = True
         else:
             raise XonshError("unrecognized redirect {0!r}".format(redirect))
     # Apply boundary conditions
