@@ -2250,6 +2250,13 @@ def test_rhs_nested_injection():
     check_xonsh_ast({}, "$[ls @$(dirname @$(which python))]", False)
 
 
+def test_merged_injection():
+    tree = check_xonsh_ast({}, "![a@$(echo 1 2)b]", False, return_obs=True)
+    assert isinstance(tree, AST)
+    func = tree.body.args[0].right.func
+    assert func.attr == "list_of_list_of_strs_outer_product"
+
+
 def test_backtick_octothorpe():
     check_xonsh_ast({}, "print(`#.*`)", False)
 
