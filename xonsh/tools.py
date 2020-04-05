@@ -2140,9 +2140,9 @@ def expandvars(path):
         for match in POSIX_ENVVAR_REGEX.finditer(path):
             name = match.group("envvar")
             if name in env:
-                ensurer = env.get_ensurer(name)
+                detyper = env.get_detyper(name)
                 val = env[name]
-                value = str(val) if ensurer.detype is None else ensurer.detype(val)
+                value = str(val) if detyper is None else detyper(val)
                 value = str(val) if value is None else value
                 path = POSIX_ENVVAR_REGEX.sub(value, path, count=1)
     return path

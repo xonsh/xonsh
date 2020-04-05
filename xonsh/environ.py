@@ -639,15 +639,15 @@ doc_store_as_str : bool, optional
 """
 
 # iterates from back
-Var.__new__.__defaults__ = (None, "", True, DefaultNotGiven, False)
+Var.__new__.__defaults__ = (always_true, None, ensure_string, None, "", True, DefaultNotGiven, False)
 
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
 def DEFAULT_VARS():
     return {
-        "ANSICON": 
-            "This is used on Windows to set the title, " "if available.",
-            configurable=False,
+        "ANSICON": Var(is_string, ensure_string, ensure_string, "",
+            "This is used on Windows to set the title, if available.",
+            doc_configurable=False,
         ),
         "AUTO_CD": Var(is_bool, to_bool, bool_to_str, False,
             "Flag to enable changing to a directory by entering the dirname or "
@@ -1316,9 +1316,8 @@ class Env(cabc.MutableMapping):
         # sentinel value for non existing envvars
         self._no_value = object()
         self._orig_env = None
-        self._ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
-        self._defaults = DEFAULT_VALUES
-        self._docs = DEFAULT_DOCS
+        self._vars = {k: v for k, v in DEFAULT_VARS.items()}
+
         if len(args) == 0 and len(kwargs) == 0:
             args = (os_environ,)
         for key, val in dict(*args, **kwargs).items():
@@ -1340,11 +1339,11 @@ class Env(cabc.MutableMapping):
         for key, val in self._d.items():
             if not isinstance(key, str):
                 key = str(key)
-            ensurer = self.get_ensurer(key)
-            if ensurer.detype is None:
+            detyper = self.get_detyper(key)
+            if detyper is None:
                 # cannot be detyped
                 continue
-            deval = ensurer.detype(val)
+            deval = detyper(val)
             if deval is None:
                 # cannot be detyped
                 continue
@@ -1370,53 +1369,70 @@ class Env(cabc.MutableMapping):
             os_environ.update(self._orig_env)
             self._orig_env = None
 
-    def _get_default_ensurer(self, default=None):
+    def _get_default_validator(self, default=None):
         if default is not None:
             return default
         else:
-            default = Ensurer(always_true, None, ensure_string)
+            default = always_true
         return default
 
-    def get_ensurer(self, key, default=None):
-        """Gets an ensurer for the given key."""
-        if key in self._ensurers:
-            return self._ensurers[key]
-        for k, ensurer in self._ensurers.items():
-            if isinstance(k, str):
-                continue
-            if k.match(key) is not None:
-                break
-        else:
-            ensurer = self._get_default_ensurer(default=default)
-        self._ensurers[key] = ensurer
-        return ensurer
-
-    def set_ensurer(self, key, value):
-        """Sets an ensurer."""
-        self._detyped = None
-        self._ensurers[key] = value
-
-    def get_docs(self, key, default=VarDocs("<no documentation>")):
-        """Gets the documentation for the environment variable."""
-        vd = self._docs.get(key, None)
-        if vd is None:
+    def _get_default_converter(self, default=None):
+        if default is not None:
             return default
-        if vd.default is DefaultNotGiven:
+        else:
+            default = None
+        return default
+
+    def _get_default_detyper(self, default=None):
+        if default is not None:
+            return default
+        else:
+            default = ensure_string
+        return default
+
+    def get_validator(self, key, default=None):
+        """Gets a validator for the given key."""
+        if key in self._vars:
+            return self._vars[key].validate
+        else:
+            return self._get_default_validator(default=default)
+
+    def get_converter(self, key, default=None):
+        """Gets a converter for the given key."""
+        if key in self._vars:
+            return self._vars[key].convert
+        else:
+            return self._get_default_converter(default=default)
+
+    def get_detyper(self, key, default=None):
+        """Gets a detyper for the given key."""
+        if key in self._vars:
+            return self._vars[key].detype
+        else:
+            return self._get_default_detyper(default=default)
+
+    def get_docs(self, key, default=None):
+        """Gets the documentation for the environment variable."""
+        vd = self._vars.get(key, None)
+        if vd is None:
+            if default is None:
+                default = Var()
+            return default
+        if vd.doc_default is DefaultNotGiven:
             dval = pprint.pformat(self._defaults.get(key, "<default not set>"))
-            vd = vd._replace(default=dval)
-            self._docs[key] = vd
+            vd = vd._replace(doc_default=dval)
         return vd
 
     def help(self, key):
         """Get information about a specific environment variable."""
         vardocs = self.get_docs(key)
         width = min(79, os.get_terminal_size()[0])
-        docstr = "\n".join(textwrap.wrap(vardocs.docstr, width=width))
+        docstr = "\n".join(textwrap.wrap(vardocs.doc, width=width))
         template = HELP_TEMPLATE.format(
             envvar=key,
             docstr=docstr,
-            default=vardocs.default,
-            configurable=vardocs.configurable,
+            default=vardocs.doc_default,
+            configurable=vardocs.doc_configurable,
         )
         print_color(template)
 
@@ -1482,9 +1498,11 @@ class Env(cabc.MutableMapping):
         return val
 
     def __setitem__(self, key, val):
-        ensurer = self.get_ensurer(key)
-        if not ensurer.validate(val):
-            val = ensurer.convert(val)
+        validator = self.get_validator(key)
+        converter = self.get_converter(key)
+        detyper = self.get_detyper(key)
+        if not validator(val):
+            val = converter(val)
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
@@ -1492,10 +1510,10 @@ class Env(cabc.MutableMapping):
         if self.get("UPDATE_OS_ENVIRON"):
             if self._orig_env is None:
                 self.replace_env()
-            elif ensurer.detype is None:
+            elif detyper is None:
                 pass
             else:
-                deval = ensurer.detype(val)
+                deval = detyper(val)
                 if deval is not None:
                     os_environ[key] = deval
         if old_value is self._no_value:
@@ -1588,28 +1606,29 @@ class Env(cabc.MutableMapping):
 
         if ((type is not None) and 
             (type in ('bool', 'str', 'path', 'int', 'float'))):
-            ensurer = Ensurer(*ENSURERS[type])
-        else:
-            ensurer = Ensurer(*(validate, convert, detype))
+            validate, convert, detype = *ENSURERS[type]
 
-        # set ensurer for envvar
-        set_ensurer(name, ensurer)
-
-        # set default value for envvar
         if default is not None:
-            if ensurer['validate'](default):
-                self._defaults[name] = default
+            if validate(default):
+                pass
             else:
-                raise ValueError("Default value does not match type specified by ensurer")
+                raise ValueError("Default value does not match type specified by validate")
 
         # set doc for envvar
         if doc is not None:
-            self._docs[name] = VarDocs(
-                    *(val for val in (doc,
-                                      doc_configurable,
-                                      doc_default,
-                                      doc_store_as_str)
+            docs = *(val for val in (doc,
+                                     doc_configurable,
+                                     doc_default,
+                                     doc_store_as_str)
                       if val is not None))
+        else:
+            docs = tuple()
+
+        self._vars[name] = Var(validate,
+                               convert,
+                               detype,
+                               default,
+                               *docs)
 
     def deregister(self, name):
         """Deregister an enviornment variable and all its type handling,
@@ -1621,14 +1640,8 @@ class Env(cabc.MutableMapping):
             Environment variable name to deregister. Typically all caps.
         """
 
-        # drop ensurer
-        self._ensurers.pop(name)
-
-        # drop default value for envvar
-        self._defaults.pop(name)
-
-        # drop doc for envvar
-        self._docs.pop(name)
+        # drop var
+        self._vars.pop(name)
 
 
 def _yield_executables(directory, name):
