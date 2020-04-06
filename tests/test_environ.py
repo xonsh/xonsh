@@ -13,10 +13,8 @@ import pytest
 from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
-    Ensurer,
     locate_binary,
-    DEFAULT_ENSURERS,
-    DEFAULT_VALUES,
+    DEFAULT_VARS,
     default_env,
     make_args_env,
     LsColors,

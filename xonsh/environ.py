@@ -794,7 +794,6 @@ def DEFAULT_VARS():
             "``.xonshrc`` is parsed",
             doc_configurable=True,
         ),
-        ),
         "FUZZY_PATH_COMPLETION": Var(is_bool, to_bool, bool_to_str, True,
             "Toggles 'fuzzy' matching of paths for tab completion, which is only "
             "used as a fallback if no other completions succeed but can be used "
@@ -941,6 +940,7 @@ def DEFAULT_VARS():
             "http://xon.sh/tutorial.html#customizing-the-prompt",
             doc_configurable=False,
             doc_default="``xonsh.prompt.PROMPT_FIELDS``",
+        ),
         "PROMPT_REFRESH_INTERVAL": Var(is_float, float, str, 0,
             "Interval (in seconds) to evaluate and update ``$PROMPT``, ``$RIGHT_PROMPT`` "
             "and ``$BOTTOM_TOOLBAR``. The default is zero (no update). "
@@ -1394,22 +1394,62 @@ class Env(cabc.MutableMapping):
         """Gets a validator for the given key."""
         if key in self._vars:
             return self._vars[key].validate
+        
+        # necessary for keys that match regexes, such as `*PATH`s
+        for k, var in self._vars.items():
+            if isinstance(k, str):
+                continue
+            if k.match(key) is not None:
+                validator = var.validate
+                self._vars[key] = var
+                break
         else:
-            return self._get_default_validator(default=default)
+            validator = self._get_default_validator(default=default)
+
+        return validator
 
     def get_converter(self, key, default=None):
         """Gets a converter for the given key."""
         if key in self._vars:
             return self._vars[key].convert
+
+        # necessary for keys that match regexes, such as `*PATH`s
+        for k, var in self._vars.items():
+            if isinstance(k, str):
+                continue
+            if k.match(key) is not None:
+                converter = var.convert
+                self._vars[key] = var
+                break
         else:
-            return self._get_default_converter(default=default)
+            converter = self._get_default_converter(default=default)
+
+        return converter
 
     def get_detyper(self, key, default=None):
         """Gets a detyper for the given key."""
         if key in self._vars:
             return self._vars[key].detype
+
+        # necessary for keys that match regexes, such as `*PATH`s
+        for k, var in self._vars.items():
+            if isinstance(k, str):
+                continue
+            if k.match(key) is not None:
+                detyper = var.detype
+                self._vars[key] = var
+                break
         else:
-            return self._get_default_detyper(default=default)
+            detyper = self._get_default_detyper(default=default)
+
+        return detyper
+
+    def get_default(self, key, default=None):
+        """Gets default for the given key."""
+        if key in self._vars:
+            return self._vars[key].default
+        else:
+            return default
 
     def get_docs(self, key, default=None):
         """Gets the documentation for the environment variable."""
@@ -1419,7 +1459,7 @@ class Env(cabc.MutableMapping):
                 default = Var()
             return default
         if vd.doc_default is DefaultNotGiven:
-            dval = pprint.pformat(self._defaults.get(key, "<default not set>"))
+            dval = pprint.pformat(self._vars.get(key, "<default not set>").default)
             vd = vd._replace(doc_default=dval)
         return vd
 
@@ -1484,8 +1524,8 @@ class Env(cabc.MutableMapping):
             return self
         elif key in self._d:
             val = self._d[key]
-        elif key in self._defaults:
-            val = self._defaults[key]
+        elif key in self._vars:
+            val = self.get_default(key)
             if is_callable_default(val):
                 val = val(self)
         else:
@@ -1527,7 +1567,7 @@ class Env(cabc.MutableMapping):
             self._detyped = None
             if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
                 del os_environ[key]
-        elif key not in self._defaults:
+        elif key not in self._vars:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
 
@@ -1541,10 +1581,10 @@ class Env(cabc.MutableMapping):
             return default
 
     def __iter__(self):
-        yield from (set(self._d) | set(self._defaults))
+        yield from (set(self._d) | set(v.default for v in self._vars))
 
     def __contains__(self, item):
-        return item in self._d or item in self._defaults
+        return item in self._d or item in (v.default for v in self._vars)
 
     def __len__(self):
         return len(self._d)
@@ -1606,7 +1646,7 @@ class Env(cabc.MutableMapping):
 
         if ((type is not None) and 
             (type in ('bool', 'str', 'path', 'int', 'float'))):
-            validate, convert, detype = *ENSURERS[type]
+            validate, convert, detype = ENSURERS[type]
 
         if default is not None:
             if validate(default):
@@ -1616,11 +1656,11 @@ class Env(cabc.MutableMapping):
 
         # set doc for envvar
         if doc is not None:
-            docs = *(val for val in (doc,
-                                     doc_configurable,
-                                     doc_default,
-                                     doc_store_as_str)
-                      if val is not None))
+            docs = (val for val in (doc,
+                                    doc_configurable,
+                                    doc_default,
+                                    doc_store_as_str)
+                    if val is not None)
         else:
             docs = tuple()
 
@@ -1665,8 +1705,8 @@ def locate_binary(name):
 
 BASE_ENV = LazyObject(
     lambda: {
-        "BASH_COMPLETIONS": list(DEFAULT_VALUES["BASH_COMPLETIONS"]),
-        "PROMPT_FIELDS": dict(DEFAULT_VALUES["PROMPT_FIELDS"]),
+        "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
+        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default),
         "XONSH_VERSION": XONSH_VERSION,
     },
     globals(),
