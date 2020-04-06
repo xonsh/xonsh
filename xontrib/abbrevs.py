@@ -5,7 +5,7 @@ This expands input words from `abbrevs` disctionary as you type.
 """
 
 import builtins
-from prompt_toolkit.filters import IsMultiline
+from prompt_toolkit.filters import completion_is_selected, IsMultiline
 from prompt_toolkit.keys import Keys
 from xonsh.built_ins import DynamicAccessProxy
 from xonsh.platform import ptk_shell_type
@@ -55,8 +55,12 @@ def custom_keybindings(bindings, **kw):
         expand_abbrev(buffer)
         buffer.insert_text(" ")
 
-    @handler(Keys.ControlJ, filter=IsMultiline() & insert_mode)
-    @handler(Keys.ControlM, filter=IsMultiline() & insert_mode)
+    @handler(
+        Keys.ControlJ, filter=IsMultiline() & insert_mode & ~completion_is_selected
+    )
+    @handler(
+        Keys.ControlM, filter=IsMultiline() & insert_mode & ~completion_is_selected
+    )
     def multiline_carriage_return(event):
         buffer = event.app.current_buffer
         current_char = buffer.document.current_char
