@@ -67,7 +67,7 @@ def test_env_detype_mutable_access_clear(path1, path2):
 
 def test_env_detype_no_dict():
     env = Env(YO={"hey": 42})
-    env.set_ensurer("YO", Ensurer(always_true, None, None))
+    env.register("YO", always_true, None, None)
     det = env.detype()
     assert "YO" not in det
 
@@ -251,13 +251,6 @@ def test_events_on_envvar_called_in_right_order(xonsh_builtins):
     assert share == ["change"]
 
 
-def test_int_bool_envvars_have_ensurers():
-    bool_ints = [type(envvar) in [bool, int] for envvar in DEFAULT_VALUES.values()]
-    key_mask = set(itertools.compress(DEFAULT_VALUES.keys(), bool_ints))
-    ensurer_keys = set(DEFAULT_ENSURERS.keys())
-    assert len(key_mask.intersection(ensurer_keys)) == len(key_mask)
-
-
 def test_no_lines_columns():
     os.environ["LINES"] = "spam"
     os.environ["COLUMNS"] = "eggs"
@@ -293,7 +286,7 @@ def test_delitem():
 def test_delitem_default():
     env = Env()
     a_key, a_value = next(
-        (k, v) for (k, v) in env._defaults.items() if isinstance(v, str)
+        (k, v.default) for (k, v) in env._vars.items() if isinstance(v.default, str)
     )
     del env[a_key]
     assert env[a_key] == a_value

@@ -1581,10 +1581,10 @@ class Env(cabc.MutableMapping):
             return default
 
     def __iter__(self):
-        yield from (set(self._d) | set(v.default for v in self._vars))
+        yield from (set(self._d) | set(self._vars))
 
     def __contains__(self, item):
-        return item in self._d or item in (v.default for v in self._vars)
+        return item in self._d or item in self._vars
 
     def __len__(self):
         return len(self._d)
