@@ -67,7 +67,7 @@ def test_env_detype_mutable_access_clear(path1, path2):
 
 def test_env_detype_no_dict():
     env = Env(YO={"hey": 42})
-    env.register("YO", always_true, None, None)
+    env.register("YO", validate=always_true, convert=None, detype=None)
     det = env.detype()
     assert "YO" not in det
 

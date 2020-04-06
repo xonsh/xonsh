@@ -639,7 +639,8 @@ doc_store_as_str : bool, optional
 """
 
 # iterates from back
-Var.__new__.__defaults__ = (always_true, None, ensure_string, None, "", True, DefaultNotGiven, False)
+Var.__new__.__defaults__ = (always_true, None, ensure_string, None,
+                            "", True, DefaultNotGiven, False)
 
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
@@ -1606,9 +1607,10 @@ class Env(cabc.MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
-    def register(self, name, type=None, default=None, doc=None,
-                 validate=None, convert=None, detype=None,
-                 doc_configurable=None, doc_default=None, doc_store_as_str=None):
+    def register(self, name, type=None, default=None, doc="",
+                 validate=always_true, convert=None, detype=ensure_string,
+                 doc_configurable=True, doc_default=DefaultNotGiven,
+                 doc_store_as_str=False):
         """Register an enviornment variable with optional type handling,
         default value, doc.
 
@@ -1654,21 +1656,14 @@ class Env(cabc.MutableMapping):
             else:
                 raise ValueError("Default value does not match type specified by validate")
 
-        # set doc for envvar
-        if doc is not None:
-            docs = (val for val in (doc,
-                                    doc_configurable,
-                                    doc_default,
-                                    doc_store_as_str)
-                    if val is not None)
-        else:
-            docs = tuple()
-
         self._vars[name] = Var(validate,
                                convert,
                                detype,
                                default,
-                               *docs)
+                               doc,
+                               doc_configurable,
+                               doc_default,
+                               doc_store_as_str)
 
     def deregister(self, name):
         """Deregister an enviornment variable and all its type handling,
@@ -1679,8 +1674,6 @@ class Env(cabc.MutableMapping):
         name : str
             Environment variable name to deregister. Typically all caps.
         """
-
-        # drop var
         self._vars.pop(name)
 
 
