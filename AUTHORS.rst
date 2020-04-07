@@ -10,10 +10,10 @@ Authors are sorted by number of commits.
 * Hugo Wang
 * BlahGeek
 * Bob Hyman
+* David Strobach
 * Jean-Benoist Leger
 * christopher
 * Klaus Alexander Seistrup
-* David Strobach
 * Leonardo Santagada
 * Burak Yiğit Kaya
 * Aaron Griffin
@@ -123,6 +123,7 @@ Authors are sorted by number of commits.
 * Niklas Hambüchen
 * Sébastien Pierre
 * shadow-light
+* Gyuri Horak
 * Jan Chren
 * Samuel Lotz
 * Mark Wiebe
@@ -147,11 +148,11 @@ Authors are sorted by number of commits.
 * Steven Kryskalla
 * cclauss
 * Eddie Peters
-* Gyuri Horak
 * Ke Zhang
 * László Vaskó
 * Allan Crooks
 * micimize
+* Chris Lasher
 * Edmund Miller
 * Noortheen Raja
 * Gabriel Vogel
@@ -219,7 +220,6 @@ Authors are sorted by number of commits.
 * fanosta
 * David Kalliecharan
 * Sylvain Corlay
-* Chris Lasher
 * Marcio Mazza
 * Jerzy Drozdz
 * goodboy
