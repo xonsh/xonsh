@@ -791,6 +791,9 @@ def _executables_in_posix(path):
 def _executables_in_windows(path):
     if not os.path.isdir(path):
         return
+    # isdir will return True even with a trailing space
+    # scandir doesn't handle this so we strip any space.
+    path = path.rstrip(" ")
     extensions = builtins.__xonsh__.env["PATHEXT"]
     if PYTHON_VERSION_INFO < (3, 5, 0):
         for fname in os.listdir(path):
