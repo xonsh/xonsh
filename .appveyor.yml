@@ -4,12 +4,8 @@ environment:
 
   matrix:
     # http://www.appveyor.com/docs/installed-software#python
-    - PYTHON: "C:\\Python35"
-    - PYTHON: "C:\\Python35-x64"
-      DISTUTILS_USE_SDK: "1"
     - XONSH_TEST_ENV: "MSYS2"
       MSYS2_PATH: "C:\\msys64"
-    # TODO: Miniconda
 
 matrix:
   allow_failures:
