@@ -791,9 +791,6 @@ def _executables_in_posix(path):
 def _executables_in_windows(path):
     if not os.path.isdir(path):
         return
-    # isdir will return True even with a trailing space
-    # scandir doesn't so normalize path first
-    path = os.path.normpath(path)
     extensions = builtins.__xonsh__.env["PATHEXT"]
     if PYTHON_VERSION_INFO < (3, 5, 0):
         for fname in os.listdir(path):
@@ -803,18 +800,24 @@ def _executables_in_windows(path):
                 if ext.upper() in extensions:
                     yield fname
     else:
-        for x in scandir(path):
-            try:
-                is_file = x.is_file()
-            except OSError:
-                continue
-            if is_file:
-                fname = x.name
-            else:
-                continue
-            base_name, ext = os.path.splitext(fname)
-            if ext.upper() in extensions:
-                yield fname
+        try:
+            for x in scandir(path):
+                try:
+                    is_file = x.is_file()
+                except OSError:
+                    continue
+                if is_file:
+                    fname = x.name
+                else:
+                    continue
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+        except FileNotFoundError:
+            # On Windows, there's no guarantee for the directory to really
+            # exist even if isdir returns True. This may happen for instance
+            # if the path contains trailing spaces.
+            return
 
 
 def executables_in(path):
