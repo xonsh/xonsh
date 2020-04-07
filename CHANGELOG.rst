@@ -4,6 +4,34 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.16
+====================
+
+**Added:**
+
+* Added ``abbrevs`` xontrib.
+* Added `xontrib-pyenv <https://github.com/dyuri/xontrib-pyenv>`_ to list of registered xontribs.
+
+**Changed:**
+
+* ``xdg-open`` now runs unthreaded.
+
+**Fixed:**
+
+* Return Token.Text when filesystem item's type not defined in LS_COLORS; avoid crashing Pygments.
+* Fixed bug on Windows if Path elements has trailing spaces. Windows in general and ``os.path.isdir()`` 
+  doesn't care about trailing spaces but ``os.scandir()`` does.
+
+**Authors:**
+
+* Morten Enemark Lund
+* Bob Hyman
+* David Strobach
+* Gyuri Horak
+* Chris Lasher
+
+
+
 v0.9.15
 ====================
 
