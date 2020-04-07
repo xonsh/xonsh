@@ -510,6 +510,7 @@ def default_threadable_predictors():
         "weechat": predict_help_ver,
         "wget": predict_true,
         "xclip": predict_help_ver,
+        "xdg-open": predict_false,
         "xo": predict_help_ver,
         "xon.sh": predict_shell,
         "xonsh": predict_shell,

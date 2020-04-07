@@ -1355,13 +1355,16 @@ file_color_tokens = dict()
 Initialized by XonshStyle."""
 
 
-@events.on_lscolors_change
-def on_lscolors_change_p(key, oldvalue, newvalue, **kwargs):
+# define as external funcition so tests can reference it too.
+def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
     """if LS_COLORS updated, update file_color_tokens and  corresponding color token in style"""
     if newvalue is None:
         del file_color_tokens[key]
     else:
         file_color_tokens[key] = color_token_by_name(newvalue)
+
+
+events.on_lscolors_change(on_lscolors_change)
 
 
 def color_file(file_path: str, mode: int) -> (Color, str):
@@ -1379,6 +1382,7 @@ def color_file(file_path: str, mode: int) -> (Color, str):
     Bugs
     ----
     * doesn't handle CA (capability)
+    * doesn't handle LS TARGET mapping.
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
@@ -1425,7 +1429,7 @@ def color_file(file_path: str, mode: int) -> (Color, str):
     elif stat.S_ISDOOR(mode):
         color_key = "do"  # bug missing mapping for FMT based PORT and WHITEOUT ??
 
-    ret_color_token = file_color_tokens.get(color_key, None)
+    ret_color_token = file_color_tokens.get(color_key, Text)
 
     return ret_color_token, color_key
 

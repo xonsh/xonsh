@@ -1,6 +1,6 @@
 cloud_sptheme
 numpydoc
-Sphinx
+Sphinx==2.4.4
 prompt_toolkit
 pygments>=2.2
 psutil

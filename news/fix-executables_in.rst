@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``abbrevs`` xontrib.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,8 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed a bug on Windows causing ``FileNotFoundError`` exception if path
+  elements contain trailing spaces.
 
 **Security:**
 

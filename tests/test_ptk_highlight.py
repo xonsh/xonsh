@@ -22,9 +22,9 @@ from tools import skip_if_on_windows
 from xonsh.platform import ON_WINDOWS
 from xonsh.built_ins import load_builtins, unload_builtins
 from xonsh.execer import Execer
-from xonsh.pyghooks import XonshLexer, Color, XonshStyle
+from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
 from xonsh.environ import LsColors
-from xonsh.events import events
+from xonsh.events import events, EventManager
 from tools import DummyShell
 
 
@@ -143,15 +143,29 @@ def test_nested():
     )
 
 
-@skip_if_on_windows
-def test_path(tmpdir, xonsh_builtins):
+# can't seem to get thie test to import pyghooks and define on_lscolors_change handler like live code does.
+# so we declare the event handler directly here.
+@pytest.fixture
+def events_fxt():
+    return EventManager()
 
+@pytest.fixture
+def xonsh_builtins_ls_colors(xonsh_builtins, events_fxt):
+    x = xonsh_builtins.__xonsh__
     xonsh_builtins.__xonsh__.shell = DummyShell()  # because load_command_cache zaps it.
     xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit2"
     lsc = LsColors(LsColors.default_settings)
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc  # establish LS_COLORS before style.
     xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
 
+    events.on_lscolors_change(on_lscolors_change)
+    
+    yield xonsh_builtins
+    xonsh_builtins.__xonsh__ = x
+
+@skip_if_on_windows
+def test_path(tmpdir, xonsh_builtins_ls_colors):
+    
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
     check_token(
         "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.BOLD_BLUE, test_dir)]
@@ -165,6 +179,25 @@ def test_path(tmpdir, xonsh_builtins):
     with builtins.__xonsh__.env.swap(AUTO_CD=True):
         check_token(test_dir, [(Name.Constant, test_dir)])
 
+
+@skip_if_on_windows
+def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors):
+    """Verify colorizer returns Token.Text if file type not defined in LS_COLORS"""
+
+    lsc = xonsh_builtins_ls_colors.__xonsh__.env["LS_COLORS"]    
+    test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
+
+    lsc['di'] = ('GREEN',)
+
+    check_token(
+        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.GREEN, test_dir)]
+    )
+
+    del lsc['di']
+    
+    check_token(
+        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)]
+    )
 
 @skip_if_on_windows
 def test_subproc_args():

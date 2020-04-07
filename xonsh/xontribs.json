@@ -181,7 +181,7 @@
  },
  {"name": "ssh_agent",
   "package": "xontrib-ssh-agent",
-  "url": "https://bitbucket.org/dyuri/xontrib-ssh-agent",
+  "url": "https://github.com/dyuri/xontrib-ssh-agent",
   "description": ["ssh-agent integration"]
  },
  {"name": "vox",
@@ -361,7 +361,7 @@
   },
   "xontrib-ssh-agent": {
    "license": "MIT",
-   "url": "https://bitbucket.org/dyuri/xontrib-ssh-agent",
+   "url": "https://github.com/dyuri/xontrib-ssh-agent",
    "install": {
     "pip": "xpip install xontrib-ssh-agent"
    }
