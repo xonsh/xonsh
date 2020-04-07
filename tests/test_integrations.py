@@ -567,3 +567,15 @@ def test_negative_exit_codes_fail():
     out, err, rtn = run_xonsh(script)
     assert "OK" is not out
     assert "OK" is not err
+
+@pytest.mark.parametrize(
+    "cmd, fmt, exp",
+    [
+        ("echo '&'", None, "&\n"),
+        ("echo foo'&'", None, "foo'&'\n"),
+        ("echo foo '&'", None, "foo &\n"),
+        ("echo foo '&' bar", None, "foo & bar\n"),
+    ],
+)
+def test_ampersand_argument(cmd, fmt, exp):
+    check_run_xonsh(cmd, fmt, exp)
