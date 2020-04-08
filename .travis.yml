@@ -5,23 +5,10 @@ env:
 matrix:
     include:
         - os: linux
-          dist: xenial  # required for Python >= 3.7
-          python: 3.7
-          env:
-            - MINICONDA_OS="Linux"
-            - BUILD_DOCS=false
-        - os: linux
           python: 3.6
           env:
             - MINICONDA_OS="Linux"
             - BUILD_DOCS=true
-        - os: linux
-          python: "nightly"
-          dist: xenial  # required for Python >= 3.7
-        - os: linux
-          python: "pypy3"
-          env:
-            - BUILD_DOCS=false
         - os: osx
           language: generic
           env: PYTHON="3.6" MINICONDA_OS="MacOSX"
@@ -31,9 +18,6 @@ matrix:
         - os: osx
           language: generic
           env: PYTHON="3.8" MINICONDA_OS="MacOSX"
-    allow_failures:
-        - python: "nightly"
-        - python: "pypy3"
 
 before_install:
   - if [[ ! ("$TRAVIS_PYTHON_VERSION" == "nightly" || "$TRAVIS_PYTHON_VERSION" == "3.6-dev") && ! $BUILD_DOCS ]]; then

@@ -1,4 +1,4 @@
-name: py36-xonsh-test
+name: 3.6-xonsh-test
 channels:
   - conda-forge
   - defaults
