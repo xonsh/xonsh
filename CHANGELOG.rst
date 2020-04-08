@@ -4,6 +4,35 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.17
+====================
+
+**Changed:**
+
+* ``@$()`` subprocess operator now properly strips newline characters off
+  the lines of multiline output.
+
+* ``@$()`` subprocess operator does not require leading and trailing whitespace
+  anymore, so expansions like ``cd /lib/modules/@$(uname -r)/kernel`` or
+  ``gdb --pid=@$(pidof crashme)`` are now possible.
+* Moved most CI to github actions (OSX is still on travis)
+* Replaced Repl.It with RunThis on the front page of the docs.
+
+**Fixed:**
+
+* autovox xontrib now works with Python 3.5
+* It is now possible to pass ``"&"`` as the last argument in subprocess mode.
+* Fixed a bug on Windows causing ``FileNotFoundError`` exception if path
+  elements contain trailing spaces.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* David Strobach
+
+
+
 v0.9.16
 ====================
 
