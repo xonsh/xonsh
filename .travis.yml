@@ -9,6 +9,15 @@ matrix:
           env:
             - MINICONDA_OS="Linux"
             - BUILD_DOCS=true
+        - os: osx
+          language: generic
+          env: PYTHON="3.6" MINICONDA_OS="MacOSX"
+        - os: osx
+          language: generic
+          env: PYTHON="3.7" MINICONDA_OS="MacOSX"
+        - os: osx
+          language: generic
+          env: PYTHON="3.8" MINICONDA_OS="MacOSX"
 
 before_install:
   - if [[ ! ("$TRAVIS_PYTHON_VERSION" == "nightly" || "$TRAVIS_PYTHON_VERSION" == "3.6-dev") && ! $BUILD_DOCS ]]; then
