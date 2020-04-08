@@ -9,8 +9,8 @@ Authors are sorted by number of commits.
 * Jamie Bliss
 * Hugo Wang
 * BlahGeek
-* Bob Hyman
 * David Strobach
+* Bob Hyman
 * Jean-Benoist Leger
 * christopher
 * Klaus Alexander Seistrup

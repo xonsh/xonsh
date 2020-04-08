@@ -63,7 +63,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 516
+  num_commits: 526
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -384,7 +384,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 62
+  num_commits: 74
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -434,7 +434,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2596
+  num_commits: 2597
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
