@@ -312,6 +312,34 @@ echo @$(which ls)
         0,
     ),
     #
+    # test @$() without leading/trailig WS
+    #
+    (
+        """
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+echo foo_@$(echo spam)_bar
+""",
+        "foo_spam_bar\n",
+        0,
+    ),
+    #
+    # test @$() outer product
+    #
+    (
+        """
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+echo foo_@$(echo spam sausage)_bar
+""",
+        "foo_spam_bar foo_sausage_bar\n",
+        0,
+    ),
+    #
     # test redirection
     #
     (
