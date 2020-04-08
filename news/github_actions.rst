@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Moved most CI to github actions
+* Moved most CI to github actions (OSX is still on travis)
 
 **Deprecated:**
 
