@@ -779,7 +779,7 @@ def DEFAULT_VALUES():
         "SUGGEST_COMMANDS": True,
         "SUGGEST_MAX_NUM": 5,
         "SUGGEST_THRESHOLD": 3,
-        "THREAD_SUBPROCS": True,
+        "THREAD_SUBPROCS": False if ON_WINDOWS else True,
         "TITLE": DEFAULT_TITLE,
         "UPDATE_COMPLETIONS_ON_KEYPRESS": False,
         "UPDATE_OS_ENVIRON": False,
@@ -1205,7 +1205,11 @@ def DEFAULT_DOCS():
             "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
-            "The desired effect is often up to the command, user, or use case."
+            "The desired effect is often up to the command, user, or use case.\n\n"
+            ".. note: This is ``False`` by default on Windows as as this feature has\n"
+            "   a number of issues and bugs on Windows.\n"
+            "",
+            default="``True`` on Posix / ``False`` on Windows",
         ),
         "TITLE": VarDocs(
             "The title text for the window in which xonsh is running. Formatted "
