@@ -5,7 +5,7 @@
 **Changed:**
 
 * Running Subprocesses in threads are no longer the default on Windows to prevent a
-  number of issues. (e.g. on Windows: :ref:`$THREAD_SUBPROCS=False <thread_subprocs>`). 
+  number of issues. (e.g. on Windows: ``$THREAD_SUBPROCS=False <thread_subprocs>``). 
 
 **Deprecated:**
 
