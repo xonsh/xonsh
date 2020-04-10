@@ -1206,7 +1206,7 @@ def DEFAULT_DOCS():
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
             "The desired effect is often up to the command, user, or use case.\n\n"
-            ".. note: This is ``False`` by default on Windows as as this feature has\n"
+            ".. note: This is ``False`` by default on Windows as  this feature has\n"
             "   a number of issues and bugs on Windows.\n"
             "",
             default="``True`` on Posix / ``False`` on Windows",
