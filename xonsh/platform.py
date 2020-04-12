@@ -171,17 +171,16 @@ def ptk_version_info():
 
 @functools.lru_cache(1)
 def ptk_above_min_supported():
-    minimum_required_ptk_version = (1, 0)
+    minimum_required_ptk_version = (2, 0)
     return ptk_version_info()[:2] >= minimum_required_ptk_version
 
 
 @functools.lru_cache(1)
 def ptk_shell_type():
     """Returns the prompt_toolkit shell type based on the installed version."""
-    if ptk_version_info()[:2] < (2, 0):
-        return "prompt_toolkit1"
-    else:
+    if ptk_version_info()[:2] >= (2, 0):
         return "prompt_toolkit2"
+    #todo: distinguish prompt_toolkit3 from 2 once there is some actual difference.
 
 
 @functools.lru_cache(1)

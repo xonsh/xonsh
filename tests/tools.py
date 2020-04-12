@@ -59,10 +59,6 @@ skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason="not Mac friendly")
 
 skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason="not Travis CI friendly")
 
-skip_if_lt_ptk2 = pytest.mark.skipif(
-    ptk_version_info()[0] < 2, reason="prompt-toolkit <2"
-)
-
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)

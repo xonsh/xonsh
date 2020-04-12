@@ -13,9 +13,9 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_POSIX
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.pygments_cache import get_all_styles
-from xonsh.ptk2.history import PromptToolkitHistory, _cust_history_matches
-from xonsh.ptk2.completer import PromptToolkitCompleter
-from xonsh.ptk2.key_bindings import load_xonsh_bindings
+from xonsh.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
+from xonsh.ptk_shell.completer import PromptToolkitCompleter
+from xonsh.ptk_shell.key_bindings import load_xonsh_bindings
 
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.lexers import PygmentsLexer

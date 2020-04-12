@@ -37,7 +37,7 @@ if spec is not None:
     if ptk_version_info()[0] < 2:
         from xonsh.ptk.shell import events
     else:
-        from xonsh.ptk2.shell import events
+        from xonsh.ptk_shell.shell import events
 else:
     from xonsh.events import events
 

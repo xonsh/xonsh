@@ -37,7 +37,7 @@ def expand_abbrev(buffer):
 def custom_keybindings(bindings, **kw):
 
     if ptk_shell_type() == "prompt_toolkit2":
-        from xonsh.ptk2.key_bindings import carriage_return
+        from xonsh.ptk_shell.key_bindings import carriage_return
         from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
 
         handler = bindings.add

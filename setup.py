@@ -358,7 +358,7 @@ def main():
             "xonsh",
             "xonsh.ply.ply",
             "xonsh.ptk",
-            "xonsh.ptk2",
+            "xonsh.ptk_shell",
             "xonsh.parsers",
             "xonsh.xoreutils",
             "xontrib",

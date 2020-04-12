@@ -149,6 +149,7 @@ def test_nested():
 def events_fxt():
     return EventManager()
 
+
 @pytest.fixture
 def xonsh_builtins_ls_colors(xonsh_builtins, events_fxt):
     x = xonsh_builtins.__xonsh__
@@ -159,13 +160,14 @@ def xonsh_builtins_ls_colors(xonsh_builtins, events_fxt):
     xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
 
     events.on_lscolors_change(on_lscolors_change)
-    
+
     yield xonsh_builtins
     xonsh_builtins.__xonsh__ = x
 
+
 @skip_if_on_windows
 def test_path(tmpdir, xonsh_builtins_ls_colors):
-    
+
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
     check_token(
         "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.BOLD_BLUE, test_dir)]
@@ -184,7 +186,7 @@ def test_path(tmpdir, xonsh_builtins_ls_colors):
 def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors):
     """Verify colorizer returns Token.Text if file type not defined in LS_COLORS"""
 
-    lsc = xonsh_builtins_ls_colors.__xonsh__.env["LS_COLORS"]    
+    lsc = xonsh_builtins_ls_colors.__xonsh__.env["LS_COLORS"]
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
 
     lsc['di'] = ('GREEN',)
@@ -194,10 +196,11 @@ def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors):
     )
 
     del lsc['di']
-    
+
     check_token(
         "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)]
     )
+
 
 @skip_if_on_windows
 def test_subproc_args():
