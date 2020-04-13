@@ -385,16 +385,6 @@ class XonshStyle(Style):
             color_token = color_token_by_name(xonsh_color, self.styles)
             file_color_tokens[file_type] = color_token
 
-        # Convert new ansicolor names to old PTK1 names
-        # Can be remvoed when PTK1 support is dropped.
-        if (
-            builtins.__xonsh__.shell.shell_type != "prompt_toolkit2"
-            and pygments_version_info()
-            and pygments_version_info() < (2, 4, 0)
-        ):
-            for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
-                smap.update(ansicolors_to_ptk1_names(smap))
-
         if ON_WINDOWS and "prompt_toolkit" in builtins.__xonsh__.shell.shell_type:
             self.enhance_colors_for_cmd_exe()
 

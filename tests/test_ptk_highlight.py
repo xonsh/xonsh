@@ -154,7 +154,7 @@ def events_fxt():
 def xonsh_builtins_ls_colors(xonsh_builtins, events_fxt):
     x = xonsh_builtins.__xonsh__
     xonsh_builtins.__xonsh__.shell = DummyShell()  # because load_command_cache zaps it.
-    xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit2"
+    xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit"
     lsc = LsColors(LsColors.default_settings)
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc  # establish LS_COLORS before style.
     xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style

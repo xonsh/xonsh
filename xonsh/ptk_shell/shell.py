@@ -46,8 +46,8 @@ Fired after prompt toolkit has been initialized
 )
 
 
-class PromptToolkit2Shell(BaseShell):
-    """The xonsh shell for prompt_toolkit v2."""
+class PromptToolkitShell(BaseShell):
+    """The xonsh shell for prompt_toolkit v2 and later."""
 
     completion_displays_to_styles = {
         "multi": CompleteStyle.MULTI_COLUMN,
@@ -68,7 +68,7 @@ class PromptToolkit2Shell(BaseShell):
         load_xonsh_bindings(self.key_bindings)
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
-        # This assumes that PromptToolkit2Shell is a singleton
+        # This assumes that PromptToolkitShell is a singleton
         events.on_ptk_create.fire(
             prompter=self.prompter,
             history=self.history,

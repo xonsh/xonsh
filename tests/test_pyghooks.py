@@ -26,7 +26,7 @@ def xonsh_builtins_LS_COLORS(xonsh_builtins):
     e = xonsh_builtins.__xonsh__.env
     lsc = LsColors(LsColors.default_settings)
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
-    xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit2"
+    xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit"
     # styler = XonshStyle()  # default style
     # xonsh_builtins.__xonsh__.shell.shell.styler = styler
     # can't really instantiate XonshStyle separate from a shell??

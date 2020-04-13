@@ -11,7 +11,8 @@ from xonsh.platform import (
     best_shell_type,
     has_prompt_toolkit,
     ptk_above_min_supported,
-    ptk_shell_type,
+    ptk_version_info,
+    minimum_required_ptk_version,
 )
 from xonsh.tools import XonshError, print_exception
 from xonsh.events import events
@@ -121,18 +122,53 @@ class Shell(object):
         "best": "best",
         "d": "dumb",
         "dumb": "dumb",
-        "ptk": "prompt_toolkit",
-        "ptk1": "prompt_toolkit1",
-        "ptk2": "prompt_toolkit2",
-        "prompt-toolkit": "prompt_toolkit",
+        "ptk": "prompt_toolkit",    # there's only 1 prompt_toolkit shell (now)
+        "ptk1": "prompt_toolkit",   # allow any old config reference to use it
+        "ptk2": "prompt_toolkit",   # so long as user actually  has ptk2+ installed.
+        "prompt-toolkit": "prompt_toolkit",     
         "prompt_toolkit": "prompt_toolkit",
-        "prompt-toolkit1": "prompt_toolkit1",
-        "prompt-toolkit2": "prompt_toolkit2",
+        "prompt-toolkit1": "prompt_toolkit",
+        "prompt-toolkit2": "prompt_toolkit",
         "rand": "random",
         "random": "random",
         "rl": "readline",
         "readline": "readline",
     }
+
+    @staticmethod
+    def choose_shell_type( init_shell_type=None, env_TERM=""):
+        # pick a valid shell -- if no shell is specified by the user,
+        # shell type is pulled from env
+        shell_type = init_shell_type
+        if shell_type is None:
+            shell_type = env.get("SHELL_TYPE")
+            if shell_type == "none":
+                # This bricks interactive xonsh
+                # Can happen from the use of .xinitrc, .xsession, etc
+                shell_type = "best"
+        shell_type = Shell.shell_type_aliases.get(shell_type, shell_type)
+        if shell_type == "best" or shell_type is None:
+            shell_type = best_shell_type()
+        elif env_TERM == "dumb":
+            shell_type = "dumb"
+        elif shell_type == "random":
+            shell_type = random.choice(("readline", "prompt_toolkit"))
+        if shell_type == "prompt_toolkit":
+            if not has_prompt_toolkit():
+                warnings.warn(
+                    "prompt_toolkit is not available, using "
+                    "readline instead."
+                )
+                shell_type = "readline"
+            elif not ptk_above_min_supported():
+                warnings.warn(
+                    "prompt-toolkit version < v{}.{}.0 is not ".format(*minimum_required_ptk_version) +
+                    "supported. Please update prompt-toolkit. Using " +
+                    "readline instead."
+                )
+                shell_type = "readline"
+        return shell_type
+
 
     def __init__(self, execer, ctx=None, shell_type=None, **kwargs):
         """
@@ -157,44 +193,13 @@ class Shell(object):
             env=env.detype(), ts=[time.time(), None], locked=True
         )
 
-        # pick a valid shell -- if no shell is specified by the user,
-        # shell type is pulled from env
-        if shell_type is None:
-            shell_type = env.get("SHELL_TYPE")
-            if shell_type == "none":
-                # This bricks interactive xonsh
-                # Can happen from the use of .xinitrc, .xsession, etc
-                shell_type = "best"
-        shell_type = self.shell_type_aliases.get(shell_type, shell_type)
-        if shell_type == "best" or shell_type is None:
-            shell_type = best_shell_type()
-        elif env.get("TERM", "") == "dumb":
-            shell_type = "dumb"
-        elif shell_type == "random":
-            shell_type = random.choice(("readline", "prompt_toolkit"))
-        if shell_type == "prompt_toolkit":
-            if not has_prompt_toolkit():
-                warnings.warn(
-                    "prompt_toolkit is not available, using " "readline instead."
-                )
-                shell_type = "readline"
-            elif not ptk_above_min_supported():
-                warnings.warn(
-                    "prompt-toolkit version < v1.0.0 is not "
-                    "supported. Please update prompt-toolkit. Using "
-                    "readline instead."
-                )
-                shell_type = "readline"
-            else:
-                shell_type = ptk_shell_type()
-        self.shell_type = env["SHELL_TYPE"] = shell_type
+        self.shell_type = env["SHELL_TYPE"] = self.choose_shell_type(shell_type, env.get("TERM", ""))
+
         # actually make the shell
         if shell_type == "none":
             from xonsh.base_shell import BaseShell as shell_class
-        elif shell_type == "prompt_toolkit2":
-            from xonsh.ptk_shell.shell import PromptToolkit2Shell as shell_class
-        elif shell_type == "prompt_toolkit1":
-            from xonsh.ptk.shell import PromptToolkitShell as shell_class
+        elif shell_type == "prompt_toolkit":
+            from xonsh.ptk_shell.shell import PromptToolkitShell as shell_class
         elif shell_type == "readline":
             from xonsh.readline_shell import ReadlineShell as shell_class
         elif shell_type == "jupyter":
