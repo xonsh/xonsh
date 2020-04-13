@@ -140,11 +140,10 @@ class Shell(object):
         # pick a valid shell -- if no shell is specified by the user,
         # shell type is pulled from env
         shell_type = init_shell_type
-        if shell_type is None:
-            if shell_type == "none":
-                # This bricks interactive xonsh
-                # Can happen from the use of .xinitrc, .xsession, etc
-                shell_type = "best"
+        if shell_type is None or shell_type == "none":
+            # This bricks interactive xonsh
+            # Can happen from the use of .xinitrc, .xsession, etc
+            shell_type = "best"
         shell_type = Shell.shell_type_aliases.get(shell_type, shell_type)
         if shell_type == "best" or shell_type is None:
             shell_type = best_shell_type()
@@ -192,7 +191,7 @@ class Shell(object):
             env=env.detype(), ts=[time.time(), None], locked=True
         )
 
-        self.shell_type = env["SHELL_TYPE"] = self.choose_shell_type(
+        self.shell_type = env["SHELL_TYPE"] = shell_type = self.choose_shell_type(
             shell_type if shell_type else env.get("SHELL_TYPE"), env.get("TERM", "")
         )
 

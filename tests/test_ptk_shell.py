@@ -8,7 +8,6 @@ import builtins
 import pytest
 
 from tools import skip_if_on_windows
-from conftest import xonsh_builtins
 
 from xonsh.platform import ON_WINDOWS, minimum_required_ptk_version
 
@@ -48,19 +47,19 @@ def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, 
     def mock_ptk_above_min_supported():
         nonlocal ptk_ver
         return ptk_ver and (ptk_ver[:2] >= minimum_required_ptk_version)
-    
+
     def mock_has_prompt_toolkit():
         nonlocal ptk_ver
         return ptk_ver is not None
 
-    monkeypatch.setattr("xonsh.shell.warnings.warn", mock_warning)      #hardwon: patch the caller!
+    monkeypatch.setattr("xonsh.shell.warnings.warn", mock_warning)      # hardwon: patch the caller!
     monkeypatch.setattr("xonsh.shell.ptk_above_min_supported", mock_ptk_above_min_supported)    # have to patch both callers
     monkeypatch.setattr("xonsh.platform.ptk_above_min_supported", mock_ptk_above_min_supported)
     monkeypatch.setattr("xonsh.shell.has_prompt_toolkit", mock_has_prompt_toolkit)
     monkeypatch.setattr("xonsh.platform.has_prompt_toolkit", mock_has_prompt_toolkit)
-    
+
     act_shell_type = Shell.choose_shell_type(ini_shell_type, "")
-    
+
     assert act_shell_type == exp_shell_type
 
     if warn_snip:
@@ -68,4 +67,4 @@ def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, 
 
     pass
 
-#someday: initialize PromptToolkitShell and have it actually do something.
+# someday: initialize PromptToolkitShell and have it actually do something.
