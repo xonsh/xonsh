@@ -357,7 +357,6 @@ def main():
         packages=[
             "xonsh",
             "xonsh.ply.ply",
-            "xonsh.ptk",
             "xonsh.ptk_shell",
             "xonsh.parsers",
             "xonsh.xoreutils",

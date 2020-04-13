@@ -8,6 +8,8 @@ import builtins
 import pytest
 
 from tools import skip_if_on_windows
+from conftest import xonsh_builtins
+
 from xonsh.platform import ON_WINDOWS, minimum_required_ptk_version
 
 from xonsh.ptk_shell.shell import PromptToolkitShell
@@ -34,7 +36,7 @@ from xonsh.shell import Shell
         ((4, 0, 0), "prompt_toolkit", "prompt_toolkit", None),
     ],
 )
-def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, warn_snip, monkeypatch):
+def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, warn_snip, monkeypatch, xonsh_builtins):
 
     mocked_warn = ""
 

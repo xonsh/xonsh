@@ -192,7 +192,7 @@ def win_ansi_support():
 
 @functools.lru_cache(1)
 def ptk_below_max_supported():
-    ptk_max_version_cutoff = (99999, 0) # currently, no limit.
+    ptk_max_version_cutoff = (99999, 0)  # currently, no limit.
     return ptk_version_info()[:2] < ptk_max_version_cutoff
 
 

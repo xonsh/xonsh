@@ -8,6 +8,4 @@ import xonsh.ptk_shell as par
 import sys
 
 for m in [par, completer, history, key_bindings, shell]:
-    sys.modules[m.__name__.replace('ptk_shell','ptk2')] = m
-
-
+    sys.modules[m.__name__.replace("ptk_shell", "ptk2")] = m
