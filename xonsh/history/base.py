@@ -27,8 +27,6 @@ class History:
 
     History objects should be created via a subclass of History.
 
-    Indexing
-    --------
     History acts like a sequence that can be indexed to return
     ``HistoryEntry`` objects.
 

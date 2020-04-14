@@ -1359,20 +1359,24 @@ events.on_lscolors_change(on_lscolors_change)
 
 def color_file(file_path: str, mode: int) -> (Color, str):
     """Determine color to use for file as ls -c would, given stat() results and its name.
+
     Parameters
     ----------
     file_path : string
         relative path of file (as user typed it).
     mode : int
         stat() results for file_path.
+
     Returns
     -------
         color token, color_key
 
-    Bugs
-    ----
+    Notes
+    -----
+
     * doesn't handle CA (capability)
-    * doesn't handle LS TARGET mapping.
+    * doesn't handle LS TARGET mapping
+    
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
