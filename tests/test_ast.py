@@ -40,16 +40,14 @@ def test_gather_load_store_names_tuple():
 @pytest.mark.parametrize(
     "line1",
     [
-        # this second line wil be transformed into a subprocess call
-        "x = 1",
-        # this second line wil be transformed into a subprocess call even though
-        # ls is defined.
-        "ls = 1",
-        # the second line wil be transformed still even though l exists.
-        "l = 1",
+        "x = 1",  # Both, ls and l remain undefined.
+        "ls = 1",  # l remains undefined.
+        "l = 1",  # ls remains undefined.
     ],
 )
 def test_multilline_num(xonsh_execer, line1):
+    # Subprocess transformation happens on the second line,
+    # because not all variables are known.
     code = line1 + "\nls -l\n"
     tree = check_parse(code)
     lsnode = tree.body[1]
@@ -58,7 +56,7 @@ def test_multilline_num(xonsh_execer, line1):
 
 
 def test_multilline_no_transform():
-    # no subprocess transformations happen here since all variables are known
+    # No subprocess transformations happen here, since all variables are known.
     code = "ls = 1\nl = 1\nls -l\n"
     tree = check_parse(code)
     lsnode = tree.body[2]
