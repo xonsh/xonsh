@@ -11,7 +11,6 @@ from xonsh.platform import (
     best_shell_type,
     has_prompt_toolkit,
     ptk_above_min_supported,
-    ptk_version_info,
     minimum_required_ptk_version,
 )
 from xonsh.tools import XonshError, print_exception
@@ -145,7 +144,7 @@ class Shell(object):
             if shell_type == "none":
                 # This bricks interactive xonsh
                 # Can happen from the use of .xinitrc, .xsession, etc
-                # odd logic.  We don't override if shell.__init__( shell_type="none"), 
+                # odd logic.  We don't override if shell.__init__( shell_type="none"),
                 # only if it come from environment?
                 shell_type = "best"
         shell_type = Shell.shell_type_aliases.get(shell_type, shell_type)

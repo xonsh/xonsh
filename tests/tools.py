@@ -15,7 +15,6 @@ import pytest
 
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
-from xonsh.platform import ptk_version_info
 
 
 VER_3_5 = (3, 5)

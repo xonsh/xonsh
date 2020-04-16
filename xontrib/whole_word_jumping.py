@@ -4,8 +4,6 @@ Alt+Left/Right remains unmodified to jump over smaller word segments.
 """
 from prompt_toolkit.keys import Keys
 
-from xonsh.platform import ptk_version_info
-
 __all__ = ()
 
 

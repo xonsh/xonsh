@@ -33,7 +33,6 @@ from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (
     ON_WINDOWS,
     intensify_colors_for_cmd_exe,
-    ansicolors_to_ptk1_names,
     ANSICOLOR_NAMES_MAP,
     PTK_NEW_OLD_COLOR_MAP,
     hardcode_colors_for_win10,
@@ -1376,7 +1375,7 @@ def color_file(file_path: str, mode: int) -> (Color, str):
 
     * doesn't handle CA (capability)
     * doesn't handle LS TARGET mapping
-    
+
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
