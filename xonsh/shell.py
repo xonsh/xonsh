@@ -136,18 +136,22 @@ class Shell(object):
     }
 
     @staticmethod
-    def choose_shell_type(init_shell_type=None, env_TERM=""):
+    def choose_shell_type(shell_type=None, env={}):
         # pick a valid shell -- if no shell is specified by the user,
         # shell type is pulled from env
-        shell_type = init_shell_type
-        if shell_type is None or shell_type == "none":
-            # This bricks interactive xonsh
-            # Can happen from the use of .xinitrc, .xsession, etc
-            shell_type = "best"
+        # extracted for testability
+        if shell_type is None:
+            shell_type = env.get("SHELL_TYPE")
+            if shell_type == "none":
+                # This bricks interactive xonsh
+                # Can happen from the use of .xinitrc, .xsession, etc
+                # odd logic.  We don't override if shell.__init__( shell_type="none"), 
+                # only if it come from environment?
+                shell_type = "best"
         shell_type = Shell.shell_type_aliases.get(shell_type, shell_type)
         if shell_type == "best" or shell_type is None:
             shell_type = best_shell_type()
-        elif env_TERM == "dumb":
+        elif env.get("TERM") == "dumb":
             shell_type = "dumb"
         elif shell_type == "random":
             shell_type = random.choice(("readline", "prompt_toolkit"))
@@ -191,9 +195,9 @@ class Shell(object):
             env=env.detype(), ts=[time.time(), None], locked=True
         )
 
-        self.shell_type = env["SHELL_TYPE"] = shell_type = self.choose_shell_type(
-            shell_type if shell_type else env.get("SHELL_TYPE"), env.get("TERM", "")
-        )
+        shell_type = self.choose_shell_type(shell_type, env)
+
+        self.shell_type = env["SHELL_TYPE"] = shell_type
 
         # actually make the shell
         if shell_type == "none":

@@ -58,7 +58,7 @@ def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, 
     monkeypatch.setattr("xonsh.shell.has_prompt_toolkit", mock_has_prompt_toolkit)
     monkeypatch.setattr("xonsh.platform.has_prompt_toolkit", mock_has_prompt_toolkit)
 
-    act_shell_type = Shell.choose_shell_type(ini_shell_type, "")
+    act_shell_type = Shell.choose_shell_type(ini_shell_type, {})
 
     assert act_shell_type == exp_shell_type
 
