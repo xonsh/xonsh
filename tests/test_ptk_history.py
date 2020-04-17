@@ -5,12 +5,11 @@ try:
 except ImportError:
     pytest.mark.skip(msg="prompt_toolkit is not available")
 
-from xonsh.ptk_shell.history import PromptToolkitHistory
-
 
 @pytest.fixture
 def history_obj():
     """Instantiate `PromptToolkitHistory` and append a line string"""
+    from xonsh.ptk_shell.history import PromptToolkitHistory
     hist = PromptToolkitHistory(load_prev=False)
     hist.append_string("line10")
     return hist
@@ -32,12 +31,17 @@ def test_ptk2_backcompat():
 
     assert dir(imports_legacy) == dir(imports_new)
 
+    # the following is true, but unexpected.  
+    # legacy package key in sys.modules is legacy path, but package __name__ is the source pagage
+    # but code doesn't care.
+    assert imports_legacy is imports_new
 
 # prove that legacy API is usable
 
 @pytest.fixture
 def history_obj_legacy():
     """Instantiate `PromptToolkitHistory` via legacy alias and append a line string"""
+    from xonsh.ptk2.history import PromptToolkitHistory
     hist = PromptToolkitHistory(load_prev=False)
     hist.append_string("line10")
     return hist

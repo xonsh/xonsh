@@ -135,10 +135,11 @@ class Shell(object):
     }
 
     @staticmethod
-    def choose_shell_type(shell_type=None, env={}):
+    def choose_shell_type(init_shell_type=None, env={}):
         # pick a valid shell -- if no shell is specified by the user,
         # shell type is pulled from env
         # extracted for testability
+        shell_type = init_shell_type
         if shell_type is None:
             shell_type = env.get("SHELL_TYPE")
             if shell_type == "none":
@@ -169,6 +170,10 @@ class Shell(object):
                     + "readline instead."
                 )
                 shell_type = "readline"
+            if init_shell_type in ("ptk1", "prompt_toolkit1"):
+                warnings.warn(
+                    "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(init_shell_type)
+                )
         return shell_type
 
     def __init__(self, execer, ctx=None, shell_type=None, **kwargs):

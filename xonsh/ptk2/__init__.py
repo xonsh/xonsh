@@ -1,11 +1,18 @@
 # provide backward compatibility for external xontribs till they can catch up.
-import xonsh.ptk_shell.completer as completer
-import xonsh.ptk_shell.history as history
-import xonsh.ptk_shell.key_bindings as key_bindings
-import xonsh.ptk_shell.shell as shell
-import xonsh.ptk_shell as par
 
+import importlib
+import pkgutil
 import sys
 
-for m in [par, completer, history, key_bindings, shell]:
-    sys.modules[m.__name__.replace("ptk_shell", "ptk2")] = m
+src_pkg = "xonsh.ptk_shell"
+
+src_pkg_imp = importlib.import_module(src_pkg)
+
+# clone package, and original __name__ (!), to my own module entry
+sys.modules[__name__] = src_pkg_imp
+
+# create module entries for all submodules
+for mi in pkgutil.iter_modules(src_pkg_imp.__path__):
+    sys.modules[__name__ + "." + mi.name] = importlib.import_module(
+        src_pkg + "." + mi.name
+    )
