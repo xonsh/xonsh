@@ -1022,7 +1022,10 @@ def DEFAULT_DOCS():
         "LANG": VarDocs("Fallback locale setting for systems where it matters"),
         "LS_COLORS": VarDocs(
             "Color settings for ``ls`` command line utility and file arguments "
-            "in subprocess mode with ``$SHELL_TYPE='prompt_toolkit'``",
+            "Color settings for ``ls`` command line utility and, "
+            "with ``$SHELL_TYPE='prompt_toolkit'``, for file arguments "
+            "in subprocess mode",
+
             default="``*.7z=1;0;31:*.Z=1;0;31:*.aac=0;36:*.ace=1;0;31:"
             "*.alz=1;0;31:*.arc=1;0;31:*.arj=1;0;31:*.asf=1;0;35:*.au=0;36:"
             "*.avi=1;0;35:*.bmp=1;0;35:*.bz=1;0;31:*.bz2=1;0;31:*.cab=1;0;31:"
