@@ -128,6 +128,9 @@ class Shell(object):
         "prompt_toolkit": "prompt_toolkit",
         "prompt-toolkit1": "prompt_toolkit",
         "prompt-toolkit2": "prompt_toolkit",
+        "prompt-toolkit3": "prompt_toolkit",
+        "prompt_toolkit3": "prompt_toolkit",
+        "ptk3": "prompt_toolkit",
         "rand": "random",
         "random": "random",
         "rl": "readline",
@@ -135,12 +138,12 @@ class Shell(object):
     }
 
     @staticmethod
-    def choose_shell_type(init_shell_type=None, env={}):
+    def choose_shell_type(init_shell_type=None, env=None):
         # pick a valid shell -- if no shell is specified by the user,
         # shell type is pulled from env
         # extracted for testability
         shell_type = init_shell_type
-        if shell_type is None:
+        if shell_type is None and env:
             shell_type = env.get("SHELL_TYPE")
             if shell_type == "none":
                 # This bricks interactive xonsh
@@ -151,7 +154,7 @@ class Shell(object):
         shell_type = Shell.shell_type_aliases.get(shell_type, shell_type)
         if shell_type == "best" or shell_type is None:
             shell_type = best_shell_type()
-        elif env.get("TERM") == "dumb":
+        elif env and env.get("TERM", "") == "dumb":
             shell_type = "dumb"
         elif shell_type == "random":
             shell_type = random.choice(("readline", "prompt_toolkit"))
@@ -172,7 +175,9 @@ class Shell(object):
                 shell_type = "readline"
             if init_shell_type in ("ptk1", "prompt_toolkit1"):
                 warnings.warn(
-                    "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(init_shell_type)
+                    "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(
+                        init_shell_type
+                    )
                 )
         return shell_type
 

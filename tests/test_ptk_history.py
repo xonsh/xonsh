@@ -28,15 +28,19 @@ def test_ptk2_backcompat():
 
     import xonsh.ptk_shell.shell as imports_new
     import xonsh.ptk2.shell as imports_legacy
+    # defining the ptk2 package this way leaves out the internal global names (which all start with '_')
 
-    assert dir(imports_legacy) == dir(imports_new)
+    s_new = set(dir(imports_new))
+    s_legacy = set(dir(imports_legacy))
+    extra_names = s_new - s_legacy
 
-    # the following is true, but unexpected.  
-    # legacy package key in sys.modules is legacy path, but package __name__ is the source pagage
-    # but code doesn't care.
-    assert imports_legacy is imports_new
+    for name in extra_names:
+        assert name.startswith('_')
+
+    assert s_legacy.issubset(s_new)
 
 # prove that legacy API is usable
+
 
 @pytest.fixture
 def history_obj_legacy():
