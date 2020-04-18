@@ -8,7 +8,6 @@ import builtins
 from prompt_toolkit.filters import completion_is_selected, IsMultiline
 from prompt_toolkit.keys import Keys
 from xonsh.built_ins import DynamicAccessProxy
-from xonsh.platform import ptk_shell_type
 from xonsh.tools import check_for_partial_string
 
 __all__ = ()
@@ -36,18 +35,11 @@ def expand_abbrev(buffer):
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
 
-    if ptk_shell_type() == "prompt_toolkit2":
-        from xonsh.ptk2.key_bindings import carriage_return
-        from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
+    from xonsh.ptk_shell.key_bindings import carriage_return
+    from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
 
-        handler = bindings.add
-        insert_mode = ViInsertMode() | EmacsInsertMode()
-    else:
-        from xonsh.ptk.key_bindings import carriage_return
-        from prompt_toolkit.filters import to_filter
-
-        handler = bindings.registry.add_binding
-        insert_mode = to_filter(True)
+    handler = bindings.add
+    insert_mode = ViInsertMode() | EmacsInsertMode()
 
     @handler(" ", filter=IsMultiline() & insert_mode)
     def handle_space(event):

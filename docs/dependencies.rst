@@ -4,16 +4,15 @@ Xonsh currently has the following external dependencies,
 
 *Run Time:*
 
-    #. Python v3.4+
+    #. Python v3.5+
 
 Pip supports "extra" dependencies in the form of ``xonsh[ptk,linux]``, where
 the list in the brackets identify the optional features
 
 Xonsh currently has the following extras
 
-    #. ``ptk``: prompt-toolkit:
-       *advanced readline library, line-editing*
-    #. ``pygments>=2.2``: *syntax-highlighting*
+    #. ``ptk``: prompt-toolkit >= 2.0: *advanced readline library, line-editing*
+    #. ``pygments``: pygments >=2.2: *syntax-highlighting*
     #. ``proctitle``: setproctitle: *change the title of terminal to reflect the current subprocess*
     #. ``linux``: distro: *linux specific platform information*
     #. ``mac``: gnureadline: *GNU's featureful version of readline*

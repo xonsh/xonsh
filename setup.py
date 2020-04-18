@@ -357,7 +357,7 @@ def main():
         packages=[
             "xonsh",
             "xonsh.ply.ply",
-            "xonsh.ptk",
+            "xonsh.ptk_shell",
             "xonsh.ptk2",
             "xonsh.parsers",
             "xonsh.xoreutils",
@@ -408,7 +408,7 @@ def main():
         }
         skw["cmdclass"]["develop"] = xdevelop
         skw["extras_require"] = {
-            "ptk": ["prompt-toolkit"],
+            "ptk": ["prompt-toolkit>=2.0"],
             "pygments": ["pygments>=2.2"],
             "mac": ["gnureadline"],
             "linux": ["distro"],

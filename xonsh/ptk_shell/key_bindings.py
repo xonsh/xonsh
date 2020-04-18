@@ -2,6 +2,7 @@
 """Key bindings for prompt_toolkit xonsh shell."""
 import builtins
 
+from prompt_toolkit import search
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.filters import (
     Condition,
@@ -9,14 +10,15 @@ from prompt_toolkit.filters import (
     HasSelection,
     EmacsInsertMode,
     ViInsertMode,
+    IsSearching,
 )
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.application.current import get_app
 
 from xonsh.aliases import xonsh_exit
 from xonsh.tools import check_for_partial_string, get_line_continuation
 from xonsh.shell import transform_command
 
-env = builtins.__xonsh__.env
 DEDENT_TOKENS = frozenset(["raise", "return", "pass", "break", "continue"])
 
 
@@ -36,6 +38,7 @@ def carriage_return(b, cli, *, autoindent=True):
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
     current_line_blank = _is_blank(doc.current_line)
 
+    env = builtins.__xonsh__.env
     indent = env.get("INDENT") if autoindent else ""
 
     partial_string_info = check_for_partial_string(doc.text)
@@ -68,7 +71,7 @@ def carriage_return(b, cli, *, autoindent=True):
     elif current_line_blank and in_partial_string:
         b.newline(copy_margin=autoindent)
     else:
-        b.accept_action.validate_and_handle(cli, b)
+        b.validate_and_handle()
 
 
 def _is_blank(l):
@@ -93,35 +96,36 @@ def can_compile(src):
 
 
 @Condition
-def tab_insert_indent(cli):
+def tab_insert_indent():
     """Check if <Tab> should insert indent instead of starting autocompletion.
     Checks if there are only whitespaces before the cursor - if so indent
     should be inserted, otherwise autocompletion.
 
     """
-    before_cursor = cli.current_buffer.document.current_line_before_cursor
+    before_cursor = get_app().current_buffer.document.current_line_before_cursor
 
     return bool(before_cursor.isspace())
 
 
 @Condition
-def beginning_of_line(cli):
+def beginning_of_line():
     """Check if cursor is at beginning of a line other than the first line in a
     multiline document
     """
-    before_cursor = cli.current_buffer.document.current_line_before_cursor
+    app = get_app()
+    before_cursor = app.current_buffer.document.current_line_before_cursor
 
     return bool(
-        len(before_cursor) == 0 and not cli.current_buffer.document.on_first_line
+        len(before_cursor) == 0 and not app.current_buffer.document.on_first_line
     )
 
 
 @Condition
-def end_of_line(cli):
+def end_of_line():
     """Check if cursor is at the end of a line other than the last line in a
     multiline document
     """
-    d = cli.current_buffer.document
+    d = get_app().current_buffer.document
     at_end = d.is_cursor_at_the_end_of_line
     last_line = d.is_cursor_at_the_end
 
@@ -129,37 +133,40 @@ def end_of_line(cli):
 
 
 @Condition
-def should_confirm_completion(cli):
+def should_confirm_completion():
     """Check if completion needs confirmation"""
     return (
         builtins.__xonsh__.env.get("COMPLETIONS_CONFIRM")
-        and cli.current_buffer.complete_state
+        and get_app().current_buffer.complete_state
     )
 
 
 # Copied from prompt-toolkit's key_binding/bindings/basic.py
 @Condition
-def ctrl_d_condition(cli):
+def ctrl_d_condition():
     """Ctrl-D binding is only active when the default buffer is selected and
     empty.
     """
     if builtins.__xonsh__.env.get("IGNOREEOF"):
-        raise EOFError
+        return False
     else:
-        return cli.current_buffer_name == DEFAULT_BUFFER and not cli.current_buffer.text
+        app = get_app()
+        buffer_name = app.current_buffer.name
+
+        return buffer_name == DEFAULT_BUFFER and not app.current_buffer.text
 
 
 @Condition
-def autopair_condition(cli):
+def autopair_condition():
     """Check if XONSH_AUTOPAIR is set"""
     return builtins.__xonsh__.env.get("XONSH_AUTOPAIR", False)
 
 
 @Condition
-def whitespace_or_bracket_before(cli):
+def whitespace_or_bracket_before():
     """Check if there is whitespace or an opening
        bracket to the left of the cursor"""
-    d = cli.current_buffer.document
+    d = get_app().current_buffer.document
     return bool(
         d.cursor_position == 0
         or d.char_before_cursor.isspace()
@@ -168,10 +175,10 @@ def whitespace_or_bracket_before(cli):
 
 
 @Condition
-def whitespace_or_bracket_after(cli):
+def whitespace_or_bracket_after():
     """Check if there is whitespace or a closing
        bracket to the right of the cursor"""
-    d = cli.current_buffer.document
+    d = get_app().current_buffer.document
     return bool(
         d.is_cursor_at_the_end_of_line
         or d.current_char.isspace()
@@ -179,11 +186,11 @@ def whitespace_or_bracket_after(cli):
     )
 
 
-def load_xonsh_bindings(key_bindings_manager):
+def load_xonsh_bindings(key_bindings):
     """
     Load custom key bindings.
     """
-    handle = key_bindings_manager.registry.add_binding
+    handle = key_bindings.add
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
@@ -193,6 +200,7 @@ def load_xonsh_bindings(key_bindings_manager):
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
+        env = builtins.__xonsh__.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
@@ -207,6 +215,7 @@ def load_xonsh_bindings(key_bindings_manager):
         if b.complete_state:
             b.complete_previous()
         else:
+            env = builtins.__xonsh__.env
             event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     @handle("(", filter=autopair_condition & whitespace_or_bracket_after)
@@ -256,9 +265,7 @@ def load_xonsh_bindings(key_bindings_manager):
 
         if buffer.document.current_char == "'":
             buffer.cursor_position += 1
-        elif whitespace_or_bracket_before(event.cli) and whitespace_or_bracket_after(
-            event.cli
-        ):
+        elif whitespace_or_bracket_before() and whitespace_or_bracket_after():
             buffer.insert_text("'")
             buffer.insert_text("'", move_cursor=False)
         else:
@@ -270,9 +277,7 @@ def load_xonsh_bindings(key_bindings_manager):
 
         if buffer.document.current_char == '"':
             buffer.cursor_position += 1
-        elif whitespace_or_bracket_before(event.cli) and whitespace_or_bracket_after(
-            event.cli
-        ):
+        elif whitespace_or_bracket_before() and whitespace_or_bracket_after():
             buffer.insert_text('"')
             buffer.insert_text('"', move_cursor=False)
         else:
@@ -296,16 +301,18 @@ def load_xonsh_bindings(key_bindings_manager):
     def call_exit_alias(event):
         """Use xonsh exit function"""
         b = event.cli.current_buffer
-        b.accept_action.validate_and_handle(event.cli, b)
+        b.validate_and_handle()
         xonsh_exit([])
 
-    @handle(Keys.ControlJ, filter=IsMultiline())
+    @handle(Keys.ControlJ, filter=IsMultiline() & insert_mode)
+    @handle(Keys.ControlM, filter=IsMultiline() & insert_mode)
     def multiline_carriage_return(event):
         """ Wrapper around carriage_return multiline parser """
         b = event.cli.current_buffer
         carriage_return(b, event.cli)
 
     @handle(Keys.ControlJ, filter=should_confirm_completion)
+    @handle(Keys.ControlM, filter=should_confirm_completion)
     def enter_confirm_completion(event):
         """Ignore <enter> (confirm completion)"""
         event.current_buffer.complete_state = None
@@ -319,7 +326,7 @@ def load_xonsh_bindings(key_bindings_manager):
     def execute_block_now(event):
         """Execute a block of text irrespective of cursor position"""
         b = event.cli.current_buffer
-        b.accept_action.validate_and_handle(event.cli, b)
+        b.validate_and_handle()
 
     @handle(Keys.Left, filter=beginning_of_line)
     def wrap_cursor_back(event):
@@ -339,28 +346,14 @@ def load_xonsh_bindings(key_bindings_manager):
         b.cursor_left(count=abs(relative_begin_index))
         b.cursor_down(count=1)
 
-    @handle(Keys.ControlI, filter=insert_mode)
-    def generate_completions(event):
+    @handle(Keys.ControlM, filter=IsSearching())
+    @handle(Keys.ControlJ, filter=IsSearching())
+    def accept_search(event):
+        search.accept_search()
+
+    @handle(Keys.ControlZ)
+    def skip_control_z(event):
+        """Prevents the writing of ^Z to the prompt, if Ctrl+Z was pressed
+        during the previous command.
         """
-        Tab-completion: where the first tab completes the common suffix and the
-        second tab lists all the completions.
-
-        Notes
-        -----
-        This method was forked from the mainline prompt-toolkit repo.
-        Copyright (c) 2014, Jonathan Slenders, All rights reserved.
-        """
-        b = event.current_buffer
-
-        def second_tab():
-            if b.complete_state:
-                b.complete_next()
-            else:
-                event.cli.start_completion(select_first=False)
-
-        # On the second tab-press, or when already navigating through
-        # completions.
-        if event.is_repeat or b.complete_state:
-            second_tab()
-        else:
-            event.cli.start_completion(insert_common_part=True, select_first=False)
+        pass

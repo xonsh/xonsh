@@ -77,3 +77,4 @@ hello = 'world'
 
     ctx = xontrib_context("script")
     assert ctx == {"hello": "world"}
+

@@ -33,7 +33,6 @@ from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (
     ON_WINDOWS,
     intensify_colors_for_cmd_exe,
-    ansicolors_to_ptk1_names,
     ANSICOLOR_NAMES_MAP,
     PTK_NEW_OLD_COLOR_MAP,
     hardcode_colors_for_win10,
@@ -384,16 +383,6 @@ class XonshStyle(Style):
         ).items():
             color_token = color_token_by_name(xonsh_color, self.styles)
             file_color_tokens[file_type] = color_token
-
-        # Convert new ansicolor names to old PTK1 names
-        # Can be remvoed when PTK1 support is dropped.
-        if (
-            builtins.__xonsh__.shell.shell_type != "prompt_toolkit2"
-            and pygments_version_info()
-            and pygments_version_info() < (2, 4, 0)
-        ):
-            for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
-                smap.update(ansicolors_to_ptk1_names(smap))
 
         if ON_WINDOWS and "prompt_toolkit" in builtins.__xonsh__.shell.shell_type:
             self.enhance_colors_for_cmd_exe()
@@ -1369,20 +1358,24 @@ events.on_lscolors_change(on_lscolors_change)
 
 def color_file(file_path: str, mode: int) -> (Color, str):
     """Determine color to use for file as ls -c would, given stat() results and its name.
+
     Parameters
     ----------
     file_path : string
         relative path of file (as user typed it).
     mode : int
         stat() results for file_path.
+
     Returns
     -------
         color token, color_key
 
-    Bugs
-    ----
+    Notes
+    -----
+
     * doesn't handle CA (capability)
-    * doesn't handle LS TARGET mapping.
+    * doesn't handle LS TARGET mapping
+
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
