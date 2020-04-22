@@ -60,42 +60,56 @@
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": [
-    "Additional core utilities that are implemented in xonsh. The current list ",
-    "includes:\n",
-    "\n",
-    "* cat\n",
-    "* echo\n",
-    "* pwd\n",
-    "* tee\n",
-    "* tty\n",
-    "* yes\n",
-    "\n",
-    "In many cases, these may have a lower performance overhead than the ",
-    "posix command line utility with the same name. This is because these ",
-    "tools avoid the need for a full subprocess call. Additionally, these ",
-    "tools are cross-platform."]
+   "Additional core utilities that are implemented in xonsh. The current list ",
+   "includes:\n",
+   "\n",
+   "* cat\n",
+   "* echo\n",
+   "* pwd\n",
+   "* tee\n",
+   "* tty\n",
+   "* yes\n",
+   "\n",
+   "In many cases, these may have a lower performance overhead than the ",
+   "posix command line utility with the same name. This is because these ",
+   "tools avoid the need for a full subprocess call. Additionally, these ",
+   "tools are cross-platform."
+  ]
  },
- {"name": "direnv",
+ {
+  "name": "direnv",
   "package": "xonsh-direnv",
   "url": "https://github.com/74th/xonsh-direnv",
-  "description": ["Supports direnv."]
+  "description": [
+   "Supports direnv."
+  ]
  },
- {"name": "distributed",
+ {
+  "name": "hist_navigator",
+  "package": "xontrib-hist-navigator",
+  "url": "https://github.com/jnoortheen/xontrib-hist-navigator",
+  "description": [
+   "Move through directory history with nextd and prevd also with keybindings."
+  ]
+ },
+ {
+  "name": "distributed",
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": [
-    "The distributed parallel computing library hooks for xonsh. ",
-    "Importantly this provides a substitute 'dworker' command which enables ",
-    "distributed workers to have access to xonsh builtins.\n\n",
-    "Furthermore, this xontrib adds a 'DSubmitter' context manager for ",
-    "executing a block remotely. Moreover, this also adds a convenience ",
-    "function 'dsubmit()' for creating DSubmitter and Executor instances ",
-    "at the same time. Thus users may submit distributed jobs with::\n\n",
-    "    with dsubmit('127.0.0.1:8786', rtn='x') as dsub:\n",
-    "        x = $(echo I am elsewhere)\n\n",
-    "    res = dsub.future.result()\n",
-    "    print(res)\n\n",
-    "This is useful for long running or non-blocking jobs."]
+   "The distributed parallel computing library hooks for xonsh. ",
+   "Importantly this provides a substitute 'dworker' command which enables ",
+   "distributed workers to have access to xonsh builtins.\n\n",
+   "Furthermore, this xontrib adds a 'DSubmitter' context manager for ",
+   "executing a block remotely. Moreover, this also adds a convenience ",
+   "function 'dsubmit()' for creating DSubmitter and Executor instances ",
+   "at the same time. Thus users may submit distributed jobs with::\n\n",
+   "    with dsubmit('127.0.0.1:8786', rtn='x') as dsub:\n",
+   "        x = $(echo I am elsewhere)\n\n",
+   "    res = dsub.future.result()\n",
+   "    print(res)\n\n",
+   "This is useful for long running or non-blocking jobs."
+  ]
   },
  {"name": "docker_tabcomplete",
   "package": "xonsh-docker-tabcomplete",
