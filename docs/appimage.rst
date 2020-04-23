@@ -9,7 +9,6 @@ The best way to build xonsh AppImage in 5 minutes is to using `python-appimage <
 
 .. code-block:: bash
 
-
     mkdir -p /tmp/test && cd /tmp/test
     git clone https://github.com/niess/python-appimage
     cd python-appimage
