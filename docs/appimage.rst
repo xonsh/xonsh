@@ -13,3 +13,4 @@ The best way to build xonsh AppImage in 5 minutes is to using `python-appimage <
     git clone https://github.com/niess/python-appimage
     cd python-appimage
     python -m python_appimage build app applications/xonsh
+    ./xonsh-x86_64.AppImage
