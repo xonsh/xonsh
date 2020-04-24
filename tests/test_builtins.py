@@ -233,7 +233,7 @@ def test_convert_macro_arg_exec(kind):
 
 
 @pytest.mark.parametrize("kind", [type, "t", "type"])
-def test_convert_macro_arg_eval(kind):
+def test_convert_macro_arg_eval1(kind):
     # literals
     raw_arg = "42"
     arg = convert_macro_arg(raw_arg, kind, {}, None)
@@ -398,21 +398,21 @@ def test_cmds_to_specs_thread_subproc(xonsh_builtins):
     env = xonsh_builtins.__xonsh__.env
     cmds = [["pwd"]]
     # First check that threadable subprocs become threadable
-    env['THREAD_SUBPROCS'] = True
-    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    env["THREAD_SUBPROCS"] = True
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
     assert specs[0].cls is PopenThread
     # turn off threading and check we use Popen
-    env['THREAD_SUBPROCS'] = False
-    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    env["THREAD_SUBPROCS"] = False
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
     assert specs[0].cls is Popen
 
     # now check the threadbility of callable aliases
     cmds = [[lambda: "Keras Selyrian"]]
     # check that threadable alias become threadable
-    env['THREAD_SUBPROCS'] = True
-    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    env["THREAD_SUBPROCS"] = True
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
     assert specs[0].cls is ProcProxyThread
     # turn off threading and check we use ProcProxy
-    env['THREAD_SUBPROCS'] = False
-    specs = cmds_to_specs(cmds, captured='hiddenobject')
+    env["THREAD_SUBPROCS"] = False
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
     assert specs[0].cls is ProcProxy

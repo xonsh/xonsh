@@ -1,22 +1,12 @@
 # -*- coding: utf-8 -*-
 """Test initialization of prompt_toolkit shell"""
 
-import os
-import gc
-import builtins
-
 import pytest
 
-from tools import skip_if_on_windows
-
-from xonsh.platform import ON_WINDOWS, minimum_required_ptk_version
-
-from xonsh.ptk_shell.shell import PromptToolkitShell
+from xonsh.platform import minimum_required_ptk_version
 
 # verify error if ptk not installed or below min
 
-import warnings
-import xonsh.platform
 from xonsh.shell import Shell
 
 

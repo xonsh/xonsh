@@ -8,7 +8,6 @@ import subprocess as sp
 import pytest
 
 import xonsh
-from xonsh.platform import ON_WINDOWS
 from xonsh.lib.os import indir
 
 from tools import (
@@ -578,10 +577,7 @@ def test_xonsh_no_close_fds():
 
 
 @pytest.mark.parametrize(
-    "cmd, fmt, exp",
-    [
-        ("ls | wc", lambda x: x > '', True),
-    ],
+    "cmd, fmt, exp", [("ls | wc", lambda x: x > "", True), ],
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"
@@ -593,8 +589,8 @@ def test_negative_exit_codes_fail():
     # see issue 3309
     script = 'python -c "import os; os.abort()" && echo OK\n'
     out, err, rtn = run_xonsh(script)
-    assert "OK" is not out
-    assert "OK" is not err
+    assert "OK" != out
+    assert "OK" != err
 
 
 @pytest.mark.parametrize(

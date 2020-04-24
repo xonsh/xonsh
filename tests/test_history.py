@@ -112,7 +112,7 @@ def test_cmd_field(hist, xonsh_builtins):
     assert hf is None
     assert 1 == hist.rtns[0]
     assert 1 == hist.rtns[-1]
-    assert None == hist.outs[-1]
+    assert None == hist.outs[-1]  # noqa: E711
     # slice
     assert [1] == hist.rtns[:]
     # on disk
@@ -120,7 +120,7 @@ def test_cmd_field(hist, xonsh_builtins):
     assert hf is not None
     assert 1 == hist.rtns[0]
     assert 1 == hist.rtns[-1]
-    assert None == hist.outs[-1]
+    assert None == hist.outs[-1]  # noqa: E711
 
 
 @pytest.mark.parametrize(

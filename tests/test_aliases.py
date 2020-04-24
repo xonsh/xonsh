@@ -16,7 +16,6 @@ from tools import skip_if_on_windows
 def cd(args, stdin=None, **kwargs):
     return args
 
-
 def make_aliases():
     ales = Aliases(
         {"o": ["omg", "lala"]},
@@ -26,7 +25,6 @@ def make_aliases():
         indirect_cd="cd ..",
     )
     return ales
-
 
 def test_imports(xonsh_execer, xonsh_builtins):
     ales = make_aliases()

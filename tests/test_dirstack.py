@@ -86,7 +86,7 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
     old_dir = os.getcwd()
     try:
         dirstack.cd([target])
-    except:
+    except Exception:
         raise
     else:
         assert (old_dir, target) == ev
@@ -109,7 +109,7 @@ def test_cd_autopush(xonsh_builtins, tmpdir):
         assert target == os.getcwd()
         assert old_ds_size + 1 == len(dirstack.DIRSTACK)
         dirstack.popd([])
-    except:
+    except Exception:
         raise
     finally:
         while len(dirstack.DIRSTACK) > old_ds_size:

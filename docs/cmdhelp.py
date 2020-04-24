@@ -40,7 +40,7 @@ class CommandHelp(Directive):
     def run(self):
         arguments = self.arguments
         lines = ['.. code-block:: none', '']
-        m, f = arguments[0].rsplit('.',  1)
+        m, f = arguments[0].rsplit('.', 1)
         mod = importlib.import_module(m)
         func = getattr(mod, f)
         args = ['--help'] if len(arguments) == 1 else arguments[1:]
@@ -65,4 +65,3 @@ class CommandHelp(Directive):
 
 def setup(app):
     app.add_directive('command-help', CommandHelp)
-
