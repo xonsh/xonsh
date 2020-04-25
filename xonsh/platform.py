@@ -2,20 +2,18 @@
 compatibility layers to make use of the 'best' implementation available
 on a platform.
 """
-import os
-import sys
-import ctypes
-import signal
-import pathlib
 import builtins
-import platform
-import functools
-import subprocess
-import collections
 import collections.abc as cabc
+import functools
 import importlib.util
+import os
+import pathlib
+import platform
+import signal
+import subprocess
+import sys
 
-from xonsh.lazyasd import LazyBool, lazyobject, lazybool
+from xonsh.lazyasd import LazyBool, lazybool, lazyobject
 
 # do not import any xonsh-modules here to avoid circular dependencies
 

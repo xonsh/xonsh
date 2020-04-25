@@ -5,8 +5,11 @@ This expands input words from `abbrevs` disctionary as you type.
 """
 
 import builtins
-from prompt_toolkit.filters import completion_is_selected, IsMultiline
+from builtins import events
+
+from prompt_toolkit.filters import IsMultiline, completion_is_selected
 from prompt_toolkit.keys import Keys
+
 from xonsh.built_ins import DynamicAccessProxy
 from xonsh.tools import check_for_partial_string
 

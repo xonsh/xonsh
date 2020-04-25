@@ -1,7 +1,6 @@
 """Tests pygments hooks."""
 import pytest
 import os
-import builtins
 import stat
 
 from tempfile import TemporaryDirectory
@@ -11,13 +10,12 @@ from xonsh.pyghooks import (
     Color,
     color_name_to_pygments_code,
     code_by_name,
-    color_by_name,
     color_file,
     file_color_tokens,
 )
 
 from xonsh.environ import LsColors
-from tools import skip_if_on_windows, skip_if_on_unix
+from tools import skip_if_on_windows
 
 
 @pytest.fixture
@@ -199,7 +197,7 @@ def colorizable_files():
             else:
                 file_path = tempdir + "/" + v
             try:
-                mode = os.lstat(file_path)
+                mode = os.lstat(file_path)  # noqa F841
             except FileNotFoundError:
                 if file_path.endswith("_dir"):
                     os.mkdir(file_path)

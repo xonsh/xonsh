@@ -3,10 +3,9 @@
 from __future__ import unicode_literals, print_function
 import os
 
-import pytest
+import pytest   # noqa F401
 
 from xonsh.wizard import (
-    Node,
     Wizard,
     Pass,
     PrettyFormatter,

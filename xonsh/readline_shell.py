@@ -10,42 +10,40 @@ are included from the IPython project.  The IPython project is:
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 
 """
-import os
-import sys
+import builtins
 import cmd
+import collections
+import importlib
+import os
 import select
 import shutil
-import builtins
-import importlib
+import sys
 import threading
-import subprocess
-import collections
 
-from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import (
-    ansi_partial_color_format,
-    ansi_color_style_names,
     ansi_color_style,
+    ansi_color_style_names,
+    ansi_partial_color_format,
+)
+from xonsh.base_shell import BaseShell
+from xonsh.events import events
+from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyimps import pyghooks, pygments, winutils
+from xonsh.platform import (
+    ON_CYGWIN,
+    ON_DARWIN,
+    ON_MSYS,
+    ON_POSIX,
+    ON_WINDOWS,
+    os_environ,
 )
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (
-    print_exception,
-    check_for_partial_string,
-    to_bool,
-    columnize,
     carriage_return,
+    columnize,
+    print_exception,
+    to_bool,
 )
-from xonsh.platform import (
-    ON_WINDOWS,
-    ON_CYGWIN,
-    ON_MSYS,
-    ON_DARWIN,
-    ON_POSIX,
-    os_environ,
-)
-from xonsh.lazyimps import pygments, pyghooks, winutils
-from xonsh.events import events
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
@@ -168,7 +166,7 @@ def setup_readline():
 def teardown_readline():
     """Tears down up the readline module, if available."""
     try:
-        import readline
+        import readline  # noqa F401
     except (ImportError, TypeError):
         return
 

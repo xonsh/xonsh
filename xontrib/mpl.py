@@ -2,9 +2,11 @@
 is imported.
 """
 
-from xonsh.tools import unthreadable
-from xonsh.lazyasd import lazyobject
+import builtins
+from builtins import aliases, events
 
+from xonsh.lazyasd import lazyobject
+from xonsh.tools import unthreadable
 
 __all__ = ()
 
@@ -32,7 +34,7 @@ def pylab_helpers():
 @events.on_import_post_exec_module
 def interactive_pyplot(module=None, **kwargs):
     """This puts pyplot in interactive mode once it is imported."""
-    if module.__name__ != "matplotlib.pyplot" or not __xonsh__.env.get(
+    if module.__name__ != "matplotlib.pyplot" or not builtins.__xonsh__.env.get(
         "XONSH_INTERACTIVE"
     ):
         return

@@ -9,9 +9,11 @@ This provides no interface for end users.
 Developers should look at events.autovox_policy
 """
 import itertools
-from pathlib import Path
-import xontrib.voxapi as voxapi
 import warnings
+from builtins import events
+from pathlib import Path
+
+import xontrib.voxapi as voxapi
 
 __all__ = ()
 

@@ -1,24 +1,14 @@
 import os
-import sys
-import time
 import shutil
-import tempfile
 import subprocess as sp
+import sys
+import tempfile
 
 import pytest
 
 import xonsh
+from tools import ON_DARWIN, ON_TRAVIS, ON_WINDOWS, skip_if_on_windows
 from xonsh.lib.os import indir
-
-from tools import (
-    skip_if_on_windows,
-    skip_if_on_darwin,
-    skip_if_on_travis,
-    ON_WINDOWS,
-    ON_DARWIN,
-    ON_TRAVIS,
-)
-
 
 XONSH_PREFIX = xonsh.__file__
 if "site-packages" in XONSH_PREFIX:
@@ -577,7 +567,8 @@ def test_xonsh_no_close_fds():
 
 
 @pytest.mark.parametrize(
-    "cmd, fmt, exp", [("ls | wc", lambda x: x > "", True), ],
+    "cmd, fmt, exp",
+    [("ls | wc", lambda x: x > "", True),],  # noqa E231 (black deletes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"

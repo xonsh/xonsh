@@ -2,8 +2,10 @@
 
 import sys
 import textwrap
-import xontrib.voxapi as voxapi
+from builtins import aliases
+
 import xonsh.lazyasd as lazyasd
+import xontrib.voxapi as voxapi
 
 __all__ = ()
 

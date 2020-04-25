@@ -3,6 +3,7 @@ import sys
 import textwrap
 import builtins
 from collections.abc import Mapping
+from xonsh.tools import XonshError
 
 
 class Block(object):

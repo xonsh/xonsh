@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh environment."""
-from __future__ import unicode_literals, print_function
-import os
-import tempfile
-import builtins
+
 import itertools
+import os
 from tempfile import TemporaryDirectory
-from xonsh.tools import ON_WINDOWS, always_true
 
 import pytest
 
+from tools import skip_if_on_unix
 from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
-    Env,
-    Ensurer,
-    locate_binary,
     DEFAULT_ENSURERS,
     DEFAULT_VALUES,
-    default_env,
-    make_args_env,
+    Ensurer,
+    Env,
     LsColors,
+    default_env,
+    locate_binary,
+    make_args_env,
+    BASE_ENV,
 )
-
-from tools import skip_if_on_unix
+from xonsh.tools import always_true
 
 
 def test_env_normal():
@@ -230,7 +228,9 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
 
 
 def test_events_on_envvar_called_in_right_order(xonsh_builtins):
-    env = Env()
+    env = Env(
+        BASE_ENV
+    )  # default instance inherits from os.environ, where TEST might be defined
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
@@ -289,7 +289,7 @@ def test_delitem():
     assert env["VAR"] == "a value"
     del env["VAR"]
     with pytest.raises(Exception):
-        a = env["VAR"]
+        a = env["VAR"]  # noqa F841
 
 
 def test_delitem_default():
@@ -335,7 +335,7 @@ def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
 
     if new_in is None:
-        old = lsc.pop(key_in, "argle")
+        old = lsc.pop(key_in, "argle")  # noqa F841
     else:
         lsc[key_in] = new_in
 

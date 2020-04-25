@@ -1,31 +1,28 @@
 # -*- coding: utf-8 -*-
 """Test XonshLexer for pygments"""
 
-import os
-import gc
 import builtins
+import gc
 
 import pytest
 from pygments.token import (
-    Keyword,
-    Name,
-    String,
     Error,
+    Keyword,
+    Literal,
+    Name,
     Number,
     Operator,
     Punctuation,
+    String,
     Text,
-    Literal,
 )
-from tools import skip_if_on_windows
 
-from xonsh.platform import ON_WINDOWS
+from tools import DummyShell, skip_if_on_windows
 from xonsh.built_ins import load_builtins, unload_builtins
-from xonsh.execer import Execer
-from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
 from xonsh.environ import LsColors
-from xonsh.events import events, EventManager
-from tools import DummyShell
+from xonsh.events import EventManager, events
+from xonsh.platform import ON_WINDOWS
+from xonsh.pyghooks import Color, XonshLexer, XonshStyle, on_lscolors_change
 
 
 @pytest.fixture(autouse=True)
@@ -189,17 +186,15 @@ def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors):
     lsc = xonsh_builtins_ls_colors.__xonsh__.env["LS_COLORS"]
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
 
-    lsc['di'] = ('GREEN',)
+    lsc["di"] = ("GREEN",)
 
     check_token(
         "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.GREEN, test_dir)]
     )
 
-    del lsc['di']
+    del lsc["di"]
 
-    check_token(
-        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)]
-    )
+    check_token("cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)])
 
 
 @skip_if_on_windows

@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
 """Testing built_ins.Aliases"""
-from __future__ import unicode_literals, print_function
-
 import os
 
 import pytest
 
-import xonsh.built_ins as built_ins
+from tools import skip_if_on_windows
 from xonsh.aliases import Aliases, ExecAlias
 from xonsh.environ import Env
-
-from tools import skip_if_on_windows
 
 
 def cd(args, stdin=None, **kwargs):
     return args
+
 
 def make_aliases():
     ales = Aliases(
@@ -25,6 +22,7 @@ def make_aliases():
         indirect_cd="cd ..",
     )
     return ales
+
 
 def test_imports(xonsh_execer, xonsh_builtins):
     ales = make_aliases()

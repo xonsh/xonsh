@@ -1,38 +1,32 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh builtins."""
-from __future__ import unicode_literals, print_function
 import os
 import re
-import builtins
 import types
-from ast import AST, Module, Interactive, Expression
+from ast import AST, Expression, Interactive, Module
 from subprocess import Popen
 
 import pytest
 
-from xonsh import built_ins
+from tools import skip_if_on_windows
 from xonsh.built_ins import (
-    reglob,
-    pathsearch,
-    helper,
-    superhelper,
-    ensure_list_of_strs,
-    list_of_strs_or_callables,
-    list_of_list_of_strs_outer_product,
-    regexsearch,
-    globsearch,
-    expand_path,
-    convert_macro_arg,
-    in_macro_call,
     call_macro,
-    enter_macro,
     cmds_to_specs,
+    convert_macro_arg,
+    ensure_list_of_strs,
+    enter_macro,
+    expand_path,
+    helper,
+    in_macro_call,
+    list_of_list_of_strs_outer_product,
+    list_of_strs_or_callables,
+    pathsearch,
+    regexsearch,
+    reglob,
+    superhelper,
 )
 from xonsh.environ import Env
 from xonsh.proc import PopenThread, ProcProxy, ProcProxyThread
-
-from tools import skip_if_on_windows
-
 
 HOME_PATH = os.path.expanduser("~")
 
@@ -127,7 +121,7 @@ def test_ensure_list_of_strs(exp, inp):
     assert exp == obs
 
 
-f = lambda x: 20
+f = lambda x: 20  # noqa 731
 
 
 @pytest.mark.parametrize(
@@ -358,7 +352,7 @@ def test_call_macro_ast_eval_statement():
         return x
 
     try:
-        rtn = call_macro(f, ["x = 5"], {}, None)
+        rtn = call_macro(f, ["x = 5"], {}, None)  # noqa F841
         assert False
     except SyntaxError:
         # It doesn't make sense to pass a statement to

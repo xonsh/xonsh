@@ -16,7 +16,7 @@ imphooks.install_import_hooks()
 
 @pytest.fixture(autouse=True)
 def imp_env(xonsh_builtins):
-    execer = Execer(unload=False)
+    execer = Execer(unload=False)   # noqa F841
     builtins.__xonsh__.env = Env({"PATH": [], "PATHEXT": []})
     yield
     unload_builtins()

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests foreign shells."""
-from __future__ import unicode_literals, print_function
+
 import os
 import subprocess
 
-import pytest
-from tools import skip_if_on_windows, skip_if_on_unix
+import pytest  # noqa F401
 
-from xonsh.foreign_shells import foreign_shell_data, parse_env, parse_aliases
+from tools import skip_if_on_unix, skip_if_on_windows
+from xonsh.foreign_shells import foreign_shell_data, parse_aliases, parse_env
 
 
 def test_parse_env():

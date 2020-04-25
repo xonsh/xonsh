@@ -4,7 +4,7 @@
 # pylint: disable=unused-import
 import sys
 import builtins
-from ast import (
+from ast import (   # noqa F401 allow extra defines
     Module,
     Num,
     Expr,
@@ -102,9 +102,7 @@ from ast import (
     walk,
     increment_lineno,
 )
-from ast import Ellipsis as EllipsisNode
 
-# pylint: enable=unused-import
 import textwrap
 import itertools
 
@@ -112,15 +110,11 @@ from xonsh.tools import subproc_toks, find_next_break, get_logical_line
 from xonsh.platform import PYTHON_VERSION_INFO
 
 if PYTHON_VERSION_INFO >= (3, 5, 0):
-    # pylint: disable=unused-import
-    # pylint: disable=no-name-in-module
     from ast import MatMult, AsyncFunctionDef, AsyncWith, AsyncFor, Await
 else:
     MatMult = AsyncFunctionDef = AsyncWith = AsyncFor = Await = None
 
 if PYTHON_VERSION_INFO >= (3, 6, 0):
-    # pylint: disable=unused-import
-    # pylint: disable=no-name-in-module
     from ast import JoinedStr, FormattedValue, AnnAssign
 else:
     JoinedStr = FormattedValue = AnnAssign = None

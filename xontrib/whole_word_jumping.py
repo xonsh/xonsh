@@ -2,6 +2,8 @@
 
 Alt+Left/Right remains unmodified to jump over smaller word segments.
 """
+from builtins import events
+
 from prompt_toolkit.keys import Keys
 
 __all__ = ()

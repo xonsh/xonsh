@@ -76,7 +76,7 @@ from xonsh.tools import (
 )
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows, skip_if_on_unix
+from tools import skip_if_on_windows, skip_if_on_unix  # noqa F401
 
 LEXER = Lexer()
 LEXER.build()
@@ -1148,7 +1148,7 @@ def test_get_portions(inp, exp):
 )
 def test_ensure_slice_invalid(inp):
     with pytest.raises(ValueError):
-        obs = ensure_slice(inp)
+        obs = ensure_slice(inp)  # noqa F841
 
 
 @pytest.mark.parametrize(

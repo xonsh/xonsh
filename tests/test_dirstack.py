@@ -1,18 +1,12 @@
 # -*- coding: utf-8 -*-
 """Testing dirstack"""
-from __future__ import unicode_literals, print_function
-
-from contextlib import contextmanager
-from functools import wraps
 import os
-import builtins
+from contextlib import contextmanager
 
-import pytest
+import pytest  # noqa F401
 
 from xonsh import dirstack
 from xonsh.environ import Env
-from xonsh.built_ins import load_builtins
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
