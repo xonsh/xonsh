@@ -4,6 +4,7 @@ on a platform.
 """
 import builtins
 import collections.abc as cabc
+import ctypes  # noqa F401
 import functools
 import importlib.util
 import os

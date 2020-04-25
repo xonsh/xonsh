@@ -16,8 +16,6 @@ else:
 
         completer = __amalgam__
         _sys.modules["xonsh.completer"] = __amalgam__
-        contexts = __amalgam__
-        _sys.modules["xonsh.contexts"] = __amalgam__
         lazyasd = __amalgam__
         _sys.modules["xonsh.lazyasd"] = __amalgam__
         lazyjson = __amalgam__
@@ -44,6 +42,8 @@ else:
         _sys.modules["xonsh.ast"] = __amalgam__
         commands_cache = __amalgam__
         _sys.modules["xonsh.commands_cache"] = __amalgam__
+        contexts = __amalgam__
+        _sys.modules["xonsh.contexts"] = __amalgam__
         diff_history = __amalgam__
         _sys.modules["xonsh.diff_history"] = __amalgam__
         events = __amalgam__

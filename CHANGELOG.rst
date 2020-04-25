@@ -302,6 +302,7 @@ v0.9.11
   ``aliases['echocat'] = 'echo "hi" and echo "there"'`` will, when run, return
 
   .. code-block::
+  
      hi
      there
 
