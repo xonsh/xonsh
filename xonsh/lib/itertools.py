@@ -3,7 +3,7 @@ def as_iterable(iterable_or_scalar):
    Parameters
    ----------
    iterable_or_scalar : anything
-   
+
    Returns
    -------
    l : iterable

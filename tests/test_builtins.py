@@ -172,7 +172,7 @@ def test_expand_path(s, home_env):
     assert expand_path(s) == s.replace("~", HOME_PATH)
 
 
-@pytest.mark.parametrize("kind", [str, "s", "S", "str", "string"])
+@pytest.mark.parametrize("kind", [str, "s", "S", "str", "string", None])
 def test_convert_macro_arg_str(kind):
     raw_arg = "value"
     arg = convert_macro_arg(raw_arg, kind, None, None)
@@ -193,7 +193,7 @@ def test_convert_macro_arg_code(kind):
     assert isinstance(arg, types.CodeType)
 
 
-@pytest.mark.parametrize("kind", [eval, None, "v", "eval"])
+@pytest.mark.parametrize("kind", [eval, "v", "eval"])
 def test_convert_macro_arg_eval(kind):
     # literals
     raw_arg = "42"
