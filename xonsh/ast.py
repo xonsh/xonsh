@@ -4,7 +4,7 @@
 # pylint: disable=unused-import
 import sys
 import builtins
-from ast import (   # noqa F401 allow extra defines
+from ast import (  # noqa F401 allow extra defines
     Module,
     Num,
     Expr,
@@ -102,6 +102,8 @@ from ast import (   # noqa F401 allow extra defines
     walk,
     increment_lineno,
 )
+
+from ast import Ellipsis as EllipsisNode  # noqa F401
 
 import textwrap
 import itertools
