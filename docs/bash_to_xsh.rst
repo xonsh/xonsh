@@ -43,7 +43,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Cause a failure after a non-zero return code. Xonsh will raise a
         ``supbrocess.CalledProcessError``.
     * - ``set -x``
-      - ``trace on``
+      - ``trace on`` and ``$XONSH_TRACE_SUBPROC = True``
       - Turns on tracing of source code lines during execution.
     * - ``&&``
       - ``and`` or ``&&``
