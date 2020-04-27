@@ -69,8 +69,8 @@ line is ``#!/usr/bin/env xonsh``.
       - ``$ARGS``
       - List of all command line argument and parameter strings.
 
-To understand how xonsh executes the subprocess commands try to set
-   :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+To understand how xonsh executes the subprocess commands try
+to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
 .. code-block:: console
 

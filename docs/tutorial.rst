@@ -604,8 +604,8 @@ With great power, and so forth...
           Python mode, it is not possible to nest other subprocess operators
           inside of them.
 
-To understand how xonsh executes the subprocess commands try to set
-   :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+To understand how xonsh executes the subprocess commands try
+to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
 .. code-block:: console
 
