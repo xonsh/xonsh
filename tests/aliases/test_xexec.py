@@ -1,7 +1,6 @@
 import os
 import inspect
 import pytest
-import sys
 
 from xonsh.aliases import xexec
 

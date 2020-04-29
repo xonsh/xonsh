@@ -11,4 +11,3 @@ def test_list():
 
 def test_string():
     assert as_iterable("my string") == ("my string",)
-

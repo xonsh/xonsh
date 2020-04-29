@@ -1,9 +1,6 @@
-import builtins
-
 import pytest
 from unittest.mock import patch
 
-from xonsh.environ import Env
 import xonsh.completers.path as xcp
 
 
