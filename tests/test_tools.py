@@ -938,7 +938,7 @@ def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_builtins):
 
 
 @pytest.mark.parametrize("inp", ["42.0", [42.0]])
-def test_is_nonstring_seq_of_strings_false(inp):
+def test_is_nonstring_seq_of_strings_false1(inp):
     assert not is_nonstring_seq_of_strings(inp)
 
 
@@ -1020,12 +1020,12 @@ def test_env_path_keep_only_non_home_paths(inp, exp):
 
 @pytest.mark.parametrize("inp", [True, False])
 def test_is_bool_true(inp):
-    assert True == is_bool(inp)
+    assert is_bool(inp)
 
 
 @pytest.mark.parametrize("inp", [1, "yooo hooo!"])
 def test_is_bool_false(inp):
-    assert False == is_bool(inp)
+    assert not is_bool(inp)
 
 
 @pytest.mark.parametrize(
