@@ -199,7 +199,7 @@ def test_convert_macro_arg_code(kind):
     assert isinstance(arg, types.CodeType)
 
 
-@pytest.mark.parametrize("kind", [eval, None, "v", "eval"])
+@pytest.mark.parametrize("kind", [eval, "v", "eval"])
 def test_convert_macro_arg_eval(kind):
     # literals
     raw_arg = "42"
