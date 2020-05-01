@@ -230,7 +230,7 @@ def test_convert_macro_arg_exec(kind):
 
 
 @pytest.mark.parametrize("kind", [type, "t", "type"])
-def test_convert_macro_arg_eval_type(kind):
+def test_convert_macro_arg_type(kind):
     # literals
     raw_arg = "42"
     arg = convert_macro_arg(raw_arg, kind, {}, None)
