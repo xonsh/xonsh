@@ -60,7 +60,7 @@ Here is a sample file system layout and what the xontrib names would be::
 
 
 You can also use `cookiecutter <https://github.com/audreyr/cookiecutter>`_ with
-the `xontrib template <https://github.com/laerus/cookiecutter-xontrib>`_ to easily
+the `xontrib template <https://github.com/xonsh/xontrib-cookiecutter>`_ to easily
 create the layout for your xontrib package.
 
 
