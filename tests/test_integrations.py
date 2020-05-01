@@ -557,6 +557,7 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
 @skip_if_no_xonsh
 @skip_if_no_sleep
 @skip_if_on_windows
+@pytest.mark.xfail(strict=False) # TODO: fixme (super flaky on OSX)
 def test_xonsh_no_close_fds():
     # see issue https://github.com/xonsh/xonsh/issues/2984
     makefile = (

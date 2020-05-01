@@ -67,6 +67,7 @@ xonsh/webconfig/js/app.js
 
 # venv (e.g, autovox)
 venv/
+.venv/
 
 # VS Code
 .vscode/
