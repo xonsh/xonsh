@@ -17,7 +17,7 @@
 **Fixed:**
 
 * Flake8/black fixes to the whole code tree, in 3 steps. 
-Devs should update their IDE to run both during file editing, to avoid a re-accumulation of arbitrary exceptions.
+  Devs should update their IDE to run both during file editing, to avoid a re-accumulation of arbitrary exceptions.
 
 **Security:**
 
