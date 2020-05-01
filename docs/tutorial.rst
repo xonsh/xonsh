@@ -604,6 +604,21 @@ With great power, and so forth...
           Python mode, it is not possible to nest other subprocess operators
           inside of them.
 
+To understand how xonsh executes the subprocess commands try
+to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+
+.. code-block:: console
+
+    >>> $XONSH_TRACE_SUBPROC = True
+    >>> $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
+    TRACE SUBPROC: (['echo', 'ls'],)
+    TRACE SUBPROC: (['which', 'ls'],)
+    TRACE SUBPROC: (['printf', 'l'],)
+    TRACE SUBPROC: (['ls', '--color=auto', '-v', '-l'],)
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+
+
 Pipes
 ====================
 
