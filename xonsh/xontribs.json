@@ -204,6 +204,11 @@
   "url": "https://github.com/dyuri/xontrib-ssh-agent",
   "description": ["ssh-agent integration"]
  },
+ {"name": "prompt_bar",
+  "package": "git+https://github.com/anki-code/xontrib-prompt-bar.git",
+  "url": "https://github.com/anki-code/xontrib-prompt-bar",
+  "description": ["An elegance bar style for prompt."]
+ },
  {"name": "vox",
   "package": "xonsh",
   "url": "http://xon.sh",
