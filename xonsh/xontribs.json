@@ -209,6 +209,11 @@
   "url": "https://github.com/anki-code/xontrib-prompt-bar",
   "description": ["An elegance bar style for prompt."]
  },
+ {"name": "pipeliner",
+  "package": "git+https://github.com/anki-code/xontrib-pipeliner.git",
+  "url": "https://github.com/anki-code/xontrib-pipeliner",
+  "description": ["Easily process the lines using pipes."]
+ },
  {"name": "vox",
   "package": "xonsh",
   "url": "http://xon.sh",
