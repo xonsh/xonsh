@@ -1,4 +1,5 @@
 """Matplotlib hooks, for what its worth."""
+import builtins
 from io import BytesIO
 import shutil
 
@@ -154,7 +155,7 @@ def display_figure_with_iterm2(fig):
 def show():
     """Run the mpl display sequence by printing the most recent figure to console"""
     try:
-        minimal = __xonsh__.env["XONTRIB_MPL_MINIMAL"]
+        minimal = builtins.__xonsh__.env["XONTRIB_MPL_MINIMAL"]
     except KeyError:
         minimal = XONTRIB_MPL_MINIMAL_DEFAULT
     fig = plt.gcf()

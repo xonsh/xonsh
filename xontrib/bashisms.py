@@ -19,7 +19,7 @@ def bash_preproc(cmd, **kw):
 
     def replace_bang(m):
         arg = m.group(1)
-        inputs = __xonsh__.history.inps
+        inputs = builtins.__xonsh__.history.inps
 
         # Dissect the previous command.
         if arg in bang_previous:
