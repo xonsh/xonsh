@@ -19,5 +19,4 @@
 * <news item>
 
 **Security:**
-base.py
 * <news item>
