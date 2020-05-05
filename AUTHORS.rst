@@ -24,9 +24,9 @@ Authors are sorted by number of commits.
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
+* anki-code
 * Travis Shirk
 * Joel Gerber
-* anki-code
 * vaaaaanquish
 * Bernardas Ališauskas
 * Derek Thomas
@@ -125,6 +125,7 @@ Authors are sorted by number of commits.
 * shadow-light
 * Gyuri Horak
 * Jan Chren
+* Noortheen Raja
 * Samuel Lotz
 * Mark Wiebe
 * Nathan Hoad
@@ -154,7 +155,6 @@ Authors are sorted by number of commits.
 * micimize
 * Chris Lasher
 * Edmund Miller
-* Noortheen Raja
 * Gabriel Vogel
 * anki
 * Dan Allan
@@ -222,5 +222,7 @@ Authors are sorted by number of commits.
 * Sylvain Corlay
 * Marcio Mazza
 * Jerzy Drozdz
+* Manor Askenazi
+* Marduk Bolaños
 * goodboy
 * Atsushi Morimoto
