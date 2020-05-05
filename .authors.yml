@@ -652,6 +652,8 @@
   github: anddam
 - name: Raphael Das Gupta
   email: raphael.das.gupta@hsr.ch
+  alternate_emails:
+    - git@raphael.dasgupta.ch
   num_commits: 9
   first_commit: 2017-01-03 06:56:44
 - name: Andrei
@@ -1143,3 +1145,7 @@
   email: anki@code.email
   num_commits: 2
   first_commit: 2020-03-02 04:59:17
+- name: Manor Askenazi
+  email: manor@biomedical.hosting
+- name: Marduk Bolaños
+  email: mardukbp@mac.com
