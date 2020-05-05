@@ -237,7 +237,6 @@ def test_autovox(xonsh_builtins, tmpdir):
     Tests that autovox works
     """
     import importlib
-    from xonsh.lib import subprocess
     import xonsh.dirstack
 
     # Set up an isolated venv home

@@ -4,7 +4,7 @@ from __future__ import unicode_literals, print_function
 import os
 import subprocess
 
-import pytest
+import pytest  # noqa F401
 from tools import skip_if_on_windows, skip_if_on_unix
 
 from xonsh.foreign_shells import foreign_shell_data, parse_env, parse_aliases

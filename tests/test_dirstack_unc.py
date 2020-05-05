@@ -2,17 +2,13 @@
 """Testing dirstack"""
 # from __future__ import unicode_literals, print_function
 
-from contextlib import contextmanager
-from functools import wraps
 import os
 import os.path
 import subprocess
 
-import builtins
 import pytest
 from xonsh import dirstack
 from xonsh.environ import Env
-from xonsh.built_ins import load_builtins
 from xonsh.dirstack import DIRSTACK
 from xonsh.platform import ON_WINDOWS
 from xonsh.dirstack import _unc_tempDrives
@@ -180,7 +176,7 @@ def test_uncpushd_push_other_push_same(xonsh_builtins, shares_setup):
     assert len(DIRSTACK) == 1
 
     dirstack.pushd([r"\\localhost\uncpushd_test_PARENT"])
-    wd = os.getcwd()
+    os.getcwd()
     assert os.getcwd().casefold() == TEMP_DRIVE[2] + "\\"
     assert len(_unc_tempDrives) == 2
     assert len(DIRSTACK) == 2
@@ -235,7 +231,7 @@ def with_unc_check_enabled():
     try:
         wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
         old_wval = wval  # if values was defined at all
-    except OSError as e:
+    except OSError:
         pass
     winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, 0)
     winreg.CloseKey(key)
@@ -267,7 +263,7 @@ def with_unc_check_disabled():  # just like the above, but value is 1 to *disabl
     try:
         wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
         old_wval = wval  # if values was defined at all
-    except OSError as e:
+    except OSError:
         pass
     winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, 1)
     winreg.CloseKey(key)

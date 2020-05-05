@@ -2,7 +2,7 @@
 import ast as pyast
 
 from xonsh import ast
-from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, pdump, isexpression
+from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, isexpression
 
 import pytest
 

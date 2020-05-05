@@ -3,15 +3,12 @@
 from __future__ import unicode_literals, print_function
 
 from contextlib import contextmanager
-from functools import wraps
 import os
-import builtins
 
-import pytest
+import pytest  # noqa F401
 
 from xonsh import dirstack
 from xonsh.environ import Env
-from xonsh.built_ins import load_builtins
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -86,7 +83,7 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
     old_dir = os.getcwd()
     try:
         dirstack.cd([target])
-    except:
+    except Exception:
         raise
     else:
         assert (old_dir, target) == ev
@@ -109,7 +106,7 @@ def test_cd_autopush(xonsh_builtins, tmpdir):
         assert target == os.getcwd()
         assert old_ds_size + 1 == len(dirstack.DIRSTACK)
         dirstack.popd([])
-    except:
+    except Exception:
         raise
     finally:
         while len(dirstack.DIRSTACK) > old_ds_size:
