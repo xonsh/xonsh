@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Test XonshLexer for pygments"""
 
-import os
 import gc
 import builtins
 
@@ -21,7 +20,6 @@ from tools import skip_if_on_windows
 
 from xonsh.platform import ON_WINDOWS
 from xonsh.built_ins import load_builtins, unload_builtins
-from xonsh.execer import Execer
 from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
 from xonsh.environ import LsColors
 from xonsh.events import events, EventManager

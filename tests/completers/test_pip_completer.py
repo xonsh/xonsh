@@ -35,5 +35,5 @@ def test_pip_list_re(line):
         "!(boxpip uninstall",
     ],
 )
-def test_pip_list_re(line):
+def test_pip_list_re1(line):
     assert PIP_RE.search(line) is None

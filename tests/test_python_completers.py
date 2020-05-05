@@ -1,5 +1,3 @@
-import builtins
-
 import pytest
 
 from xonsh.completers.python import python_signature_complete
