@@ -159,7 +159,7 @@
                   "that displays the current figure on the screen."]
   },
  {"name": "output_search",
-  "package": "git+https://github.com/anki-code/xontrib-output-search.git",
+  "package": "xontrib-output-search",
   "url": "https://github.com/anki-code/xontrib-output-search",
   "description": ["Get identifiers, names, paths, URLs and words from the previous command output ",
                   "and use them for the next command."]
@@ -205,12 +205,12 @@
   "description": ["ssh-agent integration"]
  },
  {"name": "prompt_bar",
-  "package": "git+https://github.com/anki-code/xontrib-prompt-bar.git",
+  "package": "xontrib-prompt-bar",
   "url": "https://github.com/anki-code/xontrib-prompt-bar",
   "description": ["An elegance bar style for prompt."]
  },
  {"name": "pipeliner",
-  "package": "git+https://github.com/anki-code/xontrib-pipeliner.git",
+  "package": "xontrib-pipeliner",
   "url": "https://github.com/anki-code/xontrib-pipeliner",
   "description": ["Easily process the lines using pipes."]
  },
