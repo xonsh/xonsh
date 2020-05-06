@@ -70,3 +70,6 @@ venv/
 
 # VS Code
 .vscode/
+
+# AppImage
+*.AppImage
