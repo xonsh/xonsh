@@ -430,7 +430,7 @@ class JsonHistory(History):
         hf = JsonHistoryFlusher(
             self.filename, tuple(self.buffer), self._queue, self._cond, at_exit=at_exit
         )
-        self.buffer.clear()
+        self.buffer = []
         return hf
 
     def items(self, newest_first=False):
