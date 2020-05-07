@@ -222,7 +222,9 @@ class JsonHistoryGC(threading.Thread):
 class JsonHistoryFlusher(threading.Thread):
     """Flush shell history to disk periodically."""
 
-    def __init__(self, filename, buffer, queue, cond, at_exit=False, *args, **kwargs):
+    def __init__(
+        self, filename, buffer, queue, cond, at_exit=False, skip=None, *args, **kwargs
+    ):
         """Thread for flushing history."""
         super(JsonHistoryFlusher, self).__init__(*args, **kwargs)
         self.filename = filename
@@ -231,6 +233,7 @@ class JsonHistoryFlusher(threading.Thread):
         queue.append(self)
         self.cond = cond
         self.at_exit = at_exit
+        self.skip = skip
         if at_exit:
             self.dump()
             queue.popleft()
@@ -255,9 +258,13 @@ class JsonHistoryFlusher(threading.Thread):
         for cmd in self.buffer:
             if "ignoredups" in opts and cmd["inp"] == last_inp:
                 # Skipping dup cmd
+                if self.skip is not None:
+                    self.skip(1)
                 continue
             if "ignoreerr" in opts and cmd["rtn"] != 0:
                 # Skipping failed cmd
+                if self.skip is not None:
+                    self.skip(1)
                 continue
             cmds.append(cmd)
             last_inp = cmd["inp"]
@@ -371,6 +378,7 @@ class JsonHistory(History):
         self._queue = collections.deque()
         self._cond = threading.Condition()
         self._len = 0
+        self._skipped = 0
         self.last_cmd_out = None
         self.last_cmd_rtn = None
         meta["cmds"] = []
@@ -385,7 +393,7 @@ class JsonHistory(History):
         self.rtns = JsonCommandField("rtn", self)
 
     def __len__(self):
-        return self._len
+        return self._len - self._skipped
 
     def append(self, cmd):
         """Appends command to history. Will periodically flush the history to file.
@@ -427,8 +435,17 @@ class JsonHistory(History):
         """
         if len(self.buffer) == 0:
             return
+
+        def skip(num):
+            self._skipped += num
+
         hf = JsonHistoryFlusher(
-            self.filename, tuple(self.buffer), self._queue, self._cond, at_exit=at_exit
+            self.filename,
+            tuple(self.buffer),
+            self._queue,
+            self._cond,
+            at_exit=at_exit,
+            skip=skip,
         )
         self.buffer = []
         return hf
