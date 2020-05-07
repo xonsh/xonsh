@@ -110,25 +110,25 @@ is open to interpretation.
   recommendations from PEP8 are not required here.
 * All Python code should be compliant with Python 3.5+.  At some
   unforeseen date in the future, Python 2.7 support *may* be supported.
-* Tests should be written with pytest using a procedural style. Do not use
+* Tests should be written with `pytest <https://docs.pytest.org/>`_ using a procedural style. Do not use
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
 
 You can easily check for style issues, including some outright bugs such
-as mispelled variable names, using pylint. If you're using Anaconda you'll
-need to run "conda install pylint" once. You can easily run pylint on
+as mispelled variable names, using `flake8 <https://flake8.pycqa.org/>`_. If you're using Anaconda you'll
+need to run "conda install flake8" once. You can easily run flake8 on
 the edited files in your uncommited git change::
 
-    $ git status -s | awk '/\.py$$/ { print $2 }' | xargs pylint
+    $ git status -s | awk '/\.py$$/ { print $2 }' | xargs flake8
 
 If you want to lint the entire code base run::
 
-    $ pylint $(find tests xonsh -name \*.py | sort)
+    $ flake8
 
-We also use ``black`` for formatting the code base (which includes running in
+We also use `black <https://github.com/psf/black>`_ for formatting the code base (which includes running in
 our tests)::
 
-    $ black --check --exclude=xonsh/ply/ xonsh/ xontrib/
+    $ black --check xonsh/ xontrib/
 
 To add this as a git pre-commit hook::
 
