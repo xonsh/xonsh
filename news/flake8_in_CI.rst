@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* Updated pytest_plugin for pytest 5.4 API, pip requirements for pytest>= 5.4
 
 **Deprecated:**
 
@@ -19,6 +19,7 @@
 
 * Updated development guide to reference flake8 instead of pylint
 * Corrected flake8 config for allowed exceptions.
+* various pytest warnings in a "clean" test run.
 
 **Security:**
 

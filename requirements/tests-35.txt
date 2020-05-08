@@ -1,5 +1,5 @@
 py
-pytest
+pytest>=5.4
 flake8
 pytest-cov
 pytest-timeout
