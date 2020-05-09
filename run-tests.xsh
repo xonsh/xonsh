@@ -27,4 +27,5 @@ for fname in run_separately:
 for index, fname in enumerate(run_separately):
     ![pytest @(replace_args(index+1)) @(fname)]
 echo "---------- Running flake8 ----------"
+$RAISE_SUBPROC_ERROR = False
 python -m flake8
