@@ -881,19 +881,28 @@ def _tokenize(readline, encoding):
         pos, max = 0, len(line)
 
         if contstr:  # continued string
+            # Depends on locals initialized in prev string, hence many noqa
             if not line:
-                raise TokenError("EOF in multi-line string", strstart)
-            endmatch = endprog.match(line)
+                raise TokenError("EOF in multi-line string", strstart)  # noqa F821
+            endmatch = endprog.match(line)  # noqa F821
             if endmatch:
                 pos = end = endmatch.end(0)
                 yield TokenInfo(
-                    STRING, contstr + line[:end], strstart, (lnum, end), contline + line
+                    STRING,
+                    contstr + line[:end],
+                    strstart,  # noqa F821
+                    (lnum, end),
+                    contline + line,
                 )
                 contstr, needcont = "", 0
                 contline = None
             elif needcont and line[-2:] != "\\\n" and line[-3:] != "\\\r\n":
                 yield TokenInfo(
-                    ERRORTOKEN, contstr + line, strstart, (lnum, len(line)), contline
+                    ERRORTOKEN,
+                    contstr + line,
+                    strstart,  # noqa F821
+                    (lnum, len(line)),
+                    contline,
                 )
                 contstr = ""
                 contline = None
@@ -1025,7 +1034,7 @@ def _tokenize(readline, encoding):
                     or token[:3] in single_quoted
                 ):
                     if token[-1] == "\n":  # continued string
-                        strstart = (lnum, start)
+                        strstart = (lnum, start)  # noqa F841
                         endprog = _compile(
                             endpats[initial] or endpats[token[1]] or endpats[token[2]]
                         )
