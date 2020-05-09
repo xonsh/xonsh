@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* tests/test_builtins.py, fix test case test_convert_macro_arg_eval(kind).
+* ``pip`` completer no longer erroneously fires for ``pipx``
 
 **Security:**
 
