@@ -7,6 +7,7 @@ import functools
 import json
 import os
 import sys
+import threading
 
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
@@ -223,7 +224,7 @@ def _XH_HISTORY_SESSIONS():
     }
 
 
-_XH_MAIN_ACTIONS = {"show", "id", "file", "info", "diff", "gc"}
+_XH_MAIN_ACTIONS = {"show", "id", "file", "info", "diff", "gc", "flush"}
 
 
 @functools.lru_cache()
@@ -349,6 +350,9 @@ def _xh_create_parser():
         xrp.replay_create_parser(p=replay)
         _XH_MAIN_ACTIONS.add("replay")
 
+    # 'flush' subcommand
+    subp.add_parser("flush", help="flush the current history to disk")
+
     return p
 
 
@@ -413,5 +417,9 @@ def history_main(
             import xonsh.replay as xrp
 
             xrp.replay_main_action(hist, ns, stdout=stdout, stderr=stderr)
+    elif ns.action == "flush":
+        hf = hist.flush()
+        if isinstance(hf, threading.Thread):
+            hf.join()
     else:
         print("Unknown history action {}".format(ns.action), file=sys.stderr)

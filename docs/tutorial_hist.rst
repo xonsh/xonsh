@@ -329,6 +329,15 @@ For the commands, the input sequences are diff'd first, prior to the outputs
 being compared. In a terminal, this will appear in color, with the first history
 in red and the second one in green.
 
+``flush`` action
+================
+Normally, the history entries are kept in memory and are only saved to disk once
+the in-memory buffer gets full. This is in order to reduce unnecessary I/O and to
+keep session history free from noise from other sessions. Sometimes, however, it
+may be useful to share entries between shell sessions. In such a case, one can use
+the ``flush`` action to immediately save the session history to disk and make it
+accessible from other shell sessions.
+
 ``gc`` action
 ===============
 Last, but certainly not least, the ``gc`` action is a manual hook into executing
