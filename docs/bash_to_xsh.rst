@@ -68,6 +68,9 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``$@``
       - ``$ARGS``
       - List of all command line argument and parameter strings.
+    * - ``exit``
+      - ``sys.exit()``
+      - Exiting from the current script.
 
 To understand how xonsh executes the subprocess commands try
 to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
