@@ -69,7 +69,7 @@ line is ``#!/usr/bin/env xonsh``.
       - ``$ARGS``
       - List of all command line argument and parameter strings.
     * - ``exit``
-      - ``raise SystemExit`` or ``sys.exit()``
+      - ``sys.exit()``
       - Exiting from the current script.
 
 To understand how xonsh executes the subprocess commands try

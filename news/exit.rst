@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Added two ways of exit to the "Bash to xsh" article.
+* Added exit to the "Bash to xsh" article.
 
 **Deprecated:**
 
