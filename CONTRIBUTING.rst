@@ -128,7 +128,7 @@ If you want to lint the entire code base run::
 We also use `black <https://github.com/psf/black>`_ for formatting the code base (which includes running in
 our tests)::
 
-    $ black --check xonsh/ xontrib/
+    $ black --check --exclude=xonsh/ply/ xonsh/ xontrib/
 
 To add this as a git pre-commit hook::
 

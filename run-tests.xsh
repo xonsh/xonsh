@@ -28,6 +28,5 @@ for index, fname in enumerate(run_separately):
     ![pytest @(replace_args(index+1)) @(fname)]
 
 echo "---------- Running flake8 ----------"
-$XONSH_SHOW_TRACEBACK = False
 python -m flake8
     
