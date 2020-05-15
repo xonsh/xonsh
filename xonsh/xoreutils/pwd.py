@@ -1,11 +1,10 @@
 """A pwd implementation for xonsh."""
 import os
-import builtins
 
 
 def pwd(args, stdin, stdout, stderr):
     """A pwd implementation"""
-    e = builtins.__xonsh__.env["PWD"]
+    e = __xonsh__.env["PWD"]
     if "-h" in args or "--help" in args:
         print(PWD_HELP, file=stdout)
         return 0

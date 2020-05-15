@@ -2,7 +2,6 @@
 import shlex
 import sys
 import re
-import builtins
 
 
 __all__ = ()
@@ -19,7 +18,7 @@ def bash_preproc(cmd, **kw):
 
     def replace_bang(m):
         arg = m.group(1)
-        inputs = builtins.__xonsh__.history.inps
+        inputs = __xonsh__.history.inps
 
         # Dissect the previous command.
         if arg in bang_previous:
@@ -63,4 +62,4 @@ def alias(args, stdin=None):
 
 
 aliases["alias"] = alias
-builtins.__xonsh__.env["THREAD_SUBPROCS"] = False
+__xonsh__.env["THREAD_SUBPROCS"] = False

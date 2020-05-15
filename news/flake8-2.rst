@@ -1,10 +1,10 @@
 **Added:**
 
-* <news item>
+* Added global flake8 exception for global __xonsh__, but do we really want to encourage bare global reference to "internal" field?
 
 **Changed:**
 
-* require import builtins, builtins.__xonsh__ to reference environment and non-public globals.
+* <news item>
 
 **Deprecated:**
 
@@ -16,7 +16,8 @@
 
 **Fixed:**
 
-* setup.cfg [flake8] now correctly mimics ignores of [pytest] flake-ignores
+* Resolved flake8 errors F821 (undefined name) and F841 (defined but never used).
+  setup.cfg: Removed per-file-ignores for these.
 
 **Security:**
 
