@@ -415,6 +415,49 @@ else:
         "Var foo\n",
         0,
     ),
+    #
+    # test logical subprocess operators
+    #
+    (
+        """
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+echo --version and echo a
+echo --version && echo a
+echo --version or echo a
+echo --version || echo a
+echo -+version and echo a
+echo -+version && echo a
+echo -+version or echo a
+echo -+version || echo a
+echo -~version and echo a
+echo -~version && echo a
+echo -~version or echo a
+echo -~version || echo a
+""",
+        """--version
+a
+--version
+a
+--version
+--version
+-+version
+a
+-+version
+a
+-+version
+-+version
+-~version
+a
+-~version
+a
+-~version
+-~version
+""",
+        0,
+    ),
 ]
 
 
