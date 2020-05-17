@@ -32,7 +32,7 @@
   - jamie.bliss@ilq.com
   - jbliss@nextgenerationenrollment.com
   - jamie@ivyleav.es
-  num_commits: 212
+  num_commits: 213
   first_commit: 2016-07-20 14:05:08
   github: astronouth7303
 - name: Cody Scott
@@ -63,7 +63,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 526
+  num_commits: 529
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -434,7 +434,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2597
+  num_commits: 2600
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -652,7 +652,9 @@
   github: anddam
 - name: Raphael Das Gupta
   email: raphael.das.gupta@hsr.ch
-  num_commits: 9
+  alternate_emails:
+  - git@raphael.dasgupta.ch
+  num_commits: 10
   first_commit: 2017-01-03 06:56:44
 - name: Andrei
   email: fizicars@gmail.com
@@ -950,7 +952,7 @@
   github: selepo
 - name: Bob Hyman
   email: bob.hyman@bobssoftwareworks.com
-  num_commits: 68
+  num_commits: 71
   first_commit: 2016-06-26 16:48:47
   github: bobhy
   alternate_emails:
@@ -1099,7 +1101,7 @@
   email: anki-code@users.noreply.github.com
   alternate_emails:
   - anki-code
-  num_commits: 21
+  num_commits: 26
   first_commit: 2019-10-15 18:20:58
 - name: Sylvain Corlay
   email: sylvain.corlay@gmail.com
@@ -1122,7 +1124,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 2
+  num_commits: 3
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1143,3 +1145,12 @@
   email: anki@code.email
   num_commits: 2
   first_commit: 2020-03-02 04:59:17
+- name: Manor Askenazi
+  email: manor@biomedical.hosting
+  num_commits: 1
+  first_commit: 2020-04-25 18:21:05
+  github: manor
+- name: Marduk Bolaños
+  email: mardukbp@mac.com
+  num_commits: 1
+  first_commit: 2020-04-30 20:26:48

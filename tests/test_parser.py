@@ -7,7 +7,7 @@ import itertools
 
 import pytest
 
-from xonsh.ast import AST, With, Pass, pdump, Str, Call
+from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.base import eval_fstr_fields
 
@@ -2706,7 +2706,6 @@ def test_arg_single_subprocbang(opener, closer, body):
     "body", ["echo -n!x", "echo -n!x", "echo -n !x", "echo -n ! x"]
 )
 def test_arg_single_subprocbang_nested(opener, closer, ipener, iloser, body):
-    code = opener + "echo " + ipener + body + iloser + closer
     tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts

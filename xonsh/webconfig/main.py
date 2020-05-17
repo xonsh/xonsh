@@ -71,7 +71,7 @@ def insert_into_xonshrc(
     # compute new values
     new = config_to_xonsh(config, prefix=prefix, suffix=suffix)
     # write out the file
-    with open(fname, "w") as f:
+    with open(fname, "w", encoding="utf-8") as f:
         f.write(before + new + after)
     return fname
 

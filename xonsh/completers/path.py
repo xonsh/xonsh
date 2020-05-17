@@ -299,9 +299,13 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         # see above functions for details.
         p = _splitpath(os.path.expanduser(prefix))
         if len(p) != 0:
-            if p[0] == "":
-                basedir = ("",)
-                p = p[1:]
+            relative_char = ["", ".", ".."]
+            if p[0] in relative_char:
+                i = 0
+                while p[i] in relative_char:
+                    i += 1
+                basedir = p[:i]
+                p = p[i:]
             else:
                 basedir = None
             matches_so_far = {basedir}

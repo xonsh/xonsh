@@ -2,11 +2,9 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
-import tempfile
-import builtins
 import itertools
 from tempfile import TemporaryDirectory
-from xonsh.tools import ON_WINDOWS, always_true
+from xonsh.tools import always_true
 
 import pytest
 
@@ -289,7 +287,7 @@ def test_delitem():
     assert env["VAR"] == "a value"
     del env["VAR"]
     with pytest.raises(Exception):
-        a = env["VAR"]
+        env["VAR"]
 
 
 def test_delitem_default():
@@ -335,7 +333,7 @@ def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
 
     if new_in is None:
-        old = lsc.pop(key_in, "argle")
+        lsc.pop(key_in, "argle")
     else:
         lsc[key_in] = new_in
 
