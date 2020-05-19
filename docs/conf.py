@@ -18,7 +18,6 @@ os.environ["XONSH_DEBUG"] = "1"
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 from xonsh.xontribs import xontrib_metadata
-from xonsh import main
 from xonsh.commands_cache import CommandsCache
 
 if not hasattr(builtins, "__xonsh__"):
@@ -38,13 +37,6 @@ else:
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-
-def setup(sphinx):
-    from xonsh.pyghooks import XonshConsoleLexer
-
-    sphinx.add_lexer("xonshcon", XonshConsoleLexer())
-
-
 # -- General configuration -----------------------------------------------------
 
 # Documentation is being built on readthedocs, this will be true.
@@ -59,7 +51,6 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.viewcode",
-    #'sphinx.ext.autosummary',
     "numpydoc",
     "cmdhelp",
     "runthis.sphinxext",
@@ -159,7 +150,6 @@ if not on_rtd:
         "footerbgcolor": "#FFFFE7",
         "sidebarwidth": "322px",
         "sidebarbgcolor": "#e7e7ff",
-        #'googleanalytics_id': 'UA-41934829-1',
         "inline_admonitions": True,
         "stickysidebar": False,
         "highlighttoc": False,
@@ -442,4 +432,7 @@ builtins.__xonsh__.commands_cache = CommandsCache()
 
 
 def setup(app):
+    from xonsh.pyghooks import XonshConsoleLexer
+
+    app.add_lexer("xonshcon", XonshConsoleLexer())
     app.add_stylesheet("custom.css")
