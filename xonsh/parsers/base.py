@@ -3034,14 +3034,14 @@ class BaseParser(object):
         """
         p1 = p[1]
         p3 = p[3]
-        l = p1.lineno
+        lineno = p1.lineno
         c = p1.lexpos + 1
-        subcmd = self.source_slice((l, c), (p3.lineno, p3.lexpos))
+        subcmd = self.source_slice((lineno, c), (p3.lineno, p3.lexpos))
         subcmd = subcmd.strip() + "\n"
         p0 = [
-            ast.Str(s="xonsh", lineno=l, col_offset=c),
-            ast.Str(s="-c", lineno=l, col_offset=c),
-            ast.Str(s=subcmd, lineno=l, col_offset=c),
+            ast.Str(s="xonsh", lineno=lineno, col_offset=c),
+            ast.Str(s="-c", lineno=lineno, col_offset=c),
+            ast.Str(s=subcmd, lineno=lineno, col_offset=c),
         ]
         for arg in p0:
             arg._cliarg_action = "append"

@@ -288,7 +288,7 @@ def find_file(obj):
             except TypeError:
                 # Can happen for builtins
                 pass
-    except:  # pylint:disable=bare-except
+    except Exception:
         pass
     return cast_unicode(fname)
 
@@ -322,7 +322,7 @@ def find_source_lines(obj):
                 lineno = inspect.getsourcelines(obj.__class__)[1]
             else:
                 lineno = None
-    except:  # pylint:disable=bare-except
+    except Exception:
         return None
 
     return lineno
@@ -358,7 +358,7 @@ class Inspector(object):
         try:
             hdef = oname + inspect.signature(*getargspec(obj))
             return cast_unicode(hdef)
-        except:  # pylint:disable=bare-except
+        except Exception:
             return None
 
     def noinfo(self, msg, oname):
@@ -428,7 +428,7 @@ class Inspector(object):
         linecache.checkcache()
         try:
             src = getsource(obj)
-        except:  # pylint:disable=bare-except
+        except Exception:
             self.noinfo("source", oname)
         else:
             print(src)
@@ -651,7 +651,7 @@ class Inspector(object):
         try:
             bclass = obj.__class__
             out["base_class"] = str(bclass)
-        except:  # pylint:disable=bare-except
+        except Exception:
             pass
 
         # String form, but snip if too long in ? form (full in ??)
@@ -665,7 +665,7 @@ class Inspector(object):
                         q.strip() for q in ostr.split("\n")
                     )
                 out[str_head] = ostr
-            except:  # pylint:disable=bare-except
+            except Exception:
                 pass
 
         if ospace:
@@ -674,7 +674,7 @@ class Inspector(object):
         # Length (for strings and lists)
         try:
             out["length"] = str(len(obj))
-        except:  # pylint:disable=bare-except
+        except Exception:
             pass
 
         # Filename where object was defined
@@ -755,7 +755,7 @@ class Inspector(object):
             if ds:
                 try:
                     cls = getattr(obj, "__class__")
-                except:  # pylint:disable=bare-except
+                except Exception:
                     class_ds = None
                 else:
                     class_ds = getdoc(cls)

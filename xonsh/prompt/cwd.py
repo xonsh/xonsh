@@ -35,10 +35,10 @@ def _replace_home_cwd():
 def _collapsed_pwd():
     sep = xt.get_sep()
     pwd = _replace_home_cwd().split(sep)
-    l = len(pwd)
-    leader = sep if l > 0 and len(pwd[0]) == 0 else ""
+    lpwd = len(pwd)
+    leader = sep if lpwd > 0 and len(pwd[0]) == 0 else ""
     base = [
-        i[0] if ix != l - 1 and i[0] != "." else i[0:2] if ix != l - 1 else i
+        i[0] if ix != lpwd - 1 and i[0] != "." else i[0:2] if ix != lpwd - 1 else i
         for ix, i in enumerate(pwd)
         if len(i) > 0
     ]
