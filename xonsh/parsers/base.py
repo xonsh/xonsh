@@ -2199,7 +2199,7 @@ class BaseParser(object):
             return leader
         p0 = leader
         for trailer in trailers:
-            if isinstance(trailer, (ast.Index, ast.Slice, ast.ExtSlice)):
+            if isinstance(trailer, (ast.Index, ast.Slice, ast.ExtSlice, ast.Constant)):
                 p0 = ast.Subscript(
                     value=leader,
                     slice=trailer,

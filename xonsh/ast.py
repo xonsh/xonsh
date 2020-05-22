@@ -121,9 +121,9 @@ else:
 if PYTHON_VERSION_INFO >= (3, 6, 0):
     # pylint: disable=unused-import
     # pylint: disable=no-name-in-module
-    from ast import JoinedStr, FormattedValue, AnnAssign
+    from ast import JoinedStr, FormattedValue, AnnAssign, Constant
 else:
-    JoinedStr = FormattedValue = AnnAssign = None
+    JoinedStr = FormattedValue = AnnAssign = Constant = None
 
 STATEMENTS = (
     FunctionDef,
