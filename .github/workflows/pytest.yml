@@ -5,10 +5,22 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         python-version: [3.6, 3.7, 3.8]
+        experimental: false
+        include:
+          - os: ubuntu-latest
+            python: 3.9
+            experimental: true        
+          - os: windows-latest
+            python: 3.9
+            experimental: true        
+          - os: macOS-latest
+            python: 3.9
+            experimental: true        
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2

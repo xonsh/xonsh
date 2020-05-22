@@ -1,0 +1,19 @@
+name: 3.9-xonsh-test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pygments
+  - prompt_toolkit
+  - pytest
+  - pytest-timeout
+  - numpy
+  - psutil
+  - matplotlib
+  - flake8
+  - coverage
+  - pyflakes
+  - pytest-cov
+  - pytest-flake8
+  - codecov
