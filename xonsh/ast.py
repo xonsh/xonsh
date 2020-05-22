@@ -100,7 +100,6 @@ from ast import (
     literal_eval,
     dump,
     walk,
-    increment_lineno,
 )
 from ast import Ellipsis as EllipsisNode
 
@@ -322,6 +321,19 @@ def isexpression(node, ctx=None, *args, **kwargs):
         isexpr = False
     return isexpr
 
+def increment_lineno(node, n=1):
+    """
+    Increment the line number and end line number of each node in the tree
+    starting at *node* by *n*. This is useful to "move code" to a different
+    location in a file.
+    """
+    for child in walk(node):
+        if 'lineno' in child._attributes:
+            child.lineno = getattr(child, 'lineno', 0) + n
+        end_lineno = getattr(child, "end_lineno", 0)
+        if 'end_lineno' in child._attributes and end_lineno is not None:
+            child.end_lineno = getattr(child, 'end_lineno', 0) + n
+    return node
 
 class CtxAwareTransformer(NodeTransformer):
     """Transforms a xonsh AST based to use subprocess calls when
