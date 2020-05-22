@@ -13,13 +13,13 @@ jobs:
         experimental: [false]
         include:
           - os: ubuntu-latest
-            python: 3.9
+            python-version: 3.9
             experimental: true        
           - os: windows-latest
-            python: 3.9
+            python-version: 3.9
             experimental: true        
           - os: macOS-latest
-            python: 3.9
+            python-version: 3.9
             experimental: true        
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
