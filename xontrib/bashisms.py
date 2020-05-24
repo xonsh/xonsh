@@ -2,7 +2,6 @@
 import shlex
 import sys
 import re
-import builtins
 
 
 __all__ = ()
@@ -63,4 +62,4 @@ def alias(args, stdin=None):
 
 
 aliases["alias"] = alias
-builtins.__xonsh__.env["THREAD_SUBPROCS"] = False
+__xonsh__.env["THREAD_SUBPROCS"] = False
