@@ -409,10 +409,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
-        completions, lpfx = self.completer.complete(
+        completions, l = self.completer.complete(
             prefix, line, begidx, endidx, ctx=self.ctx
         )
-        chopped = prefix[:-lpfx]
+        chopped = prefix[:-l]
         if chopped:
             rtn_completions = [chopped + i for i in completions]
         else:

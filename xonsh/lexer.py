@@ -454,13 +454,13 @@ class Lexer(object):
         """
         vals = []
         self.input(s)
-        lineno = c = -1
+        l = c = -1
         ws = "WS"
         nl = "\n"
         for t in self:
             if t.type == ws:
                 continue
-            elif lineno < t.lineno:
+            elif l < t.lineno:
                 vals.append(t.value)
             elif len(vals) > 0 and c == t.lexpos:
                 vals[-1] = vals[-1] + t.value
@@ -468,10 +468,10 @@ class Lexer(object):
                 vals.append(t.value)
             nnl = t.value.count(nl)
             if nnl == 0:
-                lineno = t.lineno
+                l = t.lineno
                 c = t.lexpos + len(t.value)
             else:
-                lineno = t.lineno + nnl
+                l = t.lineno + nnl
                 c = len(t.value.rpartition(nl)[-1])
         return vals
 

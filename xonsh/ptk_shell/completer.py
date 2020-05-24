@@ -41,7 +41,7 @@ class PromptToolkitCompleter(Completer):
         prefix = line[begidx:endidx]
         expand_offset = len(line_ex) - len(line)
         # get normal completions
-        completions, lpfx = self.completer.complete(
+        completions, l = self.completer.complete(
             prefix, line_ex, begidx + expand_offset, endidx + expand_offset, self.ctx
         )
         # completions from auto suggest
@@ -76,7 +76,7 @@ class PromptToolkitCompleter(Completer):
         for comp in completions:
             # do not display quote
             disp = comp[pre:].strip("'\"")
-            yield Completion(comp, -lpfx, display=disp)
+            yield Completion(comp, -l, display=disp)
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""
