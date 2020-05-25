@@ -4,14 +4,13 @@ on a platform.
 """
 import os
 import sys
-import ctypes
 import signal
+import ctypes   # noqa F401
 import pathlib
 import builtins
 import platform
 import functools
 import subprocess
-import collections
 import collections.abc as cabc
 import importlib.util
 

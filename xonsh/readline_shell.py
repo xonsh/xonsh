@@ -18,7 +18,6 @@ import shutil
 import builtins
 import importlib
 import threading
-import subprocess
 import collections
 
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -31,7 +30,6 @@ from xonsh.ansi_colors import (
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (
     print_exception,
-    check_for_partial_string,
     to_bool,
     columnize,
     carriage_return,
@@ -168,7 +166,7 @@ def setup_readline():
 def teardown_readline():
     """Tears down up the readline module, if available."""
     try:
-        import readline
+        import readline  # noqa F401
     except (ImportError, TypeError):
         return
 

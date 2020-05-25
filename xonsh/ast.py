@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """The xonsh abstract syntax tree node."""
-# These are imported into our module namespace for the benefit of parser.py.
-# pylint: disable=unused-import
+
 import sys
 import builtins
+
+
+# These are imported into our module namespace for the benefit of parser.py.
+# flake8: noqa F401
 from ast import (
     Module,
     Num,
@@ -101,10 +104,9 @@ from ast import (
     dump,
     walk,
     increment_lineno,
-)
+)   
 from ast import Ellipsis as EllipsisNode
 
-# pylint: enable=unused-import
 import textwrap
 import itertools
 
@@ -112,15 +114,11 @@ from xonsh.tools import subproc_toks, find_next_break, get_logical_line
 from xonsh.platform import PYTHON_VERSION_INFO
 
 if PYTHON_VERSION_INFO >= (3, 5, 0):
-    # pylint: disable=unused-import
-    # pylint: disable=no-name-in-module
     from ast import MatMult, AsyncFunctionDef, AsyncWith, AsyncFor, Await
 else:
     MatMult = AsyncFunctionDef = AsyncWith = AsyncFor = Await = None
 
 if PYTHON_VERSION_INFO >= (3, 6, 0):
-    # pylint: disable=unused-import
-    # pylint: disable=no-name-in-module
     from ast import JoinedStr, FormattedValue, AnnAssign
 else:
     JoinedStr = FormattedValue = AnnAssign = None

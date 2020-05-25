@@ -18,13 +18,12 @@ import itertools
 
 from xonsh.lazyasd import lazyobject, lazybool
 from xonsh.events import events
-from xonsh.platform import ON_WINDOWS
 
 
 @lazybool
 def _HAVE_RESOURCE():
     try:
-        import resource as r
+        import resource as r  # noqa F401
 
         have = True
     except ImportError:
