@@ -1015,7 +1015,7 @@ v0.8.5
 
     2. Add on ``~/.xonshrc``
 
-       .. code:: python
+       .. code::
             :number-lines:
 
             $BASE16_SHELL = $HOME + "/.config/base16-shell/"

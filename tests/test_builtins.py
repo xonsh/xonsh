@@ -327,7 +327,7 @@ def test_call_macro_raw_kwargs(arg):
 
 
 def test_call_macro_ast_eval_expr():
-    def f(x: ("ast", "eval")):
+    def f(x: ("ast", "eval")):  # noqa F821
         return x
 
     rtn = call_macro(f, ["x == 5"], {}, None)
@@ -335,7 +335,7 @@ def test_call_macro_ast_eval_expr():
 
 
 def test_call_macro_ast_single_expr():
-    def f(x: ("ast", "single")):
+    def f(x: ("ast", "single")):  # noqa F821
         return x
 
     rtn = call_macro(f, ["x == 5"], {}, None)
@@ -343,7 +343,7 @@ def test_call_macro_ast_single_expr():
 
 
 def test_call_macro_ast_exec_expr():
-    def f(x: ("ast", "exec")):
+    def f(x: ("ast", "exec")):  # noqa F821
         return x
 
     rtn = call_macro(f, ["x == 5"], {}, None)
@@ -351,7 +351,7 @@ def test_call_macro_ast_exec_expr():
 
 
 def test_call_macro_ast_eval_statement():
-    def f(x: ("ast", "eval")):
+    def f(x: ("ast", "eval")):  # noqa F821
         return x
 
     try:
@@ -366,7 +366,7 @@ def test_call_macro_ast_eval_statement():
 
 
 def test_call_macro_ast_single_statement():
-    def f(x: ("ast", "single")):
+    def f(x: ("ast", "single")):  # noqa F821
         return x
 
     rtn = call_macro(f, ["x = 5"], {}, None)
@@ -374,7 +374,7 @@ def test_call_macro_ast_single_statement():
 
 
 def test_call_macro_ast_exec_statement():
-    def f(x: ("ast", "exec")):
+    def f(x: ("ast", "exec")):  # noqa F821
         return x
 
     rtn = call_macro(f, ["x = 5"], {}, None)

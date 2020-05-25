@@ -170,6 +170,7 @@ def test_event_on_envvar_change(xonsh_builtins):
     env = Env(TEST=0)
     xonsh_builtins.__xonsh__.env = env
     share = []
+
     # register
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
@@ -185,6 +186,7 @@ def test_event_on_envvar_new(xonsh_builtins):
     env = Env()
     xonsh_builtins.__xonsh__.env = env
     share = []
+
     # register
     @xonsh_builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
@@ -200,6 +202,7 @@ def test_event_on_envvar_change_from_none_value(xonsh_builtins):
     env = Env(TEST=None)
     xonsh_builtins.__xonsh__.env = env
     share = []
+
     # register
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
@@ -216,6 +219,7 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
     env = Env(TEST=val)
     xonsh_builtins.__xonsh__.env = env
     share = []
+
     # register
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
@@ -231,6 +235,7 @@ def test_events_on_envvar_called_in_right_order(xonsh_builtins):
     env = Env()
     xonsh_builtins.__xonsh__.env = env
     share = []
+
     # register
     @xonsh_builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
