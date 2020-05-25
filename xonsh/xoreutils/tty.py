@@ -30,7 +30,7 @@ def tty(args, stdin, stdout, stderr):
     if not silent:
         try:
             print(os.ttyname(fd), file=stdout)
-        except: # noqa E722 (maybe we do want to swallow KeyboardInterrupt here?)
+        except:  # noqa E722 (maybe we do want to swallow KeyboardInterrupt here?)
             return 3
     return 0
 
