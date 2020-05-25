@@ -881,6 +881,7 @@ def _tokenize(readline, encoding):
         pos, max = 0, len(line)
 
         if contstr:  # continued string
+            # Depends on locals initialized in prev string, hence many noqa
             if not line:
                 raise TokenError("EOF in multi-line string", strstart)  # noqa F821
             endmatch = endprog.match(line)  # noqa F821

@@ -65,7 +65,7 @@ def partial_color_tokenize(template):
     These sub-strings maybe templates themselves.
     """
     if HAS_PYGMENTS and builtins.__xonsh__.shell is not None:
-        styles = __xonsh__.shell.shell.styler.styles
+        styles = builtins.__xonsh__.shell.shell.styler.styles
     elif builtins.__xonsh__.shell is not None:
         styles = DEFAULT_STYLE_DICT
     else:
