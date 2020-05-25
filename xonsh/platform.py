@@ -4,7 +4,7 @@ on a platform.
 """
 import os
 import sys
-import ctypes   # noqa F401
+import ctypes  # noqa F401
 import signal
 import pathlib
 import builtins
