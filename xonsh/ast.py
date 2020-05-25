@@ -104,7 +104,7 @@ from ast import (
     dump,
     walk,
     increment_lineno,
-)   
+)
 from ast import Ellipsis as EllipsisNode
 
 import textwrap

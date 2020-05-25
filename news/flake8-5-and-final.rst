@@ -7,7 +7,7 @@
 * Updated pytest_plugin for pytest 5.4 API, pip requirements for pytest>= 5.4
 * setup.cfg / flake8: removed all per-file ignores, replaced with per-line #noqa where not fixed.
   global list of 'builtins' includes xonsh builtins added by magic to global namespace
-  global list of rules ignored in any file, added a few
+  global list of rules ignored in all files, added a few
 
 **Deprecated:**
 
@@ -21,8 +21,8 @@
 **Fixed:**
 
 * Updated development guide to reference flake8 instead of pylint
-* docs/ `make html`_ enable xonshcon code block.  
-  Eliminates warnings and errors build -- docs look ever so much prettier.
+* docs/ `make html`_ enable xonshcon code block.
+  Eliminates warnings and errors during build -- docs look ever so much prettier.
 * Resolved many but not all pytest deprecation warnings during a 'clean' test run.
 
 **Security:**
