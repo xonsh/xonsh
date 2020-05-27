@@ -10,8 +10,8 @@ __all__ = ()
 @lazybool
 def HAS_JEDI():
     """``True`` if `jedi` is available, else ``False``."""
-    spec = importlib.util.find_spec('jedi')
-    return (spec is not None)
+    spec = importlib.util.find_spec("jedi")
+    return spec is not None
 
 
 @lazyobject
@@ -50,9 +50,12 @@ def complete_jedi(prefix, line, start, end, ctx):
     except Exception:
         pass
 
-    if __xonsh__.env.get('CASE_SENSITIVE_COMPLETIONS'):
-        rtn = {x.name_with_symbols for x in script_comp
-               if x.name_with_symbols.startswith(prefix)}
+    if __xonsh__.env.get("CASE_SENSITIVE_COMPLETIONS"):
+        rtn = {
+            x.name_with_symbols
+            for x in script_comp
+            if x.name_with_symbols.startswith(prefix)
+        }
     else:
         rtn = {x.name_with_symbols for x in script_comp}
     return rtn
