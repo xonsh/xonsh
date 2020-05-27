@@ -1,5 +1,4 @@
 """Jedi-based completer for Python-mode."""
-import builtins
 import importlib
 
 from xonsh.lazyasd import lazyobject, lazybool
@@ -37,7 +36,7 @@ def complete_jedi(prefix, line, start, end, ctx):
     if not HAS_JEDI:
         return set()
     new_api = jedi_version >= (0, 16, 0)
-    src = builtins.__xonsh__.shell.shell.accumulated_inputs + line
+    src = __xonsh__.shell.shell.accumulated_inputs + line
     if new_api:
         script = jedi.api.Interpreter(src, [ctx])
     else:
@@ -51,7 +50,7 @@ def complete_jedi(prefix, line, start, end, ctx):
     except Exception:
         pass
 
-    if builtins.__xonsh__.env.get('CASE_SENSITIVE_COMPLETIONS'):
+    if __xonsh__.env.get('CASE_SENSITIVE_COMPLETIONS'):
         rtn = {x.name_with_symbols for x in script_comp
                if x.name_with_symbols.startswith(prefix)}
     else:
