@@ -24,15 +24,30 @@ def jedi():
     return m
 
 
+@lazyobject
+def jedi_version():
+    if hasattr(jedi, "__version__"):
+        return tuple(int(n) for n in jedi.__version__.split("."))
+    else:
+        return (0, 0, 0)
+
+
 def complete_jedi(prefix, line, start, end, ctx):
     """Jedi-based completer for Python-mode."""
     if not HAS_JEDI:
         return set()
+    new_api = jedi_version >= (0, 16, 0)
     src = builtins.__xonsh__.shell.shell.accumulated_inputs + line
-    script = jedi.api.Interpreter(src, [ctx], column=end)
+    if new_api:
+        script = jedi.api.Interpreter(src, [ctx])
+    else:
+        script = jedi.api.Interpreter(src, [ctx], column=end)
     script_comp = set()
     try:
-        script_comp = script.completions()
+        if new_api:
+            script_comp = script.complete(column=end)
+        else:
+            script_comp = script.completions()
     except Exception:
         pass
 
