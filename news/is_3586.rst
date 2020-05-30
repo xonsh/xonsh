@@ -1,0 +1,24 @@
+**Added:**
+
+* New environment variable XONSH_PTK_HISTORY_SIZE to control max # commands loaded into PTK history
+
+**Changed:**
+
+* <news item>
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* Reduce odds of ptk3 crash when loading large Xonsh history.  Not a fix!
+  Simply reduces opportunity to trip over an undiagnosed multitasking hazard.
+
+**Security:**
+
+* <news item>

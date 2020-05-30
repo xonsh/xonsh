@@ -25,11 +25,19 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         hist = builtins.__xonsh__.history
         if hist is None:
             return
+
+        max_cmds = builtins.__xonsh__.env.get("XONSH_PTK_HISTORY_SIZE", 8128)
+
+        last_inp = None
         for cmd in hist.all_items(newest_first=True):
-            line = cmd["inp"].rstrip()
-            strs = self.get_strings()
-            if len(strs) == 0 or line != strs[-1]:
-                yield line
+            max_cmds -= 1
+            if max_cmds <= 0:  # don't overload PTK in-memory history
+                return
+
+            inp = cmd["inp"].rstrip()
+            if inp != last_inp:  # poor man's duplicate suppression
+                yield inp
+            last_inp = inp
 
     def __getitem__(self, index):
         return self.get_strings()[index]

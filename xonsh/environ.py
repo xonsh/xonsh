@@ -621,6 +621,7 @@ def DEFAULT_ENSURERS():
         ),
         "XONSH_LOGIN": (is_bool, to_bool, bool_to_str),
         "XONSH_PROC_FREQUENCY": (is_float, float, str),
+        "XONSH_PTK_HISTORY_SIZE": (is_int, int, str),
         "XONSH_SHOW_TRACEBACK": (is_bool, to_bool, bool_to_str),
         "XONSH_STDERR_PREFIX": (is_string, ensure_string, ensure_string),
         "XONSH_STDERR_POSTFIX": (is_string, ensure_string, ensure_string),
@@ -806,6 +807,7 @@ def DEFAULT_VALUES():
         "XONSH_HISTORY_SIZE": (8128, "commands"),
         "XONSH_LOGIN": False,
         "XONSH_PROC_FREQUENCY": 1e-4,
+        "XONSH_PTK_HISTORY_SIZE": 8128,
         "XONSH_TRACE_SUBPROC": False,
         "XONSH_SHOW_TRACEBACK": False,
         "XONSH_STDERR_PREFIX": "",
@@ -1367,6 +1369,10 @@ def DEFAULT_DOCS():
             "The process frequency is the time that "
             "xonsh process threads sleep for while running command pipelines. "
             "The value has units of seconds [s]."
+        ),
+        "XONSH_PTK_HISTORY_SIZE": VarDocs(
+            "Number of commands loaded into prompt-toolkit history from Xonsh history back end.\n"
+            "This reduces odds of prompt-toolkit crash when Xonsh history is very large."
         ),
         "XONSH_TRACE_SUBPROC": VarDocs(
             "Set to ``True`` to show arguments list of every executed subprocess command."
