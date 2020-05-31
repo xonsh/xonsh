@@ -21,6 +21,7 @@ from xonsh.platform import (
     ON_NETBSD,
     ON_OPENBSD,
     ON_DRAGONFLY,
+    ON_POSIX,
 )
 from xonsh.tools import (
     XonshError,
@@ -42,6 +43,9 @@ import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 from xonsh.xoreutils.umask import umask
+
+if ON_POSIX:
+    from xonsh.xoreutils.ulimit import ulimit
 
 
 @lazyobject
@@ -791,6 +795,8 @@ def make_default_aliases():
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
     }
+    if ON_POSIX:
+        default_aliases["ulimit"] = ulimit
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
         windows_cmd_aliases = {

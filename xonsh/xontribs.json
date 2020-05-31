@@ -239,6 +239,11 @@
                   "bit of the startup time when running your favorite, minimal ",
                   "text editor."]
   },
+  {"name": "xpg",
+  "package": "xontrib-xpg",
+  "url": "https://github.com/fengttt/xsh/py",
+  "description": ["Run/plot/explain sql query for PostgreSQL."] 
+  },
  {"name": "z",
   "package": "xontrib-z",
   "url": "https://github.com/astronouth7303/xontrib-z",
@@ -401,6 +406,13 @@
    "url": "https://github.com/meatballs/xontrib-thefuck",
    "install": {
     "pip": "xpip install xontrib-thefuck"
+   }
+  },
+  "xontrib-xpg": {
+   "license": "Apache",
+   "url": "https://github.com/fengttt/xsh/py",
+   "install": {
+    "pip": "xpip install xontrib-xpg"
    }
   },
   "xontrib-z": {
