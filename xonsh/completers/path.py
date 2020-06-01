@@ -298,11 +298,12 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         # e.g., ~/u/ro completes to ~/lou/carcolh
         # see above functions for details.
         p = _splitpath(os.path.expanduser(prefix))
-        if len(p) != 0:
+        p_len = len(p)
+        if p_len != 0:
             relative_char = ["", ".", ".."]
             if p[0] in relative_char:
                 i = 0
-                while p[i] in relative_char:
+                while i < p_len and p[i] in relative_char:
                     i += 1
                 basedir = p[:i]
                 p = p[i:]
