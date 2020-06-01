@@ -131,7 +131,7 @@
   },
  {"name": "fzf-widgets",
   "package": "xontrib-fzf-widgets",
-  "url": "https://github.com/shahinism/xontrib-fzf-widgets",
+  "url": "https://github.com/laloch/xontrib-fzf-widgets",
   "description": ["Adds some fzf widgets to your xonsh shell."]
  },
  {"name": "histcpy",
@@ -332,7 +332,7 @@
   },
   "xontrib-fzf-widgets": {
    "license": "GPLv3",
-   "url": "https://github.com/shahinism/xontrib-fzf-widgets",
+   "url": "https://github.com/laloch/xontrib-fzf-widgets",
    "install": {
     "pip": "xpip install xontrib-fzf-widgets"
    }
