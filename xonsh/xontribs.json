@@ -164,6 +164,11 @@
   "description": ["Get identifiers, names, paths, URLs and words from the previous command output ",
                   "and use them for the next command."]
  },
+ {"name": "pdb",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Simple built-in debugger. Runs pdb on reception of SIGUSR1 signal."]
+ },
  {"name": "powerline",
   "package": "xontrib-powerline",
   "url": "https://github.com/santagada/xontrib-powerline",
