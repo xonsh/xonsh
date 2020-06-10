@@ -158,10 +158,9 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
 
 
 _cf = {
-    "rs": "regular",
+    "fi": "regular",
     "di": "simple_dir",
     "ln": "simple_link",
-    "mh": None,
     "pi": "pipe",
     "so": None,
     "do": None,
@@ -179,7 +178,10 @@ _cf = {
     "*.emf": "foo.emf",
     "*.zip": "foo.zip",
     "*.ogg": "foo.ogg",
+    "mh": "hard_link",
 }
+
+# TODO: create equivalent zoo of files for Windows.
 
 
 @pytest.fixture(scope="module")
@@ -203,7 +205,7 @@ def colorizable_files():
                     os.mkdir(file_path)
                 else:
                     open(file_path, "a").close()
-                if k in ("di", "rg"):
+                if k in ("di", "fi"):
                     pass
                 elif k == "ex":
                     os.chmod(file_path, stat.S_IXUSR)
@@ -232,6 +234,9 @@ def colorizable_files():
                     )
                 elif k == "ow":
                     os.chmod(file_path, stat.S_IWOTH | stat.S_IRUSR | stat.S_IWUSR)
+                elif k == "mh":
+                    os.rename(file_path, file_path + "_target")
+                    os.link(file_path + "_target", file_path)
                 else:
                     pass  # cauterize those elseless ifs!
 
@@ -249,7 +254,12 @@ def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLO
         XonshStyle()
     )  # default style
     ffp = colorizable_files + "/" + file_path
-    mode = (os.lstat(ffp)).st_mode
-    color_token, color_key = color_file(ffp, mode)
+    stat_result = os.lstat(ffp)
+    color_token, color_key = color_file(ffp, stat_result)
     assert color_key == key, "File classified as expected kind"
     assert color_token == file_color_tokens[key], "Color token is as expected"
+
+# TODO: test precedence of some types over others:
+# mh + link to ex --> ex
+# ln + link to ex --> ex
+# ln:target

@@ -321,6 +321,7 @@ class LsColors(cabc.MutableMapping):
         "di": ("BOLD_BLUE",),
         "do": ("BOLD_PURPLE",),
         "ex": ("BOLD_GREEN",),
+        "fi": ("NO_COLOR",),
         "ln": ("BOLD_CYAN",),
         "mh": ("NO_COLOR",),
         "mi": ("NO_COLOR",),

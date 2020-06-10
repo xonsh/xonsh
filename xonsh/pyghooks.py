@@ -1356,14 +1356,14 @@ def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
 events.on_lscolors_change(on_lscolors_change)
 
 
-def color_file(file_path: str, mode: int) -> (Color, str):
+def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
     """Determine color to use for file as ls -c would, given stat() results and its name.
 
     Parameters
     ----------
-    file_path : string
+    file_path:
         relative path of file (as user typed it).
-    mode : int
+    path_stat:
         stat() results for file_path.
 
     Returns
@@ -1379,7 +1379,8 @@ def color_file(file_path: str, mode: int) -> (Color, str):
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
-    color_key = "rs"
+    color_key = "fi"
+    mode = path_stat.st_mode
 
     if stat.S_ISLNK(mode):  # must test link before S_ISREG (esp execute)
         color_key = "ln"
@@ -1403,9 +1404,11 @@ def color_file(file_path: str, mode: int) -> (Color, str):
                 if ext in lsc:
                     color_key = ext
                 else:
-                    color_key = "rs"
+                    color_key = "fi"
+            elif path_stat.st_nlink > 1:
+                color_key = "mh"
             else:
-                color_key = "rs"
+                color_key = "fi"
     elif stat.S_ISDIR(mode):  # ls -c doesn't colorize sticky or ow if not dirs...
         color_key = ("di", "ow", "st", "tw")[
             (mode & stat.S_ISVTX == stat.S_ISVTX) * 2
@@ -1464,8 +1467,8 @@ def subproc_arg_callback(_, match):
     yieldVal = Text
     try:
         path = os.path.expanduser(text)
-        mode = (os.lstat(path)).st_mode  # lstat() will raise FNF if not a real file
-        yieldVal, _ = color_file(path, mode)
+        path_stat = os.lstat(path)  # lstat() will raise FNF if not a real file
+        yieldVal, _ = color_file(path, path_stat)
     except (FileNotFoundError, OSError):
         pass
 

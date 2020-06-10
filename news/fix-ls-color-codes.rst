@@ -1,0 +1,24 @@
+**Added:**
+
+* $LS_COLORS code 'mh' now recognized for (multi) hard-linked files.
+
+**Changed:**
+
+* <news item>
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* $LS_COLORS code 'fi' now used for "regular files", as it should have been all along. (was 'rs') 
+  See (#3608)[https://github.com/xonsh/xonsh/issues/3608].
+
+**Security:**
+
+* <news item>
