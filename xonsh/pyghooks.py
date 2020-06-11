@@ -1373,7 +1373,6 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
     Notes
     -----
 
-    * doesn't handle CA (capability)
     * doesn't handle LS TARGET mapping
 
     """
@@ -1389,7 +1388,10 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
         except FileNotFoundError:
             color_key = "or"
     elif stat.S_ISREG(mode):
-        if stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
+        cap = os.listxattr(file_path)
+        if cap and "security.capability" in cap:    # protect None return on some OS?
+            color_key = "ca"
+        elif stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
             color_key = "ex"
         elif (
             mode & stat.S_ISUID

@@ -156,6 +156,10 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
         xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"].keys()
     )
 
+# parameterized tests for file colorization
+# note 'ca' is checked by standalone test.
+# requires privilege to create a file with capabilities
+
 
 _cf = {
     "fi": "regular",
@@ -258,6 +262,22 @@ def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLO
     color_token, color_key = color_file(ffp, stat_result)
     assert color_key == key, "File classified as expected kind"
     assert color_token == file_color_tokens[key], "Color token is as expected"
+
+
+def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
+    def mock_os_listxattr(p):
+        return ['security.capability']
+
+    monkeypatch.setattr(os, "listxattr", mock_os_listxattr)
+
+    with TemporaryDirectory() as tmpdir:
+        file_path = tmpdir + "/cap_file"
+        open(file_path, "a").close()
+        os.chmod(file_path, stat.S_IXUSR)   # ca overrides ex
+        color_token, color_key = color_file(file_path, os.lstat(file_path))
+
+        assert color_key == 'ca'
+
 
 # TODO: test precedence of some types over others:
 # mh + link to ex --> ex

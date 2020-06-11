@@ -1,6 +1,8 @@
 **Added:**
 
 * $LS_COLORS code 'mh' now recognized for (multi) hard-linked files.
+* $LS_COLORS code 'ca' now recognized for files with security capabilities (linux only).
+
 
 **Changed:**
 
