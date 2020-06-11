@@ -48,3 +48,61 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
 
     >>> $LS_COLORS='rs=0:di=01;36:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:'
     
+Make json data directly pastable
+--------------------------------
+With this snippet, xonsh will understand json data such as ``{ "name": "Tyler", "active": false, "age": none }``.
+
+.. code-block:: xonshcon
+
+    >>> import builtins 
+    >>> builtins.true = True
+    >>> builtins.false = False
+    >>> builtins.null = None
+    
+Display different date invformation every 10th time
+---------------------------------------------------
+For a compact shell prompts, some people prefer a very condensed time format. But when you have a lengthy shell session you might want the date to show up in your logs every now and then...
+
+.. code-block:: xonshcon
+
+    >>> import time
+    >>> def get_shelldate():
+    >>>     get_shelldate.fulldate %= 10 
+    >>>     get_shelldate.fulldate += 1
+    >>>     if get_shelldate.fulldate == 1:
+    >>>         return time.strftime('%d%m%Y')
+    >>>     return time.strftime('%H:%M')
+    >>> get_shelldate.fulldate = 0
+    >>> 
+    >>> $PROMPT_FIELDS['shelldate'] = get_shelldate
+    
+Use the Nix Package manager wish Xonsh
+--------------------------------------
+To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines might be life-savers:
+
+.. code-block:: xonshcon
+
+    >>> import os.path
+    >>> if os.path.exists(f"{$HOME}/.nix-profile"):
+    >>>     $NIX_REMOTE="daemon"
+    >>>     $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
+    >>>     $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
+    >>>     $NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+    >>>     $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
+    >>>     $PATH += [f"{$HOME}/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
+
+Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is: 
+
+.. code-block:: xonshcon
+
+    >>> for p in map(lambda s: str(s.resolve()), p"~/.local/lib/".glob("python*/site-packages")):
+    >>>     if p not in sys.path:
+    >>>         sys.path.append(p)
+    >>> 
+    >>> $PYTHONPATH = "$USER/.local/lib/python3.7/site-packages"
+    >>>     
+    >>> python -m ensurepip --user
+    >>> xonsh
+    >>> python -m pip install --user -U pip xontrib-z xonsh-direnv
+
+Just run the last three lines, do not put them in your `xonshrc`!
