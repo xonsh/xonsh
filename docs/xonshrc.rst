@@ -76,7 +76,7 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
     >>> 
     >>> $PROMPT_FIELDS['shelldate'] = get_shelldate
     
-Use the Nix Package manager wish Xonsh
+Use the Nix Package manager with Xonsh
 --------------------------------------
 To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines might be life-savers:
 
