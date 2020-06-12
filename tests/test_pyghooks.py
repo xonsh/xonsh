@@ -15,7 +15,8 @@ from xonsh.pyghooks import (
 )
 
 from xonsh.environ import LsColors
-from tools import skip_if_on_windows
+
+# from tools import skip_if_on_windows
 
 
 @pytest.fixture
@@ -156,6 +157,7 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
         xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"].keys()
     )
 
+
 # parameterized tests for file colorization
 # note 'ca' is checked by standalone test.
 # requires privilege to create a file with capabilities
@@ -164,17 +166,17 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
 _cf = {
     "fi": "regular",
     "di": "simple_dir",
-    "ln": "simple_link",
+    "ln": "sym_link",
     "pi": "pipe",
     "so": None,
     "do": None,
     # bug ci failures: 'bd': '/dev/sda',
     # bug ci failures:'cd': '/dev/tty',
-    "or": "orphan_link",
-    "mi": None,
+    "or": None,
+    "mi": None,  # can't test till ln:target "missing_link",
     "su": "set_uid",
     "sg": "set_gid",
-    "ca": None,
+    "ca": None,  # Separate special case test,
     "tw": "sticky_ow_dir",
     "ow": "other_writable_dir",
     "st": "sticky_dir",
@@ -213,10 +215,11 @@ def colorizable_files():
                     pass
                 elif k == "ex":
                     os.chmod(file_path, stat.S_IXUSR)
-                elif k == "ln":
-                    os.rename(file_path, file_path + "_target")
-                    os.symlink(file_path + "_target", file_path)
-                elif k == "or":
+                elif k == "ln":  # 2 hop symlink
+                    os.rename(file_path, file_path + "_target2")
+                    os.symlink(file_path + "_target2", file_path + "_target1")
+                    os.symlink(file_path + "_target1", file_path)
+                elif k == "mi":
                     os.rename(file_path, file_path + "_target")
                     os.symlink(file_path + "_target", file_path)
                     os.remove(file_path + "_target")
@@ -252,7 +255,6 @@ def colorizable_files():
 @pytest.mark.parametrize(
     "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path]
 )
-@skip_if_on_windows
 def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
     xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = (
         XonshStyle()
@@ -266,17 +268,17 @@ def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLO
 
 def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
     def mock_os_listxattr(p):
-        return ['security.capability']
+        return ["security.capability"]
 
     monkeypatch.setattr(os, "listxattr", mock_os_listxattr)
 
     with TemporaryDirectory() as tmpdir:
         file_path = tmpdir + "/cap_file"
         open(file_path, "a").close()
-        os.chmod(file_path, stat.S_IXUSR)   # ca overrides ex
+        os.chmod(file_path, stat.S_IXUSR)  # ca overrides ex
         color_token, color_key = color_file(file_path, os.lstat(file_path))
 
-        assert color_key == 'ca'
+        assert color_key == "ca"
 
 
 # TODO: test precedence of some types over others:

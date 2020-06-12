@@ -8,6 +8,7 @@ import stat
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
+from pathlib import Path
 
 from pygments.lexer import inherit, bygroups, include
 from pygments.lexers.agile import Python3Lexer
@@ -1373,59 +1374,72 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
     Notes
     -----
 
-    * doesn't handle LS TARGET mapping
-
+    * implementation slavishly follows one authority:
+      https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
+    
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
+    symlink_target = "ln_target" in lsc  # if ln=target in LS_COLORS
     color_key = "fi"
-    mode = path_stat.st_mode
 
-    if stat.S_ISLNK(mode):  # must test link before S_ISREG (esp execute)
-        color_key = "ln"
+    # if ln=target, get fully resolved name of target and its stat_result
+    # TODO: confirm whether ls -c would fully resolve target of multi-hop link.
+    if symlink_target and stat.S_ISLNK(path_stat.st_mode):
         try:
-            os.stat(file_path)
+            path_stat = os.stat(file_path)
+            file_path = Path(file_path).resolve()
         except FileNotFoundError:
-            color_key = "or"
-    elif stat.S_ISREG(mode):
-        cap = os.listxattr(file_path)
-        if cap and "security.capability" in cap:    # protect None return on some OS?
-            color_key = "ca"
-        elif stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
-            color_key = "ex"
-        elif (
-            mode & stat.S_ISUID
-        ):  # too many tests before we get to the common case -- restructure?
-            color_key = "su"
-        elif mode & stat.S_ISGID:
-            color_key = "sg"
+            color_key = "mi"  # broken link
+    else:
+        mode = path_stat.st_mode
+
+        if stat.S_ISREG(mode):
+            if mode & stat.S_ISUID:
+                color_key = "su"
+            elif mode & stat.S_ISGID:
+                color_key = "sg"
+            else:
+                cap = os.listxattr(file_path)
+                if (
+                    cap and "security.capability" in cap
+                ):  # protect None return on some OS?
+                    color_key = "ca"
+                elif stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
+                    color_key = "ex"
+                elif path_stat.st_nlink > 1:
+                    color_key = "mh"
+                else:
+                    color_key = "fi"
+        elif stat.S_ISDIR(mode):  # ls -c doesn't colorize sticky or ow if not dirs...
+            color_key = "di"
+            if mode & stat.S_ISVTX and mode & stat.S_IWOTH:
+                color_key = "tw"
+            elif mode & stat.S_IWOTH:
+                color_key = "ow"
+            elif mode & stat.S_ISVTX:
+                color_key = "st"
+        elif stat.S_ISLNK(mode):
+            color_key = "ln"
+        elif stat.S_ISFIFO(mode):
+            color_key = "pi"
+        elif stat.S_ISSOCK(mode):
+            color_key = "so"
+        elif stat.S_ISBLK(mode):
+            color_key = "bd"
+        elif stat.S_ISCHR(mode):
+            color_key = "cd"
+        elif stat.S_ISDOOR(mode):
+            color_key = "do"
         else:
+            color_key = "or"  # any other type --> orphan
+
+        if color_key == "fi":  # if still normal file -- try color by file extension.
             match = color_file_extension_RE.match(file_path)
             if match:
                 ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
                 if ext in lsc:
                     color_key = ext
-                else:
-                    color_key = "fi"
-            elif path_stat.st_nlink > 1:
-                color_key = "mh"
-            else:
-                color_key = "fi"
-    elif stat.S_ISDIR(mode):  # ls -c doesn't colorize sticky or ow if not dirs...
-        color_key = ("di", "ow", "st", "tw")[
-            (mode & stat.S_ISVTX == stat.S_ISVTX) * 2
-            + (mode & stat.S_IWOTH == stat.S_IWOTH)
-        ]
-    elif stat.S_ISCHR(mode):
-        color_key = "cd"
-    elif stat.S_ISBLK(mode):
-        color_key = "bd"
-    elif stat.S_ISFIFO(mode):
-        color_key = "pi"
-    elif stat.S_ISSOCK(mode):
-        color_key = "so"
-    elif stat.S_ISDOOR(mode):
-        color_key = "do"  # bug missing mapping for FMT based PORT and WHITEOUT ??
 
     ret_color_token = file_color_tokens.get(color_key, Text)
 
