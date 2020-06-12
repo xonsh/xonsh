@@ -266,11 +266,14 @@ def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLO
     assert color_token == file_color_tokens[key], "Color token is as expected"
 
 
+import xonsh.lazyimps
+
+
 def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
-    def mock_os_listxattr(p):
+    def mock_os_listxattr(*args, **kwards):
         return ["security.capability"]
 
-    monkeypatch.setattr(os, "listxattr", mock_os_listxattr)
+    monkeypatch.setattr(xonsh.pyghooks, "os_listxattr", mock_os_listxattr)
 
     with TemporaryDirectory() as tmpdir:
         file_path = tmpdir + "/cap_file"

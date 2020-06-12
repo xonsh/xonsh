@@ -8,7 +8,7 @@ import stat
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
-from pathlib import Path
+from xonsh.lazyimps import os_listxattr
 
 from pygments.lexer import inherit, bygroups, include
 from pygments.lexers.agile import Python3Lexer
@@ -1358,7 +1358,7 @@ events.on_lscolors_change(on_lscolors_change)
 
 
 def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
-    """Determine color to use for file as ls -c would, given stat() results and its name.
+    """Determine color to use for file as ls --color would, given lstat() results and its name.
 
     Parameters
     ----------
@@ -1376,70 +1376,71 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
 
     * implementation slavishly follows one authority:
       https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
-    
+
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
     symlink_target = "ln_target" in lsc  # if ln=target in LS_COLORS
     color_key = "fi"
 
-    # if ln=target, get fully resolved name of target and its stat_result
-    # TODO: confirm whether ls -c would fully resolve target of multi-hop link.
+    # if ln=target, get name of target (next link only) and its lstat_result
     if symlink_target and stat.S_ISLNK(path_stat.st_mode):
         try:
-            path_stat = os.stat(file_path)
-            file_path = Path(file_path).resolve()
+            file_path = os.readlink(file_path)  # next hop in symlink chain, just like ls
+            path_stat = os.lstat(file_path)     # and work with its properties
         except FileNotFoundError:
-            color_key = "mi"  # broken link
-    else:
-        mode = path_stat.st_mode
+            color_key = "mi"                    # early exit
+            ret_color_token = file_color_tokens.get(color_key, Text)
+            return ret_color_token, color_key
 
-        if stat.S_ISREG(mode):
-            if mode & stat.S_ISUID:
-                color_key = "su"
-            elif mode & stat.S_ISGID:
-                color_key = "sg"
-            else:
-                cap = os.listxattr(file_path)
-                if (
-                    cap and "security.capability" in cap
-                ):  # protect None return on some OS?
-                    color_key = "ca"
-                elif stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
-                    color_key = "ex"
-                elif path_stat.st_nlink > 1:
-                    color_key = "mh"
-                else:
-                    color_key = "fi"
-        elif stat.S_ISDIR(mode):  # ls -c doesn't colorize sticky or ow if not dirs...
-            color_key = "di"
-            if mode & stat.S_ISVTX and mode & stat.S_IWOTH:
-                color_key = "tw"
-            elif mode & stat.S_IWOTH:
-                color_key = "ow"
-            elif mode & stat.S_ISVTX:
-                color_key = "st"
-        elif stat.S_ISLNK(mode):
-            color_key = "ln"
-        elif stat.S_ISFIFO(mode):
-            color_key = "pi"
-        elif stat.S_ISSOCK(mode):
-            color_key = "so"
-        elif stat.S_ISBLK(mode):
-            color_key = "bd"
-        elif stat.S_ISCHR(mode):
-            color_key = "cd"
-        elif stat.S_ISDOOR(mode):
-            color_key = "do"
+    mode = path_stat.st_mode
+
+    if stat.S_ISREG(mode):
+        if mode & stat.S_ISUID:
+            color_key = "su"
+        elif mode & stat.S_ISGID:
+            color_key = "sg"
         else:
-            color_key = "or"  # any other type --> orphan
+            cap = os_listxattr(file_path, follow_symlinks=False)
+            if (
+                cap and "security.capability" in cap
+            ):  # protect None return on some OS?
+                color_key = "ca"
+            elif stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
+                color_key = "ex"
+            elif path_stat.st_nlink > 1:
+                color_key = "mh"
+            else:
+                color_key = "fi"
+    elif stat.S_ISDIR(mode):  # ls --color doesn't colorize sticky or ow if not dirs...
+        color_key = "di"
+        if (mode & stat.S_ISVTX) and (mode & stat.S_IWOTH):
+            color_key = "tw"
+        elif mode & stat.S_IWOTH:
+            color_key = "ow"
+        elif mode & stat.S_ISVTX:
+            color_key = "st"
+    elif stat.S_ISLNK(mode):
+        color_key = "ln"
+    elif stat.S_ISFIFO(mode):
+        color_key = "pi"
+    elif stat.S_ISSOCK(mode):
+        color_key = "so"
+    elif stat.S_ISBLK(mode):
+        color_key = "bd"
+    elif stat.S_ISCHR(mode):
+        color_key = "cd"
+    elif stat.S_ISDOOR(mode):
+        color_key = "do"
+    else:
+        color_key = "or"  # any other type --> orphan
 
-        if color_key == "fi":  # if still normal file -- try color by file extension.
-            match = color_file_extension_RE.match(file_path)
-            if match:
-                ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
-                if ext in lsc:
-                    color_key = ext
+    if color_key == "fi":  # if still normal file -- try color by file extension.
+        match = color_file_extension_RE.match(file_path)
+        if match:
+            ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
+            if ext in lsc:
+                color_key = ext
 
     ret_color_token = file_color_tokens.get(color_key, Text)
 
