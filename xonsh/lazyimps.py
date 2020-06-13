@@ -96,6 +96,8 @@ def os_listxattr():
     if getattr(os, "listxattr", None):
         return os.listxattr
     else:
+
         def xx(*args, **kwargs):
             return []
+
         return xx
