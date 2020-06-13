@@ -1358,14 +1358,14 @@ events.on_lscolors_change(on_lscolors_change)
 
 
 def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
-    """Determine color to use for file as ls --color would, given lstat() results and its name.
+    """Determine color to use for file *approximately* as ls --color would, given lstat() results and its name.
 
     Parameters
     ----------
     file_path:
         relative path of file (as user typed it).
     path_stat:
-        stat() results for file_path.
+        lstat() results for file_path.
 
     Returns
     -------
@@ -1374,22 +1374,31 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
     Notes
     -----
 
-    * implementation slavishly follows one authority:
+    * implementation follows one authority:
       https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
-
+    * except:
+    1. does not return 'mi' symlink to missing file unless ln=target,
+      because caller provides an existing file.
+    2. in dircolors, setting type code to '0 or '00' bypasses that test and proceeds to others.
+       In our implementation, setting code to '00' paints the file with no color.
+       This is arguably a bug.
+    3. dircolors with ln=target only colors links to fundamental types, not to *.zoo 
+       (file extension patterns). This function will paint the link with the ultimate file type color.
+       This is arguably better for the user typing a filename on the command line.
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
-    symlink_target = "ln_target" in lsc  # if ln=target in LS_COLORS
     color_key = "fi"
 
     # if ln=target, get name of target (next link only) and its lstat_result
-    if symlink_target and stat.S_ISLNK(path_stat.st_mode):
+    if lsc.is_target("ln") and stat.S_ISLNK(path_stat.st_mode):
         try:
-            file_path = os.readlink(file_path)  # next hop in symlink chain, just like ls
-            path_stat = os.lstat(file_path)     # and work with its properties
+            file_path = os.readlink(
+                file_path
+            )  # next hop in symlink chain, just like ls
+            path_stat = os.lstat(file_path)  # and work with its properties
         except FileNotFoundError:
-            color_key = "mi"                    # early exit
+            color_key = "mi"  # early exit
             ret_color_token = file_color_tokens.get(color_key, Text)
             return ret_color_token, color_key
 
@@ -1402,9 +1411,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
             color_key = "sg"
         else:
             cap = os_listxattr(file_path, follow_symlinks=False)
-            if (
-                cap and "security.capability" in cap
-            ):  # protect None return on some OS?
+            if cap and "security.capability" in cap:  # protect None return on some OS?
                 color_key = "ca"
             elif stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
                 color_key = "ex"

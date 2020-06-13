@@ -198,8 +198,8 @@ def to_debug(x):
 
 class LsColors(cabc.MutableMapping):
     """Helps convert to/from $LS_COLORS format, respecting the xonsh color style.
-    This accepts the same inputs as dict(). The link ``target`` is represented
-    by the special ``"TARGET"`` color.
+    This accepts the same inputs as dict(). The special value ``target`` is
+    replaced by no color, but sets a flag for cognizant application (see is_target()).
     """
 
     default_settings = {
@@ -336,10 +336,17 @@ class LsColors(cabc.MutableMapping):
         "tw": ("BLACK", "BACKGROUND_GREEN"),
     }
 
-    def __init__(self, *args, **kwargs):
-        self._d = dict(*args, **kwargs)
+    target_value = "target"  # special value to set for ln=target
+    target_color = ("NO_COLOR",)  # repres in color space
+
+    def __init__(self, ini_dict: dict = None):
         self._style = self._style_name = None
         self._detyped = None
+        self._d = dict()
+        self._targets = set()
+        if ini_dict:
+            for key, value in ini_dict.items():
+                self[key] = value  # in case init includes ln=target
 
     def __getitem__(self, key):
         return self._d[key]
@@ -347,13 +354,20 @@ class LsColors(cabc.MutableMapping):
     def __setitem__(self, key, value):
         self._detyped = None
         old_value = self._d.get(key, None)
+        self._targets.discard(key)
+        if value == LsColors.target_value:
+            value = LsColors.target_color
+            self._targets.add(key)
         self._d[key] = value
-        if old_value != value:
+        if (
+            old_value != value
+        ):  # bug won't fire if new value is 'target' and old value happened to be no color.
             events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=value)
 
     def __delitem__(self, key):
         self._detyped = None
         old_value = self._d.get(key, None)
+        self._targets.discard(key)
         del self._d[key]
         events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=None)
 
@@ -367,7 +381,7 @@ class LsColors(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(
+        return "{0}.{1}(...)".format(  # noqa F523
             self.__class__.__module__, self.__class__.__name__, self._d
         )
 
@@ -380,6 +394,10 @@ class LsColors(cabc.MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
+    def is_target(self, key) -> bool:
+        "Return True if key is 'target'"
+        return key in self._targets
+
     def detype(self):
         """De-types the instance, allowing it to be exported to the environment."""
         style = self.style
@@ -390,8 +408,8 @@ class LsColors(cabc.MutableMapping):
                     + "="
                     + ";".join(
                         [
-                            "target"
-                            if v == "TARGET"
+                            LsColors.target_value
+                            if key in self._targets
                             else ansi_color_name_to_escape_code(v, cmap=style)
                             for v in val
                         ]
@@ -429,23 +447,21 @@ class LsColors(cabc.MutableMapping):
         # string inputs always use default codes, so translating into
         # xonsh names should be done from defaults
         reversed_default = ansi_reverse_style(style="default")
-        data = {}
         for item in s.split(":"):
             key, eq, esc = item.partition("=")
             if not eq:
                 # not a valid item
                 pass
-            elif esc == "target":
-                data[key] = ("TARGET",)
+            elif esc == LsColors.target_value:  # really only for 'ln'
+                obj[key] = esc
             else:
                 try:
-                    data[key] = ansi_color_escape_code_to_name(
+                    obj[key] = ansi_color_escape_code_to_name(
                         esc, "default", reversed_style=reversed_default
                     )
                 except Exception as e:
                     print("xonsh:warning:" + str(e), file=sys.stderr)
-                    data[key] = ("NO_COLOR",)
-        obj._d = data
+                    obj[key] = ("NO_COLOR",)
         return obj
 
     @classmethod
@@ -1664,7 +1680,7 @@ class Env(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(
+        return "{0}.{1}(...)".format(  # noqa F523
             self.__class__.__module__, self.__class__.__name__, self._d
         )
 

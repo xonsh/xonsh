@@ -171,6 +171,7 @@ def test_event_on_envvar_change(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
@@ -186,6 +187,7 @@ def test_event_on_envvar_new(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
         share.extend((name, value))
@@ -201,6 +203,7 @@ def test_event_on_envvar_change_from_none_value(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
@@ -217,6 +220,7 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
@@ -232,6 +236,7 @@ def test_events_on_envvar_called_in_right_order(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
         share[:] = ["new"]
@@ -303,8 +308,10 @@ def test_delitem_default():
 
 def test_lscolors_target():
     lsc = LsColors.fromstring("ln=target")
-    assert lsc["ln"] == ("TARGET",)
+    assert lsc["ln"] == ("NO_COLOR",)
+    assert lsc.is_target("ln")
     assert lsc.detype() == "ln=target"
+    assert not (lsc.is_target("mi"))
 
 
 @pytest.mark.parametrize(

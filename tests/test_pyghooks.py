@@ -26,11 +26,10 @@ def xonsh_builtins_LS_COLORS(xonsh_builtins):
     lsc = LsColors(LsColors.default_settings)
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
     xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit"
-    # styler = XonshStyle()  # default style
-    # xonsh_builtins.__xonsh__.shell.shell.styler = styler
-    # can't really instantiate XonshStyle separate from a shell??
+    xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
 
     yield xonsh_builtins
+
     xonsh_builtins.__xonsh__.env = e
 
 
@@ -173,7 +172,7 @@ _cf = {
     # bug ci failures: 'bd': '/dev/sda',
     # bug ci failures:'cd': '/dev/tty',
     "or": None,
-    "mi": None,  # can't test till ln:target "missing_link",
+    "mi": "missing",  # can't test till ln:target "missing_link",
     "su": "set_uid",
     "sg": "set_gid",
     "ca": None,  # Separate special case test,
@@ -215,10 +214,9 @@ def colorizable_files():
                     pass
                 elif k == "ex":
                     os.chmod(file_path, stat.S_IXUSR)
-                elif k == "ln":  # 2 hop symlink
-                    os.rename(file_path, file_path + "_target2")
-                    os.symlink(file_path + "_target2", file_path + "_target1")
-                    os.symlink(file_path + "_target1", file_path)
+                elif k == "ln":
+                    os.rename(file_path, file_path + "_target")
+                    os.symlink(file_path + "_target", file_path)
                 elif k == "mi":
                     os.rename(file_path, file_path + "_target")
                     os.symlink(file_path + "_target", file_path)
@@ -247,23 +245,65 @@ def colorizable_files():
                 else:
                     pass  # cauterize those elseless ifs!
 
+                os.symlink(file_path, file_path + "_symlink")
+
         yield tempdir
 
     pass  # tempdir get cleaned up here.
 
 
 @pytest.mark.parametrize(
-    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path]
+    "key,file_path",
+    [(key, file_path) for key, file_path in _cf.items() if file_path and key != "mi"],
 )
 def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
-    xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = (
-        XonshStyle()
-    )  # default style
+    # xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = (
+    #    XonshStyle()
+    # )  # default style
     ffp = colorizable_files + "/" + file_path
     stat_result = os.lstat(ffp)
     color_token, color_key = color_file(ffp, stat_result)
     assert color_key == key, "File classified as expected kind"
     assert color_token == file_color_tokens[key], "Color token is as expected"
+
+
+@pytest.mark.parametrize(
+    "key,file_path",
+    [(key, file_path) for key, file_path in _cf.items() if file_path],
+)
+def test_colorize_file_symlink(
+    key, file_path, colorizable_files, xonsh_builtins_LS_COLORS
+):
+    """test coloring of symlink to each kind of file"""
+    xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"]["ln"] = "target"
+    ffp = colorizable_files + "/" + file_path
+    if key != "mi":  # 'mi' is special case -- must use link that is actually broken.
+        ffp += "_symlink"
+    stat_result = os.lstat(ffp)
+    assert stat.S_ISLNK(stat_result.st_mode)
+
+    color_token, color_key = color_file(ffp, stat_result)
+    assert color_key == key, "File classified as expected kind"
+    assert color_token == file_color_tokens[key], "Color token is as expected"
+
+
+@pytest.mark.parametrize(
+    "file_path,key",
+    [
+        ("regular_symlink", "ln"),
+        ("regular", "fi"),
+        ("sym_link_symlink", "ln"),
+        ("sym_link", "ln"),
+    ],
+)
+def test_colorize_file_multi_symlink(
+    file_path, key, colorizable_files, xonsh_builtins_LS_COLORS
+):
+    """verify returns color for immediate target of a symlink, not the ultimate target."""
+    ffp = colorizable_files + "/" + file_path
+    stat_result = os.lstat(ffp)
+    color_token, color_key = color_file(ffp, stat_result)
+    assert color_key == key, "File classified as expected kind"
 
 
 import xonsh.lazyimps
@@ -282,9 +322,3 @@ def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
         color_token, color_key = color_file(file_path, os.lstat(file_path))
 
         assert color_key == "ca"
-
-
-# TODO: test precedence of some types over others:
-# mh + link to ex --> ex
-# ln + link to ex --> ex
-# ln:target

@@ -19,8 +19,10 @@
 
 * $LS_COLORS code 'fi' now used for "regular files", as it should have been all along. (was 'rs') 
   See (#3608)[https://github.com/xonsh/xonsh/issues/3608].
-* pyghooks.color_files now follows implememntation of ls --color very closely.  Thanks @qwenger!
+* pyghooks.color_files now follows implememntation of ls --color closely.  Thanks @qwenger!
+  However, a few differences documented due to use in Xonsh.
   Precedence of color for file with multiple matches improved; now follows only next symlink in a chain.
+* $LS_COLORS['ln'] = 'target' now works.  Also fixes #3578.
 
 **Security:**
 
