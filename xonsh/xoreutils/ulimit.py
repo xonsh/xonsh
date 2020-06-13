@@ -318,6 +318,6 @@ def ulimit(args, stdin, stdout, stderr):
         for fn, args in actions:
             fn(stdout=stdout, long=long, **args)
         return 0
-    except: # noqa E722 might want keyboard interrupt...
+    except:  # noqa E722 might want keyboard interrupt...
         print_exception()
         return 2
