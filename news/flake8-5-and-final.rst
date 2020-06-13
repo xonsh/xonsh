@@ -21,7 +21,7 @@
 **Fixed:**
 
 * Updated development guide to reference flake8 instead of pylint
-* docs/ `make html`_ enable xonshcon code block.
+* docs/ `make html`_ enable xonshcon code block,
   Eliminates warnings and errors during build -- docs look ever so much prettier.
 * Resolved many but not all pytest deprecation warnings during a 'clean' test run.
 
