@@ -5,6 +5,10 @@ xonsh
    :alt: Join the chat at https://gitter.im/xonsh/xonsh
    :target: https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
+.. image:: https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green
+   :alt: Matrix room: #xonsh:feneas.org
+   :target: https://matrix.to/#/#xonsh:feneas.org
+
 .. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=master
     :target: https://travis-ci.org/xonsh/xonsh
 
