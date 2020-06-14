@@ -161,30 +161,58 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
 # note 'ca' is checked by standalone test.
 # requires privilege to create a file with capabilities
 
+if ON_WINDOWS:
+    # file coloring support is very limited on Windows, only test the cases we can easily make work
+    # If you care about file colors, use Windows Subsystem for Linux, or another OS.
 
-_cf = {
-    "fi": "regular",
-    "di": "simple_dir",
-    "ln": "sym_link",
-    "pi": None if ON_WINDOWS else "pipe",
-    "so": None,
-    "do": None,
-    # bug ci failures: 'bd': '/dev/sda',
-    # bug ci failures:'cd': '/dev/tty',
-    "or": "orphan",
-    "mi": None,  # never used
-    "su": "set_uid",
-    "sg": "set_gid",
-    "ca": None,  # Separate special case test,
-    "tw": "sticky_ow_dir",
-    "ow": "other_writable_dir",
-    "st": "sticky_dir",
-    "ex": "executable",
-    "*.emf": "foo.emf",
-    "*.zip": "foo.zip",
-    "*.ogg": "foo.ogg",
-    "mh": "hard_link",
-}
+    _cf = {
+        "fi": "regular",
+        "di": "simple_dir",
+        "ln": "sym_link",
+        "pi": None,
+        "so": None,
+        "do": None,
+        # bug ci failures: 'bd': '/dev/sda',
+        # bug ci failures:'cd': '/dev/tty',
+        "or": "orphan",
+        "mi": None,  # never used
+        "su": None,
+        "sg": None,
+        "ca": None,  # Separate special case test,
+        "tw": None,
+        "ow": None,
+        "st": None,
+        "ex": None, # TODO: make this work "executable",
+        "*.emf": "foo.emf",
+        "*.zip": "foo.zip",
+        "*.ogg": "foo.ogg",
+        "mh": "hard_link",
+    }
+else:
+    # full-fledged, VT100 based infrastructure
+    _cf = {
+        "fi": "regular",
+        "di": "simple_dir",
+        "ln": "sym_link",
+        "pi": "pipe",
+        "so": None,
+        "do": None,
+        # bug ci failures: 'bd': '/dev/sda',
+        # bug ci failures:'cd': '/dev/tty',
+        "or": "orphan",
+        "mi": None,  # never used
+        "su": "set_uid",
+        "sg": "set_gid",
+        "ca": None,  # Separate special case test,
+        "tw": "sticky_ow_dir",
+        "ow": "other_writable_dir",
+        "st": "sticky_dir",
+        "ex": "executable",
+        "*.emf": "foo.emf",
+        "*.zip": "foo.zip",
+        "*.ogg": "foo.ogg",
+        "mh": "hard_link",
+    }
 
 
 @pytest.fixture(scope="module")
