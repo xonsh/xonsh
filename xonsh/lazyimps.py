@@ -95,4 +95,4 @@ def html():
 def os_listxattr():
     def dummy_listxattr(*args, **kwargs):
         return []
-    return getattr(os, 'listxattr', dummy_listxattr)
+    return getattr(os, "listxattr", dummy_listxattr)
