@@ -1358,7 +1358,8 @@ events.on_lscolors_change(on_lscolors_change)
 
 
 def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
-    """Determine color to use for file *approximately* as ls --color would, given lstat() results and its name.
+    """Determine color to use for file *approximately* as ls --color would,
+       given lstat() results and its path.
 
     Parameters
     ----------
@@ -1377,28 +1378,24 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
     * implementation follows one authority:
       https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
     * except:
-    1. does not return 'mi' symlink to missing file unless ln=target,
-      because caller provides an existing file.
+    1. does not return 'mi'.  That's the color ls uses to show the (missing) *target* of a symlink
+       (in ls -l, not ls).
     2. in dircolors, setting type code to '0 or '00' bypasses that test and proceeds to others.
        In our implementation, setting code to '00' paints the file with no color.
        This is arguably a bug.
-    3. dircolors with ln=target only colors links to fundamental types, not to *.zoo 
-       (file extension patterns). This function will paint the link with the ultimate file type color.
-       This is arguably better for the user typing a filename on the command line.
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
     color_key = "fi"
 
-    # if ln=target, get name of target (next link only) and its lstat_result
-    if lsc.is_target("ln") and stat.S_ISLNK(path_stat.st_mode):
+    # if symlink, get info on (final) target
+    if stat.S_ISLNK(path_stat.st_mode):
         try:
-            file_path = os.readlink(
-                file_path
-            )  # next hop in symlink chain, just like ls
-            path_stat = os.lstat(file_path)  # and work with its properties
-        except FileNotFoundError:
-            color_key = "mi"  # early exit
+            tar_path_stat = os.stat(file_path)  # and work with its properties
+            if lsc.is_target("ln"):  # if ln=target
+                path_stat = tar_path_stat
+        except FileNotFoundError:  # bug always color broken link 'or'
+            color_key = "or"  # early exit
             ret_color_token = file_color_tokens.get(color_key, Text)
             return ret_color_token, color_key
 
@@ -1442,7 +1439,10 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
     else:
         color_key = "or"  # any other type --> orphan
 
-    if color_key == "fi":  # if still normal file -- try color by file extension.
+    # if still normal file -- try color by file extension.
+    # note: symlink to *.<ext> will be colored 'fi' unless the symlink itself
+    # ends with .<ext>. `ls` does the same.  Bug-for-bug compatibility!
+    if color_key == "fi":
         match = color_file_extension_RE.match(file_path)
         if match:
             ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
