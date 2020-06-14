@@ -2,8 +2,10 @@
 import pytest
 import os
 import stat
+import pathlib
 
 from tempfile import TemporaryDirectory
+from xonsh.platform import ON_WINDOWS
 
 from xonsh.pyghooks import (
     XonshStyle,
@@ -15,8 +17,6 @@ from xonsh.pyghooks import (
 )
 
 from xonsh.environ import LsColors
-
-# from tools import skip_if_on_windows
 
 
 @pytest.fixture
@@ -166,13 +166,13 @@ _cf = {
     "fi": "regular",
     "di": "simple_dir",
     "ln": "sym_link",
-    "pi": "pipe",
+    "pi": None if ON_WINDOWS else "pipe",
     "so": None,
     "do": None,
     # bug ci failures: 'bd': '/dev/sda',
     # bug ci failures:'cd': '/dev/tty',
-    "or": None,
-    "mi": "missing",  # can't test till ln:target "missing_link",
+    "or": "orphan",
+    "mi": None,  # never used
     "su": "set_uid",
     "sg": "set_gid",
     "ca": None,  # Separate special case test,
@@ -185,8 +185,6 @@ _cf = {
     "*.ogg": "foo.ogg",
     "mh": "hard_link",
 }
-
-# TODO: create equivalent zoo of files for Windows.
 
 
 @pytest.fixture(scope="module")
@@ -214,14 +212,15 @@ def colorizable_files():
                     pass
                 elif k == "ex":
                     os.chmod(file_path, stat.S_IXUSR)
-                elif k == "ln":
+                elif k == "ln":  # cook ln test case.
+                    os.chmod(file_path, stat.S_IXUSR)  # link to *executable* file
                     os.rename(file_path, file_path + "_target")
                     os.symlink(file_path + "_target", file_path)
-                elif k == "mi":
+                elif k == "or":
                     os.rename(file_path, file_path + "_target")
                     os.symlink(file_path + "_target", file_path)
                     os.remove(file_path + "_target")
-                elif k == "pi":
+                elif k == "pi":  # not on Windows
                     os.remove(file_path)
                     os.mkfifo(file_path)
                 elif k == "su":
@@ -253,13 +252,10 @@ def colorizable_files():
 
 
 @pytest.mark.parametrize(
-    "key,file_path",
-    [(key, file_path) for key, file_path in _cf.items() if file_path and key != "mi"],
+    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
 )
 def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
-    # xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = (
-    #    XonshStyle()
-    # )  # default style
+    """test proper file codes with symlinks colored normally"""
     ffp = colorizable_files + "/" + file_path
     stat_result = os.lstat(ffp)
     color_token, color_key = color_file(ffp, stat_result)
@@ -268,42 +264,31 @@ def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLO
 
 
 @pytest.mark.parametrize(
-    "key,file_path",
-    [(key, file_path) for key, file_path in _cf.items() if file_path],
+    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
 )
 def test_colorize_file_symlink(
     key, file_path, colorizable_files, xonsh_builtins_LS_COLORS
 ):
-    """test coloring of symlink to each kind of file"""
+    """test proper file codes with symlinks colored target."""
     xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"]["ln"] = "target"
-    ffp = colorizable_files + "/" + file_path
-    if key != "mi":  # 'mi' is special case -- must use link that is actually broken.
-        ffp += "_symlink"
+    ffp = colorizable_files + "/" + file_path + "_symlink"
     stat_result = os.lstat(ffp)
     assert stat.S_ISLNK(stat_result.st_mode)
 
-    color_token, color_key = color_file(ffp, stat_result)
-    assert color_key == key, "File classified as expected kind"
-    assert color_token == file_color_tokens[key], "Color token is as expected"
+    _, color_key = color_file(ffp, stat_result)
 
+    try:
+        tar_stat_result = os.stat(ffp)  # stat the target of the link
+        tar_ffp = str(pathlib.Path(ffp).resolve())
+        _, tar_color_key = color_file(tar_ffp, tar_stat_result)
+        if tar_color_key.startswith("*"):
+            tar_color_key = (
+                "fi"  # all the *.* zoo, link is colored 'fi', not target type.
+            )
+    except FileNotFoundError:  # orphan symlinks always colored 'or'
+        tar_color_key = "or"  # Fake if for missing file
 
-@pytest.mark.parametrize(
-    "file_path,key",
-    [
-        ("regular_symlink", "ln"),
-        ("regular", "fi"),
-        ("sym_link_symlink", "ln"),
-        ("sym_link", "ln"),
-    ],
-)
-def test_colorize_file_multi_symlink(
-    file_path, key, colorizable_files, xonsh_builtins_LS_COLORS
-):
-    """verify returns color for immediate target of a symlink, not the ultimate target."""
-    ffp = colorizable_files + "/" + file_path
-    stat_result = os.lstat(ffp)
-    color_token, color_key = color_file(ffp, stat_result)
-    assert color_key == key, "File classified as expected kind"
+    assert color_key == tar_color_key, "File classified as expected kind, via symlink"
 
 
 import xonsh.lazyimps

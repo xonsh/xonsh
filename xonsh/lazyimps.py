@@ -93,11 +93,6 @@ def html():
 
 @lazyobject
 def os_listxattr():
-    if getattr(os, "listxattr", None):
-        return os.listxattr
-    else:
-
-        def xx(*args, **kwargs):
-            return []
-
-        return xx
+    def dummy_listxattr(*args, **kwargs):
+        return []
+    return getattr(os, 'listxattr', dummy_listxattr)
