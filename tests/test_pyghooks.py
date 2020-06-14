@@ -160,11 +160,11 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
 # parameterized tests for file colorization
 # note 'ca' is checked by standalone test.
 # requires privilege to create a file with capabilities
-# Windows is different.  Test the cases that are easy to do.
-# if you want robust file colorization use Windows Subsystem for Linux (WSL)
-# or a different OS.
 
 if ON_WINDOWS:
+    # file coloring support is very limited on Windows, only test the cases we can easily make work
+    # If you care about file colors, use Windows Subsystem for Linux, or another OS.
+
     _cf = {
         "fi": "regular",
         "di": "simple_dir",
@@ -182,18 +182,19 @@ if ON_WINDOWS:
         "tw": None,
         "ow": None,
         "st": None,
-        "ex": None,  # executable is a filetype test on Windows.
+        "ex": None,  # TODO: make this work "executable",
         "*.emf": "foo.emf",
         "*.zip": "foo.zip",
         "*.ogg": "foo.ogg",
         "mh": "hard_link",
     }
 else:
+    # full-fledged, VT100 based infrastructure
     _cf = {
         "fi": "regular",
         "di": "simple_dir",
         "ln": "sym_link",
-        "pi": None if ON_WINDOWS else "pipe",
+        "pi": "pipe",
         "so": None,
         "do": None,
         # bug ci failures: 'bd': '/dev/sda',
@@ -330,7 +331,9 @@ def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
     with TemporaryDirectory() as tmpdir:
         file_path = tmpdir + "/cap_file"
         open(file_path, "a").close()
-        os.chmod(file_path, stat.S_IXUSR)  # ca overrides ex
+        os.chmod(
+            file_path, stat.S_IRWXU
+        )  # ca overrides ex, leave file deletable on Windows
         color_token, color_key = color_file(file_path, os.lstat(file_path))
 
         assert color_key == "ca"

@@ -1418,12 +1418,13 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
                 color_key = "fi"
     elif stat.S_ISDIR(mode):  # ls --color doesn't colorize sticky or ow if not dirs...
         color_key = "di"
-        if (mode & stat.S_ISVTX) and (mode & stat.S_IWOTH):
-            color_key = "tw"
-        elif mode & stat.S_IWOTH:
-            color_key = "ow"
-        elif mode & stat.S_ISVTX:
-            color_key = "st"
+        if not (ON_WINDOWS):  # on Windows, these do not mean what you think they mean.
+            if (mode & stat.S_ISVTX) and (mode & stat.S_IWOTH):
+                color_key = "tw"
+            elif mode & stat.S_IWOTH:
+                color_key = "ow"
+            elif mode & stat.S_ISVTX:
+                color_key = "st"
     elif stat.S_ISLNK(mode):
         color_key = "ln"
     elif stat.S_ISFIFO(mode):
