@@ -8,7 +8,7 @@
 
 **Deprecated:**
 
-* `pytest --flake8`_ now exits with error message to use flake8 instead.
+* ``pytest --flake8`` now exits with error message to use flake8 instead.
   Allows single list of lint exceptions to apply in CI and your IDE.
 
 **Removed:**
