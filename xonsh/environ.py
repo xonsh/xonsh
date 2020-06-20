@@ -366,9 +366,7 @@ class LsColors(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(
-            self.__class__.__module__, self.__class__.__name__, self._d
-        )
+        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
     def _repr_pretty_(self, p, cycle):
         name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
@@ -1663,9 +1661,7 @@ class Env(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(
-            self.__class__.__module__, self.__class__.__name__, self._d
-        )
+        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
     def _repr_pretty_(self, p, cycle):
         name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)

@@ -25,6 +25,7 @@ exclude = '''
      |  \.github
      |  \.vscode
      |  \.pytest_cache
+     |  ply
      )/
 )
 '''
