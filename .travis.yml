@@ -50,4 +50,5 @@ script:
       doctr deploy --deploy-repo xonsh/xonsh-docs .;
     else
       xonsh run-tests.xsh --timeout=10;
+      flake8
     fi

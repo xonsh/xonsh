@@ -3,8 +3,8 @@
 import os
 import re
 import sys
-import builtins
 import stat
+import builtins
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
@@ -215,7 +215,7 @@ def color_token_by_name(xc: tuple, styles=None) -> Color:
     """Returns (color) token corresponding to Xonsh color tuple, side effect: defines token is defined in styles"""
     if not styles:
         try:
-            styles = builtins.__xonsh__.shell.shell.styler.styles
+            styles = __xonsh__.shell.shell.styler.styles
         except AttributeError:
             return Color
 
@@ -236,7 +236,7 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if builtins.__xonsh__.shell is not None:
+    if __xonsh__.shell is not None:
         styles = __xonsh__.shell.shell.styler.styles
     else:
         styles = None
@@ -362,7 +362,7 @@ class XonshStyle(Style):
                     file=sys.stderr,
                 )
                 value = "default"
-                builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = value
+                __xonsh__.env["XONSH_COLOR_STYLE"] = value
         cmap = STYLES[value]
         if value == "default":
             self._smap = XONSH_BASE_STYLE.copy()
@@ -378,13 +378,11 @@ class XonshStyle(Style):
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
 
-        for file_type, xonsh_color in builtins.__xonsh__.env.get(
-            "LS_COLORS", {}
-        ).items():
+        for file_type, xonsh_color in __xonsh__.env.get("LS_COLORS", {}).items():
             color_token = color_token_by_name(xonsh_color, self.styles)
             file_color_tokens[file_type] = color_token
 
-        if ON_WINDOWS and "prompt_toolkit" in builtins.__xonsh__.shell.shell_type:
+        if ON_WINDOWS and "prompt_toolkit" in __xonsh__.shell.shell_type:
             self.enhance_colors_for_cmd_exe()
 
     @style_name.deleter
@@ -396,7 +394,7 @@ class XonshStyle(Style):
             When using the default style all blue and dark red colors
             are changed to CYAN and intense red.
         """
-        env = builtins.__xonsh__.env
+        env = __xonsh__.env
         # Ensure we are not using the new Windows Terminal, ConEmu or Visual Stuio Code
         if "WT_SESSION" in env or "CONEMUANSI" in env or "VSCODE_PID" in env:
             return
@@ -1378,7 +1376,7 @@ def color_file(file_path: str, mode: int) -> (Color, str):
 
     """
 
-    lsc = builtins.__xonsh__.env["LS_COLORS"]
+    lsc = __xonsh__.env["LS_COLORS"]
     color_key = "rs"
 
     if stat.S_ISLNK(mode):  # must test link before S_ISREG (esp execute)
@@ -1435,13 +1433,13 @@ def _command_is_valid(cmd):
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     except (FileNotFoundError, OSError):
         return False
-    return (cmd in builtins.__xonsh__.commands_cache and not iskeyword(cmd)) or (
+    return (cmd in __xonsh__.commands_cache and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
     )
 
 
 def _command_is_autocd(cmd):
-    if not builtins.__xonsh__.env.get("AUTO_CD", False):
+    if not __xonsh__.env.get("AUTO_CD", False):
         return False
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
@@ -1489,14 +1487,14 @@ class XonshLexer(Python3Lexer):
             from argparse import Namespace
 
             setattr(builtins, "__xonsh__", Namespace())
-        if not hasattr(builtins.__xonsh__, "env"):
-            setattr(builtins.__xonsh__, "env", {})
+        if not hasattr(__xonsh__, "env"):
+            setattr(__xonsh__, "env", {})
             if ON_WINDOWS:
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
-                builtins.__xonsh__.env["PATHEXT"] = pathext.split(os.pathsep)
-        if not hasattr(builtins.__xonsh__, "commands_cache"):
-            setattr(builtins.__xonsh__, "commands_cache", CommandsCache())
-        _ = builtins.__xonsh__.commands_cache.all_commands  # NOQA
+                __xonsh__.env["PATHEXT"] = pathext.split(os.pathsep)
+        if not hasattr(__xonsh__, "commands_cache"):
+            setattr(__xonsh__, "commands_cache", CommandsCache())
+        _ = __xonsh__.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)
 
     tokens = {

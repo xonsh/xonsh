@@ -1,5 +1,4 @@
 """Xonsh color styling tools that simulate pygments, when it is unavailable."""
-import builtins
 from collections import defaultdict
 
 from xonsh.platform import HAS_PYGMENTS
@@ -64,9 +63,9 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if HAS_PYGMENTS and builtins.__xonsh__.shell is not None:
+    if HAS_PYGMENTS and __xonsh__.shell is not None:
         styles = __xonsh__.shell.shell.styler.styles
-    elif builtins.__xonsh__.shell is not None:
+    elif __xonsh__.shell is not None:
         styles = DEFAULT_STYLE_DICT
     else:
         styles = None
