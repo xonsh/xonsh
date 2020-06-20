@@ -1,10 +1,11 @@
 **Added:**
 
-* Added global flake8 exception for global __xonsh__, but do we really want to encourage bare global reference to "internal" field?
+* <news item>
 
 **Changed:**
 
-* <news item>
+* Added flake8 builtins exception for ``__xonsh__``, 
+  should not need ``import builtins``, ``builtins.__xonsh__`` any more
 
 **Deprecated:**
 
