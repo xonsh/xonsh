@@ -2,8 +2,10 @@
 import pytest
 import os
 import stat
+import pathlib
 
 from tempfile import TemporaryDirectory
+from xonsh.platform import ON_WINDOWS
 
 from xonsh.pyghooks import (
     XonshStyle,
@@ -15,7 +17,6 @@ from xonsh.pyghooks import (
 )
 
 from xonsh.environ import LsColors
-from tools import skip_if_on_windows
 
 
 @pytest.fixture
@@ -25,11 +26,10 @@ def xonsh_builtins_LS_COLORS(xonsh_builtins):
     lsc = LsColors(LsColors.default_settings)
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
     xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit"
-    # styler = XonshStyle()  # default style
-    # xonsh_builtins.__xonsh__.shell.shell.styler = styler
-    # can't really instantiate XonshStyle separate from a shell??
+    xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
 
     yield xonsh_builtins
+
     xonsh_builtins.__xonsh__.env = e
 
 
@@ -157,29 +157,62 @@ def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
     )
 
 
-_cf = {
-    "rs": "regular",
-    "di": "simple_dir",
-    "ln": "simple_link",
-    "mh": None,
-    "pi": "pipe",
-    "so": None,
-    "do": None,
-    # bug ci failures: 'bd': '/dev/sda',
-    # bug ci failures:'cd': '/dev/tty',
-    "or": "orphan_link",
-    "mi": None,
-    "su": "set_uid",
-    "sg": "set_gid",
-    "ca": None,
-    "tw": "sticky_ow_dir",
-    "ow": "other_writable_dir",
-    "st": "sticky_dir",
-    "ex": "executable",
-    "*.emf": "foo.emf",
-    "*.zip": "foo.zip",
-    "*.ogg": "foo.ogg",
-}
+# parameterized tests for file colorization
+# note 'ca' is checked by standalone test.
+# requires privilege to create a file with capabilities
+
+if ON_WINDOWS:
+    # file coloring support is very limited on Windows, only test the cases we can easily make work
+    # If you care about file colors, use Windows Subsystem for Linux, or another OS.
+
+    _cf = {
+        "fi": "regular",
+        "di": "simple_dir",
+        "ln": "sym_link",
+        "pi": None,
+        "so": None,
+        "do": None,
+        # bug ci failures: 'bd': '/dev/sda',
+        # bug ci failures:'cd': '/dev/tty',
+        "or": "orphan",
+        "mi": None,  # never used
+        "su": None,
+        "sg": None,
+        "ca": None,  # Separate special case test,
+        "tw": None,
+        "ow": None,
+        "st": None,
+        "ex": None,  # executable is a filetype test on Windows.
+        "*.emf": "foo.emf",
+        "*.zip": "foo.zip",
+        "*.ogg": "foo.ogg",
+        "mh": "hard_link",
+    }
+else:
+    # full-fledged, VT100 based infrastructure
+    _cf = {
+        "fi": "regular",
+        "di": "simple_dir",
+        "ln": "sym_link",
+        "pi": "pipe",
+        "so": None,
+        "do": None,
+        # bug ci failures: 'bd': '/dev/sda',
+        # bug ci failures:'cd': '/dev/tty',
+        "or": "orphan",
+        "mi": None,  # never used
+        "su": "set_uid",
+        "sg": "set_gid",
+        "ca": None,  # Separate special case test,
+        "tw": "sticky_ow_dir",
+        "ow": "other_writable_dir",
+        "st": "sticky_dir",
+        "ex": "executable",
+        "*.emf": "foo.emf",
+        "*.zip": "foo.zip",
+        "*.ogg": "foo.ogg",
+        "mh": "hard_link",
+    }
 
 
 @pytest.fixture(scope="module")
@@ -203,18 +236,19 @@ def colorizable_files():
                     os.mkdir(file_path)
                 else:
                     open(file_path, "a").close()
-                if k in ("di", "rg"):
+                if k in ("di", "fi"):
                     pass
                 elif k == "ex":
-                    os.chmod(file_path, stat.S_IXUSR)
-                elif k == "ln":
+                    os.chmod(file_path, stat.S_IRWXU)  # tmpdir on windows need u+w
+                elif k == "ln":  # cook ln test case.
+                    os.chmod(file_path, stat.S_IRWXU)  # link to *executable* file
                     os.rename(file_path, file_path + "_target")
                     os.symlink(file_path + "_target", file_path)
                 elif k == "or":
                     os.rename(file_path, file_path + "_target")
                     os.symlink(file_path + "_target", file_path)
                     os.remove(file_path + "_target")
-                elif k == "pi":
+                elif k == "pi":  # not on Windows
                     os.remove(file_path)
                     os.mkfifo(file_path)
                 elif k == "su":
@@ -232,8 +266,13 @@ def colorizable_files():
                     )
                 elif k == "ow":
                     os.chmod(file_path, stat.S_IWOTH | stat.S_IRUSR | stat.S_IWUSR)
+                elif k == "mh":
+                    os.rename(file_path, file_path + "_target")
+                    os.link(file_path + "_target", file_path)
                 else:
                     pass  # cauterize those elseless ifs!
+
+                os.symlink(file_path, file_path + "_symlink")
 
         yield tempdir
 
@@ -241,15 +280,58 @@ def colorizable_files():
 
 
 @pytest.mark.parametrize(
-    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path]
+    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
 )
-@skip_if_on_windows
 def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
-    xonsh_builtins_LS_COLORS.__xonsh__.shell.shell.styler = (
-        XonshStyle()
-    )  # default style
+    """test proper file codes with symlinks colored normally"""
     ffp = colorizable_files + "/" + file_path
-    mode = (os.lstat(ffp)).st_mode
-    color_token, color_key = color_file(ffp, mode)
+    stat_result = os.lstat(ffp)
+    color_token, color_key = color_file(ffp, stat_result)
     assert color_key == key, "File classified as expected kind"
     assert color_token == file_color_tokens[key], "Color token is as expected"
+
+
+@pytest.mark.parametrize(
+    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
+)
+def test_colorize_file_symlink(
+    key, file_path, colorizable_files, xonsh_builtins_LS_COLORS
+):
+    """test proper file codes with symlinks colored target."""
+    xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"]["ln"] = "target"
+    ffp = colorizable_files + "/" + file_path + "_symlink"
+    stat_result = os.lstat(ffp)
+    assert stat.S_ISLNK(stat_result.st_mode)
+
+    _, color_key = color_file(ffp, stat_result)
+
+    try:
+        tar_stat_result = os.stat(ffp)  # stat the target of the link
+        tar_ffp = str(pathlib.Path(ffp).resolve())
+        _, tar_color_key = color_file(tar_ffp, tar_stat_result)
+        if tar_color_key.startswith("*"):
+            tar_color_key = (
+                "fi"  # all the *.* zoo, link is colored 'fi', not target type.
+            )
+    except FileNotFoundError:  # orphan symlinks always colored 'or'
+        tar_color_key = "or"  # Fake if for missing file
+
+    assert color_key == tar_color_key, "File classified as expected kind, via symlink"
+
+
+import xonsh.lazyimps
+
+
+def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
+    def mock_os_listxattr(*args, **kwards):
+        return ["security.capability"]
+
+    monkeypatch.setattr(xonsh.pyghooks, "os_listxattr", mock_os_listxattr)
+
+    with TemporaryDirectory() as tmpdir:
+        file_path = tmpdir + "/cap_file"
+        open(file_path, "a").close()
+        os.chmod(file_path, stat.S_IXUSR)  # ca overrides ex
+        color_token, color_key = color_file(file_path, os.lstat(file_path))
+
+        assert color_key == "ca"
