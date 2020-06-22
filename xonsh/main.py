@@ -402,7 +402,7 @@ def main(argv=None):
     args = None
     try:
         args = premain(argv)
-        return main_xonsh(args)
+        sys.exit(main_xonsh(args))
     except Exception as err:
         _failback_to_other_shells(args, err)
 
@@ -420,6 +420,8 @@ def main_xonsh(args):
     events.on_post_init.fire()
     env = builtins.__xonsh__.env
     shell = builtins.__xonsh__.shell
+    history = builtins.__xonsh__.history
+    exit_code = 0
     try:
         if args.mode == XonshMode.interactive:
             # enter the shell
@@ -437,6 +439,8 @@ def main_xonsh(args):
         elif args.mode == XonshMode.single_command:
             # run a single command and exit
             run_code_with_cache(args.command.lstrip(), shell.execer, mode="single")
+            if history is not None and history.last_cmd_rtn is not None:
+                exit_code = history.last_cmd_rtn
         elif args.mode == XonshMode.script_from_file:
             # run a script contained in a file
             path = os.path.abspath(os.path.expanduser(args.file))
@@ -450,8 +454,7 @@ def main_xonsh(args):
                 )
             else:
                 print("xonsh: {0}: No such file or directory.".format(args.file))
-                events.on_exit.fire()
-                sys.exit(1)
+                exit_code = 1
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
             code = sys.stdin.read()
@@ -461,6 +464,7 @@ def main_xonsh(args):
     finally:
         events.on_exit.fire()
     postmain(args)
+    return exit_code
 
 
 def postmain(args=None):
