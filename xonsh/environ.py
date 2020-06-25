@@ -427,7 +427,7 @@ class LsColors(cabc.MutableMapping):
         env_style_name = env.get("XONSH_COLOR_STYLE", "default")
         if self._style_name is None or self._style_name != env_style_name:
             self._style_name = env_style_name
-            self._style = self._dtyped = None
+            self._style = self._detyped = None
         return self._style_name
 
     @property
