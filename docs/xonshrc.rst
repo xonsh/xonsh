@@ -59,7 +59,7 @@ With this snippet, xonsh will understand json data such as ``{ "name": "Tyler", 
     >>> builtins.false = False
     >>> builtins.null = None
     
-Display different date invformation every 10th time
+Display different date information every 10th time
 ---------------------------------------------------
 For a compact shell prompts, some people prefer a very condensed time format. But when you have a lengthy shell session you might want the date to show up in your logs every now and then...
 
