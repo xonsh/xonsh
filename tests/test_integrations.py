@@ -596,7 +596,7 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
 @skip_if_no_xonsh
 @skip_if_no_sleep
 @skip_if_on_windows
-@pytest.mark.xfail(strict=False) # TODO: fixme (super flaky on OSX)
+@pytest.mark.xfail(strict=False)  # TODO: fixme (super flaky on OSX)
 def test_xonsh_no_close_fds():
     # see issue https://github.com/xonsh/xonsh/issues/2984
     makefile = (
@@ -618,7 +618,8 @@ def test_xonsh_no_close_fds():
 
 
 @pytest.mark.parametrize(
-    "cmd, fmt, exp", [("ls | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)  
+    "cmd, fmt, exp",
+    [("ls | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"

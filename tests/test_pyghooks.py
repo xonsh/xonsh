@@ -182,7 +182,7 @@ if ON_WINDOWS:
         "tw": None,
         "ow": None,
         "st": None,
-        "ex": None,  # TODO: make this work "executable",
+        "ex": None,  # executable is a filetype test on Windows.
         "*.emf": "foo.emf",
         "*.zip": "foo.zip",
         "*.ogg": "foo.ogg",
@@ -239,9 +239,9 @@ def colorizable_files():
                 if k in ("di", "fi"):
                     pass
                 elif k == "ex":
-                    os.chmod(file_path, stat.S_IXUSR)
+                    os.chmod(file_path, stat.S_IRWXU)  # tmpdir on windows need u+w
                 elif k == "ln":  # cook ln test case.
-                    os.chmod(file_path, stat.S_IXUSR)  # link to *executable* file
+                    os.chmod(file_path, stat.S_IRWXU)  # link to *executable* file
                     os.rename(file_path, file_path + "_target")
                     os.symlink(file_path + "_target", file_path)
                 elif k == "or":

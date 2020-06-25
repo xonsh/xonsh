@@ -12,4 +12,4 @@ jobs:
     - name: Black Check
       uses: "lgeiger/black-action@master"
       with:
-        args: "--check --exclude=xonsh/ply/ xonsh/ xontrib/"
+        args: "--check xonsh/ xontrib/"

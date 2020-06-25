@@ -346,7 +346,10 @@ class LsColors(cabc.MutableMapping):
         self._targets = set()
         if ini_dict:
             for key, value in ini_dict.items():
-                self[key] = value  # in case init includes ln=target
+                if value == LsColors.target_value:
+                    self._targets.add(key)
+                    value = LsColors.target_color
+                self._d[key] = value
 
     def __getitem__(self, key):
         return self._d[key]
@@ -381,9 +384,7 @@ class LsColors(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(  # noqa F523
-            self.__class__.__module__, self.__class__.__name__, self._d
-        )
+        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
     def _repr_pretty_(self, p, cycle):
         name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
@@ -443,7 +444,7 @@ class LsColors(cabc.MutableMapping):
         """Creates a new instance of the LsColors class from a colon-separated
         string of dircolor-valid keys to ANSI color escape sequences.
         """
-        obj = cls()
+        ini_dict = dict()
         # string inputs always use default codes, so translating into
         # xonsh names should be done from defaults
         reversed_default = ansi_reverse_style(style="default")
@@ -453,16 +454,16 @@ class LsColors(cabc.MutableMapping):
                 # not a valid item
                 pass
             elif esc == LsColors.target_value:  # really only for 'ln'
-                obj[key] = esc
+                ini_dict[key] = esc
             else:
                 try:
-                    obj[key] = ansi_color_escape_code_to_name(
+                    ini_dict[key] = ansi_color_escape_code_to_name(
                         esc, "default", reversed_style=reversed_default
                     )
                 except Exception as e:
                     print("xonsh:warning:" + str(e), file=sys.stderr)
-                    obj[key] = ("NO_COLOR",)
-        return obj
+                    ini_dict[key] = ("NO_COLOR",)
+        return cls(ini_dict)
 
     @classmethod
     def fromdircolors(cls, filename=None):
@@ -1680,9 +1681,7 @@ class Env(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(  # noqa F523
-            self.__class__.__module__, self.__class__.__name__, self._d
-        )
+        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
     def _repr_pretty_(self, p, cycle):
         name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
