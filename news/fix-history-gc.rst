@@ -10,9 +10,9 @@
 
 **Changed:**
 
-  Garbage collection now tallies how much history it would delete and avoids doing so if more than double the comfigured limit.
+  Garbage collection avoids deleting history and issues a warning instead if existing history is more than double the comfigured limit.
   This protects active users who might have accumulated a lot of history while a bug was preventing garbage collection.  The warning
-  will be displayed each time you start Xonsh until you take action to reconcile the situation.
+  will be displayed each time Xonsh is started until user takes action to reconcile the situation.
 
 **Deprecated:**
 
