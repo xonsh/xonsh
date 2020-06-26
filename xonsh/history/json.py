@@ -15,53 +15,70 @@ import xonsh.lazyjson as xlj
 import xonsh.xoreutils.uptime as uptime
 
 
-def _xhj_gc_commands_to_rmfiles(hsize, files):
-    """Return the history files to remove to get under the command limit."""
-    rmfiles = []
+def _xhj_gc_commands_to_rmfiles(hsize, files) -> ([], int):
+    """Return number of units and list of history files to remove to get under the limit,
+
+    Parameters:
+    -----------
+    hsize (int):  units of history, # of commands in this case.
+    files ((mod_ts, num_commands, path)[], fsize): history files, sorted oldest first.
+
+    Returns:
+    --------
+    hsize_removed (int):  units of history to be removed
+    rm_files ((mod_ts, num_commands, path, fsize)[]): list of files to remove.
+    """
     n = 0
     ncmds = 0
-    for ts, fcmds, f in files[::-1]:
-        if fcmds == 0:
-            # we need to make sure that 'empty' history files don't hang around
-            rmfiles.append((ts, fcmds, f))
+    for _, fcmds, f, _ in files[::-1]:
+        # `files` comes in with empty files included (now), don't need special handling to gc them here.
+
         if ncmds + fcmds > hsize:
             break
         ncmds += fcmds
         n += 1
-    rmfiles += files[:-n]
-    return rmfiles
+
+    cmds_removed = 0
+    for _, fcmds, f, _ in files[:-n]:
+        cmds_removed += fcmds
+
+    return cmds_removed, files[:-n]
 
 
 def _xhj_gc_files_to_rmfiles(hsize, files):
-    """Return the history files to remove to get under the file limit."""
+    """Return the number and list of history files to remove to get under the file limit."""
     rmfiles = files[:-hsize] if len(files) > hsize else []
-    return rmfiles
+    return len(rmfiles), rmfiles
 
 
 def _xhj_gc_seconds_to_rmfiles(hsize, files):
-    """Return the history files to remove to get under the age limit."""
-    rmfiles = []
+    """Return age removed (the age of the *oldest* file) and list of history files to remove to get under the age limit."""
     now = time.time()
-    for ts, _, f in files:
+    oldest_ts = files[0][0]
+    n = 0
+
+    for ts, _, f, _ in files:
         if (now - ts) < hsize:
             break
-        rmfiles.append((None, None, f))
-    return rmfiles
+        n += 1
+
+    return (now - oldest_ts) if n > 0 else 0, files[:n]
 
 
 def _xhj_gc_bytes_to_rmfiles(hsize, files):
     """Return the history files to remove to get under the byte limit."""
-    rmfiles = []
     n = 0
     nbytes = 0
-    for _, _, f in files[::-1]:
-        fsize = os.stat(f).st_size
+    for _, _, f, fsize in files[::-1]:
         if nbytes + fsize > hsize:
             break
         nbytes += fsize
         n += 1
-    rmfiles = files[:-n]
-    return rmfiles
+    bytes_removed = 0
+    for _, _, f, fsize in files[:-n]:
+        bytes_removed += fsize
+
+    return bytes_removed, files[:-n]
 
 
 def _xhj_get_history_files(sort=True, newest_first=False):
@@ -88,7 +105,7 @@ def _xhj_get_history_files(sort=True, newest_first=False):
 class JsonHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
-    def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
+    def __init__(self, wait_for_shell=True, size=None, force=False, *args, **kwargs):
         """Thread responsible for garbage collecting old history.
 
         May wait for shell (and for xonshrc to have been loaded) to start work.
@@ -97,6 +114,7 @@ class JsonHistoryGC(threading.Thread):
         self.daemon = True
         self.size = size
         self.wait_for_shell = wait_for_shell
+        self.force_gc = force
         self.gc_units_to_rmfiles = {
             "commands": _xhj_gc_commands_to_rmfiles,
             "files": _xhj_gc_files_to_rmfiles,
@@ -118,31 +136,46 @@ class JsonHistoryGC(threading.Thread):
         if rmfiles_fn is None:
             raise ValueError("Units type {0!r} not understood".format(units))
 
-        for _, _, f in rmfiles_fn(hsize, files):
-            try:
-                os.remove(f)
-            except OSError:
-                pass
+        size_over, rm_files = rmfiles_fn(hsize, files)
+        hist = getattr(builtins.__xonsh__, "history", None)
+        if hist:  # remember last gc pass history size
+            hist.hist_size = size_over + hsize
+            hist.hist_units = units
+
+        if self.force_gc or size_over < hsize:
+            for _, _, f, _ in rm_files:
+                try:
+                    os.remove(f)
+                except OSError:
+                    pass
+        else:
+            print(
+                f"Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({hsize}).\n"
+                "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run `history gc --force`.",
+                file=sys.stderr,
+            )
 
     def files(self, only_unlocked=False):
         """Find and return the history files. Optionally locked files may be
         excluded.
 
         This is sorted by the last closed time. Returns a list of
-        (timestamp, number of cmds, file name) tuples.
+        (file_size, timestamp, number of cmds, file name) tuples.
         """
-        # pylint: disable=no-member
-        env = getattr(builtins, "__xonsh__.env", None)
+
+        env = getattr(getattr(builtins, "__xonsh__", None), "env", None)
         if env is None:
             return []
+
         boot = uptime.boottime()
         fs = _xhj_get_history_files(sort=False)
         files = []
         for f in fs:
             try:
-                if os.path.getsize(f) == 0:
+                cur_file_size = os.path.getsize(f)
+                if cur_file_size == 0:
                     # collect empty files (for gc)
-                    files.append((time.time(), 0, f))
+                    files.append((os.path.getmtime(f), 0, f, cur_file_size))
                     continue
                 lj = xlj.LazyJSON(f, reopen=False)
                 if lj["locked"] and lj["ts"][0] < boot:
@@ -156,12 +189,21 @@ class JsonHistoryGC(threading.Thread):
                     lj = xlj.LazyJSON(f, reopen=False)
                 if only_unlocked and lj["locked"]:
                     continue
-                # info: closing timestamp, number of commands, filename
-                files.append((lj["ts"][1] or lj["ts"][0], len(lj.sizes["cmds"]) - 1, f))
+                # info: file size, closing timestamp, number of commands, filename
+                files.append(
+                    (
+                        lj["ts"][1] or lj["ts"][0],
+                        len(lj.sizes["cmds"]) - 1,
+                        f,
+                        cur_file_size,
+                    ),
+                )
                 lj.close()
             except (IOError, OSError, ValueError):
                 continue
-        files.sort()
+        files.sort()  # this sorts by elements of the tuple,
+        # the first of which just happens to be file mod time.
+        # so sort by oldest first.
         return files
 
 
@@ -427,10 +469,11 @@ class JsonHistory(History):
         data["bufferlength"] = len(self.buffer)
         envs = builtins.__xonsh__.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
+        data["gc_last_size"] = f"{(self.hist_size, self.hist_units)}"
         return data
 
-    def run_gc(self, size=None, blocking=True):
-        self.gc = JsonHistoryGC(wait_for_shell=False, size=size)
+    def run_gc(self, size=None, blocking=True, force=False):
+        self.gc = JsonHistoryGC(wait_for_shell=False, size=size, force=force)
         if blocking:
-            while self.gc.is_alive():
-                continue
+            while self.gc.is_alive():  # while waiting for gc.
+                time.sleep(0.1)  # don't monopolize the thread (or Python GIL?)

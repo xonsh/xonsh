@@ -69,6 +69,8 @@ class History:
         self.outs = None
         self.last_cmd_rtn = None
         self.last_cmd_out = None
+        self.hist_size = None
+        self.hist_units = None
 
     def __len__(self):
         """Return the number of items in current session."""
