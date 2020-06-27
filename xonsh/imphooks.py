@@ -303,6 +303,53 @@ class XonshImportEventLoader(Loader):
         """Legacy module repr, provided for backwards compatibility."""
         return self.loader.module_repr(module)
 
+    def get_data(self, path):
+        """redirect to wrapped loader"""
+        return self.loader.get_data(path)
+
+    def get_resource_filename(self, manager, resource_name):
+        """redirect to wrapped loader"""
+        return self.loader.get_resource_filename(manager, resource_name)
+
+    def get_resource_stream(self, manager, resource_name):
+        """redirect to wrapped loader"""
+        return self.loader.get_resource_stream(manager, resource_name)
+
+    def get_resource_string(self, manager, resource_name):
+        """redirect to wrapped loader"""
+        return self.loader.get_resource_string(manager, resource_name)
+
+    def has_resource(self, resource_name):
+        """redirect to wrapped loader"""
+        return self.loader.has_resource(resource_name)
+
+    def has_metadata(self, name):
+        """redirect to wrapped loader"""
+        return self.loader.has_metadata(name)
+
+    def get_metadata(self, name):
+        """redirect to wrapped loader"""
+        return self.loader.get_metadata(name)
+
+    def get_metadata_lines(self, name):
+        """redirect to wrapped loader"""
+        return self.loader.get_metadata_lines(name)
+
+    def resource_isdir(self, resource_name):
+        """redirect to wrapped loader"""
+        return self.loader.resource_isdir(resource_name)
+
+    def metadata_isdir(self, name):
+        """redirect to wrapped loader"""
+        return self.loader.metadata_isdir(name)
+
+    def resource_listdir(self, resource_name):
+        """redirect to wrapped loader"""
+        return self.loader.resource_listdir(resource_name)
+
+    def metadata_listdir(self, name):
+        """redirect to wrapped loader"""
+        return self.loader.metadata_listdir(name)
 
 def install_import_hooks():
     """
