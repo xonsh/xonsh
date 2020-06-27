@@ -4,6 +4,110 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.18
+====================
+
+**Added:**
+
+* external *xontrib-hist-navigator* to facilitate directory history navigation.
+* Support package prompt-toolkit V3 as well as V2 in prompt_toolkit shell.
+* New `xontrib-output-search <https://github.com/anki-code/xontrib-output-search>`_ to get identifiers, names, paths, URLs and words from the previous command output and use them for the next command.
+* New `xontrib-pipeliner <https://github.com/anki-code/xontrib-pipeliner>`_ is to easily process the lines using pipes.
+* New `xontrib-prompt-bar <https://github.com/anki-code/xontrib-prompt-bar>`_ with elegance bar style for prompt.
+
+**Changed:**
+
+* $SHELL_TYPE "prompt_toolkit" with any suffix creates the "prompt_toolkit" shell, requires package prompt-toolkit >= 2.0
+* Moved code from package xonsh.ptk2 to xonsh.ptk_shell (because it's the only one now); package xonsh.ptk2 redirects thence.
+* Added extremely simplified xonsh AppImage building process.
+* Added examples of usage $XONSH_TRACE_SUBPROC to the docs
+* Use UTF-8 encoding when writing .xonshrc with webconfig for Windows compatibility
+
+**Deprecated:**
+
+* prompt-toolkit versions before 2.0
+
+**Removed:**
+
+* package xonsh.ptk
+
+**Fixed:**
+
+* Fixed name autosuggestion in path completer (#3519)
+* Flake8/black fixes to the whole code tree, in 3 steps. 
+  Devs should update their IDE to run both during file editing, to avoid a re-accumulation of arbitrary exceptions.
+* tests/test_builtins.py, fix test case test_convert_macro_arg_eval(kind).
+
+**Authors:**
+
+* Gil Forsyth
+* Jamie Bliss
+* Bob Hyman
+* anki-code
+* Raphael Das Gupta
+* Noortheen Raja
+* Manor Askenazi
+* Marduk Bolaños
+
+
+
+v0.9.17
+====================
+
+**Changed:**
+
+* ``@$()`` subprocess operator now properly strips newline characters off
+  the lines of multiline output.
+
+* ``@$()`` subprocess operator does not require leading and trailing whitespace
+  anymore, so expansions like ``cd /lib/modules/@$(uname -r)/kernel`` or
+  ``gdb --pid=@$(pidof crashme)`` are now possible.
+* Moved most CI to github actions (OSX is still on travis)
+* Replaced Repl.It with RunThis on the front page of the docs.
+
+**Fixed:**
+
+* autovox xontrib now works with Python 3.5
+* It is now possible to pass ``"&"`` as the last argument in subprocess mode.
+* Fixed a bug on Windows causing ``FileNotFoundError`` exception if path
+  elements contain trailing spaces.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* David Strobach
+
+
+
+v0.9.16
+====================
+
+**Added:**
+
+* Added ``abbrevs`` xontrib.
+* Added `xontrib-pyenv <https://github.com/dyuri/xontrib-pyenv>`_ to list of registered xontribs.
+
+**Changed:**
+
+* ``xdg-open`` now runs unthreaded.
+
+**Fixed:**
+
+* Return Token.Text when filesystem item's type not defined in LS_COLORS; avoid crashing Pygments.
+* Fixed bug on Windows if Path elements has trailing spaces. Windows in general and ``os.path.isdir()`` 
+  doesn't care about trailing spaces but ``os.scandir()`` does.
+
+**Authors:**
+
+* Morten Enemark Lund
+* Bob Hyman
+* David Strobach
+* Gyuri Horak
+* Chris Lasher
+
+
+
 v0.9.15
 ====================
 
@@ -100,6 +204,7 @@ v0.9.14
 
   - `Before <https://i.imgur.com/EMhPdgU.png>`_
   - `After <https://i.imgur.com/sJiqgsb.png>`_
+  
 * The autovox xontrib now preserves activated environment on cd
 * setup.cfg -- duplicated flake8 config so interactive use and test runs enforce same rules. (Implementation is arguably a regression.)
 * Pressing ``Ctrl+Z`` no longer deadlocks the terminal,
@@ -244,6 +349,7 @@ v0.9.11
   ``aliases['echocat'] = 'echo "hi" and echo "there"'`` will, when run, return
 
   .. code-block::
+  
      hi
      there
 

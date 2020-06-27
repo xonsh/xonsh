@@ -11,7 +11,6 @@ import sys
 
 import xonsh.main
 from xonsh.main import XonshMode
-from xonsh.environ import Env
 import pytest
 from tools import TEST_DIR, skip_if_on_windows
 
@@ -77,7 +76,7 @@ def test_no_rc_with_script(shell, tmpdir):
 
 
 def test_force_interactive_rc_with_script(shell, tmpdir):
-    args = xonsh.main.premain(["-i", "tests/sample.xsh"])
+    xonsh.main.premain(["-i", "tests/sample.xsh"])
     assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
 
 

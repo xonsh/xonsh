@@ -34,7 +34,7 @@ def test_mpl_preserve_font_size():
     f = create_figure()
     width, height = f.canvas.get_width_height()
     print(width, height)
-    s = mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
+    mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
     exp = FONT_SIZE
     obs = matplotlib.rcParams["font.size"]
     plt.close(f)
@@ -46,7 +46,7 @@ def test_mpl_preserve_face_color():
     """Make sure that the figure preserves face color settings"""
     f = create_figure()
     width, height = f.canvas.get_width_height()
-    s = mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
+    mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
     exp = FACE_COLOR
     obs = f.get_facecolor()
     plt.close(f)
@@ -58,7 +58,7 @@ def test_mpl_preserve_width():
     """Make sure that the figure preserves width settings"""
     f = create_figure()
     width, height = f.canvas.get_width_height()
-    s = mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
+    mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
     exp = width
     newwidth, newheight = f.canvas.get_width_height()
     obs = newwidth
@@ -71,7 +71,7 @@ def test_mpl_preserve_height():
     """Make sure that the figure preserves height settings"""
     f = create_figure()
     width, height = f.canvas.get_width_height()
-    s = mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
+    mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
     exp = height
     newwidth, newheight = f.canvas.get_width_height()
     obs = newheight
@@ -83,7 +83,7 @@ def test_mpl_preserve_dpi():
     """Make sure that the figure preserves height settings"""
     f = create_figure()
     width, height = f.canvas.get_width_height()
-    s = mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, False)
+    mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, False)
     exp = DPI
     obs = f.dpi
     plt.close(f)
@@ -96,7 +96,7 @@ def test_mpl_preserve_image_tight():
     f = create_figure()
     exp = mplhooks.figure_to_rgb_array(f)
     width, height = f.canvas.get_width_height()
-    s = mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
+    mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, True)
     obs = mplhooks.figure_to_rgb_array(f)
     plt.close(f)
     assert np.all(exp == obs)
@@ -107,7 +107,7 @@ def test_mpl_preserve_standard():
     f = create_figure()
     exp = mplhooks.figure_to_rgb_array(f)
     width, height = f.canvas.get_width_height()
-    s = mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, False)
+    mplhooks.figure_to_tight_array(f, 0.5 * width, 0.5 * height, False)
     obs = mplhooks.figure_to_rgb_array(f)
     plt.close(f)
     assert np.all(exp == obs)

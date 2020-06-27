@@ -33,7 +33,10 @@ def test_pip_list_re(line):
         "![thewholepipandpaboodle uninstall",
         "$[littlebopip show",
         "!(boxpip uninstall",
+        "pipx",
+        "vim pip_",
+        "pip_",
     ],
 )
-def test_pip_list_re(line):
+def test_pip_list_re1(line):
     assert PIP_RE.search(line) is None

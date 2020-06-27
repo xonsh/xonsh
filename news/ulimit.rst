@@ -1,6 +1,6 @@
 **Added:**
 
-* Added `xontrib-pyenv <https://github.com/dyuri/xontrib-pyenv>`_ to list of registered xontribs.
+* ``ulimit`` command.
 
 **Changed:**
 

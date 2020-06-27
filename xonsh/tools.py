@@ -800,18 +800,24 @@ def _executables_in_windows(path):
                 if ext.upper() in extensions:
                     yield fname
     else:
-        for x in scandir(path):
-            try:
-                is_file = x.is_file()
-            except OSError:
-                continue
-            if is_file:
-                fname = x.name
-            else:
-                continue
-            base_name, ext = os.path.splitext(fname)
-            if ext.upper() in extensions:
-                yield fname
+        try:
+            for x in scandir(path):
+                try:
+                    is_file = x.is_file()
+                except OSError:
+                    continue
+                if is_file:
+                    fname = x.name
+                else:
+                    continue
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+        except FileNotFoundError:
+            # On Windows, there's no guarantee for the directory to really
+            # exist even if isdir returns True. This may happen for instance
+            # if the path contains trailing spaces.
+            return
 
 
 def executables_in(path):

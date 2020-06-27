@@ -76,7 +76,7 @@ from xonsh.tools import (
 )
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows, skip_if_on_unix
+from tools import skip_if_on_windows
 
 LEXER = Lexer()
 LEXER.build()
@@ -938,7 +938,7 @@ def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_builtins):
 
 
 @pytest.mark.parametrize("inp", ["42.0", [42.0]])
-def test_is_nonstring_seq_of_strings_false(inp):
+def test_is_nonstring_seq_of_strings_false1(inp):
     assert not is_nonstring_seq_of_strings(inp)
 
 
@@ -1020,12 +1020,12 @@ def test_env_path_keep_only_non_home_paths(inp, exp):
 
 @pytest.mark.parametrize("inp", [True, False])
 def test_is_bool_true(inp):
-    assert True == is_bool(inp)
+    assert is_bool(inp)
 
 
 @pytest.mark.parametrize("inp", [1, "yooo hooo!"])
 def test_is_bool_false(inp):
-    assert False == is_bool(inp)
+    assert not is_bool(inp)
 
 
 @pytest.mark.parametrize(
@@ -1148,7 +1148,7 @@ def test_get_portions(inp, exp):
 )
 def test_ensure_slice_invalid(inp):
     with pytest.raises(ValueError):
-        obs = ensure_slice(inp)
+        ensure_slice(inp)
 
 
 @pytest.mark.parametrize(

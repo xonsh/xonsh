@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``abbrevs`` xontrib.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Logical subprocess operators now work after long arguments (e.g. ``--version``).
 
 **Security:**
 

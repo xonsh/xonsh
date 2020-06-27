@@ -759,7 +759,7 @@ WELCOME_MSG = [
     "the browser{{NO_COLOR}}",
     "{{GREEN}}xonfig{{NO_COLOR}} web         {{INTENSE_WHITE}}->    Run the configuration "
     "tool in the browser and claim your shell {{NO_COLOR}}",
-    "{{INTENSE_BLACK}}(Note: Run the configurationn tool or create a "
+    "{{INTENSE_BLACK}}(Note: Run the configuration tool or create a "
     "{{RED}}~/.xonshrc{{INTENSE_BLACK}} file to suppress the welcome screen)",
     "",
 ]

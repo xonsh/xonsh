@@ -257,7 +257,7 @@ def _pprint_displayhook(value):
         printed_val = repr(value)
     if HAS_PYGMENTS and env.get("COLOR_RESULTS"):
         tokens = list(pygments.lex(printed_val, lexer=pyghooks.XonshLexer()))
-        end = "" if env.get("SHELL_TYPE") == "prompt_toolkit2" else "\n"
+        end = "" if env.get("SHELL_TYPE") == "prompt_toolkit" else "\n"
         print_color(tokens, end=end)
     else:
         print(printed_val)  # black & white case

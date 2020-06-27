@@ -1,4 +1,5 @@
 """Lazy imports that may apply across the xonsh package."""
+import os
 import importlib
 
 from xonsh.platform import ON_WINDOWS, ON_DARWIN
@@ -88,3 +89,11 @@ def terminal256():
 @lazyobject
 def html():
     return importlib.import_module("pygments.formatters.html")
+
+
+@lazyobject
+def os_listxattr():
+    def dummy_listxattr(*args, **kwargs):
+        return []
+
+    return getattr(os, "listxattr", dummy_listxattr)

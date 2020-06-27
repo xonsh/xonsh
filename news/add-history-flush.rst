@@ -1,10 +1,10 @@
 **Added:**
 
-* <news item>
+* ``history`` command now supports ``flush`` action
 
 **Changed:**
 
-* ``xdg-open`` now runs unthreaded.
+* <news item>
 
 **Deprecated:**
 

@@ -2,11 +2,9 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
-import tempfile
-import builtins
 import itertools
 from tempfile import TemporaryDirectory
-from xonsh.tools import ON_WINDOWS, always_true
+from xonsh.tools import always_true
 
 import pytest
 
@@ -171,6 +169,7 @@ def test_event_on_envvar_change(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
@@ -186,6 +185,7 @@ def test_event_on_envvar_new(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
         share.extend((name, value))
@@ -201,6 +201,7 @@ def test_event_on_envvar_change_from_none_value(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
@@ -217,6 +218,7 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
@@ -232,6 +234,7 @@ def test_events_on_envvar_called_in_right_order(xonsh_builtins):
     xonsh_builtins.__xonsh__.env = env
     share = []
     # register
+
     @xonsh_builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
         share[:] = ["new"]
@@ -280,7 +283,7 @@ def test_delitem():
     assert env["VAR"] == "a value"
     del env["VAR"]
     with pytest.raises(Exception):
-        a = env["VAR"]
+        env["VAR"]
 
 
 def test_delitem_default():
@@ -296,21 +299,23 @@ def test_delitem_default():
 
 def test_lscolors_target():
     lsc = LsColors.fromstring("ln=target")
-    assert lsc["ln"] == ("TARGET",)
+    assert lsc["ln"] == ("NO_COLOR",)
+    assert lsc.is_target("ln")
     assert lsc.detype() == "ln=target"
+    assert not (lsc.is_target("mi"))
 
 
 @pytest.mark.parametrize(
     "key_in,old_in,new_in,test",
     [
-        ("rs", ("NO_COLOR",), ("BLUE",), "existing key, change value"),
-        ("rs", ("NO_COLOR",), ("NO_COLOR",), "existing key, no change in value"),
+        ("fi", ("NO_COLOR",), ("BLUE",), "existing key, change value"),
+        ("fi", ("NO_COLOR",), ("NO_COLOR",), "existing key, no change in value"),
         ("tw", None, ("NO_COLOR",), "create new key"),
         ("pi", ("BACKGROUND_BLACK", "YELLOW"), None, "delete existing key"),
     ],
 )
 def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
-    lsc = LsColors.fromstring("rs=0:di=01;34:pi=40;33")
+    lsc = LsColors.fromstring("fi=0:di=01;34:pi=40;33")
     # corresponding colors: [('NO_COLOR',), ('BOLD_CYAN',), ('BOLD_CYAN',), ('BACKGROUND_BLACK', 'YELLOW')]
 
     event_fired = False
@@ -326,7 +331,7 @@ def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
     xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
 
     if new_in is None:
-        old = lsc.pop(key_in, "argle")
+        lsc.pop(key_in, "argle")
     else:
         lsc[key_in] = new_in
 

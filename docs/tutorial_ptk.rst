@@ -72,26 +72,21 @@ Custom keyload function
 
 We need our additional keybindings to load after the shell is initialized, so we
 define a function that contains all of the custom keybindings and decorate it
-with the appropriate event, in this case ``on_ptk_create``. Please note that
-the method of ``handler`` differs depending on the version of ``prompt_toolkit``.
+with the appropriate event, in this case ``on_ptk_create``. 
 
 We'll start with a toy example that just inserts the text "hi" into the current line of the prompt::
 
     @events.on_ptk_create
     def custom_keybindings(bindings, **kw):
-        # prompt_toolkit 1.x
-        # handler = bindings.registry.add_binding
-        # prompt_toolkit 2.x
-        handler = bindings.add
-
-        @handler(Keys.ControlW)
+        
+        @bindings.add(Keys.ControlW)
         def say_hi(event):
             event.current_buffer.insert_text('hi')
 
 Put that in your `xonshrc <xonshrc.html>`_, restart xonsh and then see if
 pressing ``Ctrl-w`` does anything (it should!)
 
-.. note:: From prompt_toolkit 2.x it is also possible to write ``Keys.ControlW`` like ``c-w``.
+.. note:: It is also possible to write ``Keys.ControlW`` like ``c-w``.
 
 
 What commands can keybindings run?

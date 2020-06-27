@@ -7,7 +7,7 @@ import itertools
 
 import pytest
 
-from xonsh.ast import AST, With, Pass, pdump, Str, Call
+from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.base import eval_fstr_fields
 
@@ -315,7 +315,7 @@ def test_in():
 
 
 def test_is():
-    check_ast("42 is 65")
+    check_ast("int is float")   # avoid PY3.8 SyntaxWarning "is" with a literal
 
 
 def test_not_in():
@@ -323,7 +323,7 @@ def test_not_in():
 
 
 def test_is_not():
-    check_ast("42 is not 65")
+    check_ast("float is not int")
 
 
 def test_lt_lt():
@@ -2250,6 +2250,13 @@ def test_rhs_nested_injection():
     check_xonsh_ast({}, "$[ls @$(dirname @$(which python))]", False)
 
 
+def test_merged_injection():
+    tree = check_xonsh_ast({}, "![a@$(echo 1 2)b]", False, return_obs=True)
+    assert isinstance(tree, AST)
+    func = tree.body.args[0].right.func
+    assert func.attr == "list_of_list_of_strs_outer_product"
+
+
 def test_backtick_octothorpe():
     check_xonsh_ast({}, "print(`#.*`)", False)
 
@@ -2699,7 +2706,6 @@ def test_arg_single_subprocbang(opener, closer, body):
     "body", ["echo -n!x", "echo -n!x", "echo -n !x", "echo -n ! x"]
 )
 def test_arg_single_subprocbang_nested(opener, closer, ipener, iloser, body):
-    code = opener + "echo " + ipener + body + iloser + closer
     tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts

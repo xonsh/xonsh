@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* ``xontrib load`` does not stop loading modules on error any more.
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Return Token.Text when filesystem item's type not defined in LS_COLORS; avoid crashing Pygments.
+* <news item>
 
 **Security:**
 

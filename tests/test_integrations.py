@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import shutil
 import tempfile
 import subprocess as sp
@@ -8,13 +7,10 @@ import subprocess as sp
 import pytest
 
 import xonsh
-from xonsh.platform import ON_WINDOWS
 from xonsh.lib.os import indir
 
 from tools import (
     skip_if_on_windows,
-    skip_if_on_darwin,
-    skip_if_on_travis,
     ON_WINDOWS,
     ON_DARWIN,
     ON_TRAVIS,
@@ -312,6 +308,34 @@ echo @$(which ls)
         0,
     ),
     #
+    # test @$() without leading/trailig WS
+    #
+    (
+        """
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+echo foo_@$(echo spam)_bar
+""",
+        "foo_spam_bar\n",
+        0,
+    ),
+    #
+    # test @$() outer product
+    #
+    (
+        """
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+echo foo_@$(echo spam sausage)_bar
+""",
+        "foo_spam_bar foo_sausage_bar\n",
+        0,
+    ),
+    #
     # test redirection
     #
     (
@@ -389,6 +413,49 @@ else:
     print("Var foo")
 """,
         "Var foo\n",
+        0,
+    ),
+    #
+    # test logical subprocess operators
+    #
+    (
+        """
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+
+echo --version and echo a
+echo --version && echo a
+echo --version or echo a
+echo --version || echo a
+echo -+version and echo a
+echo -+version && echo a
+echo -+version or echo a
+echo -+version || echo a
+echo -~version and echo a
+echo -~version && echo a
+echo -~version or echo a
+echo -~version || echo a
+""",
+        """--version
+a
+--version
+a
+--version
+--version
+-+version
+a
+-+version
+a
+-+version
+-+version
+-~version
+a
+-~version
+a
+-~version
+-~version
+""",
         0,
     ),
 ]
@@ -529,6 +596,7 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
 @skip_if_no_xonsh
 @skip_if_no_sleep
 @skip_if_on_windows
+@pytest.mark.xfail(strict=False)  # TODO: fixme (super flaky on OSX)
 def test_xonsh_no_close_fds():
     # see issue https://github.com/xonsh/xonsh/issues/2984
     makefile = (
@@ -551,9 +619,7 @@ def test_xonsh_no_close_fds():
 
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
-    [
-        ("ls | wc", lambda x: x > '', True),
-    ],
+    [("ls | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"
@@ -565,5 +631,28 @@ def test_negative_exit_codes_fail():
     # see issue 3309
     script = 'python -c "import os; os.abort()" && echo OK\n'
     out, err, rtn = run_xonsh(script)
-    assert "OK" is not out
-    assert "OK" is not err
+    assert "OK" != out
+    assert "OK" != err
+
+
+@pytest.mark.parametrize(
+    "cmd, exp",
+    [
+        ("echo '&'", "&\n"),
+        ("echo foo'&'", "foo'&'\n"),
+        ("echo foo '&'", "foo &\n"),
+        ("echo foo '&' bar", "foo & bar\n"),
+    ],
+)
+def test_ampersand_argument(cmd, exp):
+    script = """
+#!/usr/bin/env xonsh
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+{}
+""".format(
+        cmd
+    )
+    out, _, _ = run_xonsh(script)
+    assert out == exp
