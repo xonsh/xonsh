@@ -427,3 +427,31 @@ def test_register_custom_var_path():
 
     assert hasattr(env['MY_SPECIAL_VAR'], 'paths')
     assert env["MY_SPECIAL_VAR"].paths == paths
+
+    with pytest.raises(TypeError):
+        env["MY_SPECIAL_VAR"] = 32
+    
+
+def test_deregister_custom_var():
+    env = Env()
+
+    env.register("MY_SPECIAL_VAR", type='path')
+    env.deregister("MY_SPECIAL_VAR")
+    assert "MY_SPECIAL_VAR" not in env
+
+    env.register("MY_SPECIAL_VAR", type='path')
+    paths = ["/home/wakka", "/home/wakka/bin"]
+    env["MY_SPECIAL_VAR"] = paths
+    env.deregister("MY_SPECIAL_VAR")
+
+    # deregistering a variable that has a value set doesn't
+    # remove it from env;
+    # the existing variable also maintains its type validation, conversion
+    assert "MY_SPECIAL_VAR" in env
+    with pytest.raises(TypeError):
+        env["MY_SPECIAL_VAR"] = 32
+
+    # removing, then re-adding the variable without registering
+    # gives it only default permissive validation, conversion
+    del env["MY_SPECIAL_VAR"]
+    env["MY_SPECIAL_VAR"] = 32
