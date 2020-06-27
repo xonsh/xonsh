@@ -339,3 +339,91 @@ def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
         assert not event_fired, "No event if value doesn't change"
     else:
         assert event_fired
+
+
+def test_register_custom_var_generic():
+    """Test that a registered envvar without any type is treated
+    permissively.
+
+    """
+    env = Env()
+
+    assert "MY_SPECIAL_VAR" not in env
+    env.register("MY_SPECIAL_VAR")
+    assert "MY_SPECIAL_VAR" in env
+
+    env["MY_SPECIAL_VAR"] = 32
+    assert env["MY_SPECIAL_VAR"] == 32
+
+    env["MY_SPECIAL_VAR"] = True
+    assert env["MY_SPECIAL_VAR"] == True
+
+
+def test_register_custom_var_int():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='int')
+
+    env["MY_SPECIAL_VAR"] = "32"
+    assert env["MY_SPECIAL_VAR"] == 32
+
+    with pytest.raises(ValueError):
+        env["MY_SPECIAL_VAR"] = "wakka"
+
+
+def test_register_custom_var_float():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='float')
+
+    env["MY_SPECIAL_VAR"] = "27"
+    assert env["MY_SPECIAL_VAR"] == 27.0
+
+    with pytest.raises(ValueError):
+        env["MY_SPECIAL_VAR"] = "wakka"
+
+
+@pytest.mark.parametrize("val,converted", 
+        [
+            (True, True),
+            (32, True),
+            (0, False),
+            (27.0, True),
+            (None, False),
+            ("lol", True),
+            ("false", False),
+            ("no", False),
+            ])
+def test_register_custom_var_bool(val, converted):
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='bool')
+
+    env["MY_SPECIAL_VAR"] = val
+    assert env["MY_SPECIAL_VAR"] == converted
+
+
+@pytest.mark.parametrize("val,converted", 
+        [
+            (32, "32"),
+            (0, "0"),
+            (27.0, "27.0"),
+            (None, "None"),
+            ("lol", "lol"),
+            ("false", "false"),
+            ("no", "no"),
+        ])
+def test_register_custom_var_str(val, converted):
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='str')
+
+    env["MY_SPECIAL_VAR"] = val
+    assert env["MY_SPECIAL_VAR"] == converted
+
+
+def test_register_custom_var_path():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='path')
+
+    paths = ["/home/wakka", "/home/wakka/bin"]
+    env["MY_SPECIAL_VAR"] = paths
+
+    assert hasattr(env['MY_SPECIAL_VAR'], 'paths')
+    assert env["MY_SPECIAL_VAR"].paths == paths
