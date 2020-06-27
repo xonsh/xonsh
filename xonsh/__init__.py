@@ -82,8 +82,6 @@ else:
         _sys.modules["xonsh.tracer"] = __amalgam__
         readline_shell = __amalgam__
         _sys.modules["xonsh.readline_shell"] = __amalgam__
-        replay = __amalgam__
-        _sys.modules["xonsh.replay"] = __amalgam__
         aliases = __amalgam__
         _sys.modules["xonsh.aliases"] = __amalgam__
         dumb_shell = __amalgam__

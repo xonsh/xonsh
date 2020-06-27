@@ -49,7 +49,6 @@ For those of you who want the gritty details.
     ptk_shell/completer
     ptk_shell/key_bindings
     pretty
-    replay
     diff_history
     xoreutils/index
 
