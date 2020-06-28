@@ -55,7 +55,7 @@ skip_if_no_sleep = pytest.mark.skipif(
 def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
     env = dict(os.environ)
     env["PATH"] = PATH
-    env["XONSH_DEBUG"] = "1"
+    env["XONSH_DEBUG"] = "0" # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""

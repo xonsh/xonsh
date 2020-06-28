@@ -10,9 +10,10 @@
 
 **Changed:**
 
-  Garbage collection avoids deleting history and issues a warning instead if existing history is more than double the comfigured limit.
+* Garbage collection avoids deleting history and issues a warning instead if existing history is more than double the comfigured limit.
   This protects active users who might have accumulated a lot of history while a bug was preventing garbage collection.  The warning
   will be displayed each time Xonsh is started until user takes action to reconcile the situation.
+* ``tests\test_integrations.py`` no longer runs with XONSH_DEBUG=1 (because new, debug-only progress messages from history were breaking it).
 
 **Deprecated:**
 
