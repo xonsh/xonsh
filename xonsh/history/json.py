@@ -127,6 +127,7 @@ class JsonHistoryGC(threading.Thread):
         while self.wait_for_shell:
             time.sleep(0.01)
         env = builtins.__xonsh__.env  # pylint: disable=no-member
+        xonsh_debug = env.get("XONSH_DEBUG", 0)
         if self.size is None:
             hsize, units = env.get("XONSH_HISTORY_SIZE")
         else:
@@ -138,21 +139,28 @@ class JsonHistoryGC(threading.Thread):
 
         size_over, rm_files = rmfiles_fn(hsize, files)
         hist = getattr(builtins.__xonsh__, "history", None)
-        if hist:  # remember last gc pass history size
+        if hist is not None:  # remember last gc pass history size
             hist.hist_size = size_over + hsize
             hist.hist_units = units
 
         if self.force_gc or size_over < hsize:
+            i = 0
             for _, _, f, _ in rm_files:
                 try:
                     os.remove(f)
+                    if xonsh_debug:
+                        print(
+                            f"... Deleted {i:7d} of {len(rm_files):7d} history files.\r",
+                            end="",
+                        )
+                    pass
                 except OSError:
                     pass
+                i += 1
         else:
             print(
                 f"Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({hsize}).\n"
-                "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run `history gc --force`.",
-                file=sys.stderr,
+                "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run `history gc --force`."
             )
 
     def files(self, only_unlocked=False):
@@ -162,11 +170,11 @@ class JsonHistoryGC(threading.Thread):
         This is sorted by the last closed time. Returns a list of
         (file_size, timestamp, number of cmds, file name) tuples.
         """
-
         env = getattr(getattr(builtins, "__xonsh__", None), "env", None)
         if env is None:
             return []
 
+        xonsh_debug = env.get("XONSH_DEBUG", 0)
         boot = uptime.boottime()
         fs = _xhj_get_history_files(sort=False)
         files = []
@@ -199,6 +207,8 @@ class JsonHistoryGC(threading.Thread):
                     ),
                 )
                 lj.close()
+                if xonsh_debug:
+                    print(f"... Enumerated {len(files):7d} history files.\r", end="")
             except (IOError, OSError, ValueError):
                 continue
         files.sort()  # this sorts by elements of the tuple,

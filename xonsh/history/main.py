@@ -328,7 +328,7 @@ def _xh_create_parser():
         dest="force_gc",
         default=False,
         action="store_true",
-        help="perform garbage collection even if history much bigger than size limit",
+        help="perform garbage collection even if history much bigger than configured limit",
     )
     bgcp = gcp.add_mutually_exclusive_group()
     bgcp.add_argument(
