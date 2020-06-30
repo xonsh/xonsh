@@ -50,7 +50,7 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
     
 Make json data directly pastable
 --------------------------------
-With this snippet, xonsh will understand json data such as ``{ "name": "Tyler", "active": false, "age": none }``.
+With this snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``.
 
 .. code-block:: xonshcon
 
