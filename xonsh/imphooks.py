@@ -3,20 +3,20 @@
 
 This module registers the hooks it defines when it is imported.
 """
+import builtins
+import contextlib
+import importlib
 import os
 import re
 import sys
 import types
-import builtins
-import contextlib
-import importlib
-from importlib.machinery import ModuleSpec
 from importlib.abc import MetaPathFinder, SourceLoader, Loader
+from importlib.machinery import ModuleSpec
 
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.platform import ON_WINDOWS, scandir
 from xonsh.lazyasd import lazyobject
+from xonsh.platform import ON_WINDOWS, scandir
 
 
 @lazyobject
@@ -270,6 +270,24 @@ class XonshImportEventHook(MetaPathFinder):
         return spec
 
 
+_XIEVL_WRAPPED_ATTRIBUTES = [
+    "load_module",
+    "module_repr",
+    "get_data",
+    "get_resource_filename",
+    "get_resource_stream",
+    "get_resource_string",
+    "has_resource",
+    "has_metadata",
+    "get_metadata",
+    "get_metadata_lines",
+    "resource_isdir",
+    "metadata_isdir",
+    "resource_listdir",
+    "metadata_listdir",
+]
+
+
 class XonshImportEventLoader(Loader):
     """A class that dispatches loader calls to another loader and fires relevant
     xonsh events.
@@ -295,61 +313,11 @@ class XonshImportEventLoader(Loader):
         events.on_import_post_exec_module.fire(module=module)
         return rtn
 
-    def load_module(self, fullname):
-        """Legacy module loading, provided for backwards compatibility."""
-        return self.loader.load_module(fullname)
+    def __getattribute__(self, name):
+        if name in _XIEVL_WRAPPED_ATTRIBUTES:
+            return getattr(self.loader, name)
+        return object.__getattribute__(self, name)
 
-    def module_repr(self, module):
-        """Legacy module repr, provided for backwards compatibility."""
-        return self.loader.module_repr(module)
-
-    def get_data(self, path):
-        """redirect to wrapped loader"""
-        return self.loader.get_data(path)
-
-    def get_resource_filename(self, manager, resource_name):
-        """redirect to wrapped loader"""
-        return self.loader.get_resource_filename(manager, resource_name)
-
-    def get_resource_stream(self, manager, resource_name):
-        """redirect to wrapped loader"""
-        return self.loader.get_resource_stream(manager, resource_name)
-
-    def get_resource_string(self, manager, resource_name):
-        """redirect to wrapped loader"""
-        return self.loader.get_resource_string(manager, resource_name)
-
-    def has_resource(self, resource_name):
-        """redirect to wrapped loader"""
-        return self.loader.has_resource(resource_name)
-
-    def has_metadata(self, name):
-        """redirect to wrapped loader"""
-        return self.loader.has_metadata(name)
-
-    def get_metadata(self, name):
-        """redirect to wrapped loader"""
-        return self.loader.get_metadata(name)
-
-    def get_metadata_lines(self, name):
-        """redirect to wrapped loader"""
-        return self.loader.get_metadata_lines(name)
-
-    def resource_isdir(self, resource_name):
-        """redirect to wrapped loader"""
-        return self.loader.resource_isdir(resource_name)
-
-    def metadata_isdir(self, name):
-        """redirect to wrapped loader"""
-        return self.loader.metadata_isdir(name)
-
-    def resource_listdir(self, resource_name):
-        """redirect to wrapped loader"""
-        return self.loader.resource_listdir(resource_name)
-
-    def metadata_listdir(self, name):
-        """redirect to wrapped loader"""
-        return self.loader.metadata_listdir(name)
 
 def install_import_hooks():
     """
