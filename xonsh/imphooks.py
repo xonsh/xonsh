@@ -313,7 +313,7 @@ class XonshImportEventLoader(Loader):
         events.on_import_post_exec_module.fire(module=module)
         return rtn
 
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         if name in _XIEVL_WRAPPED_ATTRIBUTES:
             return getattr(self.loader, name)
         return object.__getattribute__(self, name)
