@@ -30,7 +30,7 @@ def _xhj_gc_commands_to_rmfiles(hsize, files) -> ([], int):
     """
     n = 0
     ncmds = 0
-    for _, fcmds, f, _ in files[::-1]:
+    for _, fcmds, f, _ in reversed(files):
         # `files` comes in with empty files included (now), don't need special handling to gc them here.
 
         if ncmds + fcmds > hsize:
@@ -39,10 +39,11 @@ def _xhj_gc_commands_to_rmfiles(hsize, files) -> ([], int):
         n += 1
 
     cmds_removed = 0
-    for _, fcmds, f, _ in files[:-n]:
+    files_removed = files[:-n]
+    for _, fcmds, f, _ in files_removed:
         cmds_removed += fcmds
 
-    return cmds_removed, files[:-n]
+    return cmds_removed, files_removed
 
 
 def _xhj_gc_files_to_rmfiles(hsize, files):
@@ -69,16 +70,17 @@ def _xhj_gc_bytes_to_rmfiles(hsize, files):
     """Return the history files to remove to get under the byte limit."""
     n = 0
     nbytes = 0
-    for _, _, f, fsize in files[::-1]:
+    for _, _, f, fsize in reversed(files):
         if nbytes + fsize > hsize:
             break
         nbytes += fsize
         n += 1
     bytes_removed = 0
-    for _, _, f, fsize in files[:-n]:
+    files_removed = files[:-n]
+    for _, _, f, fsize in files_removed:
         bytes_removed += fsize
 
-    return bytes_removed, files[:-n]
+    return bytes_removed, files_removed
 
 
 def _xhj_get_history_files(sort=True, newest_first=False):
