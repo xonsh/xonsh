@@ -145,7 +145,7 @@
  {"name": "jedi",
   "package": "xonsh",
   "url": "http://xon.sh",
-  "description": ["Jedi tab completion hooks for xonsh."]
+  "description": ["Use Jedi as xonsh's python completer."]
   },
  {"name": "kitty",
   "package": "xontrib-kitty",
