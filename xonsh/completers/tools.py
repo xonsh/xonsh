@@ -31,3 +31,21 @@ def justify(s, max_length, left_pad=0):
     """
     txt = textwrap.wrap(s, width=max_length, subsequent_indent=" " * left_pad)
     return "\n".join(txt)
+
+
+def get_ptk_completer():
+    """Get the current PromptToolkitCompleter
+
+    This is usefull for completers that want to use
+    PromptToolkitCompleter.current_document (the current multiline document).
+
+    Call this function lazily since in '.xonshrc' the shell doesn't exist.
+
+    Returns
+    -------
+    The PromptToolkitCompleter if running with ptk, else returns None
+    """
+    if __xonsh__.shell is None or __xonsh__.shell.shell_type != "prompt_toolkit":
+        return None
+
+    return __xonsh__.shell.shell.pt_completer
