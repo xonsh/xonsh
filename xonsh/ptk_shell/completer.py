@@ -90,7 +90,7 @@ class PromptToolkitCompleter(Completer):
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -l,
                     display=comp.display,
-                    display_meta=comp.description,
+                    display_meta=comp.description or None,
                 )
             else:
                 disp = comp[pre:].strip("'\"")
