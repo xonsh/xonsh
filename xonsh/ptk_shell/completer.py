@@ -7,6 +7,8 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.application.current import get_app
 
+from xonsh.completers.tools import RichCompletion
+
 
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.
@@ -83,8 +85,16 @@ class PromptToolkitCompleter(Completer):
             pre = len(c_prefix)
         for comp in completions:
             # do not display quote
-            disp = comp[pre:].strip("'\"")
-            yield Completion(comp, -l, display=disp)
+            if isinstance(comp, RichCompletion):
+                yield Completion(
+                    comp,
+                    -comp.prefix_len if comp.prefix_len is not None else -l,
+                    display=comp.display,
+                    display_meta=comp.description,
+                )
+            else:
+                disp = comp[pre:].strip("'\"")
+                yield Completion(comp, -l, display=disp)
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""

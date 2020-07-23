@@ -21,6 +21,7 @@ import threading
 import subprocess
 import collections
 
+import xonsh.completers.tools as xct
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import (
@@ -281,6 +282,27 @@ def _insert_text_func(s, readline):
     return inserter
 
 
+def _render_completions(completions, prefix, prefix_len):
+    """Render the completions according to the required prefix_len.
+
+    Readline will replace the current prefix with the chosen rendered completion.
+    """
+    chopped = prefix[:-prefix_len] if prefix_len else prefix
+
+    rendered_completions = []
+    for comp in completions:
+        if isinstance(comp, xct.RichCompletion) and comp.prefix_len is not None:
+            if comp.prefix_len:
+                comp = prefix[: -comp.prefix_len] + comp
+            else:
+                comp = prefix + comp
+        elif chopped:
+            comp = chopped + comp
+        rendered_completions.append(comp)
+
+    return rendered_completions
+
+
 DEDENT_TOKENS = LazyObject(
     lambda: frozenset(["raise", "return", "pass", "break", "continue"]),
     globals(),
@@ -412,11 +434,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         completions, l = self.completer.complete(
             prefix, line, begidx, endidx, ctx=self.ctx
         )
-        chopped = prefix[:-l]
-        if chopped:
-            rtn_completions = [chopped + i for i in completions]
-        else:
-            rtn_completions = completions
+        rtn_completions = _render_completions(completions, prefix, l)
+
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
         prefix_ends_quote = prefix.endswith("'") or prefix.endswith('"')
