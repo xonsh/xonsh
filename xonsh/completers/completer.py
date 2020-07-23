@@ -8,7 +8,14 @@ def complete_completer(prefix, line, start, end, ctx):
     args = line.split(" ")
     if len(args) == 0 or args[0] != "completer":
         return None
+
+    if end < len(line) and line[end] != " ":
+        # completing in a middle of a word
+        # (e.g. "completer some<TAB>thing")
+        return None
+
     curix = args.index(prefix)
+
     compnames = set(builtins.__xonsh__.completers.keys())
     if curix == 1:
         possible = {"list", "help", "add", "remove"}
