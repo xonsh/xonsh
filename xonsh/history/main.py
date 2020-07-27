@@ -323,6 +323,13 @@ def _xh_create_parser():
             'units; e.g. "--size 8128 commands"'
         ),
     )
+    gcp.add_argument(
+        "--force",
+        dest="force_gc",
+        default=False,
+        action="store_true",
+        help="perform garbage collection even if history much bigger than configured limit",
+    )
     bgcp = gcp.add_mutually_exclusive_group()
     bgcp.add_argument(
         "--blocking",
@@ -402,7 +409,7 @@ def history_main(
             return
         print(str(hist.filename), file=stdout)
     elif ns.action == "gc":
-        hist.run_gc(size=ns.size, blocking=ns.blocking)
+        hist.run_gc(size=ns.size, blocking=ns.blocking, force=ns.force_gc)
     elif ns.action == "diff":
         if isinstance(hist, JsonHistory):
             xdh.dh_main_action(ns)
