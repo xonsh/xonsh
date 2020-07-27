@@ -270,22 +270,24 @@ class XonshImportEventHook(MetaPathFinder):
         return spec
 
 
-_XIEVL_WRAPPED_ATTRIBUTES = frozenset([
-    "load_module",
-    "module_repr",
-    "get_data",
-    "get_resource_filename",
-    "get_resource_stream",
-    "get_resource_string",
-    "has_resource",
-    "has_metadata",
-    "get_metadata",
-    "get_metadata_lines",
-    "resource_isdir",
-    "metadata_isdir",
-    "resource_listdir",
-    "metadata_listdir",
-])
+_XIEVL_WRAPPED_ATTRIBUTES = frozenset(
+    [
+        "load_module",
+        "module_repr",
+        "get_data",
+        "get_resource_filename",
+        "get_resource_stream",
+        "get_resource_string",
+        "has_resource",
+        "has_metadata",
+        "get_metadata",
+        "get_metadata_lines",
+        "resource_isdir",
+        "metadata_isdir",
+        "resource_listdir",
+        "metadata_listdir",
+    ]
+)
 
 
 class XonshImportEventLoader(Loader):
