@@ -48,9 +48,9 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
 
     >>> $LS_COLORS='rs=0:di=01;36:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:'
     
-Make json data directly pastable
+Make JSON data directly pastable
 --------------------------------
-With this snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``.
+With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``. Note that, though practical, this is rather hacky and might break other functionality. Use at your own risk.
 
 .. code-block:: xonshcon
 
@@ -83,7 +83,7 @@ To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines 
 .. code-block:: xonshcon
 
     >>> import os.path
-    >>> if os.path.exists(f"{$HOME}/.nix-profile"):
+    >>> if os.path.exists(f"{$HOME}/.nix-profile") and not __xonsh__.env.get("NIX_PATH"):
     >>>     $NIX_REMOTE="daemon"
     >>>     $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
     >>>     $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
