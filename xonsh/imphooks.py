@@ -3,20 +3,20 @@
 
 This module registers the hooks it defines when it is imported.
 """
+import builtins
+import contextlib
+import importlib
 import os
 import re
 import sys
 import types
-import builtins
-import contextlib
-import importlib
-from importlib.machinery import ModuleSpec
 from importlib.abc import MetaPathFinder, SourceLoader, Loader
+from importlib.machinery import ModuleSpec
 
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.platform import ON_WINDOWS, scandir
 from xonsh.lazyasd import lazyobject
+from xonsh.platform import ON_WINDOWS, scandir
 
 
 @lazyobject
@@ -270,6 +270,26 @@ class XonshImportEventHook(MetaPathFinder):
         return spec
 
 
+_XIEVL_WRAPPED_ATTRIBUTES = frozenset(
+    [
+        "load_module",
+        "module_repr",
+        "get_data",
+        "get_resource_filename",
+        "get_resource_stream",
+        "get_resource_string",
+        "has_resource",
+        "has_metadata",
+        "get_metadata",
+        "get_metadata_lines",
+        "resource_isdir",
+        "metadata_isdir",
+        "resource_listdir",
+        "metadata_listdir",
+    ]
+)
+
+
 class XonshImportEventLoader(Loader):
     """A class that dispatches loader calls to another loader and fires relevant
     xonsh events.
@@ -295,13 +315,10 @@ class XonshImportEventLoader(Loader):
         events.on_import_post_exec_module.fire(module=module)
         return rtn
 
-    def load_module(self, fullname):
-        """Legacy module loading, provided for backwards compatibility."""
-        return self.loader.load_module(fullname)
-
-    def module_repr(self, module):
-        """Legacy module repr, provided for backwards compatibility."""
-        return self.loader.module_repr(module)
+    def __getattr__(self, name):
+        if name in _XIEVL_WRAPPED_ATTRIBUTES:
+            return getattr(self.loader, name)
+        return object.__getattribute__(self, name)
 
 
 def install_import_hooks():
