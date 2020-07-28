@@ -156,3 +156,9 @@ def xonsh_builtins(monkeypatch, xonsh_events):
         if hasattr(builtins, attr):
             delattr(builtins, attr)
     tasks.clear()  # must to this to enable resetting all_jobs
+
+
+def pytest_configure(config):
+    """Abort test run if --flake8 requested, since it would hang on parser_test.py"""
+    if config.getoption('--flake8', ''):
+        pytest.exit("pytest-flake8 no longer supported, use flake8 instead.")

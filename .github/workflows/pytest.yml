@@ -23,5 +23,5 @@ jobs:
       - shell: bash -l {0}
         run: |
           python -m pip install . --no-deps
-          python -m xonsh run-tests.xsh --timeout=90
+          python -m xonsh run-tests.xsh --timeout=240
 

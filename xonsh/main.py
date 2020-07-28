@@ -369,26 +369,43 @@ def _failback_to_other_shells(args, err):
     # as an interactive one for safe.
     if hasattr(args, "mode") and args.mode != XonshMode.interactive:
         raise err
+
     foreign_shell = None
-    shells_file = "/etc/shells"
-    if not os.path.exists(shells_file):
-        # right now, it will always break here on Windows
-        raise err
-    excluded_list = ["xonsh", "screen"]
-    with open(shells_file) as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            if "/" not in line:
-                continue
-            _, shell = line.rsplit("/", 1)
-            if shell in excluded_list:
-                continue
-            if not os.path.exists(line):
-                continue
-            foreign_shell = line
-            break
+
+    # look first in users login shell $SHELL.
+    # use real os.environ, in case Xonsh hasn't initialized yet
+    # but don't fail back to same shell that just failed.
+
+    try:
+        env_shell = os.getenv("SHELL")
+        if env_shell and os.path.exists(env_shell) and env_shell != sys.argv[0]:
+            foreign_shell = env_shell
+    except Exception:
+        pass
+
+    # otherwise, find acceptable shell from (unix) list of installed shells.
+
+    if not foreign_shell:
+        excluded_list = ["xonsh", "screen"]
+        shells_file = "/etc/shells"
+        if not os.path.exists(shells_file):
+            # right now, it will always break here on Windows
+            raise err
+        with open(shells_file) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "/" not in line:
+                    continue
+                _, shell = line.rsplit("/", 1)
+                if shell in excluded_list:
+                    continue
+                if not os.path.exists(line):
+                    continue
+                foreign_shell = line
+                break
+
     if foreign_shell:
         traceback.print_exc()
         print("Xonsh encountered an issue during launch", file=sys.stderr)

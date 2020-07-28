@@ -315,7 +315,7 @@ def test_in():
 
 
 def test_is():
-    check_ast("42 is 65")
+    check_ast("int is float")   # avoid PY3.8 SyntaxWarning "is" with a literal
 
 
 def test_not_in():
@@ -323,7 +323,7 @@ def test_not_in():
 
 
 def test_is_not():
-    check_ast("42 is not 65")
+    check_ast("float is not int")
 
 
 def test_lt_lt():

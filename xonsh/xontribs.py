@@ -8,7 +8,14 @@ import functools
 import importlib
 import importlib.util
 
-from xonsh.tools import print_color, unthreadable
+from enum import IntEnum
+from xonsh.tools import print_color, print_exception, unthreadable
+
+
+class ExitCode(IntEnum):
+    OK = 0
+    NOT_FOUND = 1
+    INIT_FAILED = 2
 
 
 def find_xontrib(name):
@@ -59,10 +66,10 @@ def update_context(name, ctx=None):
     """
     if ctx is None:
         ctx = builtins.__xonsh__.ctx
-    if not hasattr(update_context, "bad_imports"):
-        update_context.bad_imports = []
     modctx = xontrib_context(name)
     if modctx is None:
+        if not hasattr(update_context, "bad_imports"):
+            update_context.bad_imports = []
         update_context.bad_imports.append(name)
         return ctx
     return ctx.update(modctx)
@@ -109,18 +116,25 @@ def xontrib_metadata():
 def xontribs_load(names, verbose=False):
     """Load xontribs from a list of names"""
     ctx = builtins.__xonsh__.ctx
+    res = ExitCode.OK
     for name in names:
         if verbose:
             print("loading xontrib {0!r}".format(name))
-        update_context(name, ctx=ctx)
-    if update_context.bad_imports:
+        try:
+            update_context(name, ctx=ctx)
+        except Exception:
+            res = ExitCode.INIT_FAILED
+            print_exception("Failed to load xontrib {}.".format(name))
+    if hasattr(update_context, "bad_imports"):
+        res = ExitCode.NOT_FOUND
         prompt_xontrib_install(update_context.bad_imports)
         del update_context.bad_imports
+    return res
 
 
 def _load(ns):
     """load xontribs"""
-    xontribs_load(ns.names, verbose=ns.verbose)
+    return xontribs_load(ns.names, verbose=ns.verbose)
 
 
 def _list(ns):
