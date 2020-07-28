@@ -16,7 +16,7 @@ import importlib
 os.environ["XONSH_DEBUG"] = "1"
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.environ import DEFAULT_DOCS, Env
+from xonsh.environ import DEFAULT_VARS, Env
 from xonsh.xontribs import xontrib_metadata
 from xonsh import main
 from xonsh.commands_cache import CommandsCache
@@ -283,7 +283,7 @@ runthis_server = "https://runthis.xonsh.org:80"
 
 def make_envvars():
     env = Env()
-    vars = sorted(DEFAULT_DOCS.keys())
+    vars = sorted(DEFAULT_VARS.keys())
     s = ".. list-table::\n" "    :header-rows: 0\n\n"
     table = []
     ncol = 3
