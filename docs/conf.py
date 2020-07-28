@@ -283,12 +283,13 @@ runthis_server = "https://runthis.xonsh.org:80"
 
 def make_envvars():
     env = Env()
-    vars = sorted(DEFAULT_VARS.keys())
+    vars = sorted(DEFAULT_VARS.keys(), key=lambda x: getattr(x, "pattern", x))
     s = ".. list-table::\n" "    :header-rows: 0\n\n"
     table = []
     ncol = 3
     row = "    {0} - :ref:`${1} <{2}>`"
-    for i, var in enumerate(vars):
+    for i, varname in enumerate(vars):
+        var = getattr(x, "pattern", x)
         star = "*" if i % ncol == 0 else " "
         table.append(row.format(star, var, var.lower()))
     table.extend(["      -"] * ((ncol - len(vars) % ncol) % ncol))
@@ -309,7 +310,7 @@ def make_envvars():
         under = "." * len(title)
         vd = env.get_docs(var)
         s += sec.format(
-            low=var.lower(),
+            low=getattr(x, "pattern", x).lower(),
             title=title,
             under=under,
             docstr=vd.docstr,
