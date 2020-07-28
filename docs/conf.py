@@ -289,7 +289,7 @@ def make_envvars():
     ncol = 3
     row = "    {0} - :ref:`${1} <{2}>`"
     for i, varname in enumerate(vars):
-        var = getattr(x, "pattern", x)
+        var = getattr(varname, "pattern", varname)
         star = "*" if i % ncol == 0 else " "
         table.append(row.format(star, var, var.lower()))
     table.extend(["      -"] * ((ncol - len(vars) % ncol) % ncol))
@@ -305,12 +305,13 @@ def make_envvars():
         "**store_as_str:** {store_as_str}\n\n"
         "-------\n\n"
     )
-    for var in vars:
+    for varname in vars:
+        var = getattr(varname, "pattern", varname)
         title = "$" + var
         under = "." * len(title)
-        vd = env.get_docs(var)
+        vd = env.get_docs(varname)
         s += sec.format(
-            low=getattr(x, "pattern", x).lower(),
+            low=var.lower(),
             title=title,
             under=under,
             docstr=vd.docstr,
