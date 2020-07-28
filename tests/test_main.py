@@ -132,7 +132,36 @@ def test_premain_timings_arg(shell):
 
 
 @skip_if_on_windows
-def test_xonsh_failback(shell, monkeypatch, monkeypatch_stderr):
+@pytest.mark.parametrize(
+    ("env_shell", "rc_shells", "exp_shell"),
+    [
+        ("", [], ""),
+        ("/argle/bash", [], "/argle/bash"),
+        ("/bin/xonsh", [], ""),
+        (
+            "/argle/bash",
+            ["/argle/xonsh", "/argle/dash", "/argle/sh", "/argle/bargle"],
+            "/argle/bash",
+        ),
+        (
+            "",
+            ["/argle/xonsh", "/argle/dash", "/argle/sh", "/argle/bargle"],
+            "/argle/dash",
+        ),
+        ("", ["/argle/xonsh", "/argle/screen", "/argle/sh"], "/argle/sh"),
+        ("", ["/argle/xonsh", "/argle/screen"], ""),
+    ],
+)
+@skip_if_on_windows
+def test_xonsh_failback(
+    env_shell,
+    rc_shells,
+    exp_shell,
+    shell,
+    xonsh_builtins,
+    monkeypatch,
+    monkeypatch_stderr,
+):
     failback_checker = []
 
     def mocked_main(*args):
@@ -146,16 +175,27 @@ def test_xonsh_failback(shell, monkeypatch, monkeypatch_stderr):
 
     monkeypatch.setattr(os, "execlp", mocked_execlp)
     monkeypatch.setattr(os.path, "exists", lambda x: True)
-    monkeypatch.setattr(sys, "argv", ["xonsh", "-i"])
+    monkeypatch.setattr(sys, "argv", ["/bin/xonsh", "-i"])  # has to look like real path
 
     @contextmanager
     def mocked_open(*args):
-        yield ["/usr/bin/xonsh", "/usr/bin/screen", "bash", "/bin/xshell"]
+        yield rc_shells
 
     monkeypatch.setattr(builtins, "open", mocked_open)
 
-    xonsh.main.main()
-    assert failback_checker == ["/bin/xshell", "/bin/xshell"]
+    monkeypatch.setenv("SHELL", env_shell)
+
+    try:
+        xonsh.main.main()  # if main doesn't raise, it did try to invoke a shell
+        assert failback_checker[0] == exp_shell
+        assert failback_checker[1] == failback_checker[0]
+    except Exception as e:
+        if len(e.args) and "A fake failure" in str(
+            e.args[0]
+        ):  # if it did raise expected exception
+            assert len(failback_checker) == 0  # then it didn't invoke a shell
+        else:
+            raise e  # it raised something other than the test exception,
 
 
 def test_xonsh_failback_single(shell, monkeypatch, monkeypatch_stderr):
