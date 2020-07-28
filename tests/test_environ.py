@@ -297,7 +297,7 @@ def test_delitem_default():
     assert env[a_key] == a_value
 
 
-def test_lscolors_target():
+def test_lscolors_target(xonsh_builtins):
     lsc = LsColors.fromstring("ln=target")
     assert lsc["ln"] == ("NO_COLOR",)
     assert lsc.is_target("ln")

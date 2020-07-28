@@ -9,6 +9,7 @@ import builtins
 import threading
 import subprocess
 import re
+import pathlib
 
 import xonsh.tools as xt
 from xonsh.lazyasd import LazyObject
@@ -96,32 +97,34 @@ def get_hg_branch(root=None):
     t.start()
     t.join(timeout=timeout)
     try:
-        root = q.get_nowait()
+        root = pathlib.Path(q.get_nowait())
     except queue.Empty:
         return None
     if env.get("VC_HG_SHOW_BRANCH"):
         # get branch name
-        branch_path = os.path.sep.join([root, ".hg", "branch"])
-        if os.path.exists(branch_path):
+        branch_path = root / ".hg" / "branch"
+        if branch_path.exists():
             with open(branch_path, "r") as branch_file:
-                branch = branch_file.read()
+                branch = branch_file.read().strip()
         else:
             branch = "default"
     else:
         branch = ""
-    # add bookmark, if we can
-    bookmark_path = os.path.sep.join([root, ".hg", "bookmarks.current"])
-    if os.path.exists(bookmark_path):
-        with open(bookmark_path, "r") as bookmark_file:
-            active_bookmark = bookmark_file.read()
-        if env.get("VC_HG_SHOW_BRANCH") is True:
-            branch = "{0}, {1}".format(
-                *(b.strip(os.linesep) for b in (branch, active_bookmark))
-            )
-        else:
-            branch = active_bookmark.strip(os.linesep)
-    else:
-        branch = branch.strip(os.linesep)
+    # add activated bookmark and topic
+    for filename in ["bookmarks.current", "topic"]:
+        feature_branch_path = root / ".hg" / filename
+        if feature_branch_path.exists():
+            with open(feature_branch_path) as file:
+                feature_branch = file.read().strip()
+            if feature_branch:
+                if branch:
+                    if filename == "topic":
+                        branch = f"{branch}/{feature_branch}"
+                    else:
+                        branch = f"{branch}, {feature_branch}"
+                else:
+                    branch = feature_branch
+
     return branch
 
 
