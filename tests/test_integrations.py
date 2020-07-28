@@ -52,7 +52,7 @@ skip_if_no_sleep = pytest.mark.skipif(
 )
 
 
-def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
+def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False):
     env = dict(os.environ)
     env["PATH"] = PATH
     env["XONSH_DEBUG"] = "0" # was "1"
@@ -61,23 +61,31 @@ def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
     env["PROMPT"] = ""
     xonsh = "xonsh.bat" if ON_WINDOWS else "xon.sh"
     xonsh = shutil.which(xonsh, path=PATH)
+    if single_command:
+        args = [xonsh, "--no-rc", "-c", cmd]
+        input = None
+    else:
+        args = [xonsh, "--no-rc"]
+        input = cmd
+
     proc = sp.Popen(
-        [xonsh, "--no-rc"],
+        args,
         env=env,
         stdin=stdin,
         stdout=stdout,
         stderr=stderr,
         universal_newlines=True,
     )
+
     try:
-        out, err = proc.communicate(input=cmd, timeout=10)
+        out, err = proc.communicate(input=input, timeout=10)
     except sp.TimeoutExpired:
         proc.kill()
         raise
     return out, err, proc.returncode
 
 
-def check_run_xonsh(cmd, fmt, exp):
+def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
     """
@@ -87,7 +95,7 @@ def check_run_xonsh(cmd, fmt, exp):
     if callable(exp):
         exp = exp()
     assert out == exp, err
-    assert rtn == 0, err
+    assert rtn == exp_rtn, err
 
 
 #
@@ -656,3 +664,19 @@ aliases['echo'] = _echo
     )
     out, _, _ = run_xonsh(script)
     assert out == exp
+
+
+# issue 3402
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "cmd, exp_rtn",
+    [
+        ("sys.exit(0)", 0),
+        ("sys.exit(100)", 100),
+        ("ls .", 0),
+        ("ls _ThiSShoulDNoTExisT_", 2),
+    ],
+)
+def test_single_command_return_code(cmd, exp_rtn):
+    _, _, rtn = run_xonsh(cmd, single_command=True)
+    assert rtn == exp_rtn
