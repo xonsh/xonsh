@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed exit code for commands executed via `-c` (#3402)
+* Fixed exit code for commands executed via ``-c`` (#3402)
 
 **Security:**
 
