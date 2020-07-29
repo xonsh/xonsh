@@ -673,8 +673,8 @@ aliases['echo'] = _echo
     [
         ("sys.exit(0)", 0),
         ("sys.exit(100)", 100),
-        ("ls .", 0),
-        ("ls _ThiSShoulDNoTExisT_", 2),
+        ("sh -c 'exit 0'", 0),
+        ("sh -c 'exit 1'", 1),
     ],
 )
 def test_single_command_return_code(cmd, exp_rtn):
