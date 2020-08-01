@@ -209,8 +209,8 @@ class VoxHandler:
                 del self.vox[name]
             except voxapi.EnvironmentInUse:
                 print(
-                    'The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n'
-                    % (name, name),
+                    'The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate".\n'
+                    % name,
                     file=sys.stderr,
                 )
                 return
