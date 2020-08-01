@@ -673,6 +673,7 @@ Var.__new__.__defaults__ = (
     False,
 )
 
+
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
 def DEFAULT_VARS():
