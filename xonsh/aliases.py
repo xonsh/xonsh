@@ -560,7 +560,7 @@ def source_alias(args, stdin=None):
                     print("source: {}: No such file".format(fname), file=sys.stderr)
                 if i == 0:
                     raise RuntimeError(
-                        "must source at least one file, " + fname + "does not exist."
+                        "must source at least one file, " + fname + " does not exist."
                     )
                 break
         _, fext = os.path.splitext(fpath)

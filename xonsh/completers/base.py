@@ -11,6 +11,10 @@ def complete_base(prefix, line, start, end, ctx):
     and paths.  If we are completing the first argument, complete based on
     valid commands and python names.
     """
+    if line.strip() and prefix != line:
+        # don't do unnecessary completions
+        return set()
+
     # get and unpack python completions
     python_comps = complete_python(prefix, line, start, end, ctx)
     if isinstance(python_comps, cabc.Sequence):

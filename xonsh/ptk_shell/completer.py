@@ -7,6 +7,8 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.application.current import get_app
 
+from xonsh.completers.tools import RichCompletion
+
 
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.
@@ -22,6 +24,7 @@ class PromptToolkitCompleter(Completer):
         self.ctx = ctx
         self.shell = shell
         self.hist_suggester = AutoSuggestFromHistory()
+        self.current_document = None
 
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
@@ -40,10 +43,17 @@ class PromptToolkitCompleter(Completer):
         begidx = line[:endidx].rfind(" ") + 1 if line[:endidx].rfind(" ") >= 0 else 0
         prefix = line[begidx:endidx]
         expand_offset = len(line_ex) - len(line)
+
+        # enable completers to access entire document
+        self.current_document = document
+
         # get normal completions
         completions, l = self.completer.complete(
             prefix, line_ex, begidx + expand_offset, endidx + expand_offset, self.ctx
         )
+
+        self.current_document = None
+
         # completions from auto suggest
         sug_comp = None
         if env.get("AUTO_SUGGEST") and env.get("AUTO_SUGGEST_IN_COMPLETIONS"):
@@ -75,8 +85,16 @@ class PromptToolkitCompleter(Completer):
             pre = len(c_prefix)
         for comp in completions:
             # do not display quote
-            disp = comp[pre:].strip("'\"")
-            yield Completion(comp, -l, display=disp)
+            if isinstance(comp, RichCompletion):
+                yield Completion(
+                    comp,
+                    -comp.prefix_len if comp.prefix_len is not None else -l,
+                    display=comp.display,
+                    display_meta=comp.description,
+                )
+            else:
+                disp = comp[pre:].strip("'\"")
+                yield Completion(comp, -l, display=disp)
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""
