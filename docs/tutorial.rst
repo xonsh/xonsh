@@ -1268,12 +1268,11 @@ may have one of the following signatures:
         """
         import xonsh.proc
         if spec.captured in xonsh.proc.STDOUT_CAPTURE_KINDS:
-            end = ''
+            print("I'm being captured!")
+        elif not spec.last_in_pipeline:
+            print("Going through a pipe!")
         else:
-            end = '\n'
-        # Now we'll get a newline if the user is at the terminal, and no
-        # newline if we are captured
-        print('Hi Mom!', end=end)
+            print("Hello terminal!")
         return 0
 
     def mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
