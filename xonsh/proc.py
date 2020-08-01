@@ -1203,12 +1203,12 @@ def parse_proxy_return(r, stdout, stderr):
     elif isinstance(r, cabc.Sequence):
         rlen = len(r)
         if rlen > 0 and r[0] is not None:
-            stdout.write(r[0])
+            stdout.write(str(r[0]))
             stdout.flush()
         if rlen > 1 and r[1] is not None:
-            stderr.write(r[1])
+            stderr.write(str(r[1]))
             stderr.flush()
-        if rlen > 2 and r[2] is not None:
+        if rlen > 2 and isinstance(r[2], int):
             cmd_result = r[2]
     elif r is not None:
         # for the random object...
