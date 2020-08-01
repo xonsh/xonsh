@@ -289,10 +289,11 @@ def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
 
-echo --option1 \
+echo --option1 \\
 --option2
-""",
-        "--option1 --option2\n",
+echo missing \\
+EOL""",
+        "--option1 --option2\nmissing EOL\n",
         0,
     ),
     #
