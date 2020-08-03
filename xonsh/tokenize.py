@@ -7,9 +7,6 @@ version 2), which provides tokenization help for Python programs.
 It is modified to properly tokenize xonsh code, including backtick regex
 path and several xonsh-specific operators.
 
-A few pieces of this file are specific to the version of Python being used.
-To find these pieces, search the PY35.
-
 Original file credits:
    __author__ = 'Ka-Ping Yee <ping@lfw.org>'
    __credits__ = ('GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, '
@@ -113,7 +110,7 @@ __all__ = token.__all__ + [
     "DOLLARNAME",
     "IOREDIRECT",
 ]
-HAS_ASYNC = (3, 5, 0) <= PYTHON_VERSION_INFO < (3, 7, 0)
+HAS_ASYNC = PYTHON_VERSION_INFO < (3, 7, 0)
 if HAS_ASYNC:
     ASYNC = token.ASYNC
     AWAIT = token.AWAIT
@@ -121,10 +118,8 @@ if HAS_ASYNC:
 else:
     ADDSPACE_TOKS = (NAME, NUMBER)
 del token  # must clean up token
-PY35 = (3, 5, 0) <= PYTHON_VERSION_INFO
+
 AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
-if not PY35:
-    AUGASSIGN_OPS = AUGASSIGN_OPS.replace("@", "")
 
 
 COMMENT = N_TOKENS

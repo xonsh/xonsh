@@ -7,11 +7,12 @@ import argparse
 import linecache
 import importlib
 import functools
+from inspect import getouterframes
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
-from xonsh.inspectors import find_file, getouterframes
+from xonsh.inspectors import find_file
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.proc import STDOUT_CAPTURE_KINDS
 import xonsh.prompt.cwd as prompt
