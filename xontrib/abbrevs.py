@@ -16,8 +16,12 @@ builtins.__xonsh__.abbrevs = dict()
 proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
 setattr(builtins, "abbrevs", proxy)
 
+last_expanded = None
+
 
 def expand_abbrev(buffer):
+    global last_expanded
+    last_expanded = None
     abbrevs = getattr(builtins, "abbrevs", None)
     if abbrevs is None:
         return
@@ -30,6 +34,26 @@ def expand_abbrev(buffer):
             return
         buffer.delete_before_cursor(count=len(word))
         buffer.insert_text(abbrevs[word])
+        last_expanded = word
+
+
+def revert_abbrev(buffer):
+    global last_expanded
+    if last_expanded is None:
+        return False
+    abbrevs = getattr(builtins, "abbrevs", None)
+    if abbrevs is None:
+        return False
+    if last_expanded not in abbrevs.keys():
+        return False
+    document = buffer.document
+    expansion = abbrevs[last_expanded] + " "
+    if not document.text_before_cursor.endswith(expansion):
+        return False
+    buffer.delete_before_cursor(count=len(expansion))
+    buffer.insert_text(last_expanded)
+    last_expanded = None
+    return True
 
 
 @events.on_ptk_create
@@ -44,7 +68,8 @@ def custom_keybindings(bindings, **kw):
     @handler(" ", filter=IsMultiline() & insert_mode)
     def handle_space(event):
         buffer = event.app.current_buffer
-        expand_abbrev(buffer)
+        if not revert_abbrev(buffer):
+            expand_abbrev(buffer)
         buffer.insert_text(" ")
 
     @handler(
