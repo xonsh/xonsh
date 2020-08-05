@@ -11,10 +11,8 @@ import pytest
 from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
-    Ensurer,
     locate_binary,
-    DEFAULT_ENSURERS,
-    DEFAULT_VALUES,
+    DEFAULT_VARS,
     default_env,
     make_args_env,
     LsColors,
@@ -67,7 +65,7 @@ def test_env_detype_mutable_access_clear(path1, path2):
 
 def test_env_detype_no_dict():
     env = Env(YO={"hey": 42})
-    env.set_ensurer("YO", Ensurer(always_true, None, None))
+    env.register("YO", validate=always_true, convert=None, detype=None)
     det = env.detype()
     assert "YO" not in det
 
@@ -256,13 +254,6 @@ def test_events_on_envvar_called_in_right_order(xonsh_builtins):
     assert share == ["change"]
 
 
-def test_int_bool_envvars_have_ensurers():
-    bool_ints = [type(envvar) in [bool, int] for envvar in DEFAULT_VALUES.values()]
-    key_mask = set(itertools.compress(DEFAULT_VALUES.keys(), bool_ints))
-    ensurer_keys = set(DEFAULT_ENSURERS.keys())
-    assert len(key_mask.intersection(ensurer_keys)) == len(key_mask)
-
-
 def test_no_lines_columns():
     os.environ["LINES"] = "spam"
     os.environ["COLUMNS"] = "eggs"
@@ -298,7 +289,7 @@ def test_delitem():
 def test_delitem_default():
     env = Env()
     a_key, a_value = next(
-        (k, v) for (k, v) in env._defaults.items() if isinstance(v, str)
+        (k, v.default) for (k, v) in env._vars.items() if isinstance(v.default, str)
     )
     del env[a_key]
     assert env[a_key] == a_value
@@ -348,3 +339,119 @@ def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
         assert not event_fired, "No event if value doesn't change"
     else:
         assert event_fired
+
+
+def test_register_custom_var_generic():
+    """Test that a registered envvar without any type is treated
+    permissively.
+
+    """
+    env = Env()
+
+    assert "MY_SPECIAL_VAR" not in env
+    env.register("MY_SPECIAL_VAR")
+    assert "MY_SPECIAL_VAR" in env
+
+    env["MY_SPECIAL_VAR"] = 32
+    assert env["MY_SPECIAL_VAR"] == 32
+
+    env["MY_SPECIAL_VAR"] = True
+    assert env["MY_SPECIAL_VAR"] == True
+
+
+def test_register_custom_var_int():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='int')
+
+    env["MY_SPECIAL_VAR"] = "32"
+    assert env["MY_SPECIAL_VAR"] == 32
+
+    with pytest.raises(ValueError):
+        env["MY_SPECIAL_VAR"] = "wakka"
+
+
+def test_register_custom_var_float():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='float')
+
+    env["MY_SPECIAL_VAR"] = "27"
+    assert env["MY_SPECIAL_VAR"] == 27.0
+
+    with pytest.raises(ValueError):
+        env["MY_SPECIAL_VAR"] = "wakka"
+
+
+@pytest.mark.parametrize("val,converted", 
+        [
+            (True, True),
+            (32, True),
+            (0, False),
+            (27.0, True),
+            (None, False),
+            ("lol", True),
+            ("false", False),
+            ("no", False),
+            ])
+def test_register_custom_var_bool(val, converted):
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='bool')
+
+    env["MY_SPECIAL_VAR"] = val
+    assert env["MY_SPECIAL_VAR"] == converted
+
+
+@pytest.mark.parametrize("val,converted", 
+        [
+            (32, "32"),
+            (0, "0"),
+            (27.0, "27.0"),
+            (None, "None"),
+            ("lol", "lol"),
+            ("false", "false"),
+            ("no", "no"),
+        ])
+def test_register_custom_var_str(val, converted):
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='str')
+
+    env["MY_SPECIAL_VAR"] = val
+    assert env["MY_SPECIAL_VAR"] == converted
+
+
+def test_register_custom_var_path():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type='path')
+
+    paths = ["/home/wakka", "/home/wakka/bin"]
+    env["MY_SPECIAL_VAR"] = paths
+
+    assert hasattr(env['MY_SPECIAL_VAR'], 'paths')
+    assert env["MY_SPECIAL_VAR"].paths == paths
+
+    with pytest.raises(TypeError):
+        env["MY_SPECIAL_VAR"] = 32
+    
+
+def test_deregister_custom_var():
+    env = Env()
+
+    env.register("MY_SPECIAL_VAR", type='path')
+    env.deregister("MY_SPECIAL_VAR")
+    assert "MY_SPECIAL_VAR" not in env
+
+    env.register("MY_SPECIAL_VAR", type='path')
+    paths = ["/home/wakka", "/home/wakka/bin"]
+    env["MY_SPECIAL_VAR"] = paths
+    env.deregister("MY_SPECIAL_VAR")
+
+    # deregistering a variable that has a value set doesn't
+    # remove it from env;
+    # the existing variable also maintains its type validation, conversion
+    assert "MY_SPECIAL_VAR" in env
+    with pytest.raises(TypeError):
+        env["MY_SPECIAL_VAR"] = 32
+
+    # removing, then re-adding the variable without registering
+    # gives it only default permissive validation, conversion
+    del env["MY_SPECIAL_VAR"]
+    env["MY_SPECIAL_VAR"] = 32

@@ -16,7 +16,7 @@ import importlib
 os.environ["XONSH_DEBUG"] = "1"
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.environ import DEFAULT_DOCS, Env
+from xonsh.environ import DEFAULT_VARS, Env
 from xonsh.xontribs import xontrib_metadata
 from xonsh import main
 from xonsh.commands_cache import CommandsCache
@@ -283,12 +283,13 @@ runthis_server = "https://runthis.xonsh.org:80"
 
 def make_envvars():
     env = Env()
-    vars = sorted(DEFAULT_DOCS.keys())
+    vars = sorted(DEFAULT_VARS.keys(), key=lambda x: getattr(x, "pattern", x))
     s = ".. list-table::\n" "    :header-rows: 0\n\n"
     table = []
     ncol = 3
     row = "    {0} - :ref:`${1} <{2}>`"
-    for i, var in enumerate(vars):
+    for i, varname in enumerate(vars):
+        var = getattr(varname, "pattern", varname)
         star = "*" if i % ncol == 0 else " "
         table.append(row.format(star, var, var.lower()))
     table.extend(["      -"] * ((ncol - len(vars) % ncol) % ncol))
@@ -304,18 +305,19 @@ def make_envvars():
         "**store_as_str:** {store_as_str}\n\n"
         "-------\n\n"
     )
-    for var in vars:
+    for varname in vars:
+        var = getattr(varname, "pattern", varname)
         title = "$" + var
         under = "." * len(title)
-        vd = env.get_docs(var)
+        vd = env.get_docs(varname)
         s += sec.format(
             low=var.lower(),
             title=title,
             under=under,
-            docstr=vd.docstr,
-            configurable=vd.configurable,
-            default=vd.default,
-            store_as_str=vd.store_as_str,
+            docstr=vd.doc,
+            configurable=vd.doc_configurable,
+            default=vd.doc_default,
+            store_as_str=vd.doc_store_as_str,
         )
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), "envvarsbody")

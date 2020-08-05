@@ -34,7 +34,6 @@ from xonsh.tools import (
     unthreadable,
     print_color,
 )
-from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
 from xonsh.ast import isexpression
@@ -781,7 +780,6 @@ def make_default_aliases():
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
-        "replay": replay_main,
         "trace": trace,
         "timeit": timeit_alias,
         "umask": umask,

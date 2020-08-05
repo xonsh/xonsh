@@ -333,7 +333,7 @@ class JsonCommandField(cabc.Sequence):
 class JsonHistory(History):
     """Xonsh history backend implemented with JSON files.
 
-    JsonHistory implements two extra actions: ``diff``, and ``replay``.
+    JsonHistory implements an extra action: ``diff``
     """
 
     def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True, **meta):
