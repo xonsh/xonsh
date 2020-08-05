@@ -251,9 +251,11 @@ def _pprint_displayhook(value):
         builtins._ = value
         return
     env = builtins.__xonsh__.env
+    printed_val = None
     if env.get("PRETTY_PRINT_RESULTS"):
         printed_val = pretty(value)
-    else:
+    if not isinstance(printed_val, str):
+        # pretty may fail (i.e for unittest.mock.Mock)
         printed_val = repr(value)
     if HAS_PYGMENTS and env.get("COLOR_RESULTS"):
         tokens = list(pygments.lex(printed_val, lexer=pyghooks.XonshLexer()))
