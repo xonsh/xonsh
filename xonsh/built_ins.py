@@ -206,8 +206,9 @@ def _un_shebang(x):
 
 def get_script_subproc_command(fname, args):
     """Given the name of a script outside the path, returns a list representing
-    an appropriate subprocess command to execute the script.  Raises
-    PermissionError if the script is not executable.
+    an appropriate subprocess command to execute the script or None if
+    the argument is not readable or not a script. Raises PermissionError
+    if the script is not executable.
     """
     # make sure file is executable
     if not os.access(fname, os.X_OK):
@@ -217,10 +218,10 @@ def get_script_subproc_command(fname, args):
         # execute permissions but not read/write permissions. This enables
         # things with the SUID set to be run. Needs to come before _is_binary()
         # is called, because that function tries to read the file.
-        return [fname] + args
+        return None
     elif _is_binary(fname):
         # if the file is a binary, we should call it directly
-        return [fname] + args
+        return None
     if ON_WINDOWS:
         # Windows can execute various filetypes directly
         # as given in PATHEXT
@@ -730,7 +731,9 @@ class SubprocSpec:
         if self.binary_loc is None:
             return
         try:
-            self.cmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
+            scriptcmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
+            if scriptcmd is not None:
+                self.cmd = scriptcmd
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise XonshError(e.format(self.cmd[0]))
