@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tools to help interface with foreign shells, such as Bash."""
 import os
 import re
@@ -373,7 +372,7 @@ def parse_aliases(s, shell, sourcer=None, extra_args=()):
                 )
         except ValueError as exc:
             warnings.warn(
-                'could not parse alias "{0}": {1!r}'.format(key, exc), RuntimeWarning
+                f'could not parse alias "{key}": {exc!r}', RuntimeWarning
             )
             continue
         aliases[key] = value
@@ -428,7 +427,7 @@ def parse_funcs(s, shell, sourcer=None, extra_args=()):
     return funcs
 
 
-class ForeignShellBaseAlias(object):
+class ForeignShellBaseAlias:
     """This class is responsible for calling foreign shell functions as if
     they were aliases. This does not currently support taking stdin.
     """
@@ -493,7 +492,7 @@ class ForeignShellBaseAlias(object):
             + "("
             + ", ".join(
                 [
-                    "{k}={v!r}".format(k=k, v=v)
+                    f"{k}={v!r}"
                     for k, v in sorted(self._input_kwargs().items())
                 ]
             )

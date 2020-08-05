@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The xonsh built-ins.
 
 Note that this module is named 'built_ins' so as not to be confused with the
@@ -263,14 +262,14 @@ _REDIR_OUT = LazyObject(
 )
 _E2O_MAP = LazyObject(
     lambda: frozenset(
-        {"{}>{}".format(e, o) for e in _REDIR_ERR for o in _REDIR_OUT if o != ""}
+        {f"{e}>{o}" for e in _REDIR_ERR for o in _REDIR_OUT if o != ""}
     ),
     globals(),
     "_E2O_MAP",
 )
 _O2E_MAP = LazyObject(
     lambda: frozenset(
-        {"{}>{}".format(o, e) for e in _REDIR_ERR for o in _REDIR_OUT if o != ""}
+        {f"{o}>{e}" for e in _REDIR_ERR for o in _REDIR_OUT if o != ""}
     ),
     globals(),
     "_O2E_MAP",
@@ -285,13 +284,13 @@ def safe_open(fname, mode, buffering=-1):
     """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
     try:
-        return io.open(fname, mode, buffering=buffering)
+        return open(fname, mode, buffering=buffering)
     except PermissionError:
-        raise XonshError("xonsh: {0}: permission denied".format(fname))
+        raise XonshError(f"xonsh: {fname}: permission denied")
     except FileNotFoundError:
-        raise XonshError("xonsh: {0}: no such file or directory".format(fname))
+        raise XonshError(f"xonsh: {fname}: no such file or directory")
     except Exception:
-        raise XonshError("xonsh: {0}: unable to open file".format(fname))
+        raise XonshError(f"xonsh: {fname}: unable to open file")
 
 
 def safe_close(x):
@@ -316,7 +315,7 @@ def _parse_redirects(r, loc=None):
             if loc is None:
                 loc, dest = dest, ""  # NOQA
             else:
-                e = "Unrecognized redirection command: {}".format(r)
+                e = f"Unrecognized redirection command: {r}"
                 raise XonshError(e)
         except (ValueError, XonshError):
             raise
@@ -324,9 +323,9 @@ def _parse_redirects(r, loc=None):
             pass
     mode = _MODES.get(mode, None)
     if mode == "r" and (len(orig) > 0 or len(dest) > 0):
-        raise XonshError("Unrecognized redirection command: {}".format(r))
+        raise XonshError(f"Unrecognized redirection command: {r}")
     elif mode in _WRITE_MODES and len(dest) > 0:
-        raise XonshError("Unrecognized redirection command: {}".format(r))
+        raise XonshError(f"Unrecognized redirection command: {r}")
     return orig, mode, dest
 
 
@@ -353,9 +352,9 @@ def _redirect_streams(r, loc=None):
         elif orig in _REDIR_ERR:
             stderr = safe_open(loc, mode)
         else:
-            raise XonshError("Unrecognized redirection command: {}".format(r))
+            raise XonshError(f"Unrecognized redirection command: {r}")
     else:
-        raise XonshError("Unrecognized redirection command: {}".format(r))
+        raise XonshError(f"Unrecognized redirection command: {r}")
     return stdin, stdout, stderr
 
 
@@ -568,7 +567,7 @@ class SubprocSpec:
                     return self.cls(
                         ["man", cmd0.rstrip("?")], bufsize=bufsize, **kwargs
                     )
-            e = "xonsh: subprocess mode: command not found: {0}".format(cmd0)
+            e = f"xonsh: subprocess mode: command not found: {cmd0}"
             env = builtins.__xonsh__.env
             sug = suggest_commands(cmd0, env, builtins.aliases)
             if len(sug.strip()) > 0:
@@ -902,7 +901,7 @@ def cmds_to_specs(cmds, captured=False):
         elif redirect == "&" and i == len(redirects) - 1:
             specs[i].background = True
         else:
-            raise XonshError("unrecognized redirect {0!r}".format(redirect))
+            raise XonshError(f"unrecognized redirect {redirect!r}")
     # Apply boundary conditions
     _update_last_spec(specs[-1])
     return specs
@@ -1083,7 +1082,7 @@ def _convert_kind_flag(x):
     x = x.lower()
     kind = MACRO_FLAG_KINDS.get(x, None)
     if kind is None:
-        raise TypeError("{0!r} not a recognized macro type.".format(x))
+        raise TypeError(f"{x!r} not a recognized macro type.")
     return kind
 
 
@@ -1244,7 +1243,7 @@ def _eval_regular_args(raw_args, glbs, locs):
     else:
         argstr = "({},)".format(", ".join(arglist))
         kwargstr = "dict({})".format(", ".join(kwarglist))
-        both = "({}, {})".format(argstr, kwargstr)
+        both = f"({argstr}, {kwargstr})"
         args, kwargs = execer.eval(both, glbs=glbs, locs=locs)
     return args, kwargs
 

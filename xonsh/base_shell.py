@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The base class for xonsh shell"""
 import io
 import os
@@ -293,7 +292,7 @@ class Tee:
         return s
 
 
-class BaseShell(object):
+class BaseShell:
     """The xonsh shell."""
 
     def __init__(self, execer, ctx, **kwargs):
@@ -521,7 +520,7 @@ class BaseShell(object):
             with open(1, "wb", closefd=False) as f:
                 # prevent xonsh from answering interactive questions
                 # on the next command by writing the title
-                f.write("\x1b]0;{0}\x07".format(t).encode())
+                f.write(f"\x1b]0;{t}\x07".encode())
                 f.flush()
 
     @property

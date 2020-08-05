@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements JSON version of xonsh history backend."""
 import os
 import sys
@@ -137,7 +136,7 @@ class JsonHistoryGC(threading.Thread):
         files = self.files(only_unlocked=True)
         rmfiles_fn = self.gc_units_to_rmfiles.get(units)
         if rmfiles_fn is None:
-            raise ValueError("Units type {0!r} not understood".format(units))
+            raise ValueError(f"Units type {units!r} not understood")
 
         size_over, rm_files = rmfiles_fn(hsize, files)
         hist = getattr(builtins.__xonsh__, "history", None)
@@ -211,7 +210,7 @@ class JsonHistoryGC(threading.Thread):
                 lj.close()
                 if xonsh_debug:
                     print(f"... Enumerated {len(files):7d} history files.\r", end="")
-            except (IOError, OSError, ValueError):
+            except (OSError, ValueError):
                 continue
         files.sort()  # this sorts by elements of the tuple,
         # the first of which just happens to be file mod time.
@@ -224,7 +223,7 @@ class JsonHistoryFlusher(threading.Thread):
 
     def __init__(self, filename, buffer, queue, cond, at_exit=False, *args, **kwargs):
         """Thread for flushing history."""
-        super(JsonHistoryFlusher, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.filename = filename
         self.buffer = buffer
         self.queue = queue
@@ -261,7 +260,7 @@ class JsonHistoryFlusher(threading.Thread):
                 continue
             cmds.append(cmd)
             last_inp = cmd["inp"]
-        with open(self.filename, "r", newline="\n") as f:
+        with open(self.filename, newline="\n") as f:
             hist = xlj.LazyJSON(f).load()
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
@@ -317,7 +316,7 @@ class JsonCommandField(cabc.Sequence):
         queue.append(self)
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
-            with open(self.hist.filename, "r", newline="\n") as f:
+            with open(self.hist.filename, newline="\n") as f:
                 lj = xlj.LazyJSON(f, reopen=False)
                 rtn = lj["cmds"][key].get(self.field, self.default)
                 if isinstance(rtn, xlj.LJNode):
@@ -362,7 +361,7 @@ class JsonHistory(History):
             data_dir = builtins.__xonsh__.env.get("XONSH_DATA_DIR")
             data_dir = os.path.expanduser(data_dir)
             self.filename = os.path.join(
-                data_dir, "xonsh-{0}.json".format(self.sessionid)
+                data_dir, f"xonsh-{self.sessionid}.json"
             )
         else:
             self.filename = filename

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module for caching command & alias names as well as for predicting whether
 a command will be able to be run in the background.
 

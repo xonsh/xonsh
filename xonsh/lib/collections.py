@@ -6,7 +6,7 @@ from collections import ChainMap
 from collections.abc import MutableMapping, MutableSequence, MutableSet
 
 
-class ChainDBDefaultType(object):
+class ChainDBDefaultType:
     """Singleton for representing when no default value is given."""
 
     __inst = None
@@ -50,7 +50,7 @@ class ChainDB(ChainMap):
             for result in reversed(results):
                 if result is not ChainDBDefault:
                     return result
-            raise KeyError("{} is none of the current mappings".format(key))
+            raise KeyError(f"{key} is none of the current mappings")
         return res
 
     def __setitem__(self, key, value):

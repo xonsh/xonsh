@@ -95,4 +95,4 @@ except ImportError:
     def open(file, *pargs, **kwargs):
         if isinstance(file, PathLike):
             file = fspath(file)
-        return io.open(file, *pargs, **kwargs)
+        return open(file, *pargs, **kwargs)

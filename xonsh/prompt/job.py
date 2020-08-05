@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Prompt formatter for current jobs"""
 
 import xonsh.jobs as xj

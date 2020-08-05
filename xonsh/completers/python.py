@@ -182,7 +182,7 @@ def complete_python_mode(prefix, line, start, end, ctx):
     python_matches = complete_python(prefix[2:], line, start - 2, end - 2, ctx)
     if isinstance(python_matches, cabc.Sequence):
         python_matches = python_matches[0]
-    return set(prefix_start + i for i in python_matches)
+    return {prefix_start + i for i in python_matches}
 
 
 def _turn_off_warning(func):
@@ -236,7 +236,7 @@ def attr_complete(prefix, ctx, filter_func):
     prelen = len(prefix)
     for opt in opts:
         # check whether these options actually work (e.g., disallow 7.imag)
-        _expr = "{0}.{1}".format(expr, opt)
+        _expr = f"{expr}.{opt}"
         _val_, _ctx_ = _safe_eval(_expr, _ctx)
         if _val_ is None and _ctx_ is None:
             continue
@@ -286,7 +286,7 @@ def complete_import(prefix, line, start, end, ctx):
     ntoks = len(ltoks)
     if ntoks == 2 and ltoks[0] == "from":
         # completing module to import
-        return {"{} ".format(i) for i in complete_module(prefix)}
+        return {f"{i} " for i in complete_module(prefix)}
     if ntoks > 1 and ltoks[0] == "import" and start == len("import "):
         # completing module to import
         return complete_module(prefix)

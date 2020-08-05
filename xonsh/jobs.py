@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Job control for the xonsh shell."""
 import os
 import sys
@@ -277,7 +276,7 @@ def print_one_job(num, outfile=sys.stdout):
     cmd = " ".join(cmd)
     pid = job["pids"][-1]
     bg = " &" if job["bg"] else ""
-    print("[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid), file=outfile)
+    print(f"[{num}]{pos} {status}: {cmd}{bg} ({pid})", file=outfile)
 
 
 def get_next_job_number():
@@ -337,7 +336,7 @@ def clean_jobs():
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
-                print("xonsh: {}".format(msg), file=sys.stderr)
+                print(f"xonsh: {msg}", file=sys.stderr)
                 print("-" * 5, file=sys.stderr)
                 jobs([], stdout=sys.stderr)
                 print("-" * 5, file=sys.stderr)

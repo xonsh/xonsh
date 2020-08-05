@@ -191,7 +191,7 @@ class LexErrorWarningTests(unittest.TestCase):
                    "Make sure '#' in rule 't_POUND' is escaped with '\\#'\n")
         else:
             msg = ("Invalid regular expression for rule 't_POUND'. missing ), unterminated subpattern at position 0\n"
-                   "ERROR: Make sure '#' in rule 't_POUND' is escaped with '\#'")
+                   r"ERROR: Make sure '#' in rule 't_POUND' is escaped with '\#'")
         self.assert_(check_expected(result,
                                     msg,
                                     contains=True), result)
@@ -523,7 +523,7 @@ class LexBuildOptionTests(unittest.TestCase):
 
         for extension in ['py', 'pyc']:
             try:
-                os.remove("opt4tab.{0}".format(extension))
+                os.remove(f"opt4tab.{extension}")
             except OSError:
                 pass
 
@@ -532,7 +532,7 @@ class LexBuildOptionTests(unittest.TestCase):
 
         for extension in ['py', 'pyc']:
             try:
-                os.remove("opt4tab.{0}".format(extension))
+                os.remove(f"opt4tab.{extension}")
             except OSError:
                 pass
 

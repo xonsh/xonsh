@@ -66,7 +66,7 @@ class ContextCheckingVisitor(ast.NodeVisitor):
         for i in node.targets:
             err = _not_assignable(i)
             if err is not None:
-                msg = "can't delete {}".format(err)
+                msg = f"can't delete {err}"
                 self.error = msg, i.lineno, i.col_offset
                 break
 
@@ -74,12 +74,12 @@ class ContextCheckingVisitor(ast.NodeVisitor):
         for i in node.targets:
             err = _not_assignable(i)
             if err is not None:
-                msg = "can't assign to {}".format(err)
+                msg = f"can't assign to {err}"
                 self.error = msg, i.lineno, i.col_offset
                 break
 
     def visit_AugAssign(self, node):
         err = _not_assignable(node.target, True)
         if err is not None:
-            msg = "illegal target for augmented assignment: {}".format(err)
+            msg = f"illegal target for augmented assignment: {err}"
             self.error = msg, node.target.lineno, node.target.col_offset

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The xonsh abstract syntax tree node."""
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
@@ -332,7 +331,7 @@ class CtxAwareTransformer(NodeTransformer):
         parser : xonsh.Parser
             A parse instance to try to parse subprocess statements with.
         """
-        super(CtxAwareTransformer, self).__init__()
+        super().__init__()
         self.parser = parser
         self.input = None
         self.contexts = []

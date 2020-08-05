@@ -63,7 +63,7 @@ class LexError(Exception):
 
 
 # Token class.  This class is used to represent the tokens produced.
-class LexToken(object):
+class LexToken:
     def __str__(self):
         return 'LexToken(%s,%r,%d,%d)' % (self.type, self.value, self.lineno, self.lexpos)
 
@@ -74,7 +74,7 @@ class LexToken(object):
 # This object is a stand-in for a logging object created by the
 # logging module.
 
-class PlyLogger(object):
+class PlyLogger:
     def __init__(self, f):
         self.f = f
 
@@ -92,7 +92,7 @@ class PlyLogger(object):
 
 
 # Null logger is used when no output is generated. Does nothing.
-class NullLogger(object):
+class NullLogger:
     def __getattribute__(self, name):
         return self
 
@@ -175,11 +175,11 @@ class Lexer:
     # ------------------------------------------------------------
     def writetab(self, lextab, outputdir=''):
         if isinstance(lextab, types.ModuleType):
-            raise IOError("Won't overwrite existing lextab module")
+            raise OSError("Won't overwrite existing lextab module")
         basetabmodule = lextab.split('.')[-1]
         filename = os.path.join(outputdir, basetabmodule) + '.py'
         with open(filename, 'w') as tf:
-            tf.write('# %s.py. This file automatically created by PLY (version %s). Don\'t edit!\n' % (basetabmodule, __version__))
+            tf.write(f'# {basetabmodule}.py. This file automatically created by PLY (version {__version__}). Don\'t edit!\n')
             tf.write('_tabversion   = %s\n' % repr(__tabversion__))
             tf.write('_lextokens    = set(%s)\n' % repr(tuple(sorted(self.lextokens))))
             tf.write('_lexreflags   = %s\n' % repr(int(self.lexreflags)))
@@ -556,7 +556,7 @@ def _statetoken(s, names):
 # This class represents information needed to build a lexer as extracted from a
 # user's input file.
 # -----------------------------------------------------------------------------
-class LexerReflect(object):
+class LexerReflect:
     def __init__(self, ldict, log=None, reflags=0):
         self.ldict      = ldict
         self.error_func = None
@@ -759,7 +759,7 @@ class LexerReflect(object):
                     continue
 
                 try:
-                    c = re.compile('(?P<%s>%s)' % (fname, _get_regex(f)), self.reflags)
+                    c = re.compile('(?P<{}>{})'.format(fname, _get_regex(f)), self.reflags)
                     if c.match(''):
                         self.log.error("%s:%d: Regular expression for rule '%s' matches empty string", file, line, f.__name__)
                         self.error = True
@@ -783,7 +783,7 @@ class LexerReflect(object):
                     continue
 
                 try:
-                    c = re.compile('(?P<%s>%s)' % (name, r), self.reflags)
+                    c = re.compile(f'(?P<{name}>{r})', self.reflags)
                     if (c.match('')):
                         self.log.error("Regular expression for rule '%s' matches empty string", name)
                         self.error = True
@@ -833,7 +833,7 @@ class LexerReflect(object):
     def validate_module(self, module):
         try:
             lines, linen = inspect.getsourcelines(module)
-        except IOError:
+        except OSError:
             return
 
         fre = re.compile(r'\s*def\s+(t_[a-zA-Z_0-9]*)\(')
@@ -950,13 +950,13 @@ def lex(module=None, object=None, debug=False, optimize=False, lextab='lextab',
 
         # Add rules defined by functions first
         for fname, f in linfo.funcsym[state]:
-            regex_list.append('(?P<%s>%s)' % (fname, _get_regex(f)))
+            regex_list.append('(?P<{}>{})'.format(fname, _get_regex(f)))
             if debug:
                 debuglog.info("lex: Adding rule %s -> '%s' (state '%s')", fname, _get_regex(f), state)
 
         # Now add all of the simple rules
         for name, r in linfo.strsym[state]:
-            regex_list.append('(?P<%s>%s)' % (name, r))
+            regex_list.append(f'(?P<{name}>{r})')
             if debug:
                 debuglog.info("lex: Adding rule %s -> '%s' (state '%s')", name, r, state)
 
@@ -1042,8 +1042,8 @@ def lex(module=None, object=None, debug=False, optimize=False, lextab='lextab',
             lexobj.writetab(lextab, outputdir)
             if lextab in sys.modules:
                 del sys.modules[lextab]
-        except IOError as e:
-            errorlog.warning("Couldn't write lextab module %r. %s" % (lextab, e))
+        except OSError as e:
+            errorlog.warning(f"Couldn't write lextab module {lextab!r}. {e}")
 
     return lexobj
 

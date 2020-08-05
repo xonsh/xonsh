@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
 import os
 import re
@@ -158,12 +157,12 @@ class Aliases(cabc.MutableMapping):
         return str(self._raw)
 
     def __repr__(self):
-        return "{0}.{1}({2})".format(
+        return "{}.{}({})".format(
             self.__class__.__module__, self.__class__.__name__, self._raw
         )
 
     def _repr_pretty_(self, p, cycle):
-        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
+        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
         with p.group(0, name + "(", ")"):
             if cycle:
                 p.text("...")
@@ -195,7 +194,7 @@ class ExecAlias:
         )
 
     def __repr__(self):
-        return "ExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
+        return f"ExecAlias({self.src!r}, filename={self.filename!r})"
 
 
 class PartialEvalAliasBase:
@@ -508,7 +507,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
         if ns.dryrun:
             return
         else:
-            msg = "xonsh: error: Source failed: {0!r}\n".format(ns.prevcmd)
+            msg = f"xonsh: error: Source failed: {ns.prevcmd!r}\n"
             msg += "xonsh: error: Possible reasons: File not found or syntax error\n"
             return (None, msg, 1)
     # apply results
@@ -556,7 +555,7 @@ def source_alias(args, stdin=None):
             fpath = locate_binary(fname)
             if fpath is None:
                 if env.get("XONSH_DEBUG"):
-                    print("source: {}: No such file".format(fname), file=sys.stderr)
+                    print(f"source: {fname}: No such file", file=sys.stderr)
                 if i == 0:
                     raise RuntimeError(
                         "must source at least one file, " + fname + " does not exist."
@@ -570,7 +569,7 @@ def source_alias(args, stdin=None):
                 "then please use the appropriate source command. "
                 "For example, source-bash script.sh"
             )
-        with open(fpath, "r", encoding=encoding, errors=errors) as fp:
+        with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
         if not src.endswith("\n"):
             src += "\n"
@@ -601,7 +600,7 @@ def source_cmd(args, stdin=None):
     prevcmd = "call "
     prevcmd += " ".join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
-    args.append("--prevcmd={}".format(prevcmd))
+    args.append(f"--prevcmd={prevcmd}")
     args.insert(0, "cmd")
     args.append("--interactive=0")
     args.append("--sourcer=call")

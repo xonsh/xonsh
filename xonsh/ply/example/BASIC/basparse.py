@@ -48,7 +48,7 @@ def p_program_error(p):
 def p_statement(p):
     '''statement : INTEGER command NEWLINE'''
     if isinstance(p[2], str):
-        print("%s %s %s" % (p[2], "AT LINE", p[1]))
+        print("{} {} {}".format(p[2], "AT LINE", p[1]))
         p[0] = None
         p.parser.error = 1
     else:

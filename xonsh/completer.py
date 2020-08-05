@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
 import builtins
 import collections.abc as cabc
 
 
-class Completer(object):
+class Completer:
     """This provides a list of optional completions for the xonsh shell."""
 
     def complete(self, prefix, line, begidx, endidx, ctx=None):

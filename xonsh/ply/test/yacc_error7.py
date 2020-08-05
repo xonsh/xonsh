@@ -27,7 +27,7 @@ def p_statements_1(t):
 
 def p_statement_assign(p):
     'statement : LPAREN NAME EQUALS expression RPAREN'
-    print("%s=%s" % (p[2],p[4]))
+    print("{}={}".format(p[2],p[4]))
 
 def p_statement_expr(t):
     'statement : LPAREN expression RPAREN'

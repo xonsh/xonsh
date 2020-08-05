@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Informative git status prompt formatter"""
 
 import builtins
@@ -97,7 +96,7 @@ def _get_stash(gitdir):
     try:
         with open(os.path.join(gitdir, "logs/refs/stash")) as f:
             return sum(1 for _ in f)
-    except IOError:
+    except OSError:
         return 0
 
 

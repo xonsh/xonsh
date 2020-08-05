@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
 import os
 import re
@@ -145,7 +144,7 @@ def color_name_to_pygments_code(name, styles):
         return styles[token]
     m = RE_XONSH_COLOR.match(name)
     if m is None:
-        raise ValueError("{!r} is not a color!".format(name))
+        raise ValueError(f"{name!r} is not a color!")
     parts = m.groupdict()
     # convert regex match into actual pygments colors
     if parts["nocolor"] is not None:
@@ -359,7 +358,7 @@ class XonshStyle(Style):
                 pygments_style_by_name(value)
             except Exception:
                 print(
-                    "Could not find style {0!r}, using default".format(value),
+                    f"Could not find style {value!r}, using default",
                     file=sys.stderr,
                 )
                 value = "default"
@@ -1599,7 +1598,7 @@ class XonshLexer(Python3Lexer):
         with root or subproc state"""
         start = 0
         state = ("root",)
-        m = re.match(r"(\s*)({})".format(COMMAND_TOKEN_RE), text)
+        m = re.match(fr"(\s*)({COMMAND_TOKEN_RE})", text)
         if m is not None:
             yield m.start(1), Whitespace, m.group(1)
             start = m.end(1)

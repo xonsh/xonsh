@@ -155,7 +155,7 @@ def run_script_with_cache(filename, execer, glb=None, loc=None, mode="exec"):
     if use_cache:
         run_cached, ccode = script_cache_check(filename, cachefname)
     if not run_cached:
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             code = f.read()
         ccode = compile_code(filename, code, execer, glb, loc, mode)
         update_cache(ccode, cachefname)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The readline based xonsh shell.
 
 Portions of this code related to initializing the readline library
@@ -118,7 +117,7 @@ def setup_readline():
     readline.parse_and_bind('"\\e[B": history-search-forward')
     readline.parse_and_bind('"\\e[A": history-search-backward')
     # Setup Shift-Tab to indent
-    readline.parse_and_bind('"\\e[Z": "{0}"'.format(env.get("INDENT")))
+    readline.parse_and_bind('"\\e[Z": "{}"'.format(env.get("INDENT")))
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997
@@ -680,7 +679,7 @@ class ReadlineHistoryAdder(threading.Thread):
         current readline instance. May wait for the history garbage
         collector to finish.
         """
-        super(ReadlineHistoryAdder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.daemon = True
         self.wait_for_gc = wait_for_gc
         self.start()

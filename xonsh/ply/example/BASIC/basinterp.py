@@ -385,20 +385,20 @@ class BasicInterpreter:
             if expr[1] == '-':
                 return "-" + str(expr[2])
         elif etype == 'BINOP':
-            return "%s %s %s" % (self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
+            return "{} {} {}".format(self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
         elif etype == 'VAR':
             return self.var_str(expr[1])
 
     def relexpr_str(self, expr):
-        return "%s %s %s" % (self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
+        return "{} {} {}".format(self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
 
     def var_str(self, var):
         varname, dim1, dim2 = var
         if not dim1 and not dim2:
             return varname
         if dim1 and not dim2:
-            return "%s(%s)" % (varname, self.expr_str(dim1))
-        return "%s(%s,%s)" % (varname, self.expr_str(dim1), self.expr_str(dim2))
+            return "{}({})".format(varname, self.expr_str(dim1))
+        return "{}({},{})".format(varname, self.expr_str(dim1), self.expr_str(dim2))
 
     # Create a program listing
     def list(self):
@@ -408,22 +408,22 @@ class BasicInterpreter:
             instr = self.prog[line]
             op = instr[0]
             if op in ['END', 'STOP', 'RETURN']:
-                print("%s %s" % (line, op))
+                print(f"{line} {op}")
                 continue
             elif op == 'REM':
-                print("%s %s" % (line, instr[1]))
+                print("{} {}".format(line, instr[1]))
             elif op == 'PRINT':
-                _out = "%s %s " % (line, op)
+                _out = f"{line} {op} "
                 first = 1
                 for p in instr[1]:
                     if not first:
                         _out += ", "
                     if p[0] and p[1]:
-                        _out += '"%s"%s' % (p[0], self.expr_str(p[1]))
+                        _out += '"{}"{}'.format(p[0], self.expr_str(p[1]))
                     elif p[1]:
                         _out += self.expr_str(p[1])
                     else:
-                        _out += '"%s"' % (p[0],)
+                        _out += '"{}"'.format(p[0])
                     first = 0
                 if instr[2]:
                     _out += instr[2]
@@ -444,15 +444,15 @@ class BasicInterpreter:
                 print("%s IF %s THEN %d" %
                       (line, self.relexpr_str(instr[1]), instr[2]))
             elif op == 'GOTO' or op == 'GOSUB':
-                print("%s %s %s" % (line, op, instr[1]))
+                print("{} {} {}".format(line, op, instr[1]))
             elif op == 'FOR':
-                _out = "%s FOR %s = %s TO %s" % (
+                _out = "{} FOR {} = {} TO {}".format(
                     line, instr[1], self.expr_str(instr[2]), self.expr_str(instr[3]))
                 if instr[4]:
                     _out += " STEP %s" % (self.expr_str(instr[4]))
                 print(_out)
             elif op == 'NEXT':
-                print("%s NEXT %s" % (line, instr[1]))
+                print("{} NEXT {}".format(line, instr[1]))
             elif op == 'FUNC':
                 print("%s DEF %s(%s) = %s" %
                       (line, instr[1], instr[2], self.expr_str(instr[3])))

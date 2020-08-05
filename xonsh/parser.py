@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the xonsh parser."""
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO

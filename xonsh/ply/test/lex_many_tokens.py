@@ -12,9 +12,9 @@ tokens = ["TOK%d" % i for i in range(1000)]
 
 for tok in tokens:
     if sys.version_info[0] < 3:
-        exec("t_%s = '%s:'" % (tok,tok))
+        exec(f"t_{tok} = '{tok}:'")
     else:
-        exec("t_%s = '%s:'" % (tok,tok), globals())
+        exec(f"t_{tok} = '{tok}:'", globals())
 
 t_ignore = " \t"
 

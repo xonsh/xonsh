@@ -11,7 +11,7 @@ import ply.yacc
 
 def patched_open(filename, mode):
     if 'w' in mode:
-        raise IOError("Permission denied %r" % filename)
+        raise OSError("Permission denied %r" % filename)
     return open(filename, mode)
 
 ply.lex.open = patched_open

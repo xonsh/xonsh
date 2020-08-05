@@ -22,7 +22,7 @@ import ply.yacc as yacc
 import os
 
 
-class Parser(object):
+class Parser:
     """
     Base class for a lexer/parser that has the rules defined as methods
     """

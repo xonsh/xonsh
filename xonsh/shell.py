@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The xonsh shell"""
 import sys
 import random
@@ -109,7 +108,7 @@ def transform_command(src, show_diff=True):
     return src
 
 
-class Shell(object):
+class Shell:
     """Main xonsh shell.
 
     Initializes execution environment and decides if prompt_toolkit or
@@ -220,7 +219,7 @@ class Shell(object):
         elif shell_type == "dumb":
             from xonsh.dumb_shell import DumbShell as shell_class
         else:
-            raise XonshError("{} is not recognized as a shell type".format(shell_type))
+            raise XonshError(f"{shell_type} is not recognized as a shell type")
         self.shell = shell_class(execer=self.execer, ctx=self.ctx, **kwargs)
         # allows history garbage collector to start running
         if hist.gc is not None:

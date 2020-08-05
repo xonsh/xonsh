@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Interface for running Python functions as subprocess-mode commands.
 
 Code for several helper methods in the `ProcProxy` class have been reproduced
@@ -63,12 +62,12 @@ def STDOUT_CAPTURE_KINDS():
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ("1049", "47", "1047")
 START_ALTERNATE_MODE = LazyObject(
-    lambda: frozenset("\x1b[?{0}h".format(i).encode() for i in MODE_NUMS),
+    lambda: frozenset(f"\x1b[?{i}h".encode() for i in MODE_NUMS),
     globals(),
     "START_ALTERNATE_MODE",
 )
 END_ALTERNATE_MODE = LazyObject(
-    lambda: frozenset("\x1b[?{0}l".format(i).encode() for i in MODE_NUMS),
+    lambda: frozenset(f"\x1b[?{i}l".encode() for i in MODE_NUMS),
     globals(),
     "END_ALTERNATE_MODE",
 )
@@ -398,7 +397,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             buf = winutils.read_console_output_character(
                 x=x, y=y, fd=fd, buf=buffer, bufsize=chunksize, raw=True
             )
-        except (OSError, IOError):
+        except OSError:
             reader.closed = True
             break
         # cursor position and offset
@@ -1354,21 +1353,21 @@ class ProcProxyThread(threading.Thread):
                 self.errread = msvcrt.open_osfhandle(self.errread.Detach(), 0)
 
         if self.p2cwrite != -1:
-            self.stdin = io.open(self.p2cwrite, "wb", -1)
+            self.stdin = open(self.p2cwrite, "wb", -1)
             if universal_newlines:
                 self.stdin = io.TextIOWrapper(
                     self.stdin, write_through=True, line_buffering=False
                 )
         elif isinstance(stdin, int) and stdin != 0:
-            self.stdin = io.open(stdin, "wb", -1)
+            self.stdin = open(stdin, "wb", -1)
 
         if self.c2pread != -1:
-            self.stdout = io.open(self.c2pread, "rb", -1)
+            self.stdout = open(self.c2pread, "rb", -1)
             if universal_newlines:
                 self.stdout = io.TextIOWrapper(self.stdout)
 
         if self.errread != -1:
-            self.stderr = io.open(self.errread, "rb", -1)
+            self.stderr = open(self.errread, "rb", -1)
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
@@ -1411,14 +1410,14 @@ class ProcProxyThread(threading.Thread):
             sp_stdin = None
         elif self.p2cread != -1:
             sp_stdin = io.TextIOWrapper(
-                io.open(self.p2cread, "rb", -1), encoding=enc, errors=err
+                open(self.p2cread, "rb", -1), encoding=enc, errors=err
             )
         else:
             sp_stdin = sys.stdin
         # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(
-                io.open(self.c2pwrite, "wb", -1), encoding=enc, errors=err
+                open(self.c2pwrite, "wb", -1), encoding=enc, errors=err
             )
         else:
             sp_stdout = sys.stdout
@@ -1427,7 +1426,7 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
             sp_stderr = io.TextIOWrapper(
-                io.open(self.errwrite, "wb", -1), encoding=enc, errors=err
+                open(self.errwrite, "wb", -1), encoding=enc, errors=err
             )
         else:
             sp_stderr = sys.stderr
@@ -1675,7 +1674,7 @@ class ProcProxyThread(threading.Thread):
 #
 
 
-class ProcProxy(object):
+class ProcProxy:
     """This is process proxy class that runs its alias functions on the
     same thread that it was called from, which is typically the main thread.
     This prevents the process from running on a background thread, but enables
@@ -1726,7 +1725,7 @@ class ProcProxy(object):
             stdin = None
         else:
             if isinstance(self.stdin, int):
-                inbuf = io.open(self.stdin, "rb", -1)
+                inbuf = open(self.stdin, "rb", -1)
             else:
                 inbuf = self.stdin
             stdin = io.TextIOWrapper(inbuf, encoding=enc, errors=err)
@@ -1752,7 +1751,7 @@ class ProcProxy(object):
                 buf = sysbuf
             else:
                 buf = io.TextIOWrapper(
-                    io.open(handle, "wb", -1), encoding=enc, errors=err
+                    open(handle, "wb", -1), encoding=enc, errors=err
                 )
         elif hasattr(handle, "encoding"):
             # must be a text stream, no need to wrap.

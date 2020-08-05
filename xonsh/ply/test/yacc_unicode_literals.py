@@ -3,7 +3,6 @@
 #
 # Test for unicode literals on Python 2.x
 # -----------------------------------------------------------------------------
-from __future__ import unicode_literals
 
 import sys
 

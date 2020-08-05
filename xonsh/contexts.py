@@ -5,7 +5,7 @@ import builtins
 from collections.abc import Mapping
 
 
-class Block(object):
+class Block:
     """This is a context manager for obtaining a block of lines without actually
     executing the block. The lines are accessible as the 'lines' attribute.
     This must be used as a macro.
@@ -77,7 +77,7 @@ class Functor(Block):
         super().__enter__()
         body = textwrap.indent(self.macro_block, "    ")
         uid = hash(body) + sys.maxsize  # should always be a positive int
-        name = "__xonsh_functor_{uid}__".format(uid=uid)
+        name = f"__xonsh_functor_{uid}__"
         # construct signature string
         sig = rtn = ""
         sig = ", ".join(self.args)

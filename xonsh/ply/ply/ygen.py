@@ -39,7 +39,7 @@ def filter_section(lines, tag):
 def main():
     dirname = os.path.dirname(__file__)
     shutil.copy2(os.path.join(dirname, 'yacc.py'), os.path.join(dirname, 'yacc.py.bak'))
-    with open(os.path.join(dirname, 'yacc.py'), 'r') as f:
+    with open(os.path.join(dirname, 'yacc.py')) as f:
         lines = f.readlines()
 
     parse_start, parse_end = get_source_range(lines, 'parsedebug')

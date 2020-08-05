@@ -18,18 +18,18 @@ tokens = (
 
 # Tokens
 
-t_PLUS = ur'\+'
-t_MINUS = ur'-'
-t_TIMES = ur'\*'
-t_DIVIDE = ur'/'
-t_EQUALS = ur'='
-t_LPAREN = ur'\('
-t_RPAREN = ur'\)'
-t_NAME = ur'[a-zA-Z_][a-zA-Z0-9_]*'
+t_PLUS = '\\+'
+t_MINUS = '-'
+t_TIMES = '\\*'
+t_DIVIDE = '/'
+t_EQUALS = '='
+t_LPAREN = '\\('
+t_RPAREN = '\\)'
+t_NAME = '[a-zA-Z_][a-zA-Z0-9_]*'
 
 
 def t_NUMBER(t):
-    ur'\d+'
+    '\\d+'
     try:
         t.value = int(t.value)
     except ValueError:
@@ -37,11 +37,11 @@ def t_NUMBER(t):
         t.value = 0
     return t
 
-t_ignore = u" \t"
+t_ignore = " \t"
 
 
 def t_newline(t):
-    ur'\n+'
+    '\\n+'
     t.lexer.lineno += t.value.count("\n")
 
 
@@ -80,13 +80,13 @@ def p_expression_binop(p):
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression'''
-    if p[2] == u'+':
+    if p[2] == '+':
         p[0] = p[1] + p[3]
-    elif p[2] == u'-':
+    elif p[2] == '-':
         p[0] = p[1] - p[3]
-    elif p[2] == u'*':
+    elif p[2] == '*':
         p[0] = p[1] * p[3]
-    elif p[2] == u'/':
+    elif p[2] == '/':
         p[0] = p[1] / p[3]
 
 

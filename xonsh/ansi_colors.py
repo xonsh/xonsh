@@ -65,7 +65,7 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         return cmap[name]
     m = RE_XONSH_COLOR.match(name)
     if m is None:
-        raise ValueError("{!r} is not a color!".format(name))
+        raise ValueError(f"{name!r} is not a color!")
     parts = m.groupdict()
     # convert regex match into actual ANSI colors
     if parts["nocolor"] is not None:
@@ -178,7 +178,7 @@ def ansi_color_style(style="default"):
     if style in ANSI_STYLES:
         cmap = ANSI_STYLES[style]
     else:
-        msg = "Could not find color style {0!r}, using default.".format(style)
+        msg = f"Could not find color style {style!r}, using default."
         warnings.warn(msg, RuntimeWarning)
         cmap = ANSI_STYLES["default"]
     return cmap
@@ -274,7 +274,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     # strip some actual escape codes, if needed.
     match = ANSI_ESCAPE_CODE_RE.match(escape_code)
     if not match:
-        msg = 'Invalid ANSI color sequence "{0}", using "NO_COLOR" instead.'.format(
+        msg = 'Invalid ANSI color sequence "{}", using "NO_COLOR" instead.'.format(
             escape_code
         )
         warnings.warn(msg, RuntimeWarning)
@@ -1074,7 +1074,7 @@ def ansi_style_by_name(name):
     if name in ANSI_STYLES:
         return ANSI_STYLES[name]
     elif not HAS_PYGMENTS:
-        raise KeyError("could not find style {0!r}".format(name))
+        raise KeyError(f"could not find style {name!r}")
     from xonsh.pygments_cache import get_style_by_name
 
     pstyle = get_style_by_name(name)

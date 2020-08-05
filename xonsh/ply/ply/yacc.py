@@ -107,7 +107,7 @@ MAXINT = sys.maxsize
 # information, they can create their own logging object and pass
 # it into PLY.
 
-class PlyLogger(object):
+class PlyLogger:
     def __init__(self, f):
         self.f = f
 
@@ -125,7 +125,7 @@ class PlyLogger(object):
     critical = debug
 
 # Null logger is used when no output is generated. Does nothing.
-class NullLogger(object):
+class NullLogger:
     def __getattribute__(self, name):
         return self
 
@@ -143,7 +143,7 @@ def format_result(r):
         repr_str = repr(repr_str)
     if len(repr_str) > resultlimit:
         repr_str = repr_str[:resultlimit] + ' ...'
-    result = '<%s @ 0x%x> (%s)' % (type(r).__name__, id(r), repr_str)
+    result = '<{} @ 0x{:x}> ({})'.format(type(r).__name__, id(r), repr_str)
     return result
 
 # Format stack entries when the parser is running in debug mode
@@ -154,7 +154,7 @@ def format_stack_entry(r):
     if len(repr_str) < 16:
         return repr_str
     else:
-        return '<%s @ 0x%x>' % (type(r).__name__, id(r))
+        return '<{} @ 0x{:x}>'.format(type(r).__name__, id(r))
 
 # Panic mode error recovery support.   This feature is being reworked--much of the
 # code here is to offer a deprecation/backwards compatible transition
@@ -434,7 +434,7 @@ class LRParser:
 
             #--! DEBUG
             debug.debug('Stack  : %s',
-                        ('%s . %s' % (' '.join([xx.type for xx in symstack][1:]), str(lookahead))).lstrip())
+                        ('{} . {}'.format(' '.join([xx.type for xx in symstack][1:]), str(lookahead))).lstrip())
             #--! DEBUG
 
             if t is not None:
@@ -579,7 +579,7 @@ class LRParser:
 
                 #--! DEBUG
                 debug.error('Error  : %s',
-                            ('%s . %s' % (' '.join([xx.type for xx in symstack][1:]), str(lookahead))).lstrip())
+                            ('{} . {}'.format(' '.join([xx.type for xx in symstack][1:]), str(lookahead))).lstrip())
                 #--! DEBUG
 
                 # We have some kind of parsing error here.  To handle
@@ -1310,7 +1310,7 @@ _is_identifier = re.compile(r'^[a-zA-Z0-9_-]+$')
 #       usyms     - Set of unique symbols found in the production
 # -----------------------------------------------------------------------------
 
-class Production(object):
+class Production:
     reduced = 0
     def __init__(self, number, name, prod, precedence=('right', 0), func=None, file='', line=0):
         self.name     = name
@@ -1338,7 +1338,7 @@ class Production(object):
 
         # Create a string representation
         if self.prod:
-            self.str = '%s -> %s' % (self.name, ' '.join(self.prod))
+            self.str = '{} -> {}'.format(self.name, ' '.join(self.prod))
         else:
             self.str = '%s -> <empty>' % self.name
 
@@ -1382,7 +1382,7 @@ class Production(object):
 # reading table data from files.   It only contains information
 # actually used by the LR parsing engine, plus some additional
 # debugging information.
-class MiniProduction(object):
+class MiniProduction:
     def __init__(self, str, name, len, func, file, line):
         self.name     = name
         self.len      = len
@@ -1428,7 +1428,7 @@ class MiniProduction(object):
 #       lr_before   - Grammar symbol immediately before
 # -----------------------------------------------------------------------------
 
-class LRItem(object):
+class LRItem:
     def __init__(self, p, n):
         self.name       = p.name
         self.prod       = list(p.prod)
@@ -1442,7 +1442,7 @@ class LRItem(object):
 
     def __str__(self):
         if self.prod:
-            s = '%s -> %s' % (self.name, ' '.join(self.prod))
+            s = '{} -> {}'.format(self.name, ' '.join(self.prod))
         else:
             s = '%s -> <empty>' % self.name
         return s
@@ -1474,7 +1474,7 @@ def rightmost_terminal(symbols, terminals):
 class GrammarError(YaccError):
     pass
 
-class Grammar(object):
+class Grammar:
     def __init__(self, terminals):
         self.Productions  = [None]  # A list of all of the productions.  The first
                                     # entry is always reserved for the purpose of
@@ -1596,7 +1596,7 @@ class Grammar(object):
             prodprec = self.Precedence.get(precname, ('right', 0))
 
         # See if the rule is already in the rulemap
-        map = '%s -> %s' % (prodname, syms)
+        map = f'{prodname} -> {syms}'
         if map in self.Prodmap:
             m = self.Prodmap[map]
             raise GrammarError('%s:%d: Duplicate rule %s. ' % (file, line, m) +
@@ -1972,7 +1972,7 @@ class Grammar(object):
 class VersionError(YaccError):
     pass
 
-class LRTable(object):
+class LRTable:
     def __init__(self):
         self.lr_action = None
         self.lr_goto = None
@@ -2728,7 +2728,7 @@ class LRGeneratedTable(LRTable):
 
     def write_table(self, tabmodule, outputdir='', signature=''):
         if isinstance(tabmodule, types.ModuleType):
-            raise IOError("Won't overwrite existing tabmodule")
+            raise OSError("Won't overwrite existing tabmodule")
 
         basemodulename = tabmodule.split('.')[-1]
         filename = os.path.join(outputdir, basemodulename) + '.py'
@@ -2736,15 +2736,15 @@ class LRGeneratedTable(LRTable):
             f = open(filename, 'w')
 
             f.write('''
-# %s
+# {}
 # This file is automatically generated. Do not edit.
 # pylint: disable=W,C,R
-_tabversion = %r
+_tabversion = {!r}
 
-_lr_method = %r
+_lr_method = {!r}
 
-_lr_signature = %r
-    ''' % (os.path.basename(filename), __tabversion__, self.lr_method, signature))
+_lr_signature = {!r}
+    '''.format(os.path.basename(filename), __tabversion__, self.lr_method, signature))
 
             # Change smaller to 0 to go back to original tables
             smaller = 1
@@ -2786,7 +2786,7 @@ del _lr_action_items
             else:
                 f.write('\n_lr_action = { ')
                 for k, v in self.lr_action.items():
-                    f.write('(%r,%r):%r,' % (k[0], k[1], v))
+                    f.write('({!r},{!r}):{!r},'.format(k[0], k[1], v))
                 f.write('}\n')
 
             if smaller:
@@ -2825,7 +2825,7 @@ del _lr_goto_items
             else:
                 f.write('\n_lr_goto = { ')
                 for k, v in self.lr_goto.items():
-                    f.write('(%r,%r):%r,' % (k[0], k[1], v))
+                    f.write('({!r},{!r}):{!r},'.format(k[0], k[1], v))
                 f.write('}\n')
 
             # Write production table
@@ -2839,7 +2839,7 @@ del _lr_goto_items
             f.write(']\n')
             f.close()
 
-        except IOError as e:
+        except OSError as e:
             raise
 
 
@@ -2937,7 +2937,7 @@ def parse_grammar(doc, file, line):
 # start symbol, error function, tokens, precedence list, action functions,
 # etc.
 # -----------------------------------------------------------------------------
-class ParserReflect(object):
+class ParserReflect:
     def __init__(self, pdict, log=None):
         self.pdict      = pdict
         self.start      = None
@@ -3005,7 +3005,7 @@ class ParserReflect(object):
         for module in self.modules:
             try:
                 lines, linen = inspect.getsourcelines(module)
-            except IOError:
+            except OSError:
                 continue
 
             counthash = {}
@@ -3310,8 +3310,8 @@ def yacc(method='LALR', debug=yaccdebug, module=None, tabmodule=tab_module, star
         if debug:
             try:
                 debuglog = PlyLogger(open(os.path.join(outputdir, debugfile), 'w'))
-            except IOError as e:
-                errorlog.warning("Couldn't open %r. %s" % (debugfile, e))
+            except OSError as e:
+                errorlog.warning(f"Couldn't open {debugfile!r}. {e}")
                 debuglog = NullLogger()
         else:
             debuglog = NullLogger()
@@ -3486,15 +3486,15 @@ def yacc(method='LALR', debug=yaccdebug, module=None, tabmodule=tab_module, star
             lr.write_table(tabmodule, outputdir, signature)
             if tabmodule in sys.modules:
                 del sys.modules[tabmodule]
-        except IOError as e:
-            errorlog.warning("Couldn't create %r. %s" % (tabmodule, e))
+        except OSError as e:
+            errorlog.warning(f"Couldn't create {tabmodule!r}. {e}")
 
     # Write a pickled version of the tables
     if picklefile:
         try:
             lr.pickle_table(picklefile, signature)
-        except IOError as e:
-            errorlog.warning("Couldn't create %r. %s" % (picklefile, e))
+        except OSError as e:
+            errorlog.warning(f"Couldn't create {picklefile!r}. {e}")
 
     # Build the parser
     lr.bind_callables(pinfo.pdict)

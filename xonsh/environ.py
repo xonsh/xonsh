@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import os
 import re
@@ -170,7 +169,7 @@ def locale_convert(key):
             locale.setlocale(LOCALE_CATS[key], val)
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
-            msg = "Failed to set locale {0!r} to {1!r}".format(key, val)
+            msg = f"Failed to set locale {key!r} to {val!r}"
             warnings.warn(msg, RuntimeWarning)
         return val
 
@@ -384,10 +383,10 @@ class LsColors(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
+        return f"{self.__class__.__module__}.{self.__class__.__name__}(...)"
 
     def _repr_pretty_(self, p, cycle):
-        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
+        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
         with p.group(0, name + "(", ")"):
             if cycle:
                 p.text("...")
@@ -1979,10 +1978,10 @@ class Env(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
+        return f"{self.__class__.__module__}.{self.__class__.__name__}(...)"
 
     def _repr_pretty_(self, p, cycle):
-        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
+        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
         with p.group(0, name + "(", ")"):
             if cycle:
                 p.text("...")

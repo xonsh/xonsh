@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Base class of Xonsh History backends."""
 import types
 import uuid

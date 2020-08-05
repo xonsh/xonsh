@@ -107,7 +107,7 @@ def xontrib_metadata():
         md = json.loads(bytesdata.decode("utf-8"))
     else:
         path = os.path.join(os.path.dirname(__file__), "xontribs.json")
-        with open(path, "r") as f:
+        with open(path) as f:
             md = json.load(f)
 
     return md
@@ -119,12 +119,12 @@ def xontribs_load(names, verbose=False):
     res = ExitCode.OK
     for name in names:
         if verbose:
-            print("loading xontrib {0!r}".format(name))
+            print(f"loading xontrib {name!r}")
         try:
             update_context(name, ctx=ctx)
         except Exception:
             res = ExitCode.INIT_FAILED
-            print_exception("Failed to load xontrib {}.".format(name))
+            print_exception(f"Failed to load xontrib {name}.")
     if hasattr(update_context, "bad_imports"):
         res = ExitCode.NOT_FOUND
         prompt_xontrib_install(update_context.bad_imports)

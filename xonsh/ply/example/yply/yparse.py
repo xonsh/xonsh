@@ -155,7 +155,7 @@ def p_rules(p):
                     embed_count += 1
             else:
                 prod.append(item)
-        print("    '''%s : %s'''" % (rulename, " ".join(prod)))
+        print("    '''{} : {}'''".format(rulename, " ".join(prod)))
         # Emit code
         print_code(prodcode, 4)
         print()
@@ -241,4 +241,4 @@ def print_code(code, indent):
         return
     codelines = code.splitlines()
     for c in codelines:
-        print("%s# %s" % (" " * indent, c))
+        print("{}# {}".format(" " * indent, c))

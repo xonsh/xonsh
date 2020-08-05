@@ -187,11 +187,11 @@ def _dump_xonfig_env(path, value):
     detyper = builtins.__xonsh__.env.get_detyper(name)
     dval = str(value) if detyper is None else detyper(value)
     dval = str(value) if dval is None else dval
-    return "${name} = {val!r}".format(name=name, val=dval)
+    return f"${name} = {dval!r}"
 
 
 def _dump_xonfig_xontribs(path, value):
-    return "xontrib load {0}".format(" ".join(value))
+    return "xontrib load {}".format(" ".join(value))
 
 
 @lazyobject
@@ -597,7 +597,7 @@ def _colors(args):
 
     if args.style is not None:
         if args.style not in color_style_names():
-            print("Invalid style: {}".format(args.style))
+            print(f"Invalid style: {args.style}")
             return
         builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = args.style
 

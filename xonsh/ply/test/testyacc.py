@@ -66,7 +66,7 @@ def check_expected(result, expected):
 
     # Selectively remove expected lines from the output
     for eline in expected.splitlines():
-        resultlines = set(line for line in resultlines if not line.endswith(eline))
+        resultlines = {line for line in resultlines if not line.endswith(eline)}
 
     # Return True if no result lines remain
     return not bool(resultlines)

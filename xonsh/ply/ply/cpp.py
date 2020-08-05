@@ -35,7 +35,6 @@
 
 # This module implements an ANSI-C style lexical preprocessor for PLY.
 # -----------------------------------------------------------------------------
-from __future__ import generators
 
 import sys
 
@@ -167,7 +166,7 @@ def trigraph(input):
 # during macro expansion
 # ------------------------------------------------------------------
 
-class Macro(object):
+class Macro:
     def __init__(self,name,value,arglist=None,variadic=False):
         self.name = name
         self.value = value
@@ -184,7 +183,7 @@ class Macro(object):
 # include directories, and other information
 # ------------------------------------------------------------------
 
-class Preprocessor(object):
+class Preprocessor:
     def __init__(self,lexer=None):
         if lexer is None:
             lexer = lex.lexer
@@ -828,12 +827,11 @@ class Preprocessor(object):
                 dname = os.path.dirname(iname)
                 if dname:
                     self.temp_path.insert(0,dname)
-                for tok in self.parsegen(data,filename):
-                    yield tok
+                yield from self.parsegen(data,filename)
                 if dname:
                     del self.temp_path[0]
                 break
-            except IOError:
+            except OSError:
                 pass
         else:
             print("Couldn't find '%s'" % filename)
@@ -848,7 +846,7 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
 
     def read_include_file(self, filepath):
-        with open(filepath, 'r', encoding='utf-8', errors='surrogateescape') as file:
+        with open(filepath, encoding='utf-8', errors='surrogateescape') as file:
             return file.read()
 
     # ----------------------------------------------------------------------

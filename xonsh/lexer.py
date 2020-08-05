@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Lexer for xonsh code.
 
 Written using a hybrid of ``tokenize`` and PLY.
@@ -156,7 +155,7 @@ def _end_delimiter(state, token):
             e = '"{}" at {} ends "{}" at {} (expected "{}")'
             return e.format(s, (l, c), orig, pos, match)
     else:
-        return 'Unmatched "{}" at line {}, column {}'.format(s, l, c)
+        return f'Unmatched "{s}" at line {l}, column {c}'
 
 
 def handle_rparen(state, token):
@@ -358,7 +357,7 @@ def handle_token(state, token):
         state["last"] = token
         yield _new_token(token_map[typ], st, token.start)
     else:
-        m = "Unexpected token: {0}".format(token)
+        m = f"Unexpected token: {token}"
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
@@ -404,7 +403,7 @@ def _new_token(type, value, pos):
     return o
 
 
-class Lexer(object):
+class Lexer:
     """Implements a lexer for the xonsh language."""
 
     _tokens = None

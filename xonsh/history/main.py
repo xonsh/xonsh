@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Main entry points of the xonsh history."""
 import argparse
 import builtins
@@ -32,7 +31,7 @@ def construct_history(**kwargs):
         return backend
     else:
         print(
-            "Unknown history backend: {}. Using JSON version".format(backend),
+            f"Unknown history backend: {backend}. Using JSON version",
             file=sys.stderr,
         )
         kls_history = JsonHistory
@@ -61,7 +60,7 @@ def _xh_find_histfile_var(file_list, default=None):
         f = xt.expanduser_abs_path(f)
         if not os.path.isfile(f):
             continue
-        with open(f, "r") as rc_file:
+        with open(f) as rc_file:
             for line in rc_file:
                 if line.startswith("HISTFILE="):
                     hist_file = line.split("=", 1)[1].strip("'\"\n")
@@ -83,7 +82,7 @@ def _xh_bash_hist_parser(location=None, **kwargs):
             os.path.join("~", ".bash_history"),
         )
     if location:
-        with open(location, "r", errors="backslashreplace") as bash_hist:
+        with open(location, errors="backslashreplace") as bash_hist:
             for ind, line in enumerate(bash_hist):
                 yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
     else:
@@ -98,7 +97,7 @@ def _xh_zsh_hist_parser(location=None, **kwargs):
             os.path.join("~", ".zsh_history"),
         )
     if location:
-        with open(location, "r", errors="backslashreplace") as zsh_hist:
+        with open(location, errors="backslashreplace") as zsh_hist:
             for ind, line in enumerate(zsh_hist):
                 if line.startswith(":"):
                     try:
@@ -186,7 +185,7 @@ def _xh_show_history(hist, ns, stdout=None, stderr=None):
             datetime_format=ns.datetime_format,
         )
     except Exception as err:
-        print("history: error: {}".format(err), file=stderr)
+        print(f"history: error: {err}", file=stderr)
         return
     if ns.reverse:
         commands = reversed(list(commands))
@@ -398,7 +397,7 @@ def history_main(
             s = json.dumps(data)
             print(s, file=stdout)
         else:
-            lines = ["{0}: {1}".format(k, v) for k, v in data.items()]
+            lines = [f"{k}: {v}" for k, v in data.items()]
             print("\n".join(lines), file=stdout)
     elif ns.action == "id":
         if not hist.sessionid:
@@ -418,4 +417,4 @@ def history_main(
         if isinstance(hf, threading.Thread):
             hf.join()
     else:
-        print("Unknown history action {}".format(ns.action), file=sys.stderr)
+        print(f"Unknown history action {ns.action}", file=sys.stderr)

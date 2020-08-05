@@ -322,8 +322,8 @@ _redir_map = (
 )
 IORedirect = group(group(*_redir_map), "{}>>?".format(group(*_redir_names)))
 _redir_check = set(_redir_map)
-_redir_check = {"{}>".format(i) for i in _redir_names}.union(_redir_check)
-_redir_check = {"{}>>".format(i) for i in _redir_names}.union(_redir_check)
+_redir_check = {f"{i}>" for i in _redir_names}.union(_redir_check)
+_redir_check = {f"{i}>>" for i in _redir_names}.union(_redir_check)
 _redir_check = frozenset(_redir_check)
 Operator = group(
     r"\*\*=?",
@@ -777,7 +777,7 @@ def detect_encoding(readline):
         except UnicodeDecodeError:
             msg = "invalid or missing encoding declaration"
             if filename is not None:
-                msg = "{} for {!r}".format(msg, filename)
+                msg = f"{msg} for {filename!r}"
             raise SyntaxError(msg)
 
         match = cookie_re.match(line_string)
@@ -791,7 +791,7 @@ def detect_encoding(readline):
             if filename is None:
                 msg = "unknown encoding: " + encoding
             else:
-                msg = "unknown encoding for {!r}: {}".format(filename, encoding)
+                msg = f"unknown encoding for {filename!r}: {encoding}"
             raise SyntaxError(msg)
 
         if bom_found:
@@ -800,7 +800,7 @@ def detect_encoding(readline):
                 if filename is None:
                     msg = "encoding problem: utf-8"
                 else:
-                    msg = "encoding problem for {!r}: utf-8".format(filename)
+                    msg = f"encoding problem for {filename!r}: utf-8"
                 raise SyntaxError(msg)
             encoding += "-sig"
         return encoding
@@ -1149,7 +1149,7 @@ def tokenize_main():
             args = (filename,) + location + (message,)
             perror("%s:%d:%d: error: %s" % args)
         elif filename:
-            perror("%s: error: %s" % (filename, message))
+            perror(f"{filename}: error: {message}")
         else:
             perror("error: %s" % message)
         sys.exit(1)
