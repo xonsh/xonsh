@@ -9,7 +9,6 @@ from xonsh.completers.tools import (
     RichCompletion,
 )
 
-
 __all__ = ()
 
 # an error will be printed in xontribs
@@ -65,9 +64,11 @@ def complete_jedi(prefix, line, start, end, ctx):
         document = PTK_COMPLETER.current_document
         source = document.text
         row = document.cursor_position_row + 1
+        column = document.cursor_position_col
     else:
         source = line
         row = 1
+        column = end
 
     extra_ctx = {"__xonsh__": __xonsh__}
     try:
@@ -78,12 +79,13 @@ def complete_jedi(prefix, line, start, end, ctx):
     if JEDI_NEW_API:
         script = jedi.Interpreter(source, [ctx, extra_ctx])
     else:
-        script = jedi.Interpreter(source, [ctx, extra_ctx], line=row, column=end)
+        script = jedi.Interpreter(source, [ctx, extra_ctx], line=row,
+                                  column=column)
 
     script_comp = set()
     try:
         if JEDI_NEW_API:
-            script_comp = script.complete(row, end)
+            script_comp = script.complete(row, column)
         else:
             script_comp = script.completions()
     except Exception:
@@ -96,27 +98,28 @@ def complete_jedi(prefix, line, start, end, ctx):
     return set(
         itertools.chain(
             (
-                create_completion(comp, prefix)
+                create_completion(comp)
                 for comp in script_comp
-                if complete_underscores or 
-                    not comp.name.startswith('_') or 
-                    not comp.complete.startswith("_")
+                if complete_underscores or
+                   not comp.name.startswith('_') or
+                   not comp.complete.startswith("_")
             ),
             (t for t in XONSH_SPECIAL_TOKENS if filter_func(t, prefix)),
         )
     )
 
 
-def create_completion(comp, prefix):
-    """Create a RichCompletion from Jedi Completion object"""
+def create_completion(comp):
+    """Create a RichCompletion from a Jedi Completion object"""
     comp_type = None
     description = None
 
-    sigs = comp.get_signatures()
-    if sigs:
-        comp_type = comp.type
-        description = sigs[0].to_string()
-    else:
+    if comp.type != "instance":
+        sigs = comp.get_signatures()
+        if sigs:
+            comp_type = comp.type
+            description = sigs[0].to_string()
+    if comp_type is None:
         # jedi doesn't know exactly what this is
         inf = comp.infer()
         if inf:
