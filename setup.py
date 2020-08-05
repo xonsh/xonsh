@@ -401,7 +401,7 @@ def main():
         "proctitle": ["setproctitle"],
         "zipapp": ['importlib_resources; python_version < "3.7"'],
     }
-    skw["python_requires"] = ">=3.5"
+    skw["python_requires"] = ">=3.6"
     setup(**skw)
 
 

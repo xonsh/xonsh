@@ -17,8 +17,6 @@ from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
 
 
-VER_3_5 = (3, 5)
-VER_3_6 = (3, 6)
 VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
 ON_DARWIN = platform.system() == "Darwin"
@@ -34,10 +32,6 @@ print("os.environ['TF_BUILD']", repr(os.environ.get("TF_BUILD", "")))
 TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
-skip_if_lt_py36 = pytest.mark.skipif(
-    VER_MAJOR_MINOR < VER_3_6, reason="Py3.6+ only test"
-)
-
 skip_if_on_conda = pytest.mark.skipif(
     ON_CONDA, reason="Conda and virtualenv _really_ hate each other"
 )
