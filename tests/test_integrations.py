@@ -10,7 +10,9 @@ import xonsh
 from xonsh.lib.os import indir
 
 from tools import (
+    skip_if_on_msys,
     skip_if_on_windows,
+    skip_if_on_darwin,
     ON_WINDOWS,
     ON_DARWIN,
     ON_TRAVIS,
@@ -681,3 +683,10 @@ aliases['echo'] = _echo
 def test_single_command_return_code(cmd, exp_rtn):
     _, _, rtn = run_xonsh(cmd, single_command=True)
     assert rtn == exp_rtn
+
+
+@skip_if_on_msys
+@skip_if_on_windows
+@skip_if_on_darwin
+def test_argv0():
+    check_run_xonsh("checkargv0.xsh", None, "OK\n")
