@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Test initialization of prompt_toolkit shell"""
 
+import sys
 import pytest
 
 from xonsh.platform import minimum_required_ptk_version
@@ -13,9 +14,9 @@ from xonsh.shell import Shell
 @pytest.mark.parametrize(
     "ptk_ver, ini_shell_type, exp_shell_type, warn_snip",
     [
-        (None, "prompt_toolkit", "readline", "prompt_toolkit is not available"),
-        ((0, 5, 7), "prompt_toolkit", "readline", "is not supported"),
-        ((1, 0, 0), "prompt_toolkit", "readline", "is not supported"),
+        (None, "prompt_toolkit", "prompt_toolkit", None),
+        ((0, 5, 7), "prompt_toolkit", "prompt_toolkit", "is not supported"),
+        ((1, 0, 0), "prompt_toolkit", "prompt_toolkit", "is not supported"),
         ((2, 0, 0), "prompt_toolkit", "prompt_toolkit", None),
         ((2, 0, 0), "best", "prompt_toolkit", None),
         ((2, 0, 0), "readline", "readline", None),
@@ -47,8 +48,13 @@ def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, 
     monkeypatch.setattr("xonsh.platform.ptk_above_min_supported", mock_ptk_above_min_supported)
     monkeypatch.setattr("xonsh.shell.has_prompt_toolkit", mock_has_prompt_toolkit)
     monkeypatch.setattr("xonsh.platform.has_prompt_toolkit", mock_has_prompt_toolkit)
+    
+    old_syspath = sys.path.copy()
 
     act_shell_type = Shell.choose_shell_type(ini_shell_type, {})
+
+    sys.path = old_syspath
+
 
     assert act_shell_type == exp_shell_type
 
