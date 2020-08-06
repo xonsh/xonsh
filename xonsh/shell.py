@@ -9,7 +9,6 @@ import warnings
 
 from xonsh.platform import (
     best_shell_type,
-    has_prompt_toolkit,
     ptk_above_min_supported,
     use_vended_prompt_toolkit,
     minimum_required_ptk_version,
