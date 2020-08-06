@@ -990,7 +990,9 @@ def DEFAULT_VARS():
             always_false,
             locale_convert("LC_MESSAGES"),
             ensure_string,
-            locale.setlocale(locale.LC_MESSAGES) if hasattr(locale, "LC_MESSAGES") else "",
+            locale.setlocale(locale.LC_MESSAGES)
+            if hasattr(locale, "LC_MESSAGES")
+            else "",
         ),
         "LC_MONETARY": Var(
             always_false,
