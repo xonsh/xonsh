@@ -65,6 +65,7 @@ def run_compiled_code(code, glb, loc, mode):
     else:
         func = eval
     func(code, glb, loc)
+    builtins.__xonsh__.fstring_fields.clear()
 
 
 def get_cache_filename(fname, code=True):
