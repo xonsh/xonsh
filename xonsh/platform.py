@@ -143,6 +143,14 @@ def pygments_version_info():
         return None
 
 
+def load_vended_prompt_toolkit():
+    """ Unload any prompt_toolkit libraries and load the version vended with xonsh """
+    for mod in (mod for mod in list(sys.modules) if mod.startswith("prompt_toolkit")):
+        del sys.modules[mod]
+    sys.path.insert(0, str(pathlib.Path(__file__).with_name("vended_ptk").resolve()))
+    import prompt_toolkit
+
+
 @functools.lru_cache(1)
 def has_prompt_toolkit():
     """Tests if the `prompt_toolkit` is available."""
@@ -170,7 +178,7 @@ def ptk_version_info():
         return None
 
 
-minimum_required_ptk_version = (2, 0)
+minimum_required_ptk_version = (2, 0, 0)
 """Minimum version of prompt-toolkit supported by Xonsh"""
 
 

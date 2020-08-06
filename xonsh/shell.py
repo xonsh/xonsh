@@ -11,6 +11,7 @@ from xonsh.platform import (
     best_shell_type,
     has_prompt_toolkit,
     ptk_above_min_supported,
+    load_vended_prompt_toolkit,
     minimum_required_ptk_version,
 )
 from xonsh.tools import XonshError, print_exception
@@ -159,20 +160,19 @@ class Shell(object):
         elif shell_type == "random":
             shell_type = random.choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
-            if not has_prompt_toolkit():
-                warnings.warn(
-                    "prompt_toolkit is not available, using " "readline instead."
-                )
-                shell_type = "readline"
-            elif not ptk_above_min_supported():
-                warnings.warn(
-                    "prompt-toolkit version < v{}.{}.0 is not ".format(
-                        *minimum_required_ptk_version
+            try:
+                import prompt_toolkit
+
+                if not ptk_above_min_supported():
+                    warnings.warn(
+                        "Installed prompt-toolkit version < v{}.{}.{} is not ".format(
+                            *minimum_required_ptk_version
+                        )
+                        + "supported. Falling back to the builtin prompt-toolkit."
                     )
-                    + "supported. Please update prompt-toolkit. Using "
-                    + "readline instead."
-                )
-                shell_type = "readline"
+                    raise ImportError
+            except ImportError:
+                load_vended_prompt_toolkit()
             if init_shell_type in ("ptk1", "prompt_toolkit1"):
                 warnings.warn(
                     "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(
