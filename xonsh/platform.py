@@ -143,12 +143,11 @@ def pygments_version_info():
         return None
 
 
-def load_vended_prompt_toolkit():
-    """ Unload any prompt_toolkit libraries and load the version vended with xonsh """
+def use_vended_prompt_toolkit():
+    """ Unload any prompt_toolkit libraries and add vended version to sys.path """
     for mod in (mod for mod in list(sys.modules) if mod.startswith("prompt_toolkit")):
         del sys.modules[mod]
     sys.path.insert(0, str(pathlib.Path(__file__).with_name("vended_ptk").resolve()))
-    import prompt_toolkit
 
 
 @functools.lru_cache(1)
