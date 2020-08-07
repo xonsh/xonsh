@@ -27,7 +27,7 @@ def tee(args, stdin, stdout, stderr):
             try:
                 files.append(open(i, mode))
             except:
-                print("tee: failed to open {}".format(i), file=stderr)
+                print(f"tee: failed to open {i}", file=stderr)
                 errors = True
     files.append(stdout)
 

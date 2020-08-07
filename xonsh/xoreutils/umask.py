@@ -68,7 +68,7 @@ def get_symbolic_rep_single(digit):
 def get_symbolic_rep(number):
     digits = get_oct_digits(number)
     return ",".join(
-        "%s=%s" % (class_, get_symbolic_rep_single(digits[class_])) for class_ in "ugo"
+        "{}={}".format(class_, get_symbolic_rep_single(digits[class_])) for class_ in "ugo"
     )
 
 
