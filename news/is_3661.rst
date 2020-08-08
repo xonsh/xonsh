@@ -4,8 +4,8 @@
 
 **Changed:**
 
-* xonsh.bat now invokes python directly (from top of PATH) instead of relying on py.exe to find it.
-  'py -3' was preferring the system-wide interpreter instead of virtual environment when both were in PATH.
+* custom startup scripts replaced by setup.py -generated (console) entrypoint scripts for both xonsh and xonsh-cat.
+  This means xonsh.bat and xonsh-cat.bat are replaced on Windows by xonsh.exe and xonsh-cat.exe, respectively.
 
 **Deprecated:**
 
@@ -18,6 +18,9 @@
 **Fixed:**
 
 * Avoid startup error on Windows when py.exe chooses wrong python interpreter to run xonsh.
+  When multiple interpreters are in PATH, 'py' will choose the first one (usually in the virtual environment),
+  but 'py -3' finds the system-wide one, apparently by design.
+
 
 **Security:**
 

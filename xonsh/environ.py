@@ -677,7 +677,7 @@ Var.__new__.__defaults__ = (
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
 def DEFAULT_VARS():
-    return {
+    dv = {
         "ANSICON": Var(
             is_string,
             ensure_string,
@@ -985,12 +985,6 @@ def DEFAULT_VARS():
             locale_convert("LC_CTYPE"),
             ensure_string,
             locale.setlocale(locale.LC_CTYPE),
-        ),
-        "LC_MESSAGES": Var(
-            always_false,
-            locale_convert("LC_MESSAGES"),
-            ensure_string,
-            locale.setlocale(locale.LC_MESSAGES),
         ),
         "LC_MONETARY": Var(
             always_false,
@@ -1673,6 +1667,14 @@ def DEFAULT_VARS():
             "Logging to a file is not enabled by default.",
         ),
     }
+    if hasattr(locale, "LC_MESSAGES"):
+        dv["LC_MESSAGES"] = Var(
+            always_false,
+            locale_convert("LC_MESSAGES"),
+            ensure_string,
+            locale.setlocale(locale.LC_MESSAGES),
+        )
+    return dv
 
 
 #
