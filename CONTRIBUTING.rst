@@ -3,7 +3,8 @@
 =================
 Developer's Guide
 =================
-.. image:: _static/knight-vs-snail.jpg
+.. an image URL works for CONTRIBUTING.rst and the symlinked docs/devguide.html
+.. image:: https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/knight-vs-snail.jpg
    :width: 80 %
    :alt: knight-vs-snail
    :align: center
