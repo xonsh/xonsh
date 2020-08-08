@@ -21,6 +21,8 @@
   When multiple interpreters are in PATH, 'py' will choose the first one (usually in the virtual environment),
   but 'py -3' finds the system-wide one, apparently by design.
 
+* For xonsh-cat, avoid parsing and processing first (0'th) argument when invoked directly from OS shell.  
+
 
 **Security:**
 

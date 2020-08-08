@@ -161,7 +161,7 @@ def cat_main(args=None):
     from xonsh.main import setup
 
     setup()
-    args = sys.argv if args is None else args
+    args = sys.argv[1:] if args is None else args
     cat(args, sys.stdin, sys.stdout, sys.stderr)
 
 

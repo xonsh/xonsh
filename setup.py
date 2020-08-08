@@ -379,7 +379,7 @@ def main():
         "pytest11": ["xonsh = xonsh.pytest_plugin"],
         "console_scripts": [
             "xonsh = xonsh.main:main",
-            "xonsh-cat = xonsh.xorutils.cat",
+            "xonsh-cat = xonsh.xoreutils.cat:cat_main",
         ],
     }
     skw["cmdclass"]["develop"] = xdevelop
