@@ -109,21 +109,18 @@ import textwrap
 import itertools
 
 from xonsh.tools import subproc_toks, find_next_break, get_logical_line
-from xonsh.platform import PYTHON_VERSION_INFO
 
-if PYTHON_VERSION_INFO >= (3, 5, 0):
-    # pylint: disable=unused-import
-    # pylint: disable=no-name-in-module
-    from ast import MatMult, AsyncFunctionDef, AsyncWith, AsyncFor, Await
-else:
-    MatMult = AsyncFunctionDef = AsyncWith = AsyncFor = Await = None
+from ast import (
+    MatMult,
+    AsyncFunctionDef,
+    AsyncWith,
+    AsyncFor,
+    Await,
+    JoinedStr,
+    FormattedValue,
+    AnnAssign,
+)
 
-if PYTHON_VERSION_INFO >= (3, 6, 0):
-    # pylint: disable=unused-import
-    # pylint: disable=no-name-in-module
-    from ast import JoinedStr, FormattedValue, AnnAssign
-else:
-    JoinedStr = FormattedValue = AnnAssign = None
 
 STATEMENTS = (
     FunctionDef,
@@ -147,9 +144,8 @@ STATEMENTS = (
     Pass,
     Break,
     Continue,
+    AnnAssign,
 )
-if PYTHON_VERSION_INFO >= (3, 6, 0):
-    STATEMENTS += (AnnAssign,)
 
 
 def leftmostname(node):

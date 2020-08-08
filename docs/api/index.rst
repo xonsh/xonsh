@@ -44,12 +44,11 @@ For those of you who want the gritty details.
     shell
     base_shell
     readline_shell
-    ptk2/shell
-    ptk2/history
-    ptk2/completer
-    ptk2/key_bindings
+    ptk_shell/shell
+    ptk_shell/history
+    ptk_shell/completer
+    ptk_shell/key_bindings
     pretty
-    replay
     diff_history
     xoreutils/index
 
@@ -88,13 +87,3 @@ For those of you who want the gritty details.
 
     mplhooks
     vox
-
-**Pending Deprecation:**
-
-.. toctree::
-    :maxdepth: 1
-
-    ptk/shell
-    ptk/history
-    ptk/completer
-    ptk/key_bindings

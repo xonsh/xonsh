@@ -242,6 +242,8 @@ class Execer(object):
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
+                if input.endswith("\n"):
+                    lines.append("")
                 line, nlogical, idx = get_logical_line(lines, idx)
                 if nlogical > 1 and not logical_input:
                     _, sbpline = self._parse_ctx_free(
@@ -254,8 +256,6 @@ class Execer(object):
                     last_error_col += 3
                     input = "\n".join(lines)
                     continue
-                if input.endswith("\n"):
-                    lines.append("")
                 if len(line.strip()) == 0:
                     # whitespace only lines are not valid syntax in Python's
                     # interactive mode='single', who knew?! Just ignore them.

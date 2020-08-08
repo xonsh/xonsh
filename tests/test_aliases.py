@@ -6,7 +6,6 @@ import os
 
 import pytest
 
-import xonsh.built_ins as built_ins
 from xonsh.aliases import Aliases, ExecAlias
 from xonsh.environ import Env
 

@@ -1,3 +1,6 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
 [tool.black]
 # better to keep default line-length than to match flake8
 exclude = '''
@@ -25,7 +28,7 @@ exclude = '''
      |  \.github
      |  \.vscode
      |  \.pytest_cache
-     |  tests
+     |  ply
      )/
 )
 '''

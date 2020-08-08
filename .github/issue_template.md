@@ -34,3 +34,6 @@ traceback
 
 ## Steps to Reproduce
 <!--- Please try to write out a minimal reproducible snippet to trigger the bug, it will help us fix it! -->
+
+## For community
+⬇️  **Please click the 👍 reaction instead of leaving a `+1` or 👍  comment**

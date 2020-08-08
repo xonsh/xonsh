@@ -53,7 +53,9 @@ def get_venv(vox, dirpath):
             if len(venvs) > 1:
                 warnings.warn(
                     MultipleVenvsWarning(
-                        f"Found {len(venvs)} venvs for {path}; using the first"
+                        "Found {numvenvs} venvs for {path}; using the first".format(
+                            numvenvs=len(venvs), path=path
+                        )
                     )
                 )
             return venvs[0]

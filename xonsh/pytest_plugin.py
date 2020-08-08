@@ -41,7 +41,7 @@ def _limited_traceback(excinfo):
 
 def pytest_collect_file(parent, path):
     if path.ext.lower() == ".xsh" and path.basename.startswith("test_"):
-        return XshFile(path, parent)
+        return XshFile.from_parent(parent, fspath=path)
 
 
 class XshFile(pytest.File):
@@ -53,8 +53,8 @@ class XshFile(pytest.File):
         for test_name in tests:
             obj = getattr(mod, test_name)
             if hasattr(obj, "__call__"):
-                yield XshFunction(
-                    name=test_name, parent=self, test_func=obj, test_module=mod
+                yield XshFunction.from_parent(
+                    self, name=test_name, test_func=obj, test_module=mod
                 )
 
 

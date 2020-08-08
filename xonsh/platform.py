@@ -3,6 +3,7 @@ compatibility layers to make use of the 'best' implementation available
 on a platform.
 """
 import os
+from os import scandir
 import sys
 import ctypes
 import signal
@@ -169,19 +170,13 @@ def ptk_version_info():
         return None
 
 
+minimum_required_ptk_version = (2, 0)
+"""Minimum version of prompt-toolkit supported by Xonsh"""
+
+
 @functools.lru_cache(1)
 def ptk_above_min_supported():
-    minimum_required_ptk_version = (1, 0)
-    return ptk_version_info()[:2] >= minimum_required_ptk_version
-
-
-@functools.lru_cache(1)
-def ptk_shell_type():
-    """Returns the prompt_toolkit shell type based on the installed version."""
-    if ptk_version_info()[:2] < (2, 0):
-        return "prompt_toolkit1"
-    else:
-        return "prompt_toolkit2"
+    return ptk_version_info() and ptk_version_info()[:2] >= minimum_required_ptk_version
 
 
 @functools.lru_cache(1)
@@ -198,7 +193,7 @@ def win_ansi_support():
 
 @functools.lru_cache(1)
 def ptk_below_max_supported():
-    ptk_max_version_cutoff = (2, 0)
+    ptk_max_version_cutoff = (99999, 0)  # currently, no limit.
     return ptk_version_info()[:2] < ptk_max_version_cutoff
 
 
@@ -309,42 +304,6 @@ def githash():
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 """ Default string encoding. """
-
-
-if PYTHON_VERSION_INFO < (3, 5, 0):
-
-    class DirEntry:
-        def __init__(self, directory, name):
-            self.__path__ = pathlib.Path(directory) / name
-            self.name = name
-            self.path = str(self.__path__)
-            self.is_symlink = self.__path__.is_symlink
-
-        def inode(self):
-            return os.stat(self.path, follow_symlinks=False).st_ino
-
-        def is_dir(self, *, follow_symlinks=True):
-            if follow_symlinks:
-                return self.__path__.is_dir()
-            else:
-                return not self.__path__.is_symlink() and self.__path__.is_dir()
-
-        def is_file(self, *, follow_symlinks=True):
-            if follow_symlinks:
-                return self.__path__.is_file()
-            else:
-                return not self.__path__.is_symlink() and self.__path__.is_file()
-
-        def stat(self, *, follow_symlinks=True):
-            return os.stat(self.path, follow_symlinks=follow_symlinks)
-
-    def scandir(path):
-        """ Compatibility layer for  `os.scandir` from Python 3.5+. """
-        return (DirEntry(path, x) for x in os.listdir(path))
-
-
-else:
-    scandir = os.scandir
 
 
 #

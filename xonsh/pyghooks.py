@@ -8,6 +8,7 @@ import stat
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
+from xonsh.lazyimps import os_listxattr
 
 from pygments.lexer import inherit, bygroups, include
 from pygments.lexers.agile import Python3Lexer
@@ -33,7 +34,6 @@ from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (
     ON_WINDOWS,
     intensify_colors_for_cmd_exe,
-    ansicolors_to_ptk1_names,
     ANSICOLOR_NAMES_MAP,
     PTK_NEW_OLD_COLOR_MAP,
     hardcode_colors_for_win10,
@@ -384,16 +384,6 @@ class XonshStyle(Style):
         ).items():
             color_token = color_token_by_name(xonsh_color, self.styles)
             file_color_tokens[file_type] = color_token
-
-        # Convert new ansicolor names to old PTK1 names
-        # Can be remvoed when PTK1 support is dropped.
-        if (
-            builtins.__xonsh__.shell.shell_type != "prompt_toolkit2"
-            and pygments_version_info()
-            and pygments_version_info() < (2, 4, 0)
-        ):
-            for smap in [self.trap, cmap, PTK_STYLE, self._smap]:
-                smap.update(ansicolors_to_ptk1_names(smap))
 
         if ON_WINDOWS and "prompt_toolkit" in builtins.__xonsh__.shell.shell_type:
             self.enhance_colors_for_cmd_exe()
@@ -1367,67 +1357,98 @@ def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
 events.on_lscolors_change(on_lscolors_change)
 
 
-def color_file(file_path: str, mode: int) -> (Color, str):
-    """Determine color to use for file as ls -c would, given stat() results and its name.
+def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
+    """Determine color to use for file *approximately* as ls --color would,
+       given lstat() results and its path.
+
     Parameters
     ----------
-    file_path : string
+    file_path:
         relative path of file (as user typed it).
-    mode : int
-        stat() results for file_path.
+    path_stat:
+        lstat() results for file_path.
+
     Returns
     -------
         color token, color_key
 
-    Bugs
-    ----
-    * doesn't handle CA (capability)
-    * doesn't handle LS TARGET mapping.
+    Notes
+    -----
+
+    * implementation follows one authority:
+      https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
+    * except:
+    1. does not return 'mi'.  That's the color ls uses to show the (missing) *target* of a symlink
+       (in ls -l, not ls).
+    2. in dircolors, setting type code to '0 or '00' bypasses that test and proceeds to others.
+       In our implementation, setting code to '00' paints the file with no color.
+       This is arguably a bug.
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
-    color_key = "rs"
+    color_key = "fi"
 
-    if stat.S_ISLNK(mode):  # must test link before S_ISREG (esp execute)
-        color_key = "ln"
+    # if symlink, get info on (final) target
+    if stat.S_ISLNK(path_stat.st_mode):
         try:
-            os.stat(file_path)
-        except FileNotFoundError:
-            color_key = "or"
-    elif stat.S_ISREG(mode):
-        if stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
-            color_key = "ex"
-        elif (
-            mode & stat.S_ISUID
-        ):  # too many tests before we get to the common case -- restructure?
+            tar_path_stat = os.stat(file_path)  # and work with its properties
+            if lsc.is_target("ln"):  # if ln=target
+                path_stat = tar_path_stat
+        except FileNotFoundError:  # bug always color broken link 'or'
+            color_key = "or"  # early exit
+            ret_color_token = file_color_tokens.get(color_key, Text)
+            return ret_color_token, color_key
+
+    mode = path_stat.st_mode
+
+    if stat.S_ISREG(mode):
+        if mode & stat.S_ISUID:
             color_key = "su"
         elif mode & stat.S_ISGID:
             color_key = "sg"
         else:
-            match = color_file_extension_RE.match(file_path)
-            if match:
-                ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
-                if ext in lsc:
-                    color_key = ext
-                else:
-                    color_key = "rs"
+            cap = os_listxattr(file_path, follow_symlinks=False)
+            if cap and "security.capability" in cap:  # protect None return on some OS?
+                color_key = "ca"
+            elif stat.S_IMODE(mode) & (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH):
+                color_key = "ex"
+            elif path_stat.st_nlink > 1:
+                color_key = "mh"
             else:
-                color_key = "rs"
-    elif stat.S_ISDIR(mode):  # ls -c doesn't colorize sticky or ow if not dirs...
-        color_key = ("di", "ow", "st", "tw")[
-            (mode & stat.S_ISVTX == stat.S_ISVTX) * 2
-            + (mode & stat.S_IWOTH == stat.S_IWOTH)
-        ]
-    elif stat.S_ISCHR(mode):
-        color_key = "cd"
-    elif stat.S_ISBLK(mode):
-        color_key = "bd"
+                color_key = "fi"
+    elif stat.S_ISDIR(mode):  # ls --color doesn't colorize sticky or ow if not dirs...
+        color_key = "di"
+        if not (ON_WINDOWS):  # on Windows, these do not mean what you think they mean.
+            if (mode & stat.S_ISVTX) and (mode & stat.S_IWOTH):
+                color_key = "tw"
+            elif mode & stat.S_IWOTH:
+                color_key = "ow"
+            elif mode & stat.S_ISVTX:
+                color_key = "st"
+    elif stat.S_ISLNK(mode):
+        color_key = "ln"
     elif stat.S_ISFIFO(mode):
         color_key = "pi"
     elif stat.S_ISSOCK(mode):
         color_key = "so"
+    elif stat.S_ISBLK(mode):
+        color_key = "bd"
+    elif stat.S_ISCHR(mode):
+        color_key = "cd"
     elif stat.S_ISDOOR(mode):
-        color_key = "do"  # bug missing mapping for FMT based PORT and WHITEOUT ??
+        color_key = "do"
+    else:
+        color_key = "or"  # any other type --> orphan
+
+    # if still normal file -- try color by file extension.
+    # note: symlink to *.<ext> will be colored 'fi' unless the symlink itself
+    # ends with .<ext>. `ls` does the same.  Bug-for-bug compatibility!
+    if color_key == "fi":
+        match = color_file_extension_RE.match(file_path)
+        if match:
+            ext = "*" + match.group(1)  # look for *.<fileExtension> coloring
+            if ext in lsc:
+                color_key = ext
 
     ret_color_token = file_color_tokens.get(color_key, Text)
 
@@ -1471,8 +1492,8 @@ def subproc_arg_callback(_, match):
     yieldVal = Text
     try:
         path = os.path.expanduser(text)
-        mode = (os.lstat(path)).st_mode  # lstat() will raise FNF if not a real file
-        yieldVal, _ = color_file(path, mode)
+        path_stat = os.lstat(path)  # lstat() will raise FNF if not a real file
+        yieldVal, _ = color_file(path, path_stat)
     except (FileNotFoundError, OSError):
         pass
 

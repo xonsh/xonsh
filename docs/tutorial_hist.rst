@@ -58,18 +58,8 @@ So the reasons for having rich history are debugging and reproducibility. Xonsh 
 guess-work out of the past. There is even the ability to store all of stdout, though this
 is turned off by default.
 If history was just a static file, it would be more like a server log than a traditional
-history file.  However, xonsh also has the ability to ``replay`` a history file.
+history file.
 
-Replaying history allows previous sessions to act as scripts in a new or the same environment.
-Replaying will create a new, separate history session and file. The two histories - even though
-they contain the same inputs - are then able to be diff'ed. Diff'ing can be done through
-xonsh custom history diff'ing tool, which can help pinpoint differences stemming from the
-environment as well as the input/output.  This cycle of do-replay-diff is more meaningful than
-a traditional, "What did I/it/the Universe just do?!" approach.
-
-Of course, nothing has ever stopped anyone from pulling Unix tools like ``env``, ``script``,
-``diff``, and others together to deliver the same kind of capability. However, in practice,
-no one does this. With xonsh, rich and useful history come batteries included.
 
 ``history`` command
 ====================
@@ -192,79 +182,6 @@ series of lines. However, it can also return a JSON formatted string.
      "filename": "/home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json",
      "length": 7, "buffersize": 100, "bufferlength": 7}
 
-``replay`` action
-==================
-The ``replay`` action allows for history files to be rerun, as scripts or in an existing xonsh
-session.
-
-First, the original ``'replay'`` environment is loaded and will be merged with the current ``'native'``
-environment. How the environments are merged or not merged can be set at replay time. The default is for
-the current native environment to take precedence. Next, each input in the environment is executed in order.
-Lastly, the information of the replayed history file is printed.
-
-Let's walk through an example. To begin with, open up xonsh and run some simple commands, as follows.
-Call this the ``orig`` session.
-
-**orig history**
-
-.. code-block:: xonshcon
-
-    >>> mkdir -p temp/
-    >>> cd temp
-    >>> import random
-    >>> touch @(random.randint(0, 18))
-    >>> ls
-    2
-    >>> history file
-    /home/scopatz/.local/share/xonsh/xonsh-4bc4ecd6-3eba-4f3a-b396-a229ba2b4810.json
-    >>> exit
-
-We can now replay this by passing the filename into the replay command or the replay action
-of the history command. This action has a few different options, but one of them is that
-we can select a different target output file with the ``-o`` or ``--target`` option.
-For example, in a new session, we could run:
-
-**new history**
-
-.. code-block:: xonshcon
-
-    >>> history replay -o ~/new.json ~/.local/share/xonsh/xonsh-4bc4ecd6-3eba-4f3a-b396-a229ba2b4810.json
-    2  10
-    /home/scopatz/new.json
-
-    ----------------------------------------------------------------
-    Just replayed history, new history the has following information
-    ----------------------------------------------------------------
-    sessionid: 35712b6f-4b15-4ef9-8ce3-b4c781601bc2
-    filename: /home/scopatz/new.json
-    length: 7
-    buffersize: 100
-    bufferlength: 0
-
-As you can see, a new history was created and another random file was added to the file system.
-If we want instead to replay history in its own session, we can always use the ``-c`` option on
-xonsh itself to execute the replay command.
-
-**next history**
-
-.. code-block:: xonshcon
-
-    >>> xonsh -c "replay -o ~/next.json ~/new.json"
-    2  7  10
-    /home/scopatz/next.json
-
-    ----------------------------------------------------------------
-    Just replayed history, new history has the following information
-    ----------------------------------------------------------------
-    sessionid: 70d7186e-3eb9-4b1c-8f82-45bb8a1b7967
-    filename: /home/scopatz/next.json
-    length: 7
-    buffersize: 100
-    bufferlength: 0
-
-
-Currently history does not handle alias storage and reloading, but such a feature may be coming in
-the future.
 
 ``diff`` action
 ===============
@@ -277,7 +194,7 @@ is to be meaningful. However, they don't need to be exactly the same.
 
 The diff action has one major option, ``-v`` or ``--verbose``. This basically says whether the
 diff should go into as much detail as possible or only pick out the relevant pieces. Diffing
-the new and next examples from the replay action, we see the diff looks like:
+the new and next examples, we see the diff looks like:
 
 .. code-block:: xonshcon
 
@@ -322,12 +239,21 @@ As can be seen, the diff has three sections.
 1. **The header** describes the meta-information about the histories, such as
    their file names, sessionids, and time stamps.
 2. **The environment** section describes the differences in the environment
-   when the histories were started or replayed.
+   when the histories were started.
 3. **The commands** list this differences in the command themselves.
 
 For the commands, the input sequences are diff'd first, prior to the outputs
 being compared. In a terminal, this will appear in color, with the first history
 in red and the second one in green.
+
+``flush`` action
+================
+Normally, the history entries are kept in memory and are only saved to disk once
+the in-memory buffer gets full. This is in order to reduce unnecessary I/O and to
+keep session history free from noise from other sessions. Sometimes, however, it
+may be useful to share entries between shell sessions. In such a case, one can use
+the ``flush`` action to immediately save the session history to disk and make it
+accessible from other shell sessions.
 
 ``gc`` action
 ===============
@@ -434,8 +360,7 @@ of hocus pocus before you get to anything real.
 
 Xonsh has implemented a generic indexing system (sizes, offsets, etc)for JSON files that lives
 inside of the file that it indexes.  This is known as ``LazyJSON`` because it allows us to
-only read in the parts of a file that we need. For example, for replaying we only need to
-grab the input fields and so that helps us on I/O. For garbage collecting based on the number
+only read in the parts of a file that we need. For garbage collecting based on the number
 of commands, we can get this information from the index and don't need to read in any of the
 original data.
 
@@ -465,8 +390,8 @@ Sqlite History Backend
 Xonsh has a second built-in history backend powered by sqlite (other than
 the JSON version mentioned all above in this tutorial). It shares the same
 functionality as the JSON version in most ways, except it currently doesn't
-support ``history diff`` and ``history replay`` actions and does not store
-the output of commands, as the json-backend does. E.g. 
+support the ``history diff`` action and does not store the output of commands,
+as the json-backend does. E.g. 
 `__xonsh__.history[-1].out` will always be `None`.
 
 The Sqlite history backend can provide a speed advantage in loading history

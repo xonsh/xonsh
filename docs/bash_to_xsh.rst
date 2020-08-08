@@ -19,7 +19,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Look up an environment variable by name.
     * - ``export NAME=Peter``
       - ``$NAME = 'Peter'``
-      - Setting an environment variable. 
+      - Setting an environment variable. See also :ref:`$UPDATE_OS_ENVIRON <update_os_environ>`.
     * - ``unset NAME``
       - ``del $NAME``
       - Unsetting/deleting an environment variable. 
@@ -43,7 +43,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Cause a failure after a non-zero return code. Xonsh will raise a
         ``supbrocess.CalledProcessError``.
     * - ``set -x``
-      - ``trace on``
+      - ``trace on`` and ``$XONSH_TRACE_SUBPROC = True``
       - Turns on tracing of source code lines during execution.
     * - ``&&``
       - ``and`` or ``&&``
@@ -68,3 +68,23 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``$@``
       - ``$ARGS``
       - List of all command line argument and parameter strings.
+    * - ``shopt -s dotglob``
+      - ``$DOTGLOB = True``
+      - Globbing files with “*” or “**” will also match dotfiles, or those ‘hidden’ files whose names begin with a literal ‘.’. Such files are filtered out by default like in bash.
+    * - Display completions as list
+      - ``$COMPLETIONS_DISPLAY = 'readline'``
+      - Display completions will emulate the behavior of readline.
+    * - ``exit``
+      - ``sys.exit()``
+      - Exiting from the current script.
+
+To understand how xonsh executes the subprocess commands try
+to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+
+.. code-block:: console
+
+    >>> $XONSH_TRACE_SUBPROC = True
+    >>> echo $(echo @('hello')) @('wor' + 'ld') | grep hello
+    TRACE SUBPROC: (['echo', 'hello'],)
+    TRACE SUBPROC: (['echo', 'hello\n', 'world'], '|', ['grep', 'hello'])
+

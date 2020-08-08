@@ -251,13 +251,15 @@ def _pprint_displayhook(value):
         builtins._ = value
         return
     env = builtins.__xonsh__.env
+    printed_val = None
     if env.get("PRETTY_PRINT_RESULTS"):
         printed_val = pretty(value)
-    else:
+    if not isinstance(printed_val, str):
+        # pretty may fail (i.e for unittest.mock.Mock)
         printed_val = repr(value)
     if HAS_PYGMENTS and env.get("COLOR_RESULTS"):
         tokens = list(pygments.lex(printed_val, lexer=pyghooks.XonshLexer()))
-        end = "" if env.get("SHELL_TYPE") == "prompt_toolkit2" else "\n"
+        end = "" if env.get("SHELL_TYPE") == "prompt_toolkit" else "\n"
         print_color(tokens, end=end)
     else:
         print(printed_val)  # black & white case
@@ -369,26 +371,43 @@ def _failback_to_other_shells(args, err):
     # as an interactive one for safe.
     if hasattr(args, "mode") and args.mode != XonshMode.interactive:
         raise err
+
     foreign_shell = None
-    shells_file = "/etc/shells"
-    if not os.path.exists(shells_file):
-        # right now, it will always break here on Windows
-        raise err
-    excluded_list = ["xonsh", "screen"]
-    with open(shells_file) as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            if "/" not in line:
-                continue
-            _, shell = line.rsplit("/", 1)
-            if shell in excluded_list:
-                continue
-            if not os.path.exists(line):
-                continue
-            foreign_shell = line
-            break
+
+    # look first in users login shell $SHELL.
+    # use real os.environ, in case Xonsh hasn't initialized yet
+    # but don't fail back to same shell that just failed.
+
+    try:
+        env_shell = os.getenv("SHELL")
+        if env_shell and os.path.exists(env_shell) and env_shell != sys.argv[0]:
+            foreign_shell = env_shell
+    except Exception:
+        pass
+
+    # otherwise, find acceptable shell from (unix) list of installed shells.
+
+    if not foreign_shell:
+        excluded_list = ["xonsh", "screen"]
+        shells_file = "/etc/shells"
+        if not os.path.exists(shells_file):
+            # right now, it will always break here on Windows
+            raise err
+        with open(shells_file) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "/" not in line:
+                    continue
+                _, shell = line.rsplit("/", 1)
+                if shell in excluded_list:
+                    continue
+                if not os.path.exists(line):
+                    continue
+                foreign_shell = line
+                break
+
     if foreign_shell:
         traceback.print_exc()
         print("Xonsh encountered an issue during launch", file=sys.stderr)
@@ -402,7 +421,7 @@ def main(argv=None):
     args = None
     try:
         args = premain(argv)
-        return main_xonsh(args)
+        sys.exit(main_xonsh(args))
     except Exception as err:
         _failback_to_other_shells(args, err)
 
@@ -420,6 +439,8 @@ def main_xonsh(args):
     events.on_post_init.fire()
     env = builtins.__xonsh__.env
     shell = builtins.__xonsh__.shell
+    history = builtins.__xonsh__.history
+    exit_code = 0
     try:
         if args.mode == XonshMode.interactive:
             # enter the shell
@@ -437,6 +458,8 @@ def main_xonsh(args):
         elif args.mode == XonshMode.single_command:
             # run a single command and exit
             run_code_with_cache(args.command.lstrip(), shell.execer, mode="single")
+            if history is not None and history.last_cmd_rtn is not None:
+                exit_code = history.last_cmd_rtn
         elif args.mode == XonshMode.script_from_file:
             # run a script contained in a file
             path = os.path.abspath(os.path.expanduser(args.file))
@@ -450,8 +473,7 @@ def main_xonsh(args):
                 )
             else:
                 print("xonsh: {0}: No such file or directory.".format(args.file))
-                events.on_exit.fire()
-                sys.exit(1)
+                exit_code = 1
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
             code = sys.stdin.read()
@@ -461,6 +483,7 @@ def main_xonsh(args):
     finally:
         events.on_exit.fire()
     postmain(args)
+    return exit_code
 
 
 def postmain(args=None):

@@ -198,8 +198,8 @@ def to_debug(x):
 
 class LsColors(cabc.MutableMapping):
     """Helps convert to/from $LS_COLORS format, respecting the xonsh color style.
-    This accepts the same inputs as dict(). The link ``target`` is represented
-    by the special ``"TARGET"`` color.
+    This accepts the same inputs as dict(). The special value ``target`` is
+    replaced by no color, but sets a flag for cognizant application (see is_target()).
     """
 
     default_settings = {
@@ -321,6 +321,7 @@ class LsColors(cabc.MutableMapping):
         "di": ("BOLD_BLUE",),
         "do": ("BOLD_PURPLE",),
         "ex": ("BOLD_GREEN",),
+        "fi": ("NO_COLOR",),
         "ln": ("BOLD_CYAN",),
         "mh": ("NO_COLOR",),
         "mi": ("NO_COLOR",),
@@ -335,10 +336,20 @@ class LsColors(cabc.MutableMapping):
         "tw": ("BLACK", "BACKGROUND_GREEN"),
     }
 
-    def __init__(self, *args, **kwargs):
-        self._d = dict(*args, **kwargs)
+    target_value = "target"  # special value to set for ln=target
+    target_color = ("NO_COLOR",)  # repres in color space
+
+    def __init__(self, ini_dict: dict = None):
         self._style = self._style_name = None
         self._detyped = None
+        self._d = dict()
+        self._targets = set()
+        if ini_dict:
+            for key, value in ini_dict.items():
+                if value == LsColors.target_value:
+                    self._targets.add(key)
+                    value = LsColors.target_color
+                self._d[key] = value
 
     def __getitem__(self, key):
         return self._d[key]
@@ -346,13 +357,20 @@ class LsColors(cabc.MutableMapping):
     def __setitem__(self, key, value):
         self._detyped = None
         old_value = self._d.get(key, None)
+        self._targets.discard(key)
+        if value == LsColors.target_value:
+            value = LsColors.target_color
+            self._targets.add(key)
         self._d[key] = value
-        if old_value != value:
+        if (
+            old_value != value
+        ):  # bug won't fire if new value is 'target' and old value happened to be no color.
             events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=value)
 
     def __delitem__(self, key):
         self._detyped = None
         old_value = self._d.get(key, None)
+        self._targets.discard(key)
         del self._d[key]
         events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=None)
 
@@ -366,9 +384,7 @@ class LsColors(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(
-            self.__class__.__module__, self.__class__.__name__, self._d
-        )
+        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
     def _repr_pretty_(self, p, cycle):
         name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
@@ -378,6 +394,10 @@ class LsColors(cabc.MutableMapping):
             elif len(self):
                 p.break_()
                 p.pretty(dict(self))
+
+    def is_target(self, key) -> bool:
+        "Return True if key is 'target'"
+        return key in self._targets
 
     def detype(self):
         """De-types the instance, allowing it to be exported to the environment."""
@@ -389,8 +409,8 @@ class LsColors(cabc.MutableMapping):
                     + "="
                     + ";".join(
                         [
-                            "target"
-                            if v == "TARGET"
+                            LsColors.target_value
+                            if key in self._targets
                             else ansi_color_name_to_escape_code(v, cmap=style)
                             for v in val
                         ]
@@ -407,7 +427,7 @@ class LsColors(cabc.MutableMapping):
         env_style_name = env.get("XONSH_COLOR_STYLE", "default")
         if self._style_name is None or self._style_name != env_style_name:
             self._style_name = env_style_name
-            self._style = self._dtyped = None
+            self._style = self._detyped = None
         return self._style_name
 
     @property
@@ -424,28 +444,26 @@ class LsColors(cabc.MutableMapping):
         """Creates a new instance of the LsColors class from a colon-separated
         string of dircolor-valid keys to ANSI color escape sequences.
         """
-        obj = cls()
+        ini_dict = dict()
         # string inputs always use default codes, so translating into
         # xonsh names should be done from defaults
         reversed_default = ansi_reverse_style(style="default")
-        data = {}
         for item in s.split(":"):
             key, eq, esc = item.partition("=")
             if not eq:
                 # not a valid item
                 pass
-            elif esc == "target":
-                data[key] = ("TARGET",)
+            elif esc == LsColors.target_value:  # really only for 'ln'
+                ini_dict[key] = esc
             else:
                 try:
-                    data[key] = ansi_color_escape_code_to_name(
+                    ini_dict[key] = ansi_color_escape_code_to_name(
                         esc, "default", reversed_style=reversed_default
                     )
                 except Exception as e:
                     print("xonsh:warning:" + str(e), file=sys.stderr)
-                    data[key] = ("NO_COLOR",)
-        obj._d = data
-        return obj
+                    ini_dict[key] = ("NO_COLOR",)
+        return cls(ini_dict)
 
     @classmethod
     def fromdircolors(cls, filename=None):
@@ -505,131 +523,17 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
 
 
 #
-# Ensurerers
+# Ensurers
 #
 
-Ensurer = collections.namedtuple("Ensurer", ["validate", "convert", "detype"])
-Ensurer.__doc__ = """Named tuples whose elements are functions that
-represent environment variable validation, conversion, detyping.
-"""
-
-
-@lazyobject
-def DEFAULT_ENSURERS():
-    return {
-        "AUTO_CD": (is_bool, to_bool, bool_to_str),
-        "AUTO_PUSHD": (is_bool, to_bool, bool_to_str),
-        "AUTO_SUGGEST": (is_bool, to_bool, bool_to_str),
-        "AUTO_SUGGEST_IN_COMPLETIONS": (is_bool, to_bool, bool_to_str),
-        "BASH_COMPLETIONS": (is_env_path, str_to_env_path, env_path_to_str),
-        "CASE_SENSITIVE_COMPLETIONS": (is_bool, to_bool, bool_to_str),
-        re.compile(r"\w*DIRS$"): (is_env_path, str_to_env_path, env_path_to_str),
-        "COLOR_INPUT": (is_bool, to_bool, bool_to_str),
-        "COLOR_RESULTS": (is_bool, to_bool, bool_to_str),
-        "COMPLETIONS_BRACKETS": (is_bool, to_bool, bool_to_str),
-        "COMPLETIONS_CONFIRM": (is_bool, to_bool, bool_to_str),
-        "COMPLETIONS_DISPLAY": (
-            is_completions_display_value,
-            to_completions_display_value,
-            str,
-        ),
-        "COMPLETIONS_MENU_ROWS": (is_int, int, str),
-        "COMPLETION_QUERY_LIMIT": (is_int, int, str),
-        "COMPLETION_IN_THREAD": (is_bool, to_bool, bool_to_str),
-        "DIRSTACK_SIZE": (is_int, int, str),
-        "DOTGLOB": (is_bool, to_bool, bool_to_str),
-        "DYNAMIC_CWD_WIDTH": (
-            is_dynamic_cwd_width,
-            to_dynamic_cwd_tuple,
-            dynamic_cwd_tuple_to_str,
-        ),
-        "DYNAMIC_CWD_ELISION_CHAR": (is_string, ensure_string, ensure_string),
-        "EXPAND_ENV_VARS": (is_bool, to_bool, bool_to_str),
-        "FORCE_POSIX_PATHS": (is_bool, to_bool, bool_to_str),
-        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": (is_bool, to_bool, bool_to_str),
-        "FOREIGN_ALIASES_OVERRIDE": (is_bool, to_bool, bool_to_str),
-        "FUZZY_PATH_COMPLETION": (is_bool, to_bool, bool_to_str),
-        "GLOB_SORTED": (is_bool, to_bool, bool_to_str),
-        "HISTCONTROL": (is_string_set, csv_to_set, set_to_csv),
-        "IGNOREEOF": (is_bool, to_bool, bool_to_str),
-        "INTENSIFY_COLORS_ON_WIN": (
-            always_false,
-            intensify_colors_on_win_setter,
-            bool_to_str,
-        ),
-        "LANG": (is_string, ensure_string, ensure_string),
-        "LC_COLLATE": (always_false, locale_convert("LC_COLLATE"), ensure_string),
-        "LC_CTYPE": (always_false, locale_convert("LC_CTYPE"), ensure_string),
-        "LC_MESSAGES": (always_false, locale_convert("LC_MESSAGES"), ensure_string),
-        "LC_MONETARY": (always_false, locale_convert("LC_MONETARY"), ensure_string),
-        "LC_NUMERIC": (always_false, locale_convert("LC_NUMERIC"), ensure_string),
-        "LC_TIME": (always_false, locale_convert("LC_TIME"), ensure_string),
-        "LS_COLORS": (is_lscolors, LsColors.convert, detype),
-        "LOADED_RC_FILES": (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
-        "MOUSE_SUPPORT": (is_bool, to_bool, bool_to_str),
-        "MULTILINE_PROMPT": (is_string_or_callable, ensure_string, ensure_string),
-        re.compile(r"\w*PATH$"): (is_env_path, str_to_env_path, env_path_to_str),
-        "PATHEXT": (
-            is_nonstring_seq_of_strings,
-            pathsep_to_upper_seq,
-            seq_to_upper_pathsep,
-        ),
-        "PRETTY_PRINT_RESULTS": (is_bool, to_bool, bool_to_str),
-        "PROMPT": (is_string_or_callable, ensure_string, ensure_string),
-        "PROMPT_FIELDS": (always_true, None, None),
-        "PROMPT_REFRESH_INTERVAL": (is_float, float, str),
-        "PROMPT_TOOLKIT_COLOR_DEPTH": (
-            always_false,
-            ptk2_color_depth_setter,
-            ensure_string,
-        ),
-        "PUSHD_MINUS": (is_bool, to_bool, bool_to_str),
-        "PUSHD_SILENT": (is_bool, to_bool, bool_to_str),
-        "PTK_STYLE_OVERRIDES": (is_str_str_dict, to_str_str_dict, dict_to_str),
-        "RAISE_SUBPROC_ERROR": (is_bool, to_bool, bool_to_str),
-        "RIGHT_PROMPT": (is_string_or_callable, ensure_string, ensure_string),
-        "BOTTOM_TOOLBAR": (is_string_or_callable, ensure_string, ensure_string),
-        "SUBSEQUENCE_PATH_COMPLETION": (is_bool, to_bool, bool_to_str),
-        "SUGGEST_COMMANDS": (is_bool, to_bool, bool_to_str),
-        "SUGGEST_MAX_NUM": (is_int, int, str),
-        "SUGGEST_THRESHOLD": (is_int, int, str),
-        "SUPPRESS_BRANCH_TIMEOUT_MESSAGE": (is_bool, to_bool, bool_to_str),
-        "THREAD_SUBPROCS": (is_bool, to_bool, bool_to_str),
-        "UPDATE_COMPLETIONS_ON_KEYPRESS": (is_bool, to_bool, bool_to_str),
-        "UPDATE_OS_ENVIRON": (is_bool, to_bool, bool_to_str),
-        "UPDATE_PROMPT_ON_KEYPRESS": (is_bool, to_bool, bool_to_str),
-        "VC_BRANCH_TIMEOUT": (is_float, float, str),
-        "VC_HG_SHOW_BRANCH": (is_bool, to_bool, bool_to_str),
-        "VI_MODE": (is_bool, to_bool, bool_to_str),
-        "VIRTUAL_ENV": (is_string, ensure_string, ensure_string),
-        "XONSHRC": (is_env_path, str_to_env_path, env_path_to_str),
-        "XONSH_APPEND_NEWLINE": (is_bool, to_bool, bool_to_str),
-        "XONSH_AUTOPAIR": (is_bool, to_bool, bool_to_str),
-        "XONSH_CACHE_SCRIPTS": (is_bool, to_bool, bool_to_str),
-        "XONSH_CACHE_EVERYTHING": (is_bool, to_bool, bool_to_str),
-        "XONSH_COLOR_STYLE": (is_string, ensure_string, ensure_string),
-        "XONSH_DEBUG": (always_false, to_debug, bool_or_int_to_str),
-        "XONSH_ENCODING": (is_string, ensure_string, ensure_string),
-        "XONSH_ENCODING_ERRORS": (is_string, ensure_string, ensure_string),
-        "XONSH_HISTORY_BACKEND": (is_history_backend, to_itself, ensure_string),
-        "XONSH_HISTORY_FILE": (is_string, ensure_string, ensure_string),
-        "XONSH_HISTORY_MATCH_ANYWHERE": (is_bool, to_bool, bool_to_str),
-        "XONSH_HISTORY_SIZE": (
-            is_history_tuple,
-            to_history_tuple,
-            history_tuple_to_str,
-        ),
-        "XONSH_LOGIN": (is_bool, to_bool, bool_to_str),
-        "XONSH_PROC_FREQUENCY": (is_float, float, str),
-        "XONSH_SHOW_TRACEBACK": (is_bool, to_bool, bool_to_str),
-        "XONSH_STDERR_PREFIX": (is_string, ensure_string, ensure_string),
-        "XONSH_STDERR_POSTFIX": (is_string, ensure_string, ensure_string),
-        "XONSH_STORE_STDOUT": (is_bool, to_bool, bool_to_str),
-        "XONSH_STORE_STDIN": (is_bool, to_bool, bool_to_str),
-        "XONSH_TRACE_SUBPROC": (is_bool, to_bool, bool_to_str),
-        "XONSH_TRACEBACK_LOGFILE": (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
-        "XONSH_DATETIME_FORMAT": (is_string, ensure_string, ensure_string),
-    }
+# we use this as a registry of common ensurers; valuable for user interface
+ENSURERS = {
+    "bool": (is_bool, to_bool, bool_to_str),
+    "str": (is_string, ensure_string, ensure_string),
+    "path": (is_env_path, str_to_env_path, env_path_to_str),
+    "float": (is_float, float, str),
+    "int": (is_int, int, str),
+}
 
 
 #
@@ -715,161 +619,110 @@ def default_lscolors(env):
     return lsc
 
 
-# Default values should generally be immutable, that way if a user wants
-# to set them they have to do a copy and write them to the environment.
-# try to keep this sorted.
-@lazyobject
-def DEFAULT_VALUES():
-    dv = {
-        "AUTO_CD": False,
-        "AUTO_PUSHD": False,
-        "AUTO_SUGGEST": True,
-        "AUTO_SUGGEST_IN_COMPLETIONS": False,
-        "BASH_COMPLETIONS": BASH_COMPLETIONS_DEFAULT,
-        "CASE_SENSITIVE_COMPLETIONS": ON_LINUX,
-        "CDPATH": (),
-        "COLOR_INPUT": True,
-        "COLOR_RESULTS": True,
-        "COMPLETIONS_BRACKETS": True,
-        "COMPLETIONS_CONFIRM": False,
-        "COMPLETIONS_DISPLAY": "multi",
-        "COMPLETIONS_MENU_ROWS": 5,
-        "COMPLETION_QUERY_LIMIT": 100,
-        "COMPLETION_IN_THREAD": False,
-        "DIRSTACK_SIZE": 20,
-        "DOTGLOB": False,
-        "DYNAMIC_CWD_WIDTH": (float("inf"), "c"),
-        "DYNAMIC_CWD_ELISION_CHAR": "",
-        "EXPAND_ENV_VARS": True,
-        "FORCE_POSIX_PATHS": False,
-        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": False,
-        "FOREIGN_ALIASES_OVERRIDE": False,
-        "PROMPT_FIELDS": dict(prompt.PROMPT_FIELDS),
-        "FUZZY_PATH_COMPLETION": True,
-        "GLOB_SORTED": True,
-        "HISTCONTROL": set(),
-        "IGNOREEOF": False,
-        "INDENT": "    ",
-        "INTENSIFY_COLORS_ON_WIN": True,
-        "LANG": "C.UTF-8",
-        "LC_CTYPE": locale.setlocale(locale.LC_CTYPE),
-        "LC_COLLATE": locale.setlocale(locale.LC_COLLATE),
-        "LC_TIME": locale.setlocale(locale.LC_TIME),
-        "LC_MONETARY": locale.setlocale(locale.LC_MONETARY),
-        "LC_NUMERIC": locale.setlocale(locale.LC_NUMERIC),
-        "LS_COLORS": default_lscolors,
-        "LOADED_RC_FILES": (),
-        "MOUSE_SUPPORT": False,
-        "MULTILINE_PROMPT": ".",
-        "PATH": PATH_DEFAULT,
-        "PATHEXT": [".COM", ".EXE", ".BAT", ".CMD"] if ON_WINDOWS else [],
-        "PRETTY_PRINT_RESULTS": True,
-        "PROMPT": prompt.default_prompt(),
-        "PROMPT_REFRESH_INTERVAL": 0,
-        "PROMPT_TOOLKIT_COLOR_DEPTH": "",
-        "PTK_STYLE_OVERRIDES": dict(PTK2_STYLE),
-        "PUSHD_MINUS": False,
-        "PUSHD_SILENT": False,
-        "RAISE_SUBPROC_ERROR": False,
-        "RIGHT_PROMPT": "",
-        "BOTTOM_TOOLBAR": "",
-        "SHELL_TYPE": "best",
-        "SUBSEQUENCE_PATH_COMPLETION": True,
-        "SUPPRESS_BRANCH_TIMEOUT_MESSAGE": False,
-        "SUGGEST_COMMANDS": True,
-        "SUGGEST_MAX_NUM": 5,
-        "SUGGEST_THRESHOLD": 3,
-        "THREAD_SUBPROCS": True,
-        "TITLE": DEFAULT_TITLE,
-        "UPDATE_COMPLETIONS_ON_KEYPRESS": False,
-        "UPDATE_OS_ENVIRON": False,
-        "UPDATE_PROMPT_ON_KEYPRESS": False,
-        "VC_BRANCH_TIMEOUT": 0.2 if ON_WINDOWS else 0.1,
-        "VC_HG_SHOW_BRANCH": True,
-        "VI_MODE": False,
-        "XDG_CONFIG_HOME": os.path.expanduser(os.path.join("~", ".config")),
-        "XDG_DATA_HOME": os.path.expanduser(os.path.join("~", ".local", "share")),
-        "XONSHRC": default_xonshrc,
-        "XONSH_APPEND_NEWLINE": xonsh_append_newline,
-        "XONSH_AUTOPAIR": False,
-        "XONSH_CACHE_SCRIPTS": True,
-        "XONSH_CACHE_EVERYTHING": False,
-        "XONSH_COLOR_STYLE": "default",
-        "XONSH_CONFIG_DIR": xonsh_config_dir,
-        "XONSH_DATA_DIR": xonsh_data_dir,
-        "XONSH_DEBUG": 0,
-        "XONSH_ENCODING": DEFAULT_ENCODING,
-        "XONSH_ENCODING_ERRORS": "surrogateescape",
-        "XONSH_HISTORY_BACKEND": "json",
-        "XONSH_HISTORY_FILE": os.path.expanduser("~/.xonsh_history.json"),
-        "XONSH_HISTORY_MATCH_ANYWHERE": False,
-        "XONSH_HISTORY_SIZE": (8128, "commands"),
-        "XONSH_LOGIN": False,
-        "XONSH_PROC_FREQUENCY": 1e-4,
-        "XONSH_TRACE_SUBPROC": False,
-        "XONSH_SHOW_TRACEBACK": False,
-        "XONSH_STDERR_PREFIX": "",
-        "XONSH_STDERR_POSTFIX": "",
-        "XONSH_STORE_STDIN": False,
-        "XONSH_STORE_STDOUT": False,
-        "XONSH_TRACEBACK_LOGFILE": None,
-        "XONSH_DATETIME_FORMAT": "%Y-%m-%d %H:%M",
-    }
-    if hasattr(locale, "LC_MESSAGES"):
-        dv["LC_MESSAGES"] = locale.setlocale(locale.LC_MESSAGES)
-    return dv
-
-
-VarDocs = collections.namedtuple(
-    "VarDocs", ["docstr", "configurable", "default", "store_as_str"]
+Var = collections.namedtuple(
+    "Var",
+    [
+        "validate",
+        "convert",
+        "detype",
+        "default",
+        "doc",
+        "doc_configurable",
+        "doc_default",
+        "doc_store_as_str",
+    ],
 )
-VarDocs.__doc__ = """Named tuple for environment variable documentation
+Var.__doc__ = """Named tuples whose elements represent environment variable
+validation, conversion, detyping; default values; and documentation.
 
 Parameters
 ----------
-docstr : str
+validate : func
+    Validator function returning a bool; checks that the variable is of the
+    expected type.
+convert : func
+    Function to convert variable from a string representation to its type.
+detype : func
+    Function to convert variable from its type to a string representation.
+default
+    Default value for variable.
+doc : str
    The environment variable docstring.
-configurable : bool, optional
+doc_configurable : bool, optional
     Flag for whether the environment variable is configurable or not.
-default : str, optional
+doc_default : str, optional
     Custom docstring for the default value for complex defaults.
     Is this is DefaultNotGiven, then the default will be looked up
     from DEFAULT_VALUES and converted to a str.
-store_as_str : bool, optional
+doc_store_as_str : bool, optional
     Flag for whether the environment variable should be stored as a
     string. This is used when persisting a variable that is not JSON
     serializable to the config file. For example, sets, frozensets, and
     potentially other non-trivial data types. default, False.
 """
+
 # iterates from back
-VarDocs.__new__.__defaults__ = (True, DefaultNotGiven, False)
+Var.__new__.__defaults__ = (
+    always_true,
+    None,
+    ensure_string,
+    None,
+    "",
+    True,
+    DefaultNotGiven,
+    False,
+)
 
 
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
-def DEFAULT_DOCS():
+def DEFAULT_VARS():
     return {
-        "ANSICON": VarDocs(
-            "This is used on Windows to set the title, " "if available.",
-            configurable=False,
+        "ANSICON": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
+            "This is used on Windows to set the title, if available.",
+            doc_configurable=False,
         ),
-        "AUTO_CD": VarDocs(
+        "AUTO_CD": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Flag to enable changing to a directory by entering the dirname or "
-            "full path only (without the cd command)."
+            "full path only (without the cd command).",
         ),
-        "AUTO_PUSHD": VarDocs(
-            "Flag for automatically pushing directories onto the directory stack."
+        "AUTO_PUSHD": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "Flag for automatically pushing directories onto the directory stack.",
         ),
-        "AUTO_SUGGEST": VarDocs(
+        "AUTO_SUGGEST": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Enable automatic command suggestions based on history, like in the fish "
             "shell.\n\nPressing the right arrow key inserts the currently "
-            "displayed suggestion. Only usable with ``$SHELL_TYPE=prompt_toolkit.``"
+            "displayed suggestion. Only usable with ``$SHELL_TYPE=prompt_toolkit.``",
         ),
-        "AUTO_SUGGEST_IN_COMPLETIONS": VarDocs(
+        "AUTO_SUGGEST_IN_COMPLETIONS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Places the auto-suggest result as the first option in the completions. "
-            "This enables you to tab complete the auto-suggestion."
+            "This enables you to tab complete the auto-suggestion.",
         ),
-        "BASH_COMPLETIONS": VarDocs(
+        "BASH_COMPLETIONS": Var(
+            is_env_path,
+            str_to_env_path,
+            env_path_to_str,
+            BASH_COMPLETIONS_DEFAULT,
             "This is a list (or tuple) of strings that specifies where the "
             "``bash_completion`` script may be found. "
             "The first valid path will be used. For better performance, "
@@ -880,7 +733,7 @@ def DEFAULT_DOCS():
             "The default values are platform "
             "dependent, but sane. To specify an alternate list, do so in the run "
             "control file.",
-            default=(
+            doc_default=(
                 "Normally this is:\n\n"
                 "    ``('/usr/share/bash-completion/bash_completion', )``\n\n"
                 "But, on Mac it is:\n\n"
@@ -889,22 +742,59 @@ def DEFAULT_DOCS():
                 "Other OS-specific defaults may be added in the future."
             ),
         ),
-        "CASE_SENSITIVE_COMPLETIONS": VarDocs(
+        "CASE_SENSITIVE_COMPLETIONS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            ON_LINUX,
             "Sets whether completions should be case sensitive or case " "insensitive.",
-            default="True on Linux, False otherwise.",
+            doc_default="True on Linux, False otherwise.",
         ),
-        "CDPATH": VarDocs(
+        "CDPATH": Var(
+            is_env_path,
+            str_to_env_path,
+            env_path_to_str,
+            (),
             "A list of paths to be used as roots for a cd, breaking compatibility "
-            "with Bash, xonsh always prefer an existing relative path."
+            "with Bash, xonsh always prefer an existing relative path.",
         ),
-        "COLOR_INPUT": VarDocs("Flag for syntax highlighting interactive input."),
-        "COLOR_RESULTS": VarDocs("Flag for syntax highlighting return values."),
-        "COMPLETIONS_BRACKETS": VarDocs(
+        "COLOR_INPUT": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
+            "Flag for syntax highlighting interactive input.",
+        ),
+        "COLOR_RESULTS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
+            "Flag for syntax highlighting return values.",
+        ),
+        "COMPLETIONS_BRACKETS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Flag to enable/disable inclusion of square brackets and parentheses "
             "in Python attribute completions.",
-            default="True",
+            doc_default="True",
         ),
-        "COMPLETIONS_DISPLAY": VarDocs(
+        "COMPLETIONS_CONFIRM": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "While tab-completions menu is displayed, press <Enter> to confirm "
+            "completion instead of running command. This only affects the "
+            "prompt-toolkit shell.",
+        ),
+        "COMPLETIONS_DISPLAY": Var(
+            is_completions_display_value,
+            to_completions_display_value,
+            str,
+            "multi",
             "Configure if and how Python completions are displayed by the "
             "``prompt_toolkit`` shell.\n\nThis option does not affect Bash "
             "completions, auto-suggestions, etc.\n\nChanging it at runtime will "
@@ -921,85 +811,127 @@ def DEFAULT_DOCS():
             "These option values are not case- or type-sensitive, so e.g. "
             "writing ``$COMPLETIONS_DISPLAY = None`` "
             "and ``$COMPLETIONS_DISPLAY = 'none'`` are equivalent. Only usable with "
-            "``$SHELL_TYPE=prompt_toolkit``"
+            "``$SHELL_TYPE=prompt_toolkit``",
         ),
-        "COMPLETIONS_CONFIRM": VarDocs(
-            "While tab-completions menu is displayed, press <Enter> to confirm "
-            "completion instead of running command. This only affects the "
-            "prompt-toolkit shell."
-        ),
-        "COMPLETIONS_MENU_ROWS": VarDocs(
+        "COMPLETIONS_MENU_ROWS": Var(
+            is_int,
+            int,
+            str,
+            5,
             "Number of rows to reserve for tab-completions menu if "
             "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
-            "prompt-toolkit shell."
+            "prompt-toolkit shell.",
         ),
-        "COMPLETION_QUERY_LIMIT": VarDocs(
+        "COMPLETION_QUERY_LIMIT": Var(
+            is_int,
+            int,
+            str,
+            100,
             "The number of completions to display before the user is asked "
-            "for confirmation."
+            "for confirmation.",
         ),
-        "COMPLETION_IN_THREAD": VarDocs(
+        "COMPLETION_IN_THREAD": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "When generating the completions takes time, "
             "it’s better to do this in a background thread. "
-            "When this is True, background threads is used for completion."
+            "When this is True, background threads is used for completion.",
         ),
-        "DIRSTACK_SIZE": VarDocs("Maximum size of the directory stack."),
-        "DOTGLOB": VarDocs(
+        "DIRSTACK_SIZE": Var(
+            is_int, int, str, 20, "Maximum size of the directory stack."
+        ),
+        "DOTGLOB": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             'Globbing files with "*" or "**" will also match '
             "dotfiles, or those 'hidden' files whose names "
             "begin with a literal '.'. Such files are filtered "
-            "out by default."
+            "out by default.",
         ),
-        "DYNAMIC_CWD_WIDTH": VarDocs(
+        "DYNAMIC_CWD_WIDTH": Var(
+            is_dynamic_cwd_width,
+            to_dynamic_cwd_tuple,
+            dynamic_cwd_tuple_to_str,
+            (float("inf"), "c"),
             "Maximum length in number of characters "
             "or as a percentage for the ``cwd`` prompt variable. For example, "
             '"20" is a twenty character width and "10%" is ten percent of the '
-            "number of columns available."
+            "number of columns available.",
         ),
-        "DYNAMIC_CWD_ELISION_CHAR": VarDocs(
+        "DYNAMIC_CWD_ELISION_CHAR": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
             "The string used to show a shortened directory in a shortened cwd, "
-            "e.g. ``'…'``."
+            "e.g. ``'…'``.",
         ),
-        "EXPAND_ENV_VARS": VarDocs(
+        "EXPAND_ENV_VARS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Toggles whether environment variables are expanded inside of strings "
-            "in subprocess mode."
+            "in subprocess mode.",
         ),
-        "FORCE_POSIX_PATHS": VarDocs(
+        "FORCE_POSIX_PATHS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Forces forward slashes (``/``) on Windows systems when using auto "
             "completion if set to anything truthy.",
-            configurable=ON_WINDOWS,
+            doc_configurable=ON_WINDOWS,
         ),
-        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": VarDocs(
+        "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Whether or not foreign aliases should suppress the message "
             "that informs the user when a foreign alias has been skipped "
             "because it already exists in xonsh.",
-            configurable=True,
+            doc_configurable=True,
         ),
-        "FOREIGN_ALIASES_OVERRIDE": VarDocs(
+        "FOREIGN_ALIASES_OVERRIDE": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Whether or not foreign aliases should override xonsh aliases "
             "with the same name. Note that setting of this must happen in the "
             "environment that xonsh was started from. "
             "It cannot be set in the ``.xonshrc`` as loading of foreign aliases happens before"
             "``.xonshrc`` is parsed",
-            configurable=True,
+            doc_configurable=True,
         ),
-        "PROMPT_FIELDS": VarDocs(
-            "Dictionary containing variables to be used when formatting $PROMPT "
-            "and $TITLE. See 'Customizing the Prompt' "
-            "http://xon.sh/tutorial.html#customizing-the-prompt",
-            configurable=False,
-            default="``xonsh.prompt.PROMPT_FIELDS``",
-        ),
-        "FUZZY_PATH_COMPLETION": VarDocs(
+        "FUZZY_PATH_COMPLETION": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Toggles 'fuzzy' matching of paths for tab completion, which is only "
             "used as a fallback if no other completions succeed but can be used "
             "as a way to adjust for typographical errors. If ``True``, then, e.g.,"
-            " ``xonhs`` will match ``xonsh``."
+            " ``xonhs`` will match ``xonsh``.",
         ),
-        "GLOB_SORTED": VarDocs(
+        "GLOB_SORTED": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Toggles whether globbing results are manually sorted. If ``False``, "
-            "the results are returned in arbitrary order."
+            "the results are returned in arbitrary order.",
         ),
-        "HISTCONTROL": VarDocs(
+        "HISTCONTROL": Var(
+            is_string_set,
+            csv_to_set,
+            set_to_csv,
+            set(),
             "A set of strings (comma-separated list in string form) of options "
             "that determine what commands are saved to the history list. By "
             "default all commands are saved. The option ``ignoredups`` will not "
@@ -1008,21 +940,84 @@ def DEFAULT_DOCS():
             "exit status) to not be added to the history list. The option "
             "``erasedups`` will remove all previous commands that matches and updates the frequency. "
             "Note: ``erasedups`` is supported only in sqlite backend).",
-            store_as_str=True,
+            doc_store_as_str=True,
         ),
-        "IGNOREEOF": VarDocs("Prevents Ctrl-D from exiting the shell."),
-        "INDENT": VarDocs("Indentation string for multiline input"),
-        "INTENSIFY_COLORS_ON_WIN": VarDocs(
+        "IGNOREEOF": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "Prevents Ctrl-D from exiting the shell.",
+        ),
+        "INDENT": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "    ",
+            "Indentation string for multiline input",
+        ),
+        "INTENSIFY_COLORS_ON_WIN": Var(
+            always_false,
+            intensify_colors_on_win_setter,
+            bool_to_str,
+            True,
             "Enhance style colors for readability "
             "when using the default terminal (``cmd.exe``) on Windows. Blue colors, "
             "which are hard to read, are replaced with cyan. Other colors are "
             "generally replaced by their bright counter parts.",
-            configurable=ON_WINDOWS,
+            doc_configurable=ON_WINDOWS,
         ),
-        "LANG": VarDocs("Fallback locale setting for systems where it matters"),
-        "LS_COLORS": VarDocs(
-            "Color settings for ``ls`` command line utility",
-            default="``*.7z=1;0;31:*.Z=1;0;31:*.aac=0;36:*.ace=1;0;31:"
+        "LANG": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "C.UTF-8",
+            "Fallback locale setting for systems where it matters",
+        ),
+        "LC_COLLATE": Var(
+            always_false,
+            locale_convert("LC_COLLATE"),
+            ensure_string,
+            locale.setlocale(locale.LC_COLLATE),
+        ),
+        "LC_CTYPE": Var(
+            always_false,
+            locale_convert("LC_CTYPE"),
+            ensure_string,
+            locale.setlocale(locale.LC_CTYPE),
+        ),
+        "LC_MESSAGES": Var(
+            always_false,
+            locale_convert("LC_MESSAGES"),
+            ensure_string,
+            locale.setlocale(locale.LC_MESSAGES),
+        ),
+        "LC_MONETARY": Var(
+            always_false,
+            locale_convert("LC_MONETARY"),
+            ensure_string,
+            locale.setlocale(locale.LC_MONETARY),
+        ),
+        "LC_NUMERIC": Var(
+            always_false,
+            locale_convert("LC_NUMERIC"),
+            ensure_string,
+            locale.setlocale(locale.LC_NUMERIC),
+        ),
+        "LC_TIME": Var(
+            always_false,
+            locale_convert("LC_TIME"),
+            ensure_string,
+            locale.setlocale(locale.LC_TIME),
+        ),
+        "LS_COLORS": Var(
+            is_lscolors,
+            LsColors.convert,
+            detype,
+            default_lscolors,
+            "Color settings for ``ls`` command line utility and, "
+            "with ``$SHELL_TYPE='prompt_toolkit'``, file arguments in subprocess mode.",
+            doc_default="``*.7z=1;0;31:*.Z=1;0;31:*.aac=0;36:*.ace=1;0;31:"
             "*.alz=1;0;31:*.arc=1;0;31:*.arj=1;0;31:*.asf=1;0;35:*.au=0;36:"
             "*.avi=1;0;35:*.bmp=1;0;35:*.bz=1;0;31:*.bz2=1;0;31:*.cab=1;0;31:"
             "*.cgm=1;0;35:*.cpio=1;0;31:*.deb=1;0;31:*.dl=1;0;35:*.dwm=1;0;31:"
@@ -1049,31 +1044,51 @@ def DEFAULT_DOCS():
             "or=40;0;31:ow=0;34;42:pi=40;0;33:rs=0:sg=0;30;43:so=1;0;35:"
             "st=0;37;44:su=0;37;41:tw=0;30;42``",
         ),
-        "LOADED_RC_FILES": VarDocs(
+        "LOADED_RC_FILES": Var(
+            is_bool_seq,
+            csv_to_bool_seq,
+            bool_seq_to_csv,
+            (),
             "Whether or not any of the xonsh run control files were loaded at "
             "startup. This is a sequence of bools in Python that is converted "
             "to a CSV list in string form, ie ``[True, False]`` becomes "
             "``'True,False'``.",
-            configurable=False,
+            doc_configurable=False,
         ),
-        "MOUSE_SUPPORT": VarDocs(
+        "MOUSE_SUPPORT": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Enable mouse support in the ``prompt_toolkit`` shell. This allows "
             "clicking for positioning the cursor or selecting a completion. In "
             "some terminals however, this disables the ability to scroll back "
             "through the history of the terminal. Only usable with "
-            "``$SHELL_TYPE=prompt_toolkit``"
+            "``$SHELL_TYPE=prompt_toolkit``",
         ),
-        "MULTILINE_PROMPT": VarDocs(
+        "MULTILINE_PROMPT": Var(
+            is_string_or_callable,
+            ensure_string,
+            ensure_string,
+            ".",
             "Prompt text for 2nd+ lines of input, may be str or function which "
-            "returns a str."
+            "returns a str.",
         ),
-        "OLDPWD": VarDocs(
+        "OLDPWD": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            ".",
             "Used to represent a previous present working directory.",
-            configurable=False,
+            doc_configurable=False,
         ),
-        "PATH": VarDocs(
+        "PATH": Var(
+            is_env_path,
+            str_to_env_path,
+            env_path_to_str,
+            PATH_DEFAULT,
             "List of strings representing where to look for executables.",
-            default="On Windows: it is ``Path`` value of register's "
+            doc_default="On Windows: it is ``Path`` value of register's "
             "``HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment``. "
             "On Mac OSX: ``('/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin')`` "
             "On Linux & on Cygwin & on MSYS, when detected that the distro "
@@ -1084,59 +1099,122 @@ def DEFAULT_DOCS():
             "``('~/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin',"
             "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``",
         ),
-        "PATHEXT": VarDocs(
+        re.compile(r"\w*PATH$"): Var(is_env_path, str_to_env_path, env_path_to_str),
+        "PATHEXT": Var(
+            is_nonstring_seq_of_strings,
+            pathsep_to_upper_seq,
+            seq_to_upper_pathsep,
+            [".COM", ".EXE", ".BAT", ".CMD"] if ON_WINDOWS else [],
             "Sequence of extension strings (eg, ``.EXE``) for "
             "filtering valid executables by. Each element must be "
-            "uppercase."
+            "uppercase.",
         ),
-        "PRETTY_PRINT_RESULTS": VarDocs('Flag for "pretty printing" return values.'),
-        "PROMPT": VarDocs(
+        "PRETTY_PRINT_RESULTS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
+            'Flag for "pretty printing" return values.',
+        ),
+        "PROMPT": Var(
+            is_string_or_callable,
+            ensure_string,
+            ensure_string,
+            prompt.default_prompt(),
             "The prompt text. May contain keyword arguments which are "
             "auto-formatted, see 'Customizing the Prompt' at "
             "http://xon.sh/tutorial.html#customizing-the-prompt. "
             "This value is never inherited from parent processes.",
-            default="``xonsh.environ.DEFAULT_PROMPT``",
+            doc_default="``xonsh.environ.DEFAULT_PROMPT``",
         ),
-        "PROMPT_REFRESH_INTERVAL": VarDocs(
+        "PROMPT_FIELDS": Var(
+            always_true,
+            None,
+            None,
+            prompt.PROMPT_FIELDS,
+            "Dictionary containing variables to be used when formatting $PROMPT "
+            "and $TITLE. See 'Customizing the Prompt' "
+            "http://xon.sh/tutorial.html#customizing-the-prompt",
+            doc_configurable=False,
+            doc_default="``xonsh.prompt.PROMPT_FIELDS``",
+        ),
+        "PROMPT_REFRESH_INTERVAL": Var(
+            is_float,
+            float,
+            str,
+            0,
             "Interval (in seconds) to evaluate and update ``$PROMPT``, ``$RIGHT_PROMPT`` "
             "and ``$BOTTOM_TOOLBAR``. The default is zero (no update). "
             "NOTE: ``$UPDATE_PROMPT_ON_KEYPRESS`` must be set to ``True`` for this "
-            "variable to take effect."
+            "variable to take effect.",
         ),
-        "PROMPT_TOOLKIT_COLOR_DEPTH": VarDocs(
+        "PROMPT_TOOLKIT_COLOR_DEPTH": Var(
+            always_false,
+            ptk2_color_depth_setter,
+            ensure_string,
+            "",
             "The color depth used by prompt toolkit 2. Possible values are: "
             "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
-            "colors. Default is an empty string which means that prompt toolkit decide."
+            "colors. Default is an empty string which means that prompt toolkit decide.",
         ),
-        "PTK_STYLE_OVERRIDES": VarDocs(
-            "A dictionary containing custom prompt_toolkit style definitions."
+        "PTK_STYLE_OVERRIDES": Var(
+            is_str_str_dict,
+            to_str_str_dict,
+            dict_to_str,
+            dict(PTK2_STYLE),
+            "A dictionary containing custom prompt_toolkit style definitions.",
         ),
-        "PUSHD_MINUS": VarDocs(
-            "Flag for directory pushing functionality. False is the normal " "behavior."
+        "PUSHD_MINUS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "Flag for directory pushing functionality. False is the normal "
+            "behavior.",
         ),
-        "PUSHD_SILENT": VarDocs(
-            "Whether or not to suppress directory stack manipulation output."
+        "PUSHD_SILENT": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "Whether or not to suppress directory stack manipulation output.",
         ),
-        "RAISE_SUBPROC_ERROR": VarDocs(
+        "RAISE_SUBPROC_ERROR": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Whether or not to raise an error if a subprocess (captured or "
             "uncaptured) returns a non-zero exit status, which indicates failure. "
             "This is most useful in xonsh scripts or modules where failures "
             "should cause an end to execution. This is less useful at a terminal. "
-            "The error that is raised is a ``subprocess.CalledProcessError``."
+            "The error that is raised is a ``subprocess.CalledProcessError``.",
         ),
-        "RIGHT_PROMPT": VarDocs(
+        "RIGHT_PROMPT": Var(
+            is_string_or_callable,
+            ensure_string,
+            ensure_string,
+            "",
             "Template string for right-aligned text "
             "at the prompt. This may be parametrized in the same way as "
             "the ``$PROMPT`` variable. Currently, this is only available in the "
-            "prompt-toolkit shell."
+            "prompt-toolkit shell.",
         ),
-        "BOTTOM_TOOLBAR": VarDocs(
+        "BOTTOM_TOOLBAR": Var(
+            is_string_or_callable,
+            ensure_string,
+            ensure_string,
+            "",
             "Template string for the bottom toolbar. "
             "This may be parametrized in the same way as "
             "the ``$PROMPT`` variable. Currently, this is only available in the "
-            "prompt-toolkit shell."
+            "prompt-toolkit shell.",
         ),
-        "SHELL_TYPE": VarDocs(
+        "SHELL_TYPE": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "best",
             "Which shell is used. Currently two base shell types are supported:\n\n"
             "    - ``readline`` that is backed by Python's readline module\n"
             "    - ``prompt_toolkit`` that uses external library of the same name\n"
@@ -1147,31 +1225,55 @@ def DEFAULT_DOCS():
             "`prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_"
             " library installed. To specify which shell should be used, do so in "
             "the run control file.",
-            default="``best``",
+            doc_default="``best``",
         ),
-        "SUBSEQUENCE_PATH_COMPLETION": VarDocs(
+        "SUBSEQUENCE_PATH_COMPLETION": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Toggles subsequence matching of paths for tab completion. "
-            "If ``True``, then, e.g., ``~/u/ro`` can match ``~/lou/carcolh``."
+            "If ``True``, then, e.g., ``~/u/ro`` can match ``~/lou/carcolh``.",
         ),
-        "SUGGEST_COMMANDS": VarDocs(
+        "SUGGEST_COMMANDS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "When a user types an invalid command, xonsh will try to offer "
-            "suggestions of similar valid commands if this is True."
+            "suggestions of similar valid commands if this is True.",
         ),
-        "SUGGEST_MAX_NUM": VarDocs(
+        "SUGGEST_MAX_NUM": Var(
+            is_int,
+            int,
+            str,
+            5,
             "xonsh will show at most this many suggestions in response to an "
             "invalid command. If negative, there is no limit to how many "
-            "suggestions are shown."
+            "suggestions are shown.",
         ),
-        "SUGGEST_THRESHOLD": VarDocs(
+        "SUGGEST_THRESHOLD": Var(
+            is_int,
+            int,
+            str,
+            3,
             "An error threshold. If the Levenshtein distance between the entered "
             "command and a valid command is less than this value, the valid "
             'command will be offered as a suggestion.  Also used for "fuzzy" '
-            "tab completion of paths."
+            "tab completion of paths.",
         ),
-        "SUPPRESS_BRANCH_TIMEOUT_MESSAGE": VarDocs(
-            "Whether or not to suppress branch timeout warning messages."
+        "SUPPRESS_BRANCH_TIMEOUT_MESSAGE": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "Whether or not to suppress branch timeout warning messages.",
         ),
-        "TERM": VarDocs(
+        "TERM": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
             "TERM is sometimes set by the terminal emulator. This is used (when "
             "valid) to determine whether or not to set the title. Users shouldn't "
             "need to set this themselves. Note that this variable should be set as "
@@ -1185,9 +1287,13 @@ def DEFAULT_DOCS():
             "* Lastly, in xonshrc with ``$TERM``\n\n"
             "Ideally, your terminal emulator will set this correctly but that does "
             "not always happen.",
-            configurable=False,
+            doc_configurable=False,
         ),
-        "THREAD_SUBPROCS": VarDocs(
+        "THREAD_SUBPROCS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Whether or not to try to run subrocess mode in a Python thread, "
             "when applicable. There are various trade-offs, which normally "
             "affects only interactive sessions.\n\nWhen True:\n\n"
@@ -1205,116 +1311,213 @@ def DEFAULT_DOCS():
             "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
-            "The desired effect is often up to the command, user, or use case."
+            "The desired effect is often up to the command, user, or use case.",
         ),
-        "TITLE": VarDocs(
+        "TITLE": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            DEFAULT_TITLE,
             "The title text for the window in which xonsh is running. Formatted "
             "in the same manner as ``$PROMPT``, see 'Customizing the Prompt' "
             "http://xon.sh/tutorial.html#customizing-the-prompt.",
-            default="``xonsh.environ.DEFAULT_TITLE``",
+            doc_default="``xonsh.environ.DEFAULT_TITLE``",
         ),
-        "UPDATE_COMPLETIONS_ON_KEYPRESS": VarDocs(
+        "UPDATE_COMPLETIONS_ON_KEYPRESS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Completions display is evaluated and presented whenever a key is "
             "pressed. This avoids the need to press TAB, except to cycle through "
-            "the possibilities. This currently only affects the prompt-toolkit shell."
+            "the possibilities. This currently only affects the prompt-toolkit shell.",
         ),
-        "UPDATE_OS_ENVIRON": VarDocs(
+        "UPDATE_OS_ENVIRON": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "If True ``os_environ`` will always be updated "
             "when the xonsh environment changes. The environment can be reset to "
-            "the default value by calling ``__xonsh__.env.undo_replace_env()``"
+            "the default value by calling ``__xonsh__.env.undo_replace_env()``",
         ),
-        "UPDATE_PROMPT_ON_KEYPRESS": VarDocs(
+        "UPDATE_PROMPT_ON_KEYPRESS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Disables caching the prompt between commands, "
             "so that it would be reevaluated on each keypress. "
-            "Disabled by default because of the incurred performance penalty."
+            "Disabled by default because of the incurred performance penalty.",
         ),
-        "VC_BRANCH_TIMEOUT": VarDocs(
+        "VC_BRANCH_TIMEOUT": Var(
+            is_float,
+            float,
+            str,
+            0.2 if ON_WINDOWS else 0.1,
             "The timeout (in seconds) for version control "
             "branch computations. This is a timeout per subprocess call, so the "
-            "total time to compute will be larger than this in many cases."
+            "total time to compute will be larger than this in many cases.",
         ),
-        "VC_HG_SHOW_BRANCH": VarDocs(
-            "Whether or not to show the Mercurial branch in the prompt."
+        "VC_HG_SHOW_BRANCH": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
+            "Whether or not to show the Mercurial branch in the prompt.",
         ),
-        "VI_MODE": VarDocs(
-            "Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell."
+        "VI_MODE": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell.",
         ),
-        "VIRTUAL_ENV": VarDocs(
-            "Path to the currently active Python environment.", configurable=False
+        "VIRTUAL_ENV": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
+            "Path to the currently active Python environment.",
+            doc_configurable=False,
         ),
-        "XDG_CONFIG_HOME": VarDocs(
+        "XDG_CONFIG_HOME": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            os.path.expanduser(os.path.join("~", ".config")),
             "Open desktop standard configuration home dir. This is the same "
             "default as used in the standard.",
-            configurable=False,
-            default="``~/.config``",
+            doc_configurable=False,
+            doc_default="``~/.config``",
         ),
-        "XDG_DATA_HOME": VarDocs(
+        "XDG_DATA_HOME": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            os.path.expanduser(os.path.join("~", ".local", "share")),
             "Open desktop standard data home dir. This is the same default as "
             "used in the standard.",
-            default="``~/.local/share``",
+            doc_default="``~/.local/share``",
         ),
-        "XONSHRC": VarDocs(
+        "XONSHRC": Var(
+            is_env_path,
+            str_to_env_path,
+            env_path_to_str,
+            default_xonshrc,
             "A list of the locations of run control files, if they exist.  User "
             "defined run control file will supersede values set in system-wide "
             "control file if there is a naming collision.",
-            default=(
+            doc_default=(
                 "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
                 "\nOn Windows: "
                 "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``"
             ),
         ),
-        "XONSH_APPEND_NEWLINE": VarDocs(
+        "XONSH_APPEND_NEWLINE": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            xonsh_append_newline,
             "Append new line when a partial line is preserved in output.",
-            default="``$XONSH_INTERACTIVE``",
+            doc_default="``$XONSH_INTERACTIVE``",
         ),
-        "XONSH_AUTOPAIR": VarDocs(
+        "XONSH_AUTOPAIR": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Whether Xonsh will auto-insert matching parentheses, brackets, and "
-            "quotes. Only available under the prompt-toolkit shell."
+            "quotes. Only available under the prompt-toolkit shell.",
         ),
-        "XONSH_CACHE_SCRIPTS": VarDocs(
+        "XONSH_CACHE_SCRIPTS": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "Controls whether the code for scripts run from xonsh will be cached"
-            " (``True``) or re-compiled each time (``False``)."
+            " (``True``) or re-compiled each time (``False``).",
         ),
-        "XONSH_CACHE_EVERYTHING": VarDocs(
+        "XONSH_CACHE_EVERYTHING": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Controls whether all code (including code entered at the interactive"
-            " prompt) will be cached."
+            " prompt) will be cached.",
         ),
-        "XONSH_COLOR_STYLE": VarDocs(
+        "XONSH_COLOR_STYLE": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "default",
             "Sets the color style for xonsh colors. This is a style name, not "
-            "a color map. Run ``xonfig styles`` to see the available styles."
+            "a color map. Run ``xonfig styles`` to see the available styles.",
         ),
-        "XONSH_CONFIG_DIR": VarDocs(
+        "XONSH_CONFIG_DIR": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            xonsh_config_dir,
             "This is the location where xonsh configuration information is stored.",
-            configurable=False,
-            default="``$XDG_CONFIG_HOME/xonsh``",
+            doc_configurable=False,
+            doc_default="``$XDG_CONFIG_HOME/xonsh``",
         ),
-        "XONSH_DEBUG": VarDocs(
+        "XONSH_DATETIME_FORMAT": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "%Y-%m-%d %H:%M",
+            "The format that is used for ``datetime.strptime()`` in various places, "
+            "i.e the history timestamp option.",
+        ),
+        "XONSH_DEBUG": Var(
+            always_false,
+            to_debug,
+            bool_or_int_to_str,
+            0,
             "Sets the xonsh debugging level. This may be an integer or a boolean. "
             "Setting this variable prior to stating xonsh to ``1`` or ``True`` "
             "will suppress amalgamated imports. Setting it to ``2`` will get some "
             "basic information like input transformation, command replacement. "
             "With ``3`` or a higher number will make more debugging information "
             "presented, like PLY parsing messages.",
-            configurable=False,
+            doc_configurable=False,
         ),
-        "XONSH_DATA_DIR": VarDocs(
+        "XONSH_DATA_DIR": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            xonsh_data_dir,
             "This is the location where xonsh data files are stored, such as "
             "history.",
-            default="``$XDG_DATA_HOME/xonsh``",
+            doc_default="``$XDG_DATA_HOME/xonsh``",
         ),
-        "XONSH_ENCODING": VarDocs(
+        "XONSH_ENCODING": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            DEFAULT_ENCODING,
             "This is the encoding that xonsh should use for subprocess operations.",
-            default="``sys.getdefaultencoding()``",
+            doc_default="``sys.getdefaultencoding()``",
         ),
-        "XONSH_ENCODING_ERRORS": VarDocs(
+        "XONSH_ENCODING_ERRORS": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "surrogateescape",
             "The flag for how to handle encoding errors should they happen. "
             "Any string flag that has been previously registered with Python "
             "is allowed. See the 'Python codecs documentation' "
             "(https://docs.python.org/3/library/codecs.html#error-handlers) "
             "for more information and available options.",
-            default="``surrogateescape``",
+            doc_default="``surrogateescape``",
         ),
-        "XONSH_GITSTATUS_*": VarDocs(
+        "XONSH_GITSTATUS_*": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
             "Symbols for gitstatus prompt. Default values are: \n\n"
             "* ``XONSH_GITSTATUS_HASH``: ``:``\n"
             "* ``XONSH_GITSTATUS_BRANCH``: ``{CYAN}``\n"
@@ -1326,25 +1529,41 @@ def DEFAULT_DOCS():
             "* ``XONSH_GITSTATUS_STASHED``: ``⚑``\n"
             "* ``XONSH_GITSTATUS_CLEAN``: ``{BOLD_GREEN}✓``\n"
             "* ``XONSH_GITSTATUS_AHEAD``: ``↑·``\n"
-            "* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n"
+            "* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n",
         ),
-        "XONSH_HISTORY_BACKEND": VarDocs(
+        "XONSH_HISTORY_BACKEND": Var(
+            is_history_backend,
+            to_itself,
+            ensure_string,
+            "json",
             "Set which history backend to use. Options are: 'json', "
             "'sqlite', and 'dummy'. The default is 'json'. "
             "``XONSH_HISTORY_BACKEND`` also accepts a class type that inherits "
-            "from ``xonsh.history.base.History``, or its instance."
+            "from ``xonsh.history.base.History``, or its instance.",
         ),
-        "XONSH_HISTORY_FILE": VarDocs(
+        "XONSH_HISTORY_FILE": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            os.path.expanduser("~/.xonsh_history.json"),
             "Location of history file (deprecated).",
-            configurable=False,
-            default="``~/.xonsh_history``",
+            doc_configurable=False,
+            doc_default="``~/.xonsh_history``",
         ),
-        "XONSH_HISTORY_MATCH_ANYWHERE": VarDocs(
+        "XONSH_HISTORY_MATCH_ANYWHERE": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "When searching history from a partial string (by pressing up arrow), "
             "match command history anywhere in a given line (not just the start)",
-            default="False",
+            doc_default="False",
         ),
-        "XONSH_HISTORY_SIZE": VarDocs(
+        "XONSH_HISTORY_SIZE": Var(
+            is_history_tuple,
+            to_history_tuple,
+            history_tuple_to_str,
+            (8128, "commands"),
             "Value and units tuple that sets the size of history after garbage "
             "collection. Canonical units are:\n\n"
             "- ``commands`` for the number of past commands executed,\n"
@@ -1352,66 +1571,106 @@ def DEFAULT_DOCS():
             "- ``s`` for the number of seconds in the past that are allowed, and\n"
             "- ``b`` for the number of bytes that history may consume.\n\n"
             "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
-            default="``(8128, 'commands')`` or ``'8128 commands'``",
+            doc_default="``(8128, 'commands')`` or ``'8128 commands'``",
         ),
-        "XONSH_INTERACTIVE": VarDocs(
+        "XONSH_INTERACTIVE": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
             "``True`` if xonsh is running interactively, and ``False`` otherwise.",
-            configurable=False,
+            doc_configurable=False,
         ),
-        "XONSH_LOGIN": VarDocs(
+        "XONSH_LOGIN": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "``True`` if xonsh is running as a login shell, and ``False`` otherwise.",
-            configurable=False,
+            doc_configurable=False,
         ),
-        "XONSH_PROC_FREQUENCY": VarDocs(
+        "XONSH_PROC_FREQUENCY": Var(
+            is_float,
+            float,
+            str,
+            1e-4,
             "The process frequency is the time that "
             "xonsh process threads sleep for while running command pipelines. "
-            "The value has units of seconds [s]."
+            "The value has units of seconds [s].",
         ),
-        "XONSH_TRACE_SUBPROC": VarDocs(
-            "Set to ``True`` to show arguments list of every executed subprocess command."
-        ),
-        "XONSH_SHOW_TRACEBACK": VarDocs(
+        "XONSH_SHOW_TRACEBACK": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Controls if a traceback is shown if exceptions occur in the shell. "
             "Set to ``True`` to always show traceback or ``False`` to always hide. "
             "If undefined then the traceback is hidden but a notice is shown on how "
-            "to enable the full traceback."
+            "to enable the full traceback.",
         ),
-        "XONSH_SOURCE": VarDocs(
+        "XONSH_SOURCE": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
             "When running a xonsh script, this variable contains the absolute path "
             "to the currently executing script's file.",
-            configurable=False,
+            doc_configurable=False,
         ),
-        "XONSH_STDERR_PREFIX": VarDocs(
+        "XONSH_STDERR_PREFIX": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
             "A format string, using the same keys and colors as ``$PROMPT``, that "
             "is prepended whenever stderr is displayed. This may be used in "
             "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
             "For example, to have stderr appear on a red background, the "
-            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".'
+            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".',
         ),
-        "XONSH_STDERR_POSTFIX": VarDocs(
+        "XONSH_STDERR_POSTFIX": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            "",
             "A format string, using the same keys and colors as ``$PROMPT``, that "
             "is appended whenever stderr is displayed. This may be used in "
             "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
             "For example, to have stderr appear on a red background, the "
-            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".'
+            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".',
         ),
-        "XONSH_STORE_STDIN": VarDocs(
+        "XONSH_STORE_STDIN": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Whether or not to store the stdin that is supplied to the "
-            "``!()`` and ``![]`` operators."
+            "``!()`` and ``![]`` operators.",
         ),
-        "XONSH_STORE_STDOUT": VarDocs(
+        "XONSH_STORE_STDOUT": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
             "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
-            "history files."
+            "history files.",
         ),
-        "XONSH_TRACEBACK_LOGFILE": VarDocs(
+        "XONSH_TRACE_SUBPROC": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "Set to ``True`` to show arguments list of every executed subprocess command.",
+        ),
+        "XONSH_TRACEBACK_LOGFILE": Var(
+            is_logfile_opt,
+            to_logfile_opt,
+            logfile_opt_to_str,
+            None,
             "Specifies a file to store the traceback log to, regardless of whether "
             "``XONSH_SHOW_TRACEBACK`` has been set. Its value must be a writable file "
             "or None / the empty string if traceback logging is not desired. "
-            "Logging to a file is not enabled by default."
-        ),
-        "XONSH_DATETIME_FORMAT": VarDocs(
-            "The format that is used for ``datetime.strptime()`` in various places, "
-            "i.e the history timestamp option."
+            "Logging to a file is not enabled by default.",
         ),
     }
 
@@ -1443,9 +1702,8 @@ class Env(cabc.MutableMapping):
         # sentinel value for non existing envvars
         self._no_value = object()
         self._orig_env = None
-        self._ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
-        self._defaults = DEFAULT_VALUES
-        self._docs = DEFAULT_DOCS
+        self._vars = {k: v for k, v in DEFAULT_VARS.items()}
+
         if len(args) == 0 and len(kwargs) == 0:
             args = (os_environ,)
         for key, val in dict(*args, **kwargs).items():
@@ -1467,11 +1725,11 @@ class Env(cabc.MutableMapping):
         for key, val in self._d.items():
             if not isinstance(key, str):
                 key = str(key)
-            ensurer = self.get_ensurer(key)
-            if ensurer.detype is None:
+            detyper = self.get_detyper(key)
+            if detyper is None:
                 # cannot be detyped
                 continue
-            deval = ensurer.detype(val)
+            deval = detyper(val)
             if deval is None:
                 # cannot be detyped
                 continue
@@ -1497,53 +1755,110 @@ class Env(cabc.MutableMapping):
             os_environ.update(self._orig_env)
             self._orig_env = None
 
-    def _get_default_ensurer(self, default=None):
+    def _get_default_validator(self, default=None):
         if default is not None:
             return default
         else:
-            default = Ensurer(always_true, None, ensure_string)
+            default = always_true
         return default
 
-    def get_ensurer(self, key, default=None):
-        """Gets an ensurer for the given key."""
-        if key in self._ensurers:
-            return self._ensurers[key]
-        for k, ensurer in self._ensurers.items():
+    def _get_default_converter(self, default=None):
+        if default is not None:
+            return default
+        else:
+            default = None
+        return default
+
+    def _get_default_detyper(self, default=None):
+        if default is not None:
+            return default
+        else:
+            default = ensure_string
+        return default
+
+    def get_validator(self, key, default=None):
+        """Gets a validator for the given key."""
+        if key in self._vars:
+            return self._vars[key].validate
+
+        # necessary for keys that match regexes, such as `*PATH`s
+        for k, var in self._vars.items():
             if isinstance(k, str):
                 continue
             if k.match(key) is not None:
+                validator = var.validate
+                self._vars[key] = var
                 break
         else:
-            ensurer = self._get_default_ensurer(default=default)
-        self._ensurers[key] = ensurer
-        return ensurer
+            validator = self._get_default_validator(default=default)
 
-    def set_ensurer(self, key, value):
-        """Sets an ensurer."""
-        self._detyped = None
-        self._ensurers[key] = value
+        return validator
 
-    def get_docs(self, key, default=VarDocs("<no documentation>")):
-        """Gets the documentation for the environment variable."""
-        vd = self._docs.get(key, None)
-        if vd is None:
+    def get_converter(self, key, default=None):
+        """Gets a converter for the given key."""
+        if key in self._vars:
+            return self._vars[key].convert
+
+        # necessary for keys that match regexes, such as `*PATH`s
+        for k, var in self._vars.items():
+            if isinstance(k, str):
+                continue
+            if k.match(key) is not None:
+                converter = var.convert
+                self._vars[key] = var
+                break
+        else:
+            converter = self._get_default_converter(default=default)
+
+        return converter
+
+    def get_detyper(self, key, default=None):
+        """Gets a detyper for the given key."""
+        if key in self._vars:
+            return self._vars[key].detype
+
+        # necessary for keys that match regexes, such as `*PATH`s
+        for k, var in self._vars.items():
+            if isinstance(k, str):
+                continue
+            if k.match(key) is not None:
+                detyper = var.detype
+                self._vars[key] = var
+                break
+        else:
+            detyper = self._get_default_detyper(default=default)
+
+        return detyper
+
+    def get_default(self, key, default=None):
+        """Gets default for the given key."""
+        if key in self._vars:
+            return self._vars[key].default
+        else:
             return default
-        if vd.default is DefaultNotGiven:
-            dval = pprint.pformat(self._defaults.get(key, "<default not set>"))
-            vd = vd._replace(default=dval)
-            self._docs[key] = vd
+
+    def get_docs(self, key, default=None):
+        """Gets the documentation for the environment variable."""
+        vd = self._vars.get(key, None)
+        if vd is None:
+            if default is None:
+                default = Var()
+            return default
+        if vd.doc_default is DefaultNotGiven:
+            dval = pprint.pformat(self._vars.get(key, "<default not set>").default)
+            vd = vd._replace(doc_default=dval)
         return vd
 
     def help(self, key):
         """Get information about a specific environment variable."""
         vardocs = self.get_docs(key)
         width = min(79, os.get_terminal_size()[0])
-        docstr = "\n".join(textwrap.wrap(vardocs.docstr, width=width))
+        docstr = "\n".join(textwrap.wrap(vardocs.doc, width=width))
         template = HELP_TEMPLATE.format(
             envvar=key,
             docstr=docstr,
-            default=vardocs.default,
-            configurable=vardocs.configurable,
+            default=vardocs.doc_default,
+            configurable=vardocs.doc_configurable,
         )
         print_color(template)
 
@@ -1595,8 +1910,8 @@ class Env(cabc.MutableMapping):
             return self
         elif key in self._d:
             val = self._d[key]
-        elif key in self._defaults:
-            val = self._defaults[key]
+        elif key in self._vars:
+            val = self.get_default(key)
             if is_callable_default(val):
                 val = val(self)
         else:
@@ -1609,9 +1924,11 @@ class Env(cabc.MutableMapping):
         return val
 
     def __setitem__(self, key, val):
-        ensurer = self.get_ensurer(key)
-        if not ensurer.validate(val):
-            val = ensurer.convert(val)
+        validator = self.get_validator(key)
+        converter = self.get_converter(key)
+        detyper = self.get_detyper(key)
+        if not validator(val):
+            val = converter(val)
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
@@ -1619,10 +1936,10 @@ class Env(cabc.MutableMapping):
         if self.get("UPDATE_OS_ENVIRON"):
             if self._orig_env is None:
                 self.replace_env()
-            elif ensurer.detype is None:
+            elif detyper is None:
                 pass
             else:
-                deval = ensurer.detype(val)
+                deval = detyper(val)
                 if deval is not None:
                     os_environ[key] = deval
         if old_value is self._no_value:
@@ -1636,7 +1953,7 @@ class Env(cabc.MutableMapping):
             self._detyped = None
             if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
                 del os_environ[key]
-        elif key not in self._defaults:
+        elif key not in self._vars:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
 
@@ -1650,10 +1967,10 @@ class Env(cabc.MutableMapping):
             return default
 
     def __iter__(self):
-        yield from (set(self._d) | set(self._defaults))
+        yield from (set(self._d) | set(self._vars))
 
     def __contains__(self, item):
-        return item in self._d or item in self._defaults
+        return item in self._d or item in self._vars
 
     def __len__(self):
         return len(self._d)
@@ -1662,9 +1979,7 @@ class Env(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(
-            self.__class__.__module__, self.__class__.__name__, self._d
-        )
+        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
     def _repr_pretty_(self, p, cycle):
         name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
@@ -1674,6 +1989,87 @@ class Env(cabc.MutableMapping):
             elif len(self):
                 p.break_()
                 p.pretty(dict(self))
+
+    def register(
+        self,
+        name,
+        type=None,
+        default=None,
+        doc="",
+        validate=always_true,
+        convert=None,
+        detype=ensure_string,
+        doc_configurable=True,
+        doc_default=DefaultNotGiven,
+        doc_store_as_str=False,
+    ):
+        """Register an enviornment variable with optional type handling,
+        default value, doc.
+
+        Parameters
+        ----------
+        name : str
+            Environment variable name to register. Typically all caps.
+        type : str, optional,  {'bool', 'str', 'path', 'int', 'float'}
+            Variable type. If not one of the available presets, use `validate`,
+            `convert`, and `detype` to specify type behavior.
+        default : optional
+            Default value for variable. ``ValueError`` raised if type does not match
+            that specified by `type` (or `validate`).
+        doc : str, optional
+            Docstring for variable.
+        validate : func, optional
+            Function to validate type.
+        convert : func, optional
+            Function to convert variable from a string representation to its type.
+        detype : func, optional
+            Function to convert variable from its type to a string representation.
+        doc_configurable : bool, optional
+            Flag for whether the environment variable is configurable or not.
+        doc_default : str, optional
+            Custom docstring for the default value for complex defaults.
+            If this is ``DefaultNotGiven``, then the default will be looked up
+            from ``DEFAULT_VALUES`` and converted to a ``str``.
+        doc_store_as_str : bool, optional
+            Flag for whether the environment variable should be stored as a
+            string. This is used when persisting a variable that is not JSON
+            serializable to the config file. For example, sets, frozensets, and
+            potentially other non-trivial data types. default, False.
+
+        """
+
+        if (type is not None) and (type in ("bool", "str", "path", "int", "float")):
+            validate, convert, detype = ENSURERS[type]
+
+        if default is not None:
+            if validate(default):
+                pass
+            else:
+                raise ValueError(
+                    "Default value does not match type specified by validate"
+                )
+
+        self._vars[name] = Var(
+            validate,
+            convert,
+            detype,
+            default,
+            doc,
+            doc_configurable,
+            doc_default,
+            doc_store_as_str,
+        )
+
+    def deregister(self, name):
+        """Deregister an enviornment variable and all its type handling,
+        default value, doc.
+
+        Parameters
+        ----------
+        name : str
+            Environment variable name to deregister. Typically all caps.
+        """
+        self._vars.pop(name)
 
 
 def _yield_executables(directory, name):
@@ -1697,8 +2093,8 @@ def locate_binary(name):
 
 BASE_ENV = LazyObject(
     lambda: {
-        "BASH_COMPLETIONS": list(DEFAULT_VALUES["BASH_COMPLETIONS"]),
-        "PROMPT_FIELDS": dict(DEFAULT_VALUES["PROMPT_FIELDS"]),
+        "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
+        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default),
         "XONSH_VERSION": XONSH_VERSION,
     },
     globals(),

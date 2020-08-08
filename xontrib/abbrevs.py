@@ -8,7 +8,6 @@ import builtins
 from prompt_toolkit.filters import completion_is_selected, IsMultiline
 from prompt_toolkit.keys import Keys
 from xonsh.built_ins import DynamicAccessProxy
-from xonsh.platform import ptk_shell_type
 from xonsh.tools import check_for_partial_string
 
 __all__ = ()
@@ -17,8 +16,12 @@ builtins.__xonsh__.abbrevs = dict()
 proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
 setattr(builtins, "abbrevs", proxy)
 
+last_expanded = None
+
 
 def expand_abbrev(buffer):
+    global last_expanded
+    last_expanded = None
     abbrevs = getattr(builtins, "abbrevs", None)
     if abbrevs is None:
         return
@@ -31,28 +34,42 @@ def expand_abbrev(buffer):
             return
         buffer.delete_before_cursor(count=len(word))
         buffer.insert_text(abbrevs[word])
+        last_expanded = word
+
+
+def revert_abbrev(buffer):
+    global last_expanded
+    if last_expanded is None:
+        return False
+    abbrevs = getattr(builtins, "abbrevs", None)
+    if abbrevs is None:
+        return False
+    if last_expanded not in abbrevs.keys():
+        return False
+    document = buffer.document
+    expansion = abbrevs[last_expanded] + " "
+    if not document.text_before_cursor.endswith(expansion):
+        return False
+    buffer.delete_before_cursor(count=len(expansion))
+    buffer.insert_text(last_expanded)
+    last_expanded = None
+    return True
 
 
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
 
-    if ptk_shell_type() == "prompt_toolkit2":
-        from xonsh.ptk2.key_bindings import carriage_return
-        from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
+    from xonsh.ptk_shell.key_bindings import carriage_return
+    from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
 
-        handler = bindings.add
-        insert_mode = ViInsertMode() | EmacsInsertMode()
-    else:
-        from xonsh.ptk.key_bindings import carriage_return
-        from prompt_toolkit.filters import to_filter
-
-        handler = bindings.registry.add_binding
-        insert_mode = to_filter(True)
+    handler = bindings.add
+    insert_mode = ViInsertMode() | EmacsInsertMode()
 
     @handler(" ", filter=IsMultiline() & insert_mode)
     def handle_space(event):
         buffer = event.app.current_buffer
-        expand_abbrev(buffer)
+        if not revert_abbrev(buffer):
+            expand_abbrev(buffer)
         buffer.insert_text(" ")
 
     @handler(

@@ -498,7 +498,7 @@ class BaseParser(object):
         if not yacc_debug:
             yacc_kwargs["errorlog"] = yacc.NullLogger()
         if outputdir is None:
-            outputdir = os.path.dirname(os.path.dirname(__file__))
+            outputdir = os.path.dirname(os.path.realpath(__file__))
         yacc_kwargs["outputdir"] = outputdir
         if yacc_debug:
             # create parser on main thread
@@ -966,9 +966,12 @@ class BaseParser(object):
     def p_tfpdef(self, p):
         """tfpdef : name_tok colon_test_opt"""
         p1 = p[1]
-        kwargs = {"arg": p1.value, "annotation": p[2]}
-        if PYTHON_VERSION_INFO >= (3, 5, 1):
-            kwargs.update({"lineno": p1.lineno, "col_offset": p1.lexpos})
+        kwargs = {
+            "arg": p1.value,
+            "annotation": p[2],
+            "lineno": p1.lineno,
+            "col_offset": p1.lexpos,
+        }
         p[0] = ast.arg(**kwargs)
 
     def p_comma_tfpdef_empty(self, p):
@@ -1108,9 +1111,12 @@ class BaseParser(object):
     def p_vfpdef(self, p):
         """vfpdef : name_tok"""
         p1 = p[1]
-        kwargs = {"arg": p1.value, "annotation": None}
-        if PYTHON_VERSION_INFO >= (3, 5, 1):
-            kwargs.update({"lineno": p1.lineno, "col_offset": p1.lexpos})
+        kwargs = {
+            "arg": p1.value,
+            "annotation": None,
+            "lineno": p1.lineno,
+            "col_offset": p1.lexpos,
+        }
         p[0] = ast.arg(**kwargs)
 
     def p_comma_vfpdef_empty(self, p):
@@ -2153,12 +2159,15 @@ class BaseParser(object):
         p[0] = p[1]
 
     def p_factor_unary(self, p):
-        """factor : PLUS factor
-                  | MINUS factor
-                  | TILDE factor
+        """factor : plus_tok factor
+                  | minus_tok factor
+                  | tilde_tok factor
         """
-        op = self._factor_ops[p[1]]()
-        p[0] = ast.UnaryOp(op=op, operand=p[2], lineno=self.lineno, col_offset=self.col)
+        p1 = p[1]
+        op = self._factor_ops[p1.value]()
+        p[0] = ast.UnaryOp(
+            op=op, operand=p[2], lineno=self.lineno, col_offset=p1.lexpos
+        )
 
     def p_power_atom(self, p):
         """power : atom_expr"""
@@ -2984,6 +2993,14 @@ class BaseParser(object):
         """
         p[0] = ast.Str(s="|", lineno=self.lineno, col_offset=self.col)
 
+    def p_amper(self, p):
+        """amper : AMPERSAND
+                 | WS AMPERSAND
+                 | AMPERSAND WS
+                 | WS AMPERSAND WS
+        """
+        p[0] = ast.Str(s="&", lineno=self.lineno, col_offset=self.col)
+
     def p_subproc_s2(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms WS
@@ -2991,10 +3008,10 @@ class BaseParser(object):
         p1 = p[1]
         p[0] = [self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)]
 
-    def p_subproc_amp(self, p):
-        """subproc : subproc AMPERSAND"""
+    def p_subproc_amper(self, p):
+        """subproc : subproc amper"""
         p1 = p[1]
-        p[0] = p1 + [ast.Str(s=p[2], lineno=self.lineno, col_offset=self.col)]
+        p[0] = p1 + [p[2]]
 
     def p_subproc_pipe(self, p):
         """subproc : subproc pipe subproc_atoms
@@ -3132,7 +3149,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_subproc_inject(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc RPAREN"""
+        """subproc_atom : atdollar_lparen_tok subproc RPAREN
+           subproc_arg_part : atdollar_lparen_tok subproc RPAREN
+        """
         p1 = p[1]
         p0 = xonsh_call(
             "__xonsh__.subproc_captured_inject", p[2], lineno=p1.lineno, col=p1.lexpos
@@ -3141,12 +3160,16 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_subproc_inject_bang_empty(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN"""
+        """subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN
+           subproc_arg_part : atdollar_lparen_tok subproc bang_tok RPAREN
+        """
         self._append_subproc_bang_empty(p)
         self.p_subproc_atom_subproc_inject(p)
 
     def p_subproc_atom_subproc_inject_bang(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok"""
+        """subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+           subproc_arg_part : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        """
         self._append_subproc_bang(p)
         self.p_subproc_atom_subproc_inject(p)
 
@@ -3257,6 +3280,7 @@ class BaseParser(object):
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "AMPERSAND",
         }
         ts = "\n                 | ".join(sorted([t.lower() + "_tok" for t in toks]))
         doc = "subproc_arg_part : " + ts + "\n"

@@ -206,8 +206,9 @@ def _un_shebang(x):
 
 def get_script_subproc_command(fname, args):
     """Given the name of a script outside the path, returns a list representing
-    an appropriate subprocess command to execute the script.  Raises
-    PermissionError if the script is not executable.
+    an appropriate subprocess command to execute the script or None if
+    the argument is not readable or not a script. Raises PermissionError
+    if the script is not executable.
     """
     # make sure file is executable
     if not os.access(fname, os.X_OK):
@@ -217,10 +218,10 @@ def get_script_subproc_command(fname, args):
         # execute permissions but not read/write permissions. This enables
         # things with the SUID set to be run. Needs to come before _is_binary()
         # is called, because that function tries to read the file.
-        return [fname] + args
+        return None
     elif _is_binary(fname):
         # if the file is a binary, we should call it directly
-        return [fname] + args
+        return None
     if ON_WINDOWS:
         # Windows can execute various filetypes directly
         # as given in PATHEXT
@@ -730,7 +731,9 @@ class SubprocSpec:
         if self.binary_loc is None:
             return
         try:
-            self.cmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
+            scriptcmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
+            if scriptcmd is not None:
+                self.cmd = scriptcmd
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise XonshError(e.format(self.cmd[0]))
@@ -887,9 +890,6 @@ def cmds_to_specs(cmds, captured=False):
         if isinstance(cmd, str):
             redirects.append(cmd)
         else:
-            if cmd[-1] == "&":
-                cmd = cmd[:-1]
-                redirects.append("&")
             spec = SubprocSpec.build(cmd, captured=captured)
             spec.pipeline_index = i
             specs.append(spec)
@@ -903,7 +903,7 @@ def cmds_to_specs(cmds, captured=False):
             specs[i].stdout = w
             specs[i + 1].stdin = r
         elif redirect == "&" and i == len(redirects) - 1:
-            specs[-1].background = True
+            specs[i].background = True
         else:
             raise XonshError("unrecognized redirect {0!r}".format(redirect))
     # Apply boundary conditions
@@ -995,8 +995,12 @@ def subproc_captured_inject(*cmds):
     The string is split using xonsh's lexer, rather than Python's str.split()
     or shlex.split().
     """
-    s = run_subproc(cmds, captured="stdout")
-    toks = builtins.__xonsh__.execer.parser.lexer.split(s.strip())
+    o = run_subproc(cmds, captured="object")
+    o.end()
+    toks = []
+    for line in o:
+        line = line.rstrip(os.linesep)
+        toks.extend(builtins.__xonsh__.execer.parser.lexer.split(line))
     return toks
 
 

@@ -8,7 +8,14 @@ import pytest
 
 from xonsh.lazyjson import LazyJSON
 from xonsh.history.dummy import DummyHistory
-from xonsh.history.json import JsonHistory
+from xonsh.history.json import (
+    JsonHistory,
+    _xhj_gc_commands_to_rmfiles,
+    _xhj_gc_files_to_rmfiles,
+    _xhj_gc_seconds_to_rmfiles,
+    _xhj_gc_bytes_to_rmfiles,
+)
+
 from xonsh.history.main import history_main, _xh_parse_args, construct_history
 
 
@@ -112,7 +119,7 @@ def test_cmd_field(hist, xonsh_builtins):
     assert hf is None
     assert 1 == hist.rtns[0]
     assert 1 == hist.rtns[-1]
-    assert None == hist.outs[-1]
+    assert hist.outs[-1] is None
     # slice
     assert [1] == hist.rtns[:]
     # on disk
@@ -120,7 +127,7 @@ def test_cmd_field(hist, xonsh_builtins):
     assert hf is not None
     assert 1 == hist.rtns[0]
     assert 1 == hist.rtns[-1]
-    assert None == hist.outs[-1]
+    assert hist.outs[-1] is None
 
 
 @pytest.mark.parametrize(
@@ -308,3 +315,171 @@ def test_construct_history_class(xonsh_builtins):
 def test_construct_history_instance(xonsh_builtins):
     xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = DummyHistory()
     assert isinstance(construct_history(), DummyHistory)
+
+
+import time
+import calendar
+
+
+HF_FIRST_DAY = calendar.timegm(time.struct_time((2018, 5, 13, 0, 0, 0, 0, 0, 0)))
+
+
+def history_files_list(gen_count) -> (float, int, str, int):
+    """Generate a list of history file tuples"""
+    # generate test list:
+    # 2 files every day in range
+    # morning file has 100 commands, evening 50
+    # first file size 10000, 2nd 2500
+    # first file time 0900, 2nd 2300
+    # for sanity in reproducable test results, all date arithmetic ignores astronomy.
+    # time zone is UTC, all days have 24 h and 0 sec, no leap year or leap sec.
+
+    retval = []
+    for i in range(int((gen_count + 1) / 2)):
+        retval.append(
+            (
+                # first day in sec + #days * 24hr + #hr * 60min + # sec * 60sec + sec= sec to date.
+                HF_FIRST_DAY + (((((i * 24) + 9) * 60) + 0) * 60) + 0,  # mod dt,
+                100,
+                f".argle/xonsh-{2*i:05n}.json",
+                10000,
+            )
+        )
+        retval.append(
+            (
+                # first day in sec + #days * 24hr + #hr * 60min + # sec * 60sec + sec= sec to date.
+                HF_FIRST_DAY + (((((i * 24) + 23) * 60) + 0) * 60) + 0,  # mod dt,
+                50,
+                f".argle/xonsh-{2*i+1:05n}.json",
+                2500,
+            )
+        )
+    return retval
+
+
+# generate 100 files, 50 days.
+HISTORY_FILES_LIST = history_files_list(100)
+
+# TS of newest history file
+SEC_FROM_LATEST = time.time() - (HISTORY_FILES_LIST[-1][0])
+SEC_FROM_OLDEST = time.time() - (HISTORY_FILES_LIST[0][0])
+SEC_PER_DAY = 24 * 60 * 60
+SEC_PER_HR = 60 * 60
+
+
+@pytest.mark.parametrize(
+    "fn, hsize, in_files, exp_size, exp_files",
+    [
+        # xhj_gc_commands_to_rmfiles
+        (
+            _xhj_gc_commands_to_rmfiles,
+            1001 * (100 + 50),  # Limit > history, no trimming.
+            HISTORY_FILES_LIST,
+            0,  # nothing trimmed
+            [],  #
+        ),
+        (
+            _xhj_gc_commands_to_rmfiles,
+            20 * (100 + 50),  # keep 20 full days (40 files)
+            HISTORY_FILES_LIST,
+            30 * (100 + 50),
+            HISTORY_FILES_LIST[: 2 * (30)],  # trim 30 full days
+        ),
+        (
+            _xhj_gc_commands_to_rmfiles,
+            20 * (100 + 50) + 100,  # keep 20 full newest and evening before (41 files)
+            HISTORY_FILES_LIST,
+            30 * (100 + 50) - 50,  # trim 30 full oldest, keep newest evening (59 files)
+            HISTORY_FILES_LIST[: 2 * 30 - 1],
+        ),
+        # xhj_gc_files_to_rmfiles
+        (
+            _xhj_gc_files_to_rmfiles,
+            1001,  # Limit > history, no trimming.
+            HISTORY_FILES_LIST,
+            0,  # nothing trimmed
+            [],  #
+        ),
+        (
+            _xhj_gc_files_to_rmfiles,
+            40,  # keep 20 full days (40 files)
+            HISTORY_FILES_LIST,
+            60,
+            HISTORY_FILES_LIST[:60],  # trim 30 full days
+        ),
+        (
+            _xhj_gc_files_to_rmfiles,
+            41,  # keep 20 full newest and evening before (41 files)
+            HISTORY_FILES_LIST,
+            59,  # trim 30 full oldest, keep newest evening (59 files)
+            HISTORY_FILES_LIST[: 2 * 30 - 1],
+        ),
+        # xhj_gc_bytes_to_rmfiles
+        (
+            _xhj_gc_bytes_to_rmfiles,
+            1001 * (10000 + 2500),  # Limit > history, no trimming.
+            HISTORY_FILES_LIST,
+            0,  # nothing trimmed
+            [],  #
+        ),
+        (
+            _xhj_gc_bytes_to_rmfiles,
+            20 * (10000 + 2500),  # keep 20 full days (40 files)
+            HISTORY_FILES_LIST,
+            30 * (10000 + 2500),
+            HISTORY_FILES_LIST[: 2 * (30)],  # trim 30 full days
+        ),
+        (
+            _xhj_gc_bytes_to_rmfiles,
+            20 * (10000 + 2500)
+            + 10000,  # keep 20 full newest and evening before (41 files)
+            HISTORY_FILES_LIST,
+            30 * (10000 + 2500)
+            - 2500,  # trim 30 full oldest, keep newest evening (59 files)
+            HISTORY_FILES_LIST[: 2 * 30 - 1],
+        ),
+        # xhj_gc_seconds_to_rmfiles
+        # amount of history removed by age is strange.
+        # it's always the age of the *oldest* file, no matter how many would be removed.
+        (
+            _xhj_gc_seconds_to_rmfiles,
+            SEC_FROM_LATEST + 1001 * SEC_PER_DAY,  # Limit > history, no trimming.
+            HISTORY_FILES_LIST,
+            0,  # nothing trimmed
+            [],  #
+        ),
+        (
+            _xhj_gc_seconds_to_rmfiles,
+            SEC_FROM_LATEST + 20 * SEC_PER_DAY,  # keep 20 full days (40 files)
+            HISTORY_FILES_LIST,
+            SEC_FROM_OLDEST,
+            HISTORY_FILES_LIST[: 2 * (30)],  # trim 30 full days
+        ),
+        (
+            _xhj_gc_seconds_to_rmfiles,
+            SEC_FROM_LATEST
+            + 20 * SEC_PER_DAY
+            + 1 * SEC_PER_HR,  # keep 20 full newest and evening before (41 files)
+            HISTORY_FILES_LIST,
+            SEC_FROM_OLDEST,
+            HISTORY_FILES_LIST[: 2 * 30 - 1],
+        ),
+    ],
+)
+def test__xhj_gc_xx_to_rmfiles(
+    fn, hsize, in_files, exp_size, exp_files, xonsh_builtins
+):
+
+    act_size, act_files = fn(hsize, in_files)
+
+    assert act_files == exp_files
+
+    # comparing age is approximate, because xhj_gc_seconds_to_rmfiles computes 'now' on each call.
+    # For test runs, accept anything in the same hour, test cases not that close.  
+    # We find multi-minute variations in CI environments.
+    # This should cover some amount of think time sitting at a breakpoint, too.
+    if fn == _xhj_gc_seconds_to_rmfiles:
+        minute_diff = int(abs(act_size - exp_size) / 60)
+        assert minute_diff <= 60
+    else:
+        assert act_size == exp_size

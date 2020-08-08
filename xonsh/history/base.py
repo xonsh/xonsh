@@ -27,8 +27,6 @@ class History:
 
     History objects should be created via a subclass of History.
 
-    Indexing
-    --------
     History acts like a sequence that can be indexed to return
     ``HistoryEntry`` objects.
 
@@ -71,6 +69,8 @@ class History:
         self.outs = None
         self.last_cmd_rtn = None
         self.last_cmd_out = None
+        self.hist_size = None
+        self.hist_units = None
 
     def __len__(self):
         """Return the number of items in current session."""

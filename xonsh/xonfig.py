@@ -184,8 +184,8 @@ def _dump_xonfig_foreign_shell(path, value):
 
 def _dump_xonfig_env(path, value):
     name = os.path.basename(path.rstrip("/"))
-    ensurer = builtins.__xonsh__.env.get_ensurer(name)
-    dval = str(value) if ensurer.detype is None else ensurer.detype(value)
+    detyper = builtins.__xonsh__.env.get_detyper(name)
+    dval = str(value) if detyper is None else detyper(value)
     dval = str(value) if dval is None else dval
     return "${name} = {val!r}".format(name=name, val=dval)
 
@@ -314,11 +314,11 @@ def make_envvar(name):
         docstr=_wrap_paragraphs(vd.docstr, width=69),
     )
     mnode = wiz.Message(message=msg)
-    ens = env.get_ensurer(name)
+    converter = env.get_converter(name)
     path = "/env/" + name
     pnode = wiz.StoreNonEmpty(
         ENVVAR_PROMPT,
-        converter=ens.convert,
+        converter=converter,
         show_conversion=True,
         path=path,
         retry=True,
@@ -759,7 +759,7 @@ WELCOME_MSG = [
     "the browser{{NO_COLOR}}",
     "{{GREEN}}xonfig{{NO_COLOR}} web         {{INTENSE_WHITE}}->    Run the configuration "
     "tool in the browser and claim your shell {{NO_COLOR}}",
-    "{{INTENSE_BLACK}}(Note: Run the configurationn tool or create a "
+    "{{INTENSE_BLACK}}(Note: Run the configuration tool or create a "
     "{{RED}}~/.xonshrc{{INTENSE_BLACK}} file to suppress the welcome screen)",
     "",
 ]

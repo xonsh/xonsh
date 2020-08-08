@@ -7,7 +7,7 @@ import pytest
 import sys
 from xontrib.voxapi import Vox
 
-from tools import skip_if_on_conda, skip_if_on_msys, skip_if_lt_py36
+from tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
 
 
@@ -231,13 +231,11 @@ def test_reserved_names(xonsh_builtins, tmpdir):
 
 @skip_if_on_msys
 @skip_if_on_conda
-@skip_if_lt_py36
 def test_autovox(xonsh_builtins, tmpdir):
     """
     Tests that autovox works
     """
     import importlib
-    from xonsh.lib import subprocess
     import xonsh.dirstack
 
     # Set up an isolated venv home
