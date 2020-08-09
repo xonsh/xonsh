@@ -47,10 +47,10 @@ def _uptime_linux():
     """Returns uptime in seconds or None, on Linux."""
     # With procfs
     try:
-        with open("/proc/uptime", "r") as f:
+        with open("/proc/uptime") as f:
             up = float(f.readline().split()[0])
         return up
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         pass
     buf = ctypes.create_string_buffer(128)  # 64 suffices on 32-bit, whatever.
     if xp.LIBC.sysinfo(buf) < 0:
@@ -65,12 +65,12 @@ def _boottime_linux():
     """A way to figure out the boot time directly on Linux."""
     global _BOOTTIME
     try:
-        with open("/proc/stat", "r") as f:
+        with open("/proc/stat") as f:
             for line in f:
                 if line.startswith("btime"):
                     _BOOTTIME = float(line.split()[1])
         return _BOOTTIME
-    except (IOError, IndexError):
+    except (OSError, IndexError):
         return None
 
 
@@ -121,10 +121,10 @@ def _uptime_bsd():
 def _uptime_minix():
     """Returns uptime in seconds or None, on MINIX."""
     try:
-        with open("/proc/uptime", "r") as f:
+        with open("/proc/uptime") as f:
             up = float(f.read())
         return up
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         return None
 
 
@@ -139,10 +139,10 @@ def _uptime_plan9():
         # senting nanoseconds since start of epoch, clock ticks, and
         # clock frequency.
         #  -- cons(3)
-        with open("/dev/time", "r") as f:
+        with open("/dev/time") as f:
             s, ns, ct, cf = f.read().split()
         return float(ct) / float(cf)
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         return None
 
 
