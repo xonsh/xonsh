@@ -2044,11 +2044,12 @@ class Env(cabc.MutableMapping):
             validate, convert, detype = ENSURERS[type]
 
         if default is not None:
-            if callable(default) or validate(default):
+            if is_callable_default(default) or validate(default):
                 pass
             else:
                 raise ValueError(
-                    "Default value does not match type specified by validate"
+                    "Default value does not match type specified by validate and "
+                    "is not a callable default."
                 )
 
         self._vars[name] = Var(

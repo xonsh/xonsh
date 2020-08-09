@@ -17,6 +17,7 @@ from xonsh.environ import (
     default_env,
     make_args_env,
     LsColors,
+    default_value,
 )
 
 from tools import skip_if_on_unix
@@ -465,4 +466,4 @@ def test_register_callable_default():
     # registration should not raise a value error just because
     # default is a function which generates the proper type.
     env = Env()
-    env.register("TODAY", default=datetime.date.today, validate=is_date)
+    env.register("TODAY", default=default_value(datetime.date.today), validate=is_date)
