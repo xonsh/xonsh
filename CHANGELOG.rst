@@ -13,10 +13,10 @@ v0.9.19
 * Added new items on "Bash to xsh" page
 * JsonHistory: added ``history gc --force`` switch to allow user to override above warning.
 * JsonHistoryGC: display following warning when garbage collection would delete "too" much data and don't delete anything.
-  
+
   "Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({limit_size}).\n"
   "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run ``history gc --force``.",
-   
+
   It is displayed when the amount of history on disk is more than double the limit configured (or defaulted) for $XONSH_HIST_SIZE.
 * $LS_COLORS code 'mh' now recognized for (multi) hard-linked files.
 * $LS_COLORS code 'ca' now recognized for files with security capabilities (linux only).
@@ -82,7 +82,7 @@ v0.9.19
   This does much to keep Xonsh ptk_shell responsive when dealing with very large history on disk.
 * Fixed JSON history indexing error.
 * Fixed syntax error in scripts containing line continuation syntax.
-* $LS_COLORS code 'fi' now used for "regular files", as it should have been all along. (was 'rs') 
+* $LS_COLORS code 'fi' now used for "regular files", as it should have been all along. (was 'rs')
   See (#3608)[https://github.com/xonsh/xonsh/issues/3608].
 * pyghooks.color_files now follows implememntation of ls --color closely.  Thanks @qwenger!
   However, a few documented differences remain due to use in Xonsh.
@@ -157,7 +157,7 @@ v0.9.18
 **Fixed:**
 
 * Fixed name autosuggestion in path completer (#3519)
-* Flake8/black fixes to the whole code tree, in 3 steps. 
+* Flake8/black fixes to the whole code tree, in 3 steps.
   Devs should update their IDE to run both during file editing, to avoid a re-accumulation of arbitrary exceptions.
 * tests/test_builtins.py, fix test case test_convert_macro_arg_eval(kind).
 
@@ -218,7 +218,7 @@ v0.9.16
 **Fixed:**
 
 * Return Token.Text when filesystem item's type not defined in LS_COLORS; avoid crashing Pygments.
-* Fixed bug on Windows if Path elements has trailing spaces. Windows in general and ``os.path.isdir()`` 
+* Fixed bug on Windows if Path elements has trailing spaces. Windows in general and ``os.path.isdir()``
   doesn't care about trailing spaces but ``os.scandir()`` does.
 
 **Authors:**
@@ -246,7 +246,7 @@ v0.9.15
 
 * ``-l`` switch works like bash, loads environment in non-interactive shell
 * The xonsh pytest plugin no longer messes up the test order for pytest. Xsh test
-  are still executed first to avoid a bug were other tests would prevent ``test_*.xsh`` 
+  are still executed first to avoid a bug were other tests would prevent ``test_*.xsh``
   files to run correctly.
 * New repo name for xxh
 
@@ -323,11 +323,11 @@ v0.9.14
 
 **Fixed:**
 
--  `[color] in .gitconfig (#3427) <https://github.com/xonsh/xonsh/issues/3427>`_ now stripped from {curr\_branch} 
+-  `[color] in .gitconfig (#3427) <https://github.com/xonsh/xonsh/issues/3427>`_ now stripped from {curr\_branch}
 
   - `Before <https://i.imgur.com/EMhPdgU.png>`_
   - `After <https://i.imgur.com/sJiqgsb.png>`_
-  
+
 * The autovox xontrib now preserves activated environment on cd
 * setup.cfg -- duplicated flake8 config so interactive use and test runs enforce same rules. (Implementation is arguably a regression.)
 * Pressing ``Ctrl+Z`` no longer deadlocks the terminal,
@@ -377,14 +377,14 @@ v0.9.13
 
 **Removed:**
 
-* Remove built in support for "win unicode console". Full unicode support on windows is now provided by 
+* Remove built in support for "win unicode console". Full unicode support on windows is now provided by
   using the new `Windows terminal <https://github.com/microsoft/terminal>`__.
 
 **Fixed:**
 
 * Fixed issue converting ANSI color codes that contained both slow blink and set foreground
   or set background sequences.
-* Fix coreutils ``cat`` behaviour on empty input (e.g. ``cat -``). 
+* Fix coreutils ``cat`` behaviour on empty input (e.g. ``cat -``).
 
 * Fix Ctrl-C event causing Atribute error on Windows.
 * Fix Added OpenBSD as a platform
@@ -472,7 +472,7 @@ v0.9.11
   ``aliases['echocat'] = 'echo "hi" and echo "there"'`` will, when run, return
 
   .. code-block::
-  
+
      hi
      there
 
@@ -1138,7 +1138,7 @@ v0.8.5
 
     2. Add on ``~/.xonshrc``
 
-       .. code:: python
+       .. code:: xonsh
             :number-lines:
 
             $BASE16_SHELL = $HOME + "/.config/base16-shell/"
@@ -1878,18 +1878,19 @@ v0.6.6
 
   .. code-block:: xonshcon
 
-    $ $PATH
+    >>> $PATH
     EnvPath(
     ['/usr/bin', '/usr/local/bin', '/bin']
     )
-    $ $PATH.add('~/.local/bin', front=True); $PATH
+    >>> $PATH.add('~/.local/bin', front=True); $PATH
     EnvPath(
     ['/home/user/.local/bin', '/usr/bin', '/usr/local/bin', '/bin']
     )
-    $ $PATH.add('/usr/bin', front=True, replace=True); $PATH
+    >>> $PATH.add('/usr/bin', front=True, replace=True); $PATH
     EnvPath(
     ['/usr/bin', '/home/user/.local/bin', '/usr/local/bin', '/bin']
     )
+
 * Added ``pygments-cache`` project in order to reduce startup time.
 
 
