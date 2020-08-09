@@ -2,12 +2,13 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
+import datetime
 import itertools
 from tempfile import TemporaryDirectory
-from xonsh.tools import always_true
 
 import pytest
 
+from xonsh.tools import always_true
 from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
@@ -381,7 +382,7 @@ def test_register_custom_var_float():
         env["MY_SPECIAL_VAR"] = "wakka"
 
 
-@pytest.mark.parametrize("val,converted", 
+@pytest.mark.parametrize("val,converted",
         [
             (True, True),
             (32, True),
@@ -400,7 +401,7 @@ def test_register_custom_var_bool(val, converted):
     assert env["MY_SPECIAL_VAR"] == converted
 
 
-@pytest.mark.parametrize("val,converted", 
+@pytest.mark.parametrize("val,converted",
         [
             (32, "32"),
             (0, "0"),
@@ -430,7 +431,7 @@ def test_register_custom_var_path():
 
     with pytest.raises(TypeError):
         env["MY_SPECIAL_VAR"] = 32
-    
+
 
 def test_deregister_custom_var():
     env = Env()
@@ -455,3 +456,13 @@ def test_deregister_custom_var():
     # gives it only default permissive validation, conversion
     del env["MY_SPECIAL_VAR"]
     env["MY_SPECIAL_VAR"] = 32
+
+
+def test_register_callable_default():
+    def is_date(x):
+        return isinstance(x, datetime.date)
+
+    # registration should not raise a value error just because
+    # default is a function which generates the proper type.
+    env = Env()
+    env.register("TODAY", default=datetime.date.today, validate=is_date)

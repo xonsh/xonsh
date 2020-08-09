@@ -2044,7 +2044,7 @@ class Env(cabc.MutableMapping):
             validate, convert, detype = ENSURERS[type]
 
         if default is not None:
-            if validate(default):
+            if callable(default) or validate(default):
                 pass
             else:
                 raise ValueError(
