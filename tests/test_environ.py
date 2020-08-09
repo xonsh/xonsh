@@ -467,7 +467,11 @@ def test_register_callable_default():
     def is_date(x):
         return isinstance(x, datetime.date)
 
+    @default_value
+    def today(env):
+        return datetime.date.today()
+
     # registration should not raise a value error just because
     # default is a function which generates the proper type.
     env = Env()
-    env.register("TODAY", default=default_value(datetime.date.today), validate=is_date)
+    env.register("TODAY", default=today, validate=is_date)
