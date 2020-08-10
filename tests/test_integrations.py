@@ -1,3 +1,6 @@
+"""Tests involving running Xonsh in subproc.
+This requires Xonsh installed in venv or otherwise available on PATH
+"""
 import os
 import shutil
 import tempfile
@@ -39,7 +42,7 @@ def run_xonsh(
     cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False
 ):
     env = dict(os.environ)
-    # env["PATH"] = os.environ["PATH"]
+    env["PATH"] = PATH
     env["XONSH_DEBUG"] = "0"  # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
@@ -62,7 +65,7 @@ def run_xonsh(
     )
 
     try:
-        out, err = proc.communicate(input=input, timeout=10)
+        out, err = proc.communicate(input=input, timeout=20)
     except sp.TimeoutExpired:
         proc.kill()
         raise
@@ -454,6 +457,7 @@ a
 ]
 
 
+@skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 def test_script(case):
     script, exp_out, exp_rtn = case
@@ -478,6 +482,7 @@ f o>e
 ]
 
 
+@skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS_STDERR)
 def test_script_stderr(case):
     script, exp_err, exp_rtn = case
@@ -486,6 +491,7 @@ def test_script_stderr(case):
     assert exp_rtn == rtn
 
 
+@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
@@ -499,6 +505,7 @@ def test_single_command_no_windows(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
+@skip_if_no_xonsh
 def test_eof_syntax_error():
     """Ensures syntax errors for EOF appear on last line."""
     script = "x = 1\na = (1, 0\n"
@@ -507,6 +514,7 @@ def test_eof_syntax_error():
     assert ":2:0: EOF in multi-line statement" in err
 
 
+@skip_if_no_xonsh
 def test_open_quote_syntax_error():
     script = (
         "#!/usr/bin/env xonsh\n\n"
@@ -526,21 +534,25 @@ _bad_case = pytest.mark.skipif(
 )
 
 
+@skip_if_no_xonsh
 @_bad_case
 def test_printfile():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
+@skip_if_no_xonsh
 @_bad_case
 def test_printname():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
+@skip_if_no_xonsh
 @_bad_case
 def test_sourcefile():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
+@skip_if_no_xonsh
 @_bad_case
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
@@ -573,6 +585,7 @@ def test_subshells(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
+@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize("cmd, exp", [("pwd", lambda: os.getcwd() + "\n")])
 def test_redirect_out_to_file(cmd, exp, tmpdir):
@@ -610,17 +623,17 @@ def test_xonsh_no_close_fds():
         assert "warning" not in out
 
 
+@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
-    [
-        ("python tests/bin/cat tttt | python tests/bin/wc", lambda x: x > "", True),
-    ],  # noqa E231 (black removes space)
+    [("cat tttt | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"
     check_run_xonsh(cmd, fmt, exp)
 
 
+@skip_if_no_xonsh
 @skip_if_on_windows
 def test_negative_exit_codes_fail():
     # see issue 3309
@@ -630,6 +643,7 @@ def test_negative_exit_codes_fail():
     assert "OK" != err
 
 
+@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, exp",
     [
@@ -654,6 +668,7 @@ aliases['echo'] = _echo
 
 
 # issue 3402
+@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "cmd, exp_rtn",
@@ -669,6 +684,7 @@ def test_single_command_return_code(cmd, exp_rtn):
     assert rtn == exp_rtn
 
 
+@skip_if_no_xonsh
 @skip_if_on_msys
 @skip_if_on_windows
 @skip_if_on_darwin
