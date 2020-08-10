@@ -61,7 +61,7 @@ def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_comma
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""
-    xonsh = "xonsh.bat" if ON_WINDOWS else "xon.sh"
+    xonsh = "xonsh.exe" if ON_WINDOWS else "xonsh"
     xonsh = shutil.which(xonsh, path=PATH)
     if single_command:
         args = [xonsh, "--no-rc", "-c", cmd]
