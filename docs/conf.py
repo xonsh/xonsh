@@ -39,12 +39,6 @@ else:
 sys.path.insert(0, os.path.dirname(__file__))
 
 
-def setup(sphinx):
-    from xonsh.pyghooks import XonshConsoleLexer
-
-    sphinx.add_lexer("xonshcon", XonshConsoleLexer())
-
-
 # -- General configuration -----------------------------------------------------
 
 # Documentation is being built on readthedocs, this will be true.
@@ -75,7 +69,7 @@ source_suffix = ".rst"
 # source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = "sidebar"
+master_doc = "contents"
 
 # General information about the project.
 project = u"xonsh"
@@ -208,7 +202,7 @@ html_style = "numpy_friendly.css"
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-# html_additional_pages = {}
+html_additional_pages = {'index': 'index.html'}
 
 # If false, no module index is generated.
 # html_use_modindex = True
@@ -444,4 +438,7 @@ builtins.__xonsh__.commands_cache = CommandsCache()
 
 
 def setup(app):
-    app.add_stylesheet("custom.css")
+    from xonsh.pyghooks import XonshConsoleLexer
+
+    app.add_lexer("xonshcon", XonshConsoleLexer)
+    app.add_css_file("custom.css")

@@ -3,16 +3,19 @@ def as_iterable(iterable_or_scalar):
    Parameters
    ----------
    iterable_or_scalar : anything
+
    Returns
    -------
    l : iterable
        If `obj` was None, return the empty tuple.
        If `obj` was not iterable returns a 1-tuple containing `obj`.
        Otherwise return `obj`
+
    Notes
    -----
    Although string types are iterable in Python, we are treating them as not iterable in this
    method.  Thus, as_iterable(string) returns (string, )
+
    Examples
    ---------
    >>> as_iterable(1)

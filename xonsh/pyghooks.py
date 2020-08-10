@@ -1370,19 +1370,19 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
 
     Returns
     -------
-        color token, color_key
+    color token, color_key
 
     Notes
     -----
-
     * implementation follows one authority:
       https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
     * except:
-    1. does not return 'mi'.  That's the color ls uses to show the (missing) *target* of a symlink
-       (in ls -l, not ls).
-    2. in dircolors, setting type code to '0 or '00' bypasses that test and proceeds to others.
-       In our implementation, setting code to '00' paints the file with no color.
-       This is arguably a bug.
+
+      1. does not return 'mi'.  That's the color ls uses to show the (missing) *target* of a symlink
+         (in ls -l, not ls).
+      2. in dircolors, setting type code to '0 or '00' bypasses that test and proceeds to others.
+         In our implementation, setting code to '00' paints the file with no color.
+         This is arguably a bug.
     """
 
     lsc = builtins.__xonsh__.env["LS_COLORS"]
