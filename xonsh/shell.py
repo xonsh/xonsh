@@ -11,6 +11,7 @@ from xonsh.platform import (
     best_shell_type,
     ptk_above_min_supported,
     use_vended_prompt_toolkit,
+    has_prompt_toolkit,
     minimum_required_ptk_version,
 )
 from xonsh.tools import XonshError, print_exception
@@ -159,16 +160,15 @@ class Shell(object):
         elif shell_type == "random":
             shell_type = random.choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
-            try:
-                if not ptk_above_min_supported():
-                    warnings.warn(
-                        "Installed prompt-toolkit version < v{}.{}.{} is not ".format(
-                            *minimum_required_ptk_version
-                        )
-                        + "supported. Falling back to the builtin prompt-toolkit."
+            if not has_prompt_toolkit():
+                use_vended_prompt_toolkit()
+            elif not ptk_above_min_supported():
+                warnings.warn(
+                    "Installed prompt-toolkit version < v{}.{}.{} is not ".format(
+                        *minimum_required_ptk_version
                     )
-                    raise ImportError
-            except ImportError:
+                    + "supported. Falling back to the builtin prompt-toolkit."
+                )
                 use_vended_prompt_toolkit()
             if init_shell_type in ("ptk1", "prompt_toolkit1"):
                 warnings.warn(
