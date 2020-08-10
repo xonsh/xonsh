@@ -57,7 +57,7 @@ skip_if_no_sleep = pytest.mark.skipif(
 def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False):
     env = dict(os.environ)
     env["PATH"] = PATH
-    env["XONSH_DEBUG"] = "0" # was "1"
+    env["XONSH_DEBUG"] = "0"  # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""
@@ -229,7 +229,7 @@ with open('tttt', 'w') as fp:
 
 ![cat tttt | wc]
 """,
-        "      1       2      10\n" if ON_WINDOWS else " 1  2 9 <stdin>\n",
+        " 1  2 10 <stdin>\n" if ON_WINDOWS else " 1  2 9 <stdin>\n",
         0,
     ),
     # test double  piping 'real' command
@@ -240,7 +240,7 @@ with open('tttt', 'w') as fp:
 
 ![cat tttt | wc | wc]
 """,
-        "      1       3      24\n" if ON_WINDOWS else " 1  4 16 <stdin>\n",
+        " 1  4 18 <stdin>\n" if ON_WINDOWS else " 1  4 16 <stdin>\n",
         0,
     ),
     # test unthreadable alias (which should trigger a ProcPoxy call)
