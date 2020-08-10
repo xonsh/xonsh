@@ -1,3 +1,6 @@
+from rever.activities.ghrelease import git_archive_asset
+
+
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
 $ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage'
@@ -36,4 +39,4 @@ $DOCKER_INSTALL_COMMAND = ('rm -rf .cache/ __pycache__/ */__pycache__ */*/__pyca
 $DOCKER_GIT_NAME = 'xonsh'
 $DOCKER_GIT_EMAIL = 'xonsh@googlegroups.com'
 
-$GHRELEASE_ASSETS = ['xonsh-x86_64.AppImage']
+$GHRELEASE_ASSETS = [git_archive_asset(), 'xonsh-x86_64.AppImage']
