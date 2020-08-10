@@ -34,7 +34,7 @@ def _which_create_parser():
         "-V",
         "--version",
         action="version",
-        version="{}".format(_which.__version__),
+        version=f"{_which.__version__}",
         help="Display the version of the python which module " "used by xonsh",
     )
     parser.add_argument(
@@ -90,7 +90,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
         if builtins.__xonsh__.env.get("FORCE_POSIX_PATHS", False):
             abs_name.replace(os.sep, os.altsep)
     if verbose:
-        print("{} ({})".format(abs_name, from_where), file=stdout)
+        print(f"{abs_name} ({from_where})", file=stdout)
     else:
         end = "" if captured else "\n"
         print(abs_name, end=end, file=stdout)

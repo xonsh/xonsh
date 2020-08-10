@@ -47,10 +47,10 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     if fname == "-":
         f = stdin or sys.stdin
     elif os.path.isdir(fname):
-        print("cat: {}: Is a directory.".format(fname), file=err)
+        print(f"cat: {fname}: Is a directory.", file=err)
         return True, line_count
     elif not os.path.exists(fname):
-        print("cat: No such file or directory: {}".format(fname), file=err)
+        print(f"cat: No such file or directory: {fname}", file=err)
         return True, line_count
     else:
         file_size = os.stat(fname).st_size

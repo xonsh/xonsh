@@ -16,7 +16,7 @@ def tty(args, stdin, stdout, stderr):
     if len(args) > 0:
         if not silent:
             for i in args:
-                print("tty: Invalid option: {}".format(i), file=stderr)
+                print(f"tty: Invalid option: {i}", file=stderr)
             print("Try 'tty --help' for more information", file=stderr)
         return 2
     try:
