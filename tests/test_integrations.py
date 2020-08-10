@@ -1,5 +1,4 @@
 import os
-import sys  # noqa F823
 import shutil
 import tempfile
 import subprocess as sp
@@ -15,6 +14,13 @@ from tools import (
     ON_WINDOWS,
     ON_DARWIN,
     ON_TRAVIS,
+)
+
+
+PATH = (
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), "bin")
+    + os.pathsep
+    + os.environ["PATH"]
 )
 
 
@@ -38,7 +44,7 @@ def run_xonsh(
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""
-    xonsh = shutil.which("xonsh")
+    xonsh = shutil.which("xonsh", path=PATH)
     if single_command:
         args = [xonsh, "--no-rc", "-c", cmd]
         input = None
