@@ -1,12 +1,11 @@
 import os
-import sys
+import sys  # noqa F823
 import shutil
 import tempfile
 import subprocess as sp
 
 import pytest
 
-import xonsh
 from xonsh.lib.os import indir
 
 from tools import (
@@ -19,50 +18,27 @@ from tools import (
 )
 
 
-XONSH_PREFIX = xonsh.__file__
-if "site-packages" in XONSH_PREFIX:
-    # must be installed version of xonsh
-    num_up = 5
-else:
-    # must be in source dir
-    num_up = 2
-for i in range(num_up):
-    XONSH_PREFIX = os.path.dirname(XONSH_PREFIX)
-PATH = (
-    os.path.join(os.path.dirname(__file__), "bin")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "bin")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "Scripts")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "scripts")
-    + os.pathsep
-    + os.path.dirname(sys.executable)
-    + os.pathsep
-    + os.environ["PATH"]
-)
-
-
 skip_if_no_xonsh = pytest.mark.skipif(
-    shutil.which("xonsh", path=PATH) is None, reason="xonsh not on PATH"
+    shutil.which("xonsh") is None, reason="xonsh not on PATH"
 )
 skip_if_no_make = pytest.mark.skipif(
-    shutil.which("make", path=PATH) is None, reason="make command not on PATH"
+    shutil.which("make") is None, reason="make command not on PATH"
 )
 skip_if_no_sleep = pytest.mark.skipif(
-    shutil.which("sleep", path=PATH) is None, reason="sleep command not on PATH"
+    shutil.which("sleep") is None, reason="sleep command not on PATH"
 )
 
 
-def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False):
+def run_xonsh(
+    cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False
+):
     env = dict(os.environ)
-    env["PATH"] = PATH
+    # env["PATH"] = os.environ["PATH"]
     env["XONSH_DEBUG"] = "0"  # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""
-    xonsh = "xonsh.exe" if ON_WINDOWS else "xonsh"
-    xonsh = shutil.which(xonsh, path=PATH)
+    xonsh = shutil.which("xonsh")
     if single_command:
         args = [xonsh, "--no-rc", "-c", cmd]
         input = None
@@ -227,7 +203,7 @@ g
 with open('tttt', 'w') as fp:
     fp.write("Wow mom!\\n")
 
-![cat tttt | wc]
+![python tests/bin/cat tttt | python tests/bin/wc]
 """,
         " 1  2 10 <stdin>\n" if ON_WINDOWS else " 1  2 9 <stdin>\n",
         0,
@@ -238,7 +214,7 @@ with open('tttt', 'w') as fp:
 with open('tttt', 'w') as fp:
     fp.write("Wow mom!\\n")
 
-![cat tttt | wc | wc]
+![python tests/bin/cat tttt | python tests/bin/wc | python tests/bin/wc]
 """,
         " 1  4 18 <stdin>\n" if ON_WINDOWS else " 1  4 16 <stdin>\n",
         0,
@@ -352,7 +328,7 @@ echo foo_@$(echo spam sausage)_bar
     (
         """
 echo Just the place for a snark. >tttt
-cat tttt
+python tests/bin/cat tttt
 """,
         "Just the place for a snark.\n",
         0,
@@ -630,7 +606,9 @@ def test_xonsh_no_close_fds():
 
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
-    [("ls | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)
+    [
+        ("python tests/bin/cat tttt | python tests/bin/wc", lambda x: x > "", True),
+    ],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"
