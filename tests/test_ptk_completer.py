@@ -15,7 +15,7 @@ from xonsh.ptk_shell.completer import PromptToolkitCompleter
     (RichCompletion('x'), 5, PTKCompletion(RichCompletion('x'), -5, 'x')),
     ('x', 5, PTKCompletion('x', -5, 'x')),
 ])
-def test_rich_completion(completion, lprefix, ptk_completion, monkeypatch):
+def test_rich_completion(completion, lprefix, ptk_completion, monkeypatch, xonsh_builtins):
     xonsh_completer_mock = MagicMock()
     xonsh_completer_mock.complete.return_value = {completion}, lprefix
 
