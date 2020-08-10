@@ -66,7 +66,7 @@ available in ``sys.path``. If you want to be able to import a module that
 resides in the current directory, ensure that there is an empty string as the
 first element of your ``sys.path``
 
-.. code-block:: xonshcon
+.. code-block:: console
 
    $ import sys
    $ sys.path.insert(0, '')
@@ -173,7 +173,7 @@ then choose ``Open Terminal Here`` and click on ``Edit currently selected action
 
 If you are unable to use utf-8 (ie. non-ascii) characters in xonsh. For example if you get the following output
 
-.. code-block:: xonshcon
+.. code-block:: console
 
     $ echo "ßðđ"
     xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
@@ -245,9 +245,9 @@ Make sure you install xonsh with readline support and in your
 ``.xonshrc`` file define
 
 .. code-block:: xonsh
-                
+
     $SHELL_TYPE = 'readline'
-    
+
 Also, in Emacs set ``explicit-shell-file-name`` to your xonsh executable.
 
 **Option B: Ansi-term buffer**

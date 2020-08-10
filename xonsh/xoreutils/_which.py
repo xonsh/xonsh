@@ -314,7 +314,7 @@ def main(argv):
             ["help", "all", "version", "verbose", "quiet", "path=", "exts="],
         )
     except getopt.GetoptErrsor as msg:
-        sys.stderr.write("which: error: %s. Your invocation was: %s\n" % (msg, argv))
+        sys.stderr.write(f"which: error: {msg}. Your invocation was: {argv}\n")
         sys.stderr.write("Try 'which --help'.\n")
         return 1
     for opt, optarg in optlist:
@@ -352,7 +352,7 @@ def main(argv):
             arg, path=altpath, verbose=verbose, exts=exts
         ):
             if verbose:
-                print("%s (%s)" % (absName, fromWhere))
+                print(f"{absName} ({fromWhere})")
             else:
                 print(absName)
             nmatches += 1

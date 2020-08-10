@@ -4,6 +4,129 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.19
+====================
+
+**Added:**
+
+* ``history`` command now supports ``flush`` action
+* Added new items on "Bash to xsh" page
+* JsonHistory: added ``history gc --force`` switch to allow user to override above warning.
+* JsonHistoryGC: display following warning when garbage collection would delete "too" much data and don't delete anything.
+
+  "Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({limit_size}).\n"
+  "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run ``history gc --force``.",
+
+  It is displayed when the amount of history on disk is more than double the limit configured (or defaulted) for $XONSH_HIST_SIZE.
+* $LS_COLORS code 'mh' now recognized for (multi) hard-linked files.
+* $LS_COLORS code 'ca' now recognized for files with security capabilities (linux only).
+* CI step to run flake8 after pytest.
+* RichCompletion for completions with different display value, description and prefix_len.
+* Allow completer access to multiline document when available via ``xonsh.completers.tools.get_ptk_completer().current_document``.
+* ``abbrevs`` word expasion can now be reverted by pressing
+  the space bar second time immediately after the previous
+  word got expanded.
+* ``ulimit`` command.
+* ``pdb`` xontrib, that runs pdb debugger on reception of SIGUSR1 signal.
+* xontrib-xpg is a xontrib for running or explaining sql queries for posgresql database.
+
+**Changed:**
+
+* Xonsh now launches subprocesses with their ``argv[0]`` argument containing
+  the command exactly as inserted by the user instead of setting it to the
+  resolved path of the executable. This is for consistency with bash and other
+  shells.
+* Added ability to register, deregister environment variables;
+  centralized environment default variables
+* Added exit to the "Bash to xsh" article.
+* xonsh.main _failback_to_other_shells now tries user's login shell (in $SHELL) before trying system wide shells from /etc/shells.
+* The current working directory is now correctly obtained in line 501 of xonsh/parsers/base.py
+* Garbage collection avoids deleting history and issues a warning instead if existing history is more than double the comfigured limit.
+  This protects active users who might have accumulated a lot of history while a bug was preventing garbage collection.  The warning
+  will be displayed each time Xonsh is started until user takes action to reconcile the situation.
+* ``tests\test_integrations.py`` no longer runs with XONSH_DEBUG=1 (because new, debug-only progress messages from history were breaking it).
+* Updated pytest_plugin for pytest 5.4 API, pip requirements for pytest>= 5.4
+* Major improvements to Jedi xontrib completer:
+    * Use new Jedi API
+    * Replace the existing python completer
+    * Create rich completions with extra info
+    * Use entire multiline document if available
+    * Complete xonsh special tokens
+    * Be aware of _ (last result)
+    * Only show dunder attrs when prefix ends with '_'
+* Many files are starting to be formatted using ``pyupgrade --py36-plus``, in order to automatically update to newer
+  Python constructs.
+* ``xontrib load`` does not stop loading modules on error any more.
+
+**Deprecated:**
+
+* ``pytest --flake8`` now exits with error message to use flake8 instead.
+  Allows single list of lint exceptions to apply in CI and your IDE.
+
+**Removed:**
+
+* Removed history replay
+* pytest-flake8 package from requirements\*.txt
+* Xonsh now relies exclusively on Setuptools for install.
+* Compatibility with Python 3.5 has been removed as well as all related code. In
+  particular xonsh.inspector does not defined ``getouterframes`` anymore, use
+  ``inspect.getouterframe`` directly.
+
+**Fixed:**
+
+* Unhandled exception triggered by unexpected return from callable alias.
+* Fix path completer throwing exception sometimes
+* Fixed help operator not displaying definition for callables.
+* JsonHistory.files(): Now once again enumerates history files from the directory.  This has been broken for about 2 years.
+* JsonHistory.run_gc(): Don't busy loop while waiting for history garbage collection to complete, sleep a bit instead.
+  This does much to keep Xonsh ptk_shell responsive when dealing with very large history on disk.
+* Fixed JSON history indexing error.
+* Fixed syntax error in scripts containing line continuation syntax.
+* $LS_COLORS code 'fi' now used for "regular files", as it should have been all along. (was 'rs')
+  See (#3608)[https://github.com/xonsh/xonsh/issues/3608].
+* pyghooks.color_files now follows implememntation of ls --color closely.  Thanks @qwenger!
+  However, a few documented differences remain due to use in Xonsh.
+
+* $LS_COLORS['ln'] = 'target' now works.  Also fixes #3578.
+* Fixed exit code for commands executed via ``-c`` (#3402)
+* Logical subprocess operators now work after long arguments (e.g. ``--version``).
+* ``pip`` completer no longer erroneously fires for ``pipx``
+* Updated development guide to reference flake8 instead of pylint
+* Corrected flake8 config for allowed exceptions.
+* various pytest warnings in a "clean" test run.
+* The current Mercurial topic is shown.
+* Fixed import problems due to modules using deprecated pkg_resources methods by proxying calls to the underlying loader.
+* Typo in 'source' alias.
+* Crash in 'completer' completer.
+* Don't complete unnecessarily in 'base' completer
+* Viewing mock objects in the shell
+* Fixed formatting error in ``vox rm`` command.
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Morten Enemark Lund
+* Bob Hyman
+* David Strobach
+* Burak Yiğit Kaya
+* Matthias Bussonnier
+* anki-code
+* David Dotson
+* con-f-use
+* Daniel Shimon
+* Jason R. Coombs
+* Gyuri Horak
+* Achim Herwig
+* Marduk Bolaños
+* Stefane Fermigier
+* swedneck
+* Feng Tian
+* cafehaine
+* paugier
+
+
+
 v0.9.18
 ====================
 
@@ -34,7 +157,7 @@ v0.9.18
 **Fixed:**
 
 * Fixed name autosuggestion in path completer (#3519)
-* Flake8/black fixes to the whole code tree, in 3 steps. 
+* Flake8/black fixes to the whole code tree, in 3 steps.
   Devs should update their IDE to run both during file editing, to avoid a re-accumulation of arbitrary exceptions.
 * tests/test_builtins.py, fix test case test_convert_macro_arg_eval(kind).
 
@@ -95,7 +218,7 @@ v0.9.16
 **Fixed:**
 
 * Return Token.Text when filesystem item's type not defined in LS_COLORS; avoid crashing Pygments.
-* Fixed bug on Windows if Path elements has trailing spaces. Windows in general and ``os.path.isdir()`` 
+* Fixed bug on Windows if Path elements has trailing spaces. Windows in general and ``os.path.isdir()``
   doesn't care about trailing spaces but ``os.scandir()`` does.
 
 **Authors:**
@@ -123,7 +246,7 @@ v0.9.15
 
 * ``-l`` switch works like bash, loads environment in non-interactive shell
 * The xonsh pytest plugin no longer messes up the test order for pytest. Xsh test
-  are still executed first to avoid a bug were other tests would prevent ``test_*.xsh`` 
+  are still executed first to avoid a bug were other tests would prevent ``test_*.xsh``
   files to run correctly.
 * New repo name for xxh
 
@@ -200,11 +323,11 @@ v0.9.14
 
 **Fixed:**
 
--  `[color] in .gitconfig (#3427) <https://github.com/xonsh/xonsh/issues/3427>`_ now stripped from {curr\_branch} 
+-  `[color] in .gitconfig (#3427) <https://github.com/xonsh/xonsh/issues/3427>`_ now stripped from {curr\_branch}
 
   - `Before <https://i.imgur.com/EMhPdgU.png>`_
   - `After <https://i.imgur.com/sJiqgsb.png>`_
-  
+
 * The autovox xontrib now preserves activated environment on cd
 * setup.cfg -- duplicated flake8 config so interactive use and test runs enforce same rules. (Implementation is arguably a regression.)
 * Pressing ``Ctrl+Z`` no longer deadlocks the terminal,
@@ -254,14 +377,14 @@ v0.9.13
 
 **Removed:**
 
-* Remove built in support for "win unicode console". Full unicode support on windows is now provided by 
+* Remove built in support for "win unicode console". Full unicode support on windows is now provided by
   using the new `Windows terminal <https://github.com/microsoft/terminal>`__.
 
 **Fixed:**
 
 * Fixed issue converting ANSI color codes that contained both slow blink and set foreground
   or set background sequences.
-* Fix coreutils ``cat`` behaviour on empty input (e.g. ``cat -``). 
+* Fix coreutils ``cat`` behaviour on empty input (e.g. ``cat -``).
 
 * Fix Ctrl-C event causing Atribute error on Windows.
 * Fix Added OpenBSD as a platform
@@ -349,7 +472,7 @@ v0.9.11
   ``aliases['echocat'] = 'echo "hi" and echo "there"'`` will, when run, return
 
   .. code-block::
-  
+
      hi
      there
 
@@ -1015,7 +1138,7 @@ v0.8.5
 
     2. Add on ``~/.xonshrc``
 
-       .. code:: python
+       .. code:: xonsh
             :number-lines:
 
             $BASE16_SHELL = $HOME + "/.config/base16-shell/"
@@ -1755,18 +1878,19 @@ v0.6.6
 
   .. code-block:: xonshcon
 
-    $ $PATH
+    >>> $PATH
     EnvPath(
     ['/usr/bin', '/usr/local/bin', '/bin']
     )
-    $ $PATH.add('~/.local/bin', front=True); $PATH
+    >>> $PATH.add('~/.local/bin', front=True); $PATH
     EnvPath(
     ['/home/user/.local/bin', '/usr/bin', '/usr/local/bin', '/bin']
     )
-    $ $PATH.add('/usr/bin', front=True, replace=True); $PATH
+    >>> $PATH.add('/usr/bin', front=True, replace=True); $PATH
     EnvPath(
     ['/usr/bin', '/home/user/.local/bin', '/usr/local/bin', '/bin']
     )
+
 * Added ``pygments-cache`` project in order to reduce startup time.
 
 

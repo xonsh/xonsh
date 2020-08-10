@@ -146,7 +146,7 @@ def _ul_show(res, res_type, desc, unit, opt, long=False, **kwargs):
         )
     else:
         pre = ""
-    print("{}{}".format(pre, str_limit), file=kwargs["stdout"])
+    print(f"{pre}{str_limit}", file=kwargs["stdout"])
 
 
 def _ul_add_action(actions, opt, res_type, stderr):
@@ -181,13 +181,13 @@ def _ul_add_all_actions(actions, res_type, stderr):
 
 def _ul_unknown_opt(arg, stderr):
     """Print an invalid option message to stderr"""
-    print("ulimit: Invalid option: {}".format(arg), file=stderr, flush=True)
+    print(f"ulimit: Invalid option: {arg}", file=stderr, flush=True)
     print("Try 'ulimit --help' for more information", file=stderr, flush=True)
 
 
 def _ul_unsupported_opt(opt, stderr):
     """Print an unsupported option message to stderr"""
-    print("ulimit: Unsupported option: -{}".format(opt), file=stderr, flush=True)
+    print(f"ulimit: Unsupported option: -{opt}", file=stderr, flush=True)
     print("Try 'ulimit --help' for more information", file=stderr, flush=True)
 
 

@@ -1,4 +1,4 @@
-version: 0.9.18.{build}
+version: 0.9.19.{build}
 os: Windows Server 2012 R2
 environment:
 
