@@ -345,6 +345,7 @@ def main():
             "xonsh",
             "xonsh.ply.ply",
             "xonsh.vended_ptk.prompt_toolkit",
+            "xonsh.vended_ptk.wcwidth",
             "xonsh.ptk_shell",
             "xonsh.ptk2",
             "xonsh.parsers",
@@ -364,7 +365,7 @@ def main():
         },
         package_data={
             "xonsh": ["*.json", "*.githash"],
-            "xonsh.vended_ptk": ["LICENSE"],
+            "xonsh.vended_ptk": ["LICENSE-prompt-toolkit","LICENSE-wcwidth"],
             "xontrib": ["*.xsh"],
             "xonsh.lib": ["*.xsh"],
             "xonsh.webconfig": [
