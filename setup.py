@@ -370,7 +370,8 @@ def main():
         scripts=scripts,
     )
     # We used to avoid setuptools 'console_scripts' due to startup performance
-    # concerns which have since been resolved.  So now we use them.
+    # concerns which have since been resolved, so long as install is done
+    # via `pip install .` and not `python setup.py install`.
     skw["entry_points"] = {
         "pygments.lexers": [
             "xonsh = xonsh.pyghooks:XonshLexer",
