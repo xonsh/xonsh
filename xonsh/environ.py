@@ -1915,7 +1915,7 @@ class Env(cabc.MutableMapping):
         elif key in self._vars:
             val = self.get_default(key)
             if is_callable_default(val):
-                val = val(self)
+                val = self._d[key] = val(self)
         else:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))

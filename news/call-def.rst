@@ -18,6 +18,7 @@
 
 * Environment variable registration no longer fails to validate when the default
   is a callable.
+* Default values created from callables are stored on in the evironment.
 
 **Security:**
 
