@@ -1,12 +1,10 @@
 import os
-import sys
 import shutil
 import tempfile
 import subprocess as sp
 
 import pytest
 
-import xonsh
 from xonsh.lib.os import indir
 
 from tools import (
@@ -19,25 +17,8 @@ from tools import (
 )
 
 
-XONSH_PREFIX = xonsh.__file__
-if "site-packages" in XONSH_PREFIX:
-    # must be installed version of xonsh
-    num_up = 5
-else:
-    # must be in source dir
-    num_up = 2
-for i in range(num_up):
-    XONSH_PREFIX = os.path.dirname(XONSH_PREFIX)
 PATH = (
-    os.path.join(os.path.dirname(__file__), "bin")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "bin")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "Scripts")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "scripts")
-    + os.pathsep
-    + os.path.dirname(sys.executable)
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), "bin")
     + os.pathsep
     + os.environ["PATH"]
 )
@@ -54,15 +35,16 @@ skip_if_no_sleep = pytest.mark.skipif(
 )
 
 
-def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False):
+def run_xonsh(
+    cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False
+):
     env = dict(os.environ)
     env["PATH"] = PATH
     env["XONSH_DEBUG"] = "0"  # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""
-    xonsh = "xonsh.exe" if ON_WINDOWS else "xonsh"
-    xonsh = shutil.which(xonsh, path=PATH)
+    xonsh = shutil.which("xonsh", path=PATH)
     if single_command:
         args = [xonsh, "--no-rc", "-c", cmd]
         input = None
