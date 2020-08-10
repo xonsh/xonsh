@@ -14,6 +14,7 @@ from xonsh.parsers.base import eval_fstr_fields
 from tools import nodes_equal, skip_if_no_walrus
 
 
+
 @pytest.fixture(autouse=True)
 def xonsh_builtins_autouse(xonsh_builtins):
     return xonsh_builtins
@@ -124,27 +125,50 @@ def test_f_env_var():
 
 
 @pytest.mark.parametrize(
-    "inp, exp",
+    "inp, exp, exp_fields",
     [
-        ('f"{}"', 'f"{}"'),
-        ('f"$HOME"', 'f"$HOME"'),
-        ('f"{0} - {1}"', 'f"{0} - {1}"'),
+        ('f"$HOME"', "$HOME", 0),
+        ('f"{0} - {1}"', "0 - 1", 0),
+        ('f"{$HOME}"', "/foo/bar", 1),
+        ('f"{ $HOME }"', "/foo/bar", 1),
+        ("f\"{'$HOME'}\"", "$HOME", 0),
+        ("f\"{${'HOME'}}\"", "/foo/bar", 1),
+        ("f'{${$FOO+$BAR}}'", "/foo/bar", 1),
+        ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar", 3),
         (
-            'f"{$HOME}"',
-            "f\"{__xonsh__.execer.eval(r'$HOME', glbs=globals(), locs=locals())}\"",
+            '''f"""foo
+{f"_{$HOME}_"}
+bar"""''',
+            "foo\n_/foo/bar_\nbar",
+            1,
         ),
         (
-            'f"{ $HOME }"',
-            "f\"{__xonsh__.execer.eval(r'$HOME ', glbs=globals(), locs=locals())}\"",
+            '''f"""foo
+{f"_{${'HOME'}}_"}
+bar"""''',
+            "foo\n_/foo/bar_\nbar",
+            1,
         ),
         (
-            "f\"{'$HOME'}\"",
-            "f\"{__xonsh__.execer.eval(r'\\'$HOME\\'', glbs=globals(), locs=locals())}\"",
+            '''f"""foo
+{f"_{${ $FOO + $BAR }}_"}
+bar"""''',
+            "foo\n_/foo/bar_\nbar",
+            1,
         ),
     ],
 )
-def test_eval_fstr_fields(inp, exp):
-    obs = eval_fstr_fields(inp, 'f"')
+def test_eval_fstr_fields(inp, exp, exp_fields):
+    builtins.__xonsh__.fstring_fields.clear()
+    joined_str_node = eval_fstr_fields(inp, "f").body[0].value
+    assert isinstance(joined_str_node, ast.JoinedStr)
+    node = ast.Expression(body=joined_str_node)
+    code = compile(node, "<test_eval_fstr_fields>", mode="eval")
+    fields = len(builtins.__xonsh__.fstring_fields)
+    assert exp_fields == fields
+    builtins.__xonsh__.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
+    obs = eval(code)
+    assert len(builtins.__xonsh__.fstring_fields) == 0
     assert exp == obs
 
 
@@ -308,7 +332,7 @@ def test_in():
 
 
 def test_is():
-    check_ast("int is float")   # avoid PY3.8 SyntaxWarning "is" with a literal
+    check_ast("int is float")  # avoid PY3.8 SyntaxWarning "is" with a literal
 
 
 def test_not_in():
