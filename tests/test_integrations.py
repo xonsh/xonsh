@@ -10,7 +10,9 @@ import xonsh
 from xonsh.lib.os import indir
 
 from tools import (
+    skip_if_on_msys,
     skip_if_on_windows,
+    skip_if_on_darwin,
     ON_WINDOWS,
     ON_DARWIN,
     ON_TRAVIS,
@@ -52,32 +54,40 @@ skip_if_no_sleep = pytest.mark.skipif(
 )
 
 
-def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
+def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, single_command=False):
     env = dict(os.environ)
     env["PATH"] = PATH
-    env["XONSH_DEBUG"] = "1"
+    env["XONSH_DEBUG"] = "0" # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["PROMPT"] = ""
     xonsh = "xonsh.bat" if ON_WINDOWS else "xon.sh"
     xonsh = shutil.which(xonsh, path=PATH)
+    if single_command:
+        args = [xonsh, "--no-rc", "-c", cmd]
+        input = None
+    else:
+        args = [xonsh, "--no-rc"]
+        input = cmd
+
     proc = sp.Popen(
-        [xonsh, "--no-rc"],
+        args,
         env=env,
         stdin=stdin,
         stdout=stdout,
         stderr=stderr,
         universal_newlines=True,
     )
+
     try:
-        out, err = proc.communicate(input=cmd, timeout=10)
+        out, err = proc.communicate(input=input, timeout=10)
     except sp.TimeoutExpired:
         proc.kill()
         raise
     return out, err, proc.returncode
 
 
-def check_run_xonsh(cmd, fmt, exp):
+def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
     """
@@ -87,7 +97,7 @@ def check_run_xonsh(cmd, fmt, exp):
     if callable(exp):
         exp = exp()
     assert out == exp, err
-    assert rtn == 0, err
+    assert rtn == exp_rtn, err
 
 
 #
@@ -289,10 +299,11 @@ def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
 
-echo --option1 \
+echo --option1 \\
 --option2
-""",
-        "--option1 --option2\n",
+echo missing \\
+EOL""",
+        "--option1 --option2\nmissing EOL\n",
         0,
     ),
     #
@@ -596,7 +607,7 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
 @skip_if_no_xonsh
 @skip_if_no_sleep
 @skip_if_on_windows
-@pytest.mark.xfail(strict=False) # TODO: fixme (super flaky on OSX)
+@pytest.mark.xfail(strict=False)  # TODO: fixme (super flaky on OSX)
 def test_xonsh_no_close_fds():
     # see issue https://github.com/xonsh/xonsh/issues/2984
     makefile = (
@@ -618,7 +629,8 @@ def test_xonsh_no_close_fds():
 
 
 @pytest.mark.parametrize(
-    "cmd, fmt, exp", [("ls | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)  
+    "cmd, fmt, exp",
+    [("ls | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"
@@ -655,3 +667,26 @@ aliases['echo'] = _echo
     )
     out, _, _ = run_xonsh(script)
     assert out == exp
+
+
+# issue 3402
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "cmd, exp_rtn",
+    [
+        ("sys.exit(0)", 0),
+        ("sys.exit(100)", 100),
+        ("sh -c 'exit 0'", 0),
+        ("sh -c 'exit 1'", 1),
+    ],
+)
+def test_single_command_return_code(cmd, exp_rtn):
+    _, _, rtn = run_xonsh(cmd, single_command=True)
+    assert rtn == exp_rtn
+
+
+@skip_if_on_msys
+@skip_if_on_windows
+@skip_if_on_darwin
+def test_argv0():
+    check_run_xonsh("checkargv0.xsh", None, "OK\n")

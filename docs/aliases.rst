@@ -92,14 +92,6 @@ for more information all the history command and all of its sub-commands.
 .. command-help:: xonsh.history.main.history_main
 
 
-``replay``
-=====================
-Replays a xonsh history file.  See `the replay section of the history tutorial
-<tutorial_hist.html#replay-action>`_ for more information about this command.
-
-.. command-help:: xonsh.replay.replay_main
-
-
 ``timeit``
 ===============
 Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.

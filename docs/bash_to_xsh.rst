@@ -19,7 +19,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Look up an environment variable by name.
     * - ``export NAME=Peter``
       - ``$NAME = 'Peter'``
-      - Setting an environment variable. 
+      - Setting an environment variable. See also :ref:`$UPDATE_OS_ENVIRON <update_os_environ>`.
     * - ``unset NAME``
       - ``del $NAME``
       - Unsetting/deleting an environment variable. 
@@ -68,6 +68,12 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``$@``
       - ``$ARGS``
       - List of all command line argument and parameter strings.
+    * - ``shopt -s dotglob``
+      - ``$DOTGLOB = True``
+      - Globbing files with “*” or “**” will also match dotfiles, or those ‘hidden’ files whose names begin with a literal ‘.’. Such files are filtered out by default like in bash.
+    * - Display completions as list
+      - ``$COMPLETIONS_DISPLAY = 'readline'``
+      - Display completions will emulate the behavior of readline.
     * - ``exit``
       - ``sys.exit()``
       - Exiting from the current script.

@@ -3,7 +3,6 @@
 """The xonsh installer."""
 # Note: Do not embed any non-ASCII characters in this file until pip has been
 # fixed. See https://github.com/xonsh/xonsh/issues/487.
-from __future__ import print_function, unicode_literals
 import os
 import sys
 import json
@@ -14,21 +13,11 @@ try:
 except ImportError:
     pass
 
-try:
-    from setuptools import setup
-    from setuptools.command.sdist import sdist
-    from setuptools.command.install import install
-    from setuptools.command.develop import develop
-    from setuptools.command.install_scripts import install_scripts
-
-    HAVE_SETUPTOOLS = True
-except ImportError:
-    from distutils.core import setup
-    from distutils.command.sdist import sdist as sdist
-    from distutils.command.install import install as install
-    from distutils.command.install_scripts import install_scripts
-
-    HAVE_SETUPTOOLS = False
+from setuptools import setup
+from setuptools.command.sdist import sdist
+from setuptools.command.install import install
+from setuptools.command.develop import develop
+from setuptools.command.install_scripts import install_scripts
 
 try:
     from jupyter_client.kernelspec import KernelSpecManager
@@ -301,26 +290,24 @@ else:
     }
 
 
-if HAVE_SETUPTOOLS:
+class xdevelop(develop):
+    """Xonsh specialization of setuptools develop class."""
 
-    class xdevelop(develop):
-        """Xonsh specialization of setuptools develop class."""
+    def run(self):
+        clean_tables()
+        build_tables()
+        dirty = dirty_version()
+        develop.run(self)
+        if dirty:
+            restore_version()
 
-        def run(self):
-            clean_tables()
-            build_tables()
-            dirty = dirty_version()
-            develop.run(self)
-            if dirty:
-                restore_version()
-
-        def install_script(self, dist, script_name, script_text, dev_path=None):
-            if script_name == "xon.sh":
-                # change default python3 to the concrete python binary used to install/develop inside xon.sh script
-                script_text = script_text.replace(
-                    " python3 ", ' "{}" '.format(sys.executable)
-                )
-            super().install_script(dist, script_name, script_text, dev_path)
+    def install_script(self, dist, script_name, script_text, dev_path=None):
+        if script_name == "xon.sh":
+            # change default python3 to the concrete python binary used to install/develop inside xon.sh script
+            script_text = script_text.replace(
+                " python3 ", ' "{}" '.format(sys.executable)
+            )
+        super().install_script(dist, script_name, script_text, dev_path)
 
 
 def main():
@@ -388,34 +375,33 @@ def main():
         cmdclass=cmdclass,
         scripts=scripts,
     )
-    if HAVE_SETUPTOOLS:
-        # WARNING!!! Do not use setuptools 'console_scripts'
-        # It validates the dependencies (of which we have none) every time the
-        # 'xonsh' command is run. This validation adds ~0.2 sec. to the startup
-        # time of xonsh - for every single xonsh run.  This prevents us from
-        # reaching the goal of a startup time of < 0.1 sec.  So never ever write
-        # the following:
-        #
-        #     'console_scripts': ['xonsh = xonsh.main:main'],
-        #
-        # END WARNING
-        skw["entry_points"] = {
-            "pygments.lexers": [
-                "xonsh = xonsh.pyghooks:XonshLexer",
-                "xonshcon = xonsh.pyghooks:XonshConsoleLexer",
-            ],
-            "pytest11": ["xonsh = xonsh.pytest_plugin"],
-        }
-        skw["cmdclass"]["develop"] = xdevelop
-        skw["extras_require"] = {
-            "ptk": ["prompt-toolkit>=2.0"],
-            "pygments": ["pygments>=2.2"],
-            "mac": ["gnureadline"],
-            "linux": ["distro"],
-            "proctitle": ["setproctitle"],
-            "zipapp": ['importlib_resources; python_version < "3.7"'],
-        }
-        skw["python_requires"] = ">=3.5"
+    # WARNING!!! Do not use setuptools 'console_scripts'
+    # It validates the dependencies (of which we have none) every time the
+    # 'xonsh' command is run. This validation adds ~0.2 sec. to the startup
+    # time of xonsh - for every single xonsh run.  This prevents us from
+    # reaching the goal of a startup time of < 0.1 sec.  So never ever write
+    # the following:
+    #
+    #     'console_scripts': ['xonsh = xonsh.main:main'],
+    #
+    # END WARNING
+    skw["entry_points"] = {
+        "pygments.lexers": [
+            "xonsh = xonsh.pyghooks:XonshLexer",
+            "xonshcon = xonsh.pyghooks:XonshConsoleLexer",
+        ],
+        "pytest11": ["xonsh = xonsh.pytest_plugin"],
+    }
+    skw["cmdclass"]["develop"] = xdevelop
+    skw["extras_require"] = {
+        "ptk": ["prompt-toolkit>=2.0"],
+        "pygments": ["pygments>=2.2"],
+        "mac": ["gnureadline"],
+        "linux": ["distro"],
+        "proctitle": ["setproctitle"],
+        "zipapp": ['importlib_resources; python_version < "3.7"'],
+    }
+    skw["python_requires"] = ">=3.6"
     setup(**skw)
 
 

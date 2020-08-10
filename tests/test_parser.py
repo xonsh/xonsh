@@ -11,11 +11,7 @@ from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.base import eval_fstr_fields
 
-from tools import VER_FULL, skip_if_lt_py36, nodes_equal
-
-# a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
-INC_ATTRS = (3, 5, 1) <= VER_FULL
-
+from tools import nodes_equal
 
 @pytest.fixture(autouse=True)
 def xonsh_builtins_autouse(xonsh_builtins):
@@ -77,7 +73,6 @@ def test_int_literal():
     check_ast("42")
 
 
-@skip_if_lt_py36
 def test_int_literal_underscore():
     check_ast("4_2")
 
@@ -86,7 +81,6 @@ def test_float_literal():
     check_ast("42.0")
 
 
-@skip_if_lt_py36
 def test_float_literal_underscore():
     check_ast("4_2.4_2")
 
@@ -117,13 +111,11 @@ def test_raw_literal():
     check_ast('R"hell\\o"')
 
 
-@skip_if_lt_py36
 def test_f_literal():
     check_ast('f"wakka{yo}yakka{42}"', run=False)
     check_ast('F"{yo}"', run=False)
 
 
-@skip_if_lt_py36
 def test_f_env_var():
     check_xonsh_ast({}, 'f"{$HOME}"', run=False)
     check_xonsh_ast({}, "f'{$XONSH_DEBUG}'", run=False)
@@ -315,7 +307,7 @@ def test_in():
 
 
 def test_is():
-    check_ast("42 is 65")
+    check_ast("int is float")   # avoid PY3.8 SyntaxWarning "is" with a literal
 
 
 def test_not_in():
@@ -323,7 +315,7 @@ def test_not_in():
 
 
 def test_is_not():
-    check_ast("42 is not 65")
+    check_ast("float is not int")
 
 
 def test_lt_lt():
@@ -1338,7 +1330,6 @@ def test_equals_attr():
     check_stmts("class X(object):\n  pass\nx = X()\nx.a = 65")
 
 
-@skip_if_lt_py36
 def test_equals_annotation():
     check_stmts("x : int = 42")
 

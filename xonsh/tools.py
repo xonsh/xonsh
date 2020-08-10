@@ -48,7 +48,6 @@ from xonsh.platform import (
     DEFAULT_ENCODING,
     ON_LINUX,
     ON_WINDOWS,
-    PYTHON_VERSION_INFO,
     expanduser,
     os_environ,
     pygments_version_info,
@@ -775,15 +774,6 @@ def _yield_accessible_unix_file_names(path):
 def _executables_in_posix(path):
     if not os.path.exists(path):
         return
-    elif PYTHON_VERSION_INFO < (3, 5, 0):
-        for fname in os.listdir(path):
-            fpath = os.path.join(path, fname)
-            if (
-                os.path.exists(fpath)
-                and os.access(fpath, os.X_OK)
-                and (not os.path.isdir(fpath))
-            ):
-                yield fname
     else:
         yield from _yield_accessible_unix_file_names(path)
 
@@ -792,32 +782,24 @@ def _executables_in_windows(path):
     if not os.path.isdir(path):
         return
     extensions = builtins.__xonsh__.env["PATHEXT"]
-    if PYTHON_VERSION_INFO < (3, 5, 0):
-        for fname in os.listdir(path):
-            fpath = os.path.join(path, fname)
-            if os.path.exists(fpath) and not os.path.isdir(fpath):
-                base_name, ext = os.path.splitext(fname)
-                if ext.upper() in extensions:
-                    yield fname
-    else:
-        try:
-            for x in scandir(path):
-                try:
-                    is_file = x.is_file()
-                except OSError:
-                    continue
-                if is_file:
-                    fname = x.name
-                else:
-                    continue
-                base_name, ext = os.path.splitext(fname)
-                if ext.upper() in extensions:
-                    yield fname
-        except FileNotFoundError:
-            # On Windows, there's no guarantee for the directory to really
-            # exist even if isdir returns True. This may happen for instance
-            # if the path contains trailing spaces.
-            return
+    try:
+        for x in scandir(path):
+            try:
+                is_file = x.is_file()
+            except OSError:
+                continue
+            if is_file:
+                fname = x.name
+            else:
+                continue
+            base_name, ext = os.path.splitext(fname)
+            if ext.upper() in extensions:
+                yield fname
+    except FileNotFoundError:
+        # On Windows, there's no guarantee for the directory to really
+        # exist even if isdir returns True. This may happen for instance
+        # if the path contains trailing spaces.
+        return
 
 
 def executables_in(path):
@@ -1208,10 +1190,7 @@ def to_logfile_opt(x):
     the filepath if it is a writable file or None if the filepath is not
     valid, informing the user on stderr about the invalid choice.
     """
-    superclass = pathlib.PurePath
-    if PYTHON_VERSION_INFO >= (3, 6, 0):
-        superclass = os.PathLike
-    if isinstance(x, superclass):
+    if isinstance(x, os.PathLike):
         x = str(x)
     if is_logfile_opt(x):
         return x
@@ -2146,9 +2125,9 @@ def expandvars(path):
         for match in POSIX_ENVVAR_REGEX.finditer(path):
             name = match.group("envvar")
             if name in env:
-                ensurer = env.get_ensurer(name)
+                detyper = env.get_detyper(name)
                 val = env[name]
-                value = str(val) if ensurer.detype is None else ensurer.detype(val)
+                value = str(val) if detyper is None else detyper(val)
                 value = str(val) if value is None else value
                 path = POSIX_ENVVAR_REGEX.sub(value, path, count=1)
     return path
@@ -2258,37 +2237,21 @@ def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
         include_dotfiles = builtins.__xonsh__.env.get("DOTGLOB")
     if ignore_case:
         s = expand_case_matching(s)
-    if sys.version_info > (3, 5):
-        if "**" in s and "**/*" not in s:
-            s = s.replace("**", "**/*")
-        if include_dotfiles:
-            dotted_s, dotmodified = _dotglobstr(s)
-        # `recursive` is only a 3.5+ kwarg.
-        if sort_result:
-            paths = glob.glob(s, recursive=True)
-            if include_dotfiles and dotmodified:
-                paths.extend(glob.iglob(dotted_s, recursive=True))
-            paths.sort()
-            paths = iter(paths)
-        else:
-            paths = glob.iglob(s, recursive=True)
-            if include_dotfiles and dotmodified:
-                paths = itertools.chain(glob.iglob(dotted_s, recursive=True), paths)
-        return paths, s
+    if "**" in s and "**/*" not in s:
+        s = s.replace("**", "**/*")
+    if include_dotfiles:
+        dotted_s, dotmodified = _dotglobstr(s)
+    if sort_result:
+        paths = glob.glob(s, recursive=True)
+        if include_dotfiles and dotmodified:
+            paths.extend(glob.iglob(dotted_s, recursive=True))
+        paths.sort()
+        paths = iter(paths)
     else:
-        if include_dotfiles:
-            dotted_s, dotmodified = _dotglobstr(s)
-        if sort_result:
-            paths = glob.glob(s)
-            if include_dotfiles and dotmodified:
-                paths.extend(glob.iglob(dotted_s))
-            paths.sort()
-            paths = iter(paths)
-        else:
-            paths = glob.iglob(s)
-            if include_dotfiles and dotmodified:
-                paths = itertools.chain(glob.iglob(dotted_s), paths)
-        return paths, s
+        paths = glob.iglob(s, recursive=True)
+        if include_dotfiles and dotmodified:
+            paths = itertools.chain(glob.iglob(dotted_s, recursive=True), paths)
+    return paths, s
 
 
 def iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):

@@ -323,6 +323,13 @@ def _xh_create_parser():
             'units; e.g. "--size 8128 commands"'
         ),
     )
+    gcp.add_argument(
+        "--force",
+        dest="force_gc",
+        default=False,
+        action="store_true",
+        help="perform garbage collection even if history much bigger than configured limit",
+    )
     bgcp = gcp.add_mutually_exclusive_group()
     bgcp.add_argument(
         "--blocking",
@@ -343,12 +350,6 @@ def _xh_create_parser():
         # add actions belong only to JsonHistory
         diff = subp.add_parser("diff", help="diff two xonsh history files")
         xdh.dh_create_parser(p=diff)
-
-        import xonsh.replay as xrp
-
-        replay = subp.add_parser("replay", help="replay a xonsh history file")
-        xrp.replay_create_parser(p=replay)
-        _XH_MAIN_ACTIONS.add("replay")
 
     # 'flush' subcommand
     subp.add_parser("flush", help="flush the current history to disk")
@@ -408,15 +409,10 @@ def history_main(
             return
         print(str(hist.filename), file=stdout)
     elif ns.action == "gc":
-        hist.run_gc(size=ns.size, blocking=ns.blocking)
+        hist.run_gc(size=ns.size, blocking=ns.blocking, force=ns.force_gc)
     elif ns.action == "diff":
         if isinstance(hist, JsonHistory):
             xdh.dh_main_action(ns)
-    elif ns.action == "replay":
-        if isinstance(hist, JsonHistory):
-            import xonsh.replay as xrp
-
-            xrp.replay_main_action(hist, ns, stdout=stdout, stderr=stderr)
     elif ns.action == "flush":
         hf = hist.flush()
         if isinstance(hf, threading.Thread):

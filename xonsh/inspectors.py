@@ -15,13 +15,12 @@ import types
 import inspect
 import itertools
 import linecache
-import collections
 
 from xonsh.lazyasd import LazyObject
 from xonsh.tokenize import detect_encoding
 from xonsh.openpy import read_py_file
 from xonsh.tools import cast_unicode, safe_hasattr, indent, print_color, format_color
-from xonsh.platform import HAS_PYGMENTS, PYTHON_VERSION_INFO
+from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.style_tools import partial_color_tokenize
 
@@ -328,21 +327,6 @@ def find_source_lines(obj):
     return lineno
 
 
-if PYTHON_VERSION_INFO < (3, 5, 0):
-    FrameInfo = collections.namedtuple(
-        "FrameInfo",
-        ["frame", "filename", "lineno", "function", "code_context", "index"],
-    )
-
-    def getouterframes(frame, context=1):
-        """Wrapper for getouterframes so that it acts like the Python v3.5 version."""
-        return [FrameInfo(*f) for f in inspect.getouterframes(frame, context=context)]
-
-
-else:
-    getouterframes = inspect.getouterframes
-
-
 class Inspector(object):
     """Inspects objects."""
 
@@ -356,7 +340,7 @@ class Inspector(object):
         exception is suppressed.
         """
         try:
-            hdef = oname + inspect.signature(*getargspec(obj))
+            hdef = oname + str(inspect.signature(obj))
             return cast_unicode(hdef)
         except:  # pylint:disable=bare-except
             return None

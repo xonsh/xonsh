@@ -1,4 +1,4 @@
-__version__ = "0.9.18"
+__version__ = "0.9.19"
 
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
@@ -80,16 +80,14 @@ else:
         _sys.modules["xonsh.environ"] = __amalgam__
         tracer = __amalgam__
         _sys.modules["xonsh.tracer"] = __amalgam__
-        readline_shell = __amalgam__
-        _sys.modules["xonsh.readline_shell"] = __amalgam__
-        replay = __amalgam__
-        _sys.modules["xonsh.replay"] = __amalgam__
         aliases = __amalgam__
         _sys.modules["xonsh.aliases"] = __amalgam__
-        dumb_shell = __amalgam__
-        _sys.modules["xonsh.dumb_shell"] = __amalgam__
+        readline_shell = __amalgam__
+        _sys.modules["xonsh.readline_shell"] = __amalgam__
         built_ins = __amalgam__
         _sys.modules["xonsh.built_ins"] = __amalgam__
+        dumb_shell = __amalgam__
+        _sys.modules["xonsh.dumb_shell"] = __amalgam__
         execer = __amalgam__
         _sys.modules["xonsh.execer"] = __amalgam__
         imphooks = __amalgam__

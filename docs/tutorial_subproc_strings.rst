@@ -32,7 +32,7 @@ to try this in xonsh, you'd see:
 
 **xonsh**
 
-.. code-block:: xonshcon
+.. code-block:: bash
 
     $ echo Actually\ Three\ Arguments
     Actually\ Three\ Arguments
@@ -43,7 +43,7 @@ pass in a single argument:
 
 **xonsh** or **bash**
 
-.. code-block:: xonshcon
+.. code-block:: bash
 
     $ echo "A Single Argument"
     A Single Argument
@@ -71,7 +71,7 @@ For example,
 
 **xonsh**
 
-.. code-block:: xonshcon
+.. code-block:: bash
 
     $ echo! A  Single     Argument
     A  Single     Argument
@@ -97,7 +97,7 @@ when leading and trailing quotes are not matched.
 
 **xonsh**
 
-.. code-block:: xonshcon
+.. code-block:: bash
 
     $ echo foo"bar"baz
     foo"bar"baz
@@ -110,7 +110,7 @@ You can think of these being equivalent to,
 
 **xonsh**
 
-.. code-block:: xonshcon
+.. code-block:: bash
 
     $ echo 'foo"bar"baz'
     foo"bar"baz

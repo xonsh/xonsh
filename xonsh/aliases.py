@@ -21,6 +21,7 @@ from xonsh.platform import (
     ON_NETBSD,
     ON_OPENBSD,
     ON_DRAGONFLY,
+    ON_POSIX,
 )
 from xonsh.tools import (
     XonshError,
@@ -33,7 +34,6 @@ from xonsh.tools import (
     unthreadable,
     print_color,
 )
-from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
 from xonsh.ast import isexpression
@@ -42,6 +42,9 @@ import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 from xonsh.xoreutils.umask import umask
+
+if ON_POSIX:
+    from xonsh.xoreutils.ulimit import ulimit
 
 
 @lazyobject
@@ -556,7 +559,7 @@ def source_alias(args, stdin=None):
                     print("source: {}: No such file".format(fname), file=sys.stderr)
                 if i == 0:
                     raise RuntimeError(
-                        "must source at least one file, " + fname + "does not exist."
+                        "must source at least one file, " + fname + " does not exist."
                     )
                 break
         _, fext = os.path.splitext(fpath)
@@ -777,7 +780,6 @@ def make_default_aliases():
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
-        "replay": replay_main,
         "trace": trace,
         "timeit": timeit_alias,
         "umask": umask,
@@ -791,6 +793,8 @@ def make_default_aliases():
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
     }
+    if ON_POSIX:
+        default_aliases["ulimit"] = ulimit
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
         windows_cmd_aliases = {

@@ -498,7 +498,7 @@ class BaseParser(object):
         if not yacc_debug:
             yacc_kwargs["errorlog"] = yacc.NullLogger()
         if outputdir is None:
-            outputdir = os.path.dirname(os.path.dirname(__file__))
+            outputdir = os.path.dirname(os.path.realpath(__file__))
         yacc_kwargs["outputdir"] = outputdir
         if yacc_debug:
             # create parser on main thread
@@ -966,9 +966,12 @@ class BaseParser(object):
     def p_tfpdef(self, p):
         """tfpdef : name_tok colon_test_opt"""
         p1 = p[1]
-        kwargs = {"arg": p1.value, "annotation": p[2]}
-        if PYTHON_VERSION_INFO >= (3, 5, 1):
-            kwargs.update({"lineno": p1.lineno, "col_offset": p1.lexpos})
+        kwargs = {
+            "arg": p1.value,
+            "annotation": p[2],
+            "lineno": p1.lineno,
+            "col_offset": p1.lexpos,
+        }
         p[0] = ast.arg(**kwargs)
 
     def p_comma_tfpdef_empty(self, p):
@@ -1108,9 +1111,12 @@ class BaseParser(object):
     def p_vfpdef(self, p):
         """vfpdef : name_tok"""
         p1 = p[1]
-        kwargs = {"arg": p1.value, "annotation": None}
-        if PYTHON_VERSION_INFO >= (3, 5, 1):
-            kwargs.update({"lineno": p1.lineno, "col_offset": p1.lexpos})
+        kwargs = {
+            "arg": p1.value,
+            "annotation": None,
+            "lineno": p1.lineno,
+            "col_offset": p1.lexpos,
+        }
         p[0] = ast.arg(**kwargs)
 
     def p_comma_vfpdef_empty(self, p):
