@@ -11,8 +11,7 @@ from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.base import eval_fstr_fields
 
-from tools import nodes_equal, skip_if_no_walrus
-
+from tools import nodes_equal, skip_if_no_walrus, VER_MAJOR_MINOR
 
 
 @pytest.fixture(autouse=True)
@@ -124,40 +123,42 @@ def test_f_env_var():
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
 
 
-@pytest.mark.parametrize(
-    "inp, exp, exp_fields",
-    [
-        ('f"$HOME"', "$HOME", 0),
-        ('f"{0} - {1}"', "0 - 1", 0),
-        ('f"{$HOME}"', "/foo/bar", 1),
-        ('f"{ $HOME }"', "/foo/bar", 1),
-        ("f\"{'$HOME'}\"", "$HOME", 0),
-        ("f\"{${'HOME'}}\"", "/foo/bar", 1),
-        ("f'{${$FOO+$BAR}}'", "/foo/bar", 1),
-        ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar", 3),
-        (
-            '''f"""foo
+eval_fstr_fields_parameters = [
+    ('f"$HOME"', "$HOME", 0),
+    ('f"{0} - {1}"', "0 - 1", 0),
+    ('f"{$HOME}"', "/foo/bar", 1),
+    ('f"{ $HOME }"', "/foo/bar", 1),
+    ("f\"{'$HOME'}\"", "$HOME", 0),
+    ("f\"{${'HOME'}}\"", "/foo/bar", 1),
+    ("f'{${$FOO+$BAR}}'", "/foo/bar", 1),
+    ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar", 3),
+    (
+        '''f"""foo
 {f"_{$HOME}_"}
 bar"""''',
-            "foo\n_/foo/bar_\nbar",
-            1,
-        ),
-        (
-            '''f"""foo
+        "foo\n_/foo/bar_\nbar",
+        1,
+    ),
+    (
+        '''f"""foo
 {f"_{${'HOME'}}_"}
 bar"""''',
-            "foo\n_/foo/bar_\nbar",
-            1,
-        ),
-        (
-            '''f"""foo
+        "foo\n_/foo/bar_\nbar",
+        1,
+    ),
+    (
+        '''f"""foo
 {f"_{${ $FOO + $BAR }}_"}
 bar"""''',
-            "foo\n_/foo/bar_\nbar",
-            1,
-        ),
-    ],
-)
+        "foo\n_/foo/bar_\nbar",
+        1,
+    ),
+]
+if VER_MAJOR_MINOR >= (3, 8):
+    eval_fstr_fields_parameters.append(("f'{$HOME=}'", "$HOME='/foo/bar'", 1))
+
+
+@pytest.mark.parametrize("inp, exp, exp_fields", eval_fstr_fields_parameters)
 def test_eval_fstr_fields(inp, exp, exp_fields):
     builtins.__xonsh__.fstring_fields.clear()
     joined_str_node = eval_fstr_fields(inp, "f").body[0].value

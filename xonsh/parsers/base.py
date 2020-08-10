@@ -28,7 +28,17 @@ RE_STRINGPREFIX = LazyObject(
 
 @lazyobject
 def RE_FSTR_FIELD_WRAPPER():
-    return re.compile(r"__xonsh__\.eval_fstring_field\((\d+)\)")
+    if PYTHON_VERSION_INFO > (3, 8):
+        return re.compile(r"__xonsh__\.eval_fstring_field\((\d+)\)\s*[^=]")
+    else:
+        return re.compile(r"__xonsh__\.eval_fstring_field\((\d+)\)")
+
+
+if PYTHON_VERSION_INFO > (3, 8):
+
+    @lazyobject
+    def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
+        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\)\s*)=")
 
 
 class Location(object):
@@ -257,7 +267,6 @@ def eval_fstr_fields(fstring, prefix, filename=None):
         match = RE_FSTR_FIELD_WRAPPER.search(value)
         if match is None:
             continue
-
         try:
             field = builtins.__xonsh__.fstring_fields.pop(int(match.group(1)))
         except KeyError:
@@ -267,6 +276,30 @@ def eval_fstr_fields(fstring, prefix, filename=None):
 
     if reparse:
         res = pyparse(repl)
+
+    if PYTHON_VERSION_INFO > (3, 8):
+        for node in ast.walk(res.body[0].value):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                value = node.value
+            elif isinstance(node, ast.Str):
+                value = node.s
+            else:
+                continue
+
+            match = RE_FSTR_SELF_DOC_FIELD_WRAPPER.search(value)
+            if match is None:
+                continue
+            field_id = int(match.group(2))
+            try:
+                field = builtins.__xonsh__.fstring_fields[field_id]
+            except KeyError:
+                continue
+            value = value.replace(match.group(1), field[0], 1)
+            if isinstance(node, ast.Str):
+                node.s = value
+            else:
+                node.value = value
+
     return res
 
 
