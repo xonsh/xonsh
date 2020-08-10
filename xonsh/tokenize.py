@@ -82,6 +82,10 @@ from token import (
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 
+HAS_WALRUS = PYTHON_VERSION_INFO > (3, 8)
+if HAS_WALRUS:
+    from token import COLONEQUAL
+
 cookie_re = LazyObject(
     lambda: re.compile(r"^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)", re.ASCII),
     globals(),
@@ -119,7 +123,10 @@ else:
     ADDSPACE_TOKS = (NAME, NUMBER)
 del token  # must clean up token
 
-AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
+if HAS_WALRUS:
+    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>:]=?"
+else:
+    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
 
 
 COMMENT = N_TOKENS
@@ -215,6 +222,8 @@ EXACT_TOKEN_TYPES = {
     "//=": DOUBLESLASHEQUAL,
     "@": AT,
 }
+if HAS_WALRUS:
+    EXACT_TOKEN_TYPES[":="] = COLONEQUAL
 
 EXACT_TOKEN_TYPES.update(_xonsh_tokens)
 

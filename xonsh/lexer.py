@@ -34,6 +34,7 @@ from xonsh.tokenize import (
     RIGHTSHIFT,
     tokenize,
     TokenError,
+    HAS_WALRUS,
 )
 
 
@@ -111,6 +112,8 @@ def token_map():
 
         tm[ASYNC] = "ASYNC"
         tm[AWAIT] = "AWAIT"
+    if HAS_WALRUS:
+        tm[(OP, ":=")] = "COLONEQUAL"
     return tm
 
 
