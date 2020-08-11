@@ -121,6 +121,10 @@ from ast import (
     AnnAssign,
 )
 
+from xonsh.platform import PYTHON_VERSION_INFO
+
+if PYTHON_VERSION_INFO > (3, 8):
+    from ast import NamedExpr
 
 STATEMENTS = (
     FunctionDef,

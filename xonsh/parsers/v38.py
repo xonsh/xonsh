@@ -2,6 +2,7 @@
 """Implements the xonsh parser for Python v3.8."""
 import xonsh.ast as ast
 from xonsh.parsers.v36 import Parser as ThreeSixParser
+from xonsh.parsers.base import store_ctx
 
 
 class Parser(ThreeSixParser):
@@ -32,6 +33,9 @@ class Parser(ThreeSixParser):
             The directory to place generated tables within.
         """
         # Rule creation and modification *must* take place before super()
+        list_rules = ["comma_namedexpr_test_or_star_expr"]
+        for rule in list_rules:
+            self._list_rule(rule)
         tok_rules = ["colonequal"]
         for rule in tok_rules:
             self._tok_rule(rule)
@@ -354,3 +358,62 @@ class Parser(ThreeSixParser):
             targ.col_offset = targ._async_tok.lexpos
             del targ._async_tok
         p[0] = p2
+
+    def p_argument_colonequal(self, p):
+        """argument : test COLONEQUAL test"""
+        p1 = p[1]
+        store_ctx(p1)
+        p[0] = ast.NamedExpr(
+            target=p1, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
+        )
+
+    def p_namedexpr_test(self, p):
+        """namedexpr_test : test
+                          | test COLONEQUAL test
+        """
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p1 = p[1]
+            store_ctx(p1)
+            p[0] = ast.NamedExpr(
+                target=p1, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
+            )
+
+    def p_namedexpr_test_or_star_expr(self, p):
+        """namedexpr_test_or_star_expr : namedexpr_test
+                                       | star_expr
+        """
+        p[0] = p[1]
+
+    def p_comma_namedexpr_test_or_star_expr(self, p):
+        """comma_namedexpr_test_or_star_expr : COMMA namedexpr_test_or_star_expr"""
+        p[0] = [p[2]]
+
+    def p_testlist_comp_comp(self, p):
+        """testlist_comp : namedexpr_test_or_star_expr comp_for"""
+        super().p_testlist_comp_comp(p)
+
+    def p_testlist_comp_comma(self, p):
+        """testlist_comp : namedexpr_test_or_star_expr comma_opt"""
+        super().p_testlist_comp_comma(p)
+
+    def p_testlist_comp_many(self, p):
+        """testlist_comp : namedexpr_test_or_star_expr comma_namedexpr_test_or_star_expr_list comma_opt"""
+        super().p_testlist_comp_many(p)
+
+    def p_elif_part(self, p):
+        """elif_part : ELIF namedexpr_test COLON suite"""
+        super().p_elif_part(p)
+
+    def p_if_stmt(self, p):
+        """if_stmt : if_tok namedexpr_test COLON suite elif_part_list_opt
+                   | if_tok namedexpr_test COLON suite elif_part_list_opt else_part
+        """
+        super().p_if_stmt(p)
+
+    def p_while_stmt(self, p):
+        """while_stmt : WHILE namedexpr_test COLON suite
+                      | WHILE namedexpr_test COLON suite else_part
+        """
+        super().p_while_stmt(p)
