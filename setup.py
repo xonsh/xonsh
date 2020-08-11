@@ -196,7 +196,10 @@ def restore_version():
 
 
 class xinstall(install):
-    """Xonsh specialization of setuptools install class."""
+    """Xonsh specialization of setuptools install class.
+    For production, let setuptools generate the 
+    startup script, e.g: `pip installl .' rather than
+    relying on 'python setup.py install'."""
 
     def run(self):
         clean_tables()
