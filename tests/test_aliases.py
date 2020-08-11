@@ -128,3 +128,20 @@ def test_subprocess_logical_operators(xonsh_execer, xonsh_builtins, alias):
     ales = make_aliases()
     ales["echocat"] = alias
     assert isinstance(ales["echocat"], ExecAlias)
+
+
+@pytest.mark.parametrize(
+    "alias",
+    [
+        "echo 'hi' | grep h",
+        "echo 'hi' > file",
+        "cat < file",
+        "COMMAND1 e>o < input.txt | COMMAND2 > output.txt e>> errors.txt",
+        "echo 'h|i' | grep h",
+        "echo 'h|i << x > 3' | grep x",
+    ],
+)
+def test_subprocess_io_operators(xonsh_execer, xonsh_builtins, alias):
+    ales = make_aliases()
+    ales["echocat"] = alias
+    assert isinstance(ales["echocat"], ExecAlias)
