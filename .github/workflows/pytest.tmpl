@@ -1,6 +1,12 @@
 name: pytest OS_NAME PYTHON_VERSION
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
 
 jobs:
   build:
