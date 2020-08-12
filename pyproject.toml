@@ -29,6 +29,8 @@ exclude = '''
      |  \.vscode
      |  \.pytest_cache
      |  ply
+     |  vended_ptk/prompt_toolkit
+     |  vended_ptk/wcwidth
      )/
 )
 '''
