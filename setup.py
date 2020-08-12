@@ -13,7 +13,7 @@ try:
 except ImportError:
     pass
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
@@ -341,8 +341,6 @@ def main():
         packages=[
             "xonsh",
             "xonsh.ply.ply",
-            "xonsh.vended_ptk.prompt_toolkit",
-            "xonsh.vended_ptk.wcwidth",
             "xonsh.ptk_shell",
             "xonsh.ptk2",
             "xonsh.parsers",
@@ -362,7 +360,7 @@ def main():
         },
         package_data={
             "xonsh": ["*.json", "*.githash"],
-            "xonsh.vended_ptk": ["LICENSE-prompt-toolkit","LICENSE-wcwidth"],
+            "xonsh.vended_ptk": ["LICENSE-prompt-toolkit", "LICENSE-wcwidth"],
             "xontrib": ["*.xsh"],
             "xonsh.lib": ["*.xsh"],
             "xonsh.webconfig": [
@@ -374,6 +372,9 @@ def main():
         },
         cmdclass=cmdclass,
         scripts=scripts,
+    )
+    skw["packages"].extend(
+        ["xonsh.vended_ptk." + pkg for pkg in find_packages(where="xonsh/vended_ptk")]
     )
     # We used to avoid setuptools 'console_scripts' due to startup performance
     # concerns which have since been resolved, so long as install is done
