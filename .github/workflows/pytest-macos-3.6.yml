@@ -1,6 +1,13 @@
 name: pytest macos 3.6
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
 
 jobs:
   build:
