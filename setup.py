@@ -196,7 +196,10 @@ def restore_version():
 
 
 class xinstall(install):
-    """Xonsh specialization of setuptools install class."""
+    """Xonsh specialization of setuptools install class.
+    For production, let setuptools generate the 
+    startup script, e.g: `pip installl .' rather than
+    relying on 'python setup.py install'."""
 
     def run(self):
         clean_tables()
@@ -323,12 +326,6 @@ def main():
     with open(os.path.join(os.path.dirname(__file__), "README.rst"), "r") as f:
         readme = f.read()
     scripts = ["scripts/xon.sh"]
-    if sys.platform == "win32":
-        scripts.append("scripts/xonsh.bat")
-        scripts.append("scripts/xonsh-cat.bat")
-    else:
-        scripts.append("scripts/xonsh")
-        scripts.append("scripts/xonsh-cat")
     skw = dict(
         name="xonsh",
         description="Python-powered, cross-platform, Unix-gazing shell",
@@ -373,27 +370,24 @@ def main():
                 "js/app.min.js",
                 "js/bootstrap.min.css",
                 "js/LICENSE-bootstrap",
-            ]
+            ],
         },
         cmdclass=cmdclass,
         scripts=scripts,
     )
-    # WARNING!!! Do not use setuptools 'console_scripts'
-    # It validates the dependencies (of which we have none) every time the
-    # 'xonsh' command is run. This validation adds ~0.2 sec. to the startup
-    # time of xonsh - for every single xonsh run.  This prevents us from
-    # reaching the goal of a startup time of < 0.1 sec.  So never ever write
-    # the following:
-    #
-    #     'console_scripts': ['xonsh = xonsh.main:main'],
-    #
-    # END WARNING
+    # We used to avoid setuptools 'console_scripts' due to startup performance
+    # concerns which have since been resolved, so long as install is done
+    # via `pip install .` and not `python setup.py install`.
     skw["entry_points"] = {
         "pygments.lexers": [
             "xonsh = xonsh.pyghooks:XonshLexer",
             "xonshcon = xonsh.pyghooks:XonshConsoleLexer",
         ],
         "pytest11": ["xonsh = xonsh.pytest_plugin"],
+        "console_scripts": [
+            "xonsh = xonsh.main:main",
+            "xonsh-cat = xonsh.xoreutils.cat:cat_main",
+        ],
     }
     skw["cmdclass"]["develop"] = xdevelop
     skw["extras_require"] = {

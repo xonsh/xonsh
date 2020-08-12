@@ -28,7 +28,7 @@ the following from the source directory,
 
 .. code-block:: console
 
-    $ python setup.py install
+    $ pip install .
 
 
 Debian/Ubuntu users can install xonsh from the repository with:

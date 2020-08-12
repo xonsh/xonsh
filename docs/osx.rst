@@ -41,7 +41,7 @@ the following from the source directory,
 
 .. code-block:: console
 
-    $ python3 setup.py install
+    $ pip3 install xonsh
 
 Extras for macOS
 ==================
