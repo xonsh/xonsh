@@ -3,6 +3,7 @@
 from __future__ import unicode_literals, print_function
 import os
 import itertools
+import re
 from tempfile import TemporaryDirectory
 from xonsh.tools import always_true
 
@@ -455,3 +456,10 @@ def test_deregister_custom_var():
     # gives it only default permissive validation, conversion
     del env["MY_SPECIAL_VAR"]
     env["MY_SPECIAL_VAR"] = 32
+
+
+def test_env_iterate():
+    env = Env(TEST=0)
+    env.register(re.compile("re"))
+    for key in env:
+        assert isinstance(key, str)

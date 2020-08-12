@@ -1971,7 +1971,9 @@ class Env(cabc.MutableMapping):
             return default
 
     def __iter__(self):
-        yield from (set(self._d) | set(self._vars))
+        for key in set(self._d) | set(self._vars):
+            if isinstance(key, str):
+                yield key
 
     def __contains__(self, item):
         return item in self._d or item in self._vars
