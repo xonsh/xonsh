@@ -183,7 +183,7 @@ minimum_required_ptk_version = (2, 0, 0)
 
 @functools.lru_cache(1)
 def ptk_above_min_supported():
-    return ptk_version_info() and ptk_version_info()[:2] >= minimum_required_ptk_version
+    return ptk_version_info() and ptk_version_info() >= minimum_required_ptk_version
 
 
 @functools.lru_cache(1)
