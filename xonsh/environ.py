@@ -12,6 +12,7 @@ import contextlib
 import collections
 import collections.abc as cabc
 import subprocess
+import platform
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -86,7 +87,6 @@ from xonsh.ansi_colors import (
     ansi_style_by_name,
 )
 import xonsh.prompt.base as prompt
-
 
 events.doc(
     "on_envvar_new",
@@ -941,6 +941,20 @@ def DEFAULT_VARS():
             "``erasedups`` will remove all previous commands that matches and updates the frequency. "
             "Note: ``erasedups`` is supported only in sqlite backend).",
             doc_store_as_str=True,
+        ),
+        "HOSTNAME": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            default_value(lambda env: platform.node()),
+            "Automatically set to the name of the current host.",
+        ),
+        "HOSTTYPE": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            default_value(lambda env: platform.machine()),
+            "Automatically set to a string that fully describes the system type on which xonsh is executing.",
         ),
         "IGNOREEOF": Var(
             is_bool,
