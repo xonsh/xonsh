@@ -1,0 +1,3 @@
+**Added:**
+
+* History clear.
