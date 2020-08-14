@@ -483,3 +483,19 @@ def test__xhj_gc_xx_to_rmfiles(
         assert minute_diff <= 60
     else:
         assert act_size == exp_size
+
+
+def test_hist_clear_cmd(hist, xonsh_builtins, capsys, tmpdir):
+    """Verify that CLI history clear command work."""
+    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xonsh_builtins.__xonsh__.history = hist
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+
+    for ts, cmd in enumerate(CMDS):  # populate the shell history
+        hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+    assert len(xonsh_builtins.__xonsh__.history) == 6
+
+    history_main(["clear"])
+    out, err = capsys.readouterr()
+    assert out.rstrip() == "History cleared"
+    assert len(xonsh_builtins.__xonsh__.history) == 0
