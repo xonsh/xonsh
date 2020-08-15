@@ -3,7 +3,7 @@
 =================
 Developer's Guide
 =================
-.. an image URL works for CONTRIBUTING.rst and the symlinked docs/devguide.html
+.. an image URL works for CONTRIBUTING.rst and the symlinked docs/devguide.rst
 .. image:: https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/knight-vs-snail.jpg
    :width: 80 %
    :alt: knight-vs-snail
