@@ -382,7 +382,7 @@ def test_register_custom_var_float():
         env["MY_SPECIAL_VAR"] = "wakka"
 
 
-@pytest.mark.parametrize("val,converted", 
+@pytest.mark.parametrize("val,converted",
         [
             (True, True),
             (32, True),
@@ -401,7 +401,7 @@ def test_register_custom_var_bool(val, converted):
     assert env["MY_SPECIAL_VAR"] == converted
 
 
-@pytest.mark.parametrize("val,converted", 
+@pytest.mark.parametrize("val,converted",
         [
             (32, "32"),
             (0, "0"),
@@ -431,7 +431,7 @@ def test_register_custom_var_path():
 
     with pytest.raises(TypeError):
         env["MY_SPECIAL_VAR"] = 32
-    
+
 
 def test_deregister_custom_var():
     env = Env()
@@ -463,3 +463,15 @@ def test_env_iterate():
     env.register(re.compile("re"))
     for key in env:
         assert isinstance(key, str)
+
+
+def test_env_iterate_rawkeys():
+    env = Env(TEST=0)
+    env.register(re.compile("re"))
+    saw_regex = False
+    for key in env.rawkeys():
+        if isinstance(key, str):
+            continue
+        elif isinstance(key, re.Pattern) and key.pattern == "re":
+            saw_regex = True
+    assert saw_regex
