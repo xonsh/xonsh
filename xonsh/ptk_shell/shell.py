@@ -17,6 +17,7 @@ from xonsh.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
 from xonsh.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.ptk_shell.key_bindings import load_xonsh_bindings
 
+from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.enums import EditingMode
@@ -25,7 +26,7 @@ from prompt_toolkit.history import ThreadedHistory
 from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.shortcuts.prompt import PromptSession
-from prompt_toolkit.formatted_text import PygmentsTokens
+from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.styles import merge_styles, Style
 from prompt_toolkit.styles.pygments import (
     style_from_pygments_cls,
@@ -44,6 +45,32 @@ on_ptk_create(prompter: PromptSession, history: PromptToolkitHistory, completer:
 Fired after prompt toolkit has been initialized
 """,
 )
+
+
+def tokenize_ansi(tokens):
+    """Checks a list of (token, str) tuples for ANSI escape sequences and
+    extends the token list with the new formatted entries.
+    During processing tokens are converted to ``prompt_toolkit.FormattedText``.
+    Returns a list of similar (token, str) tuples.
+    """
+    formatted_tokens = to_formatted_text(tokens)
+    ansi_tokens = []
+    for style, text in formatted_tokens:
+        if "\x1b" in text:
+            formatted_ansi = to_formatted_text(ANSI(text))
+            ansi_text = ""
+            prev_style = ""
+            for ansi_style, ansi_text_part in formatted_ansi:
+                if prev_style == ansi_style:
+                    ansi_text += ansi_text_part
+                else:
+                    ansi_tokens.append((prev_style or style, ansi_text))
+                    prev_style = ansi_style
+                    ansi_text = ansi_text_part
+            ansi_tokens.append((prev_style or style, ansi_text))
+        else:
+            ansi_tokens.append((style, text))
+    return ansi_tokens
 
 
 class PromptToolkitShell(BaseShell):
@@ -220,7 +247,7 @@ class PromptToolkitShell(BaseShell):
             carriage_return()
             self._first_prompt = False
         self.settitle()
-        return PygmentsTokens(toks)
+        return tokenize_ansi(PygmentsTokens(toks))
 
     def rprompt_tokens(self):
         """Returns a list of (token, str) tuples for the current right
@@ -237,7 +264,7 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
-        return PygmentsTokens(toks)
+        return tokenize_ansi(PygmentsTokens(toks))
 
     def _bottom_toolbar_tokens(self):
         """Returns a list of (token, str) tuples for the current bottom
@@ -251,7 +278,7 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
-        return PygmentsTokens(toks)
+        return tokenize_ansi(PygmentsTokens(toks))
 
     @property
     def bottom_toolbar_tokens(self):
