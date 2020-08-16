@@ -37,7 +37,8 @@ bin/
 /lib/
 include/
 venv/
-.venv/
+.venv*/
+
 
 # Mac
 .DS_Store
