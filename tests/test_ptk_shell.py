@@ -8,6 +8,7 @@ from xonsh.platform import minimum_required_ptk_version
 
 # verify error if ptk not installed or below min
 
+from xonsh.ptk_shell.shell import tokenize_ansi
 from xonsh.shell import Shell
 
 
@@ -26,7 +27,15 @@ from xonsh.shell import Shell
         ((4, 0, 0), "prompt_toolkit", "prompt_toolkit", None, False),
     ],
 )
-def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, warn_snip, using_vended_ptk, monkeypatch, xonsh_builtins):
+def test_prompt_toolkit_version_checks(
+    ptk_ver,
+    ini_shell_type,
+    exp_shell_type,
+    warn_snip,
+    using_vended_ptk,
+    monkeypatch,
+    xonsh_builtins,
+):
 
     mocked_warn = ""
 
@@ -43,11 +52,17 @@ def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, 
         nonlocal ptk_ver
         return ptk_ver is not None
 
-    monkeypatch.setattr("xonsh.shell.warnings.warn", mock_warning)      # hardwon: patch the caller!
-    monkeypatch.setattr("xonsh.shell.ptk_above_min_supported", mock_ptk_above_min_supported)    # have to patch both callers
-    monkeypatch.setattr("xonsh.platform.ptk_above_min_supported", mock_ptk_above_min_supported)
+    monkeypatch.setattr(
+        "xonsh.shell.warnings.warn", mock_warning
+    )  # hardwon: patch the caller!
+    monkeypatch.setattr(
+        "xonsh.shell.ptk_above_min_supported", mock_ptk_above_min_supported
+    )  # have to patch both callers
+    monkeypatch.setattr(
+        "xonsh.platform.ptk_above_min_supported", mock_ptk_above_min_supported
+    )
     monkeypatch.setattr("xonsh.platform.has_prompt_toolkit", mock_has_prompt_toolkit)
-    
+
     old_syspath = sys.path.copy()
 
     act_shell_type = Shell.choose_shell_type(ini_shell_type, {})
@@ -60,12 +75,34 @@ def test_prompt_toolkit_version_checks(ptk_ver, ini_shell_type, exp_shell_type, 
 
     sys.path = old_syspath
 
-
     assert act_shell_type == exp_shell_type
 
     if warn_snip:
         assert warn_snip in mocked_warn
 
     pass
+
+
+@pytest.mark.parametrize(
+    "prompt_tokens, ansi_string_parts",
+    [
+        # no ansi, single token
+        ([("fake style", "no ansi here")], ["no ansi here"]),
+        # no ansi, multiple tokens
+        ([("s1", "no"), ("s2", "ansi here")], ["no", "ansi here"]),
+        # ansi only, multiple
+        ([("s1", "\x1b[33mansi \x1b[1monly")], ["", "ansi ", "only"]),
+        # mixed
+        (
+            [("s1", "no ansi"), ("s2", "mixed \x1b[33mansi")],
+            ["no ansi", "mixed ", "ansi"],
+        ),
+    ],
+)
+def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
+    ansi_tokens = tokenize_ansi(prompt_tokens)
+    for token, text in zip(ansi_tokens, ansi_string_parts):
+        assert token[1] == text
+
 
 # someday: initialize PromptToolkitShell and have it actually do something.
