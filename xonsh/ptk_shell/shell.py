@@ -16,8 +16,8 @@ from xonsh.pygments_cache import get_all_styles
 from xonsh.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
 from xonsh.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.ptk_shell.key_bindings import load_xonsh_bindings
+from xonsh.ptk_shell.tokenize_ansi import tokenize_ansi
 
-from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.enums import EditingMode
@@ -216,14 +216,12 @@ class PromptToolkitShell(BaseShell):
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
-        if "\x1b" in p:
-            return ANSI(p)
         toks = partial_color_tokenize(p)
         if self._first_prompt:
             carriage_return()
             self._first_prompt = False
         self.settitle()
-        return PygmentsTokens(toks)
+        return tokenize_ansi(PygmentsTokens(toks))
 
     def rprompt_tokens(self):
         """Returns a list of (token, str) tuples for the current right
@@ -239,10 +237,8 @@ class PromptToolkitShell(BaseShell):
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
-        if "\x1b" in p:
-            return ANSI(p)
         toks = partial_color_tokenize(p)
-        return PygmentsTokens(toks)
+        return tokenize_ansi(PygmentsTokens(toks))
 
     def _bottom_toolbar_tokens(self):
         """Returns a list of (token, str) tuples for the current bottom
@@ -256,7 +252,7 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
-        return PygmentsTokens(toks)
+        return tokenize_ansi(PygmentsTokens(toks))
 
     @property
     def bottom_toolbar_tokens(self):
