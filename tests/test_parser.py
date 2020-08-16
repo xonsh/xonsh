@@ -11,7 +11,8 @@ from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.base import eval_fstr_fields
 
-from tools import nodes_equal
+from tools import nodes_equal, skip_if_no_walrus
+
 
 @pytest.fixture(autouse=True)
 def xonsh_builtins_autouse(xonsh_builtins):
@@ -1185,6 +1186,16 @@ def test_rshift_op_three():
     check_ast("42 >> 65 >> 1 >> 7")
 
 
+@skip_if_no_walrus
+def test_named_expr():
+    check_ast("(x := 42)")
+
+
+@skip_if_no_walrus
+def test_named_expr_list():
+    check_ast("[x := 42, x + 1, x + 2]")
+
+
 #
 # statements
 #
@@ -1997,6 +2008,26 @@ def test_async_decorator():
 
 def test_async_await():
     check_stmts("async def f():\n    await fut\n", False)
+
+
+@skip_if_no_walrus
+def test_named_expr_args():
+    check_stmts("id(x := 42)")
+
+
+@skip_if_no_walrus
+def test_named_expr_if():
+    check_stmts("if (x := 42) > 0:\n  x += 1")
+
+
+@skip_if_no_walrus
+def test_named_expr_elif():
+    check_stmts("if False:\n  pass\nelif x := 42:\n  x += 1")
+
+
+@skip_if_no_walrus
+def test_named_expr_while():
+    check_stmts("y = 42\nwhile (x := y) < 43:\n  y += 1")
 
 
 #
