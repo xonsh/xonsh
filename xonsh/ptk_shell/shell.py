@@ -21,7 +21,10 @@ from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.key_binding.bindings.emacs import (
+    load_emacs_shift_selection_bindings,
+)
+from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
 from prompt_toolkit.history import ThreadedHistory
 from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
@@ -91,8 +94,13 @@ class PromptToolkitShell(BaseShell):
         self.history = ThreadedHistory(PromptToolkitHistory())
         self.prompter = PromptSession(history=self.history)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-        self.key_bindings = KeyBindings()
-        load_xonsh_bindings(self.key_bindings)
+        self.key_bindings = merge_key_bindings(
+            [
+                load_xonsh_bindings(),
+                load_emacs_shift_selection_bindings(),
+            ]
+        )
+
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
         # This assumes that PromptToolkitShell is a singleton
@@ -282,8 +290,7 @@ class PromptToolkitShell(BaseShell):
 
     @property
     def bottom_toolbar_tokens(self):
-        """Returns self._bottom_toolbar_tokens if it would yield a result
-        """
+        """Returns self._bottom_toolbar_tokens if it would yield a result"""
         if builtins.__xonsh__.env.get("BOTTOM_TOOLBAR"):
             return self._bottom_toolbar_tokens
 
