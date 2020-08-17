@@ -467,11 +467,12 @@ def test_env_iterate():
 
 def test_env_iterate_rawkeys():
     env = Env(TEST=0)
-    env.register(re.compile("re"))
+    r = re.compile("re")
+    env.register(r)
     saw_regex = False
     for key in env.rawkeys():
         if isinstance(key, str):
             continue
-        elif isinstance(key, re.Pattern) and key.pattern == "re":
+        elif isinstance(key, type(r)) and key.pattern == "re":
             saw_regex = True
     assert saw_regex
