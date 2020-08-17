@@ -17,7 +17,6 @@ from xonsh.built_ins import (
     enter_macro,
     path_literal,
     _BuiltIns,
-    fstring_fields,
     eval_fstring_field,
 )
 from xonsh.execer import Execer
@@ -134,7 +133,6 @@ def xonsh_builtins(monkeypatch, xonsh_events):
     builtins.__xonsh__.list_of_list_of_strs_outer_product = (
         list_of_list_of_strs_outer_product
     )
-    builtins.__xonsh__.fstring_fields = fstring_fields
     builtins.__xonsh__.eval_fstring_field = eval_fstring_field
     builtins.__xonsh__.history = DummyHistory()
     builtins.__xonsh__.subproc_captured_stdout = sp

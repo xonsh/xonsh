@@ -9,7 +9,7 @@ import pytest
 
 from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
-from xonsh.parsers.base import eval_fstr_fields
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
 from tools import nodes_equal, skip_if_no_walrus, VER_MAJOR_MINOR
 
@@ -123,53 +123,46 @@ def test_f_env_var():
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
 
 
-eval_fstr_fields_parameters = [
-    ('f"$HOME"', "$HOME", 0),
-    ('f"{0} - {1}"', "0 - 1", 0),
-    ('f"{$HOME}"', "/foo/bar", 1),
-    ('f"{ $HOME }"', "/foo/bar", 1),
-    ("f\"{'$HOME'}\"", "$HOME", 0),
-    ("f\"{${'HOME'}}\"", "/foo/bar", 1),
-    ("f'{${$FOO+$BAR}}'", "/foo/bar", 1),
-    ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar", 3),
+fstring_adaptor_parameters = [
+    ('f"$HOME"', "$HOME"),
+    ('f"{0} - {1}"', "0 - 1"),
+    ('f"{$HOME}"', "/foo/bar"),
+    ('f"{ $HOME }"', "/foo/bar"),
+    ("f\"{'$HOME'}\"", "$HOME"),
+    ("f\"{${'HOME'}}\"", "/foo/bar"),
+    ("f'{${$FOO+$BAR}}'", "/foo/bar"),
+    ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar"),
     (
         '''f"""foo
 {f"_{$HOME}_"}
 bar"""''',
         "foo\n_/foo/bar_\nbar",
-        1,
     ),
     (
         '''f"""foo
 {f"_{${'HOME'}}_"}
 bar"""''',
         "foo\n_/foo/bar_\nbar",
-        1,
     ),
     (
         '''f"""foo
 {f"_{${ $FOO + $BAR }}_"}
 bar"""''',
         "foo\n_/foo/bar_\nbar",
-        1,
     ),
 ]
 if VER_MAJOR_MINOR >= (3, 8):
-    eval_fstr_fields_parameters.append(("f'{$HOME=}'", "$HOME='/foo/bar'", 1))
+    fstring_adaptor_parameters.append(("f'{$HOME=}'", "$HOME='/foo/bar'"))
 
 
-@pytest.mark.parametrize("inp, exp, exp_fields", eval_fstr_fields_parameters)
-def test_eval_fstr_fields(inp, exp, exp_fields):
-    builtins.__xonsh__.fstring_fields.clear()
-    joined_str_node = eval_fstr_fields(inp, "f").body[0].value
+@pytest.mark.parametrize("inp, exp", fstring_adaptor_parameters)
+def test_fstring_adaptor(inp, exp):
+    joined_str_node = FStringAdaptor(inp, "f").run()
     assert isinstance(joined_str_node, ast.JoinedStr)
     node = ast.Expression(body=joined_str_node)
-    code = compile(node, "<test_eval_fstr_fields>", mode="eval")
-    fields = len(builtins.__xonsh__.fstring_fields)
-    assert exp_fields == fields
+    code = compile(node, "<test_fstring_adaptor>", mode="eval")
     builtins.__xonsh__.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
     obs = eval(code)
-    assert len(builtins.__xonsh__.fstring_fields) == 0
     assert exp == obs
 
 

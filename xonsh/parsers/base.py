@@ -4,7 +4,6 @@ import os
 import re
 import time
 import textwrap
-import builtins
 from threading import Thread
 from ast import parse as pyparse
 from collections.abc import Iterable, Sequence, Mapping
@@ -16,29 +15,15 @@ from xonsh.ast import has_elts, xonsh_call, load_attribute_chain
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath, StringPrefix
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import LazyObject
 from xonsh.parsers.context_check import check_contexts
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCHPATH")
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
-
-
-@lazyobject
-def RE_FSTR_FIELD_WRAPPER():
-    if PYTHON_VERSION_INFO > (3, 8):
-        return re.compile(r"__xonsh__\.eval_fstring_field\((\d+)\)\s*[^=]")
-    else:
-        return re.compile(r"__xonsh__\.eval_fstring_field\((\d+)\)")
-
-
-if PYTHON_VERSION_INFO > (3, 8):
-
-    @lazyobject
-    def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
-        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\)\s*)=")
 
 
 class Location(object):
@@ -219,88 +204,6 @@ def hasglobstar(x):
             return False
     else:
         return False
-
-
-def eval_fstr_fields(fstring, prefix, filename=None):
-    """Takes an fstring (and its prefix, ie f") that may contain
-    xonsh expressions as its field values and substitues them for
-    a call to __xonsh__.eval_fstring_field as needed.
-    """
-    prelen = len(prefix)
-    quote = fstring[prelen]
-    if fstring[prelen + 1] == quote:
-        quote *= 3
-    template = fstring[prelen + len(quote) : -len(quote)]
-    while True:
-        repl = prefix + quote + template + quote
-        try:
-            res = pyparse(repl)
-            break
-        except SyntaxError as e:
-            # The e.text attribute is expected to contain the failing
-            # expression, e.g. "($HOME)" for f"{$HOME}" string.
-            if e.text is None or e.text[0] != "(":
-                raise
-            error_expr = e.text[1:-1]
-            epos = template.find(error_expr)
-            if epos < 0:
-                raise
-        # We can olny get here in the case of handled SyntaxError.
-        # Patch the last error and start over.
-        xonsh_field = (error_expr, filename)
-        field_id = id(xonsh_field)
-        builtins.__xonsh__.fstring_fields[field_id] = xonsh_field
-        eval_field = f"__xonsh__.eval_fstring_field({field_id})"
-        template = template[:epos] + eval_field + template[epos + len(error_expr) :]
-
-    # If we accidentally patched some false-positives within strings,
-    # revert the false matches and reparse.
-    reparse = False
-    for node in ast.walk(res.body[0].value):
-        if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            value = node.value
-        elif isinstance(node, ast.Str):
-            value = node.s
-        else:
-            continue
-
-        match = RE_FSTR_FIELD_WRAPPER.search(value)
-        if match is None:
-            continue
-        try:
-            field = builtins.__xonsh__.fstring_fields.pop(int(match.group(1)))
-        except KeyError:
-            continue
-        repl = repl.replace(match.group(0), field[0], 1)
-        reparse = True
-
-    if reparse:
-        res = pyparse(repl)
-
-    if PYTHON_VERSION_INFO > (3, 8):
-        for node in ast.walk(res.body[0].value):
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                value = node.value
-            elif isinstance(node, ast.Str):
-                value = node.s
-            else:
-                continue
-
-            match = RE_FSTR_SELF_DOC_FIELD_WRAPPER.search(value)
-            if match is None:
-                continue
-            field_id = int(match.group(2))
-            try:
-                field = builtins.__xonsh__.fstring_fields[field_id]
-            except KeyError:
-                continue
-            value = value.replace(match.group(1), field[0], 1)
-            if isinstance(node, ast.Str):
-                node.s = value
-            else:
-                node.value = value
-
-    return res
 
 
 class YaccLoader(Thread):
@@ -2485,19 +2388,18 @@ class BaseParser(object):
             new_pref = prefix.replace("p", "")
             value_without_p = new_pref + p1.value[len(prefix) :]
             try:
-                s = pyparse(value_without_p)
+                s = pyparse(value_without_p).body[0].value
             except SyntaxError:
                 s = None
             if s is None:
                 try:
-                    s = eval_fstr_fields(
+                    s = FStringAdaptor(
                         value_without_p, new_pref, filename=self.lexer.fname
-                    )
+                    ).run()
                 except SyntaxError as e:
                     self._parse_error(
                         str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
                     )
-            s = s.body[0].value
             s = ast.increment_lineno(s, p1.lineno - 1)
             p[0] = xonsh_call(
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
@@ -2514,17 +2416,18 @@ class BaseParser(object):
             )
         elif "f" in prefix:
             try:
-                s = pyparse(p1.value)
+                s = pyparse(p1.value).body[0].value
             except SyntaxError:
                 s = None
             if s is None:
                 try:
-                    s = eval_fstr_fields(p1.value, prefix, filename=self.lexer.fname)
+                    s = FStringAdaptor(
+                        p1.value, prefix, filename=self.lexer.fname
+                    ).run()
                 except SyntaxError as e:
                     self._parse_error(
                         str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
                     )
-            s = s.body[0].value
             s = ast.increment_lineno(s, p1.lineno - 1)
             if "r" in prefix:
                 setattr(s, "is_raw", True)
