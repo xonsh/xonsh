@@ -1984,8 +1984,14 @@ class Env(cabc.MutableMapping):
         except KeyError:
             return default
 
+    def rawkeys(self):
+        """An iterator that returns all environment keys in their original form.
+        This include string & compiled regular expression keys.
+        """
+        yield from (set(self._d) | set(self._vars))
+
     def __iter__(self):
-        for key in set(self._d) | set(self._vars):
+        for key in self.rawkeys():
             if isinstance(key, str):
                 yield key
 
