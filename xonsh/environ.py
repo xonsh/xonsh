@@ -682,7 +682,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            None,
             "This is used on Windows to set the title, if available.",
             doc_configurable=False,
         ),
@@ -1086,7 +1086,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            ".",
+            None,
             "Used to represent a previous present working directory.",
             doc_configurable=False,
         ),
@@ -1281,7 +1281,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            None,
             "TERM is sometimes set by the terminal emulator. This is used (when "
             "valid) to determine whether or not to set the title. Users shouldn't "
             "need to set this themselves. Note that this variable should be set as "
@@ -1385,7 +1385,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            None,
             "Path to the currently active Python environment.",
             doc_configurable=False,
         ),
@@ -1525,7 +1525,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            None,
             "Symbols for gitstatus prompt. Default values are: \n\n"
             "* ``XONSH_GITSTATUS_HASH``: ``:``\n"
             "* ``XONSH_GITSTATUS_BRANCH``: ``{CYAN}``\n"
@@ -1585,7 +1585,7 @@ def DEFAULT_VARS():
             is_bool,
             to_bool,
             bool_to_str,
-            True,
+            None,
             "``True`` if xonsh is running interactively, and ``False`` otherwise.",
             doc_configurable=False,
         ),
@@ -1620,7 +1620,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            None,
             "When running a xonsh script, this variable contains the absolute path "
             "to the currently executing script's file.",
             doc_configurable=False,
@@ -1721,6 +1721,7 @@ class Env(cabc.MutableMapping):
         self._no_value = object()
         self._orig_env = None
         self._vars = {k: v for k, v in DEFAULT_VARS.items()}
+        self._defaults = {k: v.default for k, v in self._vars.items() if v.default is not None}
 
         if len(args) == 0 and len(kwargs) == 0:
             args = (os_environ,)
@@ -1848,13 +1849,6 @@ class Env(cabc.MutableMapping):
 
         return detyper
 
-    def get_default(self, key, default=None):
-        """Gets default for the given key."""
-        if key in self._vars:
-            return self._vars[key].default
-        else:
-            return default
-
     def get_docs(self, key, default=None):
         """Gets the documentation for the environment variable."""
         vd = self._vars.get(key, None)
@@ -1863,7 +1857,7 @@ class Env(cabc.MutableMapping):
                 default = Var()
             return default
         if vd.doc_default is DefaultNotGiven:
-            dval = pprint.pformat(self._vars.get(key, "<default not set>").default)
+            dval = pprint.pformat(self._defaults.get(key, "<default not set>"))
             vd = vd._replace(doc_default=dval)
         return vd
 
@@ -1928,8 +1922,8 @@ class Env(cabc.MutableMapping):
             return self
         elif key in self._d:
             val = self._d[key]
-        elif key in self._vars:
-            val = self.get_default(key)
+        elif key in self._defaults:
+            val = self._defaults[key]
             if is_callable_default(val):
                 val = val(self)
         else:
@@ -1971,7 +1965,7 @@ class Env(cabc.MutableMapping):
             self._detyped = None
             if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
                 del os_environ[key]
-        elif key not in self._vars:
+        elif key not in self._defaults:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
 
@@ -1988,7 +1982,7 @@ class Env(cabc.MutableMapping):
         """An iterator that returns all environment keys in their original form.
         This include string & compiled regular expression keys.
         """
-        yield from (set(self._d) | set(self._vars))
+        yield from (set(self._d) | set(self._defaults))
 
     def __iter__(self):
         for key in self.rawkeys():
@@ -1996,7 +1990,7 @@ class Env(cabc.MutableMapping):
                 yield key
 
     def __contains__(self, item):
-        return item in self._d or item in self._vars
+        return item in self._d or item in self._defaults
 
     def __len__(self):
         return len(self._d)
