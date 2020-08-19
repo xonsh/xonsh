@@ -1721,7 +1721,9 @@ class Env(cabc.MutableMapping):
         self._no_value = object()
         self._orig_env = None
         self._vars = {k: v for k, v in DEFAULT_VARS.items()}
-        self._defaults = {k: v.default for k, v in self._vars.items() if v.default is not None}
+        self._defaults = {
+            k: v.default for k, v in self._vars.items() if v.default is not None
+        }
 
         if len(args) == 0 and len(kwargs) == 0:
             args = (os_environ,)
