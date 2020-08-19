@@ -200,9 +200,10 @@ class JsonHistoryGC(threading.Thread):
                 if only_unlocked and lj.get("locked", False):
                     continue
                 # info: file size, closing timestamp, number of commands, filename
+                ts = lj.get("ts", (0.0, None))
                 files.append(
                     (
-                        lj["ts"][1] or lj["ts"][0],
+                        ts[1] or ts[0],
                         len(lj.sizes["cmds"]) - 1,
                         f,
                         cur_file_size,
