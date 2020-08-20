@@ -202,12 +202,7 @@ class JsonHistoryGC(threading.Thread):
                 # info: file size, closing timestamp, number of commands, filename
                 ts = lj.get("ts", (0.0, None))
                 files.append(
-                    (
-                        ts[1] or ts[0],
-                        len(lj.sizes["cmds"]) - 1,
-                        f,
-                        cur_file_size,
-                    ),
+                    (ts[1] or ts[0], len(lj.sizes["cmds"]) - 1, f, cur_file_size,),
                 )
                 lj.close()
                 if xonsh_debug:
