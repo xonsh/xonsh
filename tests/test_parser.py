@@ -9,9 +9,9 @@ import pytest
 
 from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
-from xonsh.parsers.base import eval_fstr_fields
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
-from tools import nodes_equal, skip_if_no_walrus
+from tools import nodes_equal, skip_if_no_walrus, VER_MAJOR_MINOR
 
 
 @pytest.fixture(autouse=True)
@@ -123,28 +123,47 @@ def test_f_env_var():
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
 
 
-@pytest.mark.parametrize(
-    "inp, exp",
-    [
-        ('f"{}"', 'f"{}"'),
-        ('f"$HOME"', 'f"$HOME"'),
-        ('f"{0} - {1}"', 'f"{0} - {1}"'),
-        (
-            'f"{$HOME}"',
-            "f\"{__xonsh__.execer.eval(r'$HOME', glbs=globals(), locs=locals())}\"",
-        ),
-        (
-            'f"{ $HOME }"',
-            "f\"{__xonsh__.execer.eval(r'$HOME ', glbs=globals(), locs=locals())}\"",
-        ),
-        (
-            "f\"{'$HOME'}\"",
-            "f\"{__xonsh__.execer.eval(r'\\'$HOME\\'', glbs=globals(), locs=locals())}\"",
-        ),
-    ],
-)
-def test_eval_fstr_fields(inp, exp):
-    obs = eval_fstr_fields(inp, 'f"')
+fstring_adaptor_parameters = [
+    ('f"$HOME"', "$HOME"),
+    ('f"{0} - {1}"', "0 - 1"),
+    ('f"{$HOME}"', "/foo/bar"),
+    ('f"{ $HOME }"', "/foo/bar"),
+    ("f\"{'$HOME'}\"", "$HOME"),
+    ("f\"$HOME  = {$HOME}\"", "$HOME  = /foo/bar"),
+    ("f\"{${'HOME'}}\"", "/foo/bar"),
+    ("f'{${$FOO+$BAR}}'", "/foo/bar"),
+    ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar"),
+    (
+        '''f"""foo
+{f"_{$HOME}_"}
+bar"""''',
+        "foo\n_/foo/bar_\nbar",
+    ),
+    (
+        '''f"""foo
+{f"_{${'HOME'}}_"}
+bar"""''',
+        "foo\n_/foo/bar_\nbar",
+    ),
+    (
+        '''f"""foo
+{f"_{${ $FOO + $BAR }}_"}
+bar"""''',
+        "foo\n_/foo/bar_\nbar",
+    ),
+]
+if VER_MAJOR_MINOR >= (3, 8):
+    fstring_adaptor_parameters.append(("f'{$HOME=}'", "$HOME='/foo/bar'"))
+
+
+@pytest.mark.parametrize("inp, exp", fstring_adaptor_parameters)
+def test_fstring_adaptor(inp, exp):
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+    node = ast.Expression(body=joined_str_node)
+    code = compile(node, "<test_fstring_adaptor>", mode="eval")
+    builtins.__xonsh__.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
+    obs = eval(code)
     assert exp == obs
 
 
@@ -308,7 +327,7 @@ def test_in():
 
 
 def test_is():
-    check_ast("int is float")   # avoid PY3.8 SyntaxWarning "is" with a literal
+    check_ast("int is float")  # avoid PY3.8 SyntaxWarning "is" with a literal
 
 
 def test_not_in():
