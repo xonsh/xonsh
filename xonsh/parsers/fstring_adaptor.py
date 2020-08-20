@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+"""Implements helper class for parsing Xonsh syntax within f-strings."""
 import re
-from xonsh.lazyasd import lazyobject
 from ast import parse as pyparse
+
 from xonsh import ast
+from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 
 
@@ -21,7 +24,22 @@ if PYTHON_VERSION_INFO > (3, 8):
 
 
 class FStringAdaptor:
+    """Helper for parsing Xonsh syntax within f-strings."""
+
     def __init__(self, fstring, prefix, filename=None):
+        """Parses an f-string containing special Xonsh syntax and returns
+        ast.JoinedStr AST node instance representing the input string.
+
+        Parameters
+        ----------
+        fstring : str
+            The input f-string.
+        prefix : str
+            Prefix of the f-string (e.g. "fr").
+        filename : str, optional
+            File from which the code was read or any string describing
+            origin of the code.
+        """
         self.fstring = fstring
         self.prefix = prefix
         self.filename = filename
@@ -30,7 +48,7 @@ class FStringAdaptor:
         self.res = None
 
     def _patch_special_syntax(self):
-        """Takes an fstring (and its prefix, ie f") that may contain
+        """Takes an fstring (and its prefix, ie "f") that may contain
         xonsh expressions as its field values and substitues them for
         a call to __xonsh__.eval_fstring_field as needed.
         """
@@ -78,9 +96,8 @@ class FStringAdaptor:
             match = RE_FSTR_FIELD_WRAPPER.search(value)
             if match is None:
                 continue
-            try:
-                field = self.fields.pop(int(match.group(1)))
-            except KeyError:
+            field = self.fields.pop(int(match.group(1)), None)
+            if field is None:
                 continue
             self.repl = self.repl.replace(match.group(0), field[0], 1)
             reparse = True
@@ -102,10 +119,8 @@ class FStringAdaptor:
             match = RE_FSTR_SELF_DOC_FIELD_WRAPPER.search(value)
             if match is None:
                 continue
-            field_id = int(match.group(2))
-            try:
-                field = self.fields[field_id]
-            except KeyError:
+            field = self.fields.get(int(match.group(2)), None)
+            if field is None:
                 continue
             value = value.replace(match.group(1), field[0], 1)
             if isinstance(node, ast.Str):
@@ -129,9 +144,8 @@ class FStringAdaptor:
                 if isinstance(node.args[0], ast.Constant) and isinstance(
                     node.args[0].value, int
                 ):
-                    try:
-                        field = self.fields.pop(node.args[0].value)
-                    except KeyError:
+                    field = self.fields.pop(node.args[0].value, None)
+                    if field is None:
                         continue
                     lineno = node.args[0].lineno
                     col_offset = node.args[0].col_offset
@@ -150,9 +164,8 @@ class FStringAdaptor:
                     )
                     node.args[0] = field_node
             elif isinstance(node.args[0], ast.Num):
-                try:
-                    field = self.fields.pop(node.args[0].n)
-                except KeyError:
+                field = self.fields.pop(node.args[0].n, None)
+                if field is None:
                     continue
                 lineno = node.args[0].lineno
                 col_offset = node.args[0].col_offset
@@ -173,6 +186,7 @@ class FStringAdaptor:
                 node.args[0] = field_node
 
     def run(self):
+        """Runs the parser. Returns ast.JoinedStr instance."""
         self._patch_special_syntax()
         self._unpatch_strings()
         if PYTHON_VERSION_INFO > (3, 8):
