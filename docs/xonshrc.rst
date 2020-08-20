@@ -2,22 +2,58 @@ Run Control File
 =========================
 Xonsh allows you to have run control files to customize your shell behavior.  These are called ``xonshrc`` files.
 
-The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.  You can create this file in ``/etc/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
+The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.  
+You can create this file in ``/etc/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
 
-Xonsh also allows you to have a run control file in your home directory. It can either be directly in the home directory at ``~/.xonshrc`` or for XDG compliance at ``~/.config/rc.xsh``. The options set in the local ``xonshrc`` only apply to the current user and will override any conflicting settings set in the system-wide control file.
+Xonsh also allows you to have a run control file in your home directory. 
+It can either be directly in the home directory at ``~/.xonshrc`` or for XDG compliance at ``~/.config/rc.xsh``. 
+The options set in the local ``xonshrc`` only apply to the current user and will override any conflicting settings set in the system-wide control file.
 
-These files are written in the xonsh language, of course. They are executed exactly once
-at startup. The following is a real-world example of such a file.
+These files are written in the xonsh language (a superset of Python). They are executed exactly once at startup.   
+The control file usually contains:
+
+* Assignment statements setting `environment variables <envvars.html>`_.  This includes standard OS environment variables that affect other programs and many that Xonsh uses for itself.
+* Xonsh function defintions
+* `Alias definitions <aliases.html>`_, many of which invoke the above functions with specified arguments.
+
+The following is a real-world example of such a file.
 
 :download:`Download xonshrc <xonshrc.xsh>`
 
 .. include:: xonshrc.xsh
     :code: xonsh
 
+Xonfig web
+-----------
+
+Xonsh provides a configuration wizard which helps you choose a color theme, customized prompt and add-in packages ("xontribs").  It 
+initializes your personal run control file (usually at ``~/.xonshrc``).  To invoke it (from a xonsh prompt):
+
+.. code-block:: xonshcon
+  
+  >>> xonfig web
+  Web config started at 'http://localhost:8421'. Hit Crtl+C to stop.
+  127.0.0.1 - - [23/Aug/2020 15:04:39] "GET / HTTP/1.1" 200 -
+
+This will open your default browser on a page served from a local server.  You can exit the server by typing ``Ctrl+c`` at any time.
+
+The page has:
+ 
+:Colors: shows the  color themes built into Xonsh.  
+  Simply click on a sample to select it.  Although color names are standardized across various terminal applications, 
+  their actual appearance is not and do vary widely.  Seeing is believing! 
+:Prompts: shows various sample prompts.  It is recommended to select one but to then edit the run control file to further refine your prompt.
+:Xontribs: are community-contributed add-ins often used to enhance command completion and line editing, 
+  but can affect any aspect of Xonsh behavior.  
+  Choose one or more to suit your needs but note that they will require installation of additional
+  packages.  You can extend Xonsh by `writing your own xontrib <tutorial_xontrib.html>`_, and are invited/urged to do so!
+:Save: Click to write the configuration choices to your `~/.xonshrc`. This will add a few tagged lines to your run control file, but will not 
+  overwrite it completely, so you can run `xonfig web` at any time.
 
 Snippets for xonshrc
-=========================
-The following are usefull snippets and code that tweaks and adjust xonsh in various ways.
+--------------------
+
+The following are useful snippets and code that tweaks and adjust xonsh in various ways.
 If you have any useful tricks, feel free to share them.
 
 Adjust how git branch label behaves
@@ -37,7 +73,7 @@ The following snippet reimplements the formatter also to include untracked files
                                                    else '{BOLD_INTENSE_GREEN}')
 
 
-.. _customize the prompt: http://xon.sh/tutorial.html#customizing-the-prompt
+.. _customize the prompt: tutorial.html#customizing-the-prompt
 
 
 Get better colors from the ``ls`` command
@@ -50,7 +86,8 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
     
 Make JSON data directly pastable
 --------------------------------
-With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``. Note that, though practical, this is rather hacky and might break other functionality. Use at your own risk.
+With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``. 
+Note that, though practical, this is rather hacky and might break other functionality. Use at your own risk.
 
 .. code-block:: xonshcon
 
