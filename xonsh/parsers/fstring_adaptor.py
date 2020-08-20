@@ -11,9 +11,9 @@ from xonsh.platform import PYTHON_VERSION_INFO
 @lazyobject
 def RE_FSTR_FIELD_WRAPPER():
     if PYTHON_VERSION_INFO > (3, 8):
-        return re.compile(r"__xonsh__\.eval_fstring_field\((\d+)\)\s*[^=]")
+        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))\s*[^=]")
     else:
-        return re.compile(r"__xonsh__\.eval_fstring_field\((\d+)\)")
+        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))")
 
 
 if PYTHON_VERSION_INFO > (3, 8):
@@ -96,10 +96,10 @@ class FStringAdaptor:
             match = RE_FSTR_FIELD_WRAPPER.search(value)
             if match is None:
                 continue
-            field = self.fields.pop(int(match.group(1)), None)
+            field = self.fields.pop(int(match.group(2)), None)
             if field is None:
                 continue
-            self.repl = self.repl.replace(match.group(0), field[0], 1)
+            self.repl = self.repl.replace(match.group(1), field[0], 1)
             reparse = True
 
         if reparse:
