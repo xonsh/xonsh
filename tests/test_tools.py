@@ -19,6 +19,7 @@ from xonsh.tools import (
     always_true,
     argvquote,
     bool_or_int_to_str,
+    bool_or_none_to_str,
     bool_to_str,
     check_for_partial_string,
     dynamic_cwd_tuple_to_str,
@@ -32,6 +33,7 @@ from xonsh.tools import (
     find_next_break,
     is_bool,
     is_bool_or_int,
+    is_bool_or_none,
     is_callable,
     is_dynamic_cwd_width,
     is_env_path,
@@ -46,6 +48,7 @@ from xonsh.tools import (
     subproc_toks,
     to_bool,
     to_bool_or_int,
+    to_bool_or_none,
     to_dynamic_cwd_tuple,
     to_logfile_opt,
     pathsep_to_set,
@@ -1088,6 +1091,42 @@ def test_to_bool_or_int(inp, exp):
 def test_bool_or_int_to_str(inp, exp):
     obs = bool_or_int_to_str(inp)
     assert exp == obs
+
+
+@pytest.mark.parametrize("inp", [True, False, None])
+def test_is_bool_or_none_true(inp):
+    assert is_bool_or_none(inp)
+
+
+@pytest.mark.parametrize("inp", [1, "yooo hooo!"])
+def test_is_bool_or_none_false(inp):
+    assert not is_bool_or_none(inp)
+
+
+@pytest.mark.parametrize(
+    "inp, exp",
+    [
+        (True, True),
+        (False, False),
+        (None, None),
+        ("", False),
+        ("0", False),
+        ("False", False),
+        ("NONE", None),
+        ("TRUE", True),
+        ("1", True),
+        (0, False),
+        (1, True),
+    ],
+)
+def test_to_bool_or_none(inp, exp):
+    obs = to_bool_or_none(inp)
+    assert exp == obs
+
+
+@pytest.mark.parametrize("inp, exp", [(True, "1"), (False, ""), (None, "None")])
+def test_bool_or_none_to_str(inp, exp):
+    assert bool_or_none_to_str(inp) == exp
 
 
 @pytest.mark.parametrize(

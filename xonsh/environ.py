@@ -41,6 +41,9 @@ from xonsh.tools import (
     is_bool,
     to_bool,
     bool_to_str,
+    is_bool_or_none,
+    to_bool_or_none,
+    bool_or_none_to_str,
     is_history_tuple,
     to_history_tuple,
     history_tuple_to_str,
@@ -1298,9 +1301,9 @@ def DEFAULT_VARS():
             doc_configurable=False,
         ),
         "THREAD_SUBPROCS": Var(
-            is_bool,
-            to_bool,
-            bool_to_str,
+            is_bool_or_none,
+            to_bool_or_none,
+            bool_or_none_to_str,
             True,
             "Whether or not to try to run subrocess mode in a Python thread, "
             "when applicable. There are various trade-offs, which normally "
@@ -1319,7 +1322,8 @@ def DEFAULT_VARS():
             "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
-            "The desired effect is often up to the command, user, or use case.",
+            "The desired effect is often up to the command, user, or use case.\n",
+            "None values are for internal use only.",
         ),
         "TITLE": Var(
             is_string,
@@ -2134,6 +2138,8 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
     ctx = {} if ctx is None else ctx
     if rcfiles is None:
         return env
+    orig_thread = env.get("THREAD_SUBPROCS")
+    env["THREAD_SUBPROCS"] = None
     env["XONSHRC"] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
@@ -2142,6 +2148,8 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
         _, ext = os.path.splitext(rcfile)
         status = xonsh_script_run_control(rcfile, ctx, env, execer=execer, login=login)
         loaded.append(status)
+    if env["THREAD_SUBPROCS"] is None:
+        env["THREAD_SUBPROCS"] = orig_thread
     return ctx
 
 
