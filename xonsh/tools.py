@@ -1171,6 +1171,11 @@ def is_bool(x):
     return isinstance(x, bool)
 
 
+def is_bool_or_none(x):
+    """Tests if something is a boolean or None."""
+    return (x is None) or isinstance(x, bool)
+
+
 def is_logfile_opt(x):
     """
     Checks if x is a valid $XONSH_TRACEBACK_LOGFILE option. Returns False
@@ -1234,6 +1239,20 @@ def to_bool(x):
         return bool(x)
 
 
+def to_bool_or_none(x):
+    """"Converts to a boolean or none in a semantically meaningful way."""
+    if x is None or isinstance(x, bool):
+        return x
+    elif isinstance(x, str):
+        low_x = x.lower()
+        if low_x == "none":
+            return None
+        else:
+            return False if x.lower() in _FALSES else True
+    else:
+        return bool(x)
+
+
 def to_itself(x):
     """No conversion, returns itself."""
     return x
@@ -1244,6 +1263,14 @@ def bool_to_str(x):
     True.
     """
     return "1" if x else ""
+
+
+def bool_or_none_to_str(x):
+    """Converts a bool or None value to a string."""
+    if x is None:
+        return "None"
+    else:
+        return "1" if x else ""
 
 
 _BREAKS = LazyObject(
