@@ -272,7 +272,10 @@ class Vox(collections.abc.Mapping):
             the current one (throws a KeyError if there isn't one).
         """
         if name is ...:
-            env_paths = [builtins.__xonsh__.env["VIRTUAL_ENV"]]
+            env = builtins.__xonsh__.env
+            if not env["VIRTUAL_ENV"]:
+                raise KeyError()
+            env_paths = [env["VIRTUAL_ENV"]]
         elif isinstance(name, PathLike):
             env_paths = [fspath(name)]
         else:
