@@ -1322,8 +1322,12 @@ def DEFAULT_VARS():
             "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
-            "The desired effect is often up to the command, user, or use case.\n",
-            "None values are for internal use only.",
+            "The desired effect is often up to the command, user, or use case.\n\n"
+            "None values are for internal use only and are used to turn off "
+            "threading when loading xonshrc files. This is done because Bash "
+            "was automatically placing new xonsh instances in the background "
+            "at startup when threadable subprocs were used. Please see "
+            "https://github.com/xonsh/xonsh/pull/3705 for more information.\n",
         ),
         "TITLE": Var(
             is_string,
@@ -1419,7 +1423,8 @@ def DEFAULT_VARS():
             default_xonshrc,
             "A list of the locations of run control files, if they exist.  User "
             "defined run control file will supersede values set in system-wide "
-            "control file if there is a naming collision.",
+            "control file if there is a naming collision. $THREAD_SUBPROCS=None "
+            "when reading in run control files.",
             doc_default=(
                 "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
                 "\nOn Windows: "
