@@ -214,6 +214,9 @@ class VoxHandler:
                     file=sys.stderr,
                 )
                 return
+            except KeyError:
+                print('"%s" environment doesn\'t exist.\n' % name, file=sys.stderr)
+                return
             else:
                 print('Environment "%s" removed.' % name)
         print()
