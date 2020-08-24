@@ -2,10 +2,9 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
-import itertools
 import re
 from tempfile import TemporaryDirectory
-from xonsh.tools import always_true
+from xonsh.tools import always_true, DefaultNotGiven
 
 import pytest
 
@@ -13,7 +12,6 @@ from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
     locate_binary,
-    DEFAULT_VARS,
     default_env,
     make_args_env,
     LsColors,
@@ -357,12 +355,12 @@ def test_register_custom_var_generic():
     assert env["MY_SPECIAL_VAR"] == 32
 
     env["MY_SPECIAL_VAR"] = True
-    assert env["MY_SPECIAL_VAR"] == True
+    assert env["MY_SPECIAL_VAR"] == True    # noqa E712
 
 
 def test_register_custom_var_int():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='int')
+    env.register("MY_SPECIAL_VAR", type="int")
 
     env["MY_SPECIAL_VAR"] = "32"
     assert env["MY_SPECIAL_VAR"] == 32
@@ -373,7 +371,7 @@ def test_register_custom_var_int():
 
 def test_register_custom_var_float():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='float')
+    env.register("MY_SPECIAL_VAR", type="float")
 
     env["MY_SPECIAL_VAR"] = "27"
     assert env["MY_SPECIAL_VAR"] == 27.0
@@ -382,38 +380,42 @@ def test_register_custom_var_float():
         env["MY_SPECIAL_VAR"] = "wakka"
 
 
-@pytest.mark.parametrize("val,converted",
-        [
-            (True, True),
-            (32, True),
-            (0, False),
-            (27.0, True),
-            (None, False),
-            ("lol", True),
-            ("false", False),
-            ("no", False),
-            ])
+@pytest.mark.parametrize(
+    "val,converted",
+    [
+        (True, True),
+        (32, True),
+        (0, False),
+        (27.0, True),
+        (None, False),
+        ("lol", True),
+        ("false", False),
+        ("no", False),
+    ],
+)
 def test_register_custom_var_bool(val, converted):
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='bool')
+    env.register("MY_SPECIAL_VAR", type="bool")
 
     env["MY_SPECIAL_VAR"] = val
     assert env["MY_SPECIAL_VAR"] == converted
 
 
-@pytest.mark.parametrize("val,converted",
-        [
-            (32, "32"),
-            (0, "0"),
-            (27.0, "27.0"),
-            (None, "None"),
-            ("lol", "lol"),
-            ("false", "false"),
-            ("no", "no"),
-        ])
+@pytest.mark.parametrize(
+    "val,converted",
+    [
+        (32, "32"),
+        (0, "0"),
+        (27.0, "27.0"),
+        (None, "None"),
+        ("lol", "lol"),
+        ("false", "false"),
+        ("no", "no"),
+    ],
+)
 def test_register_custom_var_str(val, converted):
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='str')
+    env.register("MY_SPECIAL_VAR", type="str")
 
     env["MY_SPECIAL_VAR"] = val
     assert env["MY_SPECIAL_VAR"] == converted
@@ -421,12 +423,12 @@ def test_register_custom_var_str(val, converted):
 
 def test_register_custom_var_path():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='path')
+    env.register("MY_SPECIAL_VAR", type="path")
 
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
 
-    assert hasattr(env['MY_SPECIAL_VAR'], 'paths')
+    assert hasattr(env["MY_SPECIAL_VAR"], "paths")
     assert env["MY_SPECIAL_VAR"].paths == paths
 
     with pytest.raises(TypeError):
@@ -436,11 +438,11 @@ def test_register_custom_var_path():
 def test_deregister_custom_var():
     env = Env()
 
-    env.register("MY_SPECIAL_VAR", type='path')
+    env.register("MY_SPECIAL_VAR", type="path")
     env.deregister("MY_SPECIAL_VAR")
     assert "MY_SPECIAL_VAR" not in env
 
-    env.register("MY_SPECIAL_VAR", type='path')
+    env.register("MY_SPECIAL_VAR", type="path")
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
     env.deregister("MY_SPECIAL_VAR")
@@ -476,3 +478,23 @@ def test_env_iterate_rawkeys():
         elif isinstance(key, type(r)) and key.pattern == "re":
             saw_regex = True
     assert saw_regex
+
+
+@pytest.mark.parametrize(
+    "doc_default,exp_type", [(None, None), (DefaultNotGiven, str), ("foo", str)]
+)
+def test_env_get_docs(doc_default, exp_type):
+    """Verify get_docs.doc_default returns None if name not documented in Env, some string otherwise."""
+    env = Env()
+    if doc_default is not None:
+        env.register("MY_SPECIAL_VAR", type="str", default="", doc_default=doc_default)
+
+    var = env._vars.get("MY_SPECIAL_VAR", None)
+    docs = env.get_docs("MY_SPECIAL_VAR")
+
+    if doc_default is None:
+        assert var is None
+        assert docs is None
+    else:
+        assert var is not None
+        assert isinstance(docs.doc_default, exp_type)

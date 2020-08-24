@@ -296,9 +296,9 @@ def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
     env = builtins.__xonsh__.env
     vd = env.get_docs(name)
-    if not vd.configurable:
+    if (not vd) or (not vd.doc_configurable):
         return
-    default = vd.default
+    default = vd.doc_default
     if "\n" in default:
         default = "\n" + _wrap_paragraphs(default, width=69)
     curr = env.get(name)
@@ -311,7 +311,7 @@ def make_envvar(name):
         name=name,
         default=default,
         current=curr,
-        docstr=_wrap_paragraphs(vd.docstr, width=69),
+        docstr=_wrap_paragraphs(vd.doc, width=69),
     )
     mnode = wiz.Message(message=msg)
     converter = env.get_converter(name)
@@ -322,7 +322,7 @@ def make_envvar(name):
         show_conversion=True,
         path=path,
         retry=True,
-        store_raw=vd.store_as_str,
+        store_raw=vd.doc_store_as_str,
     )
     return mnode, pnode
 
@@ -340,7 +340,7 @@ def _make_flat_wiz(kidfunc, *args):
 
 def make_env_wiz():
     """Makes an environment variable wizard."""
-    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh__.env._docs.keys()))
+    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh__.env.keys()))
     return w
 
 
