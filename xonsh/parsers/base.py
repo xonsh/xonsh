@@ -2844,6 +2844,7 @@ class BaseParser(object):
         p0 = {"if": [p2]}
         if p3 is not None:
             p0["comps"] = p3.get("comps", [])
+            p0["if"] += p3.get("if", [])
         p[0] = p0
 
     def p_yield_expr(self, p):
