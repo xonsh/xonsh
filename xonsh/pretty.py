@@ -108,7 +108,7 @@ def _safe_getattr(obj, attr, default=None):
     rather than raising.
     """
     try:
-    return getattr(obj, attr, default)
+        return getattr(obj, attr, default)
     except Exception:
         return default
 
