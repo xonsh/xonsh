@@ -101,6 +101,7 @@ from ast import (
     dump,
     walk,
     increment_lineno,
+    Constant,
 )
 from ast import Ellipsis as EllipsisNode
 

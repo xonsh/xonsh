@@ -188,7 +188,7 @@ class JsonHistoryGC(threading.Thread):
                     files.append((os.path.getmtime(f), 0, f, cur_file_size))
                     continue
                 lj = xlj.LazyJSON(f, reopen=False)
-                if lj["locked"] and lj["ts"][0] < boot:
+                if lj.get("locked", False) and lj["ts"][0] < boot:
                     # computer was rebooted between when this history was created
                     # and now and so this history should be unlocked.
                     hist = lj.load()
@@ -197,16 +197,12 @@ class JsonHistoryGC(threading.Thread):
                     with open(f, "w", newline="\n") as fp:
                         xlj.ljdump(hist, fp, sort_keys=True)
                     lj = xlj.LazyJSON(f, reopen=False)
-                if only_unlocked and lj["locked"]:
+                if only_unlocked and lj.get("locked", False):
                     continue
                 # info: file size, closing timestamp, number of commands, filename
+                ts = lj.get("ts", (0.0, None))
                 files.append(
-                    (
-                        lj["ts"][1] or lj["ts"][0],
-                        len(lj.sizes["cmds"]) - 1,
-                        f,
-                        cur_file_size,
-                    ),
+                    (ts[1] or ts[0], len(lj.sizes["cmds"]) - 1, f, cur_file_size,),
                 )
                 lj.close()
                 if xonsh_debug:

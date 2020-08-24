@@ -41,6 +41,9 @@ from xonsh.tools import (
     is_bool,
     to_bool,
     bool_to_str,
+    is_bool_or_none,
+    to_bool_or_none,
+    bool_or_none_to_str,
     is_history_tuple,
     to_history_tuple,
     history_tuple_to_str,
@@ -1298,9 +1301,9 @@ def DEFAULT_VARS():
             doc_configurable=False,
         ),
         "THREAD_SUBPROCS": Var(
-            is_bool,
-            to_bool,
-            bool_to_str,
+            is_bool_or_none,
+            to_bool_or_none,
+            bool_or_none_to_str,
             True,
             "Whether or not to try to run subrocess mode in a Python thread, "
             "when applicable. There are various trade-offs, which normally "
@@ -1319,7 +1322,12 @@ def DEFAULT_VARS():
             "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
-            "The desired effect is often up to the command, user, or use case.",
+            "The desired effect is often up to the command, user, or use case.\n\n"
+            "None values are for internal use only and are used to turn off "
+            "threading when loading xonshrc files. This is done because Bash "
+            "was automatically placing new xonsh instances in the background "
+            "at startup when threadable subprocs were used. Please see "
+            "https://github.com/xonsh/xonsh/pull/3705 for more information.\n",
         ),
         "TITLE": Var(
             is_string,
@@ -1415,7 +1423,8 @@ def DEFAULT_VARS():
             default_xonshrc,
             "A list of the locations of run control files, if they exist.  User "
             "defined run control file will supersede values set in system-wide "
-            "control file if there is a naming collision.",
+            "control file if there is a naming collision. $THREAD_SUBPROCS=None "
+            "when reading in run control files.",
             doc_default=(
                 "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
                 "\nOn Windows: "
@@ -1984,8 +1993,14 @@ class Env(cabc.MutableMapping):
         except KeyError:
             return default
 
+    def rawkeys(self):
+        """An iterator that returns all environment keys in their original form.
+        This include string & compiled regular expression keys.
+        """
+        yield from (set(self._d) | set(self._vars))
+
     def __iter__(self):
-        for key in set(self._d) | set(self._vars):
+        for key in self.rawkeys():
             if isinstance(key, str):
                 yield key
 
@@ -2128,6 +2143,8 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
     ctx = {} if ctx is None else ctx
     if rcfiles is None:
         return env
+    orig_thread = env.get("THREAD_SUBPROCS")
+    env["THREAD_SUBPROCS"] = None
     env["XONSHRC"] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
@@ -2136,6 +2153,8 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
         _, ext = os.path.splitext(rcfile)
         status = xonsh_script_run_control(rcfile, ctx, env, execer=execer, login=login)
         loaded.append(status)
+    if env["THREAD_SUBPROCS"] is None:
+        env["THREAD_SUBPROCS"] = orig_thread
     return ctx
 
 

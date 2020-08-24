@@ -10,25 +10,20 @@ from collections.abc import Iterable, Sequence, Mapping
 
 from xonsh.ply.ply import yacc
 
-from xonsh.tools import FORMATTER
 from xonsh import ast
 from xonsh.ast import has_elts, xonsh_call, load_attribute_chain
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath, StringPrefix
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import LazyObject
 from xonsh.parsers.context_check import check_contexts
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCHPATH")
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
-
-
-@lazyobject
-def RE_FSTR_EVAL_CHARS():
-    return re.compile(".*?[!@$`]")
 
 
 class Location(object):
@@ -209,49 +204,6 @@ def hasglobstar(x):
             return False
     else:
         return False
-
-
-def _wrap_fstr_field(field, spec, conv):
-    rtn = "{" + field
-    if conv:
-        rtn += "!" + conv
-    if spec:
-        rtn += ":" + spec
-    rtn += "}"
-    return rtn
-
-
-def eval_fstr_fields(fstring, prefix, filename=None):
-    """Takes an fstring (and its prefix, ie f") that may contain
-    xonsh expressions as its field values and
-    substitues them for a xonsh eval() call as needed. Roughly,
-    for example, this will take f"{$HOME}" and transform it to
-    be f"{__xonsh__.execer.eval(r'$HOME')}".
-    """
-    last = fstring[-1]
-    q, r = ("'", r"\'") if last == '"' else ('"', r"\"")
-    prelen = len(prefix)
-    postlen = len(fstring) - len(fstring.rstrip(last))
-    template = fstring[prelen:-postlen]
-    repl = prefix
-    for literal, field, spec, conv in FORMATTER.parse(template):
-        repl += literal
-        if field is None:
-            continue
-        elif RE_FSTR_EVAL_CHARS.match(field) is None:
-            # just a normal python field, simply reconstruct.
-            repl += _wrap_fstr_field(field, spec, conv)
-        else:
-            # the field has a special xonsh character, so we must eval it
-            eval_field = "__xonsh__.execer.eval(r" + q
-            eval_field += field.lstrip().replace(q, r)
-            eval_field += q + ", glbs=globals(), locs=locals()"
-            if filename is not None:
-                eval_field += ", filename=" + q + filename + q
-            eval_field += ")"
-            repl += _wrap_fstr_field(eval_field, spec, conv)
-    repl += last * postlen
-    return repl
 
 
 class YaccLoader(Thread):
@@ -2219,7 +2171,7 @@ class BaseParser(object):
                     func=leader,
                     lineno=leader.lineno,
                     col_offset=leader.col_offset,
-                    **trailer
+                    **trailer,
                 )
             elif isinstance(trailer, (ast.Tuple, tuple)):
                 # call macro functions
@@ -2435,13 +2387,23 @@ class BaseParser(object):
         if "p" in prefix and "f" in prefix:
             new_pref = prefix.replace("p", "")
             value_without_p = new_pref + p1.value[len(prefix) :]
-            s = eval_fstr_fields(value_without_p, new_pref, filename=self.lexer.fname)
-            s = pyparse(s).body[0].value
+            try:
+                s = pyparse(value_without_p).body[0].value
+            except SyntaxError:
+                s = None
+            if s is None:
+                try:
+                    s = FStringAdaptor(
+                        value_without_p, new_pref, filename=self.lexer.fname
+                    ).run()
+                except SyntaxError as e:
+                    self._parse_error(
+                        str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
+                    )
             s = ast.increment_lineno(s, p1.lineno - 1)
             p[0] = xonsh_call(
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
             )
-
         elif "p" in prefix:
             value_without_p = prefix.replace("p", "") + p1.value[len(prefix) :]
             s = ast.Str(
@@ -2453,9 +2415,22 @@ class BaseParser(object):
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
             )
         elif "f" in prefix:
-            s = eval_fstr_fields(p1.value, prefix, filename=self.lexer.fname)
-            s = pyparse(s).body[0].value
+            try:
+                s = pyparse(p1.value).body[0].value
+            except SyntaxError:
+                s = None
+            if s is None:
+                try:
+                    s = FStringAdaptor(
+                        p1.value, prefix, filename=self.lexer.fname
+                    ).run()
+                except SyntaxError as e:
+                    self._parse_error(
+                        str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
+                    )
             s = ast.increment_lineno(s, p1.lineno - 1)
+            if "r" in prefix:
+                setattr(s, "is_raw", True)
             p[0] = s
         else:
             s = ast.literal_eval(p1.value)

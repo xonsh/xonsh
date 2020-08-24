@@ -1061,6 +1061,14 @@ def list_of_list_of_strs_outer_product(x):
     return rtn
 
 
+def eval_fstring_field(field):
+    """Evaluates the argument in Xonsh context."""
+    res = __xonsh__.execer.eval(
+        field[0].strip(), glbs=globals(), locs=builtins.__xonsh__.ctx, filename=field[1]
+    )
+    return res
+
+
 @lazyobject
 def MACRO_FLAG_KINDS():
     return {
@@ -1403,8 +1411,8 @@ class XonshSession:
         self.all_jobs = {}
         self.ensure_list_of_strs = ensure_list_of_strs
         self.list_of_strs_or_callables = list_of_strs_or_callables
-
         self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
+        self.eval_fstring_field = eval_fstring_field
 
         self.completers = xonsh.completers.init.default_completers()
         self.call_macro = call_macro

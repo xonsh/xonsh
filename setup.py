@@ -17,6 +17,7 @@ from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
+from setuptools.command.build_py import build_py
 from setuptools.command.install_scripts import install_scripts
 
 try:
@@ -195,9 +196,23 @@ def restore_version():
         f.write(upd)
 
 
+class xbuild_py(build_py):
+    """Xonsh specialization of setuptools build_py class."""
+
+    def run(self):
+        clean_tables()
+        build_tables()
+        amalgamate_source()
+        # add dirty version number
+        dirty = dirty_version()
+        super().run()
+        if dirty:
+            restore_version()
+
+
 class xinstall(install):
     """Xonsh specialization of setuptools install class.
-    For production, let setuptools generate the 
+    For production, let setuptools generate the
     startup script, e.g: `pip installl .' rather than
     relying on 'python setup.py install'."""
 
@@ -217,6 +232,7 @@ class xinstall(install):
 
             traceback.print_exc()
             print("Installing Jupyter hook failed.")
+
         super().run()
         if dirty:
             restore_version()
@@ -230,6 +246,7 @@ class xsdist(sdist):
         build_tables()
         amalgamate_source()
         dirty = dirty_version()
+        files.extend(TABLES)
         super().make_release_tree(basedir, files)
         if dirty:
             restore_version()
@@ -279,18 +296,15 @@ class install_scripts_rewrite(install_scripts):
 
 
 # The custom install needs to be used on Windows machines
+cmdclass = {
+    "install": xinstall,
+    "sdist": xsdist,
+    "build_py": xbuild_py,
+}
 if os.name == "nt":
-    cmdclass = {
-        "install": xinstall,
-        "sdist": xsdist,
-        "install_scripts": install_scripts_quoted_shebang,
-    }
+    cmdclass["install_scripts"] = install_scripts_quoted_shebang
 else:
-    cmdclass = {
-        "install": xinstall,
-        "sdist": xsdist,
-        "install_scripts": install_scripts_rewrite,
-    }
+    cmdclass["install_scripts"] = install_scripts_rewrite
 
 
 class xdevelop(develop):

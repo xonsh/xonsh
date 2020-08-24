@@ -332,9 +332,10 @@ class Vox(collections.abc.Mapping):
 
         Returns None if no environment is active.
         """
-        if "VIRTUAL_ENV" not in builtins.__xonsh__.env:
+        env = builtins.__xonsh__.env
+        if not env["VIRTUAL_ENV"]:
             return
-        env_path = builtins.__xonsh__.env["VIRTUAL_ENV"]
+        env_path = env["VIRTUAL_ENV"]
         if env_path.startswith(self.venvdir):
             name = env_path[len(self.venvdir) :]
             if name[0] in "/\\":
@@ -354,7 +355,7 @@ class Vox(collections.abc.Mapping):
         """
         env = builtins.__xonsh__.env
         ve = self[name]
-        if "VIRTUAL_ENV" in env:
+        if env["VIRTUAL_ENV"]:
             self.deactivate()
 
         type(self).oldvars = {"PATH": list(env["PATH"])}
@@ -370,7 +371,7 @@ class Vox(collections.abc.Mapping):
         Deactivate the active virtual environment. Returns its name.
         """
         env = builtins.__xonsh__.env
-        if "VIRTUAL_ENV" not in env:
+        if not env["VIRTUAL_ENV"]:
             raise NoEnvironmentActive("No environment currently active.")
 
         env_name = self.active()
@@ -380,7 +381,7 @@ class Vox(collections.abc.Mapping):
                 env[k] = v
             del type(self).oldvars
 
-        env.pop("VIRTUAL_ENV")
+        del env["VIRTUAL_ENV"]
 
         events.vox_on_deactivate.fire(name=env_name, path=self[env_name].env)
         return env_name
