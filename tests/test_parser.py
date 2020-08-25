@@ -793,6 +793,10 @@ def test_listcomp_if_and():
     check_ast('[x for x in "mom" if True and x == "m"]')
 
 
+def test_listcomp_multi_if():
+    check_ast('[x for x in "mom" if True if x in "mo" if x == "m"]')
+
+
 def test_dbl_listcomp():
     check_ast('[x+y for x in "mom" for y in "dad"]')
 
