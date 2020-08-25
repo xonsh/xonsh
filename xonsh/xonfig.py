@@ -296,7 +296,7 @@ def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
     env = builtins.__xonsh__.env
     vd = env.get_docs(name)
-    if (not vd) or (not vd.doc_configurable):
+    if not vd.doc_configurable:
         return
     default = vd.doc_default
     if "\n" in default:

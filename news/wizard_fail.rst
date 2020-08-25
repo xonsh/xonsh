@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* environ.Var.get_docs(name) returns None if name not in env._vars
+* <news item>
 
 **Deprecated:**
 
@@ -17,6 +17,7 @@
 **Fixed:**
 
 * crash when starting wizard by ''xonfig wizard``
+  xonsh.environ: ensure get_docs(name).doc_default is str when name is not registered.
 
 **Security:**
 

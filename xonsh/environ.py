@@ -1865,12 +1865,12 @@ class Env(cabc.MutableMapping):
             return default
 
     def get_docs(self, key, default=None):
-        """Gets the documentation for the environment variable. May be None"""
-        vd = self._vars.get(key, None)
+        """Gets the documentation for the environment variable."""
+        vd = self._vars.get(key, default)
         if vd is None:
-            return None
+            vd = Var(default="", doc_default="")
         if vd.doc_default is DefaultNotGiven:
-            dval = pprint.pformat(self._vars.get(key, "<default not set>").default)
+            dval = pprint.pformat(vd.default)
             vd = vd._replace(doc_default=dval)
         return vd
 

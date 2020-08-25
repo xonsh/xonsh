@@ -355,7 +355,7 @@ def test_register_custom_var_generic():
     assert env["MY_SPECIAL_VAR"] == 32
 
     env["MY_SPECIAL_VAR"] = True
-    assert env["MY_SPECIAL_VAR"] == True    # noqa E712
+    assert env["MY_SPECIAL_VAR"] == True  # noqa E712
 
 
 def test_register_custom_var_int():
@@ -481,20 +481,15 @@ def test_env_iterate_rawkeys():
 
 
 @pytest.mark.parametrize(
-    "doc_default,exp_type", [(None, None), (DefaultNotGiven, str), ("foo", str)]
+    "do_register,doc_default",
+    [(True, "abc"), (True, DefaultNotGiven), (False, "abc"), (False, DefaultNotGiven)],
 )
-def test_env_get_docs(doc_default, exp_type):
-    """Verify get_docs.doc_default returns None if name not documented in Env, some string otherwise."""
+def test_env_get_docs(do_register, doc_default):
+    """Verify get_docs.doc_default handles both known and unknown environment variables."""
     env = Env()
-    if doc_default is not None:
+    if do_register:
         env.register("MY_SPECIAL_VAR", type="str", default="", doc_default=doc_default)
 
-    var = env._vars.get("MY_SPECIAL_VAR", None)
     docs = env.get_docs("MY_SPECIAL_VAR")
 
-    if doc_default is None:
-        assert var is None
-        assert docs is None
-    else:
-        assert var is not None
-        assert isinstance(docs.doc_default, exp_type)
+    assert isinstance(docs.doc_default, str)
