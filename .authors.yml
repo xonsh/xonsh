@@ -654,6 +654,8 @@
   email: raphael.das.gupta@hsr.ch
   alternate_emails:
   - git@raphael.dasgupta.ch
+  aliases:
+  - Raphael Borun Das Gupta
   num_commits: 10
   first_commit: 2017-01-03 06:56:44
 - name: Andrei
