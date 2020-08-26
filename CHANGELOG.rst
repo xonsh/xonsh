@@ -4,6 +4,78 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.20
+====================
+
+**Added:**
+
+* ``abbrevs`` expansion now allows for setting cursor to a specific
+  position within the expanded abbrev. For instance
+  ::
+
+    abbrevs["eswap"] = "with ${...}.swap(<edit>):\n    "
+
+  expands ``eswap`` as you type to environment context manager
+  ``swap()`` syntax and places the cursor at the position of the
+  ``<edit>`` mark removing the mark itself in the process.
+* Support for ANSI escape codes in ``$PROMPT``/``$RIGHT_PROMPT``. In this way 3rd party prompt generators like ``powerline`` or ``starship`` can be used to set the prompt. ANSI escape codes might be mixed with the normal formatting (like ``{BOLD_GREEN}``) and *prompt variables* (like ``{user}``) should work as well.
+  For example:
+  ::
+
+    $PROMPT=lambda: $(starship prompt)
+    $RIGHT_PROMPT="\x1b[33m{hostname} {GREEN}> "
+* Added ``$HOSTNAME`` and ``$HOSTTYPE`` environment variables.
+* New ``Env.rawkeys()`` iterator for iterating over all keys in an environment,
+  not just the string keys like with ``__iter__()``.
+* New landing page for https://xon.sh
+* Added xonsh AppImage to the GitHub release assets
+* xonsh now comes with a bulitin version of prompt-toolkit (3.0.5) which will be used as fall back if prompt_toolkit is not installed.
+* Support for Python 3.8 PEP 572 assignment expressions (walrus operator).
+
+**Changed:**
+
+* custom startup scripts replaced by setup.py -generated (console) entrypoint scripts for both xonsh and xonsh-cat.
+  This means xonsh.bat and xonsh-cat.bat are replaced on Windows by xonsh.exe and xonsh-cat.exe, respectively.
+
+**Fixed:**
+
+* Iterating over ``${...}`` or ``__xonsh__.env`` yields only string
+  values again.
+* List comprehensions do not ignore the second and subsequent ``if`` clauses
+  in multi-if comprehension expressions any more.
+* Xonsh can now fully handle special Xonsh syntax within f-strings, including
+  environmnent variables within ``${}`` operator and captured subprocess
+  expansion within f-string expressions.
+* Avoid startup error on Windows when py.exe chooses wrong python interpreter to run xonsh.
+  When multiple interpreters are in PATH, 'py' will choose the first one (usually in the virtual environment),
+  but 'py -3' finds the system-wide one, apparently by design.
+
+* For xonsh-cat, avoid parsing and processing first (0'th) argument when invoked directly from OS shell.
+* Run control files are now read in with ``$THREAD_SUBPROCS`` off.
+  This prevents a weird error when starting xonsh from Bash (and
+  possibly other shells) where the top-level xonsh process would
+  be stopped and placed into the background during startup. It
+  may be necessary to set ``$THREAD_SUBPROCS=False`` in downstream
+  xonsh scripts and modules.
+* Fixed installation issues where generated files (like the parser table and
+  amalgamated modules) were not installed.
+* The xonsh test suite has been cleaned up. So no more failing test. Hopefully.
+* Addressed robustness issue with ``"locked"`` history key not
+  being present at startup.
+* ``vox`` xontrib works again with the new environment defaults.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* David Strobach
+* Bob Hyman
+* anki-code
+* Raphael Das Gupta
+* Gyuri Horak
+
+
+
 v0.9.19
 ====================
 
