@@ -11,10 +11,11 @@ import io
 import textwrap
 import importlib
 from docutils import nodes, statemachine, utils
+
 try:
     from docutils.utils.error_reporting import ErrorString  # the new way
 except ImportError:
-    from docutils.error_reporting import ErrorString        # the old way
+    from docutils.error_reporting import ErrorString  # the old way
 from docutils.parsers.rst import Directive, convert_directive_function
 from docutils.parsers.rst import directives, roles, states
 from docutils.parsers.rst.roles import set_classes
@@ -31,6 +32,7 @@ class CommandHelp(Directive):
     of string lines of restructured text and then parsing it into its own node.
     Note that this will add the '--help' flag automatically.
     """
+
     required_arguments = 1
     optional_arguments = 1
     final_argument_whitespace = True
@@ -39,11 +41,11 @@ class CommandHelp(Directive):
 
     def run(self):
         arguments = self.arguments
-        lines = ['.. code-block:: none', '']
-        m, f = arguments[0].rsplit('.',  1)
+        lines = [".. code-block:: none", ""]
+        m, f = arguments[0].rsplit(".", 1)
         mod = importlib.import_module(m)
         func = getattr(mod, f)
-        args = ['--help'] if len(arguments) == 1 else arguments[1:]
+        args = ["--help"] if len(arguments) == 1 else arguments[1:]
         stdout = io.StringIO()
         stderr = io.StringIO()
         with redirect_stdout(stdout), redirect_stderr(stderr):
@@ -53,7 +55,7 @@ class CommandHelp(Directive):
                 pass
         stdout.seek(0)
         s = stdout.read()
-        lines += textwrap.indent(s, '    ').splitlines()
+        lines += textwrap.indent(s, "    ").splitlines()
 
         # hook to docutils
         src, lineno = self.state_machine.get_source_and_line(self.lineno)
@@ -64,5 +66,4 @@ class CommandHelp(Directive):
 
 
 def setup(app):
-    app.add_directive('command-help', CommandHelp)
-
+    app.add_directive("command-help", CommandHelp)

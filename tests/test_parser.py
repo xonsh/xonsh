@@ -129,7 +129,7 @@ fstring_adaptor_parameters = [
     ('f"{$HOME}"', "/foo/bar"),
     ('f"{ $HOME }"', "/foo/bar"),
     ("f\"{'$HOME'}\"", "$HOME"),
-    ("f\"$HOME  = {$HOME}\"", "$HOME  = /foo/bar"),
+    ('f"$HOME  = {$HOME}"', "$HOME  = /foo/bar"),
     ("f\"{${'HOME'}}\"", "/foo/bar"),
     ("f'{${$FOO+$BAR}}'", "/foo/bar"),
     ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar"),

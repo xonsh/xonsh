@@ -109,8 +109,8 @@ def test_boottime():
 @pytest.fixture
 def cat_env_fixture(xonsh_builtins):
     with xonsh_builtins.__xonsh__.env.swap(
-            XONSH_ENCODING=DEFAULT_ENCODING,
-            XONSH_ENCODING_ERRORS="surrogateescape"):
+        XONSH_ENCODING=DEFAULT_ENCODING, XONSH_ENCODING_ERRORS="surrogateescape"
+    ):
         yield xonsh_builtins
 
 
@@ -134,29 +134,29 @@ class CatLimitedBuffer(io.BytesIO):
 class TestCatLimitedBuffer:
     def test_write_buffer_correctly(self):
         buf = CatLimitedBuffer(limit=500)
-        buf.write(b'0' * 499)
-        assert buf.getvalue() == b'0' * 499
+        buf.write(b"0" * 499)
+        assert buf.getvalue() == b"0" * 499
 
     def test_raise_keyboardinterrupt_when_reached(self):
         buf = CatLimitedBuffer(limit=500)
-        buf.write(b'0' * 499)
+        buf.write(b"0" * 499)
         with pytest.raises(KeyboardInterrupt):
-            buf.write(b'1')
+            buf.write(b"1")
 
     def test_raise_allow_write_over_limit(self):
         buf = CatLimitedBuffer(limit=500)
-        buf.write(b'0' * 400)
+        buf.write(b"0" * 400)
         with pytest.raises(KeyboardInterrupt):
-            buf.write(b'1' * 200)
+            buf.write(b"1" * 200)
 
-        assert buf.getvalue() == (b'0' * 400 + b'1' * 200)
+        assert buf.getvalue() == (b"0" * 400 + b"1" * 200)
 
     def test_not_raise_twice_time(self):
         buf = CatLimitedBuffer(limit=500)
         with pytest.raises(KeyboardInterrupt):
-            buf.write(b'1' * 1000)
+            buf.write(b"1" * 1000)
         try:
-            buf.write(b'2')
+            buf.write(b"2")
         except KeyboardInterrupt:
             pytest.fail("Unexpected KeyboardInterrupt")
 
@@ -166,6 +166,7 @@ class TestCat:
 
     def setup_method(self, _method):
         import tempfile
+
         tmpfile = tempfile.mkstemp()
         self.tempfile = tmpfile[1]
         os.close(tmpfile[0])
@@ -189,7 +190,7 @@ class TestCat:
         stdout.flush()
         stderr.flush()
         assert stdout_buf.getvalue() == bytes(expected_content, "utf-8")
-        assert stderr_buf.getvalue() == b''
+        assert stderr_buf.getvalue() == b""
 
     def test_cat_single_file_with_end_newline(self, cat_env_fixture):
         content = "this is a content withe \\n\nfor testing xoreutil's cat\n"
@@ -207,7 +208,7 @@ class TestCat:
         stdout.flush()
         stderr.flush()
         assert stdout_buf.getvalue() == bytes(expected_content, "utf-8")
-        assert stderr_buf.getvalue() == b''
+        assert stderr_buf.getvalue() == b""
 
     def test_cat_empty_file(self, cat_env_fixture):
         with open(self.tempfile, "w") as f:
@@ -222,11 +223,12 @@ class TestCat:
         cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr)
         stdout.flush()
         stderr.flush()
-        assert stdout_buf.getvalue() == b''
-        assert stderr_buf.getvalue() == b''
+        assert stdout_buf.getvalue() == b""
+        assert stderr_buf.getvalue() == b""
 
-    @pytest.mark.skipif(not os.path.exists("/dev/urandom"),
-                        reason="/dev/urandom doesn't exists")
+    @pytest.mark.skipif(
+        not os.path.exists("/dev/urandom"), reason="/dev/urandom doesn't exists"
+    )
     def test_cat_dev_urandom(self, cat_env_fixture):
         """
         test of cat (pseudo) device.

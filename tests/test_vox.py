@@ -103,8 +103,8 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
         last_event = "deactivate", name, path
 
     with tmpdir.as_cwd():
-        venv_dirname = 'venv'
-        sp.run([sys.executable, '-m', 'venv', venv_dirname])
+        venv_dirname = "venv"
+        sp.run([sys.executable, "-m", "venv", venv_dirname])
         vox = Vox()
         vox.activate(venv_dirname)
         vxv = vox[venv_dirname]
@@ -117,7 +117,7 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
     assert last_event == (
         "activate",
         venv_dirname,
-        str(pathlib.Path(str(tmpdir)) / 'venv')
+        str(pathlib.Path(str(tmpdir)) / "venv"),
     )
 
     vox.deactivate()
@@ -126,7 +126,7 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
     assert last_event == (
         "deactivate",
         tmpdir.join(venv_dirname),
-        str(pathlib.Path(str(tmpdir)) / 'venv')
+        str(pathlib.Path(str(tmpdir)) / "venv"),
     )
 
 
@@ -243,14 +243,15 @@ def test_autovox(xonsh_builtins, tmpdir):
 
     # Makes sure that event handlers are registered
     import xontrib.autovox
+
     importlib.reload(xontrib.autovox)
 
     # Set up enough environment for xonsh to function
-    xonsh_builtins.__xonsh__.env['PWD'] = os.getcwd()
-    xonsh_builtins.__xonsh__.env['DIRSTACK_SIZE'] = 10
-    xonsh_builtins.__xonsh__.env['PATH'] = []
+    xonsh_builtins.__xonsh__.env["PWD"] = os.getcwd()
+    xonsh_builtins.__xonsh__.env["DIRSTACK_SIZE"] = 10
+    xonsh_builtins.__xonsh__.env["PATH"] = []
 
-    xonsh_builtins.__xonsh__.env['XONSH_SHOW_TRACEBACK'] = True
+    xonsh_builtins.__xonsh__.env["XONSH_SHOW_TRACEBACK"] = True
 
     @xonsh_builtins.events.autovox_policy
     def policy(path, **_):
@@ -260,16 +261,16 @@ def test_autovox(xonsh_builtins, tmpdir):
 
     vox = Vox()
 
-    print(xonsh_builtins.__xonsh__.env['PWD'])
+    print(xonsh_builtins.__xonsh__.env["PWD"])
     xonsh.dirstack.pushd([str(tmpdir)])
-    print(xonsh_builtins.__xonsh__.env['PWD'])
+    print(xonsh_builtins.__xonsh__.env["PWD"])
     assert vox.active() is None
     xonsh.dirstack.popd([])
-    print(xonsh_builtins.__xonsh__.env['PWD'])
+    print(xonsh_builtins.__xonsh__.env["PWD"])
 
-    vox.create('myenv')
+    vox.create("myenv")
     xonsh.dirstack.pushd([str(tmpdir)])
-    print(xonsh_builtins.__xonsh__.env['PWD'])
-    assert vox.active() == 'myenv'
+    print(xonsh_builtins.__xonsh__.env["PWD"])
+    assert vox.active() == "myenv"
     xonsh.dirstack.popd([])
-    print(xonsh_builtins.__xonsh__.env['PWD'])
+    print(xonsh_builtins.__xonsh__.env["PWD"])

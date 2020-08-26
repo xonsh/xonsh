@@ -65,8 +65,8 @@ def test_module_dunder_file_attribute_sub():
 
 
 def test_get_source():
-    mod = import_module('sample')
+    mod = import_module("sample")
     loader = mod.__loader__
-    source = loader.get_source('sample')
-    with open(os.path.join(TEST_DIR, 'sample.xsh'), 'rt') as srcfile:
+    source = loader.get_source("sample")
+    with open(os.path.join(TEST_DIR, "sample.xsh"), "rt") as srcfile:
         assert source == srcfile.read()
