@@ -11,7 +11,7 @@ from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
-from tools import nodes_equal, skip_if_no_walrus, VER_MAJOR_MINOR
+from tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
 
 
 @pytest.fixture(autouse=True)
@@ -1209,12 +1209,12 @@ def test_rshift_op_three():
     check_ast("42 >> 65 >> 1 >> 7")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr():
     check_ast("(x := 42)")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_list():
     check_ast("[x := 42, x + 1, x + 2]")
 
@@ -1560,10 +1560,7 @@ def test_yield_x_y():
     check_stmts("yield x, y", False)
 
 
-@pytest.mark.skipif(
-    VER_MAJOR_MINOR < (3, 8),
-    reason="Python 3.8 feature"
-)
+@skip_if_pre_3_8
 def test_return_x_starexpr():
     check_stmts("yield x, *[y, z]", False)
 
@@ -1588,10 +1585,7 @@ def test_return_x_y():
     check_stmts("return x, y", False)
 
 
-@pytest.mark.skipif(
-    VER_MAJOR_MINOR < (3, 8),
-    reason="Python 3.8 feature"
-)
+@skip_if_pre_3_8
 def test_return_x_starexpr():
     check_stmts("return x, *[y, z]", False)
 
@@ -1943,10 +1937,12 @@ def test_func_x_star_y_kwargs():
     check_stmts("def f(x, *, y, **kwargs):\n  return 42")
 
 
+@skip_if_pre_3_8
 def test_func_x_divide():
     check_stmts("def f(x, /):\n  return 42")
 
 
+@skip_if_pre_3_8
 def test_func_x_divide_y_star_z_kwargs():
     check_stmts("def f(x, /, y, *, z, **kwargs):\n  return 42")
 
@@ -2057,22 +2053,22 @@ def test_async_await():
     check_stmts("async def f():\n    await fut\n", False)
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_args():
     check_stmts("id(x := 42)")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_if():
     check_stmts("if (x := 42) > 0:\n  x += 1")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_elif():
     check_stmts("if False:\n  pass\nelif x := 42:\n  x += 1")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_while():
     check_stmts("y = 42\nwhile (x := y) < 43:\n  y += 1")
 
