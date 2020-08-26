@@ -39,5 +39,4 @@ $DOCKER_INSTALL_COMMAND = ('rm -rf .cache/ __pycache__/ */__pycache__ */*/__pyca
 $DOCKER_GIT_NAME = 'xonsh'
 $DOCKER_GIT_EMAIL = 'xonsh@googlegroups.com'
 
-if $VERSION != "check":
-    $GHRELEASE_ASSETS = [git_archive_asset(), 'xonsh-x86_64.AppImage']
+$GHRELEASE_ASSETS = [git_archive_asset, 'xonsh-x86_64.AppImage']
