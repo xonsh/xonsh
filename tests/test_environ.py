@@ -362,7 +362,7 @@ def test_register_custom_var_generic():
 
 def test_register_custom_var_int():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='int')
+    env.register("MY_SPECIAL_VAR", type="int")
 
     env["MY_SPECIAL_VAR"] = "32"
     assert env["MY_SPECIAL_VAR"] == 32
@@ -373,7 +373,7 @@ def test_register_custom_var_int():
 
 def test_register_custom_var_float():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='float')
+    env.register("MY_SPECIAL_VAR", type="float")
 
     env["MY_SPECIAL_VAR"] = "27"
     assert env["MY_SPECIAL_VAR"] == 27.0
@@ -382,38 +382,42 @@ def test_register_custom_var_float():
         env["MY_SPECIAL_VAR"] = "wakka"
 
 
-@pytest.mark.parametrize("val,converted",
-        [
-            (True, True),
-            (32, True),
-            (0, False),
-            (27.0, True),
-            (None, False),
-            ("lol", True),
-            ("false", False),
-            ("no", False),
-            ])
+@pytest.mark.parametrize(
+    "val,converted",
+    [
+        (True, True),
+        (32, True),
+        (0, False),
+        (27.0, True),
+        (None, False),
+        ("lol", True),
+        ("false", False),
+        ("no", False),
+    ],
+)
 def test_register_custom_var_bool(val, converted):
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='bool')
+    env.register("MY_SPECIAL_VAR", type="bool")
 
     env["MY_SPECIAL_VAR"] = val
     assert env["MY_SPECIAL_VAR"] == converted
 
 
-@pytest.mark.parametrize("val,converted",
-        [
-            (32, "32"),
-            (0, "0"),
-            (27.0, "27.0"),
-            (None, "None"),
-            ("lol", "lol"),
-            ("false", "false"),
-            ("no", "no"),
-        ])
+@pytest.mark.parametrize(
+    "val,converted",
+    [
+        (32, "32"),
+        (0, "0"),
+        (27.0, "27.0"),
+        (None, "None"),
+        ("lol", "lol"),
+        ("false", "false"),
+        ("no", "no"),
+    ],
+)
 def test_register_custom_var_str(val, converted):
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='str')
+    env.register("MY_SPECIAL_VAR", type="str")
 
     env["MY_SPECIAL_VAR"] = val
     assert env["MY_SPECIAL_VAR"] == converted
@@ -421,12 +425,12 @@ def test_register_custom_var_str(val, converted):
 
 def test_register_custom_var_path():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type='path')
+    env.register("MY_SPECIAL_VAR", type="path")
 
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
 
-    assert hasattr(env['MY_SPECIAL_VAR'], 'paths')
+    assert hasattr(env["MY_SPECIAL_VAR"], "paths")
     assert env["MY_SPECIAL_VAR"].paths == paths
 
     with pytest.raises(TypeError):
@@ -436,11 +440,11 @@ def test_register_custom_var_path():
 def test_deregister_custom_var():
     env = Env()
 
-    env.register("MY_SPECIAL_VAR", type='path')
+    env.register("MY_SPECIAL_VAR", type="path")
     env.deregister("MY_SPECIAL_VAR")
     assert "MY_SPECIAL_VAR" not in env
 
-    env.register("MY_SPECIAL_VAR", type='path')
+    env.register("MY_SPECIAL_VAR", type="path")
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
     env.deregister("MY_SPECIAL_VAR")

@@ -187,17 +187,15 @@ def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors):
     lsc = xonsh_builtins_ls_colors.__xonsh__.env["LS_COLORS"]
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
 
-    lsc['di'] = ('GREEN',)
+    lsc["di"] = ("GREEN",)
 
     check_token(
         "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.GREEN, test_dir)]
     )
 
-    del lsc['di']
+    del lsc["di"]
 
-    check_token(
-        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)]
-    )
+    check_token("cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)])
 
 
 @skip_if_on_windows

@@ -475,7 +475,7 @@ def test__xhj_gc_xx_to_rmfiles(
     assert act_files == exp_files
 
     # comparing age is approximate, because xhj_gc_seconds_to_rmfiles computes 'now' on each call.
-    # For test runs, accept anything in the same hour, test cases not that close.  
+    # For test runs, accept anything in the same hour, test cases not that close.
     # We find multi-minute variations in CI environments.
     # This should cover some amount of think time sitting at a breakpoint, too.
     if fn == _xhj_gc_seconds_to_rmfiles:
