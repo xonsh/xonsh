@@ -1943,6 +1943,14 @@ def test_func_x_star_y_kwargs():
     check_stmts("def f(x, *, y, **kwargs):\n  return 42")
 
 
+def test_func_x_divide():
+    check_stmts("def f(x, /):\n  return 42")
+
+
+def test_func_x_divide_y_star_z_kwargs():
+    check_stmts("def f(x, /, y, *, z, **kwargs):\n  return 42")
+
+
 def test_func_tx():
     check_stmts("def f(x:int):\n  return x")
 
