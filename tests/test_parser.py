@@ -3132,3 +3132,11 @@ def test_syntax_error_augassign_cmp(exp):
 def test_syntax_error_bar_kwonlyargs():
     with pytest.raises(SyntaxError):
         PARSER.parse("def spam(*):\n   pass\n", mode="exec")
+
+def test_syntax_error_bar_posonlyargs():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(/):\n   pass\n", mode="exec")
+
+def test_syntax_error_bar_posonlyargs_no_comma():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x /, y):\n   pass\n", mode="exec")
