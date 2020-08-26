@@ -1560,6 +1560,14 @@ def test_yield_x_y():
     check_stmts("yield x, y", False)
 
 
+@pytest.mark.skipif(
+    VER_MAJOR_MINOR < (3, 8),
+    reason="Python 3.8 feature"
+)
+def test_return_x_starexpr():
+    check_stmts("yield x, *[y, z]", False)
+
+
 def test_yield_from_x():
     check_stmts("yield from x", False)
 
@@ -1578,6 +1586,14 @@ def test_return_x_comma():
 
 def test_return_x_y():
     check_stmts("return x, y", False)
+
+
+@pytest.mark.skipif(
+    VER_MAJOR_MINOR < (3, 8),
+    reason="Python 3.8 feature"
+)
+def test_return_x_starexpr():
+    check_stmts("return x, *[y, z]", False)
 
 
 def test_if_true():
