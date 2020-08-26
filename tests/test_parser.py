@@ -1580,6 +1580,10 @@ def test_return_x_y():
     check_stmts("return x, y", False)
 
 
+def test_return_x_starexpr():
+    check_stmts("return x, *[y, z]", False)
+
+
 def test_if_true():
     check_stmts("if True:\n  pass")
 

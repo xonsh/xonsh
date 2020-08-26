@@ -33,6 +33,9 @@ class Parser(ThreeSixParser):
             The directory to place generated tables within.
         """
         # Rule creation and modification *must* take place before super()
+        opt_rules = ["testlist_star_expr"]
+        for rule in opt_rules:
+            self._opt_rule(rule)
         list_rules = ["comma_namedexpr_test_or_star_expr"]
         for rule in list_rules:
             self._list_rule(rule)
@@ -417,3 +420,12 @@ class Parser(ThreeSixParser):
                       | WHILE namedexpr_test COLON suite else_part
         """
         super().p_while_stmt(p)
+
+    def p_return_stmt(self, p):
+        """return_stmt : return_tok testlist_star_expr_opt"""
+        p1 = p[1]
+        p[0] = ast.Return(
+            value=p[2][0] if p[2] is not None else None,
+            lineno=p1.lineno,
+            col_offset=p1.lexpos,
+        )
