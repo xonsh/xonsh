@@ -1580,6 +1580,10 @@ def test_return_x_y():
     check_stmts("return x, y", False)
 
 
+@pytest.mark.skipif(
+    VER_MAJOR_MINOR < (3, 8),
+    reason="Python 3.8 feature"
+)
 def test_return_x_starexpr():
     check_stmts("return x, *[y, z]", False)
 
