@@ -11,7 +11,6 @@ $PYPI_SIGN = False
 
 $AUTHORS_FILENAME = "AUTHORS.rst"
 $VERSION_BUMP_PATTERNS = [
-    ('.appveyor.yml', 'version:.*', 'version: $VERSION.{build}'),
     ('xonsh/__init__.py', r'__version__\s*=.*', '__version__ = "$VERSION"'),
     ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
