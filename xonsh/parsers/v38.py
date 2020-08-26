@@ -429,3 +429,11 @@ class Parser(ThreeSixParser):
             lineno=p1.lineno,
             col_offset=p1.lexpos,
         )
+
+    def p_yield_arg_testlist(self, p):
+        # remove pre 3.8 grammar
+        pass
+
+    def p_yield_arg_testlist_star_expr(self, p):
+        """yield_arg : testlist_star_expr"""
+        p[0] = {"from": False, "val": p[1][0]}
