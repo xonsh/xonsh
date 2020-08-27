@@ -51,6 +51,31 @@ class Parser(ThreeSixParser):
             outputdir=outputdir,
         )
 
+    def _set_posonly_args_def(self, argmts, vals):
+        for v in vals:
+            argmts.posonlyargs.append(v["arg"])
+            d = v["default"]
+            if d is not None:
+                argmts.defaults.append(d)
+
+    def _set_posonly_args(self, p0, p1, p2, p3):
+        if p2 is None and p3 is None:
+            # x
+            p0.posonlyargs.append(p1)
+        elif p2 is not None and p3 is None:
+            # x=42
+            p0.posonlyargs.append(p1)
+            p0.defaults.append(p2)
+        elif p2 is None and p3 is not None:
+            # x, y and x, y=42
+            p0.posonlyargs.append(p1)
+            self._set_posonly_args_def(p0, p3)
+        else:
+            # x=42, y=42
+            p0.posonlyargs.append(p1)
+            p0.defaults.append(p2)
+            self._set_posonly_args_def(p0, p3)
+
     def p_parameters(self, p):
         """parameters : LPAREN typedargslist_opt RPAREN"""
         p2 = p[2]
@@ -214,6 +239,35 @@ class Parser(ThreeSixParser):
         self._set_var_args(p0, p[6], p[7])
         p[0] = p0
 
+    def p_typedargslist_t12(self, p):
+        """typedargslist : posonlyargslist comma_opt
+                         | posonlyargslist COMMA typedargslist
+        """
+        if len(p) == 4:
+            p0 = p[3]
+            p0.posonlyargs = p[1].posonlyargs
+        else:
+            p0 = p[1]
+        p[0] = p0
+
+    def p_posonlyargslist(self, p):
+        """posonlyargslist : tfpdef equals_test_opt COMMA DIVIDE
+                           | tfpdef equals_test_opt comma_tfpdef_list COMMA DIVIDE"""
+        p0 = ast.arguments(
+            posonlyargs=[],
+            args=[],
+            vararg=None,
+            kwonlyargs=[],
+            kw_defaults=[],
+            kwarg=None,
+            defaults=[],
+        )
+        if p[3] == ",":
+            self._set_posonly_args(p0, p[1], p[2], None)
+        else:
+            self._set_posonly_args(p0, p[1], p[2], p[3])
+        p[0] = p0
+
     def p_varargslist_kwargs(self, p):
         """varargslist : POW vfpdef"""
         p[0] = ast.arguments(
@@ -330,6 +384,35 @@ class Parser(ThreeSixParser):
         )
         self._set_regular_args(p0, p[1], p[2], p[3], p[4])
         self._set_var_args(p0, p[6], p[7])
+        p[0] = p0
+
+    def p_varargslist_t12(self, p):
+        """varargslist : posonlyvarargslist comma_opt
+                       | posonlyvarargslist COMMA varargslist
+        """
+        if len(p) == 4:
+            p0 = p[3]
+            p0.posonlyargs = p[1].posonlyargs
+        else:
+            p0 = p[1]
+        p[0] = p0
+
+    def p_posonlyvarargslist(self, p):
+        """posonlyvarargslist : vfpdef equals_test_opt COMMA DIVIDE
+                              | vfpdef equals_test_opt comma_vfpdef_list COMMA DIVIDE"""
+        p0 = ast.arguments(
+            posonlyargs=[],
+            args=[],
+            vararg=None,
+            kwonlyargs=[],
+            kw_defaults=[],
+            kwarg=None,
+            defaults=[],
+        )
+        if p[3] == ",":
+            self._set_posonly_args(p0, p[1], p[2], None)
+        else:
+            self._set_posonly_args(p0, p[1], p[2], p[3])
         p[0] = p0
 
     def p_lambdef(self, p):
