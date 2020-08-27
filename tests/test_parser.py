@@ -1041,6 +1041,11 @@ def test_lambda_x_star_y_kwargs():
     check_ast("lambda x, *, y, **kwargs: 42")
 
 
+@skip_if_pre_3_8
+def test_lambda_x_divide_y_star_z_kwargs():
+    check_ast("lambda x, /, y, *, z, **kwargs: 42")
+
+
 def test_call_range():
     check_ast("range(6)")
 

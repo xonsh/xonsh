@@ -386,6 +386,35 @@ class Parser(ThreeSixParser):
         self._set_var_args(p0, p[6], p[7])
         p[0] = p0
 
+    def p_varargslist_t12(self, p):
+        """varargslist : posonlyvarargslist comma_opt
+                       | posonlyvarargslist COMMA varargslist
+        """
+        if len(p) == 4:
+            p0 = p[3]
+            p0.posonlyargs = p[1].posonlyargs
+        else:
+            p0 = p[1]
+        p[0] = p0
+
+    def p_posonlyvarargslist(self, p):
+        """posonlyvarargslist : vfpdef equals_test_opt COMMA DIVIDE
+                              | vfpdef equals_test_opt comma_vfpdef_list COMMA DIVIDE"""
+        p0 = ast.arguments(
+            posonlyargs=[],
+            args=[],
+            vararg=None,
+            kwonlyargs=[],
+            kw_defaults=[],
+            kwarg=None,
+            defaults=[],
+        )
+        if p[3] == ",":
+            self._set_posonly_args(p0, p[1], p[2], None)
+        else:
+            self._set_posonly_args(p0, p[1], p[2], p[3])
+        p[0] = p0
+
     def p_lambdef(self, p):
         """lambdef : lambda_tok varargslist_opt COLON test"""
         p1, p2, p4 = p[1], p[2], p[4]
