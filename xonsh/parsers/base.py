@@ -962,6 +962,9 @@ class BaseParser(object):
             d = v["default"]
             if kwargs or (d is not None):
                 defs.append(d)
+            elif defs:
+                loc = self.currloc(self.lineno, self.col)
+                self._parse_error("non-default argument follows default argument", loc)
 
     def _set_regular_args(self, p0, p1, p2, p3, p4):
         if p2 is None and p3 is None:
