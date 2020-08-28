@@ -167,10 +167,11 @@ class VoxHandler:
         )
         if args.activate:
             self.vox.activate(args.name)
-            msg = "Environment {0!r} created and activated.\n"
+            print(f"Environment {args.name!r} created and activated.\n")
         else:
-            msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
-        print(msg.format(args.name))
+            print(
+                f'Environment {args.name!r} created. Activate it with "vox activate {args.name}".\n'
+            )
 
     def cmd_activate(self, args, stdin=None):
         """Activate a virtual environment."""
