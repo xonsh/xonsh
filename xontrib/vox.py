@@ -75,6 +75,14 @@ class VoxHandler:
             "virtual environment (pip is bootstrapped "
             "by default)",
         )
+        create.add_argument(
+            "-a",
+            "--activate",
+            default=False,
+            action="store_true",
+            dest="activate",
+            help="Activate the newly created virtual environment.",
+        )
 
         activate = subparsers.add_parser(
             "activate", aliases=["workon", "enter"], help="Activate virtual environment"
@@ -88,10 +96,17 @@ class VoxHandler:
                 "list or the path to an arbitrary venv"
             ),
         )
-        subparsers.add_parser(
+        deactivate = subparsers.add_parser(
             "deactivate",
             aliases=["exit"],
             help="Deactivate current virtual environment",
+        )
+        deactivate.add_argument(
+            "--remove",
+            dest="remove",
+            default=False,
+            action="store_true",
+            help="Remove the virtual environment after leaving it."
         )
         subparsers.add_parser(
             "list",
@@ -151,7 +166,11 @@ class VoxHandler:
             with_pip=args.with_pip,
             interpreter=args.interpreter,
         )
-        msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
+        if args.activate:
+            self.vox.activate(args.name)
+            msg = "Environment {0!r} created and activated.\n"
+        else:
+            msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
         print(msg.format(args.name))
 
     def cmd_activate(self, args, stdin=None):
@@ -180,7 +199,11 @@ class VoxHandler:
             )
             return None
         env_name = self.vox.deactivate()
-        print('Deactivated "%s".\n' % env_name)
+        if args.remove:
+            del self.vox[env_name]
+            print(f'Environment "{env_name}" deactivated and removed.\n')
+        else:
+            print(f'Environment "{env_name}" deactivated.\n')
 
     def cmd_list(self, args, stdin=None):
         """List available virtual environments."""
