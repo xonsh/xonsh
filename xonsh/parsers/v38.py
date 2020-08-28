@@ -57,6 +57,8 @@ class Parser(ThreeSixParser):
             d = v["default"]
             if d is not None:
                 argmts.defaults.append(d)
+            elif argmts.defaults:
+                self._set_error("non-default argument follows default argument")
 
     def _set_posonly_args(self, p0, p1, p2, p3):
         if p2 is None and p3 is None:
@@ -246,6 +248,9 @@ class Parser(ThreeSixParser):
         if len(p) == 4:
             p0 = p[3]
             p0.posonlyargs = p[1].posonlyargs
+            # If posonlyargs contain default arguments, all following arguments must have defaults.
+            if p[1].defaults and (len(p[3].defaults) != len(p[3].args)):
+                self._set_error("non-default argument follows default argument")
         else:
             p0 = p[1]
         p[0] = p0
@@ -393,6 +398,9 @@ class Parser(ThreeSixParser):
         if len(p) == 4:
             p0 = p[3]
             p0.posonlyargs = p[1].posonlyargs
+            # If posonlyargs contain default arguments, all following arguments must have defaults.
+            if p[1].defaults and (len(p[3].defaults) != len(p[3].args)):
+                self._set_error("non-default argument follows default argument")
         else:
             p0 = p[1]
         p[0] = p0

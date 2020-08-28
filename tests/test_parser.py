@@ -3138,10 +3138,36 @@ def test_syntax_error_bar_kwonlyargs():
     with pytest.raises(SyntaxError):
         PARSER.parse("def spam(*):\n   pass\n", mode="exec")
 
+
+@skip_if_pre_3_8
 def test_syntax_error_bar_posonlyargs():
     with pytest.raises(SyntaxError):
         PARSER.parse("def spam(/):\n   pass\n", mode="exec")
 
+
+@skip_if_pre_3_8
 def test_syntax_error_bar_posonlyargs_no_comma():
     with pytest.raises(SyntaxError):
         PARSER.parse("def spam(x /, y):\n   pass\n", mode="exec")
+
+
+def test_syntax_error_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x=1, y):\n   pass\n", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_posonly_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x, y=1, /, z):\n   pass\n", mode="exec")
+
+
+def test_syntax_error_lambda_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("lambda x=1, y: x", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_lambda_posonly_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("lambda x, y=1, /, z: x", mode="exec")
