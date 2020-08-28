@@ -58,8 +58,7 @@ class Parser(ThreeSixParser):
             if d is not None:
                 argmts.defaults.append(d)
             elif argmts.defaults:
-                loc = self.currloc(self.lineno, self.col)
-                self._parse_error("non-default argument follows default argument", loc)
+                self._set_error("non-default argument follows default argument")
 
     def _set_posonly_args(self, p0, p1, p2, p3):
         if p2 is None and p3 is None:
@@ -251,8 +250,7 @@ class Parser(ThreeSixParser):
             p0.posonlyargs = p[1].posonlyargs
             # If posonlyargs contain default arguments, all following arguments must have defaults.
             if p[1].defaults and (len(p[3].defaults) != len(p[3].args)):
-                loc = self.currloc(self.lineno, self.col)
-                self._parse_error("non-default argument follows default argument", loc)
+                self._set_error("non-default argument follows default argument")
         else:
             p0 = p[1]
         p[0] = p0
@@ -402,8 +400,7 @@ class Parser(ThreeSixParser):
             p0.posonlyargs = p[1].posonlyargs
             # If posonlyargs contain default arguments, all following arguments must have defaults.
             if p[1].defaults and (len(p[3].defaults) != len(p[3].args)):
-                loc = self.currloc(self.lineno, self.col)
-                self._parse_error("non-default argument follows default argument", loc)
+                self._set_error("non-default argument follows default argument")
         else:
             p0 = p[1]
         p[0] = p0
