@@ -106,7 +106,7 @@ class VoxHandler:
             dest="remove",
             default=False,
             action="store_true",
-            help="Remove the virtual environment after leaving it."
+            help="Remove the virtual environment after leaving it.",
         )
         subparsers.add_parser(
             "list",
@@ -156,8 +156,7 @@ class VoxHandler:
             getattr(self, "cmd_" + cmd)(args, stdin)
 
     def cmd_new(self, args, stdin=None):
-        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
-        """
+        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``."""
         print("Creating environment...")
         self.vox.create(
             args.name,
@@ -174,8 +173,7 @@ class VoxHandler:
         print(msg.format(args.name))
 
     def cmd_activate(self, args, stdin=None):
-        """Activate a virtual environment.
-        """
+        """Activate a virtual environment."""
 
         try:
             self.vox.activate(args.name)
@@ -225,8 +223,7 @@ class VoxHandler:
         print("\n".join(envs))
 
     def cmd_remove(self, args, stdin=None):
-        """Remove virtual environments.
-        """
+        """Remove virtual environments."""
         for name in args.names:
             try:
                 del self.vox[name]
