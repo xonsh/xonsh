@@ -2977,7 +2977,7 @@ v0.4.7
 **Added:**
 
 * Define alias for 'echo' on startup for Windows only.
-* New coredev `astronouth7303 <https://github.com/astronouth7303>`_ added
+* New coredev `AstraLuma <https://github.com/AstraLuma>`_ added
 * ``which -a`` now searches in ``__xonsh_ctx__`` too
 * Info about the xontrib cookiecutter template on xontrib tutorial
 * xonsh's optional dependencies may now be installed with the pip extras ``ptk``, ``proctitle``, ``linux``, ``mac``, and ``win``.
@@ -3179,7 +3179,7 @@ v0.4.5
   the xonsh FAQ for more information on trade-offs and mitigation strategies.
 * ``which -v`` now calls superhelp, which will print highlighted source.
 * Added xontribs:
-  * `z (Tracks your most used directories, based on 'frecency'.) <https://github.com/astronouth7303/xontrib-z>`_
+  * `z (Tracks your most used directories, based on 'frecency'.) <https://github.com/AstraLuma/xontrib-z>`_
 * amalgamate.py now supports relative imports.
 * ``history show`` args ``-t``, ``-f``, ``-T`` ``+T`` to filter commands by timestamp
 
