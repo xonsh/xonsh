@@ -87,9 +87,9 @@ v0.9.19
 * JsonHistoryGC: display following warning when garbage collection would delete "too" much data and don't delete anything.
 
   "Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({limit_size}).\n"
-  "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run ``history gc --force``.",
+  "Not removing any history for now. Either increase your limit ($XONSH_HISTORY_SIZE), or run ``history gc --force``.",
 
-  It is displayed when the amount of history on disk is more than double the limit configured (or defaulted) for $XONSH_HIST_SIZE.
+  It is displayed when the amount of history on disk is more than double the limit configured (or defaulted) for $XONSH_HISTORY_SIZE.
 * $LS_COLORS code 'mh' now recognized for (multi) hard-linked files.
 * $LS_COLORS code 'ca' now recognized for files with security capabilities (linux only).
 * CI step to run flake8 after pytest.

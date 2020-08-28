@@ -162,7 +162,7 @@ class JsonHistoryGC(threading.Thread):
         else:
             print(
                 f"Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({hsize}).\n"
-                "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run `history gc --force`."
+                "Not removing any history for now. Either increase your limit ($XONSH_HISTORY_SIZE), or run `history gc --force`."
             )
 
     def files(self, only_unlocked=False):
