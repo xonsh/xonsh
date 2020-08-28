@@ -159,7 +159,7 @@ class Parser(BaseParser):
         lineno, col = lopen_loc(p1)
         if len(p[1]) > 1 or not isinstance(p1, ast.Name):
             loc = self.currloc(lineno, col)
-            self._parse_error("only single target can be annotated", loc)
+            self._set_error("only single target can be annotated", loc)
         store_ctx(p1)
         p[0] = ast.AnnAssign(
             target=p1,

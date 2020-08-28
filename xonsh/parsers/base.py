@@ -461,6 +461,7 @@ class BaseParser(object):
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
+        self._error = None
 
     def reset(self):
         """Resets for clean parsing."""
@@ -468,6 +469,7 @@ class BaseParser(object):
         self._last_yielded_token = None
         self._lines = None
         self.xonsh_code = None
+        self._error = None
 
     def parse(self, s, filename="<code>", mode="exec", debug_level=0):
         """Returns an abstract syntax tree of xonsh code.
@@ -493,6 +495,8 @@ class BaseParser(object):
         while self.parser is None:
             time.sleep(0.01)  # block until the parser is ready
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
+        if self._error is not None:
+            self._parse_error(self._error[0], self._error[1])
         if tree is not None:
             check_contexts(tree)
         # hack for getting modes right
@@ -608,6 +612,13 @@ class BaseParser(object):
             lines[-1] = lines[-1][:ecol]
         lines[0] = lines[0][bcol:]
         return "".join(lines)
+
+    def _set_error(self, msg, loc=None):
+        assert self._error is None
+        if loc is None:
+            loc = self.currloc(self.lineno, self.col)
+        self._error = (msg, loc)
+        raise SyntaxError()
 
     def _parse_error(self, msg, loc):
         if self.xonsh_code is None or loc is None:
@@ -945,8 +956,7 @@ class BaseParser(object):
             else (argmts.args, argmts.defaults)
         )
         if vals is None and kwargs:
-            loc = self.currloc(self.lineno, self.col)
-            self._parse_error("named arguments must follow bare *", loc)
+            self._set_error("named arguments must follow bare *")
         for v in vals:
             args.append(v["arg"])
             d = v["default"]
@@ -1173,7 +1183,7 @@ class BaseParser(object):
         store_ctx(p1)
         op = self._augassign_op[p2]
         if op is None:
-            self._parse_error(
+            self._set_error(
                 "operation {0!r} not supported".format(p2),
                 self.currloc(lineno=p.lineno, column=p.lexpos),
             )
@@ -2098,7 +2108,7 @@ class BaseParser(object):
         p1 = p[1]
         op = self._term_binops[p1.value]
         if op is None:
-            self._parse_error(
+            self._set_error(
                 "operation {0!r} not supported".format(p1),
                 self.currloc(lineno=p.lineno, column=p.lexpos),
             )
@@ -2227,7 +2237,8 @@ class BaseParser(object):
             p0 = p2[0]
             p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
         else:
-            self.p_error(p)
+            loc = self.currloc(lineno=p.lineno, column=p.lexpos)
+            self._set_error(f"code: {p.value}", loc)
         p[0] = p0
 
     def p_atom_lbraket(self, p):
@@ -2397,7 +2408,7 @@ class BaseParser(object):
                         value_without_p, new_pref, filename=self.lexer.fname
                     ).run()
                 except SyntaxError as e:
-                    self._parse_error(
+                    self._set_error(
                         str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
                     )
             s = ast.increment_lineno(s, p1.lineno - 1)
@@ -2425,7 +2436,7 @@ class BaseParser(object):
                         p1.value, prefix, filename=self.lexer.fname
                     ).run()
                 except SyntaxError as e:
-                    self._parse_error(
+                    self._set_error(
                         str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
                     )
             s = ast.increment_lineno(s, p1.lineno - 1)
@@ -2505,7 +2516,7 @@ class BaseParser(object):
                     break
                 else:
                     msg = "empty macro arguments not allowed"
-                    self._parse_error(msg, self.currloc(*beg))
+                    self._set_error(msg, self.currloc(*beg))
             node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
             elts.append(node)
         p0 = ast.Tuple(
@@ -2995,8 +3006,7 @@ class BaseParser(object):
         """
         p1 = p[1]
         if len(p1) > 1 and hasattr(p1[-2], "s") and p1[-2].s != "|":
-            msg = "additional redirect following non-pipe redirect"
-            self._parse_error(msg, self.currloc(lineno=self.lineno, column=self.col))
+            self._set_error("additional redirect following non-pipe redirect")
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
         p[0] = p1 + [p[2], cliargs]
 
