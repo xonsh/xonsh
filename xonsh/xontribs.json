@@ -35,7 +35,7 @@
  },
  {"name": "avox",
   "package": "xontrib-avox",
-  "url": "https://github.com/astronouth7303/xontrib-avox",
+  "url": "https://github.com/AstraLuma/xontrib-avox",
   "description": ["Automatic (de)activation of virtual environments as you cd around"]
  },
  {"name": "bashisms",
@@ -191,7 +191,7 @@
  },
  {"name": "schedule",
   "package": "xontrib-schedule",
-  "url": "https://github.com/astronouth7303/xontrib-schedule",
+  "url": "https://github.com/AstraLuma/xontrib-schedule",
   "description": ["Xonsh Task Scheduling"]
  },
  {"name": "scrapy_tabcomplete",
@@ -246,7 +246,7 @@
   },
  {"name": "z",
   "package": "xontrib-z",
-  "url": "https://github.com/astronouth7303/xontrib-z",
+  "url": "https://github.com/AstraLuma/xontrib-z",
   "description": ["Tracks your most used directories, based on 'frecency'."]
  }
  ],
@@ -325,7 +325,7 @@
   },
   "xontrib-avox": {
    "license": "GPLv3",
-   "url": "https://github.com/astronouth7303/xontrib-avox",
+   "url": "https://github.com/AstraLuma/xontrib-avox",
    "install": {
     "pip": "xpip install xontrib-avox"
    }
@@ -389,7 +389,7 @@
   },
   "xontrib-schedule": {
    "license": "MIT",
-   "url": "https://github.com/astronouth7303/xontrib-schedule",
+   "url": "https://github.com/AstraLuma/xontrib-schedule",
    "install": {
     "pip": "xpip install xontrib-schedule"
    }
@@ -417,7 +417,7 @@
   },
   "xontrib-z": {
    "license": "GPLv3",
-   "url": "https://github.com/astronouth7303/xontrib-z",
+   "url": "https://github.com/AstraLuma/xontrib-z",
    "install": {
     "pip": "xpip install xontrib-z"
    }
