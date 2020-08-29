@@ -5,8 +5,8 @@
 
 **Changed:**
 
-* Tutorial Getting Started doc to reference new install option and to reorganize
-  for smoother flow.
+* Rewrote Installation and Configuration sections of Getting Started doc 
+  to clarify install from packages, and generally improve flow.
 
 **Deprecated:**
 
@@ -18,7 +18,7 @@
 
 **Fixed:**
 
-* <news item>
+* RST code-block:: xonshcon now works.
 
 **Security:**
 
