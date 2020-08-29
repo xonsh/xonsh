@@ -1,6 +1,6 @@
 
-Installation and Configuration
-==============================
+Installation
+============
 
 Prerequisites
 -------------
@@ -32,14 +32,15 @@ Installation in specialized environments
     jupyter
     editors
 
-Next Steps
-==========
+Configuration and Customization
+================================
 
-Xonsh uses a startup configuration file and provides a configuration wizard to help you set this up.
+Xonsh uses startup configuration files and provides configuration wizards to help you set them up.
 
 .. toctree::
     :titlesonly:
     :maxdepth: 2
 
-    xonshrc   
+    xonshrc
     customization
+    platform-issues
