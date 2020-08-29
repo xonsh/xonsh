@@ -106,7 +106,11 @@ class DummyHistory:
 
 class DummyEnv(MutableMapping):
 
-    DEFAULTS = {"XONSH_DEBUG": 1, "XONSH_COLOR_STYLE": "default"}
+    DEFAULTS = {
+        "XONSH_DEBUG": 1,
+        "XONSH_COLOR_STYLE": "default",
+        "VIRTUAL_ENV": "",
+    }
 
     def __init__(self, *args, **kwargs):
         self._d = self.DEFAULTS.copy()
