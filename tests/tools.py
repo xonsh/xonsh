@@ -30,7 +30,6 @@ ON_AZURE_PIPELINES = os.environ.get("TF_BUILD", "") == "True"
 print("ON_AZURE_PIPELINES", repr(ON_AZURE_PIPELINES))
 print("os.environ['TF_BUILD']", repr(os.environ.get("TF_BUILD", "")))
 TEST_DIR = os.path.dirname(__file__)
-HAS_WALRUS = (VER_FULL > (3, 8))
 
 # pytest skip decorators
 skip_if_on_conda = pytest.mark.skipif(
@@ -53,7 +52,8 @@ skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason="not Mac friendly")
 
 skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason="not Travis CI friendly")
 
-skip_if_no_walrus = pytest.mark.skipif(not HAS_WALRUS, reason="no assignment expr.")
+skip_if_pre_3_8 = pytest.mark.skipif(VER_FULL < (3, 8), reason="Python >= 3.8 feature")
+
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
@@ -201,11 +201,9 @@ def nodes_equal(x, y):
         type(y),
     )
     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-        assert (
-            x.lineno == y.lineno
-        ), "Ast nodes do not have the same line number : %s != %s" % (
-            x.lineno,
-            y.lineno,
+        assert x.lineno == y.lineno, (
+            "Ast nodes do not have the same line number : %s != %s"
+            % (x.lineno, y.lineno,)
         )
         assert x.col_offset == y.col_offset, (
             "Ast nodes do not have the same column offset number : %s != %s"

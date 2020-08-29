@@ -11,7 +11,7 @@ from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
-from tools import nodes_equal, skip_if_no_walrus, VER_MAJOR_MINOR
+from tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
 
 
 @pytest.fixture(autouse=True)
@@ -129,7 +129,7 @@ fstring_adaptor_parameters = [
     ('f"{$HOME}"', "/foo/bar"),
     ('f"{ $HOME }"', "/foo/bar"),
     ("f\"{'$HOME'}\"", "$HOME"),
-    ("f\"$HOME  = {$HOME}\"", "$HOME  = /foo/bar"),
+    ('f"$HOME  = {$HOME}"', "$HOME  = /foo/bar"),
     ("f\"{${'HOME'}}\"", "/foo/bar"),
     ("f'{${$FOO+$BAR}}'", "/foo/bar"),
     ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar"),
@@ -1041,6 +1041,11 @@ def test_lambda_x_star_y_kwargs():
     check_ast("lambda x, *, y, **kwargs: 42")
 
 
+@skip_if_pre_3_8
+def test_lambda_x_divide_y_star_z_kwargs():
+    check_ast("lambda x, /, y, *, z, **kwargs: 42")
+
+
 def test_call_range():
     check_ast("range(6)")
 
@@ -1209,12 +1214,12 @@ def test_rshift_op_three():
     check_ast("42 >> 65 >> 1 >> 7")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr():
     check_ast("(x := 42)")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_list():
     check_ast("[x := 42, x + 1, x + 2]")
 
@@ -1560,6 +1565,11 @@ def test_yield_x_y():
     check_stmts("yield x, y", False)
 
 
+@skip_if_pre_3_8
+def test_return_x_starexpr():
+    check_stmts("yield x, *[y, z]", False)
+
+
 def test_yield_from_x():
     check_stmts("yield from x", False)
 
@@ -1578,6 +1588,11 @@ def test_return_x_comma():
 
 def test_return_x_y():
     check_stmts("return x, y", False)
+
+
+@skip_if_pre_3_8
+def test_return_x_starexpr():
+    check_stmts("return x, *[y, z]", False)
 
 
 def test_if_true():
@@ -1927,6 +1942,16 @@ def test_func_x_star_y_kwargs():
     check_stmts("def f(x, *, y, **kwargs):\n  return 42")
 
 
+@skip_if_pre_3_8
+def test_func_x_divide():
+    check_stmts("def f(x, /):\n  return 42")
+
+
+@skip_if_pre_3_8
+def test_func_x_divide_y_star_z_kwargs():
+    check_stmts("def f(x, /, y, *, z, **kwargs):\n  return 42")
+
+
 def test_func_tx():
     check_stmts("def f(x:int):\n  return x")
 
@@ -2033,22 +2058,22 @@ def test_async_await():
     check_stmts("async def f():\n    await fut\n", False)
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_args():
     check_stmts("id(x := 42)")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_if():
     check_stmts("if (x := 42) > 0:\n  x += 1")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_elif():
     check_stmts("if False:\n  pass\nelif x := 42:\n  x += 1")
 
 
-@skip_if_no_walrus
+@skip_if_pre_3_8
 def test_named_expr_while():
     check_stmts("y = 42\nwhile (x := y) < 43:\n  y += 1")
 
@@ -3112,3 +3137,37 @@ def test_syntax_error_augassign_cmp(exp):
 def test_syntax_error_bar_kwonlyargs():
     with pytest.raises(SyntaxError):
         PARSER.parse("def spam(*):\n   pass\n", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_bar_posonlyargs():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(/):\n   pass\n", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_bar_posonlyargs_no_comma():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x /, y):\n   pass\n", mode="exec")
+
+
+def test_syntax_error_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x=1, y):\n   pass\n", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_posonly_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x, y=1, /, z):\n   pass\n", mode="exec")
+
+
+def test_syntax_error_lambda_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("lambda x=1, y: x", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_lambda_posonly_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("lambda x, y=1, /, z: x", mode="exec")

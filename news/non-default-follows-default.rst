@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* ``vox`` xontrib works again with the new environment defaults.
+* Non-default parameters can not follow defaults anymore.
 
 **Security:**
 

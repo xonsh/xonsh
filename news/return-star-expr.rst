@@ -1,6 +1,7 @@
 **Added:**
 
-* <news item>
+* Support for starred expressions within return statement
+  (``return x, *my_list``).
 
 **Changed:**
 
@@ -16,7 +17,7 @@
 
 **Fixed:**
 
-* The xonsh test suite has been cleaned up. So no more failing test. Hopefully.
+* <news item>
 
 **Security:**
 

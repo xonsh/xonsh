@@ -1,6 +1,6 @@
 **Added:**
 
-* Added xonsh AppImage to the GitHub release assets
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed parser not emmiting errors in some cases.
 
 **Security:**
 

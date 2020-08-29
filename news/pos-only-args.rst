@@ -1,7 +1,6 @@
 **Added:**
 
-* New ``Env.rawkeys()`` iterator for iterating over all keys in an environment,
-  not just the string keys like with ``__iter__()``.
+* Support for PEP 570 positional-only parameters.
 
 **Changed:**
 
