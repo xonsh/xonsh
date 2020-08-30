@@ -484,6 +484,9 @@ class Lexer(object):
     @property
     def tokens(self):
         if self._tokens is None:
+            kwlist = kwmod.kwlist[:]
+            if PYTHON_VERSION_INFO >= (3, 9, 0) and PYTHON_VERSION_INFO < (3, 10):
+                kwlist.remove("__peg_parser__")
             t = (
                 tuple(token_map.values())
                 + (
@@ -505,7 +508,7 @@ class Lexer(object):
                     "ATDOLLAR_LPAREN",  # @$(
                     "ERRORTOKEN",  # whoops!
                 )
-                + tuple(i.upper() for i in kwmod.kwlist)
+                + tuple(i.upper() for i in kwlist)
             )
             self._tokens = t
         return self._tokens
