@@ -130,7 +130,10 @@ class Parser(BaseParser):
 
     def p_argument_kwargs(self, p):
         """argument : POW test"""
-        p[0] = ast.keyword(arg=None, value=p[2])
+        p2 = p[2]
+        p[0] = ast.keyword(
+            arg=None, value=p2, lineno=p2.lineno, col_offset=p2.col_offset
+        )
 
     def p_argument_args(self, p):
         """argument : TIMES test"""
@@ -145,7 +148,10 @@ class Parser(BaseParser):
 
     def p_argument_eq(self, p):
         """argument : test EQUALS test"""
-        p[0] = ast.keyword(arg=p[1].id, value=p[3])
+        p3 = p[3]
+        p[0] = ast.keyword(
+            arg=p[1].id, value=p3, lineno=p3.lineno, col_offset=p3.col_offset
+        )
 
     def p_comp_for(self, p):
         """comp_for : FOR exprlist IN or_test comp_iter_opt"""
