@@ -15,6 +15,7 @@ parser.add_argument("--ptk", "-t", default="2.0.4", metavar="ptk_version")
 parser.add_argument("--keep", action="store_true")
 parser.add_argument("--build", action="store_true")
 parser.add_argument("--command", "-c", default="xonsh", metavar="command")
+parser.add_argument("--pytest", action="store_true")
 
 args = parser.parse_args()
 
@@ -22,13 +23,14 @@ docker_script = """
 from python:{python_version}
 RUN pip install --upgrade pip && pip install \\
   prompt-toolkit=={ptk_version} \\
+  {pytest} \\
   pygments
 RUN mkdir /xonsh
 WORKDIR /xonsh
 ADD ./ ./
 RUN python setup.py install
 """.format(
-    python_version=args.python, ptk_version=args.ptk
+    python_version=args.python, ptk_version=args.ptk, pytest="pytest" if args.pytest else ""
 )
 
 if args.pypy:
@@ -37,13 +39,14 @@ from pypy:{python_version}
 RUN pypy3 -m ensurepip
 RUN pip install --upgrade pip && pip install \\
   prompt-toolkit=={ptk_version} \\
+  {pytest} \\
   pygments
 RUN mkdir /xonsh
 WORKDIR /xonsh
 ADD ./ ./
 RUN pypy3 setup.py install
     """.format(
-        python_version=args.pypy, ptk_version=args.ptk
+        python_version=args.pypy, ptk_version=args.ptk, pytest="pytest" if args.pytest else ""
     )
 
 print("Building and running Xonsh")
