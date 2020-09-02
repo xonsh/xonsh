@@ -4,6 +4,47 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.21
+====================
+
+**Added:**
+
+* ``xonsh-in-docker.py`` script now has ``--pytest`` parameter,
+  that automates pytest installation into the Docker container.
+* Setup extras tag '[full]' to install prompt-toolkit and pygments in one fell swoop.
+  Full feature install can be ``pip install xonsh[full]``.
+* Support for PEP 570 positional-only parameters.
+* Support for starred expressions within return statement
+  (``return x, *my_list``).
+* Xonsh now runs in Python 3.9
+* ``vox`` xontrib now supports ``new --activate`` and ``deactivate --remove``
+  to create + activate and deactivate + remove virtual environments in a single
+  command.
+
+**Changed:**
+
+* Rewrote Installation and Configuration sections of Getting Started doc 
+  to clarify install from packages, and generally improve flow.
+
+**Fixed:**
+
+* Fixed incorrect reference to XONSH_HIST_SIZE instead of XONSH_HISTORY_SIZE
+* RST code-block:: xonshcon now works.
+* Non-default parameters can not follow defaults anymore.
+* Fixed parser not emmiting errors in some cases.
+
+**Authors:**
+
+* Anthony Scopatz
+* Jamie Bliss
+* David Strobach
+* Bob Hyman
+* Will S
+* Danny Sepler
+* Marius van Niekerk
+
+
+
 v0.9.20
 ====================
 
