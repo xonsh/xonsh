@@ -4,7 +4,7 @@ Installation
 
 Prerequisites
 -------------
-* python, V3.6 or later.
+* python V3.6 or later.
 * for interactive use, an ansi (vt100-compatible) terminal application.  On Windows 10, the 
   separately-installable `Windows Terminal app <https://github.com/microsoft/terminal/releases>`_ 
   is recommended.
@@ -20,16 +20,6 @@ Xonsh can be installed via package manager, via appimage or just run from a pre-
     packages
     appimage
     containers
-
-
-Installation in specialized environments
-----------------------------------------
-
-.. toctree::
-    :titlesonly:
-    :maxdepth: 2
-
-    jupyter
     editors
 
 Configuration and Customization

@@ -7,7 +7,7 @@ your operating system distribution.
 For the fullest interactive user experience, these additional packages should also be installed:
 
   :prompt-toolkit: for command completion, configurable key bindings and especially multi-line line editing.
-  :pygments: for xonsh and python syntax-specific highlighting
+  :pygments: for xonsh and Python syntax-specific highlighting
   :setproctitle: updates process title (in terminal window and process monitor) to match Xonsh arguments.
 
 Installing with these packages is the recommended configuration and is documented first.   
@@ -20,21 +20,21 @@ described in `fewer prerequisites`_
 .. code-block:: console
 
     $ conda config --add channels conda-forge
-    $ conda install pygments prompt-toolkit setproctitle xonsh
+    $ conda install xonsh
 
 
 **pip:** Typically you will activate a virtual environment and install xonsh there.  This will ensure that you invoke the 
-correct python interpreter and ``pip`` module. 
-
-.. code-block:: console
-
-    $ pip install pygments prompt-toolkit setproctitle xonsh
-
-As a shortcut (for pip only), you can specify all of the above with `extras` syntax:
+correct Python interpreter and ``pip`` module. 
 
 .. code-block:: console
 
     $ pip install xonsh[full]
+
+This uses the pip 'extras' syntax, and is equivalent to:
+
+.. code-block:: console
+
+    $ pip install pygments prompt-toolkit setproctitle xonsh
 
 The above ``pip`` commands may have to be spelled ``pip3`` or ``sudo pip3`` if you are not installing in a virtual environment.
 
@@ -75,8 +75,8 @@ A design goal of Xonsh is to run in any environment that supports a (supported) 
 can install just the ``xonsh`` package (using any package manager).
 
 .. code-block:: console
-  
-  pip install xonsh
+
+    pip install xonsh
 
 When it starts up, if xonsh does not find ``pygments`` or ``setproctitle`` packages, it simply does not colorize 
 or highlight syntax or set process title, respectively.  

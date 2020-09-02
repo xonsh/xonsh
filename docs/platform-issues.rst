@@ -40,7 +40,7 @@ aliases. This is implemented by executing a command that sources the file
 containing the function definition and then immediately calls the function with
 any necessary arguments.
 
-The default user `~/.bashrc` file in Ubuntu 15.10 has the following snippet at
+The default user ``~/.bashrc`` file in Ubuntu 15.10 has the following snippet at
 the top, which causes the script to exit immediately if not run interactively.
 
 .. code-block:: bash
@@ -65,7 +65,7 @@ readline
 ^^^^^^^^
 
 [ed note: This recommendation seems to be `out of date <https://pypi.org/project/gnureadline/>`_. 
-It's retained in the current docs in case you have an older version of Python or MacOS.  But if 
+It's retained in the current docs in case you have an older version of Python or macOS.  But if 
 you have Mac platform experience and can clarify, please open an issue or even a PR to correct the documentation.]
 
 On macOS, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
@@ -83,11 +83,15 @@ which by default configures paths in bash and other POSIX or C  shells. Without
 including these paths, common tools including those installed by Homebrew
 may be unavailable. See ``/etc/profile`` for details on how it is done.
 To ensure the path helper is invoked on xonsh (for all users), add the
-following to ``/etc/xonshrc``::
+following to ``/etc/xonshrc``:
+
+.. code-block:: xonshcon
 
     source-bash $(/usr/libexec/path_helper -s)
 
-To incorporate the whole functionality of ``/etc/profile``::
+To incorporate the whole functionality of ``/etc/profile``:
+
+.. code-block:: xonshcon
 
     source-bash --seterrprevcmd "" /etc/profile
 
@@ -101,7 +105,7 @@ The regular bash-completion package uses v1 which mostly works, but `occasionall
 
 Bash completion comes from <https://github.com/scop/bash-completion> which suggests you use a package manager to install it, this manager will also install a new version of bash without affecting  /bin/bash. Xonsh also needs to be told where the bash shell file that builds the completions is, this has to be added to $BASH_COMPLETIONS. The package includes completions for many Unix commands.
 
-Common packaging systems for MacOs include
+Common packaging systems for macOS include
 
  -  Homebrew where the bash-completion2 package needs to be installed.
 
@@ -128,9 +132,6 @@ Common packaging systems for MacOs include
 Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script to be called as in .../profile.d/bash_completion.sh which will the call the script mentioned above and one in $XDG_CONFIG_HOME . Currently xonsh seems only to be able to read the first script directly.
 
 
-
-
-
 Windows
 -------
 
@@ -142,10 +143,48 @@ we recommend the Windows Terminal (``wt.exe``) rather than the time-honored ``cm
 unicode rendering, better ansi terminal compatibility and all the conveniences you expect 
 from the terminal application in other platforms.
 
-You can install it from the `Microsoft Store<https://www.microsoft.com/en-us/p/windows-terminal/9n0dx20hk701>`_ 
-or from `Github<https://github.com/microsoft/terminal>`_.
+You can install it from the `Microsoft Store <https://www.microsoft.com/en-us/p/windows-terminal/9n0dx20hk701>`_ 
+or from `Github <https://github.com/microsoft/terminal>`_.
 
-By default Windows Terminal runs Powershell, but comes with a profile tab that runs `cmd.exe` instead, and you can add one for Xonsh as well.
+By default Windows Terminal runs Powershell, but you can add a profile tab to run Xonsh and even configure it
+to open automatically in xonsh. Here is a sample settings.json:
+
+.. code-block::
+
+    {
+        "$schema": "https://aka.ms/terminal-profiles-schema",
+
+        "defaultProfile": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+        
+        // To learn more about global settings, visit https://aka.ms/terminal-global-settings
+        // To learn more about profiles, visit https://aka.ms/terminal-profile-settings
+        "profiles":
+        {
+            "defaults":
+            {
+                // Put settings here that you want to apply to all profiles.
+            },
+            "list":
+            [
+                            {
+                    // Guid from https://guidgen.com
+                    "guid": "{02639f1c-9437-4b34-a383-2df49b5ed5c5}",
+                    "name": "Xonsh",
+                    "commandline": "c:\\users\\bobhy\\src\\xonsh\\.venv\\scripts\\xonsh.exe",
+                    "hidden": false
+                },
+                {
+                    // Make changes here to the powershell.exe profile.
+                    "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+                    "name": "Windows PowerShell",
+                    "commandline": "powershell.exe",
+                    "hidden": false
+                }
+            ]
+        },
+
+        . . .
+
 
 Nice colors
 ^^^^^^^^^^^

@@ -12,14 +12,14 @@ The control file usually contains:
 The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.  
 You can create this file in ``/etc/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
 
-Xonsh also allows a per-user  run control file in your home directory, either
+Xonsh also allows a per-user run control file in your home directory, either
 directly in the home directory at ``~/.xonshrc`` or, for XDG compliance, at ``~/.config/rc.xsh``. 
 The options set per user override settings in the system-wide control file.
 
 Xonsh provides 2 wizards to create your own "xonshrc".  ``xonfig web`` provides basic settings, and ``xonfig wizard``
 steps you through all the available options.
 
-Xonfig web
+xonfig web
 -----------
 
 This helps you choose a color theme, customized prompt and add-in packages ("xontribs").  It 
@@ -44,7 +44,7 @@ The page has:
   but can affect any aspect of Xonsh behavior.  
   Choose one or more to suit your needs but note that they will require installation of additional
   packages.  You can extend Xonsh by `writing your own xontrib <tutorial_xontrib.html>`_, and are invited/urged to do so!
-:Save: Click to write the configuration choices to your `~/.xonshrc`. This will add a few tagged lines to your run control file, but will not 
+:Save: Click to write the configuration choices to your ``~/.xonshrc``. This will add a few tagged lines to your run control file, but will not 
   overwrite it completely, so you can run `xonfig web` at any time.
 
 xonfig wizard
@@ -56,99 +56,99 @@ in a question-and-answer format:
 
 .. code-block:: xonshcon
 
-  $ xonfig wizard
+    $ xonfig wizard
 
-            Welcome to the xonsh configuration wizard!
-            ------------------------------------------
-  This will present a guided tour through setting up the xonsh static
-  config file. Xonsh will automatically ask you if you want to run this
-  wizard if the configuration file does not exist. However, you can
-  always rerun this wizard with the xonfig command:
+              Welcome to the xonsh configuration wizard!
+              ------------------------------------------
+    This will present a guided tour through setting up the xonsh static
+    config file. Xonsh will automatically ask you if you want to run this
+    wizard if the configuration file does not exist. However, you can
+    always rerun this wizard with the xonfig command:
 
-      $ xonfig wizard
+        $ xonfig wizard
 
-  This wizard will load an existing configuration, if it is available.
-  Also never fear when this wizard saves its results! It will create
-  a backup of any existing configuration automatically.
+    This wizard will load an existing configuration, if it is available.
+    Also never fear when this wizard saves its results! It will create
+    a backup of any existing configuration automatically.
 
-  This wizard has two main phases: foreign shell setup and environment
-  variable setup. Each phase may be skipped in its entirety.
+    This wizard has two main phases: foreign shell setup and environment
+    variable setup. Each phase may be skipped in its entirety.
 
-  For the configuration to take effect, you will need to restart xonsh.
+    For the configuration to take effect, you will need to restart xonsh.
 
-  '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'``-.,_,.-*'
+    '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'``-.,_,.-*'
 
-  To exit the wizard at any time, press Ctrl-C.
+    To exit the wizard at any time, press Ctrl-C.
 
 
-  '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'
+    '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'
 
-                        Foreign Shell Setup
-                        -------------------
-  The xonsh shell has the ability to interface with foreign shells such
-  as Bash, or zsh (fish not yet implemented).
+                          Foreign Shell Setup
+                          -------------------
+    The xonsh shell has the ability to interface with foreign shells such
+    as Bash, or zsh (fish not yet implemented).
 
-  For configuration, this means that xonsh can load the environment,
-  aliases, and functions specified in the config files of these shells.
-  Naturally, these shells must be available on the system to work.
-  Being able to share configuration (and source) from foreign shells
-  makes it easier to transition to and from xonsh.
+    For configuration, this means that xonsh can load the environment,
+    aliases, and functions specified in the config files of these shells.
+    Naturally, these shells must be available on the system to work.
+    Being able to share configuration (and source) from foreign shells
+    makes it easier to transition to and from xonsh.
 
-  Add a new foreign shell, yes or no [default: no]? yes
-  shell name (e.g. bash): bash
-  interactive shell [bool, default=True]:
-  login shell [bool, default=False]:
-  env command [str, default='env']:
-  alias command [str, default='alias']:
-  extra command line arguments [list of str, default=[]]:
-  safely handle exceptions [bool, default=True]:
-  pre-command [str, default='']:
-  post-command [str, default='']:
-  foreign function command [str, default=None]:
-  source command [str, default=None]: source
-  Foreign shell added.
+    Add a new foreign shell, yes or no [default: no]? yes
+    shell name (e.g. bash): bash
+    interactive shell [bool, default=True]:
+    login shell [bool, default=False]:
+    env command [str, default='env']:
+    alias command [str, default='alias']:
+    extra command line arguments [list of str, default=[]]:
+    safely handle exceptions [bool, default=True]:
+    pre-command [str, default='']:
+    post-command [str, default='']:
+    foreign function command [str, default=None]:
+    source command [str, default=None]: source
+    Foreign shell added.
 
-  Add a new foreign shell, yes or no [default: no]? no
+    Add a new foreign shell, yes or no [default: no]? no
 
-  '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'``-.,_,.-*'
+    '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'``-.,_,.-*'
 
-                    Environment Variable Setup
-                    --------------------------
-  The xonsh shell also allows you to setup environment variables from
-  the static configuration file. Any variables set in this way are
-  superseded by the definitions in the xonshrc or on the command line.
-  Still, setting environment variables in this way can help define
-  options that are global to the system or user.
+                      Environment Variable Setup
+                      --------------------------
+    The xonsh shell also allows you to setup environment variables from
+    the static configuration file. Any variables set in this way are
+    superseded by the definitions in the xonshrc or on the command line.
+    Still, setting environment variables in this way can help define
+    options that are global to the system or user.
 
-  The following lists the environment variable name, its documentation,
-  the default value, and the current value. The default and current
-  values are presented as pretty repr strings of their Python types.
+    The following lists the environment variable name, its documentation,
+    the default value, and the current value. The default and current
+    values are presented as pretty repr strings of their Python types.
 
-  Note: Simply hitting enter for any environment variable
-  will accept the default value for that entry.
+    Note: Simply hitting enter for any environment variable
+    will accept the default value for that entry.
 
-  Would you like to set env vars now, yes or no [default: no]? yes
+    Would you like to set env vars now, yes or no [default: no]? yes
 
-  $ALLUSERSPROFILE
+    $ALLUSERSPROFILE
 
-  default value:
-  current value: 'C:\\ProgramData'
-  >>>
+    default value:
+    current value: 'C:\\ProgramData'
+    >>>
 
-  $APPDATA
+    $APPDATA
 
-  default value:
-  current value: 'C:\\Users\\bobhy\\AppData\\Roaming'
-  >>>
+    default value:
+    current value: 'C:\\Users\\bobhy\\AppData\\Roaming'
+    >>>
 
-  $AUTO_CD
-  Flag to enable changing to a directory by entering the dirname or
-  full path only (without the cd command).
-  default value: False
-  current value: False
-  >>>
+    $AUTO_CD
+    Flag to enable changing to a directory by entering the dirname or
+    full path only (without the cd command).
+    default value: False
+    current value: False
+    >>>
 
-  . . .
+    . . .
 
 
 Real world sample xonshrc
