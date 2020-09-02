@@ -49,12 +49,12 @@ Authors are sorted by number of commits.
 * Jason R. Coombs
 * Gyuri Horak
 * Stephan Fitzpatrick
+* Will S
 * K.-Michael Aye
 * halloleo
 * Will Wykeham
 * Oleh Prypin
 * Brian Skinn
-* Will S
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -160,6 +160,7 @@ Authors are sorted by number of commits.
 * Edmund Miller
 * Gabriel Vogel
 * anki
+* Danny Sepler
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -231,5 +232,6 @@ Authors are sorted by number of commits.
 * Feng Tian
 * cafehaine
 * paugier
+* Marius van Niekerk
 * goodboy
 * Atsushi Morimoto
