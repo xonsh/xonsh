@@ -234,30 +234,4 @@ variables:
 ...use xonsh inside Emacs?
 ----------------------------------
 
-**Option A: Comint buffer**
-
-You can use xonsh as your `interactive shell in Emacs
-<https://www.gnu.org/software/emacs/manual/html_node/emacs/Interactive-Shell.html>`_
-in a Comint buffer. This way you keep all the Emacs editing power
-in the shell, but you loose xonsh's completion feature.
-
-Make sure you install xonsh with readline support and in your
-``.xonshrc`` file define
-
-.. code-block:: xonsh
-
-    $SHELL_TYPE = 'readline'
-
-Also, in Emacs set ``explicit-shell-file-name`` to your xonsh executable.
-
-**Option B: Ansi-term buffer**
-
-The second option is to run xonsh in an Ansi-term buffer inside
-Emacs. This way you have to switch modes if you want do Emacs-style
-editing, but you keep xonsh's impressive completion.
-
-For this it is preferred to have xonsh installed with the
-prompt-toolkit. Then you can leave ``$SHELL_TYPE`` at its default.
-
-Emacs will prompt you for the path of the xonsh exeutable when you
-start up ``ansi-term``.
+see `emacs <editors.html>`_.

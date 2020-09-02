@@ -3,6 +3,7 @@
 *******************
 Tutorial
 *******************
+
 xonsh is a shell language and command prompt. Unlike other shells, xonsh is
 based on Python, with additional syntax added that makes calling subprocess
 commands, manipulating the environment, and dealing with the file system
