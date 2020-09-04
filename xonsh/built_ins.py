@@ -454,7 +454,13 @@ class SubprocSpec:
         self.universal_newlines = universal_newlines
         self.close_fds = close_fds
         self.captured = captured
-        self.env = env
+        if env is not None:
+            self.env = {
+                k: v if not (isinstance(v, list)) or len(v) > 1 else v[0]
+                for (k, v) in env.items()
+            }
+        else:
+            self.env = None
         # pure attrs
         self.args = list(cmd)
         self.alias = None

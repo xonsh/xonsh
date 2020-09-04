@@ -3333,15 +3333,15 @@ class BaseParser(object):
         p[0] = p[1]
 
     def p_envvar_assign(self, p):
-        """envvar_assign : envvar_assign_left test WS"""
+        """envvar_assign : envvar_assign_left test WS
+                         | envvar_assign_left subproc_atom WS
+        """
         p1, p2 = p[1], p[2]
         p[0] = ast.Dict(
             keys=[
                 ast.Constant(value=p1.value[1:], lineno=p1.lineno, col_offset=p1.lexpos)
             ],
-            values=[
-                ast.Constant(value=p2.value, lineno=p2.lineno, col_offset=p2.col_offset)
-            ],
+            values=[p2],
             lineno=p1.lineno,
             col_offset=p1.lexpos,
         )
