@@ -390,6 +390,7 @@ class SubprocSpec:
         universal_newlines=False,
         close_fds=False,
         captured=False,
+        env=None,
     ):
         """
         Parameters
@@ -413,6 +414,8 @@ class SubprocSpec:
             The flag for if the subprocess is captured, may be one of:
             False for $[], 'stdout' for $(), 'hiddenobject' for ![], or
             'object' for !().
+        env : dict
+            Replacement environment to run the subporcess in.
 
         Attributes
         ----------
@@ -451,6 +454,7 @@ class SubprocSpec:
         self.universal_newlines = universal_newlines
         self.close_fds = close_fds
         self.captured = captured
+        self.env = env
         # pure attrs
         self.args = list(cmd)
         self.alias = None
@@ -579,7 +583,8 @@ class SubprocSpec:
 
     def prep_env(self, kwargs):
         """Prepares the environment to use in the subprocess."""
-        denv = builtins.__xonsh__.env.detype()
+        with builtins.__xonsh__.env.swap(self.env) as env:
+            denv = env.detype()
         if ON_WINDOWS:
             # Over write prompt variable as xonsh's $PROMPT does
             # not make much sense for other subprocs
@@ -878,7 +883,7 @@ def _update_last_spec(last):
         last.captured_stderr = last.captured_stdout
 
 
-def cmds_to_specs(cmds, captured=False):
+def cmds_to_specs(cmds, captured=False, envs=None):
     """Converts a list of cmds to a list of SubprocSpec objects that are
     ready to be executed.
     """
@@ -886,11 +891,12 @@ def cmds_to_specs(cmds, captured=False):
     i = 0
     specs = []
     redirects = []
-    for cmd in cmds:
+    for i, cmd in enumerate(cmds):
         if isinstance(cmd, str):
             redirects.append(cmd)
         else:
-            spec = SubprocSpec.build(cmd, captured=captured)
+            env = envs[i] if envs is not None else None
+            spec = SubprocSpec.build(cmd, captured=captured, env=env)
             spec.pipeline_index = i
             specs.append(spec)
             i += 1
@@ -921,7 +927,7 @@ def _should_set_title(captured=False):
     )
 
 
-def run_subproc(cmds, captured=False):
+def run_subproc(cmds, captured=False, envs=None):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
     a special connecting character.  For example::
@@ -937,7 +943,7 @@ def run_subproc(cmds, captured=False):
     if builtins.__xonsh__.env.get("XONSH_TRACE_SUBPROC"):
         print("TRACE SUBPROC: %s" % str(cmds), file=sys.stderr)
 
-    specs = cmds_to_specs(cmds, captured=captured)
+    specs = cmds_to_specs(cmds, captured=captured, envs=envs)
     captured = specs[-1].captured
     if captured == "hiddenobject":
         command = HiddenCommandPipeline(specs)
@@ -982,20 +988,20 @@ def run_subproc(cmds, captured=False):
         return
 
 
-def subproc_captured_stdout(*cmds):
+def subproc_captured_stdout(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str.
     """
-    return run_subproc(cmds, captured="stdout")
+    return run_subproc(cmds, captured="stdout", envs=envs)
 
 
-def subproc_captured_inject(*cmds):
+def subproc_captured_inject(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns a list of
     whitespace-separated strings of the stdout that was produced.
     The string is split using xonsh's lexer, rather than Python's str.split()
     or shlex.split().
     """
-    o = run_subproc(cmds, captured="object")
+    o = run_subproc(cmds, captured="object", envs=envs)
     o.end()
     toks = []
     for line in o:
@@ -1004,26 +1010,26 @@ def subproc_captured_inject(*cmds):
     return toks
 
 
-def subproc_captured_object(*cmds):
+def subproc_captured_object(*cmds, envs=None):
     """
     Runs a subprocess, capturing the output. Returns an instance of
     CommandPipeline representing the completed command.
     """
-    return run_subproc(cmds, captured="object")
+    return run_subproc(cmds, captured="object", envs=envs)
 
 
-def subproc_captured_hiddenobject(*cmds):
+def subproc_captured_hiddenobject(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns an instance of
     HiddenCommandPipeline representing the completed command.
     """
-    return run_subproc(cmds, captured="hiddenobject")
+    return run_subproc(cmds, captured="hiddenobject", envs=envs)
 
 
-def subproc_uncaptured(*cmds):
+def subproc_uncaptured(*cmds, envs=None):
     """Runs a subprocess, without capturing the output. Returns the stdout
     that was produced as a str.
     """
-    return run_subproc(cmds, captured=False)
+    return run_subproc(cmds, captured=False, envs=envs)
 
 
 def ensure_list_of_strs(x):
