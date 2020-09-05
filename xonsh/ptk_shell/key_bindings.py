@@ -373,7 +373,7 @@ def load_xonsh_bindings() -> KeyBindingsBase:
         data = event.current_buffer.copy_selection()
         event.app.clipboard.set_data(data)
 
-    @handle(Keys.ControlV, filter=insert_mode)
+    @handle(Keys.ControlV, filter=insert_mode | has_selection)
     def _yank(event):
         """ Paste selected text. """
         buff = event.current_buffer
