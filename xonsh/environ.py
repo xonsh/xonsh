@@ -1875,7 +1875,12 @@ class Env(cabc.MutableMapping):
                 default = Var()
             return default
         if vd.doc_default is DefaultNotGiven:
-            dval = pprint.pformat(self._vars.get(key, "<default not set>").default)
+            var_default = self._vars.get(key, "<default not set>").default
+            dval = (
+                "not defined"
+                if var_default is DefaultNotGiven
+                else pprint.pformat(var_default)
+            )
             vd = vd._replace(doc_default=dval)
         return vd
 
@@ -2018,7 +2023,7 @@ class Env(cabc.MutableMapping):
 
     def __contains__(self, item):
         return item in self._d or (
-            item in self._vars and self._vars[item] is not DefaultNotGiven
+            item in self._vars and self._vars[item].default is not DefaultNotGiven
         )
 
     def __len__(self):
