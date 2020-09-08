@@ -2018,7 +2018,7 @@ class Env(cabc.MutableMapping):
 
     def __contains__(self, item):
         return item in self._d or (
-            item in self._vars and self._vars[item] is not DefaultNotGiven
+            item in self._vars and self._vars[item].default is not DefaultNotGiven
         )
 
     def __len__(self):
