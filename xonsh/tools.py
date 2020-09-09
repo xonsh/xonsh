@@ -515,9 +515,9 @@ def _have_open_triple_quotes(s):
 
 
 def get_line_continuation():
-    """ The line continuation characters used in subproc mode. In interactive
-         mode on Windows the backslash must be preceded by a space. This is because
-         paths on Windows may end in a backslash.
+    """The line continuation characters used in subproc mode. In interactive
+    mode on Windows the backslash must be preceded by a space. This is because
+    paths on Windows may end in a backslash.
     """
     if (
         ON_WINDOWS
@@ -691,7 +691,7 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
 
 
 def get_sep():
-    """ Returns the appropriate filepath separator char depending on OS and
+    """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
     if ON_WINDOWS and builtins.__xonsh__.env.get("FORCE_POSIX_PATHS"):
@@ -847,7 +847,9 @@ def conda_suggest_command_not_found(cmd, env):
         from conda_suggest import find
     except ImportError:
         return ""
-    return find.message_string(cmd, conda_suggest_path=env.get("CONDA_SUGGEST_PATH", None))
+    return find.message_string(
+        cmd, conda_suggest_path=env.get("CONDA_SUGGEST_PATH", None)
+    )
 
 
 def command_not_found(cmd, env):
@@ -1036,7 +1038,7 @@ def escape_windows_cmd_string(s):
 
 
 def argvquote(arg, force=False):
-    """ Returns an argument quoted in such a way that that CommandLineToArgvW
+    """Returns an argument quoted in such a way that that CommandLineToArgvW
     on Windows will return the argument string unchanged.
     This is the same thing Popen does when supplied with an list of arguments.
     Arguments in a command line should be separated by spaces; this
@@ -1506,8 +1508,8 @@ def bool_seq_to_csv(x):
 
 
 def ptk2_color_depth_setter(x):
-    """ Setter function for $PROMPT_TOOLKIT_COLOR_DEPTH. Also
-        updates os.environ so prompt toolkit can pickup the value.
+    """Setter function for $PROMPT_TOOLKIT_COLOR_DEPTH. Also
+    updates os.environ so prompt toolkit can pickup the value.
     """
     x = str(x)
     if x in {
@@ -1685,7 +1687,7 @@ def is_history_backend(x):
 
 
 def is_dynamic_cwd_width(x):
-    """ Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
+    """Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
     environment variable.
     """
     return (
@@ -1897,7 +1899,7 @@ WIN_BOLD_COLOR_MAP = LazyObject(_win_bold_color_map, globals(), "WIN_BOLD_COLOR_
 
 def hardcode_colors_for_win10(style_map):
     """Replace all ansi colors with hardcoded colors to avoid unreadable defaults
-       in conhost.exe
+    in conhost.exe
     """
     modified_style = {}
     if not builtins.__xonsh__.env["PROMPT_TOOLKIT_COLOR_DEPTH"]:
@@ -1923,8 +1925,7 @@ def hardcode_colors_for_win10(style_map):
 
 
 def ansicolors_to_ptk1_names(stylemap):
-    """Converts ansicolor names in a stylemap to old PTK1 color names
-    """
+    """Converts ansicolor names in a stylemap to old PTK1 color names"""
     if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
         return stylemap
     modified_stylemap = {}
@@ -1938,7 +1939,7 @@ def ansicolors_to_ptk1_names(stylemap):
 
 def intensify_colors_for_cmd_exe(style_map):
     """Returns a modified style to where colors that maps to dark
-       colors are replaced with brighter versions.
+    colors are replaced with brighter versions.
     """
     modified_style = {}
     replace_colors = {
