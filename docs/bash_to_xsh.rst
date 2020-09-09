@@ -55,9 +55,9 @@ line is ``#!/usr/bin/env xonsh``.
       - ``_.rtn``
       - Returns the exit code, or status, of the previous command.
     * - ``N=V command``
-      - ``with ${...}.swap(N=V): command``
-      - Set temporary environment variable(s) and execute for command.
-        Use an indented block to execute many commands in the same context.
+      - ``$N=V command`` or ``with ${...}.swap(N=V): command``
+      - Set temporary environment variable(s) and execute the command.
+        Use the second notation with an indented block to execute many commands in the same context.
     * - ``!$``
       - ``__xonsh__.history[-1, -1]``
       - Get the last argument of the last command
