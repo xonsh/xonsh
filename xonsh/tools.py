@@ -814,7 +814,7 @@ def executables_in(path):
         return
 
 
-def command_not_found(cmd):
+def debian_command_not_found(cmd):
     """Uses the debian/ubuntu command-not-found utility to suggest packages for a
     command that cannot currently be found.
     """
@@ -837,6 +837,31 @@ def command_not_found(cmd):
     )
     s = "\n".join(s.rstrip().splitlines()).strip()
     return s
+
+
+def conda_suggest_command_not_found(cmd, env):
+    """Uses conda-suggest to suggest packages for a command that cannot
+    currently be found.
+    """
+    try:
+        from conda_suggest import find
+    except ImportError:
+        return ""
+    return find.message_string(cmd, conda_suggest_path=env.get("CONDA_SUGGEST_PATH", None))
+
+
+def command_not_found(cmd, env):
+    """Uses various mechanism to suggest packages for a command that cannot
+    currently be found.
+    """
+    if ON_LINUX:
+        rtn = debian_command_not_found(cmd)
+    else:
+        rtn = ""
+    conda = conda_suggest_command_not_found(cmd, env)
+    if conda:
+        rtn = rtn + "\n\n" + conda if rtn else conda
+    return rtn
 
 
 def suggest_commands(cmd, env, aliases):
@@ -871,7 +896,7 @@ def suggest_commands(cmd, env, aliases):
     num = min(len(suggested), max_sugg)
 
     if num == 0:
-        rtn = command_not_found(cmd)
+        rtn = command_not_found(cmd, env)
     else:
         oneof = "" if num == 1 else "one of "
         tips = "Did you mean {}the following?".format(oneof)
@@ -881,7 +906,7 @@ def suggest_commands(cmd, env, aliases):
             "    {: <{}} {}".format(key + ":", length, val) for key, val in items
         )
         rtn = "{}\n{}".format(tips, alternatives)
-        c = command_not_found(cmd)
+        c = command_not_found(cmd, env)
         rtn += ("\n\n" + c) if len(c) > 0 else ""
     return rtn
 
