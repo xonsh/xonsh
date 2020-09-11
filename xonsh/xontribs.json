@@ -17,6 +17,11 @@
   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
   "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
  },
+ {"name": "argcomplete",
+  "package": "xontrib-argcomplete",
+  "url": "https://github.com/anki-code/xontrib-argcomplete",
+  "description": ["Adding support of kislyuk/argcomplete to xonsh."]
+ },
  {"name": "autojump",
   "package": "xontrib-autojump",
   "url": "https://github.com/sagartewari01/autojump-xonsh",
