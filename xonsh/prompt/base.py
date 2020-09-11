@@ -16,6 +16,7 @@ from xonsh.prompt.cwd import (
     _collapsed_pwd,
     _replace_home_cwd,
     _dynamically_collapsed_pwd,
+    _add_dir_slash,
 )
 from xonsh.prompt.job import _current_job
 from xonsh.prompt.env import env_name, vte_new_tab_cwd
@@ -95,7 +96,7 @@ def PROMPT_FIELDS():
         prompt_end="#" if xt.is_superuser() else "$",
         hostname=socket.gethostname().split(".", 1)[0],
         cwd=_dynamically_collapsed_pwd,
-        cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
+        cwd_dir=lambda: _add_dir_slash(os.path.dirname(_replace_home_cwd())),
         cwd_base=lambda: os.path.basename(_replace_home_cwd()),
         short_cwd=_collapsed_pwd,
         curr_branch=current_branch,
