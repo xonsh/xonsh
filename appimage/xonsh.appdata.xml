@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
     <id>xonsh</id>
-    <metadata_license>MIT</metadata_license>
-    <project_license>Python-2.0</project_license>
+    <metadata_license>BSD</metadata_license>
+    <project_license>BSD</project_license>
     <name>Xonsh</name>
     <summary>Xonsh on Python {{ python-fullversion }}</summary>
     <description>
