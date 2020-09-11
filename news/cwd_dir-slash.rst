@@ -4,9 +4,9 @@
 
 **Changed:**
 
-* The variable cmd_dir, used for prompts,
+* The variable cwd_dir, used for prompts,
   now always has a slash at the end, so users can use the
-  construct "{cmd_dir}{cmd_base}" in their custom prompt definitions.
+  construct "{cwd_dir}{cwd_base}" in their custom prompt definitions.
 
 **Deprecated:**
 
