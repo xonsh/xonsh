@@ -75,6 +75,14 @@ class VoxHandler:
             "virtual environment (pip is bootstrapped "
             "by default)",
         )
+        create.add_argument(
+            "-a",
+            "--activate",
+            default=False,
+            action="store_true",
+            dest="activate",
+            help="Activate the newly created virtual environment.",
+        )
 
         activate = subparsers.add_parser(
             "activate", aliases=["workon", "enter"], help="Activate virtual environment"
@@ -88,10 +96,17 @@ class VoxHandler:
                 "list or the path to an arbitrary venv"
             ),
         )
-        subparsers.add_parser(
+        deactivate = subparsers.add_parser(
             "deactivate",
             aliases=["exit"],
             help="Deactivate current virtual environment",
+        )
+        deactivate.add_argument(
+            "--remove",
+            dest="remove",
+            default=False,
+            action="store_true",
+            help="Remove the virtual environment after leaving it.",
         )
         subparsers.add_parser(
             "list",
@@ -141,8 +156,7 @@ class VoxHandler:
             getattr(self, "cmd_" + cmd)(args, stdin)
 
     def cmd_new(self, args, stdin=None):
-        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
-        """
+        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``."""
         print("Creating environment...")
         self.vox.create(
             args.name,
@@ -151,12 +165,16 @@ class VoxHandler:
             with_pip=args.with_pip,
             interpreter=args.interpreter,
         )
-        msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
-        print(msg.format(args.name))
+        if args.activate:
+            self.vox.activate(args.name)
+            print(f"Environment {args.name!r} created and activated.\n")
+        else:
+            print(
+                f'Environment {args.name!r} created. Activate it with "vox activate {args.name}".\n'
+            )
 
     def cmd_activate(self, args, stdin=None):
-        """Activate a virtual environment.
-        """
+        """Activate a virtual environment."""
 
         try:
             self.vox.activate(args.name)
@@ -180,7 +198,11 @@ class VoxHandler:
             )
             return None
         env_name = self.vox.deactivate()
-        print('Deactivated "%s".\n' % env_name)
+        if args.remove:
+            del self.vox[env_name]
+            print(f'Environment "{env_name}" deactivated and removed.\n')
+        else:
+            print(f'Environment "{env_name}" deactivated.\n')
 
     def cmd_list(self, args, stdin=None):
         """List available virtual environments."""
@@ -202,8 +224,7 @@ class VoxHandler:
         print("\n".join(envs))
 
     def cmd_remove(self, args, stdin=None):
-        """Remove virtual environments.
-        """
+        """Remove virtual environments."""
         for name in args.names:
             try:
                 del self.vox[name]

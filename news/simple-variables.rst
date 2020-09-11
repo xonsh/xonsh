@@ -1,7 +1,7 @@
 **Added:**
 
-* New ``Env.rawkeys()`` iterator for iterating over all keys in an environment,
-  not just the string keys like with ``__iter__()``.
+* Xonsh now supports bash-style variable assignments preceding
+  subprocess commands (e.g. ``$FOO = "bar" bash -c r"echo $FOO"``).
 
 **Changed:**
 

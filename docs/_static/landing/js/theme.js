@@ -77,7 +77,16 @@
         mainClass: 'mfp-fade',
         removalDelay: 160,
         preloader: false,
-        fixedContentPos: false
+        fixedContentPos: false,
+        iframe: {
+            patterns: {
+                youtube_short: {
+                    index: 'youtu.be/',
+                    id: 'youtu.be/',
+                    src: 'http://www.youtube.com/embed/%id%?autoplay=1'
+                }
+            }
+        }
     });
 
 

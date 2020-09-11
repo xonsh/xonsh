@@ -16,6 +16,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Black Check
-      uses: "lgeiger/black-action@master"
+      uses: "laloch/black-action@master"
       with:
         args: "--check xonsh/ xontrib/"

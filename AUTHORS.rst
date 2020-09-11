@@ -8,8 +8,8 @@ Authors are sorted by number of commits.
 * Konstantinos Tsakiltzidis
 * Jamie Bliss
 * Hugo Wang
-* Bob Hyman
 * David Strobach
+* Bob Hyman
 * BlahGeek
 * Jean-Benoist Leger
 * christopher
@@ -20,8 +20,8 @@ Authors are sorted by number of commits.
 * Aaron Griffin
 * Rob Brewer
 * virus
-* Sagar Tewari
 * anki-code
+* Sagar Tewari
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
@@ -43,18 +43,18 @@ Authors are sorted by number of commits.
 * Andrew Hundt
 * Jonathan Slenders
 * Justin Moen
+* Raphael Das Gupta
 * Caleb Hattingh
 * Daniel Shimon
 * Jason R. Coombs
+* Gyuri Horak
 * Stephan Fitzpatrick
-* Raphael Das Gupta
+* Will S
 * K.-Michael Aye
 * halloleo
 * Will Wykeham
 * Oleh Prypin
 * Brian Skinn
-* Will S
-* Gyuri Horak
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -160,6 +160,7 @@ Authors are sorted by number of commits.
 * Edmund Miller
 * Gabriel Vogel
 * anki
+* Danny Sepler
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -231,5 +232,6 @@ Authors are sorted by number of commits.
 * Feng Tian
 * cafehaine
 * paugier
+* Marius van Niekerk
 * goodboy
 * Atsushi Morimoto

@@ -1,6 +1,6 @@
 **Added:**
 
-* Added xonsh AppImage to the GitHub release assets
+* Borrow shift-selection from prompt-toolkit. Shift-arrow (selects a letter) and control-shift-arrow (selects a word) should now be supported.
 
 **Changed:**
 

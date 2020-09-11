@@ -499,6 +499,7 @@ def test_script_stderr(case):
         ("pwd", None, lambda: os.getcwd() + "\n"),
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
+        ("$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'", None, "foo2",),
     ],
 )
 def test_single_command_no_windows(cmd, fmt, exp):

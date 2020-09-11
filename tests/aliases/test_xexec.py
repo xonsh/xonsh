@@ -25,16 +25,21 @@ def test_missing_command(mockexecvpe):
 
 def test_command_not_found(monkeypatch):
 
-    dummy_error_msg = "This is dummy error message, file not found or something like that"
+    dummy_error_msg = (
+        "This is dummy error message, file not found or something like that"
+    )
     command = "non_existing_command"
 
     def mocked_execvpe(_command, _args, _env):
         raise FileNotFoundError(2, dummy_error_msg)
+
     monkeypatch.setattr(os, "execvpe", mocked_execvpe)
 
-    assert xexec([command]) == (None,
-                                "xonsh: exec: file not found: {}: {}" "\n".format(dummy_error_msg, command),
-                                1)
+    assert xexec([command]) == (
+        None,
+        "xonsh: exec: file not found: {}: {}" "\n".format(dummy_error_msg, command),
+        1,
+    )
 
 
 def test_help(mockexecvpe):

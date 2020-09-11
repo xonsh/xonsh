@@ -202,7 +202,7 @@ html_style = "numpy_friendly.css"
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {'index': 'index.html'}
+html_additional_pages = {"index": "index.html"}
 
 # If false, no module index is generated.
 # html_use_modindex = True
@@ -440,5 +440,5 @@ builtins.__xonsh__.commands_cache = CommandsCache()
 def setup(app):
     from xonsh.pyghooks import XonshConsoleLexer
 
-    app.add_lexer("xonshcon", XonshConsoleLexer)
+    app.add_lexer("xonshcon", XonshConsoleLexer())
     app.add_css_file("custom.css")

@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* Added xontrib-argcomplete to support kislyuk/argcomplete - tab completion for argparse.
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* ``vox`` xontrib works again with the new environment defaults.
+* <news item>
 
 **Security:**
 

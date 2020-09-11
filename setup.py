@@ -412,6 +412,7 @@ def main():
         "linux": ["distro"],
         "proctitle": ["setproctitle"],
         "zipapp": ['importlib_resources; python_version < "3.7"'],
+        "full" : ["ptk", "pygments", "distro"]
     }
     skw["python_requires"] = ">=3.6"
     setup(**skw)

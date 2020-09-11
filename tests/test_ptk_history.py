@@ -10,6 +10,7 @@ except ImportError:
 def history_obj():
     """Instantiate `PromptToolkitHistory` and append a line string"""
     from xonsh.ptk_shell.history import PromptToolkitHistory
+
     hist = PromptToolkitHistory(load_prev=False)
     hist.append_string("line10")
     return hist
@@ -28,6 +29,7 @@ def test_ptk2_backcompat():
 
     import xonsh.ptk_shell.shell as imports_new
     import xonsh.ptk2.shell as imports_legacy
+
     # defining the ptk2 package this way leaves out the internal global names (which all start with '_')
 
     s_new = set(dir(imports_new))
@@ -35,9 +37,10 @@ def test_ptk2_backcompat():
     extra_names = s_new - s_legacy
 
     for name in extra_names:
-        assert name.startswith('_')
+        assert name.startswith("_")
 
     assert s_legacy.issubset(s_new)
+
 
 # prove that legacy API is usable
 
@@ -46,6 +49,7 @@ def test_ptk2_backcompat():
 def history_obj_legacy():
     """Instantiate `PromptToolkitHistory` via legacy alias and append a line string"""
     from xonsh.ptk2.history import PromptToolkitHistory
+
     hist = PromptToolkitHistory(load_prev=False)
     hist.append_string("line10")
     return hist

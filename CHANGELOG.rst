@@ -4,6 +4,119 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.21
+====================
+
+**Added:**
+
+* ``xonsh-in-docker.py`` script now has ``--pytest`` parameter,
+  that automates pytest installation into the Docker container.
+* Setup extras tag '[full]' to install prompt-toolkit and pygments in one fell swoop.
+  Full feature install can be ``pip install xonsh[full]``.
+* Support for PEP 570 positional-only parameters.
+* Support for starred expressions within return statement
+  (``return x, *my_list``).
+* Xonsh now runs in Python 3.9
+* ``vox`` xontrib now supports ``new --activate`` and ``deactivate --remove``
+  to create + activate and deactivate + remove virtual environments in a single
+  command.
+
+**Changed:**
+
+* Rewrote Installation and Configuration sections of Getting Started doc 
+  to clarify install from packages, and generally improve flow.
+
+**Fixed:**
+
+* Fixed incorrect reference to XONSH_HIST_SIZE instead of XONSH_HISTORY_SIZE
+* RST code-block:: xonshcon now works.
+* Non-default parameters can not follow defaults anymore.
+* Fixed parser not emmiting errors in some cases.
+
+**Authors:**
+
+* Anthony Scopatz
+* Jamie Bliss
+* David Strobach
+* Bob Hyman
+* Will S
+* Danny Sepler
+* Marius van Niekerk
+
+
+
+v0.9.20
+====================
+
+**Added:**
+
+* ``abbrevs`` expansion now allows for setting cursor to a specific
+  position within the expanded abbrev. For instance
+  ::
+
+    abbrevs["eswap"] = "with ${...}.swap(<edit>):\n    "
+
+  expands ``eswap`` as you type to environment context manager
+  ``swap()`` syntax and places the cursor at the position of the
+  ``<edit>`` mark removing the mark itself in the process.
+* Support for ANSI escape codes in ``$PROMPT``/``$RIGHT_PROMPT``. In this way 3rd party prompt generators like ``powerline`` or ``starship`` can be used to set the prompt. ANSI escape codes might be mixed with the normal formatting (like ``{BOLD_GREEN}``) and *prompt variables* (like ``{user}``) should work as well.
+  For example:
+  ::
+
+    $PROMPT=lambda: $(starship prompt)
+    $RIGHT_PROMPT="\x1b[33m{hostname} {GREEN}> "
+* Added ``$HOSTNAME`` and ``$HOSTTYPE`` environment variables.
+* New ``Env.rawkeys()`` iterator for iterating over all keys in an environment,
+  not just the string keys like with ``__iter__()``.
+* New landing page for https://xon.sh
+* Added xonsh AppImage to the GitHub release assets
+* xonsh now comes with a bulitin version of prompt-toolkit (3.0.5) which will be used as fall back if prompt_toolkit is not installed.
+* Support for Python 3.8 PEP 572 assignment expressions (walrus operator).
+
+**Changed:**
+
+* custom startup scripts replaced by setup.py -generated (console) entrypoint scripts for both xonsh and xonsh-cat.
+  This means xonsh.bat and xonsh-cat.bat are replaced on Windows by xonsh.exe and xonsh-cat.exe, respectively.
+
+**Fixed:**
+
+* Iterating over ``${...}`` or ``__xonsh__.env`` yields only string
+  values again.
+* List comprehensions do not ignore the second and subsequent ``if`` clauses
+  in multi-if comprehension expressions any more.
+* Xonsh can now fully handle special Xonsh syntax within f-strings, including
+  environmnent variables within ``${}`` operator and captured subprocess
+  expansion within f-string expressions.
+* Avoid startup error on Windows when py.exe chooses wrong python interpreter to run xonsh.
+  When multiple interpreters are in PATH, 'py' will choose the first one (usually in the virtual environment),
+  but 'py -3' finds the system-wide one, apparently by design.
+
+* For xonsh-cat, avoid parsing and processing first (0'th) argument when invoked directly from OS shell.
+* Run control files are now read in with ``$THREAD_SUBPROCS`` off.
+  This prevents a weird error when starting xonsh from Bash (and
+  possibly other shells) where the top-level xonsh process would
+  be stopped and placed into the background during startup. It
+  may be necessary to set ``$THREAD_SUBPROCS=False`` in downstream
+  xonsh scripts and modules.
+* Fixed installation issues where generated files (like the parser table and
+  amalgamated modules) were not installed.
+* The xonsh test suite has been cleaned up. So no more failing test. Hopefully.
+* Addressed robustness issue with ``"locked"`` history key not
+  being present at startup.
+* ``vox`` xontrib works again with the new environment defaults.
+
+**Authors:**
+
+* Anthony Scopatz
+* Morten Enemark Lund
+* David Strobach
+* Bob Hyman
+* anki-code
+* Raphael Das Gupta
+* Gyuri Horak
+
+
+
 v0.9.19
 ====================
 
@@ -15,9 +128,9 @@ v0.9.19
 * JsonHistoryGC: display following warning when garbage collection would delete "too" much data and don't delete anything.
 
   "Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({limit_size}).\n"
-  "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run ``history gc --force``.",
+  "Not removing any history for now. Either increase your limit ($XONSH_HISTORY_SIZE), or run ``history gc --force``.",
 
-  It is displayed when the amount of history on disk is more than double the limit configured (or defaulted) for $XONSH_HIST_SIZE.
+  It is displayed when the amount of history on disk is more than double the limit configured (or defaulted) for $XONSH_HISTORY_SIZE.
 * $LS_COLORS code 'mh' now recognized for (multi) hard-linked files.
 * $LS_COLORS code 'ca' now recognized for files with security capabilities (linux only).
 * CI step to run flake8 after pytest.
@@ -2905,7 +3018,7 @@ v0.4.7
 **Added:**
 
 * Define alias for 'echo' on startup for Windows only.
-* New coredev `astronouth7303 <https://github.com/astronouth7303>`_ added
+* New coredev `AstraLuma <https://github.com/AstraLuma>`_ added
 * ``which -a`` now searches in ``__xonsh_ctx__`` too
 * Info about the xontrib cookiecutter template on xontrib tutorial
 * xonsh's optional dependencies may now be installed with the pip extras ``ptk``, ``proctitle``, ``linux``, ``mac``, and ``win``.
@@ -3107,7 +3220,7 @@ v0.4.5
   the xonsh FAQ for more information on trade-offs and mitigation strategies.
 * ``which -v`` now calls superhelp, which will print highlighted source.
 * Added xontribs:
-  * `z (Tracks your most used directories, based on 'frecency'.) <https://github.com/astronouth7303/xontrib-z>`_
+  * `z (Tracks your most used directories, based on 'frecency'.) <https://github.com/AstraLuma/xontrib-z>`_
 * amalgamate.py now supports relative imports.
 * ``history show`` args ``-t``, ``-f``, ``-T`` ``+T`` to filter commands by timestamp
 
