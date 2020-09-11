@@ -89,12 +89,3 @@ def _dynamically_collapsed_pwd():
                 0 : int(target_width) - len(truncature_char)
             ] + truncature_char
     return full
-
-
-def _add_dir_slash(cwd_dir):
-    """Adds a slash to parent directory path where appropriate for aesthetics.
-       Currently used for cwd_dir prompt variable."""
-    if cwd_dir and not cwd_dir.endswith(os.path.sep):
-        return f"{cwd_dir}{os.path.sep}"
-    else:
-        return cwd_dir
