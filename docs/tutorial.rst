@@ -1447,7 +1447,7 @@ By default, the following variables are available for use:
     set the character used in shortened path.
   * ``short_cwd``: A shortened form of the current working directory; e.g.,
     ``/path/to/xonsh`` becomes ``/p/t/xonsh``
-  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
+  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/`` in
     ``/path/to/xonsh``.
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
     ``/path/to/xonsh``.
