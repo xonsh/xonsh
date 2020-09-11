@@ -95,10 +95,7 @@ class PromptToolkitShell(BaseShell):
         self.prompter = PromptSession(history=self.history)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = merge_key_bindings(
-            [
-                load_xonsh_bindings(),
-                load_emacs_shift_selection_bindings(),
-            ]
+            [load_xonsh_bindings(), load_emacs_shift_selection_bindings()]
         )
 
         # Store original `_history_matches` in case we need to restore it
