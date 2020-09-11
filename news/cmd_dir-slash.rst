@@ -4,7 +4,9 @@
 
 **Changed:**
 
-* <news item>
+* The variable cmd_dir, used for prompts,
+  now always has a slash at the end, so users can use the
+  construct "{cmd_dir}{cmd_base}" in their custom prompt definitions.
 
 **Deprecated:**
 
