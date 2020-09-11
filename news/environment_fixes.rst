@@ -4,10 +4,10 @@
 
 **Changed:**
 
-* xonsh/environ.py: new rule: if default for "registered" environment variable is set to ``DefaultNotGiven``_ 
-  (in env.register(), or DEFAULT_VARS) then variable has no default and raises KeyError if it is not defined in 
-  environment.  Likewise, ``"var" in __xonsh__.env``_ will return False.
-* Changed defaults for ANSICON, TERM and VIRTUAL_ENV to DefaultNotGiven, so code can rationally test whether
+* xonsh/environ.py: new rule: for "registered" environment variables (in ``DEFAULT_VARS`` or via ``env.register()``), 
+  if default is set to ``DefaultNotGiven``, then variable has no default and raises ``KeyError`` if it is not 
+  actually defined in environment.  Likewise, ``"var" in __xonsh__.env`` will return False.
+* Changed defaults for ANSICON, TERM and VIRTUAL_ENV to ``DefaultNotGiven``, so code can rationally test whether
   the expected external program has defined these variables.  No need to do this for variables that xonsh
   itself defines.
 

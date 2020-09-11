@@ -109,7 +109,6 @@ class DummyEnv(MutableMapping):
     DEFAULTS = {
         "XONSH_DEBUG": 1,
         "XONSH_COLOR_STYLE": "default",
-        # "VIRTUAL_ENV": "",
     }
 
     def __init__(self, *args, **kwargs):

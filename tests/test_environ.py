@@ -355,7 +355,7 @@ def test_register_custom_var_generic():
     assert env["MY_SPECIAL_VAR"] == 32
 
     env["MY_SPECIAL_VAR"] = True
-    assert env["MY_SPECIAL_VAR"] == True  # NOQA E712
+    assert env["MY_SPECIAL_VAR"] is True
 
 
 def test_register_custom_var_int():
