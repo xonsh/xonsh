@@ -3,11 +3,11 @@ Via AppImage
 
 `AppImage <https://appimage.org/>`_ is a format for distributing portable software on Linux without needing superuser permissions to install the application. It tries also to allow Linux distribution-agnostic binary software deployment for application developers, also called Upstream packaging. 
 
-In short the AppImage is the one executable file which contains the xonsh and Python. AppImage allows xonsh to be run on any AppImage supported Linux distributives without installation and root access.
+In short the AppImage is one executable file which contains both xonsh and Python. AppImage allows xonsh to be run on any AppImage supported Linux distribution without installation or root access.
 
 Get AppImage from Github
 ------------------------
-You can get xonsh AppImage from Github and run it on your Linux without install:
+You can get the xonsh AppImage from GitHub and run it on your Linux machine without installing it:
 
 .. code-block:: bash
 
@@ -15,7 +15,7 @@ You can get xonsh AppImage from Github and run it on your Linux without install:
     chmod +x xonsh
     ./xonsh
 
-If you haven't Python on your host you may want to get it from AppImage:
+If you don't have Python on your host, you may want to get it from AppImage:
 
 .. code-block:: xonsh
 
