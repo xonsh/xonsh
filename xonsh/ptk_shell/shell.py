@@ -21,6 +21,7 @@ from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.enums import EditingMode
+from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_shift_selection_bindings,
 )
@@ -94,9 +95,7 @@ class PromptToolkitShell(BaseShell):
         self.history = ThreadedHistory(PromptToolkitHistory())
         self.prompter = PromptSession(history=self.history)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-        self.key_bindings = merge_key_bindings(
-            [load_xonsh_bindings(), load_emacs_shift_selection_bindings()]
-        )
+        self.key_bindings = load_xonsh_bindings()
 
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
@@ -106,6 +105,11 @@ class PromptToolkitShell(BaseShell):
             history=self.history,
             completer=self.pt_completer,
             bindings=self.key_bindings,
+        )
+        # Goes at the end, since _MergedKeyBindings objects do not have
+        # an add() function, which is necessary for on_ptk_create events
+        self.key_bindings = merge_key_bindings(
+            [self.key_bindings, load_emacs_shift_selection_bindings()]
         )
 
     def singleline(
