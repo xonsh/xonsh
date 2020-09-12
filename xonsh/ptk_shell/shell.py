@@ -21,7 +21,6 @@ from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_shift_selection_bindings,
 )
