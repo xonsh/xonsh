@@ -212,7 +212,13 @@ def get_script_subproc_command(fname, args):
     """
     # make sure file is executable
     if not os.access(fname, os.X_OK):
-        raise PermissionError
+        if not ON_CYGWIN:
+            raise PermissionError
+        # explicitly look at all PATH entries for cmd
+        w_path = os.getenv("PATH").split(':')
+        w_fpath = list(map(lambda p: p + os.sep + fname,w_path))
+        if not any(list(map(lambda c: os.access(c,os.X_OK), w_fpath))):
+            raise PermissionError
     if ON_POSIX and not os.access(fname, os.R_OK):
         # on some systems, some important programs (e.g. sudo) will have
         # execute permissions but not read/write permissions. This enables

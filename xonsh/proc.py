@@ -2033,7 +2033,8 @@ class CommandPipeline:
         # read from process now that it is over
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))
-        proc.wait()
+        if not ON_CYGWIN:
+            proc.wait()
         self._endtime()
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))
