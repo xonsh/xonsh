@@ -17,7 +17,7 @@ You can get the xonsh AppImage from GitHub and run it on your Linux machine with
 
 If you don't have Python on your host, you may want to get it from AppImage:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     ./xonsh
     $PATH = [f'{$APPDIR}/usr/bin'] + $PATH

@@ -15,6 +15,8 @@ import itertools
 import contextlib
 import collections
 
+from tempfile import TemporaryDirectory
+
 from xonsh.ply import ply
 
 import xonsh.wizard as wiz
@@ -140,6 +142,8 @@ Thanks for using the xonsh configuration wizard!"""
 _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
     lambda: "source-foreign", bash="source-bash", cmd="source-cmd", zsh="source-zsh"
 )
+
+XONSH_JUPYTER_KERNEL = "xonsh"
 
 
 def _dump_xonfig_foreign_shell(path, value):
@@ -523,6 +527,21 @@ def _info(ns):
             ("encoding errors", env.get("XONSH_ENCODING_ERRORS")),
         ]
     )
+    jup_ksm = jup_kernel = None
+    try:
+        from jupyter_client.kernelspec import KernelSpecManager
+
+        jup_ksm = KernelSpecManager()
+        jup_kernel = jup_ksm.find_kernel_specs()[XONSH_JUPYTER_KERNEL]
+    except (ImportError, KeyError):
+        pass
+    data.extend(
+        [
+            ("on jupyter", jup_ksm is not None),
+            ("jupyter kernel", jup_kernel),
+        ]
+    )
+
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s
@@ -623,6 +642,53 @@ def _web(args):
     subprocess.run([sys.executable, "-m", "xonsh.webconfig"] + args.orig_args[1:])
 
 
+def _kernel(args):
+    """Make xonsh available as a Jupyter kernel."""
+    try:
+        from jupyter_client.kernelspec import KernelSpecManager
+    except ImportError:
+        raise ImportError("Jupyter not found in current Python environment")
+
+    root = args.root
+    prefix = args.prefix
+    user = args.user
+    spec = {
+        "argv": [
+            sys.executable,
+            "-m",
+            "xonsh.jupyter_kernel",
+            "-f",
+            "{connection_file}",
+        ],
+        "display_name": "Xonsh",
+        "language": "xonsh",
+        "codemirror_mode": "shell",
+    }
+    with TemporaryDirectory() as d:
+        os.chmod(d, 0o755)  # Starts off as 700, not user readable
+        if sys.platform == "win32":
+            # Ensure that conda-build detects the hard coded prefix
+            spec["argv"][0] = spec["argv"][0].replace(os.sep, os.altsep)
+        with open(os.path.join(d, "kernel.json"), "w") as f:
+            json.dump(spec, f, sort_keys=True)
+        if "CONDA_BUILD" in os.environ or "VIRTUAL_ENV" in os.environ:
+            prefix = sys.prefix
+            if sys.platform == "win32":
+                prefix = prefix.replace(os.sep, os.altsep)
+        print("Installing Jupyter kernel spec:")
+        print("  root: {0!r}".format(root))
+        print("  prefix: {0!r}".format(prefix))
+        print("  as user: {0}".format(user))
+        if root and prefix:
+            # os.path.join isn't used since prefix is probably absolute
+            prefix = root + prefix
+            print("  combined prefix {0!r}".format(prefix))
+        KernelSpecManager().install_kernel_spec(
+            d, XONSH_JUPYTER_KERNEL, user=user, prefix=prefix
+        )
+        return 0
+
+
 @functools.lru_cache(1)
 def _xonfig_create_parser():
     p = argparse.ArgumentParser(
@@ -662,6 +728,22 @@ def _xonfig_create_parser():
         "style", nargs="?", default=None, help="style to preview, default: <current>"
     )
     subp.add_parser("tutorial", help="Launch tutorial in browser.")
+    kern = subp.add_parser("kernel", help="Generate xonsh kernel for jupyter.")
+    kern.add_argument(
+        "--user",
+        action="store_true",
+        default=False,
+        help="Install kernel in user config.",
+    )
+    kern.add_argument(
+        "--root",
+        default=None,
+        help="Install relative to this alternate root directory.",
+    )
+    kern.add_argument(
+        "--prefix", default=None, help="Installation prefix for bin, lib, etc."
+    )
+
     return p
 
 
@@ -672,6 +754,7 @@ _XONFIG_MAIN_ACTIONS = {
     "styles": _styles,
     "colors": _colors,
     "tutorial": _tutorial,
+    "kernel": _kernel,
 }
 
 

@@ -21,6 +21,7 @@ Xonsh can be installed via package manager, via appimage or just run from a pre-
     appimage
     containers
     editors
+    jupyter
 
 Configuration and Customization
 ================================
