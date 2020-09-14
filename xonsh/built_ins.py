@@ -949,6 +949,10 @@ def run_subproc(cmds, captured=False, envs=None):
     if builtins.__xonsh__.env.get("XONSH_TRACE_SUBPROC"):
         print("TRACE SUBPROC: %s" % str(cmds), file=sys.stderr)
 
+    precmds = events.on_subproc_precommand.fire(cmds=cmds)
+    if precmds:
+        cmds = precmds[0]        
+        
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
     captured = specs[-1].captured
     if captured == "hiddenobject":
