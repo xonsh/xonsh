@@ -171,7 +171,3 @@ class History:
     def clear(self):
         """Wipes the current session from both the disk and memory."""
         pass
-
-    def remake_file(self):
-        """Makes new file if required, after old one gets deleted."""
-        pass

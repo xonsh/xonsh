@@ -269,6 +269,9 @@ class JsonHistoryFlusher(threading.Thread):
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
         if self.at_exit:
+            #print(hist["ts"])
+            print(hist.__class__)
+            print(hist)
             hist["ts"][1] = time.time()  # apply end time
             hist["locked"] = False
         if not builtins.__xonsh__.env.get("XONSH_STORE_STDOUT", False):
@@ -510,20 +513,15 @@ class JsonHistory(History):
 
     def clear(self):
         def wipe_disk(hist):
-            try:
-                os.remove(hist.filename)
-            except FileNotFoundError:
-                pass
+            with open(self.filename, "r") as f:
+                backup_metadata = json.load(f)
+            backup_metadata["data"]["cmds"] = []
+            print(backup_metadata)
+            with open(self.filename, "w") as f:
+                json.dump(backup_metadata, f)
 
         def wipe_memory(hist):  # todo is this enough?
             hist.buffer = []
 
         wipe_disk(self)
         wipe_memory(self)
-
-    def remake_file(self):
-        meta = dict()
-        meta["cmds"] = []
-        meta["sessionid"] = str(self.sessionid)
-        with open(self.filename, "w", newline="\n") as f:
-            xlj.ljdump(meta, f, sort_keys=True)

@@ -297,3 +297,6 @@ class SqliteHistory(History):  # todo work out how to block flush on sqlite.
         if blocking:
             while self.gc.is_alive():
                 continue
+
+    def clear(self):
+        pass  # todo implement
