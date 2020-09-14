@@ -327,9 +327,9 @@ class JsonCommandField(cabc.Sequence):
                     if isinstance(rtn, xlj.LJNode):
                         rtn = rtn.load()
                 queue.popleft()
+            return rtn
         else:
             return ""
-        return rtn
 
     def i_am_at_the_front(self):
         """Tests if the command field is at the front of the queue."""
@@ -508,14 +508,18 @@ class JsonHistory(History):
             while self.gc.is_alive():  # while waiting for gc.
                 time.sleep(0.1)  # don't monopolize the thread (or Python GIL?)
 
-    def wipe_disk(self):
-        try:
-            os.remove(self.filename)
-        except FileNotFoundError:
-            pass
+    def clear(self):
+        def wipe_disk(hist):
+            try:
+                os.remove(hist.filename)
+            except FileNotFoundError:
+                pass
 
-    def wipe_memory(self):  # todo is this enough?
-        self.buffer = []
+        def wipe_memory(hist):  # todo is this enough?
+            hist.buffer = []
+
+        wipe_disk(self)
+        wipe_memory(self)
 
     def remake_file(self):
         meta = dict()

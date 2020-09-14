@@ -170,15 +170,6 @@ class History:
 
     def clear(self):
         """Wipes the current session from both the disk and memory."""
-        self.wipe_disk()
-        self.wipe_memory()
-
-    def wipe_disk(self):
-        """Wipes the current session's history from the disk."""
-        pass
-
-    def wipe_memory(self):
-        """Reinitialises History object with blank commands."""
         pass
 
     def remake_file(self):
