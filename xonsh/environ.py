@@ -1615,6 +1615,15 @@ def DEFAULT_VARS():
             "xonsh process threads sleep for while running command pipelines. "
             "The value has units of seconds [s].",
         ),
+        "XONSH_REMEMBER_HISTORY": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            True,
+            "If False, Xonsh will not save history."
+            "History for the session will be deleted if it exists",
+            doc_configurable=True
+        ),
         "XONSH_SHOW_TRACEBACK": Var(
             is_bool,
             to_bool,
