@@ -2,7 +2,6 @@
 """Base class of Xonsh History backends."""
 import types
 import uuid
-import builtins
 
 
 class HistoryEntry(types.SimpleNamespace):
@@ -51,7 +50,7 @@ class History:
     is the newest.
     """
 
-    def __init__(self, sessionid=None, **kwargs):
+    def __init__(self, sessionid=None, remember_history=None, **kwargs):
         """Represents a xonsh session's history.
 
         Parameters
@@ -72,6 +71,7 @@ class History:
         self.last_cmd_out = None
         self.hist_size = None
         self.hist_units = None
+        self.remember_history = remember_history
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -158,7 +158,7 @@ class History:
     @staticmethod
     def remember_history_check(f):
         def new_f(self, at_exit=False):
-            if builtins.__xonsh__.env["XONSH_REMEMBER_HISTORY"]:
+            if self.remember_history:
                 return f(self, at_exit=at_exit)
             else:
                 return
