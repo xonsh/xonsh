@@ -2,6 +2,7 @@
 """Base class of Xonsh History backends."""
 import types
 import uuid
+import builtins
 
 
 class HistoryEntry(types.SimpleNamespace):
@@ -153,3 +154,13 @@ class History:
             If set blocking, then wait until gc action finished.
         """
         pass
+
+    @staticmethod
+    def remember_history_check(f):
+        def new_f(self, at_exit=False):
+            if builtins.__xonsh__.env["XONSH_REMEMBER_HISTORY"]:
+                return f(self, at_exit=at_exit)
+            else:
+                return
+
+        return new_f

@@ -415,6 +415,7 @@ class JsonHistory(History):
             hf = None
         return hf
 
+    @History.remember_history_check
     def flush(self, at_exit=False):
         """Flushes the current command buffer to disk.
 
