@@ -27,7 +27,7 @@ from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.jobs import add_job
-from xonsh.platform import ON_POSIX, ON_WINDOWS, ON_WSL
+from xonsh.platform import ON_POSIX, ON_WINDOWS, ON_WSL, ON_CYGWIN
 from xonsh.proc import (
     PopenThread,
     ProcProxyThread,
@@ -217,7 +217,7 @@ def get_script_subproc_command(fname, args):
         # explicitly look at all PATH entries for cmd
         w_path = os.getenv("PATH").split(':')
         w_fpath = list(map(lambda p: p + os.sep + fname,w_path))
-        if not any(list(map(lambda c: os.access(c,os.X_OK), w_fpath))):
+        if not any(list(map(lambda c: os.access(c, os.X_OK), w_fpath))):
             raise PermissionError
     if ON_POSIX and not os.access(fname, os.R_OK):
         # on some systems, some important programs (e.g. sudo) will have
