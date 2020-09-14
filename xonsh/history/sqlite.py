@@ -221,7 +221,7 @@ class SqliteHistoryGC(threading.Thread):
         xh_sqlite_delete_items(hsize, filename=self.filename)
 
 
-class SqliteHistory(History):
+class SqliteHistory(History):  # todo work out how to block flush on sqlite.
     """Xonsh history backend implemented with sqlite3."""
 
     def __init__(self, gc=True, filename=None, **kwargs):
@@ -239,6 +239,7 @@ class SqliteHistory(History):
         # during init rerun create command
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
 
+    @History.remember_history_check
     def append(self, cmd):
         envs = builtins.__xonsh__.env
         inp = cmd["inp"].rstrip()

@@ -354,6 +354,13 @@ def _xh_create_parser():
     # 'flush' subcommand
     subp.add_parser("flush", help="flush the current history to disk")
 
+    subp.add_parser("off", help="history will not be saved for this session")
+
+    subp.add_parser("on", help="history will be saved for the rest of this"
+                               " session (default)")
+
+    subp.add_parser("clear", help="one-time wipe of session history")
+
     return p
 
 
@@ -417,5 +424,12 @@ def history_main(
         hf = hist.flush()
         if isinstance(hf, threading.Thread):
             hf.join()
+    elif ns.action == "off":
+        hist.remember_history = False
+        hist.clear()
+    elif ns.action == "on":
+        hist.remember_history = True
+    elif ns.action == "clear":
+        hist.clear()
     else:
         print("Unknown history action {}".format(ns.action), file=sys.stderr)

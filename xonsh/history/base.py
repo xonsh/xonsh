@@ -50,7 +50,7 @@ class History:
     is the newest.
     """
 
-    def __init__(self, sessionid=None, remember_history=None, **kwargs):
+    def __init__(self, sessionid=None, **kwargs):
         """Represents a xonsh session's history.
 
         Parameters
@@ -71,7 +71,7 @@ class History:
         self.last_cmd_out = None
         self.hist_size = None
         self.hist_units = None
-        self.remember_history = remember_history
+        self.remember_history = True
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -164,3 +164,16 @@ class History:
                 return
 
         return new_f
+
+    def clear(self):
+        """Wipes the current session from both the disk and memory."""
+        self.wipe_disk()
+        self.wipe_memory()
+
+    def wipe_disk(self):
+        """Wipes the current session's history from the disk."""
+        pass
+
+    def wipe_memory(self):
+        """Reinitialises History object with blank commands."""
+        pass

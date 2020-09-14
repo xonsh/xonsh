@@ -391,6 +391,7 @@ class JsonHistory(History):
     def __len__(self):
         return self._len - self._skipped
 
+    @History.remember_history_check
     def append(self, cmd):
         """Appends command to history. Will periodically flush the history to file.
 
