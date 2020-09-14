@@ -157,9 +157,12 @@ class History:
 
     @staticmethod
     def remember_history_check(f):
-        def new_f(self, at_exit=False):
+        """Allows the decorated function to run only if
+           self.remember_history is True.
+        """
+        def new_f(self, *args, **kwargs):
             if self.remember_history:
-                return f(self, at_exit=at_exit)
+                return f(self, *args, **kwargs)
             else:
                 return
 
@@ -176,4 +179,8 @@ class History:
 
     def wipe_memory(self):
         """Reinitialises History object with blank commands."""
+        pass
+
+    def remake_file(self):
+        """Makes new file if required, after old one gets deleted."""
         pass

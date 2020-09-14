@@ -318,14 +318,17 @@ class JsonCommandField(cabc.Sequence):
         # now we know we have to go into the file
         queue = self.hist._queue
         queue.append(self)
-        with self.hist._cond:
-            self.hist._cond.wait_for(self.i_am_at_the_front)
-            with open(self.hist.filename, "r", newline="\n") as f:
-                lj = xlj.LazyJSON(f, reopen=False)
-                rtn = lj["cmds"][key].get(self.field, self.default)
-                if isinstance(rtn, xlj.LJNode):
-                    rtn = rtn.load()
-            queue.popleft()
+        if self.hist.remember_history:  # todo make sure this works after clear. Reinitialise file.
+            with self.hist._cond:
+                self.hist._cond.wait_for(self.i_am_at_the_front)
+                with open(self.hist.filename, "r", newline="\n") as f:
+                    lj = xlj.LazyJSON(f, reopen=False)
+                    rtn = lj["cmds"][key].get(self.field, self.default)
+                    if isinstance(rtn, xlj.LJNode):
+                        rtn = rtn.load()
+                queue.popleft()
+        else:
+            return ""
         return rtn
 
     def i_am_at_the_front(self):
@@ -504,3 +507,19 @@ class JsonHistory(History):
         if blocking:
             while self.gc.is_alive():  # while waiting for gc.
                 time.sleep(0.1)  # don't monopolize the thread (or Python GIL?)
+
+    def wipe_disk(self):
+        try:
+            os.remove(self.filename)
+        except FileNotFoundError:
+            pass
+
+    def wipe_memory(self):  # todo is this enough?
+        self.buffer = []
+
+    def remake_file(self):
+        meta = dict()
+        meta["cmds"] = []
+        meta["sessionid"] = str(self.sessionid)
+        with open(self.filename, "w", newline="\n") as f:
+            xlj.ljdump(meta, f, sort_keys=True)
