@@ -535,9 +535,7 @@ def _info(ns):
         jup_kernel = jup_ksm.find_kernel_specs()[XONSH_JUPYTER_KERNEL]
     except (ImportError, KeyError):
         pass
-    data.extend(
-        [("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel),]
-    )
+    data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
@@ -744,7 +742,7 @@ def _xonfig_create_parser():
     return p
 
 
-_XONFIG_MAIN_ACTIONS = {
+XONFIG_MAIN_ACTIONS = {
     "info": _info,
     "web": _web,
     "wizard": _wizard,
@@ -758,7 +756,7 @@ _XONFIG_MAIN_ACTIONS = {
 def xonfig_main(args=None):
     """Main xonfig entry point."""
     if not args or (
-        args[0] not in _XONFIG_MAIN_ACTIONS and args[0] not in {"-h", "--help"}
+        args[0] not in XONFIG_MAIN_ACTIONS and args[0] not in {"-h", "--help"}
     ):
         args.insert(0, "info")
     parser = _xonfig_create_parser()
@@ -766,7 +764,7 @@ def xonfig_main(args=None):
     ns.orig_args = args
     if ns.action is None:  # apply default action
         ns = parser.parse_args(["info"] + args)
-    return _XONFIG_MAIN_ACTIONS[ns.action](ns)
+    return XONFIG_MAIN_ACTIONS[ns.action](ns)
 
 
 @lazyobject
