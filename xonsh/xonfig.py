@@ -536,10 +536,7 @@ def _info(ns):
     except (ImportError, KeyError):
         pass
     data.extend(
-        [
-            ("on jupyter", jup_ksm is not None),
-            ("jupyter kernel", jup_kernel),
-        ]
+        [("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel),]
     )
 
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
@@ -728,12 +725,12 @@ def _xonfig_create_parser():
         "style", nargs="?", default=None, help="style to preview, default: <current>"
     )
     subp.add_parser("tutorial", help="Launch tutorial in browser.")
-    kern = subp.add_parser("kernel", help="Generate xonsh kernel for jupyter.")
+    kern = subp.add_parser("jupyter_kernel", help="Generate xonsh kernel for jupyter.")
     kern.add_argument(
         "--user",
         action="store_true",
         default=False,
-        help="Install kernel in user config.",
+        help="Install kernel spec in user config directory.",
     )
     kern.add_argument(
         "--root",
@@ -754,7 +751,7 @@ _XONFIG_MAIN_ACTIONS = {
     "styles": _styles,
     "colors": _colors,
     "tutorial": _tutorial,
-    "kernel": _kernel,
+    "jupyter_kernel": _kernel,
 }
 
 

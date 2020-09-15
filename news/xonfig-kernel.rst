@@ -1,6 +1,6 @@
 **Added:**
 
-* ``xonfig kernel`` new subcommand to generate xonsh kernel spec for jupyter.
+* ``xonfig jupyter_kernel`` new subcommand to generate xonsh kernel spec for jupyter.
 
 **Changed:**
 
@@ -14,7 +14,7 @@
 **Removed:**
 
 * setup no longer (tries to) install jupyter kernel automatically, 
-  user must run ``xonfig kernel`` manually.
+  user must run ``xonfig jupyter_kernel`` manually.
 
 **Fixed:**
 

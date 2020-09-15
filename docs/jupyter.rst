@@ -10,13 +10,13 @@ Install Jupyter and Xonsh in the same environment, then configure the Xonsh kern
 
 .. code-block:: xonshcon
 
-    $ xonfig kernel
+    $ xonfig jupyter_kernel
     Installing Jupyter kernel spec:
       root: None
       prefix: <env_prefix>
       as user: False
 
-_<Env_prefix>_ is the path prefix of the Jupyter and Xonsh environment.  ``xonfig kernel --help`` shows options 
+_<Env_prefix>_ is the path prefix of the Jupyter and Xonsh environment.  ``xonfig jupyter_kernel --help`` shows options 
 for installing the kernel spec in the user config folder or in a non-standard environment prefix.
 
 You can confirm the status of the installation:
