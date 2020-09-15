@@ -221,7 +221,7 @@ class SqliteHistoryGC(threading.Thread):
         xh_sqlite_delete_items(hsize, filename=self.filename)
 
 
-class SqliteHistory(History):  # todo work out how to block flush on sqlite.
+class SqliteHistory(History):
     """Xonsh history backend implemented with sqlite3."""
 
     def __init__(self, gc=True, filename=None, **kwargs):
@@ -299,4 +299,10 @@ class SqliteHistory(History):  # todo work out how to block flush on sqlite.
                 continue
 
     def clear(self):
-        pass  # todo implement
+        self.inps = []
+        self.rtns = []
+        self.outs = []
+        self.tss = []
+
+        # Wipe data from disk.
+        xh_sqlite_delete_items(size_to_keep=0, filename=self.filename)

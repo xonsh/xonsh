@@ -318,7 +318,7 @@ class JsonCommandField(cabc.Sequence):
         # now we know we have to go into the file
         queue = self.hist._queue
         queue.append(self)
-        if self.hist.remember_history:  # todo make sure this works after clear. Reinitialise file.
+        if self.hist.remember_history:  # todo is this necessary and elegant?
             with self.hist._cond:
                 self.hist._cond.wait_for(self.i_am_at_the_front)
                 with open(self.hist.filename, "r", newline="\n") as f:
