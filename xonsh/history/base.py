@@ -170,4 +170,9 @@ class History:
 
     def clear(self):
         """Wipes the current session from both the disk and memory."""
-        pass
+        self.buffer = None
+        self.inps = None
+        self.rtns = None
+        self.tss = None
+        self.outs = None
+

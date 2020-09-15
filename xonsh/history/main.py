@@ -430,14 +430,12 @@ def history_main(
             hf.join()
     elif ns.action == "off":
         if hist.remember_history:
-            hist.remember_history = False
             hist.clear()
+            hist.remember_history = False
     elif ns.action == "on":
         if not hist.remember_history:
             hist.remember_history = True
-            hist.remake_file()
     elif ns.action == "clear":
         hist.clear()
-        hist.remake_file()
     else:
         print("Unknown history action {}".format(ns.action), file=sys.stderr)

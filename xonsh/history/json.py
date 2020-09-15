@@ -269,9 +269,6 @@ class JsonHistoryFlusher(threading.Thread):
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
         if self.at_exit:
-            #print(hist["ts"])
-            print(hist.__class__)
-            print(hist)
             hist["ts"][1] = time.time()  # apply end time
             hist["locked"] = False
         if not builtins.__xonsh__.env.get("XONSH_STORE_STDOUT", False):
@@ -512,16 +509,15 @@ class JsonHistory(History):
                 time.sleep(0.1)  # don't monopolize the thread (or Python GIL?)
 
     def clear(self):
-        def wipe_disk(hist):
-            with open(self.filename, "r") as f:
-                backup_metadata = json.load(f)
-            backup_metadata["data"]["cmds"] = []
-            print(backup_metadata)
-            with open(self.filename, "w") as f:
-                json.dump(backup_metadata, f)
 
         def wipe_memory(hist):  # todo is this enough?
             hist.buffer = []
+            self.tss = JsonCommandField("ts", self)
+            self.inps = JsonCommandField("inp", self)
+            self.outs = JsonCommandField("out", self)
+            self.rtns = JsonCommandField("rtn", self)
 
-        wipe_disk(self)
         wipe_memory(self)
+
+        # Flush empty history object to disk. This overwrites the old commands.
+        self.flush()
