@@ -2,10 +2,9 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
-import itertools
 import re
 from tempfile import TemporaryDirectory
-from xonsh.tools import always_true
+from xonsh.tools import always_true, DefaultNotGiven
 
 import pytest
 
@@ -13,7 +12,6 @@ from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
     locate_binary,
-    DEFAULT_VARS,
     default_env,
     make_args_env,
     LsColors,
@@ -357,7 +355,7 @@ def test_register_custom_var_generic():
     assert env["MY_SPECIAL_VAR"] == 32
 
     env["MY_SPECIAL_VAR"] = True
-    assert env["MY_SPECIAL_VAR"] == True
+    assert env["MY_SPECIAL_VAR"] is True
 
 
 def test_register_custom_var_int():
@@ -480,3 +478,18 @@ def test_env_iterate_rawkeys():
         elif isinstance(key, type(r)) and key.pattern == "re":
             saw_regex = True
     assert saw_regex
+
+
+@pytest.mark.parametrize(
+    "do_register,doc_default",
+    [(True, "abc"), (True, DefaultNotGiven), (False, "abc"), (False, DefaultNotGiven)],
+)
+def test_env_get_docs(do_register, doc_default):
+    """Verify get_docs.doc_default handles both known and unknown environment variables."""
+    env = Env()
+    if do_register:
+        env.register("MY_SPECIAL_VAR", type="str", default="", doc_default=doc_default)
+
+    docs = env.get_docs("MY_SPECIAL_VAR")
+
+    assert isinstance(docs.doc_default, str)
