@@ -16,8 +16,7 @@
 
 **Fixed:**
 
-* cygwin needs full path to find exe
-* disable thread_subprocs for cygwin as default
+* cygwin needs full path to find exe; disable thread_subprocs as default for cygwin
 
 **Security:**
 
