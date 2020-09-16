@@ -723,7 +723,7 @@ def _xonfig_create_parser():
         "style", nargs="?", default=None, help="style to preview, default: <current>"
     )
     subp.add_parser("tutorial", help="Launch tutorial in browser.")
-    kern = subp.add_parser("jupyter_kernel", help="Generate xonsh kernel for jupyter.")
+    kern = subp.add_parser("jupyter-kernel", help="Generate xonsh kernel for jupyter.")
     kern.add_argument(
         "--user",
         action="store_true",
@@ -749,7 +749,7 @@ XONFIG_MAIN_ACTIONS = {
     "styles": _styles,
     "colors": _colors,
     "tutorial": _tutorial,
-    "jupyter_kernel": _kernel,
+    "jupyter-kernel": _kernel,
 }
 
 
