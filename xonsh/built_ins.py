@@ -215,7 +215,7 @@ def get_script_subproc_command(fname, args):
         if not ON_CYGWIN:
             raise PermissionError
         # explicitly look at all PATH entries for cmd
-        w_path = os.getenv("PATH").split(':')
+        w_path = os.getenv("PATH").split(":")
         w_fpath = list(map(lambda p: p + os.sep + fname, w_path))
         if not any(list(map(lambda c: os.access(c, os.X_OK), w_fpath))):
             raise PermissionError
@@ -1371,9 +1371,7 @@ def xonsh_builtins(execer=None):
 
 
 class XonshSession:
-    """All components defining a xonsh session.
-
-    """
+    """All components defining a xonsh session."""
 
     def __init__(self, execer=None, ctx=None):
         """

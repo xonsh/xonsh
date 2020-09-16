@@ -1305,7 +1305,7 @@ def DEFAULT_VARS():
             is_bool_or_none,
             to_bool_or_none,
             bool_or_none_to_str,
-            True,
+            True if not ON_CYGWIN else False,
             "Whether or not to try to run subrocess mode in a Python thread, "
             "when applicable. There are various trade-offs, which normally "
             "affects only interactive sessions.\n\nWhen True:\n\n"
