@@ -2502,7 +2502,7 @@ def test_ls_quotes_3_space():
 
 
 def test_leading_envvar_assignment():
-    check_xonsh_ast({}, "![$FOO= 'foo' $BAR =2 echo r'$BAR']", False)
+    check_xonsh_ast({}, "![$FOO='foo' $BAR=2 echo r'$BAR']", False)
 
 
 def test_echo_comma():
