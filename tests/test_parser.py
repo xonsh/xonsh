@@ -2240,6 +2240,10 @@ def test_bang_ls_envvar_listval():
     check_xonsh_ast({"WAKKA": [".", "."]}, "!(ls $WAKKA)", False)
 
 
+def test_bang_envvar_args():
+    check_xonsh_ast({"LS": "ls"}, "!($LS .)", False)
+
+
 def test_question():
     check_xonsh_ast({}, "range?")
 
