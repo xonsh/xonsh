@@ -510,14 +510,17 @@ class JsonHistory(History):
 
     def clear(self):
 
-        def wipe_memory(hist):  # todo is this enough?
+        def wipe_memory(hist):
             hist.buffer = []
             self.tss = JsonCommandField("ts", self)
             self.inps = JsonCommandField("inp", self)
             self.outs = JsonCommandField("out", self)
             self.rtns = JsonCommandField("rtn", self)
+            self._len = 0
+            self._skipped = 0
 
         wipe_memory(self)
 
-        # Flush empty history object to disk. This overwrites the old commands.
+        # Flush empty history object to disk. This overwrites the old commands,
+        # but keeps basic session metadata to prevent things from breaking.
         self.flush()

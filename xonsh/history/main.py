@@ -432,10 +432,13 @@ def history_main(
         if hist.remember_history:
             hist.clear()
             hist.remember_history = False
+            print("History off", file=sys.stderr)
     elif ns.action == "on":
         if not hist.remember_history:
             hist.remember_history = True
+            print("History on", file=sys.stderr)
     elif ns.action == "clear":
         hist.clear()
+        print("History cleared", file=sys.stderr)
     else:
         print("Unknown history action {}".format(ns.action), file=sys.stderr)
