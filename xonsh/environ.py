@@ -25,6 +25,7 @@ from xonsh.platform import (
     PATH_DEFAULT,
     ON_WINDOWS,
     ON_LINUX,
+    ON_CYGWIN,
     os_environ,
 )
 
