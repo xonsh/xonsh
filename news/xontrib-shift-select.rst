@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed issue where xontribs were failing from `AttributeError: '_MergedKeyBindings' object has no attribute 'add'`
+* Fixed issue where xontribs were failing from ``AttributeError: '_MergedKeyBindings' object has no attribute 'add'``
 
 **Security:**
 
