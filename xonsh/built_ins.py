@@ -950,7 +950,7 @@ def run_subproc(cmds, captured=False, envs=None):
         print("TRACE SUBPROC: %s" % str(cmds), file=sys.stderr)
 
     precmds = events.on_run_subproc.fire(cmds=cmds)
-    cmds = precmds[0] if precmds else cmds
+    cmds = precmds[0] if len(precmds) and precmds[0] else cmds
         
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
     captured = specs[-1].captured
