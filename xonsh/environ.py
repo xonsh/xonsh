@@ -25,6 +25,7 @@ from xonsh.platform import (
     PATH_DEFAULT,
     ON_WINDOWS,
     ON_LINUX,
+    ON_CYGWIN,
     os_environ,
 )
 
@@ -1304,7 +1305,7 @@ def DEFAULT_VARS():
             is_bool_or_none,
             to_bool_or_none,
             bool_or_none_to_str,
-            True,
+            True if not ON_CYGWIN else False,
             "Whether or not to try to run subrocess mode in a Python thread, "
             "when applicable. There are various trade-offs, which normally "
             "affects only interactive sessions.\n\nWhen True:\n\n"
@@ -1866,13 +1867,11 @@ class Env(cabc.MutableMapping):
 
     def get_docs(self, key, default=None):
         """Gets the documentation for the environment variable."""
-        vd = self._vars.get(key, None)
+        vd = self._vars.get(key, default)
         if vd is None:
-            if default is None:
-                default = Var()
-            return default
+            vd = Var(default="", doc_default="")
         if vd.doc_default is DefaultNotGiven:
-            dval = pprint.pformat(self._vars.get(key, "<default not set>").default)
+            dval = pprint.pformat(vd.default)
             vd = vd._replace(doc_default=dval)
         return vd
 

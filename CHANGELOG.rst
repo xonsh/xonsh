@@ -4,6 +4,48 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.22
+====================
+
+**Added:**
+
+* Added xontrib-argcomplete to support kislyuk/argcomplete - tab completion for argparse.
+* New ``tools.debian_command_not_found()`` function for finding commands in
+  debian/ubuntu packages.
+* New ``tools.conda_suggest_command_not_found()`` function for finding commands in
+  conda packages.
+* Borrow shift-selection from prompt-toolkit. Shift-arrow (selects a letter) and control-shift-arrow (selects a word) should now be supported.
+* Documentation for keyboard shortcuts
+* Xonsh now supports bash-style variable assignments preceding
+  subprocess commands (e.g. ``$FOO="bar" bash -c r"echo $FOO"``).
+
+**Changed:**
+
+* Added the fastest way to run xonsh AppImage to the docs.
+* ``command_not_found()`` is now a wrapper function that finds packages for missing
+  commands in a variety of locations. This function now also takes an ``env`` argument
+  for looking up values in the enviornment.
+* The variable cwd_dir, used for prompts,
+  now always has a slash at the end, so users can use the
+  construct "{cwd_dir}{cwd_base}" in their custom prompt definitions.
+
+**Fixed:**
+
+* crash when starting wizard by ``xonfig wizard``
+  xonsh.environ: ensure get_docs(name).doc_default is str when name is not registered.
+* Fixed issue where xontribs were failing from ``AttributeError: '_MergedKeyBindings' object has no attribute 'add'``
+
+**Authors:**
+
+* Anthony Scopatz
+* David Strobach
+* Bob Hyman
+* anki-code
+* Danny Sepler
+* Eadaen1
+
+
+
 v0.9.21
 ====================
 

@@ -19,3 +19,4 @@ Guides
     bash_to_xsh
     subproc_types
     python_virtual_environments
+    keyboard_shortcuts

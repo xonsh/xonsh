@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Added the fastest way to run xonsh AppImage to the docs.
+* <news item>
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* cygwin needs full path to find exe; disable thread_subprocs as default for cygwin
 
 **Security:**
 
