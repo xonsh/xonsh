@@ -184,10 +184,7 @@ def is_app_execution_alias(fname):
         Here try to detect if a file is an app execution alias
     """
     fname = pathlib.Path(fname)
-    return (
-        not os.path.exists(fname)
-        and fname.name in os.listdir(fname.parent)
-    )
+    return not os.path.exists(fname) and fname.name in os.listdir(fname.parent)
 
 
 def _is_binary(fname, limit=80):
