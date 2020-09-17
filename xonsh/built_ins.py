@@ -179,16 +179,33 @@ def pathsearch(func, s, pymode=False, pathobj=False):
 RE_SHEBANG = LazyObject(lambda: re.compile(r"#![ \t]*(.+?)$"), globals(), "RE_SHEBANG")
 
 
+def is_app_execution_alias(fname):
+    """ App execution aliases behave strangly on windows and python.
+        Here try to detect if a file is an app execution alias
+    """
+    fname = pathlib.Path(fname)
+    return (
+        not os.path.exists(fname)
+        and fname.name in os.listdir(fname.parent)
+    )
+
+
 def _is_binary(fname, limit=80):
-    with open(fname, "rb") as f:
-        for i in range(limit):
-            char = f.read(1)
-            if char == b"\0":
-                return True
-            if char == b"\n":
-                return False
-            if char == b"":
-                return False
+    try:
+        with open(fname, "rb") as f:
+            for i in range(limit):
+                char = f.read(1)
+                if char == b"\0":
+                    return True
+                if char == b"\n":
+                    return False
+                if char == b"":
+                    return
+    except OSError as e:
+        if ON_WINDOWS and is_app_execution_alias(fname):
+            return True
+        raise e
+
     return False
 
 
