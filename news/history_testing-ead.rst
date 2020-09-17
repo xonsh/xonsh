@@ -1,6 +1,6 @@
 **Added:**
 
-``history clear``, ``history off`` and ``history on`` actions, for managing whether history in the current session is saved.
+* history clear, history off and history on actions, for managing whether history in the current session is saved.
 
 **Changed:**
 

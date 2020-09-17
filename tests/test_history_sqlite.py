@@ -231,7 +231,7 @@ def test_hist_clear_cmd(hist, xonsh_builtins, capsys, tmpdir):
 
     out, err = capsys.readouterr()
     assert err.rstrip() == "History cleared"
-    assert len(xonsh_builtins.__xonsh__.history) == 1
+    assert len(xonsh_builtins.__xonsh__.history) == 0
 
 
 def test_hist_off_cmd(hist, xonsh_builtins, capsys, tmpdir):
@@ -248,12 +248,12 @@ def test_hist_off_cmd(hist, xonsh_builtins, capsys, tmpdir):
 
     out, err = capsys.readouterr()
     assert err.rstrip() == "History off"
-    assert len(xonsh_builtins.__xonsh__.history) == 1
+    assert len(xonsh_builtins.__xonsh__.history) == 0
 
     for ts, cmd in enumerate(CMDS):  # attempt to populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
-    assert len(xonsh_builtins.__xonsh__.history) == 1
+    assert len(xonsh_builtins.__xonsh__.history) == 0
 
 
 def test_hist_on_cmd(hist, xonsh_builtins, capsys, tmpdir):
@@ -271,9 +271,9 @@ def test_hist_on_cmd(hist, xonsh_builtins, capsys, tmpdir):
 
     out, err = capsys.readouterr()
     assert err.rstrip().endswith("History on")
-    assert len(xonsh_builtins.__xonsh__.history) == 1
+    assert len(xonsh_builtins.__xonsh__.history) == 0
 
     for ts, cmd in enumerate(CMDS):  # attempt to populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
-    assert len(xonsh_builtins.__xonsh__.history) == 7
+    assert len(xonsh_builtins.__xonsh__.history) == 6
