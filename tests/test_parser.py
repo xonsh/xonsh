@@ -2240,6 +2240,10 @@ def test_bang_ls_envvar_listval():
     check_xonsh_ast({"WAKKA": [".", "."]}, "!(ls $WAKKA)", False)
 
 
+def test_bang_envvar_args():
+    check_xonsh_ast({"LS": "ls"}, "!($LS .)", False)
+
+
 def test_question():
     check_xonsh_ast({}, "range?")
 
@@ -2502,7 +2506,7 @@ def test_ls_quotes_3_space():
 
 
 def test_leading_envvar_assignment():
-    check_xonsh_ast({}, "![$FOO= 'foo' $BAR =2 echo r'$BAR']", False)
+    check_xonsh_ast({}, "![$FOO='foo' $BAR=2 echo r'$BAR']", False)
 
 
 def test_echo_comma():

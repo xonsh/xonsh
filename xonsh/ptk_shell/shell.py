@@ -94,12 +94,7 @@ class PromptToolkitShell(BaseShell):
         self.history = ThreadedHistory(PromptToolkitHistory())
         self.prompter = PromptSession(history=self.history)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-        self.key_bindings = merge_key_bindings(
-            [
-                load_xonsh_bindings(),
-                load_emacs_shift_selection_bindings(),
-            ]
-        )
+        self.key_bindings = load_xonsh_bindings()
 
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
@@ -109,6 +104,11 @@ class PromptToolkitShell(BaseShell):
             history=self.history,
             completer=self.pt_completer,
             bindings=self.key_bindings,
+        )
+        # Goes at the end, since _MergedKeyBindings objects do not have
+        # an add() function, which is necessary for on_ptk_create events
+        self.key_bindings = merge_key_bindings(
+            [self.key_bindings, load_emacs_shift_selection_bindings()]
         )
 
     def singleline(

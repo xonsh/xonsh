@@ -15,12 +15,12 @@ Authors are sorted by number of commits.
 * christopher
 * Klaus Alexander Seistrup
 * Leonardo Santagada
+* anki-code
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
 * Rob Brewer
 * virus
-* anki-code
 * Sagar Tewari
 * Konstantin Molchanov
 * Guillaume Leclerc
@@ -49,12 +49,14 @@ Authors are sorted by number of commits.
 * Jason R. Coombs
 * Gyuri Horak
 * Stephan Fitzpatrick
+* Danny Sepler
 * Will S
 * K.-Michael Aye
 * halloleo
 * Will Wykeham
 * Oleh Prypin
 * Brian Skinn
+* Eadaen1
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -160,7 +162,6 @@ Authors are sorted by number of commits.
 * Edmund Miller
 * Gabriel Vogel
 * anki
-* Danny Sepler
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
