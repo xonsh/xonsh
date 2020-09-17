@@ -303,6 +303,9 @@ class JsonCommandField(cabc.Sequence):
         return len(self.hist)
 
     def __getitem__(self, key):
+        if not self.hist.remember_history:
+            return ""
+
         size = len(self)
         if isinstance(key, slice):
             return [self[i] for i in range(*key.indices(size))]
@@ -318,18 +321,15 @@ class JsonCommandField(cabc.Sequence):
         # now we know we have to go into the file
         queue = self.hist._queue
         queue.append(self)
-        if self.hist.remember_history:  # todo is this necessary and elegant?
-            with self.hist._cond:
-                self.hist._cond.wait_for(self.i_am_at_the_front)
-                with open(self.hist.filename, "r", newline="\n") as f:
-                    lj = xlj.LazyJSON(f, reopen=False)
-                    rtn = lj["cmds"][key].get(self.field, self.default)
-                    if isinstance(rtn, xlj.LJNode):
-                        rtn = rtn.load()
-                queue.popleft()
-            return rtn
-        else:
-            return ""
+        with self.hist._cond:
+            self.hist._cond.wait_for(self.i_am_at_the_front)
+            with open(self.hist.filename, "r", newline="\n") as f:
+                lj = xlj.LazyJSON(f, reopen=False)
+                rtn = lj["cmds"][key].get(self.field, self.default)
+                if isinstance(rtn, xlj.LJNode):
+                    rtn = rtn.load()
+            queue.popleft()
+        return rtn
 
     def i_am_at_the_front(self):
         """Tests if the command field is at the front of the queue."""

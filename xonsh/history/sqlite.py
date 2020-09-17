@@ -304,5 +304,8 @@ class SqliteHistory(History):
         self.outs = []
         self.tss = []
 
+        # Add in dummy command. Delete items has to leave one.
+        self.append({"inp": "", "rtn": 0, "ts": (0, 0.5)})
+
         # Wipe data from disk.
-        xh_sqlite_delete_items(size_to_keep=0, filename=self.filename)
+        xh_sqlite_delete_items(size_to_keep=1, filename=self.filename)
