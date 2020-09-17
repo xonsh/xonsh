@@ -308,4 +308,4 @@ class SqliteHistory(History):
         self.append({"inp": "", "rtn": 0, "ts": (0, 0.5)})
 
         # Wipe data from disk.
-        xh_sqlite_delete_items(size_to_keep=1, filename=self.filename)
+        xh_sqlite_delete_items(size_to_keep=1, filename=self.filename)  # todo this leads to data loss from other sessions. Need to fix.
