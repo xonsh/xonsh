@@ -12,6 +12,7 @@ import sys
 import json
 import pytest  # noqa F401
 
+from xonsh.tools import ON_WINDOWS
 from xonsh.xonfig import XONFIG_MAIN_ACTIONS, xonfig_main
 
 
@@ -43,7 +44,10 @@ def test_xonfig_info(args, xonsh_builtins):
 
 def strip_sep(path: str) -> str:
     """remove all path separators from argument"""
-    return path.replace(os.sep, "").replace(os.altsep, "")
+    retval = path.replace(os.sep, "")
+    if ON_WINDOWS:
+        retval = retval.replace(os.altsep, "")
+    return retval
 
 
 @pytest.fixture
