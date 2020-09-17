@@ -27,6 +27,8 @@ xonsh (pronounced *conch*) is meant for the daily use of experts and novices ali
 
 Please visit https://xon.sh for more information.
 
+If you like the idea of xonsh click ⭐ on the repo and stay tuned by watching releases.
+
 Projects that use xonsh
 ***********************
 
