@@ -802,6 +802,7 @@ def _executables_in_windows(path):
         return
 
 
+# @functools.lru_cache(128)
 def executables_in(path):
     """Returns a generator of files in path that the user could execute. """
     if ON_WINDOWS:
