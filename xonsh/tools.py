@@ -802,7 +802,6 @@ def _executables_in_windows(path):
         return
 
 
-@functools.lru_cache(128)
 def executables_in(path):
     """Returns a generator of files in path that the user could execute. """
     if ON_WINDOWS:
@@ -883,13 +882,10 @@ def suggest_commands(cmd, env, aliases):
             if levenshtein(alias.lower(), cmd, thresh) < thresh:
                 suggested[alias] = "Alias"
 
-    for path in filter(os.path.isdir, env.get("PATH")):
-        for _file in executables_in(path):
-            if (
-                _file not in suggested
-                and levenshtein(_file.lower(), cmd, thresh) < thresh
-            ):
-                suggested[_file] = "Command ({0})".format(os.path.join(path, _file))
+    for _cmd in builtins.__xonsh__.commands_cache.all_commands:
+        if _cmd not in suggested:
+            if levenshtein(_cmd.lower(), cmd, thresh) < thresh:
+                suggested[_cmd] = "Command ({0})".format(_cmd)
 
     suggested = collections.OrderedDict(
         sorted(

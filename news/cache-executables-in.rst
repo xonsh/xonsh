@@ -1,6 +1,6 @@
 **Added:**
 
-* Added cache on finding executable files, to speedup command-not-found suggestions
+* Use command_cache when finding available commands, to speedup command-not-found suggestions
 
 **Changed:**
 
