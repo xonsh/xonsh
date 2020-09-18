@@ -1462,6 +1462,7 @@ def test_executables_in(xonsh_builtins):
                 result = set(executables_in(test_path))
             else:
                 result = set(executables_in(test_path))
+            executables_in.cache_clear()
     assert expected == result
 
 
