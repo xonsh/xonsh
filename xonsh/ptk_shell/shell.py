@@ -76,9 +76,10 @@ def tokenize_ansi(tokens):
     return ansi_tokens
 
 
-def set_ansi_title(prompt):
-    """Sets $TITLE based on the ANSI terminal title setting escape sequence"""
+def check_ansi_title(prompt):
+    """Checks the prompt string for ANSI terminal title setting escape sequence"""
 
+    title = None
     title_idx = prompt.find("\x1b]0;")
     if title_idx > -1:
         title_end = prompt.find("\007", title_idx)
@@ -86,9 +87,7 @@ def set_ansi_title(prompt):
             title = prompt[title_idx + 4 : title_end]
             prompt = prompt[:title_idx] + prompt[title_end + 1 :]
 
-            builtins.__xonsh__.env["TITLE"] = title
-
-    return prompt
+    return prompt, title
 
 
 class PromptToolkitShell(BaseShell):
@@ -265,7 +264,11 @@ class PromptToolkitShell(BaseShell):
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
-        p = set_ansi_title(p)
+
+        p, title = check_ansi_title(p)
+        if title:
+            builtins.__xonsh__.env["TITLE"] = title
+
         toks = partial_color_tokenize(p)
         if self._first_prompt:
             carriage_return()

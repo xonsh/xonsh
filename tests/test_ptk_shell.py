@@ -8,7 +8,7 @@ from xonsh.platform import minimum_required_ptk_version
 
 # verify error if ptk not installed or below min
 
-from xonsh.ptk_shell.shell import tokenize_ansi
+from xonsh.ptk_shell.shell import tokenize_ansi, check_ansi_title
 from xonsh.shell import Shell
 
 
@@ -103,6 +103,25 @@ def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
     ansi_tokens = tokenize_ansi(prompt_tokens)
     for token, text in zip(ansi_tokens, ansi_string_parts):
         assert token[1] == text
+
+
+@pytest.mark.parametrize(
+    "raw_prompt, prompt, title",
+    [
+        # no title
+        ("test prompt", "test prompt", None),
+        # starts w/ title
+        ("\033]0;TITLE THIS\007test prompt", "test prompt", "TITLE THIS"),
+        # ends w/ title
+        ("test prompt\033]0;TITLE THIS\007", "test prompt", "TITLE THIS"),
+        # title in the middle
+        ("test \033]0;TITLE THIS\007prompt", "test prompt", "TITLE THIS"),
+    ],
+)
+def test_check_ansi_title(raw_prompt, prompt, title):
+    checked_prompt, ansi_title = check_ansi_title(raw_prompt)
+    assert prompt == checked_prompt
+    assert title == ansi_title
 
 
 # someday: initialize PromptToolkitShell and have it actually do something.
