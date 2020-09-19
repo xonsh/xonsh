@@ -5,6 +5,7 @@ import builtins
 
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.application.current import get_app
 
 from xonsh.completers.tools import RichCompletion
 
@@ -65,6 +66,11 @@ class PromptToolkitCompleter(Completer):
                 completions = set(completions)
                 completions.discard(sug_comp)
                 completions = (sug_comp,) + tuple(sorted(completions))
+        # reserve space, if needed.
+        if len(completions) <= 1:
+            pass
+        elif len(os.path.commonprefix(completions)) <= len(prefix):
+            self.reserve_space()
         # Find common prefix (strip quoting)
         c_prefix = os.path.commonprefix([a.strip("'\"") for a in completions])
         # Find last split symbol, do not trim the last part
@@ -99,3 +105,19 @@ class PromptToolkitCompleter(Completer):
         comp, _, _ = sug.text.partition(" ")
         _, _, prev = line.rpartition(" ")
         return prev + comp
+
+    def reserve_space(self):
+        """Adjust the height for showing autocompletion menu."""
+        app = get_app()
+        render = app.renderer
+        window = app.layout.container.children[0].content.children[1].content
+
+        if window and window.render_info and render._last_screen:
+            height_needed = window.render_info.content_height + builtins.__xonsh__.env.get("COMPLETIONS_MENU_ROWS")
+
+            last_h = max(render._last_screen.height, render._min_available_height)
+            if last_h < height_needed:
+                render._last_screen.height = height_needed + 2
+                # the 2 is emperical.
+                # Is this because last_h doesn't include next prompt
+                # and the 1st line of completions?
