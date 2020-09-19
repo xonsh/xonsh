@@ -112,12 +112,12 @@ class PromptToolkitCompleter(Completer):
         render = app.renderer
         window = app.layout.container.children[0].content.children[1].content
 
-        if window and window.render_info and render._last_screen:
-            height_needed = window.render_info.content_height + builtins.__xonsh__.env.get("COMPLETIONS_MENU_ROWS")
-
-            last_h = max(render._last_screen.height, render._min_available_height)
-            if last_h < height_needed:
-                render._last_screen.height = height_needed + 2
-                # the 2 is emperical.
-                # Is this because last_h doesn't include next prompt
-                # and the 1st line of completions?
+        # FIXME: this doesn't work when cursor is near but not at the bottom of the screen.
+        # it does work when cursor is at botoom, for a variety of prompt heights and COMPLETION_MENU_ROWS values.
+        # Here, we're relying on stale rendering data and effectively modifying the iterable
+        # as PTK is looping through it, with typically "unpredictable" results.
+        # What we need is direct access to ptk's completion menu and its container (DEFAULT_BUFFER?) to do better.
+        if window and window.render_info and render and render._last_screen:
+            height_needed = builtins.__xonsh__.env.get("COMPLETIONS_MENU_ROWS")
+            if window.render_info.window_height < height_needed:
+                render._last_screen.height += height_needed + 1
