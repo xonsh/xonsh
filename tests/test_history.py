@@ -541,7 +541,7 @@ def test_hist_on_cmd(hist, xonsh_builtins, capsys, tmpdir):
     assert err.rstrip().endswith("History on")
     assert len(xonsh_builtins.__xonsh__.history) == 0
 
-    for ts, cmd in enumerate(CMDS):  # attempt to populate the shell history
+    for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
     assert len(xonsh_builtins.__xonsh__.history) == 6
