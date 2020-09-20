@@ -24,26 +24,15 @@ RE_REMOVE_ANSI = LazyObject(
 def _get_git_branch(q):
     denv = builtins.__xonsh__.env.detype()
     try:
-        branches = xt.decode_bytes(
-            subprocess.check_output(
-                ["git", "branch"], env=denv, stderr=subprocess.DEVNULL
-            )
-        ).splitlines()
+        cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+        branch = xt.decode_bytes(
+            subprocess.check_output(cmd, env=denv, stderr=subprocess.DEVNULL)
+        )
+        branch = branch.splitlines()[0] or None
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     else:
-        for branch in branches:
-            if not branch.startswith("* "):
-                continue
-            elif branch.endswith(")"):
-                branch = branch.split()[-1][:-1]
-            else:
-                branch = branch.split()[-1]
-
-            q.put(branch)
-            break
-        else:
-            q.put(None)
+        q.put(branch)
 
 
 def get_git_branch():
@@ -59,7 +48,6 @@ def get_git_branch():
     t.join(timeout=timeout)
     try:
         branch = q.get_nowait()
-        # branch = RE_REMOVE_ANSI.sub("", branch or "")
         if branch:
             branch = RE_REMOVE_ANSI.sub("", branch)
     except queue.Empty:
@@ -157,16 +145,17 @@ def current_branch():
     """
     branch = None
     cmds = builtins.__xonsh__.commands_cache
-    # check for binary only once
-    if cmds.is_empty():
-        has_git = bool(cmds.locate_binary("git", ignore_alias=True))
-        has_hg = bool(cmds.locate_binary("hg", ignore_alias=True))
-    else:
-        has_git = bool(cmds.lazy_locate_binary("git", ignore_alias=True))
-        has_hg = bool(cmds.lazy_locate_binary("hg", ignore_alias=True))
-    if has_git:
+
+    # This allows us to locate binaries after git only if necessary
+    def has(vc):
+        if cmds.is_empty():
+            return bool(cmds.locate_binary(vc, ignore_alias=True))
+        else:
+            return bool(cmds.lazy_locate_binary(vc, ignore_alias=True))
+
+    if has("git"):
         branch = get_git_branch()
-    if not branch and has_hg:
+    if not branch and has("hg"):
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = "<branch-timeout>"
@@ -175,19 +164,27 @@ def current_branch():
 
 
 def _git_dirty_working_directory(q, include_untracked):
-    status = None
     denv = builtins.__xonsh__.env.detype()
     try:
-        cmd = ["git", "status", "--porcelain"]
+        # Borrowing this conversation
+        # https://github.com/sindresorhus/pure/issues/115
         if include_untracked:
-            cmd.append("--untracked-files=normal")
+            cmd = [
+                "git",
+                "status",
+                "--porcelain",
+                "--quiet",
+                "--untracked-files=normal",
+            ]
         else:
-            cmd.append("--untracked-files=no")
-        status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, env=denv)
+            cmd = ["git", "diff", "--no-ext-diff", "--quiet"]
+        child = subprocess.Popen(cmd, stderr=subprocess.DEVNULL, env=denv)
+        child.communicate()
+        dwd = bool(child.returncode)
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
-    if status is not None:
-        return q.put(bool(status))
+    else:
+        q.put(dwd)
 
 
 def git_dirty_working_directory(include_untracked=False):
@@ -244,7 +241,7 @@ def dirty_working_directory():
     cmds = builtins.__xonsh__.commands_cache
     if cmds.lazy_locate_binary("git", ignore_alias=True):
         dwd = git_dirty_working_directory()
-    if cmds.lazy_locate_binary("hg", ignore_alias=True) and dwd is None:
+    if dwd is None and cmds.lazy_locate_binary("hg", ignore_alias=True):
         dwd = hg_dirty_working_directory()
     return dwd
 
