@@ -7,6 +7,7 @@ import json
 import shutil
 import random
 import pprint
+import tempfile
 import textwrap
 import builtins
 import argparse
@@ -15,7 +16,6 @@ import itertools
 import contextlib
 import collections
 
-from tempfile import TemporaryDirectory
 
 from xonsh.ply import ply
 
@@ -515,6 +515,8 @@ def _info(ns):
     )
     if ON_LINUX:
         data.append(("distro", linux_distro()))
+    a = ON_MSYS  # noqa F841 force evaluation of these lazy bools (maybe only on Windows?)
+    a = ON_CYGWIN  # noqa F841
     data.extend(
         [
             ("on darwin", ON_DARWIN),
@@ -532,8 +534,8 @@ def _info(ns):
         from jupyter_client.kernelspec import KernelSpecManager
 
         jup_ksm = KernelSpecManager()
-        jup_kernel = jup_ksm.find_kernel_specs()[XONSH_JUPYTER_KERNEL]
-    except (ImportError, KeyError):
+        jup_kernel = jup_ksm.find_kernel_specs().get(XONSH_JUPYTER_KERNEL)
+    except Exception:
         pass
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
@@ -641,8 +643,8 @@ def _kernel(args):
     """Make xonsh available as a Jupyter kernel."""
     try:
         from jupyter_client.kernelspec import KernelSpecManager
-    except ImportError:
-        raise ImportError("Jupyter not found in current Python environment")
+    except ImportError as e:
+        raise ImportError("Jupyter not found in current Python environment") from e
 
     root = args.root
     prefix = args.prefix
@@ -659,7 +661,7 @@ def _kernel(args):
         "language": "xonsh",
         "codemirror_mode": "shell",
     }
-    with TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory() as d:
         os.chmod(d, 0o755)  # Starts off as 700, not user readable
         if sys.platform == "win32":
             # Ensure that conda-build detects the hard coded prefix

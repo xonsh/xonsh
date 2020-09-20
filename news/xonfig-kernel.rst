@@ -21,6 +21,8 @@
 * Setup wasn't consistently detecting jupyter in environment; ``python setup.py install`` worked, but
   ``pip install .`` wouldn't (because pip mucks with ``sys.path``), 
   nor would install from wheel (because it doesn't run ``setup.py``).
+* ``xonfig info`` now displays actual value of ON_MSYS and ON_CYGWIN instead of lazy bool type.
+  (maybe only on Windows?)
 
 **Security:**
 
