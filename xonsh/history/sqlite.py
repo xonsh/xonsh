@@ -299,21 +299,16 @@ class SqliteHistory(History):
                 continue
 
     def clear(self):
+        """Clears the current session's history from both memory and disk."""
+        # Wipe memory
         self.inps = []
         self.rtns = []
         self.outs = []
         self.tss = []
 
-        # Add in dummy command. Delete items has to leave one.
-        #self.append({"inp": "", "rtn": 0, "ts": (0, 0.5)})
-
-        # Wipe data from disk.
-
-        #xh_sqlite_delete_items(size_to_keep=1, filename=self.filename)  # todo this leads to data loss from other sessions. Need to fix.
+        # Wipe the current session's entries from the database.
         sql = "DELETE FROM xonsh_history WHERE sessionid = ?"
         with _xh_sqlite_get_conn(filename=self.filename) as conn:
             c = conn.cursor()
             _xh_sqlite_create_history_table(c)
             c.execute(sql, (str(self.sessionid),))
-
-        # "DELETE FROM xonsh_history WHERE sessionid == ?", self.sessionid # check
