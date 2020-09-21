@@ -39,4 +39,3 @@ def custom_keybindings(bindings, **kw):
         endpos = endpos + 1 if startpos == 0 else endpos
         buff.text = buff.text[:startpos] + buff.text[endpos:]
         buff.cursor_position = startpos
-            

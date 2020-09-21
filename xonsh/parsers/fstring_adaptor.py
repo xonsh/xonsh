@@ -181,7 +181,7 @@ class FStringAdaptor:
                         )
                     )
                 field_node = ast.Tuple(
-                    elts=elts, ctx=ast.Load(), lineno=lineno, col_offset=col_offset,
+                    elts=elts, ctx=ast.Load(), lineno=lineno, col_offset=col_offset
                 )
                 node.args[0] = field_node
 
