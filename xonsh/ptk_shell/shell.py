@@ -86,15 +86,13 @@ def remove_ansi_osc(prompt):
     """
 
     osc_tokens = ANSI_OSC_PATTERN.findall(prompt)
-    prompt = re.sub(ANSI_OSC_PATTERN, "", prompt)
+    prompt = ANSI_OSC_PATTERN.sub("", prompt)
 
     return prompt, osc_tokens
 
 
 def write_ansi_osc(ansi_osc_code):
-    with open(1, "wb", closefd=False) as output:
-        output.write(ansi_osc_code.encode())
-        output.flush()
+    print(ansi_osc_code, file=sys.__stdout__, flush=True)
 
 
 class PromptToolkitShell(BaseShell):
