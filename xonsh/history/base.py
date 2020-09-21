@@ -155,18 +155,6 @@ class History:
         """
         pass
 
-    @staticmethod
-    def remember_history_check(f):
-        """Jumps over the decorated function if self.remember_history is False.
-        """
-        def out_f(self, *args, **kwargs):
-            if self.remember_history:
-                return f(self, *args, **kwargs)
-            else:
-                return
-
-        return out_f
-
     def clear(self):
         """Clears the history of the current session from both the disk and
            memory.

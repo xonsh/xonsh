@@ -239,8 +239,9 @@ class SqliteHistory(History):
         # during init rerun create command
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
 
-    @History.remember_history_check
     def append(self, cmd):
+        if not self.remember_history:
+            return
         envs = builtins.__xonsh__.env
         inp = cmd["inp"].rstrip()
         self.inps.append(inp)

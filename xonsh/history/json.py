@@ -394,7 +394,6 @@ class JsonHistory(History):
     def __len__(self):
         return self._len - self._skipped
 
-    @History.remember_history_check
     def append(self, cmd):
         """Appends command to history. Will periodically flush the history to file.
 
@@ -411,6 +410,8 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
+        if not self.remember_history:
+            return
         self.buffer.append(cmd)
         self._len += 1  # must come before flushing
         if len(self.buffer) >= self.buffersize:
@@ -419,7 +420,6 @@ class JsonHistory(History):
             hf = None
         return hf
 
-    @History.remember_history_check
     def flush(self, at_exit=False):
         """Flushes the current command buffer to disk.
 
@@ -434,6 +434,7 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
+        # Implicitly covers case of self.remember_history being False.
         if len(self.buffer) == 0:
             return
 
