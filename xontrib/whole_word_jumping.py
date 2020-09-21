@@ -28,3 +28,14 @@ def custom_keybindings(bindings, **kw):
         pos = buff.document.find_next_word_ending(count=event.arg, WORD=True)
         if pos:
             buff.cursor_position += pos
+
+    @bindings.add(Keys.ShiftDelete)
+    def shift_delete(event):
+        buff = event.current_buffer
+        startpos, endpos = buff.document.find_boundaries_of_current_word(WORD=True)
+        startpos = buff.cursor_position + startpos - 1
+        startpos = 0 if startpos < 0 else startpos
+        endpos = buff.cursor_position + endpos
+        endpos = endpos + 1 if startpos == 0 else endpos
+        buff.text = buff.text[:startpos] + buff.text[endpos:]
+        buff.cursor_position = startpos
