@@ -137,6 +137,15 @@ def _first_branch_timeout_message():
     )
 
 
+def _has(binary):
+    """ This allows us to locate binaries after git only if necessary """
+    cmds = builtins.__xonsh__.commands_cache
+    if cmds.is_empty():
+        return bool(cmds.locate_binary(binary, ignore_alias=True))
+    else:
+        return bool(cmds.lazy_locate_binary(binary, ignore_alias=True))
+
+
 def current_branch():
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
@@ -144,18 +153,9 @@ def current_branch():
     '<branch-timeout>' is returned.
     """
     branch = None
-    cmds = builtins.__xonsh__.commands_cache
-
-    # This allows us to locate binaries after git only if necessary
-    def has(vc):
-        if cmds.is_empty():
-            return bool(cmds.locate_binary(vc, ignore_alias=True))
-        else:
-            return bool(cmds.lazy_locate_binary(vc, ignore_alias=True))
-
-    if has("git"):
+    if _has("git"):
         branch = get_git_branch()
-    if not branch and has("hg"):
+    if not branch and _has("hg"):
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = "<branch-timeout>"
@@ -178,8 +178,7 @@ def _git_dirty_working_directory(q, include_untracked):
             ]
         else:
             cmd = ["git", "diff", "--no-ext-diff", "--quiet"]
-        child = subprocess.Popen(cmd, stderr=subprocess.DEVNULL, env=denv)
-        child.communicate()
+        child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
         dwd = bool(child.returncode)
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
@@ -238,10 +237,9 @@ def dirty_working_directory():
     None. Currently supports git and hg.
     """
     dwd = None
-    cmds = builtins.__xonsh__.commands_cache
-    if cmds.lazy_locate_binary("git", ignore_alias=True):
+    if _has("git"):
         dwd = git_dirty_working_directory()
-    if dwd is None and cmds.lazy_locate_binary("hg", ignore_alias=True):
+    if dwd is None and _has("hg"):
         dwd = hg_dirty_working_directory()
     return dwd
 
