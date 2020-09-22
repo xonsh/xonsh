@@ -91,10 +91,6 @@ def remove_ansi_osc(prompt):
     return prompt, osc_tokens
 
 
-def write_ansi_osc(ansi_osc_code):
-    print(ansi_osc_code, file=sys.__stdout__, flush=True)
-
-
 class PromptToolkitShell(BaseShell):
     """The xonsh shell for prompt_toolkit v2 and later."""
 
@@ -280,10 +276,9 @@ class PromptToolkitShell(BaseShell):
         # handle OSC tokens
         for osc in osc_tokens:
             if osc[2:4] == "0;":
-                # set $TITLE
                 builtins.__xonsh__.env["TITLE"] = osc[4:-1]
             else:
-                write_ansi_osc(osc)
+                print(osc, file=sys.__stdout__, flush=True)
 
         self.settitle()
         return tokenize_ansi(PygmentsTokens(toks))
