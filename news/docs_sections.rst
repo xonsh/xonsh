@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Updated sections order in the docs
+* Updated sections order in the docs.
 
 **Deprecated:**
 
