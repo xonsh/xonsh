@@ -179,7 +179,7 @@ def _git_dirty_working_directory(q, include_untracked):
         else:
             unindexed = ["git", "diff", "--no-ext-diff", "--quiet"]
             indexed = unindexed + ["--cached", "HEAD"]
-            cmd = indexed + ["||"] + unindexed
+            cmd = unindexed + ["||"] + indexed
         child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
         # "--quiet" git commands imply "--exit-code", which returns:
         # 1 if there are differences
