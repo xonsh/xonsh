@@ -137,7 +137,7 @@ def _first_branch_timeout_message():
     )
 
 
-def _has(binary):
+def _vc_has(binary):
     """ This allows us to locate binaries after git only if necessary """
     cmds = builtins.__xonsh__.commands_cache
     if cmds.is_empty():
@@ -153,9 +153,9 @@ def current_branch():
     '<branch-timeout>' is returned.
     """
     branch = None
-    if _has("git"):
+    if _vc_has("git"):
         branch = get_git_branch()
-    if not branch and _has("hg"):
+    if not branch and _vc_has("hg"):
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = "<branch-timeout>"
@@ -237,9 +237,9 @@ def dirty_working_directory():
     None. Currently supports git and hg.
     """
     dwd = None
-    if _has("git"):
+    if _vc_has("git"):
         dwd = git_dirty_working_directory()
-    if dwd is None and _has("hg"):
+    if dwd is None and _vc_has("hg"):
         dwd = hg_dirty_working_directory()
     return dwd
 
