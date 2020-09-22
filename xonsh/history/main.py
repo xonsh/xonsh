@@ -224,8 +224,18 @@ def _XH_HISTORY_SESSIONS():
     }
 
 
-_XH_MAIN_ACTIONS = {"show", "id", "file", "info", "diff", "gc", "flush",
-                    "off", "on", "clear"}
+_XH_MAIN_ACTIONS = {
+    "show",
+    "id",
+    "file",
+    "info",
+    "diff",
+    "gc",
+    "flush",
+    "off",
+    "on",
+    "clear",
+}
 
 
 @functools.lru_cache()
@@ -359,8 +369,9 @@ def _xh_create_parser():
     subp.add_parser("off", help="history will not be saved for this session")
 
     # 'on' subcommand
-    subp.add_parser("on", help="history will be saved for the rest of this"
-                               " session (default)")
+    subp.add_parser(
+        "on", help="history will be saved for the rest of the session (default)"
+    )
 
     # 'clear' subcommand
     subp.add_parser("clear", help="one-time wipe of session history")

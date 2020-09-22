@@ -157,6 +157,6 @@ class History:
 
     def clear(self):
         """Clears the history of the current session from both the disk and
-           memory.
+        memory.
         """
         pass
