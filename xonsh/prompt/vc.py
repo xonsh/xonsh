@@ -166,7 +166,7 @@ def current_branch():
 def _git_dirty_working_directory(q, include_untracked):
     denv = builtins.__xonsh__.env.detype()
     try:
-        # Borrowing this conversation
+        # Borrowed from this conversation
         # https://github.com/sindresorhus/pure/issues/115
         if include_untracked:
             cmd = [
@@ -179,6 +179,9 @@ def _git_dirty_working_directory(q, include_untracked):
         else:
             cmd = ["git", "diff", "--no-ext-diff", "--quiet"]
         child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
+        # "--quiet" git commands imply "--exit-code", which returns:
+        # 1 if there are differences
+        # 0 if there are no differences
         dwd = bool(child.returncode)
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
