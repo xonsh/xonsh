@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
 import os
+import re
 import sys
 import builtins
 from types import MethodType
@@ -37,6 +38,7 @@ from prompt_toolkit.styles.pygments import (
 )
 
 
+ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
 Token = _TokenType()
 
 events.transmogrify("on_ptk_create", "LoadEvent")
@@ -74,6 +76,19 @@ def tokenize_ansi(tokens):
         else:
             ansi_tokens.append((style, text))
     return ansi_tokens
+
+
+def remove_ansi_osc(prompt):
+    """Removes the ANSI OSC escape codes - ``prompt_toolkit`` does not support them.
+    Some terminal emulators - like iTerm2 - uses them for various things.
+
+    See: https://www.iterm2.com/documentation-escape-codes.html
+    """
+
+    osc_tokens = ANSI_OSC_PATTERN.findall(prompt)
+    prompt = ANSI_OSC_PATTERN.sub("", prompt)
+
+    return prompt, osc_tokens
 
 
 class PromptToolkitShell(BaseShell):
@@ -250,10 +265,21 @@ class PromptToolkitShell(BaseShell):
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
+
+        p, osc_tokens = remove_ansi_osc(p)
+
         toks = partial_color_tokenize(p)
         if self._first_prompt:
             carriage_return()
             self._first_prompt = False
+
+        # handle OSC tokens
+        for osc in osc_tokens:
+            if osc[2:4] == "0;":
+                builtins.__xonsh__.env["TITLE"] = osc[4:-1]
+            else:
+                print(osc, file=sys.__stdout__, flush=True)
+
         self.settitle()
         return tokenize_ansi(PygmentsTokens(toks))
 
