@@ -20,7 +20,7 @@
  {"name": "argcomplete",
   "package": "xontrib-argcomplete",
   "url": "https://github.com/anki-code/xontrib-argcomplete",
-  "description": ["Adding support of kislyuk/argcomplete to xonsh."]
+  "description": ["Argcomplete support to tab completion of python and xonsh scripts in xonsh."]
  },
  {"name": "autojump",
   "package": "xontrib-autojump",
@@ -222,7 +222,7 @@
  {"name": "pipeliner",
   "package": "xontrib-pipeliner",
   "url": "https://github.com/anki-code/xontrib-pipeliner",
-  "description": ["Easily process the lines using pipes."]
+  "description": ["Let your pipe lines flow thru the Python code in xonsh."]
  },
  {"name": "vox",
   "package": "xonsh",
