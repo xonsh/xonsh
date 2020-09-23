@@ -79,6 +79,8 @@ def test_xonfig_kernel_with_jupyter(monkeypatch, capsys, fake_lib, xonsh_builtin
     cap_args = None
     cap_spec = None
 
+    import jupyter_client.kernelspec  # from fake_lib, hopefully.
+
     def mock_install_kernel_spec(*args, **kwargs):  # arg[0] is self
         nonlocal cap_args
         nonlocal cap_spec
@@ -86,12 +88,19 @@ def test_xonfig_kernel_with_jupyter(monkeypatch, capsys, fake_lib, xonsh_builtin
         spec_file = os.path.join(args[1], "kernel.json")
         cap_spec = json.load(open(spec_file, "r"))
 
-    import jupyter_client.kernelspec  # from fake_lib, hopefully.
+    def mock_get_kernel_spec(*args, **kwargs):
+        raise jupyter_client.kernelspec.NoSuchKernel
 
     monkeypatch.setattr(
         jupyter_client.kernelspec.KernelSpecManager,
         "install_kernel_spec",
         value=mock_install_kernel_spec,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        jupyter_client.kernelspec.KernelSpecManager,
+        "get_kernel_spec",
+        value=mock_get_kernel_spec,
         raising=False,
     )
 
