@@ -1,6 +1,8 @@
 **Added:**
 
-* ``xonfig jupyter-kernel`` new subcommand to generate xonsh kernel spec for jupyter.
+* ``xonfig jupyter-kernel`` new subcommand to generate xonsh kernel spec for jupyter.  
+  Installing a new xonsh kernel for jupyter automatically removes any other one registered with jupyter, 
+  otherwise the new one might not be used.
 
 **Changed:**
 

@@ -640,9 +640,11 @@ def _web(args):
 def _jupyter_kernel(args):
     """Make xonsh available as a Jupyter kernel."""
     try:
-        from jupyter_client.kernelspec import KernelSpecManager
+        from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
     except ImportError as e:
         raise ImportError("Jupyter not found in current Python environment") from e
+
+    ksm = KernelSpecManager()
 
     root = args.root
     prefix = args.prefix
@@ -659,28 +661,44 @@ def _jupyter_kernel(args):
         "language": "xonsh",
         "codemirror_mode": "shell",
     }
+
+    if not prefix and ("CONDA_BUILD" in os.environ or "VIRTUAL_ENV" in os.environ):
+        prefix = sys.prefix
+    if root and prefix:
+        # os.path.join isn't used since prefix is probably absolute
+        prefix = root + prefix
+
+    try:
+        old_jup_kernel = ksm.get_kernel_spec(XONSH_JUPYTER_KERNEL)
+        if not old_jup_kernel.resource_dir.startswith(prefix):
+            print(
+                "Removing existing Jupyter kernel found at {0}".format(
+                    old_jup_kernel.resource_dir
+                )
+            )
+        ksm.remove_kernel_spec(XONSH_JUPYTER_KERNEL)
+    except NoSuchKernel:
+        pass
+
+    if sys.platform == "win32":
+        # Ensure that conda-build detects the hard coded prefix
+        spec["argv"][0] = spec["argv"][0].replace(os.sep, os.altsep)
+        prefix = prefix.replace(os.sep, os.altsep)
+
     with tempfile.TemporaryDirectory() as d:
         os.chmod(d, 0o755)  # Starts off as 700, not user readable
-        if sys.platform == "win32":
-            # Ensure that conda-build detects the hard coded prefix
-            spec["argv"][0] = spec["argv"][0].replace(os.sep, os.altsep)
         with open(os.path.join(d, "kernel.json"), "w") as f:
             json.dump(spec, f, sort_keys=True)
-        if "CONDA_BUILD" in os.environ or "VIRTUAL_ENV" in os.environ:
-            prefix = sys.prefix
-            if sys.platform == "win32":
-                prefix = prefix.replace(os.sep, os.altsep)
+
         print("Installing Jupyter kernel spec:")
         print("  root: {0!r}".format(root))
         if user:
             print("  as user: {0}".format(user))
         elif root and prefix:
-            # os.path.join isn't used since prefix is probably absolute
-            prefix = root + prefix
             print("  combined prefix {0!r}".format(prefix))
         else:
             print("  prefix: {0!r}".format(prefix))
-        KernelSpecManager().install_kernel_spec(
+        ksm.install_kernel_spec(
             d, XONSH_JUPYTER_KERNEL, user=user, prefix=(None if user else prefix)
         )
         return 0
