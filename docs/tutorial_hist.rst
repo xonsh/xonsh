@@ -255,6 +255,21 @@ may be useful to share entries between shell sessions. In such a case, one can u
 the ``flush`` action to immediately save the session history to disk and make it
 accessible from other shell sessions.
 
+``clear`` action
+================
+Deletes the history from the current session up until this point. Later commands
+will still be saved.
+
+``off`` action
+================
+Deletes the history from the current session and turns off history saving for the
+rest of the session. Only session metadata will be saved, not commands or output.
+
+``on`` action
+================
+Turns history saving back on. Previous commands won't be saved, but future
+commands will be.
+
 ``gc`` action
 ===============
 Last, but certainly not least, the ``gc`` action is a manual hook into executing

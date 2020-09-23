@@ -61,10 +61,7 @@ class RichCompletion(str):
 
     def __repr__(self):
         return "RichCompletion({}, prefix_len={}, display={}, description={})".format(
-            repr(str(self)),
-            self.prefix_len,
-            repr(self.display),
-            repr(self.description),
+            repr(str(self)), self.prefix_len, repr(self.display), repr(self.description)
         )
 
 

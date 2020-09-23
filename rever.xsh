@@ -4,8 +4,12 @@ from rever.activities.ghrelease import git_archive_asset
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
 $ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
-               'tag', 'push_tag', 'ghrelease', 'sphinx',
-               'ghpages', 'pypi', 'conda_forge',
+               'tag', 'push_tag',
+               'ghrelease',
+               'sphinx',
+               'ghpages',
+               'pypi',
+               'conda_forge',
                ]
 $PYPI_SIGN = False
 

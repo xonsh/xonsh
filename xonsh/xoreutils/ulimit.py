@@ -159,13 +159,7 @@ def _ul_add_action(actions, opt, res_type, stderr):
     actions.append(
         [
             _ul_show,
-            {
-                "res": r[0],
-                "res_type": res_type,
-                "desc": r[3],
-                "unit": r[4],
-                "opt": opt,
-            },
+            {"res": r[0], "res_type": res_type, "desc": r[3], "unit": r[4], "opt": opt},
         ]
     )
     return True

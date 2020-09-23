@@ -2099,7 +2099,7 @@ class Env(cabc.MutableMapping):
                 pass
             else:
                 raise ValueError(
-                    "Default value does not match type specified by validate"
+                    f"Default value for {name} does not match type specified by validate"
                 )
 
         self._vars[name] = Var(
