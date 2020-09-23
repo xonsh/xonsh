@@ -25,7 +25,7 @@ xonsh is a Python-powered, cross-platform, Unix-gazing shell language and comman
 The language is a superset of Python 3.5+ with additional shell primitives.
 xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
 
-If you like the idea of xonsh click ⭐ on the repo and stay tuned by watching releases.
+If you like the idea of xonsh click star on the repo and stay tuned by watching releases.
 
 Visit https://xon.sh for more information:
 
