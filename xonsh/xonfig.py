@@ -672,14 +672,16 @@ def _jupyter_kernel(args):
                 prefix = prefix.replace(os.sep, os.altsep)
         print("Installing Jupyter kernel spec:")
         print("  root: {0!r}".format(root))
-        print("  prefix: {0!r}".format(prefix))
-        print("  as user: {0}".format(user))
-        if root and prefix:
+        if user:
+            print("  as user: {0}".format(user))
+        elif root and prefix:
             # os.path.join isn't used since prefix is probably absolute
             prefix = root + prefix
             print("  combined prefix {0!r}".format(prefix))
+        else:
+            print("  prefix: {0!r}".format(prefix))
         KernelSpecManager().install_kernel_spec(
-            d, XONSH_JUPYTER_KERNEL, user=user, prefix=prefix
+            d, XONSH_JUPYTER_KERNEL, user=user, prefix=(None if user else prefix)
         )
         return 0
 
