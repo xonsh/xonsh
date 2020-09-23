@@ -649,7 +649,9 @@ convert : func
 detype : func
     Function to convert variable from its type to a string representation.
 default
-    Default value for variable.
+    Default value for variable. If set to DefaultNotGiven, raise KeyError
+    instead of returning this default value.  Used for env vars defined
+    outside of Xonsh.
 doc : str
    The environment variable docstring.
 doc_configurable : bool, optional
@@ -686,7 +688,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "This is used on Windows to set the title, if available.",
             doc_configurable=False,
         ),
@@ -1285,9 +1287,10 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "TERM is sometimes set by the terminal emulator. This is used (when "
-            "valid) to determine whether or not to set the title. Users shouldn't "
+            "valid) to determine whether the terminal emulator can support "
+            "the selected shell, or whether or not to set the title. Users shouldn't "
             "need to set this themselves. Note that this variable should be set as "
             "early as possible in order to ensure it is effective. Here are a few "
             "options:\n\n"
@@ -1394,7 +1397,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "Path to the currently active Python environment.",
             doc_configurable=False,
         ),
@@ -1860,7 +1863,7 @@ class Env(cabc.MutableMapping):
 
     def get_default(self, key, default=None):
         """Gets default for the given key."""
-        if key in self._vars:
+        if key in self._vars and self._vars[key].default is not DefaultNotGiven:
             return self._vars[key].default
         else:
             return default
@@ -1871,7 +1874,12 @@ class Env(cabc.MutableMapping):
         if vd is None:
             vd = Var(default="", doc_default="")
         if vd.doc_default is DefaultNotGiven:
-            dval = pprint.pformat(vd.default)
+            var_default = self._vars.get(key, "<default not set>").default
+            dval = (
+                "not defined"
+                if var_default is DefaultNotGiven
+                else pprint.pformat(var_default)
+            )
             vd = vd._replace(doc_default=dval)
         return vd
 
@@ -1936,7 +1944,7 @@ class Env(cabc.MutableMapping):
             return self
         elif key in self._d:
             val = self._d[key]
-        elif key in self._vars:
+        elif key in self._vars and self._vars[key].default is not DefaultNotGiven:
             val = self.get_default(key)
             if is_callable_default(val):
                 val = val(self)
@@ -1987,16 +1995,25 @@ class Env(cabc.MutableMapping):
         """The environment will look up default values from its own defaults if a
         default is not given here.
         """
-        try:
+        if key in self._d or (
+            key in self._vars and self._vars[key].default is not DefaultNotGiven
+        ):
             return self[key]
-        except KeyError:
+        else:
             return default
 
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.
         This include string & compiled regular expression keys.
         """
-        yield from (set(self._d) | set(self._vars))
+        yield from (
+            set(self._d)
+            | set(
+                k
+                for k in self._vars.keys()
+                if self._vars[k].default is not DefaultNotGiven
+            )
+        )
 
     def __iter__(self):
         for key in self.rawkeys():
@@ -2004,7 +2021,9 @@ class Env(cabc.MutableMapping):
                 yield key
 
     def __contains__(self, item):
-        return item in self._d or item in self._vars
+        return item in self._d or (
+            item in self._vars and self._vars[item].default is not DefaultNotGiven
+        )
 
     def __len__(self):
         return len(self._d)

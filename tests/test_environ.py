@@ -480,16 +480,22 @@ def test_env_iterate_rawkeys():
     assert saw_regex
 
 
-@pytest.mark.parametrize(
-    "do_register,doc_default",
-    [(True, "abc"), (True, DefaultNotGiven), (False, "abc"), (False, DefaultNotGiven)],
-)
-def test_env_get_docs(do_register, doc_default):
-    """Verify get_docs.doc_default handles both known and unknown environment variables."""
-    env = Env()
-    if do_register:
-        env.register("MY_SPECIAL_VAR", type="str", default="", doc_default=doc_default)
+def test_env_get_defaults():
+    """Verify the rather complex rules for env.get("<envvar>",default) value when envvar is not defined.
+    """
 
-    docs = env.get_docs("MY_SPECIAL_VAR")
+    env = Env(TEST1=0)
+    env.register("TEST_REG", default="abc")
+    env.register("TEST_REG_DNG", default=DefaultNotGiven)
 
-    assert isinstance(docs.doc_default, str)
+    # var is defined, registered is don't-care => value is defined value
+    assert env.get("TEST1", 22) == 0
+    # var not defined, not registered => value is immediate default
+    assert env.get("TEST2", 22) == 22
+    assert "TEST2" not in env
+    # var not defined, is registered, reg default is not sentinel => value is *registered* default
+    assert env.get("TEST_REG", 22) == "abc"
+    assert "TEST_REG" in env
+    # var not defined, is registered, reg default is sentinel => value is *immediate* default
+    assert env.get("TEST_REG_DNG", 22) == 22
+    assert "TEST_REG_DNG" not in env
