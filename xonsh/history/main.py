@@ -224,7 +224,18 @@ def _XH_HISTORY_SESSIONS():
     }
 
 
-_XH_MAIN_ACTIONS = {"show", "id", "file", "info", "diff", "gc", "flush"}
+_XH_MAIN_ACTIONS = {
+    "show",
+    "id",
+    "file",
+    "info",
+    "diff",
+    "gc",
+    "flush",
+    "off",
+    "on",
+    "clear",
+}
 
 
 @functools.lru_cache()
@@ -354,6 +365,17 @@ def _xh_create_parser():
     # 'flush' subcommand
     subp.add_parser("flush", help="flush the current history to disk")
 
+    # 'off' subcommand
+    subp.add_parser("off", help="history will not be saved for this session")
+
+    # 'on' subcommand
+    subp.add_parser(
+        "on", help="history will be saved for the rest of the session (default)"
+    )
+
+    # 'clear' subcommand
+    subp.add_parser("clear", help="one-time wipe of session history")
+
     return p
 
 
@@ -417,5 +439,17 @@ def history_main(
         hf = hist.flush()
         if isinstance(hf, threading.Thread):
             hf.join()
+    elif ns.action == "off":
+        if hist.remember_history:
+            hist.clear()
+            hist.remember_history = False
+            print("History off", file=sys.stderr)
+    elif ns.action == "on":
+        if not hist.remember_history:
+            hist.remember_history = True
+            print("History on", file=sys.stderr)
+    elif ns.action == "clear":
+        hist.clear()
+        print("History cleared", file=sys.stderr)
     else:
         print("Unknown history action {}".format(ns.action), file=sys.stderr)
