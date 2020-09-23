@@ -481,11 +481,15 @@ def make_palette(strings):
             palette[t] = rgb_to_ints(t)
     return palette
 
+
 def warn_deprecated_no_color():
     """Show a warning once if NO_COLOR was used instead of RESET."""
     global _NO_COLOR_WARNING_SHOWN
     if not _NO_COLOR_WARNING_SHOWN:
         import warnings
-        warnings.warn("NO_COLOR is deprecated and should be replaced with RESET.",
-                      DeprecationWarning)
+
+        warnings.warn(
+            "NO_COLOR is deprecated and should be replaced with RESET.",
+            DeprecationWarning,
+        )
         _NO_COLOR_WARNING_SHOWN = True

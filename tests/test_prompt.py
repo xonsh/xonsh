@@ -94,7 +94,7 @@ def test_format_prompt_with_invalid_func(formatter, xonsh_builtins):
 def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
     xonsh_builtins.__xonsh__.env = Env()
     template = "tt {zerodiv} tt"
-    exp = "tt {BACKGROUND_RED}{ERROR:zerodiv}{NO_COLOR} tt"
+    exp = "tt {BACKGROUND_RED}{ERROR:zerodiv}{RESET} tt"
     fields = {"zerodiv": lambda: 1 / 0}
     obs = formatter(template, fields)
     assert exp == obs

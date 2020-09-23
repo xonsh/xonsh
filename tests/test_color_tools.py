@@ -7,7 +7,7 @@ from xonsh.color_tools import iscolor
 @pytest.mark.parametrize(
     "inp, exp",
     [
-        ("NO_COLOR", True),
+        ("RESET", True),
         ("CYAN", True),
         ("PURPLE", True),
         ("INTENSE_YELLOW", True),
