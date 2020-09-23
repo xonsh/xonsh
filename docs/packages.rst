@@ -86,7 +86,7 @@ use the Python ``readline`` module (which reads configuration  file ``.inputrc``
 To ensure xonsh uses ``readline`` even if ``prompt-toolkit`` is installed, configure this in your
 ``.xonshrc`` file:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     $SHELL_TYPE = 'readline'
 

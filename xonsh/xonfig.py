@@ -7,6 +7,7 @@ import json
 import shutil
 import random
 import pprint
+import tempfile
 import textwrap
 import builtins
 import argparse
@@ -14,6 +15,7 @@ import functools
 import itertools
 import contextlib
 import collections
+
 
 from xonsh.ply import ply
 
@@ -140,6 +142,8 @@ Thanks for using the xonsh configuration wizard!"""
 _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
     lambda: "source-foreign", bash="source-bash", cmd="source-cmd", zsh="source-zsh"
 )
+
+XONSH_JUPYTER_KERNEL = "xonsh"
 
 
 def _dump_xonfig_foreign_shell(path, value):
@@ -513,16 +517,26 @@ def _info(ns):
         data.append(("distro", linux_distro()))
     data.extend(
         [
-            ("on darwin", ON_DARWIN),
-            ("on windows", ON_WINDOWS),
-            ("on cygwin", ON_CYGWIN),
-            ("on msys2", ON_MSYS),
+            ("on darwin", bool(ON_DARWIN)),
+            ("on windows", bool(ON_WINDOWS)),
+            ("on cygwin", bool(ON_CYGWIN)),
+            ("on msys2", bool(ON_MSYS)),
             ("is superuser", is_superuser()),
             ("default encoding", DEFAULT_ENCODING),
             ("xonsh encoding", env.get("XONSH_ENCODING")),
             ("encoding errors", env.get("XONSH_ENCODING_ERRORS")),
         ]
     )
+    jup_ksm = jup_kernel = None
+    try:
+        from jupyter_client.kernelspec import KernelSpecManager
+
+        jup_ksm = KernelSpecManager()
+        jup_kernel = jup_ksm.find_kernel_specs().get(XONSH_JUPYTER_KERNEL)
+    except Exception:
+        pass
+    data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
+
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s
@@ -623,6 +637,71 @@ def _web(args):
     subprocess.run([sys.executable, "-m", "xonsh.webconfig"] + args.orig_args[1:])
 
 
+def _jupyter_kernel(args):
+    """Make xonsh available as a Jupyter kernel."""
+    try:
+        from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
+    except ImportError as e:
+        raise ImportError("Jupyter not found in current Python environment") from e
+
+    ksm = KernelSpecManager()
+
+    root = args.root
+    prefix = args.prefix if args.prefix else sys.prefix
+    user = args.user
+    spec = {
+        "argv": [
+            sys.executable,
+            "-m",
+            "xonsh.jupyter_kernel",
+            "-f",
+            "{connection_file}",
+        ],
+        "display_name": "Xonsh",
+        "language": "xonsh",
+        "codemirror_mode": "shell",
+    }
+
+    if root and prefix:
+        # os.path.join isn't used since prefix is probably absolute
+        prefix = root + prefix
+
+    try:
+        old_jup_kernel = ksm.get_kernel_spec(XONSH_JUPYTER_KERNEL)
+        if not old_jup_kernel.resource_dir.startswith(prefix):
+            print(
+                "Removing existing Jupyter kernel found at {0}".format(
+                    old_jup_kernel.resource_dir
+                )
+            )
+        ksm.remove_kernel_spec(XONSH_JUPYTER_KERNEL)
+    except NoSuchKernel:
+        pass
+
+    if sys.platform == "win32":
+        # Ensure that conda-build detects the hard coded prefix
+        spec["argv"][0] = spec["argv"][0].replace(os.sep, os.altsep)
+        prefix = prefix.replace(os.sep, os.altsep)
+
+    with tempfile.TemporaryDirectory() as d:
+        os.chmod(d, 0o755)  # Starts off as 700, not user readable
+        with open(os.path.join(d, "kernel.json"), "w") as f:
+            json.dump(spec, f, sort_keys=True)
+
+        print("Installing Jupyter kernel spec:")
+        print("  root: {0!r}".format(root))
+        if user:
+            print("  as user: {0}".format(user))
+        elif root and prefix:
+            print("  combined prefix {0!r}".format(prefix))
+        else:
+            print("  prefix: {0!r}".format(prefix))
+        ksm.install_kernel_spec(
+            d, XONSH_JUPYTER_KERNEL, user=user, prefix=(None if user else prefix)
+        )
+        return 0
+
+
 @functools.lru_cache(1)
 def _xonfig_create_parser():
     p = argparse.ArgumentParser(
@@ -662,23 +741,40 @@ def _xonfig_create_parser():
         "style", nargs="?", default=None, help="style to preview, default: <current>"
     )
     subp.add_parser("tutorial", help="Launch tutorial in browser.")
+    kern = subp.add_parser("jupyter-kernel", help="Generate xonsh kernel for jupyter.")
+    kern.add_argument(
+        "--user",
+        action="store_true",
+        default=False,
+        help="Install kernel spec in user config directory.",
+    )
+    kern.add_argument(
+        "--root",
+        default=None,
+        help="Install relative to this alternate root directory.",
+    )
+    kern.add_argument(
+        "--prefix", default=None, help="Installation prefix for bin, lib, etc."
+    )
+
     return p
 
 
-_XONFIG_MAIN_ACTIONS = {
+XONFIG_MAIN_ACTIONS = {
     "info": _info,
     "web": _web,
     "wizard": _wizard,
     "styles": _styles,
     "colors": _colors,
     "tutorial": _tutorial,
+    "jupyter-kernel": _jupyter_kernel,
 }
 
 
 def xonfig_main(args=None):
     """Main xonfig entry point."""
     if not args or (
-        args[0] not in _XONFIG_MAIN_ACTIONS and args[0] not in {"-h", "--help"}
+        args[0] not in XONFIG_MAIN_ACTIONS and args[0] not in {"-h", "--help"}
     ):
         args.insert(0, "info")
     parser = _xonfig_create_parser()
@@ -686,7 +782,7 @@ def xonfig_main(args=None):
     ns.orig_args = args
     if ns.action is None:  # apply default action
         ns = parser.parse_args(["info"] + args)
-    return _XONFIG_MAIN_ACTIONS[ns.action](ns)
+    return XONFIG_MAIN_ACTIONS[ns.action](ns)
 
 
 @lazyobject
