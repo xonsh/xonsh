@@ -94,7 +94,7 @@ def color_by_name(name, fg=None, bg=None):
     """
     name = name.upper()
     if name == "RESET":
-        return Color.NO_COLOR, None, None
+        return Color.DEFAULT, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color
         fg = norm_name(name)
@@ -241,11 +241,11 @@ def partial_color_tokenize(template):
         styles = __xonsh__.shell.shell.styler.styles
     else:
         styles = None
-    color = Color.NO_COLOR
+    color = Color.DEFAULT
     try:
         toks, color = _partial_color_tokenize_main(template, styles)
     except Exception:
-        toks = [(Color.NO_COLOR, template)]
+        toks = [(Color.DEFAULT, template)]
     if styles is not None:
         styles[color]  # ensure color is available
     return toks
@@ -256,7 +256,7 @@ def _partial_color_tokenize_main(template, styles):
     bclose = "}"
     colon = ":"
     expl = "!"
-    color = Color.NO_COLOR
+    color = Color.DEFAULT
     fg = bg = None
     value = ""
     toks = []
@@ -507,7 +507,7 @@ def _bw_style():
         Color.INTENSE_RED: "noinherit",
         Color.INTENSE_WHITE: "noinherit",
         Color.INTENSE_YELLOW: "noinherit",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "noinherit",
         Color.RED: "noinherit",
         Color.WHITE: "noinherit",
@@ -530,7 +530,7 @@ def _default_style():
         Color.INTENSE_RED: "ansibrightred",
         Color.INTENSE_WHITE: "ansiwhite",
         Color.INTENSE_YELLOW: "ansibrightyellow",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "ansimagenta",
         Color.RED: "ansired",
         Color.WHITE: "ansigray",
@@ -553,7 +553,7 @@ def _monokai_style():
         Color.INTENSE_RED: "#f92672",
         Color.INTENSE_WHITE: "#f8f8f2",
         Color.INTENSE_YELLOW: "#e6db74",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#960050",
         Color.RED: "#AF0000",
         Color.WHITE: "#d7d7d7",
@@ -579,7 +579,7 @@ def _algol_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#888",
         Color.INTENSE_YELLOW: "#888",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#666",
         Color.RED: "#FF0000",
         Color.WHITE: "#888",
@@ -602,7 +602,7 @@ def _algol_nu_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#888",
         Color.INTENSE_YELLOW: "#888",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#666",
         Color.RED: "#FF0000",
         Color.WHITE: "#888",
@@ -625,7 +625,7 @@ def _autumn_style():
         Color.INTENSE_RED: "#aa5500",
         Color.INTENSE_WHITE: "#bbbbbb",
         Color.INTENSE_YELLOW: "#FAA",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#aa0000",
         Color.WHITE: "#aaaaaa",
@@ -648,7 +648,7 @@ def _borland_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#ffdddd",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#aa0000",
         Color.WHITE: "#aaaaaa",
@@ -671,7 +671,7 @@ def _colorful_style():
         Color.INTENSE_RED: "#D42",
         Color.INTENSE_WHITE: "#fff0ff",
         Color.INTENSE_YELLOW: "#FAA",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -694,7 +694,7 @@ def _emacs_style():
         Color.INTENSE_RED: "#D2413A",
         Color.INTENSE_WHITE: "#bbbbbb",
         Color.INTENSE_YELLOW: "#bbbbbb",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -717,7 +717,7 @@ def _friendly_style():
         Color.INTENSE_RED: "#d55537",
         Color.INTENSE_WHITE: "#fff0f0",
         Color.INTENSE_YELLOW: "#bbbbbb",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -740,7 +740,7 @@ def _fruity_style():
         Color.INTENSE_RED: "#fb660a",
         Color.INTENSE_WHITE: "#ffffff",
         Color.INTENSE_YELLOW: "#cdcaa9",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#ff0086",
         Color.RED: "#ff0007",
         Color.WHITE: "#cdcaa9",
@@ -763,7 +763,7 @@ def _igor_style():
         Color.INTENSE_RED: "#C34E00",
         Color.INTENSE_WHITE: "#CC00A3",
         Color.INTENSE_YELLOW: "#C34E00",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#CC00A3",
         Color.RED: "#C34E00",
         Color.WHITE: "#CC00A3",
@@ -786,7 +786,7 @@ def _lovelace_style():
         Color.INTENSE_RED: "#b83838",
         Color.INTENSE_WHITE: "#888888",
         Color.INTENSE_YELLOW: "#a89028",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#a848a8",
         Color.RED: "#c02828",
         Color.WHITE: "#888888",
@@ -809,7 +809,7 @@ def _manni_style():
         Color.INTENSE_RED: "#FF6600",
         Color.INTENSE_WHITE: "#FFCCCC",
         Color.INTENSE_YELLOW: "#FFCC33",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#CC00FF",
         Color.RED: "#AA0000",
         Color.WHITE: "#AAAAAA",
@@ -832,7 +832,7 @@ def _murphy_style():
         Color.INTENSE_RED: "#f84",
         Color.INTENSE_WHITE: "#eee",
         Color.INTENSE_YELLOW: "#fc8",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -855,7 +855,7 @@ def _native_style():
         Color.INTENSE_RED: "#cd2828",
         Color.INTENSE_WHITE: "#ffffff",
         Color.INTENSE_YELLOW: "#ed9d13",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#666666",
         Color.RED: "#a61717",
         Color.WHITE: "#aaaaaa",
@@ -878,7 +878,7 @@ def _paraiso_dark_style():
         Color.INTENSE_RED: "#ef6155",
         Color.INTENSE_WHITE: "#e7e9db",
         Color.INTENSE_YELLOW: "#fec418",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#815ba4",
         Color.RED: "#ef6155",
         Color.WHITE: "#5bc4bf",
@@ -901,7 +901,7 @@ def _paraiso_light_style():
         Color.INTENSE_RED: "#ef6155",
         Color.INTENSE_WHITE: "#5bc4bf",
         Color.INTENSE_YELLOW: "#fec418",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#815ba4",
         Color.RED: "#2f1e2e",
         Color.WHITE: "#8d8687",
@@ -924,7 +924,7 @@ def _pastie_style():
         Color.INTENSE_RED: "#dd7700",
         Color.INTENSE_WHITE: "#fff0ff",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#bb0066",
         Color.RED: "#aa0000",
         Color.WHITE: "#bbbbbb",
@@ -947,7 +947,7 @@ def _perldoc_style():
         Color.INTENSE_RED: "#CD5555",
         Color.INTENSE_WHITE: "#e3d2d2",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#8B008B",
         Color.RED: "#aa0000",
         Color.WHITE: "#a7a7a7",
@@ -970,7 +970,7 @@ def _rrt_style():
         Color.INTENSE_RED: "#ff0000",
         Color.INTENSE_WHITE: "#e5e5e5",
         Color.INTENSE_YELLOW: "#eedd82",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#ee82ee",
         Color.RED: "#ff0000",
         Color.WHITE: "#87ceeb",
@@ -993,7 +993,7 @@ def _tango_style():
         Color.INTENSE_RED: "#ef2929",
         Color.INTENSE_WHITE: "#f8f8f8",
         Color.INTENSE_YELLOW: "#c4a000",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#a40000",
         Color.WHITE: "#f8f8f8",
@@ -1016,7 +1016,7 @@ def _trac_style():
         Color.INTENSE_RED: "#bb8844",
         Color.INTENSE_WHITE: "#ffdddd",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#aa0000",
         Color.WHITE: "#aaaaaa",
@@ -1039,7 +1039,7 @@ def _vim_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#cccccc",
         Color.INTENSE_YELLOW: "#cdcd00",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#cd00cd",
         Color.RED: "#cd0000",
         Color.WHITE: "#cccccc",
@@ -1062,7 +1062,7 @@ def _vs_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#2b91af",
         Color.INTENSE_YELLOW: "#2b91af",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#a31515",
         Color.RED: "#a31515",
         Color.WHITE: "#2b91af",
@@ -1085,7 +1085,7 @@ def _xcode_style():
         Color.INTENSE_RED: "#C41A16",
         Color.INTENSE_WHITE: "#3F6E75",
         Color.INTENSE_YELLOW: "#836C28",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#A90D91",
         Color.RED: "#C41A16",
         Color.WHITE: "#3F6E75",
@@ -1161,7 +1161,7 @@ del (
 def make_pygments_style(palette):
     """Makes a pygments style based on a color palette."""
     global Color
-    style = {getattr(Color, "NO_COLOR"): "noinherit"}
+    style = {getattr(Color, "DEFAULT"): "noinherit"}
     for name, t in BASE_XONSH_COLORS.items():
         color = find_closest_color(t, palette)
         style[getattr(Color, name)] = "#" + color
@@ -1233,8 +1233,8 @@ def XonshTerminal256Formatter():
             for name, (opener, closer) in self.style_string.items():
                 if name in color_names:
                     self.style_string[name] = (opener, "")
-            # special case NO_COLOR, because it is special.
-            self.style_string["Token.Color.NO_COLOR"] = ("\x1b[39m", "")
+            # special case DEFAULT, because it is special.
+            self.style_string["Token.Color.DEFAULT"] = ("\x1b[39m", "")
 
     return XonshTerminal256FormatterProxy
 

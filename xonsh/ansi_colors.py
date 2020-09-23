@@ -82,7 +82,7 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
                 res = str(int(fgcolor) + 10)
             elif fgcolor.startswith("38;"):
                 res = "4" + fgcolor[1:]
-            elif fgcolor == "NO_COLOR":
+            elif fgcolor == "DEFAULT":
                 res = "39"
             else:
                 msg = (
@@ -101,7 +101,7 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         color = parts["color"]
         if "#" in color:
             mods.append("38;5;" + rgb_to_256(color[1:])[0])
-        elif color == "NO_COLOR":
+        elif color == "DEFAULT":
             res = "39"
         else:
             mods.append(cmap[color])
