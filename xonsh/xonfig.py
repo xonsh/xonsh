@@ -647,7 +647,7 @@ def _jupyter_kernel(args):
     ksm = KernelSpecManager()
 
     root = args.root
-    prefix = args.prefix
+    prefix = args.prefix if args.prefix else sys.prefix
     user = args.user
     spec = {
         "argv": [
@@ -662,8 +662,6 @@ def _jupyter_kernel(args):
         "codemirror_mode": "shell",
     }
 
-    if not prefix and ("CONDA_BUILD" in os.environ or "VIRTUAL_ENV" in os.environ):
-        prefix = sys.prefix
     if root and prefix:
         # os.path.join isn't used since prefix is probably absolute
         prefix = root + prefix
