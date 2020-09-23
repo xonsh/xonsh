@@ -515,14 +515,12 @@ def _info(ns):
     )
     if ON_LINUX:
         data.append(("distro", linux_distro()))
-    a = ON_MSYS  # noqa F841 force evaluation of these lazy bools (maybe only on Windows?)
-    a = ON_CYGWIN  # noqa F841
     data.extend(
         [
-            ("on darwin", ON_DARWIN),
-            ("on windows", ON_WINDOWS),
-            ("on cygwin", ON_CYGWIN),
-            ("on msys2", ON_MSYS),
+            ("on darwin", bool(ON_DARWIN)),
+            ("on windows", bool(ON_WINDOWS)),
+            ("on cygwin", bool(ON_CYGWIN)),
+            ("on msys2", bool(ON_MSYS)),
             ("is superuser", is_superuser()),
             ("default encoding", DEFAULT_ENCODING),
             ("xonsh encoding", env.get("XONSH_ENCODING")),
@@ -639,7 +637,7 @@ def _web(args):
     subprocess.run([sys.executable, "-m", "xonsh.webconfig"] + args.orig_args[1:])
 
 
-def _kernel(args):
+def _jupyter_kernel(args):
     """Make xonsh available as a Jupyter kernel."""
     try:
         from jupyter_client.kernelspec import KernelSpecManager
@@ -751,7 +749,7 @@ XONFIG_MAIN_ACTIONS = {
     "styles": _styles,
     "colors": _colors,
     "tutorial": _tutorial,
-    "jupyter-kernel": _kernel,
+    "jupyter-kernel": _jupyter_kernel,
 }
 
 
