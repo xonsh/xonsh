@@ -10,6 +10,7 @@ import math
 
 from xonsh.lazyasd import lazyobject, LazyObject
 
+_NO_COLOR_WARNING_SHOWN = False
 
 RE_BACKGROUND = LazyObject(
     lambda: re.compile("(BG#|BGHEX|BACKGROUND)"), globals(), "RE_BACKGROUND"
@@ -479,3 +480,12 @@ def make_palette(strings):
             t, _, s = t.partition(" ")
             palette[t] = rgb_to_ints(t)
     return palette
+
+def warn_deprecated_no_color():
+    """Show a warning once if NO_COLOR was used instead of RESET."""
+    global _NO_COLOR_WARNING_SHOWN
+    if not _NO_COLOR_WARNING_SHOWN:
+        import warnings
+        warnings.warn("NO_COLOR is deprecated and should be replaced with RESET.",
+                      DeprecationWarning)
+        _NO_COLOR_WARNING_SHOWN = True

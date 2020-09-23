@@ -15,6 +15,7 @@ from xonsh.color_tools import (
     rgb_to_256,
     short_to_ints,
     iscolor,
+    warn_deprecated_no_color,
 )
 from xonsh.tools import FORMATTER
 
@@ -69,6 +70,8 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
     parts = m.groupdict()
     # convert regex match into actual ANSI colors
     if parts["reset"] is not None:
+        if parts["reset"] == "NO_COLOR":
+            warn_deprecated_no_color()
         res = "0"
     elif parts["bghex"] is not None:
         res = "48;5;" + rgb_to_256(parts["bghex"][3:])[0]

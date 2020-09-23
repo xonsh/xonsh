@@ -47,6 +47,7 @@ from xonsh.color_tools import (
     make_palette,
     find_closest_color,
     iscolor,
+    warn_deprecated_no_color,
 )
 from xonsh.style_tools import norm_name
 from xonsh.lazyimps import terminal256, html
@@ -149,6 +150,8 @@ def color_name_to_pygments_code(name, styles):
     parts = m.groupdict()
     # convert regex match into actual pygments colors
     if parts["reset"] is not None:
+        if parts["reset"] == "NO_COLOR":
+            warn_deprecated_no_color()
         res = "noinherit"
     elif parts["bghex"] is not None:
         res = "bg:#" + parts["bghex"][3:]
