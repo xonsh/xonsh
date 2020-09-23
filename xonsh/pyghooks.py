@@ -93,7 +93,7 @@ def color_by_name(name, fg=None, bg=None):
         New computed background color name.
     """
     name = name.upper()
-    if name == "NO_COLOR":
+    if name == "RESET":
         return Color.NO_COLOR, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color
@@ -102,7 +102,7 @@ def color_by_name(name, fg=None, bg=None):
         bg = norm_name(name)
     # assemble token
     if fg is None and bg is None:
-        tokname = "NO_COLOR"
+        tokname = "RESET"
     elif fg is None:
         tokname = bg
     elif bg is None:
@@ -148,7 +148,7 @@ def color_name_to_pygments_code(name, styles):
         raise ValueError("{!r} is not a color!".format(name))
     parts = m.groupdict()
     # convert regex match into actual pygments colors
-    if parts["nocolor"] is not None:
+    if parts["reset"] is not None:
         res = "noinherit"
     elif parts["bghex"] is not None:
         res = "bg:#" + parts["bghex"][3:]

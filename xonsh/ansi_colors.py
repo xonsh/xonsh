@@ -68,7 +68,7 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         raise ValueError("{!r} is not a color!".format(name))
     parts = m.groupdict()
     # convert regex match into actual ANSI colors
-    if parts["nocolor"] is not None:
+    if parts["reset"] is not None:
         res = "0"
     elif parts["bghex"] is not None:
         res = "48;5;" + rgb_to_256(parts["bghex"][3:])[0]
@@ -82,6 +82,8 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
                 res = str(int(fgcolor) + 10)
             elif fgcolor.startswith("38;"):
                 res = "4" + fgcolor[1:]
+            elif fgcolor == "NO_COLOR":
+                res = "39"
             else:
                 msg = (
                     "when converting {!r}, did not recognize {!r} within "
@@ -99,6 +101,8 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         color = parts["color"]
         if "#" in color:
             mods.append("38;5;" + rgb_to_256(color[1:])[0])
+        elif color == "NO_COLOR":
+            res = "39"
         else:
             mods.append(cmap[color])
         res = ";".join(mods)

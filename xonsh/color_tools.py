@@ -79,7 +79,7 @@ def RE_XONSH_COLOR():
         # colors
         r"(?P<color>BLACK|RED|GREEN|YELLOW|BLUE|PURPLE|CYAN|WHITE|INTENSE_BLACK|"
         r"INTENSE_RED|INTENSE_GREEN|INTENSE_YELLOW|INTENSE_BLUE|INTENSE_PURPLE|"
-        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex + "{6})"
+        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex + "{6}|NO_COLOR)"
     )
     bghex = (
         "bg#" + hex + "{3}|"
@@ -87,7 +87,7 @@ def RE_XONSH_COLOR():
         "BG#" + hex + "{3}|"
         "BG#" + hex + "{6}"
     )
-    s = "^((?P<nocolor>NO_COLOR)|(?P<bghex>" + bghex + ")|" + s + ")$"
+    s = "^((?P<reset>RESET)|(?P<bghex>" + bghex + ")|" + s + ")$"
     return re.compile(s)
 
 
