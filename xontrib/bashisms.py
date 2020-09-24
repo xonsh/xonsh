@@ -68,42 +68,48 @@ builtins.__xonsh__.env["THREAD_SUBPROCS"] = False
 
 def _unset(args):
     if not args:
-        print(f'Usage: unset <ENV_VARIABLE> [...]', file=sys.stderr)
-    
+        print("Usage: unset ENV_VARIABLE", file=sys.stderr)
+
     for v in args:
         try:
             __xonsh__.env.pop(v)
         except:
-            print(f'{v} not found', file=sys.stderr)
+            print(f"{v} not found", file=sys.stderr)
 
-aliases['unset'] = _unset
-    
+
+aliases["unset"] = _unset
+
 
 def _export(args):
     if not args:
-        print(f'Usage: export <ENV_VARIABLE=VALUE> [...]', file=sys.stderr)
-    
+        print("Usage: export ENV_VARIABLE=VALUE", file=sys.stderr)
+
     for eq in args:
         if "=" in eq:
             name, val = shlex.split(eq)[0].split("=", 1)
             __xonsh__.env[name] = val
         else:
-            print(f'{eq} equal sign not found', file=sys.stderr)
+            print(f"{eq} equal sign not found", file=sys.stderr)
 
-aliases['export'] = _export
+
+aliases["export"] = _export
 
 
 def _set(args):
     arg = args[0]
-    if arg == '-e':
-        $RAISE_SUBPROC_ERROR = True
-    elif arg == '+e':
-        $RAISE_SUBPROC_ERROR = False
-    elif arg == '-x':
-        $XONSH_TRACE_SUBPROC = True
-    elif arg == '+x':
-        $XONSH_TRACE_SUBPROC = False
+    if arg == "-e":
+        __xonsh__.env["RAISE_SUBPROC_ERROR"] = True
+    elif arg == "+e":
+        __xonsh__.env["RAISE_SUBPROC_ERROR"] = False
+    elif arg == "-x":
+        __xonsh__.env["XONSH_TRACE_SUBPROC"] = True
+    elif arg == "+x":
+        __xonsh__.env["XONSH_TRACE_SUBPROC"] = False
     else:
-        print(f'This function not found in xontrib bashisms.\n PRs are welcome - https://github.com/xonsh/xonsh/blob/master/xontrib/bashisms.py', file=sys.stderr)
+        print(
+            "Not supported in xontrib bashisms.\nPRs are welcome - https://github.com/xonsh/xonsh/blob/master/xontrib/bashisms.py",
+            file=sys.stderr,
+        )
 
-aliases['set'] = _set
+
+aliases["set"] = _set
