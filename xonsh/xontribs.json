@@ -48,7 +48,7 @@
   "url": "http://xon.sh",
   "description": [
     "Enables additional Bash-like syntax while at the command prompt. For ",
-    "example, the ``!!`` syntax for running the previous command is now usable.",
+    "example, the ``!!`` syntax for running the previous command is now usable. ",
     "Note that these features are implemented as precommand events and these ",
     "additions do not affect the xonsh language when run as script. That said, ",
     "you might find them useful if you have strong muscle memory.\n\n",
