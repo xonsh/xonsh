@@ -1749,6 +1749,8 @@ following:
 
 That's All, Folks
 ======================
+To exit from xonsh script just call the ``exit(code)`` function.
+
 To leave xonsh, hit ``Ctrl-D``, type ``EOF``, type ``quit``, or type ``exit``.
 On Windows, you can also type ``Ctrl-Z``.
 
