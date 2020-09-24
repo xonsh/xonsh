@@ -73,7 +73,7 @@ def _unset(args):
     for v in args:
         try:
             __xonsh__.env.pop(v)
-        except:
+        except KeyError:
             print(f"{v} not found", file=sys.stderr)
 
 
