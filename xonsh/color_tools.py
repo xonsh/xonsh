@@ -7,6 +7,7 @@ WTFPL http://sam.zoy.org/wtfpl/
 """
 import re
 import math
+import sys
 
 from xonsh.lazyasd import lazyobject, LazyObject
 
@@ -486,10 +487,7 @@ def warn_deprecated_no_color():
     """Show a warning once if NO_COLOR was used instead of RESET."""
     global _NO_COLOR_WARNING_SHOWN
     if not _NO_COLOR_WARNING_SHOWN:
-        import warnings
-
-        warnings.warn(
-            "NO_COLOR is deprecated and should be replaced with RESET.",
-            DeprecationWarning,
+        print(
+            "NO_COLOR is deprecated and should be replaced with RESET.", file=sys.stderr
         )
         _NO_COLOR_WARNING_SHOWN = True
