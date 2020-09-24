@@ -53,7 +53,9 @@ line is ``#!/usr/bin/env xonsh``.
       - Logical-or operator for subprocesses.
     * - ``$?``
       - ``_.rtn``
-      - Returns the exit code, or status, of the previous command.
+      - Returns the exit code, or status, of the previous command. The underscore ``_`` is working 
+        in the prompt mode. To get the exit code of the command in xonsh script 
+        use captured subprocess `!().rtn`.
     * - ``N=V command``
       - ``$N=V command`` or ``with ${...}.swap(N=V): command``
       - Set temporary environment variable(s) and execute the command.
