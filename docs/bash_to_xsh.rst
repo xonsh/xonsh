@@ -75,7 +75,7 @@ line is ``#!/usr/bin/env xonsh``.
       - ``$COMPLETIONS_DISPLAY = 'readline'``
       - Display completions will emulate the behavior of readline.
     * - ``exit``
-      - ``sys.exit()``
+      - ``exit()``
       - Exiting from the current script.
 
 To understand how xonsh executes the subprocess commands try
