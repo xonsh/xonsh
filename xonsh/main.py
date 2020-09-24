@@ -467,7 +467,9 @@ def main_xonsh(args):
                 sys.argv = [args.file] + args.args
                 env.update(make_args_env())  # $ARGS is not sys.argv
                 env["XONSH_SOURCE"] = path
-                shell.ctx.update({"__file__": args.file, "__name__": "__main__"})
+                shell.ctx.update(
+                    {"__file__": args.file, "__name__": "__main__", "exit": sys.exit}
+                )
                 run_script_with_cache(
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
@@ -477,6 +479,7 @@ def main_xonsh(args):
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
             code = sys.stdin.read()
+            shell.ctx.update({"exit": sys.exit})
             run_code_with_cache(
                 code, shell.execer, glb=shell.ctx, loc=None, mode="exec"
             )
