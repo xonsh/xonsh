@@ -38,6 +38,15 @@ line is ``#!/usr/bin/env xonsh``.
       - Command substitution (allow the output of a command to replace the
         command itself).  Tokenizes and executes the output of a subprocess
         command as another subprocess.
+    * - ``find ~/ -name bashrc -exec wc '{}' \;``
+      - ``find ~/ -name bashrc -exec wc '{}' ';'``
+      - There is no notion of an escaping character in xonsh like the backslash (\) in bash.
+        Single or double quotes can be used to remove the special meaning of certain 
+        characters or words.
+    * - ``v=`echo 1```
+      - ``v=$(echo 1)``
+      - In bash, backticks mean to run a captured subprocess - it's `$()` in xonsh. Backticks in xonsh
+        mean regex globbing (i.e. ``ls `/etc/pass.*```).
     * - ``set -e``
       - ``$RAISE_SUBPROC_ERROR = True``
       - Cause a failure after a non-zero return code. Xonsh will raise a
@@ -73,6 +82,9 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``shopt -s dotglob``
       - ``$DOTGLOB = True``
       - Globbing files with “*” or “**” will also match dotfiles, or those ‘hidden’ files whose names begin with a literal ‘.’. Such files are filtered out by default like in bash.
+    * - ``if [ -f "$FILE" ];``
+      - ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()``
+      - Path objects can be instantiated and checked directly using p-string syntax. 
     * - Display completions as list
       - ``$COMPLETIONS_DISPLAY = 'readline'``
       - Display completions will emulate the behavior of readline.
