@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* "Bash to Xonsh Translation Guide" improvements.
 
 **Deprecated:**
 
