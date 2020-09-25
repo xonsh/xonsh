@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``unset``, ``export``, ``set -e``, ``set -x`` to xontrib bashisms.
+* Added ``unset``, ``export``, ``set -e``, ``set -x``, ``shopt``, ``complete`` to xontrib bashisms.
 
 **Changed:**
 

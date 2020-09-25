@@ -113,3 +113,37 @@ def _set(args):
 
 
 aliases["set"] = _set
+
+
+def _shopt(args):
+
+    supported_shopt = ["DOTGLOB"]
+
+    args_len = len(args)
+    if args_len == 0:
+        for so in supported_shopt:
+            onoff = "on" if so in __xonsh__.env and __xonsh__.env[so] else "off"
+            print(f"dotglob\t{onoff}")
+        return
+    elif args_len < 2 or args[0] in ["-h", "--help"]:
+        print(f'Usage: shopt <-s|-u> <{"|".join(supported_shopt).lower()}>')
+        return
+
+    opt = args[0]
+    optname = args[1]
+
+    if opt == "-s" and optname == "dotglob":
+        __xonsh__.env["DOTGLOB"] = True
+    elif opt == "-u" and optname == "dotglob":
+        __xonsh__.env["DOTGLOB"] = False
+    else:
+        print(
+            "Not supported in xontrib bashisms.\nPRs are welcome - https://github.com/xonsh/xonsh/blob/master/xontrib/bashisms.py",
+            file=sys.stderr,
+        )
+
+
+aliases["shopt"] = _shopt
+
+
+aliases["complete"] = "completer list"

@@ -55,7 +55,7 @@
     "**Warning:** This xontrib may modify user command line input to implement ",
     "its behavior. To see the modifications as they are applied (in unified diff",
     "format), please set ``$XONSH_DEBUG`` to ``2`` or higher.\n\n",
-    "Limited support of bash commands: ``alias``, ``export``, ``unset``, ``set``."]
+    "The xontrib also adds commands: ``alias``, ``export``, ``unset``, ``set``, ``shopt``, ``complete``."]
  },
  {"name": "base16_shell",
   "package": "xontrib-base16-shell",
