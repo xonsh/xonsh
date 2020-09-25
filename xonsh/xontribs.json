@@ -176,7 +176,6 @@
                   "The xontrib-onepath brings the same logic for the xonsh shell. Type the filename or path",
                   "without preceding command and an associated action will be executed. The actions are customizable."]
  },
- 
  {"name": "pdb",
   "package": "xonsh",
   "url": "http://xon.sh",
