@@ -33,7 +33,7 @@ line is ``#!/usr/bin/env xonsh``.
       - ``${var or expr}``
       - Look up an environment variable via another variable name. In xonsh,
         this may be any valid expression.
-    * - ``ENV1=VAL1 ENV2=VAL2 command``
+    * - ``ENV1=VAL1 command``
       - ``$ENV1=VAL1 command`` or ``with ${...}.swap(ENV1=VAL1): command``
       - Set temporary environment variable(s) and execute the command.
         Use the second notation with an indented block to execute many commands in the same context.
