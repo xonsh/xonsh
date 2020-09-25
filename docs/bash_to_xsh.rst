@@ -37,6 +37,9 @@ line is ``#!/usr/bin/env xonsh``.
       - ``$N=V command`` or ``with ${...}.swap(N=V): command``
       - Set temporary environment variable(s) and execute the command.
         Use the second notation with an indented block to execute many commands in the same context.
+    * - ``alias ll='ls -la'``
+      - ``aliases['ll'] = 'ls -la'``
+      - Alias in xonsh could be a subprocess command as a string or list of arguments or any Python function.
     * - ``$(cmd args)`` or ```cmd args```
       - ``@$(cmd args)``
       - Command substitution (allow the output of a command to replace the
