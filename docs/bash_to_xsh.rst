@@ -53,8 +53,8 @@ line is ``#!/usr/bin/env xonsh``.
         mean regex globbing (i.e. ``ls `/etc/pass.*```).
     * - ``shopt -s dotglob``
       - ``$DOTGLOB = True``
-      - Globbing files with “*” or “**” will also match dotfiles, or those ‘hidden’ files whose names 
-        begin with a literal ‘.’. Such files are filtered out by default like in bash.
+      - Globbing files with ``*`` or ``**`` will also match dotfiles, or those ‘hidden’ files whose names 
+        begin with a literal `.`. Such files are filtered out by default like in bash.
     * - ``if [ -f "$FILE" ];``
       - ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()``
       - Path objects can be instantiated and checked directly using p-string syntax.        
