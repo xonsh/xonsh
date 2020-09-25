@@ -91,7 +91,12 @@ line is ``#!/usr/bin/env xonsh``.
       - List of all command line argument and parameter strings.
     * - ``while getopts "h?vf:" opt; do``
       - ``import argparse``
-      - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe the command line arguments in your script.
+      - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe 
+        the command line arguments in your script.
+    * - ``complete``
+      - ``completer list``
+      - As with many other shells, xonsh ships with the ability to complete partially-specified arguments 
+        upon hitting the “tab” key.        
     * - Display completions as list
       - ``$COMPLETIONS_DISPLAY = 'readline'``
       - Display completions will emulate the behavior of readline.
