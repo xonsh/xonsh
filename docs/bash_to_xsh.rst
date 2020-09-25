@@ -92,7 +92,9 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``while getopts "h?vf:" opt; do``
       - ``import argparse``
       - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe 
-        the command line arguments in your script.
+        the command line arguments in your script. Next try 
+        `xontrib-argcomplete <https://github.com/anki-code/xontrib-argcomplete>`_ to activate 
+        tab completion for your script.
     * - ``complete``
       - ``completer list``
       - As with many other shells, xonsh ships with the ability to complete partially-specified arguments 
