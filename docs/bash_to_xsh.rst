@@ -98,7 +98,11 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``complete``
       - ``completer list``
       - As with many other shells, xonsh ships with the ability to complete partially-specified arguments 
-        upon hitting the “tab” key.        
+        upon hitting the “tab” key.
+    * - OhMyBash or BashIt
+      - `Xontribs <https://xon.sh/xontribs.html>`_
+      - Xontributions, or ``xontribs``, are a set of tools and conventions for extending the functionality 
+        of xonsh beyond what is provided by default.
     * - Display completions as list
       - ``$COMPLETIONS_DISPLAY = 'readline'``
       - Display completions will emulate the behavior of readline.
