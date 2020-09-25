@@ -89,6 +89,9 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``$@``
       - ``$ARGS``
       - List of all command line argument and parameter strings.
+    * - ``while getopts "h?vf:" opt; do``
+      - ``import argparse``
+      - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe the command line arguments in your script.
     * - Display completions as list
       - ``$COMPLETIONS_DISPLAY = 'readline'``
       - Display completions will emulate the behavior of readline.
