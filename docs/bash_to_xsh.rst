@@ -106,6 +106,10 @@ line is ``#!/usr/bin/env xonsh``.
     * - Display completions as list
       - ``$COMPLETIONS_DISPLAY = 'readline'``
       - Display completions will emulate the behavior of readline.
+    * - ``docker run -it bash``
+      - ``docker run -it xonsh/xonsh:slim``
+      - Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. 
+        All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`_.
     * - ``exit``
       - ``sys.exit()``
       - Exiting from the current script.
