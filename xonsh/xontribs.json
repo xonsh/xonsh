@@ -169,6 +169,14 @@
   "description": ["Get identifiers, names, paths, URLs and words from the previous command output ",
                   "and use them for the next command."]
  },
+ {"name": "onepath",
+  "package": "xontrib-onepath",
+  "url": "https://github.com/anki-code/xontrib-onepath",
+  "description": ["When you click to a file or folder in graphical OS they will be opened in associated app.",
+                  "The xontrib-onepath brings the same logic for the xonsh shell. Type the filename or path",
+                  "without preceding command and an associated action will be executed. The actions are customizable."]
+ },
+ 
  {"name": "pdb",
   "package": "xonsh",
   "url": "http://xon.sh",
