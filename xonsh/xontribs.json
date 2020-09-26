@@ -258,7 +258,7 @@
   },
   {"name": "xpg",
   "package": "xontrib-xpg",
-  "url": "https://github.com/fengttt/xsh/py",
+  "url": "https://github.com/fengttt/xsh/tree/master/py",
   "description": ["Run/plot/explain sql query for PostgreSQL."] 
   },
  {"name": "z",
