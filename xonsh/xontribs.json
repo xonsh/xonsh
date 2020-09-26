@@ -181,11 +181,21 @@
   "url": "http://xon.sh",
   "description": ["Simple built-in debugger. Runs pdb on reception of SIGUSR1 signal."]
  },
+ {"name": "pipeliner",
+  "package": "xontrib-pipeliner",
+  "url": "https://github.com/anki-code/xontrib-pipeliner",
+  "description": ["Let your pipe lines flow thru the Python code in xonsh."]
+ }, 
  {"name": "powerline",
   "package": "xontrib-powerline",
   "url": "https://github.com/santagada/xontrib-powerline",
   "description": ["Powerline for Xonsh shell"]
  },
+ {"name": "prompt_bar",
+  "package": "xontrib-prompt-bar",
+  "url": "https://github.com/anki-code/xontrib-prompt-bar",
+  "description": ["An elegance bar style for prompt."]
+ }, 
  {"name": "prompt_ret_code",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -220,16 +230,6 @@
   "package": "xontrib-ssh-agent",
   "url": "https://github.com/dyuri/xontrib-ssh-agent",
   "description": ["ssh-agent integration"]
- },
- {"name": "prompt_bar",
-  "package": "xontrib-prompt-bar",
-  "url": "https://github.com/anki-code/xontrib-prompt-bar",
-  "description": ["An elegance bar style for prompt."]
- },
- {"name": "pipeliner",
-  "package": "xontrib-pipeliner",
-  "url": "https://github.com/anki-code/xontrib-pipeliner",
-  "description": ["Let your pipe lines flow thru the Python code in xonsh."]
  },
  {"name": "vox",
   "package": "xonsh",
