@@ -1,6 +1,6 @@
 **Added:**
 
-* Added xontrib `powerline-binding <https://github.com/dyuri/xontrib-powerline-binding>`_ - uses `powerline <https://github.com/powerline/powerline>`_ to render the prompt.
+* Added xontrib ``powerline-binding`` (https://github.com/dyuri/xontrib-powerline-binding) - uses ``powerline`` to render the prompt.
 
 **Changed:**
 
