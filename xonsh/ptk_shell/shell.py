@@ -142,6 +142,7 @@ class PromptToolkitShell(BaseShell):
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
         refresh_interval = refresh_interval if refresh_interval > 0 else None
         complete_in_thread = env.get("COMPLETION_IN_THREAD")
+        completions_menu_rows = env.get("COMPLETIONS_MENU_ROWS")
         completions_display = env.get("COMPLETIONS_DISPLAY")
         complete_style = self.completion_displays_to_styles[completions_display]
 
@@ -190,7 +191,7 @@ class PromptToolkitShell(BaseShell):
             "editing_mode": editing_mode,
             "prompt_continuation": self.continuation_tokens,
             "enable_history_search": enable_history_search,
-            "reserve_space_for_menu": 0,
+            "reserve_space_for_menu": completions_menu_rows,
             "key_bindings": self.key_bindings,
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
