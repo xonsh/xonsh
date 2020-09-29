@@ -14,6 +14,7 @@ import collections.abc as cabc
 import subprocess
 import platform
 
+from pathlib import Path
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
@@ -2002,6 +2003,9 @@ class Env(cabc.MutableMapping):
         else:
             return default
 
+    def get_path(self, *args, **kwargs):
+        return Path(self.get(*args, **kwargs))
+                
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.
         This include string & compiled regular expression keys.
