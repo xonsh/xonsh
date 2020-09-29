@@ -2005,7 +2005,7 @@ class Env(cabc.MutableMapping):
 
     def get_path(self, *args, **kwargs):
         return Path(self.get(*args, **kwargs))
-                
+
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.
         This include string & compiled regular expression keys.
