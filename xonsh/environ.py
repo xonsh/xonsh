@@ -2004,7 +2004,8 @@ class Env(cabc.MutableMapping):
             return default
 
     def get_path(self, *args, **kwargs):
-        return Path(self.get(*args, **kwargs))
+        v = self.get(*args, **kwargs)
+        return Path(v) if v is not None else None
 
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.
