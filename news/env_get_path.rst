@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``${...}.get_path`` function to simplify getting Path object from environment variable.
+* Added ``${...}.get_path`` function to simplify getting Path-object from environment variable.
 
 **Changed:**
 
