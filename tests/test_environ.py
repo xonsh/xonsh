@@ -3,6 +3,7 @@
 from __future__ import unicode_literals, print_function
 import os
 import re
+import pathlib
 from tempfile import TemporaryDirectory
 from xonsh.tools import always_true, DefaultNotGiven
 
@@ -421,9 +422,26 @@ def test_register_custom_var_str(val, converted):
     assert env["MY_SPECIAL_VAR"] == converted
 
 
-def test_register_custom_var_path():
+def test_register_var_path():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type="path")
+    env.register("MY_PATH_VAR", type="path")
+
+    path = '/tmp'
+    env["MY_PATH_VAR"] = path
+    assert env["MY_PATH_VAR"] == pathlib.Path(path)
+
+    # Empty string is None to avoid uncontrolled converting empty string to Path('.')
+    path = ''
+    env["MY_PATH_VAR"] = path
+    assert env["MY_PATH_VAR"] == None
+
+    with pytest.raises(TypeError):
+        env["MY_PATH_VAR"] = 42
+
+
+def test_register_custom_var_env_path():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type="env_path")
 
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
@@ -438,11 +456,11 @@ def test_register_custom_var_path():
 def test_deregister_custom_var():
     env = Env()
 
-    env.register("MY_SPECIAL_VAR", type="path")
+    env.register("MY_SPECIAL_VAR", type="env_path")
     env.deregister("MY_SPECIAL_VAR")
     assert "MY_SPECIAL_VAR" not in env
 
-    env.register("MY_SPECIAL_VAR", type="path")
+    env.register("MY_SPECIAL_VAR", type="env_path")
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
     env.deregister("MY_SPECIAL_VAR")

@@ -274,9 +274,7 @@ class PromptToolkitShell(BaseShell):
 
         try:
             p = self.prompt_formatter(
-                template=p,
-                threaded=env["ENABLE_ASYNC_PROMPT"],
-                prompt_name=prompt_name,
+                template=p, threaded=env["ENABLE_ASYNC_PROMPT"], prompt_name=prompt_name
             )
         except Exception:  # pylint: disable=broad-except
             print_exception()

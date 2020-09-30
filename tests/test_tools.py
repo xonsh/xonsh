@@ -25,6 +25,7 @@ from xonsh.tools import (
     dynamic_cwd_tuple_to_str,
     ensure_slice,
     ensure_string,
+    path_to_str,
     env_path_to_str,
     escape_windows_cmd_string,
     executables_in,
@@ -36,12 +37,14 @@ from xonsh.tools import (
     is_bool_or_none,
     is_callable,
     is_dynamic_cwd_width,
+    is_path,
     is_env_path,
     is_float,
     is_int,
     is_logfile_opt,
     is_string_or_callable,
     logfile_opt_to_str,
+    str_to_path,
     str_to_env_path,
     is_string,
     subexpr_from_unbalanced,
@@ -812,6 +815,14 @@ def test_seq_to_upper_pathsep(inp, exp):
 
 
 @pytest.mark.parametrize(
+    "inp, exp", [(pathlib.Path("/home/wakka"), True), ("/home/jawaka", False)]
+)
+def test_is_path(inp, exp):
+    obs = is_path(inp)
+    assert exp == obs
+
+
+@pytest.mark.parametrize(
     "inp, exp",
     [
         ("/home/wakka", False),
@@ -826,6 +837,12 @@ def test_is_env_path(inp, exp):
     assert exp == obs
 
 
+@pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None)])
+def test_str_to_path(inp, exp):
+    obs = str_to_path(inp)
+    assert exp == obs
+
+
 @pytest.mark.parametrize(
     "inp, exp",
     [
@@ -837,6 +854,14 @@ def test_is_env_path(inp, exp):
 def test_str_to_env_path(inp, exp):
     obs = str_to_env_path(inp)
     assert exp == obs.paths
+
+
+@pytest.mark.parametrize("inp, exp", [(pathlib.Path("///tmp"), "/tmp")])
+def test_path_to_str(inp, exp):
+    obs = path_to_str(inp)
+    if ON_WINDOWS:
+        exp = exp.replace('/','\\')
+    assert exp == obs
 
 
 @pytest.mark.parametrize(
