@@ -5,8 +5,8 @@
 **Changed:**
 
 * The ``path`` type in ``${...}.register`` was renamed to ``env_path`` as it should be and added
-  new ``path`` type instead that represent ``pathlib.Path``. Now you can registered typed environment
-  variables that will be converted to ``Path`` objects.
+  new ``path`` type instead that represent ``pathlib.Path``. Now you can register typed environment
+  variables that will be converted to ``Path``.
 
 **Deprecated:**
 
