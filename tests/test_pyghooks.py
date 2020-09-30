@@ -35,7 +35,7 @@ def xonsh_builtins_LS_COLORS(xonsh_builtins):
 
 DEFAULT_STYLES = {
     # Reset
-    Color.NO_COLOR: "noinherit",  # Text Reset
+    Color.RESET: "noinherit",  # Text Reset
     # Regular Colors
     Color.BLACK: "ansiblack",
     Color.BLUE: "ansiblue",
@@ -59,7 +59,7 @@ DEFAULT_STYLES = {
 @pytest.mark.parametrize(
     "name, exp",
     [
-        ("NO_COLOR", "noinherit"),
+        ("RESET", "noinherit"),
         ("RED", "ansired"),
         ("BACKGROUND_RED", "bg:ansired"),
         ("BACKGROUND_INTENSE_RED", "bg:ansibrightred"),
@@ -92,7 +92,7 @@ def test_color_name_to_pygments_code(name, exp):
 @pytest.mark.parametrize(
     "name, exp",
     [
-        ("NO_COLOR", "noinherit"),
+        ("RESET", "noinherit"),
         ("RED", "ansired"),
         ("BACKGROUND_RED", "bg:ansired"),
         ("BACKGROUND_INTENSE_RED", "bg:ansibrightred"),
@@ -125,7 +125,7 @@ def test_code_by_name(name, exp):
 @pytest.mark.parametrize(
     "in_tuple, exp_ct, exp_ansi_colors",
     [
-        (("NO_COLOR",), Color.NO_COLOR, "noinherit"),
+        (("RESET",), Color.RESET, "noinherit"),
         (("GREEN",), Color.GREEN, "ansigreen"),
         (("BOLD_RED",), Color.BOLD_RED, "bold ansired"),
         (

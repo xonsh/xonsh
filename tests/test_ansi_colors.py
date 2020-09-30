@@ -11,7 +11,7 @@ from xonsh.ansi_colors import (
 
 DEFAULT_CMAP = {
     # Reset
-    "NO_COLOR": "0",  # Text Reset
+    "RESET": "0",  # Text Reset
     # Regular Colors
     "BLACK": "0;30",  # BLACK
     "RED": "0;31",  # RED
@@ -45,7 +45,7 @@ DEFAULT_CMAP = {
 @pytest.mark.parametrize(
     "name, exp",
     [
-        ("NO_COLOR", "0"),
+        ("RESET", "0"),
         ("RED", "0;31"),
         ("BACKGROUND_RED", "41"),
         ("BACKGROUND_INTENSE_RED", "101"),
@@ -72,7 +72,7 @@ def test_ansi_color_name_to_escape_code_default(name, exp):
 RS = ansi_reverse_style(style="default")
 
 
-@pytest.mark.parametrize("key, value", [("", "NO_COLOR"), ("31", "RED")])
+@pytest.mark.parametrize("key, value", [("", "RESET"), ("31", "RED")])
 def test_ansi_reverse_style(key, value):
     assert key in RS
     assert RS[key] == value
@@ -81,11 +81,11 @@ def test_ansi_reverse_style(key, value):
 @pytest.mark.parametrize(
     "inp, exp",
     [
-        ("0", ("NO_COLOR",)),
+        ("0", ("RESET",)),
         ("1", ("BOLD_WHITE",)),
-        ("\0010\002", ("NO_COLOR",)),
-        ("\033[0m", ("NO_COLOR",)),
-        ("\001\033[0m\002", ("NO_COLOR",)),
+        ("\0010\002", ("RESET",)),
+        ("\033[0m", ("RESET",)),
+        ("\001\033[0m\002", ("RESET",)),
         ("00;36", ("CYAN",)),
         ("01;31", ("BOLD_RED",)),
         ("04;31", ("UNDERLINE_RED",)),

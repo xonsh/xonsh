@@ -298,7 +298,7 @@ def test_delitem_default():
 
 def test_lscolors_target(xonsh_builtins):
     lsc = LsColors.fromstring("ln=target")
-    assert lsc["ln"] == ("NO_COLOR",)
+    assert lsc["ln"] == ("RESET",)
     assert lsc.is_target("ln")
     assert lsc.detype() == "ln=target"
     assert not (lsc.is_target("mi"))
@@ -307,15 +307,15 @@ def test_lscolors_target(xonsh_builtins):
 @pytest.mark.parametrize(
     "key_in,old_in,new_in,test",
     [
-        ("fi", ("NO_COLOR",), ("BLUE",), "existing key, change value"),
-        ("fi", ("NO_COLOR",), ("NO_COLOR",), "existing key, no change in value"),
-        ("tw", None, ("NO_COLOR",), "create new key"),
+        ("fi", ("RESET",), ("BLUE",), "existing key, change value"),
+        ("fi", ("RESET",), ("RESET",), "existing key, no change in value"),
+        ("tw", None, ("RESET",), "create new key"),
         ("pi", ("BACKGROUND_BLACK", "YELLOW"), None, "delete existing key"),
     ],
 )
 def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
     lsc = LsColors.fromstring("fi=0:di=01;34:pi=40;33")
-    # corresponding colors: [('NO_COLOR',), ('BOLD_CYAN',), ('BOLD_CYAN',), ('BACKGROUND_BLACK', 'YELLOW')]
+    # corresponding colors: [('RESET',), ('BOLD_CYAN',), ('BOLD_CYAN',), ('BACKGROUND_BLACK', 'YELLOW')]
 
     event_fired = False
 

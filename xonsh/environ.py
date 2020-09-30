@@ -145,10 +145,10 @@ Normal usage is to arm the event handler, then read (not modify) all existing va
 @lazyobject
 def HELP_TEMPLATE():
     return (
-        "{{INTENSE_RED}}{envvar}{{NO_COLOR}}:\n\n"
-        "{{INTENSE_YELLOW}}{docstr}{{NO_COLOR}}\n\n"
-        "default: {{CYAN}}{default}{{NO_COLOR}}\n"
-        "configurable: {{CYAN}}{configurable}{{NO_COLOR}}"
+        "{{INTENSE_RED}}{envvar}{{RESET}}:\n\n"
+        "{{INTENSE_YELLOW}}{docstr}{{RESET}}\n\n"
+        "default: {{CYAN}}{default}{{RESET}}\n"
+        "configurable: {{CYAN}}{configurable}{{RESET}}"
     )
 
 
@@ -325,14 +325,14 @@ class LsColors(cabc.MutableMapping):
         "di": ("BOLD_BLUE",),
         "do": ("BOLD_PURPLE",),
         "ex": ("BOLD_GREEN",),
-        "fi": ("NO_COLOR",),
+        "fi": ("RESET",),
         "ln": ("BOLD_CYAN",),
-        "mh": ("NO_COLOR",),
-        "mi": ("NO_COLOR",),
+        "mh": ("RESET",),
+        "mi": ("RESET",),
         "or": ("BACKGROUND_BLACK", "RED"),
         "ow": ("BLUE", "BACKGROUND_GREEN"),
         "pi": ("BACKGROUND_BLACK", "YELLOW"),
-        "rs": ("NO_COLOR",),
+        "rs": ("RESET",),
         "sg": ("BLACK", "BACKGROUND_YELLOW"),
         "so": ("BOLD_PURPLE",),
         "st": ("WHITE", "BACKGROUND_BLUE"),
@@ -341,7 +341,7 @@ class LsColors(cabc.MutableMapping):
     }
 
     target_value = "target"  # special value to set for ln=target
-    target_color = ("NO_COLOR",)  # repres in color space
+    target_color = ("RESET",)  # repres in color space
 
     def __init__(self, ini_dict: dict = None):
         self._style = self._style_name = None
@@ -466,7 +466,7 @@ class LsColors(cabc.MutableMapping):
                     )
                 except Exception as e:
                     print("xonsh:warning:" + str(e), file=sys.stderr)
-                    ini_dict[key] = ("NO_COLOR",)
+                    ini_dict[key] = ("RESET",)
         return cls(ini_dict)
 
     @classmethod
@@ -1672,7 +1672,7 @@ def DEFAULT_VARS():
             "is prepended whenever stderr is displayed. This may be used in "
             "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
             "For example, to have stderr appear on a red background, the "
-            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".',
+            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
         ),
         "XONSH_STDERR_POSTFIX": Var(
             is_string,
@@ -1683,7 +1683,7 @@ def DEFAULT_VARS():
             "is appended whenever stderr is displayed. This may be used in "
             "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
             "For example, to have stderr appear on a red background, the "
-            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".',
+            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
         ),
         "XONSH_STORE_STDIN": Var(
             is_bool,

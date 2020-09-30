@@ -1505,7 +1505,7 @@ For example:
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
-* ``NO_COLOR``: Resets any previously used color codes
+* ``RESET``: Resets any previously used styling.
 * ``COLORNAME``: Inserts a color code for the following basic colors,
   which come in regular (dark) and intense (light) forms:
 
@@ -1518,6 +1518,7 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
     - ``CYAN`` or ``INTENSE_CYAN``
     - ``WHITE`` or ``INTENSE_WHITE``
 
+* ``DEFAULT``: The color code for the terminal's default foreground color.
 * ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
   hex color, or the nearest approximation that that is supported by
   the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
