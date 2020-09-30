@@ -400,7 +400,7 @@ class LsColors(cabc.MutableMapping):
                 p.pretty(dict(self))
 
     def is_target(self, key) -> bool:
-        "Return True if key is 'target'"
+        """Return True if key is 'target'"""
         return key in self._targets
 
     def detype(self):
