@@ -1985,10 +1985,11 @@ class Env(cabc.MutableMapping):
         ):
             self._detyped = None
 
-        validator = self.get_validator(key)
-        converter = self.get_converter(key)
-        if not validator(val):
-            val = converter(val)
+        if val:
+            validator = self.get_validator(key)
+            converter = self.get_converter(key)
+            if not validator(val):
+                val = converter(val)
         return val
 
     def __setitem__(self, key, val):
