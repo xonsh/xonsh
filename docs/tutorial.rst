@@ -1757,4 +1757,6 @@ On Windows, you can also type ``Ctrl-Z``.
 
     >>> exit
 
+To exit from the xonsh script just call the ``exit(code)`` function.
+
 Now it is your turn.
