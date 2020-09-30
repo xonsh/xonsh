@@ -36,6 +36,9 @@ from xonsh.tools import (
     always_false,
     detype,
     ensure_string,
+    is_path,
+    str_to_path,
+    path_to_str,
     is_env_path,
     str_to_env_path,
     env_path_to_str,
@@ -534,7 +537,8 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
 ENSURERS = {
     "bool": (is_bool, to_bool, bool_to_str),
     "str": (is_string, ensure_string, ensure_string),
-    "path": (is_env_path, str_to_env_path, env_path_to_str),
+    "path": (is_path, str_to_path, path_to_str),
+    "env_path": (is_env_path, str_to_env_path, env_path_to_str),
     "float": (is_float, float, str),
     "int": (is_int, int, str),
 }
@@ -1980,6 +1984,11 @@ class Env(cabc.MutableMapping):
             val, (cabc.MutableSet, cabc.MutableSequence, cabc.MutableMapping)
         ):
             self._detyped = None
+
+        validator = self.get_validator(key)
+        converter = self.get_converter(key)
+        if not validator(val):
+            val = converter(val)
         return val
 
     def __setitem__(self, key, val):
@@ -2088,7 +2097,7 @@ class Env(cabc.MutableMapping):
         ----------
         name : str
             Environment variable name to register. Typically all caps.
-        type : str, optional,  {'bool', 'str', 'path', 'int', 'float'}
+        type : str, optional,  {'bool', 'str', 'path', 'env_path', 'int', 'float'}
             Variable type. If not one of the available presets, use `validate`,
             `convert`, and `detype` to specify type behavior.
         default : optional
@@ -2116,7 +2125,9 @@ class Env(cabc.MutableMapping):
 
         """
 
-        if (type is not None) and (type in ("bool", "str", "path", "int", "float")):
+        if (type is not None) and (
+            type in ("bool", "str", "path", "env_path", "int", "float")
+        ):
             validate, convert, detype = ENSURERS[type]
 
         if default is not None:
