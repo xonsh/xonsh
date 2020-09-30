@@ -7,9 +7,11 @@ WTFPL http://sam.zoy.org/wtfpl/
 """
 import re
 import math
+import sys
 
 from xonsh.lazyasd import lazyobject, LazyObject
 
+_NO_COLOR_WARNING_SHOWN = False
 
 RE_BACKGROUND = LazyObject(
     lambda: re.compile("(BG#|BGHEX|BACKGROUND)"), globals(), "RE_BACKGROUND"
@@ -23,7 +25,7 @@ def KNOWN_XONSH_COLORS():
     """
     return frozenset(
         [
-            "NO_COLOR",
+            "DEFAULT",
             "BLACK",
             "RED",
             "GREEN",
@@ -79,7 +81,7 @@ def RE_XONSH_COLOR():
         # colors
         r"(?P<color>BLACK|RED|GREEN|YELLOW|BLUE|PURPLE|CYAN|WHITE|INTENSE_BLACK|"
         r"INTENSE_RED|INTENSE_GREEN|INTENSE_YELLOW|INTENSE_BLUE|INTENSE_PURPLE|"
-        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex + "{6})"
+        r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex + "{6}|DEFAULT)"
     )
     bghex = (
         "bg#" + hex + "{3}|"
@@ -87,7 +89,7 @@ def RE_XONSH_COLOR():
         "BG#" + hex + "{3}|"
         "BG#" + hex + "{6}"
     )
-    s = "^((?P<nocolor>NO_COLOR)|(?P<bghex>" + bghex + ")|" + s + ")$"
+    s = "^((?P<reset>RESET|NO_COLOR)|(?P<bghex>" + bghex + ")|" + s + ")$"
     return re.compile(s)
 
 
@@ -479,3 +481,13 @@ def make_palette(strings):
             t, _, s = t.partition(" ")
             palette[t] = rgb_to_ints(t)
     return palette
+
+
+def warn_deprecated_no_color():
+    """Show a warning once if NO_COLOR was used instead of RESET."""
+    global _NO_COLOR_WARNING_SHOWN
+    if not _NO_COLOR_WARNING_SHOWN:
+        print(
+            "NO_COLOR is deprecated and should be replaced with RESET.", file=sys.stderr
+        )
+        _NO_COLOR_WARNING_SHOWN = True
