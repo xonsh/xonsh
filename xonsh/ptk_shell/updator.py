@@ -1,3 +1,5 @@
+"""Has classes that help updating Prompt sections using Threads."""
+
 import builtins
 import concurrent.futures
 import threading
@@ -134,6 +136,8 @@ class AsyncPrompt:
 
 
 class PromptUpdator:
+    """Handle updating multiple AsyncPrompt instances prompt/rprompt/bottom_toolbar"""
+
     def __init__(self, session: PromptSession):
         self.prompts: Dict[str, AsyncPrompt] = {}
         self.prompter = session
