@@ -3355,7 +3355,7 @@ class BaseParser(object):
         p[0] = p2
 
     def p_empty(self, p):
-        "empty : "
+        """empty : """
         p[0] = None
 
     def p_error(self, p):

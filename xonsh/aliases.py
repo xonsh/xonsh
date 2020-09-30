@@ -724,7 +724,8 @@ def showcmd(args, stdin=None):
     optional arguments:
       -h, --help            show this help message and exit
 
-    example:
+    Example:
+    -------
       >>> showcmd echo $USER can't hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """

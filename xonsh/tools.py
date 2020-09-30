@@ -77,6 +77,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
     returncode of the command is nonzero.
 
     Example:
+    -------
         try:
             for line in !(ls):
                 print(line)
@@ -1254,7 +1255,7 @@ _FALSES = LazyObject(
 
 
 def to_bool(x):
-    """"Converts to a boolean in a semantically meaningful way."""
+    """Converts to a boolean in a semantically meaningful way."""
     if isinstance(x, bool):
         return x
     elif isinstance(x, str):
@@ -1264,7 +1265,7 @@ def to_bool(x):
 
 
 def to_bool_or_none(x):
-    """"Converts to a boolean or none in a semantically meaningful way."""
+    """Converts to a boolean or none in a semantically meaningful way."""
     if x is None or isinstance(x, bool):
         return x
     elif isinstance(x, str):

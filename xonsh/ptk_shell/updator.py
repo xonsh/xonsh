@@ -75,7 +75,6 @@ class AsyncPrompt:
 
         Parameters
         -----------
-
         on_complete:
             callback to notify after all the futures are completed
         """
