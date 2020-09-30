@@ -167,6 +167,13 @@ def norm_name(name):
     return name.upper().replace("#", "HEX")
 
 
+def style_as_faded(template: str) -> str:
+    """Remove the colors from the template string and style as faded."""
+    tokens = partial_color_tokenize(template)
+    without_color = "".join([sect for _, sect in tokens])
+    return "{NO_COLOR}{#d3d3d3}" + without_color + "{NO_COLOR}"
+
+
 DEFAULT_STYLE_DICT = LazyObject(
     lambda: defaultdict(
         lambda: "",

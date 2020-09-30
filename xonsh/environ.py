@@ -724,6 +724,23 @@ def DEFAULT_VARS():
             "Places the auto-suggest result as the first option in the completions. "
             "This enables you to tab complete the auto-suggestion.",
         ),
+        "ASYNC_INVALIDATE_INTERVAL": Var(
+            is_float,
+            float,
+            str,
+            0.05,
+            "When ENABLE_ASYNC_PROMPT is True, it may call the redraw frequently. "
+            "This is to group such calls into one that happens within that timeframe. "
+            "The number is set in seconds.",
+        ),
+        "ASYNC_PROMPT_THREAD_WORKERS": Var(
+            is_int,
+            int,
+            str,
+            None,
+            "Define the number of workers used by the ASYC_PROPMT's pool. "
+            "By default it is defined by Python's concurrent.futures.ThreadPoolExecutor",
+        ),
         "BASH_COMPLETIONS": Var(
             is_env_path,
             str_to_env_path,
@@ -875,6 +892,14 @@ def DEFAULT_VARS():
             "",
             "The string used to show a shortened directory in a shortened cwd, "
             "e.g. ``'…'``.",
+        ),
+        "ENABLE_ASYNC_PROMPT": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "When enabled the prompt is loaded from threads making the shell faster. "
+            "Sections that take long will be updated in the background. ",
         ),
         "EXPAND_ENV_VARS": Var(
             is_bool,
