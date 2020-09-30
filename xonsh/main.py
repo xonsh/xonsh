@@ -441,10 +441,13 @@ def main_xonsh(args):
     shell = builtins.__xonsh__.shell
     history = builtins.__xonsh__.history
     exit_code = 0
+
+    if shell and not env["XONSH_INTERACTIVE"]:
+        shell.ctx.update({"exit": sys.exit})
+
     try:
         if args.mode == XonshMode.interactive:
             # enter the shell
-            env["XONSH_INTERACTIVE"] = True
             ignore_sigtstp()
             if env["XONSH_INTERACTIVE"] and not any(
                 os.path.isfile(i) for i in env["XONSHRC"]
