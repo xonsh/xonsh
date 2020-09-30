@@ -39,10 +39,6 @@ from prompt_toolkit.styles.pygments import (
 )
 
 
-class PtkFormattedText:  # represents PTK `AnyFormattedText` type union
-    pass  # used only in type hinting, since PTK does not publish this API
-
-
 ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
 Token = _TokenType()
 
@@ -57,7 +53,7 @@ Fired after prompt toolkit has been initialized
 )
 
 
-def tokenize_ansi(tokens) -> PtkFormattedText:
+def tokenize_ansi(tokens):
     """Checks a list of (token, str) tuples for ANSI escape sequences and
     extends the token list with the new formatted entries.
     During processing tokens are converted to ``prompt_toolkit.FormattedText``.
@@ -146,7 +142,6 @@ class PromptToolkitShell(BaseShell):
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
         refresh_interval = refresh_interval if refresh_interval > 0 else None
         complete_in_thread = env.get("COMPLETION_IN_THREAD")
-        completions_menu_rows = env.get("COMPLETIONS_MENU_ROWS")
         completions_display = env.get("COMPLETIONS_DISPLAY")
         complete_style = self.completion_displays_to_styles[completions_display]
 
@@ -157,6 +152,8 @@ class PromptToolkitShell(BaseShell):
         if HAS_PYGMENTS:
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         completer = None if completions_display == "none" else self.pt_completer
+
+        get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
 
         if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
             get_prompt_tokens = lambda: self.prompt_tokens("PROMPT", "message")
@@ -193,7 +190,7 @@ class PromptToolkitShell(BaseShell):
             "editing_mode": editing_mode,
             "prompt_continuation": self.continuation_tokens,
             "enable_history_search": enable_history_search,
-            "reserve_space_for_menu": completions_menu_rows,
+            "reserve_space_for_menu": 0,
             "key_bindings": self.key_bindings,
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
@@ -252,10 +249,6 @@ class PromptToolkitShell(BaseShell):
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
         self.push = self._push
-        if self._first_prompt:
-            carriage_return()
-            self._first_prompt = False
-
         while not builtins.__xonsh__.exit:
             try:
                 line = self.singleline(auto_suggest=auto_suggest)
@@ -291,30 +284,57 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
 
-        # handle OSC tokens
         p, osc_tokens = remove_ansi_osc(p)
-        for osc in osc_tokens:
-            if osc[2:4] == "0;":
-                builtins.__xonsh__.env["TITLE"] = osc[4:-1]
-            else:
-                print(osc, file=sys.__stdout__, flush=True)
-        self.settitle()
 
-        # convert what's left to PTK FormattedText
+        if kwargs.get("handle_osc_tokens"):
+            # handle OSC tokens
+            for osc in osc_tokens:
+                if osc[2:4] == "0;":
+                    env["TITLE"] = osc[4:-1]
+                else:
+                    print(osc, file=sys.__stdout__, flush=True)
+
         toks = partial_color_tokenize(p)
+
         return tokenize_ansi(PygmentsTokens(toks))
 
-    def continuation_tokens(
-        self, width, line_number, is_soft_wrap=False
-    ) -> PtkFormattedText:
+    def prompt_tokens(self):
+        """Returns a list of (token, str) tuples for the current prompt."""
+        if self._first_prompt:
+            carriage_return()
+            self._first_prompt = False
+
+        tokens = self._get_prompt_tokens("PROMPT", "message", handle_osc_tokens=True)
+        self.settitle()
+        return tokens
+
+    def rprompt_tokens(self):
+        """Returns a list of (token, str) tuples for the current right
+        prompt.
+        """
+        return self._get_prompt_tokens("RIGHT_PROMPT", "rprompt", default=[])
+
+    def _bottom_toolbar_tokens(self):
+        """Returns a list of (token, str) tuples for the current bottom
+        toolbar.
+        """
+        return self._get_prompt_tokens("BOTTOM_TOOLBAR", "bottom_toolbar", default=None)
+
+    @property
+    def bottom_toolbar_tokens(self):
+        """Returns self._bottom_toolbar_tokens if it would yield a result"""
+        if builtins.__xonsh__.env.get("BOTTOM_TOOLBAR"):
+            return self._bottom_toolbar_tokens
+
+    def continuation_tokens(self, width, line_number, is_soft_wrap=False):
         """Displays dots in multiline prompt"""
         if is_soft_wrap:
-            return []
+            return ""
         width = width - 1
         dots = builtins.__xonsh__.env.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
         if not dots:
-            return []
+            return ""
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
