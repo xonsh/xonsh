@@ -163,11 +163,17 @@ def current_branch():
     return branch or None
 
 
-def _git_dirty_working_directory(q, include_untracked):
+def _get_exit_code(cmd):
+    """ Run a command and return its exit code """
     denv = builtins.__xonsh__.env.detype()
+    child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
+    return child.returncode
+
+
+def _git_dirty_working_directory(q, include_untracked):
     try:
         # Borrowed from this conversation
-        # https://github.com/sindresorhus/pure/issues/115
+        # https://gist.github.com/sindresorhus/3898739
         if include_untracked:
             cmd = [
                 "git",
@@ -176,15 +182,19 @@ def _git_dirty_working_directory(q, include_untracked):
                 "--quiet",
                 "--untracked-files=normal",
             ]
+            exitcode = _get_exit_code(cmd)
         else:
-            unindexed = ["git", "diff", "--no-ext-diff", "--quiet"]
-            indexed = unindexed + ["--cached", "HEAD"]
-            cmd = unindexed + ["||"] + indexed
-        child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
+            # checking unindexed files is faster, so try that first
+            unindexed = ["git", "diff-files", "--quiet"]
+            exitcode = _get_exit_code(unindexed)
+            if exitcode == 0:
+                # then, check indexed files
+                indexed = ["git", "diff-index", "--quiet", "--cached", "HEAD"]
+                exitcode = _get_exit_code(indexed)
         # "--quiet" git commands imply "--exit-code", which returns:
         # 1 if there are differences
         # 0 if there are no differences
-        dwd = bool(child.returncode)
+        dwd = bool(exitcode)
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     else:
