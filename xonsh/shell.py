@@ -34,24 +34,6 @@ output, so design any handlers for this carefully.
 )
 
 events.doc(
-    "on_run_subproc",
-    """
-on_run_subproc(cmds: tuple) -> tuple
-
-Fires just before a subprocess command is executed. Could be used to modify subprocess command before execute.
-
-Parameters:
-
-* ``cmds``: The tuple of commands and arguments that will be executed. Example: ``(['ls', '-l'], '|', ['grep', 'file'])``.
-
-Return:
-
-If tuple was returned it will replace the cmds.
-
-""",
-)
-
-events.doc(
     "on_precommand",
     """
 on_precommand(cmd: str) -> None
