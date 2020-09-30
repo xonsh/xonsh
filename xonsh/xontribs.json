@@ -196,6 +196,11 @@
   "url": "https://github.com/anki-code/xontrib-prompt-bar",
   "description": ["An elegance bar style for prompt."]
  }, 
+ {"name": "powerline-binding",
+  "package": "xontrib-powerline-binding",
+  "url": "https://github.com/dyuri/xontrib-powerline-binding",
+  "description": ["Uses powerline to render the xonsh prompt"]
+ },
  {"name": "prompt_ret_code",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -374,6 +379,13 @@
    "url": "https://github.com/santagada/xontrib-powerline",
    "install": {
     "pip": "xpip install xontrib-powerline"
+   }
+  },
+  "xontrib-powerline-binding": {
+   "license": "MIT",
+   "url": "https://github.com/dyuri/xontrib-powerline-binding",
+   "install": {
+    "pip": "xpip install xontrib-powerline-binding"
    }
   },
   "xontrib-prompt-ret-code": {
