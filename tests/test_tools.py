@@ -859,6 +859,8 @@ def test_str_to_env_path(inp, exp):
 @pytest.mark.parametrize("inp, exp", [(pathlib.Path("///tmp"), "/tmp")])
 def test_path_to_str(inp, exp):
     obs = path_to_str(inp)
+    if ON_WINDOWS:
+        exp = exp.replace('/','\\')
     assert exp == obs
 
 
