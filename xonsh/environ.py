@@ -13,8 +13,8 @@ import collections
 import collections.abc as cabc
 import subprocess
 import platform
+import pathlib
 
-from pathlib import Path
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
@@ -2004,8 +2004,11 @@ class Env(cabc.MutableMapping):
             return default
 
     def get_path(self, *args, **kwargs):
+        """The environment will look up default values from its own defaults if a
+        default is not given here and then Path-object will return.
+        """
         v = self.get(*args, **kwargs)
-        return Path(v) if v is not None else None
+        return pathlib.Path(v) if v else None
 
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.
