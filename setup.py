@@ -8,25 +8,12 @@ import sys
 import json
 import subprocess
 
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:
-    pass
-
 from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools.command.build_py import build_py
 from setuptools.command.install_scripts import install_scripts
-
-try:
-    from jupyter_client.kernelspec import KernelSpecManager
-
-    HAVE_JUPYTER = True
-except ImportError:
-    HAVE_JUPYTER = False
-
 
 TABLES = [
     "xonsh/lexer_table.py",
@@ -84,50 +71,6 @@ def build_tables():
         yacc_debug=True,
     )
     sys.path.pop(0)
-
-
-def install_jupyter_hook(prefix=None, root=None):
-    """Make xonsh available as a Jupyter kernel."""
-    if not HAVE_JUPYTER:
-        print(
-            "Could not install Jupyter kernel spec, please install " "Jupyter/IPython."
-        )
-        return
-    spec = {
-        "argv": [
-            sys.executable,
-            "-m",
-            "xonsh.jupyter_kernel",
-            "-f",
-            "{connection_file}",
-        ],
-        "display_name": "Xonsh",
-        "language": "xonsh",
-        "codemirror_mode": "shell",
-    }
-    with TemporaryDirectory() as d:
-        os.chmod(d, 0o755)  # Starts off as 700, not user readable
-        if sys.platform == "win32":
-            # Ensure that conda-build detects the hard coded prefix
-            spec["argv"][0] = spec["argv"][0].replace(os.sep, os.altsep)
-        with open(os.path.join(d, "kernel.json"), "w") as f:
-            json.dump(spec, f, sort_keys=True)
-        if "CONDA_BUILD" in os.environ:
-            prefix = sys.prefix
-            if sys.platform == "win32":
-                prefix = prefix.replace(os.sep, os.altsep)
-        user = "--user" in sys.argv
-        print("Installing Jupyter kernel spec:")
-        print("  root: {0!r}".format(root))
-        print("  prefix: {0!r}".format(prefix))
-        print("  as user: {0}".format(user))
-        if root and prefix:
-            # os.path.join isn't used since prefix is probably absolute
-            prefix = root + prefix
-            print("  combined prefix {0!r}".format(prefix))
-        KernelSpecManager().install_kernel_spec(
-            d, "xonsh", user=user, replace=True, prefix=prefix
-        )
 
 
 def dirty_version():
@@ -222,16 +165,6 @@ class xinstall(install):
         amalgamate_source()
         # add dirty version number
         dirty = dirty_version()
-        # install Jupyter hook
-        root = self.root if self.root else None
-        prefix = self.prefix if self.prefix else None
-        try:
-            install_jupyter_hook(prefix=prefix, root=root)
-        except Exception:
-            import traceback
-
-            traceback.print_exc()
-            print("Installing Jupyter hook failed.")
 
         super().run()
         if dirty:
@@ -412,7 +345,7 @@ def main():
         "linux": ["distro"],
         "proctitle": ["setproctitle"],
         "zipapp": ['importlib_resources; python_version < "3.7"'],
-        "full" : ["ptk", "pygments", "distro"]
+        "full": ["ptk", "pygments", "distro"],
     }
     skw["python_requires"] = ">=3.6"
     setup(**skw)

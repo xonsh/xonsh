@@ -2,10 +2,9 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
-import itertools
 import re
 from tempfile import TemporaryDirectory
-from xonsh.tools import always_true
+from xonsh.tools import always_true, DefaultNotGiven
 
 import pytest
 
@@ -13,7 +12,6 @@ from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
     locate_binary,
-    DEFAULT_VARS,
     default_env,
     make_args_env,
     LsColors,
@@ -357,7 +355,7 @@ def test_register_custom_var_generic():
     assert env["MY_SPECIAL_VAR"] == 32
 
     env["MY_SPECIAL_VAR"] = True
-    assert env["MY_SPECIAL_VAR"] == True
+    assert env["MY_SPECIAL_VAR"] is True
 
 
 def test_register_custom_var_int():
@@ -480,3 +478,24 @@ def test_env_iterate_rawkeys():
         elif isinstance(key, type(r)) and key.pattern == "re":
             saw_regex = True
     assert saw_regex
+
+
+def test_env_get_defaults():
+    """Verify the rather complex rules for env.get("<envvar>",default) value when envvar is not defined.
+    """
+
+    env = Env(TEST1=0)
+    env.register("TEST_REG", default="abc")
+    env.register("TEST_REG_DNG", default=DefaultNotGiven)
+
+    # var is defined, registered is don't-care => value is defined value
+    assert env.get("TEST1", 22) == 0
+    # var not defined, not registered => value is immediate default
+    assert env.get("TEST2", 22) == 22
+    assert "TEST2" not in env
+    # var not defined, is registered, reg default is not sentinel => value is *registered* default
+    assert env.get("TEST_REG", 22) == "abc"
+    assert "TEST_REG" in env
+    # var not defined, is registered, reg default is sentinel => value is *immediate* default
+    assert env.get("TEST_REG_DNG", 22) == 22
+    assert "TEST_REG_DNG" not in env

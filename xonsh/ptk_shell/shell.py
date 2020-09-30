@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
 import os
+import re
 import sys
 import builtins
 from types import MethodType
 
 from xonsh.events import events
 from xonsh.base_shell import BaseShell
+from xonsh.ptk_shell.formatter import PTKPromptFormatter
 from xonsh.shell import transform_command
 from xonsh.tools import print_exception, carriage_return
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_POSIX
@@ -37,6 +39,7 @@ from prompt_toolkit.styles.pygments import (
 )
 
 
+ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
 Token = _TokenType()
 
 events.transmogrify("on_ptk_create", "LoadEvent")
@@ -76,6 +79,19 @@ def tokenize_ansi(tokens):
     return ansi_tokens
 
 
+def remove_ansi_osc(prompt):
+    """Removes the ANSI OSC escape codes - ``prompt_toolkit`` does not support them.
+    Some terminal emulators - like iTerm2 - uses them for various things.
+
+    See: https://www.iterm2.com/documentation-escape-codes.html
+    """
+
+    osc_tokens = ANSI_OSC_PATTERN.findall(prompt)
+    prompt = ANSI_OSC_PATTERN.sub("", prompt)
+
+    return prompt, osc_tokens
+
+
 class PromptToolkitShell(BaseShell):
     """The xonsh shell for prompt_toolkit v2 and later."""
 
@@ -93,13 +109,9 @@ class PromptToolkitShell(BaseShell):
         self._first_prompt = True
         self.history = ThreadedHistory(PromptToolkitHistory())
         self.prompter = PromptSession(history=self.history)
+        self.prompt_formatter = PTKPromptFormatter(self.prompter)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-        self.key_bindings = merge_key_bindings(
-            [
-                load_xonsh_bindings(),
-                load_emacs_shift_selection_bindings(),
-            ]
-        )
+        self.key_bindings = load_xonsh_bindings()
 
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
@@ -109,6 +121,11 @@ class PromptToolkitShell(BaseShell):
             history=self.history,
             completer=self.pt_completer,
             bindings=self.key_bindings,
+        )
+        # Goes at the end, since _MergedKeyBindings objects do not have
+        # an add() function, which is necessary for on_ptk_create events
+        self.key_bindings = merge_key_bindings(
+            [self.key_bindings, load_emacs_shift_selection_bindings()]
         )
 
     def singleline(
@@ -181,7 +198,7 @@ class PromptToolkitShell(BaseShell):
             "refresh_interval": refresh_interval,
             "complete_in_thread": complete_in_thread,
         }
-        if builtins.__xonsh__.env.get("COLOR_INPUT"):
+        if env.get("COLOR_INPUT"):
             if HAS_PYGMENTS:
                 prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
                 style = style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
@@ -198,7 +215,12 @@ class PromptToolkitShell(BaseShell):
                 except (AttributeError, TypeError, ValueError):
                     print_exception()
 
+        if env["ENABLE_ASYNC_PROMPT"]:
+            # once the prompt is done, update it in background as each future is completed
+            prompt_args["pre_run"] = self.prompt_formatter.start_update
+
         line = self.prompter.prompt(**prompt_args)
+
         events.on_post_prompt.fire()
         return line
 
@@ -243,50 +265,57 @@ class PromptToolkitShell(BaseShell):
                 else:
                     break
 
-    def prompt_tokens(self):
-        """Returns a list of (token, str) tuples for the current prompt."""
-        p = builtins.__xonsh__.env.get("PROMPT")
+    def _get_prompt_tokens(self, env_name: str, prompt_name: str, **kwargs):
+        env = builtins.__xonsh__.env
+        p = env.get(env_name)
+
+        if not p and "default" in kwargs:
+            return kwargs.pop("default")
+
         try:
-            p = self.prompt_formatter(p)
+            p = self.prompt_formatter(
+                template=p,
+                threaded=env["ENABLE_ASYNC_PROMPT"],
+                prompt_name=prompt_name,
+            )
         except Exception:  # pylint: disable=broad-except
             print_exception()
+
+        p, osc_tokens = remove_ansi_osc(p)
+
+        if kwargs.get("handle_osc_tokens"):
+            # handle OSC tokens
+            for osc in osc_tokens:
+                if osc[2:4] == "0;":
+                    env["TITLE"] = osc[4:-1]
+                else:
+                    print(osc, file=sys.__stdout__, flush=True)
+
         toks = partial_color_tokenize(p)
+
+        return tokenize_ansi(PygmentsTokens(toks))
+
+    def prompt_tokens(self):
+        """Returns a list of (token, str) tuples for the current prompt."""
         if self._first_prompt:
             carriage_return()
             self._first_prompt = False
+
+        tokens = self._get_prompt_tokens("PROMPT", "message", handle_osc_tokens=True)
         self.settitle()
-        return tokenize_ansi(PygmentsTokens(toks))
+        return tokens
 
     def rprompt_tokens(self):
         """Returns a list of (token, str) tuples for the current right
         prompt.
         """
-        p = builtins.__xonsh__.env.get("RIGHT_PROMPT")
-        # self.prompt_formatter does handle empty strings properly,
-        # but this avoids descending into it in the common case of
-        # $RIGHT_PROMPT == ''.
-        if isinstance(p, str) and len(p) == 0:
-            return []
-        try:
-            p = self.prompt_formatter(p)
-        except Exception:  # pylint: disable=broad-except
-            print_exception()
-        toks = partial_color_tokenize(p)
-        return tokenize_ansi(PygmentsTokens(toks))
+        return self._get_prompt_tokens("RIGHT_PROMPT", "rprompt", default=[])
 
     def _bottom_toolbar_tokens(self):
         """Returns a list of (token, str) tuples for the current bottom
         toolbar.
         """
-        p = builtins.__xonsh__.env.get("BOTTOM_TOOLBAR")
-        if not p:
-            return
-        try:
-            p = self.prompt_formatter(p)
-        except Exception:  # pylint: disable=broad-except
-            print_exception()
-        toks = partial_color_tokenize(p)
-        return tokenize_ansi(PygmentsTokens(toks))
+        return self._get_prompt_tokens("BOTTOM_TOOLBAR", "bottom_toolbar", default=None)
 
     @property
     def bottom_toolbar_tokens(self):

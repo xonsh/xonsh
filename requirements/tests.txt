@@ -1,6 +1,7 @@
 py
 pytest>=5.4
 flake8
+flake8-docstrings
 pytest-cov
 pytest-timeout
 prompt-toolkit>=2.0

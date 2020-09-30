@@ -333,7 +333,6 @@ def handle_token(state, token):
 
     Parameters
     ----------
-
     state :
         The current state of the lexer, including information about whether
         we are in Python mode or subprocess mode, which changes the lexer's

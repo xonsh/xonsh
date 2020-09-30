@@ -4,17 +4,15 @@ the xonsh shell
 
 .. include:: intro.rst
 
-.. include:: tryitnow.rst
-
-.. include:: comparison.rst
-
 .. include:: installation.rst
 
-.. include:: news.rst
+.. include:: comparison.rst
 
 .. include:: guides.rst
 
 .. include:: setup.rst
+
+.. include:: news.rst
 
 .. include:: contributing.rst
 

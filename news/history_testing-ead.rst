@@ -1,6 +1,6 @@
 **Added:**
 
-* Borrow shift-selection from prompt-toolkit. Shift-arrow (selects a letter) and control-shift-arrow (selects a word) should now be supported.
+* history clear, history off and history on actions, for managing whether history in the current session is saved.
 
 **Changed:**
 

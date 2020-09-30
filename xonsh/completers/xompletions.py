@@ -2,6 +2,7 @@
 
 import xonsh.xontribs as xx
 import xonsh.tools as xt
+from xonsh.xonfig import XONFIG_MAIN_ACTIONS
 
 
 def complete_xonfig(prefix, line, start, end, ctx):
@@ -11,7 +12,7 @@ def complete_xonfig(prefix, line, start, end, ctx):
         return None
     curix = args.index(prefix)
     if curix == 1:
-        possible = {"info", "wizard", "styles", "colors", "-h"}
+        possible = set(XONFIG_MAIN_ACTIONS.keys()) | {"-h"}
     elif curix == 2 and args[1] == "colors":
         possible = set(xt.color_style_names())
     else:

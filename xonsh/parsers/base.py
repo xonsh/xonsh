@@ -3325,11 +3325,7 @@ class BaseParser(object):
         p[0] = ast.Str(s=p1.value, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_envvar_assign_left(self, p):
-        """envvar_assign_left : dollar_name_tok EQUALS
-                              | dollar_name_tok WS EQUALS
-                              | dollar_name_tok EQUALS WS
-                              | dollar_name_tok WS EQUALS WS
-        """
+        """envvar_assign_left : dollar_name_tok EQUALS"""
         p[0] = p[1]
 
     def p_envvar_assign(self, p):
@@ -3359,7 +3355,7 @@ class BaseParser(object):
         p[0] = p2
 
     def p_empty(self, p):
-        "empty : "
+        """empty : """
         p[0] = None
 
     def p_error(self, p):

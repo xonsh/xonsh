@@ -71,6 +71,7 @@ class History:
         self.last_cmd_out = None
         self.hist_size = None
         self.hist_units = None
+        self.remember_history = True
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -151,5 +152,11 @@ class History:
             Determines the size and units of what would be allowed to remain.
         blocking: bool
             If set blocking, then wait until gc action finished.
+        """
+        pass
+
+    def clear(self):
+        """Clears the history of the current session from both the disk and
+        memory.
         """
         pass

@@ -37,47 +37,53 @@ class PromptFormatter:
     def __init__(self):
         self.cache = {}
 
-    def __call__(self, template=DEFAULT_PROMPT, fields=None):
+    def __call__(self, template=DEFAULT_PROMPT, fields=None, **kwargs):
         """Formats a xonsh prompt template string."""
         if fields is None:
             self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
         else:
             self.fields = fields
         try:
-            prompt = self._format_prompt(template=template)
+            prompt = self._format_prompt(template=template, **kwargs)
         except Exception:
             return _failover_template_format(template)
         # keep cache only during building prompt
         self.cache.clear()
         return prompt
 
-    def _format_prompt(self, template=DEFAULT_PROMPT):
+    def _format_prompt(self, template=DEFAULT_PROMPT, **kwargs):
+        return "".join(self._get_tokens(template, **kwargs))
+
+    def _get_tokens(self, template, **kwargs):
         template = template() if callable(template) else template
         toks = []
         for literal, field, spec, conv in xt.FORMATTER.parse(template):
             toks.append(literal)
-            entry = self._format_field(field, spec, conv)
+            entry = self._format_field(field, spec, conv, idx=len(toks), **kwargs)
             if entry is not None:
                 toks.append(entry)
-        return "".join(toks)
+        return toks
 
-    def _format_field(self, field, spec, conv):
+    def _format_field(self, field, spec, conv, **kwargs):
         if field is None:
             return
         elif field.startswith("$"):
             val = builtins.__xonsh__.env[field[1:]]
             return _format_value(val, spec, conv)
         elif field in self.fields:
-            val = self._get_field_value(field)
+            val = self._get_field_value(field, **kwargs)
             return _format_value(val, spec, conv)
         else:
             # color or unknown field, return as is
             return "{" + field + "}"
 
-    def _get_field_value(self, field):
+    def _get_field_value(self, field, **kwargs):
         field_value = self.fields[field]
         if field_value in self.cache:
             return self.cache[field_value]
+        return self._no_cache_field_value(field, field_value, **kwargs)
+
+    def _no_cache_field_value(self, field, field_value, **_):
         try:
             value = field_value() if callable(field_value) else field_value
             self.cache[field_value] = value
@@ -95,7 +101,7 @@ def PROMPT_FIELDS():
         prompt_end="#" if xt.is_superuser() else "$",
         hostname=socket.gethostname().split(".", 1)[0],
         cwd=_dynamically_collapsed_pwd,
-        cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
+        cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
         cwd_base=lambda: os.path.basename(_replace_home_cwd()),
         short_cwd=_collapsed_pwd,
         curr_branch=current_branch,

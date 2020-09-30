@@ -77,6 +77,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
     returncode of the command is nonzero.
 
     Example:
+    -------
         try:
             for line in !(ls):
                 print(line)
@@ -515,9 +516,9 @@ def _have_open_triple_quotes(s):
 
 
 def get_line_continuation():
-    """ The line continuation characters used in subproc mode. In interactive
-         mode on Windows the backslash must be preceded by a space. This is because
-         paths on Windows may end in a backslash.
+    """The line continuation characters used in subproc mode. In interactive
+    mode on Windows the backslash must be preceded by a space. This is because
+    paths on Windows may end in a backslash.
     """
     if (
         ON_WINDOWS
@@ -691,7 +692,7 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
 
 
 def get_sep():
-    """ Returns the appropriate filepath separator char depending on OS and
+    """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
     if ON_WINDOWS and builtins.__xonsh__.env.get("FORCE_POSIX_PATHS"):
@@ -814,7 +815,7 @@ def executables_in(path):
         return
 
 
-def command_not_found(cmd):
+def debian_command_not_found(cmd):
     """Uses the debian/ubuntu command-not-found utility to suggest packages for a
     command that cannot currently be found.
     """
@@ -839,6 +840,33 @@ def command_not_found(cmd):
     return s
 
 
+def conda_suggest_command_not_found(cmd, env):
+    """Uses conda-suggest to suggest packages for a command that cannot
+    currently be found.
+    """
+    try:
+        from conda_suggest import find
+    except ImportError:
+        return ""
+    return find.message_string(
+        cmd, conda_suggest_path=env.get("CONDA_SUGGEST_PATH", None)
+    )
+
+
+def command_not_found(cmd, env):
+    """Uses various mechanism to suggest packages for a command that cannot
+    currently be found.
+    """
+    if ON_LINUX:
+        rtn = debian_command_not_found(cmd)
+    else:
+        rtn = ""
+    conda = conda_suggest_command_not_found(cmd, env)
+    if conda:
+        rtn = rtn + "\n\n" + conda if rtn else conda
+    return rtn
+
+
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
     if not env.get("SUGGEST_COMMANDS"):
@@ -855,13 +883,10 @@ def suggest_commands(cmd, env, aliases):
             if levenshtein(alias.lower(), cmd, thresh) < thresh:
                 suggested[alias] = "Alias"
 
-    for path in filter(os.path.isdir, env.get("PATH")):
-        for _file in executables_in(path):
-            if (
-                _file not in suggested
-                and levenshtein(_file.lower(), cmd, thresh) < thresh
-            ):
-                suggested[_file] = "Command ({0})".format(os.path.join(path, _file))
+    for _cmd in builtins.__xonsh__.commands_cache.all_commands:
+        if _cmd not in suggested:
+            if levenshtein(_cmd.lower(), cmd, thresh) < thresh:
+                suggested[_cmd] = "Command ({0})".format(_cmd)
 
     suggested = collections.OrderedDict(
         sorted(
@@ -871,7 +896,7 @@ def suggest_commands(cmd, env, aliases):
     num = min(len(suggested), max_sugg)
 
     if num == 0:
-        rtn = command_not_found(cmd)
+        rtn = command_not_found(cmd, env)
     else:
         oneof = "" if num == 1 else "one of "
         tips = "Did you mean {}the following?".format(oneof)
@@ -881,7 +906,7 @@ def suggest_commands(cmd, env, aliases):
             "    {: <{}} {}".format(key + ":", length, val) for key, val in items
         )
         rtn = "{}\n{}".format(tips, alternatives)
-        c = command_not_found(cmd)
+        c = command_not_found(cmd, env)
         rtn += ("\n\n" + c) if len(c) > 0 else ""
     return rtn
 
@@ -1011,7 +1036,7 @@ def escape_windows_cmd_string(s):
 
 
 def argvquote(arg, force=False):
-    """ Returns an argument quoted in such a way that that CommandLineToArgvW
+    """Returns an argument quoted in such a way that that CommandLineToArgvW
     on Windows will return the argument string unchanged.
     This is the same thing Popen does when supplied with an list of arguments.
     Arguments in a command line should be separated by spaces; this
@@ -1230,7 +1255,7 @@ _FALSES = LazyObject(
 
 
 def to_bool(x):
-    """"Converts to a boolean in a semantically meaningful way."""
+    """Converts to a boolean in a semantically meaningful way."""
     if isinstance(x, bool):
         return x
     elif isinstance(x, str):
@@ -1240,7 +1265,7 @@ def to_bool(x):
 
 
 def to_bool_or_none(x):
-    """"Converts to a boolean or none in a semantically meaningful way."""
+    """Converts to a boolean or none in a semantically meaningful way."""
     if x is None or isinstance(x, bool):
         return x
     elif isinstance(x, str):
@@ -1481,8 +1506,8 @@ def bool_seq_to_csv(x):
 
 
 def ptk2_color_depth_setter(x):
-    """ Setter function for $PROMPT_TOOLKIT_COLOR_DEPTH. Also
-        updates os.environ so prompt toolkit can pickup the value.
+    """Setter function for $PROMPT_TOOLKIT_COLOR_DEPTH. Also
+    updates os.environ so prompt toolkit can pickup the value.
     """
     x = str(x)
     if x in {
@@ -1660,7 +1685,7 @@ def is_history_backend(x):
 
 
 def is_dynamic_cwd_width(x):
-    """ Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
+    """Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
     environment variable.
     """
     return (
@@ -1872,7 +1897,7 @@ WIN_BOLD_COLOR_MAP = LazyObject(_win_bold_color_map, globals(), "WIN_BOLD_COLOR_
 
 def hardcode_colors_for_win10(style_map):
     """Replace all ansi colors with hardcoded colors to avoid unreadable defaults
-       in conhost.exe
+    in conhost.exe
     """
     modified_style = {}
     if not builtins.__xonsh__.env["PROMPT_TOOLKIT_COLOR_DEPTH"]:
@@ -1898,8 +1923,7 @@ def hardcode_colors_for_win10(style_map):
 
 
 def ansicolors_to_ptk1_names(stylemap):
-    """Converts ansicolor names in a stylemap to old PTK1 color names
-    """
+    """Converts ansicolor names in a stylemap to old PTK1 color names"""
     if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
         return stylemap
     modified_stylemap = {}
@@ -1913,7 +1937,7 @@ def ansicolors_to_ptk1_names(stylemap):
 
 def intensify_colors_for_cmd_exe(style_map):
     """Returns a modified style to where colors that maps to dark
-       colors are replaced with brighter versions.
+    colors are replaced with brighter versions.
     """
     modified_style = {}
     replace_colors = {

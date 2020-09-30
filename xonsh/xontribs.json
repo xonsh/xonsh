@@ -20,7 +20,7 @@
  {"name": "argcomplete",
   "package": "xontrib-argcomplete",
   "url": "https://github.com/anki-code/xontrib-argcomplete",
-  "description": ["Adding support of kislyuk/argcomplete to xonsh."]
+  "description": ["Argcomplete support to tab completion of python and xonsh scripts in xonsh."]
  },
  {"name": "autojump",
   "package": "xontrib-autojump",
@@ -48,13 +48,14 @@
   "url": "http://xon.sh",
   "description": [
     "Enables additional Bash-like syntax while at the command prompt. For ",
-    "example, the ``!!`` syntax for running the previous command is now usable.",
+    "example, the ``!!`` syntax for running the previous command is now usable. ",
     "Note that these features are implemented as precommand events and these ",
     "additions do not affect the xonsh language when run as script. That said, ",
     "you might find them useful if you have strong muscle memory.\n\n",
     "**Warning:** This xontrib may modify user command line input to implement ",
     "its behavior. To see the modifications as they are applied (in unified diff",
-    "format), please set ``$XONSH_DEBUG`` to ``2`` or higher."]
+    "format), please set ``$XONSH_DEBUG`` to ``2`` or higher.\n\n",
+    "The xontrib also adds commands: ``alias``, ``export``, ``unset``, ``set``, ``shopt``, ``complete``."]
  },
  {"name": "base16_shell",
   "package": "xontrib-base16-shell",
@@ -169,15 +170,37 @@
   "description": ["Get identifiers, names, paths, URLs and words from the previous command output ",
                   "and use them for the next command."]
  },
+ {"name": "onepath",
+  "package": "xontrib-onepath",
+  "url": "https://github.com/anki-code/xontrib-onepath",
+  "description": ["When you click to a file or folder in graphical OS they will be opened in associated app.",
+                  "The xontrib-onepath brings the same logic for the xonsh shell. Type the filename or path",
+                  "without preceding command and an associated action will be executed. The actions are customizable."]
+ },
  {"name": "pdb",
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": ["Simple built-in debugger. Runs pdb on reception of SIGUSR1 signal."]
  },
+ {"name": "pipeliner",
+  "package": "xontrib-pipeliner",
+  "url": "https://github.com/anki-code/xontrib-pipeliner",
+  "description": ["Let your pipe lines flow thru the Python code in xonsh."]
+ }, 
  {"name": "powerline",
   "package": "xontrib-powerline",
   "url": "https://github.com/santagada/xontrib-powerline",
   "description": ["Powerline for Xonsh shell"]
+ },
+ {"name": "prompt_bar",
+  "package": "xontrib-prompt-bar",
+  "url": "https://github.com/anki-code/xontrib-prompt-bar",
+  "description": ["An elegance bar style for prompt."]
+ }, 
+ {"name": "powerline-binding",
+  "package": "xontrib-powerline-binding",
+  "url": "https://github.com/dyuri/xontrib-powerline-binding",
+  "description": ["Uses powerline to render the xonsh prompt"]
  },
  {"name": "prompt_ret_code",
   "package": "xonsh",
@@ -214,16 +237,6 @@
   "url": "https://github.com/dyuri/xontrib-ssh-agent",
   "description": ["ssh-agent integration"]
  },
- {"name": "prompt_bar",
-  "package": "xontrib-prompt-bar",
-  "url": "https://github.com/anki-code/xontrib-prompt-bar",
-  "description": ["An elegance bar style for prompt."]
- },
- {"name": "pipeliner",
-  "package": "xontrib-pipeliner",
-  "url": "https://github.com/anki-code/xontrib-pipeliner",
-  "description": ["Easily process the lines using pipes."]
- },
  {"name": "vox",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -238,8 +251,9 @@
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": [
-    "Jumping across whole words (non-whitespace) with Ctrl+Left/Right.",
-    "Alt+Left/Right remains unmodified to jump over smaller word segments."]
+    "Jumping across whole words (non-whitespace) with Ctrl+Left/Right. ",
+    "Alt+Left/Right remains unmodified to jump over smaller word segments. ",
+    "Shift+Delete removes the whole word."]
  },
  {"name": "xo",
   "package": "exofrills",
@@ -251,7 +265,7 @@
   },
   {"name": "xpg",
   "package": "xontrib-xpg",
-  "url": "https://github.com/fengttt/xsh/py",
+  "url": "https://github.com/fengttt/xsh/tree/master/py",
   "description": ["Run/plot/explain sql query for PostgreSQL."] 
   },
  {"name": "z",
@@ -367,6 +381,13 @@
    "url": "https://github.com/santagada/xontrib-powerline",
    "install": {
     "pip": "xpip install xontrib-powerline"
+   }
+  },
+  "xontrib-powerline-binding": {
+   "license": "MIT",
+   "url": "https://github.com/dyuri/xontrib-powerline-binding",
+   "install": {
+    "pip": "xpip install xontrib-powerline-binding"
    }
   },
   "xontrib-prompt-ret-code": {

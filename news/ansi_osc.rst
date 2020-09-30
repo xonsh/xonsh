@@ -1,6 +1,6 @@
 **Added:**
 
-* Added xontrib-argcomplete to support kislyuk/argcomplete - tab completion for argparse.
+* Support for ANSI OSC escape sequences in ``$PROMPT``, setting ``$TITLE`` for example. (#374, #1403)
 
 **Changed:**
 
