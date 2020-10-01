@@ -10,13 +10,7 @@ from xonsh.tools import always_true, DefaultNotGiven
 import pytest
 
 from xonsh.commands_cache import CommandsCache
-from xonsh.environ import (
-    Env,
-    locate_binary,
-    default_env,
-    make_args_env,
-    LsColors,
-)
+from xonsh.environ import Env, locate_binary, default_env, make_args_env, LsColors
 
 from tools import skip_if_on_unix
 
@@ -422,16 +416,23 @@ def test_register_custom_var_str(val, converted):
     assert env["MY_SPECIAL_VAR"] == converted
 
 
+def test_register_var_without_setting_val():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type="str")
+    # If variable registered but not initialized it should be None.
+    assert env["MY_SPECIAL_VAR"] == None
+
+
 def test_register_var_path():
     env = Env()
     env.register("MY_PATH_VAR", type="path")
 
-    path = '/tmp'
+    path = "/tmp"
     env["MY_PATH_VAR"] = path
     assert env["MY_PATH_VAR"] == pathlib.Path(path)
 
     # Empty string is None to avoid uncontrolled converting empty string to Path('.')
-    path = ''
+    path = ""
     env["MY_PATH_VAR"] = path
     assert env["MY_PATH_VAR"] == None
 
