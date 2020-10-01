@@ -34,3 +34,6 @@ exclude = '''
      )/
 )
 '''
+
+[tool.pytest.ini_options]
+norecursedirs = "manual_tests"
