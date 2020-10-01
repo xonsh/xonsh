@@ -837,7 +837,7 @@ def test_is_env_path(inp, exp):
     assert exp == obs
 
 
-@pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None)])
+@pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None), (False, False)])
 def test_str_to_path(inp, exp):
     obs = str_to_path(inp)
     assert exp == obs
@@ -853,7 +853,7 @@ def test_str_to_path(inp, exp):
 )
 def test_str_to_env_path(inp, exp):
     obs = str_to_env_path(inp)
-    assert exp == obs.paths
+    assert exp == obs.paths(type=str)
 
 
 @pytest.mark.parametrize("inp, exp", [(pathlib.Path("///tmp"), "/tmp")])

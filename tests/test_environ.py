@@ -34,7 +34,7 @@ def test_env_contains():
 @pytest.mark.parametrize("path", [["/home/wakka"], ["wakka"]])
 def test_env_path_list(path):
     env = Env(MYPATH=path)
-    assert path == env["MYPATH"].paths
+    assert path == env["MYPATH"].paths(type=str)
 
 
 @pytest.mark.parametrize(
@@ -43,7 +43,7 @@ def test_env_path_list(path):
 )
 def test_env_path_str(path):
     env = Env(MYPATH=path)
-    assert path == env["MYPATH"].paths
+    assert path == env["MYPATH"].paths(type=str)
 
 
 def test_env_detype():
@@ -447,7 +447,7 @@ def test_register_custom_var_env_path():
     env["MY_SPECIAL_VAR"] = paths
 
     assert hasattr(env["MY_SPECIAL_VAR"], "paths")
-    assert env["MY_SPECIAL_VAR"].paths == paths
+    assert env["MY_SPECIAL_VAR"].paths(type=str) == paths
 
     with pytest.raises(TypeError):
         env["MY_SPECIAL_VAR"] = 32

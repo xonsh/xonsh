@@ -208,12 +208,11 @@ class EnvPath(cabc.MutableSequence):
     def insert(self, index, value):
         self._l.insert(index, value)
 
-    @property
-    def paths(self):
+    def paths(self, type=pathlib.Path):
         """
         Returns the list of directories that this EnvPath contains.
         """
-        return list(self)
+        return [type(p) for p in list(self)]
 
     def __repr__(self):
         return repr(self._l)
@@ -1183,8 +1182,12 @@ def is_env_path(x):
 
 def str_to_path(x):
     """Converts a string to a path."""
-    # checking x is needed to avoid uncontrolled converting empty string to Path('.')
-    return pathlib.Path(x) if x else None
+    if isinstance(x, str):
+        # checking x is needed to avoid uncontrolled converting empty string to Path('.')
+        return pathlib.Path(x) if x else None
+    else:
+        # if variable set to non string value, leave it as is
+        return x
 
 
 def str_to_env_path(x):

@@ -209,8 +209,8 @@ Like other variables in Python, environment variables have a type. Sometimes
 this type is imposed based on the variable name. The current rules are pretty
 simple:
 
-* ``\w*PATH``: any variable whose name ends in PATH is a list of strings.
-* ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
+* ``\w*PATH``, ``\w*_DIRS``, ``\w*_FILES``: any variable whose name ends in PATH is a list of strings.
+* ``\w*_FILE``, ``\w*_DIR``: any variable whose name ends in _FILE is a file path.
 * ``XONSH_HISTORY_SIZE``: this variable is an int.
 * ``CASE_SENSITIVE_COMPLETIONS``: this variable is a boolean.
 
@@ -225,6 +225,12 @@ PATH examples:
     ['/home/snail/.local/bin', '/home/snail/sandbox/bin',
     '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin',
     '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
+    >>> $PATH.paths()
+    [PosixPath('/home/snail/.local/bin'),
+     PosixPath('/home/snail/sandbox/bin'),
+     #...
+    >>> $PATH.paths()[0].exists()
+    True
     >>> $LD_LIBRARY_PATH
     ['/home/snail/.local/lib', '']
 
