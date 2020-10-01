@@ -1985,7 +1985,7 @@ class Env(cabc.MutableMapping):
         ):
             self._detyped = None
 
-        if val:
+        if val is not None:
             validator = self.get_validator(key)
             converter = self.get_converter(key)
             if not validator(val):
