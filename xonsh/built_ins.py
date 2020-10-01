@@ -44,6 +44,7 @@ from xonsh.tools import (
     globpath,
     XonshError,
     XonshCalledProcessError,
+    print_color,
 )
 from xonsh.lazyimps import pty, termios, fcntl
 from xonsh.commands_cache import CommandsCache
@@ -1467,6 +1468,8 @@ class XonshSession:
         for refname, objname in proxy_mapping.items():
             proxy = DynamicAccessProxy(refname, objname)
             setattr(builtins, refname, proxy)
+
+        builtins.printx = print_color
 
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that

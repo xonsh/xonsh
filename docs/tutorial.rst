@@ -1502,8 +1502,8 @@ For example:
     (env) >>>
 
 
-You can also color your prompt easily by inserting keywords such as ``{GREEN}``
-or ``{BOLD_BLUE}``.  Colors have the form shown below:
+You can also color your prompt (or print colored messages using ``printx`` function) easily by inserting
+keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
 * ``RESET``: Resets any previously used styling.
 * ``COLORNAME``: Inserts a color code for the following basic colors,
