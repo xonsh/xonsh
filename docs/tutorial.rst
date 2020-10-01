@@ -253,9 +253,9 @@ does not exist:
 
 .. code-block:: xonshcon
 
-    ${...}.register('MY_HOSTS_FILE', type='path', default=p'/etc/hosts')
-    if $MY_HOSTS_FILE.exists():
-        wc -l $MY_HOSTS_FILE
+    ${...}.register('MY_HOSTS', type='path', default=p'/etc/hosts')
+    if $MY_HOSTS.exists():
+        wc -l $MY_HOSTS
 
 Learn more about `register function <environ.html#xonsh.environ.Env.register>`_.
 
