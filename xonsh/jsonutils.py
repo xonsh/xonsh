@@ -16,4 +16,4 @@ def serialize_xonsh_json(val):
 
 @serialize_xonsh_json.register(EnvPath)
 def _serialize_xonsh_json_env_path(val):
-    return val.paths
+    return val.paths(type=str)
