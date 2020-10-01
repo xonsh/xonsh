@@ -222,12 +222,12 @@ PATH examples:
 .. code-block:: xonshcon
 
     >>> $PATH
-    ['/home/snail/.local/bin', '/home/snail/sandbox/bin',
+    ['/home/snail/.local/bin', '/home/anki/sandbox/bin',
     '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin',
     '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
     >>> $PATH.paths()
     [PosixPath('/home/snail/.local/bin'),
-     PosixPath('/home/snail/sandbox/bin'),
+     PosixPath('/home/anki/sandbox/bin'),
      #...
     >>> $PATH.paths()[0].exists()
     True
