@@ -435,8 +435,9 @@ def test_register_var_path():
     env["MY_PATH_VAR"] = path
     assert env["MY_PATH_VAR"] == None
 
-    with pytest.raises(TypeError):
-        env["MY_PATH_VAR"] = 42
+    path = 42
+    env["MY_PATH_VAR"] = path
+    assert env["MY_PATH_VAR"] == 42
 
 
 def test_register_custom_var_env_path():
