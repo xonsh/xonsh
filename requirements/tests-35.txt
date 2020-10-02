@@ -1,9 +1,0 @@
-py
-pytest>=5.4
-flake8
-pytest-cov
-pytest-timeout
-prompt-toolkit>=2.0
-pygments>=2.2
-codecov
-coverage
