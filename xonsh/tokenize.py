@@ -331,15 +331,10 @@ _redir_map = (
 )
 IORedirect = group(group(*_redir_map), "{}>>?".format(group(*_redir_names)))
 
-
-def _get_redir_check():
-    _map = set(_redir_map)
-    _check1 = {"{}>".format(i) for i in _redir_names}.union(_map)
-    _check2 = {"{}>>".format(i) for i in _redir_names}.union(_check1)
-    return frozenset(_check2)
-
-
-_redir_check = _get_redir_check()
+_redir_check_0 = set(_redir_map)
+_redir_check_1 = {"{}>".format(i) for i in _redir_names}.union(_redir_check_0)
+_redir_check_2 = {"{}>>".format(i) for i in _redir_names}.union(_redir_check_1)
+_redir_check = frozenset(_redir_check_2)
 
 Operator = group(
     r"\*\*=?",

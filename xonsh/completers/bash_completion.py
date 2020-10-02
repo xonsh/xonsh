@@ -13,10 +13,9 @@ import pathlib
 import platform
 import functools
 import subprocess
+import typing as tp
 
 __version__ = "0.2.6"
-
-import typing as tp
 
 
 @functools.lru_cache(1)

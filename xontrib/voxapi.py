@@ -18,7 +18,7 @@ import subprocess as sp
 
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS
-from xonsh.fs import PathLike, fspath
+
 
 # This is because builtins aren't globally created during testing.
 # FIXME: Is there a better way?
@@ -160,8 +160,8 @@ class Vox(collections.abc.Mapping):
         )
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
-        if isinstance(name, PathLike):
-            env_path = fspath(name)
+        if isinstance(name, os.PathLike):
+            env_path = os.fspath(name)
         else:
             env_path = os.path.join(self.venvdir, name)
         if not self._check_reserved(env_path):
@@ -274,8 +274,8 @@ class Vox(collections.abc.Mapping):
         if name is ...:
             env = builtins.__xonsh__.env
             env_paths = [env["VIRTUAL_ENV"]]
-        elif isinstance(name, PathLike):
-            env_paths = [fspath(name)]
+        elif isinstance(name, os.PathLike):
+            env_paths = [os.fspath(name)]
         else:
             if not self._check_reserved(name):
                 # Don't allow a venv that could be a venv special dir

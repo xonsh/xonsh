@@ -33,8 +33,7 @@ def python(*_):
             (('pytest', '--ignore', 'tests/test_main.py', 'tests/test_ptk_highlight.py'), "Test Rest"),
     ), start=1):
 
-        print("")
-        print("$ %s" % ' '.join(command))
+        print(f"\n$ {' '.join(command)}")
         failure = subprocess.call(command)
 
         if failure:

@@ -38,11 +38,10 @@ import warnings
 import operator
 import ast
 import string
+import typing as tp
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
-import typing as tp
-
 from xonsh import __version__
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (
@@ -721,7 +720,7 @@ def fallback(cond, backup):
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
 
-    _stream: str
+    _stream: tp.Optional[str] = None
 
     def __init__(self, new_target):
         self._new_target = new_target

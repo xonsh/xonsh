@@ -7,7 +7,7 @@ else:
     import sys as _sys
 
     try:
-        from xonsh.prompt import __amalgam__  # type:ignore
+        from xonsh.prompt import __amalgam__
 
         cwd = __amalgam__
         _sys.modules["xonsh.prompt.cwd"] = __amalgam__
