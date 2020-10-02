@@ -79,7 +79,7 @@ from xonsh.tools import (
 )
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows
+from .tools import skip_if_on_windows
 
 LEXER = Lexer()
 LEXER.build()

@@ -9,7 +9,7 @@ import pytest
 from xonsh.aliases import Aliases, ExecAlias
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows
+from .tools import skip_if_on_windows
 
 
 def cd(args, stdin=None, **kwargs):

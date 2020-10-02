@@ -17,7 +17,7 @@ from xonsh.environ import (
     LsColors,
 )
 
-from tools import skip_if_on_unix
+from .tools import skip_if_on_unix
 
 
 def test_env_normal():

@@ -9,7 +9,7 @@ from xonsh.environ import Env
 from xonsh.prompt.base import PromptFormatter, PROMPT_FIELDS
 from xonsh.prompt import vc
 
-from tools import DummyEnv
+from .tools import DummyEnv
 
 
 @pytest.fixture

@@ -12,7 +12,7 @@ from prompt_toolkit.buffer import Buffer
 from xonsh.tools import ON_WINDOWS
 from xonsh.built_ins import XonshSession
 
-from tools import DummyEnv
+from .tools import DummyEnv
 
 Context = namedtuple("Context", ["indent", "buffer", "accept", "cli", "cr"])
 

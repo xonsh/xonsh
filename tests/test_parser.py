@@ -11,7 +11,7 @@ from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
-from tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
+from .tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
 
 
 @pytest.fixture(autouse=True)

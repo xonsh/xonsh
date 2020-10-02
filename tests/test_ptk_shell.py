@@ -28,15 +28,14 @@ from xonsh.shell import Shell
     ],
 )
 def test_prompt_toolkit_version_checks(
-    ptk_ver,
-    ini_shell_type,
-    exp_shell_type,
-    warn_snip,
-    using_vended_ptk,
-    monkeypatch,
-    xonsh_builtins,
+        ptk_ver,
+        ini_shell_type,
+        exp_shell_type,
+        warn_snip,
+        using_vended_ptk,
+        monkeypatch,
+        xonsh_builtins,
 ):
-
     mocked_warn = ""
 
     def mock_warning(msg):
@@ -94,8 +93,8 @@ def test_prompt_toolkit_version_checks(
         ([("s1", "\x1b[33mansi \x1b[1monly")], ["", "ansi ", "only"]),
         # mixed
         (
-            [("s1", "no ansi"), ("s2", "mixed \x1b[33mansi")],
-            ["no ansi", "mixed ", "ansi"],
+                [("s1", "no ansi"), ("s2", "mixed \x1b[33mansi")],
+                ["no ansi", "mixed ", "ansi"],
         ),
     ],
 )
@@ -118,9 +117,9 @@ def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
         ("test \033]0;TITLE THIS\007prompt", "test prompt", ["\033]0;TITLE THIS\007"]),
         # title + iTerm2 OSC exapmle
         (
-            "test \033]0;TITLE THIS\007prompt \033]133;A\007here",
-            "test prompt here",
-            ["\033]0;TITLE THIS\007", "\033]133;A\007"],
+                "test \033]0;TITLE THIS\007prompt \033]133;A\007here",
+                "test prompt here",
+                ["\033]0;TITLE THIS\007", "\033]133;A\007"],
         ),
     ],
 )
@@ -133,3 +132,18 @@ def test_remove_ansi_osc(raw_prompt, prompt, osc_tokens):
 
 
 # someday: initialize PromptToolkitShell and have it actually do something.
+
+def test_xonsh_shell(capsys):
+    # todo: make sure that shell executes and prompt is getting loaded as expected
+    import xonsh
+    from xonsh.built_ins import load_builtins, unload_builtins
+    load_builtins()
+    import xonsh.main
+    # args = premain(['exit'])
+    # main_xonsh(args)
+
+    with pytest.raises(SystemExit):
+        xonsh.main.main(['exit'])
+
+    capture = capsys.readouterr()
+    print(capture.out, capture.err)

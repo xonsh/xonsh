@@ -10,7 +10,7 @@ from xonsh.commands_cache import (
     predict_true,
     predict_false,
 )
-from tools import skip_if_on_windows
+from .tools import skip_if_on_windows
 
 
 def test_commands_cache_lazy(xonsh_builtins):

@@ -28,7 +28,7 @@ from xonsh.built_ins import (
 from xonsh.environ import Env
 from xonsh.proc import PopenThread, ProcProxy, ProcProxyThread
 
-from tools import skip_if_on_windows
+from .tools import skip_if_on_windows
 
 
 HOME_PATH = os.path.expanduser("~")

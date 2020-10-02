@@ -10,7 +10,7 @@ import pytest
 
 from xonsh.lib.os import indir
 
-from tools import (
+from .tools import (
     skip_if_on_msys,
     skip_if_on_windows,
     skip_if_on_darwin,

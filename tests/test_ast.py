@@ -6,7 +6,7 @@ from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, isexpression
 
 import pytest
 
-from tools import check_parse, nodes_equal
+from .tools import check_parse, nodes_equal
 
 
 @pytest.fixture(autouse=True)

@@ -1,7 +1,7 @@
 """Tests xonsh contexts."""
 from textwrap import dedent
 
-from tools import check_exec
+from .tools import check_exec
 from xonsh.contexts import Block, Functor
 
 import pytest

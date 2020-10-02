@@ -7,7 +7,7 @@ import pytest
 import sys
 from xontrib.voxapi import Vox
 
-from tools import skip_if_on_conda, skip_if_on_msys
+from .tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
 
 

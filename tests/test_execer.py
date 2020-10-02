@@ -2,7 +2,7 @@
 """Tests the xonsh lexer."""
 import os
 
-from tools import (
+from .tools import (
     check_eval,
     check_exec,
     check_parse,

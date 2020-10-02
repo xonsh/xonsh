@@ -24,7 +24,7 @@ from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 
-from tools import DummyShell, sp, DummyCommandsCache, DummyEnv, DummyHistory
+from .tools import DummyShell, sp, DummyCommandsCache, DummyEnv, DummyHistory, ON_WINDOWS
 
 
 @pytest.fixture
@@ -164,3 +164,9 @@ def pytest_configure(config):
     """Abort test run if --flake8 requested, since it would hang on parser_test.py"""
     if config.getoption("--flake8", ""):
         pytest.exit("pytest-flake8 no longer supported, use flake8 instead.")
+
+
+@pytest.fixture
+def skip_on_windows():
+    if ON_WINDOWS:
+        pytest.skip("Unix stuff")

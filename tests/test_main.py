@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh main function."""
 from __future__ import unicode_literals, print_function
-from contextlib import contextmanager
 
 import builtins
 import gc
 import os
 import os.path
 import sys
+from contextlib import contextmanager
 
+import pytest
 import xonsh.main
 from xonsh.main import XonshMode
-import pytest
-from tools import TEST_DIR, skip_if_on_windows
+
+from .tools import TEST_DIR, skip_if_on_windows
 
 
 def Shell(*args, **kwargs):

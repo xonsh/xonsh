@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Test XonshLexer for pygments"""
 
-import gc
 import builtins
+import gc
 
 import pytest
 from pygments.token import (
@@ -16,14 +16,13 @@ from pygments.token import (
     Text,
     Literal,
 )
-from tools import skip_if_on_windows
-
-from xonsh.platform import ON_WINDOWS
 from xonsh.built_ins import load_builtins, unload_builtins
-from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
 from xonsh.environ import LsColors
 from xonsh.events import events, EventManager
-from tools import DummyShell
+from xonsh.platform import ON_WINDOWS
+from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
+
+from .tools import DummyShell, skip_if_on_windows
 
 
 @pytest.fixture(autouse=True)

@@ -6,7 +6,7 @@ from xonsh.lib.subprocess import run, check_call, check_output, CalledProcessErr
 
 import pytest
 
-from tools import ON_WINDOWS
+from ..tools import ON_WINDOWS
 
 
 def test_run():
