@@ -1991,18 +1991,33 @@ class Env(cabc.MutableMapping):
         validator = self.get_validator(key)
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
+        old_value = self._d[key] if key in self._d else self._no_value
         if not validator(val):
+            old_value_validate = validator(old_value)
             try:
                 val = converter(val)
             except TypeError:
-                print_color(
-                    f"{{YELLOW}}Environ: variable {key} with {type(val)} value '{val}' cannot be converted to registered type.",
-                    file=sys.stderr,
+                check_new = (
+                    key not in self._d
+                    or old_value in [None, self._no_value]
+                    or old_value_validate
                 )
-                raise
+                if check_new or builtins.__xonsh__.env.get("XONSH_DEBUG"):
+                    if check_new:
+                        msg = "Raise error because it is new variable or value or previous value is valid."
+                    else:
+                        msg = "Because it is existing variable, new value passed unchanged."
+
+                    print_color(
+                        f"{{YELLOW}}Environ: variable {key} has registered validator {validator} "
+                        f"and value '{val}' of type {type(val)} cannot be converted to registered type. "
+                        f"{msg}",
+                        file=sys.stderr,
+                    )
+                if check_new:
+                    raise
 
         # existing envvars can have any value including None
-        old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
         self._detyped = None
         if self.get("UPDATE_OS_ENVIRON"):
@@ -2153,11 +2168,12 @@ class Env(cabc.MutableMapping):
                     try:
                         converted_values[k] = convert(val)
                     except TypeError:
-                        print_color(
-                            f"{{YELLOW}}Environ: variable {k} with {builtins.type(val)} value '{val}' cannot be converted to {type} type. Register this variable before.",
-                            file=sys.stderr,
-                        )
-                        raise
+                        if builtins.__xonsh__.env.get("XONSH_DEBUG"):
+                            print_color(
+                                f"{{YELLOW}}Environ: variable {k} with value '{val}' of type '{builtins.type(val)}' "
+                                f"cannot be converted to {type} type. The type left unchanged.",
+                                file=sys.stderr,
+                            )
                 if name_type == str:
                     break
 

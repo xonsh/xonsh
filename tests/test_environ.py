@@ -440,6 +440,32 @@ def test_register_var_path():
         env["MY_PATH_VAR"] = 42
 
 
+def test_before_register_var_path():
+    # If variable set before type registration and the type is not equal as registered type
+    # then variable could be changable until type becomes like registered.
+    env = Env(THE_GOOD_DIR=pathlib.Path("/tmp"), THE_BAD_DIR=False, THE_UGLY_DIR="/tmp")
+    env.register(re.compile(r"\w*_DIR$"), type="path")
+
+    assert env["THE_GOOD_DIR"] == pathlib.Path("/tmp")
+    assert env["THE_UGLY_DIR"] == pathlib.Path("/tmp")
+    assert env["THE_BAD_DIR"] == False
+
+    env["THE_BAD_DIR"] = True
+    assert env["THE_BAD_DIR"] == True
+
+    env["THE_BAD_DIR"] = ""
+    assert env["THE_BAD_DIR"] == None
+
+    with pytest.raises(TypeError):
+        env["THE_BAD_DIR"] = 42
+
+    env["THE_BAD_DIR"] = "/tmp"
+    assert env["THE_BAD_DIR"] == pathlib.Path("/tmp")
+
+    with pytest.raises(TypeError):
+        env["THE_BAD_DIR"] = 42
+
+
 def test_register_custom_var_env_path():
     env = Env()
     env.register("MY_SPECIAL_VAR", type="env_path")
