@@ -18,7 +18,6 @@ import shutil
 import builtins
 import importlib
 import threading
-import subprocess
 import collections
 
 import xonsh.completers.tools as xct
@@ -32,7 +31,6 @@ from xonsh.ansi_colors import (
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (
     print_exception,
-    check_for_partial_string,
     to_bool,
     columnize,
     carriage_return,
@@ -48,12 +46,12 @@ from xonsh.platform import (
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.events import events
 
-readline = None  # type:ignore
-RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None  # type:ignore
-RL_COMPLETION_QUERY_ITEMS = None  # type:ignore
+readline = None
+RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
+RL_COMPLETION_QUERY_ITEMS = None
 RL_CAN_RESIZE = False
-RL_DONE = None  # type:ignore
-RL_VARIABLE_VALUE = None  # type:ignore
+RL_DONE = None
+RL_VARIABLE_VALUE = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
 

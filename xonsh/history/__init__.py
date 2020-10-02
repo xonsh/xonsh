@@ -7,7 +7,7 @@ else:
     import sys as _sys
 
     try:
-        from xonsh.history import __amalgam__
+        from xonsh.history import __amalgam__  # type:ignore
 
         base = __amalgam__
         _sys.modules["xonsh.history.base"] = __amalgam__

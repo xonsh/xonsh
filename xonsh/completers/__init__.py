@@ -7,7 +7,7 @@ else:
     import sys as _sys
 
     try:
-        from xonsh.completers import __amalgam__
+        from xonsh.completers import __amalgam__  # type:ignore
 
         bash_completion = __amalgam__
         _sys.modules["xonsh.completers.bash_completion"] = __amalgam__

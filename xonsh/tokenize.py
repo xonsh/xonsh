@@ -85,7 +85,7 @@ from xonsh.platform import PYTHON_VERSION_INFO
 
 HAS_WALRUS = PYTHON_VERSION_INFO > (3, 8)
 if HAS_WALRUS:
-    from token import COLONEQUAL
+    from token import COLONEQUAL  # type:ignore
 
 cookie_re = LazyObject(
     lambda: re.compile(r"^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)", re.ASCII),
@@ -117,8 +117,8 @@ __all__ = token.__all__ + [  # type:ignore
 ]
 HAS_ASYNC = PYTHON_VERSION_INFO < (3, 7, 0)
 if HAS_ASYNC:
-    ASYNC = token.ASYNC
-    AWAIT = token.AWAIT
+    ASYNC = token.ASYNC  # type:ignore
+    AWAIT = token.AWAIT  # type:ignore
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
 else:
     ADDSPACE_TOKS = (NAME, NUMBER)  # type:ignore
@@ -128,7 +128,6 @@ if HAS_WALRUS:
     AUGASSIGN_OPS = r"[+\-*/%&@|^=<>:]=?"
 else:
     AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
-
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = "COMMENT"

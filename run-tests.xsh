@@ -31,4 +31,5 @@ echo "---------- Running flake8 ----------"
 python -m flake8
     
 echo "---------- Running mypy ----------"
+mypy --version
 mypy xonsh

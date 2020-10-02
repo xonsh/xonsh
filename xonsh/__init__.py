@@ -12,7 +12,7 @@ else:
     import sys as _sys
 
     try:
-        from xonsh import __amalgam__
+        from xonsh import __amalgam__  # type:ignore
 
         completer = __amalgam__
         _sys.modules["xonsh.completer"] = __amalgam__
