@@ -2147,8 +2147,7 @@ class Env(cabc.MutableMapping):
         converted_values = {}
         for k, val in self._d.items():
             if (
-                (name_type == str and k == name)
-                or (name_type == re.Pattern and name.match(k))
+                (name_type == str and k == name) or (name_type != str and name.match(k))
             ) and k not in self._vars:
                 if not validate(val):
                     try:
