@@ -447,8 +447,8 @@ def test_before_register_var_path():
     env.register(re.compile(r"\w*_DIR$"), type="path")
 
     assert env["THE_GOOD_DIR"] == pathlib.Path("/tmp")
-    assert env["THE_UGLY_DIR"] == pathlib.Path("/tmp")
     assert env["THE_BAD_DIR"] == False
+    assert env["THE_UGLY_DIR"] == pathlib.Path("/tmp")
 
     env["THE_BAD_DIR"] = True
     assert env["THE_BAD_DIR"] == True
