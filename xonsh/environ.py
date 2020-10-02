@@ -1985,11 +1985,6 @@ class Env(cabc.MutableMapping):
         ):
             self._detyped = None
 
-        if val is not None:
-            validator = self.get_validator(key)
-            converter = self.get_converter(key)
-            if not validator(val):
-                val = converter(val)
         return val
 
     def __setitem__(self, key, val):
@@ -1997,7 +1992,15 @@ class Env(cabc.MutableMapping):
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
         if not validator(val):
-            val = converter(val)
+            try:
+                val = converter(val)
+            except:
+                print_color(
+                    f"{{YELLOW}}Environ: variable {key} with {type(val)} value '{val}' cannot be converted to registered type.",
+                    file=sys.stderr,
+                )
+                raise
+
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
         self._d[key] = val
@@ -2138,6 +2141,30 @@ class Env(cabc.MutableMapping):
                 raise ValueError(
                     f"Default value for {name} does not match type specified by validate"
                 )
+
+        # Convert existing variables
+        name_type = builtins.type(name)
+        converted_values = {}
+        for k, val in self._d.items():
+            if (
+                (name_type == str and k == name)
+                or (name_type == re.Pattern and name.match(k))
+            ) and k not in self._vars:
+                if not validate(val):
+                    try:
+                        converted_values[k] = convert(val)
+                    except TypeError:
+                        print_color(
+                            f"{{YELLOW}}Environ: variable {k} with {builtins.type(val)} value '{val}' cannot be converted to {type} type. Register this variable before.",
+                            file=sys.stderr,
+                        )
+                        raise
+                if name_type == str:
+                    break
+
+        # If there is no exception during convertation, commiting the changes
+        for k, v in converted_values.items():
+            self._d[k] = v
 
         self._vars[name] = Var(
             validate,
