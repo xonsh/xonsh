@@ -38,6 +38,9 @@ def _path_from_partial_string(inp, pos=None):
         pos = len(inp)
     partial = inp[:pos]
     startix, endix, quote = xt.check_for_partial_string(partial)
+    # if pathlib literal, strip leading `p`
+    if quote in ('p"', "p'"):
+        startix += 1
     _post = ""
     if startix is None:
         return None
@@ -51,6 +54,7 @@ def _path_from_partial_string(inp, pos=None):
             else:
                 return None
         string = partial[startix:endix]
+
     end = xt.RE_STRING_START.sub("", quote)
     _string = string
     if not _string.endswith(end):
@@ -280,7 +284,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     if p is not None:
         lprefix = len(p[0])
         prefix = p[1]
-        path_str_start = p[2]
+        path_str_start = p[2].lstrip("p")
         path_str_end = p[3]
         if len(line) >= end + 1 and line[end] == path_str_end:
             append_end = False
