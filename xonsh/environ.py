@@ -1994,7 +1994,7 @@ class Env(cabc.MutableMapping):
         if not validator(val):
             try:
                 val = converter(val)
-            except:
+            except TypeError:
                 print_color(
                     f"{{YELLOW}}Environ: variable {key} with {type(val)} value '{val}' cannot be converted to registered type.",
                     file=sys.stderr,
