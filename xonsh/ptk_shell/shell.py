@@ -266,7 +266,7 @@ class PromptToolkitShell(BaseShell):
                     break
 
     def _get_prompt_tokens(self, env_name: str, prompt_name: str, **kwargs):
-        env = builtins.__xonsh__.env
+        env = builtins.__xonsh__.env  # type:ignore
         p = env.get(env_name)
 
         if not p and "default" in kwargs:

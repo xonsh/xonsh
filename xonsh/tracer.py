@@ -8,6 +8,7 @@ import linecache
 import importlib
 import functools
 from inspect import getouterframes
+import typing as tp
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
@@ -29,7 +30,7 @@ class TracerType(object):
     state. This is a singleton.
     """
 
-    _inst = None
+    _inst: tp.Optional["TracerType"] = None
     valid_events = frozenset(["line", "call"])
 
     def __new__(cls, *args, **kwargs):

@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """Directory stack and associated utilities for the xonsh shell."""
-import os
-import glob
 import argparse
 import builtins
+import glob
+import os
 import subprocess
+import typing as tp
 
-from xonsh.lazyasd import lazyobject
-from xonsh.tools import get_sep
 from xonsh.events import events
+from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
+from xonsh.tools import get_sep
 
-DIRSTACK = []
+DIRSTACK: tp.List[str] = []
 """A list containing the currently remembered directories."""
-_unc_tempDrives = {}
+_unc_tempDrives: tp.Dict[str, str] = {}
 """ drive: sharePath for temp drive letters we create for UNC mapping"""
 
 
@@ -27,7 +28,7 @@ def _unc_check_enabled() -> bool:
         False if check is explicitly disabled.
     """
     if not ON_WINDOWS:
-        return
+        return False
 
     import winreg
 

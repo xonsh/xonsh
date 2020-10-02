@@ -15,7 +15,7 @@ import xonsh.lazyjson as xlj
 import xonsh.xoreutils.uptime as uptime
 
 
-def _xhj_gc_commands_to_rmfiles(hsize, files) -> ([], int):
+def _xhj_gc_commands_to_rmfiles(hsize, files):
     """Return number of units and list of history files to remove to get under the limit,
 
     Parameters:

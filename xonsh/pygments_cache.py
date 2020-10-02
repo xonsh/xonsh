@@ -19,7 +19,7 @@ import importlib
 
 # Global storage variables
 __version__ = "0.1.1"
-CACHE = None
+CACHE = None  # type:ignore
 DEBUG = False
 
 

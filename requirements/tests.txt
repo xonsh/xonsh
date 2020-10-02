@@ -10,3 +10,4 @@ codecov
 coverage
 black
 pre-commit
+mypy>=0.782

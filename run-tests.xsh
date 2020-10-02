@@ -30,3 +30,5 @@ for index, fname in enumerate(run_separately):
 echo "---------- Running flake8 ----------"
 python -m flake8
     
+echo "---------- Running mypy ----------"
+mypy xonsh

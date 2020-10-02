@@ -16,7 +16,7 @@ class _TokenType(tuple):
     See https://bitbucket.org/birkenfeld/pygments-main/raw/05818a4ef9891d9ac22c851f7b3ea4b4fce460ab/AUTHORS
     """
 
-    parent = None
+    parent = None  # type:ignore
 
     def split(self):
         buf = []

@@ -20,6 +20,7 @@ class PTKPromptFormatter(PromptFormatter):
         fields=None,
         threaded=False,
         prompt_name: str = None,
+        **_
     ) -> str:
         """Formats a xonsh prompt template string."""
 

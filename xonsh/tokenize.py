@@ -78,6 +78,7 @@ from token import (
     VBAREQUAL,
     tok_name,
 )
+import typing as tp
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
@@ -99,7 +100,7 @@ blank_re = LazyObject(
 # token modifications
 #
 tok_name = tok_name.copy()
-__all__ = token.__all__ + [
+__all__ = token.__all__ + [  # type:ignore
     "COMMENT",
     "tokenize",
     "detect_encoding",
@@ -120,7 +121,7 @@ if HAS_ASYNC:
     AWAIT = token.AWAIT
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
 else:
-    ADDSPACE_TOKS = (NAME, NUMBER)
+    ADDSPACE_TOKS = (NAME, NUMBER)  # type:ignore
 del token  # must clean up token
 
 if HAS_WALRUS:
@@ -177,7 +178,7 @@ for v in _xonsh_tokens.values():
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES = {
+EXACT_TOKEN_TYPES: tp.Dict[str, tp.Union[str, int]] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,
@@ -330,10 +331,17 @@ _redir_map = (
     "1>2",
 )
 IORedirect = group(group(*_redir_map), "{}>>?".format(group(*_redir_names)))
-_redir_check = set(_redir_map)
-_redir_check = {"{}>".format(i) for i in _redir_names}.union(_redir_check)
-_redir_check = {"{}>>".format(i) for i in _redir_names}.union(_redir_check)
-_redir_check = frozenset(_redir_check)
+
+
+def _get_redir_check():
+    _map = set(_redir_map)
+    _check1 = {"{}>".format(i) for i in _redir_names}.union(_map)
+    _check2 = {"{}>>".format(i) for i in _redir_names}.union(_check1)
+    return frozenset(_check2)
+
+
+_redir_check = _get_redir_check()
+
 Operator = group(
     r"\*\*=?",
     r">>=?",

@@ -4,12 +4,13 @@ import itertools
 
 from collections import ChainMap
 from collections.abc import MutableMapping, MutableSequence, MutableSet
+import typing as tp
 
 
 class ChainDBDefaultType(object):
     """Singleton for representing when no default value is given."""
 
-    __inst = None
+    __inst: tp.Optional["ChainDBDefaultType"] = None
 
     def __new__(cls):
         if ChainDBDefaultType.__inst is None:

@@ -48,12 +48,12 @@ from xonsh.platform import (
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.events import events
 
-readline = None
-RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
-RL_COMPLETION_QUERY_ITEMS = None
+readline = None  # type:ignore
+RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None  # type:ignore
+RL_COMPLETION_QUERY_ITEMS = None  # type:ignore
 RL_CAN_RESIZE = False
-RL_DONE = None
-RL_VARIABLE_VALUE = None
+RL_DONE = None  # type:ignore
+RL_VARIABLE_VALUE = None  # type:ignore
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
 
@@ -464,7 +464,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             raise ValueError("query completions flag not understood.")
 
     # tab complete on first index too
-    completenames = completedefault
+    completenames = completedefault  # type:ignore
 
     def _load_remaining_input_into_queue(self):
         buf = b""

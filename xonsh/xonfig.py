@@ -15,7 +15,7 @@ import functools
 import itertools
 import contextlib
 import collections
-
+import typing as tp
 
 from xonsh.ply import ply
 
@@ -139,7 +139,7 @@ WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
 
 
-_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND = collections.defaultdict(
+_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND: tp.Dict[str, str] = collections.defaultdict(
     lambda: "source-foreign", bash="source-bash", cmd="source-cmd", zsh="source-zsh"
 )
 
