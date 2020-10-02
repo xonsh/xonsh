@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch
+import tempfile
 
 import xonsh.completers.path as xcp
 
@@ -38,3 +39,22 @@ def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins):
     }
     xcp.complete_path("a", "cat a", 4, 5, dict())
     mock_add_cdpaths.assert_not_called()
+
+
+@pytest.mark.parametrize("quote", ('"', "'"))
+def test_complete_path_when_prefix_is_path_literal(quote, xonsh_builtins):
+    xonsh_builtins.__xonsh__.env = {
+        "CASE_SENSITIVE_COMPLETIONS": False,
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 1,
+        "CDPATH": set(),
+    }
+    with tempfile.NamedTemporaryFile(suffix="_dummySuffix") as tmp:
+        prefix_file_name = tmp.name.replace("_dummySuffix", "")
+        prefix = f"p{quote}{prefix_file_name}"
+        line = f"ls {prefix}"
+        out = xcp.complete_path(prefix, line, line.find(prefix), len(line), dict())
+        expected = [f"p{quote}{tmp.name}{quote}"]
+        assert list(out[0]) == expected
