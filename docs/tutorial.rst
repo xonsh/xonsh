@@ -914,13 +914,13 @@ Advanced String Literals
 For fine control of envvar substitutions, brace substitutions and backslash escapes
 there are extended list of literals:
 
-- ``"txt"`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
-- ``r"txt"`` - raw string: unmodified.
-- ``f"txt"`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
-- ``fr"txt"`` - raw formatted string: brace substitutions.
-- ``p"txt"`` - path string: backslash escapes, envvar substitutions, returns Path.
-- ``pr"txt"`` - raw Path string: envvar substitutions, returns Path.
-- ``pf"txt"`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
+- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
+- ``r""`` - raw string: unmodified.
+- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
+- ``fr""`` - raw formatted string: brace substitutions.
+- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
+- ``pr""`` - raw Path string: envvar substitutions, returns Path.
+- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
 
 To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
 and make a table that shows how literal changes the string in Python- and subprocess-mode:
