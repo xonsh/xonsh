@@ -18,7 +18,7 @@
 
 **Fixed:**
 
-* Fixed getting a typed registered environment variable when it was initialized before registration.
+* Fixed getting a typed registered environment variable when it was initialized before registering.
 
 **Security:**
 
