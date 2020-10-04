@@ -914,16 +914,16 @@ Advanced String Literals
 For fine control of envvar substitutions, brace substitutions and backslash escapes
 there are extended list of literals:
 
- - ``"foo"`` - regular string: backslash escapes.
- - ``r"foo"`` - raw string: unmodified.
- - ``f"foo"`` - formatted string: brace substitutions, backslash escapes.
- - ``fr"foo"`` - raw formatted string: brace substitutions.
- - ``p"foo"`` - path string: backslash escapes, envvar substitutions, returns Path.
- - ``pr"foo"`` - raw Path string: envvar substitutions, returns Path.
- - ``pf"foo"`` - formatted Path string: backslash escapes, brace substitutions, envvar substitutions, returns Path.
+- ``"txt"`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
+- ``r"txt"`` - raw string: unmodified.
+- ``f"txt"`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
+- ``fr"txt"`` - raw formatted string: brace substitutions.
+- ``p"txt"`` - path string: backslash escapes, envvar substitutions, returns Path.
+- ``pr"txt"`` - raw Path string: envvar substitutions, returns Path.
+- ``pf"txt"`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
 
 To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
-and make a table that shows how literal changes the string in Python and subprocess mode:
+and make a table that shows how literal changes the string in Python- and subprocess-mode:
 
 .. table::
 
@@ -931,8 +931,8 @@ and make a table that shows how literal changes the string in Python and subproc
          String literal            As python object       print(<String literal>)  echo <String literal>
     ========================  ==========================  =======================  =====================
     ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
-    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
     ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
+    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
     ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
     ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
     ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
