@@ -1528,10 +1528,10 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   and ``BACKGROUND_#123456`` can both be used.
 * ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
   Thus you can set ``bg#0012ab`` or the uppercase version.
-* ``BOLD_`` is a prefix modifier that increases the intesnity of the font.
+* ``BOLD_`` is a prefix modifier that increases the intensity of the font.
   It may be used with any foreground color.
   For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
-* ``FAINT_`` is a prefix modifier that decreases the intesnity of the font.
+* ``FAINT_`` is a prefix modifier that decreases the intensity of the font.
   For example, ``FAINT_YELLOW``.
 * ``ITALIC_`` is a prefix modifier that switches to an italic font.
   For example, ``ITALIC_BLUE``.
@@ -1547,7 +1547,7 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   widely supported. For example, ``CONCEAL_BLACK``.
 * ``STRIKETHROUGH_`` is a prefix modifier which draws a line through the text.
   For example, ``STRIKETHROUGH_RED``.
-* ``BOLDOFF_`` is a prefix modifier for removing the intesnity of the font.
+* ``BOLDOFF_`` is a prefix modifier for removing the intensity of the font.
   It may be used with any foreground color.
   For example, ``BOLDOFF_RED`` and ``BOLD_#112233`` are OK!
 * ``FAINTOFF_`` is a prefix modifier for removing the faintness of the font.

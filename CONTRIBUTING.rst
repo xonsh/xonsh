@@ -117,9 +117,9 @@ is open to interpretation.
 * Test generators make more dots and the dots must flow!
 
 You can easily check for style issues, including some outright bugs such
-as mispelled variable names, using `flake8 <https://flake8.pycqa.org/>`_. If you're using Anaconda you'll
+as misspelled variable names, using `flake8 <https://flake8.pycqa.org/>`_. If you're using Anaconda you'll
 need to run "conda install flake8" once. You can easily run flake8 on
-the edited files in your uncommited git change::
+the edited files in your uncommitted git change::
 
     $ git status -s | awk '/\.py$$/ { print $2 }' | xargs flake8
 
