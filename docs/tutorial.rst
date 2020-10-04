@@ -911,7 +911,7 @@ to be evaluated in Python mode using the ``@()`` syntax:
 Advanced String Literals
 ========================
 
-For fine control of envvar substitutions, brace substitutions and backslash escapes
+For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
 there are extended list of literals:
 
 - ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
