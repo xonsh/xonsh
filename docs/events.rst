@@ -18,7 +18,7 @@ are ignored otherwise. Here are their specifications.
 .........................................................
 This event fires whenever a command with a give name (``<cmd-name>``)
 has its ``SubprocSpec.run()`` method called.  This is fired
-prior to the run call executing anything at all. This recieves the
+prior to the run call executing anything at all. This receives the
 ``SubprocSpec`` object as ``spec`` that triggered the event, allowing
 the handler to modify the spec if needed.  For example, if we wanted to
 intercept an ``ls`` spec, we could write:
