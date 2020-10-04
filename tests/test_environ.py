@@ -5,7 +5,7 @@ import os
 import re
 import pathlib
 from tempfile import TemporaryDirectory
-from xonsh.tools import always_true, DefaultNotGiven
+from xonsh.tools import always_true, DefaultNotGiven, EnvPath
 
 import pytest
 
@@ -443,12 +443,18 @@ def test_register_var_path():
 def test_before_register_var_path():
     # If variable set before type registration and the type is not equal as registered type
     # then variable could be changable until type becomes like registered.
-    env = Env(THE_GOOD_DIR=pathlib.Path("/tmp"), THE_BAD_DIR=False, THE_UGLY_DIR="/tmp")
+    env = Env(
+        THE_GOOD_DIR=pathlib.Path("/colt"),
+        THE_BAD_DIR=False,
+        THE_UGLY_DIR=EnvPath(["/bodeo"]),
+        THE_SHERIFF_DIR="/revolver",
+    )
     env.register(re.compile(r"\w*_DIR$"), type="path")
 
-    assert env["THE_GOOD_DIR"] == pathlib.Path("/tmp")
+    assert env["THE_GOOD_DIR"] == pathlib.Path("/colt")
     assert env["THE_BAD_DIR"] == False
-    assert env["THE_UGLY_DIR"] == pathlib.Path("/tmp")
+    assert env["THE_UGLY_DIR"] == pathlib.Path("/bodeo")
+    assert env["THE_SHERIFF_DIR"] == pathlib.Path("/revolver")
 
     env["THE_BAD_DIR"] = True
     assert env["THE_BAD_DIR"] == True
@@ -457,13 +463,16 @@ def test_before_register_var_path():
     assert env["THE_BAD_DIR"] == None
 
     with pytest.raises(TypeError):
-        env["THE_BAD_DIR"] = 42
+        env["THE_BAD_DIR"] = 1966
 
-    env["THE_BAD_DIR"] = "/tmp"
-    assert env["THE_BAD_DIR"] == pathlib.Path("/tmp")
+    env["THE_BAD_DIR"] = "/money"
+    assert env["THE_BAD_DIR"] == pathlib.Path("/money")
 
     with pytest.raises(TypeError):
-        env["THE_BAD_DIR"] = 42
+        env["THE_BAD_DIR"] = 200000
+
+    with pytest.raises(TypeError):
+        env["THE_UGLY_DIR"] = EnvPath(["/colt/left", "/colt/right"])
 
 
 def test_register_custom_var_env_path():

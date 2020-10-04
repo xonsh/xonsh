@@ -1188,9 +1188,11 @@ def str_to_path(x):
         return pathlib.Path(x) if x else None
     elif isinstance(x, pathlib.Path):
         return x
+    elif isinstance(x, EnvPath) and len(x) == 1:
+        return pathlib.Path(x[0]) if x[0] else None
     else:
         raise TypeError(
-            f"Variable should be a str or pathlib.Path type. {type(x)} given."
+            f"Variable should be a pathlib.Path, str or single EnvPath type. {type(x)} given."
         )
 
 

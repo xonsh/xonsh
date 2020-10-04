@@ -2161,9 +2161,7 @@ class Env(cabc.MutableMapping):
         name_type = builtins.type(name)
         converted_values = {}
         for k, val in self._d.items():
-            if (
-                (name_type == str and k == name) or (name_type != str and name.match(k))
-            ) and k not in self._vars:
+            if (name_type == str and k == name) or (name_type != str and name.match(k)):
                 if not validate(val):
                     try:
                         converted_values[k] = convert(val)
