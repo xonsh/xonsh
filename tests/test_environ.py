@@ -434,7 +434,7 @@ def test_register_var_path():
     # Empty string is None to avoid uncontrolled converting empty string to Path('.')
     path = ""
     env["MY_PATH_VAR"] = path
-    assert env["MY_PATH_VAR"] == None
+    assert env["MY_PATH_VAR"] is None
 
     with pytest.raises(TypeError):
         env["MY_PATH_VAR"] = 42
@@ -457,10 +457,10 @@ def test_before_register_var_path():
     assert env["THE_SHERIFF_DIR"] == pathlib.Path("/revolver")
 
     env["THE_BAD_DIR"] = True
-    assert env["THE_BAD_DIR"] == True
+    assert env["THE_BAD_DIR"] is True
 
     env["THE_BAD_DIR"] = ""
-    assert env["THE_BAD_DIR"] == None
+    assert env["THE_BAD_DIR"] is None
 
     with pytest.raises(TypeError):
         env["THE_BAD_DIR"] = 1966
