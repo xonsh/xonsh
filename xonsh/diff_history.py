@@ -8,7 +8,7 @@ import argparse
 from xonsh.lazyjson import LazyJSON
 from xonsh.tools import print_color
 
-NO_COLOR_S = "{NO_COLOR}"
+RESET_S = "{RESET}"
 RED_S = "{RED}"
 GREEN_S = "{GREEN}"
 BOLD_RED_S = "{BOLD_RED}"
@@ -40,16 +40,16 @@ def bold_str_diff(a, b, sm=None):
             bline += b[j1:j2]
         else:
             raise RuntimeError("tag not understood")
-    return aline + NO_COLOR_S + "\n" + bline + NO_COLOR_S + "\n"
+    return aline + RESET_S + "\n" + bline + RESET_S + "\n"
 
 
 def redline(line):
-    return "{red}- {line}{no_color}\n".format(red=RED_S, line=line, no_color=NO_COLOR_S)
+    return "{red}- {line}{reset}\n".format(red=RED_S, line=line, reset=RESET_S)
 
 
 def greenline(line):
-    return "{green}+ {line}{no_color}\n".format(
-        green=GREEN_S, line=line, no_color=NO_COLOR_S
+    return "{green}+ {line}{reset}\n".format(
+        green=GREEN_S, line=line, reset=RESET_S
     )
 
 
@@ -126,13 +126,13 @@ class HistoryDiffer(object):
 
     def header(self):
         """Computes a header string difference."""
-        s = "{red}--- {aline}{no_color}\n" "{green}+++ {bline}{no_color}"
+        s = "{red}--- {aline}{reset}\n" "{green}+++ {bline}{reset}"
         s = s.format(
             aline=self._header_line(self.a),
             bline=self._header_line(self.b),
             red=RED_S,
             green=GREEN_S,
-            no_color=NO_COLOR_S,
+            reset=RESET_S,
         )
         return s
 
@@ -159,8 +159,8 @@ class HistoryDiffer(object):
             xstr = "\n" + xstr
         else:
             xstr = ", ".join(["{0!r}".format(key) for key in only_x])
-        in_x = "These vars are only in {color}{xid}{no_color}: {{{xstr}}}\n\n"
-        return in_x.format(xid=xid, color=color, no_color=NO_COLOR_S, xstr=xstr)
+        in_x = "These vars are only in {color}{xid}{reset}: {{{xstr}}}\n\n"
+        return in_x.format(xid=xid, color=color, reset=RESET_S, xstr=xstr)
 
     def envdiff(self):
         """Computes the difference between the environments."""
@@ -184,13 +184,13 @@ class HistoryDiffer(object):
         return s
 
     def _cmd_in_one_diff(self, inp, i, xlj, xid, color):
-        s = "cmd #{i} only in {color}{xid}{no_color}:\n"
-        s = s.format(i=i, color=color, xid=xid, no_color=NO_COLOR_S)
+        s = "cmd #{i} only in {color}{xid}{reset}:\n"
+        s = s.format(i=i, color=color, xid=xid, reset=RESET_S)
         lines = inp.splitlines()
-        lt = "{color}{pre}{no_color} {line}\n"
-        s += lt.format(color=color, no_color=NO_COLOR_S, line=lines[0], pre=">>>")
+        lt = "{color}{pre}{reset} {line}\n"
+        s += lt.format(color=color, reset=RESET_S, line=lines[0], pre=">>>")
         for line in lines[1:]:
-            s += lt.format(color=color, no_color=NO_COLOR_S, line=line, pre="...")
+            s += lt.format(color=color, reset=RESET_S, line=line, pre="...")
         if not self.verbose:
             return s + "\n"
         out = xlj["cmds"][0].get("out", "Note: no output stored")
@@ -206,13 +206,13 @@ class HistoryDiffer(object):
             pass
         elif bout is None:
             aid = self.a["sessionid"]
-            s += "Note: only {red}{aid}{no_color} output stored\n".format(
-                red=RED_S, aid=aid, no_color=NO_COLOR_S
+            s += "Note: only {red}{aid}{reset} output stored\n".format(
+                red=RED_S, aid=aid, reset=RESET_S
             )
         elif aout is None:
             bid = self.b["sessionid"]
-            s += "Note: only {green}{bid}{no_color} output stored\n".format(
-                green=GREEN_S, bid=bid, no_color=NO_COLOR_S
+            s += "Note: only {green}{bid}{reset} output stored\n".format(
+                green=GREEN_S, bid=bid, reset=RESET_S
             )
         elif aout != bout:
             s += "Outputs differ\n"
@@ -223,19 +223,19 @@ class HistoryDiffer(object):
         brtn = self.b["cmds"][j]["rtn"]
         if artn != brtn:
             s += (
-                "Return vals {red}{artn}{no_color} & {green}{brtn}{no_color} differ\n"
+                "Return vals {red}{artn}{reset} & {green}{brtn}{reset} differ\n"
             ).format(
-                red=RED_S, green=GREEN_S, no_color=NO_COLOR_S, artn=artn, brtn=brtn
+                red=RED_S, green=GREEN_S, reset=RESET_S, artn=artn, brtn=brtn
             )
         return s
 
     def _cmd_replace_diff(self, i, ainp, aid, j, binp, bid):
         s = (
-            "cmd #{i} in {red}{aid}{no_color} is replaced by \n"
-            "cmd #{j} in {green}{bid}{no_color}:\n"
+            "cmd #{i} in {red}{aid}{reset} is replaced by \n"
+            "cmd #{j} in {green}{bid}{reset}:\n"
         )
         s = s.format(
-            i=i, aid=aid, j=j, bid=bid, red=RED_S, green=GREEN_S, no_color=NO_COLOR_S
+            i=i, aid=aid, j=j, bid=bid, red=RED_S, green=GREEN_S, reset=RESET_S
         )
         s += highlighted_ndiff(ainp.splitlines(), binp.splitlines())
         if not self.verbose:
@@ -275,8 +275,8 @@ class HistoryDiffer(object):
                     odiff = self._cmd_out_and_rtn_diff(i, j)
                     if len(odiff) > 0:
                         h = (
-                            "cmd #{i} in {red}{aid}{no_color} input is the same as \n"
-                            "cmd #{j} in {green}{bid}{no_color}, but output differs:\n"
+                            "cmd #{i} in {red}{aid}{reset} input is the same as \n"
+                            "cmd #{j} in {green}{bid}{reset}, but output differs:\n"
                         )
                         s += h.format(
                             i=i,
@@ -285,7 +285,7 @@ class HistoryDiffer(object):
                             bid=bid,
                             red=RED_S,
                             green=GREEN_S,
-                            no_color=NO_COLOR_S,
+                            reset=RESET_S,
                         )
                         s += odiff + "\n"
             else:

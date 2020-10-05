@@ -454,7 +454,7 @@ class Inspector(object):
             title_width = max(len(title) + 2 for title, _ in fields)
         for title, content in fields:
             title_len = len(title)
-            title = "{BOLD_RED}" + title + ":{NO_COLOR}"
+            title = "{BOLD_RED}" + title + ":{RESET}"
             if len(content.splitlines()) > 1:
                 title += "\n"
             else:
@@ -478,7 +478,7 @@ class Inspector(object):
             title_width = max(len(title) + 2 for title, _ in fields)
         for title, content in fields:
             title_len = len(title)
-            title = "{BOLD_RED}" + title + ":{NO_COLOR}"
+            title = "{BOLD_RED}" + title + ":{RESET}"
             if not isinstance(content, str) or len(content.splitlines()) > 1:
                 title += "\n"
             else:
