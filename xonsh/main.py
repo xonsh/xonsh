@@ -448,6 +448,10 @@ def main_xonsh(args):
     try:
         if args.mode == XonshMode.interactive:
             # enter the shell
+
+            # Setted again here because it is possible to call main_xonsh() without calling premain(), namely in the tests.
+            env["XONSH_INTERACTIVE"] = True
+
             ignore_sigtstp()
             if env["XONSH_INTERACTIVE"] and not any(
                 os.path.isfile(i) for i in env["XONSHRC"]
