@@ -2190,6 +2190,7 @@ def expandvars(path):
         # get the path's string representation
         path = str(path)
     if "$" in path:
+        shift = 0
         for match in POSIX_ENVVAR_REGEX.finditer(path):
             name = match.group("envvar")
             if name in env:
@@ -2197,7 +2198,10 @@ def expandvars(path):
                 val = env[name]
                 value = str(val) if detyper is None else detyper(val)
                 value = str(val) if value is None else value
-                path = POSIX_ENVVAR_REGEX.sub(value, path, count=1)
+                start_pos, end_pos = match.span()
+                path_len_before_replace = len(path)
+                path = path[: start_pos + shift] + value + path[end_pos + shift :]
+                shift = shift + len(path) - path_len_before_replace
     return path
 
 
