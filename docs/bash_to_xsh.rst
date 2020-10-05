@@ -54,6 +54,9 @@ line is ``#!/usr/bin/env xonsh``.
       - ``v=$(echo 1)``
       - In bash, backticks mean to run a captured subprocess - it's ``$()`` in xonsh. Backticks in xonsh
         mean regex globbing (i.e. ``ls `/etc/pass.*```).
+    * - ``echo -e "\033[0;31mRed text\033[0m"```
+      - ``printx("{RED}Red text{RESET}")``
+      - Print colored text as easy as possible.
     * - ``shopt -s dotglob``
       - ``$DOTGLOB = True``
       - Globbing files with ``*`` or ``**`` will also match dotfiles, or those ‘hidden’ files whose names 
