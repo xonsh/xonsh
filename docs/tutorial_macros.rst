@@ -23,7 +23,7 @@ Is this meta-programming? You betcha!
 
 When and where are macros used?
 ===============================
-Macros are a practicality-beats-purity feature of many programing
+Macros are a practicality-beats-purity feature of many programming
 languages. Because they allow you break out of the normal parsing
 cycle, depending on the language, you can do some truly wild things with
 them. However, macros are really there to reduce the amount of boiler plate
