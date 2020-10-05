@@ -688,11 +688,8 @@ class StateVisitor(Visitor):
         return flat
 
 
-YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} [default: no]? "
-YNB = (
-    "{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR}, or "
-    "{YELLOW}break{NO_COLOR} [default: no]? "
-)
+YN = "{GREEN}yes{RESET} or {RED}no{RESET} [default: no]? "
+YNB = "{GREEN}yes{RESET}, {RED}no{RESET}, or " "{YELLOW}break{RESET} [default: no]? "
 
 
 class PromptVisitor(StateVisitor):
@@ -746,15 +743,14 @@ class PromptVisitor(StateVisitor):
                 except Exception:
                     if node.retry:
                         msg = (
-                            "{{BOLD_RED}}Invalid{{NO_COLOR}} input {0!r}, "
-                            "please retry."
+                            "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, " "please retry."
                         )
                         print_color(msg.format(raw))
                         continue
                     else:
                         raise
                 if node.show_conversion and x is not Unstorable and str(x) != raw:
-                    msg = "{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}."
+                    msg = "{{BOLD_PURPLE}}Converted{{RESET}} input {0!r} to {1!r}."
                     print_color(msg.format(raw, x))
             else:
                 x = raw
@@ -825,10 +821,10 @@ class PromptVisitor(StateVisitor):
         if os.path.isfile(fname):
             with open(fname, "r") as f:
                 self.state = json.load(f)
-            print_color("{{GREEN}}{0!r} loaded.{{NO_COLOR}}".format(fname))
+            print_color("{{GREEN}}{0!r} loaded.{{RESET}}".format(fname))
         else:
             print_color(
-                ("{{RED}}{0!r} could not be found, " "continuing.{{NO_COLOR}}").format(
+                ("{{RED}}{0!r} could not be found, " "continuing.{{RESET}}").format(
                     fname
                 )
             )
