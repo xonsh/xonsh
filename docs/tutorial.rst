@@ -902,8 +902,42 @@ to be evaluated in Python mode using the ``@()`` syntax:
     >>> echo @("my home is $HOME")
     my home is $HOME
 
-You can also disable environment variable expansion completely by setting
-``$EXPAND_ENV_VARS`` to ``False``.
+
+.. note::
+
+    You can also disable environment variable expansion completely by setting
+    ``$EXPAND_ENV_VARS`` to ``False``.
+
+Advanced String Literals
+========================
+
+For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
+there are extended list of literals:
+
+- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
+- ``r""`` - raw string: unmodified.
+- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
+- ``fr""`` - raw formatted string: brace substitutions.
+- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
+- ``pr""`` - raw Path string: envvar substitutions, returns Path.
+- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
+
+To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
+and make a table that shows how literal changes the string in Python- and subprocess-mode:
+
+.. table::
+
+    ========================  ==========================  =======================  =====================
+         String literal            As python object       print(<String literal>)  echo <String literal>
+    ========================  ==========================  =======================  =====================
+    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
+    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
+    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
+    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
+    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
+    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
+    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
+    ========================  ==========================  =======================  =====================
 
 Filename Globbing with ``*``
 ===============================
