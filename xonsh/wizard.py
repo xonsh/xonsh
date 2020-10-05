@@ -689,10 +689,7 @@ class StateVisitor(Visitor):
 
 
 YN = "{GREEN}yes{RESET} or {RED}no{RESET} [default: no]? "
-YNB = (
-    "{GREEN}yes{RESET}, {RED}no{RESET}, or "
-    "{YELLOW}break{RESET} [default: no]? "
-)
+YNB = "{GREEN}yes{RESET}, {RED}no{RESET}, or " "{YELLOW}break{RESET} [default: no]? "
 
 
 class PromptVisitor(StateVisitor):
@@ -746,8 +743,7 @@ class PromptVisitor(StateVisitor):
                 except Exception:
                     if node.retry:
                         msg = (
-                            "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, "
-                            "please retry."
+                            "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, " "please retry."
                         )
                         print_color(msg.format(raw))
                         continue

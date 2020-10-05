@@ -48,9 +48,7 @@ def redline(line):
 
 
 def greenline(line):
-    return "{green}+ {line}{reset}\n".format(
-        green=GREEN_S, line=line, reset=RESET_S
-    )
+    return "{green}+ {line}{reset}\n".format(green=GREEN_S, line=line, reset=RESET_S)
 
 
 def highlighted_ndiff(a, b):
@@ -224,9 +222,7 @@ class HistoryDiffer(object):
         if artn != brtn:
             s += (
                 "Return vals {red}{artn}{reset} & {green}{brtn}{reset} differ\n"
-            ).format(
-                red=RED_S, green=GREEN_S, reset=RESET_S, artn=artn, brtn=brtn
-            )
+            ).format(red=RED_S, green=GREEN_S, reset=RESET_S, artn=artn, brtn=brtn)
         return s
 
     def _cmd_replace_diff(self, i, ainp, aid, j, binp, bid):
