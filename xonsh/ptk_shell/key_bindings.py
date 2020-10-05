@@ -206,15 +206,6 @@ def load_xonsh_bindings() -> KeyBindingsBase:
         env = builtins.__xonsh__.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
 
-    @handle(Keys.Tab, filter=~tab_insert_indent)
-    def start_complete(event):
-        """If starting completions, automatically move to first option"""
-        buff = event.app.current_buffer
-        if buff.complete_state:
-            buff.complete_next()
-        else:
-            buff.start_completion(select_first=True)
-
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):
         """ Open current buffer in editor """
