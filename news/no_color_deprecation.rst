@@ -5,7 +5,7 @@
 
 **Changed:**
 
-* <news item>
+* Moved interal uses of ``NO_COLOR`` to ``RESET``.
 
 **Deprecated:**
 
