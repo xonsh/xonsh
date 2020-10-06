@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``printx`` (``xonsh.tools.print_color``) function to builtins.
+* Added ``print_color`` and ``printx`` functions to builtins as reference to ``xonsh.tools.print_color``.
 
 **Changed:**
 
