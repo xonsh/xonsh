@@ -213,8 +213,9 @@ def parser():
         "Possible options: "
         + ", ".join(Shell.shell_type_aliases.keys())
         + ". Warning! If set this overrides $SHELL_TYPE variable.",
+        metavar="SHELL_TYPE",
         dest="shell_type",
-        # choices=tuple(Shell.shell_type_aliases.keys()),
+        choices=tuple(Shell.shell_type_aliases.keys()),
         default=None,
     )
     p.add_argument(
