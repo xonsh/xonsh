@@ -860,7 +860,7 @@ def test_str_to_env_path(inp, exp):
 def test_path_to_str(inp, exp):
     obs = path_to_str(inp)
     if ON_WINDOWS:
-        exp = exp.replace('/','\\')
+        exp = exp.replace("/", "\\")
     assert exp == obs
 
 
@@ -1510,22 +1510,32 @@ def test_expand_case_matching(inp, exp):
     [
         ("foo", "foo"),
         ("$foo $bar", "bar $bar"),
+        ("$unk $foo $bar", "$unk bar $bar"),
         ("$foobar", "$foobar"),
         ("$foo $spam", "bar eggs"),
+        ("$unk $foo $spam", "$unk bar eggs"),
+        ("$unk $foo $unk $spam $unk", "$unk bar $unk eggs $unk"),
         ("$an_int$spam$a_bool", "42eggsTrue"),
+        ("$unk$an_int$spam$a_bool", "$unk42eggsTrue"),
         ("bar$foo$spam$foo $an_int $none", "barbareggsbar 42 None"),
+        ("$unk bar$foo$spam$foo $an_int $none", "$unk barbareggsbar 42 None"),
         ("$foo/bar", "bar/bar"),
+        ("$unk/$foo/bar", "$unk/bar/bar"),
         ("${'foo'} $spam", "bar eggs"),
+        ("$unk ${'unk'} ${'foo'} $spam", "$unk ${'unk'} bar eggs"),
         ("${'foo'} ${'a_bool'}", "bar True"),
         ("${'foo'}bar", "barbar"),
         ("${'foo'}/bar", "bar/bar"),
+        ("${'unk'}/${'foo'}/bar", "${'unk'}/bar/bar"),
         ("${\"foo'}", "${\"foo'}"),
         ("$?bar", "$?bar"),
         ("$foo}bar", "bar}bar"),
         ("${'foo", "${'foo"),
         (b"foo", "foo"),
         (b"$foo bar", "bar bar"),
+        (b"$unk $foo bar", "$unk bar bar"),
         (b"${'foo'}bar", "barbar"),
+        (b"${'unk'}${'foo'}bar", "${'unk'}barbar"),
     ],
 )
 def test_expandvars(inp, exp, xonsh_builtins):

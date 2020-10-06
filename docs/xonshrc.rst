@@ -6,7 +6,7 @@ The control file usually contains:
 
 * Assignment statements setting `environment variables <envvars.html>`_.  This includes standard OS environment variables that affect other programs and many that Xonsh uses for itself.
 * ``xonfig`` commands to load selected add-ins ("`xontribs<tutorial_xontrib.html#loading-xontribs>`")
-* Xonsh function defintions
+* Xonsh function definitions
 * `Alias definitions <aliases.html>`_, many of which invoke the above functions with specified arguments.
 
 The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.  

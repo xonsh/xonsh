@@ -70,11 +70,11 @@ def partial_color_tokenize(template):
         styles = DEFAULT_STYLE_DICT
     else:
         styles = None
-    color = Color.NO_COLOR
+    color = Color.RESET
     try:
         toks, color = _partial_color_tokenize_main(template, styles)
     except Exception:
-        toks = [(Color.NO_COLOR, template)]
+        toks = [(Color.RESET, template)]
     if styles is not None:
         styles[color]  # ensure color is available
     return toks
@@ -85,7 +85,7 @@ def _partial_color_tokenize_main(template, styles):
     bclose = "}"
     colon = ":"
     expl = "!"
-    color = Color.NO_COLOR
+    color = Color.RESET
     fg = bg = None
     value = ""
     toks = []
@@ -142,8 +142,8 @@ def color_by_name(name, fg=None, bg=None):
         New computed background color name.
     """
     name = name.upper()
-    if name == "NO_COLOR":
-        return Color.NO_COLOR, None, None
+    if name == "RESET":
+        return Color.RESET, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color
         fg = norm_name(name)
@@ -151,7 +151,7 @@ def color_by_name(name, fg=None, bg=None):
         bg = norm_name(name)
     # assemble token
     if fg is None and bg is None:
-        tokname = "NO_COLOR"
+        tokname = "RESET"
     elif fg is None:
         tokname = bg
     elif bg is None:
@@ -171,7 +171,7 @@ def style_as_faded(template: str) -> str:
     """Remove the colors from the template string and style as faded."""
     tokens = partial_color_tokenize(template)
     without_color = "".join([sect for _, sect in tokens])
-    return "{NO_COLOR}{#d3d3d3}" + without_color + "{NO_COLOR}"
+    return "{RESET}{#d3d3d3}" + without_color + "{RESET}"
 
 
 DEFAULT_STYLE_DICT = LazyObject(
@@ -241,7 +241,7 @@ DEFAULT_STYLE_DICT = LazyObject(
             Token.Color.INTENSE_RED: "ansibrightred",
             Token.Color.INTENSE_WHITE: "ansiwhite",
             Token.Color.INTENSE_YELLOW: "ansibrightyellow",
-            Token.Color.NO_COLOR: "noinherit",
+            Token.Color.RESET: "noinherit",
             Token.Color.PURPLE: "ansimagenta",
             Token.Color.RED: "ansired",
             Token.Color.UNDERLINE_BLACK: "underline ansiblack",

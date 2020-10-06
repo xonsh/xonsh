@@ -582,10 +582,10 @@ def source_alias(args, stdin=None):
             except Exception:
                 print_color(
                     "{RED}You may be attempting to source non-xonsh file! "
-                    "{NO_COLOR}If you are trying to source a file in "
+                    "{RESET}If you are trying to source a file in "
                     "another language, then please use the appropriate "
                     "source command. For example, {GREEN}source-bash "
-                    "script.sh{NO_COLOR}",
+                    "script.sh{RESET}",
                     file=sys.stderr,
                 )
                 raise

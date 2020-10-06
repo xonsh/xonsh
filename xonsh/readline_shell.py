@@ -394,7 +394,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif len(completions) <= builtins.__xonsh__.env.get("COMPLETION_QUERY_LIMIT"):
             return 2
         msg = "\nDisplay all {} possibilities? ".format(len(completions))
-        msg += "({GREEN}y{NO_COLOR} or {RED}n{NO_COLOR})"
+        msg += "({GREEN}y{RESET} or {RED}n{RESET})"
         self.print_color(msg, end="", flush=True, file=sys.stderr)
         yn = "x"
         while yn not in "yn":
@@ -407,9 +407,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         w, h = shutil.get_terminal_size()
         lines = columnize(completions, width=w)
         more_msg = self.format_color(
-            "{YELLOW}==={NO_COLOR} more or "
-            "{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit "
-            "{YELLOW}==={NO_COLOR}"
+            "{YELLOW}==={RESET} more or "
+            "{PURPLE}({RESET}q{PURPLE}){RESET}uit "
+            "{YELLOW}==={RESET}"
         )
         while len(lines) > h - 1:
             print("".join(lines[: h - 1]), end="", flush=True, file=sys.stderr)

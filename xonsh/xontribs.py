@@ -165,15 +165,15 @@ def _list(ns):
         for d in data:
             name = d["name"]
             lname = len(name)
-            s += "{PURPLE}" + name + "{NO_COLOR}  " + " " * (nname - lname)
+            s += "{PURPLE}" + name + "{RESET}  " + " " * (nname - lname)
             if d["installed"]:
-                s += "{GREEN}installed{NO_COLOR}      "
+                s += "{GREEN}installed{RESET}      "
             else:
-                s += "{RED}not-installed{NO_COLOR}  "
+                s += "{RED}not-installed{RESET}  "
             if d["loaded"]:
-                s += "{GREEN}loaded{NO_COLOR}"
+                s += "{GREEN}loaded{RESET}"
             else:
-                s += "{RED}not-loaded{NO_COLOR}"
+                s += "{RED}not-loaded{RESET }"
             s += "\n"
         print_color(s[:-1])
 

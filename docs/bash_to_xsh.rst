@@ -110,8 +110,8 @@ line is ``#!/usr/bin/env xonsh``.
       - ``docker run -it xonsh/xonsh:slim``
       - Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. 
         All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`_.
-    * - ``exit``
-      - ``sys.exit()``
+    * - ``exit 1``
+      - ``exit(1)``
       - Exiting from the current script.
 
 To understand how xonsh executes the subprocess commands try

@@ -53,5 +53,5 @@ editing, but you keep xonsh's impressive completion.
 For this it is preferred to have xonsh installed with the
 prompt-toolkit. Then you can leave ``$SHELL_TYPE`` at its default.
 
-Emacs will prompt you for the path of the xonsh exeutable when you
+Emacs will prompt you for the path of the xonsh executable when you
 start up ``ansi-term``.
