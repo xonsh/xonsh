@@ -446,8 +446,10 @@ def main_xonsh(args):
             # enter the shell
             env["XONSH_INTERACTIVE"] = True
             ignore_sigtstp()
-            if env["XONSH_INTERACTIVE"] and not any(
-                os.path.isfile(i) for i in env["XONSHRC"]
+            if (
+                env["XONSH_INTERACTIVE"]
+                and not args.norc
+                and not any(os.path.isfile(i) for i in env["XONSHRC"])
             ):
                 print_welcome_screen()
             events.on_pre_cmdloop.fire()
