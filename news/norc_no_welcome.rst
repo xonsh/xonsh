@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* <news item>
+* Deprecated `--config-path` argument suppressed from help.
 
 **Fixed:**
 
