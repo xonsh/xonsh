@@ -133,10 +133,9 @@ def parser():
     p.add_argument(
         "-V",
         "--version",
-        dest="version",
-        action="store_true",
-        default=False,
+        action="version",
         help="Show version information and exit.",
+        version="/".join(("xonsh", __version__))
     )
     p.add_argument(
         "-c",
@@ -323,10 +322,6 @@ def premain(argv=None):
     args = parser.parse_args(argv)
     if args.help:
         parser.print_help()
-        parser.exit()
-    if args.version:
-        version = "/".join(("xonsh", __version__))
-        print(version)
         parser.exit()
     shell_kwargs = {
         "shell_type": args.shell_type,
