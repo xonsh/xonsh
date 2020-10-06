@@ -1464,6 +1464,7 @@ class XonshSession:
             "execx": "__xonsh__.builtins.execx",
             "compilex": "__xonsh__.builtins.compilex",
             "events": "__xonsh__.builtins.events",
+            "print_color": "__xonsh__.builtins.print_color",
             "printx": "__xonsh__.builtins.printx",
         }
         for refname, objname in proxy_mapping.items():
@@ -1487,6 +1488,8 @@ class XonshSession:
             "compilex",
             "default_aliases",
             "events",
+            "print_color",
+            "printx",
         ]
 
         for name in names:
@@ -1503,7 +1506,7 @@ class _BuiltIns:
         self.execx = None if execer is None else execer.exec
         self.compilex = None if execer is None else execer.compile
         self.events = events
-        self.printx = print_color
+        self.print_color = self.printx = print_color
 
 
 class DynamicAccessProxy:
