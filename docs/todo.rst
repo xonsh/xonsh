@@ -15,6 +15,21 @@ For now we use Python syntax by adding the ``language`` to ``.gitattributes``:
     *xonshrc text linguist-language=Python
     *.xsh text linguist-language=Python
 
+xontribs
+----------------------------------------
+This is simply a list of things we wish existed as a xontrib.
+
+* Gitsome-style rich git(hub) client
+* Timeout context manager--will kill a ``with`` block if it takes too long
+* Macros to run a command in a specific container
+* Tools to go between ``namedtuple`` and shell-style tables
+* Able to use ``find``-like and ``grep``-like calls as iterables
+* ``touch`` and ``rm`` like xoreutils
+* `Keep <https://github.com/OrkoHunter/keep>`_ (With PTK keyboard shortcut)
+* Display docstring of python class/method/function being typed into xonsh prompt, like ptpython
+* udisks notifications and easy access
+* Easily (transparently) load/save data
+
 
 Tab completion from man pages
 ---------------------------------
