@@ -297,7 +297,7 @@ class SqliteHistory(History):
                 }
             else:
                 inp, tsb, rtn, freq = item
-                yield {"inp": inp, "ts": ts, "rtn": rtn, "frequency": freq}
+                yield {"inp": inp, "ts": tsb, "rtn": rtn, "frequency": freq}
 
     def items(self, newest_first=False):
         """Display history items of current session."""
