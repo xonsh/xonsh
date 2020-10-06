@@ -135,7 +135,7 @@ def parser():
         "--version",
         action="version",
         help="Show version information and exit.",
-        version="/".join(("xonsh", __version__)),
+        version=f"xonsh/{__version__}",
     )
     p.add_argument(
         "-c",
