@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* Deprecated `--config-path` argument suppressed from help.
+* Deprecated ``--config-path`` argument suppressed from help.
 
 **Fixed:**
 
