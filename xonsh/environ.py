@@ -2159,26 +2159,36 @@ class Env(cabc.MutableMapping):
                 )
 
         # Convert existing variables
-        name_type = builtins.type(name)
-        converted_values = {}
-        for k, val in self._d.items():
-            if (name_type == str and k == name) or (name_type != str and name.match(k)):
+        if builtins.type(name) == str:
+            if name in self._d:
+                val = self._d[name]
                 if not validate(val):
                     try:
-                        converted_values[k] = convert(val)
+                        self._d[name] = convert(val)
                     except TypeError:
                         if builtins.__xonsh__.env.get("XONSH_DEBUG"):
                             print_color(
-                                f"{{YELLOW}}Environ: variable {k} with value '{val}' of type '{builtins.type(val)}' "
+                                f"{{YELLOW}}Environ: variable {name} with value '{val}' of type '{builtins.type(val)}' "
                                 f"cannot be converted to {type} type. The type left unchanged.",
                                 file=sys.stderr,
                             )
-                if name_type == str:
-                    break
+        else:
+            converted_values = {}
+            for k, val in self._d.items():
+                if name.match(k):
+                    if not validate(val):
+                        try:
+                            converted_values[k] = convert(val)
+                        except TypeError:
+                            if builtins.__xonsh__.env.get("XONSH_DEBUG"):
+                                print_color(
+                                    f"{{YELLOW}}Environ: variable {k} with value '{val}' of type '{builtins.type(val)}' "
+                                    f"cannot be converted to {type} type. The type left unchanged.",
+                                    file=sys.stderr,
+                                )
 
-        # If there is no exception during convertation, commiting the changes
-        for k, v in converted_values.items():
-            self._d[k] = v
+            for k, v in converted_values.items():
+                self._d[k] = v
 
         self._vars[name] = Var(
             validate,
