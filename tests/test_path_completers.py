@@ -56,5 +56,5 @@ def test_complete_path_when_prefix_is_path_literal(quote, xonsh_builtins):
         prefix = f"p{quote}{prefix_file_name}"
         line = f"ls {prefix}"
         out = xcp.complete_path(prefix, line, line.find(prefix), len(line), dict())
-        expected = [f"p{quote}{tmp.name}{quote}"]
+        expected = [f"{quote}{tmp.name}{quote}"]
         assert list(out[0]) == expected
