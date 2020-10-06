@@ -132,7 +132,7 @@ def _xh_get_history(
     datetime_format=None,
     start_time=None,
     end_time=None,
-    location=None
+    location=None,
 ):
     """Get the requested portion of shell history.
 
@@ -385,13 +385,12 @@ def _xh_create_parser():
         "--source",
         choices=HISTORY_BACKENDS,
         default=backend,
-        help="source history backend"
+        help="source history backend",
     )
-    tcp.add_argument("--source-filename",help="override location of source file(s)")
+    tcp.add_argument("--source-filename", help="override location of source file(s)")
     tcp.add_argument("target", choices=HISTORY_BACKENDS, help="target history backend")
     tcp.add_argument(
-        "--target-filename",
-        help="override location of target history file(s)"
+        "--target-filename", help="override location of target history file(s)"
     )
 
     return p
@@ -445,7 +444,7 @@ def _xh_transfer(args):
     print(
         f"transferring history data from {args.source!r} -> {args.target!r}...",
         end=" ",
-        file=sys.stderr
+        file=sys.stderr,
     )
     sessions = {}
 
@@ -460,9 +459,7 @@ def _xh_transfer(args):
         target_session = sessions.get(sessionid)
         if target_session is None:
             sessions[sessionid] = target_session = HISTORY_BACKENDS[args.target](
-                filename=args.target_filename,
-                gc=False,
-                sessionid=sessionid
+                filename=args.target_filename, gc=False, sessionid=sessionid
             )
 
         # sqlite expects a "ts" list-field with [tsb, tse]

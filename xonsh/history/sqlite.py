@@ -127,7 +127,9 @@ def _xh_sqlite_get_count(cursor, sessionid=None):
     return cursor.fetchone()[0]
 
 
-def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, newest_first=False, full_item=False):
+def _xh_sqlite_get_records(
+    cursor, sessionid=None, limit=None, newest_first=False, full_item=False
+):
     if full_item:
         sql = "SELECT inp, rtn, tsb, tse, sessionid, out, info, frequency FROM xonsh_history "
     else:
@@ -180,7 +182,9 @@ def xh_sqlite_items(sessionid=None, filename=None, newest_first=False, full_item
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        return _xh_sqlite_get_records(c, sessionid=sessionid, newest_first=newest_first, full_item=full_item)
+        return _xh_sqlite_get_records(
+            c, sessionid=sessionid, newest_first=newest_first, full_item=full_item
+        )
 
 
 def xh_sqlite_delete_items(size_to_keep, filename=None):
@@ -276,8 +280,10 @@ class SqliteHistory(History):
     def all_items(self, newest_first=False, session_id=None, full_item=False):
         """Display all history items."""
         for item in xh_sqlite_items(
-            filename=self.filename, newest_first=newest_first, sessionid=session_id,
-            full_item=full_item
+            filename=self.filename,
+            newest_first=newest_first,
+            sessionid=session_id,
+            full_item=full_item,
         ):
             if full_item:
                 inp, rtn, tsb, tse, sessionid, out, info, freq = item
@@ -287,7 +293,7 @@ class SqliteHistory(History):
                     "ts": [tsb, tse],
                     "frequency": freq,
                     "out": out,
-                    "info": info
+                    "info": info,
                 }
             else:
                 inp, tsb, rtn, freq = item
