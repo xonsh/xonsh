@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Disable welcome screen if ``--no-rc`` argument was passed.
+* Disabled welcome screen if ``--no-rc`` argument was passed.
 
 **Deprecated:**
 
