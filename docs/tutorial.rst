@@ -1536,7 +1536,7 @@ For example:
     (env) >>>
 
 
-You can also color your prompt (or print colored messages using ``printx`` function) easily by inserting
+You can also color your prompt (or print colored messages using ``print_color`` function) easily by inserting
 keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
 * ``RESET``: Resets any previously used styling.
