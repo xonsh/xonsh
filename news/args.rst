@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Disabled welcome screen if ``--no-rc`` argument was passed.
+* Improved printing of xonsh ``--shell-type`` argument in help message.
 
 **Deprecated:**
 
