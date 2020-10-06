@@ -128,7 +128,7 @@ def parser():
         dest="help",
         action="store_true",
         default=False,
-        help="show help and exit",
+        help="Show help and exit.",
     )
     p.add_argument(
         "-V",
@@ -136,11 +136,11 @@ def parser():
         dest="version",
         action="store_true",
         default=False,
-        help="show version information and exit",
+        help="Show version information and exit.",
     )
     p.add_argument(
         "-c",
-        help="Run a single command and exit",
+        help="Run a single command and exit.",
         dest="command",
         required=False,
         default=None,
@@ -148,7 +148,7 @@ def parser():
     p.add_argument(
         "-i",
         "--interactive",
-        help="force running in interactive mode",
+        help="Force running in interactive mode.",
         dest="force_interactive",
         action="store_true",
         default=False,
@@ -156,15 +156,14 @@ def parser():
     p.add_argument(
         "-l",
         "--login",
-        help="run as a login shell",
+        help="Run as a login shell.",
         dest="login",
         action="store_true",
         default=False,
     )
     p.add_argument(
         "--config-path",
-        help="DEPRECATED: static configuration files may now be used "
-        "in the XONSHRC file list, see the --rc option.",
+        help=argparse.SUPPRESS,
         dest="config_path",
         default=None,
         type=path_argument,
@@ -180,21 +179,21 @@ def parser():
     )
     p.add_argument(
         "--no-rc",
-        help="Do not load the .xonshrc files",
+        help="Do not load the .xonshrc files.",
         dest="norc",
         action="store_true",
         default=False,
     )
     p.add_argument(
         "--no-script-cache",
-        help="Do not cache scripts as they are run",
+        help="Do not cache scripts as they are run.",
         dest="scriptcache",
         action="store_false",
         default=True,
     )
     p.add_argument(
         "--cache-everything",
-        help="Use a cache, even for interactive commands",
+        help="Use a cache, even for interactive commands.",
         dest="cacheall",
         action="store_true",
         default=False,
@@ -202,7 +201,7 @@ def parser():
     p.add_argument(
         "-D",
         dest="defines",
-        help="define an environment variable, in the form of "
+        help="Define an environment variable, in the form of "
         "-DNAME=VAL. May be used many times.",
         metavar="ITEM",
         action="append",
@@ -229,14 +228,14 @@ def parser():
     p.add_argument(
         "file",
         metavar="script-file",
-        help="If present, execute the script in script-file" " and exit",
+        help="If present, execute the script in script-file and exit.",
         nargs="?",
         default=None,
     )
     p.add_argument(
         "args",
         metavar="args",
-        help="Additional arguments to the script specified " "by script-file",
+        help="Additional arguments to the script specified by script-file.",
         nargs=argparse.REMAINDER,
         default=[],
     )
