@@ -129,7 +129,7 @@ class History:
         """Get history items of current session."""
         raise NotImplementedError
 
-    def all_items(self, newest_first=False):
+    def all_items(self, newest_first=False, full_item=False):
         """Get all history items."""
         raise NotImplementedError
 

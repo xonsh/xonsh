@@ -127,8 +127,12 @@ def _xh_sqlite_get_count(cursor, sessionid=None):
     return cursor.fetchone()[0]
 
 
-def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, newest_first=False):
-    sql = "SELECT inp, tsb, rtn, frequency FROM xonsh_history "
+def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, newest_first=False, full_item=False):
+    if full_item:
+        sql = "SELECT inp, rtn, tsb, tse, sessionid, out, info, frequency FROM xonsh_history "
+    else:
+        sql = "SELECT inp, tsb, rtn, frequency FROM xonsh_history "
+
     params = []
     if sessionid is not None:
         sql += "WHERE sessionid = ? "
@@ -172,11 +176,11 @@ def xh_sqlite_get_count(sessionid=None, filename=None):
         return _xh_sqlite_get_count(c, sessionid=sessionid)
 
 
-def xh_sqlite_items(sessionid=None, filename=None, newest_first=False):
+def xh_sqlite_items(sessionid=None, filename=None, newest_first=False, full_item=False):
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        return _xh_sqlite_get_records(c, sessionid=sessionid, newest_first=newest_first)
+        return _xh_sqlite_get_records(c, sessionid=sessionid, newest_first=newest_first, full_item=full_item)
 
 
 def xh_sqlite_delete_items(size_to_keep, filename=None):
@@ -269,12 +273,25 @@ class SqliteHistory(History):
             remove_duplicates=("erasedups" in opts),
         )
 
-    def all_items(self, newest_first=False, session_id=None):
+    def all_items(self, newest_first=False, session_id=None, full_item=False):
         """Display all history items."""
-        for inp, ts, rtn, freq in xh_sqlite_items(
-            filename=self.filename, newest_first=newest_first, sessionid=session_id
+        for item in xh_sqlite_items(
+            filename=self.filename, newest_first=newest_first, sessionid=session_id,
+            full_item=full_item
         ):
-            yield {"inp": inp, "ts": ts, "rtn": rtn, "frequency": freq}
+            if full_item:
+                inp, rtn, tsb, tse, sessionid, out, info, freq = item
+                yield sessionid, {
+                    "inp": inp,
+                    "rtn": rtn,
+                    "ts": [tsb, tse],
+                    "frequency": freq,
+                    "out": out,
+                    "info": info
+                }
+            else:
+                inp, tsb, rtn, freq = item
+                yield {"inp": inp, "ts": ts, "rtn": rtn, "frequency": freq}
 
     def items(self, newest_first=False):
         """Display history items of current session."""

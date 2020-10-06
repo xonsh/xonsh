@@ -461,7 +461,7 @@ class JsonHistory(History):
         for item, tss in items:
             yield {"inp": item.rstrip(), "ts": tss[0]}
 
-    def all_items(self, newest_first=False, **kwargs):
+    def all_items(self, newest_first=False, full_item=False, **kwargs):
         """
         Returns all history as found in XONSH_DATA_DIR.
 
@@ -476,7 +476,8 @@ class JsonHistory(History):
                 # Invalid json file
                 continue
             try:
-                commands = json_file.load()["cmds"]
+                data = json_file.load()
+                commands = data["cmds"]
             except json.decoder.JSONDecodeError:
                 # file is corrupted somehow
                 if builtins.__xonsh__.env.get("XONSH_DEBUG") > 0:
@@ -485,10 +486,19 @@ class JsonHistory(History):
                 continue
             if newest_first:
                 commands = reversed(commands)
+            sessionid = data["sessionid"]
             for c in commands:
-                yield {"inp": c["inp"].rstrip(), "ts": c["ts"][0]}
+                if full_item:
+                    yield sessionid, c
+                else:
+                    yield {"inp": c["inp"].rstrip(), "ts": c["ts"][0]}
+
         # all items should also include session items
-        yield from self.items()
+        for item in self.items():
+            if full_item:
+                yield self.sessionid, item
+            else:
+                yield item
 
     def info(self):
         data = collections.OrderedDict()

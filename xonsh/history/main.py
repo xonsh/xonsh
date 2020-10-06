@@ -235,6 +235,7 @@ _XH_MAIN_ACTIONS = {
     "off",
     "on",
     "clear",
+    "transfer",
 }
 
 
@@ -376,6 +377,23 @@ def _xh_create_parser():
     # 'clear' subcommand
     subp.add_parser("clear", help="one-time wipe of session history")
 
+    # 'transfer' subcommand
+    env = builtins.__xonsh__.env
+    backend = env.get("XONSH_HISTORY_BACKEND")
+    tcp = subp.add_parser("transfer", help="transfer history between backends")
+    tcp.add_argument(
+        "--source",
+        choices=HISTORY_BACKENDS,
+        default=backend,
+        help="source history backend"
+    )
+    tcp.add_argument("--source-filename",help="override location of source file(s)")
+    tcp.add_argument("target", choices=HISTORY_BACKENDS, help="target history backend")
+    tcp.add_argument(
+        "--target-filename",
+        help="override location of target history file(s)"
+    )
+
     return p
 
 
@@ -402,6 +420,63 @@ def _xh_parse_args(args):
     else:
         ns = parser.parse_args(args)
     return ns
+
+
+def _xh_transfer(args):
+    if args.source == args.target:
+        print("source and target backend can't be the same", file=sys.stderr)
+        return
+
+    source = HISTORY_BACKENDS[args.source](filename=args.source_filename, gc=False)
+    target = HISTORY_BACKENDS[args.target](filename=args.target_filename, gc=False)
+    existing_identifiers = set()
+
+    def get_ts(item):
+        ts = item.get("ts")
+        if isinstance(ts, list):
+            return ts
+
+        return [ts, None]
+
+    for sessionid, item in target.all_items(full_item=True):
+        identifier = sessionid, item["inp"], get_ts(item)[0]
+        existing_identifiers.add(identifier)
+
+    print(
+        f"transferring history data from {args.source!r} -> {args.target!r}...",
+        end=" ",
+        file=sys.stderr
+    )
+    sessions = {}
+
+    for sessionid, item in source.all_items(full_item=True):
+        ts = get_ts(item)
+
+        # Collect identifiers for existing items, to prevent importing duplicates
+        identifier = sessionid, item["inp"], ts[0]
+        if identifier in existing_identifiers:
+            continue
+
+        target_session = sessions.get(sessionid)
+        if target_session is None:
+            sessions[sessionid] = target_session = HISTORY_BACKENDS[args.target](
+                filename=args.target_filename,
+                gc=False,
+                sessionid=sessionid
+            )
+
+        # sqlite expects a "ts" list-field with [tsb, tse]
+        if args.target == "sqlite":
+            item["ts"] = ts
+        else:
+            item["ts"] = ts[0]
+
+        target_session.append(item)
+
+    for session in sessions.values():
+        session.flush()
+
+    print("done.", file=sys.stderr)
 
 
 def history_main(
@@ -451,5 +526,7 @@ def history_main(
     elif ns.action == "clear":
         hist.clear()
         print("History cleared", file=sys.stderr)
+    elif ns.action == "transfer":
+        _xh_transfer(ns)
     else:
         print("Unknown history action {}".format(ns.action), file=sys.stderr)
