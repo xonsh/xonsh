@@ -238,20 +238,6 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
 
-Register typed environment variables
-------------------------------------
-
-Before using environment variable you can register it. Xonsh will automatically
-convert the value to appropriate format or set default value if variable
-does not exist:
-
-.. code-block:: xonshcon
-
-    ${...}.register('MY_HOSTS_FILE', type='path', default=p'/etc/hosts')
-    if $MY_HOSTS_FILE.exists():
-        wc -l $MY_HOSTS_FILE
-
-Learn more about `register function <environ.html#xonsh.environ.Env.register>`_.
 
 Running Commands
 ==============================

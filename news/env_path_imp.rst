@@ -1,6 +1,6 @@
 **Added:**
 
-* Added the section "Register typed environment variables" to the Tutorial.
+* <news item>
 
 **Changed:**
 
