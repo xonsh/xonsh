@@ -20,9 +20,13 @@ RE_REMOVE_ANSI = LazyObject(
     "RE_REMOVE_ANSI",
 )
 
+# when running git status commands we do not want to acquire locks running command like git status
+_GIT_OPTIONAL_LOCKS = {"GIT_OPTIONAL_LOCKS": "0"}
+
 
 def _get_git_branch(q):
     denv = builtins.__xonsh__.env.detype()
+    denv.update(_GIT_OPTIONAL_LOCKS)
     try:
         cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
         branch = xt.decode_bytes(
@@ -163,9 +167,11 @@ def current_branch():
     return branch or None
 
 
-def _get_exit_code(cmd):
+def _get_exit_code(cmd, additional_env=None):
     """ Run a command and return its exit code """
     denv = builtins.__xonsh__.env.detype()
+    if additional_env:
+        denv.update(additional_env)
     child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
     return child.returncode
 
@@ -182,15 +188,15 @@ def _git_dirty_working_directory(q, include_untracked):
                 "--quiet",
                 "--untracked-files=normal",
             ]
-            exitcode = _get_exit_code(cmd)
+            exitcode = _get_exit_code(cmd, _GIT_OPTIONAL_LOCKS)
         else:
             # checking unindexed files is faster, so try that first
             unindexed = ["git", "diff-files", "--quiet"]
-            exitcode = _get_exit_code(unindexed)
+            exitcode = _get_exit_code(unindexed, _GIT_OPTIONAL_LOCKS)
             if exitcode == 0:
                 # then, check indexed files
                 indexed = ["git", "diff-index", "--quiet", "--cached", "HEAD"]
-                exitcode = _get_exit_code(indexed)
+                exitcode = _get_exit_code(indexed, _GIT_OPTIONAL_LOCKS)
         # "--quiet" git commands imply "--exit-code", which returns:
         # 1 if there are differences
         # 0 if there are no differences
