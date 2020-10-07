@@ -1968,7 +1968,6 @@ class Env(cabc.MutableMapping):
     #
 
     def __getitem__(self, key):
-        # remove this block on next release
         if key is Ellipsis:
             return self
         elif key in self._d:
@@ -1984,11 +1983,6 @@ class Env(cabc.MutableMapping):
             val, (cabc.MutableSet, cabc.MutableSequence, cabc.MutableMapping)
         ):
             self._detyped = None
-
-        validator = self.get_validator(key)
-        converter = self.get_converter(key)
-        if not validator(val):
-            val = converter(val)
         return val
 
     def __setitem__(self, key, val):
