@@ -312,7 +312,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     norm_names = []
     prefixes = ""
     for name in names:
-        if name == "RESET":
+        if name in ("RESET", "NO_COLOR"):
             # skip most '0' entries
             continue
         elif "BACKGROUND_" in name and n:

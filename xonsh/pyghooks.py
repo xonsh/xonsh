@@ -94,7 +94,7 @@ def color_by_name(name, fg=None, bg=None):
         New computed background color name.
     """
     name = name.upper()
-    if name == "RESET":
+    if name in ("RESET", "NO_COLOR"):
         return Color.DEFAULT, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color
