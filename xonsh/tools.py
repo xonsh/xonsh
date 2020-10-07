@@ -1183,15 +1183,15 @@ def is_env_path(x):
 
 def str_to_path(x):
     """Converts a string to a path."""
-    if isinstance(x, str):
+    if x is None:
+        return None
+    elif isinstance(x, str):
         # checking x is needed to avoid uncontrolled converting empty string to Path('.')
         return pathlib.Path(x) if x else None
     elif isinstance(x, pathlib.Path):
         return x
     elif isinstance(x, EnvPath) and len(x) == 1:
         return pathlib.Path(x[0]) if x[0] else None
-    elif x is None:
-        return None
     else:
         raise TypeError(
             f"Variable should be a pathlib.Path, str or single EnvPath type. {type(x)} given."
