@@ -25,7 +25,8 @@ _GIT_OPTIONAL_LOCKS = {"GIT_OPTIONAL_LOCKS": "0"}
 
 
 def _get_git_branch(q):
-    denv = builtins.__xonsh__.env.detype()
+    # create a safge detyped env dictionary and update with the additional git environment variables
+    denv = dict(builtins.__xonsh__.env.detype())
     denv.update(_GIT_OPTIONAL_LOCKS)
     try:
         cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
@@ -169,7 +170,7 @@ def current_branch():
 
 def _get_exit_code(cmd, additional_env=None):
     """ Run a command and return its exit code """
-    denv = builtins.__xonsh__.env.detype()
+    denv = dict(builtins.__xonsh__.env.detype())
     if additional_env:
         denv.update(additional_env)
     child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
