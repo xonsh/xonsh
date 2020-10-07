@@ -2,10 +2,11 @@
 
 * Add a new color ``DEFAULT`` that is used to designate the terminal's default color.
 * Add a new special color token ``RESET`` used to reset all attributes.
+* Add a new xonsh tool 'print_warning' that prints a traceback with a warning message.
 
 **Changed:**
 
-* Moved interal uses of ``NO_COLOR`` to ``RESET``.
+* Moved internal uses of ``NO_COLOR`` to ``RESET``.
 
 **Deprecated:**
 
