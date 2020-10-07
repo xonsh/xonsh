@@ -316,8 +316,8 @@ You do not need to worry about partially executed commands - that is
 impossible.
 
 If you still have concerns about the determination process and want to have strong confidence
-when running a subprocess command, you can always use the elegant subprocess mode syntax
-that we will see in the following sections. Short example now:
+when running a subprocess command in your xonsh scripts, you can always use the elegant subprocess
+mode syntax that we will see in the following sections. Short example now:
 
 .. code-block:: xonshcon
 
