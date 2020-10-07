@@ -32,9 +32,10 @@ def test_env_contains():
 
 
 @pytest.mark.parametrize("path", [["/home/wakka"], ["wakka"]])
-def test_env_path_list(path):
-    env = Env(MYPATH=path)
+def test_env_path_dirs_list(path):
+    env = Env(MYPATH=path, MYDIRS=path)
     assert path == env["MYPATH"].paths
+    assert path == env["MYDIRS"].paths
 
 
 @pytest.mark.parametrize(
