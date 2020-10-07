@@ -315,10 +315,16 @@ The determination between the two modes is done well ahead of any execution.
 You do not need to worry about partially executed commands - that is
 impossible.
 
-If you absolutely want to run a subprocess command, you can always
-force xonsh to do so with the syntax that we will see in the following
-sections.
+If you still have concerns about the determination process and want to have strong confidence
+when running a subprocess command, you can always use the elegant subprocess mode syntax
+that we will see in the following sections. Short example now:
 
+.. code-block:: xonshcon
+
+    >>> # this will be in subproc-mode forever
+    >>> ![ls -l]
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
 Quoting
 =======
