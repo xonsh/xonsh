@@ -2,6 +2,7 @@
 """A (tab-)completer for xonsh."""
 import builtins
 import collections.abc as cabc
+
 from xonsh.tools import print_exception
 
 
