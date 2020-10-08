@@ -238,6 +238,7 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
 
+
 Running Commands
 ==============================
 As a shell, xonsh is meant to make running commands easy and fun.

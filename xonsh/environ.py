@@ -1143,6 +1143,7 @@ def DEFAULT_VARS():
             "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``",
         ),
         re.compile(r"\w*PATH$"): Var(is_env_path, str_to_env_path, env_path_to_str),
+        re.compile(r"\w*DIRS$"): Var(is_env_path, str_to_env_path, env_path_to_str),
         "PATHEXT": Var(
             is_nonstring_seq_of_strings,
             pathsep_to_upper_seq,
