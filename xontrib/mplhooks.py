@@ -135,7 +135,7 @@ def buf_to_color_str(buf):
             else:
                 pixels.append(pix.format(*rgb))
             last = rgb
-        pixels.append("{NO_COLOR}\n")
+        pixels.append("{RESET}\n")
     pixels[-1] = pixels[-1].rstrip()
     return "".join(pixels)
 
