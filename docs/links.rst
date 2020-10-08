@@ -5,6 +5,7 @@ Helpful Links
 
 * `GitHub Repository <https://github.com/xonsh/xonsh>`_
 * `DockerHub images <https://hub.docker.com/u/xonsh>`_
+* `Cookiecutter template to creating xontribs <https://github.com/xonsh/xontrib-cookiecutter>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
