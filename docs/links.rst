@@ -4,6 +4,7 @@ Helpful Links
 =============
 
 * `GitHub Repository <https://github.com/xonsh/xonsh>`_
+* GitHub topics: `xonsh <https://github.com/topics/xonsh>`_ and `xontrib <https://github.com/topics/xontrib>`_
 * `DockerHub images <https://hub.docker.com/u/xonsh>`_
 * `Cookiecutter template to creating xontribs <https://github.com/xonsh/xontrib-cookiecutter>`_
 * :ref:`genindex`
