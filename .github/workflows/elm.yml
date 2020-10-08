@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup conda
-        uses: goanpeca/setup-miniconda@v1
+        uses: conda-incubator/setup-miniconda@v1
         with:
           activate-environment: elm-xonsh-test
           environment-file: ci/environment-elm.yml
