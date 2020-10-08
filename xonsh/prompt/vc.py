@@ -22,7 +22,10 @@ RE_REMOVE_ANSI = LazyObject(
 
 
 def _get_git_branch(q):
-    denv = builtins.__xonsh__.env.detype()
+    # create a safge detyped env dictionary and update with the additional git environment variables
+    # when running git status commands we do not want to acquire locks running command like git status
+    denv = dict(builtins.__xonsh__.env.detype())
+    denv.update({"GIT_OPTIONAL_LOCKS": "0"})
     try:
         cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
         branch = xt.decode_bytes(
@@ -165,7 +168,8 @@ def current_branch():
 
 def _get_exit_code(cmd):
     """ Run a command and return its exit code """
-    denv = builtins.__xonsh__.env.detype()
+    denv = dict(builtins.__xonsh__.env.detype())
+    denv.update({"GIT_OPTIONAL_LOCKS": "0"})
     child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
     return child.returncode
 
