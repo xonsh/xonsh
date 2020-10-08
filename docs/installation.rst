@@ -17,6 +17,12 @@ Xonsh can be installed via different ways:
     editors
     jupyter
 
+.. note::
+
+   On Windows 10, the separately-installable `Windows Terminal app`_ is recommended.
+
+.. _`Windows Terminal app`: https://github.com/microsoft/terminal/releases
+
 Configuration and Customization
 -------------------------------
 
