@@ -158,21 +158,6 @@ class PromptToolkitShell(BaseShell):
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         completer = None if completions_display == "none" else self.pt_completer
 
-        get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
-
-        if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
-            get_prompt_tokens = lambda: self.prompt_tokens("PROMPT", "message")
-            get_rprompt_tokens = lambda: self.prompt_tokens("RIGHT_PROMPT", "rprompt")
-            get_bottom_toolbar_tokens = lambda: self.prompt_tokens(
-                "BOTTOM_TOOLBAR", "bottom_toolbar"
-            )
-        else:
-            get_prompt_tokens = self.prompt_tokens("PROMPT", "message")
-            get_rprompt_tokens = self.prompt_tokens("RIGHT_PROMPT", "rprompt")
-            get_bottom_toolbar_tokens = self.prompt_tokens(
-                "BOTTOM_TOOLBAR", "bottom_toolbar"
-            )
-
         if env.get("VI_MODE"):
             editing_mode = EditingMode.VI
         else:
