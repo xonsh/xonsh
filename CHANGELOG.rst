@@ -75,7 +75,6 @@ v0.9.23
 * cygwin needs full path to find exe; disable thread_subprocs as default for cygwin
 * Fixed logic in git dirty working directory
 * Fixed type registration for ``*DIRS`` environment variables.
-* Fixed getting typed registered environment variable when it was initialized before registration.
 * Fixed #3703 and #3739, recent code change made it impossible to tell whether a (registered) environment variable
   was missing from environment or present and set to its registered default value. The test for ANSICON was
   failing due to this.
