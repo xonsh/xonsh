@@ -4,6 +4,110 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.23
+====================
+
+**Added:**
+
+* add API docs for ptk_shell.updator module
+* add flake8-docstrings to the project. it integrates pydocstyle to flake8.
+* Support for ANSI OSC escape sequences in ``$PROMPT``, setting ``$TITLE`` for example. (#374, #1403)
+* Now ptk_shell supports loading its sections in thread, speeding up the prompt. Enable it by setting ``$ENABLE_ASYNC_PROMPT=True``.
+* Added ``unset``, ``export``, ``set -e``, ``set -x``, ``shopt``, ``complete`` to xontrib bashisms.
+* Use command_cache when finding available commands, to speedup command-not-found suggestions
+* Added Visual Studio Code (VSCode) extension and Vim syntax file to the Editors page.
+* Added ``exit(exit_code)`` function by default in not interactive mode. Now importing ``exit`` from ``sys`` is not needed.
+* Added Python syntax highlighting of xsh files on Github repo xonsh/xonsh
+* history clear, history off and history on actions, for managing whether history in the current session is saved.
+* ValueErrors from environ.register now report the name of the bad env var
+* Add a new color ``DEFAULT`` that is used to designate the terminal's default color.
+* Add a new special color token ``RESET`` used to reset all attributes.
+* Add a new xonsh tool 'print_warning' that prints a traceback with a warning message.
+* Added `xontrib-onepath <https://github.com/anki-code/xontrib-onepath>`_ to associate files with apps in xonsh shell like in graphical OS.
+* Added ``print_color`` and ``printx`` functions to builtins as reference to ``xonsh.tools.print_color``.
+* Added to xontrib whole_word_jumping: Shift+Delete hotkey to delete whole word.
+* Added "Advanced String Literals" to the "Tutorial".
+* ``xonfig jupyter-kernel`` new subcommand to generate xonsh kernel spec for jupyter.  
+  Installing a new xonsh kernel for jupyter automatically removes any other one registered with jupyter, 
+  otherwise the new one might not be used.
+* Added xontrib ``powerline-binding`` (https://github.com/dyuri/xontrib-powerline-binding) - uses ``powerline`` to render the prompt.
+
+**Changed:**
+
+* Improved printing of xonsh ``--shell-type`` argument in help message.
+* "Bash to Xonsh Translation Guide" improvements.
+* More stable exception handling in the tab completer.
+* Changed sections order in docs
+* The ``path`` type in ``${...}.register`` was renamed to ``env_path`` as it should be and added
+  new ``path`` type instead that represent ``pathlib.Path``. Now you can register typed environment
+  variables that will be converted to ``Path``.
+* xonsh/environ.py: new rule: for "registered" environment variables (in ``DEFAULT_VARS`` or via ``env.register()``), 
+  if default is set to ``DefaultNotGiven``, then variable has no default and raises ``KeyError`` if it is not 
+  actually defined in environment.  Likewise, ``"var" in __xonsh__.env`` will return False.
+* Changed defaults for ANSICON, TERM and VIRTUAL_ENV to ``DefaultNotGiven``, so code can rationally test whether
+  the expected external program has defined these variables.  No need to do this for variables that xonsh
+  itself defines.
+* Moved internal uses of ``NO_COLOR`` to ``RESET``.
+* When retrieving the git status or other fields for building the prompt xonsh will run
+  the git commands with ``$GIT_OPTIONAL_LOCKS=0``.  For details on what this entails see
+  the git documentation for
+  `GIT_OPTIONAL_LOCKS <https://git-scm.com/docs/git#Documentation/git.txt-codeGITOPTIONALLOCKScode/>`_.
+* Minor improvements to the get prompt speed. (Mostly in git.)
+* ptk key binding for TAB -- hitting TAB to start completion now automatically selects the first displayed completion (if any).
+  hitting TAB when in insert mode inserts TAB, as heretofore.  This more exactly follows behavior of readline ``menu-complete``.
+  There is no configuration option for tailoring this behavior.
+* ``xonfig info`` displays whether jupyter detected in environment and 
+  also path of xonsh jupyter kernel spec, if any.
+* xontrib-argcomplete and xontrib-pipeliner description improvement.
+
+**Deprecated:**
+
+* Deprecated the ``NO_COLOR`` color reset token in favor of ``RESET``.
+
+**Removed:**
+
+* Deprecated ``--config-path`` argument suppressed from help.
+* setup no longer (tries to) install jupyter kernel automatically, 
+  user must run ``xonfig jupyter-kernel`` manually.
+
+**Fixed:**
+
+* cygwin needs full path to find exe; disable thread_subprocs as default for cygwin
+* Fixed logic in git dirty working directory
+* Fixed type registration for ``*DIRS`` environment variables.
+* Fixed getting typed registered environment variable when it was initialized before registration.
+* Fixed #3703 and #3739, recent code change made it impossible to tell whether a (registered) environment variable
+  was missing from environment or present and set to its registered default value. The test for ANSICON was
+  failing due to this.
+* Fixed environment variables substitution: unknown variables stay unreplaced now (#3818).
+* Fixed xpg xontrib link
+* Fix crash when xonsh tries to run windows app execution aliases.
+* Setup wasn't consistently detecting jupyter in environment; ``python setup.py install`` worked, but
+  ``pip install .`` wouldn't (because pip mucks with ``sys.path``), 
+  nor would install from wheel (because it doesn't run ``setup.py``).
+* ``xonfig info`` now displays actual value of ON_MSYS and ON_CYGWIN instead of lazy bool type.
+  (maybe was happening only on Windows?)
+
+**Authors:**
+
+* Anthony Scopatz
+* Gil Forsyth
+* Morten Enemark Lund
+* Bob Hyman
+* a
+* anki-code
+* christopher
+* Eadaen1
+* Danny Sepler
+* Gyuri Horak
+* cafehaine
+* Wendell Turner
+* Noortheen Raja
+* Marius van Niekerk
+* Wendell CTR Turner
+
+
+
 v0.9.22
 ====================
 
