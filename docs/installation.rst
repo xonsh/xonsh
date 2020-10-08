@@ -5,7 +5,7 @@ Installation
 Installation
 ------------
 
-Xonsh can be installed via different ways:
+Xonsh can be installed via different package managers from python specific to operation system package managers:
 
 .. toctree::
     :titlesonly:
