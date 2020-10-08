@@ -86,31 +86,31 @@ import String
 # render prompts
 PROMPTS = [
     ("default", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
-                '{branch_color}{curr_branch: {}}{NO_COLOR} {BOLD_BLUE}'
-                '{prompt_end}{NO_COLOR} '),
-    ("debian chroot", '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{NO_COLOR}> '),
-    ("minimalist", '{BOLD_GREEN}{cwd_base}{NO_COLOR} ) '),
-    ("terlar", '{env_name}{BOLD_GREEN}{user}{NO_COLOR}@{hostname}:'
-               '{BOLD_GREEN}{cwd}{NO_COLOR}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{NO_COLOR} '),
+                '{branch_color}{curr_branch: {}}{RESET} {BOLD_BLUE}'
+                '{prompt_end}{RESET} '),
+    ("debian chroot", '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{RESET}> '),
+    ("minimalist", '{BOLD_GREEN}{cwd_base}{RESET} ) '),
+    ("terlar", '{env_name}{BOLD_GREEN}{user}{RESET}@{hostname}:'
+               '{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{RESET} '),
     ("default with git status", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
-                '{branch_color}{gitstatus: {}}{NO_COLOR} {BOLD_BLUE}'
-                '{prompt_end}{NO_COLOR} '),
-    ("robbyrussell", '{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{NO_COLOR} '),
+                '{branch_color}{gitstatus: {}}{RESET} {BOLD_BLUE}'
+                '{prompt_end}{RESET} '),
+    ("robbyrussell", '{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{RESET} '),
     ("just a dollar", "$ "),
-    ("simple pythonista", "{INTENSE_RED}{user}{NO_COLOR} at {INTENSE_PURPLE}{hostname}{NO_COLOR} "
-                          "in {BOLD_GREEN}{cwd}{NO_COLOR}\\n↪ "),
+    ("simple pythonista", "{INTENSE_RED}{user}{RESET} at {INTENSE_PURPLE}{hostname}{RESET} "
+                          "in {BOLD_GREEN}{cwd}{RESET}\\n↪ "),
     ("informative", "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
-                    "{BOLD_GREEN}{cwd} {gitstatus}{NO_COLOR}\\n> "),
+                    "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\\n> "),
     ("informative Version Control", "{YELLOW}{env_name} "
-                    "{BOLD_GREEN}{cwd} {gitstatus}{NO_COLOR} {prompt_end} "),
-    ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
-    ("classic with git status", "{gitstatus} {NO_COLOR}{user}@{hostname} {BOLD_GREEN}{cwd}{NO_COLOR}> "),
-    ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{NO_COLOR}> "),
-    ("sorin", "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{NO_COLOR} "),
-    ("acidhub", "❰{INTENSE_GREEN}{user}{NO_COLOR}❙{YELLOW}{cwd}{NO_COLOR}{env_name}❱{gitstatus}≻ "),
-    ("nim", "{INTENSE_GREEN}┬─[{YELLOW}{user}{NO_COLOR}@{BLUE}{hostname}{NO_COLOR}:{cwd}"
-            "{INTENSE_GREEN}]─[{localtime}]─[{NO_COLOR}G:{INTENSE_GREEN}{curr_branch}=]"
-            "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{NO_COLOR} "),
+                    "{BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} "),
+    ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> "),
+    ("classic with git status", "{gitstatus} {RESET}{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> "),
+    ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{RESET}> "),
+    ("sorin", "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{RESET} "),
+    ("acidhub", "❰{INTENSE_GREEN}{user}{RESET}❙{YELLOW}{cwd}{RESET}{env_name}❱{gitstatus}≻ "),
+    ("nim", "{INTENSE_GREEN}┬─[{YELLOW}{user}{RESET}@{BLUE}{hostname}{RESET}:{cwd}"
+            "{INTENSE_GREEN}]─[{localtime}]─[{RESET}G:{INTENSE_GREEN}{curr_branch}=]"
+            "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{RESET} "),
 ]
 
 prompt_header = """type alias PromptData =
@@ -123,7 +123,7 @@ prompts : List PromptData
 prompts ="""
 
 def render_prompts(lines):
-    print_color("Rendering {GREEN}prompts{NO_COLOR}")
+    print_color("Rendering {GREEN}prompts{RESET}")
     prompt_format = PromptFormatter()
     fields = dict($PROMPT_FIELDS)
     fields.update(
@@ -133,7 +133,7 @@ def render_prompts(lines):
         hostname="carcolh",
         env_name=fields['env_prefix'] + "env" + fields["env_postfix"],
         curr_branch="branch",
-        gitstatus="{CYAN}branch|{BOLD_BLUE}+2{NO_COLOR}⚑7",
+        gitstatus="{CYAN}branch|{BOLD_BLUE}+2{RESET}⚑7",
         branch_color="{BOLD_INTENSE_RED}",
         localtime="15:56:07",
     )
@@ -160,7 +160,7 @@ colors : List ColorData
 colors ="""
 
 def render_colors(lines):
-    print_color("Rendering {GREEN}color styles{NO_COLOR}")
+    print_color("Rendering {GREEN}color styles{RESET}")
     source = (
         'import sys\n'
         'echo "Welcome $USER on" @(sys.platform)\n\n'
@@ -200,7 +200,7 @@ xontribs : List XontribData
 xontribs ="""
 
 def render_xontribs(lines):
-    print_color("Rendering {GREEN}xontribs{NO_COLOR}")
+    print_color("Rendering {GREEN}xontribs{RESET}")
     lines.append(xontrib_header)
     md = xontrib_metadata()
     packages = md["packages"]
@@ -245,8 +245,8 @@ def compile():
         base = os.path.splitext(source.lower())[0]
         src = os.path.join('elm-src', source)
         js_target = os.path.join('js', base + '.js')
-        print_color('Compiling {YELLOW}' + src + '{NO_COLOR} -> {GREEN}' +
-                    js_target + '{NO_COLOR}')
+        print_color('Compiling {YELLOW}' + src + '{RESET} -> {GREEN}' +
+                    js_target + '{RESET}')
         $XONSH_SHOW_TRACEBACK = False
         try:
             ![elm make --optimize --output @(js_target) @(src)]
@@ -258,8 +258,8 @@ def compile():
         if os.path.exists(min_target):
             ![rm -v @(min_target)]
         if HAVE_UGLIFY:
-            print_color('Minifying {YELLOW}' + js_target + '{NO_COLOR} -> {GREEN}' +
-                        min_target + '{NO_COLOR}')
+            print_color('Minifying {YELLOW}' + js_target + '{RESET} -> {GREEN}' +
+                        min_target + '{RESET}')
             ![uglifyjs @(js_target) --compress @(UGLIFY_FLAGS) |
               uglifyjs --mangle --output @(min_target)]
             new_files.append(min_target)
