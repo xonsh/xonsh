@@ -911,7 +911,7 @@ def suggest_commands(cmd, env, aliases):
     return rtn
 
 
-def _get_env_var(name, default=None):
+def _get_manual_env_var(name, default=None):
     """Returns if the given variable is manually set as well as it's value."""
     env = getattr(builtins.__xonsh__, "env", None)
     if env is None:
@@ -926,8 +926,8 @@ def _get_env_var(name, default=None):
 
 def print_warning(msg):
     """Print warnings with/without traceback."""
-    manually_set_trace, show_trace = _get_env_var("XONSH_SHOW_TRACEBACK", False)
-    manually_set_logfile, log_file = _get_env_var("XONSH_TRACEBACK_LOGFILE")
+    manually_set_trace, show_trace = _get_manual_env_var("XONSH_SHOW_TRACEBACK", False)
+    manually_set_logfile, log_file = _get_manual_env_var("XONSH_TRACEBACK_LOGFILE")
     if (not manually_set_trace) and (not manually_set_logfile):
         # Notify about the traceback output possibility if neither of
         # the two options have been manually set
@@ -962,8 +962,8 @@ def print_warning(msg):
 
 def print_exception(msg=None):
     """Print exceptions with/without traceback."""
-    manually_set_trace, show_trace = _get_env_var("XONSH_SHOW_TRACEBACK", False)
-    manually_set_logfile, log_file = _get_env_var("XONSH_TRACEBACK_LOGFILE")
+    manually_set_trace, show_trace = _get_manual_env_var("XONSH_SHOW_TRACEBACK", False)
+    manually_set_logfile, log_file = _get_manual_env_var("XONSH_TRACEBACK_LOGFILE")
     if (not manually_set_trace) and (not manually_set_logfile):
         # Notify about the traceback output possibility if neither of
         # the two options have been manually set
