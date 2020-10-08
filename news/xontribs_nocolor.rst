@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* NO_COLOR replaced to RESET in prompt_ret_code and mplhooks.
+* Fixed NO_COLOR to RESET in prompt_ret_code and mplhooks.
 
 **Security:**
 
