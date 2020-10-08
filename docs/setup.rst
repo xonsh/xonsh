@@ -7,7 +7,9 @@ Config Files and Settings
     :maxdepth: 2
 
     xonshrc
+    customization
     envvars
     aliases
     xontribs
     events
+    platform-issues

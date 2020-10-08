@@ -1,5 +1,5 @@
-Via Package Manager
-===================
+Package Manager
+===============
 
 You can install xonsh using ``conda``, ``pip`` or the package manager for 
 your operating system distribution.
