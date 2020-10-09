@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* Removed `import random`.
+* Removed ``import random``.
 
 **Fixed:**
 
