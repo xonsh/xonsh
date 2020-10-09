@@ -127,9 +127,12 @@ def _expandpath(path):
     return expand_path(path, expand_user=expand_user)
 
 
-def random_choice(lst):
-    """Returns random element from the list"""
-    return lst[datetime.datetime.now().microsecond % len(lst)]
+def simple_random_choice(lst):
+    """Returns random element from the list with length less than 1 million elements."""
+    l = len(lst)
+    if l > 1000000:  # microsecond maximum
+        raise ValueError("The list is too long.")
+    return lst[datetime.datetime.now().microsecond % l]
 
 
 def decode_bytes(b):

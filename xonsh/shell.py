@@ -13,7 +13,7 @@ from xonsh.platform import (
     has_prompt_toolkit,
     minimum_required_ptk_version,
 )
-from xonsh.tools import XonshError, print_exception, random_choice
+from xonsh.tools import XonshError, print_exception, simple_random_choice
 from xonsh.events import events
 import xonsh.history.main as xhm
 
@@ -157,7 +157,7 @@ class Shell(object):
         elif env and env.get("TERM", "") == "dumb":
             shell_type = "dumb"
         elif shell_type == "random":
-            shell_type = random_choice(("readline", "prompt_toolkit"))
+            shell_type = simple_random_choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
             if not has_prompt_toolkit():
                 use_vended_prompt_toolkit()
