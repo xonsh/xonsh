@@ -812,7 +812,7 @@ def DEFAULT_VARS():
             is_bool,
             to_bool,
             bool_to_str,
-            False,
+            True,
             "While tab-completions menu is displayed, press <Enter> to confirm "
             "completion instead of running command. This only affects the "
             "prompt-toolkit shell.",
