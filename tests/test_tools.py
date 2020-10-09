@@ -79,6 +79,7 @@ from xonsh.tools import (
     balanced_parens,
     iglobpath,
     all_permutations,
+    simple_random_choice,
 )
 from xonsh.environ import Env
 
@@ -92,6 +93,15 @@ INDENT = "    "
 TOOLS_ENV = {"EXPAND_ENV_VARS": True, "XONSH_ENCODING_ERRORS": "strict"}
 ENCODE_ENV_ONLY = {"XONSH_ENCODING_ERRORS": "strict"}
 PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
+
+
+def test_random_choice():
+    lst = [1, 2, 3]
+    r = simple_random_choice(lst)
+    assert r in lst
+
+    with pytest.raises(ValueError):
+        simple_random_choice(range(1010101))
 
 
 def test_subproc_toks_x():
