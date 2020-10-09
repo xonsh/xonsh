@@ -13,7 +13,7 @@ from xonsh.platform import (
     has_prompt_toolkit,
     minimum_required_ptk_version,
 )
-from xonsh.tools import XonshError, print_exception
+from xonsh.tools import XonshError, print_exception, random_choice
 from xonsh.events import events
 import xonsh.history.main as xhm
 
@@ -74,11 +74,6 @@ on_post_prompt() -> None
 Fires just after the prompt returns
 """,
 )
-
-
-def random_choice(lst):
-    """Returns random element from the list"""
-    return lst[int(time.time() % len(lst))]
 
 
 def transform_command(src, show_diff=True):
@@ -202,7 +197,7 @@ class Shell(object):
         env = builtins.__xonsh__.env
         # build history backend before creating shell
         builtins.__xonsh__.history = hist = xhm.construct_history(
-            env=env.detype(), ts=[time.time(), None], locked=True
+            env=env.detype(), ts=[time(), None], locked=True
         )
 
         shell_type = self.choose_shell_type(shell_type, env)

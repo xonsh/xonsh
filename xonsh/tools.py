@@ -127,6 +127,11 @@ def _expandpath(path):
     return expand_path(path, expand_user=expand_user)
 
 
+def random_choice(lst):
+    """Returns random element from the list"""
+    return lst[datetime.datetime.now().microsecond % len(lst)]
+
+
 def decode_bytes(b):
     """Tries to decode the bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
