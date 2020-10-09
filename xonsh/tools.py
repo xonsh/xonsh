@@ -127,6 +127,14 @@ def _expandpath(path):
     return expand_path(path, expand_user=expand_user)
 
 
+def simple_random_choice(lst):
+    """Returns random element from the list with length less than 1 million elements."""
+    l = len(lst)
+    if l > 1000000:  # microsecond maximum
+        raise ValueError("The list is too long.")
+    return lst[datetime.datetime.now().microsecond % l]
+
+
 def decode_bytes(b):
     """Tries to decode the bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
