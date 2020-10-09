@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Now `COMPLETIONS_CONFIRM` is `True` by default.
+* Now ``COMPLETIONS_CONFIRM`` is ``True`` by default.
 
 **Deprecated:**
 
