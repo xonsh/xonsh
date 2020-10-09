@@ -197,7 +197,7 @@ class Shell(object):
         env = builtins.__xonsh__.env
         # build history backend before creating shell
         builtins.__xonsh__.history = hist = xhm.construct_history(
-            env=env.detype(), ts=[time(), None], locked=True
+            env=env.detype(), ts=[time.time(), None], locked=True
         )
 
         shell_type = self.choose_shell_type(shell_type, env)
