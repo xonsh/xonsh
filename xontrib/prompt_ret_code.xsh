@@ -26,8 +26,8 @@ def _ret_code():
     return None
 
 
-$PROMPT = $PROMPT.replace('{prompt_end}{NO_COLOR}',
-                          '{ret_code_color}{ret_code}{prompt_end}{NO_COLOR}')
+$PROMPT = $PROMPT.replace('{prompt_end}{RESET}',
+                          '{ret_code_color}{ret_code}{prompt_end}{RESET}')
 
 
 $PROMPT_FIELDS['ret_code_color'] = _ret_code_color
