@@ -5,7 +5,7 @@ Installation
 Installation
 ------------
 
-Xonsh can be installed via different package managers from python specific to operation system package managers:
+Xonsh can be installed and run with various package managers, by using appimage, or from a docker container:
 
 .. toctree::
     :titlesonly:
