@@ -1,5 +1,5 @@
-Run from container
-==================
+Docker container
+================
 
 Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`__.
 

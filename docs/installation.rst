@@ -2,16 +2,10 @@
 Installation
 ============
 
-Prerequisites
--------------
-* python V3.6 or later.
-* for interactive use, an ansi (vt100-compatible) terminal application.  On Windows 10, the 
-  separately-installable `Windows Terminal app <https://github.com/microsoft/terminal/releases>`_ 
-  is recommended.
-  
 Installation
 ------------
-Xonsh can be installed via package manager, via appimage or just run from a pre-built container:
+
+Xonsh can be installed and run with various package managers, by using appimage, or from a docker container:
 
 .. toctree::
     :titlesonly:
@@ -20,18 +14,11 @@ Xonsh can be installed via package manager, via appimage or just run from a pre-
     packages
     appimage
     containers
-    editors
     jupyter
 
-Configuration and Customization
-================================
 
-Xonsh uses startup configuration files and provides configuration wizards to help you set them up.
+.. note::
 
-.. toctree::
-    :titlesonly:
-    :maxdepth: 2
+   On Windows 10, the separately-installable `Windows Terminal app`_ is recommended.
 
-    xonshrc
-    customization
-    platform-issues
+.. _`Windows Terminal app`: https://github.com/microsoft/terminal/releases

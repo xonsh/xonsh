@@ -4,9 +4,9 @@ the xonsh shell
 
 .. include:: intro.rst
 
-.. include:: installation.rst
-
 .. include:: comparison.rst
+
+.. include:: installation.rst
 
 .. include:: guides.rst
 
