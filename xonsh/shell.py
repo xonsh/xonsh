@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
 import sys
-import random
 import time
 import difflib
 import builtins
@@ -75,6 +74,11 @@ on_post_prompt() -> None
 Fires just after the prompt returns
 """,
 )
+
+
+def random_choice(lst):
+    """Returns random element from the list"""
+    return lst[int(time.time() % len(lst))]
 
 
 def transform_command(src, show_diff=True):
@@ -158,7 +162,7 @@ class Shell(object):
         elif env and env.get("TERM", "") == "dumb":
             shell_type = "dumb"
         elif shell_type == "random":
-            shell_type = random.choice(("readline", "prompt_toolkit"))
+            shell_type = random_choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
             if not has_prompt_toolkit():
                 use_vended_prompt_toolkit()
