@@ -105,6 +105,12 @@ def _set(args):
         __xonsh__.env["XONSH_TRACE_SUBPROC"] = True
     elif arg == "+x":
         __xonsh__.env["XONSH_TRACE_SUBPROC"] = False
+    elif arg in ["-ex", "-xe"]:
+        __xonsh__.env["RAISE_SUBPROC_ERROR"] = True
+        __xonsh__.env["XONSH_TRACE_SUBPROC"] = True
+    elif arg in ["+ex", "+xe"]:
+        __xonsh__.env["RAISE_SUBPROC_ERROR"] = False
+        __xonsh__.env["XONSH_TRACE_SUBPROC"] = False
     else:
         print(
             "Not supported in xontrib bashisms.\nPRs are welcome - https://github.com/xonsh/xonsh/blob/master/xontrib/bashisms.py",
