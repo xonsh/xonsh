@@ -138,12 +138,13 @@ there is `bashisms xontrib <https://xon.sh/xontribs.html#bashisms>`_:
     >>> !!
     echo
 
-Work with bash snippets? Try`xontrib-sh <https://xon.sh/xontribs.html#sh>`_:
+Work with bash snippets? Take a look at `xontrib-sh <https://xon.sh/xontribs.html#sh>`_:
 
 .. code-block:: console
 
     >>> xontrib load sh
     >>> $AND = 'a' + 'nd'
+    >>> # Run bash script:
     >>> ! for i in {1..3}
           do
              echo -n "$AND $i "
