@@ -1,6 +1,6 @@
 **Added:**
 
-* New xontrib-sh (https://github.com/anki-code/xontrib-sh) to paste and run commands from bash, zsh, fish.
+* New xontrib-sh (https://github.com/anki-code/xontrib-sh) to paste and run snippets from bash, zsh, fish.
 
 **Changed:**
 
