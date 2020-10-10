@@ -58,7 +58,7 @@ from xonsh.platform import (
     pygments_version_info,
 )
 
-from xonsh.pygments_cache import get_style_by_name
+from xonsh.pygments_cache import get_style_by_name, add_custom_style
 
 from xonsh.events import events
 
@@ -432,6 +432,47 @@ def xonsh_style_proxy(styler):
             return cls.target
 
     return XonshStyleProxy
+
+
+def register_custom_style(
+    name, styles, highlight_color=None, background_color=None, base=None
+):
+    """Register custom style.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    styles : dict
+        Token -> style mapping.
+    highlight_color : str
+        Hightlight color.
+    background_color : str
+        Background color.
+    base : str, optional
+        Base style to use as default.
+    """
+    base_style = get_style_by_name(base if base is not None else "default")
+    custom_styles = base_style.styles.copy()
+
+    for token, value in styles.items():
+        custom_styles[token] = value
+
+    style = type(
+        f"Custom{name}Style",
+        (Style,),
+        {
+            "styles": custom_styles,
+            "highlight_color": highlight_color
+            if highlight_color is not None
+            else base_style.highlight_color,
+            "background_color": background_color
+            if background_color is not None
+            else base_style.background_color,
+        },
+    )
+
+    add_custom_style(name, style)
 
 
 PTK_STYLE = LazyObject(
