@@ -1359,6 +1359,14 @@ def to_itself(x):
     return x
 
 
+def to_int_or_none(x) -> tp.Optional[int]:
+    """Convert the given value to integer if possible. Otherwise return None"""
+    if isinstance(x, str) and x.lower() == "none":
+        return None
+    else:
+        return int(x)
+
+
 def bool_to_str(x):
     """Converts a bool to an empty string if False and the string '1' if
     True.

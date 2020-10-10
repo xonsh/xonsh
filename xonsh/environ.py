@@ -87,6 +87,7 @@ from xonsh.tools import (
     is_str_str_dict,
     to_str_str_dict,
     dict_to_str,
+    to_int_or_none,
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -740,11 +741,11 @@ def DEFAULT_VARS():
         ),
         "ASYNC_PROMPT_THREAD_WORKERS": Var(
             is_int,
-            int,
+            to_int_or_none,
             str,
             None,
             "Define the number of workers used by the ASYC_PROPMT's pool. "
-            "By default it is defined by Python's concurrent.futures.ThreadPoolExecutor",
+            "By default it is the same as defined by Python's concurrent.futures.ThreadPoolExecutor class.",
         ),
         "BASH_COMPLETIONS": Var(
             is_env_path,
