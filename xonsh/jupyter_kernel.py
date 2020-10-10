@@ -22,7 +22,6 @@ from xonsh.main import setup
 from xonsh.completer import Completer
 from xonsh.commands_cache import predict_true
 
-
 MAX_SIZE = 8388608  # 8 Mb
 DELIM = b"<IDS|MSG>"
 
@@ -468,11 +467,11 @@ if __name__ == "__main__":
         xontribs=["coreutils"],
         threadable_predictors={"git": predict_true, "man": predict_true},
     )
-    if builtins.__xonsh__.commands_cache.is_only_functional_alias("cat"):
+    if builtins.__xonsh__.commands_cache.is_only_functional_alias("cat"):  # type:ignore
         # this is needed if the underlying system doesn't have cat
         # we supply our own, because we can
-        builtins.aliases["cat"] = "xonsh-cat"
-        builtins.__xonsh__.env["PAGER"] = "xonsh-cat"
-    shell = builtins.__xonsh__.shell
+        builtins.aliases["cat"] = "xonsh-cat"  # type:ignore
+        builtins.__xonsh__.env["PAGER"] = "xonsh-cat"  # type:ignore
+    shell = builtins.__xonsh__.shell  # type:ignore
     kernel = shell.kernel = XonshKernel()
     kernel.start()

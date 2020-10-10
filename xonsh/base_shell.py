@@ -33,7 +33,7 @@ from xonsh.ansi_colors import ansi_partial_color_format
 if ON_WINDOWS:
     import ctypes
 
-    kernel32 = ctypes.windll.kernel32
+    kernel32 = ctypes.windll.kernel32  # type:ignore
     kernel32.SetConsoleTitleW.argtypes = [ctypes.c_wchar_p]
 
 

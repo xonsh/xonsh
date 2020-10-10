@@ -9,6 +9,7 @@ import fnmatch
 import builtins
 import textwrap
 import collections.abc as cabc
+import typing as tp
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 from xonsh.jsonutils import serialize_xonsh_json
@@ -20,7 +21,7 @@ from xonsh.jsonutils import serialize_xonsh_json
 class Node(object):
     """Base type of all nodes."""
 
-    attrs = ()
+    attrs: tp.Union[tp.Tuple[str, ...], str] = ()
 
     def __str__(self):
         return PrettyFormatter(self).visit()
@@ -81,7 +82,13 @@ class Question(Node):
 class Input(Node):
     """Gets input from the user."""
 
-    attrs = ("prompt", "converter", "show_conversion", "confirm", "path")
+    attrs: tp.Tuple[str, ...] = (
+        "prompt",
+        "converter",
+        "show_conversion",
+        "confirm",
+        "path",
+    )
 
     def __init__(
         self,
@@ -251,7 +258,7 @@ class StateFile(Input):
     given file name. This node type is likely not useful on its own.
     """
 
-    attrs = ("default_file", "check", "ask_filename")
+    attrs: tp.Tuple[str, ...] = ("default_file", "check", "ask_filename")
 
     def __init__(self, default_file=None, check=True, ask_filename=True):
         """
@@ -604,7 +611,7 @@ class UnstorableType(object):
     singleton.
     """
 
-    _inst = None
+    _inst: tp.Optional["UnstorableType"] = None
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:

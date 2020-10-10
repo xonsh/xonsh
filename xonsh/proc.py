@@ -2356,8 +2356,6 @@ class CommandPipeline:
             return 1
         return self.proc.returncode
 
-    rtn = returncode
-
     @property
     def args(self):
         """Arguments to the process."""

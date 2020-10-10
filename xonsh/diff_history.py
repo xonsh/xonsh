@@ -4,6 +4,7 @@ import difflib
 import datetime
 import itertools
 import argparse
+import typing as tp
 
 from xonsh.lazyjson import LazyJSON
 from xonsh.tools import print_color
@@ -302,7 +303,7 @@ class HistoryDiffer(object):
         return s.rstrip()
 
 
-_HD_PARSER = None
+_HD_PARSER: tp.Optional[argparse.ArgumentParser] = None
 
 
 def dh_create_parser(p=None):

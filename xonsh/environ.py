@@ -13,6 +13,7 @@ import collections
 import collections.abc as cabc
 import subprocess
 import platform
+import typing as tp
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -672,7 +673,7 @@ doc_store_as_str : bool, optional
 """
 
 # iterates from back
-Var.__new__.__defaults__ = (
+Var.__new__.__defaults__ = (  # type:ignore
     always_true,
     None,
     ensure_string,
@@ -1755,7 +1756,8 @@ class Env(cabc.MutableMapping):
     use in a subprocess.
     """
 
-    _arg_regex = None
+    # todo: check this variable is ever used
+    _arg_regex: tp.Optional[str] = None
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os_environ is used."""

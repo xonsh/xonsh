@@ -38,6 +38,7 @@ import warnings
 import operator
 import ast
 import string
+import typing as tp
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -292,7 +293,7 @@ def FORMATTER():
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 
-    __inst = None
+    __inst: tp.Optional["DefaultNotGivenType"] = None
 
     def __new__(cls):
         if DefaultNotGivenType.__inst is None:
@@ -727,7 +728,7 @@ def fallback(cond, backup):
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
 
-    _stream = None
+    _stream: tp.Optional[str] = None
 
     def __init__(self, new_target):
         self._new_target = new_target
@@ -1678,7 +1679,7 @@ _year_to_sec = lambda x: 365.25 * _day_to_sec(x)
 _kb_to_b = lambda x: 1024 * int(x)
 _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
-_tb_to_b = lambda x: 1024 * _tb_to_b(x)
+_tb_to_b = lambda x: 1024 * _tb_to_b(x)  # type: ignore
 
 CANON_HISTORY_UNITS = LazyObject(
     lambda: frozenset(["commands", "files", "s", "b"]), globals(), "CANON_HISTORY_UNITS"

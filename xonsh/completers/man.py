@@ -3,13 +3,14 @@ import re
 import pickle
 import builtins
 import subprocess
+import typing as tp
 
 import xonsh.lazyasd as xl
 
 from xonsh.completers.tools import get_filter_function
 
-OPTIONS = None
-OPTIONS_PATH = None
+OPTIONS: tp.Optional[tp.Dict[str, tp.Any]] = None
+OPTIONS_PATH: tp.Optional[str] = None
 
 
 @xl.lazyobject
