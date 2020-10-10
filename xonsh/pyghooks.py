@@ -231,7 +231,8 @@ def color_token_by_name(xc: tuple, styles=None) -> Color:
         tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
-    styles[token] = pc
+    if token not in styles:
+        styles[token] = pc
     return token
 
 
@@ -434,6 +435,20 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
+def _get_token_by_name(name):
+    """Get pygments token object by its string representation."""
+    token = Token
+    parts = name.split(".")
+    if parts[0] == "Token":
+        parts = parts[1:]
+
+    while len(parts):
+        token = getattr(token, parts[0])
+        parts = parts[1:]
+
+    return token
+
+
 def register_custom_style(
     name, styles, highlight_color=None, background_color=None, base=None
 ):
@@ -456,6 +471,8 @@ def register_custom_style(
     custom_styles = base_style.styles.copy()
 
     for token, value in styles.items():
+        if isinstance(token, str):
+            token = _get_token_by_name(token)
         custom_styles[token] = value
 
     style = type(
@@ -473,6 +490,14 @@ def register_custom_style(
     )
 
     add_custom_style(name, style)
+
+    # generate palette from style
+    cmap = pygments_style_by_name(name)
+
+    # replace colors in color map if found in styles
+    for token in cmap.keys():
+        if token in custom_styles:
+            cmap[token] = custom_styles[token]
 
 
 PTK_STYLE = LazyObject(
