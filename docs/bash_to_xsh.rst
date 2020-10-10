@@ -129,21 +129,4 @@ to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
 If after time you still try to type ``export``, ``unset`` or ``!!`` commands 
 there is `bashisms <https://xon.sh/xontribs.html#bashisms>`_
-and `sh <https://xon.sh/xontribs.html#sh>`_ xontribs:
-
-.. code-block:: console
-
-    >>> xontrib load bashisms
-    >>> echo echo
-    echo
-    >>> !!
-    echo
-    >>> xontrib load sh
-    >>> $AND = 'a' + 'nd'
-    >>> # Run bash script:
-    >>> ! for i in {1..3}
-          do
-             echo -n "$AND $i "
-          done
-
-    and 1 and 2 and 3
+and `sh <https://xon.sh/xontribs.html#sh>`_ xontribs.
