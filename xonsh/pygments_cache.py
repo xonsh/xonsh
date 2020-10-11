@@ -443,6 +443,7 @@ def get_all_styles():
     if CACHE is None:
         load_or_build()
     yield from CACHE["styles"]["names"]
+    yield from CUSTOM_STYLES
 
 
 def get_filter_by_name(filtername, **options):
