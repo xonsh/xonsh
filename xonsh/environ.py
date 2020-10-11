@@ -847,7 +847,7 @@ def DEFAULT_VARS():
             int,
             str,
             5,
-            "Number of rows to reserve for tab-completions menu if "
+            "Maximum number of rows to display for tab-completions menu if "
             "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
             "prompt-toolkit shell.",
         ),
