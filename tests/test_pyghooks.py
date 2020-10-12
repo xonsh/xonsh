@@ -10,10 +10,13 @@ from xonsh.platform import ON_WINDOWS
 from xonsh.pyghooks import (
     XonshStyle,
     Color,
+    Token,
     color_name_to_pygments_code,
     code_by_name,
     color_file,
     file_color_tokens,
+    get_style_by_name,
+    register_custom_style,
 )
 
 from xonsh.environ import LsColors
@@ -337,3 +340,37 @@ def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
         color_token, color_key = color_file(file_path, os.lstat(file_path))
 
         assert color_key == "ca"
+
+
+@pytest.mark.parametrize(
+    "name, styles, refrules",
+    [
+        ("test1", {}, {}),  # empty styles
+        (
+            "test2",
+            {Token.Literal.String.Single: "#ff0000"},
+            {Token.Literal.String.Single: "#ff0000"},
+        ),  # Token
+        (
+            "test3",
+            {"Token.Literal.String.Single": "#ff0000"},
+            {Token.Literal.String.Single: "#ff0000"},
+        ),  # str key
+        (
+            "test4",
+            {"Literal.String.Single": "#ff0000"},
+            {Token.Literal.String.Single: "#ff0000"},
+        ),  # short str key
+    ],
+)
+def test_register_custom_style(name, styles, refrules):
+    register_custom_style(name, styles)
+    style = get_style_by_name(name)
+
+    # registration succeeded
+    assert style is not None
+
+    # check rules
+    for rule, color in refrules.items():
+        assert rule in style.styles
+        assert style.styles[rule] == color
