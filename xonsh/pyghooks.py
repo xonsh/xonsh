@@ -450,7 +450,7 @@ def _get_token_by_name(name):
 
 
 def register_custom_style(
-    name, styles, highlight_color=None, background_color=None, base=None
+    name, styles, highlight_color=None, background_color=None, base="default"
 ):
     """Register custom style.
 
@@ -467,7 +467,7 @@ def register_custom_style(
     base : str, optional
         Base style to use as default.
     """
-    base_style = get_style_by_name(base if base is not None else "default")
+    base_style = get_style_by_name(base)
     custom_styles = base_style.styles.copy()
 
     for token, value in styles.items():
@@ -491,13 +491,14 @@ def register_custom_style(
 
     add_custom_style(name, style)
 
-    # generate palette from style
-    cmap = pygments_style_by_name(name)
+    cmap = pygments_style_by_name(base).copy()
 
     # replace colors in color map if found in styles
     for token in cmap.keys():
         if token in custom_styles:
             cmap[token] = custom_styles[token]
+
+    STYLES[name] = cmap
 
 
 PTK_STYLE = LazyObject(
