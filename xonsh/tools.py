@@ -1636,6 +1636,31 @@ def to_completions_display_value(x):
     return x
 
 
+CANONIC_COMPLETION_MODES = ("default", "menu-complete")
+
+
+def is_completion_mode(x):
+    return x in CANONIC_COMPLETION_MODES
+
+
+def to_completion_mode(x):
+    y = str(x).casefold().replace("_", "-")
+    y = (
+        "default"
+        if y in ("", "d", "xonsh", "none", "def")
+        else "menu-complete"
+        if y in ("m", "menu", "menu-completion")
+        else y
+    )
+    if y not in CANONIC_COMPLETION_MODES:
+        warnings.warn(
+            f"'{x}' is not valid for $COMPLETION_MODE, must be one of {CANONIC_COMPLETION_MODES}.  Using 'default'.",
+            RuntimeWarning,
+        )
+        y = "default"
+    return y
+
+
 def is_str_str_dict(x):
     """Tests if something is a str:str dictionary"""
     return isinstance(x, dict) and all(
