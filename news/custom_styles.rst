@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* #1287 - custom color themes
+* #1207 - custom color themes
 
 **Security:**
 
