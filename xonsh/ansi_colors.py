@@ -1120,7 +1120,7 @@ def register_custom_ansi_style(name, styles, base="default"):
         token = str(token)  # convert pygments token to str
         parts = token.split(".")
         if len(parts) == 1 or parts[-2] == "Color":
-            base_style[parts[-1]] = _pygments_to_asni_style(style)
+            base_style[parts[-1]] = _pygments_to_ansi_style(style)
 
     ANSI_STYLES[name] = base_style
 
