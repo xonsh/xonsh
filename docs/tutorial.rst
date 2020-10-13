@@ -315,9 +315,9 @@ The determination between the two modes is done well ahead of any execution.
 You do not need to worry about partially executed commands - that is
 impossible.
 
-If you still have concerns about the determination process and want to have strong confidence
-when running a subprocess command in your xonsh scripts, you can always use the elegant subprocess
-mode syntax that we will see in the following sections. Short example now:
+If you would like to explicitly run a subprocess command, you can always
+use the formal xonsh subprocess syntax that we will see in the following
+sections. For example:
 
 .. code-block:: xonshcon
 
