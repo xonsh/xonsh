@@ -439,6 +439,10 @@ def _get_token_by_name(name):
     """Get pygments token object by its string representation."""
     token = Token
     parts = name.split(".")
+
+    if len(parts) == 1:
+        parts = ["Color"] + parts
+
     if parts[0] == "Token":
         parts = parts[1:]
 
@@ -466,6 +470,10 @@ def register_custom_style(
         Background color.
     base : str, optional
         Base style to use as default.
+
+    Returns
+    -------
+    style : The ``pygments.Style`` subclass created
     """
     base_style = get_style_by_name(base)
     custom_styles = base_style.styles.copy()
@@ -499,6 +507,8 @@ def register_custom_style(
             cmap[token] = custom_styles[token]
 
     STYLES[name] = cmap
+
+    return style
 
 
 PTK_STYLE = LazyObject(

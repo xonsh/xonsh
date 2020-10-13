@@ -65,16 +65,16 @@ To do so, add something similar to your ``.xonshrc``:
 
 .. code-block:: python
 
-   from xonsh.pyghooks import register_custom_style
+   from xonsh.tools import register_custom_style
    mystyle = {
        "Literal.String.Single": "#ff88aa",
        "Literal.String.Double": "#ff4488",
-       "Color.RED": "#008800",
+       "RED": "#008800",
    }
    register_custom_style("mystyle", mystyle, base="monokai")
    $XONSH_COLOR_STYLE="mystyle"
 
-You can check ``xonfig colors`` for the token names (prepend ``Color.`` for colors). The ``base`` style will be used as a fallback for styles you don't set - pick one from ``xonfig styles`` (``default`` is used if omitted).
+You can check ``xonfig colors`` for the token names. The ``base`` style will be used as a fallback for styles you don't set - pick one from ``xonfig styles`` (``default`` is used if omitted).
 
 .. _import_local_modules:
 

@@ -1843,6 +1843,43 @@ def color_style():
     return builtins.__xonsh__.shell.shell.color_style()
 
 
+def register_custom_style(
+    name, styles, highlight_color=None, background_color=None, base="default"
+):
+    """Register custom style.
+    Uses ``xonsh.pyghooks.register_custom_style`` if ``pygments`` is available.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    styles : dict
+        Token -> style mapping.
+    highlight_color : str
+        Hightlight color.
+    background_color : str
+        Background color.
+    base : str, optional
+        Base style to use as default.
+
+    Returns
+    -------
+    style : The style object created, None if not succeeded
+    """
+    style = None
+    if pygments_version_info():
+        from xonsh.pyghooks import (
+            register_custom_style as register_custom_style_pygments,
+        )
+
+        style = register_custom_style_pygments(
+            name, styles, highlight_color, background_color, base
+        )
+    # TODO ansi version?
+
+    return style
+
+
 def _token_attr_from_stylemap(stylemap):
     """yields tokens attr, and index from a stylemap """
     import prompt_toolkit as ptk
