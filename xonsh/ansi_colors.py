@@ -1079,7 +1079,7 @@ def _pygments_to_ansi_style(style):
 
     Parameter
     ---------
-        style : pygments style value
+    style : pygments style value
 
     Returns
     -------
