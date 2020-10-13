@@ -1,6 +1,6 @@
 **Added:**
 
-* history clear, history off and history on actions, for managing whether history in the current session is saved.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* handle None value for ASYNC_PROMPT_THREAD_WORKERS
 
 **Security:**
 

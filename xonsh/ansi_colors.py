@@ -3,6 +3,7 @@ import re
 import sys
 import warnings
 import builtins
+import typing as tp
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict, lazyobject
@@ -261,7 +262,7 @@ def _color_name_from_ints(ints, background=False, prefix=None):
     return name
 
 
-_ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE = {}
+_ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE: tp.Dict[str, tp.Tuple[str, ...]] = {}
 
 
 def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
@@ -274,6 +275,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     style is not provided, it is computed.
     """
     key = (escape_code, style)
+    # todo: see the cache ever used?
     if key in _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE:
         return _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE[key]
     if reversed_style is None:
@@ -312,7 +314,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     norm_names = []
     prefixes = ""
     for name in names:
-        if name == "RESET":
+        if name in ("RESET", "NO_COLOR"):
             # skip most '0' entries
             continue
         elif "BACKGROUND_" in name and n:

@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``exit(exit_code)`` function by default in not interactive mode. Now importing ``exit`` from ``sys`` is not needed.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Webconfig updarted for the ``NO_COLOR`` to ``RESET`` change.
 
 **Security:**
 

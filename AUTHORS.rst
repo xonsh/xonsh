@@ -11,22 +11,25 @@ Authors are sorted by number of commits.
 * David Strobach
 * Bob Hyman
 * BlahGeek
+* a
+* anki-code
 * Jean-Benoist Leger
 * christopher
 * Klaus Alexander Seistrup
 * Leonardo Santagada
-* anki-code
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
 * Rob Brewer
 * virus
 * Sagar Tewari
+* Eadaen1
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
 * Travis Shirk
 * Joel Gerber
+* Danny Sepler
 * vaaaaanquish
 * Bernardas Ališauskas
 * David Dotson
@@ -35,11 +38,13 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
+* Gyuri Horak
 * Carmen Bianca Bakker
 * Frank Sachsenheim
 * Kurtis Rader
 * cryzed
 * Brian Visel
+* cafehaine
 * Andrew Hundt
 * Jonathan Slenders
 * Justin Moen
@@ -47,16 +52,14 @@ Authors are sorted by number of commits.
 * Caleb Hattingh
 * Daniel Shimon
 * Jason R. Coombs
-* Gyuri Horak
 * Stephan Fitzpatrick
-* Danny Sepler
 * Will S
 * K.-Michael Aye
 * halloleo
 * Will Wykeham
 * Oleh Prypin
 * Brian Skinn
-* Eadaen1
+* Wendell Turner
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -71,6 +74,7 @@ Authors are sorted by number of commits.
 * mel
 * Jared Crawford
 * Mike Crowe
+* Noortheen Raja
 * JuanPablo
 * Ollie Terrance
 * Marcel Bollmann
@@ -113,6 +117,7 @@ Authors are sorted by number of commits.
 * Andrés García García
 * Sean Farley
 * Marduk Bolaños
+* Marius van Niekerk
 * Jan Schulz
 * Samuel Dion-Girardeau
 * Michael Droettboom
@@ -130,7 +135,6 @@ Authors are sorted by number of commits.
 * Sébastien Pierre
 * shadow-light
 * Jan Chren
-* Noortheen Raja
 * Samuel Lotz
 * Mark Wiebe
 * Nathan Hoad
@@ -231,8 +235,7 @@ Authors are sorted by number of commits.
 * Stefane Fermigier
 * swedneck
 * Feng Tian
-* cafehaine
 * paugier
-* Marius van Niekerk
+* Wendell CTR Turner
 * goodboy
 * Atsushi Morimoto

@@ -18,7 +18,6 @@ import shutil
 import builtins
 import importlib
 import threading
-import subprocess
 import collections
 
 import xonsh.completers.tools as xct
@@ -32,7 +31,6 @@ from xonsh.ansi_colors import (
 from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import (
     print_exception,
-    check_for_partial_string,
     to_bool,
     columnize,
     carriage_return,
@@ -464,7 +462,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             raise ValueError("query completions flag not understood.")
 
     # tab complete on first index too
-    completenames = completedefault
+    completenames = completedefault  # type:ignore
 
     def _load_remaining_input_into_queue(self):
         buf = b""

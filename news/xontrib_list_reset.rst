@@ -1,6 +1,6 @@
 **Added:**
 
-* Support for ANSI OSC escape sequences in ``$PROMPT``, setting ``$TITLE`` for example. (#374, #1403)
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed reset color in ``xontrib list``.
 
 **Security:**
 

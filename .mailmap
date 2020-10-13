@@ -25,23 +25,26 @@ Hugo Wang <w@mitnk.com>
 David Strobach <lalochcz@gmail.com> laloch <lalochcz@gmail.com>
 Bob Hyman <bob.hyman@bobssoftwareworks.com> Bob Hyman <bob.hyman@gmail.com>
 BlahGeek <i@BlahGeek.com>
+a <a>
+anki-code <anki-code@users.noreply.github.com> anki-code <anki-code>
 Jean-Benoist Leger <jb@leger.tf> Jean-Benoist Leger <jbleger@gertrude>
 Jean-Benoist Leger <jb@leger.tf> Jean-Benoist Leger <jbleger@hds.utc.fr>
 christopher <cjwright4242@gmail.com>
 Klaus Alexander Seistrup <klaus@seistrup.dk> Klaus Alexander Seistrup <kseistrup@users.noreply.github.com>
 Leonardo Santagada <santagada@gmail.com>
-anki-code <anki-code@users.noreply.github.com> anki-code <anki-code>
 Burak Yiğit Kaya <ben@byk.im> Burak Yigit Kaya <ben@byk.im>
 Matthias Bussonnier <bussonniermatthias@gmail.com>
 Aaron Griffin <aig787@gmail.com>
 Rob Brewer <rwb123@gmail.com> Robert W. Brewer <rwb123@gmail.com>
 virus <virusbb001a@gmail.com>
 Sagar Tewari <sagartewari01@gmail.com> Sagar Tewari <sagartewariym@yahoo.com>
+Eadaen1 <eadaen@protonmail.com>
 Konstantin Molchanov <kmolchanov@machinezone.com> Konstantin Molchanov <moigagoo@live.com>
 Guillaume Leclerc <guillaume.leclerc@epfl.ch> Guillaume Leclerc <guillaume.leclerc.work@gmail.com>
 Gordon Ball <gordon@chronitis.net>
 Travis Shirk <travis@pobox.com>
 Joel Gerber <joel@grrbrr.ca>
+Danny Sepler <dannysepler@gmail.com>
 vaaaaanquish <6syun9@gmail.com> @vaaaaanquish <6syun9@gmail.com>
 vaaaaanquish <6syun9@gmail.com> vaaaaanquish <6syun9@gmail.com>
 vaaaaanquish <6syun9@gmail.com> 6syun9 <6syun9@gmail.com>
@@ -52,11 +55,13 @@ con-f-use <con-f-use@users.noreply.github.com>
 VHarisop <the.machine.headed@gmail.com>
 JohnLunzer <lunzer@gmail.com> jlunz <lunz8748@usroc1miniwaas.corp.exelisinc.com>
 Paul Goelz <s8pagoel@stud.uni-saarland.de>
+Gyuri Horak <dyuri@horak.hu>
 Carmen Bianca Bakker <carmen@carmenbianca.eu>
 Frank Sachsenheim <funkyfuture@riseup.net> Frank Sachsenheim <funkyfuture@users.noreply.github.com>
 Kurtis Rader <krader@skepticism.us>
 cryzed <cryzed@googlemail.com>
 Brian Visel <eode@eptitude.net>
+cafehaine <kilian.guillaume@gmail.com>
 Andrew Hundt <ATHundt@gmail.com>
 Jonathan Slenders <jonathan@slenders.be>
 Justin Moen <jamoen7@gmail.com>
@@ -64,16 +69,14 @@ Raphael Das Gupta <raphael.das.gupta@hsr.ch> Raphael Borun Das Gupta <git@raphae
 Caleb Hattingh <caleb.hattingh@gmail.com>
 Daniel Shimon <daniel.shimon22@gmail.com>
 Jason R. Coombs <jaraco@jaraco.com>
-Gyuri Horak <dyuri@horak.hu>
 Stephan Fitzpatrick <knowsuchagency@gmail.com>
-Danny Sepler <dannysepler@gmail.com>
 Will S <wsha.code@gmail.com>
 K.-Michael Aye <kmichael.aye@gmail.com> K.-Michael Aye <michaelaye@users.noreply.github.com>
 halloleo <git@halloleo.dot.hailmail.dot.net> halloleo <halloleo@users.noreply.github.com>
 Will Wykeham <will@wykeham.net>
 Oleh Prypin <oleh@pryp.in>
 Brian Skinn <brian.skinn@gmail.com>
-Eadaen1 <eadaen@protonmail.com>
+Wendell Turner <skyking@ilikecarrots.com>
 Alessio Bogon <youtux@gmail.com> Alessio Bogon <youtux@users.noreply.github.com>
 Yohei Tamura <tamuhey@gmail.com>
 Maximilian Köhl <mail@koehlma.de>
@@ -88,6 +91,7 @@ Nathan Goldbaum <ngoldbau@illinois.edu> Nathan Goldbaum <goldbaum@ucolick.org>
 mel <mel@anybodytech.com>
 Jared Crawford <jmcrawford45@gmail.com>
 Mike Crowe <drmikecrowe@gmail.com> drmikecrowe <drmikecrowe@gmail.com>
+Noortheen Raja <jnoortheen@gmail.com>
 JuanPablo <jpabloaj@gmail.com>
 Ollie Terrance <ollie.terrance@live.co.uk>
 Marcel Bollmann <bollmann@linguistics.rub.de>
@@ -130,6 +134,7 @@ Kale Kundert <kale@thekunderts.net>
 Andrés García García <a.garcia230395@gmail.com> Ad115 <a.garcia230395@gmail.com>
 Sean Farley <sean@farley.io>
 Marduk Bolaños <mardukbp@mac.com>
+Marius van Niekerk <marius.v.niekerk@gmail.com>
 Jan Schulz <jasc@gmx.net>
 Samuel Dion-Girardeau <samuel.diongirardeau@gmail.com>
 Michael Droettboom <mdboom@gmail.com>
@@ -147,7 +152,6 @@ Niklas Hambüchen <mail@nh2.me>
 Sébastien Pierre <sebastien.pierre@gmail.com>
 shadow-light <42055707+shadow-light@users.noreply.github.com>
 Jan Chren <dev.rindeal@gmail.com>
-Noortheen Raja <jnoortheen@gmail.com>
 Samuel Lotz <samuel.lotz@salotz.info>
 Mark Wiebe <mwwiebe@gmail.com>
 Nathan Hoad <nathan@getoffmalawn.com>
@@ -248,8 +252,7 @@ Manor Askenazi <manor@biomedical.hosting>
 Stefane Fermigier <sf@fermigier.com>
 swedneck <40505480+swedneck@users.noreply.github.com>
 Feng Tian <fengttt@gmail.com>
-cafehaine <kilian.guillaume@gmail.com>
 paugier <pierre.augier@univ-grenoble-alpes.fr>
-Marius van Niekerk <marius.v.niekerk@gmail.com>
+Wendell CTR Turner <Wendell.CTR.Turner@faa.gov>
 goodboy <tgoodlet@users.noreply.github.com>
 Atsushi Morimoto <atsushi.morimoto@dena.com>

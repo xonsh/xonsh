@@ -12,6 +12,7 @@ dependencies:
   - psutil
   - matplotlib
   - flake8
+  - mypy=0.782
   - coverage
   - pyflakes
   - pytest-cov

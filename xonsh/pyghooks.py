@@ -8,6 +8,8 @@ import stat
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
+import typing as tp
+
 from xonsh.lazyimps import os_listxattr
 
 from pygments.lexer import inherit, bygroups, include
@@ -25,6 +27,7 @@ from pygments.token import (
     Token,
     Punctuation,
     Text,
+    _TokenType,
 )
 from pygments.style import Style
 import pygments.util
@@ -94,7 +97,7 @@ def color_by_name(name, fg=None, bg=None):
         New computed background color name.
     """
     name = name.upper()
-    if name == "RESET":
+    if name in ("RESET", "NO_COLOR"):
         return Color.DEFAULT, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color
@@ -215,11 +218,11 @@ def code_by_name(name, styles):
     return code
 
 
-def color_token_by_name(xc: tuple, styles=None) -> Color:
+def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
     """Returns (color) token corresponding to Xonsh color tuple, side effect: defines token is defined in styles"""
     if not styles:
         try:
-            styles = builtins.__xonsh__.shell.shell.styler.styles
+            styles = builtins.__xonsh__.shell.shell.styler.styles  # type:ignore
         except AttributeError:
             return Color
 
@@ -1343,7 +1346,7 @@ color_file_extension_RE = LazyObject(
 )
 
 
-file_color_tokens = dict()
+file_color_tokens = dict()  # type:ignore
 """Parallel to LS_COLORS, keyed by dircolors keys, but value is a Color token.
 Initialized by XonshStyle."""
 
@@ -1360,7 +1363,7 @@ def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
 events.on_lscolors_change(on_lscolors_change)
 
 
-def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
+def color_file(file_path: str, path_stat: os.stat_result) -> tp.Tuple[_TokenType, str]:
     """Determine color to use for file *approximately* as ls --color would,
        given lstat() results and its path.
 
@@ -1388,7 +1391,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
          This is arguably a bug.
     """
 
-    lsc = builtins.__xonsh__.env["LS_COLORS"]
+    lsc = builtins.__xonsh__.env["LS_COLORS"]  # type:ignore
     color_key = "fi"
 
     # if symlink, get info on (final) target
@@ -1438,7 +1441,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
         color_key = "bd"
     elif stat.S_ISCHR(mode):
         color_key = "cd"
-    elif stat.S_ISDOOR(mode):
+    elif stat.S_ISDOOR(mode):  # type:ignore
         color_key = "do"
     else:
         color_key = "or"  # any other type --> orphan
@@ -1624,7 +1627,7 @@ class XonshConsoleLexer(XonshLexer):
 
     name = "Xonsh console lexer"
     aliases = ["xonshcon"]
-    filenames = []
+    filenames: tp.List[str] = []
 
     tokens = {
         "root": [

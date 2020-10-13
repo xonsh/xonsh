@@ -39,6 +39,10 @@ class PromptFormatter:
 
     def __call__(self, template=DEFAULT_PROMPT, fields=None, **kwargs):
         """Formats a xonsh prompt template string."""
+
+        # keep cache only during building prompt
+        self.cache.clear()
+
         if fields is None:
             self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
         else:
@@ -47,8 +51,6 @@ class PromptFormatter:
             prompt = self._format_prompt(template=template, **kwargs)
         except Exception:
             return _failover_template_format(template)
-        # keep cache only during building prompt
-        self.cache.clear()
         return prompt
 
     def _format_prompt(self, template=DEFAULT_PROMPT, **kwargs):

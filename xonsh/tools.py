@@ -38,6 +38,7 @@ import warnings
 import operator
 import ast
 import string
+import typing as tp
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -125,6 +126,14 @@ def _expandpath(path):
     env = os_environ if session is None else getattr(session, "env", os_environ)
     expand_user = env.get("EXPAND_ENV_VARS", False)
     return expand_path(path, expand_user=expand_user)
+
+
+def simple_random_choice(lst):
+    """Returns random element from the list with length less than 1 million elements."""
+    l = len(lst)
+    if l > 1000000:  # microsecond maximum
+        raise ValueError("The list is too long.")
+    return lst[datetime.datetime.now().microsecond % l]
 
 
 def decode_bytes(b):
@@ -284,7 +293,7 @@ def FORMATTER():
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 
-    __inst = None
+    __inst: tp.Optional["DefaultNotGivenType"] = None
 
     def __new__(cls):
         if DefaultNotGivenType.__inst is None:
@@ -719,7 +728,7 @@ def fallback(cond, backup):
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
 
-    _stream = None
+    _stream: tp.Optional[str] = None
 
     def __init__(self, new_target):
         self._new_target = new_target
@@ -911,25 +920,66 @@ def suggest_commands(cmd, env, aliases):
     return rtn
 
 
-def print_exception(msg=None):
-    """Print exceptions with/without traceback."""
+def _get_manual_env_var(name, default=None):
+    """Returns if the given variable is manually set as well as it's value."""
     env = getattr(builtins.__xonsh__, "env", None)
-    # flags indicating whether the traceback options have been manually set
     if env is None:
         env = os_environ
-        manually_set_trace = "XONSH_SHOW_TRACEBACK" in env
-        manually_set_logfile = "XONSH_TRACEBACK_LOGFILE" in env
+        manually_set = name in env
     else:
-        manually_set_trace = env.is_manually_set("XONSH_SHOW_TRACEBACK")
-        manually_set_logfile = env.is_manually_set("XONSH_TRACEBACK_LOGFILE")
+        manually_set = env.is_manually_set(name)
+
+    value = env.get(name, default)
+    return (manually_set, value)
+
+
+def print_warning(msg):
+    """Print warnings with/without traceback."""
+    manually_set_trace, show_trace = _get_manual_env_var("XONSH_SHOW_TRACEBACK", False)
+    manually_set_logfile, log_file = _get_manual_env_var("XONSH_TRACEBACK_LOGFILE")
     if (not manually_set_trace) and (not manually_set_logfile):
         # Notify about the traceback output possibility if neither of
         # the two options have been manually set
         sys.stderr.write(
             "xonsh: For full traceback set: " "$XONSH_SHOW_TRACEBACK = True\n"
         )
-    # get env option for traceback and convert it if necessary
-    show_trace = env.get("XONSH_SHOW_TRACEBACK", False)
+    # convert show_trace to bool if necessary
+    if not is_bool(show_trace):
+        show_trace = to_bool(show_trace)
+    # if the trace option has been set, print all traceback info to stderr
+    if show_trace:
+        # notify user about XONSH_TRACEBACK_LOGFILE if it has
+        # not been set manually
+        if not manually_set_logfile:
+            sys.stderr.write(
+                "xonsh: To log full traceback to a file set: "
+                "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
+            )
+        traceback.print_stack()
+    # additionally, check if a file for traceback logging has been
+    # specified and convert to a proper option if needed
+    log_file = to_logfile_opt(log_file)
+    if log_file:
+        # if log_file <> '' or log_file <> None, append
+        # traceback log there as well
+        with open(os.path.abspath(log_file), "a") as f:
+            traceback.print_stack(file=f)
+
+    msg = msg if msg.endswith("\n") else msg + "\n"
+    sys.stderr.write(msg)
+
+
+def print_exception(msg=None):
+    """Print exceptions with/without traceback."""
+    manually_set_trace, show_trace = _get_manual_env_var("XONSH_SHOW_TRACEBACK", False)
+    manually_set_logfile, log_file = _get_manual_env_var("XONSH_TRACEBACK_LOGFILE")
+    if (not manually_set_trace) and (not manually_set_logfile):
+        # Notify about the traceback output possibility if neither of
+        # the two options have been manually set
+        sys.stderr.write(
+            "xonsh: For full traceback set: " "$XONSH_SHOW_TRACEBACK = True\n"
+        )
+    # convert show_trace to bool if necessary
     if not is_bool(show_trace):
         show_trace = to_bool(show_trace)
     # if the trace option has been set, print all traceback info to stderr
@@ -944,7 +994,6 @@ def print_exception(msg=None):
         traceback.print_exc()
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
-    log_file = env.get("XONSH_TRACEBACK_LOGFILE", None)
     log_file = to_logfile_opt(log_file)
     if log_file:
         # if log_file <> '' or log_file <> None, append
@@ -1183,8 +1232,19 @@ def is_env_path(x):
 
 def str_to_path(x):
     """Converts a string to a path."""
-    # checking x is needed to avoid uncontrolled converting empty string to Path('.')
-    return pathlib.Path(x) if x else None
+    if x is None:
+        return None
+    elif isinstance(x, str):
+        # checking x is needed to avoid uncontrolled converting empty string to Path('.')
+        return pathlib.Path(x) if x else None
+    elif isinstance(x, pathlib.Path):
+        return x
+    elif isinstance(x, EnvPath) and len(x) == 1:
+        return pathlib.Path(x[0]) if x[0] else None
+    else:
+        raise TypeError(
+            f"Variable should be a pathlib.Path, str or single EnvPath type. {type(x)} given."
+        )
 
 
 def str_to_env_path(x):
@@ -1196,8 +1256,7 @@ def str_to_env_path(x):
 
 
 def path_to_str(x):
-    """Converts a path to a string.
-    """
+    """Converts a path to a string."""
     return str(x)
 
 
@@ -1298,6 +1357,14 @@ def to_bool_or_none(x):
 def to_itself(x):
     """No conversion, returns itself."""
     return x
+
+
+def to_int_or_none(x) -> tp.Optional[int]:
+    """Convert the given value to integer if possible. Otherwise return None"""
+    if isinstance(x, str) and x.lower() == "none":
+        return None
+    else:
+        return int(x)
 
 
 def bool_to_str(x):
@@ -1620,7 +1687,7 @@ _year_to_sec = lambda x: 365.25 * _day_to_sec(x)
 _kb_to_b = lambda x: 1024 * int(x)
 _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
-_tb_to_b = lambda x: 1024 * _tb_to_b(x)
+_tb_to_b = lambda x: 1024 * _tb_to_b(x)  # type: ignore
 
 CANON_HISTORY_UNITS = LazyObject(
     lambda: frozenset(["commands", "files", "s", "b"]), globals(), "CANON_HISTORY_UNITS"

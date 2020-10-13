@@ -1,10 +1,22 @@
 
-==============================
-Editor Support
-==============================
+======================
+Editor and IDE Support
+======================
 
 .. contents::
    :local:
+
+Visual Studio Code (VSCode)
+===========================
+There is `xonsh extension for VSCode`_. To install search "xonsh" using extensions
+menu or just press ``F1`` and run without `>` preceding:
+
+.. code-block::
+
+    ext install jnoortheen.xonsh
+
+.. _xonsh extension for VSCode: https://marketplace.visualstudio.com/items?itemName=jnoortheen.xonsh
+
 
 Emacs
 =====
@@ -55,3 +67,14 @@ prompt-toolkit. Then you can leave ``$SHELL_TYPE`` at its default.
 
 Emacs will prompt you for the path of the xonsh executable when you
 start up ``ansi-term``.
+
+Vim
+===
+
+There is `xonsh syntax file for vim`_. To install run:
+
+.. code-block::
+
+    git clone --depth 1 https://github.com/linkinpark342/xonsh-vim ~/.vim
+
+.. _xonsh syntax file for vim: https://github.com/linkinpark342/xonsh-vim

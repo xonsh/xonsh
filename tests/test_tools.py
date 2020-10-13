@@ -52,6 +52,7 @@ from xonsh.tools import (
     to_bool,
     to_bool_or_int,
     to_bool_or_none,
+    to_int_or_none,
     to_dynamic_cwd_tuple,
     to_logfile_opt,
     pathsep_to_set,
@@ -79,6 +80,7 @@ from xonsh.tools import (
     balanced_parens,
     iglobpath,
     all_permutations,
+    simple_random_choice,
 )
 from xonsh.environ import Env
 
@@ -92,6 +94,15 @@ INDENT = "    "
 TOOLS_ENV = {"EXPAND_ENV_VARS": True, "XONSH_ENCODING_ERRORS": "strict"}
 ENCODE_ENV_ONLY = {"XONSH_ENCODING_ERRORS": "strict"}
 PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
+
+
+def test_random_choice():
+    lst = [1, 2, 3]
+    r = simple_random_choice(lst)
+    assert r in lst
+
+    with pytest.raises(ValueError):
+        simple_random_choice(range(1010101))
 
 
 def test_subproc_toks_x():
@@ -700,6 +711,11 @@ def test_is_string_or_callable_false():
 @pytest.mark.parametrize("inp", [42, "42"])
 def test_always_true(inp):
     assert always_true(inp)
+
+
+@pytest.mark.parametrize("inp,exp", [(42, 42), ("42", 42), ("None", None)])
+def test_to_optional_int(inp, exp):
+    assert to_int_or_none(inp) == exp
 
 
 @pytest.mark.parametrize("inp", [42, "42"])

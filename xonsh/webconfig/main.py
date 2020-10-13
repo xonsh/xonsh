@@ -7,9 +7,9 @@ import socketserver
 from http import server
 from pprint import pprint
 from argparse import ArgumentParser
+import typing as tp
 
-
-RENDERERS = []
+RENDERERS: tp.List[tp.Callable] = []
 
 
 def renderer(f):

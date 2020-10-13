@@ -3,7 +3,7 @@
 import builtins
 import concurrent.futures
 import threading
-from typing import Dict, List, Union, Callable, Optional
+import typing as tp
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
@@ -22,7 +22,7 @@ class Executor:
         # This caches results from callback alone by field name.
         self.thread_results = {}
 
-    def submit(self, func: Callable, field: str):
+    def submit(self, func: tp.Callable, field: str):
         future = self.thread_pool.submit(self._run_func, func, field)
         place_holder = "{" + field + "}"
 
@@ -62,13 +62,13 @@ class AsyncPrompt:
         self.name = name
 
         # list of tokens in that prompt. It could either be resolved or not resolved.
-        self.tokens: List[str] = []
+        self.tokens: tp.List[str] = []
         self.timer = None
         self.session = session
         self.executor = executor
 
         # (Key: the future object) that is created for the (value: index/field_name) in the tokens list
-        self.futures: Dict[concurrent.futures.Future, Union[int, str]] = {}
+        self.futures: tp.Dict[concurrent.futures.Future, tp.Union[int, str]] = {}
 
     def start_update(self, on_complete):
         """Listen on futures and update the prompt as each one completed.
@@ -129,7 +129,7 @@ class AsyncPrompt:
             fut.cancel()
         self.futures.clear()
 
-    def submit_section(self, func: Callable, field: str, idx: int = None):
+    def submit_section(self, func: tp.Callable, field: str, idx: int = None):
         future, intermediate_value, placeholder = self.executor.submit(func, field)
         self.futures[future] = placeholder if idx is None else idx
         return intermediate_value
@@ -139,11 +139,11 @@ class PromptUpdator:
     """Handle updating multiple AsyncPrompt instances prompt/rprompt/bottom_toolbar"""
 
     def __init__(self, session: PromptSession):
-        self.prompts: Dict[str, AsyncPrompt] = {}
+        self.prompts: tp.Dict[str, AsyncPrompt] = {}
         self.prompter = session
         self.executor = Executor()
 
-    def add(self, prompt_name: Optional[str]):
+    def add(self, prompt_name: tp.Optional[str]):
         # clear out old futures from the same prompt
         if prompt_name is None:
             return
@@ -173,6 +173,6 @@ class PromptUpdator:
     def on_complete(self, prompt_name):
         self.prompts.pop(prompt_name, None)
 
-    def set_tokens(self, prompt_name, tokens: List[str]):
+    def set_tokens(self, prompt_name, tokens: tp.List[str]):
         if prompt_name in self.prompts:
             self.prompts[prompt_name].tokens = tokens

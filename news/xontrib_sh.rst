@@ -1,6 +1,6 @@
 **Added:**
 
-* Added `xontrib-onepath <https://github.com/anki-code/xontrib-onepath>`_ to associate files with apps in xonsh shell like in graphical OS. 
+* New xontrib-sh (https://github.com/anki-code/xontrib-sh) to paste and run snippets from bash, zsh, fish.
 
 **Changed:**
 

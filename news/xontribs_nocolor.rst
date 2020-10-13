@@ -1,6 +1,6 @@
 **Added:**
 
-* add API docs for ptk_shell.updator module
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed NO_COLOR to RESET in prompt_ret_code and mplhooks.
 
 **Security:**
 

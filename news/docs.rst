@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Changed sections order in docs
+* Docs sections improvement.
 
 **Deprecated:**
 

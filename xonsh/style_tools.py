@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyObject
-from xonsh.color_tools import RE_BACKGROUND, iscolor
+from xonsh.color_tools import RE_BACKGROUND, iscolor, warn_deprecated_no_color
 from xonsh.tools import FORMATTER
 
 
@@ -142,7 +142,9 @@ def color_by_name(name, fg=None, bg=None):
         New computed background color name.
     """
     name = name.upper()
-    if name == "RESET":
+    if name in ("RESET", "NO_COLOR"):
+        if name == "NO_COLOR":
+            warn_deprecated_no_color()
         return Color.RESET, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color

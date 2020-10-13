@@ -1,7 +1,7 @@
 Comparison
 ==========
 Xonsh is significantly different from most other shells or shell tools. The following
-table lists features and capabilities that various tools may or may not share.
+table lists built in features and capabilities that various tools may or may not share.
 
 .. list-table::
     :widths: 3 1 1 1 1 1 1

@@ -1,10 +1,10 @@
 **Added:**
 
-* <news item>
+* Add method of escaping an environment variable from expansion to the Bash to Xonsh Translation Guide.
 
 **Changed:**
 
-* Minor improvements to the get prompt speed. (Mostly in git.)
+* <news item>
 
 **Deprecated:**
 

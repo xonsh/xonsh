@@ -1,6 +1,6 @@
 **Added:**
 
-* Added "Advanced String Literals" to the "Tutorial".
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* async prompt field's returns from earlier data
 
 **Security:**
 

@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* added mypy to the project. many of the errors are ignored. but it is a start.
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed logic in git dirty working directory
+* <news item>
 
 **Security:**
 

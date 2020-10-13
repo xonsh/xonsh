@@ -222,6 +222,11 @@
   "url": "https://github.com/6syun9/xontrib-readable-traceback",
   "description": ["Make traceback easier to see for xonsh."]
  },
+ {"name": "sh",
+  "package": "xontrib-sh",
+  "url": "https://github.com/anki-code/xontrib-sh",
+  "description": ["Paste and run commands from bash, zsh, fish in xonsh shell."]
+ },
  {"name": "schedule",
   "package": "xontrib-schedule",
   "url": "https://github.com/AstraLuma/xontrib-schedule",
@@ -291,6 +296,13 @@
     "aura": "sudo aura -A xonsh",
     "yaourt": "yaourt -Sa xonsh"}
    },
+  "xontrib-argcomplete": {
+   "license": "BSD",
+   "url": "https://github.com/anki-code/xontrib-argcomplete",
+   "install": {
+    "pip": "xpip install xontrib-argcomplete"
+   }
+  },
   "xonsh-autoxsh": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-autoxsh",
@@ -376,6 +388,27 @@
     "pip": "xpip install xontrib-kitty"
    }
   },
+  "xontrib-output-search": {
+   "license": "BSD",
+   "url": "https://github.com/tokenizer/xontrib-output-search",
+   "install": {
+    "pip": "xpip install xontrib-output-search"
+   }
+  },
+  "xontrib-onepath": {
+   "license": "BSD",
+   "url": "https://github.com/anki-code/xontrib-onepath",
+   "install": {
+    "pip": "xpip install xontrib-onepath"
+   }
+  },
+  "xontrib-pipeliner": {
+   "license": "MIT",
+   "url": "https://github.com/anki-code/xontrib-pipeliner",
+   "install": {
+    "pip": "xpip install xontrib-pipeliner"
+   }
+  },
   "xontrib-powerline": {
    "license": "MIT",
    "url": "https://github.com/santagada/xontrib-powerline",
@@ -388,6 +421,13 @@
    "url": "https://github.com/dyuri/xontrib-powerline-binding",
    "install": {
     "pip": "xpip install xontrib-powerline-binding"
+   }
+  },
+  "xontrib-prompt-bar": {
+   "license": "MIT",
+   "url": "https://github.com/anki-code/xontrib-prompt-bar",
+   "install": {
+    "pip": "xpip install xontrib-prompt-bar"
    }
   },
   "xontrib-prompt-ret-code": {
@@ -416,6 +456,13 @@
    "url": "https://github.com/6syun9/xontrib-readable-traceback",
    "install": {
     "pip": "xpip install xontrib-readable-traceback"
+   }
+  },
+  "xontrib-sh": {
+   "license": "MIT",
+   "url": "https://github.com/anki-code/xontrib-sh",
+   "install": {
+    "pip": "xpip install xontrib-sh"
    }
   },
   "xontrib-schedule": {

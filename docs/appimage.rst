@@ -1,5 +1,5 @@
-Via AppImage
-=============
+AppImage
+========
 
 `AppImage <https://appimage.org/>`_ is a format for distributing portable software on Linux without needing superuser permissions to install the application. It tries also to allow Linux distribution-agnostic binary software deployment for application developers, also called Upstream packaging. 
 

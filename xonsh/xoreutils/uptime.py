@@ -15,13 +15,13 @@ import sys
 import time
 import ctypes
 import struct
+import typing as tp
 
 import xonsh.platform as xp
 import xonsh.lazyimps as xlimps
 import xonsh.lazyasd as xl
 
-
-_BOOTTIME = None
+_BOOTTIME: tp.Optional[float] = None
 
 
 def _uptime_osx():

@@ -1,6 +1,6 @@
 **Added:**
 
-* add flake8-docstrings to the project. it integrates pydocstyle to flake8.
+* <news item>
 
 **Changed:**
 
@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* <news item>
+* Removed ``import random``.
 
 **Fixed:**
 

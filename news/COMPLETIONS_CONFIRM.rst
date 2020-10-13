@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* Now ``COMPLETIONS_CONFIRM`` is ``True`` by default.
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed environment variables substitution: unknown variables stay unreplaced now (#3818).
+* <news item>
 
 **Security:**
 

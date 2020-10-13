@@ -2,7 +2,8 @@
 
 Contact Us
 ==========
-If you have questions or comments, please send them to the mailing list
-xonsh@googlegroups.com, page us on IRC, contact the author directly, or
-open an issue on GitHub.
-`Join the mailing list here! <https://groups.google.com/forum/#!forum/xonsh>`_
+If you have questions or comments, please:
+
+* `Open issue on GitHub <https://github.com/xonsh/xonsh>`_
+* `Join the mailing list <https://groups.google.com/forum/#!forum/xonsh>`_
+* Page us on `Gitter <https://gitter.im/xonsh/xonsh>`_ or `IRC channel #xonsh on OFTC <http://www.oftc.net/>`_

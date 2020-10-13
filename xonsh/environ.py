@@ -13,6 +13,7 @@ import collections
 import collections.abc as cabc
 import subprocess
 import platform
+import typing as tp
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -86,6 +87,7 @@ from xonsh.tools import (
     is_str_str_dict,
     to_str_str_dict,
     dict_to_str,
+    to_int_or_none,
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -672,7 +674,7 @@ doc_store_as_str : bool, optional
 """
 
 # iterates from back
-Var.__new__.__defaults__ = (
+Var.__new__.__defaults__ = (  # type:ignore
     always_true,
     None,
     ensure_string,
@@ -739,11 +741,11 @@ def DEFAULT_VARS():
         ),
         "ASYNC_PROMPT_THREAD_WORKERS": Var(
             is_int,
-            int,
+            to_int_or_none,
             str,
             None,
             "Define the number of workers used by the ASYC_PROPMT's pool. "
-            "By default it is defined by Python's concurrent.futures.ThreadPoolExecutor",
+            "By default it is the same as defined by Python's concurrent.futures.ThreadPoolExecutor class.",
         ),
         "BASH_COMPLETIONS": Var(
             is_env_path,
@@ -812,7 +814,7 @@ def DEFAULT_VARS():
             is_bool,
             to_bool,
             bool_to_str,
-            False,
+            True,
             "While tab-completions menu is displayed, press <Enter> to confirm "
             "completion instead of running command. This only affects the "
             "prompt-toolkit shell.",
@@ -1143,6 +1145,7 @@ def DEFAULT_VARS():
             "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``",
         ),
         re.compile(r"\w*PATH$"): Var(is_env_path, str_to_env_path, env_path_to_str),
+        re.compile(r"\w*DIRS$"): Var(is_env_path, str_to_env_path, env_path_to_str),
         "PATHEXT": Var(
             is_nonstring_seq_of_strings,
             pathsep_to_upper_seq,
@@ -1754,7 +1757,8 @@ class Env(cabc.MutableMapping):
     use in a subprocess.
     """
 
-    _arg_regex = None
+    # todo: check this variable is ever used
+    _arg_regex: tp.Optional[str] = None
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os_environ is used."""
@@ -1968,7 +1972,6 @@ class Env(cabc.MutableMapping):
     #
 
     def __getitem__(self, key):
-        # remove this block on next release
         if key is Ellipsis:
             return self
         elif key in self._d:
@@ -1984,11 +1987,6 @@ class Env(cabc.MutableMapping):
             val, (cabc.MutableSet, cabc.MutableSequence, cabc.MutableMapping)
         ):
             self._detyped = None
-
-        validator = self.get_validator(key)
-        converter = self.get_converter(key)
-        if not validator(val):
-            val = converter(val)
         return val
 
     def __setitem__(self, key, val):
