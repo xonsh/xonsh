@@ -315,16 +315,9 @@ The determination between the two modes is done well ahead of any execution.
 You do not need to worry about partially executed commands - that is
 impossible.
 
-If you would like to explicitly run a subprocess command, you can always
-use the formal xonsh subprocess syntax that we will see in the following
-sections. For example:
-
-.. code-block:: xonshcon
-
-    >>> # this will be in subproc-mode forever
-    >>> ![ls -l]
-    total 0
-    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+.. note:: If you would like to explicitly run a subprocess command, you can always
+          use the formal xonsh subprocess syntax that we will see in the following
+          sections. For example: ``![ls -l]``.
 
 Quoting
 =======
