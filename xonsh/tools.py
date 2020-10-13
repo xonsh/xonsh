@@ -1875,7 +1875,11 @@ def register_custom_style(
         style = register_custom_style_pygments(
             name, styles, highlight_color, background_color, base
         )
-    # TODO ansi version?
+
+    # register ANSI colors
+    from xonsh.ansi_colors import register_custom_ansi_style
+
+    register_custom_ansi_style(name, styles, base)
 
     return style
 

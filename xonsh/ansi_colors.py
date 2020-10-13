@@ -265,7 +265,7 @@ _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE = {}
 
 
 def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
-    """Converts an ASNI color code escape sequence to a tuple of color names
+    """Converts an ANSI color code escape sequence to a tuple of color names
     in the provided style ('default' should almost be the style). For example,
     '0' becomes ('RESET',) and '32;41' becomes ('GREEN', 'BACKGROUND_RED').
     The style keyword may either be a string, in which the style is looked up,
@@ -1072,6 +1072,57 @@ def make_ansi_style(palette):
         short = rgb2short(closest)[0]
         style[name] = "38;5;" + short
     return style
+
+
+def _pygments_to_asni_style(style):
+    """Tries to convert the given pygments style to ANSI style.
+
+    Parameter
+    ---------
+        style : pygments style value
+
+    Returns
+    -------
+    ANSI style
+    """
+    ansi_style_list = []
+    parts = style.split(" ")
+    for part in parts:
+        if part == "bold":
+            ansi_style_list.append("1")
+        elif part == "italic":
+            ansi_style_list.append("3")
+        elif part == "underline":
+            ansi_style_list.append("4")
+        elif part[:3] == "bg:":
+            ansi_style_list.append("48;5;" + rgb2short(part[3:])[0])
+        else:
+            ansi_style_list.append("38;5;" + rgb2short(part)[0])
+
+    return ";".join(ansi_style_list)
+
+
+def register_custom_ansi_style(name, styles, base="default"):
+    """Register custom ANSI style.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    styles : dict
+        Token (or str) -> style mapping.
+    base : str, optional
+        Base style to use as default.
+    """
+    base_style = ANSI_STYLES[base].copy()
+
+    for token, style in styles.items():
+        token = str(token)  # convert pygments token to str
+        parts = token.split(".")
+        if len(parts) == 1 or parts[-2] == "Color":
+            base_style[parts[-1]] = _pygments_to_asni_style(style)
+
+    ANSI_STYLES[name] = base_style
 
 
 def ansi_style_by_name(name):
