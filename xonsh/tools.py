@@ -1847,7 +1847,6 @@ def register_custom_style(
     name, styles, highlight_color=None, background_color=None, base="default"
 ):
     """Register custom style.
-    Uses ``xonsh.pyghooks.register_custom_style`` if ``pygments`` is available.
 
     Parameters
     ----------
@@ -1868,11 +1867,9 @@ def register_custom_style(
     """
     style = None
     if pygments_version_info():
-        from xonsh.pyghooks import (
-            register_custom_style as register_custom_style_pygments,
-        )
+        from xonsh.pyghooks import register_custom_pygments_style
 
-        style = register_custom_style_pygments(
+        style = register_custom_pygments_style(
             name, styles, highlight_color, background_color, base
         )
 

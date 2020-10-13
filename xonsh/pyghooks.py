@@ -453,7 +453,7 @@ def _get_token_by_name(name):
     return token
 
 
-def register_custom_style(
+def register_custom_pygments_style(
     name, styles, highlight_color=None, background_color=None, base="default"
 ):
     """Register custom style.

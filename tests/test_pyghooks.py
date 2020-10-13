@@ -16,7 +16,7 @@ from xonsh.pyghooks import (
     color_file,
     file_color_tokens,
     get_style_by_name,
-    register_custom_style,
+    register_custom_pygments_style,
 )
 
 from xonsh.environ import LsColors
@@ -363,8 +363,8 @@ def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
         ),  # short str key
     ],
 )
-def test_register_custom_style(name, styles, refrules):
-    register_custom_style(name, styles)
+def test_register_custom_pygments_style(name, styles, refrules):
+    register_custom_pygments_style(name, styles)
     style = get_style_by_name(name)
 
     # registration succeeded
