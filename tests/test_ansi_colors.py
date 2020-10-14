@@ -6,6 +6,8 @@ from xonsh.ansi_colors import (
     ansi_reverse_style,
     ansi_color_name_to_escape_code,
     ansi_color_style_names,
+    ansi_style_by_name,
+    register_custom_ansi_style,
 )
 
 
@@ -138,3 +140,24 @@ def test_ansi_color_escape_code_to_name(inp, exp):
 def test_ansi_color_name_to_escape_code_for_all_styles(color, style):
     escape_code = ansi_color_name_to_escape_code(color, style)
     assert len(escape_code) > 0
+
+
+@pytest.mark.parametrize(
+    "name, styles, refrules",
+    [
+        ("test1", {}, {}),
+        ("test2", {"Color.RED": "#ff0000"}, {"RED": "38;5;196"}),
+        ("test3", {"BOLD_RED": "bold #ff0000"}, {"BOLD_RED": "1;38;5;196"}),
+        (
+            "test4",
+            {"INTENSE_RED": "italic underline bg:#ff0000 #ff0000"},
+            {"INTENSE_RED": "3;4;48;5;196;38;5;196"},
+        ),
+    ],
+)
+def test_register_custom_ansi_style(name, styles, refrules):
+    register_custom_ansi_style(name, styles)
+    style = ansi_style_by_name(name)
+    assert style is not None
+    for key, value in refrules.items():
+        assert style[key] == value
