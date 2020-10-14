@@ -38,6 +38,7 @@ import warnings
 import operator
 import ast
 import string
+import typing as tp
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -125,6 +126,14 @@ def _expandpath(path):
     env = os_environ if session is None else getattr(session, "env", os_environ)
     expand_user = env.get("EXPAND_ENV_VARS", False)
     return expand_path(path, expand_user=expand_user)
+
+
+def simple_random_choice(lst):
+    """Returns random element from the list with length less than 1 million elements."""
+    l = len(lst)
+    if l > 1000000:  # microsecond maximum
+        raise ValueError("The list is too long.")
+    return lst[datetime.datetime.now().microsecond % l]
 
 
 def decode_bytes(b):
@@ -284,7 +293,7 @@ def FORMATTER():
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 
-    __inst = None
+    __inst: tp.Optional["DefaultNotGivenType"] = None
 
     def __new__(cls):
         if DefaultNotGivenType.__inst is None:
@@ -719,7 +728,7 @@ def fallback(cond, backup):
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
 
-    _stream = None
+    _stream: tp.Optional[str] = None
 
     def __init__(self, new_target):
         self._new_target = new_target
@@ -1350,6 +1359,14 @@ def to_itself(x):
     return x
 
 
+def to_int_or_none(x) -> tp.Optional[int]:
+    """Convert the given value to integer if possible. Otherwise return None"""
+    if isinstance(x, str) and x.lower() == "none":
+        return None
+    else:
+        return int(x)
+
+
 def bool_to_str(x):
     """Converts a bool to an empty string if False and the string '1' if
     True.
@@ -1670,7 +1687,7 @@ _year_to_sec = lambda x: 365.25 * _day_to_sec(x)
 _kb_to_b = lambda x: 1024 * int(x)
 _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
-_tb_to_b = lambda x: 1024 * _tb_to_b(x)
+_tb_to_b = lambda x: 1024 * _tb_to_b(x)  # type: ignore
 
 CANON_HISTORY_UNITS = LazyObject(
     lambda: frozenset(["commands", "files", "s", "b"]), globals(), "CANON_HISTORY_UNITS"

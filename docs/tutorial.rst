@@ -316,10 +316,9 @@ The determination between the two modes is done well ahead of any execution.
 You do not need to worry about partially executed commands - that is
 impossible.
 
-If you absolutely want to run a subprocess command, you can always
-force xonsh to do so with the syntax that we will see in the following
-sections.
-
+.. note:: If you would like to explicitly run a subprocess command, you can always
+          use the formal xonsh subprocess syntax that we will see in the following
+          sections. For example: ``![ls -l]``.
 
 Quoting
 =======

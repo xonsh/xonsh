@@ -13,6 +13,7 @@ import pathlib
 import platform
 import functools
 import subprocess
+import typing as tp
 
 __version__ = "0.2.6"
 
@@ -98,7 +99,7 @@ def _bash_completion_paths_default():
     return bcd
 
 
-_BASH_COMPLETIONS_PATHS_DEFAULT = None
+_BASH_COMPLETIONS_PATHS_DEFAULT: tp.Tuple[str, ...] = ()
 
 
 def _get_bash_completions_source(paths=None):
@@ -123,7 +124,7 @@ def _bash_get_sep():
         return os.sep
 
 
-_BASH_PATTERN_NEED_QUOTES = None
+_BASH_PATTERN_NEED_QUOTES: tp.Optional[tp.Pattern] = None
 
 
 def _bash_pattern_need_quotes():

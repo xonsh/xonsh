@@ -173,7 +173,7 @@ def _list(ns):
             if d["loaded"]:
                 s += "{GREEN}loaded{RESET}"
             else:
-                s += "{RED}not-loaded{RESET }"
+                s += "{RED}not-loaded{RESET}"
             s += "\n"
         print_color(s[:-1])
 

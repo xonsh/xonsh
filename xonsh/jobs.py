@@ -8,6 +8,7 @@ import signal
 import builtins
 import subprocess
 import collections
+import typing as tp
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, ON_MSYS, LIBC
@@ -17,7 +18,7 @@ from xonsh.tools import unthreadable
 tasks = LazyObject(collections.deque, globals(), "tasks")
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
-_last_exit_time = None
+_last_exit_time: tp.Optional[float] = None
 
 
 if ON_DARWIN:
@@ -82,7 +83,7 @@ if ON_WINDOWS:
     def give_terminal_to(pgid):
         pass
 
-    def wait_for_active_job(last_task=None, backgrounded=False):
+    def wait_for_active_job(last_task=None, backgrounded=False, return_error=False):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -117,10 +118,15 @@ else:
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
-    _shell_pgrp = os.getpgrp()
+    _shell_pgrp = os.getpgrp()  # type:ignore
 
     _block_when_giving = LazyObject(
-        lambda: (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP, signal.SIGCHLD),
+        lambda: (
+            signal.SIGTTOU,  # type:ignore
+            signal.SIGTTIN,  # type:ignore
+            signal.SIGTSTP,  # type:ignore
+            signal.SIGCHLD,  # type:ignore
+        ),
         globals(),
         "_block_when_giving",
     )
@@ -155,7 +161,7 @@ else:
             }
 
     else:
-        _pthread_sigmask = signal.pthread_sigmask
+        _pthread_sigmask = signal.pthread_sigmask  # type:ignore
 
     # give_terminal_to is a simplified version of:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
