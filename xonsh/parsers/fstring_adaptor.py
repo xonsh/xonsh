@@ -67,7 +67,7 @@ class FStringAdaptor:
                 # expression, e.g. "($HOME)" for f"{$HOME}" string.
                 if e.text is None or e.text[0] != "(":
                     raise
-                error_expr = e.text[1:-1]
+                error_expr = e.text.strip()[1:-1]
                 epos = template.find(error_expr)
                 if epos < 0:
                     raise
