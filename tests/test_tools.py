@@ -10,7 +10,10 @@ import warnings
 import pytest
 
 from xonsh import __version__
-from xonsh.platform import ON_WINDOWS
+from xonsh.platform import (
+    ON_WINDOWS,
+    HAS_PYGMENTS,
+)
 from xonsh.lexer import Lexer
 
 from xonsh.tools import (
@@ -79,6 +82,7 @@ from xonsh.tools import (
     balanced_parens,
     iglobpath,
     all_permutations,
+    register_custom_style,
 )
 from xonsh.environ import Env
 
@@ -1772,3 +1776,30 @@ def test_all_permutations():
         "ABC",
     }
     assert obs == exp
+
+
+@pytest.mark.parametrize(
+    "name, styles, refrules",
+    [
+        ("test1", {}, {}),  # empty styles
+        (
+            "test2",
+            {"Token.Literal.String.Single": "#ff0000"},
+            {"Token.Literal.String.Single": "#ff0000"},
+        ),  # str key
+        (
+            "test3",
+            {"Literal.String.Single": "#ff0000"},
+            {"Token.Literal.String.Single": "#ff0000"},
+        ),  # short str key
+        ("test4", {"RED": "#ff0000"}, {"Token.Color.RED": "#ff0000"},),  # color
+    ],
+)
+def test_register_custom_style(name, styles, refrules):
+    style = register_custom_style(name, styles)
+    if HAS_PYGMENTS:
+        assert style is not None
+
+        for rule, color in style.styles.items():
+            if str(rule) in refrules:
+                assert refrules[str(rule)] == color
