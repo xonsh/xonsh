@@ -80,6 +80,9 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``||``
       - ``||`` as well as ``or``
       - Logical-or operator for subprocesses.
+    * - ``$$``
+      - ``os.getpid()``
+      - Get PID of the current shell.
     * - ``$?``
       - ``_.rtn``
       - Returns the exit code, or status, of the previous command. The underscore ``_`` is working 
