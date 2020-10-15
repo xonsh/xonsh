@@ -48,14 +48,14 @@ class PTKPromptFormatter(PromptFormatter):
         return self._get_tokens(template, **kwargs)
 
     def _no_cache_field_value(
-        self, field, field_value, idx=None, async_prompt=None, **_
+        self, field, field_value, async_prompt=None, idx=None, spec=None, conv=None, **_
     ):
         """This branch is created so that caching fields per prompt would still work."""
         func = functools.partial(super()._no_cache_field_value, field, field_value)
 
         if async_prompt is not None and callable(field_value):
             # create a thread and return an intermediate result
-            return async_prompt.submit_section(func, field, idx)
+            return async_prompt.submit_section(func, field, idx, spec, conv)
 
         return func()
 

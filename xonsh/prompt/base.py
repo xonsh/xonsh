@@ -73,7 +73,7 @@ class PromptFormatter:
             val = builtins.__xonsh__.env[field[1:]]
             return _format_value(val, spec, conv)
         elif field in self.fields:
-            val = self._get_field_value(field, **kwargs)
+            val = self._get_field_value(field, spec=spec, conv=conv, **kwargs)
             return _format_value(val, spec, conv)
         else:
             # color or unknown field, return as is
