@@ -727,7 +727,6 @@ def fallback(cond, backup):
 # See the Python software license: https://docs.python.org/3/license.html
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
-
     _stream: tp.Optional[str] = None
 
     def __init__(self, new_target):
@@ -1296,7 +1295,7 @@ def to_logfile_opt(x):
     the filepath if it is a writable file or None if the filepath is not
     valid, informing the user on stderr about the invalid choice.
     """
-    if isinstance(x, os.PathLike):
+    if isinstance(x, os.PathLike):  # type: ignore
         x = str(x)
     if is_logfile_opt(x):
         return x
