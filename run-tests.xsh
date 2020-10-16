@@ -39,17 +39,17 @@ def test(ns: argparse.Namespace):
 
 
 def qa(ns: argparse.Namespace):
-    """QA checks.
-    """
+    """QA checks"""
+
+    echo "---------- Check Black formatter -----------"
+    black --check xonsh xontrib
+
     echo "---------- Running flake8 ----------"
     python -m flake8
 
     echo "---------- Running mypy ----------"
     mypy --version
     mypy xonsh
-
-    echo "---------- Check Black formatter -----------"
-    black --check xonsh xontrib
 
 
 if __name__ == '__main__':
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     test_parser.set_defaults(func=test)
 
     qa_parser = commands.add_parser('qa', help=qa.__doc__)
-    qa_parser.set_defaults(func=test)
+    qa_parser.set_defaults(func=qa)
 
     args = parser.parse_args()
     args.func(args)

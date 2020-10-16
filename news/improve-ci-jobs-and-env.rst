@@ -5,7 +5,7 @@
 **Changed:**
 
 * use requirements.txt env in both CI/local/pre-commit checks
-* add caching to CI jobs
+* add caching to CI jobs to improve speed
 
 **Deprecated:**
 

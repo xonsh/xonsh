@@ -1,0 +1,43 @@
+name: qa linux 3.8
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python-version: [ 3.8 ]
+    name: Python ${{ matrix.python-version }} ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/conda_pkgs_dir
+            ~/.cache/pypoetry
+            ~/miniconda*/envs/
+          key: ${{ runner.os }}-${{ matrix.python-version }}-env-${{ hashFiles('ci/environment.yml') }}-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version }}-env-
+      - name: Setup conda
+        uses: conda-incubator/setup-miniconda@v1
+        with:
+          activate-environment: xonsh-test
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}  # this itself makes sure that Python version is installed
+          condarc-file: ci/condarc.yml
+      - uses: Gr1N/setup-poetry@v4
+      - shell: bash -l {0}
+        run: |
+          pip --version
+          pip install -r requirements/tests.txt
+          python -m pip install . --no-deps
+          python -m xonsh run-tests.xsh qa
