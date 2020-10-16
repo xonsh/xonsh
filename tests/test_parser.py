@@ -3179,3 +3179,11 @@ def test_syntax_error_lambda_nondefault_follows_default():
 def test_syntax_error_lambda_posonly_nondefault_follows_default():
     with pytest.raises(SyntaxError):
         PARSER.parse("lambda x, y=1, /, z: x", mode="exec")
+
+
+def test_get_repo_url():
+    PARSER.parse(
+        "def get_repo_url():\n"
+        "    raw = $(git remote get-url --push origin).rstrip()\n"
+        "    return raw.replace('https://github.com/', '')\n"
+    )
