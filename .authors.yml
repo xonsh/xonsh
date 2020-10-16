@@ -385,7 +385,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 159
+  num_commits: 161
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -435,7 +435,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2643
+  num_commits: 2650
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -1021,7 +1021,7 @@
   first_commit: 2018-09-16 22:50:24
 - name: Gyuri Horak
   email: dyuri@horak.hu
-  num_commits: 17
+  num_commits: 31
   first_commit: 2019-06-18 12:00:16
   github: dyuri
 - name: Ke Zhang
@@ -1104,7 +1104,7 @@
   email: anki-code@users.noreply.github.com
   alternate_emails:
   - anki-code
-  num_commits: 61
+  num_commits: 67
   first_commit: 2019-10-15 18:20:58
   github: xxh
 - name: Sylvain Corlay
@@ -1128,7 +1128,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 6
+  num_commits: 13
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1218,5 +1218,10 @@
   github: wendellwt
 - name: a
   email: a
-  num_commits: 67
+  num_commits: 97
   first_commit: 2020-10-08 15:17:00.327697
+- name: Will Shanks
+  email: willshanks@us.ibm.com
+  num_commits: 1
+  first_commit: 2020-10-13 11:26:03
+  github: willsALMANJ

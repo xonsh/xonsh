@@ -10,8 +10,8 @@ Authors are sorted by number of commits.
 * Hugo Wang
 * David Strobach
 * Bob Hyman
-* BlahGeek
 * a
+* BlahGeek
 * anki-code
 * Jean-Benoist Leger
 * christopher
@@ -23,6 +23,7 @@ Authors are sorted by number of commits.
 * Rob Brewer
 * virus
 * Sagar Tewari
+* Gyuri Horak
 * Eadaen1
 * Konstantin Molchanov
 * Guillaume Leclerc
@@ -38,12 +39,12 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
-* Gyuri Horak
 * Carmen Bianca Bakker
 * Frank Sachsenheim
 * Kurtis Rader
 * cryzed
 * Brian Visel
+* Noortheen Raja
 * cafehaine
 * Andrew Hundt
 * Jonathan Slenders
@@ -74,7 +75,6 @@ Authors are sorted by number of commits.
 * mel
 * Jared Crawford
 * Mike Crowe
-* Noortheen Raja
 * JuanPablo
 * Ollie Terrance
 * Marcel Bollmann
@@ -237,5 +237,6 @@ Authors are sorted by number of commits.
 * Feng Tian
 * paugier
 * Wendell CTR Turner
+* Will Shanks
 * goodboy
 * Atsushi Morimoto
