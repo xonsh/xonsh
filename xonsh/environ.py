@@ -851,6 +851,14 @@ def DEFAULT_VARS():
             "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
             "prompt-toolkit shell.",
         ),
+        "RESERVE_SPACE_FOR_MENU": Var(
+            is_int,
+            int,
+            str,
+            DefaultNotGiven,
+            "Additional space to reserve at bottom of screen for tab-completions menu. "
+            "Only affects prompt-toolkit shell.  Deprecated.  See ``$COMPLETIONS_MENU_ROWS``.",
+        ),
         "COMPLETION_QUERY_LIMIT": Var(
             is_int,
             int,

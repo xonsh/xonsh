@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import builtins
+import inspect
 from types import MethodType
 
 from xonsh.events import events
@@ -190,7 +191,6 @@ class PromptToolkitShell(BaseShell):
             "editing_mode": editing_mode,
             "prompt_continuation": self.continuation_tokens,
             "enable_history_search": enable_history_search,
-            "completion_menu_rows": env.get("COMPLETIONS_MENU_ROWS"),
             "key_bindings": self.key_bindings,
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
@@ -218,6 +218,18 @@ class PromptToolkitShell(BaseShell):
         if env["ENABLE_ASYNC_PROMPT"]:
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
+
+        # backwards compat logic: the value is COMPLETION_MENU_ROWS unless RESERVE_SPACE_FOR_MENU explicitly provided
+        # Invoke PromptSession.prompt parameter completion_menu_rows with that value if the parameter is defined.
+        completion_menu_rows = env.get(
+            "RESERVE_SPACE_FOR_MENU", env.get("COMPLETION_MENU_ROWS")
+        )  # RSFM can be undefined
+        prompt_args[
+            "completion_menu_rows"
+            if "completion_menu_rows"
+            in inspect.signature(self.prompter.prompt).parameters
+            else "reserve_space_for_menu"
+        ] = completion_menu_rows
 
         line = self.prompter.prompt(**prompt_args)
 
