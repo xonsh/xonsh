@@ -12,7 +12,11 @@ import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 
-from xonsh.procs.readers import BufferedFDParallelReader, NonBlockingFDReader, safe_fdclose
+from xonsh.procs.readers import (
+    BufferedFDParallelReader,
+    NonBlockingFDReader,
+    safe_fdclose,
+)
 
 
 # The following escape codes are xterm codes.
@@ -485,4 +489,3 @@ class PopenThread(threading.Thread):
     def kill(self):
         """Dispatches to Popen.kill()."""
         return self.proc.kill()
-
