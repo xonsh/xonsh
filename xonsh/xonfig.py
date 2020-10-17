@@ -537,6 +537,10 @@ def _info(ns):
         pass
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
+    if "_xontribs" in builtins.__xonsh__.ctx:
+        xontribs = ", ".join(builtins.__xonsh__.ctx["_xontribs"])
+        data.extend([("xontribs", xontribs)])
+
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s
