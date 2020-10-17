@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history backend."""
 import collections
+import uuid
+
 from xonsh.history.base import History
 
 
