@@ -22,9 +22,8 @@ jobs:
         with:
           path: |
             ~/conda_pkgs_dir
-            ~/.cache/pypoetry
             ~/miniconda*/envs/
-          key: ${{ runner.os }}-${{ matrix.python-version }}-env-${{ hashFiles('ci/environment.yml') }}-${{ hashFiles('poetry.lock') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-env-${{ hashFiles('requirements/tests.txt') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-env-
       - name: Setup conda
@@ -34,10 +33,9 @@ jobs:
           update-conda: true
           python-version: ${{ matrix.python-version }}  # this itself makes sure that Python version is installed
           condarc-file: ci/condarc.yml
-      - uses: Gr1N/setup-poetry@v4
       - shell: bash -l {0}
         run: |
-          pip --version
-          pip install -r requirements/tests.txt
+          python -m pip --version
+          python -m pip install -r requirements/tests.txt
           python -m pip install . --no-deps
           python -m xonsh run-tests.xsh test -- --timeout=240
