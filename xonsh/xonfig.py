@@ -488,10 +488,13 @@ def _xonfig_format_human(data):
     s = hr
     for key, val in data:
         if type(val) == list:
-            for i, subval in enumerate(val):
-                s += row.format(
-                    key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
-                )
+            if val == []:
+                s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
+            else:
+                for i, subval in enumerate(val):
+                    s += row.format(
+                        key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
+                    )
         else:
             s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
     s += hr
@@ -548,7 +551,7 @@ def _info(ns):
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
     xontribs = [s.split(".")[1] for s in sys.modules if s.startswith("xontrib.")]
-    data.extend([("xontrib", xontribs if xontribs else "")])
+    data.extend([("xontrib", xontribs)])
 
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
