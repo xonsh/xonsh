@@ -46,7 +46,11 @@
  {"name": "back2dir",
   "package": "xontrib-back2dir",
   "url": "https://github.com/anki-code/xontrib-back2dir",
-  "description": ["Back to the latest used directory when starting xonsh shell."]
+  "description": [
+    "Back to the latest used directory when starting xonsh shell. ",
+    "For example if you changed the directory to ``/work`` and then exit from xonsh ",
+    "and after time you run xonsh again then you'll be in ``/work`` directory at start ",
+    "instead of home directory."]
  },
  {"name": "bashisms",
   "package": "xonsh",
