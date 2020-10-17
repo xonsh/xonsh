@@ -90,5 +90,5 @@ hello = 'world'
         )
 
     xontribs_load(["script"])
-    assert xontribs_loaded() == ['script']
+    assert 'script' in xontribs_loaded()
 
