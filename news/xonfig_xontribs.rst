@@ -1,6 +1,6 @@
 **Added:**
 
-* Added `xontribs` section to the `xonfig`.
+* Added ``xontribs`` section to the ``xonfig``.
 
 **Changed:**
 
