@@ -487,14 +487,11 @@ def _xonfig_format_human(data):
     row = "| {key!s:<{wcol1}} | {val!s:<{wcol2}} |\n"
     s = hr
     for key, val in data:
-        if type(val) == list:
-            if val == []:
-                s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
-            else:
-                for i, subval in enumerate(val):
-                    s += row.format(
-                        key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
-                    )
+        if type(val) == list and val:
+            for i, subval in enumerate(val):
+                s += row.format(
+                    key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
+                )
         else:
             s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
     s += hr
