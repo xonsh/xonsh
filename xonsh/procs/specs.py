@@ -14,10 +14,15 @@ import xonsh.platform as xp
 import xonsh.environ as xenv
 import xonsh.lazyimps as xli
 
+from xonsh.procs.readers import ConsoleParallelReader
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
-from xonsh.procs.windows import ConsoleParallelReader
-from xonsh.procs.pipelines import pause_call_resume, CommandPipeline, HiddenCommandPipeline, STDOUT_CAPTURE_KINDS
+from xonsh.procs.pipelines import (
+    pause_call_resume,
+    CommandPipeline,
+    HiddenCommandPipeline,
+    STDOUT_CAPTURE_KINDS,
+)
 
 
 @xl.lazyobject
