@@ -1,7 +1,7 @@
 """xontrib tests, such as they are"""
 import sys
 import pytest
-from xonsh.xontribs import xontrib_metadata, xontrib_context
+from xonsh.xontribs import xontrib_metadata, xontrib_context, xontribs_load, xontribs_loaded
 
 
 def test_load_xontrib_metadata():
@@ -77,3 +77,18 @@ hello = 'world'
 
     ctx = xontrib_context("script")
     assert ctx == {"hello": "world"}
+
+def test_xontrib_load(tmpmod):
+    """
+    Test that .xsh xontribs are loadable
+    """
+    with tmpmod.mkdir("xontrib").join("script.xsh").open("w") as x:
+        x.write(
+            """
+hello = 'world'
+"""
+        )
+
+    xontribs_load(["script"])
+    assert xontribs_loaded() == ['script']
+

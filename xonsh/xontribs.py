@@ -132,6 +132,11 @@ def xontribs_load(names, verbose=False):
     return res
 
 
+def xontribs_loaded():
+    """Returns list of loaded xontribs."""
+    return [s.split(".")[1] for s in sys.modules if s.startswith("xontrib.")]
+
+
 def _load(ns):
     """load xontribs"""
     return xontribs_load(ns.names, verbose=ns.verbose)

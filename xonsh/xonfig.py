@@ -47,7 +47,7 @@ from xonsh.tools import (
     color_style,
 )
 from xonsh.foreign_shells import CANON_SHELL_NAMES
-from xonsh.xontribs import xontrib_metadata, find_xontrib
+from xonsh.xontribs import xontrib_metadata, find_xontrib, xontribs_loaded
 from xonsh.lazyasd import lazyobject
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
@@ -547,8 +547,7 @@ def _info(ns):
         pass
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
-    xontribs = [s.split(".")[1] for s in sys.modules if s.startswith("xontrib.")]
-    data.extend([("xontrib", xontribs)])
+    data.extend([("xontrib", xontribs_loaded())])
 
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
