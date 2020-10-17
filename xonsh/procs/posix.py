@@ -1,6 +1,7 @@
 """Interface for running subprocess-mode commands on posix systems."""
 import os
 import io
+import sys
 import time
 import array
 import signal
@@ -11,6 +12,7 @@ import subprocess
 import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
+import xonsh.lazyimps as xli
 
 from xonsh.procs.readers import (
     BufferedFDParallelReader,
@@ -318,8 +320,7 @@ class PopenThread(threading.Thread):
     #
 
     def _signal_tstp(self, signum, frame):
-        """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed.
-        """
+        """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed."""
         self.suspended = True
         self.send_signal(signum)
         self._restore_sigtstp(frame=frame)
@@ -339,8 +340,8 @@ class PopenThread(threading.Thread):
             return
         try:
             mode = xli.termios.tcgetattr(0)  # only makes sense for stdin
-            self._tc_cc_vsusp = mode[CC][xli.termios.VSUSP]
-            mode[CC][xli.termios.VSUSP] = b"\x00"  # set ^Z (ie SIGSTOP) to undefined
+            self._tc_cc_vsusp = mode[xp.CC][xli.termios.VSUSP]
+            mode[xp.CC][xli.termios.VSUSP] = b"\x00"  # set ^Z (ie SIGSTOP) to undefined
             xli.termios.tcsetattr(0, xli.termios.TCSANOW, mode)
         except xli.termios.error:
             return
@@ -350,7 +351,7 @@ class PopenThread(threading.Thread):
             return
         try:
             mode = xli.termios.tcgetattr(0)  # only makes sense for stdin
-            mode[CC][
+            mode[xp.CC][
                 xli.termios.VSUSP
             ] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
             # this usually doesn't work in interactive mode,
@@ -364,8 +365,7 @@ class PopenThread(threading.Thread):
     #
 
     def _signal_quit(self, signum, frame):
-        r"""Signal handler for quiting SIGQUIT - Ctrl+\ may have been pressed.
-        """
+        r"""Signal handler for quiting SIGQUIT - Ctrl+\ may have been pressed."""
         self.send_signal(signum)
         self._restore_sigquit(frame=frame)
 
@@ -393,9 +393,9 @@ class PopenThread(threading.Thread):
             self.stdin_mode = None
             return
         new = self.stdin_mode[:]
-        new[LFLAG] &= ~(xli.termios.ECHO | xli.termios.ICANON)
-        new[CC][xli.termios.VMIN] = 1
-        new[CC][xli.termios.VTIME] = 0
+        new[xp.LFLAG] &= ~(xli.termios.ECHO | xli.termios.ICANON)
+        new[xp.CC][xli.termios.VMIN] = 1
+        new[xp.CC][xli.termios.VTIME] = 0
         try:
             # termios.TCSAFLUSH may be less reliable than termios.TCSANOW
             xli.termios.tcsetattr(self.stdin_fd, xli.termios.TCSANOW, new)
@@ -406,9 +406,9 @@ class PopenThread(threading.Thread):
         if not xp.ON_POSIX or self.stdin_mode is None:
             return
         new = self.stdin_mode[:]
-        new[LFLAG] |= xli.termios.ECHO | xli.termios.ICANON
-        new[CC][xli.termios.VMIN] = 1
-        new[CC][xli.termios.VTIME] = 0
+        new[xp.LFLAG] |= xli.termios.ECHO | xli.termios.ICANON
+        new[xp.CC][xli.termios.VMIN] = 1
+        new[xp.CC][xli.termios.VTIME] = 0
         try:
             xli.termios.tcsetattr(self.stdin_fd, xli.termios.TCSANOW, new)
         except xli.termios.error:

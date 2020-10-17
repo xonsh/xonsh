@@ -6,6 +6,7 @@ The contents of `subprocess.py` (and, thus, the reproduced methods) are
 Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se> and were
 licensed to the Python Software foundation under a Contributor Agreement.
 """
+import os
 import io
 import sys
 import time
@@ -15,6 +16,7 @@ import builtins
 import functools
 import threading
 import subprocess
+import collections.abc as cabc
 
 import xonsh.tools as xt
 import xonsh.platform as xp
@@ -297,8 +299,7 @@ def proxy_two(f, args, stdin, stdout, stderr, spec, stack):
 
 
 def proxy_three(f, args, stdin, stdout, stderr, spec, stack):
-    """Calls a proxy function which takes three parameter: args, stdin, stdout.
-    """
+    """Calls a proxy function which takes three parameter: args, stdin, stdout."""
     return f(args, stdin, stdout)
 
 
@@ -499,7 +500,9 @@ class ProcProxyThread(threading.Thread):
         try:
             with STDOUT_DISPATCHER.register(sp_stdout), STDERR_DISPATCHER.register(
                 sp_stderr
-            ), redirect_stdout(STDOUT_DISPATCHER), redirect_stderr(STDERR_DISPATCHER):
+            ), xt.redirect_stdout(STDOUT_DISPATCHER), xt.redirect_stderr(
+                STDERR_DISPATCHER
+            ):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec, spec.stack)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
@@ -771,8 +774,7 @@ class ProcProxy:
         self.env = env
 
     def poll(self):
-        """Check if the function has completed via the returncode or None.
-        """
+        """Check if the function has completed via the returncode or None."""
         return self.returncode
 
     def wait(self, timeout=None):

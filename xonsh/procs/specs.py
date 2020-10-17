@@ -2,6 +2,8 @@
 import os
 import io
 import re
+import sys
+import shlex
 import signal
 import inspect
 import pathlib
@@ -14,6 +16,7 @@ import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.environ as xenv
 import xonsh.lazyimps as xli
+import xonsh.jobs as xj
 
 from xonsh.procs.readers import ConsoleParallelReader
 from xonsh.procs.posix import PopenThread
@@ -848,7 +851,7 @@ def run_subproc(cmds, captured=False, envs=None):
     proc = command.proc
     background = command.spec.background
     if not all(x.is_proxy for x in specs):
-        add_job(
+        xj.add_job(
             {
                 "cmds": cmds,
                 "pids": [i.pid for i in command.procs],

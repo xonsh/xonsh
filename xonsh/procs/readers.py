@@ -1,6 +1,7 @@
 """File handle readers and related tools."""
 import os
 import io
+import sys
 import time
 import queue
 import builtins

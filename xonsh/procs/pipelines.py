@@ -27,20 +27,19 @@ def RE_HIDDEN_BYTES():
     return re.compile(b"(\001.*?\002)")
 
 
-@lazyobject
+@xl.lazyobject
 def RE_VT100_ESCAPE():
     return re.compile(b"(\x9B|\x1B\\[)[0-?]*[ -\\/]*[@-~]")
 
 
-@lazyobject
+@xl.lazyobject
 def RE_HIDE_ESCAPE():
     return re.compile(
         b"(" + RE_HIDDEN_BYTES.pattern + b"|" + RE_VT100_ESCAPE.pattern + b")"
     )
 
 
-
-@lazyobject
+@xl.lazyobject
 def SIGNAL_MESSAGES():
     sm = {
         signal.SIGABRT: "Aborted",
@@ -159,7 +158,7 @@ class CommandPipeline:
             try:
                 proc = spec.run(pipeline_group=pipeline_group)
             except Exception:
-                print_exception()
+                xt.print_exception()
                 self._return_terminal()
                 self.proc = None
                 return
@@ -724,7 +723,10 @@ def pause_call_resume(p, f, *args, **kwargs):
     kwargs : keyword arguments
     """
     can_send_signal = (
-        hasattr(p, "send_signal") and xp.ON_POSIX and not xp.ON_MSYS and not xp.ON_CYGWIN
+        hasattr(p, "send_signal")
+        and xp.ON_POSIX
+        and not xp.ON_MSYS
+        and not xp.ON_CYGWIN
     )
     if can_send_signal:
         try:
