@@ -19,7 +19,6 @@ import xonsh.lazyimps as xli
 import xonsh.jobs as xj
 
 from xonsh.procs.readers import ConsoleParallelReader
-from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.pipelines import (
     pause_call_resume,
@@ -358,7 +357,7 @@ class SubprocSpec:
         self.binary_loc = None
         self.is_proxy = False
         self.background = False
-        self.threadable = True
+        self.threadable = False
         self.pipeline_index = None
         self.last_in_pipeline = False
         self.captured_stdout = None
@@ -649,7 +648,7 @@ class SubprocSpec:
             return
         self.is_proxy = True
         env = builtins.__xonsh__.env
-        thable = env.get("THREAD_SUBPROCS") and getattr(
+        thable = getattr(
             alias, "__xonsh_threadable__", True
         )
         cls = ProcProxyThread if thable else ProcProxy
@@ -712,17 +711,9 @@ def _update_last_spec(last):
     if callable_alias:
         pass
     else:
-        cmds_cache = builtins.__xonsh__.commands_cache
-        thable = (
-            env.get("THREAD_SUBPROCS")
-            and cmds_cache.predict_threadable(last.args)
-            and cmds_cache.predict_threadable(last.cmd)
-        )
-        if captured and thable:
-            last.cls = PopenThread
-        elif not thable:
-            # foreground processes should use Popen
-            last.threadable = False
+        if captured:
+            # update this when we have PTY server/client
+            last.cls = subprocess.Popen
             if captured == "object" or captured == "hiddenobject":
                 # CommandPipeline objects should not pipe stdout, stderr
                 return
@@ -870,6 +861,7 @@ def run_subproc(cmds, captured=False, envs=None):
         # sure that the shell doesn't hang. This `pause_call_resume` invocation
         # does this
         pause_call_resume(proc, int)
+    pause_call_resume(proc, int)
     # create command or return if backgrounding.
     if background:
         return

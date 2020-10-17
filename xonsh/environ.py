@@ -1336,35 +1336,6 @@ def DEFAULT_VARS():
             "not always happen.",
             doc_configurable=False,
         ),
-        "THREAD_SUBPROCS": Var(
-            is_bool_or_none,
-            to_bool_or_none,
-            bool_or_none_to_str,
-            True if not ON_CYGWIN else False,
-            "Whether or not to try to run subrocess mode in a Python thread, "
-            "when applicable. There are various trade-offs, which normally "
-            "affects only interactive sessions.\n\nWhen True:\n\n"
-            "* Xonsh is able capture & store the stdin, stdout, and stderr \n"
-            "  of threadable subprocesses.\n"
-            "* However, stopping threaded subprocs with ^Z (i.e. ``SIGTSTP``)\n"
-            "  is disabled as it causes deadlocked terminals.\n"
-            "  ``SIGTSTP`` may still be issued and only the physical pressing\n"
-            "  of ``Ctrl+Z`` is ignored.\n"
-            "* Threadable commands are run with ``PopenThread`` and threadable \n"
-            "  aliases are run with ``ProcProxyThread``.\n\n"
-            "When False:\n\n"
-            "* Xonsh may not be able to capture stdin, stdout, and stderr streams \n"
-            "  unless explicitly asked to do so.\n"
-            "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
-            "* Threadable commands are run with ``Popen`` and threadable \n"
-            "  alias are run with ``ProcProxy``.\n\n"
-            "The desired effect is often up to the command, user, or use case.\n\n"
-            "None values are for internal use only and are used to turn off "
-            "threading when loading xonshrc files. This is done because Bash "
-            "was automatically placing new xonsh instances in the background "
-            "at startup when threadable subprocs were used. Please see "
-            "https://github.com/xonsh/xonsh/pull/3705 for more information.\n",
-        ),
         "TITLE": Var(
             is_string,
             ensure_string,
@@ -1459,8 +1430,7 @@ def DEFAULT_VARS():
             default_xonshrc,
             "A list of the locations of run control files, if they exist.  User "
             "defined run control file will supersede values set in system-wide "
-            "control file if there is a naming collision. $THREAD_SUBPROCS=None "
-            "when reading in run control files.",
+            "control file if there is a naming collision.",
             doc_default=(
                 "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
                 "\nOn Windows: "
@@ -2195,8 +2165,6 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
     ctx = {} if ctx is None else ctx
     if rcfiles is None:
         return env
-    orig_thread = env.get("THREAD_SUBPROCS")
-    env["THREAD_SUBPROCS"] = None
     env["XONSHRC"] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
@@ -2205,8 +2173,6 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
         _, ext = os.path.splitext(rcfile)
         status = xonsh_script_run_control(rcfile, ctx, env, execer=execer, login=login)
         loaded.append(status)
-    if env["THREAD_SUBPROCS"] is None:
-        env["THREAD_SUBPROCS"] = orig_thread
     return ctx
 
 
