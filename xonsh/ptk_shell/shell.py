@@ -40,6 +40,7 @@ from prompt_toolkit.styles.pygments import (
 
 
 ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
+CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
 Token = _TokenType()
 
 events.transmogrify("on_ptk_create", "LoadEvent")
@@ -90,6 +91,18 @@ def remove_ansi_osc(prompt):
     prompt = ANSI_OSC_PATTERN.sub("", prompt)
 
     return prompt, osc_tokens
+
+
+def _extract_ptk_style(pygments_style):
+    """Extract PTK specific rules that are not handled by ``style_from_pygments_cls``
+    """
+    rules = {}
+    for rule, value in pygments_style.styles.items():
+        if str(rule).startswith("Token.PTK"):
+            key = CAPITAL_PATTERN.sub(r"\1-\2", str(rule)[10:]).lower()
+            rules[key] = value
+
+    return rules
 
 
 class PromptToolkitShell(BaseShell):
@@ -201,7 +214,14 @@ class PromptToolkitShell(BaseShell):
         if env.get("COLOR_INPUT"):
             if HAS_PYGMENTS:
                 prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
-                style = style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
+                style = merge_styles(
+                    [
+                        Style.from_dict(_extract_ptk_style(self.styler)),
+                        style_from_pygments_cls(
+                            pyghooks.xonsh_style_proxy(self.styler)
+                        ),
+                    ]
+                )
             else:
                 style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
 

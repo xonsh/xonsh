@@ -382,8 +382,8 @@ class XonshStyle(Style):
                 self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
-        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
-        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
+        compound = CompoundColorMap(ChainMap(self.trap, cmap, self._smap, PTK_STYLE))
+        self.styles = ChainMap(self.trap, cmap, self._smap, PTK_STYLE, compound)
         self._style_name = value
 
         for file_type, xonsh_color in builtins.__xonsh__.env.get(
