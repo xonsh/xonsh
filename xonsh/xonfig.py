@@ -478,7 +478,7 @@ def _xonfig_format_human(data):
     wcol1 = wcol2 = 0
     for key, val in data:
         wcol1 = max(wcol1, len(key))
-        if type(val) == list:
+        if isinstance(val, list):
             for subval in val:
                 wcol2 = max(wcol2, len(str(subval)))
         else:
@@ -487,7 +487,7 @@ def _xonfig_format_human(data):
     row = "| {key!s:<{wcol1}} | {val!s:<{wcol2}} |\n"
     s = hr
     for key, val in data:
-        if type(val) == list and val:
+        if isinstance(val, list) and val:
             for i, subval in enumerate(val):
                 s += row.format(
                     key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
