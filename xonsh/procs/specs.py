@@ -1,6 +1,7 @@
 """Subprocess specification and related utilities."""
 import os
 import io
+import re
 import signal
 import inspect
 import pathlib
