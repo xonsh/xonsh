@@ -457,7 +457,7 @@ class CommandPipeline:
         self.ended = False
         if xj.give_terminal_to(job["pgrp"]):
             self.term_pgid = job["pgrp"]
-        _continue(job)
+        xj._continue(job)
         self.end(tee_output=tee_output)
 
     def _endtime(self):

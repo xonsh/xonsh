@@ -4,12 +4,10 @@
 Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
-import io
 import os
 import re
 import sys
 import types
-import shlex
 import signal
 import atexit
 import pathlib
@@ -25,8 +23,7 @@ from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env
-from xonsh.jobs import add_job
-from xonsh.platform import ON_POSIX, ON_WINDOWS, ON_WSL, ON_CYGWIN
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.tools import (
     expand_path,
     globpath,

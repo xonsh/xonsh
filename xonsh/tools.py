@@ -1291,12 +1291,11 @@ def is_logfile_opt(x):
 
 
 def to_logfile_opt(x):
-    """
-    Converts a $XONSH_TRACEBACK_LOGFILE option to either a str containing
+    """Converts a $XONSH_TRACEBACK_LOGFILE option to either a str containing
     the filepath if it is a writable file or None if the filepath is not
     valid, informing the user on stderr about the invalid choice.
     """
-    if isinstance(x, os.PathLike):
+    if isinstance(x, pathlib.Path):
         x = str(x)
     if is_logfile_opt(x):
         return x
