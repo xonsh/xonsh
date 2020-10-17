@@ -197,7 +197,7 @@
   "url": "https://github.com/anki-code/xontrib-prompt-bar",
   "description": ["An elegance bar style for prompt."]
  }, 
- {"name": "powerline-binding",
+ {"name": "powerline_binding",
   "package": "xontrib-powerline-binding",
   "url": "https://github.com/dyuri/xontrib-powerline-binding",
   "description": ["Uses powerline to render the xonsh prompt"]

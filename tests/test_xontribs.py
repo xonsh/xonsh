@@ -92,3 +92,17 @@ hello = 'world'
     xontribs_load(["script"])
     assert 'script' in xontribs_loaded()
 
+def test_xontrib_load_dashed(tmpmod):
+    """
+    Test that .xsh xontribs are loadable
+    """
+    with tmpmod.mkdir("xontrib").join("scri-pt.xsh").open("w") as x:
+        x.write(
+            """
+hello = 'world'
+"""
+        )
+
+    xontribs_load(["scri-pt"])
+    assert 'scri-pt' in xontribs_loaded()
+
