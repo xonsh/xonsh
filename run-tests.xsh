@@ -13,6 +13,7 @@ def replace_args(num):
         (arg % num) if "%d" in arg else arg
         for arg in args]
 
+$XONSH_DEBUG = 1
 $RAISE_SUBPROC_ERROR = True
 
 run_separately = [
@@ -29,7 +30,7 @@ for index, fname in enumerate(run_separately):
 
 echo "---------- Running flake8 ----------"
 python -m flake8
-    
+
 echo "---------- Running mypy ----------"
 mypy --version
 mypy xonsh
