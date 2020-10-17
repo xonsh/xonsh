@@ -465,7 +465,6 @@ if __name__ == "__main__":
         env={"PAGER": "cat"},
         aliases={"less": "cat"},
         xontribs=["coreutils"],
-        threadable_predictors={"git": predict_true, "man": predict_true},
     )
     if builtins.__xonsh__.commands_cache.is_only_functional_alias("cat"):  # type:ignore
         # this is needed if the underlying system doesn't have cat

@@ -16,7 +16,7 @@ from xonsh.shell import Shell
 from xonsh.pretty import pretty
 from xonsh.execer import Execer
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import print_color, to_bool_or_int
+from xonsh.tools import print_color, to_bool_or_int, print_warning
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import print_welcome_screen
@@ -541,7 +541,7 @@ def setup(
     xontribs : iterable of str, optional
         Xontrib names to load.
     threadable_predictors : dict-like, optional
-        Threadable predictors to start up with. These overide the defaults.
+        Threadable predictors has been deprecated.
     """
     ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
@@ -555,5 +555,5 @@ def setup(
     builtins.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
-    tp = builtins.__xonsh__.commands_cache.threadable_predictors
-    tp.update(threadable_predictors)
+    if threadable_predictors:
+        print_warning("threadable_predictors has been deprecated.")
