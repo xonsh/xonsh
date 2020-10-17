@@ -478,12 +478,22 @@ def _xonfig_format_human(data):
     wcol1 = wcol2 = 0
     for key, val in data:
         wcol1 = max(wcol1, len(key))
-        wcol2 = max(wcol2, len(str(val)))
+        if type(val) == list:
+            for subval in val:
+                wcol2 = max(wcol2, len(str(subval)))
+        else:
+            wcol2 = max(wcol2, len(str(val)))
     hr = "+" + ("-" * (wcol1 + 2)) + "+" + ("-" * (wcol2 + 2)) + "+\n"
     row = "| {key!s:<{wcol1}} | {val!s:<{wcol2}} |\n"
     s = hr
     for key, val in data:
-        s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
+        if type(val) == list:
+            for i, subval in enumerate(val):
+                s += row.format(
+                    key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
+                )
+        else:
+            s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
     s += hr
     return s
 
@@ -537,9 +547,8 @@ def _info(ns):
         pass
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
-    if "_xontribs" in builtins.__xonsh__.ctx:
-        xontribs = ", ".join(builtins.__xonsh__.ctx["_xontribs"])
-        data.extend([("xontribs", xontribs)])
+    xontribs = [s.split(".")[1] for s in sys.modules if s.startswith("xontrib.")]
+    data.extend([("xontrib", xontribs)])
 
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
