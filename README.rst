@@ -1,4 +1,5 @@
 .. raw:: html
+
     <p align="center">
     <b>xonsh</b> is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
     </p>
@@ -12,21 +13,25 @@
    :alt: Join the chat at https://gitter.im/xonsh/xonsh
    :target: https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-
 .. image:: https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green
+   :align: center
    :alt: Matrix room: #xonsh:feneas.org
    :target: https://matrix.to/#/#xonsh:feneas.org
 
 .. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=master
+    :align: center
     :target: https://travis-ci.org/xonsh/xonsh
 
 .. image:: https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true
+    :align: center
     :target: https://ci.appveyor.com/project/xonsh/xonsh
 
 .. image:: https://circleci.com/gh/xonsh/xonsh.svg?style=shield
+    :align: center
     :target: https://circleci.com/gh/xonsh/xonsh
 
 .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg
+    :align: center
     :target: https://codecov.io/gh/xonsh/xonsh
 
 First steps
