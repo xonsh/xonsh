@@ -5,7 +5,7 @@
     </p>
 
     <p align="center">
-    <img src="docs/_static/xonsh4.png" alt="What is xonsh?">
+    <a href="https://xon.sh/contents.html#installation"><img src="docs/_static/xonsh4.png" alt="What is xonsh?"></a>
     </p>
 
     <p align="center">
