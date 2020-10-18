@@ -1,4 +1,4 @@
-# amalgamate exclude
+# amalgamate exclude pty_server
 import os as _os
 
 if _os.getenv("XONSH_DEBUG", ""):

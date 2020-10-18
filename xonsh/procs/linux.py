@@ -1,17 +1,53 @@
+"""Linux-specific process tools."""
+import os
 import io
-import termios
+import sys
 import select
 import socket
-import os
-import fcntl
 import argparse
+
+import xonsh.lazyasd as xl
+import xonsh.lazyimps as xli
+
+
+@xl.lazyobject
+def PTY_SERVER_PATH():
+    return os.path.join(os.path.dirname(__file__), "pty_server.py")
+
+
+# Maximum port value allowed
+MAX_PTY_PORT = 65535
+# This value is equal to `sum(map(ord, "xonsh")) * 64`, because why not
+INITIAL_PTY_PORT = 35840
+
+
+def _is_port_open(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(("127.0.0.1", port))
+        except socket.error as e:
+            return False
+    return True
+
+
+def _find_next_open_port():
+    """Gets the next valid port number."""
+    for port in range(INITIAL_PTY_PORT, MAX_PTY_PORT):
+        if _is_port_open(port):
+            return port
+    else:
+        raise RuntimeError("No ports available for PTY subprocess command")
+
+
+def serve_pty_command(command):
+    """Starts up a PTY server for a specific command."""
+    port = _find_next_open_port()
+    os.spawn(os.P_NO_WAIT, sys.execuatble, PTY_SERVER_PATH, port, command)
+    return port
+
 
 class PTY:
     def __init__(self, slave=0, pid=os.getpid()):
-        # apparently python GC's modules before class instances so, here
-        # we have some hax to ensure we can restore the terminal state.
-        self.termios, self.fcntl = termios, fcntl
-
         # open our controlling PTY
         ptylink = os.readlink(f"/proc/{pid}/fd/{slave}")
         print(ptylink)
@@ -19,28 +55,28 @@ class PTY:
 
         # store our old termios settings so we can restore after
         # we are finished
-        self.oldtermios = termios.tcgetattr(self.pty)
+        self.oldtermios = xli.termios.tcgetattr(self.pty)
 
         # get the current settings se we can modify them
-        newattr = termios.tcgetattr(self.pty)
+        newattr = xli.termios.tcgetattr(self.pty)
 
         # set the terminal to uncanonical mode and turn off
         # input echo.
-        newattr[3] &= ~termios.ICANON & ~termios.ECHO
+        newattr[3] &= ~xli.termios.ICANON & ~xli.termios.ECHO
 
         # don't handle ^C / ^Z / ^\
-        newattr[6][termios.VINTR] = b'\x00'
-        newattr[6][termios.VQUIT] = b'\x00'
-        newattr[6][termios.VSUSP] = b'\x00'
+        newattr[6][xli.termios.VINTR] = b'\x00'
+        newattr[6][xli.termios.VQUIT] = b'\x00'
+        newattr[6][xli.termios.VSUSP] = b'\x00'
 
         # set our new attributes
-        termios.tcsetattr(self.pty, termios.TCSADRAIN, newattr)
+        xli.termios.tcsetattr(self.pty, xli.termios.TCSADRAIN, newattr)
 
         # store the old fcntl flags
-        self.oldflags = fcntl.fcntl(self.pty, fcntl.F_GETFL)
+        self.oldflags = xli.fcntl.fcntl(self.pty, xli.fcntl.F_GETFL)
         # fcntl.fcntl(self.pty, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
         # make the PTY non-blocking
-        fcntl.fcntl(self.pty, fcntl.F_SETFL, self.oldflags | os.O_NONBLOCK)
+        xli.fcntl.fcntl(self.pty, xli.fcntl.F_SETFL, self.oldflags | os.O_NONBLOCK)
 
     def read(self, size=8192):
         return self.pty.read(size)
@@ -55,11 +91,12 @@ class PTY:
 
     def __del__(self):
         # restore the terminal settings on deletion
-        self.termios.tcsetattr(self.pty, self.termios.TCSAFLUSH, self.oldtermios)
-        self.fcntl.fcntl(self.pty, self.fcntl.F_SETFL, self.oldflags)
+        xli.termios.tcsetattr(self.pty, xli.termios.TCSAFLUSH, self.oldtermios)
+        xli.fcntl.fcntl(self.pty, xli.fcntl.F_SETFL, self.oldflags)
 
-class Shell:
-    def __init__(self, addr, bind=True):
+
+class PopenPTYClient:
+    def __init__(self, addr, bind=False):
         self.bind = bind
         self.addr = addr
 

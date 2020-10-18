@@ -1,6 +1,7 @@
 """Python TCP PTY server.
 
 Binds a PTY to a TCP port on the host it is ran on.
+This is separate script from other parts of this sub-package.
 """
 import os
 import sys
