@@ -32,15 +32,19 @@ def cd_in_command(line):
             break
     return have_cd
 
+def _pstring_quote_length(s):
+    """Purposely excludes 'fp' and 'pf' strings"""
+    for pre in ('p', 'pr', 'rp'):
+        for q in ('"', "'"):
+            if s.startswith(f"{pre}{q}"):
+                return len(pre)
+    return 0
 
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
         pos = len(inp)
     partial = inp[:pos]
     startix, endix, quote = xt.check_for_partial_string(partial)
-    # if pathlib literal, strip leading `p`
-    if quote in ('p"', "p'"):
-        startix += 1
     _post = ""
     if startix is None:
         return None
@@ -54,6 +58,13 @@ def _path_from_partial_string(inp, pos=None):
             else:
                 return None
         string = partial[startix:endix]
+
+    # If 'pr'/'rp', treat as raw string, otherwise strip leading 'p'
+    pstring_len = _pstring_quote_length(quote)
+    if pstring_len == 2:
+        string = f"r{string[2:]}"
+    elif pstring_len == 1:
+        string = string.lstrip('p') # explicit is better
 
     end = xt.RE_STRING_START.sub("", quote)
     _string = string
@@ -283,8 +294,11 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     lprefix = len(prefix)
     if p is not None:
         lprefix = len(p[0])
+        # Compensate for 'p' if p-string variant
+        if _pstring_quote_length(p[2]) > 0:
+            lprefix += 1
         prefix = p[1]
-        path_str_start = p[2].lstrip("p")
+        path_str_start = p[2]
         path_str_end = p[3]
         if len(line) >= end + 1 and line[end] == path_str_end:
             append_end = False
