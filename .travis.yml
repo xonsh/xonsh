@@ -40,6 +40,7 @@ script:
       cd docs;
       make html;
       cd ..;
+      git diff;
       doctr deploy --deploy-repo xonsh/xonsh-docs dev;
       git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
       git clean -fdx;
