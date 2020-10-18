@@ -1,3 +1,5 @@
+.. class:: center
+
 **xonsh** is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
 
 If you like the idea of xonsh click :star: on the repo and stay tuned by watching releases.
