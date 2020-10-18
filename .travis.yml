@@ -38,7 +38,7 @@ script:
   - set -ex
   - if [[ $BUILD_DOCS = true ]]; then
       git clean -fdx;
-      git reset --hard
+      git reset --hard;
       pip install --upgrade --force-reinstall .;
       cd docs;
       make html;
