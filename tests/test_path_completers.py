@@ -1,8 +1,9 @@
 import pytest
 from unittest.mock import patch
 import tempfile
-
+from xonsh.platform import ON_WINDOWS
 import xonsh.completers.path as xcp
+
 
 
 @pytest.fixture(autouse=True)
@@ -52,9 +53,13 @@ def test_complete_path_when_prefix_is_path_literal(quote, xonsh_builtins):
         "CDPATH": set(),
     }
     with tempfile.NamedTemporaryFile(suffix="_dummySuffix") as tmp:
-        prefix_file_name = tmp.name.replace("_dummySuffix", "")
+        filename = pathlib.Path(tmp.name).as_posix()
+        prefix_file_name = filename.replace("_dummySuffix", "")
         prefix = f"p{quote}{prefix_file_name}"
         line = f"ls {prefix}"
         out = xcp.complete_path(prefix, line, line.find(prefix), len(line), dict())
-        expected = [f"{quote}{tmp.name}{quote}"]
-        assert list(out[0]) == expected
+        completed_filename = out[0].pop()
+        if ON_WINDOWS:
+            assert filename == completed_filename[2:-1]
+        else:
+            assert filename == completed_filename[1:-1]
