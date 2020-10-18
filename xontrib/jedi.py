@@ -138,7 +138,7 @@ def create_completion(comp):
 xonsh.completers.base.complete_python = complete_jedi
 
 # Jedi ignores leading '@(' and friends
-completer remove python_mode
+del __xonsh__.completers['python_mode']
 
-completer add jedi_python complete_jedi '<python'
-completer remove python
+__xonsh__.completers['jedi_python'] = complete_jedi
+del __xonsh__.completers['python']
