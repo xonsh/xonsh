@@ -40,11 +40,7 @@ def jedi_xontrib(monkeypatch, source_path, jedi_mock, completer_mock):
 
 
 def test_completer_added(jedi_xontrib, completer_mock):
-    assert completer_mock.call_args_list == [
-        call(["remove", "python_mode"]),
-        call(["add", "jedi_python", "complete_jedi", "<python"]),
-        call(["remove", "python"]),
-    ]
+    assert 'jedi_python' in __xonsh__.completers
 
 
 @pytest.mark.parametrize(
