@@ -4,7 +4,9 @@
     <b>xonsh</b> is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
     </p>
 
+    <p align="center">
     <img src="docs/_static/xonsh4.png" alt="What is xonsh?">
+    </p>
 
     <p align="center">
     If you like the idea of xonsh click :star: on the repo and stay tuned by watching releases.
