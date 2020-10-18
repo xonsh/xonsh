@@ -1,12 +1,17 @@
-.. class:: center
+.. raw:: html
+    <p align="center">
+    <b>xonsh</b> is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
+    </p>
 
-    **xonsh** is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
-
+    <p align="center">
     If you like the idea of xonsh click :star: on the repo and stay tuned by watching releases.
+    </p>
 
 .. image:: https://badges.gitter.im/xonsh/xonsh.svg
+   :align: center
    :alt: Join the chat at https://gitter.im/xonsh/xonsh
    :target: https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 
 .. image:: https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green
    :alt: Matrix room: #xonsh:feneas.org
