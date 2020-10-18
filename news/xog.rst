@@ -1,6 +1,7 @@
 **Added:**
 
-* <news item>
+* ``xog`` xontrib - a simple command to establish and print temporary traceback
+  log file.
 
 **Changed:**
 
@@ -16,7 +17,7 @@
 
 **Fixed:**
 
-* Fixed reset color in ``xontrib list``.
+* <news item>
 
 **Security:**
 

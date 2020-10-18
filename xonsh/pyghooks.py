@@ -61,7 +61,7 @@ from xonsh.platform import (
     pygments_version_info,
 )
 
-from xonsh.pygments_cache import get_style_by_name
+from xonsh.pygments_cache import get_style_by_name, add_custom_style
 
 from xonsh.events import events
 
@@ -234,7 +234,8 @@ def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
         tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
-    styles[token] = pc
+    if token not in styles:
+        styles[token] = pc
     return token
 
 
@@ -435,6 +436,82 @@ def xonsh_style_proxy(styler):
             return cls.target
 
     return XonshStyleProxy
+
+
+def _get_token_by_name(name):
+    """Get pygments token object by its string representation."""
+    token = Token
+    parts = name.split(".")
+
+    if len(parts) == 1:
+        parts = ["Color"] + parts
+
+    if parts[0] == "Token":
+        parts = parts[1:]
+
+    while len(parts):
+        token = getattr(token, parts[0])
+        parts = parts[1:]
+
+    return token
+
+
+def register_custom_pygments_style(
+    name, styles, highlight_color=None, background_color=None, base="default"
+):
+    """Register custom style.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    styles : dict
+        Token -> style mapping.
+    highlight_color : str
+        Hightlight color.
+    background_color : str
+        Background color.
+    base : str, optional
+        Base style to use as default.
+
+    Returns
+    -------
+    style : The ``pygments.Style`` subclass created
+    """
+    base_style = get_style_by_name(base)
+    custom_styles = base_style.styles.copy()
+
+    for token, value in styles.items():
+        if isinstance(token, str):
+            token = _get_token_by_name(token)
+        custom_styles[token] = value
+
+    style = type(
+        f"Custom{name}Style",
+        (Style,),
+        {
+            "styles": custom_styles,
+            "highlight_color": highlight_color
+            if highlight_color is not None
+            else base_style.highlight_color,
+            "background_color": background_color
+            if background_color is not None
+            else base_style.background_color,
+        },
+    )
+
+    add_custom_style(name, style)
+
+    cmap = pygments_style_by_name(base).copy()
+
+    # replace colors in color map if found in styles
+    for token in cmap.keys():
+        if token in custom_styles:
+            cmap[token] = custom_styles[token]
+
+    STYLES[name] = cmap
+
+    return style
 
 
 PTK_STYLE = LazyObject(
