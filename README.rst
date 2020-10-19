@@ -1,3 +1,6 @@
+xonsh
+=====
+
 .. raw:: html
 
     <p align="center">
