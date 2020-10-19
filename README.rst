@@ -6,7 +6,7 @@
 
     <p align="center">
     The language is a superset of Python 3.5+ with additional shell primitives. <br>
-    xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
+    xonsh (pronounced <i>conch</i>) is meant for the daily use of experts and novices alike.
     </p>
 
     <p align="center">
