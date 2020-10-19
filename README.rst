@@ -5,11 +5,16 @@
     </p>
 
     <p align="center">
+    The language is a superset of Python 3.5+ with additional shell primitives.
+    xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
+    </p>
+
+    <p align="center">
     <a href="https://xon.sh/contents.html#installation"><img src="https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/xonsh4.png" alt="What is xonsh?"></a>
     </p>
 
     <p align="center">
-    If you like the idea of xonsh click :star: on the repo and stay tuned by watching releases.
+    If you like xonsh, :star: the repo and stay tuned by watching releases.
     </p>
 
     <p align="center">
