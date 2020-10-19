@@ -10,4 +10,4 @@ codecov
 coverage
 black==19.10b0 --pre
 pre-commit
-mypy>=0.782
+mypy==0.790

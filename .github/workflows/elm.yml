@@ -14,6 +14,12 @@ jobs:
     name: Python 3.7 Elm Check Ubuntu
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/conda_pkgs_dir
+          key: elm-env-${{ hashFiles('ci/environment-elm.yml') }}
+          restore-keys: |
+            elm-env-
       - name: Setup conda
         uses: conda-incubator/setup-miniconda@v1
         with:

@@ -25,10 +25,10 @@ before_install:
 install:
   - if [[ $BUILD_DOCS = true ]]; then
       pip install --upgrade -r requirements/docs.txt;
-      python setup.py install;
+      pip install .;
     else
       pip install --upgrade -r requirements/tests.txt;
-      python setup.py install;
+      pip install .;
     fi
 
 before_script:
@@ -49,5 +49,5 @@ script:
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs .;
     else
-      xonsh run-tests.xsh;
+      xonsh run-tests.xsh test;
     fi
