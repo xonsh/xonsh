@@ -1617,10 +1617,12 @@ def ptk2_color_depth_setter(x):
 
 
 def is_completions_display_value(x):
+    """Enumerated values of ``$COMPLETIONS_DISPLAY``"""
     return x in {"none", "single", "multi"}
 
 
 def to_completions_display_value(x):
+    """Convert user input to value of ``$COMPLETIONS_DISPLAY``"""
     x = str(x).lower()
     if x in {"none", "false"}:
         x = "none"
@@ -1636,14 +1638,16 @@ def to_completions_display_value(x):
     return x
 
 
-CANONIC_COMPLETION_MODES = ("default", "menu-complete")
+CANONIC_COMPLETION_MODES = frozenset({"default", "menu-complete"})
 
 
 def is_completion_mode(x):
+    """Enumerated values of $COMPLETION_MODE"""
     return x in CANONIC_COMPLETION_MODES
 
 
 def to_completion_mode(x):
+    """Convert user input to value of $COMPLETION_MODE"""
     y = str(x).casefold().replace("_", "-")
     y = (
         "default"
