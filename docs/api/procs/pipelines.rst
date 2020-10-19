@@ -1,4 +1,4 @@
-.. _xonsh_procs_piplines:
+.. _xonsh_procs_pipelines:
 
 ************************************************
 Subprocess Pipelines (``xonsh.procs.pipelines``)
