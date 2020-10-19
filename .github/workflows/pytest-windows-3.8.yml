@@ -18,16 +18,25 @@ jobs:
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/conda_pkgs_dir
+            ~/miniconda*/envs/
+          key: ${{ runner.os }}-${{ matrix.python-version }}-env-${{ hashFiles('requirements/tests.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version }}-env-
       - name: Setup conda
         uses: conda-incubator/setup-miniconda@v1
         with:
-          activate-environment: ${{matrix.python-version}}-xonsh-test
-          environment-file: ci/environment-${{matrix.python-version}}.yml
+          activate-environment: xonsh-test
           update-conda: true
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}  # this itself makes sure that Python version is installed
           condarc-file: ci/condarc.yml
       - shell: bash -l {0}
         run: |
+          python -m pip --version
+          python -m pip install -r requirements/tests.txt
           python -m pip install . --no-deps
-          python -m xonsh run-tests.xsh --timeout=240
+          python -m xonsh run-tests.xsh test -- --timeout=240
 

@@ -47,7 +47,7 @@ from xonsh.tools import (
     color_style,
 )
 from xonsh.foreign_shells import CANON_SHELL_NAMES
-from xonsh.xontribs import xontrib_metadata, find_xontrib
+from xonsh.xontribs import xontrib_metadata, find_xontrib, xontribs_loaded
 from xonsh.lazyasd import lazyobject
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
@@ -478,12 +478,22 @@ def _xonfig_format_human(data):
     wcol1 = wcol2 = 0
     for key, val in data:
         wcol1 = max(wcol1, len(key))
-        wcol2 = max(wcol2, len(str(val)))
+        if isinstance(val, list):
+            for subval in val:
+                wcol2 = max(wcol2, len(str(subval)))
+        else:
+            wcol2 = max(wcol2, len(str(val)))
     hr = "+" + ("-" * (wcol1 + 2)) + "+" + ("-" * (wcol2 + 2)) + "+\n"
     row = "| {key!s:<{wcol1}} | {val!s:<{wcol2}} |\n"
     s = hr
     for key, val in data:
-        s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
+        if isinstance(val, list) and val:
+            for i, subval in enumerate(val):
+                s += row.format(
+                    key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
+                )
+        else:
+            s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)
     s += hr
     return s
 
@@ -536,6 +546,8 @@ def _info(ns):
     except Exception:
         pass
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
+
+    data.extend([("xontrib", xontribs_loaded())])
 
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)

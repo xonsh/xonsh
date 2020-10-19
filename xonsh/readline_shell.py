@@ -29,12 +29,7 @@ from xonsh.ansi_colors import (
     ansi_color_style,
 )
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import (
-    print_exception,
-    to_bool,
-    columnize,
-    carriage_return,
-)
+from xonsh.tools import print_exception, to_bool, columnize, carriage_return
 from xonsh.platform import (
     ON_WINDOWS,
     ON_CYGWIN,
