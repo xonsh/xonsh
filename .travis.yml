@@ -49,5 +49,5 @@ script:
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs .;
     else
-      xonsh run-tests.xsh;
+      xonsh run-tests.xsh test;
     fi
