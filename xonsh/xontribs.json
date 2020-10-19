@@ -47,7 +47,7 @@
   "package": "xontrib-back2dir",
   "url": "https://github.com/anki-code/xontrib-back2dir",
   "description": [
-    "Return to the most recently used directory when starting xonsh shell. ",
+    "Return to the most recently used directory when starting the xonsh shell. ",
     "For example, if you were in the '/work' directory when you last exited xonsh, ",
     "then your next xonsh session will start in the '/work' directory, instead of your home directory."]
  },
