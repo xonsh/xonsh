@@ -356,6 +356,7 @@ def main():
         "console_scripts": [
             "xonsh = xonsh.main:main",
             "xonsh-cat = xonsh.xoreutils.cat:cat_main",
+            "xonsh-uname = xonsh.xoreutils.uname:uname_main",
         ],
     }
     skw["cmdclass"]["develop"] = xdevelop
