@@ -21,12 +21,12 @@ xonsh
     </p>
 
     <p align="center">
-    <img src="https://badges.gitter.im/xonsh/xonsh.svg" alt="Join the chat at https://gitter.im/xonsh/xonsh" target="https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
-    <img src="https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green" alt="Matrix room: #xonsh:feneas.org" target="https://matrix.to/#/#xonsh:feneas.org">
-    <img src="https://travis-ci.org/xonsh/xonsh.svg?branch=master" alt="Travis" target="https://travis-ci.org/xonsh/xonsh">
-    <img src="https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true" alt="Appveyor" target="https://ci.appveyor.com/project/xonsh/xonsh">
-    <img src="https://circleci.com/gh/xonsh/xonsh.svg?style=shield" alt="circleci" target="https://circleci.com/gh/xonsh/xonsh">
-    <img src="https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg" alt="codecov" target="https://codecov.io/gh/xonsh/xonsh">
+    <a href="https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/xonsh/xonsh.svg" alt="Join the chat at https://gitter.im/xonsh/xonsh"></a>
+    <a href="https://matrix.to/#/#xonsh:feneas.org"><img src="https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green" alt="Matrix room: #xonsh:feneas.org"></a>
+    <a href="https://travis-ci.org/xonsh/xonsh"><img src="https://travis-ci.org/xonsh/xonsh.svg?branch=master" alt="Travis"></a>
+    <a href="https://ci.appveyor.com/project/xonsh/xonsh"><img src="https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true" alt="Appveyor"></a>
+    <a href="https://circleci.com/gh/xonsh/xonsh"><img src="https://circleci.com/gh/xonsh/xonsh.svg?style=shield" alt="circleci"></a>
+    <a href="https://codecov.io/gh/xonsh/xonsh"><img src="https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg" alt="codecov"></a>
     </p>
 
 First steps
