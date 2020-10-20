@@ -101,15 +101,14 @@ class CommandsCache(cabc.Mapping):
         if cache_valid:
             return self._cmds_cache
         allcmds = {}
-        cnt = 0
         for path in reversed(path_immut):
             # iterate backwards so that entries at the front of PATH overwrite
             # entries at the back.
             for cmd in executables_in(path):
-                cnt += 1
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
 
+        cnt = len(allcmds)
         if cnt > builtins.__xonsh__.env.get("XONSH_WARNING_PATH_FILES", 10000):
             print(
                 f"Warning! Found {cnt:,} executable files in the PATH directories!\n",

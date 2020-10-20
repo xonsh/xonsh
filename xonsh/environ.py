@@ -1730,7 +1730,7 @@ def DEFAULT_VARS():
             int,
             str,
             10000,
-            "Minimal number of files in the PATH directories to show warning.",
+            "Number of files on the PATH above which a warning is shown.",
         ),
     }
 
