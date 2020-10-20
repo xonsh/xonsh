@@ -155,7 +155,7 @@ def test_locate_binary_on_windows(xonsh_builtins):
             with open(fpath, "w") as f:
                 f.write(fpath)
         xonsh_builtins.__xonsh__.env.update(
-            {"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]}
+            {"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"], "XONSH_WARNING_PATH_FILES":10000}
         )
         xonsh_builtins.__xonsh__.commands_cache = CommandsCache()
         assert locate_binary("file1") == os.path.join(tmpdir, "file1.exe")
