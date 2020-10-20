@@ -1,6 +1,6 @@
 **Added:**
 
-* Add command line ``uname``
+* Add command line ``uname`` based on ``platform`` module
 
 **Changed:**
 

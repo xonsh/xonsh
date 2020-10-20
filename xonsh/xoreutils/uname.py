@@ -1,4 +1,4 @@
-import os
+import platform
 import sys
 from xonsh.xoreutils.util import arg_handler
 
@@ -68,22 +68,25 @@ def uname(args, stdin, stdout, stderr):
         opts['operating_system'] = True
 
     if opts['kernel_name']:
-        line.append(os.uname().sysname)
+        line.append(platform.uname().system)
 
     if opts['nodename']:
-        line.append(os.uname().nodename)
+        line.append(platform.uname().node)
 
     if opts['kernel_release']:
-        line.append(os.uname().release)
+        line.append(platform.uname().release)
 
     if opts['kernel_version']:
-        line.append(os.uname().version)
+        line.append(platform.uname().version)
 
     if opts['machine']:
-        line.append(os.uname().machine)
+        line.append(platform.uname().machine)
 
     if opts['processor']:
-        line.append('unknown')
+        if platform.uname().processor == '':
+            line.append('unknown')
+        else:
+            line.append(platform.uname().processor)
 
     if opts['hardware_platform']:
         line.append('unknown')
