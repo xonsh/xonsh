@@ -1,31 +1,36 @@
 xonsh
 =====
 
-.. image:: https://badges.gitter.im/xonsh/xonsh.svg
-   :alt: Join the chat at https://gitter.im/xonsh/xonsh
-   :target: https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. raw:: html
 
-.. image:: https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green
-   :alt: Matrix room: #xonsh:feneas.org
-   :target: https://matrix.to/#/#xonsh:feneas.org
+    <p align="center">
+    <b>xonsh</b> is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
+    </p>
 
-.. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=master
-    :target: https://travis-ci.org/xonsh/xonsh
+    <p align="center">
+    The language is a superset of Python 3.5+ with additional shell primitives. <br>
+    xonsh (pronounced <i>conch</i>) is meant for the daily use of experts and novices alike.
+    </p>
 
-.. image:: https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true
-    :target: https://ci.appveyor.com/project/xonsh/xonsh
+    <p align="center">
+    <a href="https://xon.sh/contents.html#installation"><img src="https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/xonsh4.png" alt="What is xonsh?"></a>
+    </p>
 
-.. image:: https://circleci.com/gh/xonsh/xonsh.svg?style=shield
-    :target: https://circleci.com/gh/xonsh/xonsh
+    <p align="center">
+    If you like xonsh, :star: the repo and stay tuned by watching releases.
+    </p>
 
-.. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/xonsh/xonsh
+    <p align="center">
+    <a href="https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge" target="_blank"><img src="https://badges.gitter.im/xonsh/xonsh.svg" alt="Join the chat at https://gitter.im/xonsh/xonsh"></a>
+    <a href="https://matrix.to/#/#xonsh:feneas.org" target="_blank"><img src="https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green" alt="Matrix room: #xonsh:feneas.org"></a>
+    <a href="https://travis-ci.org/xonsh/xonsh" target="_blank"><img src="https://travis-ci.org/xonsh/xonsh.svg?branch=master" alt="Travis"></a>
+    <a href="https://ci.appveyor.com/project/xonsh/xonsh" target="_blank"><img src="https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true" alt="Appveyor"></a>
+    <a href="https://circleci.com/gh/xonsh/xonsh" target="_blank"><img src="https://circleci.com/gh/xonsh/xonsh.svg?style=shield" alt="circleci"></a>
+    <a href="https://codecov.io/gh/xonsh/xonsh" target="_blank"><img src="https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg" alt="codecov"></a>
+    </p>
 
-xonsh is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
-The language is a superset of Python 3.5+ with additional shell primitives.
-xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
-
-If you like the idea of xonsh click :star: on the repo and stay tuned by watching releases.
+First steps
+***********
 
 Visit https://xon.sh for more information:
 
