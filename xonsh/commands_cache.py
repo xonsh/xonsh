@@ -7,12 +7,13 @@ and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
 import os
+import sys
 import time
 import builtins
 import argparse
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_POSIX, pathbasename
+from xonsh.platform import ON_WINDOWS, ON_POSIX, ON_WSL, pathbasename
 from xonsh.tools import executables_in
 from xonsh.lazyasd import lazyobject
 
@@ -100,12 +101,21 @@ class CommandsCache(cabc.Mapping):
         if cache_valid:
             return self._cmds_cache
         allcmds = {}
+        cnt = 0
         for path in reversed(path_immut):
             # iterate backwards so that entries at the front of PATH overwrite
             # entries at the back.
             for cmd in executables_in(path):
+                cnt += 1
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
+
+        if cnt > builtins.__xonsh__.env.get("XONSH_WARNING_PATH_FILES"):
+            print(
+                f"Warning! Found {cnt:,} executable files in the PATH directories!\n",
+                file=sys.stderr,
+            )
+
         for cmd in alss:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd

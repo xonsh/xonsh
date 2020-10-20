@@ -1725,6 +1725,13 @@ def DEFAULT_VARS():
             "or None / the empty string if traceback logging is not desired. "
             "Logging to a file is not enabled by default.",
         ),
+        "XONSH_WARNING_PATH_FILES": Var(
+            is_int,
+            int,
+            str,
+            10000,
+            "Minimal number of files in the PATH directories to show warning.",
+        ),
     }
 
     if hasattr(locale, "LC_MESSAGES"):
