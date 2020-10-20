@@ -90,20 +90,6 @@ class TestWhich:
             return os.path.samefile(path1, path2)
 
 
-def test_uptime():
-    up = uptime.uptime()
-    assert up is not None
-    assert up > 0.0
-
-
-def test_boottime():
-    bt = uptime.boottime()
-    assert bt is not None
-    assert bt > 0.0
-    assert uptime._BOOTTIME is not None
-    assert uptime._BOOTTIME > 0.0
-
-
 @pytest.fixture
 def cat_env_fixture(xession):
     with xession.env.swap(
