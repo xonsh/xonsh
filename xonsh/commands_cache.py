@@ -13,7 +13,7 @@ import builtins
 import argparse
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_POSIX, ON_WSL, pathbasename
+from xonsh.platform import ON_WINDOWS, ON_POSIX, pathbasename
 from xonsh.tools import executables_in
 from xonsh.lazyasd import lazyobject
 
