@@ -52,7 +52,7 @@ from xonsh.color_tools import (
     iscolor,
     warn_deprecated_no_color,
 )
-from xonsh.style_tools import norm_name
+from xonsh.style_tools import norm_name, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import terminal256, html
 from xonsh.platform import (
     os_environ,
@@ -382,8 +382,12 @@ class XonshStyle(Style):
                 self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
-        compound = CompoundColorMap(ChainMap(self.trap, cmap, self._smap, PTK_STYLE))
-        self.styles = ChainMap(self.trap, cmap, self._smap, PTK_STYLE, compound)
+        compound = CompoundColorMap(
+            ChainMap(self.trap, cmap, self._smap, DEFAULT_STYLE_DICT)
+        )
+        self.styles = ChainMap(
+            self.trap, cmap, self._smap, DEFAULT_STYLE_DICT, compound
+        )
         self._style_name = value
 
         for file_type, xonsh_color in builtins.__xonsh__.env.get(
@@ -512,22 +516,6 @@ def register_custom_pygments_style(
     STYLES[name] = cmap
 
     return style
-
-
-PTK_STYLE = LazyObject(
-    lambda: {
-        Token.Menu.Completions: "bg:ansigray ansiblack",
-        Token.Menu.Completions.Completion: "",
-        Token.Menu.Completions.Completion.Current: "bg:ansibrightblack ansiwhite",
-        Token.Scrollbar: "bg:ansibrightblack",
-        Token.Scrollbar.Button: "bg:ansiblack",
-        Token.Scrollbar.Arrow: "bg:ansiblack ansiwhite bold",
-        Token.AutoSuggestion: "ansibrightblack",
-        Token.Aborted: "ansibrightblack",
-    },
-    globals(),
-    "PTK_STYLE",
-)
 
 
 XONSH_BASE_STYLE = LazyObject(

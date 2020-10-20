@@ -30,8 +30,6 @@ from xonsh.platform import (
     os_environ,
 )
 
-from xonsh.style_tools import PTK2_STYLE
-
 from xonsh.tools import (
     always_true,
     always_false,
@@ -1203,12 +1201,12 @@ def DEFAULT_VARS():
             "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
             "colors. Default is an empty string which means that prompt toolkit decide.",
         ),
-        "PTK_STYLE_OVERRIDES": Var(
+        "XONSH_STYLE_OVERRIDES": Var(
             is_str_str_dict,
             to_str_str_dict,
             dict_to_str,
-            dict(PTK2_STYLE),
-            "A dictionary containing custom prompt_toolkit style definitions.",
+            {},
+            "A dictionary containing custom prompt_toolkit/pygments style definitions.",
         ),
         "PUSHD_MINUS": Var(
             is_bool,

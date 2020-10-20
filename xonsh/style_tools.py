@@ -347,19 +347,16 @@ DEFAULT_STYLE_DICT = LazyObject(
             Token.Scrollbar.Button: "bg:ansiblack",
             Token.Text: "",
             Token.Text.Whitespace: "ansigray",
+            Token.PTK.CompletionMenu: "bg:ansigray ansiblack",
+            Token.PTK.CompletionMenu.Completion: "",
+            Token.PTK.CompletionMenu.Completion.Current: "bg:ansibrightblack ansiwhite",
+            Token.PTK.Scrollbar.Background: "bg:ansibrightblack",
+            Token.PTK.Scrollbar.Arrow: "bg:ansiblack ansiwhite bold",
+            Token.PTK.Scrollbar.Button: "bg:ansiblack",
+            Token.PTK.AutoSuggestion: "ansibrightblack",
+            Token.PTK.Aborting: "ansibrightblack",
         },
     ),
     globals(),
     "DEFAULT_STYLE_DICT",
 )
-
-PTK2_STYLE = {
-    "completion-menu": "bg:ansigray ansiblack",
-    "completion-menu.completion": "",
-    "completion-menu.completion.current": "bg:ansibrightblack ansiwhite",
-    "scrollbar.background": "bg:ansibrightblack",
-    "scrollbar.arrow": "bg:ansiblack ansiwhite bold",
-    "scrollbar.button": "bg:ansiblack",
-    "auto-suggestion": "ansibrightblack",
-    "aborting": "ansibrightblack",
-}

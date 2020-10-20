@@ -96,6 +96,7 @@ def remove_ansi_osc(prompt):
 def _extract_ptk_style(pygments_style):
     """Extract PTK specific rules that are not handled by ``style_from_pygments_cls``
     """
+    # TODO integrate ``style_from_pygments_cls``
     rules = {}
     for rule, value in pygments_style.styles.items():
         if str(rule).startswith("Token.PTK"):
@@ -227,7 +228,7 @@ class PromptToolkitShell(BaseShell):
 
             prompt_args["style"] = style
 
-            style_overrides_env = env.get("PTK_STYLE_OVERRIDES")
+            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES")  # TODO
             if style_overrides_env:
                 try:
                     style_overrides = Style.from_dict(style_overrides_env)
