@@ -38,20 +38,23 @@ def uname(args, stdin, stdout, stderr):
     # control
     everything_is_false = True
     for key, value in list(opts.items()):
-        if key not in ["all",
-                       "kernel_name",
-                       "nodename",
-                       "kernel_release",
-                       "kernel_version",
-                       "machine",
-                       "processor",
-                       "hardware_platform",
-                       "operating_system",
-                       "version",
-                       "help",
-                       ]:
+        if key not in [
+            "all",
+            "kernel_name",
+            "nodename",
+            "kernel_release",
+            "kernel_version",
+            "machine",
+            "processor",
+            "hardware_platform",
+            "operating_system",
+            "version",
+            "help",
+        ]:
             stdout.write("{0}: unrecognized option '{1}'\n".format(__name__, key))
-            stdout.write("Try 'uname --help' for more information.\n".format(__name__, key))
+            stdout.write(
+                "Try 'uname --help' for more information.\n".format(__name__, key)
+            )
             stdout.flush()
             opts["help"] = True
         if value:
