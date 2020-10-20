@@ -1,6 +1,6 @@
 **Added:**
 
-* Added warning about huge amount of files in PATH directories.
+* Added warning about huge amount of files in $PATH directories.
 
 **Changed:**
 
