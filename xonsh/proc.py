@@ -12,15 +12,19 @@ def _print_proc_warning(msg):
         print_warning(msg)
         _WARNINGS_PRINTED[msg] = True
 
-_print_proc_warning("The xonsh.proc module has been deprecated in favor of the "
-                    "xonsh.procs subpackage.")
 
+_print_proc_warning(
+    "The xonsh.proc module has been deprecated in favor of the "
+    "xonsh.procs subpackage."
+)
 
 
 @lazyobject
 def STDOUT_CAPTURE_KINDS():
-    _print_proc_warning("xonsh.proc.STDOUT_CAPTURE_KINDS has been deprecated. "
+    _print_proc_warning(
+        "xonsh.proc.STDOUT_CAPTURE_KINDS has been deprecated. "
         "please use xonsh.procs.pipelines.STDOUT_CAPTURE_KINDS instead."
-        )
+    )
     import xonsh.procs.pipelines
+
     return xonsh.procs.pipelines.STDOUT_CAPTURE_KINDS
