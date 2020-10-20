@@ -6,7 +6,7 @@ import functools
 
 from xonsh.xoreutils import _which
 import xonsh.platform as xp
-import xonsh.proc as xproc
+import xonsh.procs.pipelines as xpp
 
 
 @functools.lru_cache()
@@ -128,7 +128,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
     pargs = parser.parse_args(args)
     verbose = pargs.verbose or pargs.all
     if spec is not None:
-        captured = spec.captured in xproc.STDOUT_CAPTURE_KINDS
+        captured = spec.captured in xpp.STDOUT_CAPTURE_KINDS
     else:
         captured = False
     if pargs.plain:

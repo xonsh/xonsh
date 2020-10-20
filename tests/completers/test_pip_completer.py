@@ -1,4 +1,5 @@
 import pytest
+
 from xonsh.completers.pip import PIP_RE, PIP_LIST_RE
 
 

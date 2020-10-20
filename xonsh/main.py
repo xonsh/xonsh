@@ -15,7 +15,6 @@ from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
 from xonsh.execer import Execer
-from xonsh.proc import HiddenCommandPipeline
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import print_color, to_bool_or_int
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -27,6 +26,8 @@ from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context, make_args_env
 from xonsh.built_ins import XonshSession, load_builtins
+
+import xonsh.procs.pipelines as xpp
 
 
 events.transmogrify("on_post_init", "LoadEvent")
@@ -247,7 +248,7 @@ def _pprint_displayhook(value):
     if value is None:
         return
     builtins._ = None  # Set '_' to None to avoid recursion
-    if isinstance(value, HiddenCommandPipeline):
+    if isinstance(value, xpp.HiddenCommandPipeline):
         builtins._ = value
         return
     env = builtins.__xonsh__.env

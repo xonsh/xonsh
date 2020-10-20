@@ -3,6 +3,7 @@ import argparse
 from typing import List
 
 
+$XONSH_DEBUG = 1
 $RAISE_SUBPROC_ERROR = True
 
 

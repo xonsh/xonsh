@@ -22,6 +22,7 @@ TABLES = [
     "xonsh/completers/__amalgam__.py",
     "xonsh/history/__amalgam__.py",
     "xonsh/prompt/__amalgam__.py",
+    "xonsh/procs/__amalgam__.py",
 ]
 
 
@@ -53,6 +54,7 @@ def amalgamate_source():
             "xonsh.completers",
             "xonsh.history",
             "xonsh.prompt",
+            "xonsh.procs",
         ]
     )
     sys.path.pop(0)
@@ -290,6 +292,7 @@ def main():
             "xonsh.ply.ply",
             "xonsh.ptk_shell",
             "xonsh.ptk2",
+            "xonsh.procs",
             "xonsh.parsers",
             "xonsh.xoreutils",
             "xontrib",
