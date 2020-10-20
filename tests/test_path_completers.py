@@ -3,7 +3,7 @@ from unittest.mock import patch
 import tempfile
 from xonsh.platform import ON_WINDOWS
 import xonsh.completers.path as xcp
-
+import pathlib
 
 
 @pytest.fixture(autouse=True)
@@ -58,8 +58,11 @@ def test_complete_path_when_prefix_is_path_literal(quote, xonsh_builtins):
         prefix = f"p{quote}{prefix_file_name}"
         line = f"ls {prefix}"
         out = xcp.complete_path(prefix, line, line.find(prefix), len(line), dict())
-        completed_filename = out[0].pop()
-        if ON_WINDOWS:
-            assert filename == completed_filename[2:-1]
+
+        if ON_WINDOWS:  # We get a raw string
+            quote_prefix = "rp"
         else:
-            assert filename == completed_filename[1:-1]
+            quote_prefix = "p"
+        expected = f"{quote_prefix}{quote}{tmp.name}{quote}"
+
+        assert expected == out[0].pop()
