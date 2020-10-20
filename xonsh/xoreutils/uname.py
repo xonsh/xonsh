@@ -2,12 +2,20 @@ import platform
 import sys
 from xonsh.xoreutils.util import arg_handler
 
-__version__ = '0.1'
-__name__ = 'uname'
-
 
 def uname(args, stdin, stdout, stderr):
-    """Print certain system information."""
+    """
+    Print certain system information.
+
+    :param args: Arguments like -a
+    :type args: list or None
+    :param stdin: The standard input
+    :type stdin: sys.stdin
+    :param stdout: The standard output
+    :type stdout: sys.stdout
+    :param stderr: The standard output
+    :type stderr: sys.stderr
+    """
 
     opts = _uname_parse_args(args)
 
@@ -53,7 +61,7 @@ def uname(args, stdin, stdout, stderr):
         opts['kernel_name'] = True
 
     if opts['version']:
-        print("{0} {1}".format(__name__, __version__), file=stdout)
+        print("{0} {1}".format("uname", "0.1"), file=stdout)
         return 0
 
     line = []
@@ -99,6 +107,14 @@ def uname(args, stdin, stdout, stderr):
 
 
 def _uname_parse_args(args):
+    """
+    Internal function for parse args
+
+    :param args: Arguments like -a
+    :type args: list or None
+    :return: A clean arguments list
+    :rtype: list or None
+    """
     out = {
         "all": False,
         "kernel_name": False,
@@ -149,6 +165,26 @@ Print certain system information.  With no OPTION, same as -s.
 
 
 def uname_main(args=None):
+    """
+        This version of cat was written in Python for the xonsh project: http://xon.sh
+        Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
+
+        Usage: uname [OPTION]...
+        Print certain system information.  With no OPTION, same as -s.
+
+          -a, --all                print all information, in the following order,
+                                     except omit -p and -i if unknown:
+          -s, --kernel-name        print the kernel name
+          -n, --nodename           print the network node hostname
+          -r, --kernel-release     print the kernel release
+          -v, --kernel-version     print the kernel version
+          -m, --machine            print the machine hardware name
+          -p, --processor          print the processor type (non-portable)
+          -i, --hardware-platform  print the hardware platform (non-portable)
+          -o, --operating-system   print the operating system
+              --help     display this help and exit
+              --version  output version information and exit
+    """
     import sys
     from xonsh.main import setup
 

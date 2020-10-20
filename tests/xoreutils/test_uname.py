@@ -208,8 +208,8 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes('{0} {1}\n'.format(
-            uname.__name__,
-            uname.__version__
+            "uname",
+            "0.1"
         ), DEFAULT_ENCODING)
 
     def test_uname_everything(self, uname_env_fixture):
@@ -230,11 +230,3 @@ class TestUname:
             'unknown',
             sys.platform
         ), DEFAULT_ENCODING)
-
-    # def test_uname_unknown(self, uname_env_fixture):
-    #     uname.uname(['--hello'], self.stdin, self.stdout, self.stderr)
-    #     self.stdout.flush()
-    #
-    #     assert self.stdout_buf.getvalue() == bytes('{0}\n'.format(
-    #         ""
-    #     ), DEFAULT_ENCODING)
