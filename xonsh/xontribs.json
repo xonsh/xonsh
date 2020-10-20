@@ -43,6 +43,14 @@
   "url": "https://github.com/AstraLuma/xontrib-avox",
   "description": ["Automatic (de)activation of virtual environments as you cd around"]
  },
+ {"name": "back2dir",
+  "package": "xontrib-back2dir",
+  "url": "https://github.com/anki-code/xontrib-back2dir",
+  "description": [
+    "Return to the most recently used directory when starting the xonsh shell. ",
+    "For example, if you were in the '/work' directory when you last exited xonsh, ",
+    "then your next xonsh session will start in the '/work' directory, instead of your home directory."]
+ },
  {"name": "bashisms",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -306,6 +314,13 @@
    "url": "https://github.com/anki-code/xontrib-argcomplete",
    "install": {
     "pip": "xpip install xontrib-argcomplete"
+   }
+  },
+  "xontrib-back2dir": {
+   "license": "BSD",
+   "url": "https://github.com/anki-code/xontrib-back2dir",
+   "install": {
+    "pip": "xpip install xontrib-back2dir"
    }
   },
   "xonsh-autoxsh": {
