@@ -46,6 +46,7 @@ def run_xonsh(
     env["XONSH_DEBUG"] = "0"  # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
+    env["XONSH_WARNING_PATH_FILES"] = "10000"
     env["PROMPT"] = ""
     xonsh = shutil.which("xonsh", path=PATH)
     if single_command:

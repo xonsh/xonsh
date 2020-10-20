@@ -109,7 +109,7 @@ class CommandsCache(cabc.Mapping):
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
 
         cnt = len(allcmds)
-        if cnt > builtins.__xonsh__.env.get("XONSH_WARNING_PATH_FILES", 10000):
+        if cnt > builtins.__xonsh__.env.get("XONSH_WARNING_PATH_FILES"):
             print(
                 f"Warning! Found {cnt:,} executable files in the PATH directories!",
                 file=sys.stderr,
