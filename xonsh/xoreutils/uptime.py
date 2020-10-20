@@ -8,6 +8,7 @@ If this module is invoked as a stand-alone script, it will print the current
 uptime in a human-readable format, or display an error message if it can't,
 to standard output.
 
+File forked from: https://github.com/Cairnarvon/uptime
 """
 try:
     import locale

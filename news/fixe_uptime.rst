@@ -8,6 +8,7 @@
 * Update uptime lib by the last one from Pypi
 * Change boottime return for return timestamp float type require to xonsh
 * Merge the entire uptime module inside a single file
+* Black reformat
 
 **Deprecated:**
 
