@@ -16,6 +16,8 @@ def uname(args, stdin, stdout, stderr):
     :param stderr: The standard output
     :type stderr: sys.stderr
     """
+    if stdout is None:
+        stdout = sys.stdout
 
     opts = _uname_parse_args(args)
 
@@ -35,36 +37,37 @@ def uname(args, stdin, stdout, stderr):
 
     # control
     everything_is_false = True
-    for key, value in opts.items():
-        if key not in [
-            "all",
-            "kernel_name",
-            "nodename",
-            "kernel_release",
-            "kernel_version",
-            "machine",
-            "processor",
-            "hardware_platform",
-            "operating_system",
-            "version",
-            "help",
-        ]:
-            print("{0}: unrecognized option '{1}'".format(__name__, key), file=stdout)
-            print("Try 'uname --help' for more information.", file=stdout)
-            return 0
+    for key, value in list(opts.items()):
+        if key not in ["all",
+                       "kernel_name",
+                       "nodename",
+                       "kernel_release",
+                       "kernel_version",
+                       "machine",
+                       "processor",
+                       "hardware_platform",
+                       "operating_system",
+                       "version",
+                       "help",
+                       ]:
+            stdout.write("{0}: unrecognized option '{1}'\n".format(__name__, key))
+            stdout.write("Try 'uname --help' for more information.\n".format(__name__, key))
+            stdout.flush()
+            opts["help"] = True
         if value:
             everything_is_false = False
 
     if opts["help"]:
-        print(UNAME_HELP, file=stdout)
-        opts["help"] = True
+        stdout.write("{0}\n".format(UNAME_HELP))
+        stdout.flush()
         return 0
 
     if everything_is_false:
         opts["kernel_name"] = True
 
     if opts["version"]:
-        print("{0} {1}".format("uname", "0.1"), file=stdout)
+        stdout.write("uname 0.1\n")
+        stdout.flush()
         return 0
 
     line = []
@@ -94,7 +97,7 @@ def uname(args, stdin, stdout, stderr):
         line.append(platform.uname().machine)
 
     if opts["processor"]:
-        if platform.uname().processor == "":
+        if len(platform.uname().processor) <= 0:
             line.append("unknown")
         else:
             line.append(platform.uname().processor)
@@ -106,7 +109,8 @@ def uname(args, stdin, stdout, stderr):
         line.append(sys.platform)
 
     if line:
-        print(" ".join(line), file=stdout)
+        stdout.write("{0}\n".format(" ".join(line)))
+        stdout.flush()
 
 
 def _uname_parse_args(args):
