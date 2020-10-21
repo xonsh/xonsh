@@ -1,6 +1,6 @@
 **Added:**
 
-* Added timing probes for prompt tokens and lexer.
+* Added timing probes for prompt tokens, lexer and before prompt.
 
 **Changed:**
 
