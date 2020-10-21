@@ -76,7 +76,7 @@ class CommandsCache(cabc.Mapping):
         return ret
 
     @staticmethod
-    def get_cmd(cmd):
+    def get_key(cmd):
         return cmd.upper() if ON_WINDOWS else cmd
 
     @property
@@ -107,11 +107,11 @@ class CommandsCache(cabc.Mapping):
                 return self._cmds_cache
             else:
                 for cmd, alias in alss.items():
-                    cmd = self.get_cmd(cmd)
-                    if cmd in self._cmds_cache:
-                        self._cmds_cache[cmd] = (self._cmds_cache[cmd][0], alias)
+                    key = self.get_key(cmd)
+                    if key in self._cmds_cache:
+                        self._cmds_cache[key] = (self._cmds_cache[key][0], alias)
                     else:
-                        self._cmds_cache[cmd] = (cmd, True)
+                        self._cmds_cache[key] = (cmd, True)
                 return self._cmds_cache
 
         allcmds = {}
@@ -119,13 +119,13 @@ class CommandsCache(cabc.Mapping):
             # iterate backwards so that entries at the front of PATH overwrite
             # entries at the back.
             for cmd in executables_in(path):
-                key = self.get_cmd(cmd)
+                key = self.get_key(cmd)
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
 
         for cmd in alss:
             if cmd not in allcmds:
-                key = self.get_cmd(cmd)
-                allcmds[key] = (self.get_cmd(cmd), True)
+                key = self.get_key(cmd)
+                allcmds[key] = (cmd, True)
 
         self._cmds_cache = allcmds
         return allcmds
