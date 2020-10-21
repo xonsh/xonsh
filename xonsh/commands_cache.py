@@ -70,7 +70,7 @@ class CommandsCache(cabc.Mapping):
     @staticmethod
     def remove_dups(p):
         ret = list()
-        for e in p:
+        for e in map(os.path.realpath, p):
             if e not in ret:
                 ret.append(e)
         return ret
