@@ -75,10 +75,6 @@ class CommandsCache(cabc.Mapping):
                 ret.append(e)
         return ret
 
-    @staticmethod
-    def get_key(cmd):
-        return cmd.upper() if ON_WINDOWS else cmd
-
     @property
     def all_commands(self):
         paths = builtins.__xonsh__.env.get("PATH", [])
@@ -107,7 +103,7 @@ class CommandsCache(cabc.Mapping):
                 return self._cmds_cache
             else:
                 for cmd, alias in alss.items():
-                    key = self.get_key(cmd)
+                    key = cmd.upper() if ON_WINDOWS else cmd
                     if key in self._cmds_cache:
                         self._cmds_cache[key] = (self._cmds_cache[key][0], alias)
                     else:
@@ -119,12 +115,12 @@ class CommandsCache(cabc.Mapping):
             # iterate backwards so that entries at the front of PATH overwrite
             # entries at the back.
             for cmd in executables_in(path):
-                key = self.get_key(cmd)
+                key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
 
         for cmd in alss:
             if cmd not in allcmds:
-                key = self.get_key(cmd)
+                key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (cmd, True)
 
         self._cmds_cache = allcmds
