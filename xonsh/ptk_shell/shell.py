@@ -223,7 +223,7 @@ class PromptToolkitShell(BaseShell):
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
 
-        events.on_before_prompter_prompt.fire()
+        events.on_pre_prompter_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()
         return line
