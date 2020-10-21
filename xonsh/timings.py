@@ -315,10 +315,10 @@ def setup_timings(argv):
             global _timings
             _timings = {"on_post_prompt": clock()}
 
-        @events.on_pre_prompt
-        def timing_on_pre_prompt(**kw):
+        @events.on_before_prompter_prompt
+        def timing_on_before_prompter_prompt(**kw):
             global _timings
-            _timings["on_pre_prompt"] = clock()
+            _timings["on_before_prompter_prompt"] = clock()
             times = list(_timings.items())
             times = sorted(times, key=lambda x: x[1])
             width = max(len(s) for s, _ in times) + 2

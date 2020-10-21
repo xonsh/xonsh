@@ -75,6 +75,15 @@ Fires just after the prompt returns
 """,
 )
 
+events.doc(
+    "on_before_prompter_prompt",
+    """
+on_before_prompter_prompt() -> None
+
+Fires just before showing the prompt
+""",
+)
+
 
 def transform_command(src, show_diff=True):
     """Returns the results of firing the precommand handles."""

@@ -135,7 +135,7 @@ class PromptToolkitShell(BaseShell):
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
-        events.on_timingprobe.fire(name="on_prompt_singleline_create")
+        events.on_pre_prompt.fire()
         env = builtins.__xonsh__.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
@@ -223,7 +223,7 @@ class PromptToolkitShell(BaseShell):
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
 
-        events.on_pre_prompt.fire()
+        events.on_before_prompter_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()
         return line
