@@ -7,6 +7,7 @@ and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
 import os
+import sys
 import time
 import builtins
 import argparse
@@ -106,6 +107,16 @@ class CommandsCache(cabc.Mapping):
             for cmd in executables_in(path):
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
+
+        warn_cnt = builtins.__xonsh__.env.get("COMMANDS_CACHE_SIZE_WARNING")
+        if warn_cnt:
+            cnt = len(allcmds)
+            if cnt > warn_cnt:
+                print(
+                    f"Warning! Found {cnt:,} executable files in the PATH directories!",
+                    file=sys.stderr,
+                )
+
         for cmd in alss:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
