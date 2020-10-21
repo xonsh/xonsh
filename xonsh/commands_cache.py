@@ -80,7 +80,7 @@ class CommandsCache(cabc.Mapping):
         ret = list()
         for e in p:
             rpe = os.path.realpath(e)
-            e = e if len(e).lower() == rpe.lower() else rpe
+            e = e if e.lower() == rpe.lower() else rpe
             if e not in ret:
                 ret.append(e)
         return ret
