@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Now the directory and the symlink to this directory will be read from PATH once. Increasing the startup speed on linux.
+* Now the directory and the symlink to this directory will be read from PATH once. Increasing the startup speed on Linux.
 
 **Security:**
 
