@@ -11,7 +11,8 @@ import socket
 
 def spawn(port, argv):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('', port))
+    #s.bind(('', port))
+    s.bind(('127.0.0.1', port))
     s.listen(1)
     (rem, addr) = s.accept()
     os.dup2(rem.fileno(),0)
@@ -25,6 +26,8 @@ def main(args=None):
     args = sys.argv if args is None else args
     port = int(args[1])
     argv = args[2:]
+    print(port)
+    print(argv)
     spawn(port, argv)
 
 

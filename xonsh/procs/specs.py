@@ -19,6 +19,7 @@ import xonsh.lazyimps as xli
 import xonsh.jobs as xj
 
 from xonsh.procs.readers import ConsoleParallelReader
+from xonsh.procs.linux import PopenPTYClient
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.pipelines import (
     pause_call_resume,
@@ -713,7 +714,7 @@ def _update_last_spec(last):
     else:
         if captured:
             # update this when we have PTY server/client
-            last.cls = subprocess.Popen
+            last.cls = PopenPTYClient if xp.ON_LINUX else subprocess.Popen
             if captured == "object" or captured == "hiddenobject":
                 # CommandPipeline objects should not pipe stdout, stderr
                 return

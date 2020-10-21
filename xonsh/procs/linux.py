@@ -2,6 +2,7 @@
 import os
 import io
 import sys
+import time
 import select
 import socket
 import argparse
@@ -25,6 +26,7 @@ def _is_port_open(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.bind(("127.0.0.1", port))
+            #s.bind(("localhost", port))
         except socket.error as e:
             return False
     return True
@@ -42,15 +44,16 @@ def _find_next_open_port():
 def serve_pty_command(command):
     """Starts up a PTY server for a specific command."""
     port = _find_next_open_port()
-    os.spawn(os.P_NO_WAIT, sys.execuatble, PTY_SERVER_PATH, port, command)
+    os.spawnl(os.P_NOWAIT, sys.executable, PTY_SERVER_PATH, port, *command)
     return port
 
 
 class PTY:
-    def __init__(self, slave=0, pid=os.getpid()):
+    def __init__(self):
         # open our controlling PTY
-        ptylink = os.readlink(f"/proc/{pid}/fd/{slave}")
-        print(ptylink)
+        child = 0
+        pid = os.getpid()
+        ptylink = os.readlink(f"/proc/{pid}/fd/{child}")
         self.pty = pty = io.open(ptylink, "rb+", buffering=0)
 
         # store our old termios settings so we can restore after
@@ -96,20 +99,25 @@ class PTY:
 
 
 class PopenPTYClient:
-    def __init__(self, addr, bind=False):
+    def __init__(self, args, bind=False, **kwargs):
+        port = serve_pty_command(args)
+        time.sleep(1)
         self.bind = bind
-        self.addr = addr
+        self.addr = ("127.0.0.1", port)
+        #self.addr = ("localhost", port)
 
         if self.bind:
             self.sock = socket.socket()
             self.sock.bind(self.addr)
             self.sock.listen(5)
 
-    def handle(self, addr=None):
-        addr = addr or self.addr
+        self.handle()
+
+    def handle(self):
         if self.bind:
             sock, addr = self.sock.accept()
         else:
+            addr = self.addr
             sock = socket.socket()
             sock.connect(addr)
 
