@@ -108,7 +108,7 @@ class CommandsCache(cabc.Mapping):
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
 
-        warn_cnt = builtins.__xonsh__.env.get("XONSH_WARNING_PATH_FILES")
+        warn_cnt = builtins.__xonsh__.env.get("COMMANDS_CACHE_SIZE_WARNING")
         if warn_cnt:
             cnt = len(allcmds)
             if cnt > warn_cnt:

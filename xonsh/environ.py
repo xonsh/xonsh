@@ -1725,7 +1725,7 @@ def DEFAULT_VARS():
             "or None / the empty string if traceback logging is not desired. "
             "Logging to a file is not enabled by default.",
         ),
-        "XONSH_WARNING_PATH_FILES": Var(
+        "COMMANDS_CACHE_SIZE_WARNING": Var(
             is_int,
             int,
             str,
