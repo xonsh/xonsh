@@ -100,16 +100,14 @@ class CommandsCache(cabc.Mapping):
         self._path_mtime = max_mtime
 
         if cache_valid_path and cache_valid_paths:
-            if cache_valid_aliases:
-                return self._cmds_cache
-            else:
+            if not cache_valid_aliases:
                 for cmd, alias in alss.items():
                     key = cmd.upper() if ON_WINDOWS else cmd
                     if key in self._cmds_cache:
                         self._cmds_cache[key] = (self._cmds_cache[key][0], alias)
                     else:
                         self._cmds_cache[key] = (cmd, True)
-                return self._cmds_cache
+            return self._cmds_cache
 
         allcmds = {}
         for path in reversed(path_immut):
