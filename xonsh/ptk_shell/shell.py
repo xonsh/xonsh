@@ -153,8 +153,8 @@ class PromptToolkitShell(BaseShell):
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         completer = None if completions_display == "none" else self.pt_completer
 
+        events.on_timingprobe.fire(name="on_pre_prompt_tokens")
         get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
-
         if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
@@ -163,6 +163,7 @@ class PromptToolkitShell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens()
             if get_bottom_toolbar_tokens:
                 get_bottom_toolbar_tokens = get_bottom_toolbar_tokens()
+        events.on_timingprobe.fire(name="on_post_prompt_tokens")
 
         if env.get("VI_MODE"):
             editing_mode = EditingMode.VI
@@ -178,6 +179,8 @@ class PromptToolkitShell(BaseShell):
             is not self._history_matches_orig
         ):
             self.prompter.default_buffer._history_matches = self._history_matches_orig
+
+
 
         prompt_args = {
             "mouse_support": mouse_support,
