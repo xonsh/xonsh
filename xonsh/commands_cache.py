@@ -70,16 +70,7 @@ class CommandsCache(cabc.Mapping):
     @staticmethod
     def remove_dups(p):
         ret = list()
-        for e in p:
-            if e not in ret:
-                ret.append(e)
-        return ret
-
-    @staticmethod
-    def remove_dups_path(p):
-        ret = list()
-        for e in p:
-            e = os.path.realpath(e)
+        for e in map(os.path.realpath, p):
             if e not in ret:
                 ret.append(e)
         return ret
@@ -87,10 +78,7 @@ class CommandsCache(cabc.Mapping):
     @property
     def all_commands(self):
         paths = builtins.__xonsh__.env.get("PATH", [])
-        if ON_WINDOWS:
-            paths = CommandsCache.remove_dups(paths)
-        else:
-            paths = CommandsCache.remove_dups_path(paths)
+        paths = CommandsCache.remove_dups(paths)
         path_immut = tuple(x for x in paths if os.path.isdir(x))
         # did PATH change?
         path_hash = hash(path_immut)
