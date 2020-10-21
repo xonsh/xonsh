@@ -180,8 +180,6 @@ class PromptToolkitShell(BaseShell):
         ):
             self.prompter.default_buffer._history_matches = self._history_matches_orig
 
-
-
         prompt_args = {
             "mouse_support": mouse_support,
             "auto_suggest": auto_suggest,
