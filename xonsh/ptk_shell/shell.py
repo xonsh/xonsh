@@ -135,7 +135,7 @@ class PromptToolkitShell(BaseShell):
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
-        events.on_pre_prompt.fire()
+        events.on_timingprobe.fire(name="on_prompt_singleline_create")
         env = builtins.__xonsh__.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
@@ -198,10 +198,13 @@ class PromptToolkitShell(BaseShell):
             "refresh_interval": refresh_interval,
             "complete_in_thread": complete_in_thread,
         }
+
         if env.get("COLOR_INPUT"):
             if HAS_PYGMENTS:
+                events.on_timingprobe.fire(name="on_pre_prompt_pygments_lexer")
                 prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
                 style = style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
+                events.on_timingprobe.fire(name="on_post_prompt_pygments_lexer")
             else:
                 style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
 
@@ -219,8 +222,8 @@ class PromptToolkitShell(BaseShell):
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
 
+        events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
-
         events.on_post_prompt.fire()
         return line
 
