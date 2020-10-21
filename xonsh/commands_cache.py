@@ -79,7 +79,8 @@ class CommandsCache(cabc.Mapping):
     def remove_dups_path(p):
         ret = list()
         for e in p:
-            e = os.path.realpath(e)
+            rpe = os.path.realpath(e)
+            e = e if len(e).lower() == rpe.lower() else rpe
             if e not in ret:
                 ret.append(e)
         return ret
