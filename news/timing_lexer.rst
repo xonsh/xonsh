@@ -1,6 +1,6 @@
 **Added:**
 
-* Added timing probes for pygments lexer.
+* Added timing probes for prompt tokens and lexer.
 
 **Changed:**
 
