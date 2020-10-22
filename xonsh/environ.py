@@ -1201,13 +1201,6 @@ def DEFAULT_VARS():
             "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
             "colors. Default is an empty string which means that prompt toolkit decide.",
         ),
-        "XONSH_STYLE_OVERRIDES": Var(
-            is_str_str_dict,
-            to_str_str_dict,
-            dict_to_str,
-            {},
-            "A dictionary containing custom prompt_toolkit/pygments style definitions.",
-        ),
         "PUSHD_MINUS": Var(
             is_bool,
             to_bool,
@@ -1705,6 +1698,18 @@ def DEFAULT_VARS():
             False,
             "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
             "history files.",
+        ),
+        "XONSH_STYLE_OVERRIDES": Var(
+            is_str_str_dict,
+            to_str_str_dict,
+            dict_to_str,
+            {},
+            "A dictionary containing custom prompt_toolkit/pygments style definitions.\n"
+            "The following style definitions are supported:\n\n"
+            "    - ``pygments.token.Token`` - ``$XONSH_STYLE_OVERRIDES[Token.Keyword] = '#ff0000'``\n"
+            "    - pygments token name (string) - ``$XONSH_STYLE_OVERRIDES['Token.Keyword'] = '#ff0000'``\n"
+            "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
+            "(The rules above are all have the same effect.)",
         ),
         "XONSH_TRACE_SUBPROC": Var(
             is_bool,
