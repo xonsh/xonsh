@@ -234,7 +234,7 @@ def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
         tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
-    if token not in styles:
+    if token not in styles or not styles[token]:
         styles[token] = pc
     return token
 
