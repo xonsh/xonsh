@@ -175,8 +175,8 @@ Print certain system information.  With no OPTION, same as -s.
 
 def uname_main(args=None):
     """
-        This version of cat was written in Python for the xonsh project: http://xon.sh
-        Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
+    This version of cat was written in Python for the xonsh project: http://xon.sh
+    Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 
         Usage: uname [OPTION]...
         Print certain system information.  With no OPTION, same as -s.
@@ -193,6 +193,9 @@ def uname_main(args=None):
           -o, --operating-system   print the operating system
               --help     display this help and exit
               --version  output version information and exit
+
+    :param args: Arguments like -a
+    :type args: list or None
     """
     import sys
     from xonsh.main import setup
