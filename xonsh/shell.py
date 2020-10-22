@@ -62,16 +62,7 @@ events.doc(
     """
 on_pre_prompt_format() -> None
 
-Fires just before the prompt is shown
-""",
-)
-
-events.doc(
-    "on_post_prompt",
-    """
-on_post_prompt() -> None
-
-Fires just after the prompt returns
+Fires before the prompt will be formatted
 """,
 )
 
@@ -81,6 +72,16 @@ events.doc(
 on_pre_prompt() -> None
 
 Fires just before showing the prompt
+""",
+)
+
+
+events.doc(
+    "on_post_prompt",
+    """
+on_post_prompt() -> None
+
+Fires just after the prompt returns
 """,
 )
 
