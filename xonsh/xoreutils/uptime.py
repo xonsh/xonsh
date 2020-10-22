@@ -14,21 +14,25 @@ import sys
 import time
 
 try:
-    import locale
+    from locale import *
 
-    locale.setlocale(locale.LC_ALL, "")
-except Exception:
+    setlocale(LC_ALL, "")
+except ImportError:
     pass
 
 try:
     # So many broken ctypeses out there.
     import ctypes
-    import struct
 except ImportError:
     ctypes = None
 
 try:
-    import os
+    from struct import *
+except ImportError:
+    pass
+
+try:
+    from os import *
 except ImportError:
     pass
 
@@ -90,7 +94,7 @@ def _uptime_linux():
     if libc.sysinfo(buf) < 0:
         return None
 
-    up = struct.unpack_from("@l", buf.raw)[0]
+    up = unpack_from("@l", buf.raw)[0]
     if up < 0:
         up = None
     return up
@@ -117,7 +121,7 @@ def _uptime_amiga():
     """Returns uptime in seconds or None, on AmigaOS."""
     global __boottime
     try:
-        __boottime = os.stat("RAM:").st_ctime
+        __boottime = stat("RAM:").st_ctime
         return time.time() - __boottime
     except (NameError, OSError):
         return None
@@ -159,14 +163,14 @@ def _uptime_bsd():
     # Determine how much space we need for the response.
     sz = ctypes.c_uint(0)
     libc.sysctlbyname("kern.boottime", None, ctypes.byref(sz), None, 0)
-    if sz.value != struct.calcsize("@LL"):
+    if sz.value != calcsize("@LL"):
         # Unexpected, let's give up.
         return None
 
     # For real now.
     buf = ctypes.create_string_buffer(sz.value)
     libc.sysctlbyname("kern.boottime", buf, ctypes.byref(sz), None, 0)
-    sec, usec = struct.unpack("@LL", buf.raw)
+    sec, usec = unpack("@LL", buf.raw)
 
     # OS X disagrees what that second value is.
     if usec > 1000000:
@@ -177,19 +181,6 @@ def _uptime_bsd():
     if up < 0:
         up = None
     return up
-
-
-def _uptime_mac():
-    """Returns uptime in seconds or None, on Mac OS."""
-    try:
-        # Python docs say a clock tick is 1/60th of a second, Mac OS docs say
-        # it's ``approximately'' 1/60th. It's incremented by vertical retraces,
-        # which the Macintosh Plus docs say happen 60.15 times per second.
-        # I don't know if ``approximately'' means it's actually 1/60.15, or
-        # 1/60 on some machines and 1/60.15 on others.
-        return MacOS.GetTicks() / 60.15
-    except NameError:
-        return None
 
 
 def _uptime_minix():
@@ -222,16 +213,17 @@ def _uptime_plan9():
         return None
 
 
-def _uptime_riscos():
-    """Returns uptime in seconds or None, on RISC OS."""
-    try:
-        up = swi.swi("OS_ReadMonotonicTime", ";i")
-        if up < 0:
-            # Overflows after about eight months on 32-bit.
-            return None
-        return up / 100.0
-    except NameError:
-        return None
+# RiscOS is unsupported by oxnsh
+# def _uptime_riscos():
+#     """Returns uptime in seconds or None, on RISC OS."""
+#     try:
+#         up = swi.swi("OS_ReadMonotonicTime", ";i")
+#         if up < 0:
+#             # Overflows after about eight months on 32-bit.
+#             return None
+#         return up / 100.0
+#     except NameError:
+#         return None
 
 
 def _uptime_solaris():
@@ -304,7 +296,7 @@ def _uptime_syllable():
     """Returns uptime in seconds or None, on Syllable."""
     global __boottime
     try:
-        __boottime = os.stat("/dev/pty/mst/pty0").st_mtime
+        __boottime = stat("/dev/pty/mst/pty0").st_mtime
         return time.time() - __boottime
     except (NameError, OSError):
         return None
@@ -354,9 +346,9 @@ def uptime():
                 "linux": _uptime_linux,
                 "linux-armv71": _uptime_linux,
                 "linux2": _uptime_linux,
-                "mac": _uptime_mac,
+                # "mac": _uptime_mac,
                 "minix3": _uptime_minix,
-                "riscos": _uptime_riscos,
+                # "riscos": _uptime_riscos,
                 "sunos5": _uptime_solaris,
                 "syllable": _uptime_syllable,
                 "win32": _uptime_windows,
@@ -369,10 +361,10 @@ def uptime():
             or _uptime_solaris()
             or _uptime_beos()
             or _uptime_amiga()
-            or _uptime_riscos()
+            # or _uptime_riscos()
             or _uptime_posix()
             or _uptime_syllable()
-            or _uptime_mac()
+            # or _uptime_mac()
             or _uptime_osx()
     )
 
