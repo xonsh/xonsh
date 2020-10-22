@@ -52,9 +52,7 @@ def uname(args, stdin, stdout, stderr):
             "help",
         ]:
             stdout.write("{0}: unrecognized option '{1}'\n".format(__name__, key))
-            stdout.write(
-                "Try 'uname --help' for more information.\n".format(__name__, key)
-            )
+            stdout.write("Try 'uname --help' for more information.\n")
 
             stdout.flush()
             opts["help"] = True
