@@ -58,9 +58,9 @@ Parameters:
 )
 
 events.doc(
-    "on_pre_prompt",
+    "on_pre_prompt_format",
     """
-on_pre_prompt() -> None
+on_pre_prompt_format() -> None
 
 Fires just before the prompt is shown
 """,
@@ -76,9 +76,9 @@ Fires just after the prompt returns
 )
 
 events.doc(
-    "on_pre_prompter_prompt",
+    "on_pre_prompt",
     """
-on_pre_prompter_prompt() -> None
+on_pre_prompt() -> None
 
 Fires just before showing the prompt
 """,
