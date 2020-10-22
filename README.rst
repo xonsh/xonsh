@@ -21,6 +21,7 @@ xonsh
     </p>
 
     <p align="center">
+    <a href="https://twitter.com/intent/tweet?text=xonsh%20is%20a%20Python-powered,%20cross-platform,%20Unix-gazing%20shell%20language%20and%20command%20prompt.&url=https://github.com/xonsh/xonsh"><img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=flat&color=%2355acee&label=tweet%20now"></a>
     <a href="https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge" target="_blank"><img src="https://badges.gitter.im/xonsh/xonsh.svg" alt="Join the chat at https://gitter.im/xonsh/xonsh"></a>
     <a href="https://matrix.to/#/#xonsh:feneas.org" target="_blank"><img src="https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green" alt="Matrix room: #xonsh:feneas.org"></a>
     <a href="https://travis-ci.org/xonsh/xonsh" target="_blank"><img src="https://travis-ci.org/xonsh/xonsh.svg?branch=master" alt="Travis"></a>
