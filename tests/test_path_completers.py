@@ -1,9 +1,7 @@
 import pytest
 from unittest.mock import patch
 import tempfile
-from xonsh.platform import ON_WINDOWS
 import xonsh.completers.path as xcp
-import pathlib
 
 
 @pytest.fixture(autouse=True)
@@ -43,7 +41,7 @@ def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins):
 
 
 @pytest.mark.parametrize("quote", ('"', "'"))
-def test_complete_path_when_prefix_is_path_literal(quote, xonsh_builtins):
+def test_complete_path_when_prefix_is_raw_path_string(quote, xonsh_builtins):
     xonsh_builtins.__xonsh__.env = {
         "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
@@ -53,16 +51,9 @@ def test_complete_path_when_prefix_is_path_literal(quote, xonsh_builtins):
         "CDPATH": set(),
     }
     with tempfile.NamedTemporaryFile(suffix="_dummySuffix") as tmp:
-        filename = pathlib.Path(tmp.name).as_posix()
-        prefix_file_name = filename.replace("_dummySuffix", "")
-        prefix = f"p{quote}{prefix_file_name}"
+        prefix_file_name = tmp.name.replace("_dummySuffix", "")
+        prefix = f"pr{quote}{prefix_file_name}"
         line = f"ls {prefix}"
         out = xcp.complete_path(prefix, line, line.find(prefix), len(line), dict())
-
-        if ON_WINDOWS:  # We get a raw string
-            quote_prefix = "rp"
-        else:
-            quote_prefix = "p"
-        expected = f"{quote_prefix}{quote}{tmp.name}{quote}"
-
+        expected = f"pr{quote}{tmp.name}{quote}"
         assert expected == out[0].pop()
