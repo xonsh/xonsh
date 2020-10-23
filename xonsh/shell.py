@@ -58,13 +58,23 @@ Parameters:
 )
 
 events.doc(
+    "on_pre_prompt_format",
+    """
+on_pre_prompt_format() -> None
+
+Fires before the prompt will be formatted
+""",
+)
+
+events.doc(
     "on_pre_prompt",
     """
 on_pre_prompt() -> None
 
-Fires just before the prompt is shown
+Fires just before showing the prompt
 """,
 )
+
 
 events.doc(
     "on_post_prompt",

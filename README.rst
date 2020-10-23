@@ -17,7 +17,7 @@ xonsh
     </p>
 
     <p align="center">
-    If you like xonsh, :star: the repo and stay tuned by watching releases.
+    If you like xonsh, :star: the repo, <a href="https://twitter.com/intent/tweet?text=xonsh%20is%20a%20Python-powered,%20cross-platform,%20Unix-gazing%20shell%20language%20and%20command%20prompt.&url=https://github.com/xonsh/xonsh" target="_blank">write a tweet</a> and stay tuned by watching releases.
     </p>
 
     <p align="center">
