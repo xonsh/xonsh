@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Speed of CommandsCache increased when aliases have multiple updates (i.e. init conda).
+* Speed of CommandsCache increased when aliases have multiple updates (i.e. conda init).
 
 **Security:**
 
