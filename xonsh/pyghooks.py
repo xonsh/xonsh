@@ -382,6 +382,7 @@ class XonshStyle(Style):
                 self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
+
         compound = CompoundColorMap(
             ChainMap(self.trap, cmap, self._smap, DEFAULT_STYLE_DICT)
         )
@@ -402,6 +403,9 @@ class XonshStyle(Style):
     @style_name.deleter
     def style_name(self):
         self._style_name = ""
+
+    def override(self, style_dict):
+        self.trap.update(_tokenize_style_dict(style_dict))
 
     def enhance_colors_for_cmd_exe(self):
         """ Enhance colors when using cmd.exe on windows.
@@ -442,22 +446,41 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
+def _format_ptk_style_name(name):
+    """Format PTK style name to be able to include it in a pygments style"""
+    parts = name.split("-")
+    return "".join(part.capitalize() for part in parts)
+
+
 def _get_token_by_name(name):
     """Get pygments token object by its string representation."""
+    if not isinstance(name, str):
+        return name
+
     token = Token
     parts = name.split(".")
 
+    # PTK - all lowercase
+    if parts[0] == parts[0].lower():
+        parts = ["PTK"] + [_format_ptk_style_name(part) for part in parts]
+
+    # color name
     if len(parts) == 1:
-        parts = ["Color"] + parts
+        return color_token_by_name((name,))
 
     if parts[0] == "Token":
         parts = parts[1:]
 
-    while len(parts):
+    while len(parts) > 0:
         token = getattr(token, parts[0])
         parts = parts[1:]
 
     return token
+
+
+def _tokenize_style_dict(styles):
+    """Converts possible string keys in style dicts to Tokens"""
+    return {_get_token_by_name(token): value for token, value in styles.items()}
 
 
 def register_custom_pygments_style(
@@ -485,9 +508,7 @@ def register_custom_pygments_style(
     base_style = get_style_by_name(base)
     custom_styles = base_style.styles.copy()
 
-    for token, value in styles.items():
-        if isinstance(token, str):
-            token = _get_token_by_name(token)
+    for token, value in _tokenize_style_dict(styles).items():
         custom_styles[token] = value
 
     style = type(
