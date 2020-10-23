@@ -636,7 +636,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         else:
             # assume this is a list of (Token, str) tuples and format it
             env = builtins.__xonsh__.env
+            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
+            self.styler.override(style_overrides_env)
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()
