@@ -16,11 +16,11 @@
 
 **Deprecated:**
 
-* <news item>
+* ``PTK_STYLE_OVERRIDES`` has been deprecated, its function replaced by ``XONSH_STYLE_OVERRIDES``
 
 **Removed:**
 
-* ``PTK_STYLE_OVERRIDES`` has been removed, its function replaced by ``XONSH_STYLE_OVERRIDES``
+* <news item>
 
 **Fixed:**
 

@@ -10,7 +10,7 @@ from xonsh.events import events
 from xonsh.base_shell import BaseShell
 from xonsh.ptk_shell.formatter import PTKPromptFormatter
 from xonsh.shell import transform_command
-from xonsh.tools import print_exception, carriage_return
+from xonsh.tools import print_exception, print_warning, carriage_return
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_POSIX
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
@@ -150,6 +150,7 @@ class PromptToolkitShell(BaseShell):
         self.prompt_formatter = PTKPromptFormatter(self.prompter)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = load_xonsh_bindings()
+        self._overrides_deprecation_warning_shown = False
 
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
@@ -237,7 +238,16 @@ class PromptToolkitShell(BaseShell):
             "complete_in_thread": complete_in_thread,
         }
         if env.get("COLOR_INPUT"):
-            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
+            style_overrides_env = env.get("PTK_STYLE_OVERRIDES", {}).copy()
+            if (
+                len(style_overrides_env) > 0
+                and not self._overrides_deprecation_warning_shown
+            ):
+                print_warning(
+                    "$PTK_STYLE_OVERRIDES is deprecated, use $XONSH_STYLE_OVERRIDES instead!"
+                )
+                self._overrides_deprecation_warning_shown = True
+            style_overrides_env.update(env.get("XONSH_STYLE_OVERRIDES", {}))
             if HAS_PYGMENTS:
                 prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
                 self.styler.override(style_overrides_env)

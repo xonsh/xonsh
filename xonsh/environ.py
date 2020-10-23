@@ -1201,6 +1201,13 @@ def DEFAULT_VARS():
             "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
             "colors. Default is an empty string which means that prompt toolkit decide.",
         ),
+        "PTK_STYLE_OVERRIDES": Var(
+            is_str_str_dict,
+            to_str_str_dict,
+            dict_to_str,
+            {},
+            "A dictionary containing custom prompt_toolkit style definitions. (deprecated)",
+        ),
         "PUSHD_MINUS": Var(
             is_bool,
             to_bool,
