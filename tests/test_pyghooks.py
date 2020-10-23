@@ -361,9 +361,8 @@ def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
             {"Literal.String.Single": "#ff0000"},
             {Token.Literal.String.Single: "#ff0000"},
         ),  # short str key
-        ("test5", {"RED": "#00ff00"}, {"Token.Color.RED": "#00ff00"},),  # color
         (
-            "test6",
+            "test5",
             {"completion-menu.completion.current": "#00ff00"},
             {Token.PTK.CompletionMenu.Completion.Current: "#00ff00"},
         ),  # ptk style
@@ -376,14 +375,7 @@ def test_register_custom_pygments_style(name, styles, refrules):
     # registration succeeded
     assert style is not None
 
-    strkeyedstyle = {str(key): value for key, value in style.styles.items()}
-
     # check rules
     for rule, color in refrules.items():
-        if isinstance(rule, str):
-            # string fallback for xonsh's Token
-            assert rule in strkeyedstyle
-            assert strkeyedstyle[rule] == color
-        else:
-            assert rule in style.styles
-            assert style.styles[rule] == color
+        assert rule in style.styles
+        assert style.styles[rule] == color
