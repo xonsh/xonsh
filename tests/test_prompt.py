@@ -189,7 +189,7 @@ def test_promptformatter_clears_cache(formatter):
 
 
 # Xonsh interaction with version control systems.
-VC_BRANCH = {"git": "master", "hg": "default"}
+VC_BRANCH = {"git": {"master", "main"}, "hg": {"default"}}
 
 
 @pytest.fixture(scope="module", params=VC_BRANCH.keys())
@@ -240,7 +240,7 @@ def test_vc_get_branch(test_repo, xonsh_builtins):
     fun = "get_{}_branch".format(test_repo["name"])
     obs = getattr(vc, fun)()
     if obs is not None:
-        assert obs == VC_BRANCH[test_repo["name"]]
+        assert obs in VC_BRANCH[test_repo["name"]]
         if test_repo["name"] == "git":
             with open("{}/.git/config".format(test_repo["dir"]), "a") as gc:
                 gc.write(
@@ -254,7 +254,7 @@ def test_vc_get_branch(test_repo, xonsh_builtins):
                 )
             obs = getattr(vc, fun)()
             if obs is not None:
-                assert obs == VC_BRANCH[test_repo["name"]]
+                assert obs in VC_BRANCH[test_repo["name"]]
                 assert not obs.startswith(u"\u001b[")
 
 
