@@ -26,11 +26,9 @@ def python(*_):
     group = int(time.time())  # unique per run
 
     for count, (command, title) in enumerate((
-            (('dmypy', 'run', "--", "xonsh"), "Lint"),
-            (('flake8', '--count'), "Lint"),
-            (('pytest', 'tests/test_main.py'), "Test main"),
-            (('pytest', 'tests/test_ptk_highlight.py'), "Test ptk highlight"),
-            (('pytest', '--ignore', 'tests/test_main.py', 'tests/test_ptk_highlight.py'), "Test Rest"),
+            (('dmypy', 'run', "--", "xonsh"), "type-check"),
+            (('flake8', '.'), "Lint"),
+            (('xonsh', 'run-tests.xsh', 'test'), "test"),
     ), start=1):
 
         print(f"\n$ {' '.join(command)}")

@@ -1194,6 +1194,16 @@ def DEFAULT_VARS():
             "NOTE: ``$UPDATE_PROMPT_ON_KEYPRESS`` must be set to ``True`` for this "
             "variable to take effect.",
         ),
+        "PROMPT_TOKENS_FORMATTER": Var(
+            validate=callable,
+            convert=None,
+            detype=None,
+            default=prompt.prompt_tokens_formatter_default,
+            doc="Final processor that receives all tokens in the prompt template. "
+            "It gives option to format the prompt with different prefix based on other tokens values. "
+            "Highly useful for implementing something like powerline theme.",
+            doc_default="``xonsh.prompt.base.prompt_tokens_formatter_default``",
+        ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": Var(
             always_false,
             ptk2_color_depth_setter,

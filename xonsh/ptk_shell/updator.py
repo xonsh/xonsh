@@ -8,7 +8,7 @@ import typing as tp
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
 
-from xonsh.prompt.base import _format_value
+from xonsh.prompt.base import ParsedTokens
 from xonsh.style_tools import partial_color_tokenize, style_as_faded
 
 
@@ -64,7 +64,7 @@ class AsyncPrompt:
         self.name = name
 
         # list of tokens in that prompt. It could either be resolved or not resolved.
-        self.tokens: tp.List[str] = []
+        self.tokens: tp.Optional[ParsedTokens] = None
         self.timer = None
         self.session = session
         self.executor = executor
@@ -85,6 +85,9 @@ class AsyncPrompt:
         on_complete:
             callback to notify after all the futures are completed
         """
+        if not self.tokens:
+            print(f"Warn: AsyncPrompt is created without tokens - {self.name}")
+            return
         for fut in concurrent.futures.as_completed(self.futures):
             val = fut.result()
 
@@ -97,28 +100,17 @@ class AsyncPrompt:
             # example: placeholder="{field}", idx=10, spec="env: {}"
 
             if isinstance(idx, int):
-                self.update_token(idx, val, spec, conv)
+                self.tokens.update(idx, val, spec, conv)
             else:  # when the function is called outside shell.
-                for idx, sect in enumerate(self.tokens):
-                    if placeholder in sect:
-                        val = sect.replace(placeholder, val)
-                        self.update_token(idx, val, spec, conv)
+                for idx, ptok in enumerate(self.tokens.tokens):
+                    if placeholder in ptok.value:
+                        val = ptok.value.replace(placeholder, val)
+                        self.tokens.update(idx, val, spec, conv)
 
             # calling invalidate in less period is inefficient
             self.invalidate()
 
         on_complete(self.name)
-
-    def update_token(
-        self,
-        idx: int,
-        val: tp.Optional[str],
-        spec: tp.Optional[str],
-        conv: tp.Optional[str],
-    ) -> None:
-        """Update tokens list in-place"""
-        if idx < len(self.tokens):
-            self.tokens[idx] = _format_value(val, spec, conv)
 
     def invalidate(self):
         """Create a timer to update the prompt. The timing can be configured through env variables.
@@ -130,7 +122,7 @@ class AsyncPrompt:
             self.timer.cancel()
 
         def _invalidate():
-            new_prompt = "".join(self.tokens)
+            new_prompt = self.tokens.process()
             formatted_tokens = tokenize_ansi(
                 PygmentsTokens(partial_color_tokenize(new_prompt))
             )
@@ -169,10 +161,10 @@ class PromptUpdator:
         self.prompter = session
         self.executor = Executor()
 
-    def add(self, prompt_name: tp.Optional[str]):
+    def add(self, prompt_name: tp.Optional[str]) -> tp.Optional[AsyncPrompt]:
         # clear out old futures from the same prompt
         if prompt_name is None:
-            return
+            return None
 
         if prompt_name in self.prompts:
             self.stop(prompt_name)
@@ -198,7 +190,3 @@ class PromptUpdator:
 
     def on_complete(self, prompt_name):
         self.prompts.pop(prompt_name, None)
-
-    def set_tokens(self, prompt_name, tokens: tp.List[str]):
-        if prompt_name in self.prompts:
-            self.prompts[prompt_name].tokens = tokens
