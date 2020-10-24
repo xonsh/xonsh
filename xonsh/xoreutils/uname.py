@@ -7,14 +7,16 @@ def uname(args, stdin, stdout, stderr):
     """
     Print certain system information.
 
-    :param args: Arguments like -a
-    :type args: list or None
-    :param stdin: The standard input
-    :type stdin: sys.stdin
-    :param stdout: The standard output
-    :type stdout: sys.stdout
-    :param stderr: The standard output
-    :type stderr: sys.stderr
+    Parameters
+    ----------
+    args : str
+           Arguments like -a
+    stdin : sys.stdin
+            The standard input
+    stdout : sys.stdout
+           The standard output
+    stderr : sys.stderr
+           The standard error
     """
     if stdout is None:
         stdout = sys.stdout
@@ -119,10 +121,15 @@ def _uname_parse_args(args):
     """
     Internal function for parse args
 
-    :param args: Arguments like -a
-    :type args: list or None
-    :return: A clean arguments list
-    :rtype: list or None
+    Parameters
+    ----------
+    args : list
+           Arguments like -a
+
+    Returns
+    -------
+    list or None
+        A clean arguments list.
     """
     out = {
         "all": False,
@@ -175,9 +182,11 @@ Print certain system information.  With no OPTION, same as -s.
 
 def uname_main(args=None):
     """
-    This version of cat was written in Python for the xonsh project: http://xon.sh
+    This version of uname was written in Python for the xonsh project: http://xon.sh
     Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 
+    Notes
+    -----
         Usage: uname [OPTION]...
         Print certain system information.  With no OPTION, same as -s.
 
@@ -194,8 +203,10 @@ def uname_main(args=None):
               --help     display this help and exit
               --version  output version information and exit
 
-    :param args: Arguments like -a
-    :type args: list or None
+    Parameters
+    ----------
+    args : list
+           Arguments like -a
     """
     import sys
     from xonsh.main import setup

@@ -204,7 +204,7 @@ class JsonHistoryGC(threading.Thread):
             return []
 
         xonsh_debug = env.get("XONSH_DEBUG", 0)
-        boot = uptime.boottime()
+        boot = uptime.boottime_timestamp()
         fs = _xhj_get_history_files(sort=False)
         files = []
         time_start = time.time()
