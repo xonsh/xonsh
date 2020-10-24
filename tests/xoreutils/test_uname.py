@@ -249,9 +249,10 @@ class TestUname:
     def test_uname_version(self, uname_env_fixture):
         uname.uname(["--version"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
+        from xonsh import __version__
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0} {1}\n".format("uname", "0.1"), DEFAULT_ENCODING
+            "{0} {1}\n".format("uname (xonsh)", __version__), DEFAULT_ENCODING
         )
 
     def test_uname_everything(self, uname_env_fixture):
