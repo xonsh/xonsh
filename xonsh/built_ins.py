@@ -168,11 +168,12 @@ def subproc_captured_stdout(*cmds, envs=None):
     """
     return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
 
-def subproc_captured_stdout_strip(*cmds, envs=None):
+def subproc_captured_stdout_split(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns stripped the stdout
     that was produced as a str.
     """
-    return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs).strip()
+    o = xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
+    return (o[:-1] if o and o[-1] == os.linesep else o).split(os.linesep)
 
 
 def subproc_captured_inject(*cmds, envs=None):
@@ -586,7 +587,7 @@ class XonshSession:
             del builtins.quit
 
         self.subproc_captured_stdout = subproc_captured_stdout
-        self.subproc_captured_stdout_strip = subproc_captured_stdout_strip
+        self.subproc_captured_stdout_split = subproc_captured_stdout_split
         self.subproc_captured_inject = subproc_captured_inject
         self.subproc_captured_object = subproc_captured_object
         self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
