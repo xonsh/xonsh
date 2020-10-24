@@ -1,0 +1,24 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* Now ``$()`` returns stripped output by default (the same as sh shells).
+* Now ``!()`` returns output in subproc mode.
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* <news item>
+
+**Security:**
+
+* <news item>
