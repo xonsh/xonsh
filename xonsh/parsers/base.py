@@ -3127,19 +3127,14 @@ class BaseParser(object):
         """
         p1 = p[1]
 
-        func = '__xonsh__.subproc_captured_stdout_split'
-        action = 'extend'
+        func = "__xonsh__.subproc_captured_stdout_split"
+        action = "extend"
 
         if p1.type == "BANG_LPAREN":
-            func = '__xonsh__.subproc_captured_stdout'
-            action = 'append'
+            func = "__xonsh__.subproc_captured_stdout"
+            action = "append"
 
-        p0 = xonsh_call(
-            func,
-            args=p[2],
-            lineno=p1.lineno,
-            col=p1.lexpos,
-        )
+        p0 = xonsh_call(func, args=p[2], lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = action
         p[0] = p0
 
