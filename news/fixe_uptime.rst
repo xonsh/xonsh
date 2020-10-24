@@ -3,12 +3,10 @@
 * Add support for Haiku
 * Add support MacOS 10.10
 
-* <news item>
-
 **Changed:**
 
 * Update uptime lib by the last one from Pypi
-* Change boottime return for return timestamp float type require to xonsh
+* Add boottime_timestamp function for return timestamp float type require by xonsh
 * Merge the entire uptime module inside a single file
 * Black reformat
 

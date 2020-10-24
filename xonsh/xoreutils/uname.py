@@ -1,6 +1,17 @@
+#!/usr/bin/env python
+
+"""
+Provides a cross-platform way to figure out the system uname.
+
+This version of uname was written in Python for the xonsh project: http://xon.sh
+
+Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
+"""
 import platform
 import sys
+
 from xonsh.xoreutils.util import arg_handler
+from xonsh import __version__
 
 
 def uname(args, stdin, stdout, stderr):
@@ -9,7 +20,7 @@ def uname(args, stdin, stdout, stderr):
 
     Parameters
     ----------
-    args : str
+    args : list or None
            Arguments like -a
     stdin : sys.stdin
             The standard input
@@ -39,7 +50,7 @@ def uname(args, stdin, stdout, stderr):
 
     # control
     everything_is_false = True
-    for key, value in list(opts.items()):
+    for key, value in opts.items():
         if key not in [
             "all",
             "kernel_name",
@@ -53,16 +64,16 @@ def uname(args, stdin, stdout, stderr):
             "version",
             "help",
         ]:
-            stdout.write("{0}: unrecognized option '{1}'\n".format(__name__, key))
+            stdout.write(f"{__name__}: unrecognized option '{key}'\n")
             stdout.write("Try 'uname --help' for more information.\n")
-
             stdout.flush()
             opts["help"] = True
         if value:
             everything_is_false = False
 
     if opts["help"]:
-        stdout.write("{0}\n".format(UNAME_HELP))
+        stdout.write(UNAME_HELP)
+        stdout.write("\n")
         stdout.flush()
         return 0
 
@@ -70,7 +81,7 @@ def uname(args, stdin, stdout, stderr):
         opts["kernel_name"] = True
 
     if opts["version"]:
-        stdout.write("uname 0.1\n")
+        stdout.write(f"uname (xonsh) {__version__}\n")
         stdout.flush()
         return 0
 
@@ -184,24 +195,6 @@ def uname_main(args=None):
     """
     This version of uname was written in Python for the xonsh project: http://xon.sh
     Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
-
-    Notes
-    -----
-        Usage: uname [OPTION]...
-        Print certain system information.  With no OPTION, same as -s.
-
-          -a, --all                print all information, in the following order,
-                                     except omit -p and -i if unknown:
-          -s, --kernel-name        print the kernel name
-          -n, --nodename           print the network node hostname
-          -r, --kernel-release     print the kernel release
-          -v, --kernel-version     print the kernel version
-          -m, --machine            print the machine hardware name
-          -p, --processor          print the processor type (non-portable)
-          -i, --hardware-platform  print the hardware platform (non-portable)
-          -o, --operating-system   print the operating system
-              --help     display this help and exit
-              --version  output version information and exit
 
     Parameters
     ----------
