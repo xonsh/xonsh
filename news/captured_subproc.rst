@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Now ``$()`` returns stripped output by default (the same as sh shells).
+* Now ``$()`` returns list of lines from output.
 * Now ``!()`` returns output in subproc mode the same as `$()` before.
 
 **Deprecated:**
