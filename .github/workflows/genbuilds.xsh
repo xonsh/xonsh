@@ -15,6 +15,8 @@ OS_IMAGES = {
 }
 PYTHON_VERSIONS = ["3.6", "3.7", "3.8", "3.9"]
 
+ALLOWED_FAILURES = ["3.9"]
+
 CURR_DIR = os.path.dirname(__file__)
 template_path = os.path.join(CURR_DIR, "pytest.tmpl")
 
@@ -23,8 +25,7 @@ for os_name, python_version in product(OS_NAMES, PYTHON_VERSIONS):
     s = template.replace("OS_NAME", os_name)
     s = s.replace("OS_IMAGE", OS_IMAGES[os_name])
     s = s.replace("PYTHON_VERSION", python_version)
-    # Allow Python 3.9 to fail.
-    if python_version in ["3.9"]:
+    if python_version in ALLOWED_FAILURES:
         s = "\n".join((s, "        continue-on-error: true\n"))
     fname = os.path.join(CURR_DIR, f"pytest-{os_name}-{python_version}.yml")
     ![echo @(s) > @(fname)]
