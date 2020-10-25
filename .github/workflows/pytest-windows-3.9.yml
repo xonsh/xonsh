@@ -40,3 +40,4 @@ jobs:
           python -m pip install . --no-deps
           python -m xonsh run-tests.xsh test -- --timeout=240
 
+        continue-on-error: true
