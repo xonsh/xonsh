@@ -169,10 +169,15 @@ def subproc_captured_stdout(*cmds, envs=None):
     return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
 
 
+# Just for demo. This class will be moved.
+class OutputLines(list):
+    def __str__(self):
+        return (os.linesep).join(self)
+
 def subproc_captured_stdout_lines(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns list of lines from output.
     """
-    return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs).splitlines()
+    return OutputLines(xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs).splitlines())
 
 
 def subproc_captured_inject(*cmds, envs=None):
