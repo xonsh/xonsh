@@ -1735,6 +1735,13 @@ def DEFAULT_VARS():
             "or None / the empty string if traceback logging is not desired. "
             "Logging to a file is not enabled by default.",
         ),
+        "COMMANDS_CACHE_SIZE_WARNING": Var(
+            is_int,
+            int,
+            str,
+            10000,
+            "Number of files on the PATH above which a warning is shown.",
+        ),
     }
 
     if hasattr(locale, "LC_MESSAGES"):

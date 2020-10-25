@@ -174,7 +174,7 @@ class PromptToolkitShell(BaseShell):
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
-        events.on_pre_prompt.fire()
+        events.on_pre_prompt_format.fire()
         env = builtins.__xonsh__.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
@@ -192,8 +192,8 @@ class PromptToolkitShell(BaseShell):
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         completer = None if completions_display == "none" else self.pt_completer
 
+        events.on_timingprobe.fire(name="on_pre_prompt_tokenize")
         get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
-
         if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
@@ -202,6 +202,7 @@ class PromptToolkitShell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens()
             if get_bottom_toolbar_tokens:
                 get_bottom_toolbar_tokens = get_bottom_toolbar_tokens()
+        events.on_timingprobe.fire(name="on_post_prompt_tokenize")
 
         if env.get("VI_MODE"):
             editing_mode = EditingMode.VI
@@ -237,7 +238,9 @@ class PromptToolkitShell(BaseShell):
             "refresh_interval": refresh_interval,
             "complete_in_thread": complete_in_thread,
         }
+
         if env.get("COLOR_INPUT"):
+            events.on_timingprobe.fire(name="on_pre_prompt_style")
             style_overrides_env = env.get("PTK_STYLE_OVERRIDES", {}).copy()
             if (
                 len(style_overrides_env) > 0
@@ -267,13 +270,14 @@ class PromptToolkitShell(BaseShell):
                     style = _style_from_pygments_dict(DEFAULT_STYLE_DICT)
 
             prompt_args["style"] = style
+            events.on_timingprobe.fire(name="on_post_prompt_style")
 
         if env["ENABLE_ASYNC_PROMPT"]:
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
 
+        events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
-
         events.on_post_prompt.fire()
         return line
 

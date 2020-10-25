@@ -43,6 +43,14 @@
   "url": "https://github.com/AstraLuma/xontrib-avox",
   "description": ["Automatic (de)activation of virtual environments as you cd around"]
  },
+ {"name": "back2dir",
+  "package": "xontrib-back2dir",
+  "url": "https://github.com/anki-code/xontrib-back2dir",
+  "description": [
+    "Return to the most recently used directory when starting the xonsh shell. ",
+    "For example, if you were in the '/work' directory when you last exited xonsh, ",
+    "then your next xonsh session will start in the '/work' directory, instead of your home directory."]
+ },
  {"name": "bashisms",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -140,6 +148,11 @@
   "url": "https://github.com/laloch/xontrib-fzf-widgets",
   "description": ["Adds some fzf widgets to your xonsh shell."]
  },
+ {"name": "gitinfo",
+  "package": "xontrib-gitinfo",
+  "url": "https://github.com/dyuri/xontrib-gitinfo",
+  "description": ["Displays git information on entering a repository folder. Uses ``onefetch`` if available."]
+ },
  {"name": "histcpy",
   "package": "xontrib-histcpy",
   "url": "https://github.com/con-f-use/xontrib-histcpy",
@@ -197,7 +210,7 @@
   "url": "https://github.com/anki-code/xontrib-prompt-bar",
   "description": ["An elegance bar style for prompt."]
  }, 
- {"name": "powerline-binding",
+ {"name": "powerline_binding",
   "package": "xontrib-powerline-binding",
   "url": "https://github.com/dyuri/xontrib-powerline-binding",
   "description": ["Uses powerline to render the xonsh prompt"]
@@ -282,6 +295,11 @@
   "package": "xontrib-z",
   "url": "https://github.com/AstraLuma/xontrib-z",
   "description": ["Tracks your most used directories, based on 'frecency'."]
+ },
+ {"name": "zoxide",
+  "package": "xontrib-zoxide",
+  "url": "https://github.com/dyuri/xontrib-zoxide",
+  "description": ["Zoxide integration for xonsh."]
  }
  ],
  "packages": {
@@ -306,6 +324,13 @@
    "url": "https://github.com/anki-code/xontrib-argcomplete",
    "install": {
     "pip": "xpip install xontrib-argcomplete"
+   }
+  },
+  "xontrib-back2dir": {
+   "license": "BSD",
+   "url": "https://github.com/anki-code/xontrib-back2dir",
+   "install": {
+    "pip": "xpip install xontrib-back2dir"
    }
   },
   "xonsh-autoxsh": {
@@ -376,6 +401,13 @@
    "url": "https://github.com/laloch/xontrib-fzf-widgets",
    "install": {
     "pip": "xpip install xontrib-fzf-widgets"
+   }
+  },
+  "xontrib-gitinfo": {
+   "license": "MIT",
+   "url": "https://github.com/dyuri/xontrib-gitinfo",
+   "install": {
+    "pip": "xpip install xontrib-gitinfo"
    }
   },
   "xontrib-histcpy": {
@@ -503,6 +535,13 @@
    "url": "https://github.com/AstraLuma/xontrib-z",
    "install": {
     "pip": "xpip install xontrib-z"
+   }
+  },
+  "xontrib-z": {
+   "license": "MIT",
+   "url": "https://github.com/dyuri/xontrib-zoxide",
+   "install": {
+    "pip": "xpip install xontrib-zoxide"
    }
   }
  }

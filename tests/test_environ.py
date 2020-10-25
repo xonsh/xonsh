@@ -150,6 +150,7 @@ def test_swap_exception_replacement():
 def test_locate_binary_on_windows(xonsh_builtins):
     files = ("file1.exe", "FILE2.BAT", "file3.txt")
     with TemporaryDirectory() as tmpdir:
+        tmpdir = os.path.realpath(tmpdir)
         for fname in files:
             fpath = os.path.join(tmpdir, fname)
             with open(fpath, "w") as f:

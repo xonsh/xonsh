@@ -35,7 +35,7 @@ For those of you who want the gritty details.
     aliases
     dirstack
     jobs
-    proc
+    procs/index
     inspectors
     history/index
     completer
