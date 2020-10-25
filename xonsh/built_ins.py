@@ -6,7 +6,6 @@ special Python builtins module.
 """
 import os
 import re
-import io
 import sys
 import types
 import signal
@@ -171,14 +170,9 @@ def subproc_captured_stdout(*cmds, envs=None):
 
 
 def subproc_captured_stdout_lines(*cmds, envs=None):
-    """Runs a subprocess, capturing the output. Returns stripped the stdout
-    that was produced as a str.
+    """Runs a subprocess, capturing the output. Returns lines from stdout.
     """
-    return (
-        io.StringIO(xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs))
-        .read()
-        .splitlines()
-    )
+    return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs).splitlines()
 
 
 def subproc_captured_inject(*cmds, envs=None):
