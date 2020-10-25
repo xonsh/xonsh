@@ -169,23 +169,200 @@ def subproc_captured_stdout(*cmds, envs=None):
     return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
 
 
-
 class OutputLines(list):
-    """ Just for demo. This class will be moved to the right place."""
-
+    """
+    This class is a list but have all str functions.
+    (Just for demo. This class will be moved to the right place.)
+    """
     def __str__(self):
-        return (os.linesep).join(self)
+        return os.linesep.join(self)
 
-    # This is the demo of the concept:
-    #  * How to avoid "AttributeError: 'OutputLines' object has no attribute 'strip'"
-    #  * How to use subproc as string: $(curl https://xon.sh).strip() # returns stripped output
+    """
+    This is the demo of the concept:
+      * How to avoid "AttributeError: 'list' object has no attribute 'strip'"
+      * How to use list of lines from output as string: $(curl https://xon.sh).strip()
+      * How to use multiline modification: $(curl https://xon.sh).lines_strip()  # returns stripped lines
+    """
+    def capitalize(self, *a, **kw):
+        return str(self).capitalize(*a, **kw)
+    def lines_capitalize(self, *a, **kw):
+        return [l.capitalize(*a, **kw) for l in self]
+    def casefold(self, *a, **kw):
+        return str(self).casefold(*a, **kw)
+    def lines_casefold(self, *a, **kw):
+        return [l.casefold(*a, **kw) for l in self]
+    def center(self, *a, **kw):
+        return str(self).center(*a, **kw)
+    def lines_center(self, *a, **kw):
+        return [l.center(*a, **kw) for l in self]
+    def str_count(self, *a, **kw):
+        return str(self).count(*a, **kw)
+    def lines_count(self, *a, **kw):
+        return [l.count(*a, **kw) for l in self]
+    def encode(self, *a, **kw):
+        return str(self).encode(*a, **kw)
+    def lines_encode(self, *a, **kw):
+        return [l.encode(*a, **kw) for l in self]
+    def endswith(self, *a, **kw):
+        return str(self).endswith(*a, **kw)
+    def lines_endswith(self, *a, **kw):
+        return [l.endswith(*a, **kw) for l in self]
+    def expandtabs(self, *a, **kw):
+        return str(self).expandtabs(*a, **kw)
+    def lines_expandtabs(self, *a, **kw):
+        return [l.expandtabs(*a, **kw) for l in self]
+    def find(self, *a, **kw):
+        return str(self).find(*a, **kw)
+    def lines_find(self, *a, **kw):
+        return [l.find(*a, **kw) for l in self]
+    def format(self, *a, **kw):
+        return str(self).format(*a, **kw)
+    def lines_format(self, *a, **kw):
+        return [l.format(*a, **kw) for l in self]
+    def format_map(self, *a, **kw):
+        return str(self).format_map(*a, **kw)
+    def lines_format_map(self, *a, **kw):
+        return [l.format_map(*a, **kw) for l in self]
+    def str_index(self, *a, **kw):
+        return str(self).index(*a, **kw)
+    def lines_index(self, *a, **kw):
+        return [l.index(*a, **kw) for l in self]
+    def isalnum(self, *a, **kw):
+        return str(self).isalnum(*a, **kw)
+    def lines_isalnum(self, *a, **kw):
+        return [l.isalnum(*a, **kw) for l in self]
+    def isalpha(self, *a, **kw):
+        return str(self).isalpha(*a, **kw)
+    def lines_isalpha(self, *a, **kw):
+        return [l.isalpha(*a, **kw) for l in self]
+    def isascii(self, *a, **kw):
+        return str(self).isascii(*a, **kw)
+    def lines_isascii(self, *a, **kw):
+        return [l.isascii(*a, **kw) for l in self]
+    def isdecimal(self, *a, **kw):
+        return str(self).isdecimal(*a, **kw)
+    def lines_isdecimal(self, *a, **kw):
+        return [l.isdecimal(*a, **kw) for l in self]
+    def isdigit(self, *a, **kw):
+        return str(self).isdigit(*a, **kw)
+    def lines_isdigit(self, *a, **kw):
+        return [l.isdigit(*a, **kw) for l in self]
+    def isidentifier(self, *a, **kw):
+        return str(self).isidentifier(*a, **kw)
+    def lines_isidentifier(self, *a, **kw):
+        return [l.isidentifier(*a, **kw) for l in self]
+    def islower(self, *a, **kw):
+        return str(self).islower(*a, **kw)
+    def lines_islower(self, *a, **kw):
+        return [l.islower(*a, **kw) for l in self]
+    def isnumeric(self, *a, **kw):
+        return str(self).isnumeric(*a, **kw)
+    def lines_isnumeric(self, *a, **kw):
+        return [l.isnumeric(*a, **kw) for l in self]
+    def isprintable(self, *a, **kw):
+        return str(self).isprintable(*a, **kw)
+    def lines_isprintable(self, *a, **kw):
+        return [l.isprintable(*a, **kw) for l in self]
+    def isspace(self, *a, **kw):
+        return str(self).isspace(*a, **kw)
+    def lines_isspace(self, *a, **kw):
+        return [l.isspace(*a, **kw) for l in self]
+    def istitle(self, *a, **kw):
+        return str(self).istitle(*a, **kw)
+    def lines_istitle(self, *a, **kw):
+        return [l.istitle(*a, **kw) for l in self]
+    def isupper(self, *a, **kw):
+        return str(self).isupper(*a, **kw)
+    def lines_isupper(self, *a, **kw):
+        return [l.isupper(*a, **kw) for l in self]
+    def join(self, *a, **kw):
+        return str(self).join(*a, **kw)
+    def lines_join(self, *a, **kw):
+        return [l.join(*a, **kw) for l in self]
+    def ljust(self, *a, **kw):
+        return str(self).ljust(*a, **kw)
+    def lines_ljust(self, *a, **kw):
+        return [l.ljust(*a, **kw) for l in self]
+    def lower(self, *a, **kw):
+        return str(self).lower(*a, **kw)
+    def lines_lower(self, *a, **kw):
+        return [l.lower(*a, **kw) for l in self]
+    def lstrip(self, *a, **kw):
+        return str(self).lstrip(*a, **kw)
+    def lines_lstrip(self, *a, **kw):
+        return [l.lstrip(*a, **kw) for l in self]
+    def maketrans(self, *a, **kw):
+        return str(self).maketrans(*a, **kw)
+    def lines_maketrans(self, *a, **kw):
+        return [l.maketrans(*a, **kw) for l in self]
+    def partition(self, *a, **kw):
+        return str(self).partition(*a, **kw)
+    def lines_partition(self, *a, **kw):
+        return [l.partition(*a, **kw) for l in self]
+    def replace(self, *a, **kw):
+        return str(self).replace(*a, **kw)
+    def lines_replace(self, *a, **kw):
+        return [l.replace(*a, **kw) for l in self]
+    def rfind(self, *a, **kw):
+        return str(self).rfind(*a, **kw)
+    def lines_rfind(self, *a, **kw):
+        return [l.rfind(*a, **kw) for l in self]
+    def rindex(self, *a, **kw):
+        return str(self).rindex(*a, **kw)
+    def lines_rindex(self, *a, **kw):
+        return [l.rindex(*a, **kw) for l in self]
+    def rjust(self, *a, **kw):
+        return str(self).rjust(*a, **kw)
+    def lines_rjust(self, *a, **kw):
+        return [l.rjust(*a, **kw) for l in self]
+    def rpartition(self, *a, **kw):
+        return str(self).rpartition(*a, **kw)
+    def lines_rpartition(self, *a, **kw):
+        return [l.rpartition(*a, **kw) for l in self]
+    def rsplit(self, *a, **kw):
+        return str(self).rsplit(*a, **kw)
+    def lines_rsplit(self, *a, **kw):
+        return [l.rsplit(*a, **kw) for l in self]
+    def rstrip(self, *a, **kw):
+        return str(self).rstrip(*a, **kw)
+    def lines_rstrip(self, *a, **kw):
+        return [l.rstrip(*a, **kw) for l in self]
+    def split(self, *a, **kw):
+        return str(self).split(*a, **kw)
+    def lines_split(self, *a, **kw):
+        return [l.split(*a, **kw) for l in self]
+    def splitlines(self, *a, **kw):
+        return str(self).splitlines(*a, **kw)
+    def lines_splitlines(self, *a, **kw):
+        return [l.splitlines(*a, **kw) for l in self]
+    def startswith(self, *a, **kw):
+        return str(self).startswith(*a, **kw)
+    def lines_startswith(self, *a, **kw):
+        return [l.startswith(*a, **kw) for l in self]
     def strip(self, *a, **kw):
         return str(self).strip(*a, **kw)
-
-    # This is the demo of the concept:
-    #  * How to use multiline modification: $(curl https://xon.sh).lines_strip()  # returns stripped lines
     def lines_strip(self, *a, **kw):
         return [l.strip(*a, **kw) for l in self]
+    def swapcase(self, *a, **kw):
+        return str(self).swapcase(*a, **kw)
+    def lines_swapcase(self, *a, **kw):
+        return [l.swapcase(*a, **kw) for l in self]
+    def title(self, *a, **kw):
+        return str(self).title(*a, **kw)
+    def lines_title(self, *a, **kw):
+        return [l.title(*a, **kw) for l in self]
+    def translate(self, *a, **kw):
+        return str(self).translate(*a, **kw)
+    def lines_translate(self, *a, **kw):
+        return [l.translate(*a, **kw) for l in self]
+    def upper(self, *a, **kw):
+        return str(self).upper(*a, **kw)
+    def lines_upper(self, *a, **kw):
+        return [l.upper(*a, **kw) for l in self]
+    def zfill(self, *a, **kw):
+        return str(self).zfill(*a, **kw)
+    def lines_zfill(self, *a, **kw):
+        return [l.zfill(*a, **kw) for l in self]
 
 
 def subproc_captured_stdout_lines(*cmds, envs=None):
