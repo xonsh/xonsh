@@ -169,10 +169,24 @@ def subproc_captured_stdout(*cmds, envs=None):
     return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
 
 
-# Just for demo. This class will be moved.
+
 class OutputLines(list):
+    """ Just for demo. This class will be moved to the right place."""
+
     def __str__(self):
         return (os.linesep).join(self)
+
+    # This is the demo of the concept:
+    #  * How to avoid "AttributeError: 'OutputLines' object has no attribute 'strip'"
+    #  * How to use subproc as string: $(curl https://xon.sh).strip() # returns stripped output
+    def strip(self, *a, **kw):
+        return str(self).strip(*a, **kw)
+
+    # This is the demo of the concept:
+    #  * How to use multiline modification: $(curl https://xon.sh).lines_strip()  # returns stripped lines
+    def lines_strip(self, *a, **kw):
+        return [l.strip(*a, **kw) for l in self]
+
 
 def subproc_captured_stdout_lines(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns list of lines from output.
