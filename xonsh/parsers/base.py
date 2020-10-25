@@ -3121,21 +3121,24 @@ class BaseParser(object):
         self._append_subproc_bang(p)
         self.p_subproc_atom_uncaptured(p)
 
+    def p_subproc_atom_captured_stdout_lines(self, p):
+        """subproc_atom : dollar_lparen_tok subproc RPAREN"""
+        p1 = p[1]
+        p0 = xonsh_call(
+            "__xonsh__.subproc_captured_stdout_lines",
+            args=p[2],
+            lineno=p1.lineno,
+            col=p1.lexpos,
+        )
+        p0._cliarg_action = "extend"
+        p[0] = p0
+
     def p_subproc_atom_captured_stdout(self, p):
-        """subproc_atom : dollar_lparen_tok subproc RPAREN
-                        | bang_lparen_tok subproc RPAREN
+        """subproc_atom : bang_lparen_tok subproc RPAREN
         """
         p1 = p[1]
-
-        func = "__xonsh__.subproc_captured_stdout_lines"
-        action = "extend"
-
-        if p1.type == "BANG_LPAREN":
-            func = "__xonsh__.subproc_captured_stdout"
-            action = "append"
-
-        p0 = xonsh_call(func, args=p[2], lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = action
+        p0 = xonsh_call("__xonsh__.subproc_captured_stdout", args=p[2], lineno=p1.lineno, col=p1.lexpos)
+        p0._cliarg_action = "append"
         p[0] = p0
 
     def p_subproc_atom_captured_stdout_bang_empty(self, p):
