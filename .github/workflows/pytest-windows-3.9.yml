@@ -1,4 +1,4 @@
-name: pytest OS_NAME PYTHON_VERSION
+name: pytest windows 3.9
 
 on:
   push:
@@ -13,8 +13,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [OS_IMAGE]
-        python-version: [PYTHON_VERSION]
+        os: [windows-latest]
+        python-version: [3.9]
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -40,3 +40,6 @@ jobs:
           python -m pip install -r requirements/tests.txt
           python -m pip install . --no-deps
           python -m xonsh run-tests.xsh test -- --timeout=240
+
+        continue-on-error: true
+
