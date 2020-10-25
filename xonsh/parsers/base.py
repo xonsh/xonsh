@@ -2926,7 +2926,7 @@ class BaseParser(object):
             )
         elif p1 == "$(":
             p0 = xonsh_call(
-                "__xonsh__.subproc_captured_stdout_split", p2, lineno=lineno, col=col
+                "__xonsh__.subproc_captured_stdout_lines", p2, lineno=lineno, col=col
             )
         elif p1 == "!(":
             p0 = xonsh_call(
@@ -3127,7 +3127,7 @@ class BaseParser(object):
         """
         p1 = p[1]
 
-        func = "__xonsh__.subproc_captured_stdout_split"
+        func = "__xonsh__.subproc_captured_stdout_lines"
         action = "extend"
 
         if p1.type == "BANG_LPAREN":
