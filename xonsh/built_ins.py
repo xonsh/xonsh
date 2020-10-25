@@ -170,7 +170,7 @@ def subproc_captured_stdout(*cmds, envs=None):
 
 
 def subproc_captured_stdout_lines(*cmds, envs=None):
-    """Runs a subprocess, capturing the output. Returns lines from stdout.
+    """Runs a subprocess, capturing the output. Returns list of lines from output.
     """
     return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs).splitlines()
 
