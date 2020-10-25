@@ -1,10 +1,11 @@
 """PTK specific PromptFormatter class."""
 
 import functools
+import typing as tp
 
 from prompt_toolkit import PromptSession
 from xonsh.prompt.base import PromptFormatter, DEFAULT_PROMPT
-from xonsh.ptk_shell.updator import PromptUpdator
+from xonsh.ptk_shell.updator import PromptUpdator, AsyncPrompt
 
 
 class PTKPromptFormatter(PromptFormatter):
@@ -35,17 +36,21 @@ class PTKPromptFormatter(PromptFormatter):
             kwargs["async_prompt"] = self.updator.add(prompt_name)
 
         # in case of failure it returns a fail-over template. otherwise it returns list of tokens
-        prompt_or_tokens = super().__call__(template, fields, **kwargs)
+        return super().__call__(template, fields, **kwargs)
 
-        if isinstance(prompt_or_tokens, list):
-            if threaded:
-                self.updator.set_tokens(prompt_name, prompt_or_tokens)
-            return "".join(prompt_or_tokens)
-
-        return prompt_or_tokens
-
-    def _format_prompt(self, template=DEFAULT_PROMPT, **kwargs):
-        return self._get_tokens(template, **kwargs)
+    def _format_prompt(
+        self,
+        template=DEFAULT_PROMPT,
+        async_prompt: tp.Optional[AsyncPrompt] = None,
+        **kwargs
+    ):
+        toks = super()._format_prompt(
+            template=template, async_prompt=async_prompt, **kwargs
+        )
+        if async_prompt is not None:
+            # late binding of values
+            async_prompt.tokens = toks
+        return toks
 
     def _no_cache_field_value(
         self, field, field_value, async_prompt=None, idx=None, spec=None, conv=None, **_
