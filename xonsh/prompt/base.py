@@ -93,7 +93,9 @@ class PromptFormatter:
         self.cache.clear()
 
         if fields is None:
-            self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)  # type: ignore
+            self.fields = builtins.__xonsh__.env.get(
+                "PROMPT_FIELDS", PROMPT_FIELDS
+            )  # type: ignore
         else:
             self.fields = fields
         try:

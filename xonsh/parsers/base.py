@@ -3137,7 +3137,12 @@ class BaseParser(object):
         """subproc_atom : bang_lparen_tok subproc RPAREN
         """
         p1 = p[1]
-        p0 = xonsh_call("__xonsh__.subproc_captured_stdout", args=p[2], lineno=p1.lineno, col=p1.lexpos)
+        p0 = xonsh_call(
+            "__xonsh__.subproc_captured_stdout",
+            args=p[2],
+            lineno=p1.lineno,
+            col=p1.lexpos,
+        )
         p0._cliarg_action = "append"
         p[0] = p0
 
