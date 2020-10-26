@@ -170,6 +170,10 @@ class OutputLines(list):
     def __str__(self):
         return os.linesep.join(self)
 
+    @property
+    def str(self):
+        return str(self)
+
     def capitalize(self, *a, **kw):
         return str(self).capitalize(*a, **kw)
 
