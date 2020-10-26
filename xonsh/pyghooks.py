@@ -52,7 +52,7 @@ from xonsh.color_tools import (
     iscolor,
     warn_deprecated_no_color,
 )
-from xonsh.style_tools import norm_name
+from xonsh.style_tools import norm_name, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import terminal256, html
 from xonsh.platform import (
     os_environ,
@@ -234,7 +234,7 @@ def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
         tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
-    if token not in styles:
+    if token not in styles or not styles[token]:
         styles[token] = pc
     return token
 
@@ -382,8 +382,13 @@ class XonshStyle(Style):
                 self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
-        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
-        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
+
+        compound = CompoundColorMap(
+            ChainMap(self.trap, cmap, self._smap, DEFAULT_STYLE_DICT)
+        )
+        self.styles = ChainMap(
+            self.trap, cmap, self._smap, DEFAULT_STYLE_DICT, compound
+        )
         self._style_name = value
 
         for file_type, xonsh_color in builtins.__xonsh__.env.get(
@@ -398,6 +403,9 @@ class XonshStyle(Style):
     @style_name.deleter
     def style_name(self):
         self._style_name = ""
+
+    def override(self, style_dict):
+        self.trap.update(_tokenize_style_dict(style_dict))
 
     def enhance_colors_for_cmd_exe(self):
         """ Enhance colors when using cmd.exe on windows.
@@ -438,22 +446,41 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
+def _format_ptk_style_name(name):
+    """Format PTK style name to be able to include it in a pygments style"""
+    parts = name.split("-")
+    return "".join(part.capitalize() for part in parts)
+
+
 def _get_token_by_name(name):
     """Get pygments token object by its string representation."""
+    if not isinstance(name, str):
+        return name
+
     token = Token
     parts = name.split(".")
 
+    # PTK - all lowercase
+    if parts[0] == parts[0].lower():
+        parts = ["PTK"] + [_format_ptk_style_name(part) for part in parts]
+
+    # color name
     if len(parts) == 1:
-        parts = ["Color"] + parts
+        return color_token_by_name((name,))
 
     if parts[0] == "Token":
         parts = parts[1:]
 
-    while len(parts):
+    while len(parts) > 0:
         token = getattr(token, parts[0])
         parts = parts[1:]
 
     return token
+
+
+def _tokenize_style_dict(styles):
+    """Converts possible string keys in style dicts to Tokens"""
+    return {_get_token_by_name(token): value for token, value in styles.items()}
 
 
 def register_custom_pygments_style(
@@ -481,9 +508,7 @@ def register_custom_pygments_style(
     base_style = get_style_by_name(base)
     custom_styles = base_style.styles.copy()
 
-    for token, value in styles.items():
-        if isinstance(token, str):
-            token = _get_token_by_name(token)
+    for token, value in _tokenize_style_dict(styles).items():
         custom_styles[token] = value
 
     style = type(
@@ -512,22 +537,6 @@ def register_custom_pygments_style(
     STYLES[name] = cmap
 
     return style
-
-
-PTK_STYLE = LazyObject(
-    lambda: {
-        Token.Menu.Completions: "bg:ansigray ansiblack",
-        Token.Menu.Completions.Completion: "",
-        Token.Menu.Completions.Completion.Current: "bg:ansibrightblack ansiwhite",
-        Token.Scrollbar: "bg:ansibrightblack",
-        Token.Scrollbar.Button: "bg:ansiblack",
-        Token.Scrollbar.Arrow: "bg:ansiblack ansiwhite bold",
-        Token.AutoSuggestion: "ansibrightblack",
-        Token.Aborted: "ansibrightblack",
-    },
-    globals(),
-    "PTK_STYLE",
-)
 
 
 XONSH_BASE_STYLE = LazyObject(
