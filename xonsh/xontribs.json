@@ -91,6 +91,16 @@
   ]
  },
  {
+  "name": "cmd_done",
+  "package": "xontrib-cmd-durations",
+  "url": "https://github.com/jnoortheen/xontrib-cmd-durations",
+  "description": [
+   "send notification once long-running command is finished.",
+   " Adds `long_cmd_duration` field to $PROMPT_FIELDS.",
+   " Note: It needs `xdotool` installed to detect current window."
+  ]
+ },
+ {
   "name": "direnv",
   "package": "xonsh-direnv",
   "url": "https://github.com/74th/xonsh-direnv",
@@ -368,6 +378,13 @@
     "pip": "xpip install xonsh-docker-tabcomplete"
    }
   },
+  "xontrib-hist-navigator": {
+   "license": "MIT",
+   "url": "https://github.com/jnoortheen/xontrib-hist-navigator",
+   "install": {
+    "pip": "xpip install xontrib-hist-navigator"
+   }
+  },
   "xonsh-scrapy-tabcomplete": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
@@ -395,6 +412,13 @@
    "install": {
     "pip": "xpip install xontrib-avox"
    }
+  },
+  "xontrib-cmd-durations": {
+    "license": "MIT",    
+    "url": "https://github.com/jnoortheen/xontrib-cmd-durations",
+    "install": {
+      "pip": "xpip install xontrib-cmd-durations"
+    }
   },
   "xontrib-fzf-widgets": {
    "license": "GPLv3",
@@ -537,7 +561,7 @@
     "pip": "xpip install xontrib-z"
    }
   },
-  "xontrib-z": {
+  "xontrib-zoxide": {
    "license": "MIT",
    "url": "https://github.com/dyuri/xontrib-zoxide",
    "install": {
