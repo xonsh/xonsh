@@ -30,6 +30,8 @@ from xonsh.platform import (
     os_environ,
 )
 
+from xonsh.style_tools import PTK2_STYLE
+
 from xonsh.tools import (
     always_true,
     always_false,
@@ -1215,8 +1217,8 @@ def DEFAULT_VARS():
             is_str_str_dict,
             to_str_str_dict,
             dict_to_str,
-            {},
-            "A dictionary containing custom prompt_toolkit style definitions. (deprecated)",
+            dict(PTK2_STYLE),
+            "A dictionary containing custom prompt_toolkit style definitions.",
         ),
         "PUSHD_MINUS": Var(
             is_bool,
@@ -1715,18 +1717,6 @@ def DEFAULT_VARS():
             False,
             "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
             "history files.",
-        ),
-        "XONSH_STYLE_OVERRIDES": Var(
-            is_str_str_dict,
-            to_str_str_dict,
-            dict_to_str,
-            {},
-            "A dictionary containing custom prompt_toolkit/pygments style definitions.\n"
-            "The following style definitions are supported:\n\n"
-            "    - ``pygments.token.Token`` - ``$XONSH_STYLE_OVERRIDES[Token.Keyword] = '#ff0000'``\n"
-            "    - pygments token name (string) - ``$XONSH_STYLE_OVERRIDES['Token.Keyword'] = '#ff0000'``\n"
-            "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
-            "(The rules above are all have the same effect.)",
         ),
         "XONSH_TRACE_SUBPROC": Var(
             is_bool,

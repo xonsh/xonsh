@@ -147,10 +147,9 @@ def test_ansi_color_name_to_escape_code_for_all_styles(color, style):
     [
         ("test1", {}, {}),
         ("test2", {"Color.RED": "#ff0000"}, {"RED": "38;5;196"}),
-        ("test3", {"Token.Color.RED": "#ff0000"}, {"RED": "38;5;196"}),
-        ("test4", {"BOLD_RED": "bold #ff0000"}, {"BOLD_RED": "1;38;5;196"}),
+        ("test3", {"BOLD_RED": "bold #ff0000"}, {"BOLD_RED": "1;38;5;196"}),
         (
-            "test5",
+            "test4",
             {"INTENSE_RED": "italic underline bg:#ff0000 #ff0000"},
             {"INTENSE_RED": "3;4;48;5;196;38;5;196"},
         ),
