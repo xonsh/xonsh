@@ -33,7 +33,8 @@ jobs:
           update-conda: true
           python-version: ${{ matrix.python-version }}  # this itself makes sure that Python version is installed
           condarc-file: ci/condarc.yml
-      - shell: bash -l {0}
+      - name: Install Xonsh and run tests
+        shell: bash -l {0}
         run: |
           python -m pip --version
           python -m pip install -r requirements/tests.txt

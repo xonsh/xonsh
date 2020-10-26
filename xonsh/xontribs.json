@@ -91,6 +91,16 @@
   ]
  },
  {
+  "name": "cmd_done",
+  "package": "xontrib-cmd-durations",
+  "url": "https://github.com/jnoortheen/xontrib-cmd-durations",
+  "description": [
+   "send notification once long-running command is finished.",
+   " Adds `long_cmd_duration` field to $PROMPT_FIELDS.",
+   " Note: It needs `xdotool` installed to detect current window."
+  ]
+ },
+ {
   "name": "direnv",
   "package": "xonsh-direnv",
   "url": "https://github.com/74th/xonsh-direnv",
@@ -147,6 +157,11 @@
   "package": "xontrib-fzf-widgets",
   "url": "https://github.com/laloch/xontrib-fzf-widgets",
   "description": ["Adds some fzf widgets to your xonsh shell."]
+ },
+ {"name": "gitinfo",
+  "package": "xontrib-gitinfo",
+  "url": "https://github.com/dyuri/xontrib-gitinfo",
+  "description": ["Displays git information on entering a repository folder. Uses ``onefetch`` if available."]
  },
  {"name": "histcpy",
   "package": "xontrib-histcpy",
@@ -290,6 +305,11 @@
   "package": "xontrib-z",
   "url": "https://github.com/AstraLuma/xontrib-z",
   "description": ["Tracks your most used directories, based on 'frecency'."]
+ },
+ {"name": "zoxide",
+  "package": "xontrib-zoxide",
+  "url": "https://github.com/dyuri/xontrib-zoxide",
+  "description": ["Zoxide integration for xonsh."]
  }
  ],
  "packages": {
@@ -358,6 +378,13 @@
     "pip": "xpip install xonsh-docker-tabcomplete"
    }
   },
+  "xontrib-hist-navigator": {
+   "license": "MIT",
+   "url": "https://github.com/jnoortheen/xontrib-hist-navigator",
+   "install": {
+    "pip": "xpip install xontrib-hist-navigator"
+   }
+  },
   "xonsh-scrapy-tabcomplete": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
@@ -386,11 +413,25 @@
     "pip": "xpip install xontrib-avox"
    }
   },
+  "xontrib-cmd-durations": {
+    "license": "MIT",    
+    "url": "https://github.com/jnoortheen/xontrib-cmd-durations",
+    "install": {
+      "pip": "xpip install xontrib-cmd-durations"
+    }
+  },
   "xontrib-fzf-widgets": {
    "license": "GPLv3",
    "url": "https://github.com/laloch/xontrib-fzf-widgets",
    "install": {
     "pip": "xpip install xontrib-fzf-widgets"
+   }
+  },
+  "xontrib-gitinfo": {
+   "license": "MIT",
+   "url": "https://github.com/dyuri/xontrib-gitinfo",
+   "install": {
+    "pip": "xpip install xontrib-gitinfo"
    }
   },
   "xontrib-histcpy": {
@@ -518,6 +559,13 @@
    "url": "https://github.com/AstraLuma/xontrib-z",
    "install": {
     "pip": "xpip install xontrib-z"
+   }
+  },
+  "xontrib-zoxide": {
+   "license": "MIT",
+   "url": "https://github.com/dyuri/xontrib-zoxide",
+   "install": {
+    "pip": "xpip install xontrib-zoxide"
    }
   }
  }
