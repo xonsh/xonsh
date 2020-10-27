@@ -146,9 +146,6 @@ def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
 
 def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=False):
     cmap = _ensure_color_map(style=style, cmap=cmap)
-    overrides = builtins.__xonsh__.env["XONSH_STYLE_OVERRIDES"]
-    if overrides:
-        cmap.update(_style_dict_to_ansi(overrides))
     esc = ("\001" if hide else "") + "\033["
     m = "m" + ("\002" if hide else "")
     bopen = "{"
@@ -1107,18 +1104,6 @@ def _pygments_to_ansi_style(style):
     return ";".join(ansi_style_list)
 
 
-def _style_dict_to_ansi(styles):
-    """Converts pygments like style dict to ANSI rules"""
-    ansi_style = {}
-    for token, style in styles.items():
-        token = str(token)  # convert pygments token to str
-        parts = token.split(".")
-        if len(parts) == 1 or parts[-2] == "Color":
-            ansi_style[parts[-1]] = _pygments_to_ansi_style(style)
-
-    return ansi_style
-
-
 def register_custom_ansi_style(name, styles, base="default"):
     """Register custom ANSI style.
 
@@ -1133,7 +1118,11 @@ def register_custom_ansi_style(name, styles, base="default"):
     """
     base_style = ANSI_STYLES[base].copy()
 
-    base_style.update(_style_dict_to_ansi(styles))
+    for token, style in styles.items():
+        token = str(token)  # convert pygments token to str
+        parts = token.split(".")
+        if len(parts) == 1 or parts[-2] == "Color":
+            base_style[parts[-1]] = _pygments_to_ansi_style(style)
 
     ANSI_STYLES[name] = base_style
 
