@@ -257,16 +257,33 @@ class PromptToolkitShell(BaseShell):
                 style = _style_from_pygments_cls(
                     pyghooks.xonsh_style_proxy(self.styler)
                 )
+                if len(self.styler.non_pygments_rules) > 0:
+                    try:
+                        style = merge_styles(
+                            [
+                                style,
+                                _style_from_pygments_dict(
+                                    self.styler.non_pygments_rules
+                                ),
+                            ]
+                        )
+                    except (AttributeError, TypeError, ValueError) as style_exception:
+                        print_warning(
+                            f"Error applying style override!\n{style_exception}\n"
+                        )
+
             else:
                 style = _style_from_pygments_dict(DEFAULT_STYLE_DICT)
 
-            if style_overrides_env:
+            if len(style_overrides_env) > 0:
                 try:
                     style = merge_styles(
                         [style, _style_from_pygments_dict(style_overrides_env)]
                     )
-                except (AttributeError, TypeError, ValueError) as e:
-                    print_warning(f"Error applying style override!\n{e}\n")
+                except (AttributeError, TypeError, ValueError) as style_exception:
+                    print_warning(
+                        f"Error applying style override!\n{style_exception}\n"
+                    )
 
             prompt_args["style"] = style
             events.on_timingprobe.fire(name="on_post_prompt_style")

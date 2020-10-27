@@ -405,6 +405,10 @@ class XonshStyle(Style):
     def style_name(self):
         self._style_name = ""
 
+    @property
+    def non_pygments_rules(self):
+        return NON_PYGMENTS_RULES.get(self.style_name, {})
+
     def override(self, style_dict):
         self.trap.update(_tokenize_style_dict(style_dict))
 
@@ -525,6 +529,12 @@ def register_custom_pygments_style(
     for token, value in _tokenize_style_dict(styles).items():
         custom_styles[token] = value
 
+    non_pygments_rules = {
+        token: value
+        for token, value in styles.items()
+        if _ptk_specific_style_value(value)
+    }
+
     style = type(
         f"Custom{name}Style",
         (Style,),
@@ -549,6 +559,8 @@ def register_custom_pygments_style(
             cmap[token] = custom_styles[token]
 
     STYLES[name] = cmap
+    if len(non_pygments_rules) > 0:
+        NON_PYGMENTS_RULES[name] = non_pygments_rules
 
     return style
 
@@ -1232,6 +1244,7 @@ STYLES = LazyDict(
     globals(),
     "STYLES",
 )
+NON_PYGMENTS_RULES = {}
 
 del (
     _algol_style,
