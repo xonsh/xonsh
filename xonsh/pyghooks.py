@@ -71,7 +71,17 @@ from xonsh.events import events
 #
 
 Color = Token.Color  # alias to new color token namespace
+
+# style modifiers not handled by pygments (but supported by ptk)
 PTK_SPECIFIC_VALUES = ["reverse", "noreverse", "hidden", "nohidden", "blink", "noblink"]
+
+# Generate fallback style dict from non-pygments styles
+# (Let pygments handle the defaults where it can)
+FALLBACK_STYLE_DICT: tp.Dict[_TokenType, str] = {
+    token: value
+    for token, value in DEFAULT_STYLE_DICT.items()
+    if str(token).startswith("Token.PTK")
+}
 
 
 def color_by_name(name, fg=None, bg=None):
@@ -385,10 +395,10 @@ class XonshStyle(Style):
                 self._smap = XONSH_BASE_STYLE.copy()
 
         compound = CompoundColorMap(
-            ChainMap(self.trap, cmap, self._smap, DEFAULT_STYLE_DICT)
+            ChainMap(self.trap, cmap, self._smap, FALLBACK_STYLE_DICT)
         )
         self.styles = ChainMap(
-            self.trap, cmap, self._smap, DEFAULT_STYLE_DICT, compound
+            self.trap, cmap, self._smap, FALLBACK_STYLE_DICT, compound
         )
         self._style_name = value
 
