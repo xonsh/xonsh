@@ -21,6 +21,23 @@ from xonsh.color_tools import (
 from xonsh.tools import FORMATTER
 
 
+# pygments modifier to ANSI escape code mapping
+_PART_STYLE_CODE_MAPPING = {
+    "bold": "1",
+    "nobold": "21",
+    "italic": "3",
+    "noitalic": "23",
+    "underline": "4",
+    "nounderline": "24",
+    "blink": "5",
+    "noblink": "25",
+    "reverse": "7",
+    "noreverse": "27",
+    "hidden": "8",
+    "nohidden": "28",
+}
+
+
 def _ensure_color_map(style="default", cmap=None):
     if cmap is not None:
         pass
@@ -1093,30 +1110,8 @@ def _pygments_to_ansi_style(style):
     ansi_style_list = []
     parts = style.split(" ")
     for part in parts:
-        if part == "bold":
-            ansi_style_list.append("1")
-        elif part == "nobold":
-            ansi_style_list.append("21")
-        elif part == "italic":
-            ansi_style_list.append("3")
-        elif part == "noitalic":
-            ansi_style_list.append("23")
-        elif part == "underline":
-            ansi_style_list.append("4")
-        elif part == "nounderline":
-            ansi_style_list.append("24")
-        elif part == "blink":
-            ansi_style_list.append("5")
-        elif part == "noblink":
-            ansi_style_list.append("25")
-        elif part == "reverse":
-            ansi_style_list.append("7")
-        elif part == "noreverse":
-            ansi_style_list.append("27")
-        elif part == "hidden":
-            ansi_style_list.append("8")
-        elif part == "nohidden":
-            ansi_style_list.append("28")
+        if part in _PART_STYLE_CODE_MAPPING:
+            ansi_style_list.append(_PART_STYLE_CODE_MAPPING[part])
         elif part[:3] == "bg:":
             ansi_style_list.append("48;5;" + rgb2short(part[3:])[0])
         else:

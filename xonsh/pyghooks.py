@@ -72,16 +72,25 @@ from xonsh.events import events
 
 Color = Token.Color  # alias to new color token namespace
 
+# style rules that are not supported by pygments are stored here
+NON_PYGMENTS_RULES: tp.Dict[str, tp.Dict[str, str]] = {}
+
 # style modifiers not handled by pygments (but supported by ptk)
-PTK_SPECIFIC_VALUES = ["reverse", "noreverse", "hidden", "nohidden", "blink", "noblink"]
+PTK_SPECIFIC_VALUES = frozenset(
+    {"reverse", "noreverse", "hidden", "nohidden", "blink", "noblink"}
+)
 
 # Generate fallback style dict from non-pygments styles
 # (Let pygments handle the defaults where it can)
-FALLBACK_STYLE_DICT: tp.Dict[_TokenType, str] = {
-    token: value
-    for token, value in DEFAULT_STYLE_DICT.items()
-    if str(token).startswith("Token.PTK")
-}
+FALLBACK_STYLE_DICT = LazyObject(
+    lambda: {
+        token: value
+        for token, value in DEFAULT_STYLE_DICT.items()
+        if str(token).startswith("Token.PTK")
+    },
+    globals(),
+    "FALLBACK_STYLE_DICT",
+)
 
 
 def color_by_name(name, fg=None, bg=None):
@@ -1254,7 +1263,6 @@ STYLES = LazyDict(
     globals(),
     "STYLES",
 )
-NON_PYGMENTS_RULES: tp.Dict[str, str] = {}
 
 del (
     _algol_style,
