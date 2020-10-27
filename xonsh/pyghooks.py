@@ -1244,7 +1244,7 @@ STYLES = LazyDict(
     globals(),
     "STYLES",
 )
-NON_PYGMENTS_RULES = {}
+NON_PYGMENTS_RULES: tp.Dict[str, str] = {}
 
 del (
     _algol_style,
