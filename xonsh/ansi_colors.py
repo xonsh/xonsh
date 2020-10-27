@@ -1095,7 +1095,7 @@ def _pygments_to_ansi_style(style):
     for part in parts:
         if part == "bold":
             ansi_style_list.append("1")
-        if part == "nobold":
+        elif part == "nobold":
             ansi_style_list.append("21")
         elif part == "italic":
             ansi_style_list.append("3")

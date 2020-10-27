@@ -154,6 +154,16 @@ def test_ansi_color_name_to_escape_code_for_all_styles(color, style):
             {"INTENSE_RED": "italic underline bg:#ff0000 #ff0000"},
             {"INTENSE_RED": "3;4;48;5;196;38;5;196"},
         ),
+        (
+            "test6",
+            {"INTENSE_GREEN": "reverse blink hidden bg:#ff0000 #ff0000"},
+            {"INTENSE_GREEN": "7;5;8;48;5;196;38;5;196"},
+        ),
+        (
+            "test6",
+            {"INTENSE_BLUE": "noreverse noblink nohidden bg:#ff0000 #ff0000"},
+            {"INTENSE_BLUE": "27;25;28;48;5;196;38;5;196"},
+        ),
     ],
 )
 def test_register_custom_ansi_style(name, styles, refrules):
