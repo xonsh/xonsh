@@ -1095,10 +1095,28 @@ def _pygments_to_ansi_style(style):
     for part in parts:
         if part == "bold":
             ansi_style_list.append("1")
+        if part == "nobold":
+            ansi_style_list.append("21")
         elif part == "italic":
             ansi_style_list.append("3")
+        elif part == "noitalic":
+            ansi_style_list.append("23")
         elif part == "underline":
             ansi_style_list.append("4")
+        elif part == "nounderline":
+            ansi_style_list.append("24")
+        elif part == "blink":
+            ansi_style_list.append("5")
+        elif part == "noblink":
+            ansi_style_list.append("25")
+        elif part == "reverse":
+            ansi_style_list.append("7")
+        elif part == "noreverse":
+            ansi_style_list.append("27")
+        elif part == "hidden":
+            ansi_style_list.append("8")
+        elif part == "nohidden":
+            ansi_style_list.append("28")
         elif part[:3] == "bg:":
             ansi_style_list.append("48;5;" + rgb2short(part[3:])[0])
         else:
