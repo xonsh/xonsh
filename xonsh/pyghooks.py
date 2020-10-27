@@ -71,6 +71,7 @@ from xonsh.events import events
 #
 
 Color = Token.Color  # alias to new color token namespace
+PTK_SPECIFIC_VALUES = ["reverse", "noreverse", "hidden", "nohidden", "blink", "noblink"]
 
 
 def color_by_name(name, fg=None, bg=None):
@@ -446,6 +447,15 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
+def _ptk_specific_style_value(style_value):
+    """Checks if the given value is PTK style specific"""
+    for ptk_spec in PTK_SPECIFIC_VALUES:
+        if ptk_spec in style_value:
+            return True
+
+    return False
+
+
 def _format_ptk_style_name(name):
     """Format PTK style name to be able to include it in a pygments style"""
     parts = name.split("-")
@@ -480,7 +490,11 @@ def _get_token_by_name(name):
 
 def _tokenize_style_dict(styles):
     """Converts possible string keys in style dicts to Tokens"""
-    return {_get_token_by_name(token): value for token, value in styles.items()}
+    return {
+        _get_token_by_name(token): value
+        for token, value in styles.items()
+        if not _ptk_specific_style_value(value)
+    }
 
 
 def register_custom_pygments_style(

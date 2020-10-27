@@ -251,23 +251,22 @@ class PromptToolkitShell(BaseShell):
                 )
                 self._overrides_deprecation_warning_shown = True
             style_overrides_env.update(env.get("XONSH_STYLE_OVERRIDES", {}))
+
             if HAS_PYGMENTS:
                 prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
-                self.styler.override(style_overrides_env)
                 style = _style_from_pygments_cls(
                     pyghooks.xonsh_style_proxy(self.styler)
                 )
             else:
+                style = _style_from_pygments_dict(DEFAULT_STYLE_DICT)
+
+            if style_overrides_env:
                 try:
                     style = merge_styles(
-                        [
-                            _style_from_pygments_dict(DEFAULT_STYLE_DICT),
-                            _style_from_pygments_dict(style_overrides_env),
-                        ]
+                        [style, _style_from_pygments_dict(style_overrides_env),]
                     )
-                except (AttributeError, TypeError, ValueError):
-                    print_exception()
-                    style = _style_from_pygments_dict(DEFAULT_STYLE_DICT)
+                except (AttributeError, TypeError, ValueError) as e:
+                    print_warning(f"Error applying style override!\n{e}\n")
 
             prompt_args["style"] = style
             events.on_timingprobe.fire(name="on_post_prompt_style")
