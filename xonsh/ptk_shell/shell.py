@@ -263,7 +263,7 @@ class PromptToolkitShell(BaseShell):
             if style_overrides_env:
                 try:
                     style = merge_styles(
-                        [style, _style_from_pygments_dict(style_overrides_env),]
+                        [style, _style_from_pygments_dict(style_overrides_env)]
                     )
                 except (AttributeError, TypeError, ValueError) as e:
                     print_warning(f"Error applying style override!\n{e}\n")
