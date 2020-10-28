@@ -11,8 +11,9 @@ To quote one Anthony Scopatz:
     It turns out shells have a lot of tricky edge cases.
 
 Add to this that shells are personal tools that invite customization. This, in
-turn, invites lots of deeply-held convictions and strong opinions.  This is a
-*good thing*!
+turn, invites lots of deeply-held convictions and strong opinions.  
+
+These are all *good things*!
 
 This implies diversity of ideas and perspectives on often complex
 problems. Disagreement and healthy discussion of conflicting viewpoints is
