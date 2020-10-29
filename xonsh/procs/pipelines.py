@@ -177,7 +177,7 @@ class CommandPipeline:
     def __repr__(self):
         s = self.__class__.__name__ + "(\n  "
         s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
-        s += ")"
+        s += "\n)"
         return s
 
     def __bool__(self):
