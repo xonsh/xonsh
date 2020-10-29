@@ -1837,9 +1837,9 @@ def format_color(string, **kwargs):
     shell instances method of the same name. The results of this function should
     be directly usable by print_color().
     """
-    try:
+    if hasattr(builtins.__xonsh__.shell, "shell"):
         return builtins.__xonsh__.shell.shell.format_color(string, **kwargs)
-    except AttributeError:
+    else:
         # fallback for ANSI if shell is not yet initialized
         from xonsh.ansi_colors import ansi_partial_color_format
 
@@ -1852,9 +1852,9 @@ def print_color(string, **kwargs):
     method of the same name. Colors will be formatted if they have not already
     been.
     """
-    try:
+    if hasattr(builtins.__xonsh__.shell, "shell"):
         builtins.__xonsh__.shell.shell.print_color(string, **kwargs)
-    except AttributeError:
+    else:
         # fallback for ANSI if shell is not yet initialized
         print(format_color(string, **kwargs))
 
