@@ -55,6 +55,8 @@ def qa(ns: argparse.Namespace):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.set_defaults(func=lambda *args: parser.print_help())
+
     commands = parser.add_subparsers()
 
     test_parser = commands.add_parser('test', help=test.__doc__)
