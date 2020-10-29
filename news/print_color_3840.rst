@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Added ANSI fallback for `xonsh.tools.print_color` if shell is not yet initialized. Fixes #3840.
+* Added ANSI fallback for ``xonsh.tools.print_color`` if shell is not yet initialized. Fixes #3840.
 
 **Security:**
 
