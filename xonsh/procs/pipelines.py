@@ -175,8 +175,8 @@ class CommandPipeline:
         self.proc = self.procs[-1]
 
     def __repr__(self):
-        s = self.__class__.__name__ + "("
-        s += ", ".join(a + "=" + str(getattr(self, a)) for a in self.attrnames)
+        s = self.__class__.__name__ + "(\n  "
+        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
         s += ")"
         return s
 
