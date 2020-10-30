@@ -1,6 +1,6 @@
 **Added:**
 
-* New xontrib-sh (https://github.com/anki-code/xontrib-sh) to paste and run snippets from bash, zsh, fish.
+* Add "back2dir" xontrib (https://github.com/anki-code/xontrib-back2dir) - back to the latest used directory when starting xonsh shell.
 
 **Changed:**
 

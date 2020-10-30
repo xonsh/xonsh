@@ -7,7 +7,6 @@ import argparse
 import linecache
 import importlib
 import functools
-from inspect import getouterframes
 import typing as tp
 
 from xonsh.lazyasd import LazyObject
@@ -15,7 +14,7 @@ from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file
 from xonsh.lazyimps import pygments, pyghooks
-from xonsh.proc import STDOUT_CAPTURE_KINDS
+import xonsh.procs.pipelines as xpp
 import xonsh.prompt.cwd as prompt
 
 terminal = LazyObject(
@@ -66,7 +65,7 @@ class TracerType(object):
         files.add(normabspath(filename))
         sys.settrace(self.trace)
         curr = inspect.currentframe()
-        for frame, fname, *_ in getouterframes(curr, context=0):
+        for frame, fname, *_ in inspect.getouterframes(curr, context=0):
             if normabspath(fname) in files:
                 frame.f_trace = self.trace
 
@@ -77,7 +76,7 @@ class TracerType(object):
         if len(self.files) == 0:
             sys.settrace(self.prev_tracer)
             curr = inspect.currentframe()
-            for frame, fname, *_ in getouterframes(curr, context=0):
+            for frame, fname, *_ in inspect.getouterframes(curr, context=0):
                 if normabspath(fname) == filename:
                     frame.f_trace = self.prev_tracer
             self.prev_tracer = DefaultNotGiven
@@ -139,7 +138,7 @@ def _find_caller(args):
     """Somewhat hacky method of finding the __file__ based on the line executed."""
     re_line = re.compile(r"[^;\s|&<>]+\s+" + r"\s+".join(args))
     curr = inspect.currentframe()
-    for _, fname, lineno, _, lines, _ in getouterframes(curr, context=1)[3:]:
+    for _, fname, lineno, _, lines, _ in inspect.getouterframes(curr, context=1)[3:]:
         if lines is not None and re_line.search(lines[0]) is not None:
             return fname
         elif (
@@ -237,6 +236,6 @@ def tracermain(args=None, stdin=None, stdout=None, stderr=None, spec=None):
     """Main function for tracer command-line interface."""
     parser = _tracer_create_parser()
     ns = parser.parse_args(args)
-    usecolor = (spec.captured not in STDOUT_CAPTURE_KINDS) and sys.stdout.isatty()
+    usecolor = (spec.captured not in xpp.STDOUT_CAPTURE_KINDS) and sys.stdout.isatty()
     tracer.color_output(usecolor)
     return _TRACER_MAIN_ACTIONS[ns.action](ns, args)

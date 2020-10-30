@@ -29,6 +29,9 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``something/$SOME_VAR/$(some_command)``
       - ``@('something/' + $SOME_VAR + $(some_command).strip())``
       - Concatenate a variable or text with the result of running a command.
+    * - ``echo 'my home is $HOME'``
+      - ``echo @("my home is $HOME")``
+      - Escape an environment variable from expansion.
     * - ``${!VAR}``
       - ``${var or expr}``
       - Look up an environment variable via another variable name. In xonsh,
@@ -77,6 +80,9 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``||``
       - ``||`` as well as ``or``
       - Logical-or operator for subprocesses.
+    * - ``$$``
+      - ``os.getpid()``
+      - Get PID of the current shell.
     * - ``$?``
       - ``_.rtn``
       - Returns the exit code, or status, of the previous command. The underscore ``_`` is working 

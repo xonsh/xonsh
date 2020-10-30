@@ -4,6 +4,51 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.24
+====================
+
+**Added:**
+
+* Ability to register custom styles via ``xonsh.pyghooks.register_custom_style``
+* Add method of escaping an environment variable from expansion to the Bash to Xonsh Translation Guide.
+* added mypy to the project. many of the errors are ignored. but it is a start.
+* Added example of subproc calling to the tutorial.
+* New xontrib-sh (https://github.com/anki-code/xontrib-sh) to paste and run snippets from bash, zsh, fish.
+
+**Changed:**
+
+* Now ``COMPLETIONS_CONFIRM`` is ``True`` by default.
+* ``xonsh.AppImage`` python version pinned to 3.8.
+* Cookiecutter template to creating new xontribs has many improvements (https://github.com/xonsh/xontrib-cookiecutter).
+* Docs sections improvement.
+
+**Removed:**
+
+* Removed ``import random``.
+
+**Fixed:**
+
+* #1207 - custom color themes
+* Webconfig updarted for the ``NO_COLOR`` to ``RESET`` change.
+* async prompt field's returns from earlier data
+* Async prompt will now support nested-format strings in prompts
+* handle None value for ASYNC_PROMPT_THREAD_WORKERS
+* Fixed f-strings parsing in Python 3.9
+* Fixed reset color in ``xontrib list``.
+* Fixed NO_COLOR to RESET in prompt_ret_code and mplhooks.
+
+**Authors:**
+
+* Anthony Scopatz
+* David Strobach
+* a
+* anki-code
+* Gyuri Horak
+* Noortheen Raja
+* Will Shanks
+
+
+
 v0.9.23
 ====================
 

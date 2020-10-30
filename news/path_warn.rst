@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* Added warning about huge amount of commands in CommandsCache.
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed reset color in ``xontrib list``.
+* <news item>
 
 **Security:**
 

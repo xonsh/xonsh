@@ -814,7 +814,7 @@ def DEFAULT_VARS():
             is_bool,
             to_bool,
             bool_to_str,
-            False,
+            True,
             "While tab-completions menu is displayed, press <Enter> to confirm "
             "completion instead of running command. This only affects the "
             "prompt-toolkit shell.",
@@ -1193,6 +1193,16 @@ def DEFAULT_VARS():
             "and ``$BOTTOM_TOOLBAR``. The default is zero (no update). "
             "NOTE: ``$UPDATE_PROMPT_ON_KEYPRESS`` must be set to ``True`` for this "
             "variable to take effect.",
+        ),
+        "PROMPT_TOKENS_FORMATTER": Var(
+            validate=callable,
+            convert=None,
+            detype=None,
+            default=prompt.prompt_tokens_formatter_default,
+            doc="Final processor that receives all tokens in the prompt template. "
+            "It gives option to format the prompt with different prefix based on other tokens values. "
+            "Highly useful for implementing something like powerline theme.",
+            doc_default="``xonsh.prompt.base.prompt_tokens_formatter_default``",
         ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": Var(
             always_false,
@@ -1724,6 +1734,13 @@ def DEFAULT_VARS():
             "``XONSH_SHOW_TRACEBACK`` has been set. Its value must be a writable file "
             "or None / the empty string if traceback logging is not desired. "
             "Logging to a file is not enabled by default.",
+        ),
+        "COMMANDS_CACHE_SIZE_WARNING": Var(
+            is_int,
+            int,
+            str,
+            10000,
+            "Number of files on the PATH above which a warning is shown.",
         ),
     }
 

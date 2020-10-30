@@ -20,7 +20,7 @@ $VERSION_BUMP_PATTERNS = [
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
 
-$PYTEST_COMMAND = "./run-tests.xsh"
+$PYTEST_COMMAND = "./run-tests.xsh test -- "
 
 $TAG_REMOTE = 'git@github.com:xonsh/xonsh.git'
 $TAG_TARGET = 'master'
@@ -43,3 +43,5 @@ $DOCKER_GIT_NAME = 'xonsh'
 $DOCKER_GIT_EMAIL = 'xonsh@googlegroups.com'
 
 $GHRELEASE_ASSETS = [git_archive_asset, 'xonsh-x86_64.AppImage']
+
+$APPIMAGE_PYTHON_VERSION = '3.8'

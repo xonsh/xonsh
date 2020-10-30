@@ -4,7 +4,8 @@
 
 **Changed:**
 
-* Docs sections improvement.
+* ``CommandPipeline.__repr__`` now returns formatted output wherein its printed
+  attributes are also repr strings. This improves the output of ``!()``.
 
 **Deprecated:**
 

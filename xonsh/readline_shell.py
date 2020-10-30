@@ -29,12 +29,7 @@ from xonsh.ansi_colors import (
     ansi_color_style,
 )
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import (
-    print_exception,
-    to_bool,
-    columnize,
-    carriage_return,
-)
+from xonsh.tools import print_exception, to_bool, columnize, carriage_return
 from xonsh.platform import (
     ON_WINDOWS,
     ON_CYGWIN,
@@ -370,8 +365,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
+        events.on_pre_prompt_format.fire()
+        prompt = self.prompt
         events.on_pre_prompt.fire()
-        rtn = input(self.prompt)
+        rtn = input(prompt)
         events.on_post_prompt.fire()
         if not store_in_history and pos >= 0:
             readline.remove_history_item(pos)

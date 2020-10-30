@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* tests for vc-branch should accept both master and main
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* async prompt field's returns from earlier data
+* <news item>
 
 **Security:**
 

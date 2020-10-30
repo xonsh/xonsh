@@ -7,6 +7,8 @@ import typing as tp
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
+
+from xonsh.prompt.base import ParsedTokens
 from xonsh.style_tools import partial_color_tokenize, style_as_faded
 
 
@@ -62,13 +64,16 @@ class AsyncPrompt:
         self.name = name
 
         # list of tokens in that prompt. It could either be resolved or not resolved.
-        self.tokens: tp.List[str] = []
+        self.tokens: tp.Optional[ParsedTokens] = None
         self.timer = None
         self.session = session
         self.executor = executor
 
         # (Key: the future object) that is created for the (value: index/field_name) in the tokens list
-        self.futures: tp.Dict[concurrent.futures.Future, tp.Union[int, str]] = {}
+        self.futures: tp.Dict[
+            concurrent.futures.Future,
+            tp.Tuple[str, tp.Optional[int], tp.Optional[str], tp.Optional[str]],
+        ] = {}
 
     def start_update(self, on_complete):
         """Listen on futures and update the prompt as each one completed.
@@ -80,21 +85,27 @@ class AsyncPrompt:
         on_complete:
             callback to notify after all the futures are completed
         """
+        if not self.tokens:
+            print(f"Warn: AsyncPrompt is created without tokens - {self.name}")
+            return
         for fut in concurrent.futures.as_completed(self.futures):
-            val = fut.result() or ""
+            val = fut.result()
 
             if fut not in self.futures:
                 # rare case where the future is completed but the container is already cleared
                 # because new prompt is called
                 continue
 
-            token_index = self.futures[fut]
-            if isinstance(token_index, int):
-                self.tokens[token_index] = val
+            placeholder, idx, spec, conv = self.futures[fut]
+            # example: placeholder="{field}", idx=10, spec="env: {}"
+
+            if isinstance(idx, int):
+                self.tokens.update(idx, val, spec, conv)
             else:  # when the function is called outside shell.
-                for idx, sect in enumerate(self.tokens):
-                    if token_index in sect:
-                        self.tokens[idx] = sect.replace(token_index, val)
+                for idx, ptok in enumerate(self.tokens.tokens):
+                    if placeholder in ptok.value:
+                        val = ptok.value.replace(placeholder, val)
+                        self.tokens.update(idx, val, spec, conv)
 
             # calling invalidate in less period is inefficient
             self.invalidate()
@@ -111,7 +122,7 @@ class AsyncPrompt:
             self.timer.cancel()
 
         def _invalidate():
-            new_prompt = "".join(self.tokens)
+            new_prompt = self.tokens.process()
             formatted_tokens = tokenize_ansi(
                 PygmentsTokens(partial_color_tokenize(new_prompt))
             )
@@ -129,9 +140,16 @@ class AsyncPrompt:
             fut.cancel()
         self.futures.clear()
 
-    def submit_section(self, func: tp.Callable, field: str, idx: int = None):
+    def submit_section(
+        self,
+        func: tp.Callable,
+        field: str,
+        idx: tp.Optional[int] = None,
+        spec: tp.Optional[str] = None,
+        conv=None,
+    ):
         future, intermediate_value, placeholder = self.executor.submit(func, field)
-        self.futures[future] = placeholder if idx is None else idx
+        self.futures[future] = (placeholder, idx, spec, conv)
         return intermediate_value
 
 
@@ -143,10 +161,10 @@ class PromptUpdator:
         self.prompter = session
         self.executor = Executor()
 
-    def add(self, prompt_name: tp.Optional[str]):
+    def add(self, prompt_name: tp.Optional[str]) -> tp.Optional[AsyncPrompt]:
         # clear out old futures from the same prompt
         if prompt_name is None:
-            return
+            return None
 
         if prompt_name in self.prompts:
             self.stop(prompt_name)
@@ -172,7 +190,3 @@ class PromptUpdator:
 
     def on_complete(self, prompt_name):
         self.prompts.pop(prompt_name, None)
-
-    def set_tokens(self, prompt_name, tokens: tp.List[str]):
-        if prompt_name in self.prompts:
-            self.prompts[prompt_name].tokens = tokens

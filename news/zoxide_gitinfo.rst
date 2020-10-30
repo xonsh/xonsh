@@ -1,6 +1,7 @@
 **Added:**
 
-* <news item>
+* Added ``xontrib-zoxide`` to the list of xontribs.
+* Added ``xontrib-gitinfo`` to the list of xontribs.
 
 **Changed:**
 
@@ -16,7 +17,7 @@
 
 **Fixed:**
 
-* handle None value for ASYNC_PROMPT_THREAD_WORKERS
+* <news item>
 
 **Security:**
 

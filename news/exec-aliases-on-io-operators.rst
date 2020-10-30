@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed NO_COLOR to RESET in prompt_ret_code and mplhooks.
+* Setting an alias with IO redirections (e.g ``ls | wc``) now works correctly.
 
 **Security:**
 

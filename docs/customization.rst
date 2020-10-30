@@ -56,6 +56,26 @@ To set a new theme, do
 
    $ $XONSH_COLOR_STYLE='<theme name>'
 
+Registering custom styles
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you aren't happy with the styles provided by us (and ``pygments``), you can create and register custom styles.
+
+To do so, add something similar to your ``.xonshrc``:
+
+.. code-block:: python
+
+   from xonsh.tools import register_custom_style
+   mystyle = {
+       "Literal.String.Single": "#ff88aa",
+       "Literal.String.Double": "#ff4488",
+       "RED": "#008800",
+   }
+   register_custom_style("mystyle", mystyle, base="monokai")
+   $XONSH_COLOR_STYLE="mystyle"
+
+You can check ``xonfig colors`` for the token names. The ``base`` style will be used as a fallback for styles you don't set - pick one from ``xonfig styles`` (``default`` is used if omitted).
+
 .. _import_local_modules:
 
 ...import python modules from a local directory?

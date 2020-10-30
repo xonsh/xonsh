@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* Added ``xontribs`` section to the ``xonfig``.
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Webconfig updarted for the ``NO_COLOR`` to ``RESET`` change.
+* <news item>
 
 **Security:**
 

@@ -1,6 +1,6 @@
 **Added:**
 
-* added mypy to the project. many of the errors are ignored. but it is a start.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Speed of CommandsCache increased when aliases have multiple updates (i.e. init conda).
 
 **Security:**
 

@@ -727,7 +727,6 @@ def fallback(cond, backup):
 # See the Python software license: https://docs.python.org/3/license.html
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
-
     _stream: tp.Optional[str] = None
 
     def __init__(self, new_target):
@@ -1291,12 +1290,11 @@ def is_logfile_opt(x):
 
 
 def to_logfile_opt(x):
-    """
-    Converts a $XONSH_TRACEBACK_LOGFILE option to either a str containing
+    """Converts a $XONSH_TRACEBACK_LOGFILE option to either a str containing
     the filepath if it is a writable file or None if the filepath is not
     valid, informing the user on stderr about the invalid choice.
     """
-    if isinstance(x, os.PathLike):
+    if isinstance(x, os.PathLike):  # type: ignore
         x = str(x)
     if is_logfile_opt(x):
         return x
@@ -1839,7 +1837,14 @@ def format_color(string, **kwargs):
     shell instances method of the same name. The results of this function should
     be directly usable by print_color().
     """
-    return builtins.__xonsh__.shell.shell.format_color(string, **kwargs)
+    if hasattr(builtins.__xonsh__.shell, "shell"):
+        return builtins.__xonsh__.shell.shell.format_color(string, **kwargs)
+    else:
+        # fallback for ANSI if shell is not yet initialized
+        from xonsh.ansi_colors import ansi_partial_color_format
+
+        style = builtins.__xonsh__.env.get("XONSH_COLOR_STYLE")
+        return ansi_partial_color_format(string, style=style)
 
 
 def print_color(string, **kwargs):
@@ -1847,7 +1852,11 @@ def print_color(string, **kwargs):
     method of the same name. Colors will be formatted if they have not already
     been.
     """
-    builtins.__xonsh__.shell.shell.print_color(string, **kwargs)
+    if hasattr(builtins.__xonsh__.shell, "shell"):
+        builtins.__xonsh__.shell.shell.print_color(string, **kwargs)
+    else:
+        # fallback for ANSI if shell is not yet initialized
+        print(format_color(string, **kwargs))
 
 
 def color_style_names():
@@ -1858,6 +1867,44 @@ def color_style_names():
 def color_style():
     """Returns the current color map."""
     return builtins.__xonsh__.shell.shell.color_style()
+
+
+def register_custom_style(
+    name, styles, highlight_color=None, background_color=None, base="default"
+):
+    """Register custom style.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    styles : dict
+        Token -> style mapping.
+    highlight_color : str
+        Hightlight color.
+    background_color : str
+        Background color.
+    base : str, optional
+        Base style to use as default.
+
+    Returns
+    -------
+    style : The style object created, None if not succeeded
+    """
+    style = None
+    if pygments_version_info():
+        from xonsh.pyghooks import register_custom_pygments_style
+
+        style = register_custom_pygments_style(
+            name, styles, highlight_color, background_color, base
+        )
+
+    # register ANSI colors
+    from xonsh.ansi_colors import register_custom_ansi_style
+
+    register_custom_ansi_style(name, styles, base)
+
+    return style
 
 
 def _token_attr_from_stylemap(stylemap):

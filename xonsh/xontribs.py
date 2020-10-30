@@ -10,6 +10,7 @@ import importlib.util
 
 from enum import IntEnum
 from xonsh.tools import print_color, print_exception, unthreadable
+from pathlib import Path
 
 
 class ExitCode(IntEnum):
@@ -137,33 +138,62 @@ def _load(ns):
     return xontribs_load(ns.names, verbose=ns.verbose)
 
 
-def _list(ns):
-    """Lists xontribs."""
+def xontrib_installed(ns=None):
+    """Returns list of installed xontribs."""
+    installed_xontribs = set()
+    xontrib_locations = importlib.util.find_spec("xontrib").submodule_search_locations
+    names = None if not ns or len(ns.names) == 0 else set(ns.names)
+    if xontrib_locations:
+        for xl in xontrib_locations:
+            for x in Path(xl).glob("*"):
+                name = x.name.split(".")[0]
+                if name[0] == "_" or (names and name not in names):
+                    continue
+                installed_xontribs.add(name)
+    return installed_xontribs
+
+
+def xontrib_data(ns):
+    """Collects and returns the data about xontribs."""
     meta = xontrib_metadata()
-    data = []
-    nname = 6  # ensures some buffer space.
-    names = None if len(ns.names) == 0 else set(ns.names)
+    data = {}
+    names = None if not ns or len(ns.names) == 0 else set(ns.names)
     for md in meta["xontribs"]:
         name = md["name"]
         if names is not None and md["name"] not in names:
             continue
-        nname = max(nname, len(name))
         spec = find_xontrib(name)
         if spec is None:
             installed = loaded = False
         else:
             installed = True
             loaded = spec.name in sys.modules
-        d = {"name": name, "installed": installed, "loaded": loaded}
-        data.append(d)
+        data[name] = {"name": name, "installed": installed, "loaded": loaded}
+
+    installed_xontribs = xontrib_installed(ns)
+    for name in installed_xontribs:
+        if name not in data:
+            loaded = f"xontrib.{name}" in sys.modules
+            data[name] = {"name": name, "installed": True, "loaded": loaded}
+
+    return dict(sorted(data.items()))
+
+
+def xontribs_loaded(ns=None):
+    """Returns list of loaded xontribs."""
+    return [k for k, v in xontrib_data(ns).items() if v["loaded"]]
+
+
+def _list(ns):
+    """Lists xontribs."""
+    data = xontrib_data(ns)
     if ns.json:
-        jdata = {d.pop("name"): d for d in data}
-        s = json.dumps(jdata)
+        s = json.dumps(data)
         print(s)
     else:
+        nname = max([6] + [len(x) for x in data])
         s = ""
-        for d in data:
-            name = d["name"]
+        for name, d in data.items():
             lname = len(name)
             s += "{PURPLE}" + name + "{RESET}  " + " " * (nname - lname)
             if d["installed"]:
