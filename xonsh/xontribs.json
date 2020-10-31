@@ -215,6 +215,11 @@
   "url": "https://github.com/santagada/xontrib-powerline",
   "description": ["Powerline for Xonsh shell"]
  },
+ {"name": "powerline2",
+  "package": "xontrib-powerline2",
+  "url": "https://github.com/vaaaaanquish/xontrib-powerline2",
+  "description": ["Powerline for Xonsh shell forked from santagada/xontrib-powerline"]
+ },
  {"name": "prompt_bar",
   "package": "xontrib-prompt-bar",
   "url": "https://github.com/anki-code/xontrib-prompt-bar",
@@ -475,6 +480,13 @@
    "url": "https://github.com/santagada/xontrib-powerline",
    "install": {
     "pip": "xpip install xontrib-powerline"
+   }
+  },
+  "xontrib-powerline2": {
+   "license": "MIT",
+   "url": "https://github.com/vaaaaanquish/xontrib-powerline2",
+   "install": {
+    "pip": "xpip install xontrib-powerline2"
    }
   },
   "xontrib-powerline-binding": {
