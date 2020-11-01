@@ -1,6 +1,6 @@
 **Added:**
 
-* Added warning about huge amount of commands in CommandsCache that could affect on start speed.
+* Added warning about huge amount of commands in CommandsCache.
 
 **Changed:**
 
