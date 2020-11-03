@@ -1739,7 +1739,7 @@ def DEFAULT_VARS():
             is_int,
             int,
             str,
-            10000,
+            6000,
             "Number of files on the PATH above which a warning is shown.",
         ),
     }
