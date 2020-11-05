@@ -57,6 +57,8 @@ from xonsh.tools import (
     is_string_or_callable,
     is_completions_display_value,
     to_completions_display_value,
+    is_completion_mode,
+    to_completion_mode,
     is_string_set,
     csv_to_set,
     set_to_csv,
@@ -850,6 +852,17 @@ def DEFAULT_VARS():
             "Number of rows to reserve for tab-completions menu if "
             "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
             "prompt-toolkit shell.",
+        ),
+        "COMPLETION_MODE": Var(
+            is_completion_mode,
+            to_completion_mode,
+            str,
+            "default",
+            "Mode of tab completion in prompt-toolkit shell (only).\n\n"
+            "'default', the default, selects the common prefix of completions on first TAB,\n"
+            "then cycles through all completions.\n"
+            "'menu-complete' selects the first whole completion on the first TAB, \n"
+            "then cycles through the remaining completions, then the common prefix.",
         ),
         "COMPLETION_QUERY_LIMIT": Var(
             is_int,

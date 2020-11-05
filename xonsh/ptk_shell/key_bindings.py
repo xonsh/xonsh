@@ -110,6 +110,12 @@ def tab_insert_indent():
 
 
 @Condition
+def tab_menu_complete():
+    """Checks whether completion mode is `menu-complete`"""
+    return builtins.__xonsh__.env.get("COMPLETION_MODE") == "menu-complete"
+
+
+@Condition
 def beginning_of_line():
     """Check if cursor is at beginning of a line other than the first line in a
     multiline document
@@ -205,6 +211,15 @@ def load_xonsh_bindings() -> KeyBindingsBase:
         """
         env = builtins.__xonsh__.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
+
+    @handle(Keys.Tab, filter=~tab_insert_indent & tab_menu_complete)
+    def menu_complete_select(event):
+        """Start completion in menu-complete mode, or tab to next completion"""
+        b = event.current_buffer
+        if b.complete_state:
+            b.complete_next()
+        else:
+            b.start_completion(select_first=True)
 
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):
