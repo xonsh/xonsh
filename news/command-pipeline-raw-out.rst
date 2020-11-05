@@ -1,6 +1,7 @@
 **Added:**
 
 * Added ``CommandPipeline.raw_out`` and ``CommandPipeline.raw_err`` to get stdout/err as raw bytes.
+* The ``@()`` operator now supports ``bytes`` objects.
 
 **Changed:**
 

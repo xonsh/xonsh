@@ -7,8 +7,8 @@ import pytest
 import builtins
 
 from xonsh.platform import ON_WINDOWS
-from tests.tools import skip_if_on_windows, skip_if_on_unix
 from xonsh.procs.pipelines import CommandPipeline
+from tests.tools import skip_if_on_windows, skip_if_on_unix
 
 
 @pytest.fixture(autouse=True)
@@ -39,9 +39,23 @@ def patched_events(monkeypatch, xonsh_events, xonsh_execer):
         ("!(echo hi | grep h)", "hi\n", ""),
         ("!(echo hi | grep x)", "", ""),
 ))
-def test_captured(cmdline, stdout, stderr, xonsh_execer):
+def test_command_pipeline_capture(cmdline, stdout, stderr, xonsh_execer):
     pipeline: CommandPipeline = xonsh_execer.eval(cmdline)
     assert pipeline.out == stdout
     assert pipeline.err == (stderr or None)
     assert pipeline.raw_out == stdout.replace("\n", os.linesep).encode()
     assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()
+
+
+@pytest.mark.parametrize("cmdline, output", (
+        ("echo hi", "hi\n"),
+        ("echo hi | grep h", "hi\n"),
+        ("echo hi | grep x", ""),
+        pytest.param("echo -n hi", "hi", marks=skip_if_on_windows),
+))
+def test_simple_capture(cmdline, output, xonsh_execer):
+    assert xonsh_execer.eval(f"$({cmdline})") == output
+
+
+def test_raw_substitution(xonsh_execer):
+    assert xonsh_execer.eval("$(echo @(b'bytes!'))") == "bytes!\n"

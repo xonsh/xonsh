@@ -217,14 +217,29 @@ def ensure_list_of_strs(x):
     return rtn
 
 
-def list_of_strs_or_callables(x):
-    """Ensures that x is a list of strings or functions"""
+def ensure_str_or_callable(x):
+    """Ensures that x is single string or function."""
     if isinstance(x, str) or callable(x):
-        rtn = [x]
+        return x
+    if isinstance(x, bytes):
+        # ``os.fsdecode`` decodes using "surrogateescape" on linux and "strict" on windows.
+        # This is used to decode bytes for interfacing with the os, notably for command line arguments.
+        # See https://www.python.org/dev/peps/pep-0383/#specification
+        return os.fsdecode(x)
+    return str(x)
+
+
+def list_of_strs_or_callables(x):
+    """
+    Ensures that x is a list of strings or functions.
+    This is called when using the ``@()`` operator to expand it's content.
+    """
+    if isinstance(x, (str, bytes)) or callable(x):
+        rtn = [ensure_str_or_callable(x)]
     elif isinstance(x, cabc.Iterable):
-        rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
+        rtn = list(map(ensure_str_or_callable, x))
     else:
-        rtn = [str(x)]
+        rtn = [ensure_str_or_callable(x)]
     return rtn
 
 
