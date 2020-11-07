@@ -22,10 +22,10 @@ Here is a minimal history backend to start with:
         def append(self, cmd):
             pass
 
-        def items(self):
+        def items(self, newest_first=False):
             yield {'inp': 'couchdb in action', 'ts': 1464652800, 'ind': 0}
 
-        def all_items(self):
+        def all_items(self, newest_first=False):
             return self.items()
 
         def info(self):
@@ -189,10 +189,10 @@ Retrieve History Items
 
 .. code-block:: python
 
-    def items(self):
+    def items(self, newest_first=False):
         yield from self._get_db_items(self.sessionid)
 
-    def all_items(self):
+    def all_items(self, newest_first=False):
         yield from self._get_db_items()
 
 These two methods are responsible for getting history items for the current
