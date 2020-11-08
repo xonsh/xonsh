@@ -26,8 +26,8 @@ def _clear_log(logfile, stderr):
 def _print_log(logfile, stdout, stderr):
     try:
         with open(logfile) as log:
-            for l in log:
-                print(l, end="", file=stdout)
+            for line in log:
+                print(line, end="", file=stdout)
     except OSError as e:
         print(f"xog: {e}", file=stderr)
         return False
