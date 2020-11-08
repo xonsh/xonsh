@@ -110,7 +110,7 @@ class PromptToolkitCompleter(Completer):
         """Adjust the height for showing autocompletion menu."""
         app = get_app()
         render = app.renderer
-        window = app.layout.container.children[0].content.children[1].content
+        window = app.layout.current_window
 
         if window and window.render_info:
             h = window.render_info.content_height
