@@ -201,11 +201,11 @@ class Vox(collections.abc.Mapping):
         cfgfile = os.path.join(env_path, "pyvenv.cfg")
         cfgops = {}
         with open(cfgfile) as cfgfile:
-            for l in cfgfile:
-                l = l.strip()
-                if "=" not in l:
+            for line in cfgfile:
+                line = line.strip()
+                if "=" not in line:
                     continue
-                k, v = l.split("=", 1)
+                k, v = line.split("=", 1)
                 cfgops[k.strip()] = v.strip()
         flags = {
             "system_site_packages": cfgops["include-system-site-packages"] == "true",
@@ -321,10 +321,10 @@ class Vox(collections.abc.Mapping):
     def __len__(self):
         """Counts known virtual environments, using the same rules as iter().
         """
-        l = 0
+        line = 0
         for _ in self:
-            l += 1
-        return l
+            line += 1
+        return line
 
     def active(self):
         """Get the name of the active virtual environment.

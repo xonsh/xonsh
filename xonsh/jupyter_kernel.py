@@ -399,8 +399,8 @@ class XonshKernel:
             return
         lower = range(0, n, chunksize)
         upper = range(chunksize, n + chunksize, chunksize)
-        for l, u in zip(lower, upper):
-            response = {"name": name, "text": s[l:u]}
+        for lwr, upr in zip(lower, upper):
+            response = {"name": name, "text": s[lwr:upr]}
             self.send(
                 self.iopub_socket, "stream", response, parent_header=parent_header
             )

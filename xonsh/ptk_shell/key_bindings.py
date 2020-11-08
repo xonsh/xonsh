@@ -76,8 +76,8 @@ def carriage_return(b, cli, *, autoindent=True):
         b.validate_and_handle()
 
 
-def _is_blank(l):
-    return len(l.strip()) == 0
+def _is_blank(line):
+    return len(line.strip()) == 0
 
 
 def can_compile(src):

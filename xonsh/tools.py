@@ -130,10 +130,10 @@ def _expandpath(path):
 
 def simple_random_choice(lst):
     """Returns random element from the list with length less than 1 million elements."""
-    l = len(lst)
-    if l > 1000000:  # microsecond maximum
+    size = len(lst)
+    if size > 1000000:  # microsecond maximum
         raise ValueError("The list is too long.")
-    return lst[datetime.datetime.now().microsecond % l]
+    return lst[datetime.datetime.now().microsecond % size]
 
 
 def decode_bytes(b):

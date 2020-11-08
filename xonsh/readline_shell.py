@@ -426,10 +426,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
-        completions, l = self.completer.complete(
+        completions, plen = self.completer.complete(
             prefix, line, begidx, endidx, ctx=self.ctx
         )
-        rtn_completions = _render_completions(completions, prefix, l)
+        rtn_completions = _render_completions(completions, prefix, plen)
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
