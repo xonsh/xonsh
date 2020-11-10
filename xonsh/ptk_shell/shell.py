@@ -10,7 +10,7 @@ from xonsh.events import events
 from xonsh.base_shell import BaseShell
 from xonsh.ptk_shell.formatter import PTKPromptFormatter
 from xonsh.shell import transform_command
-from xonsh.tools import print_exception, carriage_return
+from xonsh.tools import print_exception, print_warning, carriage_return
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_POSIX
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
@@ -33,13 +33,11 @@ from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.styles import merge_styles, Style
-from prompt_toolkit.styles.pygments import (
-    style_from_pygments_cls,
-    style_from_pygments_dict,
-)
+from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
 
 ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
+CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
 Token = _TokenType()
 
 events.transmogrify("on_ptk_create", "LoadEvent")
@@ -92,6 +90,46 @@ def remove_ansi_osc(prompt):
     return prompt, osc_tokens
 
 
+def _pygments_token_to_classname(token):
+    """Converts pygments Tokens, token names (strings) to PTK style names."""
+    if token and isinstance(token, str):
+        # if starts with non capital letter => leave it as it is
+        if token[0].islower():
+            return token
+        # if starts with capital letter => pygments token name
+        if token.startswith("Token."):
+            token = token[6:]
+        # short colors - all caps
+        if token == token.upper():
+            token = "color." + token
+        return "pygments." + token.lower()
+
+    return pygments_token_to_classname(token)
+
+
+def _style_from_pygments_dict(pygments_dict):
+    """Custom implementation of ``style_from_pygments_dict`` that supports PTK specific
+    (``Token.PTK``) styles.
+    """
+    pygments_style = []
+
+    for token, style in pygments_dict.items():
+        # if ``Token.PTK`` then add it as "native" PTK style too
+        if str(token).startswith("Token.PTK"):
+            key = CAPITAL_PATTERN.sub(r"\1-\2", str(token)[10:]).lower()
+            pygments_style.append((key, style))
+        pygments_style.append((_pygments_token_to_classname(token), style))
+
+    return Style(pygments_style)
+
+
+def _style_from_pygments_cls(pygments_cls):
+    """Custom implementation of ``style_from_pygments_cls`` that supports PTK specific
+    (``Token.PTK``) styles.
+    """
+    return _style_from_pygments_dict(pygments_cls.styles)
+
+
 class PromptToolkitShell(BaseShell):
     """The xonsh shell for prompt_toolkit v2 and later."""
 
@@ -112,6 +150,7 @@ class PromptToolkitShell(BaseShell):
         self.prompt_formatter = PTKPromptFormatter(self.prompter)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = load_xonsh_bindings()
+        self._overrides_deprecation_warning_shown = False
 
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
@@ -202,21 +241,52 @@ class PromptToolkitShell(BaseShell):
 
         if env.get("COLOR_INPUT"):
             events.on_timingprobe.fire(name="on_pre_prompt_style")
+            style_overrides_env = env.get("PTK_STYLE_OVERRIDES", {}).copy()
+            if (
+                len(style_overrides_env) > 0
+                and not self._overrides_deprecation_warning_shown
+            ):
+                print_warning(
+                    "$PTK_STYLE_OVERRIDES is deprecated, use $XONSH_STYLE_OVERRIDES instead!"
+                )
+                self._overrides_deprecation_warning_shown = True
+            style_overrides_env.update(env.get("XONSH_STYLE_OVERRIDES", {}))
+
             if HAS_PYGMENTS:
                 prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
-                style = style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
+                style = _style_from_pygments_cls(
+                    pyghooks.xonsh_style_proxy(self.styler)
+                )
+                if len(self.styler.non_pygments_rules) > 0:
+                    try:
+                        style = merge_styles(
+                            [
+                                style,
+                                _style_from_pygments_dict(
+                                    self.styler.non_pygments_rules
+                                ),
+                            ]
+                        )
+                    except (AttributeError, TypeError, ValueError) as style_exception:
+                        print_warning(
+                            f"Error applying style override!\n{style_exception}\n"
+                        )
+
             else:
-                style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
+                style = _style_from_pygments_dict(DEFAULT_STYLE_DICT)
+
+            if len(style_overrides_env) > 0:
+                try:
+                    style = merge_styles(
+                        [style, _style_from_pygments_dict(style_overrides_env)]
+                    )
+                except (AttributeError, TypeError, ValueError) as style_exception:
+                    print_warning(
+                        f"Error applying style override!\n{style_exception}\n"
+                    )
+
             prompt_args["style"] = style
             events.on_timingprobe.fire(name="on_post_prompt_style")
-
-            style_overrides_env = env.get("PTK_STYLE_OVERRIDES")
-            if style_overrides_env:
-                try:
-                    style_overrides = Style.from_dict(style_overrides_env)
-                    prompt_args["style"] = merge_styles([style, style_overrides])
-                except (AttributeError, TypeError, ValueError):
-                    print_exception()
 
         if env["ENABLE_ASYNC_PROMPT"]:
             # once the prompt is done, update it in background as each future is completed
@@ -363,7 +433,9 @@ class PromptToolkitShell(BaseShell):
         tokens = partial_color_tokenize(string)
         if force_string and HAS_PYGMENTS:
             env = builtins.__xonsh__.env
+            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
+            self.styler.override(style_overrides_env)
             proxy_style = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=proxy_style)
             s = pygments.format(tokens, formatter)
@@ -382,14 +454,21 @@ class PromptToolkitShell(BaseShell):
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
         tokens = PygmentsTokens(tokens)
+        env = builtins.__xonsh__.env
+        style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
         if HAS_PYGMENTS:
-            env = builtins.__xonsh__.env
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
-            proxy_style = style_from_pygments_cls(
+            self.styler.override(style_overrides_env)
+            proxy_style = _style_from_pygments_cls(
                 pyghooks.xonsh_style_proxy(self.styler)
             )
         else:
-            proxy_style = style_from_pygments_dict(DEFAULT_STYLE_DICT)
+            proxy_style = merge_styles(
+                [
+                    _style_from_pygments_dict(DEFAULT_STYLE_DICT),
+                    _style_from_pygments_dict(style_overrides_env),
+                ]
+            )
         ptk_print(
             tokens, style=proxy_style, end=end, include_default_pygments_style=False
         )
