@@ -7,5 +7,5 @@ Xontribs (``xonsh.xontribs_meta``)
 .. automodule:: xonsh.xontribs_meta
     :members:
     :undoc-members:
-    :inherited-members:
+    :private-members:
 

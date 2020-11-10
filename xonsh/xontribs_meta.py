@@ -50,7 +50,12 @@ class Xontrib(tp.NamedTuple):
 
 @functools.lru_cache()
 def get_xontribs() -> tp.Dict[str, Xontrib]:
-    """Holds xontrib definitions."""
+    """Return xontrib definitions lazily."""
+    return define_xontribs()
+
+
+def define_xontribs():
+    """Xontrib registry."""
     core_pkg = _XontribPkg(
         name="xonsh",
         license="BSD 3-clause",
