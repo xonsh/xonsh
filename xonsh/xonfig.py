@@ -47,7 +47,8 @@ from xonsh.tools import (
     color_style,
 )
 from xonsh.foreign_shells import CANON_SHELL_NAMES
-from xonsh.xontribs import xontrib_metadata, find_xontrib, xontribs_loaded
+from xonsh.xontribs import find_xontrib, xontribs_loaded
+from xonsh.xontribs_meta import get_xontribs, Xontrib
 from xonsh.lazyasd import lazyobject
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
@@ -356,25 +357,23 @@ def _xontrib_path(visitor=None, node=None, val=None):
     return ("xontribs", len(visitor.state.get("xontribs", ())))
 
 
-def make_xontrib(xontrib, package):
+def make_xontrib(name: str, xontrib: Xontrib):
     """Makes a message and StoreNonEmpty node for a xontrib."""
-    name = xontrib.get("name", "<unknown-xontrib-name>")
+    name = name or "<unknown-xontrib-name>"
     msg = "\n{BOLD_CYAN}" + name + "{RESET}\n"
-    if "url" in xontrib:
-        msg += "{RED}url:{RESET} " + xontrib["url"] + "\n"
-    if "package" in xontrib:
-        msg += "{RED}package:{RESET} " + xontrib["package"] + "\n"
-    if "url" in package:
-        if "url" in xontrib and package["url"] != xontrib["url"]:
-            msg += "{RED}package-url:{RESET} " + package["url"] + "\n"
-    if "license" in package:
-        msg += "{RED}license:{RESET} " + package["license"] + "\n"
+    if xontrib.url:
+        msg += "{RED}url:{RESET} " + xontrib.url + "\n"
+    if xontrib.package:
+        pkg = xontrib.package
+        msg += "{RED}package:{RESET} " + pkg.name + "\n"
+        if pkg.url:
+            if xontrib.url and pkg.url != xontrib.url:
+                msg += "{RED}package-url:{RESET} " + pkg.url + "\n"
+        if pkg.license:
+            msg += "{RED}license:{RESET} " + pkg.license + "\n"
     msg += "{PURPLE}installed?{RESET} "
     msg += ("no" if find_xontrib(name) is None else "yes") + "\n"
-    desc = xontrib.get("description", "")
-    if not isinstance(desc, str):
-        desc = "".join(desc)
-    msg += _wrap_paragraphs(desc, width=69)
+    msg += _wrap_paragraphs(xontrib.description, width=69)
     if msg.endswith("\n"):
         msg = msg[:-1]
     mnode = wiz.Message(message=msg)
@@ -385,10 +384,7 @@ def make_xontrib(xontrib, package):
 
 def make_xontribs_wiz():
     """Makes a xontrib wizard."""
-    md = xontrib_metadata()
-    pkgs = [md["packages"].get(d.get("package", None), {}) for d in md["xontribs"]]
-    w = _make_flat_wiz(make_xontrib, md["xontribs"], pkgs)
-    return w
+    return _make_flat_wiz(make_xontrib, get_xontribs().items())
 
 
 def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
