@@ -489,7 +489,7 @@ Python Evaluation with ``@()``
 
 The ``@(<expr>)`` operator form works in subprocess mode, and will evaluate
 arbitrary Python code. The result is appended to the subprocess command list.
-If the result is a string, it is appended to the argument list. If the result
+If the result is a string or bytes, it is appended to the argument list. If the result
 is a list or other non-string sequence, the contents are converted to strings
 and appended to the argument list in order. If the result in the first position
 is a function, it is treated as an alias (see the section on `Aliases`_ below),
