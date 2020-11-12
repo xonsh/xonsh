@@ -357,8 +357,9 @@ def _xontrib_path(visitor=None, node=None, val=None):
     return ("xontribs", len(visitor.state.get("xontribs", ())))
 
 
-def make_xontrib(name: str, xontrib: Xontrib):
+def make_xontrib(xon_item: tp.Tuple[str, Xontrib]):
     """Makes a message and StoreNonEmpty node for a xontrib."""
+    name, xontrib = xon_item
     name = name or "<unknown-xontrib-name>"
     msg = "\n{BOLD_CYAN}" + name + "{RESET}\n"
     if xontrib.url:
