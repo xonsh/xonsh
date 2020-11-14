@@ -36,8 +36,8 @@ def uname(args, stdin, stdout, stderr):
     opts = _uname_parse_args(args)
 
     newline = "\n"
-    if os.name == "nt":
-        newline = "\r\n"
+    # if os.name == "nt":
+    #     newline = "\r\n"
 
     if opts is None:
         opts = {
