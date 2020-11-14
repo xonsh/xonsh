@@ -61,8 +61,10 @@ __all__ = ["uptime", "boottime", "boottime_timestamp"]
 __boottime = None
 
 import xonsh.platform as xp
+
 # import xonsh.lazyimps as xlimps
 # import xonsh.lazyasd as xl
+
 
 def _uptime_linux():
     """Returns uptime in seconds or None, on Linux."""
