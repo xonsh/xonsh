@@ -77,8 +77,28 @@ def uname(args, stdin, stdout, stderr):
             everything_is_false = False
 
     if opts["help"]:
-        stdout.write(UNAME_HELP)
-        stdout.write(f"{newline}")
+        stdout.write(
+            "This version of uname was written in Python for the xonsh project: http://xon.sh{newline}"
+            "Based on uname from GNU coreutils: http://www.gnu.org/software/coreutils/{newline}"
+            "{newline}"
+            "Usage: uname [OPTION]...{newline}"
+            "Print certain system information.  With no OPTION, same as -s.{newline}"
+            "{newline}"
+            "  -a, --all                print all information, in the following order,{newline}"
+            "                             except omit -p and -i if unknown:{newline}"
+            "  -s, --kernel-name        print the kernel name{newline}"
+            "  -n, --nodename           print the network node hostname{newline}"
+            "  -r, --kernel-release     print the kernel release{newline}"
+            "  -v, --kernel-version     print the kernel version{newline}"
+            "  -m, --machine            print the machine hardware name{newline}"
+            "  -p, --processor          print the processor type (non-portable){newline}"
+            "  -i, --hardware-platform  print the hardware platform (non-portable){newline}"
+            "  -o, --operating-system   print the operating system{newline}"
+            "      --help     display this help and exit{newline}"
+            "      --version  output version information and exit{newline}".format(
+                newline=newline
+            )
+        )
         stdout.flush()
         return 0
 
