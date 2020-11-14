@@ -94,8 +94,6 @@ class OtherTest(unittest.TestCase):
         else:
             boot1 = int(time.time() - up)
             boot2 = int(uptime.boottime_timestamp())
-            print(boot1)
-            print(boot2)
             self.assertTrue(boot1 == boot2)
 
     def test_broken_datetime(self):
