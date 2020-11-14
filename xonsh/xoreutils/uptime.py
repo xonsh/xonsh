@@ -50,39 +50,40 @@ except ImportError:
 # except ImportError:
 #     pass
 
-# try:
-#     from .uptime._posix import _uptime_posix, _uptime_osx
-# except ImportError:
-#     _uptime_posix = lambda: None
-#     # _uptime_osx = lambda: None
+try:
+    from xonsh.xoreutils._posix import _uptime_posix, _uptime_osx
+except ImportError:
+    _uptime_posix = lambda: None
+    _uptime_osx = lambda: None
 
 __all__ = ["uptime", "boottime", "boottime_timestamp"]
 
 __boottime = None
 
 import xonsh.platform as xp
-import xonsh.lazyimps as xlimps
+
+# import xonsh.lazyimps as xlimps
 
 # import xonsh.lazyasd as xl
 
 
-def _uptime_osx():
-    """Returns the uptime on mac / darwin."""
-    global __boottime
-    bt = xlimps.macutils.sysctlbyname(b"kern.boottime", return_str=False)
-    if len(bt) == 4:
-        bt = struct.unpack_from("@hh", bt)
-    elif len(bt) == 8:
-        bt = struct.unpack_from("@ii", bt)
-    elif len(bt) == 16:
-        bt = struct.unpack_from("@qq", bt)
-    else:
-        raise ValueError("length of boot time not understood: " + repr(bt))
-    bt = bt[0] + bt[1] * 1e-6
-    if bt == 0.0:
-        return None
-    __boottime = bt
-    return time.time() - bt
+# def _uptime_osx():
+#     """Returns the uptime on mac / darwin."""
+#     global __boottime
+#     bt = xlimps.macutils.sysctlbyname(b"kern.boottime", return_str=False)
+#     if len(bt) == 4:
+#         bt = struct.unpack_from("@hh", bt)
+#     elif len(bt) == 8:
+#         bt = struct.unpack_from("@ii", bt)
+#     elif len(bt) == 16:
+#         bt = struct.unpack_from("@qq", bt)
+#     else:
+#         raise ValueError("length of boot time not understood: " + repr(bt))
+#     bt = bt[0] + bt[1] * 1e-6
+#     if bt == 0.0:
+#         return None
+#     __boottime = bt
+#     return time.time() - bt
 
 
 def _uptime_linux():

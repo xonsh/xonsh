@@ -9,7 +9,6 @@ Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 """
 import platform
 import sys
-import os
 
 from xonsh.xoreutils.util import arg_handler
 from xonsh import __version__
