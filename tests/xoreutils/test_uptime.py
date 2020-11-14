@@ -93,7 +93,7 @@ class OtherTest(unittest.TestCase):
             self.assertTrue(uptime.boottime() is None)
         else:
             boot1 = int(time.time() - up)
-            boot2 = uptime.boottime_timestamp()
+            boot2 = int(uptime.boottime_timestamp())
             print(boot1)
             print(boot2)
             self.assertTrue(boot1 == boot2)
