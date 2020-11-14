@@ -69,8 +69,8 @@ def uname(args, stdin, stdout, stderr):
             "version",
             "help",
         ]:
-            stdout.write(f"{__name__}: unrecognized option '{key}'{os.linesep}")
-            stdout.write(f"Try 'uname --help' for more information.{os.linesep}")
+            stdout.write(f"{__name__}: unrecognized option '{key}'{newline}")
+            stdout.write(f"Try 'uname --help' for more information.{newline}")
             stdout.flush()
             opts["help"] = True
         if value:
@@ -176,8 +176,8 @@ def _uname_parse_args(args):
     return out
 
 
-UNAME_HELP = """This version of cat was written in Python for the xonsh project: http://xon.sh
-Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
+UNAME_HELP = """This version of uname was written in Python for the xonsh project: http://xon.sh
+Based on uname from GNU coreutils: http://www.gnu.org/software/coreutils/
 
 Usage: uname [OPTION]...
 Print certain system information.  With no OPTION, same as -s.
@@ -193,7 +193,8 @@ Print certain system information.  With no OPTION, same as -s.
   -i, --hardware-platform  print the hardware platform (non-portable)
   -o, --operating-system   print the operating system
       --help     display this help and exit
-      --version  output version information and exit"""
+      --version  output version information and exit
+"""
 
 
 def uname_main(args=None):

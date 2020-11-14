@@ -228,26 +228,25 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}".format(
-                """This version of cat was written in Python for the xonsh project: http://xon.sh
-Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
-
-Usage: uname [OPTION]...
-Print certain system information.  With no OPTION, same as -s.
-
-  -a, --all                print all information, in the following order,
-                             except omit -p and -i if unknown:
-  -s, --kernel-name        print the kernel name
-  -n, --nodename           print the network node hostname
-  -r, --kernel-release     print the kernel release
-  -v, --kernel-version     print the kernel version
-  -m, --machine            print the machine hardware name
-  -p, --processor          print the processor type (non-portable)
-  -i, --hardware-platform  print the hardware platform (non-portable)
-  -o, --operating-system   print the operating system
-      --help     display this help and exit
-      --version  output version information and exit
-"""
+            "This version of uname was written in Python for the xonsh project: http://xon.sh{newline}"
+            "Based on uname from GNU coreutils: http://www.gnu.org/software/coreutils/{newline}"
+            "{newline}"
+            "Usage: uname [OPTION]...{newline}"
+            "Print certain system information.  With no OPTION, same as -s.{newline}"
+            "{newline}"
+            "  -a, --all                print all information, in the following order,{newline}"
+            "                             except omit -p and -i if unknown:{newline}"
+            "  -s, --kernel-name        print the kernel name{newline}"
+            "  -n, --nodename           print the network node hostname{newline}"
+            "  -r, --kernel-release     print the kernel release{newline}"
+            "  -v, --kernel-version     print the kernel version{newline}"
+            "  -m, --machine            print the machine hardware name{newline}"
+            "  -p, --processor          print the processor type (non-portable){newline}"
+            "  -i, --hardware-platform  print the hardware platform (non-portable){newline}"
+            "  -o, --operating-system   print the operating system{newline}"
+            "      --help     display this help and exit{newline}"
+            "      --version  output version information and exit{newline}".format(
+                newline=self.newline
             ),
             DEFAULT_ENCODING,
         )
