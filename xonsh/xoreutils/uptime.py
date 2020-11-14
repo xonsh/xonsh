@@ -60,6 +60,9 @@ __all__ = ["uptime", "boottime", "boottime_timestamp"]
 
 __boottime = None
 
+import xonsh.platform as xp
+# import xonsh.lazyimps as xlimps
+# import xonsh.lazyasd as xl
 
 def _uptime_linux():
     """Returns uptime in seconds or None, on Linux."""
@@ -94,7 +97,7 @@ def _uptime_linux():
         return None
 
     buf = ctypes.create_string_buffer(128)  # 64 suffices on 32-bit, whatever.
-    if libc.sysinfo(buf) < 0:
+    if xp.LIBC.sysinfo(buf) < 0:
         return None
 
     up = struct.unpack_from("@l", buf.raw)[0]
@@ -132,47 +135,49 @@ def _uptime_amiga():
 
 def _uptime_beos():
     """Returns uptime in seconds on None, on BeOS/Haiku."""
-    try:
-        libroot = ctypes.CDLL("libroot.so")
-    except (AttributeError, OSError):
+    # Original check when not use xp.LIBC
+    # try:
+    #     libroot = ctypes.CDLL("libroot.so")
+    # except (AttributeError, OSError):
+    #     return None
+
+    if not hasattr(xp.LIBC, "system_time"):
         return None
 
-    if not hasattr(libroot, "system_time"):
-        return None
-
-    libroot.system_time.restype = ctypes.c_int64
-    return libroot.system_time() / 1000000.0
+    xp.LIBC.system_time.restype = ctypes.c_int64
+    return xp.LIBC.system_time() / 1000000.0
 
 
 def _uptime_bsd():
     """Returns uptime in seconds or None, on BSD (including OS X)."""
     global __boottime
-    try:
-        libc = ctypes.CDLL("libc.so")
-    except AttributeError:
-        return None
-    except OSError:
-        # OS X; can't use ctypes.util.find_library because that creates
-        # a new process on Linux, which is undesirable.
-        try:
-            libc = ctypes.CDLL("libc.dylib")
-        except OSError:
-            return None
+    # Original check when not use xp.LIBC
+    # try:
+    #     libc = ctypes.CDLL("libc.so")
+    # except AttributeError:
+    #     return None
+    # except OSError:
+    #     # OS X; can't use ctypes.util.find_library because that creates
+    #     # a new process on Linux, which is undesirable.
+    #     try:
+    #         libc = ctypes.CDLL("libc.dylib")
+    #     except OSError:
+    #         return None
 
-    if not hasattr(libc, "sysctlbyname"):
+    if not hasattr(xp.LIBC, "sysctlbyname"):
         # Not BSD.
         return None
 
     # Determine how much space we need for the response.
     sz = ctypes.c_uint(0)
-    libc.sysctlbyname("kern.boottime", None, ctypes.byref(sz), None, 0)
+    xp.LIBC.sysctlbyname("kern.boottime", None, ctypes.byref(sz), None, 0)
     if sz.value != struct.calcsize("@LL"):
         # Unexpected, let's give up.
         return None
 
     # For real now.
     buf = ctypes.create_string_buffer(sz.value)
-    libc.sysctlbyname("kern.boottime", buf, ctypes.byref(sz), None, 0)
+    xp.LIBC.sysctlbyname("kern.boottime", buf, ctypes.byref(sz), None, 0)
     sec, usec = struct.unpack("@LL", buf.raw)
 
     # OS X disagrees what that second value is.
@@ -322,23 +327,24 @@ def _uptime_windows():
     Returns uptime in seconds or None, on Windows. Warning: may return
     incorrect answers after 49.7 days on versions older than Vista.
     """
-    if hasattr(ctypes, "windll") and hasattr(ctypes.windll, "kernel32"):
-        lib = ctypes.windll.kernel32
-    else:
-        try:
-            # Windows CE uses the cdecl calling convention.
-            lib = ctypes.CDLL("coredll.lib")
-        except (AttributeError, OSError):
-            return None
+    # Original control when not use xp.LIBC
+    # if hasattr(ctypes, "windll") and hasattr(ctypes.windll, "kernel32"):
+    #     lib = ctypes.windll.kernel32
+    # else:
+    #     try:
+    #         # Windows CE uses the cdecl calling convention.
+    #         lib = ctypes.CDLL("coredll.lib")
+    #     except (AttributeError, OSError):
+    #         return None
 
-    if hasattr(lib, "GetTickCount64"):
+    if hasattr(xp.LIBC, "GetTickCount64"):
         # Vista/Server 2008 or later.
-        lib.GetTickCount64.restype = ctypes.c_uint64
-        return lib.GetTickCount64() / 1000.0
-    if hasattr(lib, "GetTickCount"):
+        xp.LIBC.GetTickCount64.restype = ctypes.c_uint64
+        return xp.LIBC.GetTickCount64() / 1000.0
+    if hasattr(xp.LIBC, "GetTickCount"):
         # WinCE and Win2k or later; gives wrong answers after 49.7 days.
-        lib.GetTickCount.restype = ctypes.c_uint32
-        return lib.GetTickCount() / 1000.0
+        xp.LIBC.GetTickCount.restype = ctypes.c_uint32
+        return xp.LIBC.GetTickCount() / 1000.0
     return None
 
 
