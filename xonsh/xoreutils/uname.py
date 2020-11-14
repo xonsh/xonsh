@@ -125,7 +125,7 @@ def uname(args, stdin, stdout, stderr):
         line.append(sys.platform)
 
     if line:
-        stdout.write("{0}{1}".format(" ".join(line), os.linesep))
+        stdout.write(f"{' '.join(line)}{os.linesep}")
         stdout.flush()
 
 

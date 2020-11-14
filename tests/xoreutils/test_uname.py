@@ -29,13 +29,16 @@ class TestUname:
         self.stderr_buf = io.BytesIO()
         self.stdout = io.TextIOWrapper(self.stdout_buf)
         self.stderr = io.TextIOWrapper(self.stderr_buf)
+        self.newline = "\n"
+        if os.name == "nt":
+            self.newline = "\r\n"
 
     def test_uname_without_args(self, uname_env_fixture):
         uname.uname([], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().system, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().system, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_a(self, uname_env_fixture):
@@ -56,7 +59,7 @@ class TestUname:
                 processor,
                 "unknown",
                 sys.platform,
-                os.linesep,
+                self.newline,
             ),
             DEFAULT_ENCODING,
         )
@@ -79,7 +82,7 @@ class TestUname:
                 processor,
                 "unknown",
                 sys.platform,
-                os.linesep,
+                self.newline,
             ),
             DEFAULT_ENCODING,
         )
@@ -89,7 +92,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().system, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().system, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_kernel_name(self, uname_env_fixture):
@@ -97,7 +100,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().system, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().system, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_n(self, uname_env_fixture):
@@ -105,7 +108,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().node, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().node, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_nodename(self, uname_env_fixture):
@@ -113,7 +116,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().node, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().node, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_r(self, uname_env_fixture):
@@ -121,7 +124,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().release, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().release, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_kernel_release(self, uname_env_fixture):
@@ -129,7 +132,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().release, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().release, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_v(self, uname_env_fixture):
@@ -137,7 +140,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().version, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().version, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_kernel_version(self, uname_env_fixture):
@@ -145,7 +148,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().version, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().version, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_m(self, uname_env_fixture):
@@ -153,7 +156,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().machine, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().machine, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_machine(self, uname_env_fixture):
@@ -161,7 +164,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(platform.uname().machine, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(platform.uname().machine, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_p(self, uname_env_fixture):
@@ -173,7 +176,7 @@ class TestUname:
             processor = "unknown"
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(processor, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(processor, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_processor(self, uname_env_fixture):
@@ -185,7 +188,7 @@ class TestUname:
             processor = "unknown"
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(processor, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(processor, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_i(self, uname_env_fixture):
@@ -193,7 +196,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format("unknown", os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format("unknown", self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_hardware_platform(self, uname_env_fixture):
@@ -201,7 +204,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format("unknown", os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format("unknown", self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_o(self, uname_env_fixture):
@@ -209,7 +212,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(sys.platform, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(sys.platform, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_operating_system(self, uname_env_fixture):
@@ -217,7 +220,7 @@ class TestUname:
         self.stdout.flush()
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0}{1}".format(sys.platform, os.linesep), DEFAULT_ENCODING
+            "{0}{1}".format(sys.platform, self.newline), DEFAULT_ENCODING
         )
 
     def test_uname_help(self, uname_env_fixture):
@@ -255,7 +258,7 @@ Print certain system information.  With no OPTION, same as -s.
         from xonsh import __version__
 
         assert self.stdout_buf.getvalue() == bytes(
-            "{0} {1}{2}".format("uname (xonsh)", __version__, os.linesep),
+            "{0} {1}{2}".format("uname (xonsh)", __version__, self.newline),
             DEFAULT_ENCODING,
         )
 
@@ -282,7 +285,7 @@ Print certain system information.  With no OPTION, same as -s.
                 processor,
                 "unknown",
                 sys.platform,
-                os.linesep,
+                self.newline,
             ),
             DEFAULT_ENCODING,
         )
