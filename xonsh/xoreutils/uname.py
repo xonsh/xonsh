@@ -35,6 +35,10 @@ def uname(args, stdin, stdout, stderr):
 
     opts = _uname_parse_args(args)
 
+    newline = "\n"
+    if os.name == "nt":
+        newline = "\r\n"
+
     if opts is None:
         opts = {
             "kernel_name": False,
@@ -74,7 +78,7 @@ def uname(args, stdin, stdout, stderr):
 
     if opts["help"]:
         stdout.write(UNAME_HELP)
-        stdout.write(f"{os.linesep}")
+        stdout.write(f"{newline}")
         stdout.flush()
         return 0
 
@@ -82,7 +86,7 @@ def uname(args, stdin, stdout, stderr):
         opts["kernel_name"] = True
 
     if opts["version"]:
-        stdout.write(f"uname (xonsh) {__version__}{os.linesep}")
+        stdout.write(f"uname (xonsh) {__version__}{newline}")
         stdout.flush()
         return 0
 
@@ -125,7 +129,7 @@ def uname(args, stdin, stdout, stderr):
         line.append(sys.platform)
 
     if line:
-        stdout.write(f"{' '.join(line)}{os.linesep}")
+        stdout.write(f"{' '.join(line)}{newline}")
         stdout.flush()
 
 
