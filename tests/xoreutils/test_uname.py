@@ -2,7 +2,7 @@ import io
 import sys
 import platform
 import pytest
-
+import os
 from xonsh.xoreutils import uname
 from xonsh.platform import DEFAULT_ENCODING
 
@@ -34,14 +34,9 @@ class TestUname:
         uname.uname([], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().system), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().system), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().system, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_a(self, uname_env_fixture):
         uname.uname(["-a"], self.stdin, self.stdout, self.stderr)
@@ -51,34 +46,20 @@ class TestUname:
         if processor == "":
             processor = "unknown"
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1} {2} {3} {4} {7}\n".format(
-                    platform.uname().system,
-                    platform.uname().node,
-                    platform.uname().release,
-                    platform.uname().version,
-                    platform.uname().machine,
-                    processor,
-                    "unknown",
-                    sys.platform,
-                ),
-                DEFAULT_ENCODING,
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1} {2} {3} {4} {7}\r".format(
-                    platform.uname().system,
-                    platform.uname().node,
-                    platform.uname().release,
-                    platform.uname().version,
-                    platform.uname().machine,
-                    processor,
-                    "unknown",
-                    sys.platform,
-                ),
-                DEFAULT_ENCODING,
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0} {1} {2} {3} {4} {7}{8}".format(
+                platform.uname().system,
+                platform.uname().node,
+                platform.uname().release,
+                platform.uname().version,
+                platform.uname().machine,
+                processor,
+                "unknown",
+                sys.platform,
+                os.linesep,
+            ),
+            DEFAULT_ENCODING,
+        )
 
     def test_uname_all(self, uname_env_fixture):
         uname.uname(["--all"], self.stdin, self.stdout, self.stderr)
@@ -88,163 +69,100 @@ class TestUname:
         if processor == "":
             processor = "unknown"
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1} {2} {3} {4} {7}\n".format(
-                    platform.uname().system,
-                    platform.uname().node,
-                    platform.uname().release,
-                    platform.uname().version,
-                    platform.uname().machine,
-                    processor,
-                    "unknown",
-                    sys.platform,
-                ),
-                DEFAULT_ENCODING,
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1} {2} {3} {4} {7}\r".format(
-                    platform.uname().system,
-                    platform.uname().node,
-                    platform.uname().release,
-                    platform.uname().version,
-                    platform.uname().machine,
-                    processor,
-                    "unknown",
-                    sys.platform,
-                ),
-                DEFAULT_ENCODING,
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0} {1} {2} {3} {4} {7}{8}".format(
+                platform.uname().system,
+                platform.uname().node,
+                platform.uname().release,
+                platform.uname().version,
+                platform.uname().machine,
+                processor,
+                "unknown",
+                sys.platform,
+                os.linesep,
+            ),
+            DEFAULT_ENCODING,
+        )
 
     def test_uname_kernel_s(self, uname_env_fixture):
         uname.uname(["-s"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().system), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().system), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().system, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_kernel_name(self, uname_env_fixture):
         uname.uname(["--kernel-name"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().system), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().system), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().system, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_n(self, uname_env_fixture):
         uname.uname(["-n"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().node), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().node), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().node, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_nodename(self, uname_env_fixture):
         uname.uname(["--nodename"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().node), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().node), DEFAULT_ENCODING
-            )
+
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().node, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_r(self, uname_env_fixture):
         uname.uname(["-r"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().release), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().release), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().release, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_kernel_release(self, uname_env_fixture):
         uname.uname(["--kernel-release"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().release), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().release), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().release, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_v(self, uname_env_fixture):
         uname.uname(["-v"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().version), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().version), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().version, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_kernel_version(self, uname_env_fixture):
         uname.uname(["--kernel-version"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().version), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().version), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().version, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_m(self, uname_env_fixture):
         uname.uname(["-m"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().machine), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().machine), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().machine, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_machine(self, uname_env_fixture):
         uname.uname(["--machine"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(platform.uname().machine), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(platform.uname().machine), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(platform.uname().machine, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_p(self, uname_env_fixture):
         uname.uname(["-p"], self.stdin, self.stdout, self.stderr)
@@ -254,14 +172,9 @@ class TestUname:
         if processor == "":
             processor = "unknown"
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(processor), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(processor), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(processor, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_processor(self, uname_env_fixture):
         uname.uname(["--processor"], self.stdin, self.stdout, self.stderr)
@@ -271,66 +184,41 @@ class TestUname:
         if processor == "":
             processor = "unknown"
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(processor), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(processor), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(processor, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_i(self, uname_env_fixture):
         uname.uname(["-i"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format("unknown"), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format("unknown"), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format("unknown", os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_hardware_platform(self, uname_env_fixture):
         uname.uname(["--hardware-platform"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format("unknown"), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format("unknown"), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format("unknown", os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_o(self, uname_env_fixture):
         uname.uname(["-o"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(sys.platform), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(sys.platform), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(sys.platform, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_operating_system(self, uname_env_fixture):
         uname.uname(["--operating-system"], self.stdin, self.stdout, self.stderr)
         self.stdout.flush()
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\n".format(sys.platform), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0}\r".format(sys.platform), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0}{1}".format(sys.platform, os.linesep), DEFAULT_ENCODING
+        )
 
     def test_uname_help(self, uname_env_fixture):
         uname.uname(["--help"], self.stdin, self.stdout, self.stderr)
@@ -366,14 +254,10 @@ Print certain system information.  With no OPTION, same as -s.
         self.stdout.flush()
         from xonsh import __version__
 
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1}\n".format("uname (xonsh)", __version__), DEFAULT_ENCODING
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1}\r".format("uname (xonsh)", __version__), DEFAULT_ENCODING
-            )
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0} {1}{2}".format("uname (xonsh)", __version__, os.linesep),
+            DEFAULT_ENCODING,
+        )
 
     def test_uname_everything(self, uname_env_fixture):
         uname.uname(
@@ -387,31 +271,18 @@ Print certain system information.  With no OPTION, same as -s.
         processor = platform.uname().processor
         if processor == "":
             processor = "unknown"
-        try:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1} {2} {3} {4} {5} {6} {7}\n".format(
-                    platform.uname().system,
-                    platform.uname().node,
-                    platform.uname().release,
-                    platform.uname().version,
-                    platform.uname().machine,
-                    processor,
-                    "unknown",
-                    sys.platform,
-                ),
-                DEFAULT_ENCODING,
-            )
-        except AssertionError:
-            assert self.stdout_buf.getvalue() == bytes(
-                "{0} {1} {2} {3} {4} {5} {6} {7}\r".format(
-                    platform.uname().system,
-                    platform.uname().node,
-                    platform.uname().release,
-                    platform.uname().version,
-                    platform.uname().machine,
-                    processor,
-                    "unknown",
-                    sys.platform,
-                ),
-                DEFAULT_ENCODING,
-            )
+
+        assert self.stdout_buf.getvalue() == bytes(
+            "{0} {1} {2} {3} {4} {5} {6} {7}{8}".format(
+                platform.uname().system,
+                platform.uname().node,
+                platform.uname().release,
+                platform.uname().version,
+                platform.uname().machine,
+                processor,
+                "unknown",
+                sys.platform,
+                os.linesep,
+            ),
+            DEFAULT_ENCODING,
+        )

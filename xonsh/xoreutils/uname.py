@@ -9,6 +9,7 @@ Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 """
 import platform
 import sys
+import os
 
 from xonsh.xoreutils.util import arg_handler
 from xonsh import __version__
@@ -64,8 +65,8 @@ def uname(args, stdin, stdout, stderr):
             "version",
             "help",
         ]:
-            stdout.write(f"{__name__}: unrecognized option '{key}'\n")
-            stdout.write("Try 'uname --help' for more information.\n")
+            stdout.write(f"{__name__}: unrecognized option '{key}'{os.linesep}")
+            stdout.write(f"Try 'uname --help' for more information.{os.linesep}")
             stdout.flush()
             opts["help"] = True
         if value:
@@ -73,7 +74,7 @@ def uname(args, stdin, stdout, stderr):
 
     if opts["help"]:
         stdout.write(UNAME_HELP)
-        stdout.write("\n")
+        stdout.write(f"{os.linesep}")
         stdout.flush()
         return 0
 
@@ -81,7 +82,7 @@ def uname(args, stdin, stdout, stderr):
         opts["kernel_name"] = True
 
     if opts["version"]:
-        stdout.write(f"uname (xonsh) {__version__}\n")
+        stdout.write(f"uname (xonsh) {__version__}{os.linesep}")
         stdout.flush()
         return 0
 
@@ -124,7 +125,7 @@ def uname(args, stdin, stdout, stderr):
         line.append(sys.platform)
 
     if line:
-        stdout.write("{0}\n".format(" ".join(line)))
+        stdout.write("{0}{1}".format(" ".join(line), os.linesep))
         stdout.flush()
 
 
