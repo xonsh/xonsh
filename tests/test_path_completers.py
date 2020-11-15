@@ -57,3 +57,15 @@ def test_complete_path_when_prefix_is_raw_path_string(quote, xonsh_builtins):
         out = xcp.complete_path(prefix, line, line.find(prefix), len(line), dict())
         expected = f"pr{quote}{tmp.name}{quote}"
         assert expected == out[0].pop()
+
+
+@pytest.mark.parametrize("prefix", ("", "r", "p", "pr", "rp"))
+def test_path_from_partial_string(prefix):
+    string = "hello"
+    quote = "'"
+    out = xcp._path_from_partial_string(f"{prefix}{quote}{string}{quote}")
+    if "r" in prefix:
+        expected = (f"r{quote}{string}{quote}", string, f"{prefix}{quote}", quote)
+    else:
+        expected = (f"{quote}{string}{quote}", string, f"{prefix}{quote}", quote)
+    assert out == expected
