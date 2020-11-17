@@ -1,7 +1,7 @@
 """Hooks for the distributed parallel computing library."""
 from xonsh.contexts import Functor
 
-__all__ = "DSubmitter", "dsubmit"
+__all__ = ["DSubmitter", "dsubmit"]
 
 
 def dworker(args, stdin=None):
