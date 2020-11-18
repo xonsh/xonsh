@@ -115,7 +115,7 @@ def _get_bash_completions_source(paths=None):
 
 
 def _bash_get_sep():
-    """ Returns the appropriate filepath separator char depending on OS and
+    """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
     if platform.system() == "Windows":

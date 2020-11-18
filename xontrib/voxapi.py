@@ -307,8 +307,7 @@ class Vox(collections.abc.Mapping):
             return True
 
     def __iter__(self):
-        """List available virtual environments found in $VIRTUALENV_HOME.
-        """
+        """List available virtual environments found in $VIRTUALENV_HOME."""
         bin_, lib, inc = _subdir_names()
         for dirpath, dirnames, filenames in os.walk(self.venvdir):
             python_exec = os.path.join(dirpath, bin_, "python")
@@ -319,8 +318,7 @@ class Vox(collections.abc.Mapping):
                 dirnames.clear()
 
     def __len__(self):
-        """Counts known virtual environments, using the same rules as iter().
-        """
+        """Counts known virtual environments, using the same rules as iter()."""
         line = 0
         for _ in self:
             line += 1

@@ -8,6 +8,6 @@ prompt-toolkit>=3.0
 pygments>=2.2
 codecov
 coverage
-black==19.10b0 --pre
+black==20.8b1 --pre
 pre-commit
 mypy==0.790

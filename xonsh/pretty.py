@@ -304,7 +304,7 @@ class PrettyPrinter(_PrettyPrinterBase):
 
 
 def _get_mro(obj_class):
-    """ Get a reasonable method resolution order of a class and its superclasses
+    """Get a reasonable method resolution order of a class and its superclasses
     for both old-style and new-style classes.
     """
     if not hasattr(obj_class, "__mro__"):
