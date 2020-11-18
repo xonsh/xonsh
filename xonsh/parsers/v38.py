@@ -242,8 +242,9 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_typedargslist_t12(self, p):
-        """typedargslist : posonlyargslist comma_opt
-                         | posonlyargslist COMMA typedargslist
+        """
+        typedargslist : posonlyargslist comma_opt
+                      | posonlyargslist COMMA typedargslist
         """
         if len(p) == 4:
             p0 = p[3]
@@ -256,8 +257,9 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_posonlyargslist(self, p):
-        """posonlyargslist : tfpdef equals_test_opt COMMA DIVIDE
-                           | tfpdef equals_test_opt comma_tfpdef_list COMMA DIVIDE"""
+        """
+        posonlyargslist : tfpdef equals_test_opt COMMA DIVIDE
+                        | tfpdef equals_test_opt comma_tfpdef_list COMMA DIVIDE"""
         p0 = ast.arguments(
             posonlyargs=[],
             args=[],
@@ -392,8 +394,9 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_varargslist_t12(self, p):
-        """varargslist : posonlyvarargslist comma_opt
-                       | posonlyvarargslist COMMA varargslist
+        """
+        varargslist : posonlyvarargslist comma_opt
+                    | posonlyvarargslist COMMA varargslist
         """
         if len(p) == 4:
             p0 = p[3]
@@ -406,8 +409,9 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_posonlyvarargslist(self, p):
-        """posonlyvarargslist : vfpdef equals_test_opt COMMA DIVIDE
-                              | vfpdef equals_test_opt comma_vfpdef_list COMMA DIVIDE"""
+        """
+        posonlyvarargslist : vfpdef equals_test_opt COMMA DIVIDE
+                           | vfpdef equals_test_opt comma_vfpdef_list COMMA DIVIDE"""
         p0 = ast.arguments(
             posonlyargs=[],
             args=[],
@@ -462,8 +466,9 @@ class Parser(ThreeSixParser):
         )
 
     def p_namedexpr_test(self, p):
-        """namedexpr_test : test
-                          | test COLONEQUAL test
+        """
+        namedexpr_test : test
+                       | test COLONEQUAL test
         """
         if len(p) == 2:
             p[0] = p[1]
@@ -475,8 +480,9 @@ class Parser(ThreeSixParser):
             )
 
     def p_namedexpr_test_or_star_expr(self, p):
-        """namedexpr_test_or_star_expr : namedexpr_test
-                                       | star_expr
+        """
+        namedexpr_test_or_star_expr : namedexpr_test
+                                    | star_expr
         """
         p[0] = p[1]
 
@@ -501,14 +507,16 @@ class Parser(ThreeSixParser):
         super().p_elif_part(p)
 
     def p_if_stmt(self, p):
-        """if_stmt : if_tok namedexpr_test COLON suite elif_part_list_opt
-                   | if_tok namedexpr_test COLON suite elif_part_list_opt else_part
+        """
+        if_stmt : if_tok namedexpr_test COLON suite elif_part_list_opt
+                | if_tok namedexpr_test COLON suite elif_part_list_opt else_part
         """
         super().p_if_stmt(p)
 
     def p_while_stmt(self, p):
-        """while_stmt : WHILE namedexpr_test COLON suite
-                      | WHILE namedexpr_test COLON suite else_part
+        """
+        while_stmt : WHILE namedexpr_test COLON suite
+                   | WHILE namedexpr_test COLON suite else_part
         """
         super().p_while_stmt(p)
 
