@@ -658,16 +658,16 @@ class BaseParser(object):
     #
 
     def p_start_symbols(self, p):
-        """start_symbols : single_input
-                         | file_input
-                         | eval_input
-                         | empty
+        """
+        start_symbols : single_input
+                      | file_input
+                      | eval_input
+                      | empty
         """
         p[0] = p[1]
 
     def p_single_input(self, p):
-        """single_input : compound_stmt NEWLINE
-        """
+        """single_input : compound_stmt NEWLINE"""
         p1 = empty_list_if_newline(p[1])
         p0 = ast.Interactive(body=p1)
         p[0] = p0
@@ -691,20 +691,21 @@ class BaseParser(object):
         p[0] = p[1] + p2
 
     def p_newline_or_stmt(self, p):
-        """newline_or_stmt : NEWLINE
-                           | stmt
+        """
+        newline_or_stmt : NEWLINE
+                        | stmt
         """
         p[0] = p[1]
 
     def p_newlines(self, p):
-        """newlines : NEWLINE
-                    | newlines NEWLINE
+        """
+        newlines : NEWLINE
+                 | newlines NEWLINE
         """
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_eval_input(self, p):
-        """eval_input : testlist newlines_opt
-        """
+        """eval_input : testlist newlines_opt"""
         p1 = p[1]
         p[0] = ast.Expression(body=p1, lineno=p1.lineno, col_offset=p1.col_offset)
 
@@ -773,8 +774,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_decorators(self, p):
-        """decorators : decorator
-                      | decorators decorator
+        """
+        decorators : decorator
+                   | decorators decorator
         """
         p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
 
@@ -1096,14 +1098,16 @@ class BaseParser(object):
         p[0] = p[3]
 
     def p_stmt(self, p):
-        """stmt : simple_stmt
-                | compound_stmt
+        """
+        stmt : simple_stmt
+             | compound_stmt
         """
         p[0] = p[1]
 
     def p_stmt_list(self, p):
-        """stmt_list : stmt
-                     | stmt_list stmt
+        """
+        stmt_list : stmt
+                  | stmt_list stmt
         """
         if len(p) == 2:
             p[0] = p[1]
@@ -1111,8 +1115,9 @@ class BaseParser(object):
             p[0] = p[1] + p[2]
 
     def p_semi_opt(self, p):
-        """semi_opt : SEMI
-                    | empty
+        """
+        semi_opt : SEMI
+                 | empty
         """
         if len(p) == 2:
             p[0] = p[1]
@@ -1130,14 +1135,15 @@ class BaseParser(object):
         p[0] = [p[1]] + p[2]
 
     def p_small_stmt(self, p):
-        """small_stmt : expr_stmt
-                      | del_stmt
-                      | pass_stmt
-                      | flow_stmt
-                      | import_stmt
-                      | global_stmt
-                      | nonlocal_stmt
-                      | assert_stmt
+        """
+        small_stmt : expr_stmt
+                   | del_stmt
+                   | pass_stmt
+                   | flow_stmt
+                   | import_stmt
+                   | global_stmt
+                   | nonlocal_stmt
+                   | assert_stmt
         """
         p[0] = p[1]
 
@@ -1158,8 +1164,9 @@ class BaseParser(object):
     }
 
     def p_expr_stmt_testlist_assign(self, p):
-        """expr_stmt : testlist_star_expr equals_yield_expr_or_testlist_list_opt
-                     | testlist equals_yield_expr_or_testlist_list_opt
+        """
+        expr_stmt : testlist_star_expr equals_yield_expr_or_testlist_list_opt
+                  | testlist equals_yield_expr_or_testlist_list_opt
         """
         p1, p2 = p[1], p[2]
         if isinstance(p1, ast.Tuple):
@@ -1233,15 +1240,17 @@ class BaseParser(object):
         p[0] = [p[1]]
 
     def p_comma_opt(self, p):
-        """comma_opt : COMMA
-                     | empty
+        """
+        comma_opt : COMMA
+                  | empty
         """
         if len(p) == 2:
             p[0] = p[1]
 
     def p_test_or_star_expr(self, p):
-        """test_or_star_expr : test
-                             | star_expr
+        """
+        test_or_star_expr : test
+                          | star_expr
         """
         p[0] = p[1]
 
@@ -1250,8 +1259,9 @@ class BaseParser(object):
         p[0] = [p[2]]
 
     def p_testlist_star_expr(self, p):
-        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list comma_opt
-                              | test_or_star_expr comma_opt
+        """
+        testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list comma_opt
+                           | test_or_star_expr comma_opt
         """
         p1, p2 = p[1], p[2]
         if p2 is None:
@@ -1277,7 +1287,8 @@ class BaseParser(object):
         p[0] = p0
 
     def p_augassign(self, p):
-        """augassign : PLUSEQUAL
+        """
+        augassign    : PLUSEQUAL
                      | MINUSEQUAL
                      | TIMESEQUAL
                      | ATEQUAL
@@ -1294,8 +1305,9 @@ class BaseParser(object):
         p[0] = p[1]
 
     def p_yield_expr_or_testlist(self, p):
-        """yield_expr_or_testlist : yield_expr
-                                  | testlist
+        """
+        yield_expr_or_testlist : yield_expr
+                               | testlist
         """
         p[0] = p[1]
 
@@ -1323,7 +1335,8 @@ class BaseParser(object):
         p[0] = ast.Pass(lineno=self.lineno, col_offset=self.col)
 
     def p_flow_stmt(self, p):
-        """flow_stmt : break_stmt
+        """
+        flow_stmt    : break_stmt
                      | continue_stmt
                      | return_stmt
                      | raise_stmt
@@ -1364,14 +1377,14 @@ class BaseParser(object):
         p[0] = ast.Raise(exc=p[2], cause=p[4], lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_import_stmt(self, p):
-        """import_stmt : import_name
+        """
+        import_stmt    : import_name
                        | import_from
         """
         p[0] = p[1]
 
     def p_import_name(self, p):
-        """import_name : import_tok dotted_as_names
-        """
+        """import_name : import_tok dotted_as_names"""
         p1 = p[1]
         p[0] = ast.Import(names=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
@@ -1411,8 +1424,9 @@ class BaseParser(object):
         )
 
     def p_period_or_ellipsis(self, p):
-        """period_or_ellipsis : PERIOD
-                              | ELLIPSIS
+        """
+        period_or_ellipsis : PERIOD
+                           | ELLIPSIS
         """
         p[0] = p[1]
 
@@ -1425,8 +1439,7 @@ class BaseParser(object):
         p[0] = ast.alias(name=p[1], asname=p[2])
 
     def p_comma_import_as_name(self, p):
-        """comma_import_as_name : COMMA import_as_name
-        """
+        """comma_import_as_name : COMMA import_as_name"""
         p[0] = [p[2]]
 
     def p_comma_import_as_name_tail(self, p):
@@ -1463,8 +1476,9 @@ class BaseParser(object):
         p[0] = p[1] + p[2]
 
     def p_dotted_name(self, p):
-        """dotted_name : NAME
-                       | NAME period_name_list
+        """
+        dotted_name : NAME
+                    | NAME period_name_list
         """
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
@@ -1502,14 +1516,15 @@ class BaseParser(object):
         p[0] = ast.Assert(test=p2, msg=p3, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_compound_stmt(self, p):
-        """compound_stmt : if_stmt
-                         | while_stmt
-                         | for_stmt
-                         | try_stmt
-                         | with_stmt
-                         | funcdef
-                         | classdef
-                         | decorated
+        """
+        compound_stmt : if_stmt
+                      | while_stmt
+                      | for_stmt
+                      | try_stmt
+                      | with_stmt
+                      | funcdef
+                      | classdef
+                      | decorated
         """
         p[0] = p[1]
 
@@ -1531,8 +1546,9 @@ class BaseParser(object):
         p[0] = p[3]
 
     def p_if_stmt(self, p):
-        """if_stmt : if_tok test COLON suite elif_part_list_opt
-                   | if_tok test COLON suite elif_part_list_opt else_part
+        """
+        if_stmt : if_tok test COLON suite elif_part_list_opt
+                | if_tok test COLON suite elif_part_list_opt else_part
         """
         p1 = p[1]
         lastif = ast.If(
@@ -1549,8 +1565,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_while_stmt(self, p):
-        """while_stmt : WHILE test COLON suite
-                      | WHILE test COLON suite else_part
+        """
+        while_stmt : WHILE test COLON suite
+                   | WHILE test COLON suite else_part
         """
         p5 = p[5] if len(p) > 5 else []
         p[0] = [
@@ -1560,8 +1577,9 @@ class BaseParser(object):
         ]
 
     def p_for_stmt(self, p):
-        """for_stmt : for_tok exprlist IN testlist COLON suite
-                    | for_tok exprlist IN testlist COLON suite else_part
+        """
+        for_stmt : for_tok exprlist IN testlist COLON suite
+                 | for_tok exprlist IN testlist COLON suite else_part
         """
         p1, p2 = p[1], p[2]
         p7 = p[7] if len(p) > 7 else []
@@ -1693,8 +1711,9 @@ class BaseParser(object):
         p[0] = p2
 
     def p_with_item(self, p):
-        """with_item : test
-                     | test as_expr
+        """
+        with_item : test
+                  | test as_expr
         """
         p2 = p[2] if len(p) > 2 else None
         p[0] = ast.withitem(context_expr=p[1], optional_vars=p2)
@@ -1718,8 +1737,9 @@ class BaseParser(object):
         )
 
     def p_suite(self, p):
-        """suite : simple_stmt
-                 | NEWLINE INDENT stmt_list DEDENT
+        """
+        suite : simple_stmt
+              | NEWLINE INDENT stmt_list DEDENT
         """
         p[0] = p[1] if len(p) == 2 else p[3]
 
@@ -1760,14 +1780,16 @@ class BaseParser(object):
         pass
 
     def p_any_dedent_tok(self, p):
-        """any_dedent_tok : nodedent
-                          | DEDENT
+        """
+        any_dedent_tok : nodedent
+                       | DEDENT
         """
         pass
 
     def p_any_dedent_toks(self, p):
-        """any_dedent_toks : any_dedent_tok
-                           | any_dedent_toks any_dedent_tok
+        """
+        any_dedent_toks : any_dedent_tok
+                        | any_dedent_toks any_dedent_tok
         """
         pass
 
@@ -1806,8 +1828,9 @@ class BaseParser(object):
         pass
 
     def p_test_ol(self, p):
-        """test : or_test
-                | lambdef
+        """
+        test : or_test
+             | lambdef
         """
         p[0] = p[1]
 
@@ -1818,8 +1841,9 @@ class BaseParser(object):
         )
 
     def p_test_nocond(self, p):
-        """test_nocond : or_test
-                       | lambdef_nocond
+        """
+        test_nocond : or_test
+                    | lambdef_nocond
         """
         p[0] = p[1]
 
@@ -1925,20 +1949,22 @@ class BaseParser(object):
     }
 
     def p_comp_op_monograph(self, p):
-        """comp_op : LT
-                   | GT
-                   | EQ
-                   | GE
-                   | LE
-                   | NE
-                   | IN
-                   | IS
+        """
+        comp_op : LT
+                | GT
+                | EQ
+                | GE
+                | LE
+                | NE
+                | IN
+                | IS
         """
         p[0] = self._comp_ops[p[1]]()
 
     def p_comp_op_digraph(self, p):
-        """comp_op : NOT IN
-                   | IS NOT
+        """
+        comp_op : NOT IN
+                | IS NOT
         """
         p[0] = self._comp_ops[(p[1], p[2])]()
 
@@ -1970,8 +1996,9 @@ class BaseParser(object):
         return p0
 
     def p_expr(self, p):
-        """expr : xor_expr
-                | xor_expr pipe_xor_expr_list
+        """
+        expr : xor_expr
+             | xor_expr pipe_xor_expr_list
         """
         p[0] = self._binop_combine(p[1], p[2] if len(p) > 2 else None)
 
@@ -2027,8 +2054,9 @@ class BaseParser(object):
         p[0] = self._binop_combine(p[1], p[2])
 
     def p_shift_arith_expr(self, p):
-        """shift_arith_expr : lshift_tok arith_expr
-                            | rshift_tok arith_expr
+        """
+        shift_arith_expr : lshift_tok arith_expr
+                         | rshift_tok arith_expr
         """
         p1 = p[1]
         op = ast.LShift() if p1.value == "<<" else ast.RShift()
@@ -2072,8 +2100,9 @@ class BaseParser(object):
     }
 
     def p_pm_term(self, p):
-        """pm_term : plus_tok term
-                   | minus_tok term
+        """
+        pm_term : plus_tok term
+                | minus_tok term
         """
         p1 = p[1]
         op = self._term_binops[p1.value](lineno=p1.lineno, col_offset=p1.lexpos)
@@ -2101,11 +2130,12 @@ class BaseParser(object):
         p[0] = p0
 
     def p_op_factor(self, p):
-        """op_factor : times_tok factor
-                     | at_tok factor
-                     | divide_tok factor
-                     | mod_tok factor
-                     | doublediv_tok factor
+        """
+        op_factor : times_tok factor
+                    | at_tok factor
+                    | divide_tok factor
+                    | mod_tok factor
+                    | doublediv_tok factor
         """
         p1 = p[1]
         op = self._term_binops[p1.value]
@@ -2123,9 +2153,10 @@ class BaseParser(object):
         p[0] = p[1]
 
     def p_factor_unary(self, p):
-        """factor : plus_tok factor
-                  | minus_tok factor
-                  | tilde_tok factor
+        """
+        factor : plus_tok factor
+               | minus_tok factor
+               | tilde_tok factor
         """
         p1 = p[1]
         op = self._factor_ops[p1.value]()
@@ -2149,8 +2180,9 @@ class BaseParser(object):
         )
 
     def p_yield_expr_or_testlist_comp(self, p):
-        """yield_expr_or_testlist_comp : yield_expr
-                                       | testlist_comp
+        """
+        yield_expr_or_testlist_comp : yield_expr
+                                    | testlist_comp
         """
         p[0] = p[1]
 
@@ -2295,8 +2327,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_atom_ns(self, p):
-        """atom : number
-                | string_literal_list
+        """
+        atom : number
+             | string_literal_list
         """
         p[0] = p[1]
 
@@ -2336,28 +2369,31 @@ class BaseParser(object):
         p[0] = self._envvar_by_name(p[1][1:], lineno=self.lineno, col=self.col)
 
     def p_atom_fistful_of_dollars(self, p):
-        """atom : dollar_lbrace_tok test RBRACE
-                | bang_lparen_tok subproc RPAREN
-                | dollar_lparen_tok subproc RPAREN
-                | bang_lbracket_tok subproc RBRACKET
-                | dollar_lbracket_tok subproc RBRACKET
+        """
+        atom : dollar_lbrace_tok test RBRACE
+             | bang_lparen_tok subproc RPAREN
+             | dollar_lparen_tok subproc RPAREN
+             | bang_lbracket_tok subproc RBRACKET
+             | dollar_lbracket_tok subproc RBRACKET
         """
         p[0] = self._dollar_rules(p)
 
     def p_atom_bang_empty_fistful_of_dollars(self, p):
-        """atom : bang_lparen_tok subproc bang_tok RPAREN
-                | dollar_lparen_tok subproc bang_tok RPAREN
-                | bang_lbracket_tok subproc bang_tok RBRACKET
-                | dollar_lbracket_tok subproc bang_tok RBRACKET
+        """
+        atom : bang_lparen_tok subproc bang_tok RPAREN
+             | dollar_lparen_tok subproc bang_tok RPAREN
+             | bang_lbracket_tok subproc bang_tok RBRACKET
+             | dollar_lbracket_tok subproc bang_tok RBRACKET
         """
         self._append_subproc_bang_empty(p)
         p[0] = self._dollar_rules(p)
 
     def p_atom_bang_fistful_of_dollars(self, p):
-        """atom : bang_lparen_tok subproc bang_tok nocloser rparen_tok
-                | dollar_lparen_tok subproc bang_tok nocloser rparen_tok
-                | bang_lbracket_tok subproc bang_tok nocloser rbracket_tok
-                | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
+        """
+        atom : bang_lparen_tok subproc bang_tok nocloser rparen_tok
+             | dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+             | bang_lbracket_tok subproc bang_tok nocloser rbracket_tok
+             | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
         """
         self._append_subproc_bang(p)
         p[0] = self._dollar_rules(p)
@@ -2455,8 +2491,9 @@ class BaseParser(object):
             p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos, is_raw=is_raw)
 
     def p_string_literal_list(self, p):
-        """string_literal_list : string_literal
-                               | string_literal_list string_literal
+        """
+        string_literal_list : string_literal
+                            | string_literal_list string_literal
         """
         if len(p) == 3:
             p[1].s += p[2].s
@@ -2500,11 +2537,12 @@ class BaseParser(object):
         p[0] = [p[2] or dict(args=[], keywords=[], starargs=None, kwargs=None)]
 
     def p_trailer_bang_lparen(self, p):
-        """trailer : bang_lparen_tok macroarglist_opt rparen_tok
-                   | bang_lparen_tok nocomma comma_tok rparen_tok
-                   | bang_lparen_tok nocomma comma_tok WS rparen_tok
-                   | bang_lparen_tok macroarglist comma_tok rparen_tok
-                   | bang_lparen_tok macroarglist comma_tok WS rparen_tok
+        """
+        trailer : bang_lparen_tok macroarglist_opt rparen_tok
+                | bang_lparen_tok nocomma comma_tok rparen_tok
+                | bang_lparen_tok nocomma comma_tok WS rparen_tok
+                | bang_lparen_tok macroarglist comma_tok rparen_tok
+                | bang_lparen_tok macroarglist comma_tok WS rparen_tok
         """
         p1, p2, p3 = p[1], p[2], p[3]
         begins = [(p1.lineno, p1.lexpos + 2)]
@@ -2529,14 +2567,16 @@ class BaseParser(object):
         p[0] = [p0]
 
     def p_trailer_p3(self, p):
-        """trailer : LBRACKET subscriptlist RBRACKET
-                   | PERIOD NAME
+        """
+        trailer : LBRACKET subscriptlist RBRACKET
+                | PERIOD NAME
         """
         p[0] = [p[2]]
 
     def p_trailer_quest(self, p):
-        """trailer : DOUBLE_QUESTION
-                   | QUESTION
+        """
+        trailer : DOUBLE_QUESTION
+                | QUESTION
         """
         p[0] = [p[1]]
 
@@ -2575,8 +2615,9 @@ class BaseParser(object):
         pass
 
     def p_any_raw_tok(self, p):
-        """any_raw_tok : nocomma
-                       | COMMA
+        """
+        any_raw_tok : nocomma
+                    | COMMA
         """
         pass
 
@@ -2593,16 +2634,17 @@ class BaseParser(object):
         pass
 
     def p_any_nested_raw(self, p):
-        """any_nested_raw : LPAREN any_raw_toks_opt RPAREN
-                          | LBRACE any_raw_toks_opt RBRACE
-                          | LBRACKET any_raw_toks_opt RBRACKET
-                          | AT_LPAREN any_raw_toks_opt RPAREN
-                          | BANG_LPAREN any_raw_toks_opt RPAREN
-                          | BANG_LBRACKET any_raw_toks_opt RBRACKET
-                          | DOLLAR_LPAREN any_raw_toks_opt RPAREN
-                          | DOLLAR_LBRACE any_raw_toks_opt RBRACE
-                          | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
-                          | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
+        """
+        any_nested_raw : LPAREN any_raw_toks_opt RPAREN
+                       | LBRACE any_raw_toks_opt RBRACE
+                       | LBRACKET any_raw_toks_opt RBRACKET
+                       | AT_LPAREN any_raw_toks_opt RPAREN
+                       | BANG_LPAREN any_raw_toks_opt RPAREN
+                       | BANG_LBRACKET any_raw_toks_opt RBRACKET
+                       | DOLLAR_LPAREN any_raw_toks_opt RPAREN
+                       | DOLLAR_LBRACE any_raw_toks_opt RBRACE
+                       | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
+                       | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
         """
         pass
 
@@ -2671,8 +2713,9 @@ class BaseParser(object):
         p[0] = p[2]
 
     def p_expr_or_star_expr(self, p):
-        """expr_or_star_expr : expr
-                             | star_expr
+        """
+        expr_or_star_expr : expr
+                          | star_expr
         """
         p[0] = p[1]
 
@@ -2713,8 +2756,9 @@ class BaseParser(object):
             p[0] = ensure_has_elts(p[1])
 
     def p_testlist_many(self, p):
-        """testlist : test comma_test_list COMMA
-                    | test comma_test_list
+        """
+        testlist : test comma_test_list COMMA
+                 | test comma_test_list
         """
         p1 = p[1]
         if isinstance(p1, ast.List) or (
@@ -2792,8 +2836,9 @@ class BaseParser(object):
         )
 
     def p_dictorsetmaker_comp(self, p):
-        """dictorsetmaker : item comp_for
-                          | test_or_star_expr comp_for
+        """
+        dictorsetmaker : item comp_for
+                       | test_or_star_expr comp_for
         """
         p1 = p[1]
         comps = p[2].get("comps", [])
@@ -2832,8 +2877,9 @@ class BaseParser(object):
         p[0] = [p[2]]
 
     def p_comp_iter(self, p):
-        """comp_iter : comp_for
-                     | comp_if
+        """
+        comp_iter : comp_for
+                  | comp_if
         """
         p[0] = p[1]
 
@@ -3004,24 +3050,27 @@ class BaseParser(object):
         return cliargs
 
     def p_pipe(self, p):
-        """pipe : PIPE
-                | WS PIPE
-                | PIPE WS
-                | WS PIPE WS
+        """
+        pipe : PIPE
+             | WS PIPE
+             | PIPE WS
+             | WS PIPE WS
         """
         p[0] = ast.Str(s="|", lineno=self.lineno, col_offset=self.col)
 
     def p_amper(self, p):
-        """amper : AMPERSAND
-                 | WS AMPERSAND
-                 | AMPERSAND WS
-                 | WS AMPERSAND WS
+        """
+        amper : AMPERSAND
+              | WS AMPERSAND
+              | AMPERSAND WS
+              | WS AMPERSAND WS
         """
         p[0] = ast.Str(s="&", lineno=self.lineno, col_offset=self.col)
 
     def p_subproc_s2(self, p):
-        """subproc : subproc_atoms
-                   | subproc_atoms WS
+        """
+        subproc : subproc_atoms
+                | subproc_atoms WS
         """
         p1 = p[1]
         p[0] = [self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)]
@@ -3032,8 +3081,9 @@ class BaseParser(object):
         p[0] = p1 + [p[2]]
 
     def p_subproc_pipe(self, p):
-        """subproc : subproc pipe subproc_atoms
-                   | subproc pipe subproc_atoms WS
+        """
+        subproc : subproc pipe subproc_atoms
+                | subproc pipe subproc_atoms WS
         """
         p1 = p[1]
         if len(p1) > 1 and hasattr(p1[-2], "s") and p1[-2].s != "|":
@@ -3052,8 +3102,9 @@ class BaseParser(object):
         p[0] = p1
 
     def p_subproc_atoms_subshell(self, p):
-        """subproc_atoms : lparen_tok any_raw_tok rparen_tok
-                         | lparen_tok any_raw_toks rparen_tok
+        """
+        subproc_atoms : lparen_tok any_raw_tok rparen_tok
+                      | lparen_tok any_raw_toks rparen_tok
         """
         p1 = p[1]
         p3 = p[3]
@@ -3071,8 +3122,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_envvar_assign_subproc_atoms(self, p):
-        """subproc_atoms : envvar_assign subproc_atoms
-                         | envvar_assign subproc_atoms WS
+        """
+        subproc_atoms : envvar_assign subproc_atoms
+                      | envvar_assign subproc_atoms WS
         """
         p1, p20 = p[1], p[2][0]
         if hasattr(p20, "_xenvvars"):
@@ -3164,8 +3216,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_pyeval(self, p):
-        """subproc_atom : at_lparen_tok testlist_comp RPAREN
-           subproc_arg_part : at_lparen_tok testlist_comp RPAREN
+        """
+        subproc_atom : at_lparen_tok testlist_comp RPAREN
+        subproc_arg_part : at_lparen_tok testlist_comp RPAREN
         """
         p1 = p[1]
         p0 = xonsh_call(
@@ -3178,8 +3231,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_subproc_inject(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc RPAREN
-           subproc_arg_part : atdollar_lparen_tok subproc RPAREN
+        """
+        subproc_atom : atdollar_lparen_tok subproc RPAREN
+        subproc_arg_part : atdollar_lparen_tok subproc RPAREN
         """
         p1, p2 = p[1], p[2]
         p0 = xonsh_call(
@@ -3192,24 +3246,27 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_subproc_inject_bang_empty(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN
-           subproc_arg_part : atdollar_lparen_tok subproc bang_tok RPAREN
+        """
+        subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN
+        subproc_arg_part : atdollar_lparen_tok subproc bang_tok RPAREN
         """
         self._append_subproc_bang_empty(p)
         self.p_subproc_atom_subproc_inject(p)
 
     def p_subproc_atom_subproc_inject_bang(self, p):
-        """subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
-           subproc_arg_part : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        """
+        subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        subproc_arg_part : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
         """
         self._append_subproc_bang(p)
         self.p_subproc_atom_subproc_inject(p)
 
     def p_subproc_atom_redirect(self, p):
-        """subproc_atom : GT
-                        | LT
-                        | RSHIFT
-                        | IOREDIRECT
+        """
+        subproc_atom : GT
+                     | LT
+                     | RSHIFT
+                     | IOREDIRECT
         """
         p0 = ast.Str(s=p[1], lineno=self.lineno, col_offset=self.col)
         p0._cliarg_action = "append"
@@ -3329,8 +3386,9 @@ class BaseParser(object):
         p[0] = p[1]
 
     def p_envvar_assign(self, p):
-        """envvar_assign : envvar_assign_left test WS
-                         | envvar_assign_left subproc_atom WS
+        """
+        envvar_assign : envvar_assign_left test WS
+                      | envvar_assign_left subproc_atom WS
         """
         p1, p2 = p[1], p[2]
         p[0] = ast.Dict(
@@ -3347,8 +3405,9 @@ class BaseParser(object):
     #
 
     def p_test_comma_combine(self, p):
-        """test_comma_list : test comma_test_list
-                           | test comma_test_list COMMA
+        """
+        test_comma_list : test comma_test_list
+                        | test comma_test_list COMMA
         """
         p2 = p[2]
         p2.insert(0, p[1])
