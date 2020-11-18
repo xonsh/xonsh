@@ -21,7 +21,7 @@ jobs:
           restore-keys: |
             elm-env-
       - name: Setup conda
-        uses: conda-incubator/setup-miniconda@v1
+        uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: elm-xonsh-test
           environment-file: ci/environment-elm.yml
