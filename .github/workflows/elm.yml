@@ -25,7 +25,7 @@ jobs:
         with:
           activate-environment: elm-xonsh-test
           environment-file: ci/environment-elm.yml
-          update-conda: true
+          auto-update-conda: true
           python-version: 3.7
           condarc-file: ci/condarc.yml
       - shell: bash -l {0}
