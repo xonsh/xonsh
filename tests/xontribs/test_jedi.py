@@ -41,6 +41,9 @@ def jedi_xontrib(monkeypatch, source_path, jedi_mock, completer_mock):
 
 def test_completer_added(jedi_xontrib):
     assert "xontrib.jedi" in sys.modules
+    assert "python" not in builtins.__xonsh__.completers
+    assert "python_mode" not in builtins.__xonsh__.completers
+    assert "jedi_python" in builtins.__xonsh__.completers
 
 
 @pytest.mark.parametrize(
