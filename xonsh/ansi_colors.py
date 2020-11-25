@@ -3,6 +3,7 @@ import re
 import sys
 import warnings
 import builtins
+import typing as tp
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict, lazyobject
@@ -15,8 +16,26 @@ from xonsh.color_tools import (
     rgb_to_256,
     short_to_ints,
     iscolor,
+    warn_deprecated_no_color,
 )
 from xonsh.tools import FORMATTER
+
+
+# pygments modifier to ANSI escape code mapping
+_PART_STYLE_CODE_MAPPING = {
+    "bold": "1",
+    "nobold": "21",
+    "italic": "3",
+    "noitalic": "23",
+    "underline": "4",
+    "nounderline": "24",
+    "blink": "5",
+    "noblink": "25",
+    "reverse": "7",
+    "noreverse": "27",
+    "hidden": "8",
+    "nohidden": "28",
+}
 
 
 def _ensure_color_map(style="default", cmap=None):
@@ -68,7 +87,9 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         raise ValueError("{!r} is not a color!".format(name))
     parts = m.groupdict()
     # convert regex match into actual ANSI colors
-    if parts["nocolor"] is not None:
+    if parts["reset"] is not None:
+        if parts["reset"] == "NO_COLOR":
+            warn_deprecated_no_color()
         res = "0"
     elif parts["bghex"] is not None:
         res = "48;5;" + rgb_to_256(parts["bghex"][3:])[0]
@@ -82,6 +103,8 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
                 res = str(int(fgcolor) + 10)
             elif fgcolor.startswith("38;"):
                 res = "4" + fgcolor[1:]
+            elif fgcolor == "DEFAULT":
+                res = "39"
             else:
                 msg = (
                     "when converting {!r}, did not recognize {!r} within "
@@ -99,6 +122,8 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         color = parts["color"]
         if "#" in color:
             mods.append("38;5;" + rgb_to_256(color[1:])[0])
+        elif color == "DEFAULT":
+            res = "39"
         else:
             mods.append(cmap[color])
         res = ";".join(mods)
@@ -138,6 +163,9 @@ def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
 
 def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=False):
     cmap = _ensure_color_map(style=style, cmap=cmap)
+    overrides = builtins.__xonsh__.env["XONSH_STYLE_OVERRIDES"]
+    if overrides:
+        cmap.update(_style_dict_to_ansi(overrides))
     esc = ("\001" if hide else "") + "\033["
     m = "m" + ("\002" if hide else "")
     bopen = "{"
@@ -254,19 +282,20 @@ def _color_name_from_ints(ints, background=False, prefix=None):
     return name
 
 
-_ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE = {}
+_ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE: tp.Dict[str, tp.Tuple[str, ...]] = {}
 
 
 def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
-    """Converts an ASNI color code escape sequence to a tuple of color names
+    """Converts an ANSI color code escape sequence to a tuple of color names
     in the provided style ('default' should almost be the style). For example,
-    '0' becomes ('NO_COLOR',) and '32;41' becomes ('GREEN', 'BACKGROUND_RED').
+    '0' becomes ('RESET',) and '32;41' becomes ('GREEN', 'BACKGROUND_RED').
     The style keyword may either be a string, in which the style is looked up,
     or an actual style dict.  You can also provide a reversed style mapping,
     too, which is just the keys/values of the style dict swapped. If reversed
     style is not provided, it is computed.
     """
     key = (escape_code, style)
+    # todo: see the cache ever used?
     if key in _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE:
         return _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE[key]
     if reversed_style is None:
@@ -274,11 +303,11 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     # strip some actual escape codes, if needed.
     match = ANSI_ESCAPE_CODE_RE.match(escape_code)
     if not match:
-        msg = 'Invalid ANSI color sequence "{0}", using "NO_COLOR" instead.'.format(
+        msg = 'Invalid ANSI color sequence "{0}", using "RESET" instead.'.format(
             escape_code
         )
         warnings.warn(msg, RuntimeWarning)
-        return ("NO_COLOR",)
+        return ("RESET",)
     ec = match.group(2)
     names = []
     n_ints = 0
@@ -305,7 +334,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     norm_names = []
     prefixes = ""
     for name in names:
-        if name == "NO_COLOR":
+        if name in ("RESET", "NO_COLOR"):
             # skip most '0' entries
             continue
         elif "BACKGROUND_" in name and n:
@@ -352,14 +381,14 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
             norm_names.append(prefixes + "WHITE")
     # return
     if len(norm_names) == 0:
-        return ("NO_COLOR",)
+        return ("RESET",)
     else:
         return tuple(norm_names)
 
 
 def _bw_style():
     style = {
-        "NO_COLOR": "0",
+        "RESET": "0",
         "BLACK": "0;30",
         "BLUE": "0;37",
         "CYAN": "0;37",
@@ -391,7 +420,7 @@ def _bw_style():
 def _default_style():
     style = {
         # Reset
-        "NO_COLOR": "0",  # Text Reset
+        "RESET": "0",  # Text Reset
         # Regular Colors
         "BLACK": "30",  # BLACK
         "RED": "31",  # RED
@@ -434,7 +463,7 @@ def _default_style():
 
 def _monokai_style():
     style = {
-        "NO_COLOR": "0",
+        "RESET": "0",
         "BLACK": "38;5;16",
         "BLUE": "38;5;63",
         "CYAN": "38;5;81",
@@ -474,7 +503,7 @@ def _algol_style():
         "INTENSE_RED": "38;5;09",
         "INTENSE_WHITE": "38;5;102",
         "INTENSE_YELLOW": "38;5;102",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;59",
         "RED": "38;5;09",
         "WHITE": "38;5;102",
@@ -497,7 +526,7 @@ def _algol_nu_style():
         "INTENSE_RED": "38;5;09",
         "INTENSE_WHITE": "38;5;102",
         "INTENSE_YELLOW": "38;5;102",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;59",
         "RED": "38;5;09",
         "WHITE": "38;5;102",
@@ -520,7 +549,7 @@ def _autumn_style():
         "INTENSE_RED": "38;5;130",
         "INTENSE_WHITE": "38;5;145",
         "INTENSE_YELLOW": "38;5;217",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -543,7 +572,7 @@ def _borland_style():
         "INTENSE_RED": "38;5;09",
         "INTENSE_WHITE": "38;5;224",
         "INTENSE_YELLOW": "38;5;188",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -566,7 +595,7 @@ def _colorful_style():
         "INTENSE_RED": "38;5;166",
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;217",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -589,7 +618,7 @@ def _emacs_style():
         "INTENSE_RED": "38;5;167",
         "INTENSE_WHITE": "38;5;145",
         "INTENSE_YELLOW": "38;5;145",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -612,7 +641,7 @@ def _friendly_style():
         "INTENSE_RED": "38;5;167",
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;145",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -635,7 +664,7 @@ def _fruity_style():
         "INTENSE_RED": "38;5;202",
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;187",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;198",
         "RED": "38;5;09",
         "WHITE": "38;5;187",
@@ -658,7 +687,7 @@ def _igor_style():
         "INTENSE_RED": "38;5;166",
         "INTENSE_WHITE": "38;5;163",
         "INTENSE_YELLOW": "38;5;166",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;163",
         "RED": "38;5;166",
         "WHITE": "38;5;163",
@@ -681,7 +710,7 @@ def _lovelace_style():
         "INTENSE_RED": "38;5;131",
         "INTENSE_WHITE": "38;5;102",
         "INTENSE_YELLOW": "38;5;136",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;133",
         "RED": "38;5;124",
         "WHITE": "38;5;102",
@@ -704,7 +733,7 @@ def _manni_style():
         "INTENSE_RED": "38;5;202",
         "INTENSE_WHITE": "38;5;224",
         "INTENSE_YELLOW": "38;5;221",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;165",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -727,7 +756,7 @@ def _murphy_style():
         "INTENSE_RED": "38;5;209",
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;222",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -750,7 +779,7 @@ def _native_style():
         "INTENSE_RED": "38;5;160",
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;214",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;59",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -773,7 +802,7 @@ def _paraiso_dark_style():
         "INTENSE_RED": "38;5;203",
         "INTENSE_WHITE": "38;5;188",
         "INTENSE_YELLOW": "38;5;220",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;97",
         "RED": "38;5;203",
         "WHITE": "38;5;79",
@@ -796,7 +825,7 @@ def _paraiso_light_style():
         "INTENSE_RED": "38;5;203",
         "INTENSE_WHITE": "38;5;79",
         "INTENSE_YELLOW": "38;5;220",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;97",
         "RED": "38;5;16",
         "WHITE": "38;5;102",
@@ -819,7 +848,7 @@ def _pastie_style():
         "INTENSE_RED": "38;5;172",
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;188",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;125",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -842,7 +871,7 @@ def _perldoc_style():
         "INTENSE_RED": "38;5;167",
         "INTENSE_WHITE": "38;5;188",
         "INTENSE_YELLOW": "38;5;188",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -865,7 +894,7 @@ def _rrt_style():
         "INTENSE_RED": "38;5;09",
         "INTENSE_WHITE": "38;5;188",
         "INTENSE_YELLOW": "38;5;222",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;213",
         "RED": "38;5;09",
         "WHITE": "38;5;117",
@@ -888,7 +917,7 @@ def _tango_style():
         "INTENSE_RED": "38;5;09",
         "INTENSE_WHITE": "38;5;15",
         "INTENSE_YELLOW": "38;5;178",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;15",
@@ -911,7 +940,7 @@ def _trac_style():
         "INTENSE_RED": "38;5;137",
         "INTENSE_WHITE": "38;5;224",
         "INTENSE_YELLOW": "38;5;188",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;90",
         "RED": "38;5;124",
         "WHITE": "38;5;145",
@@ -934,7 +963,7 @@ def _vim_style():
         "INTENSE_RED": "38;5;09",
         "INTENSE_WHITE": "38;5;188",
         "INTENSE_YELLOW": "38;5;184",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;164",
         "RED": "38;5;160",
         "WHITE": "38;5;188",
@@ -957,7 +986,7 @@ def _vs_style():
         "INTENSE_RED": "38;5;09",
         "INTENSE_WHITE": "38;5;31",
         "INTENSE_YELLOW": "38;5;31",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;124",
         "RED": "38;5;124",
         "WHITE": "38;5;31",
@@ -980,7 +1009,7 @@ def _xcode_style():
         "INTENSE_RED": "38;5;160",
         "INTENSE_WHITE": "38;5;60",
         "INTENSE_YELLOW": "38;5;94",
-        "NO_COLOR": "0",
+        "RESET": "0",
         "PURPLE": "38;5;126",
         "RED": "38;5;160",
         "WHITE": "38;5;60",
@@ -1057,7 +1086,7 @@ del (
 #
 def make_ansi_style(palette):
     """Makes an ANSI color style from a color palette"""
-    style = {"NO_COLOR": "0"}
+    style = {"RESET": "0"}
     for name, t in BASE_XONSH_COLORS.items():
         closest = find_closest_color(t, palette)
         if len(closest) == 3:
@@ -1065,6 +1094,61 @@ def make_ansi_style(palette):
         short = rgb2short(closest)[0]
         style[name] = "38;5;" + short
     return style
+
+
+def _pygments_to_ansi_style(style):
+    """Tries to convert the given pygments style to ANSI style.
+
+    Parameter
+    ---------
+    style : pygments style value
+
+    Returns
+    -------
+    ANSI style
+    """
+    ansi_style_list = []
+    parts = style.split(" ")
+    for part in parts:
+        if part in _PART_STYLE_CODE_MAPPING:
+            ansi_style_list.append(_PART_STYLE_CODE_MAPPING[part])
+        elif part[:3] == "bg:":
+            ansi_style_list.append("48;5;" + rgb2short(part[3:])[0])
+        else:
+            ansi_style_list.append("38;5;" + rgb2short(part)[0])
+
+    return ";".join(ansi_style_list)
+
+
+def _style_dict_to_ansi(styles):
+    """Converts pygments like style dict to ANSI rules"""
+    ansi_style = {}
+    for token, style in styles.items():
+        token = str(token)  # convert pygments token to str
+        parts = token.split(".")
+        if len(parts) == 1 or parts[-2] == "Color":
+            ansi_style[parts[-1]] = _pygments_to_ansi_style(style)
+
+    return ansi_style
+
+
+def register_custom_ansi_style(name, styles, base="default"):
+    """Register custom ANSI style.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    styles : dict
+        Token (or str) -> style mapping.
+    base : str, optional
+        Base style to use as default.
+    """
+    base_style = ANSI_STYLES[base].copy()
+
+    base_style.update(_style_dict_to_ansi(styles))
+
+    ANSI_STYLES[name] = base_style
 
 
 def ansi_style_by_name(name):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
 import sys
-import random
 import time
 import difflib
 import builtins
@@ -9,11 +8,12 @@ import warnings
 
 from xonsh.platform import (
     best_shell_type,
-    has_prompt_toolkit,
     ptk_above_min_supported,
+    use_vended_prompt_toolkit,
+    has_prompt_toolkit,
     minimum_required_ptk_version,
 )
-from xonsh.tools import XonshError, print_exception
+from xonsh.tools import XonshError, print_exception, simple_random_choice
 from xonsh.events import events
 import xonsh.history.main as xhm
 
@@ -58,13 +58,23 @@ Parameters:
 )
 
 events.doc(
+    "on_pre_prompt_format",
+    """
+on_pre_prompt_format() -> None
+
+Fires before the prompt will be formatted
+""",
+)
+
+events.doc(
     "on_pre_prompt",
     """
 on_pre_prompt() -> None
 
-Fires just before the prompt is shown
+Fires just before showing the prompt
 """,
 )
+
 
 events.doc(
     "on_post_prompt",
@@ -157,22 +167,18 @@ class Shell(object):
         elif env and env.get("TERM", "") == "dumb":
             shell_type = "dumb"
         elif shell_type == "random":
-            shell_type = random.choice(("readline", "prompt_toolkit"))
+            shell_type = simple_random_choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
             if not has_prompt_toolkit():
-                warnings.warn(
-                    "prompt_toolkit is not available, using " "readline instead."
-                )
-                shell_type = "readline"
+                use_vended_prompt_toolkit()
             elif not ptk_above_min_supported():
                 warnings.warn(
-                    "prompt-toolkit version < v{}.{}.0 is not ".format(
+                    "Installed prompt-toolkit version < v{}.{}.{} is not ".format(
                         *minimum_required_ptk_version
                     )
-                    + "supported. Please update prompt-toolkit. Using "
-                    + "readline instead."
+                    + "supported. Falling back to the builtin prompt-toolkit."
                 )
-                shell_type = "readline"
+                use_vended_prompt_toolkit()
             if init_shell_type in ("ptk1", "prompt_toolkit1"):
                 warnings.warn(
                     "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(

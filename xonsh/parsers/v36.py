@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh parser for Python v3.6."""
 import xonsh.ast as ast
-from xonsh.parsers.base import store_ctx, ensure_has_elts, lopen_loc, BaseParser
+from xonsh.parsers.base import store_ctx, lopen_loc, BaseParser
 
 
 class Parser(BaseParser):
@@ -130,7 +130,10 @@ class Parser(BaseParser):
 
     def p_argument_kwargs(self, p):
         """argument : POW test"""
-        p[0] = ast.keyword(arg=None, value=p[2])
+        p2 = p[2]
+        p[0] = ast.keyword(
+            arg=None, value=p2, lineno=p2.lineno, col_offset=p2.col_offset
+        )
 
     def p_argument_args(self, p):
         """argument : TIMES test"""
@@ -145,24 +148,16 @@ class Parser(BaseParser):
 
     def p_argument_eq(self, p):
         """argument : test EQUALS test"""
-        p[0] = ast.keyword(arg=p[1].id, value=p[3])
+        p3 = p[3]
+        p[0] = ast.keyword(
+            arg=p[1].id, value=p3, lineno=p3.lineno, col_offset=p3.col_offset
+        )
 
     def p_comp_for(self, p):
         """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        targs, it, p5 = p[2], p[4], p[5]
-        if len(targs) == 1:
-            targ = targs[0]
-        else:
-            targ = ensure_has_elts(targs)
-        store_ctx(targ)
+        super().p_comp_for(p)
         # only difference with base should be the is_async=0
-        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=0)
-        comps = [comp]
-        p0 = {"comps": comps}
-        if p5 is not None:
-            comps += p5.get("comps", [])
-            comp.ifs += p5.get("if", [])
-        p[0] = p0
+        p[0]["comps"][0].is_async = 0
 
     def p_expr_stmt_annassign(self, p):
         """expr_stmt : testlist_star_expr COLON test EQUALS test"""
@@ -170,7 +165,7 @@ class Parser(BaseParser):
         lineno, col = lopen_loc(p1)
         if len(p[1]) > 1 or not isinstance(p1, ast.Name):
             loc = self.currloc(lineno, col)
-            self._parse_error("only single target can be annotated", loc)
+            self._set_error("only single target can be annotated", loc)
         store_ctx(p1)
         p[0] = ast.AnnAssign(
             target=p1,

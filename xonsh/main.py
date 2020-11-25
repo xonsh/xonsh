@@ -15,7 +15,6 @@ from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
 from xonsh.execer import Execer
-from xonsh.proc import HiddenCommandPipeline
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import print_color, to_bool_or_int
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -27,6 +26,8 @@ from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context, make_args_env
 from xonsh.built_ins import XonshSession, load_builtins
+
+import xonsh.procs.pipelines as xpp
 
 
 events.transmogrify("on_post_init", "LoadEvent")
@@ -128,19 +129,18 @@ def parser():
         dest="help",
         action="store_true",
         default=False,
-        help="show help and exit",
+        help="Show help and exit.",
     )
     p.add_argument(
         "-V",
         "--version",
-        dest="version",
-        action="store_true",
-        default=False,
-        help="show version information and exit",
+        action="version",
+        help="Show version information and exit.",
+        version=f"xonsh/{__version__}",
     )
     p.add_argument(
         "-c",
-        help="Run a single command and exit",
+        help="Run a single command and exit.",
         dest="command",
         required=False,
         default=None,
@@ -148,7 +148,7 @@ def parser():
     p.add_argument(
         "-i",
         "--interactive",
-        help="force running in interactive mode",
+        help="Force running in interactive mode.",
         dest="force_interactive",
         action="store_true",
         default=False,
@@ -156,15 +156,14 @@ def parser():
     p.add_argument(
         "-l",
         "--login",
-        help="run as a login shell",
+        help="Run as a login shell.",
         dest="login",
         action="store_true",
         default=False,
     )
     p.add_argument(
         "--config-path",
-        help="DEPRECATED: static configuration files may now be used "
-        "in the XONSHRC file list, see the --rc option.",
+        help=argparse.SUPPRESS,
         dest="config_path",
         default=None,
         type=path_argument,
@@ -180,21 +179,21 @@ def parser():
     )
     p.add_argument(
         "--no-rc",
-        help="Do not load the .xonshrc files",
+        help="Do not load the .xonshrc files.",
         dest="norc",
         action="store_true",
         default=False,
     )
     p.add_argument(
         "--no-script-cache",
-        help="Do not cache scripts as they are run",
+        help="Do not cache scripts as they are run.",
         dest="scriptcache",
         action="store_false",
         default=True,
     )
     p.add_argument(
         "--cache-everything",
-        help="Use a cache, even for interactive commands",
+        help="Use a cache, even for interactive commands.",
         dest="cacheall",
         action="store_true",
         default=False,
@@ -202,7 +201,7 @@ def parser():
     p.add_argument(
         "-D",
         dest="defines",
-        help="define an environment variable, in the form of "
+        help="Define an environment variable, in the form of "
         "-DNAME=VAL. May be used many times.",
         metavar="ITEM",
         action="append",
@@ -211,8 +210,10 @@ def parser():
     p.add_argument(
         "--shell-type",
         help="What kind of shell should be used. "
-        "Possible options: readline, prompt_toolkit, random. "
-        "Warning! If set this overrides $SHELL_TYPE variable.",
+        "Possible options: "
+        + ", ".join(Shell.shell_type_aliases.keys())
+        + ". Warning! If set this overrides $SHELL_TYPE variable.",
+        metavar="SHELL_TYPE",
         dest="shell_type",
         choices=tuple(Shell.shell_type_aliases.keys()),
         default=None,
@@ -229,14 +230,14 @@ def parser():
     p.add_argument(
         "file",
         metavar="script-file",
-        help="If present, execute the script in script-file" " and exit",
+        help="If present, execute the script in script-file and exit.",
         nargs="?",
         default=None,
     )
     p.add_argument(
         "args",
         metavar="args",
-        help="Additional arguments to the script specified " "by script-file",
+        help="Additional arguments to the script specified by script-file.",
         nargs=argparse.REMAINDER,
         default=[],
     )
@@ -247,7 +248,7 @@ def _pprint_displayhook(value):
     if value is None:
         return
     builtins._ = None  # Set '_' to None to avoid recursion
-    if isinstance(value, HiddenCommandPipeline):
+    if isinstance(value, xpp.HiddenCommandPipeline):
         builtins._ = value
         return
     env = builtins.__xonsh__.env
@@ -322,10 +323,6 @@ def premain(argv=None):
     args = parser.parse_args(argv)
     if args.help:
         parser.print_help()
-        parser.exit()
-    if args.version:
-        version = "/".join(("xonsh", __version__))
-        print(version)
         parser.exit()
     shell_kwargs = {
         "shell_type": args.shell_type,
@@ -441,10 +438,17 @@ def main_xonsh(args):
     shell = builtins.__xonsh__.shell
     history = builtins.__xonsh__.history
     exit_code = 0
+
+    if shell and not env["XONSH_INTERACTIVE"]:
+        shell.ctx.update({"exit": sys.exit})
+
     try:
         if args.mode == XonshMode.interactive:
             # enter the shell
+
+            # Setted again here because it is possible to call main_xonsh() without calling premain(), namely in the tests.
             env["XONSH_INTERACTIVE"] = True
+
             ignore_sigtstp()
             if env["XONSH_INTERACTIVE"] and not any(
                 os.path.isfile(i) for i in env["XONSHRC"]

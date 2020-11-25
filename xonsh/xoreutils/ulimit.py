@@ -159,13 +159,7 @@ def _ul_add_action(actions, opt, res_type, stderr):
     actions.append(
         [
             _ul_show,
-            {
-                "res": r[0],
-                "res_type": res_type,
-                "desc": r[3],
-                "unit": r[4],
-                "opt": opt,
-            },
+            {"res": r[0], "res_type": res_type, "desc": r[3], "unit": r[4], "opt": opt},
         ]
     )
     return True
@@ -201,8 +195,8 @@ def _ul_parse_args(args, stderr):
         long_opts[_UL_RES[k][1]] = k
 
     actions = []
-    # mimic bash and default to 'hard' limits
-    res_type = _UL_HARD
+    # mimic bash and default to 'soft' limits
+    res_type = _UL_SOFT
     for arg in args:
         if arg in long_opts:
             opt = long_opts[arg]

@@ -1,6 +1,12 @@
 name: Check Elm
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
 
 jobs:
   build:
@@ -8,12 +14,18 @@ jobs:
     name: Python 3.7 Elm Check Ubuntu
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/conda_pkgs_dir
+          key: elm-env-${{ hashFiles('ci/environment-elm.yml') }}
+          restore-keys: |
+            elm-env-
       - name: Setup conda
-        uses: goanpeca/setup-miniconda@v1
+        uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: elm-xonsh-test
           environment-file: ci/environment-elm.yml
-          update-conda: true
+          auto-update-conda: true
           python-version: 3.7
           condarc-file: ci/condarc.yml
       - shell: bash -l {0}

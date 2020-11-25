@@ -22,28 +22,20 @@ RE_REMOVE_ANSI = LazyObject(
 
 
 def _get_git_branch(q):
-    denv = builtins.__xonsh__.env.detype()
+    # create a safge detyped env dictionary and update with the additional git environment variables
+    # when running git status commands we do not want to acquire locks running command like git status
+    denv = dict(builtins.__xonsh__.env.detype())
+    denv.update({"GIT_OPTIONAL_LOCKS": "0"})
     try:
-        branches = xt.decode_bytes(
-            subprocess.check_output(
-                ["git", "branch"], env=denv, stderr=subprocess.DEVNULL
-            )
-        ).splitlines()
+        cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+        branch = xt.decode_bytes(
+            subprocess.check_output(cmd, env=denv, stderr=subprocess.DEVNULL)
+        )
+        branch = branch.splitlines()[0] or None
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     else:
-        for branch in branches:
-            if not branch.startswith("* "):
-                continue
-            elif branch.endswith(")"):
-                branch = branch.split()[-1][:-1]
-            else:
-                branch = branch.split()[-1]
-
-            q.put(branch)
-            break
-        else:
-            q.put(None)
+        q.put(branch)
 
 
 def get_git_branch():
@@ -59,7 +51,6 @@ def get_git_branch():
     t.join(timeout=timeout)
     try:
         branch = q.get_nowait()
-        # branch = RE_REMOVE_ANSI.sub("", branch or "")
         if branch:
             branch = RE_REMOVE_ANSI.sub("", branch)
     except queue.Empty:
@@ -149,6 +140,15 @@ def _first_branch_timeout_message():
     )
 
 
+def _vc_has(binary):
+    """ This allows us to locate binaries after git only if necessary """
+    cmds = builtins.__xonsh__.commands_cache
+    if cmds.is_empty():
+        return bool(cmds.locate_binary(binary, ignore_alias=True))
+    else:
+        return bool(cmds.lazy_locate_binary(binary, ignore_alias=True))
+
+
 def current_branch():
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
@@ -156,17 +156,9 @@ def current_branch():
     '<branch-timeout>' is returned.
     """
     branch = None
-    cmds = builtins.__xonsh__.commands_cache
-    # check for binary only once
-    if cmds.is_empty():
-        has_git = bool(cmds.locate_binary("git", ignore_alias=True))
-        has_hg = bool(cmds.locate_binary("hg", ignore_alias=True))
-    else:
-        has_git = bool(cmds.lazy_locate_binary("git", ignore_alias=True))
-        has_hg = bool(cmds.lazy_locate_binary("hg", ignore_alias=True))
-    if has_git:
+    if _vc_has("git"):
         branch = get_git_branch()
-    if not branch and has_hg:
+    if not branch and _vc_has("hg"):
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = "<branch-timeout>"
@@ -174,20 +166,43 @@ def current_branch():
     return branch or None
 
 
+def _get_exit_code(cmd):
+    """ Run a command and return its exit code """
+    denv = dict(builtins.__xonsh__.env.detype())
+    denv.update({"GIT_OPTIONAL_LOCKS": "0"})
+    child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
+    return child.returncode
+
+
 def _git_dirty_working_directory(q, include_untracked):
-    status = None
-    denv = builtins.__xonsh__.env.detype()
     try:
-        cmd = ["git", "status", "--porcelain"]
+        # Borrowed from this conversation
+        # https://gist.github.com/sindresorhus/3898739
         if include_untracked:
-            cmd.append("--untracked-files=normal")
+            cmd = [
+                "git",
+                "status",
+                "--porcelain",
+                "--quiet",
+                "--untracked-files=normal",
+            ]
+            exitcode = _get_exit_code(cmd)
         else:
-            cmd.append("--untracked-files=no")
-        status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, env=denv)
+            # checking unindexed files is faster, so try that first
+            unindexed = ["git", "diff-files", "--quiet"]
+            exitcode = _get_exit_code(unindexed)
+            if exitcode == 0:
+                # then, check indexed files
+                indexed = ["git", "diff-index", "--quiet", "--cached", "HEAD"]
+                exitcode = _get_exit_code(indexed)
+        # "--quiet" git commands imply "--exit-code", which returns:
+        # 1 if there are differences
+        # 0 if there are no differences
+        dwd = bool(exitcode)
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
-    if status is not None:
-        return q.put(bool(status))
+    else:
+        q.put(dwd)
 
 
 def git_dirty_working_directory(include_untracked=False):
@@ -241,10 +256,9 @@ def dirty_working_directory():
     None. Currently supports git and hg.
     """
     dwd = None
-    cmds = builtins.__xonsh__.commands_cache
-    if cmds.lazy_locate_binary("git", ignore_alias=True):
+    if _vc_has("git"):
         dwd = git_dirty_working_directory()
-    if cmds.lazy_locate_binary("hg", ignore_alias=True) and dwd is None:
+    if dwd is None and _vc_has("hg"):
         dwd = hg_dirty_working_directory()
     return dwd
 

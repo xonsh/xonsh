@@ -8,6 +8,8 @@ import stat
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
+import typing as tp
+
 from xonsh.lazyimps import os_listxattr
 
 from pygments.lexer import inherit, bygroups, include
@@ -25,6 +27,7 @@ from pygments.token import (
     Token,
     Punctuation,
     Text,
+    _TokenType,
 )
 from pygments.style import Style
 import pygments.util
@@ -47,8 +50,9 @@ from xonsh.color_tools import (
     make_palette,
     find_closest_color,
     iscolor,
+    warn_deprecated_no_color,
 )
-from xonsh.style_tools import norm_name
+from xonsh.style_tools import norm_name, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import terminal256, html
 from xonsh.platform import (
     os_environ,
@@ -57,7 +61,7 @@ from xonsh.platform import (
     pygments_version_info,
 )
 
-from xonsh.pygments_cache import get_style_by_name
+from xonsh.pygments_cache import get_style_by_name, add_custom_style
 
 from xonsh.events import events
 
@@ -67,6 +71,26 @@ from xonsh.events import events
 #
 
 Color = Token.Color  # alias to new color token namespace
+
+# style rules that are not supported by pygments are stored here
+NON_PYGMENTS_RULES: tp.Dict[str, tp.Dict[str, str]] = {}
+
+# style modifiers not handled by pygments (but supported by ptk)
+PTK_SPECIFIC_VALUES = frozenset(
+    {"reverse", "noreverse", "hidden", "nohidden", "blink", "noblink"}
+)
+
+# Generate fallback style dict from non-pygments styles
+# (Let pygments handle the defaults where it can)
+FALLBACK_STYLE_DICT = LazyObject(
+    lambda: {
+        token: value
+        for token, value in DEFAULT_STYLE_DICT.items()
+        if str(token).startswith("Token.PTK")
+    },
+    globals(),
+    "FALLBACK_STYLE_DICT",
+)
 
 
 def color_by_name(name, fg=None, bg=None):
@@ -93,8 +117,8 @@ def color_by_name(name, fg=None, bg=None):
         New computed background color name.
     """
     name = name.upper()
-    if name == "NO_COLOR":
-        return Color.NO_COLOR, None, None
+    if name in ("RESET", "NO_COLOR"):
+        return Color.DEFAULT, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color
         fg = norm_name(name)
@@ -102,7 +126,7 @@ def color_by_name(name, fg=None, bg=None):
         bg = norm_name(name)
     # assemble token
     if fg is None and bg is None:
-        tokname = "NO_COLOR"
+        tokname = "RESET"
     elif fg is None:
         tokname = bg
     elif bg is None:
@@ -148,7 +172,9 @@ def color_name_to_pygments_code(name, styles):
         raise ValueError("{!r} is not a color!".format(name))
     parts = m.groupdict()
     # convert regex match into actual pygments colors
-    if parts["nocolor"] is not None:
+    if parts["reset"] is not None:
+        if parts["reset"] == "NO_COLOR":
+            warn_deprecated_no_color()
         res = "noinherit"
     elif parts["bghex"] is not None:
         res = "bg:#" + parts["bghex"][3:]
@@ -212,11 +238,11 @@ def code_by_name(name, styles):
     return code
 
 
-def color_token_by_name(xc: tuple, styles=None) -> Color:
+def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
     """Returns (color) token corresponding to Xonsh color tuple, side effect: defines token is defined in styles"""
     if not styles:
         try:
-            styles = builtins.__xonsh__.shell.shell.styler.styles
+            styles = builtins.__xonsh__.shell.shell.styler.styles  # type:ignore
         except AttributeError:
             return Color
 
@@ -228,7 +254,8 @@ def color_token_by_name(xc: tuple, styles=None) -> Color:
         tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
-    styles[token] = pc
+    if token not in styles or not styles[token]:
+        styles[token] = pc
     return token
 
 
@@ -241,11 +268,11 @@ def partial_color_tokenize(template):
         styles = __xonsh__.shell.shell.styler.styles
     else:
         styles = None
-    color = Color.NO_COLOR
+    color = Color.DEFAULT
     try:
         toks, color = _partial_color_tokenize_main(template, styles)
     except Exception:
-        toks = [(Color.NO_COLOR, template)]
+        toks = [(Color.DEFAULT, template)]
     if styles is not None:
         styles[color]  # ensure color is available
     return toks
@@ -256,7 +283,7 @@ def _partial_color_tokenize_main(template, styles):
     bclose = "}"
     colon = ":"
     expl = "!"
-    color = Color.NO_COLOR
+    color = Color.DEFAULT
     fg = bg = None
     value = ""
     toks = []
@@ -375,8 +402,13 @@ class XonshStyle(Style):
                 self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
                 self._smap = XONSH_BASE_STYLE.copy()
-        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
-        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
+
+        compound = CompoundColorMap(
+            ChainMap(self.trap, cmap, self._smap, FALLBACK_STYLE_DICT)
+        )
+        self.styles = ChainMap(
+            self.trap, cmap, self._smap, FALLBACK_STYLE_DICT, compound
+        )
         self._style_name = value
 
         for file_type, xonsh_color in builtins.__xonsh__.env.get(
@@ -391,6 +423,13 @@ class XonshStyle(Style):
     @style_name.deleter
     def style_name(self):
         self._style_name = ""
+
+    @property
+    def non_pygments_rules(self):
+        return NON_PYGMENTS_RULES.get(self.style_name, {})
+
+    def override(self, style_dict):
+        self.trap.update(_tokenize_style_dict(style_dict))
 
     def enhance_colors_for_cmd_exe(self):
         """ Enhance colors when using cmd.exe on windows.
@@ -431,20 +470,118 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
-PTK_STYLE = LazyObject(
-    lambda: {
-        Token.Menu.Completions: "bg:ansigray ansiblack",
-        Token.Menu.Completions.Completion: "",
-        Token.Menu.Completions.Completion.Current: "bg:ansibrightblack ansiwhite",
-        Token.Scrollbar: "bg:ansibrightblack",
-        Token.Scrollbar.Button: "bg:ansiblack",
-        Token.Scrollbar.Arrow: "bg:ansiblack ansiwhite bold",
-        Token.AutoSuggestion: "ansibrightblack",
-        Token.Aborted: "ansibrightblack",
-    },
-    globals(),
-    "PTK_STYLE",
-)
+def _ptk_specific_style_value(style_value):
+    """Checks if the given value is PTK style specific"""
+    for ptk_spec in PTK_SPECIFIC_VALUES:
+        if ptk_spec in style_value:
+            return True
+
+    return False
+
+
+def _format_ptk_style_name(name):
+    """Format PTK style name to be able to include it in a pygments style"""
+    parts = name.split("-")
+    return "".join(part.capitalize() for part in parts)
+
+
+def _get_token_by_name(name):
+    """Get pygments token object by its string representation."""
+    if not isinstance(name, str):
+        return name
+
+    token = Token
+    parts = name.split(".")
+
+    # PTK - all lowercase
+    if parts[0] == parts[0].lower():
+        parts = ["PTK"] + [_format_ptk_style_name(part) for part in parts]
+
+    # color name
+    if len(parts) == 1:
+        return color_token_by_name((name,))
+
+    if parts[0] == "Token":
+        parts = parts[1:]
+
+    while len(parts) > 0:
+        token = getattr(token, parts[0])
+        parts = parts[1:]
+
+    return token
+
+
+def _tokenize_style_dict(styles):
+    """Converts possible string keys in style dicts to Tokens"""
+    return {
+        _get_token_by_name(token): value
+        for token, value in styles.items()
+        if not _ptk_specific_style_value(value)
+    }
+
+
+def register_custom_pygments_style(
+    name, styles, highlight_color=None, background_color=None, base="default"
+):
+    """Register custom style.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    styles : dict
+        Token -> style mapping.
+    highlight_color : str
+        Hightlight color.
+    background_color : str
+        Background color.
+    base : str, optional
+        Base style to use as default.
+
+    Returns
+    -------
+    style : The ``pygments.Style`` subclass created
+    """
+    base_style = get_style_by_name(base)
+    custom_styles = base_style.styles.copy()
+
+    for token, value in _tokenize_style_dict(styles).items():
+        custom_styles[token] = value
+
+    non_pygments_rules = {
+        token: value
+        for token, value in styles.items()
+        if _ptk_specific_style_value(value)
+    }
+
+    style = type(
+        f"Custom{name}Style",
+        (Style,),
+        {
+            "styles": custom_styles,
+            "highlight_color": highlight_color
+            if highlight_color is not None
+            else base_style.highlight_color,
+            "background_color": background_color
+            if background_color is not None
+            else base_style.background_color,
+        },
+    )
+
+    add_custom_style(name, style)
+
+    cmap = pygments_style_by_name(base).copy()
+
+    # replace colors in color map if found in styles
+    for token in cmap.keys():
+        if token in custom_styles:
+            cmap[token] = custom_styles[token]
+
+    STYLES[name] = cmap
+    if len(non_pygments_rules) > 0:
+        NON_PYGMENTS_RULES[name] = non_pygments_rules
+
+    return style
 
 
 XONSH_BASE_STYLE = LazyObject(
@@ -507,7 +644,7 @@ def _bw_style():
         Color.INTENSE_RED: "noinherit",
         Color.INTENSE_WHITE: "noinherit",
         Color.INTENSE_YELLOW: "noinherit",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "noinherit",
         Color.RED: "noinherit",
         Color.WHITE: "noinherit",
@@ -530,7 +667,7 @@ def _default_style():
         Color.INTENSE_RED: "ansibrightred",
         Color.INTENSE_WHITE: "ansiwhite",
         Color.INTENSE_YELLOW: "ansibrightyellow",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "ansimagenta",
         Color.RED: "ansired",
         Color.WHITE: "ansigray",
@@ -553,7 +690,7 @@ def _monokai_style():
         Color.INTENSE_RED: "#f92672",
         Color.INTENSE_WHITE: "#f8f8f2",
         Color.INTENSE_YELLOW: "#e6db74",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#960050",
         Color.RED: "#AF0000",
         Color.WHITE: "#d7d7d7",
@@ -579,7 +716,7 @@ def _algol_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#888",
         Color.INTENSE_YELLOW: "#888",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#666",
         Color.RED: "#FF0000",
         Color.WHITE: "#888",
@@ -602,7 +739,7 @@ def _algol_nu_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#888",
         Color.INTENSE_YELLOW: "#888",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#666",
         Color.RED: "#FF0000",
         Color.WHITE: "#888",
@@ -625,7 +762,7 @@ def _autumn_style():
         Color.INTENSE_RED: "#aa5500",
         Color.INTENSE_WHITE: "#bbbbbb",
         Color.INTENSE_YELLOW: "#FAA",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#aa0000",
         Color.WHITE: "#aaaaaa",
@@ -648,7 +785,7 @@ def _borland_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#ffdddd",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#aa0000",
         Color.WHITE: "#aaaaaa",
@@ -671,7 +808,7 @@ def _colorful_style():
         Color.INTENSE_RED: "#D42",
         Color.INTENSE_WHITE: "#fff0ff",
         Color.INTENSE_YELLOW: "#FAA",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -694,7 +831,7 @@ def _emacs_style():
         Color.INTENSE_RED: "#D2413A",
         Color.INTENSE_WHITE: "#bbbbbb",
         Color.INTENSE_YELLOW: "#bbbbbb",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -717,7 +854,7 @@ def _friendly_style():
         Color.INTENSE_RED: "#d55537",
         Color.INTENSE_WHITE: "#fff0f0",
         Color.INTENSE_YELLOW: "#bbbbbb",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -740,7 +877,7 @@ def _fruity_style():
         Color.INTENSE_RED: "#fb660a",
         Color.INTENSE_WHITE: "#ffffff",
         Color.INTENSE_YELLOW: "#cdcaa9",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#ff0086",
         Color.RED: "#ff0007",
         Color.WHITE: "#cdcaa9",
@@ -763,7 +900,7 @@ def _igor_style():
         Color.INTENSE_RED: "#C34E00",
         Color.INTENSE_WHITE: "#CC00A3",
         Color.INTENSE_YELLOW: "#C34E00",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#CC00A3",
         Color.RED: "#C34E00",
         Color.WHITE: "#CC00A3",
@@ -786,7 +923,7 @@ def _lovelace_style():
         Color.INTENSE_RED: "#b83838",
         Color.INTENSE_WHITE: "#888888",
         Color.INTENSE_YELLOW: "#a89028",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#a848a8",
         Color.RED: "#c02828",
         Color.WHITE: "#888888",
@@ -809,7 +946,7 @@ def _manni_style():
         Color.INTENSE_RED: "#FF6600",
         Color.INTENSE_WHITE: "#FFCCCC",
         Color.INTENSE_YELLOW: "#FFCC33",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#CC00FF",
         Color.RED: "#AA0000",
         Color.WHITE: "#AAAAAA",
@@ -832,7 +969,7 @@ def _murphy_style():
         Color.INTENSE_RED: "#f84",
         Color.INTENSE_WHITE: "#eee",
         Color.INTENSE_YELLOW: "#fc8",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#A00000",
         Color.WHITE: "#bbbbbb",
@@ -855,7 +992,7 @@ def _native_style():
         Color.INTENSE_RED: "#cd2828",
         Color.INTENSE_WHITE: "#ffffff",
         Color.INTENSE_YELLOW: "#ed9d13",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#666666",
         Color.RED: "#a61717",
         Color.WHITE: "#aaaaaa",
@@ -878,7 +1015,7 @@ def _paraiso_dark_style():
         Color.INTENSE_RED: "#ef6155",
         Color.INTENSE_WHITE: "#e7e9db",
         Color.INTENSE_YELLOW: "#fec418",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#815ba4",
         Color.RED: "#ef6155",
         Color.WHITE: "#5bc4bf",
@@ -901,7 +1038,7 @@ def _paraiso_light_style():
         Color.INTENSE_RED: "#ef6155",
         Color.INTENSE_WHITE: "#5bc4bf",
         Color.INTENSE_YELLOW: "#fec418",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#815ba4",
         Color.RED: "#2f1e2e",
         Color.WHITE: "#8d8687",
@@ -924,7 +1061,7 @@ def _pastie_style():
         Color.INTENSE_RED: "#dd7700",
         Color.INTENSE_WHITE: "#fff0ff",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#bb0066",
         Color.RED: "#aa0000",
         Color.WHITE: "#bbbbbb",
@@ -947,7 +1084,7 @@ def _perldoc_style():
         Color.INTENSE_RED: "#CD5555",
         Color.INTENSE_WHITE: "#e3d2d2",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#8B008B",
         Color.RED: "#aa0000",
         Color.WHITE: "#a7a7a7",
@@ -970,7 +1107,7 @@ def _rrt_style():
         Color.INTENSE_RED: "#ff0000",
         Color.INTENSE_WHITE: "#e5e5e5",
         Color.INTENSE_YELLOW: "#eedd82",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#ee82ee",
         Color.RED: "#ff0000",
         Color.WHITE: "#87ceeb",
@@ -993,7 +1130,7 @@ def _tango_style():
         Color.INTENSE_RED: "#ef2929",
         Color.INTENSE_WHITE: "#f8f8f8",
         Color.INTENSE_YELLOW: "#c4a000",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#a40000",
         Color.WHITE: "#f8f8f8",
@@ -1016,7 +1153,7 @@ def _trac_style():
         Color.INTENSE_RED: "#bb8844",
         Color.INTENSE_WHITE: "#ffdddd",
         Color.INTENSE_YELLOW: "#e3d2d2",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#800080",
         Color.RED: "#aa0000",
         Color.WHITE: "#aaaaaa",
@@ -1039,7 +1176,7 @@ def _vim_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#cccccc",
         Color.INTENSE_YELLOW: "#cdcd00",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#cd00cd",
         Color.RED: "#cd0000",
         Color.WHITE: "#cccccc",
@@ -1062,7 +1199,7 @@ def _vs_style():
         Color.INTENSE_RED: "#FF0000",
         Color.INTENSE_WHITE: "#2b91af",
         Color.INTENSE_YELLOW: "#2b91af",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#a31515",
         Color.RED: "#a31515",
         Color.WHITE: "#2b91af",
@@ -1085,7 +1222,7 @@ def _xcode_style():
         Color.INTENSE_RED: "#C41A16",
         Color.INTENSE_WHITE: "#3F6E75",
         Color.INTENSE_YELLOW: "#836C28",
-        Color.NO_COLOR: "noinherit",
+        Color.DEFAULT: "noinherit",
         Color.PURPLE: "#A90D91",
         Color.RED: "#C41A16",
         Color.WHITE: "#3F6E75",
@@ -1161,7 +1298,7 @@ del (
 def make_pygments_style(palette):
     """Makes a pygments style based on a color palette."""
     global Color
-    style = {getattr(Color, "NO_COLOR"): "noinherit"}
+    style = {getattr(Color, "DEFAULT"): "noinherit"}
     for name, t in BASE_XONSH_COLORS.items():
         color = find_closest_color(t, palette)
         style[getattr(Color, name)] = "#" + color
@@ -1233,8 +1370,8 @@ def XonshTerminal256Formatter():
             for name, (opener, closer) in self.style_string.items():
                 if name in color_names:
                     self.style_string[name] = (opener, "")
-            # special case NO_COLOR, because it is special.
-            self.style_string["Token.Color.NO_COLOR"] = ("\x1b[39m", "")
+            # special case DEFAULT, because it is special.
+            self.style_string["Token.Color.DEFAULT"] = ("\x1b[39m", "")
 
     return XonshTerminal256FormatterProxy
 
@@ -1340,7 +1477,7 @@ color_file_extension_RE = LazyObject(
 )
 
 
-file_color_tokens = dict()
+file_color_tokens = dict()  # type:ignore
 """Parallel to LS_COLORS, keyed by dircolors keys, but value is a Color token.
 Initialized by XonshStyle."""
 
@@ -1357,7 +1494,7 @@ def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
 events.on_lscolors_change(on_lscolors_change)
 
 
-def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
+def color_file(file_path: str, path_stat: os.stat_result) -> tp.Tuple[_TokenType, str]:
     """Determine color to use for file *approximately* as ls --color would,
        given lstat() results and its path.
 
@@ -1370,22 +1507,22 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
 
     Returns
     -------
-        color token, color_key
+    color token, color_key
 
     Notes
     -----
-
     * implementation follows one authority:
       https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
     * except:
-    1. does not return 'mi'.  That's the color ls uses to show the (missing) *target* of a symlink
-       (in ls -l, not ls).
-    2. in dircolors, setting type code to '0 or '00' bypasses that test and proceeds to others.
-       In our implementation, setting code to '00' paints the file with no color.
-       This is arguably a bug.
+
+      1. does not return 'mi'.  That's the color ls uses to show the (missing) *target* of a symlink
+         (in ls -l, not ls).
+      2. in dircolors, setting type code to '0 or '00' bypasses that test and proceeds to others.
+         In our implementation, setting code to '00' paints the file with no color.
+         This is arguably a bug.
     """
 
-    lsc = builtins.__xonsh__.env["LS_COLORS"]
+    lsc = builtins.__xonsh__.env["LS_COLORS"]  # type:ignore
     color_key = "fi"
 
     # if symlink, get info on (final) target
@@ -1435,7 +1572,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> (Color, str):
         color_key = "bd"
     elif stat.S_ISCHR(mode):
         color_key = "cd"
-    elif stat.S_ISDOOR(mode):
+    elif stat.S_ISDOOR(mode):  # type:ignore
         color_key = "do"
     else:
         color_key = "or"  # any other type --> orphan
@@ -1575,7 +1712,7 @@ class XonshLexer(Python3Lexer):
         ],
         "subproc": [
             include("mode_switch_brackets"),
-            (r"&&|\|\|", Operator, "subproc_start"),
+            (r"&&|\|\||and|or", Operator, "subproc_start"),
             (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
             (r"'(\\\\|\\[0-7]+|\\.|[^'\\])*'", String.Single),
             (r"(?<=\w|\s)!", Keyword, "subproc_macro"),
@@ -1621,7 +1758,7 @@ class XonshConsoleLexer(XonshLexer):
 
     name = "Xonsh console lexer"
     aliases = ["xonshcon"]
-    filenames = []
+    filenames: tp.List[str] = []
 
     tokens = {
         "root": [

@@ -1,20 +1,26 @@
+from rever.activities.ghrelease import git_archive_asset
+
+
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
-$ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest',
-               'tag', 'push_tag', 'ghrelease', 'sphinx',
-               'ghpages', 'pypi', 'conda_forge',
+$ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
+               'tag', 'push_tag',
+               'ghrelease',
+               'sphinx',
+               'ghpages',
+               'pypi',
+               'conda_forge',
                ]
 $PYPI_SIGN = False
 
 $AUTHORS_FILENAME = "AUTHORS.rst"
 $VERSION_BUMP_PATTERNS = [
-    ('.appveyor.yml', 'version:.*', 'version: $VERSION.{build}'),
     ('xonsh/__init__.py', r'__version__\s*=.*', '__version__ = "$VERSION"'),
     ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
 
-$PYTEST_COMMAND = "./run-tests.xsh"
+$PYTEST_COMMAND = "./run-tests.xsh test -- "
 
 $TAG_REMOTE = 'git@github.com:xonsh/xonsh.git'
 $TAG_TARGET = 'master'
@@ -35,3 +41,7 @@ $DOCKER_INSTALL_COMMAND = ('rm -rf .cache/ __pycache__/ */__pycache__ */*/__pyca
                            './setup.py install')
 $DOCKER_GIT_NAME = 'xonsh'
 $DOCKER_GIT_EMAIL = 'xonsh@googlegroups.com'
+
+$GHRELEASE_ASSETS = [git_archive_asset, 'xonsh-x86_64.AppImage']
+
+$APPIMAGE_PYTHON_VERSION = '3.8'

@@ -8,24 +8,12 @@ import sys
 import json
 import subprocess
 
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:
-    pass
-
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
+from setuptools.command.build_py import build_py
 from setuptools.command.install_scripts import install_scripts
-
-try:
-    from jupyter_client.kernelspec import KernelSpecManager
-
-    HAVE_JUPYTER = True
-except ImportError:
-    HAVE_JUPYTER = False
-
 
 TABLES = [
     "xonsh/lexer_table.py",
@@ -34,6 +22,7 @@ TABLES = [
     "xonsh/completers/__amalgam__.py",
     "xonsh/history/__amalgam__.py",
     "xonsh/prompt/__amalgam__.py",
+    "xonsh/procs/__amalgam__.py",
 ]
 
 
@@ -65,6 +54,7 @@ def amalgamate_source():
             "xonsh.completers",
             "xonsh.history",
             "xonsh.prompt",
+            "xonsh.procs",
         ]
     )
     sys.path.pop(0)
@@ -83,50 +73,6 @@ def build_tables():
         yacc_debug=True,
     )
     sys.path.pop(0)
-
-
-def install_jupyter_hook(prefix=None, root=None):
-    """Make xonsh available as a Jupyter kernel."""
-    if not HAVE_JUPYTER:
-        print(
-            "Could not install Jupyter kernel spec, please install " "Jupyter/IPython."
-        )
-        return
-    spec = {
-        "argv": [
-            sys.executable,
-            "-m",
-            "xonsh.jupyter_kernel",
-            "-f",
-            "{connection_file}",
-        ],
-        "display_name": "Xonsh",
-        "language": "xonsh",
-        "codemirror_mode": "shell",
-    }
-    with TemporaryDirectory() as d:
-        os.chmod(d, 0o755)  # Starts off as 700, not user readable
-        if sys.platform == "win32":
-            # Ensure that conda-build detects the hard coded prefix
-            spec["argv"][0] = spec["argv"][0].replace(os.sep, os.altsep)
-        with open(os.path.join(d, "kernel.json"), "w") as f:
-            json.dump(spec, f, sort_keys=True)
-        if "CONDA_BUILD" in os.environ:
-            prefix = sys.prefix
-            if sys.platform == "win32":
-                prefix = prefix.replace(os.sep, os.altsep)
-        user = "--user" in sys.argv
-        print("Installing Jupyter kernel spec:")
-        print("  root: {0!r}".format(root))
-        print("  prefix: {0!r}".format(prefix))
-        print("  as user: {0}".format(user))
-        if root and prefix:
-            # os.path.join isn't used since prefix is probably absolute
-            prefix = root + prefix
-            print("  combined prefix {0!r}".format(prefix))
-        KernelSpecManager().install_kernel_spec(
-            d, "xonsh", user=user, replace=True, prefix=prefix
-        )
 
 
 def dirty_version():
@@ -195,8 +141,8 @@ def restore_version():
         f.write(upd)
 
 
-class xinstall(install):
-    """Xonsh specialization of setuptools install class."""
+class xbuild_py(build_py):
+    """Xonsh specialization of setuptools build_py class."""
 
     def run(self):
         clean_tables()
@@ -204,16 +150,24 @@ class xinstall(install):
         amalgamate_source()
         # add dirty version number
         dirty = dirty_version()
-        # install Jupyter hook
-        root = self.root if self.root else None
-        prefix = self.prefix if self.prefix else None
-        try:
-            install_jupyter_hook(prefix=prefix, root=root)
-        except Exception:
-            import traceback
+        super().run()
+        if dirty:
+            restore_version()
 
-            traceback.print_exc()
-            print("Installing Jupyter hook failed.")
+
+class xinstall(install):
+    """Xonsh specialization of setuptools install class.
+    For production, let setuptools generate the
+    startup script, e.g: `pip installl .' rather than
+    relying on 'python setup.py install'."""
+
+    def run(self):
+        clean_tables()
+        build_tables()
+        amalgamate_source()
+        # add dirty version number
+        dirty = dirty_version()
+
         super().run()
         if dirty:
             restore_version()
@@ -227,6 +181,7 @@ class xsdist(sdist):
         build_tables()
         amalgamate_source()
         dirty = dirty_version()
+        files.extend(TABLES)
         super().make_release_tree(basedir, files)
         if dirty:
             restore_version()
@@ -276,18 +231,15 @@ class install_scripts_rewrite(install_scripts):
 
 
 # The custom install needs to be used on Windows machines
+cmdclass = {
+    "install": xinstall,
+    "sdist": xsdist,
+    "build_py": xbuild_py,
+}
 if os.name == "nt":
-    cmdclass = {
-        "install": xinstall,
-        "sdist": xsdist,
-        "install_scripts": install_scripts_quoted_shebang,
-    }
+    cmdclass["install_scripts"] = install_scripts_quoted_shebang
 else:
-    cmdclass = {
-        "install": xinstall,
-        "sdist": xsdist,
-        "install_scripts": install_scripts_rewrite,
-    }
+    cmdclass["install_scripts"] = install_scripts_rewrite
 
 
 class xdevelop(develop):
@@ -323,12 +275,6 @@ def main():
     with open(os.path.join(os.path.dirname(__file__), "README.rst"), "r") as f:
         readme = f.read()
     scripts = ["scripts/xon.sh"]
-    if sys.platform == "win32":
-        scripts.append("scripts/xonsh.bat")
-        scripts.append("scripts/xonsh-cat.bat")
-    else:
-        scripts.append("scripts/xonsh")
-        scripts.append("scripts/xonsh-cat")
     skw = dict(
         name="xonsh",
         description="Python-powered, cross-platform, Unix-gazing shell",
@@ -346,6 +292,7 @@ def main():
             "xonsh.ply.ply",
             "xonsh.ptk_shell",
             "xonsh.ptk2",
+            "xonsh.procs",
             "xonsh.parsers",
             "xonsh.xoreutils",
             "xontrib",
@@ -363,6 +310,7 @@ def main():
         },
         package_data={
             "xonsh": ["*.json", "*.githash"],
+            "xonsh.vended_ptk": ["LICENSE-prompt-toolkit", "LICENSE-wcwidth"],
             "xontrib": ["*.xsh"],
             "xonsh.lib": ["*.xsh"],
             "xonsh.webconfig": [
@@ -370,36 +318,37 @@ def main():
                 "js/app.min.js",
                 "js/bootstrap.min.css",
                 "js/LICENSE-bootstrap",
-            ]
+            ],
         },
         cmdclass=cmdclass,
         scripts=scripts,
     )
-    # WARNING!!! Do not use setuptools 'console_scripts'
-    # It validates the dependencies (of which we have none) every time the
-    # 'xonsh' command is run. This validation adds ~0.2 sec. to the startup
-    # time of xonsh - for every single xonsh run.  This prevents us from
-    # reaching the goal of a startup time of < 0.1 sec.  So never ever write
-    # the following:
-    #
-    #     'console_scripts': ['xonsh = xonsh.main:main'],
-    #
-    # END WARNING
+    skw["packages"].extend(
+        ["xonsh.vended_ptk." + pkg for pkg in find_packages(where="xonsh/vended_ptk")]
+    )
+    # We used to avoid setuptools 'console_scripts' due to startup performance
+    # concerns which have since been resolved, so long as install is done
+    # via `pip install .` and not `python setup.py install`.
     skw["entry_points"] = {
         "pygments.lexers": [
             "xonsh = xonsh.pyghooks:XonshLexer",
             "xonshcon = xonsh.pyghooks:XonshConsoleLexer",
         ],
         "pytest11": ["xonsh = xonsh.pytest_plugin"],
+        "console_scripts": [
+            "xonsh = xonsh.main:main",
+            "xonsh-cat = xonsh.xoreutils.cat:cat_main",
+        ],
     }
     skw["cmdclass"]["develop"] = xdevelop
     skw["extras_require"] = {
-        "ptk": ["prompt-toolkit>=2.0"],
+        "ptk": ["prompt-toolkit>=3.0"],
         "pygments": ["pygments>=2.2"],
         "mac": ["gnureadline"],
         "linux": ["distro"],
         "proctitle": ["setproctitle"],
         "zipapp": ['importlib_resources; python_version < "3.7"'],
+        "full": ["ptk", "pygments", "distro"],
     }
     skw["python_requires"] = ">=3.6"
     setup(**skw)

@@ -475,7 +475,7 @@ def test__xhj_gc_xx_to_rmfiles(
     assert act_files == exp_files
 
     # comparing age is approximate, because xhj_gc_seconds_to_rmfiles computes 'now' on each call.
-    # For test runs, accept anything in the same hour, test cases not that close.  
+    # For test runs, accept anything in the same hour, test cases not that close.
     # We find multi-minute variations in CI environments.
     # This should cover some amount of think time sitting at a breakpoint, too.
     if fn == _xhj_gc_seconds_to_rmfiles:
@@ -483,3 +483,65 @@ def test__xhj_gc_xx_to_rmfiles(
         assert minute_diff <= 60
     else:
         assert act_size == exp_size
+
+
+def test_hist_clear_cmd(hist, xonsh_builtins, capsys, tmpdir):
+    """Verify that the CLI history clear command works."""
+    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xonsh_builtins.__xonsh__.history = hist
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+
+    for ts, cmd in enumerate(CMDS):  # populate the shell history
+        hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+    assert len(xonsh_builtins.__xonsh__.history) == 6
+
+    history_main(["clear"])
+
+    out, err = capsys.readouterr()
+    assert err.rstrip() == "History cleared"
+    assert len(xonsh_builtins.__xonsh__.history) == 0
+
+
+def test_hist_off_cmd(hist, xonsh_builtins, capsys, tmpdir):
+    """Verify that the CLI history off command works."""
+    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xonsh_builtins.__xonsh__.history = hist
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+
+    for ts, cmd in enumerate(CMDS):  # populate the shell history
+        hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+    assert len(xonsh_builtins.__xonsh__.history) == 6
+
+    history_main(["off"])
+
+    out, err = capsys.readouterr()
+    assert err.rstrip() == "History off"
+    assert len(xonsh_builtins.__xonsh__.history) == 0
+
+    for ts, cmd in enumerate(CMDS):  # attempt to populate the shell history
+        hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+
+    assert len(xonsh_builtins.__xonsh__.history) == 0
+
+
+def test_hist_on_cmd(hist, xonsh_builtins, capsys, tmpdir):
+    """Verify that the CLI history on command works."""
+    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xonsh_builtins.__xonsh__.history = hist
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+
+    for ts, cmd in enumerate(CMDS):  # populate the shell history
+        hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+    assert len(xonsh_builtins.__xonsh__.history) == 6
+
+    history_main(["off"])
+    history_main(["on"])
+
+    out, err = capsys.readouterr()
+    assert err.rstrip().endswith("History on")
+    assert len(xonsh_builtins.__xonsh__.history) == 0
+
+    for ts, cmd in enumerate(CMDS):  # populate the shell history
+        hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+
+    assert len(xonsh_builtins.__xonsh__.history) == 6

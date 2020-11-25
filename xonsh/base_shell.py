@@ -33,7 +33,7 @@ from xonsh.ansi_colors import ansi_partial_color_format
 if ON_WINDOWS:
     import ctypes
 
-    kernel32 = ctypes.windll.kernel32
+    kernel32 = ctypes.windll.kernel32  # type:ignore
     kernel32.SetConsoleTitleW.argtypes = [ctypes.c_wchar_p]
 
 
@@ -432,7 +432,7 @@ class BaseShell(object):
                 # OK PWD is really gone.
                 msg = "{UNDERLINE_INTENSE_WHITE}{BACKGROUND_INTENSE_BLACK}"
                 msg += "xonsh: working directory does not exist: " + pwd
-                msg += "{NO_COLOR}"
+                msg += "{RESET}"
                 self.print_color(msg, file=sys.stderr)
         elif "PWD" not in env:
             # $PWD is missing from env, recreate it

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>xonsh</id>
+    <metadata_license>BSD</metadata_license>
+    <project_license>BSD</project_license>
+    <name>Xonsh</name>
+    <summary>Xonsh on Python {{ python-fullversion }}</summary>
+    <description>
+        <p>  Python {{ python-fullversion }} + Xonsh bundled in an AppImage.
+        </p>
+    </description>
+    <launchable type="desktop-id">xonsh.desktop</launchable>
+    <url type="homepage">http://xon.sh</url>
+    <provides>
+        <binary>python{{ python-version }}</binary>
+    </provides>
+</component>

@@ -2,18 +2,19 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
+import re
+import pathlib
 import datetime
 import itertools
 from tempfile import TemporaryDirectory
 
 import pytest
 
-from xonsh.tools import always_true
+from xonsh.tools import always_true, DefaultNotGiven
 from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
     locate_binary,
-    DEFAULT_VARS,
     default_env,
     make_args_env,
     LsColors,
@@ -34,9 +35,10 @@ def test_env_contains():
 
 
 @pytest.mark.parametrize("path", [["/home/wakka"], ["wakka"]])
-def test_env_path_list(path):
-    env = Env(MYPATH=path)
+def test_env_path_dirs_list(path):
+    env = Env(MYPATH=path, MYDIRS=path)
     assert path == env["MYPATH"].paths
+    assert path == env["MYDIRS"].paths
 
 
 @pytest.mark.parametrize(
@@ -151,6 +153,7 @@ def test_swap_exception_replacement():
 def test_locate_binary_on_windows(xonsh_builtins):
     files = ("file1.exe", "FILE2.BAT", "file3.txt")
     with TemporaryDirectory() as tmpdir:
+        tmpdir = os.path.realpath(tmpdir)
         for fname in files:
             fpath = os.path.join(tmpdir, fname)
             with open(fpath, "w") as f:
@@ -301,7 +304,7 @@ def test_delitem_default():
 
 def test_lscolors_target(xonsh_builtins):
     lsc = LsColors.fromstring("ln=target")
-    assert lsc["ln"] == ("NO_COLOR",)
+    assert lsc["ln"] == ("RESET",)
     assert lsc.is_target("ln")
     assert lsc.detype() == "ln=target"
     assert not (lsc.is_target("mi"))
@@ -310,15 +313,15 @@ def test_lscolors_target(xonsh_builtins):
 @pytest.mark.parametrize(
     "key_in,old_in,new_in,test",
     [
-        ("fi", ("NO_COLOR",), ("BLUE",), "existing key, change value"),
-        ("fi", ("NO_COLOR",), ("NO_COLOR",), "existing key, no change in value"),
-        ("tw", None, ("NO_COLOR",), "create new key"),
+        ("fi", ("RESET",), ("BLUE",), "existing key, change value"),
+        ("fi", ("RESET",), ("RESET",), "existing key, no change in value"),
+        ("tw", None, ("RESET",), "create new key"),
         ("pi", ("BACKGROUND_BLACK", "YELLOW"), None, "delete existing key"),
     ],
 )
 def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
     lsc = LsColors.fromstring("fi=0:di=01;34:pi=40;33")
-    # corresponding colors: [('NO_COLOR',), ('BOLD_CYAN',), ('BOLD_CYAN',), ('BACKGROUND_BLACK', 'YELLOW')]
+    # corresponding colors: [('RESET',), ('BOLD_CYAN',), ('BOLD_CYAN',), ('BACKGROUND_BLACK', 'YELLOW')]
 
     event_fired = False
 
@@ -358,7 +361,7 @@ def test_register_custom_var_generic():
     assert env["MY_SPECIAL_VAR"] == 32
 
     env["MY_SPECIAL_VAR"] = True
-    assert env["MY_SPECIAL_VAR"] == True
+    assert env["MY_SPECIAL_VAR"] is True
 
 
 def test_register_custom_var_int():
@@ -424,9 +427,26 @@ def test_register_custom_var_str(val, converted):
     assert env["MY_SPECIAL_VAR"] == converted
 
 
-def test_register_custom_var_path():
+def test_register_var_path():
     env = Env()
-    env.register("MY_SPECIAL_VAR", type="path")
+    env.register("MY_PATH_VAR", type="path")
+
+    path = '/tmp'
+    env["MY_PATH_VAR"] = path
+    assert env["MY_PATH_VAR"] == pathlib.Path(path)
+
+    # Empty string is None to avoid uncontrolled converting empty string to Path('.')
+    path = ''
+    env["MY_PATH_VAR"] = path
+    assert env["MY_PATH_VAR"] == None
+
+    with pytest.raises(TypeError):
+        env["MY_PATH_VAR"] = 42
+
+
+def test_register_custom_var_env_path():
+    env = Env()
+    env.register("MY_SPECIAL_VAR", type="env_path")
 
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
@@ -441,11 +461,11 @@ def test_register_custom_var_path():
 def test_deregister_custom_var():
     env = Env()
 
-    env.register("MY_SPECIAL_VAR", type="path")
+    env.register("MY_SPECIAL_VAR", type="env_path")
     env.deregister("MY_SPECIAL_VAR")
     assert "MY_SPECIAL_VAR" not in env
 
-    env.register("MY_SPECIAL_VAR", type="path")
+    env.register("MY_SPECIAL_VAR", type="env_path")
     paths = ["/home/wakka", "/home/wakka/bin"]
     env["MY_SPECIAL_VAR"] = paths
     env.deregister("MY_SPECIAL_VAR")
@@ -475,3 +495,44 @@ def test_register_callable_default():
     # default is a function which generates the proper type.
     env = Env()
     env.register("TODAY", default=today, validate=is_date)
+
+
+def test_env_iterate():
+    env = Env(TEST=0)
+    env.register(re.compile("re"))
+    for key in env:
+        assert isinstance(key, str)
+
+
+def test_env_iterate_rawkeys():
+    env = Env(TEST=0)
+    r = re.compile("re")
+    env.register(r)
+    saw_regex = False
+    for key in env.rawkeys():
+        if isinstance(key, str):
+            continue
+        elif isinstance(key, type(r)) and key.pattern == "re":
+            saw_regex = True
+    assert saw_regex
+
+
+def test_env_get_defaults():
+    """Verify the rather complex rules for env.get("<envvar>",default) value when envvar is not defined.
+    """
+
+    env = Env(TEST1=0)
+    env.register("TEST_REG", default="abc")
+    env.register("TEST_REG_DNG", default=DefaultNotGiven)
+
+    # var is defined, registered is don't-care => value is defined value
+    assert env.get("TEST1", 22) == 0
+    # var not defined, not registered => value is immediate default
+    assert env.get("TEST2", 22) == 22
+    assert "TEST2" not in env
+    # var not defined, is registered, reg default is not sentinel => value is *registered* default
+    assert env.get("TEST_REG", 22) == "abc"
+    assert "TEST_REG" in env
+    # var not defined, is registered, reg default is sentinel => value is *immediate* default
+    assert env.get("TEST_REG_DNG", 22) == 22
+    assert "TEST_REG_DNG" not in env

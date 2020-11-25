@@ -3,6 +3,7 @@
 import builtins
 
 from prompt_toolkit import search
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.filters import (
     Condition,
@@ -13,7 +14,8 @@ from prompt_toolkit.filters import (
     IsSearching,
 )
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.application.current import get_app
+from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
+from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 
 from xonsh.aliases import xonsh_exit
 from xonsh.tools import check_for_partial_string, get_line_continuation
@@ -74,8 +76,8 @@ def carriage_return(b, cli, *, autoindent=True):
         b.validate_and_handle()
 
 
-def _is_blank(l):
-    return len(l.strip()) == 0
+def _is_blank(line):
+    return len(line.strip()) == 0
 
 
 def can_compile(src):
@@ -105,6 +107,12 @@ def tab_insert_indent():
     before_cursor = get_app().current_buffer.document.current_line_before_cursor
 
     return bool(before_cursor.isspace())
+
+
+@Condition
+def tab_menu_complete():
+    """Checks whether completion mode is `menu-complete`"""
+    return builtins.__xonsh__.env.get("COMPLETION_MODE") == "menu-complete"
 
 
 @Condition
@@ -165,7 +173,7 @@ def autopair_condition():
 @Condition
 def whitespace_or_bracket_before():
     """Check if there is whitespace or an opening
-       bracket to the left of the cursor"""
+    bracket to the left of the cursor"""
     d = get_app().current_buffer.document
     return bool(
         d.cursor_position == 0
@@ -177,7 +185,7 @@ def whitespace_or_bracket_before():
 @Condition
 def whitespace_or_bracket_after():
     """Check if there is whitespace or a closing
-       bracket to the right of the cursor"""
+    bracket to the right of the cursor"""
     d = get_app().current_buffer.document
     return bool(
         d.is_cursor_at_the_end_of_line
@@ -186,10 +194,11 @@ def whitespace_or_bracket_after():
     )
 
 
-def load_xonsh_bindings(key_bindings):
+def load_xonsh_bindings() -> KeyBindingsBase:
     """
     Load custom key bindings.
     """
+    key_bindings = KeyBindings()
     handle = key_bindings.add
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
@@ -202,6 +211,15 @@ def load_xonsh_bindings(key_bindings):
         """
         env = builtins.__xonsh__.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
+
+    @handle(Keys.Tab, filter=~tab_insert_indent & tab_menu_complete)
+    def menu_complete_select(event):
+        """Start completion in menu-complete mode, or tab to next completion"""
+        b = event.current_buffer
+        if b.complete_state:
+            b.complete_next()
+        else:
+            b.start_completion(select_first=True)
 
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):
@@ -357,3 +375,25 @@ def load_xonsh_bindings(key_bindings):
         during the previous command.
         """
         pass
+
+    @handle(Keys.ControlX, Keys.ControlX, filter=has_selection)
+    def _cut(event):
+        """ Cut selected text. """
+        data = event.current_buffer.cut_selection()
+        event.app.clipboard.set_data(data)
+
+    @handle(Keys.ControlX, Keys.ControlC, filter=has_selection)
+    def _copy(event):
+        """ Copy selected text. """
+        data = event.current_buffer.copy_selection()
+        event.app.clipboard.set_data(data)
+
+    @handle(Keys.ControlV, filter=insert_mode | has_selection)
+    def _yank(event):
+        """ Paste selected text. """
+        buff = event.current_buffer
+        if buff.selection_state:
+            buff.cut_selection()
+        get_by_name("yank").call(event)
+
+    return key_bindings

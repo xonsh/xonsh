@@ -198,12 +198,12 @@ def gitstatus_prompt():
         symbol = _get_def(category.upper())
         value = getattr(s, category)
         if symbol and value > 0:
-            ret += symbol + str(value) + "{NO_COLOR}"
+            ret += symbol + str(value) + "{RESET}"
     if s.staged + s.conflicts + s.changed + s.deleted + s.untracked + s.stashed == 0:
         symbol = _get_def("CLEAN")
         if symbol:
-            ret += symbol + "{NO_COLOR}"
+            ret += symbol + "{RESET}"
     ret = ret.rstrip("|")
-    ret += "{NO_COLOR}"
+    ret += "{RESET}"
 
     return ret

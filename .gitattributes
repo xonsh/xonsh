@@ -12,7 +12,7 @@
 *.rst text
 *.sh text
 *.txt text
-*.xsh text
+*.xsh text linguist-language=Python
 *.yaml text
 *.yml text
 CONTRIBUTING text

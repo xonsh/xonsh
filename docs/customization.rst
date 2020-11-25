@@ -56,6 +56,26 @@ To set a new theme, do
 
    $ $XONSH_COLOR_STYLE='<theme name>'
 
+Registering custom styles
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you aren't happy with the styles provided by us (and ``pygments``), you can create and register custom styles.
+
+To do so, add something similar to your ``.xonshrc``:
+
+.. code-block:: python
+
+   from xonsh.tools import register_custom_style
+   mystyle = {
+       "Literal.String.Single": "#ff88aa",
+       "Literal.String.Double": "#ff4488",
+       "RED": "#008800",
+   }
+   register_custom_style("mystyle", mystyle, base="monokai")
+   $XONSH_COLOR_STYLE="mystyle"
+
+You can check ``xonfig colors`` for the token names. The ``base`` style will be used as a fallback for styles you don't set - pick one from ``xonfig styles`` (``default`` is used if omitted).
+
 .. _import_local_modules:
 
 ...import python modules from a local directory?
@@ -66,7 +86,7 @@ available in ``sys.path``. If you want to be able to import a module that
 resides in the current directory, ensure that there is an empty string as the
 first element of your ``sys.path``
 
-.. code-block:: xonshcon
+.. code-block:: console
 
    $ import sys
    $ sys.path.insert(0, '')
@@ -173,7 +193,7 @@ then choose ``Open Terminal Here`` and click on ``Edit currently selected action
 
 If you are unable to use utf-8 (ie. non-ascii) characters in xonsh. For example if you get the following output
 
-.. code-block:: xonshcon
+.. code-block:: console
 
     $ echo "ßðđ"
     xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
@@ -234,30 +254,4 @@ variables:
 ...use xonsh inside Emacs?
 ----------------------------------
 
-**Option A: Comint buffer**
-
-You can use xonsh as your `interactive shell in Emacs
-<https://www.gnu.org/software/emacs/manual/html_node/emacs/Interactive-Shell.html>`_
-in a Comint buffer. This way you keep all the Emacs editing power
-in the shell, but you loose xonsh's completion feature.
-
-Make sure you install xonsh with readline support and in your
-``.xonshrc`` file define
-
-.. code-block:: xonsh
-                
-    $SHELL_TYPE = 'readline'
-    
-Also, in Emacs set ``explicit-shell-file-name`` to your xonsh executable.
-
-**Option B: Ansi-term buffer**
-
-The second option is to run xonsh in an Ansi-term buffer inside
-Emacs. This way you have to switch modes if you want do Emacs-style
-editing, but you keep xonsh's impressive completion.
-
-For this it is preferred to have xonsh installed with the
-prompt-toolkit. Then you can leave ``$SHELL_TYPE`` at its default.
-
-Emacs will prompt you for the path of the xonsh exeutable when you
-start up ``ansi-term``.
+see `emacs <editors.html>`_.

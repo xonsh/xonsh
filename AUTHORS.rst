@@ -8,29 +8,34 @@ Authors are sorted by number of commits.
 * Konstantinos Tsakiltzidis
 * Jamie Bliss
 * Hugo Wang
-* BlahGeek
 * David Strobach
 * Bob Hyman
+* a
+* BlahGeek
+* anki-code
 * Jean-Benoist Leger
 * christopher
 * Klaus Alexander Seistrup
 * Leonardo Santagada
 * Burak Yiğit Kaya
+* Matthias Bussonnier
 * Aaron Griffin
 * Rob Brewer
 * virus
 * Sagar Tewari
-* Matthias Bussonnier
+* Gyuri Horak
+* Eadaen1
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
-* anki-code
 * Travis Shirk
 * Joel Gerber
+* Danny Sepler
 * vaaaaanquish
 * Bernardas Ališauskas
-* Derek Thomas
 * David Dotson
+* Derek Thomas
+* con-f-use
 * VHarisop
 * JohnLunzer
 * Paul Goelz
@@ -39,20 +44,23 @@ Authors are sorted by number of commits.
 * Kurtis Rader
 * cryzed
 * Brian Visel
+* Noortheen Raja
+* cafehaine
 * Andrew Hundt
 * Jonathan Slenders
 * Justin Moen
-* con-f-use
-* Caleb Hattingh
-* Stephan Fitzpatrick
 * Raphael Das Gupta
-* K.-Michael Aye
+* Caleb Hattingh
+* Daniel Shimon
 * Jason R. Coombs
+* Stephan Fitzpatrick
+* Will S
+* K.-Michael Aye
 * halloleo
 * Will Wykeham
 * Oleh Prypin
 * Brian Skinn
-* Will S
+* Wendell Turner
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -79,6 +87,7 @@ Authors are sorted by number of commits.
 * anula
 * Jay Tuckey
 * Alexander Steffen
+* Achim Herwig
 * Randy Syring
 * Lucas Inojosa
 * adam j hartz
@@ -107,6 +116,8 @@ Authors are sorted by number of commits.
 * Kale Kundert
 * Andrés García García
 * Sean Farley
+* Marduk Bolaños
+* Marius van Niekerk
 * Jan Schulz
 * Samuel Dion-Girardeau
 * Michael Droettboom
@@ -123,9 +134,7 @@ Authors are sorted by number of commits.
 * Niklas Hambüchen
 * Sébastien Pierre
 * shadow-light
-* Gyuri Horak
 * Jan Chren
-* Noortheen Raja
 * Samuel Lotz
 * Mark Wiebe
 * Nathan Hoad
@@ -223,6 +232,11 @@ Authors are sorted by number of commits.
 * Marcio Mazza
 * Jerzy Drozdz
 * Manor Askenazi
-* Marduk Bolaños
+* Stefane Fermigier
+* swedneck
+* Feng Tian
+* paugier
+* Wendell CTR Turner
+* Will Shanks
 * goodboy
 * Atsushi Morimoto

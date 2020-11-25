@@ -17,7 +17,7 @@ os.environ["XONSH_DEBUG"] = "1"
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_VARS, Env
-from xonsh.xontribs import xontrib_metadata
+from xonsh.xontribs_meta import get_xontribs
 from xonsh import main
 from xonsh.commands_cache import CommandsCache
 
@@ -37,12 +37,6 @@ else:
     from xonsh.events import events
 
 sys.path.insert(0, os.path.dirname(__file__))
-
-
-def setup(sphinx):
-    from xonsh.pyghooks import XonshConsoleLexer
-
-    sphinx.add_lexer("xonshcon", XonshConsoleLexer())
 
 
 # -- General configuration -----------------------------------------------------
@@ -75,7 +69,7 @@ source_suffix = ".rst"
 # source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = "sidebar"
+master_doc = "contents"
 
 # General information about the project.
 project = u"xonsh"
@@ -208,7 +202,7 @@ html_style = "numpy_friendly.css"
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-# html_additional_pages = {}
+html_additional_pages = {"index": "index.html"}
 
 # If false, no module index is generated.
 # html_use_modindex = True
@@ -326,8 +320,8 @@ def make_envvars():
 
 
 def make_xontribs():
-    md = xontrib_metadata()
-    names = sorted(d["name"] for d in md["xontribs"] if "name" in d)
+    xons = get_xontribs()
+    names = sorted(xons)
     s = ".. list-table::\n" "    :header-rows: 0\n\n"
     table = []
     ncol = 5
@@ -350,33 +344,29 @@ def make_xontribs():
         "-------\n\n"
     )
     for name in names:
-        for d in md["xontribs"]:
-            if d.get("name", None) == name:
-                break
+        d = xons[name]
         title = name
         under = "." * len(title)
-        desc = d.get("description", "")
+        desc = d.description
         if not isinstance(desc, str):
             desc = "".join(desc)
-        pkgname = d.get("package", None)
-        if pkgname is None:
+        if d.package is None:
             pkg = "unknown"
             inst = ""
             usage = ""
         else:
-            pd = md["packages"].get(pkgname, {})
-            pkg = pkgname
-            if "url" in pd:
-                pkg = "`{0} website <{1}>`_".format(pkg, pd["url"])
-            if "license" in pd:
-                pkg = pkg + ", " + pd["license"]
+            pkg = d.package.name
+            if d.package.url:
+                pkg = "`{0} website <{1}>`_".format(pkg, d.package.url)
+            if d.package.license:
+                pkg = pkg + ", " + d.package.license
             inst = ""
-            installd = pd.get("install", {})
-            if pkgname == "xonsh":
+            installd = d.package.install
+            if d.package.name == "xonsh":
                 inst = "This xontrib is preinstalled with xonsh.\n\n"
             elif len(installd) > 0:
                 inst = "**Installation:**\n\n" ".. code-block:: xonsh\n\n"
-                for k, v in sorted(pd.get("install", {}).items()):
+                for k, v in sorted(installd.items()):
                     cmd = "\n    ".join(v.split("\n"))
                     inst += ("    # install with {k}\n" "    {cmd}").format(
                         k=k, cmd=cmd
@@ -393,7 +383,7 @@ def make_xontribs():
             low=name.lower(),
             title=title,
             under=under,
-            url=d.get("url", "unknown"),
+            url=d.url or "unknown",
             desc=desc,
             pkg=pkg,
             inst=inst,
@@ -444,4 +434,7 @@ builtins.__xonsh__.commands_cache = CommandsCache()
 
 
 def setup(app):
-    app.add_stylesheet("custom.css")
+    from xonsh.pyghooks import XonshConsoleLexer
+
+    app.add_lexer("xonshcon", XonshConsoleLexer())
+    app.add_css_file("custom.css")

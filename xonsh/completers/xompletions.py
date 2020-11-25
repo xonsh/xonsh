@@ -1,7 +1,9 @@
 """Provides completions for xonsh internal utilities"""
 
 import xonsh.xontribs as xx
+import xonsh.xontribs_meta as xmt
 import xonsh.tools as xt
+from xonsh.xonfig import XONFIG_MAIN_ACTIONS
 
 
 def complete_xonfig(prefix, line, start, end, ctx):
@@ -11,7 +13,7 @@ def complete_xonfig(prefix, line, start, end, ctx):
         return None
     curix = args.index(prefix)
     if curix == 1:
-        possible = {"info", "wizard", "styles", "colors", "-h"}
+        possible = set(XONFIG_MAIN_ACTIONS.keys()) | {"-h"}
     elif curix == 2 and args[1] == "colors":
         possible = set(xt.color_style_names())
     else:
@@ -20,10 +22,9 @@ def complete_xonfig(prefix, line, start, end, ctx):
 
 
 def _list_installed_xontribs():
-    meta = xx.xontrib_metadata()
+    meta = xmt.get_xontribs()
     installed = []
-    for md in meta["xontribs"]:
-        name = md["name"]
+    for name in meta:
         spec = xx.find_xontrib(name)
         if spec is not None:
             installed.append(spec.name.rsplit(".")[-1])

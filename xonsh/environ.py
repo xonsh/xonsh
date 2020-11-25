@@ -12,6 +12,8 @@ import contextlib
 import collections
 import collections.abc as cabc
 import subprocess
+import platform
+import typing as tp
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -24,22 +26,27 @@ from xonsh.platform import (
     PATH_DEFAULT,
     ON_WINDOWS,
     ON_LINUX,
+    ON_CYGWIN,
     os_environ,
 )
-
-from xonsh.style_tools import PTK2_STYLE
 
 from xonsh.tools import (
     always_true,
     always_false,
     detype,
     ensure_string,
+    is_path,
+    str_to_path,
+    path_to_str,
     is_env_path,
     str_to_env_path,
     env_path_to_str,
     is_bool,
     to_bool,
     bool_to_str,
+    is_bool_or_none,
+    to_bool_or_none,
+    bool_or_none_to_str,
     is_history_tuple,
     to_history_tuple,
     history_tuple_to_str,
@@ -48,6 +55,8 @@ from xonsh.tools import (
     is_string_or_callable,
     is_completions_display_value,
     to_completions_display_value,
+    is_completion_mode,
+    to_completion_mode,
     is_string_set,
     csv_to_set,
     set_to_csv,
@@ -78,6 +87,7 @@ from xonsh.tools import (
     is_str_str_dict,
     to_str_str_dict,
     dict_to_str,
+    to_int_or_none,
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -86,7 +96,6 @@ from xonsh.ansi_colors import (
     ansi_style_by_name,
 )
 import xonsh.prompt.base as prompt
-
 
 events.doc(
     "on_envvar_new",
@@ -141,10 +150,10 @@ Normal usage is to arm the event handler, then read (not modify) all existing va
 @lazyobject
 def HELP_TEMPLATE():
     return (
-        "{{INTENSE_RED}}{envvar}{{NO_COLOR}}:\n\n"
-        "{{INTENSE_YELLOW}}{docstr}{{NO_COLOR}}\n\n"
-        "default: {{CYAN}}{default}{{NO_COLOR}}\n"
-        "configurable: {{CYAN}}{configurable}{{NO_COLOR}}"
+        "{{INTENSE_RED}}{envvar}{{RESET}}:\n\n"
+        "{{INTENSE_YELLOW}}{docstr}{{RESET}}\n\n"
+        "default: {{CYAN}}{default}{{RESET}}\n"
+        "configurable: {{CYAN}}{configurable}{{RESET}}"
     )
 
 
@@ -321,14 +330,14 @@ class LsColors(cabc.MutableMapping):
         "di": ("BOLD_BLUE",),
         "do": ("BOLD_PURPLE",),
         "ex": ("BOLD_GREEN",),
-        "fi": ("NO_COLOR",),
+        "fi": ("RESET",),
         "ln": ("BOLD_CYAN",),
-        "mh": ("NO_COLOR",),
-        "mi": ("NO_COLOR",),
+        "mh": ("RESET",),
+        "mi": ("RESET",),
         "or": ("BACKGROUND_BLACK", "RED"),
         "ow": ("BLUE", "BACKGROUND_GREEN"),
         "pi": ("BACKGROUND_BLACK", "YELLOW"),
-        "rs": ("NO_COLOR",),
+        "rs": ("RESET",),
         "sg": ("BLACK", "BACKGROUND_YELLOW"),
         "so": ("BOLD_PURPLE",),
         "st": ("WHITE", "BACKGROUND_BLUE"),
@@ -337,7 +346,7 @@ class LsColors(cabc.MutableMapping):
     }
 
     target_value = "target"  # special value to set for ln=target
-    target_color = ("NO_COLOR",)  # repres in color space
+    target_color = ("RESET",)  # repres in color space
 
     def __init__(self, ini_dict: dict = None):
         self._style = self._style_name = None
@@ -396,7 +405,7 @@ class LsColors(cabc.MutableMapping):
                 p.pretty(dict(self))
 
     def is_target(self, key) -> bool:
-        "Return True if key is 'target'"
+        """Return True if key is 'target'"""
         return key in self._targets
 
     def detype(self):
@@ -462,7 +471,7 @@ class LsColors(cabc.MutableMapping):
                     )
                 except Exception as e:
                     print("xonsh:warning:" + str(e), file=sys.stderr)
-                    ini_dict[key] = ("NO_COLOR",)
+                    ini_dict[key] = ("RESET",)
         return cls(ini_dict)
 
     @classmethod
@@ -530,7 +539,8 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
 ENSURERS = {
     "bool": (is_bool, to_bool, bool_to_str),
     "str": (is_string, ensure_string, ensure_string),
-    "path": (is_env_path, str_to_env_path, env_path_to_str),
+    "path": (is_path, str_to_path, path_to_str),
+    "env_path": (is_env_path, str_to_env_path, env_path_to_str),
     "float": (is_float, float, str),
     "int": (is_int, int, str),
 }
@@ -645,7 +655,9 @@ convert : func
 detype : func
     Function to convert variable from its type to a string representation.
 default
-    Default value for variable.
+    Default value for variable. If set to DefaultNotGiven, raise KeyError
+    instead of returning this default value.  Used for env vars defined
+    outside of Xonsh.
 doc : str
    The environment variable docstring.
 doc_configurable : bool, optional
@@ -662,7 +674,7 @@ doc_store_as_str : bool, optional
 """
 
 # iterates from back
-Var.__new__.__defaults__ = (
+Var.__new__.__defaults__ = (  # type:ignore
     always_true,
     None,
     ensure_string,
@@ -677,12 +689,12 @@ Var.__new__.__defaults__ = (
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
 def DEFAULT_VARS():
-    return {
+    dv = {
         "ANSICON": Var(
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "This is used on Windows to set the title, if available.",
             doc_configurable=False,
         ),
@@ -717,6 +729,23 @@ def DEFAULT_VARS():
             False,
             "Places the auto-suggest result as the first option in the completions. "
             "This enables you to tab complete the auto-suggestion.",
+        ),
+        "ASYNC_INVALIDATE_INTERVAL": Var(
+            is_float,
+            float,
+            str,
+            0.05,
+            "When ENABLE_ASYNC_PROMPT is True, it may call the redraw frequently. "
+            "This is to group such calls into one that happens within that timeframe. "
+            "The number is set in seconds.",
+        ),
+        "ASYNC_PROMPT_THREAD_WORKERS": Var(
+            is_int,
+            to_int_or_none,
+            str,
+            None,
+            "Define the number of workers used by the ASYC_PROPMT's pool. "
+            "By default it is the same as defined by Python's concurrent.futures.ThreadPoolExecutor class.",
         ),
         "BASH_COMPLETIONS": Var(
             is_env_path,
@@ -785,7 +814,7 @@ def DEFAULT_VARS():
             is_bool,
             to_bool,
             bool_to_str,
-            False,
+            True,
             "While tab-completions menu is displayed, press <Enter> to confirm "
             "completion instead of running command. This only affects the "
             "prompt-toolkit shell.",
@@ -821,6 +850,17 @@ def DEFAULT_VARS():
             "Number of rows to reserve for tab-completions menu if "
             "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
             "prompt-toolkit shell.",
+        ),
+        "COMPLETION_MODE": Var(
+            is_completion_mode,
+            to_completion_mode,
+            str,
+            "default",
+            "Mode of tab completion in prompt-toolkit shell (only).\n\n"
+            "'default', the default, selects the common prefix of completions on first TAB,\n"
+            "then cycles through all completions.\n"
+            "'menu-complete' selects the first whole completion on the first TAB, \n"
+            "then cycles through the remaining completions, then the common prefix.",
         ),
         "COMPLETION_QUERY_LIMIT": Var(
             is_int,
@@ -869,6 +909,14 @@ def DEFAULT_VARS():
             "",
             "The string used to show a shortened directory in a shortened cwd, "
             "e.g. ``'…'``.",
+        ),
+        "ENABLE_ASYNC_PROMPT": Var(
+            is_bool,
+            to_bool,
+            bool_to_str,
+            False,
+            "When enabled the prompt is loaded from threads making the shell faster. "
+            "Sections that take long will be updated in the background. ",
         ),
         "EXPAND_ENV_VARS": Var(
             is_bool,
@@ -942,6 +990,20 @@ def DEFAULT_VARS():
             "Note: ``erasedups`` is supported only in sqlite backend).",
             doc_store_as_str=True,
         ),
+        "HOSTNAME": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            default_value(lambda env: platform.node()),
+            "Automatically set to the name of the current host.",
+        ),
+        "HOSTTYPE": Var(
+            is_string,
+            ensure_string,
+            ensure_string,
+            default_value(lambda env: platform.machine()),
+            "Automatically set to a string that fully describes the system type on which xonsh is executing.",
+        ),
         "IGNOREEOF": Var(
             is_bool,
             to_bool,
@@ -985,14 +1047,6 @@ def DEFAULT_VARS():
             locale_convert("LC_CTYPE"),
             ensure_string,
             locale.setlocale(locale.LC_CTYPE),
-        ),
-        "LC_MESSAGES": Var(
-            always_false,
-            locale_convert("LC_MESSAGES"),
-            ensure_string,
-            locale.setlocale(locale.LC_MESSAGES)
-            if hasattr(locale, "LC_MESSAGES")
-            else "",
         ),
         "LC_MONETARY": Var(
             always_false,
@@ -1102,6 +1156,7 @@ def DEFAULT_VARS():
             "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``",
         ),
         re.compile(r"\w*PATH$"): Var(is_env_path, str_to_env_path, env_path_to_str),
+        re.compile(r"\w*DIRS$"): Var(is_env_path, str_to_env_path, env_path_to_str),
         "PATHEXT": Var(
             is_nonstring_seq_of_strings,
             pathsep_to_upper_seq,
@@ -1150,6 +1205,16 @@ def DEFAULT_VARS():
             "NOTE: ``$UPDATE_PROMPT_ON_KEYPRESS`` must be set to ``True`` for this "
             "variable to take effect.",
         ),
+        "PROMPT_TOKENS_FORMATTER": Var(
+            validate=callable,
+            convert=None,
+            detype=None,
+            default=prompt.prompt_tokens_formatter_default,
+            doc="Final processor that receives all tokens in the prompt template. "
+            "It gives option to format the prompt with different prefix based on other tokens values. "
+            "Highly useful for implementing something like powerline theme.",
+            doc_default="``xonsh.prompt.base.prompt_tokens_formatter_default``",
+        ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": Var(
             always_false,
             ptk2_color_depth_setter,
@@ -1163,8 +1228,8 @@ def DEFAULT_VARS():
             is_str_str_dict,
             to_str_str_dict,
             dict_to_str,
-            dict(PTK2_STYLE),
-            "A dictionary containing custom prompt_toolkit style definitions.",
+            {},
+            "A dictionary containing custom prompt_toolkit style definitions. (deprecated)",
         ),
         "PUSHD_MINUS": Var(
             is_bool,
@@ -1275,9 +1340,10 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "TERM is sometimes set by the terminal emulator. This is used (when "
-            "valid) to determine whether or not to set the title. Users shouldn't "
+            "valid) to determine whether the terminal emulator can support "
+            "the selected shell, or whether or not to set the title. Users shouldn't "
             "need to set this themselves. Note that this variable should be set as "
             "early as possible in order to ensure it is effective. Here are a few "
             "options:\n\n"
@@ -1292,10 +1358,10 @@ def DEFAULT_VARS():
             doc_configurable=False,
         ),
         "THREAD_SUBPROCS": Var(
-            is_bool,
-            to_bool,
-            bool_to_str,
-            True,
+            is_bool_or_none,
+            to_bool_or_none,
+            bool_or_none_to_str,
+            True if not ON_CYGWIN else False,
             "Whether or not to try to run subrocess mode in a Python thread, "
             "when applicable. There are various trade-offs, which normally "
             "affects only interactive sessions.\n\nWhen True:\n\n"
@@ -1313,7 +1379,12 @@ def DEFAULT_VARS():
             "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
             "* Threadable commands are run with ``Popen`` and threadable \n"
             "  alias are run with ``ProcProxy``.\n\n"
-            "The desired effect is often up to the command, user, or use case.",
+            "The desired effect is often up to the command, user, or use case.\n\n"
+            "None values are for internal use only and are used to turn off "
+            "threading when loading xonshrc files. This is done because Bash "
+            "was automatically placing new xonsh instances in the background "
+            "at startup when threadable subprocs were used. Please see "
+            "https://github.com/xonsh/xonsh/pull/3705 for more information.\n",
         ),
         "TITLE": Var(
             is_string,
@@ -1379,7 +1450,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "Path to the currently active Python environment.",
             doc_configurable=False,
         ),
@@ -1409,7 +1480,8 @@ def DEFAULT_VARS():
             default_xonshrc,
             "A list of the locations of run control files, if they exist.  User "
             "defined run control file will supersede values set in system-wide "
-            "control file if there is a naming collision.",
+            "control file if there is a naming collision. $THREAD_SUBPROCS=None "
+            "when reading in run control files.",
             doc_default=(
                 "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
                 "\nOn Windows: "
@@ -1628,7 +1700,7 @@ def DEFAULT_VARS():
             "is prepended whenever stderr is displayed. This may be used in "
             "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
             "For example, to have stderr appear on a red background, the "
-            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".',
+            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
         ),
         "XONSH_STDERR_POSTFIX": Var(
             is_string,
@@ -1639,7 +1711,7 @@ def DEFAULT_VARS():
             "is appended whenever stderr is displayed. This may be used in "
             "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
             "For example, to have stderr appear on a red background, the "
-            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".',
+            'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
         ),
         "XONSH_STORE_STDIN": Var(
             is_bool,
@@ -1656,6 +1728,18 @@ def DEFAULT_VARS():
             False,
             "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
             "history files.",
+        ),
+        "XONSH_STYLE_OVERRIDES": Var(
+            is_str_str_dict,
+            to_str_str_dict,
+            dict_to_str,
+            {},
+            "A dictionary containing custom prompt_toolkit/pygments style definitions.\n"
+            "The following style definitions are supported:\n\n"
+            "    - ``pygments.token.Token`` - ``$XONSH_STYLE_OVERRIDES[Token.Keyword] = '#ff0000'``\n"
+            "    - pygments token name (string) - ``$XONSH_STYLE_OVERRIDES['Token.Keyword'] = '#ff0000'``\n"
+            "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
+            "(The rules above are all have the same effect.)",
         ),
         "XONSH_TRACE_SUBPROC": Var(
             is_bool,
@@ -1674,7 +1758,24 @@ def DEFAULT_VARS():
             "or None / the empty string if traceback logging is not desired. "
             "Logging to a file is not enabled by default.",
         ),
+        "COMMANDS_CACHE_SIZE_WARNING": Var(
+            is_int,
+            int,
+            str,
+            6000,
+            "Number of files on the PATH above which a warning is shown.",
+        ),
     }
+
+    if hasattr(locale, "LC_MESSAGES"):
+        dv["LC_MESSAGES"] = Var(
+            always_false,
+            locale_convert("LC_MESSAGES"),
+            ensure_string,
+            locale.setlocale(locale.LC_MESSAGES),
+        )
+
+    return dv
 
 
 #
@@ -1696,7 +1797,8 @@ class Env(cabc.MutableMapping):
     use in a subprocess.
     """
 
-    _arg_regex = None
+    # todo: check this variable is ever used
+    _arg_regex: tp.Optional[str] = None
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os_environ is used."""
@@ -1834,20 +1936,23 @@ class Env(cabc.MutableMapping):
 
     def get_default(self, key, default=None):
         """Gets default for the given key."""
-        if key in self._vars:
+        if key in self._vars and self._vars[key].default is not DefaultNotGiven:
             return self._vars[key].default
         else:
             return default
 
     def get_docs(self, key, default=None):
         """Gets the documentation for the environment variable."""
-        vd = self._vars.get(key, None)
+        vd = self._vars.get(key, default)
         if vd is None:
-            if default is None:
-                default = Var()
-            return default
+            vd = Var(default="", doc_default="")
         if vd.doc_default is DefaultNotGiven:
-            dval = pprint.pformat(self._vars.get(key, "<default not set>").default)
+            var_default = self._vars.get(key, "<default not set>").default
+            dval = (
+                "not defined"
+                if var_default is DefaultNotGiven
+                else pprint.pformat(var_default)
+            )
             vd = vd._replace(doc_default=dval)
         return vd
 
@@ -1907,12 +2012,11 @@ class Env(cabc.MutableMapping):
     #
 
     def __getitem__(self, key):
-        # remove this block on next release
         if key is Ellipsis:
             return self
         elif key in self._d:
             val = self._d[key]
-        elif key in self._vars:
+        elif key in self._vars and self._vars[key].default is not DefaultNotGiven:
             val = self.get_default(key)
             if is_callable_default(val):
                 val = self._d[key] = val(self)
@@ -1963,16 +2067,35 @@ class Env(cabc.MutableMapping):
         """The environment will look up default values from its own defaults if a
         default is not given here.
         """
-        try:
+        if key in self._d or (
+            key in self._vars and self._vars[key].default is not DefaultNotGiven
+        ):
             return self[key]
-        except KeyError:
+        else:
             return default
 
+    def rawkeys(self):
+        """An iterator that returns all environment keys in their original form.
+        This include string & compiled regular expression keys.
+        """
+        yield from (
+            set(self._d)
+            | set(
+                k
+                for k in self._vars.keys()
+                if self._vars[k].default is not DefaultNotGiven
+            )
+        )
+
     def __iter__(self):
-        yield from (set(self._d) | set(self._vars))
+        for key in self.rawkeys():
+            if isinstance(key, str):
+                yield key
 
     def __contains__(self, item):
-        return item in self._d or item in self._vars
+        return item in self._d or (
+            item in self._vars and self._vars[item].default is not DefaultNotGiven
+        )
 
     def __len__(self):
         return len(self._d)
@@ -2012,7 +2135,7 @@ class Env(cabc.MutableMapping):
         ----------
         name : str
             Environment variable name to register. Typically all caps.
-        type : str, optional,  {'bool', 'str', 'path', 'int', 'float'}
+        type : str, optional,  {'bool', 'str', 'path', 'env_path', 'int', 'float'}
             Variable type. If not one of the available presets, use `validate`,
             `convert`, and `detype` to specify type behavior.
         default : optional
@@ -2040,7 +2163,9 @@ class Env(cabc.MutableMapping):
 
         """
 
-        if (type is not None) and (type in ("bool", "str", "path", "int", "float")):
+        if (type is not None) and (
+            type in ("bool", "str", "path", "env_path", "int", "float")
+        ):
             validate, convert, detype = ENSURERS[type]
 
         if default is not None:
@@ -2048,8 +2173,8 @@ class Env(cabc.MutableMapping):
                 pass
             else:
                 raise ValueError(
-                    "Default value does not match type specified by validate and "
-                    "is not a callable default."
+                    f"Default value for {name} does not match type specified "
+                    "by validate and is not a callable default."
                 )
 
         self._vars[name] = Var(
@@ -2111,6 +2236,8 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
     ctx = {} if ctx is None else ctx
     if rcfiles is None:
         return env
+    orig_thread = env.get("THREAD_SUBPROCS")
+    env["THREAD_SUBPROCS"] = None
     env["XONSHRC"] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
@@ -2119,6 +2246,8 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
         _, ext = os.path.splitext(rcfile)
         status = xonsh_script_run_control(rcfile, ctx, env, execer=execer, login=login)
         loaded.append(status)
+    if env["THREAD_SUBPROCS"] is None:
+        env["THREAD_SUBPROCS"] = orig_thread
     return ctx
 
 

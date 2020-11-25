@@ -10,25 +10,20 @@ from collections.abc import Iterable, Sequence, Mapping
 
 from xonsh.ply.ply import yacc
 
-from xonsh.tools import FORMATTER
 from xonsh import ast
 from xonsh.ast import has_elts, xonsh_call, load_attribute_chain
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath, StringPrefix
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import LazyObject
 from xonsh.parsers.context_check import check_contexts
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCHPATH")
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
-
-
-@lazyobject
-def RE_FSTR_EVAL_CHARS():
-    return re.compile(".*?[!@$`]")
 
 
 class Location(object):
@@ -209,49 +204,6 @@ def hasglobstar(x):
             return False
     else:
         return False
-
-
-def _wrap_fstr_field(field, spec, conv):
-    rtn = "{" + field
-    if conv:
-        rtn += "!" + conv
-    if spec:
-        rtn += ":" + spec
-    rtn += "}"
-    return rtn
-
-
-def eval_fstr_fields(fstring, prefix, filename=None):
-    """Takes an fstring (and its prefix, ie f") that may contain
-    xonsh expressions as its field values and
-    substitues them for a xonsh eval() call as needed. Roughly,
-    for example, this will take f"{$HOME}" and transform it to
-    be f"{__xonsh__.execer.eval(r'$HOME')}".
-    """
-    last = fstring[-1]
-    q, r = ("'", r"\'") if last == '"' else ('"', r"\"")
-    prelen = len(prefix)
-    postlen = len(fstring) - len(fstring.rstrip(last))
-    template = fstring[prelen:-postlen]
-    repl = prefix
-    for literal, field, spec, conv in FORMATTER.parse(template):
-        repl += literal
-        if field is None:
-            continue
-        elif RE_FSTR_EVAL_CHARS.match(field) is None:
-            # just a normal python field, simply reconstruct.
-            repl += _wrap_fstr_field(field, spec, conv)
-        else:
-            # the field has a special xonsh character, so we must eval it
-            eval_field = "__xonsh__.execer.eval(r" + q
-            eval_field += field.lstrip().replace(q, r)
-            eval_field += q + ", glbs=globals(), locs=locals()"
-            if filename is not None:
-                eval_field += ", filename=" + q + filename + q
-            eval_field += ")"
-            repl += _wrap_fstr_field(eval_field, spec, conv)
-    repl += last * postlen
-    return repl
 
 
 class YaccLoader(Thread):
@@ -509,6 +461,7 @@ class BaseParser(object):
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
+        self._error = None
 
     def reset(self):
         """Resets for clean parsing."""
@@ -516,6 +469,7 @@ class BaseParser(object):
         self._last_yielded_token = None
         self._lines = None
         self.xonsh_code = None
+        self._error = None
 
     def parse(self, s, filename="<code>", mode="exec", debug_level=0):
         """Returns an abstract syntax tree of xonsh code.
@@ -541,6 +495,8 @@ class BaseParser(object):
         while self.parser is None:
             time.sleep(0.01)  # block until the parser is ready
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
+        if self._error is not None:
+            self._parse_error(self._error[0], self._error[1])
         if tree is not None:
             check_contexts(tree)
         # hack for getting modes right
@@ -656,6 +612,13 @@ class BaseParser(object):
             lines[-1] = lines[-1][:ecol]
         lines[0] = lines[0][bcol:]
         return "".join(lines)
+
+    def _set_error(self, msg, loc=None):
+        assert self._error is None
+        if loc is None:
+            loc = self.currloc(self.lineno, self.col)
+        self._error = (msg, loc)
+        raise SyntaxError()
 
     def _parse_error(self, msg, loc):
         if self.xonsh_code is None or loc is None:
@@ -993,13 +956,14 @@ class BaseParser(object):
             else (argmts.args, argmts.defaults)
         )
         if vals is None and kwargs:
-            loc = self.currloc(self.lineno, self.col)
-            self._parse_error("named arguments must follow bare *", loc)
+            self._set_error("named arguments must follow bare *")
         for v in vals:
             args.append(v["arg"])
             d = v["default"]
             if kwargs or (d is not None):
                 defs.append(d)
+            elif defs:
+                self._set_error("non-default argument follows default argument")
 
     def _set_regular_args(self, p0, p1, p2, p3, p4):
         if p2 is None and p3 is None:
@@ -1221,7 +1185,7 @@ class BaseParser(object):
         store_ctx(p1)
         op = self._augassign_op[p2]
         if op is None:
-            self._parse_error(
+            self._set_error(
                 "operation {0!r} not supported".format(p2),
                 self.currloc(lineno=p.lineno, column=p.lexpos),
             )
@@ -2146,7 +2110,7 @@ class BaseParser(object):
         p1 = p[1]
         op = self._term_binops[p1.value]
         if op is None:
-            self._parse_error(
+            self._set_error(
                 "operation {0!r} not supported".format(p1),
                 self.currloc(lineno=p.lineno, column=p.lexpos),
             )
@@ -2205,7 +2169,9 @@ class BaseParser(object):
             return leader
         p0 = leader
         for trailer in trailers:
-            if isinstance(trailer, (ast.Index, ast.Slice, ast.ExtSlice)):
+            if isinstance(
+                trailer, (ast.Index, ast.Slice, ast.ExtSlice, ast.Constant, ast.Name)
+            ):
                 p0 = ast.Subscript(
                     value=leader,
                     slice=trailer,
@@ -2219,7 +2185,7 @@ class BaseParser(object):
                     func=leader,
                     lineno=leader.lineno,
                     col_offset=leader.col_offset,
-                    **trailer
+                    **trailer,
                 )
             elif isinstance(trailer, (ast.Tuple, tuple)):
                 # call macro functions
@@ -2275,7 +2241,8 @@ class BaseParser(object):
             p0 = p2[0]
             p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
         else:
-            self.p_error(p)
+            loc = self.currloc(lineno=p.lineno, column=p.lexpos)
+            self._set_error(f"code: {p.value}", loc)
         p[0] = p0
 
     def p_atom_lbraket(self, p):
@@ -2435,13 +2402,23 @@ class BaseParser(object):
         if "p" in prefix and "f" in prefix:
             new_pref = prefix.replace("p", "")
             value_without_p = new_pref + p1.value[len(prefix) :]
-            s = eval_fstr_fields(value_without_p, new_pref, filename=self.lexer.fname)
-            s = pyparse(s).body[0].value
+            try:
+                s = pyparse(value_without_p).body[0].value
+            except SyntaxError:
+                s = None
+            if s is None:
+                try:
+                    s = FStringAdaptor(
+                        value_without_p, new_pref, filename=self.lexer.fname
+                    ).run()
+                except SyntaxError as e:
+                    self._set_error(
+                        str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
+                    )
             s = ast.increment_lineno(s, p1.lineno - 1)
             p[0] = xonsh_call(
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
             )
-
         elif "p" in prefix:
             value_without_p = prefix.replace("p", "") + p1.value[len(prefix) :]
             s = ast.Str(
@@ -2453,9 +2430,22 @@ class BaseParser(object):
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
             )
         elif "f" in prefix:
-            s = eval_fstr_fields(p1.value, prefix, filename=self.lexer.fname)
-            s = pyparse(s).body[0].value
+            try:
+                s = pyparse(p1.value).body[0].value
+            except SyntaxError:
+                s = None
+            if s is None:
+                try:
+                    s = FStringAdaptor(
+                        p1.value, prefix, filename=self.lexer.fname
+                    ).run()
+                except SyntaxError as e:
+                    self._set_error(
+                        str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
+                    )
             s = ast.increment_lineno(s, p1.lineno - 1)
+            if "r" in prefix:
+                setattr(s, "is_raw", True)
             p[0] = s
         else:
             s = ast.literal_eval(p1.value)
@@ -2530,7 +2520,7 @@ class BaseParser(object):
                     break
                 else:
                     msg = "empty macro arguments not allowed"
-                    self._parse_error(msg, self.currloc(*beg))
+                    self._set_error(msg, self.currloc(*beg))
             node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
             elts.append(node)
         p0 = ast.Tuple(
@@ -2869,6 +2859,7 @@ class BaseParser(object):
         p0 = {"if": [p2]}
         if p3 is not None:
             p0["comps"] = p3.get("comps", [])
+            p0["if"] += p3.get("if", [])
         p[0] = p0
 
     def p_yield_expr(self, p):
@@ -2893,6 +2884,26 @@ class BaseParser(object):
     #
     # subprocess
     #
+
+    def _get_envvars(self, p, lineno, col):
+        """Get replacement environment from subproc_atoms, return None or
+        ast.List containing ast.Dict for each subproc_atom in the pipeline.
+        """
+        if not isinstance(p, list):
+            return None
+        has_env = False
+        envs = empty_list(lineno=lineno, col=col)
+        for subproc in p:
+            if hasattr(subproc, "_xenvvars"):
+                has_env = True
+                envs.elts.append(subproc._xenvvars)
+            else:
+                envs.elts.append(
+                    ast.Constant(
+                        value=None, lineno=subproc.lineno, col_offset=subproc.col_offset
+                    )
+                )
+        return envs if has_env else None
 
     def _dollar_rules(self, p):
         """These handle the special xonsh $ shell atoms by looking up
@@ -2929,6 +2940,11 @@ class BaseParser(object):
             p0 = xonsh_call("__xonsh__.subproc_uncaptured", p2, lineno=lineno, col=col)
         else:
             assert False
+
+        envs = self._get_envvars(p2, lineno, col)
+        if envs is not None:
+            p0.keywords.append(ast.keyword(arg="envs", value=envs))
+
         return p0
 
     def _envvar_getter_by_name(self, var, lineno=None, col=None):
@@ -2983,6 +2999,8 @@ class BaseParser(object):
             else:
                 raise ValueError("action not understood: " + action)
             del arg._cliarg_action
+        if hasattr(args[0], "_xenvvars"):
+            setattr(cliargs, "_xenvvars", args[0]._xenvvars)
         return cliargs
 
     def p_pipe(self, p):
@@ -3019,8 +3037,7 @@ class BaseParser(object):
         """
         p1 = p[1]
         if len(p1) > 1 and hasattr(p1[-2], "s") and p1[-2].s != "|":
-            msg = "additional redirect following non-pipe redirect"
-            self._parse_error(msg, self.currloc(lineno=self.lineno, column=self.col))
+            self._set_error("additional redirect following non-pipe redirect")
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
         p[0] = p1 + [p[2], cliargs]
 
@@ -3052,6 +3069,18 @@ class BaseParser(object):
         for arg in p0:
             arg._cliarg_action = "append"
         p[0] = p0
+
+    def p_envvar_assign_subproc_atoms(self, p):
+        """subproc_atoms : envvar_assign subproc_atoms
+                         | envvar_assign subproc_atoms WS
+        """
+        p1, p20 = p[1], p[2][0]
+        if hasattr(p20, "_xenvvars"):
+            p20._xenvvars.keys.append(p1.keys[0])
+            p20._xenvvars.values.append(p1.values[0])
+        else:
+            setattr(p20, "_xenvvars", p1)
+        p[0] = p[2]
 
     #
     # Subproc atom rules
@@ -3152,11 +3181,14 @@ class BaseParser(object):
         """subproc_atom : atdollar_lparen_tok subproc RPAREN
            subproc_arg_part : atdollar_lparen_tok subproc RPAREN
         """
-        p1 = p[1]
+        p1, p2 = p[1], p[2]
         p0 = xonsh_call(
-            "__xonsh__.subproc_captured_inject", p[2], lineno=p1.lineno, col=p1.lexpos
+            "__xonsh__.subproc_captured_inject", p2, lineno=p1.lineno, col=p1.lexpos
         )
         p0._cliarg_action = "extend"
+        envs = self._get_envvars(p2, lineno=p2[0].lineno, col=p2[0].col_offset)
+        if envs is not None:
+            p0.keywords.append(ast.keyword(arg="envs", value=envs))
         p[0] = p0
 
     def p_subproc_atom_subproc_inject_bang_empty(self, p):
@@ -3292,6 +3324,24 @@ class BaseParser(object):
         p1 = p[1]
         p[0] = ast.Str(s=p1.value, lineno=p1.lineno, col_offset=p1.lexpos)
 
+    def p_envvar_assign_left(self, p):
+        """envvar_assign_left : dollar_name_tok EQUALS"""
+        p[0] = p[1]
+
+    def p_envvar_assign(self, p):
+        """envvar_assign : envvar_assign_left test WS
+                         | envvar_assign_left subproc_atom WS
+        """
+        p1, p2 = p[1], p[2]
+        p[0] = ast.Dict(
+            keys=[
+                ast.Constant(value=p1.value[1:], lineno=p1.lineno, col_offset=p1.lexpos)
+            ],
+            values=[p2],
+            lineno=p1.lineno,
+            col_offset=p1.lexpos,
+        )
+
     #
     # Helpers
     #
@@ -3305,7 +3355,7 @@ class BaseParser(object):
         p[0] = p2
 
     def p_empty(self, p):
-        "empty : "
+        """empty : """
         p[0] = None
 
     def p_error(self, p):

@@ -4,7 +4,7 @@ import sys
 import time
 import builtins
 
-import xonsh.proc as xproc
+import xonsh.procs.pipelines as xpp
 from xonsh.xoreutils.util import arg_handler
 
 
@@ -57,7 +57,7 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
         if file_size == 0:
             file_size = None
         fobj = open(fname, "rb")
-        f = xproc.NonBlockingFDReader(fobj.fileno(), timeout=0.1)
+        f = xpp.NonBlockingFDReader(fobj.fileno(), timeout=0.1)
     sep = os.linesep.encode(enc, enc_errors)
     last_was_blank = False
     while file_size is None or read_size < file_size:
@@ -161,7 +161,7 @@ def cat_main(args=None):
     from xonsh.main import setup
 
     setup()
-    args = sys.argv if args is None else args
+    args = sys.argv[1:] if args is None else args
     cat(args, sys.stdin, sys.stdout, sys.stderr)
 
 

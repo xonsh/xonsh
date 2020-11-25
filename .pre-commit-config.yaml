@@ -1,6 +1,11 @@
 repos:
-  - repo: https://github.com/ambv/black
-    rev: stable
+  - repo: local
     hooks:
-    - id: black
-      language_version: python3
+      - id: black
+        name: black
+        # this gets run within development environment.
+        # Otherwise will raise command not found or use system level binary
+        entry: black --check xonsh/ xontrib/
+        language: system
+        types:
+          - python

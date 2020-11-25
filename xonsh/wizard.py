@@ -9,6 +9,7 @@ import fnmatch
 import builtins
 import textwrap
 import collections.abc as cabc
+import typing as tp
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 from xonsh.jsonutils import serialize_xonsh_json
@@ -20,7 +21,7 @@ from xonsh.jsonutils import serialize_xonsh_json
 class Node(object):
     """Base type of all nodes."""
 
-    attrs = ()
+    attrs: tp.Union[tp.Tuple[str, ...], str] = ()
 
     def __str__(self):
         return PrettyFormatter(self).visit()
@@ -81,7 +82,13 @@ class Question(Node):
 class Input(Node):
     """Gets input from the user."""
 
-    attrs = ("prompt", "converter", "show_conversion", "confirm", "path")
+    attrs: tp.Tuple[str, ...] = (
+        "prompt",
+        "converter",
+        "show_conversion",
+        "confirm",
+        "path",
+    )
 
     def __init__(
         self,
@@ -251,7 +258,7 @@ class StateFile(Input):
     given file name. This node type is likely not useful on its own.
     """
 
-    attrs = ("default_file", "check", "ask_filename")
+    attrs: tp.Tuple[str, ...] = ("default_file", "check", "ask_filename")
 
     def __init__(self, default_file=None, check=True, ask_filename=True):
         """
@@ -604,7 +611,7 @@ class UnstorableType(object):
     singleton.
     """
 
-    _inst = None
+    _inst: tp.Optional["UnstorableType"] = None
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:
@@ -688,11 +695,8 @@ class StateVisitor(Visitor):
         return flat
 
 
-YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} [default: no]? "
-YNB = (
-    "{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR}, or "
-    "{YELLOW}break{NO_COLOR} [default: no]? "
-)
+YN = "{GREEN}yes{RESET} or {RED}no{RESET} [default: no]? "
+YNB = "{GREEN}yes{RESET}, {RED}no{RESET}, or " "{YELLOW}break{RESET} [default: no]? "
 
 
 class PromptVisitor(StateVisitor):
@@ -746,15 +750,14 @@ class PromptVisitor(StateVisitor):
                 except Exception:
                     if node.retry:
                         msg = (
-                            "{{BOLD_RED}}Invalid{{NO_COLOR}} input {0!r}, "
-                            "please retry."
+                            "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, " "please retry."
                         )
                         print_color(msg.format(raw))
                         continue
                     else:
                         raise
                 if node.show_conversion and x is not Unstorable and str(x) != raw:
-                    msg = "{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}."
+                    msg = "{{BOLD_PURPLE}}Converted{{RESET}} input {0!r} to {1!r}."
                     print_color(msg.format(raw, x))
             else:
                 x = raw
@@ -825,10 +828,10 @@ class PromptVisitor(StateVisitor):
         if os.path.isfile(fname):
             with open(fname, "r") as f:
                 self.state = json.load(f)
-            print_color("{{GREEN}}{0!r} loaded.{{NO_COLOR}}".format(fname))
+            print_color("{{GREEN}}{0!r} loaded.{{RESET}}".format(fname))
         else:
             print_color(
-                ("{{RED}}{0!r} could not be found, " "continuing.{{NO_COLOR}}").format(
+                ("{{RED}}{0!r} could not be found, " "continuing.{{RESET}}").format(
                     fname
                 )
             )

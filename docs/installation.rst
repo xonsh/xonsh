@@ -1,20 +1,24 @@
 
-Getting Started
-===============
-
-.. include:: dependencies.rst
+Installation
+============
 
 Installation
 ------------
+
+Xonsh can be installed and run with various package managers, by using appimage, or from a docker container:
 
 .. toctree::
     :titlesonly:
     :maxdepth: 2
 
-    linux
-    osx
-    windows
+    packages
     appimage
     containers
-    customization
-    editors
+    jupyter
+
+
+.. note::
+
+   On Windows 10, the separately-installable `Windows Terminal app`_ is recommended.
+
+.. _`Windows Terminal app`: https://github.com/microsoft/terminal/releases

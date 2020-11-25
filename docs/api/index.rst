@@ -35,7 +35,7 @@ For those of you who want the gritty details.
     aliases
     dirstack
     jobs
-    proc
+    procs/index
     inspectors
     history/index
     completer
@@ -76,6 +76,7 @@ For those of you who want the gritty details.
     dumb_shell
     wizard
     xonfig
+    xontribs_meta
     codecache
     contexts
 
@@ -84,6 +85,5 @@ For those of you who want the gritty details.
 
 .. toctree::
     :maxdepth: 1
-
     mplhooks
     vox

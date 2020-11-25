@@ -48,8 +48,8 @@ if ON_POSIX:
 
 
 @lazyobject
-def SUB_EXEC_ALIAS_RE():
-    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+")
+def EXEC_ALIAS_RE():
+    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
 
 
 class Aliases(cabc.MutableMapping):
@@ -128,8 +128,8 @@ class Aliases(cabc.MutableMapping):
     def __setitem__(self, key, val):
         if isinstance(val, str):
             f = "<exec-alias:" + key + ">"
-            if SUB_EXEC_ALIAS_RE.search(val) is not None:
-                # We have a sub-command, e.g. $(cmd), to evaluate
+            if EXEC_ALIAS_RE.search(val) is not None:
+                # We have a sub-command (e.g. $(cmd)) or IO redirect (e.g. >>)
                 self._raw[key] = ExecAlias(val, filename=f)
             elif isexpression(val):
                 # expansion substitution
@@ -582,10 +582,10 @@ def source_alias(args, stdin=None):
             except Exception:
                 print_color(
                     "{RED}You may be attempting to source non-xonsh file! "
-                    "{NO_COLOR}If you are trying to source a file in "
+                    "{RESET}If you are trying to source a file in "
                     "another language, then please use the appropriate "
                     "source command. For example, {GREEN}source-bash "
-                    "script.sh{NO_COLOR}",
+                    "script.sh{RESET}",
                     file=sys.stderr,
                 )
                 raise
@@ -724,7 +724,8 @@ def showcmd(args, stdin=None):
     optional arguments:
       -h, --help            show this help message and exit
 
-    example:
+    Example:
+    -------
       >>> showcmd echo $USER can't hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """

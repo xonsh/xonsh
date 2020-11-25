@@ -176,46 +176,39 @@ Of course, you're under no obligation to register your xontrib.  Users will
 still be able to load your xontrib, as long as they have it installed.
 
 To register a xontrib, add an entry to
-`the xontribs.json file <https://github.com/xonsh/xonsh/blob/master/xonsh/xontribs.json>`_
+`the xontribs_meta.py file <https://github.com/xonsh/xonsh/blob/master/xonsh/xontribs_meta.py>`_
 in the main xonsh repository.  A pull request is probably best, but if you
 are having trouble figuring it out please contact one of the xonsh devs
 with the relevant information.
-This is a JSON file with two top-level keys: ``"xontribs"`` and ``"packages"``.
+This is Python file holds classes and functions to register new Xontrib.
 
-The ``"xontribs"`` key is a list of dictionaries that describes the xontrib
-module itself.  Such entries have the following structure:
+The ``xontribs_meta.define_xontribs`` function returns a dictionary of all Xontribs.
+A sample ``Xontrib`` definition looks like this,
 
-.. code-block:: json
+.. code-block:: python
 
-    {"xontribs": [
-     {"name": "xontrib-name",
-      "package": "package-name",
-      "url": "http://example.com/api/xontrib",
-      "description": ["Textual description as string or list or strings ",
-                      "enabling long content to be split over many lines."]
-      }
-     ]
+    {
+        "awesome": Xontrib(
+            url="http://example.com/api/xontrib",
+            description="Description and short intro for your xontrib."
+            "It can span multi-lines. "
+            "Feel free to use a triple quotes if you want to have line-endings.",
+            package=_XontribPkg(
+                name="xontrib-awesome",
+                license="BSD",
+                install={
+                    "pip": "xpip install xontrib-awesome",
+                    "conda": "conda install xontrib-awesome",
+                },
+                url="https://example.com/",
+            ),
+        )
     }
 
-The ``"packages"`` key, on the other hand, is a dict mapping package names
-(associated with the xontrib entries) to metadata about the package. Package
-entries have the following structure:
+.. note::  Note that you can have as many entries in the ``"install"`` dict as you
+    want. Also, the keys are arbitrary labels, so feel free to pick whatever
+    you want.
 
-.. code-block:: json
-
-    {"packages": {
-      "package-name": {
-       "license": "WTFPL v1.1",
-       "url": "http://example",
-       "install": {
-        "conda": "conda install package-name",
-        "pip": "xpip install package-name"}
-       }
-     }
-    }
-
-Note that you can have as many entries in the ``"install"`` dict as you
-want. Also, the keys are arbitrary labels, so feel free to pick whatever
-you want.
+.. seealso:: Checkout the API docs of the :doc:`api/xontribs_meta`
 
 Go forth!

@@ -1,12 +1,7 @@
 """xontrib tests, such as they are"""
 import sys
 import pytest
-from xonsh.xontribs import xontrib_metadata, xontrib_context
-
-
-def test_load_xontrib_metadata():
-    # Simply tests that the xontribs JSON files isn't malformed.
-    xontrib_metadata()
+from xonsh.xontribs import xontrib_context, xontribs_load, xontribs_loaded
 
 
 @pytest.fixture
@@ -77,3 +72,33 @@ hello = 'world'
 
     ctx = xontrib_context("script")
     assert ctx == {"hello": "world"}
+
+
+def test_xontrib_load(tmpmod):
+    """
+    Test that .xsh xontribs are loadable
+    """
+    with tmpmod.mkdir("xontrib").join("script.xsh").open("w") as x:
+        x.write(
+            """
+hello = 'world'
+"""
+        )
+
+    xontribs_load(["script"])
+    assert "script" in xontribs_loaded()
+
+
+def test_xontrib_load_dashed(tmpmod):
+    """
+    Test that .xsh xontribs are loadable
+    """
+    with tmpmod.mkdir("xontrib").join("scri-pt.xsh").open("w") as x:
+        x.write(
+            """
+hello = 'world'
+"""
+        )
+
+    xontribs_load(["scri-pt"])
+    assert "scri-pt" in xontribs_loaded()

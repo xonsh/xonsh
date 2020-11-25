@@ -10,7 +10,10 @@ import warnings
 import pytest
 
 from xonsh import __version__
-from xonsh.platform import ON_WINDOWS
+from xonsh.platform import (
+    ON_WINDOWS,
+    HAS_PYGMENTS,
+)
 from xonsh.lexer import Lexer
 
 from xonsh.tools import (
@@ -19,11 +22,13 @@ from xonsh.tools import (
     always_true,
     argvquote,
     bool_or_int_to_str,
+    bool_or_none_to_str,
     bool_to_str,
     check_for_partial_string,
     dynamic_cwd_tuple_to_str,
     ensure_slice,
     ensure_string,
+    path_to_str,
     env_path_to_str,
     escape_windows_cmd_string,
     executables_in,
@@ -32,20 +37,25 @@ from xonsh.tools import (
     find_next_break,
     is_bool,
     is_bool_or_int,
+    is_bool_or_none,
     is_callable,
     is_dynamic_cwd_width,
+    is_path,
     is_env_path,
     is_float,
     is_int,
     is_logfile_opt,
     is_string_or_callable,
     logfile_opt_to_str,
+    str_to_path,
     str_to_env_path,
     is_string,
     subexpr_from_unbalanced,
     subproc_toks,
     to_bool,
     to_bool_or_int,
+    to_bool_or_none,
+    to_int_or_none,
     to_dynamic_cwd_tuple,
     to_logfile_opt,
     pathsep_to_set,
@@ -73,6 +83,12 @@ from xonsh.tools import (
     balanced_parens,
     iglobpath,
     all_permutations,
+    register_custom_style,
+    simple_random_choice,
+    is_completion_mode,
+    to_completion_mode,
+    is_completions_display_value,
+    to_completions_display_value,
 )
 from xonsh.environ import Env
 
@@ -86,6 +102,15 @@ INDENT = "    "
 TOOLS_ENV = {"EXPAND_ENV_VARS": True, "XONSH_ENCODING_ERRORS": "strict"}
 ENCODE_ENV_ONLY = {"XONSH_ENCODING_ERRORS": "strict"}
 PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
+
+
+def test_random_choice():
+    lst = [1, 2, 3]
+    r = simple_random_choice(lst)
+    assert r in lst
+
+    with pytest.raises(ValueError):
+        simple_random_choice(range(1010101))
 
 
 def test_subproc_toks_x():
@@ -511,7 +536,7 @@ mom"""
 
 
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
-def test_get_logical_line(src, idx, exp_line, exp_n):
+def test_get_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
     lines = src.splitlines()
     line, n, start = get_logical_line(lines, idx)
     assert exp_line == line
@@ -519,7 +544,7 @@ def test_get_logical_line(src, idx, exp_line, exp_n):
 
 
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
-def test_replace_logical_line(src, idx, exp_line, exp_n):
+def test_replace_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
     lines = src.splitlines()
     logical = exp_line
     while idx > 0 and lines[idx - 1].endswith("\\"):
@@ -696,6 +721,11 @@ def test_always_true(inp):
     assert always_true(inp)
 
 
+@pytest.mark.parametrize("inp,exp", [(42, 42), ("42", 42), ("None", None)])
+def test_to_optional_int(inp, exp):
+    assert to_int_or_none(inp) == exp
+
+
 @pytest.mark.parametrize("inp", [42, "42"])
 def test_always_false(inp):
     assert not always_false(inp)
@@ -809,6 +839,14 @@ def test_seq_to_upper_pathsep(inp, exp):
 
 
 @pytest.mark.parametrize(
+    "inp, exp", [(pathlib.Path("/home/wakka"), True), ("/home/jawaka", False)]
+)
+def test_is_path(inp, exp):
+    obs = is_path(inp)
+    assert exp == obs
+
+
+@pytest.mark.parametrize(
     "inp, exp",
     [
         ("/home/wakka", False),
@@ -823,6 +861,12 @@ def test_is_env_path(inp, exp):
     assert exp == obs
 
 
+@pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None)])
+def test_str_to_path(inp, exp):
+    obs = str_to_path(inp)
+    assert exp == obs
+
+
 @pytest.mark.parametrize(
     "inp, exp",
     [
@@ -834,6 +878,14 @@ def test_is_env_path(inp, exp):
 def test_str_to_env_path(inp, exp):
     obs = str_to_env_path(inp)
     assert exp == obs.paths
+
+
+@pytest.mark.parametrize("inp, exp", [(pathlib.Path("///tmp"), "/tmp")])
+def test_path_to_str(inp, exp):
+    obs = path_to_str(inp)
+    if ON_WINDOWS:
+        exp = exp.replace("/", "\\")
+    assert exp == obs
 
 
 @pytest.mark.parametrize(
@@ -1088,6 +1140,42 @@ def test_to_bool_or_int(inp, exp):
 def test_bool_or_int_to_str(inp, exp):
     obs = bool_or_int_to_str(inp)
     assert exp == obs
+
+
+@pytest.mark.parametrize("inp", [True, False, None])
+def test_is_bool_or_none_true(inp):
+    assert is_bool_or_none(inp)
+
+
+@pytest.mark.parametrize("inp", [1, "yooo hooo!"])
+def test_is_bool_or_none_false(inp):
+    assert not is_bool_or_none(inp)
+
+
+@pytest.mark.parametrize(
+    "inp, exp",
+    [
+        (True, True),
+        (False, False),
+        (None, None),
+        ("", False),
+        ("0", False),
+        ("False", False),
+        ("NONE", None),
+        ("TRUE", True),
+        ("1", True),
+        (0, False),
+        (1, True),
+    ],
+)
+def test_to_bool_or_none(inp, exp):
+    obs = to_bool_or_none(inp)
+    assert exp == obs
+
+
+@pytest.mark.parametrize("inp, exp", [(True, "1"), (False, ""), (None, "None")])
+def test_bool_or_none_to_str(inp, exp):
+    assert bool_or_none_to_str(inp) == exp
 
 
 @pytest.mark.parametrize(
@@ -1446,22 +1534,32 @@ def test_expand_case_matching(inp, exp):
     [
         ("foo", "foo"),
         ("$foo $bar", "bar $bar"),
+        ("$unk $foo $bar", "$unk bar $bar"),
         ("$foobar", "$foobar"),
         ("$foo $spam", "bar eggs"),
+        ("$unk $foo $spam", "$unk bar eggs"),
+        ("$unk $foo $unk $spam $unk", "$unk bar $unk eggs $unk"),
         ("$an_int$spam$a_bool", "42eggsTrue"),
+        ("$unk$an_int$spam$a_bool", "$unk42eggsTrue"),
         ("bar$foo$spam$foo $an_int $none", "barbareggsbar 42 None"),
+        ("$unk bar$foo$spam$foo $an_int $none", "$unk barbareggsbar 42 None"),
         ("$foo/bar", "bar/bar"),
+        ("$unk/$foo/bar", "$unk/bar/bar"),
         ("${'foo'} $spam", "bar eggs"),
+        ("$unk ${'unk'} ${'foo'} $spam", "$unk ${'unk'} bar eggs"),
         ("${'foo'} ${'a_bool'}", "bar True"),
         ("${'foo'}bar", "barbar"),
         ("${'foo'}/bar", "bar/bar"),
+        ("${'unk'}/${'foo'}/bar", "${'unk'}/bar/bar"),
         ("${\"foo'}", "${\"foo'}"),
         ("$?bar", "$?bar"),
         ("$foo}bar", "bar}bar"),
         ("${'foo", "${'foo"),
         (b"foo", "foo"),
         (b"$foo bar", "bar bar"),
+        (b"$unk $foo bar", "$unk bar bar"),
         (b"${'foo'}bar", "barbar"),
+        (b"${'unk'}${'foo'}bar", "${'unk'}barbar"),
     ],
 )
 def test_expandvars(inp, exp, xonsh_builtins):
@@ -1698,3 +1796,106 @@ def test_all_permutations():
         "ABC",
     }
     assert obs == exp
+
+
+@pytest.mark.parametrize(
+    "name, styles, refrules",
+    [
+        ("test1", {}, {}),  # empty styles
+        (
+            "test2",
+            {"Token.Literal.String.Single": "#ff0000"},
+            {"Token.Literal.String.Single": "#ff0000"},
+        ),  # str key
+        (
+            "test3",
+            {"Literal.String.Single": "#ff0000"},
+            {"Token.Literal.String.Single": "#ff0000"},
+        ),  # short str key
+        ("test4", {"RED": "#ff0000"}, {"Token.Color.RED": "#ff0000"},),  # color
+    ],
+)
+def test_register_custom_style(name, styles, refrules):
+    style = register_custom_style(name, styles)
+    if HAS_PYGMENTS:
+        assert style is not None
+
+        for rule, color in style.styles.items():
+            if str(rule) in refrules:
+                assert refrules[str(rule)] == color
+
+
+@pytest.mark.parametrize(
+    "val, exp",
+    [
+        ("default", True),
+        ("menu-complete", True),
+        ("def", False),
+        ("xonsh", False),
+        ("men", False),
+    ],
+)
+def test_is_completion_mode(val, exp):
+    assert is_completion_mode(val) is exp
+
+
+@pytest.mark.parametrize(
+    "val, exp",
+    [
+        ("", "default"),
+        (None, "default"),
+        ("default", "default"),
+        ("DEfaULT", "default"),
+        ("m", "menu-complete"),
+        ("mEnu_COMPlete", "menu-complete"),
+        ("menu-complete", "menu-complete"),
+    ],
+)
+def test_to_completion_mode(val, exp):
+    assert to_completion_mode(val) == exp
+
+
+@pytest.mark.parametrize("val", ["de", "defa_ult", "men_", "menu_",])
+def test_to_completion_mode_fail(val):
+    with pytest.warns(RuntimeWarning):
+        obs = to_completion_mode(val)
+        assert obs == "default"
+
+
+@pytest.mark.parametrize(
+    "val, exp",
+    [
+        ("none", True),
+        ("single", True),
+        ("multi", True),
+        ("", False),
+        (None, False),
+        ("argle", False),
+    ],
+)
+def test_is_completions_display_value(val, exp):
+    assert is_completions_display_value(val) == exp
+
+
+@pytest.mark.parametrize(
+    "val, exp",
+    [
+        ("none", "none"),
+        (False, "none"),
+        ("false", "none"),
+        ("single", "single"),
+        ("readline", "single"),
+        ("multi", "multi"),
+        (True, "multi"),
+        ("TRUE", "multi"),
+    ],
+)
+def test_to_completions_display_value(val, exp):
+    to_completions_display_value(val) == exp
+
+
+@pytest.mark.parametrize("val", [1, "", "argle"])
+def test_to_completions_display_value_fail(val):
+    with pytest.warns(RuntimeWarning):
+        obs = to_completions_display_value(val)
+        assert obs == "multi"

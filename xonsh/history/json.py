@@ -15,7 +15,7 @@ import xonsh.lazyjson as xlj
 import xonsh.xoreutils.uptime as uptime
 
 
-def _xhj_gc_commands_to_rmfiles(hsize, files) -> ([], int):
+def _xhj_gc_commands_to_rmfiles(hsize, files):
     """Return number of units and list of history files to remove to get under the limit,
 
     Parameters:
@@ -162,7 +162,7 @@ class JsonHistoryGC(threading.Thread):
         else:
             print(
                 f"Warning: History garbage collection would discard more history ({size_over} {units}) than it would keep ({hsize}).\n"
-                "Not removing any history for now. Either increase your limit ($XONSH_HIST_SIZE), or run `history gc --force`."
+                "Not removing any history for now. Either increase your limit ($XONSH_HISTORY_SIZE), or run `history gc --force`."
             )
 
     def files(self, only_unlocked=False):
@@ -188,7 +188,7 @@ class JsonHistoryGC(threading.Thread):
                     files.append((os.path.getmtime(f), 0, f, cur_file_size))
                     continue
                 lj = xlj.LazyJSON(f, reopen=False)
-                if lj["locked"] and lj["ts"][0] < boot:
+                if lj.get("locked", False) and lj["ts"][0] < boot:
                     # computer was rebooted between when this history was created
                     # and now and so this history should be unlocked.
                     hist = lj.load()
@@ -197,16 +197,12 @@ class JsonHistoryGC(threading.Thread):
                     with open(f, "w", newline="\n") as fp:
                         xlj.ljdump(hist, fp, sort_keys=True)
                     lj = xlj.LazyJSON(f, reopen=False)
-                if only_unlocked and lj["locked"]:
+                if only_unlocked and lj.get("locked", False):
                     continue
                 # info: file size, closing timestamp, number of commands, filename
+                ts = lj.get("ts", (0.0, None))
                 files.append(
-                    (
-                        lj["ts"][1] or lj["ts"][0],
-                        len(lj.sizes["cmds"]) - 1,
-                        f,
-                        cur_file_size,
-                    ),
+                    (ts[1] or ts[0], len(lj.sizes["cmds"]) - 1, f, cur_file_size)
                 )
                 lj.close()
                 if xonsh_debug:
@@ -307,6 +303,9 @@ class JsonCommandField(cabc.Sequence):
         return len(self.hist)
 
     def __getitem__(self, key):
+        if not self.hist.remember_history:
+            return ""
+
         size = len(self)
         if isinstance(key, slice):
             return [self[i] for i in range(*key.indices(size))]
@@ -411,6 +410,8 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
+        if not self.remember_history:
+            return
         self.buffer.append(cmd)
         self._len += 1  # must come before flushing
         if len(self.buffer) >= self.buffersize:
@@ -433,6 +434,7 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
+        # Implicitly covers case of self.remember_history being False.
         if len(self.buffer) == 0:
             return
 
@@ -506,3 +508,18 @@ class JsonHistory(History):
         if blocking:
             while self.gc.is_alive():  # while waiting for gc.
                 time.sleep(0.1)  # don't monopolize the thread (or Python GIL?)
+
+    def clear(self):
+        """Clears the current session's history from both memory and disk."""
+
+        # Wipe history from memory. Keep sessionid and other metadata.
+        self.buffer = []
+        self.tss = JsonCommandField("ts", self)
+        self.inps = JsonCommandField("inp", self)
+        self.outs = JsonCommandField("out", self)
+        self.rtns = JsonCommandField("rtn", self)
+        self._len = 0
+        self._skipped = 0
+
+        # Flush empty history object to disk, overwriting previous data.
+        self.flush()

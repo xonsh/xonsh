@@ -24,6 +24,8 @@ def test_indir():
 
 
 def test_rmtree():
+    if ON_WINDOWS:
+        pytest.skip("On Windows")
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
             mkdir rmtree_test

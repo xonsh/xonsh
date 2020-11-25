@@ -3,6 +3,8 @@
 import builtins
 import collections.abc as cabc
 
+from xonsh.tools import print_exception
+
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -35,6 +37,13 @@ class Completer(object):
             try:
                 out = func(prefix, line, begidx, endidx, ctx)
             except StopIteration:
+                return set(), len(prefix)
+            except Exception as e:
+                print_exception(
+                    f"Completer {func.__name__} raises exception when get "
+                    f"(prefix={repr(prefix)}, line={repr(line)}, begidx={repr(begidx)}, endidx={repr(endidx)}):\n"
+                    f"{e}"
+                )
                 return set(), len(prefix)
             if isinstance(out, cabc.Sequence):
                 res, lprefix = out

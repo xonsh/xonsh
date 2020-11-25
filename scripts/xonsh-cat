@@ -1,4 +1,0 @@
-#!/usr/bin/env -S python3 -u
-
-from xonsh.xoreutils.cat import cat_main as main
-main()

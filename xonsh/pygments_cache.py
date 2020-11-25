@@ -20,6 +20,7 @@ import importlib
 # Global storage variables
 __version__ = "0.1.1"
 CACHE = None
+CUSTOM_STYLES = {}
 DEBUG = False
 
 
@@ -266,6 +267,19 @@ def cache_filename():
         )
 
 
+def add_custom_style(name, style):
+    """Register custom style to be able to retrieve it by ``get_style_by_name``.
+
+    Parameters
+    ----------
+    name : str
+        Style name.
+    style : pygments.Style
+        Custom style to add.
+    """
+    CUSTOM_STYLES[name] = style
+
+
 def load(filename):
     """Loads the cache from a filename."""
     global CACHE
@@ -298,9 +312,11 @@ def load_or_build():
     else:
         import sys
 
-        print("pygments cache not found, building...", file=sys.stderr)
+        if DEBUG:
+            print("pygments cache not found, building...", file=sys.stderr)
         CACHE = build_cache()
-        print("...writing cache to " + fname, file=sys.stderr)
+        if DEBUG:
+            print("...writing cache to " + fname, file=sys.stderr)
         write_cache(fname)
 
 
@@ -407,6 +423,8 @@ def get_style_by_name(name):
         modname, clsname = names[name]
         mod = importlib.import_module(modname)
         style = getattr(mod, clsname)
+    elif name in CUSTOM_STYLES:
+        style = CUSTOM_STYLES[name]
     else:
         # couldn't find style in cache, fallback to the hard way
         import inspect
@@ -427,6 +445,7 @@ def get_all_styles():
     if CACHE is None:
         load_or_build()
     yield from CACHE["styles"]["names"]
+    yield from CUSTOM_STYLES
 
 
 def get_filter_by_name(filtername, **options):

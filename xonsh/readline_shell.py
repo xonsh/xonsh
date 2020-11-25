@@ -18,7 +18,6 @@ import shutil
 import builtins
 import importlib
 import threading
-import subprocess
 import collections
 
 import xonsh.completers.tools as xct
@@ -30,13 +29,7 @@ from xonsh.ansi_colors import (
     ansi_color_style,
 )
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import (
-    print_exception,
-    check_for_partial_string,
-    to_bool,
-    columnize,
-    carriage_return,
-)
+from xonsh.tools import print_exception, to_bool, columnize, carriage_return
 from xonsh.platform import (
     ON_WINDOWS,
     ON_CYGWIN,
@@ -372,8 +365,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
+        events.on_pre_prompt_format.fire()
+        prompt = self.prompt
         events.on_pre_prompt.fire()
-        rtn = input(self.prompt)
+        rtn = input(prompt)
         events.on_post_prompt.fire()
         if not store_in_history and pos >= 0:
             readline.remove_history_item(pos)
@@ -394,7 +389,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif len(completions) <= builtins.__xonsh__.env.get("COMPLETION_QUERY_LIMIT"):
             return 2
         msg = "\nDisplay all {} possibilities? ".format(len(completions))
-        msg += "({GREEN}y{NO_COLOR} or {RED}n{NO_COLOR})"
+        msg += "({GREEN}y{RESET} or {RED}n{RESET})"
         self.print_color(msg, end="", flush=True, file=sys.stderr)
         yn = "x"
         while yn not in "yn":
@@ -407,9 +402,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         w, h = shutil.get_terminal_size()
         lines = columnize(completions, width=w)
         more_msg = self.format_color(
-            "{YELLOW}==={NO_COLOR} more or "
-            "{PURPLE}({NO_COLOR}q{PURPLE}){NO_COLOR}uit "
-            "{YELLOW}==={NO_COLOR}"
+            "{YELLOW}==={RESET} more or "
+            "{PURPLE}({RESET}q{PURPLE}){RESET}uit "
+            "{YELLOW}==={RESET}"
         )
         while len(lines) > h - 1:
             print("".join(lines[: h - 1]), end="", flush=True, file=sys.stderr)
@@ -431,10 +426,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
-        completions, l = self.completer.complete(
+        completions, plen = self.completer.complete(
             prefix, line, begidx, endidx, ctx=self.ctx
         )
-        rtn_completions = _render_completions(completions, prefix, l)
+        rtn_completions = _render_completions(completions, prefix, plen)
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
@@ -464,7 +459,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             raise ValueError("query completions flag not understood.")
 
     # tab complete on first index too
-    completenames = completedefault
+    completenames = completedefault  # type:ignore
 
     def _load_remaining_input_into_queue(self):
         buf = b""
@@ -638,7 +633,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         else:
             # assume this is a list of (Token, str) tuples and format it
             env = builtins.__xonsh__.env
+            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
+            self.styler.override(style_overrides_env)
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()

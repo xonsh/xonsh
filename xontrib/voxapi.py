@@ -18,7 +18,7 @@ import subprocess as sp
 
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS
-from xonsh.fs import PathLike, fspath
+
 
 # This is because builtins aren't globally created during testing.
 # FIXME: Is there a better way?
@@ -160,8 +160,8 @@ class Vox(collections.abc.Mapping):
         )
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
-        if isinstance(name, PathLike):
-            env_path = fspath(name)
+        if isinstance(name, os.PathLike):
+            env_path = os.fspath(name)
         else:
             env_path = os.path.join(self.venvdir, name)
         if not self._check_reserved(env_path):
@@ -201,11 +201,11 @@ class Vox(collections.abc.Mapping):
         cfgfile = os.path.join(env_path, "pyvenv.cfg")
         cfgops = {}
         with open(cfgfile) as cfgfile:
-            for l in cfgfile:
-                l = l.strip()
-                if "=" not in l:
+            for line in cfgfile:
+                line = line.strip()
+                if "=" not in line:
                     continue
-                k, v = l.split("=", 1)
+                k, v = line.split("=", 1)
                 cfgops[k.strip()] = v.strip()
         flags = {
             "system_site_packages": cfgops["include-system-site-packages"] == "true",
@@ -272,9 +272,10 @@ class Vox(collections.abc.Mapping):
             the current one (throws a KeyError if there isn't one).
         """
         if name is ...:
-            env_paths = [builtins.__xonsh__.env["VIRTUAL_ENV"]]
-        elif isinstance(name, PathLike):
-            env_paths = [fspath(name)]
+            env = builtins.__xonsh__.env
+            env_paths = [env["VIRTUAL_ENV"]]
+        elif isinstance(name, os.PathLike):
+            env_paths = [os.fspath(name)]
         else:
             if not self._check_reserved(name):
                 # Don't allow a venv that could be a venv special dir
@@ -320,10 +321,10 @@ class Vox(collections.abc.Mapping):
     def __len__(self):
         """Counts known virtual environments, using the same rules as iter().
         """
-        l = 0
+        line = 0
         for _ in self:
-            l += 1
-        return l
+            line += 1
+        return line
 
     def active(self):
         """Get the name of the active virtual environment.
@@ -332,9 +333,10 @@ class Vox(collections.abc.Mapping):
 
         Returns None if no environment is active.
         """
-        if "VIRTUAL_ENV" not in builtins.__xonsh__.env:
+        env = builtins.__xonsh__.env
+        if "VIRTUAL_ENV" not in env:
             return
-        env_path = builtins.__xonsh__.env["VIRTUAL_ENV"]
+        env_path = env["VIRTUAL_ENV"]
         if env_path.startswith(self.venvdir):
             name = env_path[len(self.venvdir) :]
             if name[0] in "/\\":
@@ -380,7 +382,7 @@ class Vox(collections.abc.Mapping):
                 env[k] = v
             del type(self).oldvars
 
-        env.pop("VIRTUAL_ENV")
+        del env["VIRTUAL_ENV"]
 
         events.vox_on_deactivate.fire(name=env_name, path=self[env_name].env)
         return env_name

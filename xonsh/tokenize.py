@@ -78,9 +78,14 @@ from token import (
     VBAREQUAL,
     tok_name,
 )
+import typing as tp
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
+
+HAS_WALRUS = PYTHON_VERSION_INFO > (3, 8)
+if HAS_WALRUS:
+    from token import COLONEQUAL  # type:ignore
 
 cookie_re = LazyObject(
     lambda: re.compile(r"^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)", re.ASCII),
@@ -95,7 +100,7 @@ blank_re = LazyObject(
 # token modifications
 #
 tok_name = tok_name.copy()
-__all__ = token.__all__ + [
+__all__ = token.__all__ + [  # type:ignore
     "COMMENT",
     "tokenize",
     "detect_encoding",
@@ -112,15 +117,17 @@ __all__ = token.__all__ + [
 ]
 HAS_ASYNC = PYTHON_VERSION_INFO < (3, 7, 0)
 if HAS_ASYNC:
-    ASYNC = token.ASYNC
-    AWAIT = token.AWAIT
+    ASYNC = token.ASYNC  # type:ignore
+    AWAIT = token.AWAIT  # type:ignore
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
 else:
-    ADDSPACE_TOKS = (NAME, NUMBER)
+    ADDSPACE_TOKS = (NAME, NUMBER)  # type:ignore
 del token  # must clean up token
 
-AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
-
+if HAS_WALRUS:
+    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>:]=?"
+else:
+    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = "COMMENT"
@@ -170,7 +177,7 @@ for v in _xonsh_tokens.values():
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES = {
+EXACT_TOKEN_TYPES: tp.Dict[str, tp.Union[str, int]] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,
@@ -215,6 +222,8 @@ EXACT_TOKEN_TYPES = {
     "//=": DOUBLESLASHEQUAL,
     "@": AT,
 }
+if HAS_WALRUS:
+    EXACT_TOKEN_TYPES[":="] = COLONEQUAL
 
 EXACT_TOKEN_TYPES.update(_xonsh_tokens)
 
@@ -321,10 +330,12 @@ _redir_map = (
     "1>2",
 )
 IORedirect = group(group(*_redir_map), "{}>>?".format(group(*_redir_names)))
-_redir_check = set(_redir_map)
-_redir_check = {"{}>".format(i) for i in _redir_names}.union(_redir_check)
-_redir_check = {"{}>>".format(i) for i in _redir_names}.union(_redir_check)
-_redir_check = frozenset(_redir_check)
+
+_redir_check_0 = set(_redir_map)
+_redir_check_1 = {"{}>".format(i) for i in _redir_names}.union(_redir_check_0)
+_redir_check_2 = {"{}>>".format(i) for i in _redir_names}.union(_redir_check_1)
+_redir_check = frozenset(_redir_check_2)
+
 Operator = group(
     r"\*\*=?",
     r">>=?",

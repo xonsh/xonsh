@@ -3,6 +3,7 @@
 *******************
 Tutorial
 *******************
+
 xonsh is a shell language and command prompt. Unlike other shells, xonsh is
 based on Python, with additional syntax added that makes calling subprocess
 commands, manipulating the environment, and dealing with the file system
@@ -237,6 +238,7 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
 
+
 Running Commands
 ==============================
 As a shell, xonsh is meant to make running commands easy and fun.
@@ -314,10 +316,9 @@ The determination between the two modes is done well ahead of any execution.
 You do not need to worry about partially executed commands - that is
 impossible.
 
-If you absolutely want to run a subprocess command, you can always
-force xonsh to do so with the syntax that we will see in the following
-sections.
-
+.. note:: If you would like to explicitly run a subprocess command, you can always
+          use the formal xonsh subprocess syntax that we will see in the following
+          sections. For example: ``![ls -l]``.
 
 Quoting
 =======
@@ -488,7 +489,7 @@ Python Evaluation with ``@()``
 
 The ``@(<expr>)`` operator form works in subprocess mode, and will evaluate
 arbitrary Python code. The result is appended to the subprocess command list.
-If the result is a string, it is appended to the argument list. If the result
+If the result is a string or bytes, it is appended to the argument list. If the result
 is a list or other non-string sequence, the contents are converted to strings
 and appended to the argument list in order. If the result in the first position
 is a function, it is treated as an alias (see the section on `Aliases`_ below),
@@ -901,8 +902,42 @@ to be evaluated in Python mode using the ``@()`` syntax:
     >>> echo @("my home is $HOME")
     my home is $HOME
 
-You can also disable environment variable expansion completely by setting
-``$EXPAND_ENV_VARS`` to ``False``.
+
+.. note::
+
+    You can also disable environment variable expansion completely by setting
+    ``$EXPAND_ENV_VARS`` to ``False``.
+
+Advanced String Literals
+========================
+
+For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
+there are extended list of literals:
+
+- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
+- ``r""`` - raw string: unmodified.
+- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
+- ``fr""`` - raw formatted string: brace substitutions.
+- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
+- ``pr""`` - raw Path string: envvar substitutions, returns Path.
+- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
+
+To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
+and make a table that shows how literal changes the string in Python- and subprocess-mode:
+
+.. table::
+
+    ========================  ==========================  =======================  =====================
+         String literal            As python object       print(<String literal>)  echo <String literal>
+    ========================  ==========================  =======================  =====================
+    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
+    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
+    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
+    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
+    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
+    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
+    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
+    ========================  ==========================  =======================  =====================
 
 Filename Globbing with ``*``
 ===============================
@@ -1446,7 +1481,7 @@ By default, the following variables are available for use:
     set the character used in shortened path.
   * ``short_cwd``: A shortened form of the current working directory; e.g.,
     ``/path/to/xonsh`` becomes ``/p/t/xonsh``
-  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
+  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/`` in
     ``/path/to/xonsh``.
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
     ``/path/to/xonsh``.
@@ -1501,10 +1536,10 @@ For example:
     (env) >>>
 
 
-You can also color your prompt easily by inserting keywords such as ``{GREEN}``
-or ``{BOLD_BLUE}``.  Colors have the form shown below:
+You can also color your prompt (or print colored messages using ``print_color`` function) easily by inserting
+keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
-* ``NO_COLOR``: Resets any previously used color codes
+* ``RESET``: Resets any previously used styling.
 * ``COLORNAME``: Inserts a color code for the following basic colors,
   which come in regular (dark) and intense (light) forms:
 
@@ -1517,6 +1552,7 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
     - ``CYAN`` or ``INTENSE_CYAN``
     - ``WHITE`` or ``INTENSE_WHITE``
 
+* ``DEFAULT``: The color code for the terminal's default foreground color.
 * ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
   hex color, or the nearest approximation that that is supported by
   the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
@@ -1526,10 +1562,10 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   and ``BACKGROUND_#123456`` can both be used.
 * ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
   Thus you can set ``bg#0012ab`` or the uppercase version.
-* ``BOLD_`` is a prefix modifier that increases the intesnity of the font.
+* ``BOLD_`` is a prefix modifier that increases the intensity of the font.
   It may be used with any foreground color.
   For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
-* ``FAINT_`` is a prefix modifier that decreases the intesnity of the font.
+* ``FAINT_`` is a prefix modifier that decreases the intensity of the font.
   For example, ``FAINT_YELLOW``.
 * ``ITALIC_`` is a prefix modifier that switches to an italic font.
   For example, ``ITALIC_BLUE``.
@@ -1545,7 +1581,7 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   widely supported. For example, ``CONCEAL_BLACK``.
 * ``STRIKETHROUGH_`` is a prefix modifier which draws a line through the text.
   For example, ``STRIKETHROUGH_RED``.
-* ``BOLDOFF_`` is a prefix modifier for removing the intesnity of the font.
+* ``BOLDOFF_`` is a prefix modifier for removing the intensity of the font.
   It may be used with any foreground color.
   For example, ``BOLDOFF_RED`` and ``BOLD_#112233`` are OK!
 * ``FAINTOFF_`` is a prefix modifier for removing the faintness of the font.
@@ -1754,5 +1790,7 @@ On Windows, you can also type ``Ctrl-Z``.
 .. code-block:: xonshcon
 
     >>> exit
+
+To exit from the xonsh script just call the ``exit(code)`` function.
 
 Now it is your turn.

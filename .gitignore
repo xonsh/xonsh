@@ -37,7 +37,8 @@ bin/
 /lib/
 include/
 venv/
-.venv/
+.venv*/
+
 
 # Mac
 .DS_Store
@@ -62,13 +63,20 @@ rever/
 # Allow the lib
 !/xonsh/lib
 
+
+# Allow tests/bin
+!/tests/bin
+
 # elm
 xonsh/webconfig/elm-stuff/
 xonsh/webconfig/js/app.js
 
-# venv (e.g, autovox)
-venv/
-.venv/
-
 # VS Code
 .vscode/
+
+# AppImage
+*.AppImage
+
+# mypy
+.dmypy.json
+.mypy_cache

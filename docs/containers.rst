@@ -1,7 +1,7 @@
-Containers
-==========
+Docker container
+================
 
-xonsh publishes a handful of containers, primarily targeting CI and automation use-cases. All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`__.
+Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`__.
 
 * ``xonsh/xonsh``: A base container providing basic xonsh
 * ``xonsh/interactive``: xonsh with additions for people

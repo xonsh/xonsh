@@ -17,6 +17,7 @@ from xonsh.built_ins import (
     enter_macro,
     path_literal,
     _BuiltIns,
+    eval_fstring_field,
 )
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
@@ -132,6 +133,7 @@ def xonsh_builtins(monkeypatch, xonsh_events):
     builtins.__xonsh__.list_of_list_of_strs_outer_product = (
         list_of_list_of_strs_outer_product
     )
+    builtins.__xonsh__.eval_fstring_field = eval_fstring_field
     builtins.__xonsh__.history = DummyHistory()
     builtins.__xonsh__.subproc_captured_stdout = sp
     builtins.__xonsh__.subproc_captured_inject = sp
@@ -160,5 +162,5 @@ def xonsh_builtins(monkeypatch, xonsh_events):
 
 def pytest_configure(config):
     """Abort test run if --flake8 requested, since it would hang on parser_test.py"""
-    if config.getoption('--flake8', ''):
+    if config.getoption("--flake8", ""):
         pytest.exit("pytest-flake8 no longer supported, use flake8 instead.")

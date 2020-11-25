@@ -56,6 +56,21 @@ def revert_abbrev(buffer):
     return True
 
 
+def set_cursor_position(buffer):
+    abbrevs = getattr(builtins, "abbrevs", None)
+    if abbrevs is None:
+        return False
+    global last_expanded
+    abbr = abbrevs[last_expanded]
+    pos = abbr.rfind("<edit>")
+    if pos == -1:
+        return False
+    buffer.cursor_position = buffer.cursor_position - (len(abbr) - pos)
+    buffer.delete(6)
+    last_expanded = None
+    return True
+
+
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
 
@@ -70,7 +85,8 @@ def custom_keybindings(bindings, **kw):
         buffer = event.app.current_buffer
         if not revert_abbrev(buffer):
             expand_abbrev(buffer)
-        buffer.insert_text(" ")
+        if last_expanded is None or not set_cursor_position(buffer):
+            buffer.insert_text(" ")
 
     @handler(
         Keys.ControlJ, filter=IsMultiline() & insert_mode & ~completion_is_selected

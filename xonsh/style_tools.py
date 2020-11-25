@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyObject
-from xonsh.color_tools import RE_BACKGROUND, iscolor
+from xonsh.color_tools import RE_BACKGROUND, iscolor, warn_deprecated_no_color
 from xonsh.tools import FORMATTER
 
 
@@ -70,11 +70,11 @@ def partial_color_tokenize(template):
         styles = DEFAULT_STYLE_DICT
     else:
         styles = None
-    color = Color.NO_COLOR
+    color = Color.RESET
     try:
         toks, color = _partial_color_tokenize_main(template, styles)
     except Exception:
-        toks = [(Color.NO_COLOR, template)]
+        toks = [(Color.RESET, template)]
     if styles is not None:
         styles[color]  # ensure color is available
     return toks
@@ -85,7 +85,7 @@ def _partial_color_tokenize_main(template, styles):
     bclose = "}"
     colon = ":"
     expl = "!"
-    color = Color.NO_COLOR
+    color = Color.RESET
     fg = bg = None
     value = ""
     toks = []
@@ -142,8 +142,10 @@ def color_by_name(name, fg=None, bg=None):
         New computed background color name.
     """
     name = name.upper()
-    if name == "NO_COLOR":
-        return Color.NO_COLOR, None, None
+    if name in ("RESET", "NO_COLOR"):
+        if name == "NO_COLOR":
+            warn_deprecated_no_color()
+        return Color.RESET, None, None
     m = RE_BACKGROUND.search(name)
     if m is None:  # must be foreground color
         fg = norm_name(name)
@@ -151,7 +153,7 @@ def color_by_name(name, fg=None, bg=None):
         bg = norm_name(name)
     # assemble token
     if fg is None and bg is None:
-        tokname = "NO_COLOR"
+        tokname = "RESET"
     elif fg is None:
         tokname = bg
     elif bg is None:
@@ -167,13 +169,18 @@ def norm_name(name):
     return name.upper().replace("#", "HEX")
 
 
+def style_as_faded(template: str) -> str:
+    """Remove the colors from the template string and style as faded."""
+    tokens = partial_color_tokenize(template)
+    without_color = "".join([sect for _, sect in tokens])
+    return "{RESET}{#d3d3d3}" + without_color + "{RESET}"
+
+
 DEFAULT_STYLE_DICT = LazyObject(
     lambda: defaultdict(
         lambda: "",
         {
             Token: "",
-            Token.Aborted: "ansibrightblack",
-            Token.AutoSuggestion: "ansibrightblack",
             Token.Color.BACKGROUND_BLACK: "bg:ansiblack",
             Token.Color.BACKGROUND_BLUE: "bg:ansiblue",
             Token.Color.BACKGROUND_CYAN: "bg:ansicyan",
@@ -234,7 +241,7 @@ DEFAULT_STYLE_DICT = LazyObject(
             Token.Color.INTENSE_RED: "ansibrightred",
             Token.Color.INTENSE_WHITE: "ansiwhite",
             Token.Color.INTENSE_YELLOW: "ansibrightyellow",
-            Token.Color.NO_COLOR: "noinherit",
+            Token.Color.RESET: "noinherit",
             Token.Color.PURPLE: "ansimagenta",
             Token.Color.RED: "ansired",
             Token.Color.UNDERLINE_BLACK: "underline ansiblack",
@@ -305,9 +312,6 @@ DEFAULT_STYLE_DICT = LazyObject(
             Token.Literal.String.Regex: "ansimagenta",
             Token.Literal.String.Single: "",
             Token.Literal.String.Symbol: "ansiyellow",
-            Token.Menu.Completions: "bg:ansigray ansiblack",
-            Token.Menu.Completions.Completion: "",
-            Token.Menu.Completions.Completion.Current: "bg:ansibrightblack ansiwhite",
             Token.Name: "",
             Token.Name.Attribute: "ansibrightyellow",
             Token.Name.Builtin: "ansigreen",
@@ -333,24 +337,18 @@ DEFAULT_STYLE_DICT = LazyObject(
             Token.Operator.Word: "bold ansimagenta",
             Token.Other: "",
             Token.Punctuation: "",
-            Token.Scrollbar: "bg:ansibrightblack",
-            Token.Scrollbar.Arrow: "bg:ansiblack ansiwhite bold",
-            Token.Scrollbar.Button: "bg:ansiblack",
             Token.Text: "",
             Token.Text.Whitespace: "ansigray",
+            Token.PTK.Aborting: "ansibrightblack",
+            Token.PTK.AutoSuggestion: "ansibrightblack",
+            Token.PTK.CompletionMenu: "bg:ansigray ansiblack",
+            Token.PTK.CompletionMenu.Completion: "",
+            Token.PTK.CompletionMenu.Completion.Current: "bg:ansibrightblack ansiwhite",
+            Token.PTK.Scrollbar.Arrow: "bg:ansiblack ansiwhite bold",
+            Token.PTK.Scrollbar.Background: "bg:ansibrightblack",
+            Token.PTK.Scrollbar.Button: "bg:ansiblack",
         },
     ),
     globals(),
     "DEFAULT_STYLE_DICT",
 )
-
-PTK2_STYLE = {
-    "completion-menu": "bg:ansigray ansiblack",
-    "completion-menu.completion": "",
-    "completion-menu.completion.current": "bg:ansibrightblack ansiwhite",
-    "scrollbar.background": "bg:ansibrightblack",
-    "scrollbar.arrow": "bg:ansiblack ansiwhite bold",
-    "scrollbar.button": "bg:ansiblack",
-    "auto-suggestion": "ansibrightblack",
-    "aborting": "ansibrightblack",
-}

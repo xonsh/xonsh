@@ -9,9 +9,10 @@ import pytest
 
 from xonsh.ast import AST, With, Pass, Str, Call
 from xonsh.parser import Parser
-from xonsh.parsers.base import eval_fstr_fields
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
-from tools import nodes_equal
+from tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
+
 
 @pytest.fixture(autouse=True)
 def xonsh_builtins_autouse(xonsh_builtins):
@@ -122,28 +123,47 @@ def test_f_env_var():
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
 
 
-@pytest.mark.parametrize(
-    "inp, exp",
-    [
-        ('f"{}"', 'f"{}"'),
-        ('f"$HOME"', 'f"$HOME"'),
-        ('f"{0} - {1}"', 'f"{0} - {1}"'),
-        (
-            'f"{$HOME}"',
-            "f\"{__xonsh__.execer.eval(r'$HOME', glbs=globals(), locs=locals())}\"",
-        ),
-        (
-            'f"{ $HOME }"',
-            "f\"{__xonsh__.execer.eval(r'$HOME ', glbs=globals(), locs=locals())}\"",
-        ),
-        (
-            "f\"{'$HOME'}\"",
-            "f\"{__xonsh__.execer.eval(r'\\'$HOME\\'', glbs=globals(), locs=locals())}\"",
-        ),
-    ],
-)
-def test_eval_fstr_fields(inp, exp):
-    obs = eval_fstr_fields(inp, 'f"')
+fstring_adaptor_parameters = [
+    ('f"$HOME"', "$HOME"),
+    ('f"{0} - {1}"', "0 - 1"),
+    ('f"{$HOME}"', "/foo/bar"),
+    ('f"{ $HOME }"', "/foo/bar"),
+    ("f\"{'$HOME'}\"", "$HOME"),
+    ('f"$HOME  = {$HOME}"', "$HOME  = /foo/bar"),
+    ("f\"{${'HOME'}}\"", "/foo/bar"),
+    ("f'{${$FOO+$BAR}}'", "/foo/bar"),
+    ("f\"${$FOO}{$BAR}={f'{$HOME}'}\"", "$HOME=/foo/bar"),
+    (
+        '''f"""foo
+{f"_{$HOME}_"}
+bar"""''',
+        "foo\n_/foo/bar_\nbar",
+    ),
+    (
+        '''f"""foo
+{f"_{${'HOME'}}_"}
+bar"""''',
+        "foo\n_/foo/bar_\nbar",
+    ),
+    (
+        '''f"""foo
+{f"_{${ $FOO + $BAR }}_"}
+bar"""''',
+        "foo\n_/foo/bar_\nbar",
+    ),
+]
+if VER_MAJOR_MINOR >= (3, 8):
+    fstring_adaptor_parameters.append(("f'{$HOME=}'", "$HOME='/foo/bar'"))
+
+
+@pytest.mark.parametrize("inp, exp", fstring_adaptor_parameters)
+def test_fstring_adaptor(inp, exp):
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+    node = ast.Expression(body=joined_str_node)
+    code = compile(node, "<test_fstring_adaptor>", mode="eval")
+    builtins.__xonsh__.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
+    obs = eval(code)
     assert exp == obs
 
 
@@ -307,7 +327,7 @@ def test_in():
 
 
 def test_is():
-    check_ast("int is float")   # avoid PY3.8 SyntaxWarning "is" with a literal
+    check_ast("int is float")  # avoid PY3.8 SyntaxWarning "is" with a literal
 
 
 def test_not_in():
@@ -773,6 +793,10 @@ def test_listcomp_if_and():
     check_ast('[x for x in "mom" if True and x == "m"]')
 
 
+def test_listcomp_multi_if():
+    check_ast('[x for x in "mom" if True if x in "mo" if x == "m"]')
+
+
 def test_dbl_listcomp():
     check_ast('[x+y for x in "mom" for y in "dad"]')
 
@@ -1017,6 +1041,11 @@ def test_lambda_x_star_y_kwargs():
     check_ast("lambda x, *, y, **kwargs: 42")
 
 
+@skip_if_pre_3_8
+def test_lambda_x_divide_y_star_z_kwargs():
+    check_ast("lambda x, /, y, *, z, **kwargs: 42")
+
+
 def test_call_range():
     check_ast("range(6)")
 
@@ -1183,6 +1212,16 @@ def test_rshift_op_two():
 
 def test_rshift_op_three():
     check_ast("42 >> 65 >> 1 >> 7")
+
+
+@skip_if_pre_3_8
+def test_named_expr():
+    check_ast("(x := 42)")
+
+
+@skip_if_pre_3_8
+def test_named_expr_list():
+    check_ast("[x := 42, x + 1, x + 2]")
 
 
 #
@@ -1526,6 +1565,11 @@ def test_yield_x_y():
     check_stmts("yield x, y", False)
 
 
+@skip_if_pre_3_8
+def test_return_x_starexpr():
+    check_stmts("yield x, *[y, z]", False)
+
+
 def test_yield_from_x():
     check_stmts("yield from x", False)
 
@@ -1544,6 +1588,11 @@ def test_return_x_comma():
 
 def test_return_x_y():
     check_stmts("return x, y", False)
+
+
+@skip_if_pre_3_8
+def test_return_x_starexpr():
+    check_stmts("return x, *[y, z]", False)
 
 
 def test_if_true():
@@ -1893,6 +1942,16 @@ def test_func_x_star_y_kwargs():
     check_stmts("def f(x, *, y, **kwargs):\n  return 42")
 
 
+@skip_if_pre_3_8
+def test_func_x_divide():
+    check_stmts("def f(x, /):\n  return 42")
+
+
+@skip_if_pre_3_8
+def test_func_x_divide_y_star_z_kwargs():
+    check_stmts("def f(x, /, y, *, z, **kwargs):\n  return 42")
+
+
 def test_func_tx():
     check_stmts("def f(x:int):\n  return x")
 
@@ -1997,6 +2056,26 @@ def test_async_decorator():
 
 def test_async_await():
     check_stmts("async def f():\n    await fut\n", False)
+
+
+@skip_if_pre_3_8
+def test_named_expr_args():
+    check_stmts("id(x := 42)")
+
+
+@skip_if_pre_3_8
+def test_named_expr_if():
+    check_stmts("if (x := 42) > 0:\n  x += 1")
+
+
+@skip_if_pre_3_8
+def test_named_expr_elif():
+    check_stmts("if False:\n  pass\nelif x := 42:\n  x += 1")
+
+
+@skip_if_pre_3_8
+def test_named_expr_while():
+    check_stmts("y = 42\nwhile (x := y) < 43:\n  y += 1")
 
 
 #
@@ -2159,6 +2238,10 @@ def test_bang_ls_envvar_strval():
 
 def test_bang_ls_envvar_listval():
     check_xonsh_ast({"WAKKA": [".", "."]}, "!(ls $WAKKA)", False)
+
+
+def test_bang_envvar_args():
+    check_xonsh_ast({"LS": "ls"}, "!($LS .)", False)
 
 
 def test_question():
@@ -2420,6 +2503,10 @@ def test_git_two_quotes_space_space():
 
 def test_ls_quotes_3_space():
     check_xonsh_ast({}, '$[ls "wakka jawaka baraka"]', False)
+
+
+def test_leading_envvar_assignment():
+    check_xonsh_ast({}, "![$FOO='foo' $BAR=2 echo r'$BAR']", False)
 
 
 def test_echo_comma():
@@ -3058,3 +3145,45 @@ def test_syntax_error_augassign_cmp(exp):
 def test_syntax_error_bar_kwonlyargs():
     with pytest.raises(SyntaxError):
         PARSER.parse("def spam(*):\n   pass\n", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_bar_posonlyargs():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(/):\n   pass\n", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_bar_posonlyargs_no_comma():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x /, y):\n   pass\n", mode="exec")
+
+
+def test_syntax_error_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x=1, y):\n   pass\n", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_posonly_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("def spam(x, y=1, /, z):\n   pass\n", mode="exec")
+
+
+def test_syntax_error_lambda_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("lambda x=1, y: x", mode="exec")
+
+
+@skip_if_pre_3_8
+def test_syntax_error_lambda_posonly_nondefault_follows_default():
+    with pytest.raises(SyntaxError):
+        PARSER.parse("lambda x, y=1, /, z: x", mode="exec")
+
+
+def test_get_repo_url():
+    PARSER.parse(
+        "def get_repo_url():\n"
+        "    raw = $(git remote get-url --push origin).rstrip()\n"
+        "    return raw.replace('https://github.com/', '')\n"
+    )

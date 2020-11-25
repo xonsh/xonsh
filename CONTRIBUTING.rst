@@ -20,8 +20,11 @@ Making Your First Change
 ========================
 
 First, install xonsh from source and open a xonsh shell in your favorite
-terminal application. See installation instructions for details.
+terminal application. See installation instructions for details, but it
+is recommended to do an 'editable' install via `pip'
 
+        $ pip install -e .
+        
 Next, make a trivial change (e.g. ``print("hello!")`` in ``main.py``).
 
 Finally, run the following commands. You should see the effects of your change
@@ -108,16 +111,15 @@ is open to interpretation.
 * Simple functions should have simple docstrings.
 * Lines should be at most 80 characters long. The 72 and 79 character
   recommendations from PEP8 are not required here.
-* All Python code should be compliant with Python 3.5+.  At some
-  unforeseen date in the future, Python 2.7 support *may* be supported.
+* All Python code should be compliant with Python 3.5+.  
 * Tests should be written with `pytest <https://docs.pytest.org/>`_ using a procedural style. Do not use
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
 
 You can easily check for style issues, including some outright bugs such
-as mispelled variable names, using `flake8 <https://flake8.pycqa.org/>`_. If you're using Anaconda you'll
+as misspelled variable names, using `flake8 <https://flake8.pycqa.org/>`_. If you're using Anaconda you'll
 need to run "conda install flake8" once. You can easily run flake8 on
-the edited files in your uncommited git change::
+the edited files in your uncommitted git change::
 
     $ git status -s | awk '/\.py$$/ { print $2 }' | xargs flake8
 

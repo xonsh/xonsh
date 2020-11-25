@@ -7,6 +7,7 @@ import os
 import re
 import socket
 import sys
+import typing as tp
 
 import xonsh.lazyasd as xl
 import xonsh.tools as xt
@@ -29,6 +30,54 @@ def DEFAULT_PROMPT():
     return default_prompt()
 
 
+class _ParsedToken(tp.NamedTuple):
+    """It can either be a literal value alone or a field and its resultant value"""
+
+    value: str
+    field: tp.Optional[str] = None
+
+
+class ParsedTokens(tp.NamedTuple):
+    tokens: tp.List[_ParsedToken]
+    template: tp.Union[str, tp.Callable]
+
+    def process(self) -> str:
+        """Wrapper that gets formatter-function from environment and returns final prompt."""
+        processor = builtins.__xonsh__.env.get(  # type: ignore
+            "PROMPT_TOKENS_FORMATTER", prompt_tokens_formatter_default
+        )
+        return processor(self)
+
+    def update(
+        self,
+        idx: int,
+        val: tp.Optional[str],
+        spec: tp.Optional[str],
+        conv: tp.Optional[str],
+    ) -> None:
+        """Update tokens list in-place"""
+        if idx < len(self.tokens):
+            tok = self.tokens[idx]
+            self.tokens[idx] = _ParsedToken(_format_value(val, spec, conv), tok.field)
+
+
+def prompt_tokens_formatter_default(container: ParsedTokens) -> str:
+    """
+        Join the tokens
+
+    Parameters
+    ----------
+    container: ParsedTokens
+        parsed tokens holder
+
+    Returns
+    -------
+    str
+        process the tokens and finally return the prompt string
+    """
+    return "".join([tok.value for tok in container.tokens])
+
+
 class PromptFormatter:
     """Class that holds all the related prompt formatting methods,
     uses the ``PROMPT_FIELDS`` envvar (no color formatting).
@@ -37,54 +86,67 @@ class PromptFormatter:
     def __init__(self):
         self.cache = {}
 
-    def __call__(self, template=DEFAULT_PROMPT, fields=None):
+    def __call__(self, template=DEFAULT_PROMPT, fields=None, **kwargs) -> str:
         """Formats a xonsh prompt template string."""
+
+        # keep cache only during building prompt
+        self.cache.clear()
+
         if fields is None:
-            self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
+            self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)  # type: ignore
         else:
             self.fields = fields
         try:
-            prompt = self._format_prompt(template=template)
-        except Exception:
+            toks = self._format_prompt(template=template, **kwargs)
+            prompt = toks.process()
+        except Exception as ex:
+            # make it obvious why it has failed
+            print(
+                f"Failed to format prompt `{template}`-> {type(ex)}:{ex}",
+                file=sys.stderr,
+            )
             return _failover_template_format(template)
-        # keep cache only during building prompt
-        self.cache.clear()
         return prompt
 
-    def _format_prompt(self, template=DEFAULT_PROMPT):
-        template = template() if callable(template) else template
+    def _format_prompt(self, template=DEFAULT_PROMPT, **kwargs) -> ParsedTokens:
+        tmpl = template() if callable(template) else template
         toks = []
-        for literal, field, spec, conv in xt.FORMATTER.parse(template):
-            toks.append(literal)
-            entry = self._format_field(field, spec, conv)
+        for literal, field, spec, conv in xt.FORMATTER.parse(tmpl):
+            if literal:
+                toks.append(_ParsedToken(literal))
+            entry = self._format_field(field, spec, conv, idx=len(toks), **kwargs)
             if entry is not None:
-                toks.append(entry)
-        return "".join(toks)
+                toks.append(_ParsedToken(entry, field))
 
-    def _format_field(self, field, spec, conv):
+        return ParsedTokens(toks, template)
+
+    def _format_field(self, field, spec="", conv=None, **kwargs):
         if field is None:
             return
         elif field.startswith("$"):
             val = builtins.__xonsh__.env[field[1:]]
             return _format_value(val, spec, conv)
         elif field in self.fields:
-            val = self._get_field_value(field)
+            val = self._get_field_value(field, spec=spec, conv=conv, **kwargs)
             return _format_value(val, spec, conv)
         else:
             # color or unknown field, return as is
             return "{" + field + "}"
 
-    def _get_field_value(self, field):
+    def _get_field_value(self, field, **kwargs):
         field_value = self.fields[field]
         if field_value in self.cache:
             return self.cache[field_value]
+        return self._no_cache_field_value(field, field_value, **kwargs)
+
+    def _no_cache_field_value(self, field, field_value, **_):
         try:
             value = field_value() if callable(field_value) else field_value
             self.cache[field_value] = value
         except Exception:
             print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
-            value = "{{BACKGROUND_RED}}{{ERROR:{}}}{{NO_COLOR}}".format(field)
+            value = "{{BACKGROUND_RED}}{{ERROR:{}}}{{RESET}}".format(field)
         return value
 
 
@@ -95,7 +157,7 @@ def PROMPT_FIELDS():
         prompt_end="#" if xt.is_superuser() else "$",
         hostname=socket.gethostname().split(".", 1)[0],
         cwd=_dynamically_collapsed_pwd,
-        cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
+        cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
         cwd_base=lambda: os.path.basename(_replace_home_cwd()),
         short_cwd=_collapsed_pwd,
         curr_branch=current_branch,
@@ -118,21 +180,21 @@ def default_prompt():
         dp = (
             "{env_name}"
             "{BOLD_GREEN}{user}@{hostname}"
-            "{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} "
+            "{BOLD_BLUE} {cwd} {prompt_end}{RESET} "
         )
     elif xp.ON_WINDOWS and not xp.win_ansi_support():
         dp = (
             "{env_name}"
             "{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} "
-            "{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} "
-            "{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} "
+            "{cwd}{branch_color}{curr_branch: {}}{RESET} "
+            "{BOLD_INTENSE_CYAN}{prompt_end}{RESET} "
         )
     else:
         dp = (
             "{env_name}"
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
-            "{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} "
-            "{BOLD_BLUE}{prompt_end}{NO_COLOR} "
+            "{cwd}{branch_color}{curr_branch: {}}{RESET} "
+            "{BOLD_BLUE}{prompt_end}{RESET} "
         )
     return dp
 
@@ -180,7 +242,7 @@ def multiline_prompt(curr=""):
             basetoks.append(("\001" + pre + "\002", post))
             baselen += len(post)
     if baselen == 0:
-        return xt.format_color("{NO_COLOR}" + tail, hide=True)
+        return xt.format_color("{RESET}" + tail, hide=True)
     toks = basetoks * (headlen // baselen)
     n = headlen % baselen
     count = 0
@@ -196,7 +258,7 @@ def multiline_prompt(curr=""):
         count = newcount
         if n <= count:
             break
-    toks.append((xt.format_color("{NO_COLOR}", hide=True), tail))
+    toks.append((xt.format_color("{RESET}", hide=True), tail))
     rtn = "".join(itertools.chain.from_iterable(toks))
     return rtn
 

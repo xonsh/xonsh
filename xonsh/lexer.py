@@ -8,6 +8,7 @@ import re
 
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
+import typing as tp
 
 from xonsh.ply.ply.lex import LexToken
 
@@ -34,6 +35,7 @@ from xonsh.tokenize import (
     RIGHTSHIFT,
     tokenize,
     TokenError,
+    HAS_WALRUS,
 )
 
 
@@ -111,6 +113,8 @@ def token_map():
 
         tm[ASYNC] = "ASYNC"
         tm[AWAIT] = "AWAIT"
+    if HAS_WALRUS:
+        tm[(OP, ":=")] = "COLONEQUAL"
     return tm
 
 
@@ -330,7 +334,6 @@ def handle_token(state, token):
 
     Parameters
     ----------
-
     state :
         The current state of the lexer, including information about whether
         we are in Python mode or subprocess mode, which changes the lexer's
@@ -407,7 +410,7 @@ def _new_token(type, value, pos):
 class Lexer(object):
     """Implements a lexer for the xonsh language."""
 
-    _tokens = None
+    _tokens: tp.Optional[tp.Tuple[str, ...]] = None
 
     def __init__(self):
         """
@@ -481,6 +484,9 @@ class Lexer(object):
     @property
     def tokens(self):
         if self._tokens is None:
+            kwlist = kwmod.kwlist[:]
+            if PYTHON_VERSION_INFO >= (3, 9, 0) and PYTHON_VERSION_INFO < (3, 10):
+                kwlist.remove("__peg_parser__")
             t = (
                 tuple(token_map.values())
                 + (
@@ -502,7 +508,7 @@ class Lexer(object):
                     "ATDOLLAR_LPAREN",  # @$(
                     "ERRORTOKEN",  # whoops!
                 )
-                + tuple(i.upper() for i in kwmod.kwlist)
+                + tuple(i.upper() for i in kwlist)
             )
             self._tokens = t
         return self._tokens

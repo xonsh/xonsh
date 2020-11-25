@@ -10,10 +10,13 @@ from xonsh.platform import ON_WINDOWS
 from xonsh.pyghooks import (
     XonshStyle,
     Color,
+    Token,
     color_name_to_pygments_code,
     code_by_name,
     color_file,
     file_color_tokens,
+    get_style_by_name,
+    register_custom_pygments_style,
 )
 
 from xonsh.environ import LsColors
@@ -35,7 +38,7 @@ def xonsh_builtins_LS_COLORS(xonsh_builtins):
 
 DEFAULT_STYLES = {
     # Reset
-    Color.NO_COLOR: "noinherit",  # Text Reset
+    Color.RESET: "noinherit",  # Text Reset
     # Regular Colors
     Color.BLACK: "ansiblack",
     Color.BLUE: "ansiblue",
@@ -59,7 +62,7 @@ DEFAULT_STYLES = {
 @pytest.mark.parametrize(
     "name, exp",
     [
-        ("NO_COLOR", "noinherit"),
+        ("RESET", "noinherit"),
         ("RED", "ansired"),
         ("BACKGROUND_RED", "bg:ansired"),
         ("BACKGROUND_INTENSE_RED", "bg:ansibrightred"),
@@ -92,7 +95,7 @@ def test_color_name_to_pygments_code(name, exp):
 @pytest.mark.parametrize(
     "name, exp",
     [
-        ("NO_COLOR", "noinherit"),
+        ("RESET", "noinherit"),
         ("RED", "ansired"),
         ("BACKGROUND_RED", "bg:ansired"),
         ("BACKGROUND_INTENSE_RED", "bg:ansibrightred"),
@@ -125,7 +128,7 @@ def test_code_by_name(name, exp):
 @pytest.mark.parametrize(
     "in_tuple, exp_ct, exp_ansi_colors",
     [
-        (("NO_COLOR",), Color.NO_COLOR, "noinherit"),
+        (("RESET",), Color.RESET, "noinherit"),
         (("GREEN",), Color.GREEN, "ansigreen"),
         (("BOLD_RED",), Color.BOLD_RED, "bold ansired"),
         (
@@ -337,3 +340,42 @@ def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
         color_token, color_key = color_file(file_path, os.lstat(file_path))
 
         assert color_key == "ca"
+
+
+@pytest.mark.parametrize(
+    "name, styles, refrules",
+    [
+        ("test1", {}, {}),  # empty styles
+        (
+            "test2",
+            {Token.Literal.String.Single: "#ff0000"},
+            {Token.Literal.String.Single: "#ff0000"},
+        ),  # Token
+        (
+            "test3",
+            {"Token.Literal.String.Single": "#ff0000"},
+            {Token.Literal.String.Single: "#ff0000"},
+        ),  # str key
+        (
+            "test4",
+            {"Literal.String.Single": "#ff0000"},
+            {Token.Literal.String.Single: "#ff0000"},
+        ),  # short str key
+        (
+            "test5",
+            {"completion-menu.completion.current": "#00ff00"},
+            {Token.PTK.CompletionMenu.Completion.Current: "#00ff00"},
+        ),  # ptk style
+    ],
+)
+def test_register_custom_pygments_style(name, styles, refrules):
+    register_custom_pygments_style(name, styles)
+    style = get_style_by_name(name)
+
+    # registration succeeded
+    assert style is not None
+
+    # check rules
+    for rule, color in refrules.items():
+        assert rule in style.styles
+        assert style.styles[rule] == color

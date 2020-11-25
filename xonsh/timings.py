@@ -310,6 +310,11 @@ def setup_timings(argv):
             global _timings
             _timings["on_chdir"] = clock()
 
+        @events.on_pre_prompt_format
+        def timing_on_pre_prompt_format(**kw):
+            global _timings
+            _timings["on_pre_prompt_format"] = clock()
+
         @events.on_post_prompt
         def timing_on_post_prompt(**kw):
             global _timings
