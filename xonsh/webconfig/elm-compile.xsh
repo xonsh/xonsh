@@ -15,7 +15,7 @@ from xonsh.color_tools import rgb_to_ints
 from xonsh.pygments_cache import get_all_styles
 from xonsh.pyghooks import XonshStyle, xonsh_style_proxy, XonshHtmlFormatter, Token, XonshLexer
 from xonsh.prompt.base import PromptFormatter
-from xonsh.xontribs import xontrib_metadata
+from xonsh.xontribs_meta import get_xontribs, Xontrib
 
 
 $RAISE_SUBPROC_ERROR = True
@@ -199,17 +199,23 @@ type alias XontribData =
 xontribs : List XontribData
 xontribs ="""
 
+
+def get_xontrib_item(xontrib_name: str, xontrib: Xontrib):
+    item = 'name = "' + xontrib_name + '", '
+    item += 'url = "' + xontrib.url + '", '
+    item += 'license = "' + (xontrib.package.license if xontrib.package else "") + '", '
+    d = rst_to_html("".join(xontrib.description)).replace("\n", "\\n")
+    item += 'description = "' + escape(d) + '"'
+    return item
+
+
 def render_xontribs(lines):
     print_color("Rendering {GREEN}xontribs{RESET}")
     lines.append(xontrib_header)
-    md = xontrib_metadata()
-    packages = md["packages"]
-    for i, xontrib in enumerate(md["xontribs"]):
-        item = 'name = "' + xontrib["name"] + '", '
-        item += 'url = "' + xontrib["url"] + '", '
-        item += 'license = "' + packages.get(xontrib["package"], {}).get("license", "") + '", '
-        d = rst_to_html("".join(xontrib["description"])).replace("\n", "\\n")
-        item += 'description = "' + escape(d) + '"'
+    md = get_xontribs()
+    for i, xontrib_name in enumerate(md):
+        xontrib = md[xontrib_name]
+        item = get_xontrib_item(xontrib_name, xontrib)
         pre = "    [ " if i == 0 else "    , "
         lines.append(pre + "{ " + item + " }")
     lines.append("    ]")

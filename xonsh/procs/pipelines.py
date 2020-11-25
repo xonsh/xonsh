@@ -147,6 +147,7 @@ class CommandPipeline:
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
         self.lines = []
+        self._raw_output = self._raw_error = b""
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
 
@@ -175,9 +176,9 @@ class CommandPipeline:
         self.proc = self.procs[-1]
 
     def __repr__(self):
-        s = self.__class__.__name__ + "("
-        s += ", ".join(a + "=" + str(getattr(self, a)) for a in self.attrnames)
-        s += ")"
+        s = self.__class__.__name__ + "(\n  "
+        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
+        s += "\n)"
         return s
 
     def __bool__(self):
@@ -331,6 +332,7 @@ class CommandPipeline:
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
         lines = self.lines
+        raw_out_lines = []
         stream = self.captured not in STDOUT_CAPTURE_KINDS
         if stream and not self.spec.stdout:
             stream = False
@@ -346,6 +348,8 @@ class CommandPipeline:
                 else:
                     sys.stdout.write(line.decode(encoding=enc, errors=err))
                 sys.stdout.flush()
+            # save the raw bytes
+            raw_out_lines.append(line)
             # do some munging of the line before we return it
             if line.endswith(crnl):
                 line = line[:-2] + nl
@@ -356,6 +360,9 @@ class CommandPipeline:
             # tee it up!
             lines.append(line)
             yield line
+
+        # using join is more efficient than concatenating in a loop
+        self._raw_output = b"".join(raw_out_lines)
 
     def stream_stderr(self, lines):
         """Streams lines to sys.stderr and the errors attribute."""
@@ -376,6 +383,8 @@ class CommandPipeline:
         else:
             sys.stderr.write(b.decode(encoding=enc, errors=err))
         sys.stderr.flush()
+        # save the raw bytes
+        self._raw_error = b
         # do some munging of the line before we save it to the attr
         b = b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         b = RE_HIDE_ESCAPE.sub(b"", b)
@@ -612,6 +621,18 @@ class CommandPipeline:
         """Error messages as a string."""
         self.end()
         return self.errors
+
+    @property
+    def raw_out(self):
+        """Output as raw bytes."""
+        self.end()
+        return self._raw_output
+
+    @property
+    def raw_err(self):
+        """Errors as raw bytes."""
+        self.end()
+        return self._raw_error
 
     @property
     def pid(self):

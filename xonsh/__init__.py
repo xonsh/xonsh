@@ -14,6 +14,8 @@ else:
     try:
         from xonsh import __amalgam__
 
+        xontribs_meta = __amalgam__
+        _sys.modules["xonsh.xontribs_meta"] = __amalgam__
         contexts = __amalgam__
         _sys.modules["xonsh.contexts"] = __amalgam__
         lazyasd = __amalgam__

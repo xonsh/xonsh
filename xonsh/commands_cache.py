@@ -7,6 +7,7 @@ and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
 import os
+import sys
 import time
 import builtins
 import argparse
@@ -70,7 +71,7 @@ class CommandsCache(cabc.Mapping):
     @staticmethod
     def remove_dups(p):
         ret = list()
-        for e in p:
+        for e in map(os.path.realpath, p):
             if e not in ret:
                 ret.append(e)
         return ret
@@ -82,12 +83,12 @@ class CommandsCache(cabc.Mapping):
         path_immut = tuple(x for x in paths if os.path.isdir(x))
         # did PATH change?
         path_hash = hash(path_immut)
-        cache_valid = path_hash == self._path_checksum
+        cache_valid_path = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
         alss = getattr(builtins, "aliases", dict())
         al_hash = hash(frozenset(alss))
-        cache_valid = cache_valid and al_hash == self._alias_checksum
+        cache_valid_aliases = al_hash == self._alias_checksum
         self._alias_checksum = al_hash
         # did the contents of any directory in PATH change?
         max_mtime = 0
@@ -95,10 +96,19 @@ class CommandsCache(cabc.Mapping):
             mtime = os.stat(path).st_mtime
             if mtime > max_mtime:
                 max_mtime = mtime
-        cache_valid = cache_valid and (max_mtime <= self._path_mtime)
+        cache_valid_paths = max_mtime <= self._path_mtime
         self._path_mtime = max_mtime
-        if cache_valid:
+
+        if cache_valid_path and cache_valid_paths:
+            if not cache_valid_aliases:
+                for cmd, alias in alss.items():
+                    key = cmd.upper() if ON_WINDOWS else cmd
+                    if key in self._cmds_cache:
+                        self._cmds_cache[key] = (self._cmds_cache[key][0], alias)
+                    else:
+                        self._cmds_cache[key] = (cmd, True)
             return self._cmds_cache
+
         allcmds = {}
         for path in reversed(path_immut):
             # iterate backwards so that entries at the front of PATH overwrite
@@ -106,10 +116,19 @@ class CommandsCache(cabc.Mapping):
             for cmd in executables_in(path):
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), alss.get(key, None))
+
+        warn_cnt = builtins.__xonsh__.env.get("COMMANDS_CACHE_SIZE_WARNING")
+        if warn_cnt and len(allcmds) > warn_cnt:
+            print(
+                f"Warning! Found {len(allcmds):,} executable files in the PATH directories!",
+                file=sys.stderr,
+            )
+
         for cmd in alss:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (cmd, True)
+
         self._cmds_cache = allcmds
         return allcmds
 

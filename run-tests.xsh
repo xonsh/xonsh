@@ -1,5 +1,6 @@
 #!/usr/bin/env xonsh
 import argparse
+import subprocess
 from typing import List
 
 
@@ -7,7 +8,7 @@ $XONSH_DEBUG = 1
 $RAISE_SUBPROC_ERROR = True
 
 
-def _replace_args(args:List[str], num:int) -> List[str]:
+def _replace_args(args: List[str], num: int) -> List[str]:
     return [
          (arg % num) if "%d" in arg else arg
          for arg in args
@@ -55,6 +56,8 @@ def qa(ns: argparse.Namespace):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.set_defaults(func=lambda *args: parser.print_help())
+
     commands = parser.add_subparsers()
 
     test_parser = commands.add_parser('test', help=test.__doc__)
@@ -70,4 +73,7 @@ if __name__ == '__main__':
     qa_parser.set_defaults(func=qa)
 
     args = parser.parse_args()
-    args.func(args)
+    try:
+        args.func(args)
+    except subprocess.CalledProcessError as ex:
+        parser.exit(1, f"Failed with {ex}")

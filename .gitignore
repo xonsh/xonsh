@@ -71,10 +71,6 @@ rever/
 xonsh/webconfig/elm-stuff/
 xonsh/webconfig/js/app.js
 
-# venv (e.g, autovox)
-venv/
-.venv/
-
 # VS Code
 .vscode/
 
@@ -83,3 +79,4 @@ venv/
 
 # mypy
 .dmypy.json
+.mypy_cache

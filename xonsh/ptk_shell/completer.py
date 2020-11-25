@@ -48,7 +48,7 @@ class PromptToolkitCompleter(Completer):
         self.current_document = document
 
         # get normal completions
-        completions, l = self.completer.complete(
+        completions, plen = self.completer.complete(
             prefix, line_ex, begidx + expand_offset, endidx + expand_offset, self.ctx
         )
 
@@ -88,13 +88,13 @@ class PromptToolkitCompleter(Completer):
             if isinstance(comp, RichCompletion):
                 yield Completion(
                     comp,
-                    -comp.prefix_len if comp.prefix_len is not None else -l,
+                    -comp.prefix_len if comp.prefix_len is not None else -plen,
                     display=comp.display,
                     display_meta=comp.description or None,
                 )
             else:
                 disp = comp[pre:].strip("'\"")
-                yield Completion(comp, -l, display=disp)
+                yield Completion(comp, -plen, display=disp)
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""
@@ -110,7 +110,7 @@ class PromptToolkitCompleter(Completer):
         """Adjust the height for showing autocompletion menu."""
         app = get_app()
         render = app.renderer
-        window = app.layout.container.children[0].content.children[1].content
+        window = app.layout.current_window
 
         if window and window.render_info:
             h = window.render_info.content_height

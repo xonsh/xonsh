@@ -33,6 +33,14 @@ def cd_in_command(line):
     return have_cd
 
 
+def _get_normalized_pstring_quote(s):
+    for pre, norm_pre in (("p", "p"), ("pr", "pr"), ("rp", "pr"), ("fp", "pf")):
+        for q in ('"', "'"):
+            if s.startswith(f"{pre}{q}"):
+                return norm_pre, q
+    return (None, None)
+
+
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
         pos = len(inp)
@@ -51,6 +59,14 @@ def _path_from_partial_string(inp, pos=None):
             else:
                 return None
         string = partial[startix:endix]
+
+    # If 'pr'/'rp', treat as raw string, otherwise strip leading 'p'
+    pstring_pre = _get_normalized_pstring_quote(quote)[0]
+    if pstring_pre == "pr":
+        string = f"r{string[2:]}"
+    elif pstring_pre == "p":
+        string = string[1:]
+
     end = xt.RE_STRING_START.sub("", quote)
     _string = string
     if not _string.endswith(end):
@@ -279,6 +295,10 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     lprefix = len(prefix)
     if p is not None:
         lprefix = len(p[0])
+        # Compensate for 'p' if p-string variant
+        pstring_pre = _get_normalized_pstring_quote(p[2])[0]
+        if pstring_pre in ("pr", "p"):
+            lprefix += 1
         prefix = p[1]
         path_str_start = p[2]
         path_str_end = p[3]

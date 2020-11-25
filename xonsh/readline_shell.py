@@ -365,8 +365,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
+        events.on_pre_prompt_format.fire()
+        prompt = self.prompt
         events.on_pre_prompt.fire()
-        rtn = input(self.prompt)
+        rtn = input(prompt)
         events.on_post_prompt.fire()
         if not store_in_history and pos >= 0:
             readline.remove_history_item(pos)
@@ -424,10 +426,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
-        completions, l = self.completer.complete(
+        completions, plen = self.completer.complete(
             prefix, line, begidx, endidx, ctx=self.ctx
         )
-        rtn_completions = _render_completions(completions, prefix, l)
+        rtn_completions = _render_completions(completions, prefix, plen)
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
@@ -631,7 +633,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         else:
             # assume this is a list of (Token, str) tuples and format it
             env = builtins.__xonsh__.env
+            style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
+            self.styler.override(style_overrides_env)
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
             formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()

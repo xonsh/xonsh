@@ -130,10 +130,10 @@ def _expandpath(path):
 
 def simple_random_choice(lst):
     """Returns random element from the list with length less than 1 million elements."""
-    l = len(lst)
-    if l > 1000000:  # microsecond maximum
+    size = len(lst)
+    if size > 1000000:  # microsecond maximum
         raise ValueError("The list is too long.")
-    return lst[datetime.datetime.now().microsecond % l]
+    return lst[datetime.datetime.now().microsecond % size]
 
 
 def decode_bytes(b):
@@ -1617,10 +1617,12 @@ def ptk2_color_depth_setter(x):
 
 
 def is_completions_display_value(x):
+    """Enumerated values of ``$COMPLETIONS_DISPLAY``"""
     return x in {"none", "single", "multi"}
 
 
 def to_completions_display_value(x):
+    """Convert user input to value of ``$COMPLETIONS_DISPLAY``"""
     x = str(x).lower()
     if x in {"none", "false"}:
         x = "none"
@@ -1634,6 +1636,33 @@ def to_completions_display_value(x):
         warnings.warn(msg, RuntimeWarning)
         x = "multi"
     return x
+
+
+CANONIC_COMPLETION_MODES = frozenset({"default", "menu-complete"})
+
+
+def is_completion_mode(x):
+    """Enumerated values of $COMPLETION_MODE"""
+    return x in CANONIC_COMPLETION_MODES
+
+
+def to_completion_mode(x):
+    """Convert user input to value of $COMPLETION_MODE"""
+    y = str(x).casefold().replace("_", "-")
+    y = (
+        "default"
+        if y in ("", "d", "xonsh", "none", "def")
+        else "menu-complete"
+        if y in ("m", "menu", "menu-completion")
+        else y
+    )
+    if y not in CANONIC_COMPLETION_MODES:
+        warnings.warn(
+            f"'{x}' is not valid for $COMPLETION_MODE, must be one of {CANONIC_COMPLETION_MODES}.  Using 'default'.",
+            RuntimeWarning,
+        )
+        y = "default"
+    return y
 
 
 def is_str_str_dict(x):
@@ -1837,7 +1866,14 @@ def format_color(string, **kwargs):
     shell instances method of the same name. The results of this function should
     be directly usable by print_color().
     """
-    return builtins.__xonsh__.shell.shell.format_color(string, **kwargs)
+    if hasattr(builtins.__xonsh__.shell, "shell"):
+        return builtins.__xonsh__.shell.shell.format_color(string, **kwargs)
+    else:
+        # fallback for ANSI if shell is not yet initialized
+        from xonsh.ansi_colors import ansi_partial_color_format
+
+        style = builtins.__xonsh__.env.get("XONSH_COLOR_STYLE")
+        return ansi_partial_color_format(string, style=style)
 
 
 def print_color(string, **kwargs):
@@ -1845,7 +1881,11 @@ def print_color(string, **kwargs):
     method of the same name. Colors will be formatted if they have not already
     been.
     """
-    builtins.__xonsh__.shell.shell.print_color(string, **kwargs)
+    if hasattr(builtins.__xonsh__.shell, "shell"):
+        builtins.__xonsh__.shell.shell.print_color(string, **kwargs)
+    else:
+        # fallback for ANSI if shell is not yet initialized
+        print(format_color(string, **kwargs))
 
 
 def color_style_names():

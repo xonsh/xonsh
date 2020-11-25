@@ -30,8 +30,6 @@ from xonsh.platform import (
     os_environ,
 )
 
-from xonsh.style_tools import PTK2_STYLE
-
 from xonsh.tools import (
     always_true,
     always_false,
@@ -57,6 +55,8 @@ from xonsh.tools import (
     is_string_or_callable,
     is_completions_display_value,
     to_completions_display_value,
+    is_completion_mode,
+    to_completion_mode,
     is_string_set,
     csv_to_set,
     set_to_csv,
@@ -851,6 +851,17 @@ def DEFAULT_VARS():
             "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
             "prompt-toolkit shell.",
         ),
+        "COMPLETION_MODE": Var(
+            is_completion_mode,
+            to_completion_mode,
+            str,
+            "default",
+            "Mode of tab completion in prompt-toolkit shell (only).\n\n"
+            "'default', the default, selects the common prefix of completions on first TAB,\n"
+            "then cycles through all completions.\n"
+            "'menu-complete' selects the first whole completion on the first TAB, \n"
+            "then cycles through the remaining completions, then the common prefix.",
+        ),
         "COMPLETION_QUERY_LIMIT": Var(
             is_int,
             int,
@@ -1194,6 +1205,16 @@ def DEFAULT_VARS():
             "NOTE: ``$UPDATE_PROMPT_ON_KEYPRESS`` must be set to ``True`` for this "
             "variable to take effect.",
         ),
+        "PROMPT_TOKENS_FORMATTER": Var(
+            validate=callable,
+            convert=None,
+            detype=None,
+            default=prompt.prompt_tokens_formatter_default,
+            doc="Final processor that receives all tokens in the prompt template. "
+            "It gives option to format the prompt with different prefix based on other tokens values. "
+            "Highly useful for implementing something like powerline theme.",
+            doc_default="``xonsh.prompt.base.prompt_tokens_formatter_default``",
+        ),
         "PROMPT_TOOLKIT_COLOR_DEPTH": Var(
             always_false,
             ptk2_color_depth_setter,
@@ -1207,8 +1228,8 @@ def DEFAULT_VARS():
             is_str_str_dict,
             to_str_str_dict,
             dict_to_str,
-            dict(PTK2_STYLE),
-            "A dictionary containing custom prompt_toolkit style definitions.",
+            {},
+            "A dictionary containing custom prompt_toolkit style definitions. (deprecated)",
         ),
         "PUSHD_MINUS": Var(
             is_bool,
@@ -1708,6 +1729,18 @@ def DEFAULT_VARS():
             "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
             "history files.",
         ),
+        "XONSH_STYLE_OVERRIDES": Var(
+            is_str_str_dict,
+            to_str_str_dict,
+            dict_to_str,
+            {},
+            "A dictionary containing custom prompt_toolkit/pygments style definitions.\n"
+            "The following style definitions are supported:\n\n"
+            "    - ``pygments.token.Token`` - ``$XONSH_STYLE_OVERRIDES[Token.Keyword] = '#ff0000'``\n"
+            "    - pygments token name (string) - ``$XONSH_STYLE_OVERRIDES['Token.Keyword'] = '#ff0000'``\n"
+            "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
+            "(The rules above are all have the same effect.)",
+        ),
         "XONSH_TRACE_SUBPROC": Var(
             is_bool,
             to_bool,
@@ -1724,6 +1757,13 @@ def DEFAULT_VARS():
             "``XONSH_SHOW_TRACEBACK`` has been set. Its value must be a writable file "
             "or None / the empty string if traceback logging is not desired. "
             "Logging to a file is not enabled by default.",
+        ),
+        "COMMANDS_CACHE_SIZE_WARNING": Var(
+            is_int,
+            int,
+            str,
+            6000,
+            "Number of files on the PATH above which a warning is shown.",
         ),
     }
 

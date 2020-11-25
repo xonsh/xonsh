@@ -76,8 +76,8 @@ def carriage_return(b, cli, *, autoindent=True):
         b.validate_and_handle()
 
 
-def _is_blank(l):
-    return len(l.strip()) == 0
+def _is_blank(line):
+    return len(line.strip()) == 0
 
 
 def can_compile(src):
@@ -107,6 +107,12 @@ def tab_insert_indent():
     before_cursor = get_app().current_buffer.document.current_line_before_cursor
 
     return bool(before_cursor.isspace())
+
+
+@Condition
+def tab_menu_complete():
+    """Checks whether completion mode is `menu-complete`"""
+    return builtins.__xonsh__.env.get("COMPLETION_MODE") == "menu-complete"
 
 
 @Condition
@@ -205,6 +211,15 @@ def load_xonsh_bindings() -> KeyBindingsBase:
         """
         env = builtins.__xonsh__.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
+
+    @handle(Keys.Tab, filter=~tab_insert_indent & tab_menu_complete)
+    def menu_complete_select(event):
+        """Start completion in menu-complete mode, or tab to next completion"""
+        b = event.current_buffer
+        if b.complete_state:
+            b.complete_next()
+        else:
+            b.start_completion(select_first=True)
 
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):

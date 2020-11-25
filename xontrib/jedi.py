@@ -8,6 +8,7 @@ from xonsh.completers.tools import (
     get_ptk_completer,
     RichCompletion,
 )
+from xonsh.completers import _aliases
 
 __all__ = ()
 
@@ -72,15 +73,14 @@ def complete_jedi(prefix, line, start, end, ctx):
 
     extra_ctx = {"__xonsh__": __xonsh__}
     try:
-        extra_ctx['_'] = _
+        extra_ctx["_"] = _
     except NameError:
         pass
 
     if JEDI_NEW_API:
         script = jedi.Interpreter(source, [ctx, extra_ctx])
     else:
-        script = jedi.Interpreter(source, [ctx, extra_ctx], line=row,
-                                  column=column)
+        script = jedi.Interpreter(source, [ctx, extra_ctx], line=row, column=column)
 
     script_comp = set()
     try:
@@ -100,16 +100,16 @@ def complete_jedi(prefix, line, start, end, ctx):
             (
                 create_completion(comp)
                 for comp in script_comp
-                if complete_underscores or
-                   not comp.name.startswith('_') or
-                   not comp.complete.startswith("_")
+                if complete_underscores
+                or not comp.name.startswith("_")
+                or not comp.complete.startswith("_")
             ),
             (t for t in XONSH_SPECIAL_TOKENS if filter_func(t, prefix)),
         )
     )
 
 
-def create_completion(comp):
+def create_completion(comp: jedi.api.classes.Completion):
     """Create a RichCompletion from a Jedi Completion object"""
     comp_type = None
     description = None
@@ -138,7 +138,6 @@ def create_completion(comp):
 xonsh.completers.base.complete_python = complete_jedi
 
 # Jedi ignores leading '@(' and friends
-completer remove python_mode
-
-completer add jedi_python complete_jedi '<python'
-completer remove python
+_aliases._remove_completer(["python_mode"])
+_aliases._add_one_completer("jedi_python", complete_jedi, "<python")
+_aliases._remove_completer(["python"])

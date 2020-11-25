@@ -48,8 +48,8 @@ if ON_POSIX:
 
 
 @lazyobject
-def SUB_EXEC_ALIAS_RE():
-    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+")
+def EXEC_ALIAS_RE():
+    return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
 
 
 class Aliases(cabc.MutableMapping):
@@ -128,8 +128,8 @@ class Aliases(cabc.MutableMapping):
     def __setitem__(self, key, val):
         if isinstance(val, str):
             f = "<exec-alias:" + key + ">"
-            if SUB_EXEC_ALIAS_RE.search(val) is not None:
-                # We have a sub-command, e.g. $(cmd), to evaluate
+            if EXEC_ALIAS_RE.search(val) is not None:
+                # We have a sub-command (e.g. $(cmd)) or IO redirect (e.g. >>)
                 self._raw[key] = ExecAlias(val, filename=f)
             elif isexpression(val):
                 # expansion substitution

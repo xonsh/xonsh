@@ -1,16 +1,17 @@
 """Tools for helping manage xontributions."""
-import os
-import sys
-import json
-import builtins
 import argparse
+import builtins
 import functools
 import importlib
 import importlib.util
-
+import json
+import sys
+import typing as tp
 from enum import IntEnum
-from xonsh.tools import print_color, print_exception, unthreadable
 from pathlib import Path
+
+from xonsh.xontribs_meta import get_xontribs
+from xonsh.tools import print_color, print_exception, unthreadable
 
 
 class ExitCode(IntEnum):
@@ -42,14 +43,15 @@ def xontrib_context(name):
     return ctx
 
 
-def prompt_xontrib_install(names):
+def prompt_xontrib_install(names: tp.List[str]):
     """Returns a formatted string with name of xontrib package to prompt user"""
-    md = xontrib_metadata()
+    xontribs = get_xontribs()
     packages = []
     for name in names:
-        for xontrib in md["xontribs"]:
-            if xontrib["name"] == name:
-                packages.append(xontrib["package"])
+        if name in xontribs:
+            xontrib = xontribs[name]
+            if xontrib.package:
+                packages.append(xontrib.package.name)
 
     print(
         "The following xontribs are enabled but not installed: \n"
@@ -76,44 +78,6 @@ def update_context(name, ctx=None):
     return ctx.update(modctx)
 
 
-@functools.lru_cache()
-def xontrib_metadata():
-    """Loads and returns the xontribs.json file."""
-    impres = None
-    pkg_resources = None
-
-    # NOTE: Reduce all of these alternate implementations when the minimum Python
-    #       is >=3.7
-    try:
-        # Python 3.7
-        import importlib.resources as impres
-    except ImportError:
-        try:
-            # Optional backport for <3.7
-            import importlib_resources as impres
-        except ImportError:
-            try:
-                # Try the slower and clunkier pkg_resources
-                # This is only available if setuptools is part of the environment
-                import pkg_resources
-            except ImportError:
-                pass
-
-    if impres:
-        with impres.open_text("xonsh", "xontribs.json") as f:
-            md = json.load(f)
-    elif pkg_resources:
-        # Despite the name, this is a bytes
-        bytesdata = pkg_resources.resource_string("xonsh", "xontribs.json")
-        md = json.loads(bytesdata.decode("utf-8"))
-    else:
-        path = os.path.join(os.path.dirname(__file__), "xontribs.json")
-        with open(path, "r") as f:
-            md = json.load(f)
-
-    return md
-
-
 def xontribs_load(names, verbose=False):
     """Load xontribs from a list of names"""
     ctx = builtins.__xonsh__.ctx
@@ -138,39 +102,39 @@ def _load(ns):
     return xontribs_load(ns.names, verbose=ns.verbose)
 
 
-def xontrib_installed(ns=None):
+def xontrib_installed(names: tp.Set[str]):
     """Returns list of installed xontribs."""
     installed_xontribs = set()
-    xontrib_locations = importlib.util.find_spec("xontrib").submodule_search_locations
-    names = None if not ns or len(ns.names) == 0 else set(ns.names)
-    if xontrib_locations:
-        for xl in xontrib_locations:
-            for x in Path(xl).glob("*"):
-                name = x.name.split(".")[0]
-                if name[0] == "_" or (names and name not in names):
-                    continue
-                installed_xontribs.add(name)
+    spec = importlib.util.find_spec("xontrib")
+    if spec:
+        xontrib_locations = spec.submodule_search_locations
+        if xontrib_locations:
+            for xl in xontrib_locations:
+                for x in Path(xl).glob("*"):
+                    name = x.name.split(".")[0]
+                    if name[0] == "_" or (names and name not in names):
+                        continue
+                    installed_xontribs.add(name)
     return installed_xontribs
 
 
 def xontrib_data(ns):
     """Collects and returns the data about xontribs."""
-    meta = xontrib_metadata()
+    meta = get_xontribs()
     data = {}
-    names = None if not ns or len(ns.names) == 0 else set(ns.names)
-    for md in meta["xontribs"]:
-        name = md["name"]
-        if names is not None and md["name"] not in names:
+    names: tp.Set[str] = set() if not ns else set(ns.names)
+    for xo_name in meta:
+        if xo_name not in names:
             continue
-        spec = find_xontrib(name)
+        spec = find_xontrib(xo_name)
         if spec is None:
             installed = loaded = False
         else:
             installed = True
             loaded = spec.name in sys.modules
-        data[name] = {"name": name, "installed": installed, "loaded": loaded}
+        data[xo_name] = {"name": xo_name, "installed": installed, "loaded": loaded}
 
-    installed_xontribs = xontrib_installed(ns)
+    installed_xontribs = xontrib_installed(names)
     for name in installed_xontribs:
         if name not in data:
             loaded = f"xontrib.{name}" in sys.modules
