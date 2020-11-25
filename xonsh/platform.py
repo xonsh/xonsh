@@ -393,10 +393,10 @@ def windows_bash_command():
 if ON_WINDOWS:
 
     class OSEnvironCasePreserving(cabc.MutableMapping):
-        """ Case-preserving wrapper for os.environ on Windows.
-            It uses nt.environ to get the correct cased keys on
-            initialization. It also preserves the case of any variables
-            add after initialization.
+        """Case-preserving wrapper for os.environ on Windows.
+        It uses nt.environ to get the correct cased keys on
+        initialization. It also preserves the case of any variables
+        add after initialization.
         """
 
         def __init__(self):
@@ -405,8 +405,8 @@ if ON_WINDOWS:
             self._upperkeys = dict((k.upper(), k) for k in nt.environ)
 
         def _sync(self):
-            """ Ensure that the case sensitive map of the keys are
-                in sync with os.environ
+            """Ensure that the case sensitive map of the keys are
+            in sync with os.environ
             """
             envkeys = set(os.environ.keys())
             for key in envkeys.difference(self._upperkeys):

@@ -54,8 +54,7 @@ class Message(Node):
 
 
 class Question(Node):
-    """Asks a question and then chooses the next node based on the response.
-    """
+    """Asks a question and then chooses the next node based on the response."""
 
     attrs = ("question", "responses", "converter", "path")
 

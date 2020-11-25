@@ -287,8 +287,7 @@ def print_one_job(num, outfile=sys.stdout):
 
 
 def get_next_job_number():
-    """Get the lowest available unique job number (for the next job created).
-    """
+    """Get the lowest available unique job number (for the next job created)."""
     _clear_dead_jobs()
     i = 1
     while i in builtins.__xonsh__.all_jobs:

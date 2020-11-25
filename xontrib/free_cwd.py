@@ -17,8 +17,8 @@ from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_MSYS
 
 
 def _chdir_up(path):
-    """ Change directory to path or if path does not exist
-        the first valid parent.
+    """Change directory to path or if path does not exist
+    the first valid parent.
     """
     path = Path(path)
     try:
@@ -30,10 +30,10 @@ def _chdir_up(path):
 
 
 def _cwd_release_wrapper(func):
-    """ Decorator for Windows to wrap the prompt function and release
-        the process lock on the current directory while the prompt is
-        displayed. This works by temporarily setting
-        the workdir to the users home directory.
+    """Decorator for Windows to wrap the prompt function and release
+    the process lock on the current directory while the prompt is
+    displayed. This works by temporarily setting
+    the workdir to the users home directory.
     """
     env = builtins.__xonsh__.env
     if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
@@ -66,9 +66,9 @@ def _cwd_release_wrapper(func):
 
 
 def _cwd_restore_wrapper(func):
-    """ Decorator for Windows which will temporary restore the true working
-        directory. Designed to wrap completer callbacks from the
-        prompt_toolkit or readline.
+    """Decorator for Windows which will temporary restore the true working
+    directory. Designed to wrap completer callbacks from the
+    prompt_toolkit or readline.
     """
     env = builtins.__xonsh__.env
     if env.get("UPDATE_PROMPT_ON_KEYPRESS"):

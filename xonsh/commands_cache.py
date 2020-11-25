@@ -59,8 +59,8 @@ class CommandsCache(cabc.Mapping):
     @staticmethod
     def get_possible_names(name):
         """Generates the possible `PATHEXT` extension variants of a given executable
-         name on Windows as a list, conserving the ordering in `PATHEXT`.
-         Returns a list as `name` being the only item in it on other platforms."""
+        name on Windows as a list, conserving the ordering in `PATHEXT`.
+        Returns a list as `name` being the only item in it on other platforms."""
         if ON_WINDOWS:
             pathext = builtins.__xonsh__.env.get("PATHEXT", [])
             name = name.upper()
