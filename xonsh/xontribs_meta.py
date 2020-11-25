@@ -181,6 +181,16 @@ def define_xontribs():
             "``complete``.",
             package=core_pkg,
         ),
+        "broot": Xontrib(
+            url="github.com/jnoortheen/xontrib-broot",
+            description="supports broot with br alias",
+            package=_XontribPkg(
+                name="xontrib-broot",
+                license="MIT",
+                install={"pip": "xpip install xontrib-broot"},
+                url="https://github.com/jnoortheen/xontrib-broot",
+            ),
+        ),
         "cmd_done": Xontrib(
             url="https://github.com/jnoortheen/xontrib-cmd-durations",
             description="send notification once long-running command is "
