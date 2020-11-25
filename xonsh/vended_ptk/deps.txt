@@ -1,1 +1,2 @@
-prompt_toolkit==3.0.3
+# update this file and then run `xonsh tasks.xsh vendor` to install the latest files
+prompt_toolkit==3.0.8

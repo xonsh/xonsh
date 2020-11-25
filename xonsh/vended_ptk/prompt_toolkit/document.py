@@ -59,7 +59,7 @@ class _ImmutableLineList(list):
     pop = _error
     remove = _error
     reverse = _error
-    sort = _error
+    sort = _error  # type: ignore
 
 
 class _DocumentCache:
@@ -232,14 +232,14 @@ class Document:
 
     @property
     def line_count(self) -> int:
-        r""" Return the number of lines in this document. If the document ends
-        with a trailing \n, that counts as the beginning of a new line. """
+        r"""Return the number of lines in this document. If the document ends
+        with a trailing \n, that counts as the beginning of a new line."""
         return len(self.lines)
 
     @property
     def current_line(self) -> str:
-        """ Return the text on the line where the cursor is. (when the input
-        consists of just one line, it equals `text`. """
+        """Return the text on the line where the cursor is. (when the input
+        consists of just one line, it equals `text`."""
         return self.current_line_before_cursor + self.current_line_after_cursor
 
     @property
@@ -456,7 +456,7 @@ class Document:
         self, WORD: bool = False, pattern: Optional[Pattern[str]] = None
     ) -> bool:
         if pattern:
-            return self.find_start_of_previous_word(pattern=pattern) is None
+            return self.find_start_of_previous_word(WORD=WORD, pattern=pattern) is None
         else:
             return (
                 self.text_before_cursor == "" or self.text_before_cursor[-1:].isspace()
@@ -825,7 +825,9 @@ class Document:
         """
 
         # Look for a match.
-        for A, B in "()", "[]", "{}", "<>":
+        for pair in "()", "[]", "{}", "<>":
+            A = pair[0]
+            B = pair[1]
             if self.current_char == A:
                 return self.find_enclosing_bracket_right(A, B, end_pos=end_pos) or 0
             elif self.current_char == B:

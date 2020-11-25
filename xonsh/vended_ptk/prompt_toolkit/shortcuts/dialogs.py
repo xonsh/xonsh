@@ -16,6 +16,7 @@ from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.styles import BaseStyle
+from prompt_toolkit.validation import Validator
 from prompt_toolkit.widgets import (
     Box,
     Button,
@@ -25,6 +26,7 @@ from prompt_toolkit.widgets import (
     ProgressBar,
     RadioList,
     TextArea,
+    ValidationToolbar,
 )
 
 __all__ = [
@@ -105,6 +107,7 @@ def input_dialog(
     ok_text: str = "OK",
     cancel_text: str = "Cancel",
     completer: Optional[Completer] = None,
+    validator: Optional[Validator] = None,
     password: FilterOrBool = False,
     style: Optional[BaseStyle] = None,
 ) -> Application[str]:
@@ -124,13 +127,21 @@ def input_dialog(
     cancel_button = Button(text=cancel_text, handler=_return_none)
 
     textfield = TextArea(
-        multiline=False, password=password, completer=completer, accept_handler=accept
+        multiline=False,
+        password=password,
+        completer=completer,
+        validator=validator,
+        accept_handler=accept,
     )
 
     dialog = Dialog(
         title=title,
         body=HSplit(
-            [Label(text=text, dont_extend_height=True), textfield,],
+            [
+                Label(text=text, dont_extend_height=True),
+                textfield,
+                ValidationToolbar(),
+            ],
             padding=D(preferred=1, max=1),
         ),
         buttons=[ok_button, cancel_button],
@@ -152,7 +163,7 @@ def message_dialog(
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
-        buttons=[Button(text=ok_text, handler=_return_none),],
+        buttons=[Button(text=ok_text, handler=_return_none)],
         with_background=True,
     )
 
@@ -184,7 +195,8 @@ def radiolist_dialog(
     dialog = Dialog(
         title=title,
         body=HSplit(
-            [Label(text=text, dont_extend_height=True), radio_list,], padding=1
+            [Label(text=text, dont_extend_height=True), radio_list],
+            padding=1,
         ),
         buttons=[
             Button(text=ok_text, handler=ok_handler),
@@ -220,7 +232,10 @@ def checkboxlist_dialog(
 
     dialog = Dialog(
         title=title,
-        body=HSplit([Label(text=text, dont_extend_height=True), cb_list,], padding=1),
+        body=HSplit(
+            [Label(text=text, dont_extend_height=True), cb_list],
+            padding=1,
+        ),
         buttons=[
             Button(text=ok_text, handler=ok_handler),
             Button(text=cancel_text, handler=_return_none),
@@ -254,7 +269,11 @@ def progress_dialog(
 
     dialog = Dialog(
         body=HSplit(
-            [Box(Label(text=text)), Box(text_area, padding=D.exact(1)), progressbar,]
+            [
+                Box(Label(text=text)),
+                Box(text_area, padding=D.exact(1)),
+                progressbar,
+            ]
         ),
         title=title,
         with_background=True,
@@ -293,7 +312,7 @@ def _create_app(dialog: AnyContainer, style: Optional[BaseStyle]) -> Application
 
     return Application(
         layout=Layout(dialog),
-        key_bindings=merge_key_bindings([load_key_bindings(), bindings,]),
+        key_bindings=merge_key_bindings([load_key_bindings(), bindings]),
         mouse_support=True,
         style=style,
         full_screen=True,

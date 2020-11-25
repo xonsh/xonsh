@@ -8,6 +8,8 @@ http://pygments.org/
 """
 import array
 import errno
+import io
+import os
 import sys
 from typing import (
     IO,
@@ -26,6 +28,7 @@ from typing import (
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.output import Output
 from prompt_toolkit.styles import ANSI_COLOR_NAMES, Attrs
+from prompt_toolkit.utils import is_dumb_terminal
 
 from .color_depth import ColorDepth
 
@@ -415,6 +418,7 @@ class Vt100_Output(Output):
         get_size: Callable[[], Size],
         term: Optional[str] = None,
         write_binary: bool = True,
+        default_color_depth: Optional[ColorDepth] = None,
     ) -> None:
 
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
@@ -425,8 +429,9 @@ class Vt100_Output(Output):
         self._buffer: List[str] = []
         self.stdout = stdout
         self.write_binary = write_binary
+        self.default_color_depth = default_color_depth
         self._get_size = get_size
-        self.term = term or "xterm"
+        self.term = term
 
         # Cache for escape codes.
         self._escape_code_caches: Dict[ColorDepth, _EscapeCodeCache] = {
@@ -437,22 +442,32 @@ class Vt100_Output(Output):
         }
 
     @classmethod
-    def from_pty(cls, stdout: TextIO, term: Optional[str] = None) -> "Vt100_Output":
+    def from_pty(
+        cls,
+        stdout: TextIO,
+        term: Optional[str] = None,
+        default_color_depth: Optional[ColorDepth] = None,
+    ) -> "Vt100_Output":
         """
         Create an Output class from a pseudo terminal.
         (This will take the dimensions by reading the pseudo
         terminal attributes.)
         """
+        fd: Optional[int]
         # Normally, this requires a real TTY device, but people instantiate
         # this class often during unit tests as well. For convenience, we print
         # an error message, use standard dimensions, and go on.
-        fd = stdout.fileno()
+        try:
+            fd = stdout.fileno()
+        except io.UnsupportedOperation:
+            fd = None
 
-        if not stdout.isatty() and fd not in cls._fds_not_a_terminal:
+        if not stdout.isatty() and (fd is None or fd not in cls._fds_not_a_terminal):
             msg = "Warning: Output is not a terminal (fd=%r).\n"
             sys.stderr.write(msg % fd)
             sys.stderr.flush()
-            cls._fds_not_a_terminal.add(fd)
+            if fd is not None:
+                cls._fds_not_a_terminal.add(fd)
 
         def get_size() -> Size:
             # If terminal (incorrectly) reports its size as 0, pick a
@@ -470,7 +485,7 @@ class Vt100_Output(Output):
                 pass
             return Size(rows=rows or 24, columns=columns or 80)
 
-        return cls(stdout, get_size, term=term)
+        return cls(stdout, get_size, term=term, default_color_depth=default_color_depth)
 
     def get_size(self) -> Size:
         return self._get_size()
@@ -679,7 +694,45 @@ class Vt100_Output(Output):
         self.write_raw("\x1b[6n")
         self.flush()
 
+    @property
+    def responds_to_cpr(self) -> bool:
+        # When the input is a tty, we assume that CPR is supported.
+        # It's not when the input is piped from Pexpect.
+        if os.environ.get("PROMPT_TOOLKIT_NO_CPR", "") == "1":
+            return False
+
+        if is_dumb_terminal(self.term):
+            return False
+        try:
+            return self.stdout.isatty()
+        except ValueError:
+            return False  # ValueError: I/O operation on closed file
+
     def bell(self) -> None:
         " Sound bell. "
         self.write_raw("\a")
         self.flush()
+
+    def get_default_color_depth(self) -> ColorDepth:
+        """
+        Return the default color depth for a vt100 terminal, according to the
+        our term value.
+
+        We prefer 256 colors almost always, because this is what most terminals
+        support these days, and is a good default.
+        """
+        if self.default_color_depth is not None:
+            return self.default_color_depth
+
+        term = self.term
+
+        if term is None:
+            return ColorDepth.DEFAULT
+
+        if is_dumb_terminal(term):
+            return ColorDepth.DEPTH_1_BIT
+
+        if term in ("linux", "eterm-color"):
+            return ColorDepth.DEPTH_4_BIT
+
+        return ColorDepth.DEFAULT

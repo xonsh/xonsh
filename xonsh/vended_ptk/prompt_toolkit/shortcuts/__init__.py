@@ -7,7 +7,7 @@ from .dialogs import (
     radiolist_dialog,
     yes_no_dialog,
 )
-from .progress_bar import ProgressBar
+from .progress_bar import ProgressBar, ProgressBarCounter
 from .prompt import (
     CompleteStyle,
     PromptSession,
@@ -34,9 +34,11 @@ __all__ = [
     "CompleteStyle",
     # Progress bars.
     "ProgressBar",
+    "ProgressBarCounter",
     # Utils.
     "clear",
     "clear_title",
+    "print_container",
     "print_formatted_text",
     "set_title",
 ]

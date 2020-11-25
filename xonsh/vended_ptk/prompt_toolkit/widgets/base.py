@@ -59,7 +59,11 @@ from prompt_toolkit.layout.controls import (
 from prompt_toolkit.layout.dimension import AnyDimension
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.dimension import to_dimension
-from prompt_toolkit.layout.margins import NumberedMargin, ScrollbarMargin
+from prompt_toolkit.layout.margins import (
+    ConditionalMargin,
+    NumberedMargin,
+    ScrollbarMargin,
+)
 from prompt_toolkit.layout.processors import (
     AppendAutoSuggestion,
     BeforeInput,
@@ -70,6 +74,7 @@ from prompt_toolkit.layout.processors import (
 from prompt_toolkit.lexers import DynamicLexer, Lexer
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import get_cwidth
+from prompt_toolkit.validation import DynamicValidator, Validator
 
 from .toolbars import SearchToolbar
 
@@ -135,6 +140,8 @@ class TextArea:
     :param focus_on_click: When `True`, focus after mouse click.
     :param input_processors: `None` or a list of
         :class:`~prompt_toolkit.layout.Processor` objects.
+    :param validator: `None` or a :class:`~prompt_toolkit.validation.Validator`
+        object.
 
     Window attributes:
 
@@ -169,6 +176,7 @@ class TextArea:
         auto_suggest: Optional[AutoSuggest] = None,
         completer: Optional[Completer] = None,
         complete_while_typing: FilterOrBool = True,
+        validator: Optional[Validator] = None,
         accept_handler: Optional[BufferAcceptHandler] = None,
         history: Optional[History] = None,
         focusable: FilterOrBool = True,
@@ -204,6 +212,7 @@ class TextArea:
         self.auto_suggest = auto_suggest
         self.read_only = read_only
         self.wrap_lines = wrap_lines
+        self.validator = validator
 
         self.buffer = Buffer(
             document=Document(text, 0),
@@ -213,6 +222,7 @@ class TextArea:
             complete_while_typing=Condition(
                 lambda: is_true(self.complete_while_typing)
             ),
+            validator=DynamicValidator(lambda: self.validator),
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept_handler,
             history=history,
@@ -275,7 +285,7 @@ class TextArea:
 
     @text.setter
     def text(self, value: str) -> None:
-        self.buffer.set_document(Document(value, 0), bypass_readonly=True)
+        self.document = Document(value, 0)
 
     @property
     def document(self) -> Document:
@@ -286,7 +296,7 @@ class TextArea:
 
     @document.setter
     def document(self, value: Document) -> None:
-        self.buffer.document = value
+        self.buffer.set_document(value, bypass_readonly=True)
 
     @property
     def accept_handler(self) -> Optional[BufferAcceptHandler]:
@@ -356,7 +366,9 @@ class Button:
     Clickable button.
 
     :param text: The caption for the button.
-    :param handler: `None` or callable. Called when the button is clicked.
+    :param handler: `None` or callable. Called when the button is clicked. No
+        parameters are passed to this callable. Use for instance Python's
+        `functools.partial` to pass parameters to this callable if needed.
     :param width: Width of the button.
     """
 
@@ -639,6 +651,7 @@ class _DialogList(Generic[_T]):
     selected_style: str = ""
     checked_style: str = ""
     multiple_selection: bool = False
+    show_scrollbar: bool = True
 
     def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
         assert len(values) > 0
@@ -702,7 +715,12 @@ class _DialogList(Generic[_T]):
         self.window = Window(
             content=self.control,
             style=self.container_style,
-            right_margins=[ScrollbarMargin(display_arrows=True),],
+            right_margins=[
+                ConditionalMargin(
+                    margin=ScrollbarMargin(display_arrows=True),
+                    filter=Condition(lambda: self.show_scrollbar),
+                ),
+            ],
             dont_extend_height=True,
         )
 
@@ -804,13 +822,23 @@ class Checkbox(CheckboxList[str]):
     :param text: the text
     """
 
-    def __init__(self, text: AnyFormattedText = "") -> None:
+    show_scrollbar = False
+
+    def __init__(self, text: AnyFormattedText = "", checked: bool = False) -> None:
         values = [("value", text)]
         CheckboxList.__init__(self, values)
+        self.checked = checked
 
     @property
     def checked(self) -> bool:
         return "value" in self.current_values
+
+    @checked.setter
+    def checked(self, value: bool) -> None:
+        if value:
+            self.current_values = ["value"]
+        else:
+            self.current_values = []
 
 
 class VerticalLine(object):

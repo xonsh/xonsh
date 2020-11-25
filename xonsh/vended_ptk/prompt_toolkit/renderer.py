@@ -11,7 +11,6 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.data_structures import Point, Size
 from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
-from prompt_toolkit.input.base import Input
 from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.screen import Char, Screen, WritePosition
 from prompt_toolkit.output import ColorDepth, Output
@@ -21,7 +20,6 @@ from prompt_toolkit.styles import (
     DummyStyleTransformation,
     StyleTransformation,
 )
-from prompt_toolkit.utils import is_windows
 
 if TYPE_CHECKING:
     from prompt_toolkit.application import Application
@@ -45,6 +43,7 @@ def _output_screen_diff(
     is_done: bool,  # XXX: drop is_done
     full_screen: bool,
     attrs_for_style_string: "_StyleStringToAttrsCache",
+    style_string_has_style: "_StyleStringHasStyleCache",
     size: Size,
     previous_width: int,
 ) -> Tuple[Point, Optional[str]]:
@@ -139,6 +138,27 @@ def _output_screen_diff(
             write(char.char)
             last_style = char.style
 
+    def get_max_column_index(row: Dict[int, Char]) -> int:
+        """
+        Return max used column index, ignoring whitespace (without style) at
+        the end of the line. This is important for people that copy/paste
+        terminal output.
+
+        There are two reasons we are sometimes seeing whitespace at the end:
+        - `BufferControl` adds a trailing space to each line, because it's a
+          possible cursor position, so that the line wrapping won't change if
+          the cursor position moves around.
+        - The `Window` adds a style class to the current line for highlighting
+          (cursor-line).
+        """
+        numbers = [
+            index
+            for index, cell in row.items()
+            if cell.char != " " or style_string_has_style[cell.style]
+        ]
+        numbers.append(0)
+        return max(numbers)
+
     # Render for the first time: reset styling.
     if not previous_screen:
         reset_attributes()
@@ -175,14 +195,12 @@ def _output_screen_diff(
         previous_row = previous_screen.data_buffer[y]
         zero_width_escapes_row = screen.zero_width_escapes[y]
 
-        new_max_line_len = min(width - 1, max(new_row.keys()) if new_row else 0)
-        previous_max_line_len = min(
-            width - 1, max(previous_row.keys()) if previous_row else 0
-        )
+        new_max_line_len = min(width - 1, get_max_column_index(new_row))
+        previous_max_line_len = min(width - 1, get_max_column_index(previous_row))
 
         # Loop over the columns.
         c = 0
-        while c < new_max_line_len + 1:
+        while c <= new_max_line_len:
             new_char = new_row[c]
             old_char = previous_row[c]
             char_width = new_char.width or 1
@@ -270,6 +288,34 @@ class _StyleStringToAttrsCache(Dict[str, Attrs]):
         return attrs
 
 
+class _StyleStringHasStyleCache(Dict[str, bool]):
+    """
+    Cache for remember which style strings don't render the default output
+    style (default fg/bg, no underline and no reverse and no blink). That way
+    we know that we should render these cells, even when they're empty (when
+    they contain a space).
+
+    Note: we don't consider bold/italic/hidden because they don't change the
+    output if there's no text in the cell.
+    """
+
+    def __init__(self, style_string_to_attrs: Dict[str, Attrs]) -> None:
+        self.style_string_to_attrs = style_string_to_attrs
+
+    def __missing__(self, style_str: str) -> bool:
+        attrs = self.style_string_to_attrs[style_str]
+        is_default = bool(
+            attrs.color
+            or attrs.bgcolor
+            or attrs.underline
+            or attrs.blink
+            or attrs.reverse
+        )
+
+        self[style_str] = is_default
+        return is_default
+
+
 class CPR_Support(Enum):
     " Enum: whether or not CPR is supported. "
     SUPPORTED = "SUPPORTED"
@@ -294,7 +340,6 @@ class Renderer:
         self,
         style: BaseStyle,
         output: Output,
-        input: Input,
         full_screen: bool = False,
         mouse_support: FilterOrBool = False,
         cpr_not_supported_callback: Optional[Callable[[], None]] = None,
@@ -302,7 +347,6 @@ class Renderer:
 
         self.style = style
         self.output = output
-        self.input = input
         self.full_screen = full_screen
         self.mouse_support = to_filter(mouse_support)
         self.cpr_not_supported_callback = cpr_not_supported_callback
@@ -314,11 +358,13 @@ class Renderer:
         # Future set when we are waiting for a CPR flag.
         self._waiting_for_cpr_futures: Deque[Future[None]] = deque()
         self.cpr_support = CPR_Support.UNKNOWN
-        if not input.responds_to_cpr:
+
+        if not output.responds_to_cpr:
             self.cpr_support = CPR_Support.NOT_SUPPORTED
 
         # Cache for the style.
         self._attrs_for_style: Optional[_StyleStringToAttrsCache] = None
+        self._style_string_has_style: Optional[_StyleStringHasStyleCache] = None
         self._last_style_hash: Optional[Hashable] = None
         self._last_transformation_hash: Optional[Hashable] = None
         self._last_color_depth: Optional[ColorDepth] = None
@@ -347,7 +393,8 @@ class Renderer:
 
         # In case of Windows, also make sure to scroll to the current cursor
         # position. (Only when rendering the first time.)
-        if is_windows() and _scroll:
+        # It does nothing for vt100 terminals.
+        if _scroll:
             self.output.scroll_buffer_to_prompt()
 
         # Quit alternate screen.
@@ -383,9 +430,13 @@ class Renderer:
         is known. (It's often nicer to draw bottom toolbars only if the height
         is known, in order to avoid flickering when the CPR response arrives.)
         """
-        return (
-            self.full_screen or self._min_available_height > 0 or is_windows()
-        )  # On Windows, we don't have to wait for a CPR.
+        if self.full_screen or self._min_available_height > 0:
+            return True
+        try:
+            self._min_available_height = self.output.get_rows_below_cursor_position()
+            return True
+        except NotImplementedError:
+            return False
 
     @property
     def rows_above_layout(self) -> int:
@@ -419,42 +470,48 @@ class Renderer:
         # In full-screen mode, always use the total height as min-available-height.
         if self.full_screen:
             self._min_available_height = self.output.get_size().rows
+            return
 
         # For Win32, we have an API call to get the number of rows below the
         # cursor.
-        elif is_windows():
+        try:
             self._min_available_height = self.output.get_rows_below_cursor_position()
+            return
+        except NotImplementedError:
+            pass
 
         # Use CPR.
-        else:
-            if self.cpr_support == CPR_Support.NOT_SUPPORTED:
-                return
+        if self.cpr_support == CPR_Support.NOT_SUPPORTED:
+            return
 
-            def do_cpr() -> None:
-                # Asks for a cursor position report (CPR).
-                self._waiting_for_cpr_futures.append(Future())
-                self.output.ask_for_cpr()
+        def do_cpr() -> None:
+            # Asks for a cursor position report (CPR).
+            self._waiting_for_cpr_futures.append(Future())
+            self.output.ask_for_cpr()
 
-            if self.cpr_support == CPR_Support.SUPPORTED:
-                do_cpr()
+        if self.cpr_support == CPR_Support.SUPPORTED:
+            do_cpr()
+            return
 
-            # If we don't know whether CPR is supported, only do a request if
-            # none is pending, and test it, using a timer.
-            elif self.cpr_support == CPR_Support.UNKNOWN and not self.waiting_for_cpr:
-                do_cpr()
+        # If we don't know whether CPR is supported, only do a request if
+        # none is pending, and test it, using a timer.
+        if self.waiting_for_cpr:
+            return
 
-                async def timer() -> None:
-                    await sleep(self.CPR_TIMEOUT)
+        do_cpr()
 
-                    # Not set in the meantime -> not supported.
-                    if self.cpr_support == CPR_Support.UNKNOWN:
-                        self.cpr_support = CPR_Support.NOT_SUPPORTED
+        async def timer() -> None:
+            await sleep(self.CPR_TIMEOUT)
 
-                        if self.cpr_not_supported_callback:
-                            # Make sure to call this callback in the main thread.
-                            self.cpr_not_supported_callback()
+            # Not set in the meantime -> not supported.
+            if self.cpr_support == CPR_Support.UNKNOWN:
+                self.cpr_support = CPR_Support.NOT_SUPPORTED
 
-                get_app().create_background_task(timer())
+                if self.cpr_not_supported_callback:
+                    # Make sure to call this callback in the main thread.
+                    self.cpr_not_supported_callback()
+
+        get_app().create_background_task(timer())
 
     def report_absolute_cursor_row(self, row: int) -> None:
         """
@@ -505,13 +562,17 @@ class Renderer:
             await sleep(timeout)
 
             # Got timeout, erase queue.
+            for response_f in cpr_futures:
+                response_f.cancel()
             self._waiting_for_cpr_futures = deque()
 
         coroutines = [
             wait_for_responses(),
             wait_for_timeout(),
         ]
-        await wait(coroutines, return_when=FIRST_COMPLETED)
+        _, pending = await wait(coroutines, return_when=FIRST_COMPLETED)
+        for task in pending:
+            task.cancel()
 
     def render(
         self, app: "Application[Any]", layout: "Layout", is_done: bool = False
@@ -585,10 +646,15 @@ class Renderer:
         ):
             self._last_screen = None
             self._attrs_for_style = None
+            self._style_string_has_style = None
 
         if self._attrs_for_style is None:
             self._attrs_for_style = _StyleStringToAttrsCache(
                 self.style.get_attrs_for_style_str, app.style_transformation
+            )
+        if self._style_string_has_style is None:
+            self._style_string_has_style = _StyleStringHasStyleCache(
+                self._attrs_for_style
             )
 
         self._last_style_hash = self.style.invalidation_hash()
@@ -598,7 +664,7 @@ class Renderer:
         layout.container.write_to_screen(
             screen,
             mouse_handlers,
-            WritePosition(xpos=0, ypos=0, width=size.columns, height=height,),
+            WritePosition(xpos=0, ypos=0, width=size.columns, height=height),
             parent_style="",
             erase_bg=False,
             z_index=None,
@@ -621,6 +687,7 @@ class Renderer:
             is_done,
             full_screen=self.full_screen,
             attrs_for_style_string=self._attrs_for_style,
+            style_string_has_style=self._style_string_has_style,
             size=size,
             previous_width=(self._last_size.columns if self._last_size else 0),
         )
@@ -685,7 +752,7 @@ def print_formatted_text(
     """
     fragments = to_formatted_text(formatted_text)
     style_transformation = style_transformation or DummyStyleTransformation()
-    color_depth = color_depth or ColorDepth.default()
+    color_depth = color_depth or output.get_default_color_depth()
 
     # Reset first.
     output.reset_attributes()
