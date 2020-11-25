@@ -19,6 +19,7 @@ def vendor():
     cp prompt_toolkit-*.dist-info/LICENSE LICENSE-prompt-toolkit
     cp wcwidth-*.dist-info/LICENSE LICENSE-wcwidth
     rm -rd *.dist-info
+    rm -rd wcwidth/tests
     popd
 
 
