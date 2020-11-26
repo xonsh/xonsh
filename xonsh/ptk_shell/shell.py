@@ -35,6 +35,12 @@ from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.styles import merge_styles, Style
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
+try:
+    from prompt_toolkit.clipboard.pyperclip import PyperclipClipboard
+
+    HAVE_SYS_CLIPBOARD = True
+except ImportError:
+    HAVE_SYS_CLIPBOARD = False
 
 ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
 CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
@@ -146,7 +152,12 @@ class PromptToolkitShell(BaseShell):
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
         self.history = ThreadedHistory(PromptToolkitHistory())
-        self.prompter = PromptSession(history=self.history)
+
+        ptk_args = {"history": self.history}
+        if HAVE_SYS_CLIPBOARD:
+            ptk_args["clipboard"] = PyperclipClipboard()
+        self.prompter = PromptSession(**ptk_args)
+
         self.prompt_formatter = PTKPromptFormatter(self.prompter)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         self.key_bindings = load_xonsh_bindings()
