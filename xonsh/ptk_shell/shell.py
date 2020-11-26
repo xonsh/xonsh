@@ -38,9 +38,9 @@ from prompt_toolkit.styles.pygments import pygments_token_to_classname
 try:
     from prompt_toolkit.clipboard.pyperclip import PyperclipClipboard
 
-    SYS_CLIPBOARD = True
+    HAVE_SYS_CLIPBOARD = True
 except ImportError:
-    SYS_CLIPBOARD = False
+    HAVE_SYS_CLIPBOARD = False
 
 ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
 CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
@@ -154,7 +154,7 @@ class PromptToolkitShell(BaseShell):
         self.history = ThreadedHistory(PromptToolkitHistory())
 
         ptk_args = {"history": self.history}
-        if SYS_CLIPBOARD:
+        if HAVE_SYS_CLIPBOARD:
             ptk_args["clipboard"] = PyperclipClipboard()
         self.prompter = PromptSession(**ptk_args)
 
