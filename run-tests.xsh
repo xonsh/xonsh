@@ -6,7 +6,7 @@ from typing import List
 
 $XONSH_DEBUG = 1
 $RAISE_SUBPROC_ERROR = True
-$XONSH_TRACE_SUBPROC = True
+# $XONSH_TRACE_SUBPROC = True
 
 
 def _replace_args(args: List[str], num: int) -> List[str]:
