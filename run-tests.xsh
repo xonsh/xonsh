@@ -38,9 +38,9 @@ def test(ns: argparse.Namespace):
     args = ns.pytest_args
 
     if ns.report_coverage:
-        for index, fname in enumerate(run_separately):
-            ![coverage run -m pytest @(_replace_args(args, index+1)) @(fname)]
         ![coverage run -m pytest @(_replace_args(args, 0)) @(ignores)]
+        for index, fname in enumerate(run_separately):
+            ![coverage run --append -m pytest @(_replace_args(args, index+1)) @(fname)]
         ![coverage report -m]
         ![coverage xml]
     else:
