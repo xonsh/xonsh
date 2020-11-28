@@ -49,6 +49,7 @@ venv/
 .idea
 
 .coverage
+coverage.xml
 feedstock/
 *.cred
 tttt

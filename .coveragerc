@@ -4,7 +4,22 @@ source =
   xonsh/
   xontrib/
 omit =
+  .venv/*
   */__amalgam__.py
   xonsh/lazyasd.py
   xonsh/parser_table.py
   xonsh/ply/*
+
+# keep all cache files in one place
+data_file = .cache/coverage
+
+
+[report]
+precision = 2
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+skip_covered = true
+skip_empty = true
+show_missing = true
+sort = Miss

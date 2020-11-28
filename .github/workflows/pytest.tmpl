@@ -60,3 +60,9 @@ jobs:
         {% if allow_failure %}
         continue-on-error: true
         {% endif %}
+      {% if report_coverage %}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          verbose: true
+      {% endif %}

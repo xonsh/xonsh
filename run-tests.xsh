@@ -6,6 +6,7 @@ from typing import List
 
 $XONSH_DEBUG = 1
 $RAISE_SUBPROC_ERROR = True
+$XONSH_TRACE_SUBPROC = True
 
 
 def _replace_args(args: List[str], num: int) -> List[str]:
@@ -28,16 +29,24 @@ def test(ns: argparse.Namespace):
         'tests/test_ptk_highlight.py',
     ]
 
+
     ignores = []
     for fname in run_separately:
         ignores.append('--ignore')
         ignores.append(fname)
 
-    args = ns.args if "arg" in ns else []
+    args = ns.pytest_args
 
-    ![pytest @(_replace_args(args, 0)) @(ignores)]
-    for index, fname in enumerate(run_separately):
-        ![pytest @(_replace_args(args, index+1)) @(fname)]
+    if ns.report_coverage:
+        for index, fname in enumerate(run_separately):
+            ![coverage run -m pytest @(_replace_args(args, index+1)) @(fname)]
+        ![coverage run -m pytest @(_replace_args(args, 0)) @(ignores)]
+        ![coverage report -m]
+        ![coverage xml]
+    else:
+        ![pytest @(_replace_args(args, 0)) @(ignores)]
+        for index, fname in enumerate(run_separately):
+            ![pytest @(_replace_args(args, index + 1)) @(fname)]
 
 
 def qa(ns: argparse.Namespace):
@@ -66,6 +75,12 @@ if __name__ == '__main__':
         nargs='*',
         help="arbitrary arguments that gets passed to pytest's invocation."
              " Use %%d to parameterize and prevent overwrite "
+    )
+    test_parser.add_argument(
+        '--report-coverage',
+        action="store_true",
+        default=False,
+        help="Report coverage at the end of the test",
     )
     test_parser.set_defaults(func=test)
 
