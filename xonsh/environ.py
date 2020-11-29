@@ -2219,7 +2219,6 @@ def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
         if not os.path.isfile(rcfile):
             loaded.append(False)
             continue
-        _, ext = os.path.splitext(rcfile)
         status = xonsh_script_run_control(rcfile, ctx, env, execer=execer, login=login)
         loaded.append(status)
     if env["THREAD_SUBPROCS"] is None:
@@ -2250,11 +2249,21 @@ def foreign_env_fixes(ctx):
         del ctx["PROMPT"]
 
 
+class _RcPath(str):
+    """A class used exclusively to know which entry was added temporarily to
+    sys.path while loading rc files.
+    """
+
+    pass
+
+
 def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
     """Loads a xonsh file and applies it as a run control."""
     if execer is None:
         return False
     updates = {"__file__": filename, "__name__": os.path.abspath(filename)}
+    rc_dir = _RcPath(os.path.dirname(filename))
+    sys.path.append(rc_dir)
     try:
         with swap_values(ctx, updates):
             run_script_with_cache(filename, execer, ctx)
@@ -2267,6 +2276,8 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
         msg = "error running xonsh run control file {0!r}: {1!s}"
         print_exception(msg.format(filename, err))
         loaded = False
+    finally:
+        sys.path = list(filter(lambda p: p is not rc_dir, sys.path))
     return loaded
 
 
