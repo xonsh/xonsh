@@ -13,6 +13,10 @@ omit =
 # keep all cache files in one place
 data_file = .cache/coverage
 
+# https://stackoverflow.com/questions/42721896/coverage-in-parallel-for-django-tests
+# when run with xdist - but append mode will not work
+#concurrency = multiprocessing
+#parallel = true
 
 [report]
 precision = 2
