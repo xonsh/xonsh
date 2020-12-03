@@ -204,6 +204,16 @@ def define_xontribs():
                 url="https://github.com/jnoortheen/xontrib-cmd-durations",
             ),
         ),
+        "commands": Xontrib(
+            url="https://github.com/jnoortheen/xontrib-commands",
+            description="Some useful commands/aliases to use with Xonsh shell",
+            package=_XontribPkg(
+                name="xontrib-commands",
+                license="MIT",
+                install={"pip": "xpip install xontrib-commands"},
+                url="https://github.com/jnoortheen/xontrib-commands",
+            ),
+        ),
         "coreutils": Xontrib(
             url="http://xon.sh",
             description="Additional core utilities that are implemented "
