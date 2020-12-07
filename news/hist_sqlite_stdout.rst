@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* SQLite history backend now has the same logic of storing stdout to the memory like json history backend.
+* The SQLite history backend now has the same logic of storing stdout to the memory like json history backend.
 
 **Deprecated:**
 
