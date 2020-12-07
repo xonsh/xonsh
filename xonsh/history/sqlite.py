@@ -245,11 +245,7 @@ class SqliteHistory(History):
         envs = builtins.__xonsh__.env
         inp = cmd["inp"].rstrip()
         self.inps.append(inp)
-        store_stdout = envs.get("XONSH_STORE_STDOUT", False)
-        if store_stdout:
-            self.outs.append(cmd.get("out"))
-        else:
-            self.outs.append(None)
+        self.outs.append(cmd.get("out"))
         self.rtns.append(cmd["rtn"])
         self.tss.append(cmd.get("ts", (None, None)))
 
@@ -264,7 +260,7 @@ class SqliteHistory(History):
         xh_sqlite_append_history(
             cmd,
             str(self.sessionid),
-            store_stdout,
+            store_stdout=envs.get("XONSH_STORE_STDOUT", False),
             filename=self.filename,
             remove_duplicates=("erasedups" in opts),
         )
