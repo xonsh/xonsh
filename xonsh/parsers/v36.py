@@ -16,7 +16,8 @@ class Parser(BaseParser):
         yacc_debug=False,
         outputdir=None,
     ):
-        """Parameters
+        """
+        Parameters
         ----------
         lexer_optimize : bool, optional
             Set to false when unstable and true when lexer is stable.
@@ -45,9 +46,10 @@ class Parser(BaseParser):
         )
 
     def p_classdef_or_funcdef(self, p):
-        """classdef_or_funcdef : classdef
-                               | funcdef
-                               | async_funcdef
+        """
+        classdef_or_funcdef : classdef
+                            | funcdef
+                            | async_funcdef
         """
         p[0] = p[1]
 
@@ -79,9 +81,10 @@ class Parser(BaseParser):
         p[0] = p0
 
     def p_async_stmt(self, p):
-        """async_stmt : async_funcdef
-                      | async_with_stmt
-                      | async_for_stmt
+        """
+        async_stmt : async_funcdef
+                   | async_with_stmt
+                   | async_for_stmt
         """
         p[0] = p[1]
 
@@ -108,8 +111,7 @@ class Parser(BaseParser):
         p[0] = p0
 
     def p_arglist_many(self, p):
-        """arglist : argument comma_argument_list comma_opt
-        """
+        """arglist : argument comma_argument_list comma_opt"""
         p0 = {"args": [], "keywords": []}
         self._set_arg(p0, p[1])
         for arg in p[2]:

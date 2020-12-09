@@ -14,8 +14,8 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(items):
-    """ Move xsh test first to work around a bug in normal
-        pytest cleanup. The order of tests are otherwise preserved.
+    """Move xsh test first to work around a bug in normal
+    pytest cleanup. The order of tests are otherwise preserved.
     """
     xsh_items = []
     other_items = []
@@ -28,8 +28,8 @@ def pytest_collection_modifyitems(items):
 
 
 def _limited_traceback(excinfo):
-    """ Return a formatted traceback with all the stack
-        from this frame (i.e __file__) up removed
+    """Return a formatted traceback with all the stack
+    from this frame (i.e __file__) up removed
     """
     tb = extract_tb(excinfo.tb)
     try:

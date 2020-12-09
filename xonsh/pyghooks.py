@@ -432,9 +432,9 @@ class XonshStyle(Style):
         self.trap.update(_tokenize_style_dict(style_dict))
 
     def enhance_colors_for_cmd_exe(self):
-        """ Enhance colors when using cmd.exe on windows.
-            When using the default style all blue and dark red colors
-            are changed to CYAN and intense red.
+        """Enhance colors when using cmd.exe on windows.
+        When using the default style all blue and dark red colors
+        are changed to CYAN and intense red.
         """
         env = builtins.__xonsh__.env
         # Ensure we are not using the new Windows Terminal, ConEmu or Visual Stuio Code
@@ -1317,8 +1317,8 @@ def pygments_style_by_name(name):
 
 
 def _monkey_patch_pygments_codes():
-    """ Monky patch pygments' dict of console codes,
-        with new color names
+    """Monky patch pygments' dict of console codes,
+    with new color names
     """
     if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
         return
@@ -1712,7 +1712,7 @@ class XonshLexer(Python3Lexer):
         ],
         "subproc": [
             include("mode_switch_brackets"),
-            (r"&&|\|\|", Operator, "subproc_start"),
+            (r"&&|\|\||and|or", Operator, "subproc_start"),
             (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
             (r"'(\\\\|\\[0-7]+|\\.|[^'\\])*'", String.Single),
             (r"(?<=\w|\s)!", Keyword, "subproc_macro"),

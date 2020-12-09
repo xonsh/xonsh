@@ -22,7 +22,7 @@ ChainDBDefault = ChainDBDefaultType()
 
 
 class ChainDB(ChainMap):
-    """ A ChainMap who's ``_getitem__`` returns either a ChainDB or
+    """A ChainMap who's ``_getitem__`` returns either a ChainDB or
     the result. The results resolve to the outermost mapping."""
 
     def __getitem__(self, key):
