@@ -191,6 +191,16 @@ def define_xontribs():
                 url="https://github.com/jnoortheen/xontrib-broot",
             ),
         ),
+        "powerline3": Xontrib(
+            url="github.com/jnoortheen/xontrib-powerline3",
+            description="Powerline theme with native $PROMPT_FIELDS support.",
+            package=_XontribPkg(
+                name="xontrib-powerline3",
+                license="MIT",
+                install={"pip": "xpip install xontrib-powerline3"},
+                url="https://github.com/jnoortheen/xontrib-broot",
+            ),
+        ),
         "cmd_done": Xontrib(
             url="https://github.com/jnoortheen/xontrib-cmd-durations",
             description="send notification once long-running command is "
