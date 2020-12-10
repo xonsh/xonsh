@@ -172,7 +172,7 @@ def norm_name(name):
 def style_as_faded(template: str) -> str:
     """Remove the colors from the template string and style as faded."""
     tokens = partial_color_tokenize(template)
-    without_color = "".join([sect for _, sect in tokens])
+    without_color = "".join([str(sect) for _, sect in tokens])
     return "{RESET}{#d3d3d3}" + without_color + "{RESET}"
 
 
