@@ -16,7 +16,7 @@ import platform
 import typing as tp
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
