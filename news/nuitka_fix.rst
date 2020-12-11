@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* The change that allows Nuitka to build the xonsh binary.
+* The change that allows Nuitka build the xonsh binary.
 
 **Deprecated:**
 
