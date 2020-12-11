@@ -2218,17 +2218,6 @@ def locate_binary(name):
     return builtins.__xonsh__.commands_cache.locate_binary(name)
 
 
-BASE_ENV = LazyObject(
-    lambda: {
-        "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
-        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default),
-        "XONSH_VERSION": XONSH_VERSION,
-    },
-    globals(),
-    "BASE_ENV",
-)
-
-
 def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
     """Attempts to read in all xonshrc files and return the context."""
     loaded = env["LOADED_RC_FILES"] = []
@@ -2296,7 +2285,11 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
 def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
-    ctx = dict(BASE_ENV)
+    ctx = {
+        "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
+        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default),
+        "XONSH_VERSION": XONSH_VERSION,
+    }
     ctx.update(os_environ)
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
