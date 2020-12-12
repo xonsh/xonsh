@@ -1,15 +1,30 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
 import builtins
+import typing as tp
 import collections.abc as cabc
 
+from xonsh.completers.tools import is_contextual_completer
+from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_exception
 
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
 
-    def complete(self, prefix, line, begidx, endidx, ctx=None):
+    def __init__(self):
+        self.context_parser = CompletionContextParser()
+
+    def complete(
+        self,
+        prefix,
+        line,
+        begidx,
+        endidx,
+        ctx=None,
+        multiline_text=None,
+        cursor_index=None,
+    ):
         """Complete the string, given a possible execution context.
 
         Parameters
@@ -24,6 +39,12 @@ class Completer(object):
             The index in line that prefix ends on.
         ctx : Iterable of str (ie dict, set, etc), optional
             Names in the current execution context.
+        multiline_text : str
+            The complete multiline text. Needed to get completion context.
+        cursor_index : int
+            The current cursor's index in the multiline text.
+            May be ``len(multiline_text)`` for cursor at the end.
+            Needed to get completion context.
 
         Returns
         -------
@@ -32,10 +53,23 @@ class Completer(object):
         lprefix : int
             Length of the prefix to be replaced in the completion.
         """
+
+        if multiline_text is not None and cursor_index is not None:
+            completion_context: tp.Optional[
+                CompletionContext
+            ] = self.context_parser.parse(multiline_text, cursor_index)
+        else:
+            completion_context = None
+
         ctx = ctx or {}
         for func in builtins.__xonsh__.completers.values():
             try:
-                out = func(prefix, line, begidx, endidx, ctx)
+                if is_contextual_completer(func):
+                    if completion_context is None:
+                        continue
+                    out = func(completion_context)
+                else:
+                    out = func(prefix, line, begidx, endidx, ctx)
             except StopIteration:
                 return set(), len(prefix)
             except Exception as e:
