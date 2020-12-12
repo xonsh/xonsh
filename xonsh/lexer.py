@@ -168,7 +168,7 @@ def handle_rparen(state, token):
     Function for handling ``)``
     """
     e = _end_delimiter(state, token)
-    if e is None:
+    if e is None or state["tolerant"]:
         state["last"] = token
         yield _new_token("RPAREN", ")", token.start)
     else:
@@ -178,7 +178,7 @@ def handle_rparen(state, token):
 def handle_rbrace(state, token):
     """Function for handling ``}``"""
     e = _end_delimiter(state, token)
-    if e is None:
+    if e is None or state["tolerant"]:
         state["last"] = token
         yield _new_token("RBRACE", "}", token.start)
     else:
@@ -190,7 +190,7 @@ def handle_rbracket(state, token):
     Function for handling ``]``
     """
     e = _end_delimiter(state, token)
-    if e is None:
+    if e is None or state["tolerant"]:
         state["last"] = token
         yield _new_token("RBRACKET", "]", token.start)
     else:
@@ -365,7 +365,7 @@ def handle_token(state, token):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def get_tokens(s):
+def get_tokens(s, tolerant):
     """
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
@@ -374,14 +374,15 @@ def get_tokens(s):
         "indents": [0],
         "last": None,
         "pymode": [(True, "", "", (0, 0))],
-        "stream": tokenize(io.BytesIO(s.encode("utf-8")).readline),
+        "stream": tokenize(io.BytesIO(s.encode("utf-8")).readline, tolerant),
+        "tolerant": tolerant,
     }
     while True:
         try:
             token = next(state["stream"])
             yield from handle_token(state, token)
         except StopIteration:
-            if len(state["pymode"]) > 1:
+            if len(state["pymode"]) > 1 and not tolerant:
                 pm, o, m, p = state["pymode"][-1]
                 l, c = p
                 e = 'Unmatched "{}" at line {}, column {}'
@@ -412,7 +413,7 @@ class Lexer(object):
 
     _tokens: tp.Optional[tp.Tuple[str, ...]] = None
 
-    def __init__(self):
+    def __init__(self, tolerant=False):
         """
         Attributes
         ----------
@@ -422,11 +423,15 @@ class Lexer(object):
             The last token seen.
         lineno : int
             The last line number seen.
+        tolerant : bool
+            Tokenize without extra checks (e.g. paren matching).
+            When True, ERRORTOKEN contains the erroneous string instead of an error msg.
 
         """
         self.fname = ""
         self.last = None
         self.beforelast = None
+        self.tolerant = tolerant
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
@@ -437,7 +442,7 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self.token_stream = get_tokens(s)
+        self.token_stream = get_tokens(s, self.tolerant)
 
     def token(self):
         """Retrieves the next token."""
