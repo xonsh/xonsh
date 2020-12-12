@@ -49,7 +49,13 @@ class PromptToolkitCompleter(Completer):
 
         # get normal completions
         completions, plen = self.completer.complete(
-            prefix, line_ex, begidx + expand_offset, endidx + expand_offset, self.ctx
+            prefix,
+            line_ex,
+            begidx + expand_offset,
+            endidx + expand_offset,
+            self.ctx,
+            multiline_text=document.text,
+            cursor_index=document.cursor_position,
         )
 
         self.current_document = None

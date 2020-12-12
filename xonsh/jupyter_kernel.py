@@ -426,7 +426,15 @@ class XonshKernel:
         prefix = line.split(" ")[-1]
         endidx = pos
         begidx = pos - len(prefix)
-        rtn, _ = self.completer.complete(prefix, line, begidx, endidx, shell.ctx)
+        rtn, _ = self.completer.complete(
+            prefix,
+            line,
+            begidx,
+            endidx,
+            shell.ctx,
+            multiline_text=code,
+            cursor_index=pos,
+        )
         if isinstance(rtn, Set):
             rtn = list(rtn)
         message = {
