@@ -1,6 +1,9 @@
 """Xonsh completer tools."""
 import builtins
 import textwrap
+import typing as tp
+
+from xonsh.parsers.completion_context import CompletionContext
 
 
 def _filter_normal(s, x):
@@ -82,3 +85,24 @@ def get_ptk_completer():
         return None
 
     return __xonsh__.shell.shell.pt_completer
+
+
+Completion = tp.Union[RichCompletion, str]
+CompleterResult = tp.Union[tp.Set[Completion], tp.Tuple[tp.Set[Completion], int], None]
+ContextualCompleter = tp.Callable[[CompletionContext], CompleterResult]
+
+
+def contextual_completer(func: ContextualCompleter):
+    """Decorator for a contextual completer
+
+    This is used to mark completers that want to use the parsed completion context.
+    See ``xonsh/parsers/completion_context.py``.
+
+    ``func`` receives a single CompletionContext object.
+    """
+    func.contextual = True  # type: ignore
+    return func
+
+
+def is_contextual_completer(func):
+    return getattr(func, "contextual", False)
