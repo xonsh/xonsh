@@ -4,7 +4,7 @@ This parser is meant to parse a (possibly incomplete) command line.
 import os
 from typing import Optional, Tuple, List, Any, NamedTuple, Generic, TypeVar, Union
 
-from xonsh.lexer import Lexer
+from xonsh.lexer import Lexer, _new_token
 from xonsh.parsers.base import raise_parse_error, Location
 from xonsh.ply.ply import yacc
 from xonsh.tools import check_for_partial_string
@@ -70,13 +70,29 @@ class Spanned(Generic[T]):
         return Spanned(**kwargs)
 
 
+def with_docstr(docstr):
+    def decorator(func):
+        func.__doc__ = docstr
+        return func
+
+    return decorator
+
+
 class CompletionContextParser:
     """A parser to construct a completion context."""
 
     used_tokens = {
         "STRING",
+        # parens
+        "DOLLAR_LPAREN",
+        "DOLLAR_LBRACKET",
+        "BANG_LPAREN",
+        "BANG_LBRACKET",  # $ or !, ( or [
+        "ATDOLLAR_LPAREN",  # @$(
+        "RPAREN",
+        "RBRACKET",  # ), ]
     }
-    artificial_tokens = {"ANY"}
+    artificial_tokens = {"ANY", "EOF"}
     ignored_tokens = {"INDENT", "DEDENT", "WS"}
 
     def __init__(
@@ -166,15 +182,39 @@ class CompletionContextParser:
     # Grammar:
 
     def p_command(self, p):
-        """command : args"""
+        """command : args
+
+        sub_expression : DOLLAR_LPAREN args RPAREN
+            |   DOLLAR_LPAREN args EOF
+            |   BANG_LPAREN args RPAREN
+            |   BANG_LPAREN args EOF
+            |   ATDOLLAR_LPAREN args RPAREN
+            |   ATDOLLAR_LPAREN args EOF
+            |   DOLLAR_LBRACKET args RBRACKET
+            |   DOLLAR_LBRACKET args EOF
+            |   BANG_LBRACKET args RBRACKET
+            |   BANG_LBRACKET args EOF
+        """
         arg_index = -1
         prefix = suffix = opening_quote = closing_quote = subcmd_opening = ""
         cursor_context = None
 
-        spanned_args: List[Spanned[CommandArg]] = p[1]
-        first = spanned_args[0].span.first
-        last = spanned_args[-1].span.last
-        span = Span(first, last)
+        if len(p) == 2:
+            spanned_args: List[Spanned[CommandArg]] = p[1]
+            first = spanned_args[0].span.first
+            last = spanned_args[-1].span.last
+            span = Span(first, last)
+        else:
+            spanned_args: List[Spanned[CommandArg]] = p[2]
+            subcmd_opening = p[1]
+            outer_first = p.lexpos(1)
+            first = outer_first + len(subcmd_opening)
+            if p[3]:
+                outer_last = p.lexpos(3) + len(p[3]) - 1
+                last = outer_last - 1  # without the closing paren
+            else:
+                last = outer_last = len(self.current_input)
+            span = Span(outer_first, outer_last)
 
         cursor = self.cursor
         if first <= cursor <= last + 1:
@@ -189,6 +229,12 @@ class CompletionContextParser:
                     break
                 if arg.span.contains(cursor):
                     spanned_args.pop(arg_index)
+
+                    if arg.cursor_context is not None:
+                        # this arg is already a context (e.g. a sub expression)
+                        cursor_context = arg.cursor_context
+                        break
+
                     relative_location = cursor - arg.span.first
                     raw_value = arg.value.raw_value
                     if relative_location < len(arg.value.opening_quote):
@@ -224,9 +270,19 @@ class CompletionContextParser:
             closing_quote,
             subcmd_opening,
         )
-        if arg_index != -1:
+        if cursor_context is None and arg_index != -1:
             cursor_context = context
         p[0] = Spanned(context, span, cursor_context)
+
+    def p_sub_expression_arg(self, p):
+        """arg : sub_expression"""
+        sub_expression: Spanned[CompletionContext] = p[1]
+        value = self.current_input[
+            sub_expression.span.first : sub_expression.span.last + 1
+        ]
+        p[0] = sub_expression.replace(
+            value=CommandArg(value)
+        )  # preserves the cursor_context if it exists
 
     @staticmethod
     def p_string_arg(p):
@@ -257,8 +313,8 @@ class CompletionContextParser:
         p[0] = Spanned(arg, Span(first, last))
 
     @staticmethod
+    @with_docstr("""arg : """ + "\n\t| ".join({"ANY"} | used_tokens - {"STRING"}))
     def p_any_arg(p):
-        """arg : ANY"""
         first = p.lexpos(1)
         last = first + len(p[1]) - 1
         p[0] = Spanned(CommandArg(p[1]), Span(first, last))
@@ -277,15 +333,32 @@ class CompletionContextParser:
 
         if last_arg.span.last + 1 == new_arg.span.first:
             # these args are adjacent
+
+            # select which context to preserve
+            cursor_context = None
+            if last_arg.cursor_context is not None:
+                cursor_context = last_arg.cursor_context
+            elif new_arg.cursor_context is not None:
+                cursor_context = new_arg.cursor_context
+
             args[-1] = Spanned(
                 value=CommandArg(last_arg.value.raw_value + new_arg.value.raw_value),
                 span=Span(last_arg.span.first, new_arg.span.last),
+                cursor_context=cursor_context,
             )
         else:
             args.append(new_arg)
         p[0] = args
 
     def p_error(self, p):
+        if p is None:
+            if not self.got_eof:
+                # Try to send an EOF token, it might match a rule (like sub_expression)
+                self.got_eof = True
+                self.parser.errok()
+                return _new_token("EOF", "", (0, 0))
+            raise_parse_error("no further code")
+
         raise_parse_error(
             "code: {0}".format(p.value),
             Location("input", p.lineno, p.lexpos),
