@@ -98,7 +98,7 @@ class CompletionContextParser:
     def __init__(
         self,
         yacc_optimize=True,
-        yacc_table="xonsh.completion_parse_table",
+        yacc_table="xonsh.completion_parser_table",
         debug=False,
         outputdir=None,
     ):
