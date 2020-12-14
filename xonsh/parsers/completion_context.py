@@ -2,12 +2,14 @@
 This parser is meant to parse a (possibly incomplete) command line.
 """
 import os
+import re
 from typing import Optional, Tuple, List, Any, NamedTuple, Generic, TypeVar, Union
 
+from xonsh.lazyasd import lazyobject
 from xonsh.lexer import Lexer, _new_token
 from xonsh.parsers.base import raise_parse_error, Location
 from xonsh.ply.ply import yacc
-from xonsh.tools import check_for_partial_string
+from xonsh.tools import check_for_partial_string, get_line_continuation
 
 
 class CommandArg(NamedTuple):
@@ -20,7 +22,7 @@ class CommandArg(NamedTuple):
         return f"{self.opening_quote}{self.value}{self.closing_quote}"
 
 
-class CommandContext(NamedTuple):  # type: ignore
+class CommandContext(NamedTuple):
     args: Tuple[CommandArg, ...]
     arg_index: int = (
         -1
@@ -56,8 +58,24 @@ T = TypeVar("T")
 
 class Spanned(Generic[T]):
     def __init__(
-        self, value: T, span: Span, cursor_context: Optional[CompletionContext] = None
+        self,
+        value: T,
+        span: Span,
+        cursor_context: Optional[Union[CompletionContext, int]] = None,
     ):
+        """
+        Some parsed value with span and context information.
+        This is an internal class for the parser.
+        Parameters
+        ----------
+        value :
+            The spanned value.
+        span :
+            The span of chars this value takes in the input string.
+        cursor_context :
+            The context for the cursor if it's inside this value.
+            May be an ``int`` to represent the relative cursor location in a simple string arg.
+        """
         self.value = value
         self.span = span
         self.cursor_context = cursor_context
@@ -69,6 +87,11 @@ class Spanned(Generic[T]):
         kwargs.update(fields)
         return Spanned(**kwargs)
 
+    def __repr__(self):
+        return (
+            f"Spanned({self.value}, {self.span}, cursor_context={self.cursor_context})"
+        )
+
 
 def with_docstr(docstr):
     def decorator(func):
@@ -76,6 +99,26 @@ def with_docstr(docstr):
         return func
 
     return decorator
+
+
+@lazyobject
+def NEWLINE_RE():
+    return re.compile("\n")
+
+
+@lazyobject
+def LINE_CONT_REPLACEMENT_DIFF():
+    """Returns (line_continuation, replacement, diff).
+    Diff is the diff in length for each replacement.
+    """
+    line_cont = get_line_continuation()
+    if " \\" == line_cont:
+        # interactive windows
+        replacement = " "
+    else:
+        replacement = ""
+    line_cont += "\n"
+    return line_cont, replacement, len(replacement) - len(line_cont)
 
 
 class CompletionContextParser:
@@ -105,6 +148,7 @@ class CompletionContextParser:
         self.cursor = 0
         self.got_eof = False
         self.current_input = ""
+        self.line_indices = ()
 
         self.debug = debug
         self.lexer = Lexer(tolerant=True)
@@ -140,6 +184,9 @@ class CompletionContextParser:
         self.cursor = cursor_index
         self.got_eof = False
         self.current_input = multiline_text
+        self.line_indices = (0,) + tuple(
+            match.start() + 1 for match in NEWLINE_RE.finditer(multiline_text)
+        )
 
         try:
             context: Optional[Spanned[Any]] = self.parser.parse(
@@ -156,6 +203,10 @@ class CompletionContextParser:
         if isinstance(context.value, CommandContext) and not context.cursor_context:
             context = self.expand_command_span(context, Span(0, len(multiline_text)))
 
+        if isinstance(context.cursor_context, int):
+            # we got a relative cursor position, it's not a real context
+            return None
+
         return context.cursor_context
 
     # Tokenizer:
@@ -164,17 +215,28 @@ class CompletionContextParser:
         return self.lexer.input(s)
 
     def token(self):
+        """Simulate some lexer properties for the parser:
+        * skip tokens from ``ignored_tokens``.
+        * make ``lexpos`` absolute instead of per line.
+        * set tokens that aren't in ``used_tokens`` to type ``ANY``.
+        """
         while True:
             tok = self.lexer.token()
 
             if tok is None:
                 return tok
 
-            if tok.type in self.used_tokens:
-                return tok
-
             if tok.type in self.ignored_tokens:
                 continue
+
+            lineno = tok.lineno - 1  # tok.lineno is 1-indexed
+            if lineno >= len(self.line_indices):
+                raise SyntaxError(f"Invalid lexer state for token {tok} - bad lineno")
+
+            tok.lexpos = self.line_indices[lineno] + tok.lexpos
+
+            if tok.type in self.used_tokens:
+                return tok
 
             tok.type = "ANY"
             return tok
@@ -225,27 +287,40 @@ class CompletionContextParser:
                 if cursor == arg.span.last + 1:
                     # cursor is at the end of this arg
                     spanned_args.pop(arg_index)
-                    prefix = arg.value.raw_value
+
+                    if arg.value.closing_quote:
+                        # appending to a quoted string, e.g. `ls "C:\\Wind"`
+                        # TODO: handle this better?
+                        prefix = arg.value.raw_value
+                    else:
+                        # appending to a partial string, e.g. `ls "C:\\Wind`
+                        prefix = arg.value.value
+                        opening_quote = arg.value.opening_quote
                     break
                 if arg.span.contains(cursor):
                     spanned_args.pop(arg_index)
 
                     if arg.cursor_context is not None:
-                        # this arg is already a context (e.g. a sub expression)
-                        cursor_context = arg.cursor_context
-                        break
+                        if isinstance(arg.cursor_context, int):
+                            # this arg provides a relative cursor location
+                            relative_location = arg.cursor_context
+                        else:
+                            # this arg is already a context (e.g. a sub expression)
+                            cursor_context = arg.cursor_context
+                            break
+                    else:
+                        relative_location = cursor - arg.span.first
 
-                    relative_location = cursor - arg.span.first
                     raw_value = arg.value.raw_value
                     if relative_location < len(arg.value.opening_quote):
                         # the cursor is inside the opening quote
                         prefix = arg.value.opening_quote[:relative_location]
                         suffix = raw_value[relative_location:]
-                    elif relative_location >= len(arg.value.opening_quote) + len(
-                        arg.value.value
+                    elif (
+                        relative_location
+                        >= len(arg.value.opening_quote) + len(arg.value.value) + 1
                     ):
                         # the cursor is inside the closing quote
-                        # TODO: handle appending to a quoted string
                         prefix = raw_value[:relative_location]
                         suffix = raw_value[relative_location:]
                     else:
@@ -284,65 +359,76 @@ class CompletionContextParser:
             value=CommandArg(value)
         )  # preserves the cursor_context if it exists
 
-    @staticmethod
-    def p_string_arg(p):
-        """arg : STRING"""
-        raw_arg = p[1]
-
-        startix, endix, quote = check_for_partial_string(raw_arg)
-        if startix != 0 or endix not in (  # the arg doesn't start with a string literal
-            None,
-            len(raw_arg),
-        ):  # the string literal ends in the middle of the arg
-            # xonsh won't treat it as a string literal
-            arg = CommandArg(raw_arg)
-        else:
-            if endix is None:
-                # no closing quote
-                arg = CommandArg(raw_arg[len(quote) : endix], opening_quote=quote)
-            else:
-                closing_quote_len = quote.count('"') + quote.count("'")
-                arg = CommandArg(
-                    value=raw_arg[len(quote) : -closing_quote_len],
-                    closing_quote=raw_arg[-closing_quote_len:],
-                    opening_quote=quote,
-                )
-
+    @with_docstr("""arg : """ + "\n\t| ".join({"ANY"} | used_tokens))
+    def p_any_token_arg(self, p):
+        raw_arg: str = p[1]
         first = p.lexpos(1)
         last = first + len(raw_arg) - 1
-        p[0] = Spanned(arg, Span(first, last))
+        span = Span(first, last)
 
-    @staticmethod
-    @with_docstr("""arg : """ + "\n\t| ".join({"ANY"} | used_tokens - {"STRING"}))
-    def p_any_arg(p):
-        first = p.lexpos(1)
-        last = first + len(p[1]) - 1
-        p[0] = Spanned(CommandArg(p[1]), Span(first, last))
+        # handle line continuations
+        raw_arg, relative_cursor = self.process_string_segment(raw_arg, span)
+
+        arg = CompletionContextParser.try_parse_string_literal(raw_arg)
+        if arg is None:
+            arg = CommandArg(raw_arg)
+
+        p[0] = Spanned(arg, span, cursor_context=relative_cursor)
 
     @staticmethod
     def p_args_first(p):
         """args : arg"""
         p[0] = [p[1]]
 
-    @staticmethod
-    def p_args_many(p):
+    def p_args_many(self, p):
         """args : args arg"""
         args: List[Spanned[CommandArg]] = p[1]
         new_arg: Spanned[CommandArg] = p[2]
         last_arg: Spanned[CommandArg] = args[-1]
 
-        if last_arg.span.last + 1 == new_arg.span.first:
-            # these args are adjacent
+        in_between_span = Span(last_arg.span.last + 1, new_arg.span.first - 1)
+        in_between = self.current_input[
+            in_between_span.first : in_between_span.last + 1
+        ]
+
+        # handle line continuations between these args
+        in_between, relative_cursor = self.process_string_segment(
+            in_between, in_between_span
+        )
+
+        joined_raw = f"{last_arg.value.raw_value}{in_between}{new_arg.value.raw_value}"
+        string_literal = self.try_parse_string_literal(joined_raw)
+
+        if string_literal is not None or not in_between:
+            if string_literal is not None:
+                # we're appending to a partial string, e.g. `"a b`
+                arg = string_literal
+            else:
+                # these args are adjacent and didn't match other rules, e.g. `a"b"`
+                arg = CommandArg(joined_raw)
 
             # select which context to preserve
             cursor_context = None
-            if last_arg.cursor_context is not None:
+            if relative_cursor is not None:
+                # the cursor is in between
+                cursor_context = len(last_arg.value.raw_value) + relative_cursor
+            elif last_arg.cursor_context is not None:
+                # the cursor is in the last arg
                 cursor_context = last_arg.cursor_context
             elif new_arg.cursor_context is not None:
-                cursor_context = new_arg.cursor_context
+                # the cursor is in the new arg
+                if isinstance(new_arg.cursor_context, int):
+                    # the context is a relative cursor
+                    cursor_context = (
+                        len(last_arg.value.raw_value)
+                        + len(in_between)
+                        + new_arg.cursor_context
+                    )
+                else:
+                    cursor_context = new_arg.cursor_context
 
             args[-1] = Spanned(
-                value=CommandArg(last_arg.value.raw_value + new_arg.value.raw_value),
+                value=arg,
                 span=Span(last_arg.span.first, new_arg.span.last),
                 cursor_context=cursor_context,
             )
@@ -361,7 +447,7 @@ class CompletionContextParser:
 
         raise_parse_error(
             "code: {0}".format(p.value),
-            Location("input", p.lineno, p.lexpos),
+            Location("input", p.lineno, p.lexpos - self.line_indices[p.lineno - 1]),
             self.current_input,
             self.current_input.splitlines(keepends=True),
         )
@@ -395,3 +481,48 @@ class CompletionContextParser:
             return Spanned(value=new_context, span=new_span, cursor_context=new_context)
 
         return command.replace(span=new_span)
+
+    @staticmethod
+    def try_parse_string_literal(raw_arg: str) -> Optional[CommandArg]:
+        """Try to parse this as a single string literal. can be partial
+        For example:
+            "wow"
+            "a b
+            '''a b 'c' "d"
+        """
+        startix, endix, quote = check_for_partial_string(raw_arg)
+        if startix != 0 or endix not in (
+            None,  # the arg doesn't start with a string literal
+            len(raw_arg),  # the string literal ends in the middle of the arg
+        ):
+            # xonsh won't treat it as a string literal
+            return None
+        else:
+            if endix is None:
+                # no closing quote
+                return CommandArg(raw_arg[len(quote) : endix], opening_quote=quote)
+            else:
+                closing_quote_len = quote.count('"') + quote.count("'")
+                return CommandArg(
+                    value=raw_arg[len(quote) : -closing_quote_len],
+                    closing_quote=raw_arg[-closing_quote_len:],
+                    opening_quote=quote,
+                )
+
+    def process_string_segment(
+        self, string: str, span: Span
+    ) -> Tuple[str, Optional[int]]:
+        """Process a string segment:
+        1. Return a relative_cursor if it's inside the span (for ``Spanned.cursor_context``).
+        2. Handle line continuations in the string.
+        """
+        relative_cursor = None
+        line_cont, replacement, diff = LINE_CONT_REPLACEMENT_DIFF
+
+        if span.contains(self.cursor):
+            relative_cursor = self.cursor - span.first
+            relative_cursor += string.count(line_cont, 0, relative_cursor) * diff
+
+        string = string.replace(line_cont, replacement)
+
+        return string, relative_cursor
