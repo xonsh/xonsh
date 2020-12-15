@@ -50,12 +50,13 @@ class RichCompletion(str):
         Extra text to display when the completion is selected.
     """
 
-    def __new__(cls, value, prefix_len=None, display=None, description=""):
+    def __new__(cls, value, prefix_len=None, display=None, description="", style=""):
         completion = super().__new__(cls, value)
 
         completion.prefix_len = prefix_len
         completion.display = display or value
         completion.description = description
+        completion.style = style
 
         return completion
 

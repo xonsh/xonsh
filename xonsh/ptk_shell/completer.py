@@ -91,7 +91,10 @@ class PromptToolkitCompleter(Completer):
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
                     display=comp.display,
                     display_meta=comp.description or None,
+                    style=comp.style or "",
                 )
+            elif isinstance(comp, Completion):
+                yield comp
             else:
                 disp = comp[pre:].strip("'\"")
                 yield Completion(comp, -plen, display=disp)
@@ -110,7 +113,13 @@ class PromptToolkitCompleter(Completer):
         """Adjust the height for showing autocompletion menu."""
         app = get_app()
         render = app.renderer
-        window = app.layout.current_window
+
+        window = None
+        try:
+            # this raises error sometimes when COMPLETE_WHILE_TYPE is enabled
+            window = app.layout.current_window
+        except Exception:
+            pass
 
         if window and window.render_info:
             h = window.render_info.content_height
