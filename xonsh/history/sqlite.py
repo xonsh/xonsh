@@ -67,6 +67,13 @@ def _xh_sqlite_create_history_table(cursor):
         except sqlite3.OperationalError:
             pass
 
+        # add index on inp. since we query when erasedups is True
+        cursor.execute(
+            f"""\
+CREATE INDEX IF NOT EXISTS  idx_inp_history
+ON {XH_SQLITE_TABLE_NAME}(inp);"""
+        )
+
         # mark that this function ran for this session
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, True)
 
