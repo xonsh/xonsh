@@ -1,3 +1,7 @@
+"""
+small functions to create argparser CLI from functions.
+"""
+
 import argparse as ap
 import os
 import typing as tp
@@ -93,6 +97,7 @@ def make_parser(
 
 
 def dispatch(**ns):
+    """call the sub-command selected by user"""
     import inspect
 
     func = ns[_FUNC_NAME]

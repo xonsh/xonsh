@@ -103,7 +103,7 @@ Registering a Completer
 =======================
 
 Once you have created a completion function, you can add it to the list of
-active completers via the ``completer add`` command::
+active completers via the ``completer add`` command or ``xonsh.completers.completer.add_one_completer`` function::
 
     Usage:
         completer add NAME FUNC [POS]
