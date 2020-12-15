@@ -1,6 +1,6 @@
 import builtins
 import collections
-
+from xonsh.built_ins import current_xonsh_session
 from xonsh.completers.tools import justify
 
 
@@ -98,10 +98,10 @@ def remove_completer(name: str):
         completers in order)
     """
     err = None
-    if name not in builtins.__xonsh__.completers:
+    if name not in current_xonsh_session.completers:
         err = "The name %s is not a registered " "completer function." % name
     if err is None:
-        del builtins.__xonsh__.completers[name]
+        del current_xonsh_session.completers[name]
         return
     else:
         return None, err + "\n", 1

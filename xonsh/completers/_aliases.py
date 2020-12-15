@@ -60,11 +60,12 @@ def _register_completer(name: str, func: str, pos="start", stack=None):
     """
     err = None
     func_name = func
-    if name in builtins.__xonsh__.completers:
+    xsh = builtins.__xonsh__  # type: ignore
+    if name in xsh.completers:
         err = "The name %s is already a registered completer function." % name
     else:
-        if func_name in builtins.__xonsh__.ctx:
-            func = builtins.__xonsh__.ctx[func_name]
+        if func_name in xsh.ctx:
+            func = xsh.ctx[func_name]
             if not callable(func):
                 err = "%s is not callable" % func_name
         else:
@@ -85,7 +86,7 @@ def _register_completer(name: str, func: str, pos="start", stack=None):
 
 
 @xl.lazyobject
-def _parser() -> ap.ArgumentParser():
+def _parser() -> ap.ArgumentParser:
     parser = xcli.make_parser(completer_alias)
     commands = parser.add_subparsers(title="commands")
 

@@ -17,6 +17,7 @@ import builtins
 import itertools
 import contextlib
 import collections.abc as cabc
+import typing as tp
 
 from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -657,6 +658,11 @@ class XonshSession:
         for name in names:
             if hasattr(builtins, name):
                 delattr(builtins, name)
+
+
+@lazyobject
+def current_xonsh_session() -> "XonshSession":
+    return tp.cast(XonshSession, builtins.__xonsh__)  # type: ignore
 
 
 class _BuiltIns:

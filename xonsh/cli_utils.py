@@ -49,7 +49,7 @@ def get_doc(func: tp.Callable, parameter: str = None):
     """
     import inspect
 
-    doc = inspect.getdoc(func)
+    doc = inspect.getdoc(func) or ""
     if parameter:
         return _get_param_doc(doc, parameter)
     else:
