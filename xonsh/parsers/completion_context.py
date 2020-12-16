@@ -234,47 +234,54 @@ class CompletionContextParser:
     # Grammar:
 
     def p_command(self, p):
-        """command : args
+        """command : args"""
+        spanned_args: List[Spanned[CommandArg]] = p[1]
+        span = slice(spanned_args[0].span.start, spanned_args[-1].span.stop)
+        p[0] = self.create_command(spanned_args, span)
 
-        sub_expression : DOLLAR_LPAREN args RPAREN
-            |   DOLLAR_LPAREN args EOF
-            |   BANG_LPAREN args RPAREN
-            |   BANG_LPAREN args EOF
-            |   ATDOLLAR_LPAREN args RPAREN
-            |   ATDOLLAR_LPAREN args EOF
-            |   DOLLAR_LBRACKET args RBRACKET
-            |   DOLLAR_LBRACKET args EOF
-            |   BANG_LBRACKET args RBRACKET
-            |   BANG_LBRACKET args EOF
+    def p_subcommand(self, p):
+        """sub_expression : DOLLAR_LPAREN args RPAREN
+        |   DOLLAR_LPAREN args EOF
+        |   BANG_LPAREN args RPAREN
+        |   BANG_LPAREN args EOF
+        |   ATDOLLAR_LPAREN args RPAREN
+        |   ATDOLLAR_LPAREN args EOF
+        |   DOLLAR_LBRACKET args RBRACKET
+        |   DOLLAR_LBRACKET args EOF
+        |   BANG_LBRACKET args RBRACKET
+        |   BANG_LBRACKET args EOF
         """
-        arg_index = -1
-        prefix = suffix = opening_quote = closing_quote = subcmd_opening = ""
-        cursor_context = None
+        spanned_args: List[Spanned[CommandArg]] = p[2]
+        subcmd_opening = p[1]
 
-        if len(p) == 2:
-            spanned_args: List[Spanned[CommandArg]] = p[1]
-            start = spanned_args[0].span.start
-            stop = spanned_args[-1].span.stop
-            span = slice(start, stop)
+        outer_start = p.lexpos(1)
+        inner_start = outer_start + len(subcmd_opening)
+        if p[3]:
+            outer_stop = p.lexpos(3) + len(p[3])
+            inner_stop = outer_stop - 1  # without the closing paren
         else:
-            spanned_args: List[Spanned[CommandArg]] = p[2]
-            subcmd_opening = p[1]
-            outer_start = p.lexpos(1)
-            start = outer_start + len(subcmd_opening)
-            if p[3]:
-                outer_stop = p.lexpos(3) + len(p[3])
-                stop = outer_stop - 1  # without the closing paren
-            else:
-                stop = outer_stop = len(self.current_input)
-            span = slice(outer_start, outer_stop)
+            inner_stop = outer_stop = len(self.current_input)
+        inner_span = slice(inner_start, inner_stop)
+        outer_span = slice(outer_start, outer_stop)
 
-        cursor = self.cursor
-        if start <= cursor <= stop:
+        command = self.create_command(spanned_args, inner_span, subcmd_opening)
+        p[0] = command.replace(span=outer_span)
+
+    def create_command(
+        self,
+        spanned_args: List[Spanned[CommandArg]],
+        span: slice,
+        subcmd_opening: str = "",
+    ) -> Spanned[CommandContext]:
+        arg_index = -1
+        prefix = suffix = opening_quote = closing_quote = ""
+        cursor_context = None
+        if self.cursor_in_span(span):
             for arg_index, arg in enumerate(spanned_args):
-                if cursor < arg.span.start:
+                if self.cursor < arg.span.start:
                     # an empty arg that will be inserted into arg_index
                     break
-                if cursor == arg.span.stop:
+                if self.cursor == arg.span.stop:
                     # cursor is at the end of this arg
                     spanned_args.pop(arg_index)
 
@@ -294,7 +301,7 @@ class CompletionContextParser:
                         prefix = arg.value.value
                         opening_quote = arg.value.opening_quote
                     break
-                if arg.span.start <= cursor < arg.span.stop:
+                if self.cursor_in_span(arg.span):
                     spanned_args.pop(arg_index)
 
                     if arg.cursor_context is not None:
@@ -306,7 +313,7 @@ class CompletionContextParser:
                             cursor_context = arg.cursor_context
                             break
                     else:
-                        relative_location = cursor - arg.span.start
+                        relative_location = self.cursor - arg.span.start
 
                     raw_value = arg.value.raw_value
                     if relative_location < len(arg.value.opening_quote):
@@ -331,7 +338,6 @@ class CompletionContextParser:
             else:
                 # cursor is at a new arg that will be appended
                 arg_index = len(spanned_args)
-
         args = tuple(arg.value for arg in spanned_args)
         context = CommandContext(
             args,
@@ -344,7 +350,7 @@ class CompletionContextParser:
         )
         if cursor_context is None and arg_index != -1:
             cursor_context = context
-        p[0] = Spanned(context, span, cursor_context)
+        return Spanned(context, span, cursor_context)
 
     def p_sub_expression_arg(self, p):
         """arg : sub_expression"""
@@ -459,10 +465,7 @@ class CompletionContextParser:
             return command
 
         new_arg_index = None
-        if (
-            command.cursor_context is None
-            and new_span.start <= self.cursor <= new_span.stop
-        ):
+        if command.cursor_context is None and self.cursor_in_span(new_span):
             # the cursor is in the expanded span
             if self.cursor < command.span.start:
                 new_arg_index = 0
@@ -515,10 +518,16 @@ class CompletionContextParser:
         relative_cursor = None
         line_cont, replacement, diff = LINE_CONT_REPLACEMENT_DIFF
 
-        if span.start <= self.cursor <= span.stop:
+        if self.cursor_in_span(span):
             relative_cursor = self.cursor - span.start
             relative_cursor += string.count(line_cont, 0, relative_cursor) * diff
 
         string = string.replace(line_cont, replacement)
 
         return string, relative_cursor
+
+    def cursor_in_span(self, span: slice) -> bool:
+        """Returns whether the cursor is in the span.
+        The edge is included (if `self.cursor`` == ``stop``).
+        """
+        return span.start <= self.cursor <= span.stop
