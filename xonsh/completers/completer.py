@@ -106,7 +106,7 @@ def remove_completer(name: str):
     """
     err = None
     if name not in xsh_session.completers:
-        err = "The name %s is not a registered " "completer function." % name
+        err = f"The name {name} is not a registered completer function."
     if err is None:
         del xsh_session.completers[name]
         return
