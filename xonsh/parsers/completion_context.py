@@ -91,6 +91,9 @@ def with_docstr(docstr):
     return decorator
 
 
+RULES_SEP = "\n\t| "
+
+
 @lazyobject
 def NEWLINE_RE():
     return re.compile("\n")
@@ -116,15 +119,16 @@ class CompletionContextParser:
 
     used_tokens = {
         "STRING",
-        # parens
-        "DOLLAR_LPAREN",
-        "DOLLAR_LBRACKET",
-        "BANG_LPAREN",
-        "BANG_LBRACKET",  # $ or !, ( or [
-        "ATDOLLAR_LPAREN",  # @$(
-        "RPAREN",
-        "RBRACKET",  # ), ]
     }
+    paren_pairs = (
+        ("DOLLAR_LPAREN", "RPAREN"),  # $()
+        ("BANG_LPAREN", "RPAREN"),  # !()
+        ("ATDOLLAR_LPAREN", "RPAREN"),  # @$()
+        ("DOLLAR_LBRACKET", "RBRACKET"),  # $[]
+        ("BANG_LBRACKET", "RBRACKET"),  # ![]
+    )
+    used_tokens.update(left for left, _ in paren_pairs)
+    used_tokens.update(right for _, right in paren_pairs)
     artificial_tokens = {"ANY", "EOF"}
     ignored_tokens = {"INDENT", "DEDENT", "WS"}
 
@@ -190,7 +194,7 @@ class CompletionContextParser:
         if context is None:
             return None
 
-        if isinstance(context.value, CommandContext) and not context.cursor_context:
+        if isinstance(context.value, CommandContext) and context.cursor_context is None:
             context = self.expand_command_span(context, slice(0, len(multiline_text)))
 
         if isinstance(context.cursor_context, int):
@@ -234,33 +238,44 @@ class CompletionContextParser:
     # Grammar:
 
     def p_command(self, p):
-        """command : args"""
-        spanned_args: List[Spanned[CommandArg]] = p[1]
-        span = slice(spanned_args[0].span.start, spanned_args[-1].span.stop)
+        """command : args
+        | EOF
+        """
+        if p[1]:
+            spanned_args: List[Spanned[CommandArg]] = p[1]
+            span = slice(spanned_args[0].span.start, spanned_args[-1].span.stop)
+        else:
+            # EOF - we need to create an empty command
+            spanned_args = []
+            eof_position = p.lexpos(1)
+            span = slice(
+                eof_position, eof_position
+            )  # this will be expanded in ``parse``
         p[0] = self.create_command(spanned_args, span)
 
+    @with_docstr(
+        f"""sub_expression : {RULES_SEP.join(f"{l} args {r}" for l, r in paren_pairs)}
+        | {RULES_SEP.join(f"{l} {r}" for l, r in paren_pairs)}
+        | {RULES_SEP.join(f"{l} args EOF" for l, _ in paren_pairs)}
+        | {RULES_SEP.join(f"{l} EOF" for l, _ in paren_pairs)}
+    """
+    )
     def p_subcommand(self, p):
-        """sub_expression : DOLLAR_LPAREN args RPAREN
-        |   DOLLAR_LPAREN args EOF
-        |   BANG_LPAREN args RPAREN
-        |   BANG_LPAREN args EOF
-        |   ATDOLLAR_LPAREN args RPAREN
-        |   ATDOLLAR_LPAREN args EOF
-        |   DOLLAR_LBRACKET args RBRACKET
-        |   DOLLAR_LBRACKET args EOF
-        |   BANG_LBRACKET args RBRACKET
-        |   BANG_LBRACKET args EOF
-        """
-        spanned_args: List[Spanned[CommandArg]] = p[2]
+        if len(p) == 4:
+            # LPAREN args RPAREN/EOF
+            spanned_args: List[Spanned[CommandArg]] = p[2]
+            closing_token_index = 3
+        else:
+            # LPAREN RPAREN/EOF
+            spanned_args: List[Spanned[CommandArg]] = []
+            closing_token_index = 2
+
         subcmd_opening = p[1]
 
         outer_start = p.lexpos(1)
         inner_start = outer_start + len(subcmd_opening)
-        if p[3]:
-            outer_stop = p.lexpos(3) + len(p[3])
-            inner_stop = outer_stop - 1  # without the closing paren
-        else:
-            inner_stop = outer_stop = len(self.current_input)
+        inner_stop = p.lexpos(closing_token_index)
+        outer_stop = inner_stop + len(p[closing_token_index])  # len(EOF) == 0
         inner_span = slice(inner_start, inner_stop)
         outer_span = slice(outer_start, outer_stop)
 
@@ -360,7 +375,7 @@ class CompletionContextParser:
             value=CommandArg(value)
         )  # preserves the cursor_context if it exists
 
-    @with_docstr("""arg : """ + "\n\t| ".join({"ANY"} | used_tokens))
+    @with_docstr(f"""arg : {RULES_SEP.join({"ANY"} | used_tokens)}""")
     def p_any_token_arg(self, p):
         raw_arg: str = p[1]
         start = p.lexpos(1)
@@ -441,7 +456,7 @@ class CompletionContextParser:
                 # Try to send an EOF token, it might match a rule (like sub_expression)
                 self.got_eof = True
                 self.parser.errok()
-                return _new_token("EOF", "", (0, 0))
+                return _new_token("EOF", "", (0, len(self.current_input)))
             raise_parse_error("no further code")
 
         raise_parse_error(
