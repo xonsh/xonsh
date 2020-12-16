@@ -67,7 +67,7 @@ def _register_completer(name: str, func: str, pos="start", stack=None):
         if func_name in xsh.ctx:
             func = xsh.ctx[func_name]
             if not callable(func):
-                err = "%s is not callable" % func_name
+                err = f"{func_name} is not callable"
         else:
             for frame_info in stack:
                 frame = frame_info[0]
