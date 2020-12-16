@@ -41,6 +41,13 @@ COMMAND_EXAMPLES = (
         args=(CommandArg("comm and", opening_quote="'", closing_quote="'"),), arg_index=1, prefix="a", suffix="b")),
 )
 
+EMPTY_COMMAND_EXAMPLES = (
+    (f"{X}", CommandContext((), 0)),
+    (f" {X}", CommandContext((), 0)),
+    (f"{X} ", CommandContext((), 0)),
+    (f" {X} ", CommandContext((), 0)),
+)
+
 STRING_ARGS_EXAMPLES = (
     (f"'comm an{X}d'", CommandContext(
         args=(), arg_index=0, prefix="comm an", suffix="d", opening_quote="'", closing_quote="'")),
@@ -57,6 +64,7 @@ STRING_ARGS_EXAMPLES = (
 )
 
 COMMAND_EXAMPLES += STRING_ARGS_EXAMPLES
+COMMAND_EXAMPLES += EMPTY_COMMAND_EXAMPLES
 
 
 @pytest.mark.parametrize("commandline, context", COMMAND_EXAMPLES)
