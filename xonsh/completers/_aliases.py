@@ -62,7 +62,7 @@ def _register_completer(name: str, func: str, pos="start", stack=None):
     func_name = func
     xsh = builtins.__xonsh__  # type: ignore
     if name in xsh.completers:
-        err = "The name %s is already a registered completer function." % name
+        err = f"The name {name} is already a registered completer function."
     else:
         if func_name in xsh.ctx:
             func = xsh.ctx[func_name]
