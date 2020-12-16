@@ -40,16 +40,6 @@ class CommandContext(NamedTuple):
 
 CompletionContext = Union[CommandContext]
 
-
-class Span(NamedTuple):
-    # inclusive on both ends
-    first: int
-    last: int
-
-    def contains(self, index: int) -> bool:
-        return self.first <= index <= self.last
-
-
 T = TypeVar("T")
 
 
@@ -60,7 +50,7 @@ class Spanned(Generic[T]):
     def __init__(
         self,
         value: T,
-        span: Span,
+        span: slice,
         cursor_context: Optional[Union[CompletionContext, int]] = None,
     ):
         """
@@ -201,7 +191,7 @@ class CompletionContextParser:
             return None
 
         if isinstance(context.value, CommandContext) and not context.cursor_context:
-            context = self.expand_command_span(context, Span(0, len(multiline_text)))
+            context = self.expand_command_span(context, slice(0, len(multiline_text)))
 
         if isinstance(context.cursor_context, int):
             # we got a relative cursor position, it's not a real context
@@ -263,30 +253,37 @@ class CompletionContextParser:
 
         if len(p) == 2:
             spanned_args: List[Spanned[CommandArg]] = p[1]
-            first = spanned_args[0].span.first
-            last = spanned_args[-1].span.last
-            span = Span(first, last)
+            start = spanned_args[0].span.start
+            stop = spanned_args[-1].span.stop
+            span = slice(start, stop)
         else:
             spanned_args: List[Spanned[CommandArg]] = p[2]
             subcmd_opening = p[1]
-            outer_first = p.lexpos(1)
-            first = outer_first + len(subcmd_opening)
+            outer_start = p.lexpos(1)
+            start = outer_start + len(subcmd_opening)
             if p[3]:
-                outer_last = p.lexpos(3) + len(p[3]) - 1
-                last = outer_last - 1  # without the closing paren
+                outer_stop = p.lexpos(3) + len(p[3])
+                stop = outer_stop - 1  # without the closing paren
             else:
-                last = outer_last = len(self.current_input)
-            span = Span(outer_first, outer_last)
+                stop = outer_stop = len(self.current_input)
+            span = slice(outer_start, outer_stop)
 
         cursor = self.cursor
-        if first <= cursor <= last + 1:
+        if start <= cursor <= stop:
             for arg_index, arg in enumerate(spanned_args):
-                if cursor < arg.span.first:
+                if cursor < arg.span.start:
                     # an empty arg that will be inserted into arg_index
                     break
-                if cursor == arg.span.last + 1:
+                if cursor == arg.span.stop:
                     # cursor is at the end of this arg
                     spanned_args.pop(arg_index)
+
+                    if arg.cursor_context is not None and not isinstance(
+                        arg.cursor_context, int
+                    ):
+                        # this arg is already a context (e.g. a sub expression)
+                        cursor_context = arg.cursor_context
+                        break
 
                     if arg.value.closing_quote:
                         # appending to a quoted string, e.g. `ls "C:\\Wind"`
@@ -297,7 +294,7 @@ class CompletionContextParser:
                         prefix = arg.value.value
                         opening_quote = arg.value.opening_quote
                     break
-                if arg.span.contains(cursor):
+                if arg.span.start <= cursor < arg.span.stop:
                     spanned_args.pop(arg_index)
 
                     if arg.cursor_context is not None:
@@ -309,7 +306,7 @@ class CompletionContextParser:
                             cursor_context = arg.cursor_context
                             break
                     else:
-                        relative_location = cursor - arg.span.first
+                        relative_location = cursor - arg.span.start
 
                     raw_value = arg.value.raw_value
                     if relative_location < len(arg.value.opening_quote):
@@ -352,9 +349,7 @@ class CompletionContextParser:
     def p_sub_expression_arg(self, p):
         """arg : sub_expression"""
         sub_expression: Spanned[CompletionContext] = p[1]
-        value = self.current_input[
-            sub_expression.span.first : sub_expression.span.last + 1
-        ]
+        value = self.current_input[sub_expression.span]
         p[0] = sub_expression.replace(
             value=CommandArg(value)
         )  # preserves the cursor_context if it exists
@@ -362,9 +357,9 @@ class CompletionContextParser:
     @with_docstr("""arg : """ + "\n\t| ".join({"ANY"} | used_tokens))
     def p_any_token_arg(self, p):
         raw_arg: str = p[1]
-        first = p.lexpos(1)
-        last = first + len(raw_arg) - 1
-        span = Span(first, last)
+        start = p.lexpos(1)
+        stop = start + len(raw_arg)
+        span = slice(start, stop)
 
         # handle line continuations
         raw_arg, relative_cursor = self.process_string_segment(raw_arg, span)
@@ -386,10 +381,8 @@ class CompletionContextParser:
         new_arg: Spanned[CommandArg] = p[2]
         last_arg: Spanned[CommandArg] = args[-1]
 
-        in_between_span = Span(last_arg.span.last + 1, new_arg.span.first - 1)
-        in_between = self.current_input[
-            in_between_span.first : in_between_span.last + 1
-        ]
+        in_between_span = slice(last_arg.span.stop, new_arg.span.start)
+        in_between = self.current_input[in_between_span]
 
         # handle line continuations between these args
         in_between, relative_cursor = self.process_string_segment(
@@ -429,7 +422,7 @@ class CompletionContextParser:
 
             args[-1] = Spanned(
                 value=arg,
-                span=Span(last_arg.span.first, new_arg.span.last),
+                span=slice(last_arg.span.start, new_arg.span.stop),
                 cursor_context=cursor_context,
             )
         else:
@@ -455,22 +448,25 @@ class CompletionContextParser:
     # Utils:
 
     def expand_command_span(
-        self, command: Spanned[CommandContext], new_span: Span
+        self, command: Spanned[CommandContext], new_span: slice
     ) -> Spanned[CommandContext]:
         """This is used when we know the command's real span is larger
 
         For example, only when we're done parsing ` echo hi`, we know the head whitespace is also part of the command.
         """
-        if command.span.first <= new_span.first and new_span.last <= command.span.last:
+        if command.span.start <= new_span.start and new_span.stop <= command.span.stop:
             # the new span doesn't expand the old one
             return command
 
         new_arg_index = None
-        if command.cursor_context is None and new_span.contains(self.cursor):
+        if (
+            command.cursor_context is None
+            and new_span.start <= self.cursor <= new_span.stop
+        ):
             # the cursor is in the expanded span
-            if self.cursor < command.span.first:
+            if self.cursor < command.span.start:
                 new_arg_index = 0
-            if self.cursor > command.span.last + 1:
+            if self.cursor > command.span.stop:
                 new_arg_index = len(command.value.args)
             else:
                 # TODO: Can this happen?
@@ -510,7 +506,7 @@ class CompletionContextParser:
                 )
 
     def process_string_segment(
-        self, string: str, span: Span
+        self, string: str, span: slice
     ) -> Tuple[str, Optional[int]]:
         """Process a string segment:
         1. Return a relative_cursor if it's inside the span (for ``Spanned.cursor_context``).
@@ -519,8 +515,8 @@ class CompletionContextParser:
         relative_cursor = None
         line_cont, replacement, diff = LINE_CONT_REPLACEMENT_DIFF
 
-        if span.contains(self.cursor):
-            relative_cursor = self.cursor - span.first
+        if span.start <= self.cursor <= span.stop:
+            relative_cursor = self.cursor - span.start
             relative_cursor += string.count(line_cont, 0, relative_cursor) * diff
 
         string = string.replace(line_cont, replacement)
