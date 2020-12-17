@@ -156,14 +156,17 @@ def test_nested_command(commandline, context, nesting):
     assert_match(nested_commandline, context)
 
 
+NESTING_MALFORMATIONS = (
+    lambda s: s[:-1],  # remove the last closing brace ')' / ']'
+    lambda s: s + s[-1],  # add an extra closing brace ')' / ']'
+    lambda s: s[-1] + s,
+    lambda s: s + "$(",
+    lambda s: "$(" + s,
+)
+
+
 @pytest.mark.parametrize("nesting, commandline, context", NESTED_SIMPLE_CMD_EXAMPLES)
-@pytest.mark.parametrize("malformation", (
-        lambda s: s[:-1],  # remove the last closing brace ')' / ']'
-        lambda s: s + s[-1],  # add an extra closing brace ')' / ']'
-        lambda s: s[-1] + s,
-        lambda s: s + "$(",
-        lambda s: "$(" + s,
-))
+@pytest.mark.parametrize("malformation", NESTING_MALFORMATIONS)
 def test_malformed_subcmd(nesting, commandline, context, malformation):
     nested_commandline = nesting.replace(X, commandline)
     nested_commandline = malformation(nested_commandline)
@@ -196,4 +199,118 @@ def test_combined_subcommand_arg():
         (f"$(echo ){X}", CommandContext((), 0, prefix="$(echo )")),
 ))
 def test_cursor_in_subcmd_borders(commandline, context):
+    assert_match(commandline, context)
+
+
+MULTIPLE_COMMAND_KEYWORDS = (
+    ";",
+    "\n",
+    " and ",
+    "&&",
+    " or ",
+    "||",
+    "|",
+)
+
+MULTIPLE_CMD_SIMPLE_EXAMPLES = [
+    (keyword, ("echo hi", f"simple {X}"), CommandContext(args=(CommandArg("simple"),), arg_index=1))
+    for keyword in MULTIPLE_COMMAND_KEYWORDS]
+
+EXTENSIVE_COMMAND_PAIRS = tuple(itertools.chain(
+    zip(COMMAND_EXAMPLES, COMMAND_EXAMPLES[::-1]),
+    zip(COMMAND_EXAMPLES, EMPTY_COMMAND_EXAMPLES),
+    zip(EMPTY_COMMAND_EXAMPLES, COMMAND_EXAMPLES),
+    zip(EMPTY_COMMAND_EXAMPLES, EMPTY_COMMAND_EXAMPLES),
+))
+
+MULTIPLE_COMMAND_EXTENSIVE_EXAMPLES = tuple(itertools.chain(
+    (
+        # cursor in first command
+        ((first, second.replace(X, "")), first_context)
+        for (first, first_context), (second, second_context) in EXTENSIVE_COMMAND_PAIRS
+    ),
+    (
+        # cursor in second command
+        ((first.replace(X, ""), second), second_context)
+        for (first, first_context), (second, second_context) in EXTENSIVE_COMMAND_PAIRS
+    ),
+    (
+        # cursor in middle command
+        ((first.replace(X, ""), second, third.replace(X, "")), second_context)
+        for (first, _1), (second, second_context), (third, _3)
+        in zip(COMMAND_EXAMPLES[:3], COMMAND_EXAMPLES[3:6], COMMAND_EXAMPLES[6:9])
+    ),
+))
+
+
+@pytest.mark.parametrize("keyword, commands, context", tuple(itertools.chain(
+    (
+            (MULTIPLE_COMMAND_KEYWORDS[0], commands, context)
+            for commands, context in MULTIPLE_COMMAND_EXTENSIVE_EXAMPLES
+    ),
+    MULTIPLE_CMD_SIMPLE_EXAMPLES,
+)))
+def test_multiple_commands(keyword, commands, context):
+    joined_command = keyword.join(commands)
+    assert_match(joined_command, context)
+
+
+@pytest.mark.parametrize("nesting, keyword, commands, context", tuple(
+    (nesting, keyword, commands, context)  # no subcmd_opening in nested multi-commands
+    for nesting, prefix in NESTING_EXAMPLES
+    for keyword, commands, context in MULTIPLE_CMD_SIMPLE_EXAMPLES
+    if keyword != "\n"  # the lexer ignores newlines inside subcommands
+))
+def test_nested_multiple_commands(nesting, keyword, commands, context):
+    joined_command = keyword.join(commands)
+    nested_joined = nesting.replace(X, joined_command)
+    assert_match(nested_joined, context)
+
+
+@pytest.mark.parametrize("nesting, keyword, commands, context", tuple(
+    (nesting, keyword, commands, context)
+    for nesting, prefix in NESTING_EXAMPLES[:1]
+    for keyword, commands, context in MULTIPLE_CMD_SIMPLE_EXAMPLES[:1]
+))
+@pytest.mark.parametrize("malformation", NESTING_MALFORMATIONS)
+def test_malformed_subcmd(malformation, nesting, keyword, commands, context):
+    joined_command = keyword.join(commands)
+    nested_joined = nesting.replace(X, joined_command)
+    malformed_commandline = malformation(nested_joined)
+    assert_match(malformed_commandline, context)
+
+
+MULTIPLE_COMMAND_BORDER_EXAMPLES = tuple(itertools.chain(
+    itertools.chain(*(
+        (
+            (f"ls{ws1}{X}{kwd}{ws2}echo",
+             CommandContext((CommandArg("ls"),), 1) if ws1 else CommandContext((), 0, prefix="ls")),
+            (f"ls{ws1}{kwd}{X}{ws2}echo",
+             CommandContext((CommandArg("echo"),), 0) if ws2 else CommandContext((), 0, suffix="echo")),
+        ) for ws1, ws2, kwd in itertools.product(("", " "), ("", " "), ("&&", ";"))
+    )),
+
+    # space-separated keywords ('and', 'or') are treated as a normal arg if the cursor is at the edge
+    (
+        (f"ls {X}and echo", CommandContext((CommandArg("ls"), CommandArg("echo")), 1, suffix="and")),
+        (f"ls and{X} echo", CommandContext((CommandArg("ls"), CommandArg("echo")), 1, prefix="and")),
+    ),
+
+    # if the cursor is inside the keyword, it's treated as a normal arg
+    (
+        (f"ls a{X}nd echo", CommandContext((CommandArg("ls"), CommandArg("echo")), 1, prefix="a", suffix="nd")),
+        (f"ls &{X}& echo", CommandContext((CommandArg("ls"), CommandArg("echo")), 1, prefix="&", suffix="&")),
+    )
+))
+
+
+@pytest.mark.parametrize("commandline, context", tuple(itertools.chain(
+    MULTIPLE_COMMAND_BORDER_EXAMPLES,
+    (
+            # ensure these rules work with more than one command
+            (f"cat | {commandline}", context)
+            for commandline, context in MULTIPLE_COMMAND_BORDER_EXAMPLES
+    ),
+)))
+def test_cursor_in_multiple_keyword_borders(commandline, context):
     assert_match(commandline, context)
