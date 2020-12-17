@@ -131,8 +131,7 @@ def define_xontribs():
         ),
         "avox": Xontrib(
             url="https://github.com/AstraLuma/xontrib-avox",
-            description="Automatic (de)activation of virtual environments as "
-            "you cd around",
+            description="Policy for autovox based on project directories",
             package=_XontribPkg(
                 name="xontrib-avox",
                 license="GPLv3",
