@@ -3,7 +3,7 @@ This parser is meant to parse a (possibly incomplete) command line.
 """
 import os
 import re
-from typing import Optional, Tuple, List, Any, NamedTuple, Generic, TypeVar, Union
+from typing import Optional, Tuple, List, NamedTuple, Generic, TypeVar, Union, Any
 
 from xonsh.lazyasd import lazyobject
 from xonsh.lexer import Lexer, _new_token
@@ -83,6 +83,9 @@ class Spanned(Generic[T]):
         )
 
 
+Commands = Spanned[List[Spanned[CommandContext]]]
+
+
 def with_docstr(docstr):
     def decorator(func):
         func.__doc__ = docstr
@@ -129,6 +132,15 @@ class CompletionContextParser:
     )
     used_tokens.update(left for left, _ in paren_pairs)
     used_tokens.update(right for _, right in paren_pairs)
+    multi_tokens = {
+        # multiple commands
+        "SEMI",  # ;
+        "NEWLINE",
+        "PIPE",
+        "AND",
+        "OR",
+    }
+    used_tokens |= multi_tokens
     artificial_tokens = {"ANY", "EOF"}
     ignored_tokens = {"INDENT", "DEDENT", "WS"}
 
@@ -144,6 +156,7 @@ class CompletionContextParser:
         self.current_input = ""
         self.line_indices = ()
 
+        self.error = None
         self.debug = debug
         self.lexer = Lexer(tolerant=True)
         self.tokens = tuple(self.used_tokens | self.artificial_tokens)
@@ -181,9 +194,10 @@ class CompletionContextParser:
         self.line_indices = (0,) + tuple(
             match.start() + 1 for match in NEWLINE_RE.finditer(multiline_text)
         )
+        self.error = None
 
         try:
-            context: Optional[Spanned[Any]] = self.parser.parse(
+            context: Optional[CompletionContext] = self.parser.parse(
                 input=multiline_text, lexer=self, debug=1 if self.debug else 0
             )
         except SyntaxError:
@@ -191,17 +205,10 @@ class CompletionContextParser:
                 raise
             context = None
 
-        if context is None:
-            return None
+        if self.debug and self.error is not None:
+            raise self.error
 
-        if isinstance(context.value, CommandContext) and context.cursor_context is None:
-            context = self.expand_command_span(context, slice(0, len(multiline_text)))
-
-        if isinstance(context.cursor_context, int):
-            # we got a relative cursor position, it's not a real context
-            return None
-
-        return context.cursor_context
+        return context
 
     # Tokenizer:
 
@@ -213,6 +220,7 @@ class CompletionContextParser:
         * skip tokens from ``ignored_tokens``.
         * make ``lexpos`` absolute instead of per line.
         * set tokens that aren't in ``used_tokens`` to type ``ANY``.
+        * handle a weird lexer behavior with ``AND``/``OR``.
         """
         while True:
             tok = self.lexer.token()
@@ -227,7 +235,13 @@ class CompletionContextParser:
             if lineno >= len(self.line_indices):
                 raise SyntaxError(f"Invalid lexer state for token {tok} - bad lineno")
 
-            tok.lexpos = self.line_indices[lineno] + tok.lexpos
+            tok.lexpos = lexpos = self.line_indices[lineno] + tok.lexpos
+
+            # for some reason the lexer simulates ``and`` / ``or`` values for ``&&` / ``||``
+            if tok.type == "AND" and self.current_input[lexpos : lexpos + 2] == "&&":
+                tok.value = "&&"
+            elif tok.type == "OR" and self.current_input[lexpos : lexpos + 2] == "||":
+                tok.value = "||"
 
             if tok.type in self.used_tokens:
                 return tok
@@ -237,8 +251,36 @@ class CompletionContextParser:
 
     # Grammar:
 
+    def p_context_command(self, p):
+        """context : command
+        | commands
+        """
+        spanned: Union[Spanned[CommandContext], Commands] = p[1]
+
+        if spanned.cursor_context is None:
+            complete_span = slice(0, len(self.current_input))
+            if isinstance(spanned.value, list):
+                spanned = self.expand_commands_span(spanned, complete_span)
+            else:
+                spanned = self.expand_command_span(spanned, complete_span)
+
+        context = spanned.cursor_context
+
+        if context is None or isinstance(context, int):
+            # we got a relative cursor position, it's not a real context
+            context = None
+            if self.debug:
+                self.error = SyntaxError(f"Failed to find cursor context in {spanned}")
+        p[0] = context
+
+    precedence = (
+        ("left", *set(r for _, r in paren_pairs)),
+        ("left", *multi_tokens),
+        ("left", "SINGLE_COMMAND"),  # fictitious token (see p_command)
+    )
+
     def p_command(self, p):
-        """command : args
+        """command : args %prec SINGLE_COMMAND
         | EOF
         """
         if p[1]:
@@ -252,6 +294,149 @@ class CompletionContextParser:
                 eof_position, eof_position
             )  # this will be expanded in ``parse``
         p[0] = self.create_command(spanned_args, span)
+
+    @with_docstr(
+        f"""commands : {RULES_SEP.join(f"args {kwd} args" for kwd in multi_tokens)}
+        | {RULES_SEP.join(f"args {kwd}" for kwd in multi_tokens)}
+        | {RULES_SEP.join(f"{kwd} args" for kwd in multi_tokens)}
+        | {RULES_SEP.join(f"{kwd}" for kwd in multi_tokens)}
+    """
+    )
+    def p_multiple_commands_first(self, p):
+        first_index, second_index = None, None
+        if len(p) == 4:
+            # args KWD args
+            first_index, kwd_index, second_index = 1, 2, 3
+        elif len(p) == 3:
+            if isinstance(p[1], list):
+                # args KWD
+                first_index, kwd_index = 1, 2
+            else:
+                # KWD args
+                kwd_index, second_index = 1, 2
+        else:
+            # KWD
+            kwd_index = 1
+
+        # create first command
+        kwd_start = p.lexpos(kwd_index)
+        if first_index is not None:
+            first_args: List[Spanned[CommandArg]] = p[first_index]
+            first_command = self.create_command(
+                first_args, slice(first_args[0].span.start, kwd_start)
+            )
+        else:
+            first_args = []
+            first_command = self.create_command([], slice(kwd_start, kwd_start))
+
+        # create second command
+        kwd_stop = kwd_start + len(p[kwd_index])
+        if second_index is not None:
+            second_args: List[Spanned[CommandArg]] = p[second_index]
+            second_command = self.create_command(
+                second_args, slice(kwd_stop, second_args[-1].span.stop)
+            )
+        else:
+            second_args = []
+            second_command = self.create_command([], slice(kwd_stop, kwd_stop))
+
+        commands_list = [first_command, second_command]
+
+        kwd_span = slice(kwd_start, kwd_stop)
+        if p[kwd_index] in ("and", "or") and self.cursor_in_span(kwd_span):
+            # the cursor is in a space-separated multi keyword.
+            # even if the cursor's at the edge, the keyword should be considered as a normal arg,
+            # so let's trigger that flow:
+            first_command = first_command.replace(cursor_context=None)
+            second_command = second_command.replace(cursor_context=None)
+
+        # resolve cursor context
+        cursor_context = None
+        if first_command.cursor_context is not None:
+            cursor_context = first_command.cursor_context
+        elif second_command.cursor_context is not None:
+            cursor_context = second_command.cursor_context
+        elif self.cursor_in_span(kwd_span):
+            args = (
+                first_args + [Spanned(CommandArg(p[kwd_index]), kwd_span)] + second_args
+            )
+            span = slice(first_command.span.start, second_command.span.stop)
+            commands_list = [self.create_command(args, span)]
+            cursor_context = commands_list[0].cursor_context
+
+        commands: Commands = Spanned(
+            commands_list,
+            span=slice(first_command.span.start, second_command.span.stop),
+            cursor_context=cursor_context,
+        )
+        p[0] = commands
+
+    @with_docstr(
+        f"""commands : {RULES_SEP.join(f"commands {kwd} args" for kwd in multi_tokens)}
+        | {RULES_SEP.join(f"commands {kwd}" for kwd in multi_tokens)}"""
+    )
+    def p_multiple_commands_many(self, p):
+        if len(p) == 4:
+            # commands KWD args
+            kwd_index = 2
+            command_args: List[Spanned[CommandArg]] = p[3]
+        else:
+            # commands KWD
+            kwd_index = 1
+            command_args = []
+
+        commands: Commands = p[1]
+
+        # expand commands span
+        kwd_start = p.lexpos(kwd_index)
+        commands = self.expand_commands_span(
+            commands, slice(commands.span.start, kwd_start)
+        )
+
+        # create new command
+        kwd_stop = kwd_start + len(p[kwd_index])
+        if command_args:
+            new_command_span = slice(kwd_stop, command_args[-1].span.stop)
+        else:
+            new_command_span = slice(kwd_stop, kwd_stop)
+        new_command = self.create_command(command_args, new_command_span)
+
+        commands.value.append(new_command)
+
+        kwd_span = slice(kwd_start, kwd_stop)
+        if p[kwd_index] in ("and", "or") and self.cursor_in_span(kwd_span):
+            # the cursor is in a space-separated multi keyword.
+            # even if the cursor's at the edge, the keyword should be considered as a normal arg,
+            # so let's trigger that flow:
+            new_command = new_command.replace(cursor_context=None)
+            commands = commands.replace(cursor_context=None)
+
+        if new_command.cursor_context is not None:
+            commands = commands.replace(cursor_context=new_command.cursor_context)
+        elif commands.cursor_context is None and self.cursor_in_span(kwd_span):
+            # the cursor is in the keyword.
+            # join the last command with the new command and treat the keyword as a normal arg.
+            new_command = commands.value.pop()
+            last_command = commands.value.pop()
+            middle_command = self.create_command(
+                [Spanned(CommandArg(p[kwd_index]), kwd_span)], kwd_span
+            )
+            joined_command = Spanned(
+                value=middle_command.value._replace(
+                    args=last_command.value.args
+                    + middle_command.value.args
+                    + new_command.value.args,
+                    arg_index=len(last_command.value.args)
+                    + middle_command.value.arg_index,
+                ),
+                span=slice(last_command.span.start, new_command.span.stop),
+            )
+            context = joined_command.value
+            joined_command.cursor_context = context
+            commands.value.append(joined_command)
+            commands = commands.replace(cursor_context=context)
+
+        p[0] = commands
 
     @with_docstr(
         f"""sub_expression : {RULES_SEP.join(f"{l} args {r}" for l, r in paren_pairs)}
@@ -281,6 +466,27 @@ class CompletionContextParser:
 
         command = self.create_command(spanned_args, inner_span, subcmd_opening)
         p[0] = command.replace(span=outer_span)
+
+    @with_docstr(
+        f"""sub_expression : {RULES_SEP.join(f"{l} commands {r}" for l, r in paren_pairs)}
+        | {RULES_SEP.join(f"{l} commands EOF" for l, _ in paren_pairs)}
+    """
+    )
+    def p_subcommand_multiple(self, p):
+        # LPAREN commands RPAREN/EOF
+        commands: Commands = p[2]
+
+        subcmd_opening = p[1]
+
+        outer_start = p.lexpos(1)
+        inner_start = outer_start + len(subcmd_opening)
+        inner_stop = p.lexpos(3)
+        outer_stop = inner_stop + len(p[3])  # len(EOF) == 0
+        inner_span = slice(inner_start, inner_stop)
+        outer_span = slice(outer_start, outer_stop)
+
+        commands = self.expand_commands_span(commands, inner_span)
+        p[0] = commands.replace(span=outer_span)
 
     def create_command(
         self,
@@ -369,13 +575,13 @@ class CompletionContextParser:
 
     def p_sub_expression_arg(self, p):
         """arg : sub_expression"""
-        sub_expression: Spanned[CompletionContext] = p[1]
+        sub_expression: Spanned[Any] = p[1]
         value = self.current_input[sub_expression.span]
         p[0] = sub_expression.replace(
             value=CommandArg(value)
         )  # preserves the cursor_context if it exists
 
-    @with_docstr(f"""arg : {RULES_SEP.join({"ANY"} | used_tokens)}""")
+    @with_docstr(f"""arg : {RULES_SEP.join({"ANY"} | used_tokens - multi_tokens)}""")
     def p_any_token_arg(self, p):
         raw_arg: str = p[1]
         start = p.lexpos(1)
@@ -486,15 +692,36 @@ class CompletionContextParser:
                 new_arg_index = 0
             if self.cursor > command.span.stop:
                 new_arg_index = len(command.value.args)
-            else:
-                # TODO: Can this happen?
-                pass
 
         if new_arg_index is not None:
             new_context = command.value._replace(arg_index=new_arg_index)
             return Spanned(value=new_context, span=new_span, cursor_context=new_context)
 
         return command.replace(span=new_span)
+
+    def expand_commands_span(self, commands: Commands, new_span: slice) -> Commands:
+        """Like expand_command_span, but for multiple commands - expands the first command and the last command."""
+        cursor_context = commands.cursor_context
+
+        if new_span.start < commands.span.start:
+            # expand first command
+            first_command = commands.value[0]
+            commands.value[0] = first_command = self.expand_command_span(
+                first_command, slice(new_span.start, first_command.span.stop)
+            )
+            if first_command.cursor_context is not None:
+                cursor_context = first_command.cursor_context
+
+        if new_span.stop > commands.span.stop:
+            # expand last command
+            last_command = commands.value[-1]
+            commands.value[-1] = last_command = self.expand_command_span(
+                last_command, slice(last_command.span.start, new_span.stop)
+            )
+            if last_command.cursor_context is not None:
+                cursor_context = last_command.cursor_context
+
+        return commands.replace(span=new_span, cursor_context=cursor_context)
 
     @staticmethod
     def try_parse_string_literal(raw_arg: str) -> Optional[CommandArg]:
