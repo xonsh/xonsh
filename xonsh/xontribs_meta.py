@@ -139,6 +139,17 @@ def define_xontribs():
                 url="https://github.com/AstraLuma/xontrib-avox",
             ),
         ),
+        "avox_poetry": Xontrib(
+            url="github.com/jnoortheen/xontrib-avox-poetry",
+            description="auto-activate venv as one cd into a poetry project folder. "
+            "Activate ``.venv`` inside the project folder is also supported.",
+            package=_XontribPkg(
+                name="xontrib-avox-poetry",
+                license="MIT",
+                install={"pip": "xpip install xontrib-avox-poetry"},
+                url="https://github.com/jnoortheen/xontrib-avox-poetry",
+            ),
+        ),
         "back2dir": Xontrib(
             url="https://github.com/anki-code/xontrib-back2dir",
             description="Return to the most recently used directory when "
