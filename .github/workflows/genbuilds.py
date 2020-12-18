@@ -8,9 +8,11 @@ import os
 import jinja2
 from pathlib import Path
 
-CURR_DIR = Path(__file__).parent
+CURR_DIR = Path(__file__).absolute().parent
 environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(CURR_DIR), trim_blocks=True, lstrip_blocks=True,
+    loader=jinja2.FileSystemLoader(CURR_DIR),
+    trim_blocks=True,
+    lstrip_blocks=True,
 )
 tmpl = environment.get_template("pytest.tmpl")
 
@@ -20,12 +22,15 @@ OS_IMAGES = {
     "macos": "macOS-latest",
     "windows": "windows-latest",
 }
-PYTHON_VERSIONS = ["3.6", "3.7", "3.8", "3.9"]
+PY_MAIN_VERSION = "3.8"
+PYTHON_VERSIONS = ["3.6", "3.7", PY_MAIN_VERSION, "3.9"]
 
 ALLOWED_FAILURES = ["3.9"]
 
 
-def write_to_file(tst: str, os_name: str, python_version: str, **kwargs):
+def write_to_file(
+    tst: str, os_name: str, python_version: str, report_coverage=False, **kwargs
+):
     fname = os.path.join(CURR_DIR, f"{tst}-{os_name}-{python_version}.yml")
     result = tmpl.render(
         OS_NAME=os_name,
@@ -33,6 +38,7 @@ def write_to_file(tst: str, os_name: str, python_version: str, **kwargs):
         PYTHON_VERSION=python_version,
         NAME=tst,
         allow_failure=python_version in ALLOWED_FAILURES,
+        report_coverage=report_coverage,
         **kwargs,
     )
     (CURR_DIR / fname).write_text(result)
@@ -40,7 +46,19 @@ def write_to_file(tst: str, os_name: str, python_version: str, **kwargs):
 
 # pytest workflows
 for os_name, python_version in product(OS_NAMES, PYTHON_VERSIONS):
-    write_to_file("pytest", os_name, python_version, test_cmd="test -- --timeout=240")
+    report_coverage = python_version == PY_MAIN_VERSION and os_name == "linux"
+    if report_coverage:
+        test_cmd = "test --report-coverage -- --timeout=240"
+    else:
+        test_cmd = "test -- --timeout=240"
+
+    write_to_file(
+        "pytest",
+        os_name,
+        python_version,
+        report_coverage=report_coverage,
+        test_cmd=test_cmd,
+    )
 
 # qa workflow
 write_to_file("qa", "linux", "3.8", test_cmd="qa")

@@ -4,7 +4,26 @@ source =
   xonsh/
   xontrib/
 omit =
+  .venv/*
   */__amalgam__.py
   xonsh/lazyasd.py
   xonsh/parser_table.py
   xonsh/ply/*
+
+# keep all cache files in one place
+data_file = .cache/coverage
+
+# https://stackoverflow.com/questions/42721896/coverage-in-parallel-for-django-tests
+# when run with xdist - but append mode will not work
+#concurrency = multiprocessing
+#parallel = true
+
+[report]
+precision = 2
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+skip_covered = true
+skip_empty = true
+show_missing = true
+sort = Cover
