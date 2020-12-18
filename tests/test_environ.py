@@ -4,11 +4,13 @@ from __future__ import unicode_literals, print_function
 import os
 import re
 import pathlib
+import datetime
+import itertools
 from tempfile import TemporaryDirectory
-from xonsh.tools import always_true, DefaultNotGiven
 
 import pytest
 
+from xonsh.tools import always_true, DefaultNotGiven
 from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
@@ -16,6 +18,7 @@ from xonsh.environ import (
     default_env,
     make_args_env,
     LsColors,
+    default_value,
 )
 
 from tools import skip_if_on_unix
@@ -478,6 +481,20 @@ def test_deregister_custom_var():
     # gives it only default permissive validation, conversion
     del env["MY_SPECIAL_VAR"]
     env["MY_SPECIAL_VAR"] = 32
+
+
+def test_register_callable_default():
+    def is_date(x):
+        return isinstance(x, datetime.date)
+
+    @default_value
+    def today(env):
+        return datetime.date.today()
+
+    # registration should not raise a value error just because
+    # default is a function which generates the proper type.
+    env = Env()
+    env.register("TODAY", default=today, validate=is_date)
 
 
 def test_env_iterate():

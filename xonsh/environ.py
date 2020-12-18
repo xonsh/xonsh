@@ -2019,7 +2019,7 @@ class Env(cabc.MutableMapping):
         elif key in self._vars and self._vars[key].default is not DefaultNotGiven:
             val = self.get_default(key)
             if is_callable_default(val):
-                val = val(self)
+                val = self._d[key] = val(self)
         else:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
@@ -2169,11 +2169,12 @@ class Env(cabc.MutableMapping):
             validate, convert, detype = ENSURERS[type]
 
         if default is not None:
-            if validate(default):
+            if is_callable_default(default) or validate(default):
                 pass
             else:
                 raise ValueError(
-                    f"Default value for {name} does not match type specified by validate"
+                    f"Default value for {name} does not match type specified "
+                    "by validate and is not a callable default."
                 )
 
         self._vars[name] = Var(
