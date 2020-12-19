@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Using ``ujson`` in LazyJSON to loading json history 15% faster.
+* Using ``ujson`` (if installed) in LazyJSON to loading json history 15% faster.
 
 **Deprecated:**
 
