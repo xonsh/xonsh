@@ -11,7 +11,7 @@ import collections.abc as cabc
 try:
     import ujson as json
 except ImportError:
-    import json
+    import json  # type: ignore
 
 from xonsh.history.base import History
 import xonsh.tools as xt

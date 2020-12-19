@@ -8,7 +8,7 @@ import collections.abc as cabc
 try:
     import ujson as json
 except ImportError:
-    import json
+    import json  # type: ignore
 
 
 def _to_json_with_size(obj, offset=0, sort_keys=False):
