@@ -3,11 +3,15 @@
 import os
 import sys
 import time
-import json
 import builtins
 import collections
 import threading
 import collections.abc as cabc
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 from xonsh.history.base import History
 import xonsh.tools as xt
@@ -180,6 +184,7 @@ class JsonHistoryGC(threading.Thread):
         boot = uptime.boottime()
         fs = _xhj_get_history_files(sort=False)
         files = []
+        time_start = time.time()
         for f in fs:
             try:
                 cur_file_size = os.path.getsize(f)
@@ -206,7 +211,12 @@ class JsonHistoryGC(threading.Thread):
                 )
                 lj.close()
                 if xonsh_debug:
-                    print(f"... Enumerated {len(files):7d} history files.\r", end="")
+                    time_lag = time.time() - time_start
+                    print(
+                        f"[history.{json.__name__}] Enumerated {len(files):,d} history files for {time_lag:0.4f}s.\r",
+                        end="",
+                        file=sys.stderr,
+                    )
             except (IOError, OSError, ValueError):
                 continue
         files.sort()  # this sorts by elements of the tuple,
@@ -477,7 +487,7 @@ class JsonHistory(History):
                 continue
             try:
                 commands = json_file.load()["cmds"]
-            except json.decoder.JSONDecodeError:
+            except (json.decoder.JSONDecodeError, ValueError):
                 # file is corrupted somehow
                 if builtins.__xonsh__.env.get("XONSH_DEBUG") > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
