@@ -19,6 +19,7 @@ from xonsh.environ import (
     make_args_env,
     LsColors,
     default_value,
+    Var,
 )
 
 from tools import skip_if_on_unix
@@ -431,12 +432,12 @@ def test_register_var_path():
     env = Env()
     env.register("MY_PATH_VAR", type="path")
 
-    path = '/tmp'
+    path = "/tmp"
     env["MY_PATH_VAR"] = path
     assert env["MY_PATH_VAR"] == pathlib.Path(path)
 
     # Empty string is None to avoid uncontrolled converting empty string to Path('.')
-    path = ''
+    path = ""
     env["MY_PATH_VAR"] = path
     assert env["MY_PATH_VAR"] == None
 
@@ -518,8 +519,7 @@ def test_env_iterate_rawkeys():
 
 
 def test_env_get_defaults():
-    """Verify the rather complex rules for env.get("<envvar>",default) value when envvar is not defined.
-    """
+    """Verify the rather complex rules for env.get("<envvar>",default) value when envvar is not defined."""
 
     env = Env(TEST1=0)
     env.register("TEST_REG", default="abc")
@@ -536,3 +536,16 @@ def test_env_get_defaults():
     # var not defined, is registered, reg default is sentinel => value is *immediate* default
     assert env.get("TEST_REG_DNG", 22) == 22
     assert "TEST_REG_DNG" not in env
+
+
+@pytest.mark.parametrize(
+    "val,validator",
+    [
+        ("string", "is_string"),
+        (1, "is_int"),
+        (0.5, "is_float"),
+    ],
+)
+def test_var_with_default_initer(val, validator):
+    var = Var.with_default(val)
+    assert var.validate.__name__ == validator

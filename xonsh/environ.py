@@ -680,8 +680,10 @@ class Var(tp.NamedTuple):
         **kwargs,
     ):
         """fill arguments from the value of default"""
-        if type_str is None:
-            type_str = type(default).__name__
+        if not type_str:
+            cls_name = type(default).__name__
+            type_str = {"LazyBool": "bool"}.get(cls_name, cls_name)
+
         if type_str in ENSURERS and "validate" not in kwargs:
             validator, convertor, detyper = ENSURERS[type_str]
             kwargs.update(
@@ -1633,7 +1635,7 @@ def DEFAULT_VARS():
     }
     for _, vars in Xettings.get_groups():
         for name, var in vars:
-            dv[name] = var
+            dv[var.pattern or name] = var
 
     return dv
 
