@@ -87,6 +87,7 @@ from xonsh.tools import (
     to_str_str_dict,
     dict_to_str,
     to_int_or_none,
+    DefaultNotGivenType,
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -666,7 +667,7 @@ class Var(tp.NamedTuple):
     default: tp.Any = DefaultNotGiven
     doc: str = ""
     is_configurable: tp.Union[bool, LazyBool] = True
-    doc_default: str = ""
+    doc_default: tp.Union[str, DefaultNotGivenType] = DefaultNotGiven
     can_store_as_str: bool = False
     pattern: tp.Union[tp.Pattern, str, None] = None
 
@@ -675,7 +676,7 @@ class Var(tp.NamedTuple):
         cls,
         default: object,
         doc: str = "",
-        doc_default: str = "",
+        doc_default: tp.Union[str, DefaultNotGivenType] = DefaultNotGiven,
         type_str: str = "",
         **kwargs,
     ):
