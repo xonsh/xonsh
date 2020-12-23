@@ -128,3 +128,7 @@ push-root:
 	git commit -am "Pushed root-level docs at $(date)" && \
 	git push
 
+serve:
+	# run as `make serve`
+	# to not watch file changes, run as `make serve watch=no`
+	python serve_docs.py $(watch)
