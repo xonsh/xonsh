@@ -629,6 +629,9 @@ def default_lscolors(env):
     return lsc
 
 
+VarKeyType = tp.Union[str, tp.Pattern]
+
+
 class Var(tp.NamedTuple):
     """Named tuples whose elements represent environment variable
     validation, conversion, detyping; default values; and documentation.
@@ -669,7 +672,7 @@ class Var(tp.NamedTuple):
     is_configurable: tp.Union[bool, LazyBool] = True
     doc_default: tp.Union[str, DefaultNotGivenType] = DefaultNotGiven
     can_store_as_str: bool = False
-    pattern: tp.Union[tp.Pattern, str, None] = None
+    pattern: tp.Optional[VarKeyType] = None
 
     @classmethod
     def with_default(
@@ -707,14 +710,8 @@ class Var(tp.NamedTuple):
             default=locale.setlocale(getattr(locale, lcle)),
         )
 
-
-# class XettingsMeta(type):
-#     def __new__(cls, name: str, bases: tuple, attrs: tp.Dict[str, Var]):
-#         attrs["__slots__"] = tuple(
-#             k for k in attrs.keys() if not k.startswith("__") and k.isupper()
-#         )
-#
-#         return super().__new__(cls, name, bases, attrs)
+    def get_key(self, var_name: str) -> VarKeyType:
+        return self.pattern or var_name
 
 
 class Xettings:
@@ -724,10 +721,10 @@ class Xettings:
     """
 
     @classmethod
-    def get_settings(cls):
+    def get_settings(cls) -> tp.Iterator[tp.Tuple[VarKeyType, Var]]:
         for var_name, var in vars(cls).items():
             if not var_name.startswith("__") and var_name.isupper():
-                yield var_name, var
+                yield var.get_key(var_name), var
 
     @staticmethod
     def _get_groups(
@@ -744,8 +741,34 @@ class Xettings:
                 yield from Xettings._get_groups(sub, _seen, *bases, sub)
 
     @classmethod
-    def get_groups(cls):
+    def get_groups(
+        cls,
+    ) -> tp.Iterator[
+        tp.Tuple[tp.Tuple["Xettings", ...], tp.Tuple[tp.Tuple[VarKeyType, Var], ...]]
+    ]:
         yield from Xettings._get_groups(cls)
+
+    @classmethod
+    def get_doc(cls):
+        import inspect
+
+        return inspect.getdoc(cls)
+
+    @classmethod
+    def get_group_title(cls) -> str:
+        doc = cls.get_doc()
+        if doc:
+            return doc.splitlines()[0]
+        return cls.__name__
+
+    @classmethod
+    def get_group_description(cls) -> str:
+        doc = cls.get_doc()
+        if doc:
+            lines = doc.splitlines()
+            if len(lines) > 1:
+                return "\n".join(lines[1:])
+        return ""
 
 
 class GeneralSetting(Xettings):
@@ -1043,6 +1066,8 @@ class GeneralSetting(Xettings):
         "or None / the empty string if traceback logging is not desired. "
         "Logging to a file is not enabled by default.",
     )
+    STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
+    STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
 
 
 class ChangeDirSetting(Xettings):
@@ -1537,6 +1562,8 @@ class AutoCompletionSetting(Xettings):
 
 
 class PTKCompletionSetting(AutoCompletionSetting):
+    """Prompt Tool Kit  auto-completion"""
+
     COMPLETIONS_CONFIRM = Var.with_default(
         True,
         "While tab-completions menu is displayed, press <Enter> to confirm "
@@ -1630,14 +1657,10 @@ class WindowsSetting(GeneralSetting):
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
 def DEFAULT_VARS():
-    dv = {
-        re.compile(r"\w*PATH$"): Var.no_default("env_path"),
-        re.compile(r"\w*DIRS$"): Var.no_default("env_path"),
-    }
+    dv = {}
     for _, vars in Xettings.get_groups():
-        for name, var in vars:
-            dv[var.pattern or name] = var
-
+        for key, var in vars:
+            dv[key] = var
     return dv
 
 

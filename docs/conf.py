@@ -9,17 +9,25 @@
 # serve to show the default.
 import os
 import sys
+from collections import OrderedDict
+from pathlib import Path
+
 import builtins
 import inspect
 import importlib
+import typing as tp
 
 os.environ["XONSH_DEBUG"] = "1"
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.environ import DEFAULT_VARS, Env
+from xonsh.environ import Env, Var, Xettings
+
+if tp.TYPE_CHECKING:
+    from xonsh.environ import VarKeyType
 from xonsh.xontribs_meta import get_xontribs
-from xonsh import main
 from xonsh.commands_cache import CommandsCache
+
+import rst_helpers
 
 if not hasattr(builtins, "__xonsh__"):
     from argparse import Namespace
@@ -57,6 +65,7 @@ extensions = [
     "numpydoc",
     "cmdhelp",
     "runthis.sphinxext",
+    "jinja_rst_ext",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -96,7 +105,11 @@ release = XONSH_VERSION
 # today_fmt = '%B %d, %Y'
 
 # List of documents that shouldn't be included in the build.
-exclude_patterns = ["api/blank.rst"]
+exclude_patterns = [
+    "api/blank.rst",
+    "_build",
+    "_static",
+]
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
@@ -275,48 +288,55 @@ runthis_server = "https://runthis.xonsh.org:80"
 #
 
 
-def make_envvars():
-    env = Env()
-    vars = sorted(DEFAULT_VARS.keys(), key=lambda x: getattr(x, "pattern", x))
-    s = ".. list-table::\n" "    :header-rows: 0\n\n"
-    table = []
-    ncol = 3
-    row = "    {0} - :ref:`${1} <{2}>`"
-    for i, varname in enumerate(vars):
-        var = getattr(varname, "pattern", varname)
-        star = "*" if i % ncol == 0 else " "
-        table.append(row.format(star, var, var.lower()))
-    table.extend(["      -"] * ((ncol - len(vars) % ncol) % ncol))
-    s += "\n".join(table) + "\n\n"
-    s += "Listing\n" "-------\n\n"
-    sec = (
-        ".. _{low}:\n\n"
-        "{title}\n"
-        "{under}\n"
-        "{docstr}\n\n"
-        "**configurable:** {configurable}\n\n"
-        "**default:** {default}\n\n"
-        "**store_as_str:** {store_as_str}\n\n"
-        "-------\n\n"
-    )
-    for varname in vars:
-        var = getattr(varname, "pattern", varname)
+class VarDoc(tp.NamedTuple):
+    var: Var
+    info: tp.Dict[str, tp.Any]  # for using in template additional info
+
+
+class EnvVarGroup(tp.NamedTuple):
+    vars: tp.Dict["VarKeyType", VarDoc]  # sorted variables in the section
+    children: tp.Dict[Xettings, "EnvVarGroup"]  # child sections
+
+
+def _gather_groups(cls, env: Env, _seen=None):
+    if _seen is None:
+        _seen = set()
+
+    env_vars = list(cls.get_settings())
+    env_vars.sort(key=lambda x: getattr(x[0], "pattern", x[0]))
+    ordered_vars = OrderedDict()  # within that section sort keys
+    for key, var in env_vars:
+        var = getattr(key, "pattern", key)
         title = "$" + var
-        under = "." * len(title)
-        vd = env.get_docs(varname)
-        s += sec.format(
-            low=var.lower(),
+        vd = env.get_docs(key)
+        info = dict(
             title=title,
-            under=under,
             docstr=vd.doc,
-            configurable=vd.doc_configurable,
+            configurable=vd.is_configurable,
             default=vd.doc_default,
-            store_as_str=vd.doc_store_as_str,
+            store_as_str=vd.can_store_as_str,
         )
-    s = s[:-9]
-    fname = os.path.join(os.path.dirname(__file__), "envvarsbody")
-    with open(fname, "w", encoding="utf-8") as f:
-        f.write(s)
+        ordered_vars[key] = VarDoc(var, info)
+
+    vargrp = EnvVarGroup(ordered_vars, {})
+    for sub in cls.__subclasses__():
+        if sub not in _seen:
+            _seen.add(sub)
+            vargrp.children[sub] = _gather_groups(sub, env, _seen)
+    return vargrp
+
+
+def make_envvars():
+    return _gather_groups(Xettings, env=Env())
+
+
+jinja_contexts = {
+    # file-name envvars.rst
+    "envvars": {
+        "env_vars": make_envvars(),
+        "rst": rst_helpers,
+    },
+}
 
 
 def make_xontribs():
@@ -424,7 +444,6 @@ def make_events():
         f.write(s)
 
 
-make_envvars()
 make_xontribs()
 make_events()
 
@@ -436,5 +455,5 @@ builtins.__xonsh__.commands_cache = CommandsCache()
 def setup(app):
     from xonsh.pyghooks import XonshConsoleLexer
 
-    app.add_lexer("xonshcon", XonshConsoleLexer())
+    app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")
