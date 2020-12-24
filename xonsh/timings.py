@@ -18,7 +18,6 @@ import itertools
 
 from xonsh.lazyasd import lazyobject, lazybool
 from xonsh.events import events
-from xonsh.platform import ON_WINDOWS
 
 
 @lazybool
@@ -245,11 +244,10 @@ def timeit_alias(args, stdin=None):
     return
 
 
-_timings = {"start": clock()}
+_timings = {"start": clock()}  # noqa : not used warning
 
 
 def setup_timings(argv):
-    global _timings
     if "--timings" in argv:
         events.doc(
             "on_timingprobe",
@@ -262,67 +260,54 @@ def setup_timings(argv):
 
         @events.on_timingprobe
         def timing_on_timingprobe(name, **kw):
-            global _timings
             _timings[name] = clock()
 
         @events.on_post_cmdloop
         def timing_on_post_cmdloop(**kw):
-            global _timings
             _timings["on_post_cmdloop"] = clock()
 
         @events.on_post_init
         def timing_on_post_init(**kw):
-            global _timings
             _timings["on_post_init"] = clock()
 
         @events.on_post_rc
         def timing_on_post_rc(**kw):
-            global _timings
             _timings["on_post_rc"] = clock()
 
         @events.on_postcommand
         def timing_on_postcommand(**kw):
-            global _timings
             _timings["on_postcommand"] = clock()
 
         @events.on_pre_cmdloop
         def timing_on_pre_cmdloop(**kw):
-            global _timings
             _timings["on_pre_cmdloop"] = clock()
 
         @events.on_pre_rc
         def timing_on_pre_rc(**kw):
-            global _timings
             _timings["on_pre_rc"] = clock()
 
         @events.on_precommand
         def timing_on_precommand(**kw):
-            global _timings
             _timings["on_precommand"] = clock()
 
         @events.on_ptk_create
         def timing_on_ptk_create(**kw):
-            global _timings
             _timings["on_ptk_create"] = clock()
 
         @events.on_chdir
         def timing_on_chdir(**kw):
-            global _timings
             _timings["on_chdir"] = clock()
 
         @events.on_pre_prompt_format
         def timing_on_pre_prompt_format(**kw):
-            global _timings
             _timings["on_pre_prompt_format"] = clock()
 
         @events.on_post_prompt
         def timing_on_post_prompt(**kw):
-            global _timings
             _timings = {"on_post_prompt": clock()}
 
         @events.on_pre_prompt
         def timing_on_pre_prompt(**kw):
-            global _timings
             _timings["on_pre_prompt"] = clock()
             times = list(_timings.items())
             times = sorted(times, key=lambda x: x[1])
