@@ -12,6 +12,9 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
+# make current docs directory modules importable
+sys.path.append(str(Path(__file__).parent.resolve()))
+
 import builtins
 import inspect
 import importlib
