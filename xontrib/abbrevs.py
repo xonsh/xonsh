@@ -60,25 +60,28 @@ def get_abbreviated(key: str, buffer) -> str:
     return text
 
 
-def expand_abbrev(buffer):
+def expand_abbrev(buffer) -> bool:
+    """expand the given abbr text. Return true if cursor position changed."""
     global last_expanded
     last_expanded = None
     abbrevs = getattr(builtins, "abbrevs", None)
     if abbrevs is None:
-        return
+        return False
     document = buffer.document
     word = document.get_word_before_cursor(WORD=True)
     if word in abbrevs.keys():
         partial = document.text[: document.cursor_position]
         startix, endix, quote = check_for_partial_string(partial)
         if startix is not None and endix is None:
-            return
+            return False
         buffer.delete_before_cursor(count=len(word))
         text = get_abbreviated(word, buffer)
         buffer.insert_text(text)
         last_expanded = _LastExpanded(word, text)
         if EDIT_SYMBOL in text:
             set_cursor_position(buffer, text)
+            return True
+    return False
 
 
 def revert_abbrev(buffer) -> bool:
@@ -115,9 +118,14 @@ def custom_keybindings(bindings, **kw):
     @handler(" ", filter=IsMultiline() & insert_mode)
     def handle_space(event):
         buffer = event.app.current_buffer
+
+        add_space = True
         if not revert_abbrev(buffer):
-            expand_abbrev(buffer)
-        buffer.insert_text(" ")
+            position_changed = expand_abbrev(buffer)
+            if position_changed:
+                add_space = False
+        if add_space:
+            buffer.insert_text(" ")
 
     @handler(
         Keys.ControlJ, filter=IsMultiline() & insert_mode & ~completion_is_selected
