@@ -83,7 +83,16 @@ class Completer(object):
                 res, lprefix = out
             else:
                 res = out
-                lprefix = len(prefix)
+                if (
+                    is_contextual_completer(func)
+                    and completion_context is not None
+                    and completion_context.command is not None
+                ):
+                    lprefix = len(completion_context.command.prefix) + len(
+                        completion_context.command.opening_quote
+                    )
+                else:
+                    lprefix = len(prefix)
             if res is not None and len(res) != 0:
 
                 def sortkey(s):

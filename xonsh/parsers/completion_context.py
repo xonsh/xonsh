@@ -24,9 +24,7 @@ class CommandArg(NamedTuple):
 
 class CommandContext(NamedTuple):
     args: Tuple[CommandArg, ...]
-    arg_index: int = (
-        -1
-    )  # the current argument's index. ``-1`` if the cursor isn't in the command.
+    arg_index: int  # the current argument's index. ``-1`` if the cursor isn't in the command.
 
     # the current string arg
     prefix: str = ""
