@@ -38,7 +38,16 @@ class CommandContext(NamedTuple):
     subcmd_opening: str = ""  # e.g. "$(", "![", etc
 
 
-CompletionContext = Union[CommandContext]
+class PythonContext(NamedTuple):
+    multiline_code: str
+    cursor_index: int
+    is_sub_expression: bool = False
+
+
+class CompletionContext(NamedTuple):
+    command: Optional[CommandContext] = None
+    python: Optional[PythonContext] = None
+
 
 T = TypeVar("T")
 
@@ -51,7 +60,7 @@ class Spanned(Generic[T]):
         self,
         value: T,
         span: slice,
-        cursor_context: Optional[Union[CompletionContext, int]] = None,
+        cursor_context: Optional[Union[CommandContext, PythonContext, int]] = None,
     ):
         """
         Some parsed value with span and context information.
@@ -129,6 +138,8 @@ class CompletionContextParser:
         ("ATDOLLAR_LPAREN", "RPAREN"),  # @$()
         ("DOLLAR_LBRACKET", "RBRACKET"),  # $[]
         ("BANG_LBRACKET", "RBRACKET"),  # ![]
+        # python sub-expression:
+        ("AT_LPAREN", "RPAREN"),  # @()
     )
     used_tokens.update(left for left, _ in paren_pairs)
     used_tokens.update(right for _, right in paren_pairs)
@@ -197,6 +208,9 @@ class CompletionContextParser:
         self.error = None
 
         try:
+            if not self.cursor_in_span(slice(0, len(multiline_text))):
+                raise SyntaxError(f"Bad cursor index: {cursor_index}")
+
             context: Optional[CompletionContext] = self.parser.parse(
                 input=multiline_text, lexer=self, debug=1 if self.debug else 0
             )
@@ -257,21 +271,47 @@ class CompletionContextParser:
         """
         spanned: Union[Spanned[CommandContext], Commands] = p[1]
 
-        if spanned.cursor_context is None:
-            complete_span = slice(0, len(self.current_input))
-            if isinstance(spanned.value, list):
-                spanned = self.expand_commands_span(spanned, complete_span)
-            else:
-                spanned = self.expand_command_span(spanned, complete_span)
+        # expand the commands to the complete input
+        complete_span = slice(0, len(self.current_input))
+        if isinstance(spanned.value, list):
+            spanned = self.expand_commands_span(spanned, complete_span)
+        else:
+            spanned = self.expand_command_span(spanned, complete_span)
 
         context = spanned.cursor_context
 
-        if context is None or isinstance(context, int):
-            # we got a relative cursor position, it's not a real context
-            context = None
+        if isinstance(context, CommandContext):
+            # if the context is the main command, it might be python code
+            main_cursor_command: Optional[Spanned[CommandContext]] = None
+            if isinstance(spanned.value, list):
+                main_cursor_command = next(
+                    (
+                        command
+                        for command in spanned.value
+                        if command.value is context
+                        # TODO: False for connecting keywords other than '\n' and ';'
+                    ),
+                    None,
+                )
+            else:
+                if spanned.value is context:
+                    main_cursor_command = spanned
+
+            if main_cursor_command is not None:
+                python_context = PythonContext(
+                    multiline_code=self.current_input[main_cursor_command.span],
+                    cursor_index=self.cursor - main_cursor_command.span.start,
+                )
+                p[0] = CompletionContext(command=context, python=python_context)
+            else:
+                p[0] = CompletionContext(command=context)
+        elif isinstance(context, PythonContext):
+            # the cursor is in a python sub expression `@()`, so it must be python
+            p[0] = CompletionContext(python=context)
+        else:
             if self.debug:
                 self.error = SyntaxError(f"Failed to find cursor context in {spanned}")
-        p[0] = context
+            p[0] = None
 
     precedence = (
         ("left", *set(r for _, r in paren_pairs)),
@@ -455,17 +495,37 @@ class CompletionContextParser:
             spanned_args: List[Spanned[CommandArg]] = []
             closing_token_index = 2
 
-        subcmd_opening = p[1]
+        sub_expr_opening = p[1]
 
         outer_start = p.lexpos(1)
-        inner_start = outer_start + len(subcmd_opening)
+        inner_start = outer_start + len(sub_expr_opening)
         inner_stop = p.lexpos(closing_token_index)
         outer_stop = inner_stop + len(p[closing_token_index])  # len(EOF) == 0
         inner_span = slice(inner_start, inner_stop)
         outer_span = slice(outer_start, outer_stop)
 
-        command = self.create_command(spanned_args, inner_span, subcmd_opening)
-        p[0] = command.replace(span=outer_span)
+        command = self.create_command(spanned_args, inner_span, sub_expr_opening)
+        if sub_expr_opening == "@(":
+            # python sub-expression
+            python_context = PythonContext(
+                self.current_input[inner_span],
+                self.cursor - inner_span.start,
+                is_sub_expression=True,
+            )
+            if (
+                command.cursor_context is not None
+                and command.cursor_context is not command.value
+            ):
+                # the cursor is inside an inner arg
+                cursor_context = command.cursor_context
+            elif self.cursor_in_span(inner_span):
+                # the cursor is in the python expression
+                cursor_context = python_context
+            else:
+                cursor_context = None
+            p[0] = Spanned(python_context, outer_span, cursor_context)
+        else:
+            p[0] = command.replace(span=outer_span)
 
     @with_docstr(
         f"""sub_expression : {RULES_SEP.join(f"{l} commands {r}" for l, r in paren_pairs)}
@@ -476,17 +536,36 @@ class CompletionContextParser:
         # LPAREN commands RPAREN/EOF
         commands: Commands = p[2]
 
-        subcmd_opening = p[1]
+        sub_expr_opening = p[1]
 
         outer_start = p.lexpos(1)
-        inner_start = outer_start + len(subcmd_opening)
+        inner_start = outer_start + len(sub_expr_opening)
         inner_stop = p.lexpos(3)
         outer_stop = inner_stop + len(p[3])  # len(EOF) == 0
         inner_span = slice(inner_start, inner_stop)
         outer_span = slice(outer_start, outer_stop)
 
         commands = self.expand_commands_span(commands, inner_span)
-        p[0] = commands.replace(span=outer_span)
+        if sub_expr_opening == "@(":
+            # python sub-expression
+            python_context = PythonContext(
+                self.current_input[inner_span],
+                self.cursor - inner_span.start,
+                is_sub_expression=True,
+            )
+            if commands.cursor_context is not None and not any(
+                command.value == commands.cursor_context for command in commands.value
+            ):
+                # the cursor is inside an inner arg
+                cursor_context = commands.cursor_context
+            elif self.cursor_in_span(inner_span):
+                # the cursor is in the python expression
+                cursor_context = python_context
+            else:
+                cursor_context = None
+            p[0] = Spanned(python_context, outer_span, cursor_context)
+        else:
+            p[0] = commands.replace(span=outer_span)
 
     def create_command(
         self,
