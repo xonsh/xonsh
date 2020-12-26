@@ -3,8 +3,12 @@ import builtins
 
 import xonsh.tools as xt
 import xonsh.platform as xp
-
-from xonsh.completers.tools import get_filter_function
+from xonsh.completers.tools import (
+    get_filter_function,
+    contextual_command_completer,
+    is_contextual_completer,
+)
+from xonsh.parsers.completion_context import CompletionContext, CommandContext
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = {"|", "||", "&&", "and", "or"}
@@ -30,35 +34,42 @@ def complete_command(cmd, line, start, end, ctx):
     return out
 
 
-def complete_skipper(cmd, line, start, end, ctx):
+@contextual_command_completer
+def complete_skipper(command_context: CommandContext):
     """
-    Skip over several tokens (e.g., sudo) and complete based on the rest of the
-    line.
+    Skip over several tokens (e.g., sudo) and complete based on the rest of the command.
+
+    Contextual completers don't need us to skip tokens since they get the correct completion context -
+    meaning we only need to skip commands like ``sudo``.
     """
-    parts = line.split(" ")
     skip_part_num = 0
-    for i, s in enumerate(parts):
-        if s in END_PROC_TOKENS:
-            skip_part_num = i + 1
-    while len(parts) > skip_part_num:
-        if parts[skip_part_num] not in SKIP_TOKENS:
+    for skip_part_num, arg in enumerate(
+        command_context.args[: command_context.arg_index]
+    ):
+        # all the args before the current argument
+        if arg.value not in SKIP_TOKENS:
             break
-        skip_part_num += 1
 
     if skip_part_num == 0:
-        return set()
+        return None
 
-    # If there's no space following an END_PROC_TOKEN, insert one
-    if parts[-1] in END_PROC_TOKENS:
-        return (set(" "), 0)
-
-    if len(parts) == skip_part_num + 1:
-        comp_func = complete_command
-    else:
-        comp = builtins.__xonsh__.shell.shell.completer
-        comp_func = comp.complete
-
-    skip_len = len(" ".join(line[:skip_part_num])) + 1
-    return comp_func(
-        cmd, " ".join(parts[skip_part_num:]), start - skip_len, end - skip_len, ctx
+    skipped_context = CompletionContext(
+        command=command_context._replace(
+            args=command_context.args[skip_part_num:],
+            arg_index=command_context.arg_index - skip_part_num,
+        )
     )
+
+    completers = builtins.__xonsh__.completers.values()  # type: ignore
+    for completer in completers:
+        if is_contextual_completer(completer):
+            results = completer(skipped_context)
+            if results:
+                return results
+    return None
+
+
+def complete_end_proc_tokens(cmd, line, start, end, ctx):
+    """If there's no space following an END_PROC_TOKEN, insert one"""
+    if cmd in END_PROC_TOKENS and line[end : end + 1] != " ":
+        return {cmd + " "}

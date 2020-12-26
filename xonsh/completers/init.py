@@ -12,7 +12,7 @@ from xonsh.completers.python import (
     complete_import,
     complete_python_mode,
 )
-from xonsh.completers.commands import complete_skipper
+from xonsh.completers.commands import complete_skipper, complete_end_proc_tokens
 from xonsh.completers.completer import complete_completer
 from xonsh.completers.xompletions import complete_xonfig, complete_xontrib
 
@@ -21,6 +21,7 @@ def default_completers():
     """Creates a copy of the default completers."""
     return collections.OrderedDict(
         [
+            ("end_proc_tokens", complete_end_proc_tokens),
             ("python_mode", complete_python_mode),
             ("base", complete_base),
             ("completer", complete_completer),
