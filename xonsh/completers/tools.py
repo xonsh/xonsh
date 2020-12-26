@@ -2,8 +2,9 @@
 import builtins
 import textwrap
 import typing as tp
+from functools import wraps
 
-from xonsh.parsers.completion_context import CompletionContext
+from xonsh.parsers.completion_context import CompletionContext, CommandContext
 
 
 def _filter_normal(s, x):
@@ -106,3 +107,17 @@ def contextual_completer(func: ContextualCompleter):
 
 def is_contextual_completer(func):
     return getattr(func, "contextual", False)
+
+
+def contextual_command_completer(func: tp.Callable[[CommandContext], CompleterResult]):
+    """like ``contextual_completer``,
+    but will only run when completing a command and will directly receive the ``CommandContext`` object"""
+
+    @contextual_completer
+    @wraps(func)
+    def _completer(context: CompletionContext) -> CompleterResult:
+        if context.command is not None:
+            return func(context.command)
+        return None
+
+    return _completer
