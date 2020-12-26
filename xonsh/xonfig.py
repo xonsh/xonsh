@@ -860,12 +860,18 @@ WELCOME_MSG = [
     ("{{INTENSE_RED}}~{{RESET}} {tagline} {{INTENSE_RED}}~{{RESET}}", "^", " "),
     "",
     ("{{INTENSE_BLACK}}", "<", "-"),
-    "{{GREEN}}xonfig{{RESET}} tutorial    {{INTENSE_WHITE}}->    Launch the tutorial in "
-    "the browser{{RESET}}",
-    "{{GREEN}}xonfig{{RESET}} web         {{INTENSE_WHITE}}->    Run the configuration "
-    "tool in the browser and claim your shell {{RESET}}",
-    "{{INTENSE_BLACK}}(Note: Run the configuration tool or create a "
-    "{{RED}}~/.xonshrc{{INTENSE_BLACK}} file to suppress the welcome screen)",
+    "",
+    (
+        "{{INTENSE_BLACK}}Create ~/.xonshrc file manually or using xonfig to suppress the welcome screen",
+        "^",
+        " ",
+    ),
+    "",
+    "{{INTENSE_BLACK}}Start from commands:",
+    "  {{GREEN}}xonfig{{RESET}} web         {{INTENSE_BLACK}}# Run the configuration tool in the browser to create ~/.xonshrc {{RESET}}",
+    "  {{GREEN}}xonfig{{RESET}} tutorial    {{INTENSE_BLACK}}# Open the xonsh tutorial in the browser{{RESET}}",
+    "",
+    ("{{INTENSE_BLACK}}", "<", "-"),
     "",
 ]
 
