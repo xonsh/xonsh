@@ -21,16 +21,18 @@ RE_REMOVE_ANSI = LazyObject(
 )
 
 
-def _get_git_branch(q):
-    # create a safge detyped env dictionary and update with the additional git environment variables
+def _run_git_cmd(cmd):
+    # create a safe detyped env dictionary and update with the additional git environment variables
     # when running git status commands we do not want to acquire locks running command like git status
     denv = dict(builtins.__xonsh__.env.detype())
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
+    return subprocess.check_output(cmd, env=denv, stderr=subprocess.DEVNULL)
+
+
+def _get_git_branch(q):
     try:
         cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-        branch = xt.decode_bytes(
-            subprocess.check_output(cmd, env=denv, stderr=subprocess.DEVNULL)
-        )
+        branch = xt.decode_bytes(_run_git_cmd(cmd))
         branch = branch.splitlines()[0] or None
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
@@ -166,50 +168,29 @@ def current_branch():
     return branch or None
 
 
-def _get_exit_code(cmd):
-    """ Run a command and return its exit code """
-    denv = dict(builtins.__xonsh__.env.detype())
-    denv.update({"GIT_OPTIONAL_LOCKS": "0"})
-    child = subprocess.run(cmd, stderr=subprocess.DEVNULL, env=denv)
-    return child.returncode
-
-
 def _git_dirty_working_directory(q, include_untracked):
     try:
-        # Borrowed from this conversation
-        # https://gist.github.com/sindresorhus/3898739
+        cmd = ["git", "status", "--porcelain"]
         if include_untracked:
-            cmd = [
-                "git",
-                "status",
-                "--porcelain",
-                "--quiet",
-                "--untracked-files=normal",
-            ]
-            exitcode = _get_exit_code(cmd)
+            cmd += ["--untracked-files=normal"]
         else:
-            # checking unindexed files is faster, so try that first
-            unindexed = ["git", "diff-files", "--quiet"]
-            exitcode = _get_exit_code(unindexed)
-            if exitcode == 0:
-                # then, check indexed files
-                indexed = ["git", "diff-index", "--quiet", "--cached", "HEAD"]
-                exitcode = _get_exit_code(indexed)
-        # "--quiet" git commands imply "--exit-code", which returns:
-        # 1 if there are differences
-        # 0 if there are no differences
-        dwd = bool(exitcode)
+            cmd += ["--untracked-files=no"]
+        status = _run_git_cmd(cmd)
+        if status is not None:
+            q.put(bool(status))
+        else:
+            q.put(None)
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
-    else:
-        q.put(dwd)
 
 
-def git_dirty_working_directory(include_untracked=False):
+def git_dirty_working_directory():
     """Returns whether or not the git directory is dirty. If this could not
     be determined (timeout, file not found, etc.) then this returns None.
     """
-    timeout = builtins.__xonsh__.env.get("VC_BRANCH_TIMEOUT")
+    env = builtins.__xonsh__.env
+    timeout = env.get("VC_BRANCH_TIMEOUT")
+    include_untracked = env.get("VC_GIT_INCLUDE_UNTRACKED")
     q = queue.Queue()
     t = threading.Thread(
         target=_git_dirty_working_directory, args=(q, include_untracked)

@@ -1350,6 +1350,10 @@ class PromptSetting(Xettings):
         "branch computations. This is a timeout per subprocess call, so the "
         "total time to compute will be larger than this in many cases.",
     )
+    VC_GIT_INCLUDE_UNTRACKED = Var.with_default(
+        False,
+        "Whether or not untracked file changes should count as 'dirty' in git.",
+    )
     VC_HG_SHOW_BRANCH = Var.with_default(
         True,
         "Whether or not to show the Mercurial branch in the prompt.",
