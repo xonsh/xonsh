@@ -27,6 +27,7 @@ xonsh
     <a href="https://ci.appveyor.com/project/xonsh/xonsh" target="_blank"><img src="https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true" alt="Appveyor"></a>
     <a href="https://circleci.com/gh/xonsh/xonsh" target="_blank"><img src="https://circleci.com/gh/xonsh/xonsh.svg?style=shield" alt="circleci"></a>
     <a href="https://codecov.io/gh/xonsh/xonsh" target="_blank"><img src="https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg" alt="codecov"></a>
+    <br><a align="center" href="https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/xonsh/xonsh.git"><img alt="Open in Cloud Shell" src ="https://gstatic.com/cloudssh/images/open-btn.svg"></a></br>
     </p>
 
 First steps
