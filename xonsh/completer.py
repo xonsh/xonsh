@@ -88,10 +88,7 @@ class Completer(object):
                     and completion_context is not None
                     and completion_context.command is not None
                 ):
-                    # TODO: Keep string quote if exists
-                    lprefix = len(completion_context.command.prefix) + len(
-                        completion_context.command.opening_quote
-                    )
+                    lprefix = len(completion_context.command.prefix)
                 else:
                     lprefix = len(prefix)
             if res is not None and len(res) != 0:
