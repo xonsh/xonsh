@@ -1,15 +1,9 @@
-import os
-import subprocess as sp
-import tempfile
 from unittest.mock import Mock
 
 import pytest
 
 from xonsh.environ import Env
 from xonsh.prompt.base import PromptFormatter, PROMPT_FIELDS
-from xonsh.prompt import vc
-
-from tools import DummyEnv
 
 
 @pytest.fixture
@@ -186,95 +180,3 @@ def test_promptformatter_clears_cache(formatter):
     formatter(template, fields)
 
     assert spam.call_count == 2
-
-
-# Xonsh interaction with version control systems.
-VC_BRANCH = {"git": {"master", "main"}, "hg": {"default"}}
-
-
-@pytest.fixture(scope="module", params=VC_BRANCH.keys())
-def test_repo(request):
-    """Return a dict with vc and a temporary dir
-    that is a repository for testing.
-    """
-    vc = request.param
-    temp_dir = tempfile.mkdtemp()
-    os.chdir(temp_dir)
-    try:
-        sp.call([vc, "init"])
-    except FileNotFoundError:
-        pytest.skip("cannot find {} executable".format(vc))
-    # git needs at least one commit
-    if vc == "git":
-        with open("test-file", "w"):
-            pass
-        sp.call(["git", "add", "test-file"])
-        sp.call(["git", "commit", "--no-gpg-sign", "-m", "test commit"])
-    return {"name": vc, "dir": temp_dir}
-
-
-def test_test_repo(test_repo):
-    dotdir = os.path.isdir(
-        os.path.join(test_repo["dir"], ".{}".format(test_repo["name"]))
-    )
-    assert dotdir
-    if test_repo["name"] == "git":
-        assert os.path.isfile(os.path.join(test_repo["dir"], "test-file"))
-
-
-def test_no_repo(xonsh_builtins):
-    import queue
-
-    temp_dir = tempfile.mkdtemp()
-    xonsh_builtins.__xonsh__.env = Env(VC_BRANCH_TIMEOUT=2, PWD=temp_dir)
-    q = queue.Queue()
-    try:
-        vc._get_hg_root(q)
-    except AttributeError:
-        assert False
-
-
-def test_vc_get_branch(test_repo, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = Env(VC_BRANCH_TIMEOUT=2)
-    # get corresponding function from vc module
-    fun = "get_{}_branch".format(test_repo["name"])
-    obs = getattr(vc, fun)()
-    if obs is not None:
-        assert obs in VC_BRANCH[test_repo["name"]]
-        if test_repo["name"] == "git":
-            with open("{}/.git/config".format(test_repo["dir"]), "a") as gc:
-                gc.write(
-                    """
-[color]
-    branch = always
-    interactive = always
-[color "branch"]
-    current = yellow reverse
-"""
-                )
-            obs = getattr(vc, fun)()
-            if obs is not None:
-                assert obs in VC_BRANCH[test_repo["name"]]
-                assert not obs.startswith(u"\u001b[")
-
-
-def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins):
-    cache = xonsh_builtins.__xonsh__.commands_cache
-    xonsh_builtins.__xonsh__.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
-    cache.is_empty = Mock(return_value=True)
-    cache.locate_binary = Mock(return_value="")
-    vc.current_branch()
-    assert cache.locate_binary.called
-
-
-def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
-    xonsh_builtins,
-):
-    cache = xonsh_builtins.__xonsh__.commands_cache
-    xonsh_builtins.__xonsh__.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
-    cache.is_empty = Mock(return_value=False)
-    cache.locate_binary = Mock(return_value="")
-    # make lazy locate return nothing to avoid running vc binaries
-    cache.lazy_locate_binary = Mock(return_value="")
-    vc.current_branch()
-    assert not cache.locate_binary.called
