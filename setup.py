@@ -5,7 +5,6 @@
 # fixed. See https://github.com/xonsh/xonsh/issues/487.
 import os
 import sys
-import json
 import subprocess
 
 from setuptools import setup, find_packages
@@ -62,14 +61,15 @@ def amalgamate_source():
 
 def build_tables():
     """Build the lexer/parser modules."""
-    print("Building lexer and parser tables.")
-    sys.path.insert(0, os.path.dirname(__file__))
+    print("Building lexer and parser tables.", file=sys.stderr)
+    root_dir = os.path.abspath(os.path.dirname(__file__))
+    sys.path.insert(0, root_dir)
     from xonsh.parser import Parser
 
     Parser(
         lexer_table="lexer_table",
         yacc_table="parser_table",
-        outputdir="xonsh",
+        outputdir=os.path.join(root_dir, "xonsh"),
         yacc_debug=True,
     )
     sys.path.pop(0)
@@ -348,7 +348,13 @@ def main():
         "linux": ["distro"],
         "proctitle": ["setproctitle"],
         "zipapp": ['importlib_resources; python_version < "3.7"'],
-        "full": ["ptk", "pygments", "distro"],
+        "full": [
+            "prompt-toolkit>=3",
+            "pyperclip",
+            "pygments>=2.2",
+            "distro; platform_system=='Linux'",  # PEP 508 platform specifiers
+            "setproctitle; platform_system=='Windows'",
+        ],
     }
     skw["python_requires"] = ">=3.6"
     setup(**skw)
