@@ -1430,7 +1430,7 @@ class PromptSetting(Xettings):
 
 
 class PTKSetting(PromptSetting):  # sub-classing -> sub-group
-    """Prompt Tool Kit shell
+    """Prompt Toolkit shell
     Only usable with ``$SHELL_TYPE=prompt_toolkit.``
     """
 
