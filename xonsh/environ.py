@@ -1094,7 +1094,7 @@ class ChangeDirSetting(Xettings):
     )
     PUSHD_MINUS = Var.with_default(
         False,
-        "Flag for directory pushing functionality. False is the normal " "behavior.",
+        "Flag for directory pushing functionality. False is the normal behavior.",
     )
     PUSHD_SILENT = Var.with_default(
         False,
