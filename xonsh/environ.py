@@ -1507,7 +1507,7 @@ class AsyncPromptSetting(PTKSetting):
 
 
 class AutoCompletionSetting(Xettings):
-    """Tab-completion behaviour."""
+    """Tab-completion behavior."""
 
     BASH_COMPLETIONS = Var.with_default(
         doc="This is a list (or tuple) of strings that specifies where the "
