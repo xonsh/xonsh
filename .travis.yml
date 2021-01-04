@@ -5,34 +5,13 @@ env:
 matrix:
     include:
         - os: linux
-          python: 3.6
+          python: 3.8
           env:
-            - MINICONDA_OS="Linux"
             - BUILD_DOCS=true
 
-before_install:
-  - if [[ ! ("$TRAVIS_PYTHON_VERSION" == "nightly" || "$TRAVIS_PYTHON_VERSION" == "3.6-dev") && ! $BUILD_DOCS ]]; then
-      URL="https://repo.continuum.io/miniconda/Miniconda3-latest-${MINICONDA_OS}-x86_64.sh";
-      wget "${URL}" -O miniconda.sh;
-      bash miniconda.sh -b -p $HOME/miniconda;
-      export PATH="$HOME/miniconda/bin:$PATH";
-      hash -r;
-      conda config --set always_yes yes --set changeps1 no;
-      conda update -q conda;
-      conda info -a;
-    fi
-
 install:
-  - if [[ $BUILD_DOCS = true ]]; then
-      pip install --upgrade -r requirements/docs.txt;
-      pip install .;
-    else
-      pip install --upgrade -r requirements/tests.txt;
-      pip install .;
-    fi
-
-before_script:
-  - rvm get head || true
+  - pip install --upgrade -r requirements/docs.txt
+  - pip install .
 
 script:
   - set -ex
@@ -48,6 +27,4 @@ script:
       make clean html;
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs .;
-    else
-      xonsh run-tests.xsh test;
     fi
