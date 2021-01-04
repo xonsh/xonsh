@@ -1103,7 +1103,7 @@ class ChangeDirSetting(Xettings):
 
 
 class InterpreterSetting(Xettings):
-    """Interpreter Behaviour"""
+    """Interpreter Behavior"""
 
     DOTGLOB = Var.with_default(
         False,
