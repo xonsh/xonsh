@@ -145,3 +145,37 @@ def test_subprocess_io_operators(xonsh_execer, xonsh_builtins, alias):
     ales = make_aliases()
     ales["echocat"] = alias
     assert isinstance(ales["echocat"], ExecAlias)
+
+
+@pytest.mark.parametrize(
+    "alias",
+    [
+        {'echocat': 'ls'},
+    ],
+)
+def test_dict_merging(xonsh_execer, xonsh_builtins, alias):
+    ales = make_aliases()
+    assert (ales | alias)['echocat'] == ['ls']
+    assert (alias | ales)['echocat'] == ['ls']
+    assert 'echocat' not in ales
+
+
+@pytest.mark.parametrize(
+    "alias",
+    [
+        {'echocat': 'echo Why do people still use python2.7?'},
+        {'echocat': 'echo Why?'},
+    ],
+)
+def test_dict_merging_assignment(xonsh_execer, xonsh_builtins, alias):
+    ales = make_aliases()
+    ales |= alias
+
+    assert 'echocat' in ales
+    assert ' '.join(ales['echocat']) == alias['echocat']
+
+    ales = make_aliases()
+    alias |= ales
+
+    assert 'o' in alias
+    assert alias['o'] == ales['o']

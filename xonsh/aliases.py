@@ -141,6 +141,23 @@ class Aliases(cabc.MutableMapping):
         else:
             self._raw[key] = val
 
+    def _common_or(self, other):
+        new_dict = self._raw.copy()
+        for key in dict(other):
+            new_dict[key] = other[key]
+        return Aliases(new_dict)
+
+    def __or__(self, other):
+        return self._common_or(other)
+
+    def __ror__(self, other):
+        return self._common_or(other)
+
+    def __ior__(self, other):
+        for key in dict(other):
+            self[key] = other[key]
+        return self
+
     def __delitem__(self, key):
         del self._raw[key]
 
