@@ -12,7 +12,7 @@ import sys
 import xonsh.main
 from xonsh.main import XonshMode
 import pytest
-from tools import TEST_DIR, skip_if_on_windows
+from tools import ON_WINDOWS, TEST_DIR, VER_FULL, skip_if_on_windows
 
 
 def Shell(*args, **kwargs):
@@ -68,6 +68,88 @@ def test_premain_custom_rc(shell, tmpdir, monkeypatch):
     args = xonsh.main.premain(["--rc", f.strpath])
     assert args.mode == XonshMode.interactive
     assert f.strpath in builtins.__xonsh__.env.get("XONSHRC")
+
+
+def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
+    """Test that an RC file can load modules inside the same folder it is located in."""
+
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+
+    tmpdir.join("my_python_module.py").write("print('Hello,')")
+    tmpdir.join("my_xonsh_module.xsh").write("print('World!')")
+    rc = tmpdir.join("rc.xsh")
+    rc.write("from my_python_module import *\nfrom my_xonsh_module import *")
+    xonsh.main.premain(["--rc", rc.strpath])
+
+    assert rc.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert (
+        builtins.__xonsh__.env.get("LOADED_RC_FILES")[
+            builtins.__xonsh__.env.get("XONSHRC").index(rc.strpath)
+        ]
+        is True
+    )
+
+    stdout, stderr = capsys.readouterr()
+    assert "Hello,\nWorld!" in stdout
+    assert len(stderr) == 0
+
+    # Check that the temporary rc's folder is not left behind on the path
+    assert tmpdir.strpath not in sys.path
+
+
+@pytest.mark.skipif(ON_WINDOWS and VER_FULL < (3, 9), reason="See https://github.com/xonsh/xonsh/issues/3936")
+def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
+    """Test that an RC file can edit the sys.path variable without losing those values."""
+
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+
+    rc = tmpdir.join("rc.xsh")
+    rc.write(f"import sys\nsys.path.append('{tmpdir.strpath}')\nprint('Hello, World!')")
+    xonsh.main.premain(["--rc", rc.strpath])
+
+    assert rc.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert (
+        builtins.__xonsh__.env.get("LOADED_RC_FILES")[
+            builtins.__xonsh__.env.get("XONSHRC").index(rc.strpath)
+        ]
+        is True
+    )
+
+    stdout, stderr = capsys.readouterr()
+    assert "Hello, World!" in stdout
+    assert len(stderr) == 0
+
+    # Check that the path that was explicitly added is not accidentally deleted
+    assert tmpdir.strpath in sys.path
+
+
+def test_rc_with_failing_module(shell, tmpdir, monkeypatch, capsys):
+    """Test that an RC file which imports a module that throws an exception ."""
+
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+
+    tmpdir.join("my_failing_module.py").write("raise RuntimeError('Unexpected error')")
+    rc = tmpdir.join("rc.xsh")
+    rc.write("from my_failing_module import *")
+    xonsh.main.premain(["--rc", rc.strpath])
+
+    assert rc.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert (
+        builtins.__xonsh__.env.get("LOADED_RC_FILES")[
+            builtins.__xonsh__.env.get("XONSHRC").index(rc.strpath)
+        ]
+        is False
+    )
+
+    stdout, stderr = capsys.readouterr()
+    assert len(stdout) == 0
+    assert "RuntimeError: Unexpected error" in stderr
+
+    # Check that the temporary rc's folder is not left behind on the path
+    assert tmpdir.strpath not in sys.path
 
 
 def test_no_rc_with_script(shell, tmpdir):
