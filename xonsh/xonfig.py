@@ -862,7 +862,7 @@ WELCOME_MSG = [
     ("{{INTENSE_BLACK}}", "<", "-"),
     "",
     (
-        "{{INTENSE_BLACK}}Create ~/.xonshrc file manually or using xonfig to suppress the welcome screen",
+        "{{INTENSE_BLACK}}Create ~/.xonshrc file manually or use xonfig to suppress the welcome screen",
         "^",
         " ",
     ),
