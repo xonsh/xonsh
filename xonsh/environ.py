@@ -1562,7 +1562,7 @@ class AutoCompletionSetting(Xettings):
 
 
 class PTKCompletionSetting(AutoCompletionSetting):
-    """Prompt Tool Kit  auto-completion"""
+    """Prompt Toolkit tab-completion"""
 
     COMPLETIONS_CONFIRM = Var.with_default(
         True,
