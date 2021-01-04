@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Implements a lazy JSON file class that wraps around json data."""
 import io
-import json
 import weakref
 import contextlib
 import collections.abc as cabc
+
+try:
+    import ujson as json
+except ImportError:
+    import json  # type: ignore
 
 
 def _to_json_with_size(obj, offset=0, sort_keys=False):
