@@ -20,7 +20,6 @@ def rstjinja(app, docname, source):
     ctx = app.config.jinja_contexts.get(docname)
     if ctx is not None:
         environment = jinja2.Environment(
-            # loader=jinja2.FileSystemLoader("."),
             trim_blocks=True,
             lstrip_blocks=True,
         )
@@ -37,7 +36,7 @@ def rstjinja(app, docname, source):
         source[0] = rendered
 
         # for debugging purpose write output
-        Path(cur_dir / "_build" / f"{docname}.rst.out").write_text(rendered)
+        # Path(cur_dir / "_build" / f"{docname}.rst.out").write_text(rendered)
 
 
 def setup(app):
