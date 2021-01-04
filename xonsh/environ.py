@@ -1071,7 +1071,7 @@ class GeneralSetting(Xettings):
 
 
 class ChangeDirSetting(Xettings):
-    """``cd`` Behaviour"""
+    """``cd`` Behavior"""
 
     AUTO_CD = Var.with_default(
         False,
