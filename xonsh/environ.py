@@ -1068,6 +1068,12 @@ class GeneralSetting(Xettings):
     )
     STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
     STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
+    AUTO_CONTINUE = Var.with_default(
+        False,
+        "If ``True``, automatically resume stopped jobs when they are disowned. "
+        "When stopped jobs are disowned and this option is ``False``, a warning "
+        "will print information about how to continue the stopped process."
+    )
 
 
 class ChangeDirSetting(Xettings):

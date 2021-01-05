@@ -6,6 +6,7 @@ import time
 import ctypes
 import signal
 import builtins
+import argparse
 import subprocess
 import collections
 import typing as tp
@@ -111,6 +112,7 @@ else:
 
     def _continue(job):
         _send_signal(job, signal.SIGCONT)
+        job["status"] = "running"
 
     def _kill(job):
         _send_signal(job, signal.SIGKILL)
@@ -443,3 +445,64 @@ def bg(args, stdin=None):
         _continue(curtask)
     else:
         return res
+
+
+def disown(args, stdin=None):
+    """
+    xonsh command: disown
+
+    Remove the specified jobs from the job table; the shell will no longer
+    report their status, and will not complain if you try to exit an
+    interactive shell with them running or stopped. If no job is specified,
+    disown the current job.
+
+    If the jobs are currently stopped and the $AUTO_CONTINUE option is not set
+    ($AUTO_CONTINUE = False), a warning is printed containing information about
+    how to make them continue after they have been disowned.
+
+    Specifying the -c or --cont option for this command is equivalent to
+    setting $AUTO_CONTINUE=True.
+    """
+
+    parser = argparse.ArgumentParser("disown", description=disown.__doc__)
+    parser.add_argument(
+        "job_ids", type=int, nargs="*",
+        help="Jobs to act on or none to use the current job"
+    )
+    parser.add_argument(
+        "-c", "--cont",
+        action="store_true",
+        dest="force_auto_continue",
+        help="Automatically continue stopped jobs when they are disowned"
+    )
+
+    pargs = parser.parse_args(args)
+
+    if len(tasks) == 0:
+        return "", "There are no active jobs"
+
+    messages = []
+    # if args.job_ids is empty, use the active task
+    for tid in (pargs.job_ids or [tasks[0]]):
+        try:
+            current_task = get_task(tid)
+        except KeyError:
+            return "", "'{}' is not a valid job ID".format(tid)
+
+        auto_cont = builtins.__xonsh__.env.get("AUTO_CONTINUE", False)
+        if auto_cont or pargs.force_auto_continue:
+            _continue(current_task)
+        elif current_task["status"] == "stopped":
+            messages.append("warning: job is suspended, use "
+                            "'kill -CONT -{}' to resume"
+                            "\n".format(current_task["pids"][-1]))
+
+        # Stop tracking this task
+        tasks.remove(tid)
+        del builtins.__xonsh__.all_jobs[tid]
+        messages.append(
+            "Removed job {} ({})".format(tid, current_task["status"])
+        )
+
+    if messages:
+        return ''.join(messages)

@@ -51,6 +51,22 @@ Resume execution of the currently active job in the background, or, if a
 single number is given as an argument, resume that job in the background.
 
 
+``disown``
+====================
+The behavior of this command matches the behavior of zsh's disown
+command which is as follows:
+
+Remove the specified jobs from the job table; the shell will no longer
+report their status, and will not complain if you try to exit an
+interactive shell with them running or stopped. If no job is specified,
+disown the current job.
+If the jobs are currently stopped and the $AUTO_CONTINUE option is set
+($AUTO_CONTINUE = True), a warning is printed containing information about
+how to make them running after they have been disowned. If one of the
+latter two forms is used, the jobs will automatically be made running,
+independent of the setting of the $AUTO_CONTINUE option.
+
+
 ``EOF``, ``exit``, and ``quit``
 ===================================
 The commands ``EOF``, ``exit``, and ``quit`` all alias the same action, which is to
