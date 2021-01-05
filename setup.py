@@ -354,6 +354,7 @@ def main():
             "pygments>=2.2",
             "distro; platform_system=='Linux'",  # PEP 508 platform specifiers
             "setproctitle; platform_system=='Windows'",
+            "gnureadline; platform_system=='Darwin'",
         ],
     }
     skw["python_requires"] = ">=3.6"
