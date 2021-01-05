@@ -550,6 +550,11 @@ def LIBC():
         libc = ctypes.CDLL("cygwin1.dll")
     elif ON_MSYS:
         libc = ctypes.CDLL("msys-2.0.dll")
+    elif ON_FREEBSD:
+        try:
+            libc = ctypes.CDLL("libc.so.7")
+        except OSError:
+            libc = None
     elif ON_BSD:
         try:
             libc = ctypes.CDLL("libc.so")
