@@ -30,7 +30,7 @@ Control characters
 We can't and won't stop you from doing what you want, but in the interest of a
 functioning shell, you probably shouldn't mess with the following keystrokes.
 Some of them are `ASCII control characters
-<https://en.wikipedia.org/wiki/Control_character#In_ASCII>`_ and _really_
+<https://en.wikipedia.org/wiki/Control_character#In_ASCII>`_ and *really*
 shouldn't be used. The others are used by xonsh and will result in some loss of
 functionality (in less you take the time to rebind them elsewhere).
 
