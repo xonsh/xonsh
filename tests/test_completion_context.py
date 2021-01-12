@@ -69,6 +69,11 @@ STRING_ARGS_EXAMPLES = (
         args=(), arg_index=0, prefix="comm an", suffix="d", opening_quote="fr'", closing_quote="'")),
     (f"'()+{X}'", CommandContext(
         args=(), arg_index=0, prefix="()+", opening_quote="'", closing_quote="'")),
+    (f"'comm and'{X}", CommandContext(
+        args=(), arg_index=0, prefix="comm and", opening_quote="'", closing_quote="'", is_after_closing_quote=True)),
+    (f"'''comm and'''{X}", CommandContext(
+        args=(), arg_index=0, prefix="comm and",
+        opening_quote="'''", closing_quote="'''", is_after_closing_quote=True)),
 )
 
 COMMAND_EXAMPLES += STRING_ARGS_EXAMPLES
@@ -80,7 +85,10 @@ def test_command(commandline, context):
     assert_match(commandline, context, is_main_command=True)
 
 
-@pytest.mark.parametrize("commandline, context", STRING_ARGS_EXAMPLES)
+@pytest.mark.parametrize("commandline, context", tuple(
+    (commandline, context) for commandline, context in STRING_ARGS_EXAMPLES
+    if commandline.endswith("'") or commandline.endswith('"')
+))
 def test_partial_string_arg(commandline, context):
     partial_commandline = commandline.rstrip("\"'")
     partial_context = context._replace(closing_quote="")
