@@ -31,6 +31,11 @@ class CommandContext(NamedTuple):
     suffix: str = ""
     opening_quote: str = ""
     closing_quote: str = ""
+    is_after_closing_quote: bool = False
+    """
+    The cursor is appending to a closed string literal, i.e. cursor at the end of ``ls "/usr/"``.
+    This affects the completion's behaviour - see ``Completer.complete`` in ``xonsh/completer.py``.
+    """
 
     # if this command is inside a subproc expression
     subcmd_opening: str = ""  # e.g. "$(", "![", etc
@@ -574,6 +579,7 @@ class CompletionContextParser:
         arg_index = -1
         prefix = suffix = opening_quote = closing_quote = ""
         cursor_context = None
+        is_after_closing_quote = False
         if self.cursor_in_span(span):
             for arg_index, arg in enumerate(spanned_args):
                 if self.cursor < arg.span.start:
@@ -592,8 +598,10 @@ class CompletionContextParser:
 
                     if arg.value.closing_quote:
                         # appending to a quoted string, e.g. `ls "C:\\Wind"`
-                        # TODO: handle this better?
-                        prefix = arg.value.raw_value
+                        is_after_closing_quote = True
+                        opening_quote = arg.value.opening_quote
+                        prefix = arg.value.value
+                        closing_quote = arg.value.closing_quote
                     else:
                         # appending to a partial string, e.g. `ls "C:\\Wind`
                         prefix = arg.value.value
@@ -644,6 +652,7 @@ class CompletionContextParser:
             suffix,
             opening_quote,
             closing_quote,
+            is_after_closing_quote,
             subcmd_opening,
         )
         if cursor_context is None and arg_index != -1:

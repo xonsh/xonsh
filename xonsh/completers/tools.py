@@ -38,36 +38,71 @@ def justify(s, max_length, left_pad=0):
 
 
 class RichCompletion(str):
-    """A rich completion that completers can return instead of a string
+    """A rich completion that completers can return instead of a string"""
 
-    Parameters
-    ----------
-    value : str
-        The completion's actual value.
-    prefix_len : int
-        Length of the prefix to be replaced in the completion.
-        If None, the default prefix len will be used.
-    display : str
-        Text to display in completion option list.
-        If None, ``value`` will be used.
-    description : str
-        Extra text to display when the completion is selected.
-    """
-
-    def __new__(cls, value, prefix_len=None, display=None, description="", style=""):
+    def __new__(cls, value, *args, **kwargs):
         completion = super().__new__(cls, value)
-
-        completion.prefix_len = prefix_len
-        completion.display = display or value
-        completion.description = description
-        completion.style = style
-
+        # ``str``'s ``__new__`` doesn't call ``__init__``, so we'll call it ourselves
+        cls.__init__(completion, value, *args, **kwargs)
         return completion
 
+    def __init__(
+        self,
+        value: str,
+        prefix_len: tp.Optional[int] = None,
+        display: tp.Optional[str] = None,
+        description: str = "",
+        style: str = "",
+        append_closing_quote: bool = True,
+    ):
+        """
+        Parameters
+        ----------
+        value :
+            The completion's actual value.
+        prefix_len :
+            Length of the prefix to be replaced in the completion.
+            If None, the default prefix len will be used.
+        display :
+            Text to display in completion option list.
+            If None, ``value`` will be used.
+        description :
+            Extra text to display when the completion is selected.
+        style :
+            Style to pass to prompt-toolkit's ``Completion`` object.
+        append_closing_quote :
+            Whether to append a closing quote to the completion if the cursor is after it.
+            See ``Completer.complete`` in ``xonsh/completer.py``
+        """
+        super().__init__()
+        self.prefix_len = prefix_len
+        self.display = display or value
+        self.description = description
+        self.style = style
+        self.append_closing_quote = append_closing_quote
+
     def __repr__(self):
-        return "RichCompletion({}, prefix_len={}, display={}, description={})".format(
-            repr(str(self)), self.prefix_len, repr(self.display), repr(self.description)
+        return "RichCompletion({}, prefix_len={}, display={}, description={}, style={}, append_closing_quote={})".format(
+            repr(str(self)),
+            self.prefix_len,
+            repr(self.display),
+            repr(self.description),
+            repr(self.style),
+            self.append_closing_quote,
         )
+
+    def replace(self, **kwargs):
+        """Create a new RichCompletion with replaced attributes"""
+        default_kwargs = dict(
+            value=str(self),
+            prefix_len=self.prefix_len,
+            display=self.display,
+            description=self.description,
+            style=self.style,
+            append_closing_quote=self.append_closing_quote,
+        )
+        default_kwargs.update(kwargs)
+        return RichCompletion(**default_kwargs)
 
 
 def get_ptk_completer():

@@ -4,7 +4,7 @@ import builtins
 import typing as tp
 import collections.abc as cabc
 
-from xonsh.completers.tools import is_contextual_completer
+from xonsh.completers.tools import is_contextual_completer, Completion, RichCompletion
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_exception
 
@@ -79,19 +79,48 @@ class Completer(object):
                     f"{e}"
                 )
                 return set(), len(prefix)
+
+            completing_contextual_command = (
+                is_contextual_completer(func)
+                and completion_context is not None
+                and completion_context.command is not None
+            )
             if isinstance(out, cabc.Sequence):
                 res, lprefix = out
             else:
                 res = out
-                if (
-                    is_contextual_completer(func)
-                    and completion_context is not None
-                    and completion_context.command is not None
-                ):
+                if completing_contextual_command:
                     lprefix = len(completion_context.command.prefix)
                 else:
                     lprefix = len(prefix)
+
             if res is not None and len(res) != 0:
+                if (
+                    completing_contextual_command
+                    and completion_context.command.is_after_closing_quote
+                ):
+                    """
+                    The cursor is appending to a closed string literal, i.e. cursor at the end of ``ls "/usr/"``.
+                    1. The closing quote will be appended to all completions.
+                       I.e the completion ``/usr/bin`` will turn into ``/usr/bin"``
+                       To prevent this behavior, a completer can return a ``RichCompletion`` with ``append_closing_quote=False``.
+                    2. If not specified, lprefix will cover the closing prefix.
+                       I.e for ``ls "/usr/"``, the default lprefix will be 6 to include the closing quote.
+                       To prevent this behavior, a completer can return a different lprefix or specify it inside ``RichCompletion``.
+                    """
+                    closing_quote = completion_context.command.closing_quote
+                    lprefix += len(closing_quote)
+
+                    def append_closing_quote(completion: Completion):
+                        if isinstance(completion, RichCompletion):
+                            if completion.append_closing_quote:
+                                return completion.replace(
+                                    value=str(completion) + closing_quote
+                                )
+                            return completion
+                        return completion + closing_quote
+
+                    res = map(append_closing_quote, res)
 
                 def sortkey(s):
                     return s.lstrip(''''"''').lower()
