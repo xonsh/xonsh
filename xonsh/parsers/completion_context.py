@@ -425,7 +425,7 @@ class CompletionContextParser:
             command_args: List[Spanned[CommandArg]] = p[3]
         else:
             # commands KWD
-            kwd_index = 1
+            kwd_index = 2
             command_args = []
 
         commands: Commands = p[1]

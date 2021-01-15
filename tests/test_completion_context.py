@@ -21,6 +21,8 @@ def assert_match(commandline, command_context=MISSING, python_context=MISSING, i
     else:
         index = len(commandline)
     context = parse(commandline, index)
+    if context is None:
+        raise SyntaxError("Failed to parse the commandline - set DEBUG = True in this file to see the error")
     if is_main_command and python_context is MISSING:
         python_context = PythonContext(commandline, index)
     if command_context is not MISSING:
@@ -262,6 +264,12 @@ MULTIPLE_COMMAND_EXTENSIVE_EXAMPLES = tuple(itertools.chain(
         for (first, _1), (second, second_context), (third, _3)
         in zip(COMMAND_EXAMPLES[:3], COMMAND_EXAMPLES[3:6], COMMAND_EXAMPLES[6:9])
     ),
+    (
+        # cursor in third command
+        ((first.replace(X, ""), second.replace(X, ""), third), third_context)
+        for (first, _1), (second, _2), (third, third_context)
+        in zip(COMMAND_EXAMPLES[:3], COMMAND_EXAMPLES[3:6], COMMAND_EXAMPLES[6:9])
+    ),
 ))
 
 
@@ -287,6 +295,18 @@ def test_multiple_commands(keyword, commands, context):
             cursor_command = " " + cursor_command
 
     assert_match(joined_command, context, python_context=PythonContext(cursor_command.replace(X, ""), relative_index))
+
+
+@pytest.mark.parametrize("commandline", (
+    f"{X};",
+    f";{X}",
+    f"{X};;",
+    f";{X};",
+    f";;{X}",
+    f";;;{X}",
+))
+def test_multiple_empty_commands(commandline):
+    assert_match(commandline, CommandContext((), 0), python_context=PythonContext("", 0))
 
 
 @pytest.mark.parametrize("nesting, keyword, commands, context", tuple(
