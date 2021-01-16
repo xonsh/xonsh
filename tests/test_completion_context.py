@@ -1,4 +1,5 @@
 import itertools
+import typing as tp
 
 import pytest
 
@@ -8,10 +9,19 @@ from xonsh.parsers.completion_context import CommandArg, CommandContext, Complet
 DEBUG = False
 MISSING = object()
 X = "\x00"  # cursor marker
+PARSER: tp.Optional[CompletionContextParser] = None
+
+
+@pytest.fixture(scope="module", autouse=True)
+def parser():
+    global PARSER
+    PARSER = CompletionContextParser(debug=DEBUG)
+    yield
+    PARSER = None
 
 
 def parse(command, inner_index):
-    return CompletionContextParser(debug=DEBUG).parse(command, inner_index)
+    return PARSER.parse(command, inner_index)
 
 
 def assert_match(commandline, command_context=MISSING, python_context=MISSING, is_main_command=False):
