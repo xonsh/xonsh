@@ -339,8 +339,9 @@ class PromptToolkitShell(BaseShell):
                 if not line:
                     self.emptyline()
                 else:
+                    raw_line = line
                     line = self.precmd(line)
-                    self.default(line)
+                    self.default(line, raw_line)
             except (KeyboardInterrupt, SystemExit):
                 self.reset_buffer()
             except EOFError:

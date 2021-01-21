@@ -303,6 +303,7 @@ class BaseShell(object):
         self.completer = Completer() if kwargs.get("completer", True) else None
         self.buffer = []
         self.need_more_lines = False
+        self.src_starts_with_space = False
         self.mlprompt = None
         self._styler = DefaultNotGiven
         self.prompt_formatter = PromptFormatter()
@@ -342,9 +343,14 @@ class BaseShell(object):
         """Called just before execution of line."""
         return line if self.need_more_lines else line.lstrip()
 
-    def default(self, line):
+    def default(self, line, raw_line=None):
         """Implements code execution."""
         line = line if line.endswith("\n") else line + "\n"
+        if not self.need_more_lines: # this is the first line
+            if not raw_line:
+                self.src_starts_with_space = False
+            else:
+                self.src_starts_with_space = raw_line[0].isspace()
         src, code = self.push(line)
         if code is None:
             return
@@ -374,7 +380,12 @@ class BaseShell(object):
         finally:
             ts1 = ts1 or time.time()
             tee_out = tee.getvalue()
-            self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee_out)
+            self._append_history(
+                inp=src,
+                ts=[ts0, ts1],
+                spc=self.src_starts_with_space,
+                tee_out=tee_out,
+            )
             self.accumulated_inputs += src
             if (
                 tee_out

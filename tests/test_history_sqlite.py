@@ -95,7 +95,12 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
 def test_histcontrol(hist, xonsh_builtins):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
 
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "ignoredups,ignoreerr"
+    ignore_opts = ",".join([
+        "ignoredups",
+        "ignoreerr",
+        "ignorespace"
+    ])
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = ignore_opts
     assert len(hist) == 0
 
     # An error, items() remains empty
@@ -167,6 +172,22 @@ def test_histcontrol(hist, xonsh_builtins):
     assert "/bin/ls" == items[-1]["inp"]
     assert 0 == items[-1]["rtn"]
     assert -1 == hist.rtns[-1]
+
+    # Success
+    hist.append({"inp": "echo not secret", "rtn": 0, "spc": False})
+    assert len(hist) == 5
+    items = list(hist.items())
+    assert "echo not secret" == items[-1]["inp"]
+    assert 0 == items[-1]["rtn"]
+    assert 0 == hist.rtns[-1]
+
+    # Space
+    hist.append({"inp": "echo secret command", "rtn": 0, "spc": True})
+    assert len(hist) == 5
+    items = list(hist.items())
+    assert "echo not secret" == items[-1]["inp"]
+    assert 0 == items[-1]["rtn"]
+    assert 0 == hist.rtns[-1]
 
 
 def test_histcontrol_erase_dup(hist, xonsh_builtins):

@@ -20,7 +20,11 @@ from xonsh.history.main import history_main, _xh_parse_args, construct_history
 
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
-
+IGNORE_OPTS = ",".join([
+    "ignoredups",
+    "ignoreerr",
+    "ignorespace"
+])
 
 @pytest.fixture
 def hist():
@@ -94,12 +98,13 @@ def test_hist_flush_with_hist_control(hist, xonsh_builtins):
     """Verify explicit flushing of the history works."""
     hf = hist.flush()
     assert hf is None
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "ignoredups,ignoreerr"
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = IGNORE_OPTS
     hist.append({"inp": "ls foo1", "rtn": 0})
     hist.append({"inp": "ls foo1", "rtn": 1})
     hist.append({"inp": "ls foo1", "rtn": 0})
     hist.append({"inp": "ls foo2", "rtn": 2})
     hist.append({"inp": "ls foo3", "rtn": 0})
+    hist.append({"inp": " ls secret", "rtn": 0})
     hf = hist.flush()
     assert hf is not None
     while hf.is_alive():
@@ -163,9 +168,9 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
 
 
 def test_histcontrol(hist, xonsh_builtins):
-    """Test HISTCONTROL=ignoredups,ignoreerr"""
+    """Test HISTCONTROL=ignoredups,ignoreerr,ignorespacee"""
 
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "ignoredups,ignoreerr"
+    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = IGNORE_OPTS
     assert len(hist.buffer) == 0
 
     # An error, buffer remains empty
@@ -235,6 +240,22 @@ def test_histcontrol(hist, xonsh_builtins):
     assert -1 == hist.buffer[-1]["rtn"]
     assert hist.rtns[-1] == -1
     assert hist.inps[-1] == "ls bazz"
+
+    # Success
+    hist.append({"inp": "echo not secret", "rtn": 0, "spc": False})
+    assert len(hist) == 10
+    items = list(hist.items())
+    assert "echo not secret" == items[-1]["inp"]
+    assert 0 == items[-1]["rtn"]
+    assert 0 == hist.rtns[-1]
+
+    # Space
+    hist.append({"inp": "echo secret command", "rtn": 0, "spc": True})
+    assert len(hist) == 10
+    items = list(hist.items())
+    assert "echo not secret" == items[-1]["inp"]
+    assert 0 == items[-1]["rtn"]
+    assert 0 == hist.rtns[-1]
 
 
 @pytest.mark.parametrize("args", ["-h", "--help", "show -h", "show --help"])
