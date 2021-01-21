@@ -272,16 +272,6 @@ class JsonHistoryFlusher(threading.Thread):
                 if self.skip is not None:
                     self.skip(1)
                 continue
-            if "ignorespace" in opts and cmd.get("spc"):
-                # Skipping command starting with space
-                if self.skip is not None:
-                    self.skip(1)
-                continue
-
-            try:
-                del cmd["spc"]
-            except KeyError:
-                pass
 
             cmds.append(cmd)
             last_inp = cmd["inp"]
@@ -435,8 +425,19 @@ class JsonHistory(History):
         """
         if not self.remember_history:
             return
-        self.buffer.append(cmd)
-        self._len += 1  # must come before flushing
+
+        opts = builtins.__xonsh__.env.get("HISTCONTROL")
+        skipped_by_ignore_space = "ignorespace" in opts and cmd.get("spc")
+        if not skipped_by_ignore_space:
+            # Skipping command starting with space
+            self.buffer.append(cmd)
+            self._len += 1  # must come before flushing
+
+        try:
+            del cmd["spc"]
+        except KeyError:
+            pass
+
         if len(self.buffer) >= self.buffersize:
             hf = self.flush()
         else:

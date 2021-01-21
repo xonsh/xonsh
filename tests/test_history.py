@@ -101,7 +101,7 @@ def test_hist_flush_with_hist_control(hist, xonsh_builtins):
     hist.append({"inp": "ls foo1", "rtn": 0})
     hist.append({"inp": "ls foo2", "rtn": 2})
     hist.append({"inp": "ls foo3", "rtn": 0})
-    hist.append({"inp": " ls secret", "rtn": 0})
+    hist.append({"inp": "ls secret", "rtn": 0, "spc": True})
     hf = hist.flush()
     assert hf is not None
     while hf.is_alive():
@@ -109,7 +109,7 @@ def test_hist_flush_with_hist_control(hist, xonsh_builtins):
     assert len(hist.buffer) == 0
     with LazyJSON(hist.filename) as lj:
         cmds = list(lj["cmds"])
-        assert len(cmds) == 2
+        assert len(cmds) == 2, [x["inp"] for x in cmds]
         assert [x["inp"] for x in cmds] == ["ls foo1", "ls foo3"]
         assert [x["rtn"] for x in cmds] == [0, 0]
 
@@ -240,19 +240,17 @@ def test_histcontrol(hist, xonsh_builtins):
 
     # Success
     hist.append({"inp": "echo not secret", "rtn": 0, "spc": False})
-    assert len(hist) == 10
-    items = list(hist.items())
-    assert "echo not secret" == items[-1]["inp"]
-    assert 0 == items[-1]["rtn"]
-    assert 0 == hist.rtns[-1]
+    assert len(hist.buffer) == 10
+    assert "echo not secret" == hist.buffer[-1]["inp"]
+    assert 0 == hist.buffer[-1]["rtn"]
+    assert hist.rtns[-1] == 0
+    assert hist.inps[-1] == "echo not secret"
 
     # Space
     hist.append({"inp": "echo secret command", "rtn": 0, "spc": True})
-    assert len(hist) == 10
-    items = list(hist.items())
-    assert "echo not secret" == items[-1]["inp"]
-    assert 0 == items[-1]["rtn"]
-    assert 0 == hist.rtns[-1]
+    assert len(hist.buffer) == 10
+    assert hist.rtns[-1] == 0
+    assert hist.inps[-1] == "echo not secret"
 
 
 @pytest.mark.parametrize("args", ["-h", "--help", "show -h", "show --help"])
