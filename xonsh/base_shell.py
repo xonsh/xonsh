@@ -346,7 +346,7 @@ class BaseShell(object):
     def default(self, line, raw_line=None):
         """Implements code execution."""
         line = line if line.endswith("\n") else line + "\n"
-        if not self.need_more_lines: # this is the first line
+        if not self.need_more_lines:  # this is the first line
             if not raw_line:
                 self.src_starts_with_space = False
             else:

@@ -95,11 +95,7 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
 def test_histcontrol(hist, xonsh_builtins):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
 
-    ignore_opts = ",".join([
-        "ignoredups",
-        "ignoreerr",
-        "ignorespace"
-    ])
+    ignore_opts = ",".join(["ignoredups", "ignoreerr", "ignorespace"])
     xonsh_builtins.__xonsh__.env["HISTCONTROL"] = ignore_opts
     assert len(hist) == 0
 

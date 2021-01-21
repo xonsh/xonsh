@@ -20,11 +20,8 @@ from xonsh.history.main import history_main, _xh_parse_args, construct_history
 
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
-IGNORE_OPTS = ",".join([
-    "ignoredups",
-    "ignoreerr",
-    "ignorespace"
-])
+IGNORE_OPTS = ",".join(["ignoredups", "ignoreerr", "ignorespace"])
+
 
 @pytest.fixture
 def hist():
