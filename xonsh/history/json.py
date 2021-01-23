@@ -428,10 +428,11 @@ class JsonHistory(History):
 
         opts = builtins.__xonsh__.env.get("HISTCONTROL")
         skipped_by_ignore_space = "ignorespace" in opts and cmd.get("spc")
-        if not skipped_by_ignore_space:
-            # Skipping command starting with space
-            self.buffer.append(cmd)
-            self._len += 1  # must come before flushing
+        if skipped_by_ignore_space:
+            return None
+
+        self.buffer.append(cmd)
+        self._len += 1  # must come before flushing
 
         try:
             del cmd["spc"]
