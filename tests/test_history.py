@@ -109,7 +109,7 @@ def test_hist_flush_with_hist_control(hist, xonsh_builtins):
     assert len(hist.buffer) == 0
     with LazyJSON(hist.filename) as lj:
         cmds = list(lj["cmds"])
-        assert len(cmds) == 2, [x["inp"] for x in cmds]
+        assert len(cmds) == 2
         assert [x["inp"] for x in cmds] == ["ls foo1", "ls foo3"]
         assert [x["rtn"] for x in cmds] == [0, 0]
 
