@@ -263,6 +263,14 @@ class SqliteHistory(History):
         if "ignoreerr" in opts and cmd["rtn"] != 0:
             # Skipping failed cmd
             return
+        if "ignorespace" in opts and cmd.get("spc"):
+            # Skipping cmd starting with space
+            return
+
+        try:
+            del cmd["spc"]
+        except KeyError:
+            pass
         self._last_hist_inp = inp
         xh_sqlite_append_history(
             cmd,

@@ -272,6 +272,7 @@ class JsonHistoryFlusher(threading.Thread):
                 if self.skip is not None:
                     self.skip(1)
                 continue
+
             cmds.append(cmd)
             last_inp = cmd["inp"]
         with open(self.filename, "r", newline="\n") as f:
@@ -414,6 +415,8 @@ class JsonHistory(History):
             added to the history list. It should contain the keys ``inp``,
             ``rtn`` and ``ts``. These key names mirror the same names defined
             as instance variables in the ``HistoryEntry`` class.
+            Additionally, an optional key ``spc`` may be present which will
+            affect commands from being stored if ignorespace is in $HISTCONTROL.
 
         Returns
         -------
@@ -422,8 +425,20 @@ class JsonHistory(History):
         """
         if not self.remember_history:
             return
+
+        opts = builtins.__xonsh__.env.get("HISTCONTROL")
+        skipped_by_ignore_space = "ignorespace" in opts and cmd.get("spc")
+        if skipped_by_ignore_space:
+            return None
+
         self.buffer.append(cmd)
         self._len += 1  # must come before flushing
+
+        try:
+            del cmd["spc"]
+        except KeyError:
+            pass
+
         if len(self.buffer) >= self.buffersize:
             hf = self.flush()
         else:
