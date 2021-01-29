@@ -2,8 +2,10 @@
 This modules is the place where one would define the xontribs.
 """
 
+import ast
 import functools
 import importlib.util
+from pathlib import Path
 import typing as tp
 
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -53,9 +55,6 @@ class Xontrib(tp.NamedTuple):
 
 def get_module_docstring(module: str) -> str:
     """Find the module and return its docstring without actual import"""
-    print("run get module")
-    import ast
-    from pathlib import Path
 
     spec = importlib.util.find_spec(module)
     if spec and spec.has_location and spec.origin:
