@@ -7,30 +7,32 @@ Authors are sorted by number of commits.
 * Morten Enemark Lund
 * Konstantinos Tsakiltzidis
 * Jamie Bliss
+* a
 * Hugo Wang
 * David Strobach
 * Bob Hyman
-* a
 * BlahGeek
 * anki-code
+* Gyuri Horak
 * Jean-Benoist Leger
 * christopher
 * Klaus Alexander Seistrup
 * Leonardo Santagada
+* Noortheen Raja
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
 * Rob Brewer
 * virus
 * Sagar Tewari
-* Gyuri Horak
 * Eadaen1
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Gordon Ball
 * Travis Shirk
-* Joel Gerber
+* Carmen Bianca Bakker
 * Danny Sepler
+* Joel Gerber
 * vaaaaanquish
 * Bernardas Ališauskas
 * David Dotson
@@ -39,19 +41,17 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
-* Carmen Bianca Bakker
+* Daniel Shimon
 * Frank Sachsenheim
 * Kurtis Rader
 * cryzed
 * Brian Visel
-* Noortheen Raja
 * cafehaine
 * Andrew Hundt
 * Jonathan Slenders
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* Daniel Shimon
 * Jason R. Coombs
 * Stephan Fitzpatrick
 * Will S
@@ -136,6 +136,7 @@ Authors are sorted by number of commits.
 * shadow-light
 * Jan Chren
 * Samuel Lotz
+* Jerzy Drozdz
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -166,6 +167,8 @@ Authors are sorted by number of commits.
 * Edmund Miller
 * Gabriel Vogel
 * anki
+* Faris A Chugthai
+* Asaf Fisher
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -230,7 +233,6 @@ Authors are sorted by number of commits.
 * David Kalliecharan
 * Sylvain Corlay
 * Marcio Mazza
-* Jerzy Drozdz
 * Manor Askenazi
 * Stefane Fermigier
 * swedneck
@@ -238,5 +240,12 @@ Authors are sorted by number of commits.
 * paugier
 * Wendell CTR Turner
 * Will Shanks
+* Dominic Ward
+* omjadas
+* Leandro Emmanuel Reina Kiperman
+* Henré Botha
+* Aneesh Durg
+* colons
+* yggdr
 * goodboy
 * Atsushi Morimoto

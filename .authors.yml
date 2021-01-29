@@ -9,7 +9,7 @@
   - '@vaaaaanquish'
   - vaaaaanquish
   - 6syun9
-  num_commits: 20
+  num_commits: 21
   first_commit: 2018-07-17 01:14:04
   github: vaaaaanquish
 - name: Dan Allan
@@ -33,7 +33,7 @@
   - jamie.bliss@ilq.com
   - jbliss@nextgenerationenrollment.com
   - astronouth7303@gmail.com
-  num_commits: 215
+  num_commits: 216
   first_commit: 2016-07-20 14:05:08
   github: astronouth7303
 - name: Cody Scott
@@ -385,7 +385,7 @@
   email: lalochcz@gmail.com
   aliases:
   - laloch
-  num_commits: 161
+  num_commits: 164
   first_commit: 2018-07-26 13:51:50
   github: laloch
 - name: Nico Lehmann
@@ -435,7 +435,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2650
+  num_commits: 2659
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -955,7 +955,7 @@
   github: selepo
 - name: Bob Hyman
   email: bob.hyman@bobssoftwareworks.com
-  num_commits: 146
+  num_commits: 147
   first_commit: 2016-06-26 16:48:47
   github: bobhy
   alternate_emails:
@@ -991,7 +991,7 @@
   github: rodrigogolive
 - name: Carmen Bianca Bakker
   email: carmen@carmenbianca.eu
-  num_commits: 15
+  num_commits: 24
   first_commit: 2019-04-07 16:33:01
   github: carmenbianca
 - name: Andrés García García
@@ -1021,7 +1021,7 @@
   first_commit: 2018-09-16 22:50:24
 - name: Gyuri Horak
   email: dyuri@horak.hu
-  num_commits: 31
+  num_commits: 55
   first_commit: 2019-06-18 12:00:16
   github: dyuri
 - name: Ke Zhang
@@ -1104,7 +1104,7 @@
   email: anki-code@users.noreply.github.com
   alternate_emails:
   - anki-code
-  num_commits: 67
+  num_commits: 74
   first_commit: 2019-10-15 18:20:58
   github: xxh
 - name: Sylvain Corlay
@@ -1128,7 +1128,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 13
+  num_commits: 45
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1138,8 +1138,9 @@
   github: salotz
 - name: Jerzy Drozdz
   email: jerzy.drozdz@gmail.com
-  num_commits: 1
+  num_commits: 3
   first_commit: 2020-03-01 11:56:23
+  github: t0fik
 - name: Gabriel Vogel
   email: gabriel.vogel@online.de
   num_commits: 2
@@ -1185,7 +1186,7 @@
   github: paugier
 - name: Daniel Shimon
   email: daniel.shimon22@gmail.com
-  num_commits: 12
+  num_commits: 16
   first_commit: 2020-07-23 08:11:36
 - name: Achim Herwig
   email: achim.herwig@wodca.de
@@ -1199,7 +1200,7 @@
   github: mariusvniekerk
 - name: Danny Sepler
   email: dannysepler@gmail.com
-  num_commits: 23
+  num_commits: 24
   first_commit: 2020-08-29 12:32:49
   github: dannysepler
 - name: Eadaen1
@@ -1218,10 +1219,49 @@
   github: wendellwt
 - name: a
   email: a
-  num_commits: 97
+  num_commits: 167
   first_commit: 2020-10-08 15:17:00.327697
 - name: Will Shanks
   email: willshanks@us.ibm.com
   num_commits: 1
   first_commit: 2020-10-13 11:26:03
   github: willsALMANJ
+- name: Faris A Chugthai
+  email: 20028782+farisachugthai@users.noreply.github.com
+  num_commits: 2
+  first_commit: 2021-01-05 11:26:09
+- name: Asaf Fisher
+  email: asaffisher@icloud.com
+  num_commits: 2
+  first_commit: 2021-01-04 12:44:21
+- name: Dominic Ward
+  email: deeuu@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2020-11-16 09:46:42
+- name: omjadas
+  email: omja.das@gmail.com
+  num_commits: 1
+  first_commit: 2020-10-16 23:09:08
+  github: omjadas
+- name: Leandro Emmanuel Reina Kiperman
+  email: leandro.kip93@gmail.com
+  num_commits: 1
+  first_commit: 2021-01-04 12:31:05
+- name: Henré Botha
+  email: henrebotha@gmail.com
+  num_commits: 1
+  first_commit: 2020-11-26 08:27:33
+  github: henrebotha
+- name: Aneesh Durg
+  email: aneeshdurg17@gmail.com
+  num_commits: 1
+  first_commit: 2021-01-25 16:37:29
+- name: colons
+  email: colons@colons.co
+  num_commits: 1
+  first_commit: 2020-11-25 07:00:46
+  github: colons
+- name: yggdr
+  email: github@schukraft.org
+  num_commits: 1
+  first_commit: 2021-01-06 10:34:22
