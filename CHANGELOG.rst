@@ -4,6 +4,155 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.25
+====================
+
+**Added:**
+
+* VC_GIT_INCLUDE_UNTRACKED environment variable if untracked file changes are desired to show a dirty working directory
+* added `xontrib-powerline2 <https://github.com/vaaaaanquish/xontrib-powerline2>`_
+* Add '``|``' and '``|=``' operators to the ``Aliases`` class.
+* Add tests to the merging functionality.
+* Add "back2dir" xontrib (https://github.com/anki-code/xontrib-back2dir) - back to the latest used directory when starting xonsh shell.
+* show code-coverage for PRs
+* Added ``CommandPipeline.raw_out`` and ``CommandPipeline.raw_err`` to get stdout/err as raw bytes.
+* The ``@()`` operator now supports ``bytes`` objects.
+* index for history's sqlite-DB
+* support passing style from RichCompleter to PTK's Completer
+* ``xonsh.cli_utils`` to create cli from functions easily.
+* Python API for completer command with ``xonsh.completer`` module functions.
+* Added new environment variable ``$PROMPT_TOKENS_FORMATTER``.
+    That can be used to set a callable that receives all tokens in the prompt template.
+    It gives option to format the prompt with different prefix based on other tokens values.
+    Enables users to implement something like [powerline](https://github.com/vaaaaanquish/xontrib-powerline2)
+    without resorting to separate $PROMPT_FIELDS. Works with ``ASYNC_PROMPT`` as well.
+    Check the `PR <https://github.com/xonsh/xonsh/pull/3922>`_ for a snippet implementing powerline
+* PTK style rules can be defined in custom styles using the ``Token.PTK`` token prefix.
+  For example ``custom_style["Token.PTK.CompletionMenu.Completion.Current"] = "bg:#ff0000 #fff"`` sets the ``completion-menu.completion.current`` PTK style to white on red.
+* Added new environment variable ``XONSH_STYLE_OVERRIDES``. It's a dictionary containing pygments/ptk style definitions that overrides the styles defined by ``XONSH_COLOR_STYLE``.
+  For example::
+
+    $XONSH_STYLE_OVERRIDES["Token.Literal.String.Single"] = "#00ff00"  # green 'strings' (pygments)
+    $XONSH_STYLE_OVERRIDES["completion-menu"] = "bg:#ffff00 #000"  # black on yellow completion (ptk)
+    $XONSH_STYLE_OVERRIDES["Token.PTK.CompletionMenu.Completion.Current"] = "bg:#ff0000 #fff" # current completion is white on red (ptk via pygments)
+* support PTK's clipboard integration if pyperclip is installed.
+    So that some common emacs like
+    `cut/copy <https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/examples/prompts/system-clipboard-integration.py>`_
+    will work out of the box.
+* Added Python 3.9 to continuous integration.
+* ``open in google cloud shell`` button 🤩
+* Respect ignorespace present in $HISTCONTROL
+* ``_get_normalized_pstring_quote`` returns a consistent set of prefixes, and the quote, for all path-string variants e.g. inputs ``pr'`` and ``rp'`` both produce the tuple ``("pr", "'")``. This function is used by ``xonsh.completers.complete_path`` and ``xonsh.completers._path_from_partial_string``.
+* Added warning about huge amount of commands in CommandsCache that could affect on start speed.
+* New ``xonsh.procs`` subpackage for handling subprocess mode.
+* Environment variable ``$COMPLETION_MODE`` controls kind of TAB completion used with prompt-toolkit shell.
+  ``default``, the default, retains prior Xonsh behavior: first TAB displays the common prefix of matching completions,
+  next TAB selects the first or next available completion.
+  ``menu-complete`` enables TAB behavior like ``readline`` command ``menu-complete``.  First TAB selects the first matching 
+  completion, subsequent TABs cycle through available completions till the last one.  Next TAB after that displays
+  the common prefix, then the cycle repeats.
+* Added timing probes for prompt tokens, lexer and before prompt.
+* improve github actions by adding cache
+* ``xog`` xontrib - a simple command to establish and print temporary traceback
+  log file.
+* Added ``xontribs`` section to the ``xonfig``.
+* added xontrib-avox-poetry(http://github.com/jnoortheen/xontrib-avox-poetry)
+* added xontrib-broot(http://github.com/jnoortheen/xontrib-broot)
+* added `xontrib-long-cmd-durations <https://github.com/jnoortheen/xontrib-cmd-durations>`_
+* added `xontrib-commands <https://github.com/jnoortheen/xontrib-commands>`_
+* added xontrib-powerline3(http://github.com/jnoortheen/xontrib-powerline3)
+* Added ``xontrib-zoxide`` to the list of xontribs.
+* Added ``xontrib-gitinfo`` to the list of xontribs.
+
+**Changed:**
+
+* ``CommandPipeline.__repr__`` now returns formatted output wherein its printed
+  attributes are also repr strings. This improves the output of ``!()``.
+* prompt-toolkit required version updated to >=3.0
+* group environment variables into categories.
+* The SQLite history backend now has the same logic of storing stdout to the memory like json history backend.
+* Using ``ujson`` (if installed) in LazyJSON to loading json history 15% faster.
+* use requirements.txt env in both CI/local/pre-commit checks
+* add caching to CI jobs to improve speed
+* The change that allows Nuitka build the xonsh binary.
+* Remove ``p``, ``rp`` and ``pr`` prefix from partial p-string used in ``xonsh.completers._path_from_partial_string``, such that ``ast.literal_eval`` does not raise ``SyntaxError``. ``pr`` and ``rp`` strings are now treated internally as raw strings, but the p-string quote is correctly returned.
+* Increment the prefix length when the prefix input to ``xonsh.completers.complete_path`` is a p-string. This preserves the length of the prefix for path-string variants.
+* Pygments debug messages about cache will be shoen only in debug mode.
+* ``ulimit`` builtin now operates on "soft" limits by default.
+* tests for vc-branch should accept both master and main
+* upgrade black formatter to version 20.8b1
+* Use ``xontribs_meta.py`` instead of ``xontribs.json``
+* Welcome message cosmetic changes.
+* rewrite xontribs/jedi.xsh -> xontribs/jedi.py to take advantage of python tooling
+
+**Deprecated:**
+
+* ``PTK_STYLE_OVERRIDES`` has been deprecated, its function replaced by ``XONSH_STYLE_OVERRIDES``
+* The ``xonsh.proc`` module has been deprecated. Please use the new
+  ``xonsh.procs`` subpackage instead. Deprecation warnings related to this
+  have been added.
+
+**Removed:**
+
+* The deprecated ``foreground`` decorator has been removed.
+  Please use ``unthreadable`` instead.
+* ``xonsh.proc.unthreadable`` and ``xonsh.proc.uncapturable``
+  have been moved to ``xonsh.tools``. Please import from
+  this module instead.
+
+**Fixed:**
+
+* Now the directory and the symlink to this directory will be read from PATH once. Increasing the startup speed on Linux.
+* Environment variable registration no longer fails to validate when the default
+  is a callable.
+* Default values created from callables are stored on in the evironment.
+* Completers also recognize ``:`` as a valid split point for insertion for, e.g. pytest completions
+
+  .. code
+  pytest test_worker::<TAB>
+* Colorize ``and``/``or`` operators correctly like ``&&``/``||``
+* Speed of CommandsCache increased when aliases have multiple updates (i.e. init conda).
+* Now when loading RC files, xonsh will not fail to import modules located on
+  the same folder.
+* Setting an alias with IO redirections (e.g ``ls | wc``) now works correctly.
+* PTK shell: ``window has no childres`` error while completion is triggered - https://github.com/xonsh/xonsh/issues/3963
+* make_xontrib - typerror - https://github.com/xonsh/xonsh/issues/3971
+* Fix libc detection on FreeBSD
+* Fix uptime functionality on FreeBSD
+* Updated History Backend tutorial.
+* enabled flake8 warning on ambiguous names. it is fun naming variables in coded words until oneday it looks like encrypted.
+* Added ANSI fallback for ``xonsh.tools.print_color`` if shell is not yet initialized. Fixes #3840.
+* ``./run-tests.xsh`` without arguments previously gave an esoteric error. It
+  now prints help on how to run the tests.
+* The git customisation example in the .xonshrc docs uses the right module name
+
+**Authors:**
+
+* Anthony Scopatz
+* Jamie Bliss
+* a
+* David Strobach
+* Bob Hyman
+* anki-code
+* Gyuri Horak
+* Noortheen Raja
+* Carmen Bianca Bakker
+* Danny Sepler
+* vaaaaanquish
+* Daniel Shimon
+* Jerzy Drozdz
+* Faris A Chugthai
+* Asaf Fisher
+* Dominic Ward
+* omjadas
+* Leandro Emmanuel Reina Kiperman
+* Henré Botha
+* Aneesh Durg
+* colons
+* yggdr
+
+
+
 v0.9.24
 ====================
 
