@@ -2,8 +2,13 @@
 This modules is the place where one would define the xontribs.
 """
 
+import ast
 import functools
+import importlib.util
+from pathlib import Path
 import typing as tp
+
+from xonsh.lazyasd import LazyObject, lazyobject
 
 
 class _XontribPkg(tp.NamedTuple):
@@ -43,9 +48,18 @@ class Xontrib(tp.NamedTuple):
     """
 
     url: str = ""
-    description: str = ""
+    description: tp.Union[str, LazyObject] = ""
     package: tp.Optional[_XontribPkg] = None
     tags: tp.Tuple[str, ...] = ()
+
+
+def get_module_docstring(module: str) -> str:
+    """Find the module and return its docstring without actual import"""
+
+    spec = importlib.util.find_spec(module)
+    if spec and spec.has_location and spec.origin:
+        return ast.get_docstring(ast.parse(Path(spec.origin).read_text()))
+    return ""
 
 
 @functools.lru_cache()
@@ -70,20 +84,7 @@ def define_xontribs():
     return {
         "abbrevs": Xontrib(
             url="http://xon.sh",
-            description="Adds ``abbrevs`` dictionary to hold user-defined "
-            "command abbreviations. The dictionary is searched "
-            "as you type and the matching words are replaced "
-            "at the command line by the corresponding "
-            "dictionary contents once you hit 'Space' or "
-            "'Return' key. For instance a frequently used "
-            "command such as ``git status`` can be abbreviated "
-            "to ``gst`` as follows::\n"
-            "\n"
-            "    $ xontrib load abbrevs\n"
-            "    $ abbrevs['gst'] = 'git status'\n"
-            "    $ gst # Once you hit <space> or <return>, "
-            "'gst' gets expanded to 'git status'.\n"
-            "\n",
+            description=lazyobject(lambda: get_module_docstring("xontrib.abbrevs")),
             package=core_pkg,
         ),
         "apt_tabcomplete": Xontrib(
