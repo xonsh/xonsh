@@ -1,2 +1,3 @@
 prompt_toolkit
 Pygments
+ujson
