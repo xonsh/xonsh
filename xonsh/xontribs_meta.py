@@ -545,6 +545,16 @@ def define_xontribs():
                 url="https://github.com/dyuri/xontrib-ssh-agent",
             ),
         ),
+        "tcg": Xontrib(
+            url="https://github.com/zasdfgbnm/tcg/tree/master/shells/xonsh",
+            description="tcg integration.",
+            package=_XontribPkg(
+                name="xonsh-tcg",
+                license="MIT",
+                install={"pip": "xpip install xonsh-tcg"},
+                url="https://github.com/zasdfgbnm/tcg/tree/master/shells/xonsh",
+            ),
+        ),
         "vox": Xontrib(
             url="http://xon.sh",
             description="Python virtual environment manager for xonsh.",
