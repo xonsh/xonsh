@@ -20,7 +20,7 @@ $VERSION_BUMP_PATTERNS = [
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
 
-$PYTEST_COMMAND = "./run-tests.xsh test -- "
+$PYTEST_COMMAND = "./run-tests.xsh"
 
 $TAG_REMOTE = 'git@github.com:xonsh/xonsh.git'
 $TAG_TARGET = 'master'
