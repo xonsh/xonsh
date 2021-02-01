@@ -27,6 +27,7 @@ from xonsh.procs.pipelines import (
     HiddenCommandPipeline,
     STDOUT_CAPTURE_KINDS,
 )
+from xonsh.xoreutils.which import which
 
 
 @xl.lazyobject
@@ -459,6 +460,11 @@ class SubprocSpec:
     def _run_binary(self, kwargs):
         try:
             bufsize = 1
+            if xp.ON_WINDOWS:
+                out = io.StringIO()
+                if which(self.cmd[:1], stdout=out) > 0:
+                    raise FileNotFoundError
+                self.cmd[0] = out.getvalue().strip()
             p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
