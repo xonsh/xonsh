@@ -461,10 +461,11 @@ class SubprocSpec:
         try:
             bufsize = 1
             if xp.ON_WINDOWS:
-                out = io.StringIO()
-                if which(self.cmd[:1], stdout=out) > 0:
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                if which(self.cmd[:1], stdout=stdout, stderr=stderr) > 0:
                     raise FileNotFoundError
-                self.cmd[0] = out.getvalue().strip()
+                self.cmd[0] = stdout.getvalue().strip()
             p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
