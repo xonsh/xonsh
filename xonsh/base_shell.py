@@ -231,6 +231,12 @@ class _TeeStd(io.TextIOBase):
         self.std.seek(loc + len(s))
         return s
 
+    def isatty(self) -> bool:
+        """delegate the method to the underlying io-wrapper"""
+        if self.std:  # it happens to be reset sometimes
+            return self.std.isatty()
+        return super().isatty()
+
 
 class Tee:
     """Class that merges tee'd stdout and stderr into a single stream.
