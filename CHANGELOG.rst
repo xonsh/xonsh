@@ -4,6 +4,27 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.26
+====================
+
+**Added:**
+
+* abbrevs now support callbacks
+* Added a new xontrib ``tcg``
+
+**Fixed:**
+
+* now xonsh stdout delegates ``isatty`` to wrapped io stream.
+
+**Authors:**
+
+* Gil Forsyth
+* anki-code
+* Noortheen Raja
+* Gao, Xiang
+
+
+
 v0.9.25
 ====================
 
