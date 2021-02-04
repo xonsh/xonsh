@@ -247,5 +247,6 @@ Authors are sorted by number of commits.
 * Aneesh Durg
 * colons
 * yggdr
+* Gao, Xiang
 * goodboy
 * Atsushi Morimoto
