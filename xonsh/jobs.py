@@ -466,14 +466,17 @@ def disown(args, stdin=None):
 
     parser = argparse.ArgumentParser("disown", description=disown.__doc__)
     parser.add_argument(
-        "job_ids", type=int, nargs="*",
-        help="Jobs to act on or none to use the current job"
+        "job_ids",
+        type=int,
+        nargs="*",
+        help="Jobs to act on or none to use the current job",
     )
     parser.add_argument(
-        "-c", "--cont",
+        "-c",
+        "--cont",
         action="store_true",
         dest="force_auto_continue",
-        help="Automatically continue stopped jobs when they are disowned"
+        help="Automatically continue stopped jobs when they are disowned",
     )
 
     pargs = parser.parse_args(args)
@@ -483,7 +486,7 @@ def disown(args, stdin=None):
 
     messages = []
     # if args.job_ids is empty, use the active task
-    for tid in (pargs.job_ids or [tasks[0]]):
+    for tid in pargs.job_ids or [tasks[0]]:
         try:
             current_task = get_task(tid)
         except KeyError:
@@ -493,16 +496,16 @@ def disown(args, stdin=None):
         if auto_cont or pargs.force_auto_continue:
             _continue(current_task)
         elif current_task["status"] == "stopped":
-            messages.append("warning: job is suspended, use "
-                            "'kill -CONT -{}' to resume"
-                            "\n".format(current_task["pids"][-1]))
+            messages.append(
+                "warning: job is suspended, use "
+                "'kill -CONT -{}' to resume"
+                "\n".format(current_task["pids"][-1])
+            )
 
         # Stop tracking this task
         tasks.remove(tid)
         del builtins.__xonsh__.all_jobs[tid]
-        messages.append(
-            "Removed job {} ({})".format(tid, current_task["status"])
-        )
+        messages.append("Removed job {} ({})".format(tid, current_task["status"]))
 
     if messages:
-        return ''.join(messages)
+        return "".join(messages)

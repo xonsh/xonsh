@@ -1072,7 +1072,7 @@ class GeneralSetting(Xettings):
         False,
         "If ``True``, automatically resume stopped jobs when they are disowned. "
         "When stopped jobs are disowned and this option is ``False``, a warning "
-        "will print information about how to continue the stopped process."
+        "will print information about how to continue the stopped process.",
     )
 
 
