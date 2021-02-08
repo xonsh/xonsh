@@ -110,7 +110,7 @@ def define_xontribs():
             ),
         ),
         "autojump": Xontrib(
-            url="https://github.com/sagartewari01/autojump-xonsh",
+            url="https://github.com/wshanks/xontrib-autojump",
             description="autojump support for xonsh",
         ),
         "autovox": Xontrib(
