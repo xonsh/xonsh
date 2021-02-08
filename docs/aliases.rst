@@ -52,7 +52,7 @@ single number is given as an argument, resume that job in the background.
 
 
 ``disown``
-====================
+===================
 The behavior of this command matches the behavior of zsh's disown
 command which is as follows:
 
