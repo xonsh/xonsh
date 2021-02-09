@@ -57,7 +57,7 @@ def _xhj_gc_files_to_rmfiles(hsize, files):
 
 
 def _xhj_gc_seconds_to_rmfiles(hsize, files):
-    """Return age removed (the age of the *oldest* file) and list of history files to remove to get under the age limit."""
+    """Return duration removed and list of history files to remove to get under the age limit."""
     now = time.time()
     oldest_ts = files[0][0]
     n = 0
@@ -67,7 +67,8 @@ def _xhj_gc_seconds_to_rmfiles(hsize, files):
             break
         n += 1
 
-    return (now - oldest_ts) if n > 0 else 0, files[:n]
+    size_over = files[n][0] - oldest_ts
+    return size_over, files[:n]
 
 
 def _xhj_gc_bytes_to_rmfiles(hsize, files):
