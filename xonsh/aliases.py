@@ -12,7 +12,7 @@ from xonsh.lazyasd import lazyobject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import jobs, fg, bg, clean_jobs
+from xonsh.jobs import jobs, fg, bg, clean_jobs, disown
 from xonsh.platform import (
     ON_ANACONDA,
     ON_DARWIN,
@@ -787,6 +787,7 @@ def make_default_aliases():
         "jobs": jobs,
         "fg": fg,
         "bg": bg,
+        "disown": disown,
         "EOF": xonsh_exit,
         "exit": xonsh_exit,
         "quit": xonsh_exit,

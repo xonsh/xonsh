@@ -441,12 +441,10 @@ class SubprocSpec:
         self._pre_run_event_fire(event_name)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         self.prep_env(kwargs)
-        self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
         if callable(self.alias):
-            if "preexec_fn" in kwargs:
-                kwargs.pop("preexec_fn")
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
+            self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
             self._fix_null_cmd_bytes()
             p = self._run_binary(kwargs)
         p.spec = self

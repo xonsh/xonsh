@@ -139,7 +139,7 @@ Very nice.
 
 .. note::
 
-   To update ``os.environ`` when the xonsh environment changes set 
+   To update ``os.environ`` when the xonsh environment changes set
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
 
 The Environment Itself ``${...}``
@@ -837,6 +837,11 @@ The following shows an example with ``emacs``.
 
 Note that the prompt is returned to you after emacs is started.
 
+Normally background commands end upon the shell closing. To allow a background
+command to continue running after the shell has exited, use the ``disown``
+command which accepts either no arguments (to disown the most recent job)
+or an arbitrary number of job identifiers.
+
 Job Control
 ===========
 
@@ -1079,9 +1084,9 @@ handled implicitly in subprocess mode.
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 
 .. code-block:: xonshcon
-   
+
     >>> mypath = p'/etc'
-    >>> sorted(mypath.glob('**/*bashrc*')) 
+    >>> sorted(mypath.glob('**/*bashrc*'))
     [Path('/etc/bash.bashrc'), Path('/etc/skel/.bashrc')]
     >>> [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
     [True, True, False, Path('/'), 'root']
