@@ -21,15 +21,29 @@ class Parser(ThreeEightParser):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
 
         p1, p2 = p[1], p[2]
+        is_subscript = False
 
         if p2 is not None:
             if isinstance(p1, Index):
                 p1 = p1.value
+                is_subscript = True
+            if any((isinstance(p, Index) for p in p2)):
+                is_subscript = True
+
             after_comma = [p.value if isinstance(p, Index) else p for p in p2]
-            if isinstance(p1, ast.Slice) or any(
-                [isinstance(x, ast.Slice) for x in after_comma]
+            if (
+                isinstance(p1, ast.Slice)
+                or any([isinstance(x, ast.Slice) for x in after_comma])
+                or is_subscript
             ):
-                p1 = Index(value=ast.Tuple(elts=[p1] + after_comma, ctx=ast.Load()))
+                p1 = Index(
+                    value=ast.Tuple(
+                        [p1] + after_comma,
+                        ctx=ast.Load(),
+                        lineno=p1.lineno,
+                        col_offset=p1.col_offset,
+                    )
+                )
             else:
                 p1.value = ast.Tuple(
                     elts=[p1.value] + [x.value for x in after_comma],
