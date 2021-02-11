@@ -3008,7 +3008,9 @@ class BaseParser(object):
 
         envs = self._get_envvars(p2, lineno, col)
         if envs is not None:
-            p0.keywords.append(ast.keyword(arg="envs", value=envs))
+            p0.keywords.append(
+                ast.keyword(arg="envs", value=envs, lineno=lineno, col_offset=col)
+            )
 
         return p0
 
