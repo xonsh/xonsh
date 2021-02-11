@@ -7,6 +7,7 @@ import textwrap
 from threading import Thread
 from ast import parse as pyparse
 from collections.abc import Iterable, Sequence, Mapping
+import typing as tp
 
 from xonsh.ply.ply import yacc
 
@@ -40,6 +41,14 @@ class Location(object):
         if self.column is not None:
             s += ":{0}".format(self.column)
         return s
+
+
+class Index(tp.NamedTuple):
+    """From PY39 ast.Index returns the value itself."""
+
+    # todo: since ast.Index is going to be removed in future PY releases, it is better to check for Expr
+    #  rather than Index
+    value: tp.Any
 
 
 def ensure_has_elts(x, lineno=None, col_offset=None):
@@ -2202,11 +2211,21 @@ class BaseParser(object):
         p0 = leader
         for trailer in trailers:
             if isinstance(
-                trailer, (ast.Index, ast.Slice, ast.ExtSlice, ast.Constant, ast.Name)
+                trailer,
+                (
+                    ast.Index,
+                    ast.Slice,
+                    ast.ExtSlice,
+                    ast.Constant,
+                    ast.Name,
+                    Index,
+                ),
             ):
+                # unpack types
+                slice = trailer.value if isinstance(trailer, Index) else trailer
                 p0 = ast.Subscript(
                     value=leader,
-                    slice=trailer,
+                    slice=slice,
                     ctx=ast.Load(),
                     lineno=leader.lineno,
                     col_offset=leader.col_offset,

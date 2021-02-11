@@ -43,7 +43,7 @@ def check_stmts(inp, run=True, mode="exec", debug_level=0):
 
 
 def check_xonsh_ast(xenv, inp, run=True, mode="eval", debug_level=0, return_obs=False):
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
     builtins.__xonsh__.env = xenv
     obs = PARSER.parse(inp, debug_level=debug_level)
     if obs is None:
@@ -59,6 +59,12 @@ def check_xonsh(xenv, inp, run=True, mode="exec"):
     if not inp.endswith("\n"):
         inp += "\n"
     check_xonsh_ast(xenv, inp, run=run, mode=mode)
+
+
+def eval_code(inp, mode="eval", **loc_vars):
+    obs = PARSER.parse(inp)
+    bytecode = compile(obs, "<test-xonsh-ast>", mode)
+    return eval(bytecode, loc_vars)
 
 
 #
@@ -388,6 +394,29 @@ def test_if_else_expr():
 
 def test_if_else_expr_expr():
     check_ast("42+5 if 1 == 2 else 65-5")
+
+
+def test_subscription_syntaxes():
+    assert eval_code("[1, 2, 3][-1]") == 3
+    assert eval_code("[1, 2, 3][-1]") == 3
+    assert eval_code("'string'[-1]") == "g"
+
+
+def test_subscription_special_syntaxes():
+    # like numpy.r_
+    class Arr:
+        def __getitem__(self, item):
+            return item
+
+    assert eval_code("arr[1, 2, 3]", arr=Arr()) == [1, 2, 3]
+    # dataframe
+    assert eval_code('arr[["a", "b"]]', arr=Arr()) == ["a", "b"]
+    # aliases
+    d = {}
+    eval_code("d[arr.__name__]=True", arr=Arr(), d=d)
+    assert d == {"Arr": True}
+    # extslice
+    assert eval_code('arr[:, "2"]') == 2
 
 
 def test_str_idx():
