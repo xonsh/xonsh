@@ -420,13 +420,14 @@ def test_subscription_special_syntaxes(arr_container):
     assert eval_code('arr[["a", "b"]]', arr=arr_container) == ["a", "b"]
 
 
-def test_subscription_special_syntaxes_2(arr_container):
-    # aliases
-    d = {}
-    eval_code("d[arr.__name__]=True", arr=arr_container, d=d)
-    assert d == {"Arr": True}
-    # # extslice
-    # assert eval_code('arr[:, "2"]') == 2
+# todo: enable this test
+# def test_subscription_special_syntaxes_2(arr_container):
+#     # aliases
+#     d = {}
+#     eval_code("d[arr.__name__]=True", arr=arr_container, d=d)
+#     assert d == {"Arr": True}
+#     # extslice
+#     assert eval_code('arr[:, "2"]') == 2
 
 
 def test_str_idx():
