@@ -106,9 +106,7 @@ class PromptToolkitCompleter(Completer):
             return 0
 
         try:
-            words_non_posix = split(
-                line[0:endidx], posix=False
-            )
+            words_non_posix = split(line[0:endidx], posix=False)
             if line[0:endidx].endswith(" "):
                 words_non_posix.append("")
         except ValueError:
