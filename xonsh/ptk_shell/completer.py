@@ -102,29 +102,29 @@ class PromptToolkitCompleter(Completer):
                 yield Completion(comp, -plen, display=disp)
 
     def __find_begidx(self, line, endidx):
-        if len(line[0:endidx]) == 0:
+        if endidx < 1:
             return 0
 
-        wordsNonPosix = []
         try:
-            wordsNonPosix = split(
-                line[0:endidx] + "_", posix=False
-            )  # ensure last word is empty when ends with space
-            wordsNonPosix[-1] = wordsNonPosix[-1][:-1]
+            words_non_posix = split(
+                line[0:endidx], posix=False
+            )
+            if line[0:endidx].endswith(" "):
+                words_non_posix.append("")
         except ValueError:
             try:
-                wordsNonPosix = split(
+                words_non_posix = split(
                     line[0:endidx] + '"', posix=False
                 )  # try with missing `"` quote
-                wordsNonPosix[-1] = wordsNonPosix[-1][:-1]
+                words_non_posix[-1] = words_non_posix[-1][:-1]
             except ValueError:
-                wordsNonPosix = split(
+                words_non_posix = split(
                     line[0:endidx] + "'", posix=False
                 )  # try with missing `'` quote
-                wordsNonPosix[-1] = wordsNonPosix[-1][:-1]
+                words_non_posix[-1] = words_non_posix[-1][:-1]
 
         begidx = endidx
-        for word in reversed(wordsNonPosix):
+        for word in reversed(words_non_posix):
             begidx = begidx - len(word)
             if line[begidx - 1] == " ":
                 break
