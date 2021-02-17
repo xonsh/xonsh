@@ -45,7 +45,6 @@ def check_stmts(inp, run=True, mode="exec", debug_level=0):
 
 
 def check_xonsh_ast(xenv, inp, run=True, mode="eval", debug_level=0, return_obs=False):
-    # __tracebackhide__ = True
     builtins.__xonsh__.env = xenv
     obs = PARSER.parse(inp, debug_level=debug_level)
     if obs is None:
