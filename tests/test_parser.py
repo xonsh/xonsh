@@ -420,13 +420,14 @@ def test_subscription_special_syntaxes(arr_container):
 
 
 # todo: enable this test
-# def test_subscription_special_syntaxes_2(arr_container):
-#     # aliases
-#     d = {}
-#     eval_code("d[arr.__name__]=True", arr=arr_container, d=d)
-#     assert d == {"Arr": True}
-#     # extslice
-#     assert eval_code('arr[:, "2"]') == 2
+@pytest.mark.xfail
+def test_subscription_special_syntaxes_2(arr_container):
+    # aliases
+    d = {}
+    eval_code("d[arr.__name__]=True", arr=arr_container, d=d)
+    assert d == {"Arr": True}
+    # extslice
+    assert eval_code('arr[:, "2"]') == 2
 
 
 def test_str_idx():
