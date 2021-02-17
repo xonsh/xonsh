@@ -98,7 +98,7 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
     assert tmpdir.strpath not in sys.path
 
 
-@pytest.mark.skipif(ON_WINDOWS and VER_FULL < (3, 9), reason="See https://github.com/xonsh/xonsh/issues/3936")
+@pytest.mark.skipif(ON_WINDOWS, reason="See https://github.com/xonsh/xonsh/issues/3936")
 def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
     """Test that an RC file can edit the sys.path variable without losing those values."""
 
