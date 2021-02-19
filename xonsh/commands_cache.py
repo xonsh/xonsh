@@ -101,7 +101,7 @@ class CommandsCache(cabc.Mapping):
         self._alias_checksum = al_hash
 
         # did the contents of any directory in PATH change?
-        max_mtime = max(map(lambda path: os.stat(path).st_mtime, paths))
+        max_mtime = max(map(lambda path: os.stat(path).st_mtime, paths), default=0)
         yield max_mtime <= self._path_mtime
         self._path_mtime = max_mtime
 
