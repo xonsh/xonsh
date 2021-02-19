@@ -42,7 +42,7 @@ class CommandsCache(cabc.Mapping):
         env = builtins.__xonsh__.env
         self.cache_file = (
             (Path(env["XONSH_DATA_DIR"]).joinpath("commands-cache.pickle").resolve())
-            if "XONSH_DATA_DIR" in env
+            if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
             else None
         )
 
