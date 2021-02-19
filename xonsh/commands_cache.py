@@ -101,11 +101,7 @@ class CommandsCache(cabc.Mapping):
         self._alias_checksum = al_hash
 
         # did the contents of any directory in PATH change?
-        max_mtime = 0
-        for path in paths:
-            mtime = os.stat(path).st_mtime
-            if mtime > max_mtime:
-                max_mtime = mtime
+        max_mtime = max(map(lambda path: os.stat(path).st_mtime, paths))
         yield max_mtime <= self._path_mtime
         self._path_mtime = max_mtime
 
@@ -152,7 +148,7 @@ class CommandsCache(cabc.Mapping):
         self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
     ) -> tp.Dict[str, tp.Any]:
         """Update the cmds_cache variable in background without slowing down parseLexer"""
-        env = builtins.__xonsh__.env
+        env = builtins.__xonsh__.env  # type: ignore
 
         allcmds = {}
         for path in reversed(paths):
@@ -172,7 +168,7 @@ class CommandsCache(cabc.Mapping):
         for cmd in aliases:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (cmd, True)
+                allcmds[key] = (cmd, True)  # type: ignore
         return self.set_cmds_cache(allcmds)
 
     def get_cached_commands(self) -> tp.Dict[str, str]:
