@@ -85,7 +85,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
         # Use list dir to get correct case for the filename
         # i.e. windows is case insensitive but case preserving
         p, f = os.path.split(abs_name)
-        f = next(s.name for s in xp.scandir(p) if s.name.lower() == f.lower())
+        f = next(s.name for s in os.scandir(p) if s.name.lower() == f.lower())
         abs_name = os.path.join(p, f)
         if builtins.__xonsh__.env.get("FORCE_POSIX_PATHS", False):
             abs_name.replace(os.sep, os.altsep)

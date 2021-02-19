@@ -791,7 +791,7 @@ def _executables_in_windows(path):
         return
     extensions = builtins.__xonsh__.env["PATHEXT"]
     try:
-        for x in scandir(path):
+        for x in os.scandir(path):
             try:
                 is_file = x.is_file()
             except OSError:
