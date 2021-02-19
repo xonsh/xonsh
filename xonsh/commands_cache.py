@@ -41,7 +41,9 @@ class CommandsCache(cabc.Mapping):
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
         env = builtins.__xonsh__.env
         self.cache_file = (
-            Path(env["XONSH_DATA_DIR"]).joinpath("commands-cache.pickle").resolve()
+            (Path(env["XONSH_DATA_DIR"]).joinpath("commands-cache.pickle").resolve())
+            if "XONSH_DATA_DIR" in env
+            else None
         )
 
     def __contains__(self, key):
@@ -129,17 +131,21 @@ class CommandsCache(cabc.Mapping):
                 self.set_cmds_cache(self._cmds_cache)
             return self._cmds_cache
 
-        if not self._loaded_pickled:
-            # first time load the commands from cache-file
-            self._cmds_cache = self.get_cached_commands()
-            self._loaded_pickled = True
-            return self._cmds_cache
-        worker = threading.Thread(
-            target=self._update_cmds_cache,
-            args=[path_immut, alss],
-            daemon=True,
-        )
-        worker.start()
+        if self.cache_file:
+            # pickle the result only if XONSH_DATA_DIR is set
+            if not self._loaded_pickled:
+                # first time load the commands from cache-file
+                self._cmds_cache = self.get_cached_commands()
+                self._loaded_pickled = True
+            # also start a thread that updates the cache in the bg
+            worker = threading.Thread(
+                target=self._update_cmds_cache,
+                args=[path_immut, alss],
+                daemon=True,
+            )
+            worker.start()
+        else:
+            self._update_cmds_cache(path_immut, alss)
         return self._cmds_cache
 
     def _update_cmds_cache(
@@ -170,13 +176,14 @@ class CommandsCache(cabc.Mapping):
         return self.set_cmds_cache(allcmds)
 
     def get_cached_commands(self) -> tp.Dict[str, str]:
-        if self.cache_file.exists():
+        if self.cache_file and self.cache_file.exists():
             return pickle.loads(self.cache_file.read_bytes()) or {}
         return {}
 
     def set_cmds_cache(self, allcmds: tp.Dict[str, tp.Any]) -> tp.Dict[str, tp.Any]:
         """write cmds to cache-file and instance-attribute"""
-        self.cache_file.write_bytes(pickle.dumps(allcmds))
+        if self.cache_file:
+            self.cache_file.write_bytes(pickle.dumps(allcmds))
         self._cmds_cache = allcmds
         return allcmds
 
