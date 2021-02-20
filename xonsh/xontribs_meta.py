@@ -212,6 +212,17 @@ def define_xontribs():
                 url="https://github.com/jnoortheen/xontrib-broot",
             ),
         ),
+        "cd": Xontrib(
+            url="https://github.com/eugenesvk/xontrib-cd",
+            description="'cd' to any path without escaping in xonsh shell "
+            "('cd '→'cd! ')",
+            package=_XontribPkg(
+                name="xontrib-cd",
+                license="MIT",
+                install={"pip": "xpip install xontrib-cd"},
+                url="https://github.com/eugenesvk/xontrib-cd",
+            ),
+        ),
         "cmd_done": Xontrib(
             url="https://github.com/jnoortheen/xontrib-cmd-durations",
             description="send notification once long-running command is "
