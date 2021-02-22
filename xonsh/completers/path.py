@@ -342,12 +342,12 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         ):
             if xt.levenshtein(prefix, s, threshold) < threshold:
                 paths.add(s)
-    if tilde in prefix:
-        home = os.path.expanduser(tilde)
-        paths = {s.replace(home, tilde) for s in paths}
     if cdpath and cd_in_command(line):
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
+    if tilde in prefix:
+        home = os.path.expanduser(tilde)
+        paths = {s.replace(home, tilde) for s in paths}
     paths, _ = _quote_paths(
         {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
     )
