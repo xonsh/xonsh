@@ -14,6 +14,10 @@ line is ``#!/usr/bin/env xonsh``.
     * - Bash
       - Xonsh
       - Notes
+    * - ``echo --arg="val"`` and ``echo {}``
+      - ``echo --arg "val"`` and ``echo "{}"``
+      - Read `Subprocess Strings <https://xon.sh/tutorial_subproc_strings.html>`_ tutorial 
+        to understand how strings become arguments in xonsh.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
@@ -98,7 +102,7 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``$@``
       - ``$ARGS``
       - List of all command line argument and parameter strings.
-    * - ``while getopts "h?vf:" opt; do``
+    * - ``while getopts``
       - ``import argparse``
       - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe 
         the command line arguments in your script. Next try 
