@@ -14,10 +14,23 @@ line is ``#!/usr/bin/env xonsh``.
     * - Bash
       - Xonsh
       - Notes
-    * - ``echo --arg="val"`` and ``echo {}``
-      - ``echo --arg "val"`` and ``echo "{}"``
+    * - ``echo --arg="val"`` 
+    
+        ``echo {}``
+         
+        ``echo \;``
+         
+      - ``echo --arg "val"``
+      
+        ``echo "{}"``
+        
+        ``echo ";"``
+        
       - Read `Subprocess Strings <https://xon.sh/tutorial_subproc_strings.html>`_ tutorial 
-        to understand how strings become arguments in xonsh.
+        to understand how strings become arguments in xonsh.     
+        There is no notion of an escaping character in xonsh like the backslash (``\``) in bash.
+        Single or double quotes can be used to remove the special meaning of certain 
+        characters, words or brackets.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
@@ -41,7 +54,9 @@ line is ``#!/usr/bin/env xonsh``.
       - Look up an environment variable via another variable name. In xonsh,
         this may be any valid expression.
     * - ``ENV1=VAL1 command``
-      - ``$ENV1=VAL1 command`` or ``with ${...}.swap(ENV1=VAL1): command``
+      - ``$ENV1=VAL1 command``
+      
+        or ``with ${...}.swap(ENV1=VAL1): command``
       - Set temporary environment variable(s) and execute the command.
         Use the second notation with an indented block to execute many commands in the same context.
     * - ``alias ll='ls -la'``
@@ -52,11 +67,6 @@ line is ``#!/usr/bin/env xonsh``.
       - Command substitution (allow the output of a command to replace the
         command itself).  Tokenizes and executes the output of a subprocess
         command as another subprocess.
-    * - ``find ~/ -name bashrc -exec wc '{}' \;``
-      - ``find ~/ -name bashrc -exec wc '{}' ';'``
-      - There is no notion of an escaping character in xonsh like the backslash (``\``) in bash.
-        Single or double quotes can be used to remove the special meaning of certain 
-        characters or words.
     * - ``v=`echo 1```
       - ``v=$(echo 1)``
       - In bash, backticks mean to run a captured subprocess - it's ``$()`` in xonsh. Backticks in xonsh
