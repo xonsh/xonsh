@@ -519,86 +519,11 @@ class CompletionContextParser:
         p[0] = commands
 
     @with_docstr(
-        f"""sub_expression : {RULES_SEP.join(f"{l} args {r}" for l, r in paren_pairs)}
-        | {RULES_SEP.join(f"{l} {r}" for l, r in paren_pairs)}
-        | {RULES_SEP.join(f"{l} args" for l, _ in paren_pairs)}
-        | {RULES_SEP.join(f"{l}" for l, _ in paren_pairs)}
-    """
-    )
-    def p_subcommand(self, p):
-        spanned_args: List[Spanned[CommandArg]]
-        closed_parens = True
-        if len(p) == 4:
-            # LPAREN args RPAREN
-            spanned_args = p[2]
-            inner_stop = p.lexpos(3)
-            outer_stop = inner_stop + len(p[3])
-        elif len(p) == 3:
-            if isinstance(p[2], list):
-                # LPAREN args
-                spanned_args = p[2]
-                inner_stop = outer_stop = spanned_args[-1].span.stop
-                closed_parens = False
-            else:
-                # LPAREN RPAREN
-                spanned_args = []
-                inner_stop = p.lexpos(2)
-                outer_stop = inner_stop + len(p[2])
-        else:
-            # LPAREN
-            spanned_args = []
-            inner_stop = outer_stop = p.lexpos(1) + len(p[1])
-            closed_parens = False
-
-        sub_expr_opening = p[1]
-
-        outer_start = p.lexpos(1)
-        inner_start = outer_start + len(sub_expr_opening)
-        inner_span = slice(inner_start, inner_stop)
-        outer_span = slice(outer_start, outer_stop)
-
-        command = self.create_command(spanned_args, inner_span, sub_expr_opening)
-        if sub_expr_opening == "@(":
-            # python sub-expression
-            python_context = PythonContext(
-                self.current_input[inner_span],
-                self.cursor - inner_span.start,
-                is_sub_expression=True,
-            )
-            if (
-                command.cursor_context is not None
-                and command.cursor_context is not command.value
-            ):
-                # the cursor is inside an inner arg
-                cursor_context = command.cursor_context
-            elif self.cursor_in_span(inner_span):
-                # the cursor is in the python expression
-                cursor_context = python_context
-            else:
-                cursor_context = None
-
-            if isinstance(
-                command.expansion_obj, Spanned
-            ) and self.is_command_or_commands(command.expansion_obj.expansion_obj):
-                # the last arg contains a subcommand, e.g. `@(x = $(echo `
-                expansion_obj = command.expansion_obj.expansion_obj
-            else:
-                expansion_obj = None
-
-            p[0] = Spanned(python_context, outer_span, cursor_context, expansion_obj)
-        else:
-            p[0] = command.replace(span=outer_span)
-
-        if closed_parens:
-            # this subcommand cannot be expanded
-            p[0] = p[0].replace(expansion_obj=ExpansionOperation.NEVER_EXPAND)
-
-    @with_docstr(
         f"""sub_expression : {RULES_SEP.join(f"{l} commands {r}" for l, r in paren_pairs)}
         | {RULES_SEP.join(f"{l} commands" for l, _ in paren_pairs)}
     """
     )
-    def p_subcommand_multiple(self, p):
+    def p_sub_expression(self, p):
         sub_expr_opening = p[1]
         outer_start = p.lexpos(1)
         inner_start = outer_start + len(sub_expr_opening)
@@ -654,8 +579,12 @@ class CompletionContextParser:
             else:
                 cursor_context = None
 
-            if len(commands.value) and self.is_command_or_commands(
-                commands.value[-1].expansion_obj.expansion_obj
+            if (
+                len(commands.value)
+                and commands.value[-1].expansion_obj is not None
+                and self.is_command_or_commands(
+                    commands.value[-1].expansion_obj.expansion_obj
+                )
             ):
                 # the last arg (in the last command) is a subcommand, e.g. `@(a; x = $(echo `
                 expansion_obj = commands.value[-1].expansion_obj.expansion_obj
