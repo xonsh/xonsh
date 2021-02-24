@@ -272,13 +272,16 @@ class SqliteHistory(History):
         except KeyError:
             pass
         self._last_hist_inp = inp
-        xh_sqlite_append_history(
-            cmd,
-            str(self.sessionid),
-            store_stdout=envs.get("XONSH_STORE_STDOUT", False),
-            filename=self.filename,
-            remove_duplicates=("erasedups" in opts),
-        )
+        try:
+            xh_sqlite_append_history(
+                cmd,
+                str(self.sessionid),
+                store_stdout=envs.get("XONSH_STORE_STDOUT", False),
+                filename=self.filename,
+                remove_duplicates=("erasedups" in opts),
+            )
+        except sqlite3.OperationalError as err:
+            print(f"SQLite History Backend Error: {err}")
 
     def all_items(self, newest_first=False, session_id=None):
         """Display all history items."""
