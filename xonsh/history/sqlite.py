@@ -193,6 +193,15 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
         return _xh_sqlite_delete_records(c, size_to_keep)
 
 
+def xh_sqlite_wipe_session(sessionid=None, filename=None):
+    """Wipe the current session's entries from the database."""
+    sql = "DELETE FROM xonsh_history WHERE sessionid = ?"
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        _xh_sqlite_create_history_table(c)
+        c.execute(sql, (str(sessionid),))
+
+
 class SqliteHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
@@ -321,9 +330,4 @@ class SqliteHistory(History):
         self.outs = []
         self.tss = []
 
-        # Wipe the current session's entries from the database.
-        sql = "DELETE FROM xonsh_history WHERE sessionid = ?"
-        with _xh_sqlite_get_conn(filename=self.filename) as conn:
-            c = conn.cursor()
-            _xh_sqlite_create_history_table(c)
-            c.execute(sql, (str(self.sessionid),))
+        xh_sqlite_wipe_session(sessionid=self.sessionid, filename=self.filename)
