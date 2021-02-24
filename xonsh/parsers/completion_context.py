@@ -5,7 +5,18 @@ import enum
 import os
 import re
 from collections import defaultdict
-from typing import Optional, Tuple, List, NamedTuple, Generic, TypeVar, Union, Any, cast
+from typing import (
+    Optional,
+    Tuple,
+    List,
+    NamedTuple,
+    Generic,
+    TypeVar,
+    Union,
+    Any,
+    cast,
+    overload,
+)
 
 from xonsh.lazyasd import lazyobject
 from xonsh.lexer import Lexer
@@ -62,12 +73,19 @@ class ExpansionOperation(enum.Enum):
     SIMPLE_ARG_EXPANSION = None  # the default
 
 
+class Missing(enum.Enum):
+    MISSING = object()
+
+
 T = TypeVar("T")
+T2 = TypeVar("T2")
 
 # can't use Generic + NamedTuple, can't use dataclasses for compatibility with python 3.6.
 
 
 class Spanned(Generic[T]):
+    __slots__ = ["value", "span", "cursor_context", "expansion_obj"]
+
     def __init__(
         self,
         value: T,
@@ -96,14 +114,53 @@ class Spanned(Generic[T]):
         self.cursor_context = cursor_context
         self.expansion_obj = expansion_obj
 
-    def replace(self, **fields):
-        kwargs = dict(
-            value=self.value,
-            span=self.span,
-            cursor_context=self.cursor_context,
-            expansion_obj=self.expansion_obj,
-        )
-        kwargs.update(fields)
+    @overload
+    def replace(
+        self,
+        value: Missing = Missing.MISSING,
+        span: Union[slice, Missing] = Missing.MISSING,
+        cursor_context: Optional[
+            Union[CommandContext, PythonContext, int, Missing]
+        ] = Missing.MISSING,
+        expansion_obj: Union[
+            "ExpandableObject", ExpansionOperation, Missing
+        ] = Missing.MISSING,
+    ) -> "Spanned[T]":
+        ...
+
+    @overload
+    def replace(
+        self,
+        value: T2,
+        span: Union[slice, Missing] = Missing.MISSING,
+        cursor_context: Optional[
+            Union[CommandContext, PythonContext, int, Missing]
+        ] = Missing.MISSING,
+        expansion_obj: Union[
+            "ExpandableObject", ExpansionOperation, Missing
+        ] = Missing.MISSING,
+    ) -> "Spanned[T2]":
+        ...
+
+    def replace(
+        self,
+        value: Union[T2, Missing] = Missing.MISSING,
+        span: Union[slice, Missing] = Missing.MISSING,
+        cursor_context: Optional[
+            Union[CommandContext, PythonContext, int, Missing]
+        ] = Missing.MISSING,
+        expansion_obj: Union[
+            "ExpandableObject", ExpansionOperation, Missing
+        ] = Missing.MISSING,
+    ) -> "Spanned[T2]":
+        new_args = locals()
+        kwargs = {}
+        for variable in self.__slots__:
+            new_value = new_args[variable]
+            if new_value is Missing.MISSING:
+                kwargs[variable] = getattr(self, variable)
+            else:
+                kwargs[variable] = new_value
         return Spanned(**kwargs)
 
     def __repr__(self):
@@ -323,7 +380,6 @@ class CompletionContextParser:
 
         # expand the commands to the complete input
         complete_span = slice(0, len(self.current_input))
-        # import ipdb; ipdb.set_trace()
         spanned = self.try_expand_span(spanned, complete_span) or spanned
 
         context = spanned.cursor_context
@@ -361,14 +417,8 @@ class CompletionContextParser:
                 self.error = SyntaxError(f"Failed to find cursor context in {spanned}")
             p[0] = None
 
-    precedence = (
-        # ("left", *set(r for _, r in paren_pairs)),
-        # ("left", *multi_tokens),
-        ("left", "SINGLE_COMMAND"),  # fictitious token (see p_command)
-    )
-
     def p_command(self, p):
-        """command : args %prec SINGLE_COMMAND
+        """command : args
         |
         """
         if len(p) == 2:
@@ -380,147 +430,91 @@ class CompletionContextParser:
             span = EMPTY_SPAN  # this will be expanded in expand_command_span
         p[0] = self.create_command(spanned_args, span)
 
-    @with_docstr(
-        f"""commands : {RULES_SEP.join(f"args {kwd} args" for kwd in multi_tokens)}
-        | {RULES_SEP.join(f"args {kwd}" for kwd in multi_tokens)}
-        | {RULES_SEP.join(f"{kwd} args" for kwd in multi_tokens)}
-        | {RULES_SEP.join(f"{kwd}" for kwd in multi_tokens)}
-    """
-    )
-    def p_multiple_commands_first(self, p):
-        first_index, second_index = None, None
-        if len(p) == 4:
-            # args KWD args
-            first_index, kwd_index, second_index = 1, 2, 3
-        elif len(p) == 3:
-            if isinstance(p[1], list):
-                # args KWD
-                first_index, kwd_index = 1, 2
-            else:
-                # KWD args
-                kwd_index, second_index = 1, 2
-        else:
-            # KWD
-            kwd_index = 1
-
-        # create first command
-        kwd_start = p.lexpos(kwd_index)
-        if first_index is not None:
-            first_args: List[Spanned[CommandArg]] = p[first_index]
-            first_command = self.create_command(
-                first_args, slice(first_args[0].span.start, kwd_start)
-            )
-        else:
-            first_args = []
-            first_command = self.create_command([], slice(kwd_start, kwd_start))
-
-        # create second command
-        kwd_stop = kwd_start + len(p[kwd_index])
-        if second_index is not None:
-            second_args: List[Spanned[CommandArg]] = p[second_index]
-            second_command = self.create_command(
-                second_args, slice(kwd_stop, second_args[-1].span.stop)
-            )
-        else:
-            second_args = []
-            second_command = self.create_command([], slice(kwd_stop, kwd_stop))
-
-        commands_list = [first_command, second_command]
-
-        kwd_span = slice(kwd_start, kwd_stop)
-        if p[kwd_index] in ("and", "or") and self.cursor_in_span(kwd_span):
-            # the cursor is in a space-separated multi keyword.
-            # even if the cursor's at the edge, the keyword should be considered as a normal arg,
-            # so let's trigger that flow:
-            first_command = first_command.replace(cursor_context=None)
-            second_command = second_command.replace(cursor_context=None)
-
-        # resolve cursor context
-        cursor_context = None
-        if first_command.cursor_context is not None:
-            cursor_context = first_command.cursor_context
-        elif second_command.cursor_context is not None:
-            cursor_context = second_command.cursor_context
-        elif self.cursor_in_span(kwd_span):
-            args = (
-                first_args + [Spanned(CommandArg(p[kwd_index]), kwd_span)] + second_args
-            )
-            span = slice(first_command.span.start, second_command.span.stop)
-            commands_list = [self.create_command(args, span)]
-            cursor_context = commands_list[0].cursor_context
-
-        commands: Commands = Spanned(
-            commands_list,
-            span=slice(first_command.span.start, second_command.span.stop),
-            cursor_context=cursor_context,
+    @staticmethod
+    def p_multiple_commands_first(p):
+        """commands : command"""
+        command: Spanned[CommandContext] = p[1]
+        p[0] = Spanned(
+            [command],
+            command.span,
+            cursor_context=command.cursor_context,
         )
-        p[0] = commands
 
     @with_docstr(
-        f"""commands : {RULES_SEP.join(f"commands {kwd} args" for kwd in multi_tokens)}
-        | {RULES_SEP.join(f"commands {kwd}" for kwd in multi_tokens)}"""
+        f"""commands : {RULES_SEP.join(f"commands {kwd} command" for kwd in multi_tokens)}"""
     )
     def p_multiple_commands_many(self, p):
-        if len(p) == 4:
-            # commands KWD args
-            kwd_index = 2
-            command_args: List[Spanned[CommandArg]] = p[3]
-        else:
-            # commands KWD
-            kwd_index = 2
-            command_args = []
-
+        # commands KWD command
         commands: Commands = p[1]
+        kwd_index = 2
+        command: Spanned[CommandContext] = p[3]
 
         # expand commands span
         kwd_start = p.lexpos(kwd_index)
-        commands = (
-            self.try_expand_span(commands, slice(commands.span.start, kwd_start))
-            or commands
-        )
+        commands = self.try_expand_right(commands, kwd_start) or commands
 
-        # create new command
+        # expand command
         kwd_stop = kwd_start + len(p[kwd_index])
-        if command_args:
-            new_command_span = slice(kwd_stop, command_args[-1].span.stop)
-        else:
-            new_command_span = slice(kwd_stop, kwd_stop)
-        new_command = self.create_command(command_args, new_command_span)
+        command = self.try_expand_left(command, kwd_stop) or command
 
-        commands.value.append(new_command)
+        commands.value.append(command)
+        expansion_obj = command
 
         kwd_span = slice(kwd_start, kwd_stop)
         if p[kwd_index] in ("and", "or") and self.cursor_in_span(kwd_span):
             # the cursor is in a space-separated multi keyword.
             # even if the cursor's at the edge, the keyword should be considered as a normal arg,
             # so let's trigger that flow:
-            new_command = new_command.replace(cursor_context=None)
+            command = command.replace(cursor_context=None)
             commands = commands.replace(cursor_context=None)
 
-        if new_command.cursor_context is not None:
-            commands = commands.replace(cursor_context=new_command.cursor_context)
+        if command.cursor_context is not None:
+            cursor_context = command.cursor_context
         elif commands.cursor_context is None and self.cursor_in_span(kwd_span):
             # the cursor is in the keyword.
             # join the last command with the new command and treat the keyword as a normal arg.
-            new_command = commands.value.pop()
-            last_command = commands.value.pop()
-            middle_command = self.create_command(
-                [Spanned(CommandArg(p[kwd_index]), kwd_span)], kwd_span
+            first_command, second_command = commands.value[-2:]
+
+            first_args = [Spanned(arg, EMPTY_SPAN) for arg in first_command.value.args]
+            if first_args:
+                # we need the first arg's span to start properly (see `create_command`)
+                first_span = slice(first_command.span.start, first_command.span.start)
+                first_args[0] = first_args[0].replace(span=first_span)
+
+            second_args = [
+                Spanned(arg, EMPTY_SPAN) for arg in second_command.value.args
+            ]
+            if second_args:
+                # same
+                if second_command.expansion_obj is not None:
+                    second_args[-1] = second_command.expansion_obj
+                else:
+                    last_span = slice(
+                        second_command.span.stop, second_command.span.stop
+                    )
+                    second_args[-1] = second_args[-1].replace(span=last_span)
+
+            args = (
+                first_args + [Spanned(CommandArg(p[kwd_index]), kwd_span)] + second_args
             )
-            joined_command = Spanned(
-                value=middle_command.value._replace(
-                    args=last_command.value.args
-                    + middle_command.value.args
-                    + new_command.value.args,
-                    arg_index=len(last_command.value.args)
-                    + middle_command.value.arg_index,
-                ),
-                span=slice(last_command.span.start, new_command.span.stop),
-            )
-            context = joined_command.value
-            joined_command.cursor_context = context
-            commands.value.append(joined_command)
-            commands = commands.replace(cursor_context=context)
+
+            joined_span = slice(first_command.span.start, second_command.span.stop)
+            assert joined_span.start != -1 and joined_span.stop != -1
+            joined_command = self.create_command(args, joined_span)
+            # replace the first and second commands with the joined command
+            commands.value.pop()
+            commands.value[-1] = joined_command
+
+            cursor_context = joined_command.value
+            expansion_obj = joined_command
+        else:
+            cursor_context = commands.cursor_context
+
+        commands = commands.replace(
+            span=slice(commands.span.start, expansion_obj.span.stop),
+            cursor_context=cursor_context,
+            expansion_obj=expansion_obj,
+        )
 
         p[0] = commands
 
@@ -605,6 +599,10 @@ class CompletionContextParser:
     """
     )
     def p_subcommand_multiple(self, p):
+        sub_expr_opening = p[1]
+        outer_start = p.lexpos(1)
+        inner_start = outer_start + len(sub_expr_opening)
+
         commands: Commands
         if len(p) == 4:
             # LPAREN commands RPAREN
@@ -615,17 +613,29 @@ class CompletionContextParser:
         else:
             # LPAREN commands
             commands = p[2]
-            inner_stop = outer_stop = commands.span.stop
+            if commands.span is EMPTY_SPAN:  # an empty command without a location
+                inner_stop = outer_stop = inner_start
+            else:
+                inner_stop = outer_stop = commands.span.stop
             closed_parens = False
 
-        sub_expr_opening = p[1]
-
-        outer_start = p.lexpos(1)
-        inner_start = outer_start + len(sub_expr_opening)
         inner_span = slice(inner_start, inner_stop)
         outer_span = slice(outer_start, outer_stop)
 
         commands = self.try_expand_span(commands, inner_span) or commands
+
+        if len(commands.value) == 1:
+            # if this is a single command, set it's subcmd_opening attribute
+            single_command = commands.value[0]
+            new_value: CommandContext = single_command.value._replace(
+                subcmd_opening=sub_expr_opening
+            )
+            if commands.cursor_context is single_command.value:
+                single_command = single_command.replace(cursor_context=new_value)
+                commands = commands.replace(cursor_context=new_value)
+
+            commands.value[0] = single_command.replace(value=new_value)
+
         if sub_expr_opening == "@(":
             # python sub-expression
             python_context = PythonContext(
@@ -654,10 +664,6 @@ class CompletionContextParser:
 
             p[0] = Spanned(python_context, outer_span, cursor_context, expansion_obj)
         else:
-            # the first command can't be expanded to the left
-            commands.value[0] = commands.value[0].replace(
-                expansion_obj=ExpansionOperation.NEVER_EXPAND
-            )
             p[0] = commands.replace(span=outer_span)
 
         if closed_parens:
@@ -798,6 +804,20 @@ class CompletionContextParser:
 
     # Utils:
 
+    def try_expand_right(self, obj: Exp, new_right: int) -> Optional[Exp]:
+        if obj.span is EMPTY_SPAN:
+            new_span = slice(new_right, new_right)
+        else:
+            new_span = slice(obj.span.start, new_right)
+        return self.try_expand_span(obj, new_span)
+
+    def try_expand_left(self, obj: Exp, new_left: int) -> Optional[Exp]:
+        if obj.span is EMPTY_SPAN:
+            new_span = slice(new_left, new_left)
+        else:
+            new_span = slice(new_left, obj.span.stop)
+        return self.try_expand_span(obj, new_span)
+
     def try_expand_span(self, obj: Exp, new_span: slice) -> Optional[Exp]:
         if obj.span.start <= new_span.start and new_span.stop <= obj.span.stop:
             # the new span doesn't expand the old one
@@ -842,9 +862,7 @@ class CompletionContextParser:
                     )
                     last_arg = cast(Spanned[CommandArg], command.expansion_obj)
 
-                    expanded_arg = self.try_expand_span(
-                        last_arg, slice(last_arg.span.start, new_span.stop)
-                    )
+                    expanded_arg = self.try_expand_right(last_arg, new_span.stop)
                     if expanded_arg is not None:
                         # arg was expanded successfully!
                         new_context, new_cursor_context = self.handle_command_arg(
@@ -875,27 +893,22 @@ class CompletionContextParser:
     def expand_commands_span(self, commands: Commands, new_span: slice) -> Commands:
         """Like expand_command_span, but for multiple commands - expands the first command and the last command."""
         cursor_context = commands.cursor_context
+        is_empty_command = commands.span is EMPTY_SPAN
 
-        if new_span.start < commands.span.start:
+        if is_empty_command or new_span.start < commands.span.start:
             # expand first command
             first_command: Spanned[CommandContext] = commands.value[0]
             commands.value[0] = first_command = (
-                self.try_expand_span(
-                    first_command, slice(new_span.start, first_command.span.stop)
-                )
-                or first_command
+                self.try_expand_left(first_command, new_span.start) or first_command
             )
             if first_command.cursor_context is not None:
                 cursor_context = first_command.cursor_context
 
-        if new_span.stop > commands.span.stop:
+        if is_empty_command or new_span.stop > commands.span.stop:
             # expand last command
             last_command: Spanned[CommandContext] = commands.value[-1]
             commands.value[-1] = last_command = (
-                self.try_expand_span(
-                    last_command, slice(last_command.span.start, new_span.stop)
-                )
-                or last_command
+                self.try_expand_right(last_command, new_span.stop) or last_command
             )
             if last_command.cursor_context is not None:
                 cursor_context = last_command.cursor_context
@@ -939,7 +952,7 @@ class CompletionContextParser:
             sub_expr = cast(ArgContext, arg.expansion_obj)
 
             # this arg is a subcommand or multiple subcommands, e.g. `$(a && b)`
-            expanded_obj = self.try_expand_span(sub_expr, new_span)  # type: ignore
+            expanded_obj: Optional[ArgContext] = self.try_expand_span(sub_expr, new_span)  # type: ignore
             if expanded_obj is None:
                 return None
             return self.sub_expression_arg(expanded_obj)
@@ -969,9 +982,7 @@ class CompletionContextParser:
             # the last command is expandable
             # if it were an `ExpansionOperation`, `try_expand` would caught it instead
             expandable = cast(ExpandableObject, python_context.expansion_obj)
-            expanded_command = self.try_expand_span(
-                expandable, slice(expandable.span.start, new_span.stop)
-            )  # type: ignore
+            expanded_command: Optional[ExpandableObject] = self.try_expand_right(expandable, new_span.stop)  # type: ignore
 
             if (
                 expanded_command is not None
