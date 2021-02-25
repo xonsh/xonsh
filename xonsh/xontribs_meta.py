@@ -352,7 +352,7 @@ def define_xontribs():
         "history_encrypt": Xontrib(
             url="https://github.com/anki-code/xontrib-history-encrypt",
             description="History backend that encrypt the xonsh shell commands history "
-                        "to prevent leaking sensitive data.",
+            "to prevent leaking sensitive data.",
             package=_XontribPkg(
                 name="xontrib-history-encrypt",
                 license="MIT",
