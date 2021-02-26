@@ -1,568 +1,628 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<head>
-	<!-- Required meta tags -->
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="icon" href="_static/magic_conch.ico" type="image/ico">
-    <title>The Xonsh Shell</title>
-	<!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="_static/landing/css/bootstrap.css">
-    <link rel="stylesheet" href="_static/landing/linericon/style.css">
-    <link rel="stylesheet" href="_static/landing/css/font-awesome.min.css">
-    <link rel="stylesheet" href="_static/landing/owl-carousel/owl.carousel.min.css">
-    <link rel="stylesheet" href="_static/landing/css/magnific-popup.css">
-    <link rel="stylesheet" href="_static/landing/nice-select/css/nice-select.css">
-    <link rel="stylesheet" href="_static/landing/animate-css/animate.css">
-    <link rel="stylesheet" href="_static/landing/flaticon/flaticon.css">
-	<!-- main css -->
-    <link rel="stylesheet" href="_static/landing/css/style.css">
+    <!-- This is SEO section. Don't change if you don't know how it will affect Google and other search engines. -->
+        <title>The Xonsh Shell — Python-powered shell</title>
+        <meta name="description" content="The xonsh shell is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.">
+        <meta name="keywords" content="xonsh, xonsh shell, python shell, terminal, console, bash alternative, zsh alternative, fish alternative, devops tools, hacking tools">
+        <meta property="og:site_name" content="Xonsh" />
+        <meta property="og:description" content="The xonsh shell is a Python-powered, cross-platform, Unix-gazing shell language and command prompt." />
+        <meta property="og:image" content="_static/landing2/images/xonsh-landing-preview.png" />
+        <meta property="og:title" content="The Xonsh Shell — Python-powered shell" />
+        <meta property="og:url" content="https://xon.sh" />
+        <meta property="og:type" content="object" />
+    <!-- The end of SEO section. -->
+
+    <link rel="shortcut icon" type="image/png" href="_static/landing2/images/conch_pixel-128.png">
+    <link rel="stylesheet" type="text/css" href="_static/landing2/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="_static/landing2/css/owl.css">
+    <link rel="stylesheet" type="text/css" href="_static/landing2/css/magnific-popup.css">
+    <link rel="stylesheet" type="text/css" href="_static/landing2/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="_static/landing2/css/animate.css">
+    <link rel="stylesheet" type="text/css" href="_static/landing2/css/style.css">
+    <link rel="stylesheet" type="text/css" href="_static/landing2/css/responsive.css">
+
+    <style>
+        .code {
+            background: #31363b;
+            color: white;
+            text-align: left;
+            font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        [unselectable-text] {
+          color: #3daee9;
+        }
+        [unselectable-text]::after {
+          content: attr(unselectable-text);
+        }
+    </style>
 </head>
 
 <body>
-
-	<!--================Header Menu Area =================-->
-	<header class="header_area">
-		<div class="main_menu">
-			<nav class="navbar navbar-expand-lg navbar-light">
-				<div class="container">
-					<!-- Brand and toggle get grouped for better mobile display -->
-                    <a class="navbar-brand logo_h" href="index.html"><img src="_static/ascii_conch_part_transparent_tight.png" alt="" style="height:50px;"></a>
-					<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-					 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<!-- Collect the nav links, forms, and other content for toggling -->
-					<div class="collapse navbar-collapse offset" id="navbarSupportedContent">
-						<ul class="nav navbar-nav menu_nav justify-content-center">
-                            <li class="nav-item active"><a class="nav-link" href="#">Home</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#gallery">Gallery</a>
-                            <!-- Submenu example
-							<li class="nav-item submenu dropdown">
-								<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-								 aria-expanded="false">Pages</a>
-								<ul class="dropdown-menu">
-									<li class="nav-item"><a class="nav-link" href="price.html">Pricing</a>
-									<li class="nav-item"><a class="nav-link" href="games.html">Games</a>
-									<li class="nav-item"><a class="nav-link" href="elements.html">Elements</a>
-								</ul>
-							</li>
-                            -->
-                            <li class="nav-item"><a class="nav-link" href="https://gitter.im/xonsh/xonsh">Contact</a></li>
-						</ul>
-						<ul class="nav navbar-nav navbar-right">
-                            <li class="nav-item"><a href="{{ pathto('contents') }}" class="primary_btn">Documentation</a></li>
-						</ul>
-					</div>
-				</div>
-			</nav>
-		</div>
-	</header>
-	<!--================Header Menu Area =================-->
-
-	<!--================Home Banner Area =================-->
-	<section class="home_banner_area">
-		<div class="banner_inner">
-			<div class="container">
-				<div class="row">
-					<div class="col-lg-6">
-						<div class="home_left_img">
-                            <img class="img-fluid" src="_static/xonsh-demo.gif" alt=""
-                               style="border-radius: 5px;border: 2px solid #212529;">
-						</div>
-					</div>
-					<div class="col-lg-6">
-						<div class="banner_content">
-							<h2>
-                                XONSH
-							</h2>
-                            <p>
-                                A Python-powered, cross-platform, Unix-gazing shell language and command prompt.
-                            </p>
-							<div class="d-flex align-items-center">
-                                <a id="play-home-video" class="video-play-button" href="https://youtu.be/uaje5I22kgE">
-									<span></span>
-								</a>
-								<div class="watch_video text-uppercase">
-									watch the video
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-	<!--================End Home Banner Area =================-->
-
-    <!--================Start About Us Area =================-->
-    <a name="about"></a>
-    <section class="about_us_area section_gap_top">
-        <div class="container">
-            <div class="row about_content align-items-center">
-                <div class="col-lg-6">
-                    <div class="section_content">
-                        <h6>About</h6>
-                        <h1>Xonsh is a Modern<br>Approach to the Terminal</h1>
-                        <p>Xonsh <i>is</i> Python with added shell syntax thrown in.
-                        This makes it an ideal, intuitive way to interact with your
-                        computer. You probably already know Python, and so xonsh allows
-                        you to run command line applications with out needing to learn
-                        a new, arcane syntax whenever you want to use a for-statement.
-                        </p>
-                        <p>Xonsh is open source software under the BSD-2-Clause license.</p>
-                        <a class="primary_btn" href="#">Learn More</a>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="about_us_image_box justify-content-center">
-                        <img class="img-fluid w-100" src="_static/windows_terminal2.png" alt="">
-                    </div>
+    <div class="preloader" style="display: none;">
+        <div class="d-table">
+            <div class="d-table-cell align-middle">
+                <div class="spinner">
+                    <div class="double-bounce1"></div>
+                    <div class="double-bounce2"></div>
                 </div>
             </div>
         </div>
-    </section>
-    <!--================End About Us Area =================-->
-
-    <!--================ Start Gallery Area =================-->
-    <a name="gallery"></a>
-    <section class="gallery_area">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="main_title">
-                        <h2>Screenshots</h2>
-                        <h1>Screenshots</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="row">
-                        <div class="col-lg-6 col-md-6 col-sm-6">
-                            <div class="single-gallery">
-                                <div class="overlay"></div>
-                                <img class="img-fluid w-100" src="_static/windows_terminal.png" alt="">
-                                <div class="content">
-                                    <a class="pop-up-image" href="_static/windows_terminal.png">
-                                        <i class="lnr lnr-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6">
-                            <div class="single-gallery">
-                                <div class="overlay"></div>
-                                <img class="img-fluid w-100" src="_static/better_colors_windows.png" alt="">
-                                <div class="content">
-                                    <a class="pop-up-image" href="_static/better_colors_windows.png">
-                                        <i class="lnr lnr-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-12">
-                            <div class="single-gallery">
-                                <div class="overlay"></div>
-                                <img class="img-fluid w-100" src="_static/xonsh-docker-example.jpg" alt="">
-                                <div class="content">
-                                    <a class="pop-up-image" href="_static/xonsh-docker-example.jpg">
-                                        <i class="lnr lnr-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 hidden-md hidden-sm">
-                    <div class="single-gallery">
-                        <div class="overlay"></div>
-                        <img class="img-fluid w-100" src="_static/listunison.png" alt="">
-                        <div class="content">
-                            <a class="pop-up-image" href="_static/listunison.png">
-                                <i class="lnr lnr-eye"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!--================ End Gallery Area =================-->
-
-
-	<!--================Start Recent Update Area =================-->
-	<section class="recent_update_area section_gap">
-		<div class="container">
-			<div class="recent_update_inner">
-				<ul class="nav nav-tabs" id="myTab" role="tablist">
-					<li class="nav-item">
-						<a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">
-                            Features
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile"
-						 aria-selected="false">
-                            Community
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact"
-						 aria-selected="false">
-                            Install
-						</a>
-					</li>
-				</ul>
-				<div class="tab-content" id="myTabContent">
-					<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-						<div class="row recent_update_text">
-							<div class="col-lg-6">
-                                <div class="chart_img" style="height:600px;">
-                                    <img class="img-fluid" src="_static/ascii_conch_part_transparent_tight.png" alt="">
-								</div>
-							</div>
-							<div class="col-lg-6">
-								<div class="section_content">
-                                    <h6>Features</h6>
-                                    <h1>Xonsh has Depth</h1>
-                                    <p>Xonsh is a super-charged shell that enables you to work
-                                    quickly and effectively! Some of the features that help set
-                                    xonsh apart are:
-                                    </p>
-                                    <ul style="color:white;">
-                                        <li>Import any Python package or module!</li>
-                                        <li>Environment variables are just Python objects!</li>
-                                        <li>Rich history interface!</li>
-                                        <li>A 3rd-party extension system (<code>xontribs</code>)!</li>
-                                        <li>Powerful event system let's you extend default behavior!</li>
-                                        <li>Seamlessly mix Python & Subprocess operations!</li>
-                                        <li>Loads of customization options, including keybindings!</li>
-                                    </ul>
-                                    <a class="primary_btn" href="{{ pathto('contents') }}">Documentation</a>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-						<div class="row recent_update_text">
-							<div class="col-lg-6">
-                                <div class="chart_img" style="height:600px;">
-                                    <img class="img-fluid" src="_static/ascii_conch_part_transparent_tight.png" alt="">
-								</div>
-							</div>
-							<div class="col-lg-6">
-								<div class="section_content">
-                                    <h6>Community</h6>
-                                    <h1>A Shell for All</h1>
-                                    <p>
-                                        We believe that the terminal should be accessible to all!
-                                        In addition to being a more approachable language than other
-                                        shells, xonsh also strives to be a welcoming and accepting
-                                        community of developers & users. Please drop us a line at:
-                                    </p>
-                                    <ul style="color:white;">
-                                        <li>The <a href="https://github.com/xonsh/xonsh/issues">GitHub issue</a> tracker</li>
-                                        <li>Our <a href="https://gitter.im/xonsh/xonsh">Gitter</a> chatroom</li>
-                                        <li>The <a href="https://groups.google.com/forum/#!forum/xonsh">mailing list</a>, if that is how you roll</li>
-                                    </ul>
-                                    <br/>
-                                    <br/>
-
-                                    <a class="primary_btn" href="https://gitter.im/xonsh/xonsh">Gitter</a>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-						<div class="row recent_update_text">
-							<div class="col-lg-6">
-                                <div class="chart_img" style="height:600px;">
-                                    <img class="img-fluid" src="_static/ascii_conch_part_transparent_tight.png" alt="">
-								</div>
-							</div>
-							<div class="col-lg-6">
-								<div class="section_content">
-                                    <h6>Install</h6>
-                                    <h1>Get Xonsh Now</h1>
-                                    <p>
-                                        Xonsh can be installed with most package managers, including:
-                                    </p>
-                                    <ul style="color:white;">
-                                        <li>Pip (<code>pip install xonsh</code>)</li>
-                                        <li>Conda (<code>conda install -c conda-forge xonsh</code>)</li>
-                                        <li>Apt (<code>apt install xonsh</code>)</li>
-                                        <li>Brew (<code>brew install xonsh</code>)</li>
-                                        <li>and more!</li>
-                                    </ul>
-                                    <p>
-                                        Xonsh can also be customized to meet your needs!
-                                    </p>
-                                    <a class="primary_btn" href="{{ pathto('installation') }}">More Information</a>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-	<!--================End Recent Update Area =================-->
-
-	<!--========== Start Testimonials Area ==================-->
-	<section class="testimonials_area section_gap">
-		<div class="container">
-			<div class="testi_slider owl-carousel">
-				<div class="testi_item">
-                    <h1><i class="fa fa-twitter"></i></i></h1>
-                    <h4><a href="https://twitter.com/gilforsyth">@gilforsyth</a></h4>
-					<ul class="list">
-                        <li><a href="#"><i class="fa fa-star"></i></a></li>
-                        <li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-					</ul>
-                    <div class="wow fadeIn" data-wow-duration="1s">
-                        <p>
-                            Holy cow it’s amazing. <br/>
-                            I’ve never been so happy to rewrite a .rc file.
-                        </p>
-					</div>
-				</div>
-				<div class="testi_item">
-                    <h1><i class="fa fa-twitter"></i></i></h1>
-                    <h4><a href="https://twitter.com/wbuthod">@wbuthod</a></h4>
-					<ul class="list">
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-					</ul>
-					<div class="wow fadeIn" data-wow-duration="1s">
-                        <p>
-                            I’ve tweeted about Xonsh before, and finally spent a day using
-                            it exclusively. I must have it on ALL PLATFORMS now.
-                        </p>
-					</div>
-				</div>
-				<div class="testi_item">
-                    <h1><i class="fa fa-twitter"></i></i></h1>
-                    <h4><a href="https://twitter.com/biochemistries">@biochemistries</a></h4>
-					<ul class="list">
-                        <li><a href="#"><i class="fa fa-star"></i></a></li>
-                        <li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-						<li><a href="#"><i class="fa fa-star"></i></a></li>
-					</ul>
-					<div class="wow fadeIn" data-wow-duration="1s">
-                        <p>
-                            The dark wizardry of <a href="https://twitter.com/scopatz">@scopatz</a> :-) <br/>
-                            Check out <a href="https://xon.sh">xon.sh</a>
-                        </p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-	<!--================ End Testimonials Area ================-->
-
-    <div>
-        <hr style="width:65%;text-align:center;"/>
-        <br/>
-        <br/>
-        <br/>
     </div>
 
-	<!--================ Start Frequently Asked Questions Area ================-->
-	<section class="frequently_area">
-		<div class="container">
+    <header id="header" class="">
+        <div class="container">
+            <nav class="navbar navbar-light navbar-expand-lg justify-content-center">
+                <a class="logo" href="https://xon.sh"><img src="_static/landing2/images/logo.png" alt="logo"></a>
+                <button class="navbar-toggler ml-1" type="button" data-toggle="collapse" data-target="#NavbarContent">
+                    <span class="icofont-navigation-menu"></span>
+                </button>
+                <div class="navbar-collapse collapse justify-content-between align-items-center w-100" id="NavbarContent">
+                    <ul class="navbar-nav mx-auto text-center">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-scroll-nav="0">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-scroll-nav="1">What is Xonsh?</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-scroll-nav="2">Features</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-scroll-nav="3">Install</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-scroll-nav="4">Xontribs</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-scroll-nav="5">News</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://xon.sh/contents.html" target="_blank">Documentation</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://github.com/xonsh/xonsh" target="_blank">Github</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <section id="home-area" data-scroll-index="0" style="background-image: url(_static/landing2/images/banner-1.png)">
+        <div class="container">
             <div class="row">
-                <div class="col-lg-12">
-                    <div class="main_title">
-                        <h2>Frequently Asked Questions</h2>
-                        <h1>Frequently Asked Questions</h1>
+                <div class="col-lg-6 col-md-5">
+                    <div class="caption-img text-center d-table">
+                        <div class="d-table-cell align-middle">
+                            <img src="_static/landing2/images/conch_ascii.png" class="img-fluid" alt="" width="260px">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-7">
+                    <div class="caption d-table">
+                        <div class="d-table-cell align-middle" >
+                            <h2 style="color:white;"><b>XONSH</b> is a Python-powered shell</h2>
+                            <br>
+                            <p style="font-size: 20px; font-weight: 1;">Xonsh is a Python-powered, cross-platform, Unix-gazing shell language and command prompt. The language is a superset of Python 3.5+ with additional shell primitives that you are used to from Bash and IPython.
+                                It works on all major systems including Linux, OSX, and Windows. Xonsh is meant for the daily use of experts and novices.</p>
+                            <a href="#" data-scroll-nav="3"><i class="icofont-download"></i> Install</a>
+                            <a href="https://xon.sh/contents.html" target="_blank"><i class="icofont-ui-note"></i> Documentation</a>
+                            <a href="https://github.com/xonsh/xonsh" target="_blank"><i class="icofont-github"></i> Github</a>
+                        </div>
                     </div>
                 </div>
             </div>
-			<div class="row frequent_inner">
-				<div class="col-lg-5 col-md-5">
-					<div class="frequent_item">
-                        <h3>Why xonsh?</h3>
-                        <p>
-                            Xonsh solves the problem that other shells don’t “fit your brain.”
-                            A shell that doesn’t fit your brain can only be a liability.
-                        </p>
-                        <br/>
-                        <br/>
-					</div>
-				</div>
-				<div class="offset-lg-2 col-lg-5 offset-md-2 col-md-5">
-					<div class="frequent_item">
-                        <h3>Why not some other fancy shell?</h3>
-                        <p>
-                            While many other alternative shells have an amazing
-                            suite of features as well as much improved syntax of
-                            traditional options, none of them are quite as beautiful
-                            as Python. In xonsh, you get the best of all possible worlds.
-                        </p>
-					</div>
-				</div>
-				<div class="col-lg-5 col-md-5">
-					<div class="frequent_item">
-                        <h3>Why not IPython?</h3>
-                        <p>
-                            Two reasons. The first is that typing "!" before every
-                            subprocess command is extremely tedious. The second is that tab
-                            completion of subprocess commands after an "!" does not work.
-                            These are deal breakers for day-to-day use.
-                        </p>
-					</div>
-				</div>
-				<div class="offset-lg-2 col-lg-5 offset-md-2 col-md-5">
-					<div class="frequent_item">
-                        <h3>How does this work?!</h3>
-                        <p>
-                            We use PLY to tokenize and parse xonsh code. From our
-                            parser, we construct an abstract syntax tree (AST) only
-                            using nodes found in the Python ast standard library module.
-                            This allows us to compile and execute the AST using the normal
-                            Python tools.
-                        </p>
-					</div>
-				</div>
-				<div class="col-lg-5 col-md-5">
-					<div class="frequent_item last-child">
-                        <h3>Isn't context-sensitive parsing gross?</h3>
-                        <p>
-                            Yes. But the point of xonsh is that even though it uses
-                            context-sensitive parsing it is ultimately a lot less gross
-                            than other shell languages, such as Bash.
-                        </p>
-					</div>
-				</div>
-				<div class="offset-lg-2 col-lg-5 offset-md-2 col-md-5">
-					<div class="frequent_item last-child">
-                        <h3>Is xonsh open source?</h3>
-                        <p>
-                            Yes! Xonsh is freely usable and accessible under the
-                            <a href="https://github.com/xonsh/xonsh/blob/master/license">BSD-2-Clause license</a>.
-                        </p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-	<!--================ End Frequently Asked Questions Area ================-->
+        </div>
+    </section>
 
-    <br/>
-    <br/>
+    <section id="about-area" data-scroll-index="1">
+        <div class="container text-center section-heading">
+            <h2>What is Xonsh?</h2>
+            <p>The xonsh shell has powerful language that used both for programming on Python and shell commands execution.</p>
+        </div>
 
-	<!--================ Start Newsletter Area ================-->
-	<section class="newsletter_area">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-6 col-md-6 col-sm-12">
-                    <div class="newsletter_inner">
-                        <h1>Read Our <a href="{{ pathto('contents') }}">Documentation</a></h1>
-                        <p>We think it is pretty great!</p>
+        <div class="container" style="margin-top: 30px">
+            <div class="row">
+                <div class="col-lg-6 col-md-7">
+                    <div class="about-content">
+                        <h3>Xonsh is the Shell</h3>
+                        <p>The xonsh language has additional shell primitives that you are used to from Bash. <a href="https://xon.sh/tutorial.html" target="_blank">Read more →</a></p>
                     </div>
-				</div>
-				<div class="col-lg-6 col-md-6 col-sm-12">
-                    <div class="newsletter_inner">
-                        <h1>Chat With Us on <a href="https://gitter.im/xonsh/xonsh">Gitter</a></h1>
-                        <p>We are happy to help!</p>
-                    </div>
-				</div>
-			</div>
-		</div>
-	</section>
-	<!--================ End Newsletter Area ================-->
+                </div>
 
-	<!--================Footer Area =================-->
-	<footer class="footer_area section_gap_top">
-		<div class="container">
-			<div class="row footer_inner">
-				<div class="col-lg-3 col-sm-6">
-					<aside class="f_widget ab_widget">
-						<div class="f_title">
-                            <h4>About</h4>
-						</div>
-						<ul>
-                            <li><a href="https://xon.sh/">Website</a></li>
-                            <li><a href="https://github.com/xonsh/xonsh">Source Code</a></li>
-						</ul>
-					</aside>
-				</div>
-				<div class="col-lg-3 col-sm-6">
-					<aside class="f_widget ab_widget">
-						<div class="f_title">
+                <div class="col-lg-6 col-md-5">
+                    <div class="text-center">
+
+                        <pre class="code">
+<span unselectable-text="$ "></span><b>cd</b> /home
+
+<span unselectable-text="$ "></span><b>cat</b> /etc/passwd | <b>grep</b> root
+
+<span unselectable-text="$ "></span><b>ls</b> -la</pre>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container" style="margin-top: 30px">
+            <div class="row">
+
+                <div class="col-lg-6 col-md-7">
+                    <div class="about-content">
+                        <h3>Xonsh is Python</h3>
+
+                        <p>The xonsh language is a superset of Python 3.5+ and you can run Python code and import modules. <a href="https://xon.sh/tutorial.html" target="_blank">Read more →</a></p>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-5">
+                    <div class="text-center">
+
+                        <pre class="code">
+<span unselectable-text="$ "></span>2 + 2
+
+<span unselectable-text="$ "></span><b>import</b> json
+<span unselectable-text="  "></span>j = json.loads(<span style="color: lightblue;">'{"Hello": "world!", "Answer": 42}'</span>)
+<span unselectable-text="  "></span><b>print</b>(j[<span style="color: lightblue;">'Answer'</span>])</pre>
+
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+        <div class="container" style="margin-top: 30px">
+            <div class="row">
+                <div class="col-lg-6 col-md-7">
+                    <div class="about-content">
+                        <h3>Xonsh is the Shell in Python</h3>
+
+                        <p>With xonsh language you can write python code combining with the shell commands. <a href="https://xon.sh/tutorial.html" target="_blank">Read more →</a></p>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-5">
+                    <div class="text-center">
+
+                        <pre class="code">
+<span unselectable-text="$ "></span><b>len</b>(<span style="color: lightgreen">$(curl -L https://xon.sh)</span>)
+
+<span unselectable-text="$ "></span><b>for</b> filename <b>in</b> <span style="color: yellow">`.*`</span>:
+<span unselectable-text="  "></span>    <b>print</b>(filename)
+<span unselectable-text="  "></span>    <b>du</b> -sh <span style="color: lightsalmon">@(filename)</span></pre>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="container" style="margin-top: 30px">
+            <div class="row">
+
+
+                <div class="col-lg-6 col-md-7">
+                    <div class="about-content">
+                        <h3>Xonsh is Python in the Shell</h3>
+
+                        <p>Prepare environment variables and arguments in Python and use it in the shell commands. <a href="https://xon.sh/tutorial.html" target="_blank">Read more →</a></p>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-5">
+                    <div class="text-center">
+
+                        <pre class="code">
+<span unselectable-text="$ "></span>var = <span style="color: lightblue;">'he'</span> + <span style="color: lightblue;">'llo'</span>
+
+<span unselectable-text="$ "></span><b>echo</b> <span style="color: lightsalmon">@(var)</span> > /tmp/<span style="color: lightsalmon">@(var)</span>
+
+<span unselectable-text="$ "></span><b>echo</b> <span style="color: lightsalmon">@(i for i in range(42))</span></pre>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="features-area" data-scroll-index="2">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
+                    <div class="section-heading text-center">
+                        <h2>Xonsh Features</h2>
+                        <p>Xonsh is a super-charged shell that enables you to work quickly and effectively! Some of the features that help set xonsh apart are:</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="features-single">
+                        <div class="icon">
+                            <i class="icofont-terminal"></i>
+                        </div>
+                        <div class="content">
+                            <h4>Combine shell commands with Python or vice versa.</h4>
+                            <p>The language is a superset of Python 3.5+ with additional shell primitives that you are used to from Bash and IPython.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="features-single">
+                        <div class="icon">
+                            <i class="icofont-light-bulb"></i>
+                        </div>
+                        <div class="content">
+                            <h4>Xontribs - the 3rd-party extension system.</h4>
+                            <p>Xontributions, or xontribs, are a set of tools and conventions for extending the functionality of xonsh beyond what is provided by default.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="features-single">
+                        <div class="icon">
+                            <i class="icofont-history"></i>
+                        </div>
+                        <div class="content">
+                            <h4>Rich interface to discover history</h4>
+                            <p>The xonsh shell implements a collection of history files that have rich structure and API for discover them.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="features-single">
+                        <div class="icon">
+                            <i class="icofont-fix-tools"></i>
+                        </div>
+                        <div class="content">
+                            <h4>Powerful prompt customisation</h4>
+                            <p>Customisable tab completion, key bindings, color styles are on board by default.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="faq-area" data-scroll-index="3">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
+                    <div class="section-heading text-center">
+                        <h2>Install Xonsh</h2>
+                        <p>Xonsh can be installed and run with various package managers, by using appimage, or from a docker container.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2 col-md-10 offset-md-1">
+                    <div id="accordion" role="tablist">
+                        <div class="card">
+                            <div class="card-header active" role="tab" id="faq1">
+                                <h5 class="mb-0">
+                                    <a data-toggle="collapse" href="#collapse1" aria-expanded="true" aria-controls="collapse1">PyPi package</a>
+                                </h5>
+                            </div>
+                            <div id="collapse1" class="collapse show" role="tabpanel" aria-labelledby="faq1" data-parent="#accordion">
+                                <div class="card-body">
+                                    <p>Install:</p>
+                                    <pre class="code">pip install xonsh</pre>
+                                    <a href="https://xon.sh/packages.html">Learn more →</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" role="tab" id="faq2">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapse2" aria-expanded="false" aria-controls="collapse2">Conda package</a>
+                                </h5>
+                            </div>
+                            <div id="collapse2" class="collapse" role="tabpanel" aria-labelledby="faq2" data-parent="#accordion">
+                                <div class="card-body">
+                                    <p>Install:</p>
+                                    <pre class="code">
+conda config --add channels conda-forge
+conda install xonsh</pre>
+
+<a href="https://xon.sh/packages.html">Learn more →</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" role="tab" id="faq3">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapse3" aria-expanded="false" aria-controls="collapse3">Portable Linux AppImage</a>
+                                </h5>
+                            </div>
+                            <div id="collapse3" class="collapse" role="tabpanel" aria-labelledby="faq3" data-parent="#accordion">
+                                <div class="card-body">
+                                    <p>
+                                        <a href="https://appimage.org/">AppImage</a> is a format for distributing portable software on Linux without needing superuser permissions to install the application.
+                                        The xonsh AppImage file contains both xonsh and Python and allows xonsh to be run on any AppImage-supported Linux distribution without installation or root access.
+                                    </p>
+                                    <p>
+                                    Download and run:
+                                    </p>
+                                    <pre class="code">
+wget https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage
+chmod +x xonsh-x86_64.AppImage
+./xonsh-x86_64.AppImage</pre>
+
+                                    <a href="https://xon.sh/appimage.html" target="_blank">Learn more →</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" role="tab" id="faq4">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapse4" aria-expanded="false" aria-controls="collapse4">Docker container</a>
+                                </h5>
+                            </div>
+                            <div id="collapse4" class="collapse" role="tabpanel" aria-labelledby="faq4" data-parent="#accordion">
+                                <div class="card-body">
+                                    <p>
+                                        Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. All of them are published on <a href="https://hub.docker.com/u/xonsh">Docker Hub</a>.
+                                    </p>
+                                    <p>
+                                    Run the xonsh shell in the small size docker container:
+                                    </p>
+                                    <pre class="code">docker run -it --rm xonsh/xonsh:slim</pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" role="tab" id="faq4">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapse5" aria-expanded="false" aria-controls="collapse5">Platform package managers: brew, apt, pacman, dnf</a>
+                                </h5>
+                            </div>
+                            <div id="collapse5" class="collapse" role="tabpanel" aria-labelledby="faq5" data-parent="#accordion">
+                                <div class="card-body">
+                                    <p>OSX brew:</p><pre class="code">brew install xonsh</pre>
+                                    <p>Debian/Ubuntu apt:</p><pre class="code">apt install xonsh</pre>
+                                    <p>Arch Linux pacman:</p><pre class="code">pacman -S xonsh</pre>
+                                    <p>Fedore dnf:</p><pre class="code">dnf install xonsh</pre>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center">
+                <p style="margin-top: 30px;">
+                    <a href="https://xon.sh/contents.html#installation" target="_blank"> <i class="icofont-ui-note"></i> More installation methods →</a>
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="product-area" data-scroll-index="4">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
+                    <div class="section-heading text-center">
+                        <h2>Xontribs</h2>
+                        <p>Xontributions, or xontribs, are a set of tools and conventions for extending the functionality of xonsh beyond what is provided by default. </p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="product-single text-center">
+                        <div class="prod-details">
+                            <p>
+                            <a href="https://github.com/anki-code/xontrib-pipeliner" target="_blank">pipeliner</a>
+                            </p>
+                            <p>Let your pipe lines from the standard output flow thru the Python code in the xonsh shell. </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="product-single text-center">
+                        <div class="prod-details">
+                            <p>
+                            <a href="https://github.com/anki-code/xontrib-output-search" target="_blank">output-search</a>
+                            </p>
+                            <p>Get identifiers, paths, URLs and words from the previous command output and use them for the next command in the xonsh shell. </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="product-single text-center">
+                        <div class="prod-details">
+                            <p>
+                            <a href="https://github.com/anki-code/xontrib-back2dir" target="_blank">back2dir</a>
+                            </p>
+                            <p>Return to the most recently used directory when starting the xonsh shell.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="product-single text-center">
+                        <div class="prod-details">
+                            <p>
+                            <a href="https://github.com/anki-code/xontrib-argcomplete" target="_blank">argcomplete</a>
+                            </p>
+                            <p>Argcomplete support to tab completion of python and xonsh scripts in the xonsh shell. </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-12">
+                    <div class="load-more-btn text-center">
+                        <a href="https://github.com/topics/xontrib" target="_blank"><i class="icofont-download"></i> More xontribs →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="blog-area" data-scroll-index="5">
+        <div class="container">
+            <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
+                <div class="section-heading text-center">
+                    <h2>Xonsh News</h2>
+                    <p>Most interesting publications around xonsh.</p>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-4">
+                    <div class="blog-single">
+                        <a href="https://analyticsindiamag.com/top-10-trending-python-projects-on-github-2020/" target="_blank"><img src="_static/landing2/images/blog-1.jpg" class="img-fluid" alt=""></a>
+                        <div class="post-content">
+                            <a href="">25 Aug, 2020</a>
+                            <h3 class="m-0"><a href="https://analyticsindiamag.com/top-10-trending-python-projects-on-github-2020/" target="_blank">Xonsh in TOP10 trending projects</a></h3>
+                            <p>New XEP-2 is waiting for review. </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="blog-single">
+                        <a href="https://www.youtube.com/watch?v=ujo9sbqHFqw" target="_blank"><img src="_static/landing2/images/blog-3.jpg" class="img-fluid" alt=""></a>
+                        <div class="post-content">
+                            <a href="">11 Jul, 2019</a>
+                            <h3 class="m-0"><a href="https://www.youtube.com/watch?v=ujo9sbqHFqw" target="_blank">Xonsh on Scipy 2019 conference</a></h3>
+                            <p>A. Scopatz and G. Forsyth gave a two hour presentation of xonsh.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="blog-single">
+                        <a href="https://www.youtube.com/watch?v=uaje5I22kgE" target="_blank"><img src="_static/landing2/images/blog-2.jpg" class="img-fluid" alt=""></a>
+                        <div class="post-content">
+                            </small><a href="">01 Jun, 2016</a>
+                            <h3 class="m-0"><a href="https://www.youtube.com/watch?v=uaje5I22kgE" target="_blank">Xonsh on PyCon 2016 </a></h3>
+                            <p>The first big presentation of Xonsh from Anthony Scopatz!</p>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </section>
+
+    <section id="contact-area">
+        <div class="container">
+        </div>
+    </section>
+    <footer id="footer">
+        <div class="container">
+            <div class="container text-white" >
+                <div class="row footer_inner ">
+                    <div class="col-lg-3 col-sm-6 ">
+                            <div class="f_title">
+                                <h4>Xonsh</h4>
+                            </div>
+                        <p>
+                            <a href="https://xon.sh/">Website</a>
+                        </p>
+                        <p>
+                            <a href="https://xon.sh/contents.html">Documentation</a></li>
+                        </p>
+                        <p>
+                            <a href="https://github.com/xonsh/xonsh/releases">Releases</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/xonsh/xonsh">Source Code</a>
+                        </p>
+                        <p>
+                            <a href="https://hub.docker.com/u/xonsh">Docker Hub</a>
+                        </p>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="f_title">
                             <h4>Community</h4>
-						</div>
-						<ul>
-                            <li><a href="https://gitter.im/xonsh/xonsh">Gitter</a></li>
-						</ul>
-					</aside>
-				</div>
-				<div class="col-lg-3 col-sm-6">
-					<aside class="f_widget ab_widget">
-						<div class="f_title">
-							<h4>Support</h4>
-						</div>
-						<ul>
-                            <li><a href="https://github.com/xonsh/xonsh/issues">Issue Tracker</a></li>
-                            <li><a href="{{ pathto('contents') }}">Documentation</a></li>
-						</ul>
-					</aside>
-				</div>
-				<div class="col-lg-3 col-sm-6">
-					<aside class="f_widget ab_widget">
-						<div class="f_title">
-							<h4>Legal</h4>
-						</div>
-						<ul>
-                            <li><a href="https://github.com/xonsh/xonsh/blob/master/license">License</a></li>
-						</ul>
-					</aside>
-				</div>
-			</div>
-			<div class="row single-footer-widget">
-				<div class="col-lg-6 col-md-6 col-sm-12">
-					<div class="copy_right_text">
-						<p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-Copyright &copy;2020 All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></p>
-					</div>
-				</div>
-				<div class="col-lg-6 col-md-6 col-sm-12">
-					<div class="social_widget">
-                        <a href="https://github.com/xonsh/xonsh"><i class="fa fa-github"></i></a>
-                        <a href="https://gitter.im/xonsh/xonsh"><i class="fa fa-comments"></i></a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</footer>
-	<!--================End Footer Area =================-->
+                        </div>
+                        <p>
+                            <a href="https://github.com/xonsh/xonsh/issues">Issue Tracker</a>
+                        </p>
+                        <p>
+                            <a href="https://gitter.im/xonsh/xonsh">Gitter chat</a>
+                        </p>
+                        <p>
+                            <a href="https://groups.google.com/forum/#!forum/xonsh">Mailing list</a>
+                        </p>
+                        <p>
+                            <a href="http://www.oftc.net/">IRC #xonsh</a>
+                        </p>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="f_title">
+                            <h4>Xontribs</h4>
+                        </div>
+                        <p>
+                            <a href="https://xon.sh/xontribs.html">List of xontribs</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/topics/xontrib">Github: xontrib topic</a>
+                        </p>
+                        <p>
+                            <a href="https://xon.sh/tutorial_xontrib.html">Xontrib tutorial</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/xonsh/xontrib-cookiecutter">Cookiecutter template</a>
+                        </p>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="f_title">
+                            <h4>Open Source</h4>
+                        </div>
+                        <p>
+                            <a href="https://github.com/xonsh/xonsh/blob/master/license" target="_blank">License</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/xonsh/xonsh" target="_blank">Github</a>
+                        </p>
+                        <p>
+                            <a href="https://xon.sh/devguide.html" target="_blank">Developer’s Guide</a>
+                        </p>
+                    </div>
+                </div>
 
-	<!-- Optional JavaScript -->
-	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="_static/jquery.js"></script>
-    <script src="_static/landing/js/popper.js"></script>
-    <script src="_static/landing/js/bootstrap.min.js"></script>
-    <script src="_static/landing/js/stellar.js"></script>
-    <script src="_static/landing/js/jquery.magnific-popup.min.js"></script>
-    <script src="_static/landing/nice-select/js/jquery.nice-select.min.js"></script>
-    <script src="_static/landing/isotope/imagesloaded.pkgd.min.js"></script>
-    <script src="_static/landing/isotope/isotope-min.js"></script>
-    <script src="_static/landing/owl-carousel/owl.carousel.min.js"></script>
-    <script src="_static/landing/js/theme.js"></script>
-</body>
+            </div>
 
-</html>
+        </div>
+
+    </footer>
+
+    <script src="_static/landing2/js/jquery-3.js"></script>
+    <script src="_static/landing2/js/popper.js"></script>
+    <script src="_static/landing2/js/bootstrap.js"></script>
+    <script src="_static/landing2/js/magnific-popup.js"></script>
+    <script src="_static/landing2/js/owl.js"></script>
+    <script src="_static/landing2/js/scrollIt.js"></script>
+    <script src="_static/landing2/js/validator.js"></script>
+    <script src="_static/landing2/js/contact.js"></script>
+    <script src="_static/landing2/js/custom.js"></script>
+</body></html>
