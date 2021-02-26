@@ -254,7 +254,8 @@ class SqliteHistory(History):
 
         if not os.path.exists(self.filename):
             with _xh_sqlite_get_conn(filename=self.filename) as conn:
-                pass
+                if conn:
+                    pass
             try:
                 os.chmod(self.filename, 0o600)
             except Exception:  # pylint: disable=broad-except
