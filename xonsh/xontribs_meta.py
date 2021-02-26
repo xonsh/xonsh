@@ -349,6 +349,17 @@ def define_xontribs():
                 url="https://github.com/dyuri/xontrib-gitinfo",
             ),
         ),
+        "history_encrypt": Xontrib(
+            url="https://github.com/anki-code/xontrib-history-encrypt",
+            description="History backend that encrypt the xonsh shell commands history "
+            "to prevent leaking sensitive data.",
+            package=_XontribPkg(
+                name="xontrib-history-encrypt",
+                license="MIT",
+                install={"pip": "xpip install xontrib-history-encrypt"},
+                url="https://github.com/anki-code/xontrib-history-encrypt",
+            ),
+        ),
         "hist_navigator": Xontrib(
             url="https://github.com/jnoortheen/xontrib-hist-navigator",
             description="Move through directory history with nextd "
