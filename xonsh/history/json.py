@@ -391,10 +391,17 @@ class JsonHistory(History):
         self._skipped = 0
         self.last_cmd_out = None
         self.last_cmd_rtn = None
+
         meta["cmds"] = []
         meta["sessionid"] = str(self.sessionid)
         with open(self.filename, "w", newline="\n") as f:
             xlj.ljdump(meta, f, sort_keys=True)
+
+        try:
+            os.chmod(self.filename, 0o600)
+        except Exception:  # pylint: disable=broad-except
+            pass
+
         self.gc = JsonHistoryGC() if gc else None
         # command fields that are known
         self.tss = JsonCommandField("ts", self)

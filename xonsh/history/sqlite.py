@@ -252,6 +252,14 @@ class SqliteHistory(History):
         self.outs = []
         self.tss = []
 
+        if not os.path.exists(self.filename):
+            with _xh_sqlite_get_conn(filename=self.filename) as conn:
+                pass
+            try:
+                os.chmod(self.filename, 0o600)
+            except Exception:  # pylint: disable=broad-except
+                pass
+
         # during init rerun create command
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
 
