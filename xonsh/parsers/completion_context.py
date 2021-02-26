@@ -328,6 +328,7 @@ class CompletionContextParser:
         * make ``lexpos`` absolute instead of per line.
         * set tokens that aren't in ``used_tokens`` to type ``ANY``.
         * handle a weird lexer behavior with ``AND``/``OR``.
+        * set multi_tokens with cursor to type ``ANY``.
         * set mismatched closing parens to type ``ANY``.
 
         The paren checking is needed since accepting both matched and unmatched parenthesis isn't possible with an LALR(1) parser.
@@ -349,11 +350,28 @@ class CompletionContextParser:
 
             tok.lexpos = lexpos = self.line_indices[lineno] + tok.lexpos
 
-            # for some reason the lexer simulates ``and`` / ``or`` values for ``&&` / ``||``
-            if tok.type == "AND" and self.current_input[lexpos : lexpos + 2] == "&&":
-                tok.value = "&&"
-            elif tok.type == "OR" and self.current_input[lexpos : lexpos + 2] == "||":
-                tok.value = "||"
+            if tok.type in self.multi_tokens:
+                # for some reason the lexer simulates ``and`` / ``or`` values for ``&&` / ``||``
+                if (
+                    tok.type == "AND"
+                    and self.current_input[lexpos : lexpos + 2] == "&&"
+                ):
+                    tok.value = "&&"
+                elif (
+                    tok.type == "OR" and self.current_input[lexpos : lexpos + 2] == "||"
+                ):
+                    tok.value = "||"
+
+                # if the cursor is inside this token, set it to type ``ANY``
+                outer_span = slice(lexpos, lexpos + len(tok.value))
+                inner_span = slice(outer_span.start + 1, outer_span.stop - 1)
+                if self.cursor_in_span(inner_span) or (
+                    # the cursor is in a space-separated multi keyword.
+                    # even if the cursor's at the edge, the keyword should be considered as a normal arg
+                    tok.value in ("and", "or")
+                    and self.cursor_in_span(outer_span)
+                ):
+                    tok.type = "ANY"
 
             # parentheses handling
             elif tok.type in self.l_to_r_parens:
@@ -460,53 +478,8 @@ class CompletionContextParser:
         commands.value.append(command)
         expansion_obj = command
 
-        kwd_span = slice(kwd_start, kwd_stop)
-        if p[kwd_index] in ("and", "or") and self.cursor_in_span(kwd_span):
-            # the cursor is in a space-separated multi keyword.
-            # even if the cursor's at the edge, the keyword should be considered as a normal arg,
-            # so let's trigger that flow:
-            command = command.replace(cursor_context=None)
-            commands = commands.replace(cursor_context=None)
-
         if command.cursor_context is not None:
             cursor_context = command.cursor_context
-        elif commands.cursor_context is None and self.cursor_in_span(kwd_span):
-            # the cursor is in the keyword.
-            # join the last command with the new command and treat the keyword as a normal arg.
-            first_command, second_command = commands.value[-2:]
-
-            first_args = [Spanned(arg, EMPTY_SPAN) for arg in first_command.value.args]
-            if first_args:
-                # we need the first arg's span to start properly (see `create_command`)
-                first_span = slice(first_command.span.start, first_command.span.start)
-                first_args[0] = first_args[0].replace(span=first_span)
-
-            second_args = [
-                Spanned(arg, EMPTY_SPAN) for arg in second_command.value.args
-            ]
-            if second_args:
-                # same
-                if second_command.expansion_obj is not None:
-                    second_args[-1] = second_command.expansion_obj
-                else:
-                    last_span = slice(
-                        second_command.span.stop, second_command.span.stop
-                    )
-                    second_args[-1] = second_args[-1].replace(span=last_span)
-
-            args = (
-                first_args + [Spanned(CommandArg(p[kwd_index]), kwd_span)] + second_args
-            )
-
-            joined_span = slice(first_command.span.start, second_command.span.stop)
-            assert joined_span.start != -1 and joined_span.stop != -1
-            joined_command = self.create_command(args, joined_span)
-            # replace the first and second commands with the joined command
-            commands.value.pop()
-            commands.value[-1] = joined_command
-
-            cursor_context = joined_command.value
-            expansion_obj = joined_command
         else:
             cursor_context = commands.cursor_context
 
