@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* History files (json, sqlite) now have 600 (rw only for user) permission by default.
 
 **Deprecated:**
 
@@ -20,4 +20,4 @@
 
 **Security:**
 
-* History files (json, sqlite) now have ``chmod 600`` (rw only for user) permission by default.
+* <news item>
