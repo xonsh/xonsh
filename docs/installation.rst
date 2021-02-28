@@ -15,10 +15,3 @@ Xonsh can be installed and run with various package managers, by using appimage,
     appimage
     containers
     jupyter
-
-
-.. note::
-
-   On Windows 10, the separately-installable `Windows Terminal app`_ is recommended.
-
-.. _`Windows Terminal app`: https://github.com/microsoft/terminal/releases
