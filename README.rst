@@ -8,7 +8,7 @@ xonsh
     The language is a superset of Python 3.6+ with additional shell primitives.
     xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
 
-    .. image:: https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/xonsh4.png
+    .. image:: https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/xonsh5.png
             :alt: What is xonsh?
             :align: center
 
