@@ -47,7 +47,7 @@ Visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
-- `Xontribs <https://xon.sh/xontribs.html>`_ - list of awesome xonsh extensions.
+- `Xontribs <https://xon.sh/xontribs.html>`_ or `Github Xontribs <https://github.com/topics/xontrib>`_ - list of awesome xonsh extensions.
 
 Projects that use xonsh
 ***********************

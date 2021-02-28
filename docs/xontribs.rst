@@ -12,3 +12,5 @@ command line using the ``xontrib`` command:
 .. See the xontrib tutorial for more information.
 
 .. include:: xontribsbody
+
+More xontribs you can find on `Github <https://github.com/topics/xontrib>`_.
