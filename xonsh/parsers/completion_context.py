@@ -53,6 +53,10 @@ class CommandContext(NamedTuple):
     # if this command is inside a subproc expression
     subcmd_opening: str = ""  # e.g. "$(", "![", etc
 
+    def completing_command(self, command: str) -> bool:
+        """Return whether this context is completing args for a command"""
+        return self.arg_index > 0 and self.args[0].value == command
+
 
 class PythonContext(NamedTuple):
     multiline_code: str

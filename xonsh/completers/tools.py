@@ -156,3 +156,20 @@ def contextual_command_completer(func: tp.Callable[[CommandContext], CompleterRe
         return None
 
     return _completer
+
+
+def contextual_command_completer_for(cmd: str):
+    """like ``contextual_command_completer``,
+    but will only run when completing the ``cmd`` command"""
+
+    def decor(func: tp.Callable[[CommandContext], CompleterResult]):
+        @contextual_completer
+        @wraps(func)
+        def _completer(context: CompletionContext) -> CompleterResult:
+            if context.command is not None and context.command.completing_command(cmd):
+                return func(context.command)
+            return None
+
+        return _completer
+
+    return decor
