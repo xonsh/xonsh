@@ -1,24 +1,24 @@
 """Provides completions for xonsh internal utilities"""
 
+from xonsh.parsers.completion_context import CommandContext
 import xonsh.xontribs as xx
 import xonsh.xontribs_meta as xmt
 import xonsh.tools as xt
 from xonsh.xonfig import XONFIG_MAIN_ACTIONS
+from xonsh.completers.tools import contextual_command_completer_for
 
 
-def complete_xonfig(prefix, line, start, end, ctx):
+@contextual_command_completer_for("xonfig")
+def complete_xonfig(command: CommandContext):
     """Completion for ``xonfig``"""
-    args = line.split(" ")
-    if len(args) == 0 or args[0] != "xonfig":
-        return None
-    curix = args.index(prefix)
+    curix = command.arg_index
     if curix == 1:
         possible = set(XONFIG_MAIN_ACTIONS.keys()) | {"-h"}
-    elif curix == 2 and args[1] == "colors":
+    elif curix == 2 and command.args[1].value == "colors":
         possible = set(xt.color_style_names())
     else:
         raise StopIteration
-    return {i for i in possible if i.startswith(prefix)}
+    return {i for i in possible if i.startswith(command.prefix)}
 
 
 def _list_installed_xontribs():
@@ -32,18 +32,15 @@ def _list_installed_xontribs():
     return installed
 
 
-def complete_xontrib(prefix, line, start, end, ctx):
+@contextual_command_completer_for("xontrib")
+def complete_xontrib(command: CommandContext):
     """Completion for ``xontrib``"""
-    args = line.split(" ")
-    if len(args) == 0 or args[0] != "xontrib":
-        return None
-    curix = args.index(prefix)
+    curix = command.arg_index
     if curix == 1:
         possible = {"list", "load"}
-    elif curix == 2:
-        if args[1] == "load":
-            possible = _list_installed_xontribs()
+    elif curix == 2 and command.args[1].value == "load":
+        possible = _list_installed_xontribs()
     else:
         raise StopIteration
 
-    return {i for i in possible if i.startswith(prefix)}
+    return {i for i in possible if i.startswith(command.prefix)}
