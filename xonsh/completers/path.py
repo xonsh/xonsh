@@ -3,12 +3,13 @@ import re
 import ast
 import glob
 import builtins
+from xonsh.parsers.completion_context import CommandContext
 
 import xonsh.tools as xt
 import xonsh.platform as xp
 import xonsh.lazyasd as xl
 
-from xonsh.completers.tools import get_filter_function
+from xonsh.completers.tools import RichCompletion, get_filter_function
 
 
 @xl.lazyobject
@@ -356,5 +357,27 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     return paths, lprefix
 
 
-def complete_dir(prefix, line, start, end, ctx, cdpath=False):
-    return complete_path(prefix, line, start, end, cdpath, filtfunc=os.path.isdir)
+def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None):
+    # ``complete_path`` may add opening quotes:
+    prefix = command.raw_prefix
+
+    completions, lprefix = complete_path(
+        prefix,
+        prefix,
+        0,
+        len(prefix),
+        ctx={},
+        cdpath=cdpath,
+        filtfunc=filtfunc,
+    )
+
+    # ``complete_path`` may have added closing quotes:
+    rich_completions = {
+        RichCompletion(comp, append_closing_quote=False) for comp in completions
+    }
+
+    return rich_completions, lprefix
+
+
+def complete_dir(command: CommandContext):
+    return contextual_complete_path(command, filtfunc=os.path.isdir)

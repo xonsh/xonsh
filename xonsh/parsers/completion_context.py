@@ -57,6 +57,14 @@ class CommandContext(NamedTuple):
         """Return whether this context is completing args for a command"""
         return self.arg_index > 0 and self.args[0].value == command
 
+    @property
+    def raw_prefix(self):
+        """Prefix before the cursor, including quotes"""
+        if self.is_after_closing_quote:
+            return f"{self.opening_quote}{self.prefix}{self.closing_quote}"
+        else:
+            return f"{self.opening_quote}{self.prefix}"
+
 
 class PythonContext(NamedTuple):
     multiline_code: str
