@@ -36,9 +36,9 @@ xonsh
             :target: https://codecov.io/gh/xonsh/xonsh
             :alt: codecov
 
-    .. image:: https://gstatic.com/cloudssh/images/open-btn.svg
+    .. image:: https://img.shields.io/badge/Google%20Cloud%20Shell-xonsh-green
             :target: https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/xonsh/xonsh.git
-            :alt: Open in Cloud Shell
+            :alt: Open in Google Cloud Shell
 
 First steps
 ***********
