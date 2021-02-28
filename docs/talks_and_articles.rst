@@ -6,6 +6,23 @@ Here are some talks, articles, and other sundry about your favorite shell.
 Talks
 ============
 
+**Scipy Jul 2019:** presented by Anthony Scopatz and Gil Forsyth
+
+.. raw:: html
+
+    <div style="text-align:center;">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ujo9sbqHFqw" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+**Brněnské Pyvo May 2019:** presented by Alexander Sosedkin
+
+.. raw:: html
+
+    <div style="text-align:center;">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ZDhfpqRnpwI" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+
 **PyCon 2016:** presented by Anthony Scopatz
 
 .. raw:: html
