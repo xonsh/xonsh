@@ -6,11 +6,12 @@ import builtins
 import importlib
 import warnings
 import collections.abc as cabc
+from xonsh.parsers.completion_context import CompletionContext
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
 
-from xonsh.completers.tools import get_filter_function
+from xonsh.completers.tools import contextual_completer, get_filter_function
 
 
 @xl.lazyobject
@@ -277,23 +278,37 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
     return args
 
 
-def complete_import(prefix, line, start, end, ctx):
+@contextual_completer
+def complete_import(context: CompletionContext):
     """
     Completes module names and contents for "import ..." and "from ... import
     ..."
     """
-    ltoks = line.split()
-    ntoks = len(ltoks)
-    if ntoks == 2 and ltoks[0] == "from":
+    if not (context.command and context.python):
+        # Imports are only possible in independent lines (not in `$()` or `@()`).
+        # This means it's python code, but also can be a command as far as the parser is concerned.
+        return None
+
+    command = context.command
+
+    if command.opening_quote:
+        # can't have a quoted import
+        return None
+
+    arg_index = command.arg_index
+    prefix = command.prefix
+    args = command.args
+
+    if arg_index == 1 and args[0].value == "from":
         # completing module to import
         return {"{} ".format(i) for i in complete_module(prefix)}
-    if ntoks > 1 and ltoks[0] == "import" and start == len("import "):
+    if arg_index >= 1 and args[0].value == "import":
         # completing module to import
         return complete_module(prefix)
-    if ntoks > 2 and ltoks[0] == "from" and ltoks[2] == "import":
+    if arg_index > 2 and args[0].value == "from" and args[2].value == "import":
         # complete thing inside a module
         try:
-            mod = importlib.import_module(ltoks[1])
+            mod = importlib.import_module(args[1].value)
         except ImportError:
             return set()
         out = {i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix)}

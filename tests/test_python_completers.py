@@ -1,6 +1,7 @@
+from xonsh.parsers.completion_context import CommandArg, CommandContext, CompletionContext, CompletionContextParser, PythonContext
 import pytest
 
-from xonsh.completers.python import python_signature_complete
+from xonsh.completers.python import python_signature_complete, complete_import
 
 
 @pytest.fixture(autouse=True)
@@ -50,3 +51,21 @@ def test_complete_python_signatures(line, end, exp):
     ctx = dict(BASE_CTX)
     obs = python_signature_complete("", line, end, ctx, always_true)
     assert exp == obs
+
+
+@pytest.mark.parametrize("command, exp", (
+    (CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="pathli"), {"pathlib"}),
+    (CommandContext(args=(CommandArg("from"),), arg_index=1, prefix="pathli"), {"pathlib "}),
+    (CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="os.pa"), {"os.path"}),
+    (CommandContext(args=(
+        CommandArg("import"), CommandArg("os,"),
+        ), arg_index=2, prefix="pathli"), {"pathlib"}),
+    (CommandContext(args=(
+        CommandArg("from"), CommandArg("pathlib"), CommandArg("import"),
+        ), arg_index=3, prefix="PurePa"), {"PurePath"}),
+))
+def test_complete_import(command, exp):
+    result = complete_import(CompletionContext(command,
+        python=PythonContext("", 0)  # `complete_import` needs this
+    ))
+    assert result == exp
