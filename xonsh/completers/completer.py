@@ -1,7 +1,8 @@
 import builtins
 import collections
+from xonsh.parsers.completion_context import CommandContext
 
-from xonsh.completers.tools import justify
+from xonsh.completers.tools import contextual_command_completer_for, justify
 import xonsh.lazyasd as xla
 
 
@@ -11,33 +12,31 @@ def xsh_session():
     return builtins.__xonsh__  # type: ignore
 
 
-def complete_completer(prefix, line, start, end, ctx):
+@contextual_command_completer_for("completer")
+def complete_completer(command: CommandContext):
     """
     Completion for "completer"
     """
-    args = line.split(" ")
-    if len(args) == 0 or args[0] != "completer":
-        return None
-
-    if end < len(line) and line[end] != " ":
+    if command.suffix:
         # completing in a middle of a word
         # (e.g. "completer some<TAB>thing")
         return None
 
-    curix = args.index(prefix)
+    curix = command.arg_index
 
     compnames = set(xsh_session.completers.keys())
     if curix == 1:
         possible = {"list", "help", "add", "remove"}
     elif curix == 2:
-        if args[1] == "help":
+        first_arg = command.args[1].value
+        if first_arg == "help":
             possible = {"list", "add", "remove"}
-        elif args[1] == "remove":
+        elif first_arg == "remove":
             possible = compnames
         else:
             raise StopIteration
     else:
-        if args[1] != "add":
+        if command.args[1].value != "add":
             raise StopIteration
         if curix == 3:
             possible = {i for i, j in xsh_session.ctx.items() if callable(j)}
@@ -49,7 +48,7 @@ def complete_completer(prefix, line, start, end, ctx):
             )
         else:
             raise StopIteration
-    return {i for i in possible if i.startswith(prefix)}
+    return {i for i in possible if i.startswith(command.prefix)}
 
 
 def add_one_completer(name, func, loc="end"):
