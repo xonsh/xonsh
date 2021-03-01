@@ -7,7 +7,10 @@ def complete_cd(prefix, line, start, end, ctx):
     Completion for "cd", includes only valid directory names.
     """
     if start != 0 and line.split(" ")[0] == "cd":
-        return complete_dir(prefix, line, start, end, ctx, True)
+        results, prefix = complete_dir(prefix, line, start, end, ctx, True)
+        if len(results) == 0:
+            raise StopIteration
+        return results, prefix
     return set()
 
 
@@ -22,5 +25,7 @@ def complete_rmdir(prefix, line, start, end, ctx):
             if i.startswith(prefix)
         }
         comps, lp = complete_dir(prefix, line, start, end, ctx, True)
+        if len(comps) == 0 and len(opts) == 0:
+            raise StopIteration
         return comps | opts, lp
     return set()
