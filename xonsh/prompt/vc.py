@@ -66,7 +66,7 @@ def _get_hg_root(q):
         if not os.path.isdir(_curpwd):
             return False
         try:
-            dot_hg_is_in_curwd = any([b.name == ".hg" for b in xt.scandir(_curpwd)])
+            dot_hg_is_in_curwd = any([b.name == ".hg" for b in os.scandir(_curpwd)])
         except OSError:
             return False
         if dot_hg_is_in_curwd:

@@ -15,9 +15,9 @@ from xonsh.shell import Shell
 @pytest.mark.parametrize(
     "ptk_ver, ini_shell_type, exp_shell_type, warn_snip, using_vended_ptk",
     [
-        (None, "prompt_toolkit", "prompt_toolkit", None, True),
-        ((0, 5, 7), "prompt_toolkit", "prompt_toolkit", "is not supported", True),
-        ((1, 0, 0), "prompt_toolkit", "prompt_toolkit", "is not supported", True),
+        (None, "prompt_toolkit", "readline", None, False),
+        ((0, 5, 7), "prompt_toolkit", "readline", "is not supported", False),
+        ((1, 0, 0), "prompt_toolkit", "readline", "is not supported", False),
         ((2, 0, 0), "prompt_toolkit", "prompt_toolkit", None, False),
         ((2, 0, 0), "best", "prompt_toolkit", None, False),
         ((2, 0, 0), "readline", "readline", None, False),

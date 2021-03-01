@@ -5,8 +5,6 @@ import re
 
 import pytest
 
-from xonsh.platform import scandir
-
 
 NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "news")
 
@@ -63,7 +61,7 @@ def check_news_file(fname):
         pytest.fail("{}: invalid rst".format(name), pytrace=True)
 
 
-@pytest.mark.parametrize("fname", list(scandir(NEWSDIR)))
+@pytest.mark.parametrize("fname", list(os.scandir(NEWSDIR)))
 def test_news(fname):
     base, ext = os.path.splitext(fname.path)
     assert "rst" in ext

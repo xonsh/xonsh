@@ -16,7 +16,7 @@ from importlib.machinery import ModuleSpec
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lazyasd import lazyobject
-from xonsh.platform import ON_WINDOWS, scandir
+from xonsh.platform import ON_WINDOWS
 
 
 @lazyobject
@@ -84,7 +84,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
                 continue
             if not os.path.isdir(p) or not os.access(p, os.R_OK):
                 continue
-            if fname not in {x.name for x in scandir(p)}:
+            if fname not in {x.name for x in os.scandir(p)}:
                 continue
             spec = ModuleSpec(fullname, self)
             self._filenames[fullname] = os.path.join(p, fname)
