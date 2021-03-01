@@ -5,9 +5,25 @@ Here are some talks, articles, and other sundry about your favorite shell.
 
 Talks
 ============
-**Python Nordeste 2016:** presented by Lucas Inojosa http://lucasicf.github.io/talks/shell_python/
 
-**PyCon 2016:** presented by Anthony Scopatz
+**SciPy, Jul 2019:** presented by Anthony Scopatz and Gil Forsyth
+
+.. raw:: html
+
+    <div style="text-align:center;">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ujo9sbqHFqw" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+**Brněnské Pyvo, May 2019:** presented by Alexander Sosedkin
+
+.. raw:: html
+
+    <div style="text-align:center;">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ZDhfpqRnpwI" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+
+**PyCon, Jun 2016:** presented by Anthony Scopatz
 
 .. raw:: html
 

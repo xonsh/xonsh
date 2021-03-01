@@ -90,3 +90,9 @@ To ensure xonsh uses ``readline`` even if ``prompt-toolkit`` is installed, confi
 
     $SHELL_TYPE = 'readline'
 
+Windows
+-------
+
+On Windows 10, the separately-installable `Windows Terminal app`_ is recommended.
+
+.. _`Windows Terminal app`: https://github.com/microsoft/terminal/releases

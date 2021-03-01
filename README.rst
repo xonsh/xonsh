@@ -8,7 +8,7 @@ xonsh
     The language is a superset of Python 3.6+ with additional shell primitives.
     xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
 
-    .. image:: https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/xonsh4.png
+    .. image:: https://raw.githubusercontent.com/xonsh/xonsh/master/docs/_static/xonsh5.png
             :alt: What is xonsh?
             :align: center
 
@@ -36,9 +36,9 @@ xonsh
             :target: https://codecov.io/gh/xonsh/xonsh
             :alt: codecov
 
-    .. image:: https://gstatic.com/cloudssh/images/open-btn.svg
+    .. image:: https://img.shields.io/badge/Google%20Cloud%20Shell-xonsh-green
             :target: https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/xonsh/xonsh.git
-            :alt: Open in Cloud Shell
+            :alt: Open in Google Cloud Shell
 
 First steps
 ***********
@@ -47,7 +47,7 @@ Visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
-- `Xontribs <https://xon.sh/xontribs.html>`_ - list of awesome xonsh extensions.
+- `Xontribs <https://xon.sh/xontribs.html>`_ or `Github Xontribs <https://github.com/topics/xontrib>`_ - list of awesome xonsh extensions.
 
 Projects that use xonsh
 ***********************
