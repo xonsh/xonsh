@@ -199,8 +199,6 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         if end != "":
             if "r" not in start.lower():
                 s = s.replace(backslash, double_backslash)
-            if s.endswith(backslash) and not s.endswith(double_backslash):
-                s += backslash
         if end in s:
             s = s.replace(end, "".join("\\%s" % i for i in end))
         s = start + s + end if append_end else start + s
