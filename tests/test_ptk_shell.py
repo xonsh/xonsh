@@ -13,18 +13,18 @@ from xonsh.shell import Shell
 
 
 @pytest.mark.parametrize(
-    "ptk_ver, ini_shell_type, exp_shell_type, warn_snip, using_vended_ptk",
+    "ptk_ver, ini_shell_type, exp_shell_type, warn_snip",
     [
-        (None, "prompt_toolkit", "readline", None, False),
-        ((0, 5, 7), "prompt_toolkit", "readline", "is not supported", False),
-        ((1, 0, 0), "prompt_toolkit", "readline", "is not supported", False),
-        ((2, 0, 0), "prompt_toolkit", "prompt_toolkit", None, False),
-        ((2, 0, 0), "best", "prompt_toolkit", None, False),
-        ((2, 0, 0), "readline", "readline", None, False),
-        ((3, 0, 0), "prompt_toolkit", "prompt_toolkit", None, False),
-        ((3, 0, 0), "best", "prompt_toolkit", None, False),
-        ((3, 0, 0), "readline", "readline", None, False),
-        ((4, 0, 0), "prompt_toolkit", "prompt_toolkit", None, False),
+        (None, "prompt_toolkit", "readline", None),
+        ((0, 5, 7), "prompt_toolkit", "readline", "is not supported"),
+        ((1, 0, 0), "prompt_toolkit", "readline", "is not supported"),
+        ((2, 0, 0), "prompt_toolkit", "prompt_toolkit", None),
+        ((2, 0, 0), "best", "prompt_toolkit", None),
+        ((2, 0, 0), "readline", "readline", None),
+        ((3, 0, 0), "prompt_toolkit", "prompt_toolkit", None),
+        ((3, 0, 0), "best", "prompt_toolkit", None),
+        ((3, 0, 0), "readline", "readline", None),
+        ((4, 0, 0), "prompt_toolkit", "prompt_toolkit", None),
     ],
 )
 def test_prompt_toolkit_version_checks(
@@ -32,7 +32,6 @@ def test_prompt_toolkit_version_checks(
     ini_shell_type,
     exp_shell_type,
     warn_snip,
-    using_vended_ptk,
     monkeypatch,
     xonsh_builtins,
 ):
@@ -67,11 +66,7 @@ def test_prompt_toolkit_version_checks(
 
     act_shell_type = Shell.choose_shell_type(ini_shell_type, {})
 
-    if using_vended_ptk:
-        # ensure PTK has been unloaded and the vended version added to sys.path
-        assert len(old_syspath) < len(sys.path)
-    else:
-        assert len(old_syspath) == len(sys.path)
+    assert len(old_syspath) == len(sys.path)
 
     sys.path = old_syspath
 

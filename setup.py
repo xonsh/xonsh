@@ -310,7 +310,6 @@ def main():
         },
         package_data={
             "xonsh": ["*.json", "*.githash"],
-            "xonsh.vended_ptk": ["LICENSE-prompt-toolkit", "LICENSE-wcwidth"],
             "xontrib": ["*.xsh"],
             "xonsh.lib": ["*.xsh"],
             "xonsh.webconfig": [
@@ -322,9 +321,6 @@ def main():
         },
         cmdclass=cmdclass,
         scripts=scripts,
-    )
-    skw["packages"].extend(
-        ["xonsh.vended_ptk." + pkg for pkg in find_packages(where="xonsh/vended_ptk")]
     )
     # We used to avoid setuptools 'console_scripts' due to startup performance
     # concerns which have since been resolved, so long as install is done
