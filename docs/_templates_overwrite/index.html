@@ -670,7 +670,7 @@ chmod +x xonsh-x86_64.AppImage
         $( "#github_xontribs" ).html( 'Loading xontribs list...' );
         $.get( "https://api.github.com/search/repositories?q=topic:xontrib&sort=stars", function( data ) {
            xontribs = ''
-           getRandomSubarray(data['items'], 4).forEach(function (repo, index) {
+           getRandomSubarray(data['items'], 8).forEach(function (repo, index) {
                 xontribs += '<div class="col-lg-3 col-md-6"><div class="product-single text-center"><div class="prod-details"><p><a href="' + repo['html_url'] + '" target="_blank">'+repo['name']+'</a></p><p>' + sentence(repo['description']) + '<div class="icon"><i class="icofont-star"></i>' + repo['stargazers_count'] + '</div> </p></div></div></div>';
             });
             $( "#github_xontribs" ).html( xontribs );
