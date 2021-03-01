@@ -429,7 +429,7 @@ chmod +x xonsh-x86_64.AppImage
                     </div>
                 </div>
             </div>
-            <div class="row">
+            <div class="row" id="github_xontribs">
                 <div class="col-lg-3 col-md-6">
                     <div class="product-single text-center">
                         <div class="prod-details">
@@ -474,12 +474,13 @@ chmod +x xonsh-x86_64.AppImage
                     </div>
                 </div>
 
-                <div class="col-lg-12">
-                    <div class="load-more-btn text-center">
-                        <a href="https://github.com/topics/xontrib" target="_blank"><i class="icofont-download"></i> More xontribs →</a>
-                    </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="load-more-btn text-center">
+                    <a href="https://github.com/topics/xontrib" target="_blank"><i class="icofont-download"></i> More xontribs →</a>
                 </div>
             </div>
+
         </div>
     </section>
 
@@ -628,4 +629,52 @@ chmod +x xonsh-x86_64.AppImage
     <script src="_static/landing2/js/validator.js"></script>
     <script src="_static/landing2/js/contact.js"></script>
     <script src="_static/landing2/js/custom.js"></script>
+
+    <script language="JavaScript">
+        var tagsToReplace = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;'
+        };
+
+        function replaceTag(tag) {
+            return tagsToReplace[tag] || tag;
+        }
+
+        function safe_tags_replace(str) {
+            return str.replace(/[&<>]/g, replaceTag);
+        }
+
+        function getRandomSubarray(arr, size) {
+            var shuffled = arr.slice(0), i = arr.length, temp, index;
+            while (i--) {
+                index = Math.floor((i + 1) * Math.random());
+                temp = shuffled[index];
+                shuffled[index] = shuffled[i];
+                shuffled[i] = temp;
+            }
+            return shuffled.slice(0, size);
+        }
+
+        function sentence(string) {
+            string = safe_tags_replace(string)
+            string = string.trim()
+            string = string.charAt(0).toUpperCase() + string.slice(1);
+            last_char = string.charAt(string.length-1)
+            if(last_char != '.' && last_char != '!' && last_char != '?'){
+                string += '.'
+            }
+            return string
+        }
+
+        $( "#github_xontribs" ).html( 'Loading xontribs list...' );
+        $.get( "https://api.github.com/search/repositories?q=topic:xontrib&sort=stars", function( data ) {
+           xontribs = ''
+           getRandomSubarray(data['items'], 4).forEach(function (repo, index) {
+                xontribs += '<div class="col-lg-3 col-md-6"><div class="product-single text-center"><div class="prod-details"><p><a href="' + repo['html_url'] + '" target="_blank">'+repo['name']+'</a></p><p>' + sentence(repo['description']) + '<div class="icon"><i class="icofont-star"></i>' + repo['stargazers_count'] + '</div> </p></div></div></div>';
+            });
+            $( "#github_xontribs" ).html( xontribs );
+        });
+    </script>
+
 </body></html>
