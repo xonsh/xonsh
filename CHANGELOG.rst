@@ -11,7 +11,7 @@ v0.9.27
 
 * Add new internal command "disown" to remove background jobs from the shell's job list
 * Python3.9 issues with subscriptor forms fixed.
-* added `xontrib-cd<https://github.com/eugenesvk/xontrib-cd>`_
+* added `xontrib-cd <https://github.com/eugenesvk/xontrib-cd>`_
 * Added **xontrib-history-encrypt** - new history backend that encrypt the xonsh shell commands history to prevent leaking sensitive data. If you like the idea give a star to the repository https://github.com/anki-code/xontrib-history-encrypt
 
 **Changed:**
