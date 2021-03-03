@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 540
+  num_commits: 544
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1104,7 +1104,7 @@
   email: anki-code@users.noreply.github.com
   alternate_emails:
   - anki-code
-  num_commits: 75
+  num_commits: 81
   first_commit: 2019-10-15 18:20:58
   github: xxh
 - name: Sylvain Corlay
@@ -1128,7 +1128,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 47
+  num_commits: 49
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1269,3 +1269,19 @@
   email: qasdfgtyuiop@gmail.com
   num_commits: 1
   first_commit: 2021-01-31 17:22:41
+- name: Tejasvi S Tomar
+  email: 45873379+tejasvi@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-02-08 10:50:51
+- name: Evgeny
+  email: eugenesvk@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-02-22 09:32:34
+- name: Adam Schwalm
+  email: adamschwalm@gmail.com
+  num_commits: 1
+  first_commit: 2021-03-01 11:44:32
+- name: Nate Simon
+  email: njsimon10@gmail.com
+  num_commits: 1
+  first_commit: 2021-02-09 10:54:17
