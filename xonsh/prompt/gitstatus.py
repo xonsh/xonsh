@@ -22,6 +22,8 @@ GitStatus = collections.namedtuple(
         "staged",
         "stashed",
         "operations",
+        "lines_added",
+        "lines_removed",
     ],
 )
 
@@ -77,6 +79,8 @@ def _DEFS():
         "CLEAN": "{BOLD_GREEN}✓",
         "AHEAD": "↑·",
         "BEHIND": "↓·",
+        "LINES_ADDED": "{BLUE}+",
+        "LINES_REMOVED": "{RED}-",
     }
     return DEFS
 
@@ -91,6 +95,29 @@ def _get_tag_or_hash():
     hash_ = _check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
     have_tag_name = tag_or_hash != hash_
     return tag_or_hash if have_tag_name else _get_def("HASH") + hash_
+
+
+def _get_files_changed():
+    try:
+        changed = _check_output(["git", "diff", "--numstat"])
+    except subprocess.CalledProcessError:
+        return
+
+    insert = 0
+    delete = 0
+    files = 0
+
+    if changed:
+        lines = changed.split("\n")
+        for line in lines:
+            x = line.split("\t")
+            if len(x) > 1:
+                files += 1
+                insert += int(x[0])
+                delete += int(x[1])
+
+    changed = {"files": files, "lines_added": insert, "lines_removed": delete}
+    return changed
 
 
 def _get_stash(gitdir):
@@ -122,6 +149,7 @@ def gitstatus():
     branch = ""
     num_ahead, num_behind = 0, 0
     untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
+    diffchanged = _get_files_changed()
     for line in status.splitlines():
         if line.startswith("##"):
             line = line[2:].strip()
@@ -169,6 +197,8 @@ def gitstatus():
         staged,
         stashed,
         operations,
+        diffchanged["lines_added"],
+        diffchanged["lines_removed"],
     )
 
 
@@ -194,12 +224,24 @@ def gitstatus_prompt():
         "deleted",
         "untracked",
         "stashed",
+        "lines_added",
+        "lines_removed",
     ):
         symbol = _get_def(category.upper())
         value = getattr(s, category)
         if symbol and value > 0:
             ret += symbol + str(value) + "{RESET}"
-    if s.staged + s.conflicts + s.changed + s.deleted + s.untracked + s.stashed == 0:
+    if (
+        s.staged
+        + s.conflicts
+        + s.changed
+        + s.deleted
+        + s.untracked
+        + s.stashed
+        + s.lines_added
+        + s.lines_removed
+        == 0
+    ):
         symbol = _get_def("CLEAN")
         if symbol:
             ret += symbol + "{RESET}"
