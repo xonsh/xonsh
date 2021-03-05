@@ -827,7 +827,6 @@ def TAGLINES():
         "Piggy glanced nervously into hell and cradled the xonsh",
         "The xonsh is a symbol",
         "It is pronounced conch",
-        "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
         "Come snail away",
@@ -848,21 +847,20 @@ def TAGLINES():
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
         "This fix was trickier than expected",
-        "The unholy cross of Bash/Python",
     ]
 
 
 # list of strings or tuples (string, align, fill)
 WELCOME_MSG = [
     "",
-    ("{{INTENSE_WHITE}}Welcome to the xonsh shell ({version}){{RESET}}", "^", " "),
+    ("Welcome to the xonsh shell {version}", "^", " "),
     "",
     ("{{INTENSE_RED}}~{{RESET}} {tagline} {{INTENSE_RED}}~{{RESET}}", "^", " "),
     "",
     ("{{INTENSE_BLACK}}", "<", "-"),
     "",
     (
-        "{{INTENSE_BLACK}}Create ~/.xonshrc file manually or use xonfig to suppress the welcome screen",
+        "{{INTENSE_BLACK}}Create ~/.xonshrc file manually or use xonfig to suppress the welcome message",
         "^",
         " ",
     ),
@@ -870,6 +868,7 @@ WELCOME_MSG = [
     "{{INTENSE_BLACK}}Start from commands:",
     "  {{GREEN}}xonfig{{RESET}} web         {{INTENSE_BLACK}}# Run the configuration tool in the browser to create ~/.xonshrc {{RESET}}",
     "  {{GREEN}}xonfig{{RESET}} tutorial    {{INTENSE_BLACK}}# Open the xonsh tutorial in the browser{{RESET}}",
+    "[SHELL_TYPE_WARNING]",
     "",
     ("{{INTENSE_BLACK}}", "<", "-"),
     "",
@@ -877,8 +876,14 @@ WELCOME_MSG = [
 
 
 def print_welcome_screen():
+    shell_type = builtins.__xonsh__.env.get('SHELL_TYPE')
+    print(shell_type)
     subst = dict(tagline=random.choice(list(TAGLINES)), version=XONSH_VERSION)
     for elem in WELCOME_MSG:
+        if elem == '[SHELL_TYPE_WARNING]':
+            if shell_type != 'prompt_toolkit':
+                print_color("\n{INTENSE_BLACK}Install {RESET}prompt-toolkit{INTENSE_BLACK} to get best prompt experience.{RESET}")
+            continue
         if isinstance(elem, str):
             elem = (elem, "", "")
         line = elem[0].format(**subst)
