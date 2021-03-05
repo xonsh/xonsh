@@ -37,7 +37,7 @@ class Completer(object):
             The index in line that prefix starts on.
         endidx : int
             The index in line that prefix ends on.
-        ctx : Iterable of str (ie dict, set, etc), optional
+        ctx : dict, optional
             Names in the current execution context.
         multiline_text : str
             The complete multiline text. Needed to get completion context.
@@ -57,7 +57,11 @@ class Completer(object):
         if multiline_text is not None and cursor_index is not None:
             completion_context: tp.Optional[
                 CompletionContext
-            ] = self.context_parser.parse(multiline_text, cursor_index)
+            ] = self.context_parser.parse(
+                multiline_text,
+                cursor_index,
+                ctx,
+            )
         else:
             completion_context = None
 

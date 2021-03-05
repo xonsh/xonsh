@@ -6,6 +6,7 @@ import os
 import re
 from collections import defaultdict
 from typing import (
+    Dict,
     Optional,
     Tuple,
     List,
@@ -70,11 +71,17 @@ class PythonContext(NamedTuple):
     multiline_code: str
     cursor_index: int
     is_sub_expression: bool = False
+    ctx: Optional[Dict[str, Any]] = None  # Objects in the current execution context
 
 
 class CompletionContext(NamedTuple):
     command: Optional[CommandContext] = None
     python: Optional[PythonContext] = None
+
+    def with_ctx(self, ctx: Dict[str, Any]) -> "CompletionContext":
+        if self.python is not None:
+            return self._replace(python=self.python._replace(ctx=ctx))
+        return self
 
 
 # Internal parser code:
@@ -292,7 +299,10 @@ class CompletionContextParser:
         self.parser = yacc.yacc(**yacc_kwargs)
 
     def parse(
-        self, multiline_text: str, cursor_index: int
+        self,
+        multiline_text: str,
+        cursor_index: int,
+        ctx: Optional[Dict[str, Any]] = None,
     ) -> Optional[CompletionContext]:
         """Returns a CompletionContext from a command line.
 
@@ -326,6 +336,9 @@ class CompletionContextParser:
 
         if self.debug and self.error is not None:
             raise self.error
+
+        if context and ctx is not None:
+            context = context.with_ctx(ctx)
 
         return context
 
