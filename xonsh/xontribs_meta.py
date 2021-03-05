@@ -401,6 +401,16 @@ def define_xontribs():
                 url="https://github.com/scopatz/xontrib-kitty",
             ),
         ),
+        "linuxbrew": Xontrib(
+            url="https://github.com/eugenesvk/xontrib-linuxbrew",
+            description="Add Homebrew's shell environment to xonsh shell on Linux",
+            package=_XontribPkg(
+                name="xontrib-linuxbrew",
+                license="MIT",
+                install={"pip": "xpip install xontrib-linuxbrew"},
+                url="https://github.com/eugenesvk/xontrib-linuxbrew",
+            ),
+        ),
         "mpl": Xontrib(
             url="http://xon.sh",
             description="Matplotlib hooks for xonsh, including the new 'mpl' "
