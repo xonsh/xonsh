@@ -62,7 +62,7 @@ def test_cursor_after_closing_quote_override(completer, completers_mock):
             # replace the closing quote with "a"
             RichCompletion("a", prefix_len=len(context.closing_quote), append_closing_quote=False),
             # add text after the closing quote
-            RichCompletion(context.prefix + context.closing_quote + " ", append_closing_quote=False),
+            RichCompletion(context.prefix + "_no_quote", append_closing_quote=False),
             # sanity
             RichCompletion(context.prefix + "1"),
         }
@@ -72,15 +72,34 @@ def test_cursor_after_closing_quote_override(completer, completers_mock):
     assert completer.complete("", "", 0, 0, {}, multiline_text="'test'", cursor_index=6) == (
         (
             "a",
-            "test' ",
             "test1'",
+            "test_no_quote",
         ), 5
     )
 
     assert completer.complete("", "", 0, 0, {}, multiline_text="'''test'''", cursor_index=10) == (
         (
             "a",
-            "test''' ",
             "test1'''",
+            "test_no_quote",
         ), 7
+    )
+
+def test_append_space(completer, completers_mock):
+    @contextual_command_completer
+    def comp(context: CommandContext):
+        return {
+            RichCompletion(context.prefix + "a", append_space=True),
+            RichCompletion(context.prefix + " ", append_space=False),  # bad usage
+            RichCompletion(context.prefix + "b", append_space=True, append_closing_quote=False),
+        }
+
+    completers_mock["a"] = comp
+
+    assert completer.complete("", "", 0, 0, {}, multiline_text="'test'", cursor_index=6) == (
+        (
+            "test '",
+            "testa' ",
+            "testb ",
+        ), 5
     )

@@ -54,6 +54,7 @@ class RichCompletion(str):
         description: str = "",
         style: str = "",
         append_closing_quote: bool = True,
+        append_space: bool = False,
     ):
         """
         Parameters
@@ -73,6 +74,11 @@ class RichCompletion(str):
         append_closing_quote :
             Whether to append a closing quote to the completion if the cursor is after it.
             See ``Completer.complete`` in ``xonsh/completer.py``
+        append_space :
+            Whether to append a space after the completion.
+            This is intended to work with ``appending_closing_quote``, so the space will be added correctly **after** the closing quote.
+            This is used in ``Completer.complete``.
+            An extra bonus is that the space won't show up in the ``display`` attribute.
         """
         super().__init__()
         self.prefix_len = prefix_len
@@ -80,6 +86,7 @@ class RichCompletion(str):
         self.description = description
         self.style = style
         self.append_closing_quote = append_closing_quote
+        self.append_space = append_space
 
     @property
     def value(self):

@@ -4,7 +4,7 @@ import builtins
 import xonsh.platform as xp
 from xonsh.completers.path import _quote_paths
 from xonsh.completers.bash_completion import bash_completions
-from xonsh.completers.tools import contextual_command_completer
+from xonsh.completers.tools import contextual_command_completer, RichCompletion
 from xonsh.parsers.completion_context import CommandContext
 
 
@@ -26,7 +26,7 @@ def complete_from_bash(context: CommandContext):
     )
     endidx = begidx + len(prefix)
 
-    return bash_completions(
+    comps, lprefix = bash_completions(
         prefix,
         line,
         begidx,
@@ -36,3 +36,11 @@ def complete_from_bash(context: CommandContext):
         command=command,
         quote_paths=_quote_paths,
     )
+
+    def handle_space(comp: str):
+        if comp.endswith(" "):
+            return RichCompletion(comp[:-1], append_space=True)
+        return comp
+
+    comps = set(map(handle_space, comps))
+    return comps, lprefix

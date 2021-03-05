@@ -9,7 +9,7 @@ from xonsh.parsers.completion_context import CompletionContext, CommandContext, 
 @skip_if_on_darwin
 @skip_if_on_windows
 @pytest.mark.parametrize("command_context, completions", (
-        (CommandContext(args=(CommandArg("bash"),), arg_index=1, prefix="--deb"), {"--debug ", "--debugger "}),
+        (CommandContext(args=(CommandArg("bash"),), arg_index=1, prefix="--deb"), {"--debug", "--debugger"}),
 ))
 def test_bash_completer(command_context, completions, xonsh_builtins, monkeypatch):
     if not xonsh_builtins.__xonsh__.env.get("BASH_COMPLETIONS"):

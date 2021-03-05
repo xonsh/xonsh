@@ -126,6 +126,14 @@ class Completer(object):
 
                     res = map(append_closing_quote, res)
 
+                # append spaces AFTER appending closing quote
+                def append_space(comp: Completion):
+                    if isinstance(comp, RichCompletion) and comp.append_space:
+                        return comp.replace(value=comp.value + " ")
+                    return comp
+
+                res = map(append_space, res)
+
                 def sortkey(s):
                     return s.lstrip(''''"''').lower()
 

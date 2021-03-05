@@ -1,5 +1,6 @@
 import os
 import builtins
+import typing as tp
 
 import xonsh.tools as xt
 import xonsh.platform as xp
@@ -7,6 +8,8 @@ from xonsh.completers.tools import (
     get_filter_function,
     contextual_command_completer,
     is_contextual_completer,
+    RichCompletion,
+    Completion,
 )
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
 
@@ -19,9 +22,8 @@ def complete_command(command: CommandContext):
     Returns a list of valid commands starting with the first argument
     """
     cmd = command.prefix
-    space = " "
-    out = {
-        s + space
+    out: tp.Set[Completion] = {
+        RichCompletion(s, append_space=True)
         for s in builtins.__xonsh__.commands_cache  # type: ignore
         if get_filter_function()(s, cmd)
     }
@@ -73,4 +75,4 @@ def complete_skipper(command_context: CommandContext):
 def complete_end_proc_tokens(cmd, line, start, end, ctx):
     """If there's no space following an END_PROC_TOKEN, insert one"""
     if cmd in END_PROC_TOKENS and line[end : end + 1] != " ":
-        return {cmd + " "}
+        return {RichCompletion(cmd, append_space=True)}

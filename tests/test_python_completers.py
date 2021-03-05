@@ -57,9 +57,10 @@ def test_complete_python_signatures(line, end, exp):
 
 @pytest.mark.parametrize("code, exp", (
     ("x = su", "sum"),
-    ("imp", "import "),
-    pytest.param("{}.g", "{}.get(", marks=skip_if_pre_3_8),  # no signature for native builtins under 3.7
-    ("''.split(ma", "maxsplit="),
+    ("imp", "import"),
+    ("{}.g", "{}.get("),
+    # no signature for native builtins under 3.7:
+    pytest.param("''.split(ma", "maxsplit=", marks=skip_if_pre_3_8),
 ))
 def test_complete_python(code, exp):
     res = complete_python(CompletionContext(python=PythonContext(code, len(code), ctx={})))
