@@ -877,7 +877,6 @@ WELCOME_MSG = [
 
 def print_welcome_screen():
     shell_type = builtins.__xonsh__.env.get('SHELL_TYPE')
-    print(shell_type)
     subst = dict(tagline=random.choice(list(TAGLINES)), version=XONSH_VERSION)
     for elem in WELCOME_MSG:
         if elem == '[SHELL_TYPE_WARNING]':
