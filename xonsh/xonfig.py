@@ -881,7 +881,7 @@ def print_welcome_screen():
     for elem in WELCOME_MSG:
         if elem == '[SHELL_TYPE_WARNING]':
             if shell_type != 'prompt_toolkit':
-                print_color("\n{INTENSE_BLACK}Install {RESET}prompt-toolkit{INTENSE_BLACK} to get best prompt experience.{RESET}")
+                print_color("\n{INTENSE_BLACK}Install {RESET}prompt-toolkit{INTENSE_BLACK} to get the best prompt experience.{RESET}")
             continue
         if isinstance(elem, str):
             elem = (elem, "", "")
