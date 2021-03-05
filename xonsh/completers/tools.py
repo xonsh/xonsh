@@ -81,25 +81,19 @@ class RichCompletion(str):
         self.style = style
         self.append_closing_quote = append_closing_quote
 
+    @property
+    def value(self):
+        return str(self)
+
     def __repr__(self):
-        return "RichCompletion({}, prefix_len={}, display={}, description={}, style={}, append_closing_quote={})".format(
-            repr(str(self)),
-            self.prefix_len,
-            repr(self.display),
-            repr(self.description),
-            repr(self.style),
-            self.append_closing_quote,
-        )
+        attrs = ", ".join(f"{attr}={value!r}" for attr, value in self.__dict__.items())
+        return f"RichCompletion({self.value!r}, {attrs})"
 
     def replace(self, **kwargs):
         """Create a new RichCompletion with replaced attributes"""
         default_kwargs = dict(
-            value=str(self),
-            prefix_len=self.prefix_len,
-            display=self.display,
-            description=self.description,
-            style=self.style,
-            append_closing_quote=self.append_closing_quote,
+            value=self.value,
+            **self.__dict__,
         )
         default_kwargs.update(kwargs)
         return RichCompletion(**default_kwargs)

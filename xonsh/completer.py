@@ -119,7 +119,7 @@ class Completer(object):
                         if isinstance(completion, RichCompletion):
                             if completion.append_closing_quote:
                                 return completion.replace(
-                                    value=str(completion) + closing_quote
+                                    value=completion.value + closing_quote
                                 )
                             return completion
                         return completion + closing_quote
