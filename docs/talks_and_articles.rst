@@ -22,6 +22,13 @@ Talks
     <iframe width="560" height="315" src="https://www.youtube.com/embed/ZDhfpqRnpwI" frameborder="0" allowfullscreen></iframe>
     </div>
 
+**PyBay, Sep 2016:** presented by Matthias Bussonnier
+
+.. raw:: html
+
+    <div style="text-align:center;">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/lopI4HkA9rE" frameborder="0" allowfullscreen></iframe>
+    </div>
 
 **PyCon, Jun 2016:** presented by Anthony Scopatz
 
