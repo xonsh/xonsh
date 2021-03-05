@@ -10,7 +10,6 @@ from xonsh.completers.dirs import complete_cd, complete_rmdir
 from xonsh.completers.python import (
     complete_python,
     complete_import,
-    complete_python_mode,
 )
 from xonsh.completers.commands import complete_skipper, complete_end_proc_tokens
 from xonsh.completers.completer import complete_completer
@@ -22,7 +21,6 @@ def default_completers():
     return collections.OrderedDict(
         [
             ("end_proc_tokens", complete_end_proc_tokens),
-            ("python_mode", complete_python_mode),
             ("base", complete_base),
             ("completer", complete_completer),
             ("skip", complete_skipper),

@@ -1,11 +1,13 @@
-from xonsh.parsers.completion_context import CommandArg, CommandContext, CompletionContext, CompletionContextParser, PythonContext
 import pytest
 
-from xonsh.completers.python import python_signature_complete, complete_import
+from tests.tools import skip_if_pre_3_8
+from xonsh.completers.python import python_signature_complete, complete_import, complete_python
+from xonsh.parsers.completion_context import CommandArg, CommandContext, CompletionContext, CompletionContextParser, PythonContext
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xonsh_builtins, xonsh_execer):
+def xonsh_execer_autouse(xonsh_builtins, xonsh_execer, monkeypatch):
+    monkeypatch.setitem(xonsh_builtins.__xonsh__.env, "COMPLETIONS_BRACKETS", True)
     return xonsh_execer
 
 
@@ -51,6 +53,32 @@ def test_complete_python_signatures(line, end, exp):
     ctx = dict(BASE_CTX)
     obs = python_signature_complete("", line, end, ctx, always_true)
     assert exp == obs
+
+
+@pytest.mark.parametrize("code, exp", (
+    ("x = su", "sum"),
+    ("imp", "import "),
+    pytest.param("{}.g", "{}.get(", marks=skip_if_pre_3_8),  # no signature for native builtins under 3.7
+    ("''.split(ma", "maxsplit="),
+))
+def test_complete_python(code, exp):
+    res = complete_python(CompletionContext(python=PythonContext(code, len(code), ctx={})))
+    assert res and len(res) == 2
+    comps, _ = res
+    assert exp in comps
+
+
+def test_complete_python_ctx():
+    class A:
+        def wow():
+            pass
+    
+    a = A()
+
+    res = complete_python(CompletionContext(python=PythonContext("a.w", 2, ctx=locals())))
+    assert res and len(res) == 2
+    comps, _ = res
+    assert "a.wow(" in comps
 
 
 @pytest.mark.parametrize("command, exp", (

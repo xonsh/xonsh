@@ -14,14 +14,15 @@ SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = {"|", "||", "&&", "and", "or"}
 
 
-def complete_command(cmd, line, start, end, ctx):
+def complete_command(command: CommandContext):
     """
     Returns a list of valid commands starting with the first argument
     """
+    cmd = command.prefix
     space = " "
     out = {
         s + space
-        for s in builtins.__xonsh__.commands_cache
+        for s in builtins.__xonsh__.commands_cache  # type: ignore
         if get_filter_function()(s, cmd)
     }
     if xp.ON_WINDOWS:

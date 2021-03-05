@@ -6,12 +6,16 @@ import builtins
 import importlib
 import warnings
 import collections.abc as cabc
-from xonsh.parsers.completion_context import CompletionContext
+from xonsh.parsers.completion_context import CompletionContext, PythonContext
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
 
-from xonsh.completers.tools import contextual_completer, get_filter_function
+from xonsh.completers.tools import (
+    CompleterResult,
+    contextual_completer,
+    get_filter_function,
+)
 
 
 @xl.lazyobject
@@ -126,34 +130,45 @@ def XONSH_TOKENS():
     return set(XONSH_EXPR_TOKENS) | set(XONSH_STMT_TOKENS)
 
 
-def complete_python(prefix, line, start, end, ctx):
+@contextual_completer
+def complete_python(context: CompletionContext) -> CompleterResult:
     """
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
     If there are no matches, split on common delimiters and try again.
     """
-    rtn = _complete_python(prefix, line, start, end, ctx)
+    if context.python is None:
+        return None
+
+    if context.command and context.command.arg_index != 0:
+        # this can be a command (i.e. not a subexpression)
+        first = context.command.args[0].value
+        ctx = context.python.ctx or {}
+        if first in builtins.__xonsh__.commands_cache and first not in ctx:  # type: ignore
+            # this is a known command, so it won't be python code
+            return None
+
+    line = context.python.multiline_code
+    prefix = (line.rsplit(maxsplit=1) or [""])[-1]
+    rtn = _complete_python(prefix, context.python)
     if not rtn:
         prefix = (
             re.split(r"\(|=|{|\[|,", prefix)[-1]
             if not prefix.startswith(",")
             else prefix
         )
-        start = line.find(prefix)
-        rtn = _complete_python(prefix, line, start, end, ctx)
-        return rtn, len(prefix)
-    return rtn
+        rtn = _complete_python(prefix, context.python)
+    return rtn, len(prefix)
 
 
-def _complete_python(prefix, line, start, end, ctx):
+def _complete_python(prefix, context: PythonContext):
     """
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
     """
-    if line != "":
-        first = line.split()[0]
-        if first in builtins.__xonsh__.commands_cache and first not in ctx:
-            return set()
+    line = context.multiline_code
+    end = context.cursor_index
+    ctx = context.ctx
     filt = get_filter_function()
     rtn = set()
     if ctx is not None:
@@ -171,19 +186,6 @@ def _complete_python(prefix, line, start, end, ctx):
         rtn |= {s for s in XONSH_EXPR_TOKENS if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     return rtn
-
-
-def complete_python_mode(prefix, line, start, end, ctx):
-    """
-    Python-mode completions for @( and ${
-    """
-    if not (prefix.startswith("@(") or prefix.startswith("${")):
-        return set()
-    prefix_start = prefix[:2]
-    python_matches = complete_python(prefix[2:], line, start - 2, end - 2, ctx)
-    if isinstance(python_matches, cabc.Sequence):
-        python_matches = python_matches[0]
-    return set(prefix_start + i for i in python_matches)
 
 
 def _turn_off_warning(func):
