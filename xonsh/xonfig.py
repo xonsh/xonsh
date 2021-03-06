@@ -891,3 +891,4 @@ def print_welcome_screen():
         termwidth = os.get_terminal_size().columns
         line = _align_string(line, elem[1], elem[2], width=termwidth)
         print_color(line)
+    print_color("{RESET}", end="")
