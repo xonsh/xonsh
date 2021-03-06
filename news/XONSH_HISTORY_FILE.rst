@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed XONSH_HISTORY_FILE that has the actual path from the history backend now.
+* Fixed XONSH_HISTORY_FILE that has the actual path from the history backend now
 
 **Security:**
 
