@@ -882,7 +882,7 @@ def print_welcome_screen():
         if elem == "[SHELL_TYPE_WARNING]":
             if shell_type != "prompt_toolkit":
                 print_color(
-                    "\n{INTENSE_BLACK}Install {RESET}prompt-toolkit{INTENSE_BLACK} to get the best prompt experience.{RESET}"
+                    f"\n{{INTENSE_BLACK}}You are currently using the {shell_type} backend. For interactive tab-completion, on-the-fly syntax highlighting, and more, install prompt_toolkit by running:\n\n  {{GREEN}}xpip{{RESET}} install -U 'xonsh[full]'"
                 )
             continue
         if isinstance(elem, str):
