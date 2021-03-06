@@ -2212,7 +2212,14 @@ class BaseParser(object):
         for trailer in trailers:
             if isinstance(
                 trailer,
-                (ast.Index, ast.Slice, ast.ExtSlice, ast.Constant, ast.Name, Index,),
+                (
+                    ast.Index,
+                    ast.Slice,
+                    ast.ExtSlice,
+                    ast.Constant,
+                    ast.Name,
+                    Index,
+                ),
             ):
                 # unpack types
                 slice = trailer.value if isinstance(trailer, Index) else trailer

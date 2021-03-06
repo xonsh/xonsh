@@ -782,7 +782,8 @@ class GeneralSetting(Xettings):
     )
 
     COMMANDS_CACHE_SIZE_WARNING = Var.with_default(
-        6000, "Number of files on the PATH above which a warning is shown.",
+        6000,
+        "Number of files on the PATH above which a warning is shown.",
     )
 
     HOSTNAME = Var.with_default(
@@ -1094,13 +1095,17 @@ class ChangeDirSetting(Xettings):
         "with Bash, xonsh always prefer an existing relative path.",
         type_str="env_path",
     )
-    DIRSTACK_SIZE = Var.with_default(20, "Maximum size of the directory stack.",)
+    DIRSTACK_SIZE = Var.with_default(
+        20,
+        "Maximum size of the directory stack.",
+    )
     PUSHD_MINUS = Var.with_default(
         False,
         "Flag for directory pushing functionality. False is the normal behavior.",
     )
     PUSHD_SILENT = Var.with_default(
-        False, "Whether or not to suppress directory stack manipulation output.",
+        False,
+        "Whether or not to suppress directory stack manipulation output.",
     )
 
 
@@ -1146,10 +1151,12 @@ class PromptSetting(Xettings):
     """Interactive Prompt"""
 
     COLOR_INPUT = Var.with_default(
-        True, "Flag for syntax highlighting interactive input.",
+        True,
+        "Flag for syntax highlighting interactive input.",
     )
     COLOR_RESULTS = Var.with_default(
-        True, "Flag for syntax highlighting return values.",
+        True,
+        "Flag for syntax highlighting return values.",
     )
     DYNAMIC_CWD_WIDTH = Var(
         is_dynamic_cwd_width,
@@ -1181,8 +1188,14 @@ class PromptSetting(Xettings):
         "Note: ``erasedups`` is supported only in sqlite backend).",
         can_store_as_str=True,
     )
-    IGNOREEOF = Var.with_default(False, "Prevents Ctrl-D from exiting the shell.",)
-    INDENT = Var.with_default("    ", "Indentation string for multiline input",)
+    IGNOREEOF = Var.with_default(
+        False,
+        "Prevents Ctrl-D from exiting the shell.",
+    )
+    INDENT = Var.with_default(
+        "    ",
+        "Indentation string for multiline input",
+    )
     LS_COLORS = Var(
         is_lscolors,
         LsColors.convert,
@@ -1226,7 +1239,8 @@ class PromptSetting(Xettings):
         "returns a str.",
     )
     PRETTY_PRINT_RESULTS = Var.with_default(
-        True, 'Flag for "pretty printing" return values.',
+        True,
+        'Flag for "pretty printing" return values.',
     )
     PROMPT = Var(
         is_string_or_callable,
@@ -1344,10 +1358,12 @@ class PromptSetting(Xettings):
         "total time to compute will be larger than this in many cases.",
     )
     VC_GIT_INCLUDE_UNTRACKED = Var.with_default(
-        False, "Whether or not untracked file changes should count as 'dirty' in git.",
+        False,
+        "Whether or not untracked file changes should count as 'dirty' in git.",
     )
     VC_HG_SHOW_BRANCH = Var.with_default(
-        True, "Whether or not to show the Mercurial branch in the prompt.",
+        True,
+        "Whether or not to show the Mercurial branch in the prompt.",
     )
     VIRTUAL_ENV = Var.no_default(
         "str",
@@ -1466,7 +1482,8 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         "A dictionary containing custom prompt_toolkit style definitions. (deprecated)",
     )
     VI_MODE = Var.with_default(
-        False, "Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell.",
+        False,
+        "Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell.",
     )
     XONSH_AUTOPAIR = Var.with_default(
         False,
