@@ -211,6 +211,7 @@ class Shell(object):
         builtins.__xonsh__.history = hist = xhm.construct_history(
             env=env.detype(), ts=[time.time(), None], locked=True
         )
+        env["XONSH_HISTORY_FILE"] = hist.filename
 
         shell_type = self.choose_shell_type(shell_type, env)
 

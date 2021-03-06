@@ -1397,10 +1397,11 @@ class PromptSetting(Xettings):
         "from ``xonsh.history.base.History``, or its instance.",
     )
     XONSH_HISTORY_FILE = Var.with_default(
-        os.path.expanduser("~/.xonsh_history.json"),
-        "Location of history file (deprecated).",
+        None,
+        "Location of history file that was set by history backend.",
         is_configurable=False,
-        doc_default="``~/.xonsh_history``",
+        doc_default="None",
+        type_str="path",
     )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,
