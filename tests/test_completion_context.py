@@ -326,7 +326,7 @@ def test_multiple_commands(keyword, commands, context):
             relative_index += 1
             cursor_command = " " + cursor_command
 
-    assert_match(joined_command, context, python_context=PythonContext(cursor_command.replace(X, ""), relative_index))
+    assert_match(joined_command, context, is_main_command=True)
 
 
 @pytest.mark.parametrize("commandline", (
@@ -338,7 +338,7 @@ def test_multiple_commands(keyword, commands, context):
     f";;;{X}",
 ))
 def test_multiple_empty_commands(commandline):
-    assert_match(commandline, CommandContext((), 0), python_context=PythonContext("", 0))
+    assert_match(commandline, CommandContext((), 0), is_main_command=True)
 
 
 @pytest.mark.parametrize("nesting, keyword, commands, context", tuple(
@@ -459,3 +459,27 @@ def test_nested_python(commandline, context, nesting):
 ])
 def test_cursor_in_sub_python_borders(commandline, context):
     assert_match(commandline, context, is_main_command=True)
+
+
+@pytest.mark.parametrize("code", (
+    f"""
+x = 3
+x.{X}""",
+    f"""
+x = 3;
+y = 4;
+x.{X}""",
+    f"""
+def func({X}):
+    return 100
+    """,
+    f"""
+class A:
+    def a():
+        return "a{X}"
+    pass
+exit()
+    """,
+))
+def test_multiline_python(code):
+    assert_match(code, is_main_command=True)

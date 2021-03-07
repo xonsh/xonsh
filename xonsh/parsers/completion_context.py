@@ -429,25 +429,21 @@ class CompletionContextParser:
 
         if isinstance(context, CommandContext):
             # if the context is the main command, it might be python code
-            main_cursor_command: Optional[Spanned[CommandContext]] = None
+            context_is_main_command = False
             if isinstance(spanned.value, list):
-                main_cursor_command = next(
-                    (
-                        command
-                        for command in spanned.value
-                        if command.value is context
+                for command in spanned.value:
+                    if context is command.value:
                         # TODO: False for connecting keywords other than '\n' and ';'
-                    ),
-                    None,
-                )
+                        context_is_main_command = True
+                        break
             else:
-                if spanned.value is context:
-                    main_cursor_command = spanned
+                if context is spanned.value:
+                    context_is_main_command = True
 
-            if main_cursor_command is not None:
+            if context_is_main_command:
                 python_context = PythonContext(
-                    multiline_code=self.current_input[main_cursor_command.span],
-                    cursor_index=self.cursor - main_cursor_command.span.start,
+                    multiline_code=self.current_input,
+                    cursor_index=self.cursor,
                 )
                 p[0] = CompletionContext(command=context, python=python_context)
             else:
