@@ -24,7 +24,6 @@ class PromptToolkitCompleter(Completer):
         self.ctx = ctx
         self.shell = shell
         self.hist_suggester = AutoSuggestFromHistory()
-        self.current_document = None
 
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
@@ -44,9 +43,6 @@ class PromptToolkitCompleter(Completer):
         prefix = line[begidx:endidx]
         expand_offset = len(line_ex) - len(line)
 
-        # enable completers to access entire document
-        self.current_document = document
-
         # get normal completions
         completions, plen = self.completer.complete(
             prefix,
@@ -57,8 +53,6 @@ class PromptToolkitCompleter(Completer):
             multiline_text=document.text,
             cursor_index=document.cursor_position,
         )
-
-        self.current_document = None
 
         # completions from auto suggest
         sug_comp = None

@@ -106,24 +106,6 @@ class RichCompletion(str):
         return RichCompletion(**default_kwargs)
 
 
-def get_ptk_completer():
-    """Get the current PromptToolkitCompleter
-
-    This is usefull for completers that want to use
-    PromptToolkitCompleter.current_document (the current multiline document).
-
-    Call this function lazily since in '.xonshrc' the shell doesn't exist.
-
-    Returns
-    -------
-    The PromptToolkitCompleter if running with ptk, else returns None
-    """
-    if __xonsh__.shell is None or __xonsh__.shell.shell_type != "prompt_toolkit":
-        return None
-
-    return __xonsh__.shell.shell.pt_completer
-
-
 Completion = tp.Union[RichCompletion, str]
 CompleterResult = tp.Union[tp.Set[Completion], tp.Tuple[tp.Set[Completion], int], None]
 ContextualCompleter = tp.Callable[[CompletionContext], CompleterResult]
