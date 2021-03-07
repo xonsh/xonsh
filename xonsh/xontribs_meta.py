@@ -506,6 +506,16 @@ def define_xontribs():
             description="Adds return code info to the prompt",
             package=core_pkg,
         ),
+        "prompt_starship": Xontrib(
+            url="https://github.com/anki-code/xontrib-prompt-starship",
+            description="Starship prompt in xonsh shell.",
+            package=_XontribPkg(
+                name="xontrib-prompt-starship",
+                license="MIT",
+                install={"pip": "xpip install xontrib-prompt-starship"},
+                url="https://github.com/anki-code/xontrib-prompt-starship",
+            ),
+        ),
         "prompt_vi_mode": Xontrib(
             url="https://github.com/t184256/xontrib-prompt-vi-mode",
             description="vi-mode status formatter for xonsh prompt",
