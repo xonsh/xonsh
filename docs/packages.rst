@@ -28,7 +28,7 @@ correct Python interpreter and ``pip`` module.
 
 .. code-block:: console
 
-    $ pip install xonsh[full]
+    $ pip install 'xonsh[full]'
 
 This uses the pip 'extras' syntax, and is equivalent to:
 
