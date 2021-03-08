@@ -1763,7 +1763,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     adding files
     file0.txt file1.txt file2.txt file3.txt file4.txt file5.txt test_script.sh
 
-    @ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
+    $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
 Additionally, if the script should exit if a command fails, set the
