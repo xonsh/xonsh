@@ -31,7 +31,7 @@ you are in a lesser terminal:
 .. code-block:: console
 
     $ xonsh
-    snail@home ~ $
+    snail@home ~ @
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
 hostname happens to be ``home``, and we are in our home directory (``~``).
@@ -1616,8 +1616,8 @@ For example:
 
 .. code-block:: console
 
-    snail@home ~ $ $PROMPT_FIELDS['test'] = "hey"
-    snail@home ~ $ $PROMPT = "{test} {cwd} $ "
+    snail@home ~ @ $PROMPT_FIELDS['test'] = "hey"
+    snail@home ~ @ $PROMPT = "{test} {cwd} $ "
     hey ~ $
     hey ~ $ import random
     hey ~ $ $PROMPT_FIELDS['test'] = lambda: random.randint(1,9)
@@ -1631,7 +1631,7 @@ prefix.  For example:
 
 .. code-block:: console
 
-    snail@home ~ $ $PROMPT = "{$LANG} >"
+    snail@home ~ @ $PROMPT = "{$LANG} >"
     en_US.utf8 >
 
 Note that some entries of the ``$PROMPT_FIELDS`` are not always applicable, for
@@ -1642,7 +1642,7 @@ But let's consider a problem:
 
 .. code-block:: console
 
-    snail@home ~/xonsh $ $PROMPT = "{cwd_base} [{curr_branch}] $ "
+    snail@home ~/xonsh @ $PROMPT = "{cwd_base} [{curr_branch}] $ "
     xonsh [master] $ cd ..
     ~ [] $
 
@@ -1653,7 +1653,7 @@ invoked only if the value is not ``None``:
 
 .. code-block:: console
 
-    snail@home ~/xonsh $ $PROMPT = "{cwd_base}{curr_branch: [{}]} $ "
+    snail@home ~/xonsh @ $PROMPT = "{cwd_base}{curr_branch: [{}]} $ "
     xonsh [master] $ cd ..
     ~ $
 
