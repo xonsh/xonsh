@@ -15,7 +15,7 @@ import functools
 import subprocess
 import typing as tp
 
-__version__ = "0.2.6"
+__version__ = "0.2.7"
 
 
 @functools.lru_cache(1)
@@ -335,6 +335,7 @@ def bash_completions(
 
     splt = line.split()
     cmd = splt[0]
+    cmd = os.path.basename(cmd)
     idx = n = 0
     prev = ""
     for n, tok in enumerate(splt):
