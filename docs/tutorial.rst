@@ -51,7 +51,7 @@ simple:
 
 .. note:: From here on we'll be using ``>>>`` to prefix (or prompt) any
           xonsh input. This follows the Python convention and helps trick
-          syntax highlighting, though ``$`` is more traditional for shells.
+          syntax highlighting.
 
 Since this is just Python, we are able to import modules, print values,
 and use other built-in Python functionality:
