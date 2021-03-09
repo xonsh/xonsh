@@ -1,5 +1,7 @@
 import os
 import builtins
+import time
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -10,6 +12,7 @@ from xonsh.commands_cache import (
     predict_true,
     predict_false,
 )
+from xonsh import commands_cache
 from tools import skip_if_on_windows
 
 
@@ -24,6 +27,32 @@ def test_predict_threadable_unknown_command(xonsh_builtins):
     cc = CommandsCache()
     result = cc.predict_threadable(["command_should_not_found"])
     assert isinstance(result, bool)
+
+
+def test_commands_cached_between_runs(xonsh_builtins, tmp_path, monkeypatch):
+    xonsh_builtins.__xonsh__.env["XONSH_DATA_DIR"] = tmp_path
+    xonsh_builtins.__xonsh__.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = True
+    xonsh_builtins.__xonsh__.env["PATH"] = [tmp_path]
+    cc = commands_cache.CommandsCache()
+
+    exec_mock = MagicMock(return_value=["bin1", "bin2"])
+    monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
+
+    # wait for thread to end
+    cnt = 0  # timeout waiting for thread
+    while True:
+        if cc.all_commands or cnt > 10:
+            break
+        cnt += 1
+        time.sleep(0.1)
+    assert [b.lower() for b in cc.all_commands.keys()] == ["bin1", "bin2"]
+
+    files = tmp_path.glob("*.pickle")
+    assert len(list(files)) == 1
+
+    # cleanup dir
+    for file in files:
+        os.remove(file)
 
 
 TRUE_SHELL_ARGS = [
