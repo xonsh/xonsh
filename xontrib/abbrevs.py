@@ -28,6 +28,7 @@ It is also possible to set the cursor position after expansion with,
 import builtins
 import typing as tp
 
+from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.filters import completion_is_selected, IsMultiline
 from prompt_toolkit.keys import Keys
 from xonsh.built_ins import DynamicAccessProxy
@@ -60,7 +61,7 @@ def get_abbreviated(key: str, buffer) -> str:
     return text
 
 
-def expand_abbrev(buffer) -> bool:
+def expand_abbrev(buffer: Buffer) -> bool:
     """expand the given abbr text. Return true if cursor position changed."""
     global last_expanded
     last_expanded = None
@@ -74,9 +75,11 @@ def expand_abbrev(buffer) -> bool:
         startix, endix, quote = check_for_partial_string(partial)
         if startix is not None and endix is None:
             return False
-        buffer.delete_before_cursor(count=len(word))
         text = get_abbreviated(word, buffer)
+
+        buffer.delete_before_cursor(count=len(word))
         buffer.insert_text(text)
+
         last_expanded = _LastExpanded(word, text)
         if EDIT_SYMBOL in text:
             set_cursor_position(buffer, text)
