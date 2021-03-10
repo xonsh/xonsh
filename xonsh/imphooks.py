@@ -23,7 +23,7 @@ from xonsh.platform import ON_WINDOWS
 def ENCODING_LINE():
     # this regex comes from PEP 263
     # https://www.python.org/dev/peps/pep-0263/#defining-the-encoding
-    return re.compile(b"^[ tv]*#.*?coding[:=][ t]*([-_.a-zA-Z0-9]+)")
+    return re.compile(b"^[ tf]*#.*?coding[:=][ t]*([-_.a-zA-Z0-9]+)")
 
 
 def find_source_encoding(src):
