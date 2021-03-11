@@ -418,22 +418,39 @@ class XonshKernel:
             identities=identities,
         )
 
-    def do_complete(self, code, pos):
+    def do_complete(self, code: str, pos: int):
         """Get completions."""
-        shell = builtins.__xonsh__.shell
-        line = code.split("\n")[-1]
-        line = builtins.aliases.expand_alias(line)
-        prefix = line.split(" ")[-1]
-        endidx = pos
-        begidx = pos - len(prefix)
+        shell = builtins.__xonsh__.shell  # type: ignore
+        line_start = code.rfind("\n", 0, pos) + 1
+        line_stop = code.find("\n", pos)
+        if line_stop == -1:
+            line_stop = len(code)
+        else:
+            line_stop += 1
+        line = code[line_start:line_stop]
+        endidx = pos - line_start
+        line_ex: str = builtins.aliases.expand_alias(line, endidx)  # type: ignore
+
+        begidx = line[:endidx].rfind(" ") + 1 if line[:endidx].rfind(" ") >= 0 else 0
+        prefix = line[begidx:endidx]
+        expand_offset = len(line_ex) - len(line)
+
+        multiline_text = code
+        cursor_index = pos
+        if line != line_ex:
+            multiline_text = (
+                multiline_text[:line_start] + line_ex + multiline_text[line_stop:]
+            )
+            cursor_index += expand_offset
+
         rtn, _ = self.completer.complete(
             prefix,
-            line,
-            begidx,
-            endidx,
+            line_ex,
+            begidx + expand_offset,
+            endidx + expand_offset,
             shell.ctx,
-            multiline_text=code,
-            cursor_index=pos,
+            multiline_text=multiline_text,
+            cursor_index=cursor_index,
         )
         if isinstance(rtn, Set):
             rtn = list(rtn)
