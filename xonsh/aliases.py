@@ -107,15 +107,19 @@ class Aliases(cabc.MutableMapping):
                 acc_args = rest + list(acc_args)
                 return self.eval_alias(self._raw[token], seen_tokens, acc_args)
 
-    def expand_alias(self, line):
+    def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
         builtin function and if alias is only a single command.
+        The command won't be expanded if the cursor's inside/behind it.
         """
-        word = line.split(" ", 1)[0]
-        if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):
+        word = (line.split(maxsplit=1) or [""])[0]
+        if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):  # type: ignore
             word_idx = line.find(word)
-            expansion = " ".join(self.get(word))
-            line = line[:word_idx] + expansion + line[word_idx + len(word) :]
+            word_edge = word_idx + len(word)
+            if cursor_index > word_edge:
+                # the cursor isn't inside/behind the word
+                expansion = " ".join(self.get(word))
+                line = line[:word_idx] + expansion + line[word_edge:]
         return line
 
     #

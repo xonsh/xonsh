@@ -35,13 +35,25 @@ class PromptToolkitCompleter(Completer):
         if not should_complete or self.completer is None:
             return
         # generate actual completions
-        line = document.current_line.lstrip()
-        line_ex = builtins.aliases.expand_alias(line)
+        line = document.current_line
 
         endidx = document.cursor_position_col
+        line_ex = builtins.aliases.expand_alias(line, endidx)
+
         begidx = line[:endidx].rfind(" ") + 1 if line[:endidx].rfind(" ") >= 0 else 0
         prefix = line[begidx:endidx]
         expand_offset = len(line_ex) - len(line)
+
+        multiline_text = document.text
+        cursor_index = document.cursor_position
+        if line != line_ex:
+            line_start = cursor_index - len(document.current_line_before_cursor)
+            multiline_text = (
+                multiline_text[:line_start]
+                + line_ex
+                + multiline_text[line_start + len(line) :]
+            )
+            cursor_index += expand_offset
 
         # get normal completions
         completions, plen = self.completer.complete(
@@ -50,8 +62,8 @@ class PromptToolkitCompleter(Completer):
             begidx + expand_offset,
             endidx + expand_offset,
             self.ctx,
-            multiline_text=document.text,
-            cursor_index=document.cursor_position,
+            multiline_text=multiline_text,
+            cursor_index=cursor_index,
         )
 
         # completions from auto suggest
