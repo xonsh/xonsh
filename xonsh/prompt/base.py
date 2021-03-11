@@ -295,3 +295,25 @@ def _format_value(val, spec, conv):
     if not isinstance(val, str):
         val = str(val)
     return val
+
+def find_begidx(line, endidx):
+    if endidx < 1:
+        return 0
+
+    fragment = line[:endidx+1]
+
+    if fragment.count("'") % 2 == 1:
+        # unmatched single quote
+        begidx = fragment.rfind("'")
+        begidx = find_begidx(line, begidx-1)
+    elif fragment.count('"') %2 == 1:
+        # unmatched double quote
+        begidx = fragment.rfind('"')
+        begidx = find_begidx(line, begidx-1)
+    else:
+        if fragment[-1] == "'" or fragment[-1] == '"':
+            return find_begidx(line[0:-1], endidx-1)
+        else:
+            begidx = fragment.rfind(" ") + 1
+
+    return begidx

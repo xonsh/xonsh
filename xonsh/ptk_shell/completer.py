@@ -7,10 +7,8 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.application.current import get_app
 
-from shlex import split
-
 from xonsh.completers.tools import RichCompletion
-
+from xonsh.prompt.base import find_begidx
 
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.
@@ -42,7 +40,7 @@ class PromptToolkitCompleter(Completer):
         line_ex = builtins.aliases.expand_alias(line)
 
         endidx = document.cursor_position_col
-        begidx = self.__find_begidx(line, endidx)
+        begidx = find_begidx(line, endidx)
         prefix = line[begidx:endidx]
         expand_offset = len(line_ex) - len(line)
 
@@ -100,33 +98,6 @@ class PromptToolkitCompleter(Completer):
             else:
                 disp = comp[pre:].strip("'\"")
                 yield Completion(comp, -plen, display=disp)
-
-    def __find_begidx(self, line, endidx):
-        if endidx < 1:
-            return 0
-
-        try:
-            words_non_posix = split(line[0:endidx], posix=False)
-            if line[0:endidx].endswith(" "):
-                words_non_posix.append("")
-        except ValueError:
-            try:
-                words_non_posix = split(
-                    line[0:endidx] + '"', posix=False
-                )  # try with missing `"` quote
-                words_non_posix[-1] = words_non_posix[-1][:-1]
-            except ValueError:
-                words_non_posix = split(
-                    line[0:endidx] + "'", posix=False
-                )  # try with missing `'` quote
-                words_non_posix[-1] = words_non_posix[-1][:-1]
-
-        begidx = endidx
-        for word in reversed(words_non_posix):
-            begidx = begidx - len(word)
-            if line[begidx - 1] == " ":
-                break
-        return begidx
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""

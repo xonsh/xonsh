@@ -22,6 +22,8 @@ from xonsh.main import setup
 from xonsh.completer import Completer
 from xonsh.commands_cache import predict_true
 
+from xonsh.prompt.base import find_begidx
+
 MAX_SIZE = 8388608  # 8 Mb
 DELIM = b"<IDS|MSG>"
 
@@ -423,9 +425,9 @@ class XonshKernel:
         shell = builtins.__xonsh__.shell
         line = code.split("\n")[-1]
         line = builtins.aliases.expand_alias(line)
-        prefix = line.split(" ")[-1]
         endidx = pos
-        begidx = pos - len(prefix)
+        begidx = find_begidx(line, endidx)
+        prefix = line[begidx:pos]
         rtn, _ = self.completer.complete(prefix, line, begidx, endidx, shell.ctx)
         if isinstance(rtn, Set):
             rtn = list(rtn)

@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from xonsh.environ import Env
-from xonsh.prompt.base import PromptFormatter, PROMPT_FIELDS
+from xonsh.prompt.base import PromptFormatter, PROMPT_FIELDS, find_begidx
 
 
 @pytest.fixture
@@ -180,3 +180,34 @@ def test_promptformatter_clears_cache(formatter):
     formatter(template, fields)
 
     assert spam.call_count == 2
+
+def test_find_begidx():
+    def _assert(line, expected):
+        assert find_begidx(line, len(line)) == expected
+
+    _assert("", 0)
+    _assert("ex", 0)
+    _assert("example command ", 16)
+    _assert("example command -", 16)
+
+    _assert("\"", 0)
+    _assert("\"\"", 0)
+    _assert("example command \"value", 16)
+    _assert("example command \"value \"", 16)
+    # TODO _assert("example command \"value \"nospace", 16)
+    _assert("example command \"value \" space", 25)
+    _assert("example command prefix\"value \"", 16)
+    
+    _assert("example command \"value \\\"\"", 16)
+    _assert("example command \"value '\"", 16)
+    
+    _assert("'", 0)
+    _assert("''", 0)
+    _assert("example command 'value", 16)
+    _assert("example command 'value '", 16)
+    # TODO _assert("example command 'value 'nospace", 16)
+    _assert("example command 'value ' space", 25)
+    _assert("example command prefix'value '", 16)
+    
+    _assert("example command 'value \"", 16)
+    _assert("example command 'value \"'", 16)
