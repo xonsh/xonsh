@@ -139,9 +139,10 @@ The environment variable may be callable and be executed in the subprocess as ea
 
 .. code-block:: xonshcon
 
-    >>> $WHO = lambda: $(whoami).strip()
-    >>> echo "$WHO is here!"
-    snail is here!
+    >>> $XONSH_ENV_ALLOW_CALLABLE = True
+    >>> $ANSWER = lambda: 2+2
+    >>> echo "2 + 2 = $ANSWER"
+    2 + 2 = 4
 
 Very nice.
 
