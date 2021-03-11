@@ -1534,7 +1534,6 @@ def test_expand_case_matching(inp, exp):
     [
         ("foo", "foo"),
         ("$foo $bar", "bar $bar"),
-        ("$foo $bar $callme", "bar $bar hello"),
         ("$unk $foo $bar", "$unk bar $bar"),
         ("$foobar", "$foobar"),
         ("$foo $spam", "bar eggs"),
@@ -1547,7 +1546,6 @@ def test_expand_case_matching(inp, exp):
         ("$foo/bar", "bar/bar"),
         ("$unk/$foo/bar", "$unk/bar/bar"),
         ("${'foo'} $spam", "bar eggs"),
-        ("${'callme'} $spam", "hello eggs"),
         ("$unk ${'unk'} ${'foo'} $spam", "$unk ${'unk'} bar eggs"),
         ("${'foo'} ${'a_bool'}", "bar True"),
         ("${'foo'}bar", "barbar"),
@@ -1573,6 +1571,23 @@ def test_expandvars(inp, exp, xonsh_builtins):
             "a_bool": True,
             "an_int": 42,
             "none": None,
+            "callme": lambda: "hello",
+        }
+    )
+    xonsh_builtins.__xonsh__.env = env
+    assert expandvars(inp) == exp
+
+
+@pytest.mark.parametrize(
+    "inp, exp",
+    [("$foo $bar $callme", "bar $bar hello"), ("${'callme'} $spam", "hello eggs")],
+)
+def test_expandvars_callable(inp, exp, xonsh_builtins):
+    env = Env(
+        {
+            "XONSH_ENV_ALLOW_CALLABLE": True,
+            "foo": "bar",
+            "spam": "eggs",
             "callme": lambda: "hello",
         }
     )

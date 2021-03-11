@@ -2339,7 +2339,12 @@ def expandvars(path):
                 detyper = env.get_detyper(name)
                 val = env[name]
                 if callable(val):
-                    val = val()
+                    if env.get("XONSH_ENV_ALLOW_CALLABLE", False):
+                        val = val()
+                    else:
+                        raise Exception(
+                            f"The {name} variable is callable. If you want to use callables set $XONSH_ENV_ALLOW_CALLABLE = True"
+                        )
                 value = str(val) if detyper is None else detyper(val)
                 value = str(val) if value is None else value
                 start_pos, end_pos = match.span()
