@@ -135,6 +135,14 @@ variable in Python.  The same is true for deleting them too.
     Become the Lord of the Files
     >>> del $GOAL
 
+The environment variable may be callable and be executed in the subprocess as easy as possible:
+
+.. code-block:: xonshcon
+
+    >>> $WHO = lambda: $(whoami).strip()
+    >>> echo "$WHO is here!"
+    snail is here!
+
 Very nice.
 
 .. note::

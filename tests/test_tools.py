@@ -1534,6 +1534,7 @@ def test_expand_case_matching(inp, exp):
     [
         ("foo", "foo"),
         ("$foo $bar", "bar $bar"),
+        ("$foo $bar $callme", "bar $bar hello"),
         ("$unk $foo $bar", "$unk bar $bar"),
         ("$foobar", "$foobar"),
         ("$foo $spam", "bar eggs"),
@@ -1546,6 +1547,7 @@ def test_expand_case_matching(inp, exp):
         ("$foo/bar", "bar/bar"),
         ("$unk/$foo/bar", "$unk/bar/bar"),
         ("${'foo'} $spam", "bar eggs"),
+        ("${'callme'} $spam", "hello eggs"),
         ("$unk ${'unk'} ${'foo'} $spam", "$unk ${'unk'} bar eggs"),
         ("${'foo'} ${'a_bool'}", "bar True"),
         ("${'foo'}bar", "barbar"),
@@ -1565,7 +1567,14 @@ def test_expand_case_matching(inp, exp):
 def test_expandvars(inp, exp, xonsh_builtins):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
     env = Env(
-        {"foo": "bar", "spam": "eggs", "a_bool": True, "an_int": 42, "none": None}
+        {
+            "foo": "bar",
+            "spam": "eggs",
+            "a_bool": True,
+            "an_int": 42,
+            "none": None,
+            "callme": lambda: "hello",
+        }
     )
     xonsh_builtins.__xonsh__.env = env
     assert expandvars(inp) == exp
@@ -1812,7 +1821,11 @@ def test_all_permutations():
             {"Literal.String.Single": "#ff0000"},
             {"Token.Literal.String.Single": "#ff0000"},
         ),  # short str key
-        ("test4", {"RED": "#ff0000"}, {"Token.Color.RED": "#ff0000"},),  # color
+        (
+            "test4",
+            {"RED": "#ff0000"},
+            {"Token.Color.RED": "#ff0000"},
+        ),  # color
     ],
 )
 def test_register_custom_style(name, styles, refrules):
@@ -1855,7 +1868,15 @@ def test_to_completion_mode(val, exp):
     assert to_completion_mode(val) == exp
 
 
-@pytest.mark.parametrize("val", ["de", "defa_ult", "men_", "menu_",])
+@pytest.mark.parametrize(
+    "val",
+    [
+        "de",
+        "defa_ult",
+        "men_",
+        "menu_",
+    ],
+)
 def test_to_completion_mode_fail(val):
     with pytest.warns(RuntimeWarning):
         obs = to_completion_mode(val)

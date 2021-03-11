@@ -2321,8 +2321,8 @@ def POSIX_ENVVAR_REGEX():
 
 
 def expandvars(path):
-    """Expand shell variables of the forms $var, ${var} and %var%.
-    Unknown variables are left unchanged."""
+    """Expand environment variables of the forms $var, ${var} and %var%.
+    Unknown variables are left unchanged without warning if XONSH_DEBUG is 0."""
     env = builtins.__xonsh__.env
     if isinstance(path, bytes):
         path = path.decode(
@@ -2338,12 +2338,20 @@ def expandvars(path):
             if name in env:
                 detyper = env.get_detyper(name)
                 val = env[name]
+                if callable(val):
+                    val = val()
                 value = str(val) if detyper is None else detyper(val)
                 value = str(val) if value is None else value
                 start_pos, end_pos = match.span()
                 path_len_before_replace = len(path)
                 path = path[: start_pos + shift] + value + path[end_pos + shift :]
                 shift = shift + len(path) - path_len_before_replace
+            else:
+                if env.get("XONSH_DEBUG", 0):
+                    print(
+                        f"Variable {name} is not found in the environment variables!",
+                        file=sys.stderr,
+                    )
     return path
 
 
