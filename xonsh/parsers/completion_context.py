@@ -446,7 +446,33 @@ class CompletionContextParser:
             # empty command
             spanned_args = []
             span = EMPTY_SPAN  # this will be expanded in expand_command_span
-        p[0] = self.create_command(spanned_args, span)
+
+        args = tuple(arg.value for arg in spanned_args)
+        cursor_context: Optional[Union[CommandContext, PythonContext]] = None
+
+        context = CommandContext(args, arg_index=-1)
+        if self.cursor_in_span(span):
+            for arg_index, arg in enumerate(spanned_args):
+                if self.cursor < arg.span.start:
+                    # an empty arg that will be inserted into arg_index
+                    context = CommandContext(args, arg_index)
+                    break
+                if self.cursor_in_span(arg.span):
+                    context, cursor_context = self.handle_command_arg(arg)
+                    context = context._replace(
+                        args=args[:arg_index] + args[arg_index + 1 :],
+                        arg_index=arg_index,
+                    )
+                    break
+
+        if cursor_context is None and context.arg_index != -1:
+            cursor_context = context
+        p[0] = Spanned(
+            context,
+            span,
+            cursor_context,
+            expansion_obj=spanned_args[-1] if spanned_args else None,
+        )
 
     @staticmethod
     def p_multiple_commands_first(p):
@@ -570,47 +596,6 @@ class CompletionContextParser:
 
         if closed_parens:
             p[0] = p[0].replace(expansion_obj=ExpansionOperation.NEVER_EXPAND)
-
-    def create_command(
-        self,
-        spanned_args: List[Spanned[CommandArg]],
-        span: slice,
-        subcmd_opening: str = "",
-    ) -> Spanned[CommandContext]:
-        args = tuple(arg.value for arg in spanned_args)
-        cursor_context: Optional[Union[CommandContext, PythonContext]] = None
-        if spanned_args:
-            initial_span = slice(spanned_args[0].span.start, spanned_args[-1].span.stop)
-        else:
-            initial_span = EMPTY_SPAN
-
-        context = CommandContext(args, arg_index=-1)
-        if self.cursor_in_span(initial_span):
-            for arg_index, arg in enumerate(spanned_args):
-                if self.cursor < arg.span.start:
-                    # an empty arg that will be inserted into arg_index
-                    context = CommandContext(args, arg_index)
-                    break
-                if self.cursor_in_span(arg.span):
-                    context, cursor_context = self.handle_command_arg(arg)
-                    context = context._replace(
-                        args=args[:arg_index] + args[arg_index + 1 :],
-                        arg_index=arg_index,
-                    )
-                    break
-
-        context = context._replace(subcmd_opening=subcmd_opening)
-        if cursor_context is None and context.arg_index != -1:
-            cursor_context = context
-        spanned = Spanned(
-            context,
-            initial_span,
-            cursor_context,
-            expansion_obj=spanned_args[-1] if spanned_args else None,
-        )
-
-        # the span might be before the first arg or after the last arg:
-        return self.try_expand_span(spanned, span) or spanned
 
     def p_sub_expression_arg(self, p):
         """arg : sub_expression"""
