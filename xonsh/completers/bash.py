@@ -16,7 +16,7 @@ def complete_from_bash(context: CommandContext):
     command = xp.bash_command()
     # TODO: Allow passing the parsed data directly to py-bash-completion
     args = [arg.raw_value for arg in context.args]
-    prefix = context.prefix
+    prefix = context.raw_prefix
     args.insert(context.arg_index, prefix)
     line = " ".join(args)
 
