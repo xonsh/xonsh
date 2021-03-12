@@ -1459,8 +1459,8 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================
-Customizing the prompt by modifying ``$PROMPT`` is probably the most common
-reason for altering an environment variable.
+Customizing the prompt by modifying ``$PROMPT``, ``$RIGHT_PROMPT`` or ``$BOTTOM_TOOLBAR`` 
+is probably the most common reason for altering an environment variable.
 
 .. note:: Note that the ``$PROMPT`` variable will never be inherited from a
           parent process (regardless of whether that parent is a foreign shell
