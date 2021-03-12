@@ -91,8 +91,10 @@ class Completer(object):
             )
             if isinstance(out, cabc.Sequence):
                 res, lprefix = out
+                custom_lprefix = True
             else:
                 res = out
+                custom_lprefix = False
                 if completing_contextual_command:
                     lprefix = len(completion_context.command.prefix)
                 else:
@@ -113,7 +115,8 @@ class Completer(object):
                        To prevent this behavior, a completer can return a different lprefix or specify it inside ``RichCompletion``.
                     """
                     closing_quote = completion_context.command.closing_quote
-                    lprefix += len(closing_quote)
+                    if not custom_lprefix:
+                        lprefix += len(closing_quote)
 
                     def append_closing_quote(completion: Completion):
                         if isinstance(completion, RichCompletion):
