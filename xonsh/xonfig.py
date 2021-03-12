@@ -81,8 +81,8 @@ WIZARD_FS = """
 
                       {{BOLD_WHITE}}Foreign Shell Setup{{RESET}}
                       {{YELLOW}}-------------------{{RESET}}
-The xonsh shell has the ability to interface with foreign shells such
-as Bash, or zsh (fish not yet implemented).
+The xonsh shell has the ability to interface with foreign shells:
+Bash or zsh. The other shells can be implemented as well.
 
 For configuration, this means that xonsh can load the environment,
 aliases, and functions specified in the config files of these shells.
