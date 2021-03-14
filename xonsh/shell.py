@@ -202,7 +202,10 @@ class Shell(object):
         env = builtins.__xonsh__.env
         # build history backend before creating shell
         builtins.__xonsh__.history = hist = xhm.construct_history(
-            env=env.detype(), ts=[time.time(), None], locked=True
+            env=env.detype(),
+            ts=[time.time(), None],
+            locked=True,
+            filename=env.get("XONSH_HISTORY_FILE", None),
         )
         env["XONSH_HISTORY_FILE"] = hist.filename
 
