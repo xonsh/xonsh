@@ -296,23 +296,29 @@ def _format_value(val, spec, conv):
         val = str(val)
     return val
 
+
 def find_begidx(line, endidx):
     if endidx < 1:
         return 0
 
-    fragment = line[:endidx+1]
+    fragment = line[: endidx + 1]
 
     if fragment.count("'") % 2 == 1:
         # unmatched single quote
         begidx = fragment.rfind("'")
-        begidx = find_begidx(line, begidx-1)
-    elif fragment.count('"') %2 == 1:
+        cnt = 0
+        while begidx - cnt > 0 and line[begidx - (cnt + 1)] == "\\":
+            cnt += 1
+        if begidx % 2 == 1:
+            begidx -= cnt
+        begidx = find_begidx(line, begidx - 1)
+    elif fragment.count('"') % 2 == 1:
         # unmatched double quote
         begidx = fragment.rfind('"')
-        begidx = find_begidx(line, begidx-1)
+        begidx = find_begidx(line, begidx - 1)
     else:
         if fragment[-1] == "'" or fragment[-1] == '"':
-            return find_begidx(line[0:-1], endidx-1)
+            return find_begidx(line[0:-1], endidx - 1)
         else:
             begidx = fragment.rfind(" ") + 1
 

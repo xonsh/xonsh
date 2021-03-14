@@ -10,6 +10,7 @@ from prompt_toolkit.application.current import get_app
 from xonsh.completers.tools import RichCompletion
 from xonsh.prompt.base import find_begidx
 
+
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.
 
