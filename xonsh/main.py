@@ -274,7 +274,7 @@ class XonshMode(enum.Enum):
     interactive = 3
 
 
-def start_services(shell_kwargs, args):
+def start_services(shell_kwargs, args, pre_env={}):
     """Starts up the essential services in the proper order.
     This returns the environment instance as a convenience.
     """
@@ -293,6 +293,8 @@ def start_services(shell_kwargs, args):
     # load rc files
     login = shell_kwargs.get("login", True)
     env = builtins.__xonsh__.env
+    for k, v in pre_env.items():
+        env[k] = v
     rc = shell_kwargs.get("rc", None)
     rc = env.get("XONSHRC") if rc is None else rc
     if (
@@ -353,13 +355,14 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs["completer"] = True
         shell_kwargs["login"] = True
-    env = start_services(shell_kwargs, args)
-    env["XONSH_LOGIN"] = shell_kwargs["login"]
+
+    pre_env = {
+        "XONSH_LOGIN": shell_kwargs["login"],
+        "XONSH_INTERACTIVE": args.force_interactive or args.mode == XonshMode.interactive
+    }
+    env = start_services(shell_kwargs, args, pre_env=pre_env)
     if args.defines is not None:
         env.update([x.split("=", 1) for x in args.defines])
-    env["XONSH_INTERACTIVE"] = args.force_interactive or (
-        args.mode == XonshMode.interactive
-    )
     return args
 
 
@@ -443,6 +446,7 @@ def main_xonsh(args):
         shell.ctx.update({"exit": sys.exit})
 
     try:
+        print('argsmode', args.mode, 'xonsh int', env["XONSH_INTERACTIVE"])
         if args.mode == XonshMode.interactive:
             # enter the shell
 
