@@ -199,7 +199,7 @@ def test_find_begidx():
     #_assert("example command prefix\"value \"", 16)
     
     _assert("example command \"value \\\"\"", 16)
-    #_assert("example command \"value '", 16)
+    _assert("example command \"value '", 16)
     
     _assert("'", 0)
     _assert("''", 0)

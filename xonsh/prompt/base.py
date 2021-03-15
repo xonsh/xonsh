@@ -307,23 +307,23 @@ def find_begidx(line, endidx):
         if char == "\\":
             cnt += 1
         else:
-            if (char == '"' or char =="'") and cnt % 2 == 1:
+            if (char == '"' or char == "'") and cnt % 2 == 1:
                 fragment[index] = "_"
             cnt = 0
+
+    search_char = " "
+    for index, char in enumerate(fragment):
+        if char == '"' or char == "'":
+            if search_char == " ":
+                search_char = char
+            elif search_char == char:
+                fragment[index] = "_"
+                if index + 1 < len(fragment):
+                    search_char = " "
+
     fragment = "".join(fragment)
 
-    if fragment.count("'") % 2 == 1:
-        # unmatched single quote
-        begidx = fragment.rfind("'")
-    elif fragment.count('"') % 2 == 1:
-        # unmatched double quote
-        begidx = fragment.rfind('"')
-    else:
-        if fragment[-1] == "'":
-            begidx = fragment[:-1].rfind("'")
-        elif fragment[-1] == '"':
-            begidx = fragment[:-1].rfind('"')
-        else:
-            begidx = fragment.rfind(" ") + 1
-
+    begidx = fragment.rfind(search_char)
+    if search_char == " ":
+        begidx += 1
     return begidx
