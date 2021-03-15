@@ -14,7 +14,6 @@ from xonsh.platform import (
 )
 from xonsh.tools import XonshError, print_exception, simple_random_choice
 from xonsh.events import events
-from xonsh.history.dummy import DummyHistory
 import xonsh.history.main as xhm
 
 
