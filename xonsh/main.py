@@ -358,7 +358,8 @@ def premain(argv=None):
 
     pre_env = {
         "XONSH_LOGIN": shell_kwargs["login"],
-        "XONSH_INTERACTIVE": args.force_interactive or args.mode == XonshMode.interactive
+        "XONSH_INTERACTIVE": args.force_interactive
+        or (args.mode == XonshMode.interactive),
     }
     env = start_services(shell_kwargs, args, pre_env=pre_env)
     if args.defines is not None:
@@ -446,7 +447,7 @@ def main_xonsh(args):
         shell.ctx.update({"exit": sys.exit})
 
     try:
-        print('argsmode', args.mode, 'xonsh int', env["XONSH_INTERACTIVE"])
+        print("argsmode", args.mode, "xonsh int", env["XONSH_INTERACTIVE"])
         if args.mode == XonshMode.interactive:
             # enter the shell
 
