@@ -307,7 +307,7 @@ def find_begidx(line, endidx):
         if char == "\\":
             cnt += 1
         else:
-            if char == '"' and cnt % 2 == 1:
+            if (char == '"' or char =="'") and cnt % 2 == 1:
                 fragment[index] = "_"
             cnt = 0
     fragment = "".join(fragment)
