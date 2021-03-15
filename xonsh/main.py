@@ -447,7 +447,6 @@ def main_xonsh(args):
         shell.ctx.update({"exit": sys.exit})
 
     try:
-        print("argsmode", args.mode, "xonsh int", env["XONSH_INTERACTIVE"])
         if args.mode == XonshMode.interactive:
             # enter the shell
 
