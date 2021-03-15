@@ -14,6 +14,7 @@ from xonsh.platform import (
 )
 from xonsh.tools import XonshError, print_exception, simple_random_choice
 from xonsh.events import events
+from xonsh.history.dummy import DummyHistory
 import xonsh.history.main as xhm
 
 
@@ -200,14 +201,16 @@ class Shell(object):
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
         env = builtins.__xonsh__.env
+
         # build history backend before creating shell
-        builtins.__xonsh__.history = hist = xhm.construct_history(
-            env=env.detype(),
-            ts=[time.time(), None],
-            locked=True,
-            filename=env.get("XONSH_HISTORY_FILE", None),
-        )
-        env["XONSH_HISTORY_FILE"] = hist.filename
+        if env.get("XONSH_INTERACTIVE"):
+            builtins.__xonsh__.history = hist = xhm.construct_history(
+                env=env.detype(), ts=[time.time(), None], locked=True, filename=env.get("XONSH_HISTORY_FILE", None),
+            )
+            env["XONSH_HISTORY_FILE"] = hist.filename
+        else:
+            builtins.__xonsh__.history = hist = DummyHistory()
+            env["XONSH_HISTORY_FILE"] = None
 
         shell_type = self.choose_shell_type(shell_type, env)
 
@@ -228,7 +231,7 @@ class Shell(object):
             raise XonshError("{} is not recognized as a shell type".format(shell_type))
         self.shell = shell_class(execer=self.execer, ctx=self.ctx, **kwargs)
         # allows history garbage collector to start running
-        if hist.gc is not None:
+        if hist and hist.gc is not None:
             hist.gc.wait_for_shell = False
 
     def __getattr__(self, attr):
