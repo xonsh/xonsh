@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+fro unittest.mock import Mock
 
 import pytest
 
@@ -181,6 +181,7 @@ def test_promptformatter_clears_cache(formatter):
 
     assert spam.call_count == 2
 
+
 def test_find_begidx():
     def _assert(line, expected):
         assert find_begidx(line, len(line)) == expected
@@ -190,23 +191,20 @@ def test_find_begidx():
     _assert("example command ", 16)
     _assert("example command -", 16)
 
-    _assert("\"", 0)
-    _assert("\"\"", 0)
-    _assert("example command \"value", 16)
-    _assert("example command \"value \"", 16)
-    #_assert("example command \"value \"nospace", 16)
-    _assert("example command \"value \" space", 25)
-    #_assert("example command prefix\"value \"", 16)
-    
-    _assert("example command \"value \\\"\"", 16)
+    _assert('"', 0)
+    _assert('""', 0)
+    _assert('example command "value', 16)
+    _assert('example command "value "', 16)
+    _assert('example command "value " space', 25)
+
+    _assert('example command "value \\""', 16)
     _assert("example command \"value '", 16)
-    
+
     _assert("'", 0)
     _assert("''", 0)
     _assert("example command 'value", 16)
     _assert("example command 'value '", 16)
-    # TODO _assert("example command 'value 'nospace", 16)
     _assert("example command 'value ' space", 25)
-    
+
     _assert("example command 'value \"", 16)
     _assert("example command 'value \"'", 16)
