@@ -14,6 +14,7 @@ from xonsh.platform import (
 )
 from xonsh.tools import XonshError, print_exception, simple_random_choice
 from xonsh.events import events
+from xonsh.history.dummy import DummyHistory
 import xonsh.history.main as xhm
 
 
@@ -208,7 +209,8 @@ class Shell(object):
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:
-            builtins.__xonsh__.history = hist = env["XONSH_HISTORY_FILE"] = None
+            builtins.__xonsh__.history = hist = DummyHistory()
+            env["XONSH_HISTORY_FILE"] = None
 
         shell_type = self.choose_shell_type(shell_type, env)
 
