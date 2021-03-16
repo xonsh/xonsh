@@ -39,3 +39,12 @@ def test_commands():
     for comp in comps:
         assert isinstance(comp, RichCompletion)
         assert comp.append_space
+
+
+def test_package_list():
+    comps = complete_pip(CompletionContext(CommandContext(
+        args=(CommandArg("pip3"), CommandArg("show")), arg_index=2,
+    )))
+    assert "Package" not in comps
+    assert "-----------------------------" not in comps
+    assert "pytest" in comps

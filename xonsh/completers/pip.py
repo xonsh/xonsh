@@ -22,6 +22,12 @@ def PIP_RE():
 
 
 @xl.lazyobject
+def PACKAGE_IGNORE_PATTERN():
+    # These are the first and second lines in `pip list`'s output
+    return re.compile(r"^Package$|^-+$")
+
+
+@xl.lazyobject
 def ALL_COMMANDS():
     try:
         help_text = str(
@@ -57,7 +63,12 @@ def complete_pip(context: CommandContext):
         packages = (
             line.split(maxsplit=1)[0] for line in enc_items.decode("utf-8").splitlines()
         )
-        return {package for package in packages if filter_func(package, prefix)}
+        return {
+            package
+            for package in packages
+            if filter_func(package, prefix)
+            and not PACKAGE_IGNORE_PATTERN.match(package)
+        }
 
     if context.arg_index == 1:
         # `pip PREFIX` - complete pip commands
