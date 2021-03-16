@@ -6,7 +6,7 @@ from xonsh.environ import Env
 from xonsh.shell import Shell
 from xonsh.history.json import JsonHistory
 
-def test_shell_with_json_history(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatch):
+def test_shell_with_json_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
     """
     Check that shell successfully load history from file.
     """
