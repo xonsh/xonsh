@@ -3,10 +3,10 @@ name: qa linux 3.8
 on:
   push:
     branches:
-    - master
+    - main
   pull_request:
     branches:
-    - master
+    - main
 
 jobs:
   build:
