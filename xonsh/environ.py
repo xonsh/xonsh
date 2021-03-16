@@ -1398,7 +1398,7 @@ class PromptSetting(Xettings):
     )
     XONSH_HISTORY_FILE = Var.with_default(
         None,
-        "Location of history file that could be set in RC file or it will be set by history backend.",
+        "Location of history file set by history backend (default) or set by user in RC file.",
         is_configurable=False,
         doc_default="None",
         type_str="path",
