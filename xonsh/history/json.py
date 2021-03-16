@@ -264,7 +264,7 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
-        opts = builtins.__xonsh__.env.get("HISTCONTROL", '')
+        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
         last_inp = None
         cmds = []
         for cmd in self.buffer:
@@ -440,7 +440,7 @@ class JsonHistory(History):
         if not self.remember_history:
             return
 
-        opts = builtins.__xonsh__.env.get("HISTCONTROL", '')
+        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
         skipped_by_ignore_space = "ignorespace" in opts and cmd.get("spc")
         if skipped_by_ignore_space:
             return None
