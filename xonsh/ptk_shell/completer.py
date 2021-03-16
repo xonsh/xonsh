@@ -101,7 +101,7 @@ class PromptToolkitCompleter(Completer):
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display,
+                    display=comp.display or comp[pre:].strip("'\""),
                     display_meta=comp.description or None,
                     style=comp.style or "",
                 )

@@ -65,8 +65,8 @@ class RichCompletion(str):
             Length of the prefix to be replaced in the completion.
             If None, the default prefix len will be used.
         display :
-            Text to display in completion option list.
-            If None, ``value`` will be used.
+            Text to display in completion option list instead of ``value``.
+            NOTE: If supplied, the common prefix with other completions won't be removed.
         description :
             Extra text to display when the completion is selected.
         style :
@@ -82,7 +82,7 @@ class RichCompletion(str):
         """
         super().__init__()
         self.prefix_len = prefix_len
-        self.display = display or value
+        self.display = display
         self.description = description
         self.style = style
         self.append_closing_quote = append_closing_quote
