@@ -29,7 +29,7 @@ def _xh_sqlite_get_file_name():
 def _xh_sqlite_get_conn(filename=None):
     if filename is None:
         filename = _xh_sqlite_get_file_name()
-    return sqlite3.connect(filename)
+    return sqlite3.connect(str(filename))
 
 
 def _xh_sqlite_create_history_table(cursor):
@@ -274,7 +274,7 @@ class SqliteHistory(History):
         self.rtns.append(cmd["rtn"])
         self.tss.append(cmd.get("ts", (None, None)))
 
-        opts = envs.get("HISTCONTROL")
+        opts = envs.get("HISTCONTROL", "")
         if "ignoredups" in opts and inp == self._last_hist_inp:
             # Skipping dup cmd
             return

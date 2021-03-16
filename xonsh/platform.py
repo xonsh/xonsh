@@ -255,6 +255,7 @@ def windows_expanduser(path):
     exists. This restricts expanding the '~' if it is not followed by a
     separator. That is only '~/' and '~\' are expanded.
     """
+    path = str(path)
     if not path.startswith("~"):
         return path
     elif len(path) < 2 or path[1] in seps:

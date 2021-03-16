@@ -105,6 +105,12 @@ def _xhj_get_history_files(sort=True, newest_first=False):
             xt.print_exception("Could not collect xonsh history files.")
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
+
+    custom_history_file = builtins.__xonsh__.env.get("XONSH_HISTORY_FILE", None)
+    if custom_history_file:
+        custom_history_file = xt.expanduser_abs_path(custom_history_file)
+        if custom_history_file not in files:
+            files.insert(0, custom_history_file)
     return files
 
 
@@ -258,7 +264,7 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
-        opts = builtins.__xonsh__.env.get("HISTCONTROL")
+        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
         last_inp = None
         cmds = []
         for cmd in self.buffer:
@@ -383,6 +389,18 @@ class JsonHistory(History):
             )
         else:
             self.filename = filename
+
+        if self.filename and not os.path.exists(os.path.expanduser(self.filename)):
+            meta["cmds"] = []
+            meta["sessionid"] = str(self.sessionid)
+            with open(self.filename, "w", newline="\n") as f:
+                xlj.ljdump(meta, f, sort_keys=True)
+
+            try:
+                os.chmod(self.filename, 0o600)
+            except Exception:  # pylint: disable=broad-except
+                pass
+
         self.buffer = []
         self.buffersize = buffersize
         self._queue = collections.deque()
@@ -391,17 +409,6 @@ class JsonHistory(History):
         self._skipped = 0
         self.last_cmd_out = None
         self.last_cmd_rtn = None
-
-        meta["cmds"] = []
-        meta["sessionid"] = str(self.sessionid)
-        with open(self.filename, "w", newline="\n") as f:
-            xlj.ljdump(meta, f, sort_keys=True)
-
-        try:
-            os.chmod(self.filename, 0o600)
-        except Exception:  # pylint: disable=broad-except
-            pass
-
         self.gc = JsonHistoryGC() if gc else None
         # command fields that are known
         self.tss = JsonCommandField("ts", self)
@@ -433,7 +440,7 @@ class JsonHistory(History):
         if not self.remember_history:
             return
 
-        opts = builtins.__xonsh__.env.get("HISTCONTROL")
+        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
         skipped_by_ignore_space = "ignorespace" in opts and cmd.get("spc")
         if skipped_by_ignore_space:
             return None
