@@ -274,7 +274,7 @@ class SqliteHistory(History):
         self.rtns.append(cmd["rtn"])
         self.tss.append(cmd.get("ts", (None, None)))
 
-        opts = envs.get("HISTCONTROL")
+        opts = envs.get("HISTCONTROL", "")
         if "ignoredups" in opts and inp == self._last_hist_inp:
             # Skipping dup cmd
             return
