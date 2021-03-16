@@ -59,7 +59,7 @@ def test_shell_with_sqlite_history(xonsh_builtins, xonsh_execer, tmpdir_factory)
     assert len([i for i in xonsh_builtins.__xonsh__.history.all_items()]) == 2
 
 
-def test_shell_with_dummy_history_in_not_ineractive(xonsh_builtins, xonsh_execer):
+def test_shell_with_dummy_history_in_not_interactive(xonsh_builtins, xonsh_execer):
     """
     Check that shell use Dummy history in not interactive mode.
     """
