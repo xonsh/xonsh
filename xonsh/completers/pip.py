@@ -5,7 +5,11 @@ import re
 import subprocess
 
 import xonsh.lazyasd as xl
-from xonsh.completers.tools import contextual_command_completer, get_filter_function
+from xonsh.completers.tools import (
+    contextual_command_completer,
+    get_filter_function,
+    RichCompletion,
+)
 from xonsh.parsers.completion_context import CommandContext
 
 
@@ -57,8 +61,11 @@ def complete_pip(context: CommandContext):
 
     if context.arg_index == 1:
         # `pip PREFIX` - complete pip commands
-        suggestions = [c for c in ALL_COMMANDS if filter_func(c, prefix)]
-        if suggestions:
-            return suggestions, len(prefix)
+        suggestions = {
+            RichCompletion(c, append_space=True)
+            for c in ALL_COMMANDS
+            if filter_func(c, prefix)
+        }
+        return suggestions
 
     return None

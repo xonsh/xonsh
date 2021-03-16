@@ -1,6 +1,8 @@
 import pytest
 
-from xonsh.completers.pip import PIP_RE
+from xonsh.completers.tools import RichCompletion
+from xonsh.completers.pip import PIP_RE, complete_pip
+from xonsh.parsers.completion_context import CompletionContext, CommandContext, CommandArg
 
 
 @pytest.mark.parametrize(
@@ -26,3 +28,14 @@ def test_pip_re(line):
 )
 def test_pip_list_re1(line):
     assert PIP_RE.search(line) is None
+
+
+def test_commands():
+    comps = complete_pip(CompletionContext(CommandContext(
+        args=(CommandArg("pip3"),), arg_index=1,
+        prefix="c",
+    )))
+    assert comps.intersection({"cache", "check", "config"})
+    for comp in comps:
+        assert isinstance(comp, RichCompletion)
+        assert comp.append_space
