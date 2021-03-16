@@ -6,11 +6,12 @@ from xonsh.environ import Env
 from xonsh.shell import Shell
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
+from xonsh.history.dummy import DummyHistory
 
 
 def test_shell_with_json_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
     """
-    Check that shell successfully load history from file.
+    Check that shell successfully load JSON history from file.
     """
     tempdir = str(tmpdir_factory.mktemp("history"))
 
@@ -35,7 +36,7 @@ def test_shell_with_json_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
 
 def test_shell_with_sqlite_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
     """
-    Check that shell successfully load history from file.
+    Check that shell successfully load SQLite history from file.
     """
     tempdir = str(tmpdir_factory.mktemp("history"))
 
@@ -56,3 +57,13 @@ def test_shell_with_sqlite_history(xonsh_builtins, xonsh_execer, tmpdir_factory)
     Shell(xonsh_execer, shell_type='none')
 
     assert len([i for i in xonsh_builtins.__xonsh__.history.all_items()]) == 2
+
+
+def test_shell_with_dummy_history_in_not_ineractive(xonsh_builtins, xonsh_execer):
+    """
+    Check that shell use Dummy history in not interactive mode.
+    """
+    xonsh_builtins.__xonsh__.env = Env(XONSH_INTERACTIVE=False)
+    xonsh_builtins.__xonsh__.history = None
+    Shell(xonsh_execer, shell_type='none')
+    assert isinstance(xonsh_builtins.__xonsh__.history, DummyHistory)
