@@ -446,7 +446,8 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
 def _wizard(ns):
     env = builtins.__xonsh__.env
     shell = builtins.__xonsh__.shell.shell
-    fname = env.get("XONSHRC")[-1] if ns.file is None else ns.file
+    xonshrcs = env.get("XONSHRC", [])
+    fname = xonshrcs[-1] if xonshrcs and ns.file is None else ns.file
     no_wiz = os.path.join(env.get("XONSH_CONFIG_DIR"), "no-wizard")
     w = make_xonfig_wizard(
         default_file=fname, confirm=ns.confirm, no_wizard_file=no_wiz

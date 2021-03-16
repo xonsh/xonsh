@@ -27,11 +27,15 @@ def ENCODING_LINE():
 
 
 def find_source_encoding(src):
-    """Finds the source encoding given bytes representing a file. If
-    no encoding is found, UTF-8 will be returned as per the docs
+    """Finds the source encoding given bytes representing a file by checking
+    a special comment at either the first or second line of the source file.
     https://docs.python.org/3/howto/unicode.html#unicode-literals-in-python-source-code
+    If no encoding is found, UTF-8 codec with BOM signature will be returned
+    as it skips an optional UTF-8 encoded BOM at the start of the data
+    and is otherwise the same as UTF-8
+    https://docs.python.org/3/library/codecs.html#module-encodings.utf_8_sig
     """
-    utf8 = "UTF-8"
+    utf8 = "utf-8-sig"
     first, _, rest = src.partition(b"\n")
     m = ENCODING_LINE.match(first)
     if m is not None:
