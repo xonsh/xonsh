@@ -231,7 +231,7 @@ class Shell(object):
             raise XonshError("{} is not recognized as a shell type".format(shell_type))
         self.shell = shell_class(execer=self.execer, ctx=self.ctx, **kwargs)
         # allows history garbage collector to start running
-        if hist and hist.gc is not None:
+        if hist.gc is not None:
             hist.gc.wait_for_shell = False
 
     def __getattr__(self, attr):
