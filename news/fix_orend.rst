@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed colorize and/or keywords.
+* Fixed the colorize and/or keywords.
 
 **Security:**
 
