@@ -67,7 +67,7 @@ ON_OPENBSD = LazyBool(
 """``True`` if on a OpenBSD operating system, else ``False``."""
 IN_APPIMAGE = LazyBool(
     lambda: (
-        "APPIMAGE" in builtins.__xonsh__.env and "APPDIR" in builtins.__xonsh__.env
+        "APPIMAGE" in os.environ and "APPDIR" in os.environ
     ),
     globals(),
     "IN_APPIMAGE",
