@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Added catching callable argument and raising appropriate exception.
+* Added catching callable argument and raising appropriate exception
 
 **Security:**
 
