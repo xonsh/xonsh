@@ -22,6 +22,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_DRAGONFLY,
     ON_POSIX,
+    IN_APPIMAGE,
 )
 from xonsh.tools import (
     XonshError,
@@ -765,7 +766,7 @@ def detect_xpip_alias():
 
     basecmd = [sys.executable, "-m", "pip"]
     try:
-        if ON_WINDOWS:
+        if ON_WINDOWS or IN_APPIMAGE:
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
