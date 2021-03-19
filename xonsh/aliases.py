@@ -199,7 +199,7 @@ class ExecAlias:
         src : str
             Source code that will be
         """
-        self.src = src if src.endswith("\n") else src + "\n"
+        self.src = src
         self.filename = filename
 
     def __call__(
