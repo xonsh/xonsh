@@ -743,7 +743,7 @@ def showcmd(args, stdin=None):
 
     Example:
     -------
-      >>> showcmd echo $USER can't hear "the sea"
+      >>> showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """
     if len(args) == 0 or (len(args) == 1 and args[0] in {"-h", "--help"}):
