@@ -514,6 +514,8 @@ class SubprocSpec:
         # escape them just in case.
         cmd = self.cmd
         for i in range(len(cmd)):
+            if callable(cmd[i]):
+                raise Exception(f"The command contains callable argument: {cmd[i]}")
             cmd[i] = cmd[i].replace("\0", "\\0")
 
     def _cmd_event_name(self):
