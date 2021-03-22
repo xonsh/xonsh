@@ -1337,13 +1337,15 @@ class PromptSetting(Xettings):
         False,
         "Whether or not to suppress branch timeout warning messages when getting {gitstatus} PROMPT_FIELD.",
     )
-    TITLE = Var.with_default(
+    TITLE = Var(
+        is_string_or_callable,
+        ensure_string,
+        ensure_string,
         DEFAULT_TITLE,
         "The title text for the window in which xonsh is running. Formatted "
         "in the same manner as ``$PROMPT``, see 'Customizing the Prompt' "
         "http://xon.sh/tutorial.html#customizing-the-prompt.",
         doc_default="``xonsh.environ.DEFAULT_TITLE``",
-        type_str="str",
     )
     UPDATE_PROMPT_ON_KEYPRESS = Var.with_default(
         False,
