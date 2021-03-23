@@ -389,7 +389,7 @@ class CompletionContextParser:
 
                 # if the cursor is inside this token, set it to type ``ANY``
                 outer_span = slice(lexpos, lexpos + len(tok.value))
-                inner_span = slice(outer_span.start + 1, outer_span.stop - 1)
+                inner_span = slice(outer_span.start + 1, outer_span.stop)
                 if self.cursor_in_span(inner_span) or (
                     # the cursor is in a space-separated multi keyword.
                     # even if the cursor's at the edge, the keyword should be considered as a normal arg

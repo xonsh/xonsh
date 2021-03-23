@@ -259,13 +259,13 @@ def test_cursor_in_subcmd_borders(commandline, context):
 
 
 MULTIPLE_COMMAND_KEYWORDS = (
-    ";",
+    "; ",
     "\n",
     " and ",
-    "&&",
+    "&& ",
     " or ",
-    "||",
-    "|",
+    "|| ",
+    "| ",
 )
 
 MULTIPLE_CMD_SIMPLE_EXAMPLES = [
@@ -331,11 +331,11 @@ def test_multiple_commands(keyword, commands, context):
 
 @pytest.mark.parametrize("commandline", (
     f"{X};",
-    f";{X}",
+    f"; {X}",
     f"{X};;",
-    f";{X};",
-    f";;{X}",
-    f";;;{X}",
+    f"; {X};",
+    f";; {X}",
+    f";;; {X}",
 ))
 def test_multiple_empty_commands(commandline):
     assert_match(commandline, CommandContext((), 0), is_main_command=True)
@@ -388,15 +388,14 @@ MULTIPLE_COMMAND_BORDER_EXAMPLES = tuple(itertools.chain(
         (
             (f"ls{ws1}{X}{kwd}{ws2}echo",
              CommandContext((CommandArg("ls"),), 1) if ws1 else CommandContext((), 0, prefix="ls")),
-            (f"ls{ws1}{kwd}{X}{ws2}echo",
-             CommandContext((CommandArg("echo"),), 0) if ws2 else CommandContext((), 0, suffix="echo")),
         ) for ws1, ws2, kwd in itertools.product(("", " "), ("", " "), ("&&", ";"))
     )),
 
-    # space-separated keywords ('and', 'or') are treated as a normal arg if the cursor is at the edge
+    # all keywords are treated as a normal arg if the cursor is at the edge
     (
         (f"ls {X}and echo", CommandContext((CommandArg("ls"), CommandArg("echo")), 1, suffix="and")),
         (f"ls and{X} echo", CommandContext((CommandArg("ls"), CommandArg("echo")), 1, prefix="and")),
+        (f"ls ||{X} echo", CommandContext((CommandArg("ls"), CommandArg("echo")), 1, prefix="||")),
     ),
 
     # if the cursor is inside the keyword, it's treated as a normal arg
