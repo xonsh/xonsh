@@ -11,7 +11,11 @@ from xonsh.completers.python import (
     complete_python,
     complete_import,
 )
-from xonsh.completers.commands import complete_skipper, complete_end_proc_tokens
+from xonsh.completers.commands import (
+    complete_skipper,
+    complete_end_proc_tokens,
+    complete_end_proc_keywords,
+)
 from xonsh.completers.completer import complete_completer
 from xonsh.completers.xompletions import complete_xonfig, complete_xontrib
 
@@ -34,5 +38,9 @@ def default_completers():
             ("import", complete_import),
             ("python", complete_python),
             ("path", complete_path),
+            (
+                "end_proc_keywords",
+                complete_end_proc_keywords,
+            ),  # this is last to give a chance to complete `and/or` prefixes
         ]
     )

@@ -14,7 +14,8 @@ from xonsh.completers.tools import (
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
-END_PROC_TOKENS = {"|", "||", "&&", "and", "or"}
+END_PROC_TOKENS = ("|", ";", "&&")  # includes ||
+END_PROC_KEYWORDS = {"and", "or"}
 
 
 def complete_command(command: CommandContext):
@@ -72,7 +73,24 @@ def complete_skipper(command_context: CommandContext):
     return None
 
 
-def complete_end_proc_tokens(cmd, line, start, end, ctx):
+@contextual_command_completer
+def complete_end_proc_tokens(command_context: CommandContext):
     """If there's no space following an END_PROC_TOKEN, insert one"""
-    if cmd in END_PROC_TOKENS and line[end : end + 1] != " ":
-        return {RichCompletion(cmd, append_space=True)}
+    if command_context.opening_quote or not command_context.prefix:
+        return None
+    prefix = command_context.prefix
+    # for example `echo a|`, `echo a&&`, `echo a ;`
+    if any(prefix.endswith(ending) for ending in END_PROC_TOKENS):
+        return {RichCompletion(prefix, append_space=True)}
+    return None
+
+
+@contextual_command_completer
+def complete_end_proc_keywords(command_context: CommandContext):
+    """If there's no space following an END_PROC_KEYWORD, insert one"""
+    if command_context.opening_quote or not command_context.prefix:
+        return None
+    prefix = command_context.prefix
+    if prefix in END_PROC_KEYWORDS:
+        return {RichCompletion(prefix, append_space=True)}
+    return None
