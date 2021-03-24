@@ -208,9 +208,14 @@ class ExecAlias:
     ):
         execer = builtins.__xonsh__.execer
         frame = stack[0][0]  # execute as though we are at the call site
-        execer.exec(
-            self.src, glbs=frame.f_globals, locs=frame.f_locals, filename=self.filename
-        )
+
+        with builtins.__xonsh__.env.swap(ALIAS_ARGS=args):
+            execer.exec(
+                self.src,
+                glbs=frame.f_globals,
+                locs=frame.f_locals,
+                filename=self.filename,
+            )
 
     def __repr__(self):
         return "ExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
