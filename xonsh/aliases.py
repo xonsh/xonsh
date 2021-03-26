@@ -185,7 +185,7 @@ class Aliases(cabc.MutableMapping):
         with p.group(0, name + "(", ")"):
             if cycle:
                 p.text("...")
-            elif len(self):
+            elif self:
                 p.break_()
                 p.pretty(dict(self))
 

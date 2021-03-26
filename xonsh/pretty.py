@@ -874,7 +874,7 @@ def _ordereddict_pprint(obj, p, cycle):
     with p.group(len(name) + 1, name + "(", ")"):
         if cycle:
             p.text("...")
-        elif len(obj):
+        elif obj:
             p.pretty(list(obj.items()))
 
 
@@ -892,5 +892,5 @@ def _counter_pprint(obj, p, cycle):
     with p.group(len(name) + 1, name + "(", ")"):
         if cycle:
             p.text("...")
-        elif len(obj):
+        elif obj:
             p.pretty(dict(obj))
