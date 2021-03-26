@@ -190,8 +190,21 @@ class CommandPipeline:
     def __hash__(self):
         return hash(self.returncode)
 
+    def __str__(self):
+        self.end()
+        return self.output
+
     def __len__(self):
         return len(self.procs)
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.returncode == other
+        elif isinstance(other, str):
+            return str(self) == other
+        raise Exception(
+            f"CommandPipeline doesn't support comparing with {type(other)}."
+        )
 
     def __iter__(self):
         """Iterates through stdout and returns the lines, converting to

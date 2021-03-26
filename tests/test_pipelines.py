@@ -68,6 +68,12 @@ def test_raw_substitution(xonsh_execer):
         ("int(!(nocommand))", 1),
         ("hash(!(echo 1))", 0),
         ("hash(!(nocommand))", 1),
+        ("str(!(echo 1))", '1\n'),
+        ("str(!(nocommand))", ''),
+        ("!(echo 1) == 0", True),
+        ("!(nocommand) == 1", True),
+        ("!(echo -n 1) == '1'", True),
+        ("!(nocommand) == ''", True),
 ))
 def test_casting(cmdline, result, xonsh_execer):
     assert xonsh_execer.eval(f"{cmdline}") == result
