@@ -72,7 +72,7 @@ def test_raw_substitution(xonsh_execer):
         ("str(!(nocommand))", ''),
         ("!(echo 1) == 0", True),
         ("!(nocommand) == 1", True),
-        ("!(echo -n 1) == '1'", True),
+        ("!(echo -n str) == 'str'", True),
         ("!(nocommand) == ''", True),
 ))
 def test_casting(cmdline, result, xonsh_execer):
