@@ -72,9 +72,8 @@ def test_raw_substitution(xonsh_execer):
         ("str(!(nocommand))", ''),
         ("!(echo 1) == 0", True),
         ("!(nocommand) == 1", True),
-        ("!(echo -n str) == 'str'", True),
+        pytest.param("!(echo -n str) == 'str'", True, marks=skip_if_on_windows),
         ("!(nocommand) == ''", True),
-        pytest.param("echo -n hi", "hi", marks=skip_if_on_windows),
 ))
 def test_casting(cmdline, result, xonsh_execer):
     assert xonsh_execer.eval(f"{cmdline}") == result
