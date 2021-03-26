@@ -5,6 +5,7 @@ from __future__ import unicode_literals, print_function
 import os
 
 import pytest
+import inspect
 
 from xonsh.aliases import Aliases, ExecAlias
 from xonsh.environ import Env
@@ -179,3 +180,13 @@ def test_dict_merging_assignment(xonsh_execer, xonsh_builtins, alias):
 
     assert 'o' in alias
     assert alias['o'] == ales['o']
+
+
+def test_exec_alias_args(xonsh_execer, xonsh_builtins):
+    stack = inspect.stack()
+    try:
+        ExecAlias('myargs = $ALIAS_ARGS')(['arg1'], stack=stack)
+    except KeyError:
+        assert False
+
+    assert stack[0][0].f_locals['myargs'] == ['arg1']
