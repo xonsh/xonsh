@@ -592,10 +592,7 @@ def is_balanced(expr, ltok, rtok):
     if lcnt == 0:
         return True
     rcnt = expr.count(rtok)
-    if lcnt == rcnt:
-        return True
-    else:
-        return False
+    return lcnt == rcnt
 
 
 def subexpr_from_unbalanced(expr, ltok, rtok):
