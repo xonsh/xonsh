@@ -199,7 +199,7 @@ def check_parse(input):
 
 def nodes_equal(x, y):
     __tracebackhide__ = True
-    assert type(x) == type(y), "Ast nodes do not have the same type: '%s' != '%s' " % (
+    assert type(x) is type(y), "Ast nodes do not have the same type: '%s' != '%s' " % (
         type(x),
         type(y),
     )
@@ -217,7 +217,7 @@ def nodes_equal(x, y):
             "Ast nodes fields differ : %s (of type %s) != %s (of type %s)"
             % (xname, type(xval), yname, type(yval))
         )
-        assert type(xval) == type(yval), (
+        assert type(xval) is type(yval), (
             "Ast nodes fields differ : %s (of type %s) != %s (of type %s)"
             % (xname, type(xval), yname, type(yval))
         )
