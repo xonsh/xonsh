@@ -72,7 +72,7 @@ class GlobalNames(object):
             if len(val) < 2:
                 continue
             val = sorted(val)
-            if all([val[0][0] == x[0] for x in val[1:]]):
+            if all(val[0][0] == x[0] for x in val[1:]):
                 continue
             s += "WARNING: {0!r} defined in multiple locations:\n".format(key)
             for loc in val:
@@ -87,7 +87,7 @@ class GlobalNames(object):
         e = (self.pkg + "." + self.module, lineno, topnode)
         if name in self.cache:
             if topnode in self.impnodes and all(
-                [topnode == x[2] for x in self.cache[name]]
+                topnode == x[2] for x in self.cache[name]
             ):
                 return
             self.cache[name].add(e)
