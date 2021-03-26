@@ -644,7 +644,7 @@ def _tutorial(args):
 def _web(args):
     import subprocess
 
-    subprocess.run([sys.executable, "-m", "xonsh.webconfig"] + args.orig_args[1:])
+    subprocess.run([sys.executable, "-m", "xonsh.webconfig"] + args.orig_args[1:], check=True)
 
 
 def _jupyter_kernel(args):
