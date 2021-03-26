@@ -384,9 +384,9 @@ input and output were redirected.  For example:
     )
 
 This object will be "truthy" if its return code was 0, and it is equal (via
-``==``) to its return code.  It also hashes to its return code.  This allows
-for some interesting new kinds of interactions with subprocess commands, for
-example:
+``==``) to its return code. It also hashes to its return code. Converting the object
+to the string will return the output. This allows for some interesting new
+kinds of interactions with subprocess commands, for example:
 
 .. code-block:: xonshcon
 
