@@ -184,6 +184,12 @@ class CommandPipeline:
     def __bool__(self):
         return self.returncode == 0
 
+    def __int__(self):
+        return self.returncode
+
+    def __hash__(self):
+        return hash(self.returncode)
+
     def __len__(self):
         return len(self.procs)
 
