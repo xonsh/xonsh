@@ -105,7 +105,7 @@ def _xhj_get_history_files(sort=True, newest_first=False):
         if builtins.__xonsh__.env.get("XONSH_DEBUG"):
             xt.print_exception("Could not collect xonsh history files.")
     if sort:
-        files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
+        files.sort(key=os.path.getmtime, reverse=newest_first)
 
     custom_history_file = builtins.__xonsh__.env.get("XONSH_HISTORY_FILE", None)
     if custom_history_file:
