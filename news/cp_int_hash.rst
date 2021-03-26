@@ -1,6 +1,6 @@
 **Added:**
 
-* Added casting CommandPipeline to int or hash like described in the docs.
+* Added casting CommandPipeline to int, hash and str.
 
 **Changed:**
 
