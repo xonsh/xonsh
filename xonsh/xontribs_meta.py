@@ -411,6 +411,16 @@ def define_xontribs():
                 url="https://github.com/eugenesvk/xontrib-linuxbrew",
             ),
         ),
+        "macro_lib": Xontrib(
+            url="https://github.com/anki-code/xontrib-macro-lib",
+            description="Library of the useful macroses for the xonsh shell.",
+            package=_XontribPkg(
+                name="xontrib-macro-lib",
+                license="BSD",
+                install={"pip": "xpip install xontrib-macro-lib"},
+                url="https://github.com/anki-code/xontrib-macro-lib",
+            ),
+        ),
         "mpl": Xontrib(
             url="http://xon.sh",
             description="Matplotlib hooks for xonsh, including the new 'mpl' "
