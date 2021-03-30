@@ -1,6 +1,6 @@
 **Added:**
 
-* Added xontrib-macro-lib - the library of the useful macroses for the xonsh shell: https://github.com/anki-code/xontrib-macro-lib
+* Added xontrib-macro-lib - the library of the useful macros for the xonsh shell: https://github.com/anki-code/xontrib-macro-lib
 
 **Changed:**
 
