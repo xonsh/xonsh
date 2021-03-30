@@ -255,8 +255,8 @@ Running subprocess commands should work like in any other shell.
     >>> dir scripts
     xonsh  xonsh.bat
     >>> git status
-    On branch master
-    Your branch is up-to-date with 'origin/master'.
+    On branch main
+    Your branch is up-to-date with 'origin/main'.
     Changes not staged for commit:
       (use "git add <file>..." to update what will be committed)
       (use "git checkout -- <file>..." to discard changes in working directory)
@@ -1524,7 +1524,7 @@ By default, the following variables are available for use:
     foreground, if any.
   * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
     current working directory on some linux terminals. This is not usually needed.
-  * ``gitstatus``: Informative git status, like ``[master|MERGING|+1…2]``, you
+  * ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
     may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
   * ``localtime``: The current, local time as given by ``time.localtime()``.
     This is formatted with the time format string found in ``time_format``.
@@ -1659,7 +1659,7 @@ But let's consider a problem:
 .. code-block:: console
 
     snail@home ~/xonsh $ $PROMPT = "{cwd_base} [{curr_branch}] $ "
-    xonsh [master] $ cd ..
+    xonsh [main] $ cd ..
     ~ [] $
 
 We want the branch to be displayed in square brackets, but we also don't want
@@ -1670,7 +1670,7 @@ invoked only if the value is not ``None``:
 .. code-block:: console
 
     snail@home ~/xonsh $ $PROMPT = "{cwd_base}{curr_branch: [{}]} $ "
-    xonsh [master] $ cd ..
+    xonsh [main] $ cd ..
     ~ $
 
 The curly brackets act as a placeholder, because the additional part is an

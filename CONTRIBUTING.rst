@@ -24,7 +24,7 @@ terminal application. See installation instructions for details, but it
 is recommended to do an 'editable' install via `pip'
 
         $ pip install -e .
-        
+
 Next, make a trivial change (e.g. ``print("hello!")`` in ``main.py``).
 
 Finally, run the following commands. You should see the effects of your change
@@ -111,7 +111,7 @@ is open to interpretation.
 * Simple functions should have simple docstrings.
 * Lines should be at most 80 characters long. The 72 and 79 character
   recommendations from PEP8 are not required here.
-* All Python code should be compliant with Python 3.5+.  
+* All Python code should be compliant with Python 3.5+.
 * Tests should be written with `pytest <https://docs.pytest.org/>`_ using a procedural style. Do not use
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
@@ -365,7 +365,7 @@ developer can push their local changes directly to the website by::
 
 Branches and Releases
 =============================
-Mainline xonsh development occurs on the ``master`` branch. Other branches
+Mainline xonsh development occurs on the ``main`` branch. Other branches
 may be used for feature development (topical branches) or to represent
 past and upcoming releases.
 
@@ -381,17 +381,17 @@ getting released early.
 
 As such, the 'vX.X.X-release' branch should only exist while there are
 release candidates out.  They are akin to a temporary second level of staging,
-and so everything that is in this branch should also be part of master.
+and so everything that is in this branch should also be part of main.
 
 Every time a new release candidate comes out the vX.X.X-release should be
 tagged with the name 'X.X.X-rcX'.  There should be a 2 - 5 day period of time
 in between release candidates.  When the full and final release happens, the
-'vX.X.X-release' branch is merged into master and then deleted.
+'vX.X.X-release' branch is merged into main and then deleted.
 
 If you have a new fix that needs to be in the next release candidate, you
 should make a topical branch and then pull request it into the release branch.
 After this has been accepted, the topical branch should be merged with
-master as well.
+main as well.
 
 The release branch must be quiet and untouched for 2 - 5 days prior to the
 full release.
