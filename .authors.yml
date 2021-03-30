@@ -1104,6 +1104,9 @@
   email: anki-code@users.noreply.github.com
   alternate_emails:
   - anki-code
+  aliases:
+    - Andy Kipp
+    - Andy Kirby
   num_commits: 81
   first_commit: 2019-10-15 18:20:58
   github: xxh

@@ -59,3 +59,21 @@ def test_simple_capture(cmdline, output, xonsh_execer):
 
 def test_raw_substitution(xonsh_execer):
     assert xonsh_execer.eval("$(echo @(b'bytes!'))") == "bytes!\n"
+
+
+@pytest.mark.parametrize("cmdline, result", (
+        ("bool(!(echo 1))", True),
+        ("bool(!(nocommand))", False),
+        ("int(!(echo 1))", 0),
+        ("int(!(nocommand))", 1),
+        ("hash(!(echo 1))", 0),
+        ("hash(!(nocommand))", 1),
+        ("str(!(echo 1))", '1\n'),
+        ("str(!(nocommand))", ''),
+        ("!(echo 1) == 0", True),
+        ("!(nocommand) == 1", True),
+        pytest.param("!(echo -n str) == 'str'", True, marks=skip_if_on_windows),
+        ("!(nocommand) == ''", True),
+))
+def test_casting(cmdline, result, xonsh_execer):
+    assert xonsh_execer.eval(f"{cmdline}") == result
