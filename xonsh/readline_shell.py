@@ -426,8 +426,15 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         rl_completion_query_items(val=999999999)
+        prev_text = "".join(self.buffer)
         completions, plen = self.completer.complete(
-            prefix, line, begidx, endidx, ctx=self.ctx
+            prefix,
+            line,
+            begidx,
+            endidx,
+            ctx=self.ctx,
+            multiline_text=prev_text + line,
+            cursor_index=len(prev_text) + endidx,
         )
         rtn_completions = _render_completions(completions, prefix, plen)
 

@@ -24,7 +24,6 @@ class PromptToolkitCompleter(Completer):
         self.ctx = ctx
         self.shell = shell
         self.hist_suggester = AutoSuggestFromHistory()
-        self.current_document = None
 
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
@@ -36,23 +35,36 @@ class PromptToolkitCompleter(Completer):
         if not should_complete or self.completer is None:
             return
         # generate actual completions
-        line = document.current_line.lstrip()
-        line_ex = builtins.aliases.expand_alias(line)
+        line = document.current_line
 
         endidx = document.cursor_position_col
+        line_ex = builtins.aliases.expand_alias(line, endidx)
+
         begidx = line[:endidx].rfind(" ") + 1 if line[:endidx].rfind(" ") >= 0 else 0
         prefix = line[begidx:endidx]
         expand_offset = len(line_ex) - len(line)
 
-        # enable completers to access entire document
-        self.current_document = document
+        multiline_text = document.text
+        cursor_index = document.cursor_position
+        if line != line_ex:
+            line_start = cursor_index - len(document.current_line_before_cursor)
+            multiline_text = (
+                multiline_text[:line_start]
+                + line_ex
+                + multiline_text[line_start + len(line) :]
+            )
+            cursor_index += expand_offset
 
         # get normal completions
         completions, plen = self.completer.complete(
-            prefix, line_ex, begidx + expand_offset, endidx + expand_offset, self.ctx
+            prefix,
+            line_ex,
+            begidx + expand_offset,
+            endidx + expand_offset,
+            self.ctx,
+            multiline_text=multiline_text,
+            cursor_index=cursor_index,
         )
-
-        self.current_document = None
 
         # completions from auto suggest
         sug_comp = None
@@ -89,7 +101,7 @@ class PromptToolkitCompleter(Completer):
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display,
+                    display=comp.display or comp[pre:].strip("'\""),
                     display_meta=comp.description or None,
                     style=comp.style or "",
                 )

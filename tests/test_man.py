@@ -5,6 +5,8 @@ from xonsh.completers.man import complete_from_man
 
 from tools import skip_if_on_windows
 
+from xonsh.parsers.completion_context import CompletionContext, CommandContext, CommandArg
+
 
 @skip_if_on_windows
 def test_man_completion(monkeypatch, tmpdir, xonsh_builtins):
@@ -13,6 +15,8 @@ def test_man_completion(monkeypatch, tmpdir, xonsh_builtins):
         os.environ, "MANPATH", os.path.dirname(os.path.abspath(__file__))
     )
     xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tempdir)})
-    completions = complete_from_man("--", "yes --", 4, 6, xonsh_builtins.__xonsh__.env)
+    completions = complete_from_man(CompletionContext(
+        CommandContext(args=(CommandArg("yes"),), arg_index=1, prefix="--")
+    ))
     assert "--version" in completions
     assert "--help" in completions

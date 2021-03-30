@@ -406,7 +406,7 @@ Maintenance Tasks
 You can cleanup your local repository of transient files such as \*.pyc files
 created by unit testing by running::
 
-    $ rm -f xonsh/parser_table.py
+    $ rm -f xonsh/parser_table.py xonsh/completion_parser_table.py
     $ rm -f xonsh/*.pyc tests/*.pyc
     $ rm -fr build
 
