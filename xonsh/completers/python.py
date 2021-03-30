@@ -6,11 +6,17 @@ import builtins
 import importlib
 import warnings
 import collections.abc as cabc
+from xonsh.parsers.completion_context import CompletionContext, PythonContext
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
 
-from xonsh.completers.tools import get_filter_function
+from xonsh.completers.tools import (
+    CompleterResult,
+    contextual_completer,
+    get_filter_function,
+    RichCompletion,
+)
 
 
 @xl.lazyobject
@@ -21,15 +27,15 @@ def RE_ATTR():
 @xl.lazyobject
 def XONSH_EXPR_TOKENS():
     return {
-        "and ",
+        RichCompletion("and", append_space=True),
         "else",
-        "for ",
-        "if ",
-        "in ",
-        "is ",
-        "lambda ",
-        "not ",
-        "or ",
+        RichCompletion("for", append_space=True),
+        RichCompletion("if", append_space=True),
+        RichCompletion("in", append_space=True),
+        RichCompletion("is", append_space=True),
+        RichCompletion("lambda", append_space=True),
+        RichCompletion("not", append_space=True),
+        RichCompletion("or", append_space=True),
         "+",
         "-",
         "/",
@@ -48,7 +54,7 @@ def XONSH_EXPR_TOKENS():
         ">=",
         "==",
         "!=",
-        ",",
+        RichCompletion(",", append_space=True),
         "?",
         "??",
         "$(",
@@ -66,27 +72,27 @@ def XONSH_EXPR_TOKENS():
 @xl.lazyobject
 def XONSH_STMT_TOKENS():
     return {
-        "as ",
-        "assert ",
+        RichCompletion("as", append_space=True),
+        RichCompletion("assert", append_space=True),
         "break",
-        "class ",
+        RichCompletion("class", append_space=True),
         "continue",
-        "def ",
-        "del ",
-        "elif ",
-        "except ",
+        RichCompletion("def", append_space=True),
+        RichCompletion("del", append_space=True),
+        RichCompletion("elif", append_space=True),
+        RichCompletion("except", append_space=True),
         "finally:",
-        "from ",
-        "global ",
-        "import ",
-        "nonlocal ",
+        RichCompletion("from", append_space=True),
+        RichCompletion("global", append_space=True),
+        RichCompletion("import", append_space=True),
+        RichCompletion("nonlocal", append_space=True),
         "pass",
-        "raise ",
-        "return ",
+        RichCompletion("raise", append_space=True),
+        RichCompletion("return", append_space=True),
         "try:",
-        "while ",
-        "with ",
-        "yield ",
+        RichCompletion("while", append_space=True),
+        RichCompletion("with", append_space=True),
+        RichCompletion("yield", append_space=True),
         "-",
         "/",
         "//",
@@ -125,34 +131,45 @@ def XONSH_TOKENS():
     return set(XONSH_EXPR_TOKENS) | set(XONSH_STMT_TOKENS)
 
 
-def complete_python(prefix, line, start, end, ctx):
+@contextual_completer
+def complete_python(context: CompletionContext) -> CompleterResult:
     """
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
     If there are no matches, split on common delimiters and try again.
     """
-    rtn = _complete_python(prefix, line, start, end, ctx)
+    if context.python is None:
+        return None
+
+    if context.command and context.command.arg_index != 0:
+        # this can be a command (i.e. not a subexpression)
+        first = context.command.args[0].value
+        ctx = context.python.ctx or {}
+        if first in builtins.__xonsh__.commands_cache and first not in ctx:  # type: ignore
+            # this is a known command, so it won't be python code
+            return None
+
+    line = context.python.multiline_code
+    prefix = (line.rsplit(maxsplit=1) or [""])[-1]
+    rtn = _complete_python(prefix, context.python)
     if not rtn:
         prefix = (
             re.split(r"\(|=|{|\[|,", prefix)[-1]
             if not prefix.startswith(",")
             else prefix
         )
-        start = line.find(prefix)
-        rtn = _complete_python(prefix, line, start, end, ctx)
-        return rtn, len(prefix)
-    return rtn
+        rtn = _complete_python(prefix, context.python)
+    return rtn, len(prefix)
 
 
-def _complete_python(prefix, line, start, end, ctx):
+def _complete_python(prefix, context: PythonContext):
     """
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
     """
-    if line != "":
-        first = line.split()[0]
-        if first in builtins.__xonsh__.commands_cache and first not in ctx:
-            return set()
+    line = context.multiline_code
+    end = context.cursor_index
+    ctx = context.ctx
     filt = get_filter_function()
     rtn = set()
     if ctx is not None:
@@ -170,19 +187,6 @@ def _complete_python(prefix, line, start, end, ctx):
         rtn |= {s for s in XONSH_EXPR_TOKENS if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     return rtn
-
-
-def complete_python_mode(prefix, line, start, end, ctx):
-    """
-    Python-mode completions for @( and ${
-    """
-    if not (prefix.startswith("@(") or prefix.startswith("${")):
-        return set()
-    prefix_start = prefix[:2]
-    python_matches = complete_python(prefix[2:], line, start - 2, end - 2, ctx)
-    if isinstance(python_matches, cabc.Sequence):
-        python_matches = python_matches[0]
-    return set(prefix_start + i for i in python_matches)
 
 
 def _turn_off_warning(func):
@@ -277,23 +281,37 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
     return args
 
 
-def complete_import(prefix, line, start, end, ctx):
+@contextual_completer
+def complete_import(context: CompletionContext):
     """
     Completes module names and contents for "import ..." and "from ... import
     ..."
     """
-    ltoks = line.split()
-    ntoks = len(ltoks)
-    if ntoks == 2 and ltoks[0] == "from":
+    if not (context.command and context.python):
+        # Imports are only possible in independent lines (not in `$()` or `@()`).
+        # This means it's python code, but also can be a command as far as the parser is concerned.
+        return None
+
+    command = context.command
+
+    if command.opening_quote:
+        # can't have a quoted import
+        return None
+
+    arg_index = command.arg_index
+    prefix = command.prefix
+    args = command.args
+
+    if arg_index == 1 and args[0].value == "from":
         # completing module to import
         return {"{} ".format(i) for i in complete_module(prefix)}
-    if ntoks > 1 and ltoks[0] == "import" and start == len("import "):
+    if arg_index >= 1 and args[0].value == "import":
         # completing module to import
         return complete_module(prefix)
-    if ntoks > 2 and ltoks[0] == "from" and ltoks[2] == "import":
+    if arg_index > 2 and args[0].value == "from" and args[2].value == "import":
         # complete thing inside a module
         try:
-            mod = importlib.import_module(ltoks[1])
+            mod = importlib.import_module(args[1].value)
         except ImportError:
             return set()
         out = {i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix)}

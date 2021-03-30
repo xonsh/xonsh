@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, call
 
 from xonsh.xontribs import find_xontrib
 from xonsh.completers.tools import RichCompletion
+from xonsh.parsers.completion_context import CompletionContext, PythonContext
 
 
 @pytest.fixture
@@ -47,16 +48,19 @@ def test_completer_added(jedi_xontrib):
 
 
 @pytest.mark.parametrize(
-    "prefix, line, start, end, ctx", [("x", "10 + x", 5, 6, {}),], ids="x"
+    "context",
+    [
+        CompletionContext(python=PythonContext("10 + x", 6)),
+    ],
 )
 @pytest.mark.parametrize("version", ["new", "old"])
-def test_jedi_api(jedi_xontrib, jedi_mock, version, prefix, line, start, end, ctx):
+def test_jedi_api(jedi_xontrib, jedi_mock, version, context):
     if version == "old":
         jedi_mock.__version__ = "0.15.0"
         jedi_mock.Interpreter().completions.return_value = []
         jedi_mock.reset_mock()
 
-    jedi_xontrib.complete_jedi(prefix, line, start, end, ctx)
+    jedi_xontrib.complete_jedi(context)
 
     extra_namespace = {"__xonsh__": builtins.__xonsh__}
     try:
@@ -65,6 +69,8 @@ def test_jedi_api(jedi_xontrib, jedi_mock, version, prefix, line, start, end, ct
         pass
     namespaces = [{}, extra_namespace]
 
+    line = context.python.multiline_code
+    end = context.python.cursor_index
     if version == "new":
         assert jedi_mock.Interpreter.call_args_list == [call(line, namespaces)]
         assert jedi_mock.Interpreter().complete.call_args_list == [call(1, end)]
@@ -76,14 +82,12 @@ def test_jedi_api(jedi_xontrib, jedi_mock, version, prefix, line, start, end, ct
 
 
 def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
-    shell_mock = MagicMock()
     complete_document = "xx = 1\n1 + x"
-    shell_mock.shell_type = "prompt_toolkit"
-    shell_mock.shell.pt_completer.current_document.text = complete_document
-    shell_mock.shell.pt_completer.current_document.cursor_position_row = 1
-    shell_mock.shell.pt_completer.current_document.cursor_position_col = 5
-    monkeypatch.setattr(builtins.__xonsh__, "shell", shell_mock)
-    jedi_xontrib.complete_jedi("x", "x", 0, 1, {})
+    jedi_xontrib.complete_jedi(
+        CompletionContext(
+            python=PythonContext(complete_document, len(complete_document))
+        )
+    )
 
     assert jedi_mock.Interpreter.call_args_list[0][0][0] == complete_document
     assert jedi_mock.Interpreter().complete.call_args_list == [
@@ -200,7 +204,9 @@ def test_rich_completions(jedi_xontrib, jedi_mock, completion, rich_completion):
 
     jedi_xontrib.XONSH_SPECIAL_TOKENS = []
     jedi_mock.Interpreter().complete.return_value = [comp_mock]
-    completions = jedi_xontrib.complete_jedi("", "", 0, 0, {})
+    completions = jedi_xontrib.complete_jedi(
+        CompletionContext(python=PythonContext("", 0))
+    )
     assert len(completions) == 1
     (ret_completion,) = completions
     assert isinstance(ret_completion, RichCompletion)
@@ -210,9 +216,7 @@ def test_rich_completions(jedi_xontrib, jedi_mock, completion, rich_completion):
 
 
 def test_special_tokens(jedi_xontrib):
-    assert (
-        jedi_xontrib.complete_jedi("", "", 0, 0, {})
-        == jedi_xontrib.XONSH_SPECIAL_TOKENS
-    )
-    assert jedi_xontrib.complete_jedi("@", "@", 0, 1, {}) == {"@", "@(", "@$("}
-    assert jedi_xontrib.complete_jedi("$", "$", 0, 1, {}) == {"$[", "${", "$("}
+    assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext("", 0))) \
+        .issuperset(jedi_xontrib.XONSH_SPECIAL_TOKENS)
+    assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext( "@", 1))) == {"@", "@(", "@$("}
+    assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext("$", 1))) == {"$[", "${", "$("}
