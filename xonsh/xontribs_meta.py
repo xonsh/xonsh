@@ -413,7 +413,7 @@ def define_xontribs():
         ),
         "macro_lib": Xontrib(
             url="https://github.com/anki-code/xontrib-macro-lib",
-            description="Library of the useful macroses for the xonsh shell.",
+            description="Library of the useful macros for the xonsh shell.",
             package=_XontribPkg(
                 name="xontrib-macro-lib",
                 license="BSD",
