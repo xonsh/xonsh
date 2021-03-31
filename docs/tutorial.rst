@@ -1206,19 +1206,17 @@ matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
 The values are lists of strings, where the first element is the command, and
-the rest are the arguments. You can also set the value to a string, in which
-one of two things will happen:
+the rest are the arguments.
 
-1. If the string is a xonsh expression, it will be converted to a list
-   automatically with xonsh's ``Lexer.split()`` method.
-2. If the string is more complex (representing a block of xonsh code),
-   the alias will be registered as an ``ExecAlias``, which is a callable
-   alias. This block of code will then be executed whenever the alias is
-   run.
+.. code-block:: xonshcon
 
-For example, the following creates several aliases for the ``git``
-version control software.  Both styles (list of strings and single
-string) are shown:
+    >>> aliases['ls']
+    ['ls', '--color=auto', '-v']
+
+You can also set the value to a string. If the string is a xonsh expression,
+it will be converted to a list automatically with xonsh's ``Lexer.split()`` method.
+For example, the following creates several aliases for the ``git`` version
+control software. Both styles (list of strings and single string) are shown:
 
 .. code-block:: xonshcon
 
@@ -1229,6 +1227,17 @@ string) are shown:
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
 being executed.
+
+If the string is representing a block of xonsh code, the alias will be registered
+as an ``ExecAlias``, which is a callable alias. This block of code will then be
+executed whenever the alias is run. The arguments are available in ``$ALIAS_ARGS``
+and ``$ALIAS_ARG<n>`` environment variables.
+
+.. code-block:: xonshcon
+
+    >>> aliases['answer'] = 'echo @(21+21)'
+    >>> aliases['piu'] = 'pip install -U @($ALIAS_ARGS)'
+    >>> aliases['cdls'] = 'cd $ALIAS_ARG0 && ls'
 
 
 Callable Aliases
