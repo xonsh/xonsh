@@ -87,11 +87,15 @@ def _xhj_gc_bytes_to_rmfiles(hsize, files):
 
     return bytes_removed, files_removed
 
+
 def _xhj_get_data_dir():
-    dir = xt.expanduser_abs_path(os.path.join(builtins.__xonsh__.env.get("XONSH_DATA_DIR"), 'history_json'))
+    dir = xt.expanduser_abs_path(
+        os.path.join(builtins.__xonsh__.env.get("XONSH_DATA_DIR"), "history_json")
+    )
     if not os.path.exists(dir):
         os.makedirs(dir)
     return dir
+
 
 def _xhj_get_history_files(sort=True, newest_first=False):
     """Find and return the history files. Optionally sort files by
@@ -99,7 +103,9 @@ def _xhj_get_history_files(sort=True, newest_first=False):
     """
     data_dirs = [
         _xhj_get_data_dir(),
-        builtins.__xonsh__.env.get("XONSH_DATA_DIR")  # backwards compatibility, remove in the future
+        builtins.__xonsh__.env.get(
+            "XONSH_DATA_DIR"
+        ),  # backwards compatibility, remove in the future
     ]
 
     files = []
