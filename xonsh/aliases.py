@@ -213,9 +213,9 @@ class ExecAlias:
         execer = builtins.__xonsh__.execer
         frame = stack[0][0]  # execute as though we are at the call site
 
-        alias_args = {"ALIAS_ARGS": args}
+        alias_args = {"args": args}
         for i, a in enumerate(args):
-            alias_args[f"ALIAS_ARG{i}"] = a
+            alias_args[f"arg{i}"] = a
 
         with builtins.__xonsh__.env.swap(alias_args):
             execer.exec(

@@ -1230,14 +1230,14 @@ being executed.
 
 If the string is representing a block of xonsh code, the alias will be registered
 as an ``ExecAlias``, which is a callable alias. This block of code will then be
-executed whenever the alias is run. The arguments are available in ``$ALIAS_ARGS``
-and ``$ALIAS_ARG<n>`` environment variables.
+executed whenever the alias is run. The arguments are available in the list ``$args``
+or by the index in ``$arg<n>`` environment variables.
 
 .. code-block:: xonshcon
 
     >>> aliases['answer'] = 'echo @(21+21)'
-    >>> aliases['piu'] = 'pip install -U @($ALIAS_ARGS)'
-    >>> aliases['cdls'] = 'cd $ALIAS_ARG0 && ls'
+    >>> aliases['piu'] = 'pip install -U @($args)'
+    >>> aliases['cdls'] = 'cd $arg0 && ls'
 
 .. note::
 

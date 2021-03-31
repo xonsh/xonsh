@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ability to get arguments list in ExecAlias using ALIAS_ARGS environment variable.
+* Added ability to get the arguments list in ExecAlias using ``$args`` and ``$arg<n>`` environment variables.
 
 **Changed:**
 

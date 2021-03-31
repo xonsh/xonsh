@@ -185,8 +185,10 @@ def test_dict_merging_assignment(xonsh_execer, xonsh_builtins, alias):
 def test_exec_alias_args(xonsh_execer, xonsh_builtins):
     stack = inspect.stack()
     try:
-        ExecAlias('myargs = $ALIAS_ARGS')(['arg1'], stack=stack)
+        ExecAlias('myargs = $args')(['arg0'], stack=stack)
+        ExecAlias('myarg0 = $arg0')(['arg0'], stack=stack)
     except KeyError:
         assert False
 
-    assert stack[0][0].f_locals['myargs'] == ['arg1']
+    assert stack[0][0].f_locals['myargs'] == ['arg0']
+    assert stack[0][0].f_locals['myarg0'] == 'arg0'
