@@ -65,6 +65,12 @@ ON_OPENBSD = LazyBool(
     lambda: (sys.platform.startswith("openbsd")), globals(), "ON_OPENBSD"
 )
 """``True`` if on a OpenBSD operating system, else ``False``."""
+IN_APPIMAGE = LazyBool(
+    lambda: ("APPIMAGE" in os.environ and "APPDIR" in os.environ),
+    globals(),
+    "IN_APPIMAGE",
+)
+"""``True`` if in AppImage, else ``False``."""
 
 
 @lazybool

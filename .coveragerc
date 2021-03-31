@@ -8,6 +8,7 @@ omit =
   */__amalgam__.py
   xonsh/lazyasd.py
   xonsh/parser_table.py
+  xonsh/completion_parser_table.py
   xonsh/ply/*
 
 # keep all cache files in one place

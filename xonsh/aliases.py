@@ -22,6 +22,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_DRAGONFLY,
     ON_POSIX,
+    IN_APPIMAGE,
 )
 from xonsh.tools import (
     XonshError,
@@ -107,15 +108,19 @@ class Aliases(cabc.MutableMapping):
                 acc_args = rest + list(acc_args)
                 return self.eval_alias(self._raw[token], seen_tokens, acc_args)
 
-    def expand_alias(self, line):
+    def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
         builtin function and if alias is only a single command.
+        The command won't be expanded if the cursor's inside/behind it.
         """
-        word = line.split(" ", 1)[0]
-        if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):
+        word = (line.split(maxsplit=1) or [""])[0]
+        if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):  # type: ignore
             word_idx = line.find(word)
-            expansion = " ".join(self.get(word))
-            line = line[:word_idx] + expansion + line[word_idx + len(word) :]
+            word_edge = word_idx + len(word)
+            if cursor_index > word_edge:
+                # the cursor isn't inside/behind the word
+                expansion = " ".join(self.get(word))
+                line = line[:word_idx] + expansion + line[word_edge:]
         return line
 
     #
@@ -199,7 +204,7 @@ class ExecAlias:
         src : str
             Source code that will be
         """
-        self.src = src if src.endswith("\n") else src + "\n"
+        self.src = src
         self.filename = filename
 
     def __call__(
@@ -743,7 +748,7 @@ def showcmd(args, stdin=None):
 
     Example:
     -------
-      >>> showcmd echo $USER can't hear "the sea"
+      >>> showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """
     if len(args) == 0 or (len(args) == 1 and args[0] in {"-h", "--help"}):
@@ -765,7 +770,7 @@ def detect_xpip_alias():
 
     basecmd = [sys.executable, "-m", "pip"]
     try:
-        if ON_WINDOWS:
+        if ON_WINDOWS or IN_APPIMAGE:
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
