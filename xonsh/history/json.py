@@ -119,7 +119,9 @@ def _xhj_get_history_files(sort=True, newest_first=False):
             ]
         except OSError:
             if builtins.__xonsh__.env.get("XONSH_DEBUG"):
-                xt.print_exception("Could not collect xonsh history files.")
+                xt.print_exception(
+                    f"Could not collect xonsh history json files from {data_dir}"
+                )
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
 
