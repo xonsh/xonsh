@@ -1241,7 +1241,7 @@ or by the index in ``$arg<n>`` environment variables.
 
 .. note::
 
-   To add multiple aliases there is ``|=`` operator: ``aliases |= {'e': 'echo', 'g': 'git'}``.
+   To add multiple aliases there is merge operator: ``aliases |= {'e': 'echo', 'g': 'git'}``.
 
 
 Callable Aliases
