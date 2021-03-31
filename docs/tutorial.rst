@@ -1239,6 +1239,10 @@ and ``$ALIAS_ARG<n>`` environment variables.
     >>> aliases['piu'] = 'pip install -U @($ALIAS_ARGS)'
     >>> aliases['cdls'] = 'cd $ALIAS_ARG0 && ls'
 
+.. note::
+
+   To add multiple aliases there is ``|=`` operator: ``aliases |= {'e': 'echo', 'g': 'git'}``.
+
 
 Callable Aliases
 ----------------
