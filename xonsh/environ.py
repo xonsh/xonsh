@@ -1107,6 +1107,14 @@ class ChangeDirSetting(Xettings):
         False,
         "Whether or not to suppress directory stack manipulation output.",
     )
+    COMPLETE_DOTS = Var.with_default(
+        "matching",
+        doc="Flag to specify how current and previous directories should be "
+        "tab completed  ('./', '../'):"
+        "    - ``always`` Always complete paths with ./ and ../\n"
+        "    - ``never`` Never complete paths with ./ and ../\n"
+        "    - ``matching`` Complete if path starts with . or ..",
+    )
 
 
 class InterpreterSetting(Xettings):

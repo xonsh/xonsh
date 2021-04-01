@@ -124,13 +124,16 @@ def _env(prefix):
 
 
 def _dots(prefix):
-    ignore_dots = bool(builtins.__xonsh__.env.get("IGNORE_DOTS"))
-    if ignore_dots:
+    complete_dots = builtins.__xonsh__.env.get("COMPLETE_DOTS").lower()
+    if complete_dots == 'never':
         return ()
     slash = xt.get_sep()
     if slash == "\\":
         slash = ""
-    if prefix in {"", "."}:
+    prefixes = {"."}
+    if complete_dots == 'always':
+        prefixes.add("")
+    if prefix in prefixes:
         return ("." + slash, ".." + slash)
     elif prefix == "..":
         return (".." + slash,)
