@@ -124,6 +124,9 @@ def _env(prefix):
 
 
 def _dots(prefix):
+    ignore_dots = bool(builtins.__xonsh__.env.get("IGNORE_DOTS"))
+    if ignore_dots:
+        return ()
     slash = xt.get_sep()
     if slash == "\\":
         slash = ""
