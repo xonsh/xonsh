@@ -21,9 +21,7 @@ def complete_from_bash(context: CommandContext):
     line = " ".join(args)
 
     # lengths of all args + joining spaces
-    begidx = sum(len(a) for a in args[: context.arg_index]) + max(
-        context.arg_index - 1, 0
-    )
+    begidx = sum(len(a) for a in args[: context.arg_index]) + context.arg_index
     endidx = begidx + len(prefix)
 
     comps, lprefix = bash_completions(
