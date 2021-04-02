@@ -70,6 +70,7 @@ def test_premain_custom_rc(shell, tmpdir, monkeypatch):
     assert f.strpath in builtins.__xonsh__.env.get("XONSHRC")
 
 
+@pytest.mark.xfail(condition=(ON_WINDOWS and sys.version[:2] == (3, 8)))
 def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
     """Test that an RC file can load modules inside the same folder it is located in."""
 
