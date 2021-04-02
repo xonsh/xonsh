@@ -18,9 +18,9 @@
 
 **Fixed:**
 
-* Set `check` flag to `True`
-* Simplified the `if` statement
-* Used `is` to compare type of objects
+* Set check flag to True
+* Simplified the if statement
+* Used is to compare type of objects
 
 **Security:**
 
