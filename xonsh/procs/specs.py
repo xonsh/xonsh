@@ -355,6 +355,8 @@ class SubprocSpec:
         # pure attrs
         self.args = list(cmd)
         self.alias = None
+        self.alias_name = None
+        self.alias_stack = builtins.__xonsh__.env.get("ALIAS_STACK", '').split(':')
         self.binary_loc = None
         self.is_proxy = False
         self.background = False
@@ -442,6 +444,7 @@ class SubprocSpec:
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         self.prep_env(kwargs)
         if callable(self.alias):
+            kwargs['env']['ALIAS_NAME'] = self.alias_name
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
@@ -589,17 +592,29 @@ class SubprocSpec:
     def resolve_alias(self):
         """Sets alias in command, if applicable."""
         cmd0 = self.cmd[0]
+
+        if cmd0 in self.alias_stack:
+            # Disabling the alias resolving to prevent infinite loop in call stack
+            # and futher using binary_loc to resolve the alias name.
+            self.alias = None
+            return
+
         if callable(cmd0):
             alias = cmd0
         else:
             alias = builtins.aliases.get(cmd0, None)
+            if alias is not None:
+                self.alias_name = cmd0
         self.alias = alias
 
     def resolve_binary_loc(self):
         """Sets the binary location"""
         alias = self.alias
         if alias is None:
-            binary_loc = xenv.locate_binary(self.cmd[0])
+            cmd0 = self.cmd[0]
+            binary_loc = xenv.locate_binary(cmd0)
+            if binary_loc == cmd0 and cmd0 in self.alias_stack:
+                raise Exception(f'Infinite loop of calls for "{cmd0}" alias.')
         elif callable(alias):
             binary_loc = None
         else:

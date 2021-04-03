@@ -102,6 +102,40 @@ f
         "hello\n",
         0,
     ),
+    # testing alias stack: lambda function
+    (
+        """
+def _echo():
+    echo hello
+
+aliases['echo'] = _echo
+echo
+""",
+        "hello\n",
+        0,
+    ),
+    # testing alias stack: ExecAlias
+    (
+        """
+aliases['echo'] = "echo @('hello')"
+echo
+""",
+        "hello\n",
+        0,
+    ),
+    # testing alias stack: callable alias (ExecAlias) + no binary location + infinite loop
+    (
+        """
+aliases['nobinaryloc1'] = "nobinaryloc2 @(1)"
+aliases['nobinaryloc2'] = "nobinaryloc1 @(1)"
+try:
+    nobinaryloc2
+except:
+    print('qwe')
+""",
+        lambda out: 'Infinite loop of calls for "nobinaryloc2" alias.' in out,
+        0,
+    ),
     # test redirecting a function alias to a file
     (
         """
@@ -462,7 +496,10 @@ a
 def test_script(case):
     script, exp_out, exp_rtn = case
     out, err, rtn = run_xonsh(script)
-    assert exp_out == out
+    if callable(exp_out):
+        assert exp_out(out)
+    else:
+        assert exp_out == out
     assert exp_rtn == rtn
 
 
