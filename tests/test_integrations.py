@@ -76,6 +76,8 @@ def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
     """
+    if ON_WINDOWS and 'skip_if_on_windows' in cmd:
+        return
     out, err, rtn = run_xonsh(cmd, stderr=sp.PIPE)
     if callable(fmt):
         out = fmt(out)
@@ -105,6 +107,7 @@ f
     # testing alias stack: lambda function
     (
         """
+# skip_if_on_windows
 def _echo():
     echo hello
 
@@ -117,6 +120,7 @@ echo
     # testing alias stack: ExecAlias
     (
         """
+# skip_if_on_windows        
 aliases['echo'] = "echo @('hello')"
 echo
 """,
@@ -126,6 +130,7 @@ echo
     # testing alias stack: callable alias (ExecAlias) + no binary location + infinite loop
     (
         """
+# skip_if_on_windows        
 aliases['first'] = "second @(1)"
 aliases['second'] = "first @(1)"
 first
