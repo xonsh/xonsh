@@ -126,14 +126,11 @@ echo
     # testing alias stack: callable alias (ExecAlias) + no binary location + infinite loop
     (
         """
-aliases['nobinaryloc1'] = "nobinaryloc2 @(1)"
-aliases['nobinaryloc2'] = "nobinaryloc1 @(1)"
-try:
-    nobinaryloc2
-except:
-    print('qwe')
+aliases['first'] = "second @(1)"
+aliases['second'] = "first @(1)"
+first
 """,
-        lambda out: 'Infinite loop of calls for "nobinaryloc2" alias.' in out,
+        lambda out: 'Infinite loop of calls for "first" alias.' in out,
         0,
     ),
     # test redirecting a function alias to a file
