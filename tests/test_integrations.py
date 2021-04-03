@@ -76,8 +76,6 @@ def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
     """
-    if ON_WINDOWS and 'skip_if_on_windows' in cmd:
-        return
     out, err, rtn = run_xonsh(cmd, stderr=sp.PIPE)
     if callable(fmt):
         out = fmt(out)
@@ -497,6 +495,8 @@ a
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 def test_script(case):
     script, exp_out, exp_rtn = case
+    if ON_WINDOWS and 'skip_if_on_windows' in script:
+        return
     out, err, rtn = run_xonsh(script)
     if callable(exp_out):
         assert exp_out(out)
