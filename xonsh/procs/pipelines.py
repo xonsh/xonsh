@@ -396,7 +396,9 @@ class CommandPipeline:
         if self.stderr_postfix:
             b += self.stderr_postfix
         stderr_has_buffer = hasattr(sys.stderr, "buffer")
-        show_stderr = (self.captured != 'object' or env.get("XONSH_SUBPROC_CAPTURED_PRINT_STDERR", True))
+        show_stderr = self.captured != "object" or env.get(
+            "XONSH_SUBPROC_CAPTURED_PRINT_STDERR", True
+        )
         if show_stderr:
             # write bytes to std stream
             if stderr_has_buffer:

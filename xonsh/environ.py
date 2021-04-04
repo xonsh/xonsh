@@ -859,7 +859,7 @@ class GeneralSetting(Xettings):
     )
     XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
         True,
-        "If ``True`` the stderr from captured subproc will be printed automatically."
+        "If ``True`` the stderr from captured subproc will be printed automatically.",
     )
     TERM = Var.no_default(
         "str",
