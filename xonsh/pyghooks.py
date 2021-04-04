@@ -1712,7 +1712,7 @@ class XonshLexer(Python3Lexer):
         ],
         "subproc": [
             include("mode_switch_brackets"),
-            (r"&&|\|\||and|or", Operator, "subproc_start"),
+            (r"&&|\|\||\band\b|\bor\b", Operator, "subproc_start"),
             (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
             (r"'(\\\\|\\[0-7]+|\\.|[^'\\])*'", String.Single),
             (r"(?<=\w|\s)!", Keyword, "subproc_macro"),

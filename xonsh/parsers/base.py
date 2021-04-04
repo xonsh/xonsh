@@ -215,6 +215,29 @@ def hasglobstar(x):
         return False
 
 
+def raise_parse_error(
+    msg: tp.Union[str, tp.Tuple[str]],
+    loc: tp.Optional[Location] = None,
+    code: tp.Optional[str] = None,
+    lines: tp.Optional[tp.List[str]] = None,
+):
+    if loc is None or code is None or lines is None:
+        err_line_pointer = ""
+    else:
+        col = loc.column + 1
+        if loc.lineno == 0:
+            loc.lineno = len(lines)
+        i = loc.lineno - 1
+        if 0 <= i < len(lines):
+            err_line = lines[i].rstrip()
+            err_line_pointer = "\n{}\n{: >{}}".format(err_line, "^", col)
+        else:
+            err_line_pointer = ""
+    err = SyntaxError("{0}: {1}{2}".format(loc, msg, err_line_pointer))
+    err.loc = loc  # type: ignore
+    raise err
+
+
 class YaccLoader(Thread):
     """Thread to load (but not shave) the yacc parser."""
 
@@ -630,22 +653,7 @@ class BaseParser(object):
         raise SyntaxError()
 
     def _parse_error(self, msg, loc):
-        if self.xonsh_code is None or loc is None:
-            err_line_pointer = ""
-        else:
-            col = loc.column + 1
-            lines = self.lines
-            if loc.lineno == 0:
-                loc.lineno = len(lines)
-            i = loc.lineno - 1
-            if 0 <= i < len(lines):
-                err_line = lines[i].rstrip()
-                err_line_pointer = "\n{}\n{: >{}}".format(err_line, "^", col)
-            else:
-                err_line_pointer = ""
-        err = SyntaxError("{0}: {1}{2}".format(loc, msg, err_line_pointer))
-        err.loc = loc
-        raise err
+        raise_parse_error(msg, loc, self.xonsh_code, self.lines)
 
     #
     # Precedence of operators

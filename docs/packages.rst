@@ -43,7 +43,7 @@ The above ``pip`` commands may have to be spelled ``pip3`` or ``sudo pip3`` if y
 
 .. code-block:: console
 
-    $ pip install pygments prompt-toolkit setproctitle https://github.com/xonsh/xonsh/archive/master.zip
+    $ pip install pygments prompt-toolkit setproctitle https://github.com/xonsh/xonsh/archive/main.zip
 
 Spelling of ``pip`` command may likewise have to be amended as noted above.
 

@@ -17,6 +17,7 @@ from setuptools.command.install_scripts import install_scripts
 TABLES = [
     "xonsh/lexer_table.py",
     "xonsh/parser_table.py",
+    "xonsh/completion_parser_table.py",
     "xonsh/__amalgam__.py",
     "xonsh/completers/__amalgam__.py",
     "xonsh/history/__amalgam__.py",

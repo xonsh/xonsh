@@ -1,7 +1,7 @@
 __version__ = "0.9.27"
 
 
-# amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
+# amalgamate exclude jupyter_kernel parser_table completion_parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard pytest_plugin fs macutils pygments_cache
 # amalgamate exclude jupyter_shell proc
 import os as _os

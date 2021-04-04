@@ -176,7 +176,7 @@ Of course, you're under no obligation to register your xontrib.  Users will
 still be able to load your xontrib, as long as they have it installed.
 
 To register a xontrib, add an entry to
-`the xontribs_meta.py file <https://github.com/xonsh/xonsh/blob/master/xonsh/xontribs_meta.py>`_
+`the xontribs_meta.py file <https://github.com/xonsh/xonsh/blob/main/xonsh/xontribs_meta.py>`_
 in the main xonsh repository.  A pull request is probably best, but if you
 are having trouble figuring it out please contact one of the xonsh devs
 with the relevant information.

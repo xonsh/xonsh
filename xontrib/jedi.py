@@ -1,25 +1,22 @@
 """Use Jedi as xonsh's python completer."""
-import itertools
+import builtins
 
 import xonsh
+from xonsh.built_ins import XonshSession
 from xonsh.lazyasd import lazyobject, lazybool
 from xonsh.completers.tools import (
     get_filter_function,
-    get_ptk_completer,
     RichCompletion,
+    contextual_completer,
 )
 from xonsh.completers import _aliases
+from xonsh.parsers.completion_context import CompletionContext
 
 __all__ = ()
 
 # an error will be printed in xontribs
 # if jedi isn't installed
 import jedi
-
-
-@lazyobject
-def PTK_COMPLETER():
-    return get_ptk_completer()
 
 
 @lazybool
@@ -46,32 +43,40 @@ def XONSH_SPECIAL_TOKENS():
     }
 
 
-def complete_jedi(prefix, line, start, end, ctx):
+@lazyobject
+def XONSH_SPECIAL_TOKENS_FIRST():
+    return {tok[0] for tok in XONSH_SPECIAL_TOKENS}
+
+
+@contextual_completer
+def complete_jedi(context: CompletionContext):
     """Completes python code using Jedi and xonsh operators"""
+    if context.python is None:
+        return None
+
+    xonsh_execer: XonshSession = builtins.__xonsh__  # type: ignore
+    ctx = context.python.ctx or {}
 
     # if this is the first word and it's a known command, don't complete.
     # taken from xonsh/completers/python.py
-    if line.lstrip() != "":
-        first = line.split(maxsplit=1)[0]
-        if prefix == first and first in __xonsh__.commands_cache and first not in ctx:
-            return set()
+    if context.command and context.command.arg_index != 0:
+        first = context.command.args[0].value
+        if first in xonsh_execer.commands_cache and first not in ctx:  # type: ignore
+            return None
 
     filter_func = get_filter_function()
-    jedi.settings.case_insensitive_completion = not __xonsh__.env.get(
+    jedi.settings.case_insensitive_completion = not xonsh_execer.env.get(
         "CASE_SENSITIVE_COMPLETIONS"
     )
 
-    if PTK_COMPLETER:  # 'is not None' won't work with lazyobject
-        document = PTK_COMPLETER.current_document
-        source = document.text
-        row = document.cursor_position_row + 1
-        column = document.cursor_position_col
-    else:
-        source = line
-        row = 1
-        column = end
+    source = context.python.multiline_code
+    index = context.python.cursor_index
+    row = source.count("\n", 0, index) + 1
+    column = (
+        index - source.rfind("\n", 0, index) - 1
+    )  # will be `index - (-1) - 1` if there's no newline
 
-    extra_ctx = {"__xonsh__": __xonsh__}
+    extra_ctx = {"__xonsh__": xonsh_execer}
     try:
         extra_ctx["_"] = _
     except NameError:
@@ -91,22 +96,32 @@ def complete_jedi(prefix, line, start, end, ctx):
     except Exception:
         pass
 
-    # make sure _* names are completed only when
-    # the user writes the first underscore
-    complete_underscores = prefix.endswith("_")
+    res = set(create_completion(comp) for comp in script_comp if should_complete(comp))
 
-    return set(
-        itertools.chain(
-            (
-                create_completion(comp)
-                for comp in script_comp
-                if complete_underscores
-                or not comp.name.startswith("_")
-                or not comp.complete.startswith("_")
-            ),
-            (t for t in XONSH_SPECIAL_TOKENS if filter_func(t, prefix)),
+    if index > 0:
+        last_char = source[index - 1]
+        res.update(
+            RichCompletion(t, prefix_len=1)
+            for t in XONSH_SPECIAL_TOKENS
+            if filter_func(t, last_char)
         )
-    )
+    else:
+        res.update(RichCompletion(t, prefix_len=0) for t in XONSH_SPECIAL_TOKENS)
+
+    return res
+
+
+def should_complete(comp: jedi.api.classes.Completion):
+    """
+    make sure _* names are completed only when
+    the user writes the first underscore
+    """
+    name = comp.name
+    if not name.startswith("_"):
+        return True
+    completion = comp.complete
+    # only if we're not completing the first underscore:
+    return completion and len(completion) <= len(name) - 1
 
 
 def create_completion(comp: jedi.api.classes.Completion):
@@ -138,6 +153,5 @@ def create_completion(comp: jedi.api.classes.Completion):
 xonsh.completers.base.complete_python = complete_jedi
 
 # Jedi ignores leading '@(' and friends
-_aliases._remove_completer(["python_mode"])
 _aliases._add_one_completer("jedi_python", complete_jedi, "<python")
 _aliases._remove_completer(["python"])
