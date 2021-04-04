@@ -857,6 +857,10 @@ class GeneralSetting(Xettings):
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``.",
     )
+    XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
+        True,
+        "If ``True`` the stderr from captured subproc will be printed automatically."
+    )
     TERM = Var.no_default(
         "str",
         "TERM is sometimes set by the terminal emulator. This is used (when "

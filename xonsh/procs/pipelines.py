@@ -377,12 +377,14 @@ class CommandPipeline:
         if self.stderr_postfix:
             b += self.stderr_postfix
         stderr_has_buffer = hasattr(sys.stderr, "buffer")
-        # write bytes to std stream
-        if stderr_has_buffer:
-            sys.stderr.buffer.write(b)
-        else:
-            sys.stderr.write(b.decode(encoding=enc, errors=err))
-        sys.stderr.flush()
+        show_stderr = (self.captured != 'object' or env.get("XONSH_SUBPROC_CAPTURED_PRINT_STDERR", True))
+        if show_stderr:
+            # write bytes to std stream
+            if stderr_has_buffer:
+                sys.stderr.buffer.write(b)
+            else:
+                sys.stderr.write(b.decode(encoding=enc, errors=err))
+            sys.stderr.flush()
         # save the raw bytes
         self._raw_error = b
         # do some munging of the line before we save it to the attr
