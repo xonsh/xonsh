@@ -787,7 +787,7 @@ class GeneralSetting(Xettings):
     )
     COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
         False,
-        "If enabled, the results are saved between runs and can reduce the startup time.",
+        "If enabled, the CommandsCache saved between runs and can reduce the startup time.",
     )
 
     HOSTNAME = Var.with_default(
