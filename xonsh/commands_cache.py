@@ -30,6 +30,8 @@ class CommandsCache(cabc.Mapping):
     the command has an alias.
     """
 
+    CACHE_FILE = "commands-cache.pickle"
+
     def __init__(self):
         self._cmds_cache = {}
         self._path_checksum = None
@@ -41,7 +43,7 @@ class CommandsCache(cabc.Mapping):
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
         env = builtins.__xonsh__.env
         self.cache_file = (
-            (Path(env["XONSH_DATA_DIR"]).joinpath("commands-cache.pickle").resolve())
+            (Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve())
             if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
             else None
         )
