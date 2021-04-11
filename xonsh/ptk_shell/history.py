@@ -25,8 +25,12 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         hist = builtins.__xonsh__.history
         if hist is None:
             return
+        # Do not repeat commands when searching them in history (using up arrow)
+        lines = set()
         for cmd in hist.all_items(newest_first=True):
             line = cmd["inp"].rstrip()
+            lines.add(line)
+        for line in lines:
             strs = self.get_strings()
             if len(strs) == 0 or line != strs[-1]:
                 yield line
