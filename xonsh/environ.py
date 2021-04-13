@@ -858,7 +858,7 @@ class GeneralSetting(Xettings):
         "The error that is raised is a ``subprocess.CalledProcessError``.",
     )
     XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
-        True,
+        False,
         "If ``True`` the stderr from captured subproc will be printed automatically.",
     )
     TERM = Var.no_default(

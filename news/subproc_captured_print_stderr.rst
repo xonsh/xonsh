@@ -1,6 +1,6 @@
 **Added:**
 
-* Added XONSH_SUBPROC_CAPTURED_PRINT_STDERR environment variable to hide unwanted printing the stderr when using captured object.
+* Added XONSH_SUBPROC_CAPTURED_PRINT_STDERR (default False) environment variable to hide unwanted printing the stderr when using captured object.
 
 **Changed:**
 
