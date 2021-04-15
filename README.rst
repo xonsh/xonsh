@@ -32,10 +32,6 @@ xonsh
             :target: https://ci.appveyor.com/project/xonsh/xonsh
             :alt: Appveyor
 
-    .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graph/badge.svg
-            :target: https://codecov.io/gh/xonsh/xonsh
-            :alt: codecov
-
     .. image:: https://img.shields.io/badge/Google%20Cloud%20Shell-xonsh-green
             :target: https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/xonsh/xonsh.git
             :alt: Open in Google Cloud Shell
