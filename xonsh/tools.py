@@ -1451,8 +1451,8 @@ def get_portions(it, slices):
 
     Parameters
     ----------
-    it: iterable
-    slices: a slice or a list of slice objects
+    it : iterable
+    slices : a slice or a list of slice objects
     """
     if is_slice(slices):
         slices = [slices]

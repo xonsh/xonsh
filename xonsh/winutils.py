@@ -135,7 +135,7 @@ def sudo(executable, args=None):
 
     Parameters
     ----------
-    param executable : str
+    executable : str
         The path/name of the executable
     args : list of str
         The arguments to be passed to the executable

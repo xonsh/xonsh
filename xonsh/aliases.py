@@ -661,7 +661,6 @@ def xexec(args, stdin=None):
     If '-a' is supplied, the shell passes name as the zeroth argument
     to the executed command.
 
-
     Notes
     -----
     This command **is not** the same as the Python builtin function
@@ -755,8 +754,8 @@ def showcmd(args, stdin=None):
     optional arguments:
       -h, --help            show this help message and exit
 
-    Example:
-    -------
+    Examples
+    --------
       >>> showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """

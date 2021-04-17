@@ -1099,8 +1099,8 @@ def make_ansi_style(palette):
 def _pygments_to_ansi_style(style):
     """Tries to convert the given pygments style to ANSI style.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     style : pygments style value
 
     Returns

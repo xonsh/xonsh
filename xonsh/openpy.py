@@ -77,11 +77,11 @@ def read_py_file(filename, skip_encoding_cookie=True):
     Parameters
     ----------
     filename : str
-      The path to the file to read.
+        The path to the file to read.
     skip_encoding_cookie : bool
-      If True (the default), and the encoding declaration is found in the first
-      two lines, that line will be excluded from the output - compiling a
-      unicode string with an encoding declaration is a SyntaxError in Python 2.
+        If True (the default), and the encoding declaration is found in the first
+        two lines, that line will be excluded from the output - compiling a
+        unicode string with an encoding declaration is a SyntaxError in Python 2.
 
     Returns
     -------
@@ -100,14 +100,14 @@ def read_py_url(url, errors="replace", skip_encoding_cookie=True):
     Parameters
     ----------
     url : str
-      The URL from which to fetch the file.
+        The URL from which to fetch the file.
     errors : str
-      How to handle decoding errors in the file. Options are the same as for
-      bytes.decode(), but here 'replace' is the default.
+        How to handle decoding errors in the file. Options are the same as for
+        bytes.decode(), but here 'replace' is the default.
     skip_encoding_cookie : bool
-      If True (the default), and the encoding declaration is found in the first
-      two lines, that line will be excluded from the output - compiling a
-      unicode string with an encoding declaration is a SyntaxError in Python 2.
+        If True (the default), and the encoding declaration is found in the first
+        two lines, that line will be excluded from the output - compiling a
+        unicode string with an encoding declaration is a SyntaxError in Python 2.
 
     Returns
     -------
