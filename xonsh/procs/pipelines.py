@@ -184,8 +184,27 @@ class CommandPipeline:
     def __bool__(self):
         return self.returncode == 0
 
+    def __int__(self):
+        return self.returncode
+
+    def __hash__(self):
+        return hash(self.returncode)
+
+    def __str__(self):
+        self.end()
+        return self.output
+
     def __len__(self):
         return len(self.procs)
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.returncode == other
+        elif isinstance(other, str):
+            return str(self) == other
+        raise Exception(
+            f"CommandPipeline doesn't support comparing with {type(other)}."
+        )
 
     def __iter__(self):
         """Iterates through stdout and returns the lines, converting to
@@ -377,12 +396,16 @@ class CommandPipeline:
         if self.stderr_postfix:
             b += self.stderr_postfix
         stderr_has_buffer = hasattr(sys.stderr, "buffer")
-        # write bytes to std stream
-        if stderr_has_buffer:
-            sys.stderr.buffer.write(b)
-        else:
-            sys.stderr.write(b.decode(encoding=enc, errors=err))
-        sys.stderr.flush()
+        show_stderr = self.captured != "object" or env.get(
+            "XONSH_SUBPROC_CAPTURED_PRINT_STDERR", True
+        )
+        if show_stderr:
+            # write bytes to std stream
+            if stderr_has_buffer:
+                sys.stderr.buffer.write(b)
+            else:
+                sys.stderr.write(b.decode(encoding=enc, errors=err))
+            sys.stderr.flush()
         # save the raw bytes
         self._raw_error = b
         # do some munging of the line before we save it to the attr

@@ -4,6 +4,7 @@ import argparse
 import builtins
 import functools
 
+import xonsh
 from xonsh.xoreutils import _which
 import xonsh.platform as xp
 import xonsh.procs.pipelines as xpp
@@ -85,7 +86,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
         # Use list dir to get correct case for the filename
         # i.e. windows is case insensitive but case preserving
         p, f = os.path.split(abs_name)
-        f = next(s.name for s in xp.scandir(p) if s.name.lower() == f.lower())
+        f = next(s.name for s in os.scandir(p) if s.name.lower() == f.lower())
         abs_name = os.path.join(p, f)
         if builtins.__xonsh__.env.get("FORCE_POSIX_PATHS", False):
             abs_name.replace(os.sep, os.altsep)
@@ -98,19 +99,22 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
 
 def print_alias(arg, stdout, verbose=False):
     """Print the alias."""
+    alias = builtins.aliases[arg]
     if not verbose:
-        if not callable(builtins.aliases[arg]):
-            print(" ".join(builtins.aliases[arg]), file=stdout)
+        if not callable(alias):
+            print(" ".join(alias), file=stdout)
+        elif isinstance(alias, xonsh.aliases.ExecAlias):
+            print(alias.src, file=stdout)
         else:
-            print(arg, file=stdout)
+            print(alias, file=stdout)
     else:
         print(
-            "aliases['{}'] = {}".format(arg, builtins.aliases[arg]),
+            "aliases['{}'] = {}".format(arg, alias),
             flush=True,
             file=stdout,
         )
-        if callable(builtins.aliases[arg]):
-            builtins.__xonsh__.superhelp(builtins.aliases[arg])
+        if callable(alias) and not isinstance(alias, xonsh.aliases.ExecAlias):
+            builtins.__xonsh__.superhelp(alias)
 
 
 def which(args, stdin=None, stdout=None, stderr=None, spec=None):

@@ -255,3 +255,8 @@ variables:
 ----------------------------------
 
 see `emacs <editors.html>`_.
+
+See also
+========
+
+ * `Q&A in the xonsh repository <https://github.com/xonsh/xonsh/discussions>`_

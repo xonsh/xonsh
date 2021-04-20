@@ -27,11 +27,17 @@ def abbrevs_xontrib(monkeypatch, source_path):
     del sys.modules[spec.name]
 
 
+ps_special_expand = (
+    lambda buffer, word: "procs" if buffer.text.startswith(word) else word
+)
+
+
 @mark.parametrize(
     "abbr,val,expanded,cur",
     [
         ("ps", "procs", "procs", None),
-        ("ps", lambda **kw: "callback", "callback", None),
+        ("ps", ps_special_expand, "procs", None),
+        ("docker ps", ps_special_expand, "docker ps", None),
         ("kill", "kill <edit> -9", "kill  -9", 5),
         ("pt", "poe<edit>try", "poetry", 3),
     ],

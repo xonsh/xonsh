@@ -40,3 +40,8 @@ The best way to build xonsh AppImage in 5 minutes is to using `python-appimage <
     pip install git+https://github.com/niess/python-appimage
     python -m python_appimage build app ./appimage
     ./xonsh-x86_64.AppImage
+
+Links
+-----
+
+ * `How to run xonsh AppImage on Alpine? <https://github.com/xonsh/xonsh/discussions/4158>`_

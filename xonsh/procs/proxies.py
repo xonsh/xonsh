@@ -214,6 +214,8 @@ class FileThreadDispatcher:
 
     def isatty(self):
         """Returns if the file descriptor for the current thread is a tty."""
+        if self.default:
+            return self.default.isatty()
         return self.handle.isatty()
 
     def readable(self):

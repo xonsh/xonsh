@@ -857,7 +857,7 @@ def tokopen(filename):
         raise
 
 
-def _tokenize(readline, encoding):
+def _tokenize(readline, encoding, tolerant=False):
     lnum = parenlev = continued = 0
     numchars = "0123456789"
     contstr, needcont = "", 0
@@ -888,7 +888,14 @@ def _tokenize(readline, encoding):
 
         if contstr:  # continued string
             if not line:
-                raise TokenError("EOF in multi-line string", strstart)
+                if tolerant:
+                    # return the partial string
+                    yield TokenInfo(
+                        ERRORTOKEN, contstr, strstart, (lnum, end), contline + line
+                    )
+                    break
+                else:
+                    raise TokenError("EOF in multi-line string", strstart)
             endmatch = endprog.match(line)
             if endmatch:
                 pos = end = endmatch.end(0)
@@ -954,7 +961,9 @@ def _tokenize(readline, encoding):
                 indents.append(column)
                 yield TokenInfo(INDENT, line[:pos], (lnum, 0), (lnum, pos), line)
             while column < indents[-1]:
-                if column not in indents:
+                if (
+                    column not in indents and not tolerant
+                ):  # if tolerant, just ignore the error
                     raise IndentationError(
                         "unindent does not match any outer indentation level",
                         ("<tokenize>", lnum, pos, line),
@@ -975,6 +984,9 @@ def _tokenize(readline, encoding):
 
         else:  # continued statement
             if not line:
+                if tolerant:
+                    # no need to raise an error, we're done
+                    break
                 raise TokenError("EOF in multi-line statement", (lnum, 0))
             continued = 0
 
@@ -1117,7 +1129,7 @@ def _tokenize(readline, encoding):
     yield TokenInfo(ENDMARKER, "", (lnum, 0), (lnum, 0), "")
 
 
-def tokenize(readline):
+def tokenize(readline, tolerant=False):
     """
     The tokenize() generator requires one argument, readline, which
     must be a callable object which provides the same interface as the
@@ -1135,11 +1147,16 @@ def tokenize(readline):
 
     The first token sequence will always be an ENCODING token
     which tells you which encoding was used to decode the bytes stream.
+
+    If ``tolerant`` is True, yield ERRORTOKEN with the erroneous string instead of
+    throwing an exception when encountering an error.
     """
     encoding, consumed = detect_encoding(readline)
     rl_gen = iter(readline, b"")
     empty = itertools.repeat(b"")
-    return _tokenize(itertools.chain(consumed, rl_gen, empty).__next__, encoding)
+    return _tokenize(
+        itertools.chain(consumed, rl_gen, empty).__next__, encoding, tolerant
+    )
 
 
 # An undocumented, backwards compatible, API for all the places in the standard

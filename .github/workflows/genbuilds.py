@@ -25,7 +25,7 @@ OS_IMAGES = {
 PY_MAIN_VERSION = "3.8"
 PYTHON_VERSIONS = ["3.6", "3.7", PY_MAIN_VERSION, "3.9"]
 
-ALLOWED_FAILURES = ["3.9"]
+ALLOWED_FAILURES = []
 
 
 def write_to_file(

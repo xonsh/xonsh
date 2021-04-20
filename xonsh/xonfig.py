@@ -81,8 +81,8 @@ WIZARD_FS = """
 
                       {{BOLD_WHITE}}Foreign Shell Setup{{RESET}}
                       {{YELLOW}}-------------------{{RESET}}
-The xonsh shell has the ability to interface with foreign shells such
-as Bash, or zsh (fish not yet implemented).
+The xonsh shell has the ability to interface with Bash or zsh
+via the foreign shell interface.
 
 For configuration, this means that xonsh can load the environment,
 aliases, and functions specified in the config files of these shells.
@@ -446,7 +446,8 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
 def _wizard(ns):
     env = builtins.__xonsh__.env
     shell = builtins.__xonsh__.shell.shell
-    fname = env.get("XONSHRC")[-1] if ns.file is None else ns.file
+    xonshrcs = env.get("XONSHRC", [])
+    fname = xonshrcs[-1] if xonshrcs and ns.file is None else ns.file
     no_wiz = os.path.join(env.get("XONSH_CONFIG_DIR"), "no-wizard")
     w = make_xonfig_wizard(
         default_file=fname, confirm=ns.confirm, no_wizard_file=no_wiz
@@ -827,7 +828,6 @@ def TAGLINES():
         "Piggy glanced nervously into hell and cradled the xonsh",
         "The xonsh is a symbol",
         "It is pronounced conch",
-        "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
         "Come snail away",
@@ -848,21 +848,20 @@ def TAGLINES():
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
         "This fix was trickier than expected",
-        "The unholy cross of Bash/Python",
     ]
 
 
 # list of strings or tuples (string, align, fill)
 WELCOME_MSG = [
     "",
-    ("{{INTENSE_WHITE}}Welcome to the xonsh shell ({version}){{RESET}}", "^", " "),
+    ("Welcome to the xonsh shell {version}", "^", " "),
     "",
     ("{{INTENSE_RED}}~{{RESET}} {tagline} {{INTENSE_RED}}~{{RESET}}", "^", " "),
     "",
     ("{{INTENSE_BLACK}}", "<", "-"),
     "",
     (
-        "{{INTENSE_BLACK}}Create ~/.xonshrc file manually or use xonfig to suppress the welcome screen",
+        "{{INTENSE_BLACK}}Create ~/.xonshrc file manually or use xonfig to suppress the welcome message",
         "^",
         " ",
     ),
@@ -870,6 +869,7 @@ WELCOME_MSG = [
     "{{INTENSE_BLACK}}Start from commands:",
     "  {{GREEN}}xonfig{{RESET}} web         {{INTENSE_BLACK}}# Run the configuration tool in the browser to create ~/.xonshrc {{RESET}}",
     "  {{GREEN}}xonfig{{RESET}} tutorial    {{INTENSE_BLACK}}# Open the xonsh tutorial in the browser{{RESET}}",
+    "[SHELL_TYPE_WARNING]",
     "",
     ("{{INTENSE_BLACK}}", "<", "-"),
     "",
@@ -877,11 +877,21 @@ WELCOME_MSG = [
 
 
 def print_welcome_screen():
+    shell_type = builtins.__xonsh__.env.get("SHELL_TYPE")
     subst = dict(tagline=random.choice(list(TAGLINES)), version=XONSH_VERSION)
     for elem in WELCOME_MSG:
+        if elem == "[SHELL_TYPE_WARNING]":
+            if shell_type != "prompt_toolkit":
+                print_color(
+                    f"\n{{INTENSE_BLACK}}You are currently using the {shell_type} backend. "
+                    f"For interactive tab-completion, on-the-fly syntax highlighting, and more, install prompt_toolkit by running:\n\n"
+                    f"  {{GREEN}}xpip{{RESET}} install -U 'xonsh[full]'"
+                )
+            continue
         if isinstance(elem, str):
             elem = (elem, "", "")
         line = elem[0].format(**subst)
         termwidth = os.get_terminal_size().columns
         line = _align_string(line, elem[1], elem[2], width=termwidth)
         print_color(line)
+    print_color("{RESET}", end="")

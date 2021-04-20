@@ -12,7 +12,7 @@ from xonsh.lazyasd import lazyobject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import jobs, fg, bg, clean_jobs
+from xonsh.jobs import jobs, fg, bg, clean_jobs, disown
 from xonsh.platform import (
     ON_ANACONDA,
     ON_DARWIN,
@@ -22,6 +22,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_DRAGONFLY,
     ON_POSIX,
+    IN_APPIMAGE,
 )
 from xonsh.tools import (
     XonshError,
@@ -107,15 +108,19 @@ class Aliases(cabc.MutableMapping):
                 acc_args = rest + list(acc_args)
                 return self.eval_alias(self._raw[token], seen_tokens, acc_args)
 
-    def expand_alias(self, line):
+    def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
         builtin function and if alias is only a single command.
+        The command won't be expanded if the cursor's inside/behind it.
         """
-        word = line.split(" ", 1)[0]
-        if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):
+        word = (line.split(maxsplit=1) or [""])[0]
+        if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):  # type: ignore
             word_idx = line.find(word)
-            expansion = " ".join(self.get(word))
-            line = line[:word_idx] + expansion + line[word_idx + len(word) :]
+            word_edge = word_idx + len(word)
+            if cursor_index > word_edge:
+                # the cursor isn't inside/behind the word
+                expansion = " ".join(self.get(word))
+                line = line[:word_idx] + expansion + line[word_edge:]
         return line
 
     #
@@ -199,7 +204,7 @@ class ExecAlias:
         src : str
             Source code that will be
         """
-        self.src = src if src.endswith("\n") else src + "\n"
+        self.src = src
         self.filename = filename
 
     def __call__(
@@ -207,9 +212,18 @@ class ExecAlias:
     ):
         execer = builtins.__xonsh__.execer
         frame = stack[0][0]  # execute as though we are at the call site
-        execer.exec(
-            self.src, glbs=frame.f_globals, locs=frame.f_locals, filename=self.filename
-        )
+
+        alias_args = {"args": args}
+        for i, a in enumerate(args):
+            alias_args[f"arg{i}"] = a
+
+        with builtins.__xonsh__.env.swap(alias_args):
+            execer.exec(
+                self.src,
+                glbs=frame.f_globals,
+                locs=frame.f_locals,
+                filename=self.filename,
+            )
 
     def __repr__(self):
         return "ExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
@@ -743,7 +757,7 @@ def showcmd(args, stdin=None):
 
     Example:
     -------
-      >>> showcmd echo $USER can't hear "the sea"
+      >>> showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """
     if len(args) == 0 or (len(args) == 1 and args[0] in {"-h", "--help"}):
@@ -765,7 +779,7 @@ def detect_xpip_alias():
 
     basecmd = [sys.executable, "-m", "pip"]
     try:
-        if ON_WINDOWS:
+        if ON_WINDOWS or IN_APPIMAGE:
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
@@ -787,6 +801,7 @@ def make_default_aliases():
         "jobs": jobs,
         "fg": fg,
         "bg": bg,
+        "disown": disown,
         "EOF": xonsh_exit,
         "exit": xonsh_exit,
         "quit": xonsh_exit,

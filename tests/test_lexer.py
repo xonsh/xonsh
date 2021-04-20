@@ -460,3 +460,22 @@ def test_lexer_split(s, exp):
     lexer = Lexer()
     obs = lexer.split(s)
     assert exp == obs
+
+
+@pytest.mark.parametrize("s", (
+    "()",  # sanity
+    "(",
+    ")",
+    "))",
+    "'string\nliteral",
+    "'''string\nliteral",
+    "string\nliteral'",
+    "\"",
+    "'",
+    "\"\"\"",
+))
+def test_tolerant_lexer(s):
+    lexer = Lexer(tolerant=True)
+    lexer.input(s)
+    error_tokens = list(tok for tok in lexer if tok.type == "ERRORTOKEN")
+    assert all(tok.value in s for tok in error_tokens)  # no error messages

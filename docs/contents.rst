@@ -12,8 +12,6 @@ the xonsh shell
 
 .. include:: setup.rst
 
-.. include:: news.rst
-
 .. include:: contributing.rst
 
 .. include:: contact.rst

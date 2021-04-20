@@ -205,6 +205,8 @@ html_favicon = "_static/magic_conch.ico"
 html_static_path = ["_static"]
 html_style = "numpy_friendly.css"
 
+html_extra_path = ["_static/robots.txt"]
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'

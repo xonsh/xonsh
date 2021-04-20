@@ -774,6 +774,13 @@ class Xettings:
 class GeneralSetting(Xettings):
     """General"""
 
+    AUTO_CONTINUE = Var.with_default(
+        False,
+        "If ``True``, automatically resume stopped jobs when they are disowned. "
+        "When stopped jobs are disowned and this option is ``False``, a warning "
+        "will print information about how to continue the stopped process.",
+    )
+
     COMMANDS_CACHE_SIZE_WARNING = Var.with_default(
         6000,
         "Number of files on the PATH above which a warning is shown.",
@@ -849,6 +856,10 @@ class GeneralSetting(Xettings):
         "This is most useful in xonsh scripts or modules where failures "
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``.",
+    )
+    XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
+        False,
+        "If ``True`` the stderr from captured subproc will be printed automatically.",
     )
     TERM = Var.no_default(
         "str",
@@ -1330,13 +1341,15 @@ class PromptSetting(Xettings):
         False,
         "Whether or not to suppress branch timeout warning messages when getting {gitstatus} PROMPT_FIELD.",
     )
-    TITLE = Var.with_default(
+    TITLE = Var(
+        is_string_or_callable,
+        ensure_string,
+        ensure_string,
         DEFAULT_TITLE,
         "The title text for the window in which xonsh is running. Formatted "
         "in the same manner as ``$PROMPT``, see 'Customizing the Prompt' "
         "http://xon.sh/tutorial.html#customizing-the-prompt.",
         doc_default="``xonsh.environ.DEFAULT_TITLE``",
-        type_str="str",
     )
     UPDATE_PROMPT_ON_KEYPRESS = Var.with_default(
         False,
@@ -1390,10 +1403,11 @@ class PromptSetting(Xettings):
         "from ``xonsh.history.base.History``, or its instance.",
     )
     XONSH_HISTORY_FILE = Var.with_default(
-        os.path.expanduser("~/.xonsh_history.json"),
-        "Location of history file (deprecated).",
+        None,
+        "Location of history file set by history backend (default) or set by user in RC file.",
         is_configurable=False,
-        doc_default="``~/.xonsh_history``",
+        doc_default="None",
+        type_str="path",
     )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,

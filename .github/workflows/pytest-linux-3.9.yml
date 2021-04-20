@@ -3,10 +3,10 @@ name: pytest linux 3.9
 on:
   push:
     branches:
-    - master
+    - main
   pull_request:
     branches:
-    - master
+    - main
 
 jobs:
   build:
@@ -38,6 +38,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}  # this itself makes sure that Python version is installed
           condarc-file: ci/condarc.yml
+          use-only-tar-bz2: true
       - name: Get pip cache dir
         id: pip-cache
         run: |
@@ -57,4 +58,3 @@ jobs:
           python -m pip install . --no-deps
       - name: Run tests
         run: python -m xonsh run-tests.xsh test -- --timeout=240
-        continue-on-error: true

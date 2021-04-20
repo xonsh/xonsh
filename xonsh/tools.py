@@ -45,7 +45,6 @@ import typing as tp
 from xonsh import __version__
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (
-    scandir,
     DEFAULT_ENCODING,
     ON_LINUX,
     ON_WINDOWS,
@@ -771,7 +770,7 @@ def _yield_accessible_unix_file_names(path):
     """yield file names of executable files in path."""
     if not os.path.exists(path):
         return
-    for file_ in scandir(path):
+    for file_ in os.scandir(path):
         try:
             if file_.is_file() and os.access(file_.path, os.X_OK):
                 yield file_.name
@@ -792,7 +791,7 @@ def _executables_in_windows(path):
         return
     extensions = builtins.__xonsh__.env["PATHEXT"]
     try:
-        for x in scandir(path):
+        for x in os.scandir(path):
             try:
                 is_file = x.is_file()
             except OSError:

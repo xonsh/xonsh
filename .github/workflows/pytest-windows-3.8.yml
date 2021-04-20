@@ -3,10 +3,10 @@ name: pytest windows 3.8
 on:
   push:
     branches:
-    - master
+    - main
   pull_request:
     branches:
-    - master
+    - main
 
 jobs:
   build:
@@ -38,6 +38,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}  # this itself makes sure that Python version is installed
           condarc-file: ci/condarc.yml
+          use-only-tar-bz2: true
       - name: Get pip cache dir
         id: pip-cache
         run: |

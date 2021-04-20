@@ -16,22 +16,26 @@ from importlib.machinery import ModuleSpec
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lazyasd import lazyobject
-from xonsh.platform import ON_WINDOWS, scandir
+from xonsh.platform import ON_WINDOWS
 
 
 @lazyobject
 def ENCODING_LINE():
     # this regex comes from PEP 263
     # https://www.python.org/dev/peps/pep-0263/#defining-the-encoding
-    return re.compile(b"^[ tv]*#.*?coding[:=][ t]*([-_.a-zA-Z0-9]+)")
+    return re.compile(b"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
 
 
 def find_source_encoding(src):
-    """Finds the source encoding given bytes representing a file. If
-    no encoding is found, UTF-8 will be returned as per the docs
+    """Finds the source encoding given bytes representing a file by checking
+    a special comment at either the first or second line of the source file.
     https://docs.python.org/3/howto/unicode.html#unicode-literals-in-python-source-code
+    If no encoding is found, UTF-8 codec with BOM signature will be returned
+    as it skips an optional UTF-8 encoded BOM at the start of the data
+    and is otherwise the same as UTF-8
+    https://docs.python.org/3/library/codecs.html#module-encodings.utf_8_sig
     """
-    utf8 = "UTF-8"
+    utf8 = "utf-8-sig"
     first, _, rest = src.partition(b"\n")
     m = ENCODING_LINE.match(first)
     if m is not None:
@@ -84,7 +88,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
                 continue
             if not os.path.isdir(p) or not os.access(p, os.R_OK):
                 continue
-            if fname not in {x.name for x in scandir(p)}:
+            if fname not in {x.name for x in os.scandir(p)}:
                 continue
             spec = ModuleSpec(fullname, self)
             self._filenames[fullname] = os.path.join(p, fname)

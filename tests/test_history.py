@@ -378,9 +378,16 @@ HISTORY_FILES_LIST = history_files_list(100)
 
 # TS of newest history file
 SEC_FROM_LATEST = time.time() - (HISTORY_FILES_LIST[-1][0])
-SEC_FROM_OLDEST = time.time() - (HISTORY_FILES_LIST[0][0])
 SEC_PER_DAY = 24 * 60 * 60
-SEC_PER_HR = 60 * 60
+# "now" gets evaluated above at test definition time and later when the tests
+# are executed.  If the difference between these equals half the smallest time
+# interval between log files, the test will fail.  We constructed logs at 9a and
+# 11p every day.  The smallest interval is thus ten hours (from 11p to 9a), so
+# we can't spend more than five hours executing the tests.
+MAX_RUNTIME = 30 * 60
+MIN_DIFF = min(HISTORY_FILES_LIST[i+1][0] - HISTORY_FILES_LIST[i][0]
+    for i in range(len(HISTORY_FILES_LIST) - 1))
+assert MAX_RUNTIME < MIN_DIFF / 2
 
 
 @pytest.mark.parametrize(
@@ -455,8 +462,6 @@ SEC_PER_HR = 60 * 60
             HISTORY_FILES_LIST[: 2 * 30 - 1],
         ),
         # xhj_gc_seconds_to_rmfiles
-        # amount of history removed by age is strange.
-        # it's always the age of the *oldest* file, no matter how many would be removed.
         (
             _xhj_gc_seconds_to_rmfiles,
             SEC_FROM_LATEST + 1001 * SEC_PER_DAY,  # Limit > history, no trimming.
@@ -466,19 +471,19 @@ SEC_PER_HR = 60 * 60
         ),
         (
             _xhj_gc_seconds_to_rmfiles,
-            SEC_FROM_LATEST + 20 * SEC_PER_DAY,  # keep 20 full days (40 files)
+            SEC_FROM_LATEST + MAX_RUNTIME,  # keep just the latest file (night)
             HISTORY_FILES_LIST,
-            SEC_FROM_OLDEST,
-            HISTORY_FILES_LIST[: 2 * (30)],  # trim 30 full days
+            HISTORY_FILES_LIST[-1][0] - HISTORY_FILES_LIST[0][0],
+            HISTORY_FILES_LIST[:-1],
         ),
         (
             _xhj_gc_seconds_to_rmfiles,
-            SEC_FROM_LATEST
-            + 20 * SEC_PER_DAY
-            + 1 * SEC_PER_HR,  # keep 20 full newest and evening before (41 files)
+            # keep the latest file and previous day, so we'll get three files
+            # including the previous morning and night before
+            SEC_FROM_LATEST + SEC_PER_DAY + MAX_RUNTIME,
             HISTORY_FILES_LIST,
-            SEC_FROM_OLDEST,
-            HISTORY_FILES_LIST[: 2 * 30 - 1],
+            HISTORY_FILES_LIST[-3][0] - HISTORY_FILES_LIST[0][0],
+            HISTORY_FILES_LIST[:-3],
         ),
     ],
 )
@@ -491,12 +496,10 @@ def test__xhj_gc_xx_to_rmfiles(
     assert act_files == exp_files
 
     # comparing age is approximate, because xhj_gc_seconds_to_rmfiles computes 'now' on each call.
-    # For test runs, accept anything in the same hour, test cases not that close.
     # We find multi-minute variations in CI environments.
     # This should cover some amount of think time sitting at a breakpoint, too.
     if fn == _xhj_gc_seconds_to_rmfiles:
-        minute_diff = int(abs(act_size - exp_size) / 60)
-        assert minute_diff <= 60
+        assert abs(act_size - exp_size) < MAX_RUNTIME
     else:
         assert act_size == exp_size
 

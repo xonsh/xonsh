@@ -28,7 +28,7 @@ correct Python interpreter and ``pip`` module.
 
 .. code-block:: console
 
-    $ pip install xonsh[full]
+    $ pip install 'xonsh[full]'
 
 This uses the pip 'extras' syntax, and is equivalent to:
 
@@ -43,7 +43,7 @@ The above ``pip`` commands may have to be spelled ``pip3`` or ``sudo pip3`` if y
 
 .. code-block:: console
 
-    $ pip install pygments prompt-toolkit setproctitle https://github.com/xonsh/xonsh/archive/master.zip
+    $ pip install pygments prompt-toolkit setproctitle https://github.com/xonsh/xonsh/archive/main.zip
 
 Spelling of ``pip`` command may likewise have to be amended as noted above.
 
@@ -90,3 +90,9 @@ To ensure xonsh uses ``readline`` even if ``prompt-toolkit`` is installed, confi
 
     $SHELL_TYPE = 'readline'
 
+Windows
+-------
+
+On Windows 10, the separately-installable `Windows Terminal app`_ is recommended.
+
+.. _`Windows Terminal app`: https://github.com/microsoft/terminal/releases

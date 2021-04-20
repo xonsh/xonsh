@@ -5,3 +5,6 @@ https://xon.sh/devguide.html#changelog -->
 <!--- If there is specific issue / feature request that this PR is addressing,
 please link to the corresponding issue by using the `#issuenumber` syntax.
 Thanks again! -->
+
+## For community
+⬇️  **Please click the 👍 reaction instead of leaving a `+1` or 👍  comment**

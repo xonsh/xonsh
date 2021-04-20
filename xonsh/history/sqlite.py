@@ -29,7 +29,7 @@ def _xh_sqlite_get_file_name():
 def _xh_sqlite_get_conn(filename=None):
     if filename is None:
         filename = _xh_sqlite_get_file_name()
-    return sqlite3.connect(filename)
+    return sqlite3.connect(str(filename))
 
 
 def _xh_sqlite_create_history_table(cursor):
@@ -193,6 +193,15 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
         return _xh_sqlite_delete_records(c, size_to_keep)
 
 
+def xh_sqlite_wipe_session(sessionid=None, filename=None):
+    """Wipe the current session's entries from the database."""
+    sql = "DELETE FROM xonsh_history WHERE sessionid = ?"
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        _xh_sqlite_create_history_table(c)
+        c.execute(sql, (str(sessionid),))
+
+
 class SqliteHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
@@ -243,6 +252,15 @@ class SqliteHistory(History):
         self.outs = []
         self.tss = []
 
+        if not os.path.exists(self.filename):
+            with _xh_sqlite_get_conn(filename=self.filename) as conn:
+                if conn:
+                    pass
+            try:
+                os.chmod(self.filename, 0o600)
+            except Exception:  # pylint: disable=broad-except
+                pass
+
         # during init rerun create command
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
 
@@ -256,7 +274,7 @@ class SqliteHistory(History):
         self.rtns.append(cmd["rtn"])
         self.tss.append(cmd.get("ts", (None, None)))
 
-        opts = envs.get("HISTCONTROL")
+        opts = envs.get("HISTCONTROL", "")
         if "ignoredups" in opts and inp == self._last_hist_inp:
             # Skipping dup cmd
             return
@@ -272,13 +290,16 @@ class SqliteHistory(History):
         except KeyError:
             pass
         self._last_hist_inp = inp
-        xh_sqlite_append_history(
-            cmd,
-            str(self.sessionid),
-            store_stdout=envs.get("XONSH_STORE_STDOUT", False),
-            filename=self.filename,
-            remove_duplicates=("erasedups" in opts),
-        )
+        try:
+            xh_sqlite_append_history(
+                cmd,
+                str(self.sessionid),
+                store_stdout=envs.get("XONSH_STORE_STDOUT", False),
+                filename=self.filename,
+                remove_duplicates=("erasedups" in opts),
+            )
+        except sqlite3.OperationalError as err:
+            print(f"SQLite History Backend Error: {err}")
 
     def all_items(self, newest_first=False, session_id=None):
         """Display all history items."""
@@ -318,9 +339,4 @@ class SqliteHistory(History):
         self.outs = []
         self.tss = []
 
-        # Wipe the current session's entries from the database.
-        sql = "DELETE FROM xonsh_history WHERE sessionid = ?"
-        with _xh_sqlite_get_conn(filename=self.filename) as conn:
-            c = conn.cursor()
-            _xh_sqlite_create_history_table(c)
-            c.execute(sql, (str(self.sessionid),))
+        xh_sqlite_wipe_session(sessionid=self.sessionid, filename=self.filename)

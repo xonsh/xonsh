@@ -3,16 +3,14 @@ compatibility layers to make use of the 'best' implementation available
 on a platform.
 """
 import os
-from os import scandir
 import sys
-import ctypes
+import ctypes  # noqa
 import signal
 import pathlib
 import builtins
 import platform
 import functools
 import subprocess
-import collections
 import collections.abc as cabc
 import importlib.util
 
@@ -67,6 +65,12 @@ ON_OPENBSD = LazyBool(
     lambda: (sys.platform.startswith("openbsd")), globals(), "ON_OPENBSD"
 )
 """``True`` if on a OpenBSD operating system, else ``False``."""
+IN_APPIMAGE = LazyBool(
+    lambda: ("APPIMAGE" in os.environ and "APPDIR" in os.environ),
+    globals(),
+    "IN_APPIMAGE",
+)
+"""``True`` if in AppImage, else ``False``."""
 
 
 @lazybool
@@ -143,13 +147,6 @@ def pygments_version_info():
         return None
 
 
-def use_vended_prompt_toolkit():
-    """ Unload any prompt_toolkit libraries and add vended version to sys.path """
-    for mod in (mod for mod in list(sys.modules) if mod.startswith("prompt_toolkit")):
-        del sys.modules[mod]
-    sys.path.insert(0, str(pathlib.Path(__file__).with_name("vended_ptk").resolve()))
-
-
 @functools.lru_cache(1)
 def has_prompt_toolkit():
     """Tests if the `prompt_toolkit` is available."""
@@ -208,8 +205,9 @@ def ptk_below_max_supported():
 def best_shell_type():
     if builtins.__xonsh__.env.get("TERM", "") == "dumb":
         return "dumb"
-    else:
+    if has_prompt_toolkit():
         return "prompt_toolkit"
+    return "readline"
 
 
 @functools.lru_cache(1)
@@ -263,6 +261,7 @@ def windows_expanduser(path):
     exists. This restricts expanding the '~' if it is not followed by a
     separator. That is only '~/' and '~\' are expanded.
     """
+    path = str(path)
     if not path.startswith("~"):
         return path
     elif len(path) < 2 or path[1] in seps:

@@ -139,7 +139,7 @@ Very nice.
 
 .. note::
 
-   To update ``os.environ`` when the xonsh environment changes set 
+   To update ``os.environ`` when the xonsh environment changes set
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
 
 The Environment Itself ``${...}``
@@ -255,8 +255,8 @@ Running subprocess commands should work like in any other shell.
     >>> dir scripts
     xonsh  xonsh.bat
     >>> git status
-    On branch master
-    Your branch is up-to-date with 'origin/master'.
+    On branch main
+    Your branch is up-to-date with 'origin/main'.
     Changes not staged for commit:
       (use "git add <file>..." to update what will be committed)
       (use "git checkout -- <file>..." to discard changes in working directory)
@@ -365,12 +365,28 @@ input and output were redirected.  For example:
 .. code-block:: xonshcon
 
     >>> !(ls nonexistent_directory)
-    CommandPipeline(stdin=<_io.BytesIO object at 0x7f1948182bf8>, stdout=<_io.BytesIO object at 0x7f1948182af0>, stderr=<_io.BytesIO object at 0x7f19483a6200>, pid=26968, returncode=2, args=['ls', 'nonexistent_directory'], alias=['ls', '--color=auto', '-v'], stdin_redirect=['<stdin>', 'r'], stdout_redirect=[9, 'wb'], stderr_redirect=[11, 'w'], timestamps=[1485235484.5016758, None], executed_cmd=['ls', '--color=auto', '-v', 'nonexistent_directory'], input=None, output=, errors=None)
+    CommandPipeline(
+        stdin=<_io.BytesIO object at 0x7f1948182bf8>,
+        stdout=<_io.BytesIO object at 0x7f1948182af0>,
+        stderr=<_io.BytesIO object at 0x7f19483a6200>,
+        pid=26968,
+        returncode=2,
+        args=['ls', 'nonexistent_directory'],
+        alias=['ls', '--color=auto', '-v'],
+        stdin_redirect=['<stdin>', 'r'],
+        stdout_redirect=[9, 'wb'],
+        stderr_redirect=[11, 'w'],
+        timestamps=[1485235484.5016758, None],
+        executed_cmd=['ls', '--color=auto', '-v', 'nonexistent_directory'],
+        input=None,
+        output=,
+        errors=None
+    )
 
 This object will be "truthy" if its return code was 0, and it is equal (via
-``==``) to its return code.  It also hashes to its return code.  This allows
-for some interesting new kinds of interactions with subprocess commands, for
-example:
+``==``) to its return code. It also hashes to its return code. Converting the object
+to the string will return the output. This allows for some interesting new
+kinds of interactions with subprocess commands, for example:
 
 .. code-block:: xonshcon
 
@@ -837,6 +853,11 @@ The following shows an example with ``emacs``.
 
 Note that the prompt is returned to you after emacs is started.
 
+Normally background commands end upon the shell closing. To allow a background
+command to continue running after the shell has exited, use the ``disown``
+command which accepts either no arguments (to disown the most recent job)
+or an arbitrary number of job identifiers.
+
 Job Control
 ===========
 
@@ -1079,9 +1100,9 @@ handled implicitly in subprocess mode.
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 
 .. code-block:: xonshcon
-   
+
     >>> mypath = p'/etc'
-    >>> sorted(mypath.glob('**/*bashrc*')) 
+    >>> sorted(mypath.glob('**/*bashrc*'))
     [Path('/etc/bash.bashrc'), Path('/etc/skel/.bashrc')]
     >>> [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
     [True, True, False, Path('/'), 'root']
@@ -1185,19 +1206,17 @@ matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
 The values are lists of strings, where the first element is the command, and
-the rest are the arguments. You can also set the value to a string, in which
-one of two things will happen:
+the rest are the arguments.
 
-1. If the string is a xonsh expression, it will be converted to a list
-   automatically with xonsh's ``Lexer.split()`` method.
-2. If the string is more complex (representing a block of xonsh code),
-   the alias will be registered as an ``ExecAlias``, which is a callable
-   alias. This block of code will then be executed whenever the alias is
-   run.
+.. code-block:: xonshcon
 
-For example, the following creates several aliases for the ``git``
-version control software.  Both styles (list of strings and single
-string) are shown:
+    >>> aliases['ls']
+    ['ls', '--color=auto', '-v']
+
+You can also set the value to a string. If the string is a xonsh expression,
+it will be converted to a list automatically with xonsh's ``Lexer.split()`` method.
+For example, the following creates several aliases for the ``git`` version
+control software. Both styles (list of strings and single string) are shown:
 
 .. code-block:: xonshcon
 
@@ -1208,6 +1227,21 @@ string) are shown:
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
 being executed.
+
+If the string is representing a block of xonsh code, the alias will be registered
+as an ``ExecAlias``, which is a callable alias. This block of code will then be
+executed whenever the alias is run. The arguments are available in the list ``$args``
+or by the index in ``$arg<n>`` environment variables.
+
+.. code-block:: xonshcon
+
+    >>> aliases['answer'] = 'echo @(21+21)'
+    >>> aliases['piu'] = 'pip install -U @($args)'
+    >>> aliases['cdls'] = 'cd $arg0 && ls'
+
+.. note::
+
+   To add multiple aliases there is merge operator: ``aliases |= {'e': 'echo', 'g': 'git'}``.
 
 
 Callable Aliases
@@ -1454,8 +1488,8 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================
-Customizing the prompt by modifying ``$PROMPT`` is probably the most common
-reason for altering an environment variable.
+Customizing the prompt by modifying ``$PROMPT``, ``$RIGHT_PROMPT`` or ``$BOTTOM_TOOLBAR`` 
+is probably the most common reason for altering an environment variable.
 
 .. note:: Note that the ``$PROMPT`` variable will never be inherited from a
           parent process (regardless of whether that parent is a foreign shell
@@ -1503,7 +1537,7 @@ By default, the following variables are available for use:
     foreground, if any.
   * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
     current working directory on some linux terminals. This is not usually needed.
-  * ``gitstatus``: Informative git status, like ``[master|MERGING|+1…2]``, you
+  * ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
     may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
   * ``localtime``: The current, local time as given by ``time.localtime()``.
     This is formatted with the time format string found in ``time_format``.
@@ -1638,7 +1672,7 @@ But let's consider a problem:
 .. code-block:: console
 
     snail@home ~/xonsh $ $PROMPT = "{cwd_base} [{curr_branch}] $ "
-    xonsh [master] $ cd ..
+    xonsh [main] $ cd ..
     ~ [] $
 
 We want the branch to be displayed in square brackets, but we also don't want
@@ -1649,7 +1683,7 @@ invoked only if the value is not ``None``:
 .. code-block:: console
 
     snail@home ~/xonsh $ $PROMPT = "{cwd_base}{curr_branch: [{}]} $ "
-    xonsh [master] $ cd ..
+    xonsh [main] $ cd ..
     ~ $
 
 The curly brackets act as a placeholder, because the additional part is an

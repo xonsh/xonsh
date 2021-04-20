@@ -16,9 +16,9 @@ Authors are sorted by number of commits.
 * Gyuri Horak
 * Jean-Benoist Leger
 * christopher
+* Noortheen Raja
 * Klaus Alexander Seistrup
 * Leonardo Santagada
-* Noortheen Raja
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
@@ -247,5 +247,10 @@ Authors are sorted by number of commits.
 * Aneesh Durg
 * colons
 * yggdr
+* Gao, Xiang
+* Tejasvi S Tomar
+* Evgeny
+* Adam Schwalm
+* Nate Simon
 * goodboy
 * Atsushi Morimoto

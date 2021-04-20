@@ -110,7 +110,7 @@ def define_xontribs():
             ),
         ),
         "autojump": Xontrib(
-            url="https://github.com/sagartewari01/autojump-xonsh",
+            url="https://github.com/wshanks/xontrib-autojump",
             description="autojump support for xonsh",
         ),
         "autovox": Xontrib(
@@ -210,6 +210,17 @@ def define_xontribs():
                 license="MIT",
                 install={"pip": "xpip install xontrib-powerline3"},
                 url="https://github.com/jnoortheen/xontrib-broot",
+            ),
+        ),
+        "cd": Xontrib(
+            url="https://github.com/eugenesvk/xontrib-cd",
+            description="'cd' to any path without escaping in xonsh shell "
+            "('cd '→'cd! ')",
+            package=_XontribPkg(
+                name="xontrib-cd",
+                license="MIT",
+                install={"pip": "xpip install xontrib-cd"},
+                url="https://github.com/eugenesvk/xontrib-cd",
             ),
         ),
         "cmd_done": Xontrib(
@@ -338,6 +349,17 @@ def define_xontribs():
                 url="https://github.com/dyuri/xontrib-gitinfo",
             ),
         ),
+        "history_encrypt": Xontrib(
+            url="https://github.com/anki-code/xontrib-history-encrypt",
+            description="History backend that encrypt the xonsh shell commands history "
+            "to prevent leaking sensitive data.",
+            package=_XontribPkg(
+                name="xontrib-history-encrypt",
+                license="MIT",
+                install={"pip": "xpip install xontrib-history-encrypt"},
+                url="https://github.com/anki-code/xontrib-history-encrypt",
+            ),
+        ),
         "hist_navigator": Xontrib(
             url="https://github.com/jnoortheen/xontrib-hist-navigator",
             description="Move through directory history with nextd "
@@ -377,6 +399,26 @@ def define_xontribs():
                     "pip": "xpip install xontrib-kitty",
                 },
                 url="https://github.com/scopatz/xontrib-kitty",
+            ),
+        ),
+        "linuxbrew": Xontrib(
+            url="https://github.com/eugenesvk/xontrib-linuxbrew",
+            description="Add Homebrew's shell environment to xonsh shell on Linux",
+            package=_XontribPkg(
+                name="xontrib-linuxbrew",
+                license="MIT",
+                install={"pip": "xpip install xontrib-linuxbrew"},
+                url="https://github.com/eugenesvk/xontrib-linuxbrew",
+            ),
+        ),
+        "macro_lib": Xontrib(
+            url="https://github.com/anki-code/xontrib-macro-lib",
+            description="Library of the useful macros for the xonsh shell.",
+            package=_XontribPkg(
+                name="xontrib-macro-lib",
+                license="BSD",
+                install={"pip": "xpip install xontrib-macro-lib"},
+                url="https://github.com/anki-code/xontrib-macro-lib",
             ),
         ),
         "mpl": Xontrib(
@@ -473,6 +515,16 @@ def define_xontribs():
             url="http://xon.sh",
             description="Adds return code info to the prompt",
             package=core_pkg,
+        ),
+        "prompt_starship": Xontrib(
+            url="https://github.com/anki-code/xontrib-prompt-starship",
+            description="Starship prompt in xonsh shell.",
+            package=_XontribPkg(
+                name="xontrib-prompt-starship",
+                license="MIT",
+                install={"pip": "xpip install xontrib-prompt-starship"},
+                url="https://github.com/anki-code/xontrib-prompt-starship",
+            ),
         ),
         "prompt_vi_mode": Xontrib(
             url="https://github.com/t184256/xontrib-prompt-vi-mode",

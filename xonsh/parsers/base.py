@@ -7,6 +7,7 @@ import textwrap
 from threading import Thread
 from ast import parse as pyparse
 from collections.abc import Iterable, Sequence, Mapping
+import typing as tp
 
 from xonsh.ply.ply import yacc
 
@@ -40,6 +41,14 @@ class Location(object):
         if self.column is not None:
             s += ":{0}".format(self.column)
         return s
+
+
+class Index(tp.NamedTuple):
+    """From PY39 ast.Index returns the value itself."""
+
+    # todo: since ast.Index is going to be removed in future PY releases, it is better to check for Expr
+    #  rather than Index
+    value: tp.Any
 
 
 def ensure_has_elts(x, lineno=None, col_offset=None):
@@ -204,6 +213,29 @@ def hasglobstar(x):
             return False
     else:
         return False
+
+
+def raise_parse_error(
+    msg: tp.Union[str, tp.Tuple[str]],
+    loc: tp.Optional[Location] = None,
+    code: tp.Optional[str] = None,
+    lines: tp.Optional[tp.List[str]] = None,
+):
+    if loc is None or code is None or lines is None:
+        err_line_pointer = ""
+    else:
+        col = loc.column + 1
+        if loc.lineno == 0:
+            loc.lineno = len(lines)
+        i = loc.lineno - 1
+        if 0 <= i < len(lines):
+            err_line = lines[i].rstrip()
+            err_line_pointer = "\n{}\n{: >{}}".format(err_line, "^", col)
+        else:
+            err_line_pointer = ""
+    err = SyntaxError("{0}: {1}{2}".format(loc, msg, err_line_pointer))
+    err.loc = loc  # type: ignore
+    raise err
 
 
 class YaccLoader(Thread):
@@ -621,22 +653,7 @@ class BaseParser(object):
         raise SyntaxError()
 
     def _parse_error(self, msg, loc):
-        if self.xonsh_code is None or loc is None:
-            err_line_pointer = ""
-        else:
-            col = loc.column + 1
-            lines = self.lines
-            if loc.lineno == 0:
-                loc.lineno = len(lines)
-            i = loc.lineno - 1
-            if 0 <= i < len(lines):
-                err_line = lines[i].rstrip()
-                err_line_pointer = "\n{}\n{: >{}}".format(err_line, "^", col)
-            else:
-                err_line_pointer = ""
-        err = SyntaxError("{0}: {1}{2}".format(loc, msg, err_line_pointer))
-        err.loc = loc
-        raise err
+        raise_parse_error(msg, loc, self.xonsh_code, self.lines)
 
     #
     # Precedence of operators
@@ -2202,11 +2219,21 @@ class BaseParser(object):
         p0 = leader
         for trailer in trailers:
             if isinstance(
-                trailer, (ast.Index, ast.Slice, ast.ExtSlice, ast.Constant, ast.Name)
+                trailer,
+                (
+                    ast.Index,
+                    ast.Slice,
+                    ast.ExtSlice,
+                    ast.Constant,
+                    ast.Name,
+                    Index,
+                ),
             ):
+                # unpack types
+                slice = trailer.value if isinstance(trailer, Index) else trailer
                 p0 = ast.Subscript(
                     value=leader,
-                    slice=trailer,
+                    slice=slice,
                     ctx=ast.Load(),
                     lineno=leader.lineno,
                     col_offset=leader.col_offset,
@@ -2989,7 +3016,9 @@ class BaseParser(object):
 
         envs = self._get_envvars(p2, lineno, col)
         if envs is not None:
-            p0.keywords.append(ast.keyword(arg="envs", value=envs))
+            p0.keywords.append(
+                ast.keyword(arg="envs", value=envs, lineno=lineno, col_offset=col)
+            )
 
         return p0
 

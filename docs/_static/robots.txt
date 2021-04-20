@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /dev/
+Disallow: /docs-ahundt-sphinx

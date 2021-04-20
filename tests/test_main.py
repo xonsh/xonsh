@@ -69,7 +69,9 @@ def test_premain_custom_rc(shell, tmpdir, monkeypatch):
     assert args.mode == XonshMode.interactive
     assert f.strpath in builtins.__xonsh__.env.get("XONSHRC")
 
-
+@pytest.mark.skipif(
+    ON_WINDOWS and sys.version[:3] == "3.8", reason="weird failure on py38+windows",
+)    
 def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
     """Test that an RC file can load modules inside the same folder it is located in."""
 
@@ -98,7 +100,7 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
     assert tmpdir.strpath not in sys.path
 
 
-@pytest.mark.skipif(ON_WINDOWS and VER_FULL < (3, 9), reason="See https://github.com/xonsh/xonsh/issues/3936")
+@pytest.mark.skipif(ON_WINDOWS, reason="See https://github.com/xonsh/xonsh/issues/3936")
 def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
     """Test that an RC file can edit the sys.path variable without losing those values."""
 

@@ -9,12 +9,12 @@ import warnings
 from xonsh.platform import (
     best_shell_type,
     ptk_above_min_supported,
-    use_vended_prompt_toolkit,
     has_prompt_toolkit,
     minimum_required_ptk_version,
 )
 from xonsh.tools import XonshError, print_exception, simple_random_choice
 from xonsh.events import events
+from xonsh.history.dummy import DummyHistory
 import xonsh.history.main as xhm
 
 
@@ -132,15 +132,8 @@ class Shell(object):
         "d": "dumb",
         "dumb": "dumb",
         "ptk": "prompt_toolkit",  # there's only 1 prompt_toolkit shell (now)
-        "ptk1": "prompt_toolkit",  # allow any old config reference to use it
-        "ptk2": "prompt_toolkit",  # so long as user actually  has ptk2+ installed.
         "prompt-toolkit": "prompt_toolkit",
         "prompt_toolkit": "prompt_toolkit",
-        "prompt-toolkit1": "prompt_toolkit",
-        "prompt-toolkit2": "prompt_toolkit",
-        "prompt-toolkit3": "prompt_toolkit",
-        "prompt_toolkit3": "prompt_toolkit",
-        "ptk3": "prompt_toolkit",
         "rand": "random",
         "random": "random",
         "rl": "readline",
@@ -170,15 +163,18 @@ class Shell(object):
             shell_type = simple_random_choice(("readline", "prompt_toolkit"))
         if shell_type == "prompt_toolkit":
             if not has_prompt_toolkit():
-                use_vended_prompt_toolkit()
+                warnings.warn(
+                    "'prompt-toolkit' python package is not installed. Falling back to readline."
+                )
+                shell_type = "readline"
             elif not ptk_above_min_supported():
                 warnings.warn(
                     "Installed prompt-toolkit version < v{}.{}.{} is not ".format(
                         *minimum_required_ptk_version
                     )
-                    + "supported. Falling back to the builtin prompt-toolkit."
+                    + "supported. Falling back to readline."
                 )
-                use_vended_prompt_toolkit()
+                shell_type = "readline"
             if init_shell_type in ("ptk1", "prompt_toolkit1"):
                 warnings.warn(
                     "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(
@@ -205,10 +201,19 @@ class Shell(object):
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
         env = builtins.__xonsh__.env
+
         # build history backend before creating shell
-        builtins.__xonsh__.history = hist = xhm.construct_history(
-            env=env.detype(), ts=[time.time(), None], locked=True
-        )
+        if env.get("XONSH_INTERACTIVE"):
+            builtins.__xonsh__.history = hist = xhm.construct_history(
+                env=env.detype(),
+                ts=[time.time(), None],
+                locked=True,
+                filename=env.get("XONSH_HISTORY_FILE", None),
+            )
+            env["XONSH_HISTORY_FILE"] = hist.filename
+        else:
+            builtins.__xonsh__.history = hist = DummyHistory()
+            env["XONSH_HISTORY_FILE"] = None
 
         shell_type = self.choose_shell_type(shell_type, env)
 

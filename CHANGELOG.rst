@@ -4,6 +4,60 @@ Xonsh Change Log
 
 .. current developments
 
+v0.9.27
+====================
+
+**Added:**
+
+* Add new internal command "disown" to remove background jobs from the shell's job list
+* Python3.9 issues with subscriptor forms fixed.
+* added `xontrib-cd <https://github.com/eugenesvk/xontrib-cd>`_
+* Added **xontrib-history-encrypt** - new history backend that encrypt the xonsh shell commands history to prevent leaking sensitive data. If you like the idea give a star to the repository https://github.com/anki-code/xontrib-history-encrypt
+
+**Changed:**
+
+* New awesome landing on https://xon.sh - feel free to share and tweet!
+* History files (json, sqlite) now have 600 (rw only for user) permission by default.
+* PTK(python-prompt-toolkit) is no longer vendored with xonsh.
+
+**Fixed:**
+
+* Fixed a bug where "cd" and "rmdir" would return non-directory completions
+* SQLite History Backend: show message instead of exiting when disk is full.
+
+**Authors:**
+
+* Gil Forsyth
+* anki-code
+* Noortheen Raja
+* Tejasvi S Tomar
+* Evgeny
+* Adam Schwalm
+* Nate Simon
+
+
+
+v0.9.26
+====================
+
+**Added:**
+
+* abbrevs now support callbacks
+* Added a new xontrib ``tcg``
+
+**Fixed:**
+
+* now xonsh stdout delegates ``isatty`` to wrapped io stream.
+
+**Authors:**
+
+* Gil Forsyth
+* anki-code
+* Noortheen Raja
+* Gao, Xiang
+
+
+
 v0.9.25
 ====================
 

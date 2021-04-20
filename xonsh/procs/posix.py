@@ -52,6 +52,9 @@ class PopenThread(threading.Thread):
 
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
+
+        self.daemon = True
+
         self.lock = threading.RLock()
         env = builtins.__xonsh__.env
         # stdin setup

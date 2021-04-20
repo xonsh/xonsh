@@ -57,9 +57,8 @@ def _xhj_gc_files_to_rmfiles(hsize, files):
 
 
 def _xhj_gc_seconds_to_rmfiles(hsize, files):
-    """Return age removed (the age of the *oldest* file) and list of history files to remove to get under the age limit."""
+    """Return excess duration and list of history files to remove to get under the age limit."""
     now = time.time()
-    oldest_ts = files[0][0]
     n = 0
 
     for ts, _, f, _ in files:
@@ -67,7 +66,9 @@ def _xhj_gc_seconds_to_rmfiles(hsize, files):
             break
         n += 1
 
-    return (now - oldest_ts) if n > 0 else 0, files[:n]
+    rmfiles = files[:n]
+    size_over = now - hsize - rmfiles[0][0] if n > 0 else 0
+    return size_over, rmfiles
 
 
 def _xhj_gc_bytes_to_rmfiles(hsize, files):
@@ -87,24 +88,48 @@ def _xhj_gc_bytes_to_rmfiles(hsize, files):
     return bytes_removed, files_removed
 
 
+def _xhj_get_data_dir():
+    dir = xt.expanduser_abs_path(
+        os.path.join(builtins.__xonsh__.env.get("XONSH_DATA_DIR"), "history_json")
+    )
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    return dir
+
+
 def _xhj_get_history_files(sort=True, newest_first=False):
     """Find and return the history files. Optionally sort files by
     modify time.
     """
-    data_dir = builtins.__xonsh__.env.get("XONSH_DATA_DIR")
-    data_dir = xt.expanduser_abs_path(data_dir)
-    try:
-        files = [
-            os.path.join(data_dir, f)
-            for f in os.listdir(data_dir)
-            if f.startswith("xonsh-") and f.endswith(".json")
-        ]
-    except OSError:
-        files = []
-        if builtins.__xonsh__.env.get("XONSH_DEBUG"):
-            xt.print_exception("Could not collect xonsh history files.")
+    data_dirs = [
+        _xhj_get_data_dir(),
+        builtins.__xonsh__.env.get(
+            "XONSH_DATA_DIR"
+        ),  # backwards compatibility, remove in the future
+    ]
+
+    files = []
+    for data_dir in data_dirs:
+        data_dir = xt.expanduser_abs_path(data_dir)
+        try:
+            files += [
+                os.path.join(data_dir, f)
+                for f in os.listdir(data_dir)
+                if f.startswith("xonsh-") and f.endswith(".json")
+            ]
+        except OSError:
+            if builtins.__xonsh__.env.get("XONSH_DEBUG"):
+                xt.print_exception(
+                    f"Could not collect xonsh history json files from {data_dir}"
+                )
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
+
+    custom_history_file = builtins.__xonsh__.env.get("XONSH_HISTORY_FILE", None)
+    if custom_history_file:
+        custom_history_file = xt.expanduser_abs_path(custom_history_file)
+        if custom_history_file not in files:
+            files.insert(0, custom_history_file)
     return files
 
 
@@ -258,7 +283,7 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
-        opts = builtins.__xonsh__.env.get("HISTCONTROL")
+        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
         last_inp = None
         cmds = []
         for cmd in self.buffer:
@@ -361,7 +386,7 @@ class JsonHistory(History):
         ----------
         filename : str, optional
             Location of history file, defaults to
-            ``$XONSH_DATA_DIR/xonsh-{sessionid}.json``.
+            ``$XONSH_DATA_DIR/history_json/xonsh-{sessionid}.json``.
         sessionid : int, uuid, str, optional
             Current session identifier, will generate a new sessionid if not
             set.
@@ -376,13 +401,24 @@ class JsonHistory(History):
         super().__init__(sessionid=sessionid, **meta)
         if filename is None:
             # pylint: disable=no-member
-            data_dir = builtins.__xonsh__.env.get("XONSH_DATA_DIR")
-            data_dir = os.path.expanduser(data_dir)
+            data_dir = _xhj_get_data_dir()
             self.filename = os.path.join(
                 data_dir, "xonsh-{0}.json".format(self.sessionid)
             )
         else:
             self.filename = filename
+
+        if self.filename and not os.path.exists(os.path.expanduser(self.filename)):
+            meta["cmds"] = []
+            meta["sessionid"] = str(self.sessionid)
+            with open(self.filename, "w", newline="\n") as f:
+                xlj.ljdump(meta, f, sort_keys=True)
+
+            try:
+                os.chmod(self.filename, 0o600)
+            except Exception:  # pylint: disable=broad-except
+                pass
+
         self.buffer = []
         self.buffersize = buffersize
         self._queue = collections.deque()
@@ -391,10 +427,6 @@ class JsonHistory(History):
         self._skipped = 0
         self.last_cmd_out = None
         self.last_cmd_rtn = None
-        meta["cmds"] = []
-        meta["sessionid"] = str(self.sessionid)
-        with open(self.filename, "w", newline="\n") as f:
-            xlj.ljdump(meta, f, sort_keys=True)
         self.gc = JsonHistoryGC() if gc else None
         # command fields that are known
         self.tss = JsonCommandField("ts", self)
@@ -426,7 +458,7 @@ class JsonHistory(History):
         if not self.remember_history:
             return
 
-        opts = builtins.__xonsh__.env.get("HISTCONTROL")
+        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
         skipped_by_ignore_space = "ignorespace" in opts and cmd.get("spc")
         if skipped_by_ignore_space:
             return None

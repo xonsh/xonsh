@@ -3,12 +3,13 @@ import re
 import ast
 import glob
 import builtins
+from xonsh.parsers.completion_context import CommandContext
 
 import xonsh.tools as xt
 import xonsh.platform as xp
 import xonsh.lazyasd as xl
 
-from xonsh.completers.tools import get_filter_function
+from xonsh.completers.tools import RichCompletion, get_filter_function
 
 
 @xl.lazyobject
@@ -198,8 +199,6 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         if end != "":
             if "r" not in start.lower():
                 s = s.replace(backslash, double_backslash)
-            if s.endswith(backslash) and not s.endswith(double_backslash):
-                s += backslash
         if end in s:
             s = s.replace(end, "".join("\\%s" % i for i in end))
         s = start + s + end if append_end else start + s
@@ -342,12 +341,12 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         ):
             if xt.levenshtein(prefix, s, threshold) < threshold:
                 paths.add(s)
-    if tilde in prefix:
-        home = os.path.expanduser(tilde)
-        paths = {s.replace(home, tilde) for s in paths}
     if cdpath and cd_in_command(line):
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
+    if tilde in prefix:
+        home = os.path.expanduser(tilde)
+        paths = {s.replace(home, tilde) for s in paths}
     paths, _ = _quote_paths(
         {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
     )
@@ -356,5 +355,27 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     return paths, lprefix
 
 
-def complete_dir(prefix, line, start, end, ctx, cdpath=False):
-    return complete_path(prefix, line, start, end, cdpath, filtfunc=os.path.isdir)
+def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None):
+    # ``complete_path`` may add opening quotes:
+    prefix = command.raw_prefix
+
+    completions, lprefix = complete_path(
+        prefix,
+        prefix,
+        0,
+        len(prefix),
+        ctx={},
+        cdpath=cdpath,
+        filtfunc=filtfunc,
+    )
+
+    # ``complete_path`` may have added closing quotes:
+    rich_completions = {
+        RichCompletion(comp, append_closing_quote=False) for comp in completions
+    }
+
+    return rich_completions, lprefix
+
+
+def complete_dir(command: CommandContext):
+    return contextual_complete_path(command, filtfunc=os.path.isdir)
