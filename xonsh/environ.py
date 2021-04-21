@@ -785,6 +785,10 @@ class GeneralSetting(Xettings):
         6000,
         "Number of files on the PATH above which a warning is shown.",
     )
+    COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
+        False,
+        "If enabled, the CommandsCache saved between runs and can reduce the startup time.",
+    )
 
     HOSTNAME = Var.with_default(
         default=default_value(lambda env: platform.node()),
