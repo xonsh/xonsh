@@ -226,10 +226,10 @@ class CommandsCache(cabc.Mapping):
         Parameters
         ----------
         name : str
-                name of binary to search for
+            name of binary to search for
         ignore_alias : bool, optional
-                Force return of binary path even if alias of ``name`` exists
-                (default ``False``)
+            Force return of binary path even if alias of ``name`` exists
+            (default ``False``)
         """
         # make sure the cache is up to date by accessing the property
         _ = self.all_commands
@@ -241,10 +241,10 @@ class CommandsCache(cabc.Mapping):
         Parameters
         ----------
         name : str
-                name of binary to search for
+            name of binary to search for
         ignore_alias : bool, optional
-                Force return of binary path even if alias of ``name`` exists
-                (default ``False``)
+            Force return of binary path even if alias of ``name`` exists
+            (default ``False``)
         """
         possibilities = self.get_possible_names(name)
         if ON_WINDOWS:

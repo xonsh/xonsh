@@ -334,11 +334,11 @@ def handle_token(state, token):
 
     Parameters
     ----------
-    state :
+    state
         The current state of the lexer, including information about whether
         we are in Python mode or subprocess mode, which changes the lexer's
         behavior.  Also includes the stream of tokens yet to be considered.
-    token :
+    token
         The token (from ``tokenize``) currently under consideration
     """
     typ = token.type

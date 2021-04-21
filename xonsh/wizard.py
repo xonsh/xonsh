@@ -709,7 +709,7 @@ class PromptVisitor(StateVisitor):
             Tree of nodes to start visitor with.
         state : dict, optional
             Initial state to begin with.
-        kwargs : optional
+        **kwargs : optional
             Options that are passed through to the prompt via the shell's
             singleline() method. See BaseShell for mor details.
         """

@@ -226,7 +226,6 @@ def foreign_shell_data(
     dryrun : bool, optional
         Whether or not to actually run and process the command.
 
-
     Returns
     -------
     env : dict
