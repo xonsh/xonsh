@@ -33,7 +33,10 @@ def _get_git_branch(q):
     try:
         cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
         branch = xt.decode_bytes(_run_git_cmd(cmd))
-        branch = branch.splitlines()[0] or None
+        try:
+            branch = branch.splitlines()[0]
+        except IndexError:
+            branch = None
     except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     else:
