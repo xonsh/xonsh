@@ -4,6 +4,7 @@ import io
 import re
 import sys
 import shlex
+import shutil
 import signal
 import inspect
 import pathlib
@@ -27,7 +28,6 @@ from xonsh.procs.pipelines import (
     HiddenCommandPipeline,
     STDOUT_CAPTURE_KINDS,
 )
-from xonsh.xoreutils.which import which
 
 
 @xl.lazyobject
@@ -459,11 +459,8 @@ class SubprocSpec:
         try:
             bufsize = 1
             if xp.ON_WINDOWS:
-                stdout = io.StringIO()
-                stderr = io.StringIO()
-                if which(self.cmd[:1], stdout=stdout, stderr=stderr) > 0:
-                    raise FileNotFoundError
-                self.cmd[0] = stdout.getvalue().strip()
+                path = os.pathsep.join(builtins.__xonsh__.env.get("PATH"))
+                self.cmd[0] = shutil.which(self.cmd[0], path=path)
             p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
