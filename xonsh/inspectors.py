@@ -208,23 +208,21 @@ def call_tip(oinfo, format_call=True):
     Parameters
     ----------
     oinfo : dict
-
     format_call : bool, optional
-      If True, the call line is formatted and returned as a string.  If not, a
-      tuple of (name, argspec) is returned.
+        If True, the call line is formatted and returned as a string.  If not, a
+        tuple of (name, argspec) is returned.
 
     Returns
     -------
     call_info : None, str or (str, dict) tuple.
-      When format_call is True, the whole call information is formatted as a
-      single string.  Otherwise, the object's name and its argspec dict are
-      returned.  If no call information is available, None is returned.
-
+        When format_call is True, the whole call information is formatted as a
+        single string.  Otherwise, the object's name and its argspec dict are
+        returned.  If no call information is available, None is returned.
     docstring : str or None
-      The most relevant docstring for calling purposes is returned, if
-      available.  The priority is: call docstring for callable instances, then
-      constructor docstring for classes, then main object's docstring otherwise
-      (regular functions).
+        The most relevant docstring for calling purposes is returned, if
+        available.  The priority is: call docstring for callable instances, then
+        constructor docstring for classes, then main object's docstring otherwise
+        (regular functions).
     """
     # Get call definition
     argspec = oinfo.get("argspec")
@@ -269,7 +267,7 @@ def find_file(obj):
     Returns
     -------
     fname : str
-      The absolute path to the file where the object was defined.
+        The absolute path to the file where the object was defined.
     """
     # get source if obj was decorated with @decorator
     if safe_hasattr(obj, "__wrapped__"):
@@ -306,7 +304,7 @@ def find_source_lines(obj):
     Returns
     -------
     lineno : int
-      The line number where the object definition starts.
+        The line number where the object definition starts.
     """
     # get source if obj was decorated with @decorator
     if safe_hasattr(obj, "__wrapped__"):
@@ -445,9 +443,9 @@ class Inspector(object):
         Parameters
         ----------
         fields : list
-          A list of 2-tuples: (field_title, field_content)
+            A list of 2-tuples: (field_title, field_content)
         title_width : int
-          How many characters to pad titles to. Default to longest title.
+            How many characters to pad titles to. Default to longest title.
         """
         out = []
         if title_width == 0:
@@ -469,9 +467,9 @@ class Inspector(object):
         Parameters
         ----------
         fields : list
-          A list of 2-tuples: (field_title, field_content)
+            A list of 2-tuples: (field_title, field_content)
         title_width : int
-          How many characters to pad titles to. Default to longest title.
+            How many characters to pad titles to. Default to longest title.
         """
         out = []
         if title_width == 0:
@@ -499,9 +497,9 @@ class Inspector(object):
         Parameters
         ----------
         fields : list
-          A list of 2-tuples: (field_title, field_content)
+            A list of 2-tuples: (field_title, field_content)
         title_width : int
-          How many characters to pad titles to. Default to longest title.
+            How many characters to pad titles to. Default to longest title.
         """
         if HAS_PYGMENTS:
             rtn = self._format_fields_tokens(fields, title_width=title_width)

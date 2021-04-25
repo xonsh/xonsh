@@ -105,7 +105,7 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
 
         Parameters
         ----------
-        **kwargs :
+        **kwargs
             Keyword arguments to pass to each handler
         """
 
@@ -166,7 +166,7 @@ class Event(AbstractEvent):
 
         Parameters
         ----------
-        **kwargs :
+        **kwargs
             Keyword arguments to pass to each handler
 
         Returns

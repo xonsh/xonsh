@@ -288,6 +288,9 @@ def bash_completions(
     paths=None,
     command=None,
     quote_paths=_bash_quote_paths,
+    line_args=None,
+    opening_quote="",
+    closing_quote="",
     **kwargs
 ):
     """Completes based on results from BASH completion.
@@ -320,6 +323,13 @@ def bash_completions(
         this as the default is acceptable 99+% of the time. This function should
         return a set of the new paths and a boolean for whether the paths were
         quoted.
+    line_args : list of str, optional
+        A list of the args in the current line to be used instead of ``line.split()``.
+        This is usefull with a space in an argument, e.g. ``ls 'a dir/'<TAB>``.
+    opening_quote : str, optional
+        The current argument's opening quote. This is passed to the `quote_paths` function.
+    closing_quote : str, optional
+        The closing quote that **should** be used. This is also passed to the `quote_paths` function.
 
     Returns
     -------
@@ -333,7 +343,7 @@ def bash_completions(
     if prefix.startswith("$"):  # do not complete env variables
         return set(), 0
 
-    splt = line.split()
+    splt = line_args or line.split()
     cmd = splt[0]
     cmd = os.path.basename(cmd)
     idx = n = 0
@@ -398,7 +408,7 @@ def bash_completions(
         strip_len += 1
 
     if "-o noquote" not in complete_stmt:
-        out, need_quotes = quote_paths(out, "", "")
+        out, need_quotes = quote_paths(out, opening_quote, closing_quote)
     if "-o nospace" in complete_stmt:
         out = set([x.rstrip() for x in out])
 

@@ -460,7 +460,6 @@ def enter_macro(obj, raw_block, glbs, locs):
     of the macro block, globals, and locals to the object. These modifications
     are made in-place and the original object is returned.
 
-
     Parameters
     ----------
     obj : context manager

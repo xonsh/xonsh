@@ -1,6 +1,7 @@
 """Xonsh hooks into bash completions."""
 import builtins
 
+import xonsh.tools as xt
 import xonsh.platform as xp
 from xonsh.completers.path import _quote_paths
 from xonsh.completers.bash_completion import bash_completions
@@ -14,17 +15,23 @@ def complete_from_bash(context: CommandContext):
     env = builtins.__xonsh__.env.detype()  # type: ignore
     paths = builtins.__xonsh__.env.get("BASH_COMPLETIONS", ())  # type: ignore
     command = xp.bash_command()
-    # TODO: Allow passing the parsed data directly to py-bash-completion
-    args = [arg.raw_value for arg in context.args]
-    prefix = context.raw_prefix
+    args = [arg.value for arg in context.args]
+    prefix = context.prefix  # without the quotes
     args.insert(context.arg_index, prefix)
     line = " ".join(args)
 
     # lengths of all args + joining spaces
-    begidx = sum(len(a) for a in args[: context.arg_index]) + max(
-        context.arg_index - 1, 0
-    )
+    begidx = sum(len(a) for a in args[: context.arg_index]) + context.arg_index
     endidx = begidx + len(prefix)
+
+    opening_quote = context.opening_quote
+    closing_quote = context.closing_quote
+    if closing_quote and not context.is_after_closing_quote:
+        # there already are closing quotes after our cursor, don't complete new ones (i.e. `ls "/pro<TAB>"`)
+        closing_quote = ""
+    elif opening_quote and not closing_quote:
+        # get the proper closing quote
+        closing_quote = xt.RE_STRING_START.sub("", opening_quote)
 
     comps, lprefix = bash_completions(
         prefix,
@@ -35,12 +42,28 @@ def complete_from_bash(context: CommandContext):
         paths=paths,
         command=command,
         quote_paths=_quote_paths,
+        line_args=args,
+        opening_quote=opening_quote,
+        closing_quote=closing_quote,
     )
 
-    def handle_space(comp: str):
+    def enrich_comps(comp: str):
+        append_space = False
         if comp.endswith(" "):
-            return RichCompletion(comp[:-1], append_space=True)
-        return comp
+            append_space = True
+            comp = comp.rstrip()
 
-    comps = set(map(handle_space, comps))
+        # ``bash_completions`` may have added closing quotes:
+        return RichCompletion(
+            comp, append_closing_quote=False, append_space=append_space
+        )
+
+    comps = set(map(enrich_comps, comps))
+
+    if lprefix == len(prefix):
+        lprefix += len(context.opening_quote)
+    if context.is_after_closing_quote:
+        # since bash doesn't see the closing quote, we need to add its length to lprefix
+        lprefix += len(context.closing_quote)
+
     return comps, lprefix

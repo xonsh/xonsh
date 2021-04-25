@@ -1500,9 +1500,9 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tp.Tuple[_TokenType
 
     Parameters
     ----------
-    file_path:
+    file_path
         relative path of file (as user typed it).
-    path_stat:
+    path_stat
         lstat() results for file_path.
 
     Returns

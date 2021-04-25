@@ -1,5 +1,8 @@
 import os
 import builtins
+import pickle
+import time
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -10,6 +13,7 @@ from xonsh.commands_cache import (
     predict_true,
     predict_false,
 )
+from xonsh import commands_cache
 from tools import skip_if_on_windows
 
 
@@ -24,6 +28,58 @@ def test_predict_threadable_unknown_command(xonsh_builtins):
     cc = CommandsCache()
     result = cc.predict_threadable(["command_should_not_found"])
     assert isinstance(result, bool)
+
+
+@pytest.fixture
+def commands_cache_tmp(xonsh_builtins, tmp_path, monkeypatch):
+    xonsh_builtins.__xonsh__.env["XONSH_DATA_DIR"] = tmp_path
+    xonsh_builtins.__xonsh__.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = True
+    xonsh_builtins.__xonsh__.env["PATH"] = [tmp_path]
+    exec_mock = MagicMock(return_value=["bin1", "bin2"])
+    monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
+    return commands_cache.CommandsCache()
+
+
+def test_commands_cached_between_runs(commands_cache_tmp, tmp_path):
+    # 1. no pickle file
+    # 2. return empty result first and create a thread to populate result
+    # 3. once the result is available then next call to cc.all_commands returns
+
+    cc = commands_cache_tmp
+
+    # wait for thread to end
+    cnt = 0  # timeout waiting for thread
+    while True:
+        if cc.all_commands or cnt > 10:
+            break
+        cnt += 1
+        time.sleep(0.1)
+    assert [b.lower() for b in cc.all_commands.keys()] == ["bin1", "bin2"]
+
+    files = tmp_path.glob("*.pickle")
+    assert len(list(files)) == 1
+
+    # cleanup dir
+    for file in files:
+        os.remove(file)
+
+
+def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path):
+    cc = commands_cache_tmp
+    file = tmp_path / CommandsCache.CACHE_FILE
+    bins = {
+        "bin1": (
+            "/some-path/bin1",
+            None,
+        ),
+        "bin2": (
+            "/some-path/bin2",
+            None,
+        ),
+    }
+
+    file.write_bytes(pickle.dumps(bins))
+    assert cc.all_commands == bins
 
 
 TRUE_SHELL_ARGS = [

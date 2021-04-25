@@ -354,7 +354,7 @@ class CtxAwareTransformer(NodeTransformer):
         ----------
         node : ast.AST
             A syntax tree to transform.
-        input : str
+        inp : str
             The input code in string format.
         ctx : dict
             The root context to use.

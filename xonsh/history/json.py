@@ -88,22 +88,40 @@ def _xhj_gc_bytes_to_rmfiles(hsize, files):
     return bytes_removed, files_removed
 
 
+def _xhj_get_data_dir():
+    dir = xt.expanduser_abs_path(
+        os.path.join(builtins.__xonsh__.env.get("XONSH_DATA_DIR"), "history_json")
+    )
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    return dir
+
+
 def _xhj_get_history_files(sort=True, newest_first=False):
     """Find and return the history files. Optionally sort files by
     modify time.
     """
-    data_dir = builtins.__xonsh__.env.get("XONSH_DATA_DIR")
-    data_dir = xt.expanduser_abs_path(data_dir)
-    try:
-        files = [
-            os.path.join(data_dir, f)
-            for f in os.listdir(data_dir)
-            if f.startswith("xonsh-") and f.endswith(".json")
-        ]
-    except OSError:
-        files = []
-        if builtins.__xonsh__.env.get("XONSH_DEBUG"):
-            xt.print_exception("Could not collect xonsh history files.")
+    data_dirs = [
+        _xhj_get_data_dir(),
+        builtins.__xonsh__.env.get(
+            "XONSH_DATA_DIR"
+        ),  # backwards compatibility, remove in the future
+    ]
+
+    files = []
+    for data_dir in data_dirs:
+        data_dir = xt.expanduser_abs_path(data_dir)
+        try:
+            files += [
+                os.path.join(data_dir, f)
+                for f in os.listdir(data_dir)
+                if f.startswith("xonsh-") and f.endswith(".json")
+            ]
+        except OSError:
+            if builtins.__xonsh__.env.get("XONSH_DEBUG"):
+                xt.print_exception(
+                    f"Could not collect xonsh history json files from {data_dir}"
+                )
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
 
@@ -368,7 +386,7 @@ class JsonHistory(History):
         ----------
         filename : str, optional
             Location of history file, defaults to
-            ``$XONSH_DATA_DIR/xonsh-{sessionid}.json``.
+            ``$XONSH_DATA_DIR/history_json/xonsh-{sessionid}.json``.
         sessionid : int, uuid, str, optional
             Current session identifier, will generate a new sessionid if not
             set.
@@ -383,8 +401,7 @@ class JsonHistory(History):
         super().__init__(sessionid=sessionid, **meta)
         if filename is None:
             # pylint: disable=no-member
-            data_dir = builtins.__xonsh__.env.get("XONSH_DATA_DIR")
-            data_dir = os.path.expanduser(data_dir)
+            data_dir = _xhj_get_data_dir()
             self.filename = os.path.join(
                 data_dir, "xonsh-{0}.json".format(self.sessionid)
             )
