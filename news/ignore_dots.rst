@@ -1,6 +1,6 @@
 **Added:**
 
-* Added environment variable `$COMPLETE_DOTS` to specify how current and previous directories should be tab completed in cd  ('./', '../'):
+* Added environment variable ``$COMPLETE_DOTS`` to specify how current and previous directories should be tab completed in cd  ('./', '../'):
     - ``always`` Always complete paths with ./ and ../
     - ``never`` Never complete paths with ./ and ../
     - ``matching`` Complete if path starts with . or ..
