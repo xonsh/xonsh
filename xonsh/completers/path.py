@@ -125,13 +125,13 @@ def _env(prefix):
 
 def _dots(prefix):
     complete_dots = builtins.__xonsh__.env.get("COMPLETE_DOTS", "matching").lower()
-    if complete_dots == 'never':
+    if complete_dots == "never":
         return ()
     slash = xt.get_sep()
     if slash == "\\":
         slash = ""
     prefixes = {"."}
-    if complete_dots == 'always':
+    if complete_dots == "always":
         prefixes.add("")
     if prefix in prefixes:
         return ("." + slash, ".." + slash)
