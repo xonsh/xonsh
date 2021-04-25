@@ -26,7 +26,7 @@ def test_empty_line():
         )
     )
     assert completions
-    for exp in ["cool", CUR_DIR, "abs"]:
+    for exp in ["cool", "abs"]:
         assert exp in completions
 
 
@@ -38,6 +38,6 @@ def test_empty_subexpr():
         )
     )
     assert completions
-    for exp in ["cool", CUR_DIR]:
+    for exp in ["cool"]:
         assert exp in completions
     assert "abs" not in completions
