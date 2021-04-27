@@ -1,6 +1,6 @@
 **Added:**
 
-* Ability to call the tool by name from callable alias with the same name without the infinite loop error.
+* Ability to call the tool by the name from callable alias with the same name without the infinite loop error.
 
 **Changed:**
 
