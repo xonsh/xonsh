@@ -16,6 +16,8 @@ COMPLETERS = {
     "rmdir": complete_rmdir,
 }
 
+CUR_DIR = "." if ON_WINDOWS else "./"
+PARENT_DIR = ".." if ON_WINDOWS else "../"
 
 @pytest.fixture(autouse=True)
 def setup(xonsh_builtins, xonsh_execer):
@@ -46,6 +48,10 @@ def complete_cmd(cmd, prefix, opening_quote="", closing_quote=""):
     completions, lprefix = result
     assert lprefix == len(opening_quote) + len(prefix) + len(closing_quote)  # should override the quotes
     return completions
+
+
+def complete_cmd_dirs(*a, **kw):
+    return [r.value for r in complete_cmd(*a, **kw)]
 
 
 def test_non_dir(cmd):
@@ -84,3 +90,26 @@ def test_closing_quotes(cmd, dir_path):
     completion = completions.pop()
     assert isinstance(completion, RichCompletion)
     assert completion.append_closing_quote is False
+
+
+def test_complete_dots(xonsh_builtins):
+    with xonsh_builtins.__xonsh__.env.swap(COMPLETE_DOTS='never'):
+        dirs = complete_cmd_dirs('cd', '')
+        assert CUR_DIR not in dirs and PARENT_DIR not in dirs
+
+        dirs = complete_cmd_dirs('cd', '.')
+        assert CUR_DIR not in dirs and PARENT_DIR not in dirs
+
+    with xonsh_builtins.__xonsh__.env.swap(COMPLETE_DOTS='matching'):
+        dirs = complete_cmd_dirs('cd', '')
+        assert CUR_DIR not in dirs and PARENT_DIR not in dirs
+
+        dirs = complete_cmd_dirs('cd', '.')
+        assert CUR_DIR in dirs and PARENT_DIR in dirs
+
+    with xonsh_builtins.__xonsh__.env.swap(COMPLETE_DOTS='always'):
+        dirs = complete_cmd_dirs('cd', '')
+        assert CUR_DIR in dirs and PARENT_DIR in dirs
+
+        dirs = complete_cmd_dirs('cd', '.')
+        assert CUR_DIR in dirs and PARENT_DIR in dirs
