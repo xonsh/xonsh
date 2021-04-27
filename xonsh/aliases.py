@@ -212,9 +212,18 @@ class ExecAlias:
     ):
         execer = builtins.__xonsh__.execer
         frame = stack[0][0]  # execute as though we are at the call site
-        execer.exec(
-            self.src, glbs=frame.f_globals, locs=frame.f_locals, filename=self.filename
-        )
+
+        alias_args = {"args": args}
+        for i, a in enumerate(args):
+            alias_args[f"arg{i}"] = a
+
+        with builtins.__xonsh__.env.swap(alias_args):
+            execer.exec(
+                self.src,
+                glbs=frame.f_globals,
+                locs=frame.f_locals,
+                filename=self.filename,
+            )
 
     def __repr__(self):
         return "ExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
@@ -652,7 +661,6 @@ def xexec(args, stdin=None):
     If '-a' is supplied, the shell passes name as the zeroth argument
     to the executed command.
 
-
     Notes
     -----
     This command **is not** the same as the Python builtin function
@@ -746,8 +754,8 @@ def showcmd(args, stdin=None):
     optional arguments:
       -h, --help            show this help message and exit
 
-    Example:
-    -------
+    Examples
+    --------
       >>> showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """

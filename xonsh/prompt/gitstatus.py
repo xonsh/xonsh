@@ -216,7 +216,7 @@ def gitstatus_prompt():
         ret += _get_def("BEHIND") + str(s.num_behind)
     if s.operations:
         ret += _get_def("OPERATION") + "|" + "|".join(s.operations)
-    ret += "|"
+    ret += "{RESET}|"
     for category in (
         "staged",
         "conflicts",

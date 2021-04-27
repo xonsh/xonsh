@@ -205,6 +205,22 @@ aliases['test-stream'] = _test_stream
 x = !(test-stream)
 print(x.returncode)
 """,
+        "1\n",
+        0,
+    ),
+    # test captured streaming alias without stderr
+    (
+        """
+def _test_stream(args, stdin, stdout, stderr):
+    print('hallo on err', file=stderr)
+    print('hallo on out', file=stdout)
+    return 1
+
+aliases['test-stream'] = _test_stream
+with __xonsh__.env.swap(XONSH_SUBPROC_CAPTURED_PRINT_STDERR=True):
+    x = !(test-stream)
+    print(x.returncode)
+""",
         "hallo on err\n1\n",
         0,
     ),

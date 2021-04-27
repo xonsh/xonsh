@@ -785,6 +785,10 @@ class GeneralSetting(Xettings):
         6000,
         "Number of files on the PATH above which a warning is shown.",
     )
+    COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
+        False,
+        "If enabled, the CommandsCache saved between runs and can reduce the startup time.",
+    )
 
     HOSTNAME = Var.with_default(
         default=default_value(lambda env: platform.node()),
@@ -856,6 +860,10 @@ class GeneralSetting(Xettings):
         "This is most useful in xonsh scripts or modules where failures "
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``.",
+    )
+    XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
+        False,
+        "If ``True`` the stderr from captured subproc will be printed automatically.",
     )
     TERM = Var.no_default(
         "str",
