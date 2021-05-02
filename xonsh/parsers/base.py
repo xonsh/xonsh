@@ -482,7 +482,7 @@ class BaseParser(object):
         if not yacc_debug:
             yacc_kwargs["errorlog"] = yacc.NullLogger()
         if outputdir is None:
-            outputdir = os.path.dirname(os.path.realpath(__file__))
+            outputdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         yacc_kwargs["outputdir"] = outputdir
         if yacc_debug:
             # create parser on main thread
