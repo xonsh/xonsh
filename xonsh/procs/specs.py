@@ -4,7 +4,6 @@ import io
 import re
 import sys
 import shlex
-import shutil
 import signal
 import inspect
 import pathlib
@@ -459,9 +458,11 @@ class SubprocSpec:
         try:
             bufsize = 1
             if xp.ON_WINDOWS:
-                path = os.pathsep.join(builtins.__xonsh__.env.get("PATH"))
-                self.cmd[0] = shutil.which(self.cmd[0], path=path)
-            p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
+                # launch process using full paths (https://bugs.python.org/issue8557)
+                cmd = [self.binary_loc] + self.cmd[1:]
+            else:
+                cmd = self.cmd
+            p = self.cls(cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise xt.XonshError(e.format(self.cmd[0]))
