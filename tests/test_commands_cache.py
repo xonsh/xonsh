@@ -14,7 +14,7 @@ from xonsh.commands_cache import (
     predict_false,
 )
 from xonsh import commands_cache
-from tools import skip_if_on_windows, skip_if_on_darwin
+from tools import skip_if_on_windows
 
 
 def test_commands_cache_lazy(xonsh_builtins):
@@ -63,7 +63,6 @@ def test_commands_cached_between_runs(commands_cache_tmp, tmp_path):
     for file in files:
         os.remove(file)
 
-@skip_if_on_darwin
 def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path):
     cc = commands_cache_tmp
     file = tmp_path / CommandsCache.CACHE_FILE
