@@ -175,7 +175,11 @@ class CommandsCache(cabc.Mapping):
 
     def get_cached_commands(self) -> tp.Dict[str, str]:
         if self.cache_file and self.cache_file.exists():
-            return pickle.loads(self.cache_file.read_bytes()) or {}
+            try:
+                return pickle.loads(self.cache_file.read_bytes()) or {}
+            except:
+                # the file is corrupt
+                self.cache_file.unlink(missing_ok=True)
         return {}
 
     def set_cmds_cache(self, allcmds: tp.Dict[str, tp.Any]) -> tp.Dict[str, tp.Any]:
