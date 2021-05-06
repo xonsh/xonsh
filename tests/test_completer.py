@@ -1,7 +1,7 @@
 """Tests for the base completer's logic (xonsh/completer.py)"""
 
 import pytest
-from xonsh.completers.tools import RichCompletion, contextual_command_completer
+from xonsh.completers.tools import RichCompletion, contextual_command_completer, non_exclusive_completer
 
 from xonsh.completer import Completer
 from xonsh.parsers.completion_context import CommandContext
@@ -22,7 +22,7 @@ def completers_mock(xonsh_builtins, monkeypatch):
 def test_sanity(completer, completers_mock):
     # no completions:
     completers_mock["a"] = lambda *a: None
-    assert completer.complete("", "", 0, 0) == (set(), 0)
+    assert completer.complete("", "", 0, 0) == ((), 0)
     # simple completion:
     completers_mock["a"] = lambda *a: {"comp"}
     assert completer.complete("pre", "", 0, 0) == (("comp",), 3)
@@ -103,3 +103,41 @@ def test_append_space(completer, completers_mock):
             "testb ",
         ), 5
     )
+
+
+@pytest.mark.parametrize("middle_result, exp", (
+    (
+        # stop at the first exclusive result
+        (
+            {"b1", "b2"},
+            ("a1", "a2", "b1", "b2")
+        ),
+        # pass empty exclusive results
+        (
+            {},
+            ("a1", "a2", "c1", "c2")
+        ),
+        # pass empty exclusive results
+        (
+            None,
+            ("a1", "a2", "c1", "c2")
+        ),
+        # stop at StopIteration
+        (
+            StopIteration,
+            ("a1", "a2")
+        ),
+    )
+))
+def test_non_exclusive(completer, completers_mock, middle_result, exp):
+    completers_mock["a"] = non_exclusive_completer(lambda *a: {"a1", "a2"})
+
+    def middle(*a):
+        if middle_result is StopIteration:
+            raise StopIteration()
+        return middle_result
+
+    completers_mock["b"] = middle
+    completers_mock["c"] = non_exclusive_completer(lambda *a: {"c1", "c2"})
+
+    assert completer.complete("", "", 0, 0, {})[0] == exp
