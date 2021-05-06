@@ -156,3 +156,18 @@ def contextual_command_completer_for(cmd: str):
         return _completer
 
     return decor
+
+
+def apply_lprefix(comps, lprefix):
+    if lprefix is None:
+        return comps
+
+    for comp in comps:
+        if isinstance(comp, RichCompletion):
+            if comp.prefix_len is None:
+                yield comp.replace(prefix_len=lprefix)
+            else:
+                # this comp has a custom prefix len
+                yield comp
+        else:
+            yield RichCompletion(comp, prefix_len=lprefix)
