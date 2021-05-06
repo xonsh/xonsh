@@ -24,7 +24,10 @@ def default_completers():
     """Creates a copy of the default completers."""
     return collections.OrderedDict(
         [
+            # non-exclusive completers:
             ("end_proc_tokens", complete_end_proc_tokens),
+            ("end_proc_keywords", complete_end_proc_keywords),
+            # exclusive completers:
             ("base", complete_base),
             ("completer", complete_completer),
             ("skip", complete_skipper),
@@ -38,9 +41,5 @@ def default_completers():
             ("import", complete_import),
             ("python", complete_python),
             ("path", complete_path),
-            (
-                "end_proc_keywords",
-                complete_end_proc_keywords,
-            ),  # this is last to give a chance to complete `and/or` prefixes
         ]
     )
