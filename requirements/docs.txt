@@ -8,7 +8,5 @@ pyzmq
 matplotlib
 doctr
 tornado
-black
-pre-commit
 runthis-sphinxext
 livereload

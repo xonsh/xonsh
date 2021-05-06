@@ -142,7 +142,7 @@ def _first_branch_timeout_message():
 
 
 def _vc_has(binary):
-    """ This allows us to locate binaries after git only if necessary """
+    """This allows us to locate binaries after git only if necessary"""
     cmds = builtins.__xonsh__.commands_cache
     if cmds.is_empty():
         return bool(cmds.locate_binary(binary, ignore_alias=True))

@@ -243,7 +243,7 @@ def _safe_wait_for_active_job(last_task=None, backgrounded=False):
 
 
 def get_next_task():
-    """ Get the next active task and put it on top of the queue"""
+    """Get the next active task and put it on top of the queue"""
     _clear_dead_jobs()
     selected_task = None
     for tid in tasks:
