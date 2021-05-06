@@ -308,7 +308,7 @@ def start_services(shell_kwargs, args, pre_env={}):
     else:
         # otherwise, get the RC files from --rc  if set, and from XONSHRC otherwise
         rc = shell_kwargs.get("rc") or env.get("XONSHRC")
-        rcd = env.get("XONSHRCDIR")
+        rcd = env.get("XONSHRC_DIR")
 
     events.on_pre_rc.fire()
     xonshrc_context(

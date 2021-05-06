@@ -5,7 +5,7 @@
   designed to support drop-in style configuration where you could, for example, have a common config
   file shared across multiple machines and a separate machine specific file.
 
-  This is controlled by the environment variable ``XONSHRCDIR``, which defaults to
+  This is controlled by the environment variable ``XONSHRC_DIR``, which defaults to
   ``["/etc/xonsh/rc.d", "~/.config/xonsh/rc.d"]``. If those directories exist, then any ``xsh`` files
   contained within are sorted and then sourced.
 

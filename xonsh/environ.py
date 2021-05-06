@@ -956,7 +956,7 @@ class GeneralSetting(Xettings):
         ),
         type_str="env_path",
     )
-    XONSHRCDIR = Var.with_default(
+    XONSHRC_DIR = Var.with_default(
         default_xonshrcdir,
         "A list of directories, from which all .xsh files will be loaded "
         "at startup, sorted in lexographic order. Files in these directories "
@@ -2172,7 +2172,7 @@ def xonshrc_context(
             )
             loaded.append(status)
     if rcdirs is not None:
-        env["XONSHRCDIR"] = tuple(rcdirs)
+        env["XONSHRC_DIR"] = tuple(rcdirs)
         for rcdir in rcdirs:
             if os.path.isdir(rcdir):
                 for rcfile in sorted(glob.glob(os.path.join(rcdir, "*.xsh"))):

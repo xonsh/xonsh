@@ -109,7 +109,7 @@ def test_rcdir(shell, tmpdir, monkeypatch, capsys):
     rcdir = tmpdir.join("rc.d")
     rcdir.mkdir()
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-    monkeypatch.setitem(os.environ, "XONSHRCDIR", str(rcdir))
+    monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
 
     rcdir.join("2.xsh").write("print('2.xsh')")
@@ -125,12 +125,12 @@ def test_rcdir(shell, tmpdir, monkeypatch, capsys):
 
 
 def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
-    """Test that an empty XONSHRCDIR is not an error"""
+    """Test that an empty XONSHRC_DIR is not an error"""
 
     rcdir = tmpdir.join("rc.d")
     rcdir.mkdir()
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-    monkeypatch.setitem(os.environ, "XONSHRCDIR", str(rcdir))
+    monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
 
     xonsh.main.premain([])
     stdout, stderr = capsys.readouterr()
@@ -226,7 +226,7 @@ def test_custom_rc_with_script(shell, tmpdir):
 def test_premain_no_rc(shell, tmpdir):
     xonsh.main.premain(["--no-rc", "-i"])
     assert not builtins.__xonsh__.env.get("XONSHRC")
-    assert not builtins.__xonsh__.env.get("XONSHRCDIR")
+    assert not builtins.__xonsh__.env.get("XONSHRC_DIR")
 
 
 @pytest.mark.parametrize(
