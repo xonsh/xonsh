@@ -177,7 +177,7 @@ class CommandsCache(cabc.Mapping):
         if self.cache_file and self.cache_file.exists():
             try:
                 return pickle.loads(self.cache_file.read_bytes()) or {}
-            except:
+            except Exception:
                 # the file is corrupt
                 self.cache_file.unlink(missing_ok=True)
         return {}
