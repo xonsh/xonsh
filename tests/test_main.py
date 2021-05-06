@@ -132,7 +132,7 @@ def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     monkeypatch.setitem(os.environ, "XONSHRCDIR", str(rcdir))
 
-    xonsh.main.premain()
+    xonsh.main.premain([])
     stdout, stderr = capsys.readouterr()
     assert len(stderr) == 0
 
@@ -226,6 +226,7 @@ def test_custom_rc_with_script(shell, tmpdir):
 def test_premain_no_rc(shell, tmpdir):
     xonsh.main.premain(["--no-rc", "-i"])
     assert not builtins.__xonsh__.env.get("XONSHRC")
+    assert not builtins.__xonsh__.env.get("XONSHRCDIR")
 
 
 @pytest.mark.parametrize(

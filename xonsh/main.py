@@ -295,17 +295,21 @@ def start_services(shell_kwargs, args, pre_env={}):
     env = builtins.__xonsh__.env
     for k, v in pre_env.items():
         env[k] = v
-    rc = shell_kwargs.get("rc", None)
-    rc = env.get("XONSHRC") if rc is None else rc
-    rcd = env.get("XONSHRCDIR")
-    if (
+
+    if shell_kwargs.get("norc") or (
         args.mode != XonshMode.interactive
         and not args.force_interactive
         and not args.login
     ):
-        #  Don't load xonshrc if not interactive shell
-        rc = None
-        rcd = None
+        # if --no-rc was passed, or we're not in an interactive shell and
+        # interactive mode was not forced, then disable loading RC files and dirs
+        rc = ()
+        rcd = ()
+    else:
+        # otherwise, get the RC files from --rc  if set, and from XONSHRC otherwise
+        rc = shell_kwargs.get("rc") or env.get("XONSHRC")
+        rcd = env.get("XONSHRCDIR")
+
     events.on_pre_rc.fire()
     xonshrc_context(
         rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
@@ -342,7 +346,7 @@ def premain(argv=None):
         args.login = True
         shell_kwargs["login"] = True
     if args.norc:
-        shell_kwargs["rc"] = ()
+        shell_kwargs["norc"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
     setattr(sys, "displayhook", _pprint_displayhook)

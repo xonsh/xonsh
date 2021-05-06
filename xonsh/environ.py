@@ -2161,7 +2161,7 @@ def xonshrc_context(
         return env
     orig_thread = env.get("THREAD_SUBPROCS")
     env["THREAD_SUBPROCS"] = None
-    if rcfiles:
+    if rcfiles is not None:
         env["XONSHRC"] = tuple(rcfiles)
         for rcfile in rcfiles:
             if not os.path.isfile(rcfile):
@@ -2171,7 +2171,7 @@ def xonshrc_context(
                 rcfile, ctx, env, execer=execer, login=login
             )
             loaded.append(status)
-    if rcdirs:
+    if rcdirs is not None:
         env["XONSHRCDIR"] = tuple(rcdirs)
         for rcdir in rcdirs:
             if os.path.isdir(rcdir):
