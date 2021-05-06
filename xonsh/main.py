@@ -297,6 +297,7 @@ def start_services(shell_kwargs, args, pre_env={}):
         env[k] = v
     rc = shell_kwargs.get("rc", None)
     rc = env.get("XONSHRC") if rc is None else rc
+    rcd = env.get("XONSHRCDIR")
     if (
         args.mode != XonshMode.interactive
         and not args.force_interactive
@@ -304,8 +305,11 @@ def start_services(shell_kwargs, args, pre_env={}):
     ):
         #  Don't load xonshrc if not interactive shell
         rc = None
+        rcd = None
     events.on_pre_rc.fire()
-    xonshrc_context(rcfiles=rc, execer=execer, ctx=ctx, env=env, login=login)
+    xonshrc_context(
+        rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
+    )
     events.on_post_rc.fire()
     # create shell
     builtins.__xonsh__.shell = Shell(execer=execer, **shell_kwargs)

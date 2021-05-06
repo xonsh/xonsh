@@ -100,6 +100,43 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
     assert tmpdir.strpath not in sys.path
 
 
+def test_rcdir(shell, tmpdir, monkeypatch, capsys):
+    """
+    Test that files are loaded from an rcdir, after a normal rc file,
+    and in lexographic order.
+    """
+
+    rcdir = tmpdir.join("rc.d")
+    rcdir.mkdir()
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSHRCDIR", str(rcdir))
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+
+    rcdir.join("2.xsh").write("print('2.xsh')")
+    rcdir.join("0.xsh").write("print('0.xsh')")
+    rcdir.join("1.xsh").write("print('1.xsh')")
+    tmpdir.join("rc.xsh").write("print('rc.xsh')")
+
+    xonsh.main.premain(["--rc", str(tmpdir.join("rc.xsh"))])
+    stdout, stderr = capsys.readouterr()
+
+    assert "rc.xsh\n0.xsh\n1.xsh\n2.xsh" in stdout
+    assert len(stderr) == 0
+
+
+def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
+    """Test that an empty XONSHRCDIR is not an error"""
+
+    rcdir = tmpdir.join("rc.d")
+    rcdir.mkdir()
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSHRCDIR", str(rcdir))
+
+    xonsh.main.premain()
+    stdout, stderr = capsys.readouterr()
+    assert len(stderr) == 0
+
+
 @pytest.mark.skipif(ON_WINDOWS, reason="See https://github.com/xonsh/xonsh/issues/3936")
 def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
     """Test that an RC file can edit the sys.path variable without losing those values."""
