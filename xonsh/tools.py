@@ -232,7 +232,7 @@ class EnvPath(cabc.MutableSequence):
         return all(map(operator.eq, self, other))
 
     def _repr_pretty_(self, p, cycle):
-        """ Pretty print path list """
+        """Pretty print path list"""
         if cycle:
             p.text("EnvPath(...)")
         else:
@@ -811,7 +811,7 @@ def _executables_in_windows(path):
 
 
 def executables_in(path):
-    """Returns a generator of files in path that the user could execute. """
+    """Returns a generator of files in path that the user could execute."""
     if ON_WINDOWS:
         func = _executables_in_windows
     else:
@@ -1936,7 +1936,7 @@ def register_custom_style(
 
 
 def _token_attr_from_stylemap(stylemap):
-    """yields tokens attr, and index from a stylemap """
+    """yields tokens attr, and index from a stylemap"""
     import prompt_toolkit as ptk
 
     if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
@@ -1953,7 +1953,7 @@ def _token_attr_from_stylemap(stylemap):
 
 
 def _get_color_lookup_table():
-    """Returns the prompt_toolkit win32 ColorLookupTable """
+    """Returns the prompt_toolkit win32 ColorLookupTable"""
     if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
         from prompt_toolkit.terminal.win32_output import ColorLookupTable
     else:
@@ -1962,7 +1962,7 @@ def _get_color_lookup_table():
 
 
 def _get_color_indexes(style_map):
-    """Generates the color and windows color index for a style """
+    """Generates the color and windows color index for a style"""
     table = _get_color_lookup_table()
     for token, attr in _token_attr_from_stylemap(style_map):
         if attr.color:
@@ -2038,7 +2038,7 @@ WIN10_COLOR_MAP = LazyObject(_win10_color_map, globals(), "WIN10_COLOR_MAP")
 
 
 def _win_bold_color_map():
-    """ Map dark ansi colors to lighter version. """
+    """Map dark ansi colors to lighter version."""
     return {
         "ansiblack": "ansibrightblack",
         "ansiblue": "ansibrightblue",
@@ -2372,7 +2372,7 @@ def normabspath(p):
 
 
 def expanduser_abs_path(inp):
-    """ Provides user expanded absolute path """
+    """Provides user expanded absolute path"""
     return os.path.abspath(expanduser(inp))
 
 

@@ -140,7 +140,7 @@ def pygments_version():
 
 @functools.lru_cache(1)
 def pygments_version_info():
-    """ Returns `pygments`'s version as tuple of integers. """
+    """Returns `pygments`'s version as tuple of integers."""
     if HAS_PYGMENTS:
         return tuple(int(x) for x in pygments_version().strip("<>+-=.").split("."))
     else:
@@ -167,7 +167,7 @@ def ptk_version():
 
 @functools.lru_cache(1)
 def ptk_version_info():
-    """ Returns `prompt_toolkit`'s version as tuple of integers. """
+    """Returns `prompt_toolkit`'s version as tuple of integers."""
     if has_prompt_toolkit():
         return tuple(int(x) for x in ptk_version().strip("<>+-=.").split("."))
     else:
