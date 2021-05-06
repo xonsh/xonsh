@@ -223,12 +223,12 @@ def load_xonsh_bindings() -> KeyBindingsBase:
 
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):
-        """ Open current buffer in editor """
+        """Open current buffer in editor"""
         event.current_buffer.open_in_editor(event.cli)
 
     @handle(Keys.BackTab, filter=insert_mode)
     def insert_literal_tab(event):
-        """ Insert literal tab on Shift+Tab instead of autocompleting """
+        """Insert literal tab on Shift+Tab instead of autocompleting"""
         b = event.current_buffer
         if b.complete_state:
             b.complete_previous()
@@ -325,7 +325,7 @@ def load_xonsh_bindings() -> KeyBindingsBase:
     @handle(Keys.ControlJ, filter=IsMultiline() & insert_mode)
     @handle(Keys.ControlM, filter=IsMultiline() & insert_mode)
     def multiline_carriage_return(event):
-        """ Wrapper around carriage_return multiline parser """
+        """Wrapper around carriage_return multiline parser"""
         b = event.cli.current_buffer
         carriage_return(b, event.cli)
 
@@ -378,19 +378,19 @@ def load_xonsh_bindings() -> KeyBindingsBase:
 
     @handle(Keys.ControlX, Keys.ControlX, filter=has_selection)
     def _cut(event):
-        """ Cut selected text. """
+        """Cut selected text."""
         data = event.current_buffer.cut_selection()
         event.app.clipboard.set_data(data)
 
     @handle(Keys.ControlX, Keys.ControlC, filter=has_selection)
     def _copy(event):
-        """ Copy selected text. """
+        """Copy selected text."""
         data = event.current_buffer.copy_selection()
         event.app.clipboard.set_data(data)
 
     @handle(Keys.ControlV, filter=insert_mode | has_selection)
     def _yank(event):
-        """ Paste selected text. """
+        """Paste selected text."""
         buff = event.current_buffer
         if buff.selection_state:
             buff.cut_selection()

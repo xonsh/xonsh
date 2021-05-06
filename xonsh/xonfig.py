@@ -801,7 +801,7 @@ def STRIP_COLOR_RE():
 
 
 def _align_string(string, align="<", fill=" ", width=80):
-    """ Align and pad a color formatted string """
+    """Align and pad a color formatted string"""
     linelen = len(STRIP_COLOR_RE.sub("", string))
     padlen = max(width - linelen, 0)
     if align == "^":

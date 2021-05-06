@@ -369,7 +369,7 @@ def xonsh_exit(args, stdin=None):
 
 
 def xonsh_reset(args, stdin=None):
-    """ Clears __xonsh__.ctx"""
+    """Clears __xonsh__.ctx"""
     builtins.__xonsh__.ctx.clear()
 
 

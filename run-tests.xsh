@@ -60,7 +60,7 @@ def qa(ns: argparse.Namespace):
 
     echo "---------- Running mypy ----------"
     mypy --version
-    mypy xonsh
+    mypy xonsh --exclude xonsh/ply
 
 
 if __name__ == '__main__':

@@ -64,8 +64,10 @@ def test_commands_cached_between_runs(commands_cache_tmp, tmp_path):
         os.remove(file)
 
 
-def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path):
+def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path, monkeypatch):
     cc = commands_cache_tmp
+    update_cmds_cache = MagicMock()
+    monkeypatch.setattr(cc, "_update_cmds_cache", update_cmds_cache)
     file = tmp_path / CommandsCache.CACHE_FILE
     bins = {
         "bin1": (
@@ -80,6 +82,7 @@ def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path):
 
     file.write_bytes(pickle.dumps(bins))
     assert cc.all_commands == bins
+    assert cc._loaded_pickled
 
 
 TRUE_SHELL_ARGS = [
@@ -131,7 +134,7 @@ PATTERN_BIN_USING_TTY_OR_NOT = [
 
 @pytest.mark.parametrize("args", PATTERN_BIN_USING_TTY_OR_NOT)
 @skip_if_on_windows
-def test_commands_cache_predictor_default(args):
+def test_commands_cache_predictor_default(args, xonsh_builtins):
     cc = CommandsCache()
     use_tty, patterns = args
     f = open("testfile", "wb")
