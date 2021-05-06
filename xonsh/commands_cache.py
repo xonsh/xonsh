@@ -129,7 +129,7 @@ class CommandsCache(cabc.Mapping):
                 self.set_cmds_cache(self._cmds_cache)
             return self._cmds_cache
 
-        if self.cache_file:
+        if self.cache_file and self.cache_file.exists():
             # pickle the result only if XONSH_DATA_DIR is set
             if not self._loaded_pickled:
                 # first time load the commands from cache-file
