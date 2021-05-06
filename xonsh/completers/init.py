@@ -18,6 +18,7 @@ from xonsh.completers.commands import (
 )
 from xonsh.completers.completer import complete_completer
 from xonsh.completers.xompletions import complete_xonfig, complete_xontrib
+from xonsh.completers.environment import complete_environment_vars
 
 
 def default_completers():
@@ -27,6 +28,7 @@ def default_completers():
             # non-exclusive completers:
             ("end_proc_tokens", complete_end_proc_tokens),
             ("end_proc_keywords", complete_end_proc_keywords),
+            ("environment_vars", complete_environment_vars),
             # exclusive completers:
             ("base", complete_base),
             ("completer", complete_completer),
