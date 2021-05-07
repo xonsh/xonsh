@@ -10,14 +10,15 @@ from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO_BYTES
 
 
-def _splitpath(path, sofar=[]):
-    folder, path = os.path.split(path)
+def _splitpath(path: str):
+    parts = path.split(os.sep)
+    path = parts[::-1]
     if path == "":
-        return sofar[::-1]
-    elif folder == "":
-        return (sofar + [path])[::-1]
+        return path
+    elif parts and parts[0] == "":
+        return parts[1:]
     else:
-        return _splitpath(folder, sofar + [path])
+        return parts
 
 
 @lazyobject

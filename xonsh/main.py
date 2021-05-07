@@ -274,10 +274,12 @@ class XonshMode(enum.Enum):
     interactive = 3
 
 
-def start_services(shell_kwargs, args, pre_env={}):
+def start_services(shell_kwargs, args, pre_env=None):
     """Starts up the essential services in the proper order.
     This returns the environment instance as a convenience.
     """
+    if pre_env is None:
+        pre_env = {}
     install_import_hooks()
     # create execer, which loads builtins
     ctx = shell_kwargs.get("ctx", {})
