@@ -112,10 +112,10 @@ def compile_code(filename, code, execer, glb, loc, mode):
     """
     Wrapper for ``execer.compile`` to compile the given code
     """
+    if not code.endswith("\n"):
+        code += "\n"
+    old_filename = execer.filename
     try:
-        if not code.endswith("\n"):
-            code += "\n"
-        old_filename = execer.filename
         execer.filename = filename
         ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode, filename=filename)
     except Exception:
