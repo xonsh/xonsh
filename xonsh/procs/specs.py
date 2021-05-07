@@ -356,7 +356,7 @@ class SubprocSpec:
         self.args = list(cmd)
         self.alias = None
         self.alias_name = None
-        self.alias_stack = builtins.__xonsh__.env.get("ALIAS_STACK", "").split(":")
+        self.alias_stack = builtins.__xonsh__.env.get("__ALIAS_STACK", "").split(":")
         self.binary_loc = None
         self.is_proxy = False
         self.background = False
@@ -444,7 +444,7 @@ class SubprocSpec:
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         self.prep_env(kwargs)
         if callable(self.alias):
-            kwargs["env"]["ALIAS_NAME"] = self.alias_name
+            kwargs["env"]["__ALIAS_NAME"] = self.alias_name
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)

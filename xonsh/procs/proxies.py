@@ -500,16 +500,16 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = sys.stderr
         # run the function itself
         try:
-            alias_stack = builtins.__xonsh__.env.get("ALIAS_STACK", "")
-            if self.get("ALIAS_NAME"):
-                alias_stack += ":" + self.env["ALIAS_NAME"]
+            alias_stack = builtins.__xonsh__.env.get("__ALIAS_STACK", "")
+            if self.env.get("__ALIAS_NAME"):
+                alias_stack += ":" + self.env["__ALIAS_NAME"]
 
             with STDOUT_DISPATCHER.register(sp_stdout), STDERR_DISPATCHER.register(
                 sp_stderr
             ), xt.redirect_stdout(STDOUT_DISPATCHER), xt.redirect_stderr(
                 STDERR_DISPATCHER
             ), builtins.__xonsh__.env.swap(
-                ALIAS_STACK=alias_stack
+                __ALIAS_STACK=alias_stack
             ):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec, spec.stack)
         except SystemExit as e:
