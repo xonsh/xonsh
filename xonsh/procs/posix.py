@@ -15,7 +15,6 @@ import xonsh.tools as xt
 import xonsh.lazyimps as xli
 
 from xonsh.procs.readers import (
-    BufferedFDParallelReader,
     NonBlockingFDReader,
     safe_fdclose,
 )

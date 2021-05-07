@@ -1,6 +1,5 @@
 """File handle readers and related tools."""
 import os
-import io
 import sys
 import time
 import queue
@@ -182,34 +181,6 @@ def populate_buffer(reader, fd, buffer, chunksize):
         else:
             reader.closed = True
             break
-
-
-class BufferedFDParallelReader:
-    """Buffered, parallel background thread reader."""
-
-    def __init__(self, fd, buffer=None, chunksize=1024):
-        """
-        Parameters
-        ----------
-        fd : int
-            File descriptor from which to read.
-        buffer : binary file-like or None, optional
-            A buffer to write bytes into. If None, a new BytesIO object
-            is created.
-        chunksize : int, optional
-            The max size of the parallel reads, default 1 kb.
-        """
-        self.fd = fd
-        self.buffer = io.BytesIO() if buffer is None else buffer
-        self.chunksize = chunksize
-        self.closed = False
-        # start reading from stream
-        self.thread = threading.Thread(
-            target=populate_buffer, args=(self, fd, self.buffer, chunksize)
-        )
-        self.thread.daemon = True
-
-        self.thread.start()
 
 
 def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
