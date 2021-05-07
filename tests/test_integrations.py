@@ -128,7 +128,6 @@ echo
     # testing alias stack: callable alias (ExecAlias) + no binary location + infinite loop
     (
         """
-# skip_if_on_windows        
 aliases['first'] = "second @(1)"
 aliases['second'] = "first @(1)"
 first
