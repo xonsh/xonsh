@@ -501,7 +501,7 @@ class ProcProxyThread(threading.Thread):
         # run the function itself
         try:
             alias_stack = builtins.__xonsh__.env.get("ALIAS_STACK", "")
-            if self.env["ALIAS_NAME"]:
+            if self.get("ALIAS_NAME"):
                 alias_stack += ":" + self.env["ALIAS_NAME"]
 
             with STDOUT_DISPATCHER.register(sp_stdout), STDERR_DISPATCHER.register(
