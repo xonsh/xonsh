@@ -133,7 +133,7 @@ aliases['first'] = "second @(1)"
 aliases['second'] = "first @(1)"
 first
 """,
-        lambda out: 'Infinite loop of calls for "first" alias.' in out,
+        lambda out: 'Recursive calls to "first" alias.' in out,
         0,
     ),
     # test redirecting a function alias to a file
