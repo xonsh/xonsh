@@ -127,16 +127,6 @@ class PopenThread(threading.Thread):
         """
         proc = self.proc
         spec = self._wait_and_getattr("spec")
-        # get stdin and apply parallel reader if needed.
-        stdin = self.stdin
-        if self.orig_stdin is None:
-            origin = None
-        elif xp.ON_POSIX and self.store_stdin:
-            origin = self.orig_stdin
-            origfd = origin if isinstance(origin, int) else origin.fileno()
-            origin = BufferedFDParallelReader(origfd, buffer=stdin)
-        else:
-            origin = None
         # get non-blocking stdout
         stdout = self.stdout.buffer if self.universal_newlines else self.stdout
         capout = spec.captured_stdout
