@@ -157,7 +157,11 @@ class Completer(object):
 
         # append spaces AFTER appending closing quote
         def append_space(comp: Completion):
-            if isinstance(comp, RichCompletion) and comp.append_space:
+            if (
+                isinstance(comp, RichCompletion)
+                and comp.append_space
+                and not comp.value.endswith(" ")
+            ):
                 return comp.replace(value=comp.value + " ")
             return comp
 
