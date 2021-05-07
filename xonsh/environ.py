@@ -88,6 +88,7 @@ from xonsh.tools import (
     dict_to_str,
     to_int_or_none,
     DefaultNotGivenType,
+    to_repr_pretty_,
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -395,14 +396,7 @@ class LsColors(cabc.MutableMapping):
     def __repr__(self):
         return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
-    def _repr_pretty_(self, p, cycle):
-        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
-        with p.group(0, name + "(", ")"):
-            if cycle:
-                p.text("...")
-            elif len(self):
-                p.break_()
-                p.pretty(dict(self))
+    _repr_pretty_ = to_repr_pretty_
 
     def is_target(self, key) -> bool:
         """Return True if key is 'target'"""
@@ -2018,15 +2012,6 @@ class Env(cabc.MutableMapping):
 
     def __repr__(self):
         return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
-
-    def _repr_pretty_(self, p, cycle):
-        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
-        with p.group(0, name + "(", ")"):
-            if cycle:
-                p.text("...")
-            elif len(self):
-                p.break_()
-                p.pretty(dict(self))
 
     def register(
         self,

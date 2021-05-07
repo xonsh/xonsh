@@ -2645,3 +2645,13 @@ def _deprecated_error_on_expiration(name, removed_in):
         raise AssertionError(
             "{} has passed its version {} expiry date!".format(name, removed_in)
         )
+
+
+def to_repr_pretty_(inst, p, cycle):
+    name = "{0}.{1}".format(inst.__class__.__module__, inst.__class__.__name__)
+    with p.group(0, name + "(", ")"):
+        if cycle:
+            p.text("...")
+        elif len(inst):
+            p.break_()
+            p.pretty(dict(inst))

@@ -34,6 +34,7 @@ from xonsh.tools import (
     ALIAS_KWARG_NAMES,
     unthreadable,
     print_color,
+    to_repr_pretty_,
 )
 from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
@@ -184,14 +185,7 @@ class Aliases(cabc.MutableMapping):
             self.__class__.__module__, self.__class__.__name__, self._raw
         )
 
-    def _repr_pretty_(self, p, cycle):
-        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
-        with p.group(0, name + "(", ")"):
-            if cycle:
-                p.text("...")
-            elif len(self):
-                p.break_()
-                p.pretty(dict(self))
+    _repr_pretty_ = to_repr_pretty_
 
 
 class ExecAlias:
