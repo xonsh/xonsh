@@ -224,3 +224,11 @@ def nodes_equal(x, y):
     for xchild, ychild in zip(ast.iter_child_nodes(x), ast.iter_child_nodes(y)):
         assert nodes_equal(xchild, ychild), "Ast node children differs"
     return True
+
+
+def completions_from_result(results):
+    if isinstance(results, tuple):
+        results, lprefix = results
+    if results is None:
+        return set()
+    return results
