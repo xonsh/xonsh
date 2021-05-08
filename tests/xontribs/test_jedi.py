@@ -5,6 +5,8 @@ import builtins
 import importlib
 from unittest.mock import MagicMock, call
 
+from tests.tools import skip_if_on_windows, skip_if_on_darwin
+
 from xonsh.xontribs import find_xontrib
 from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import CompletionContext, PythonContext
@@ -220,3 +222,12 @@ def test_special_tokens(jedi_xontrib):
         .issuperset(jedi_xontrib.XONSH_SPECIAL_TOKENS)
     assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext( "@", 1))) == {"@", "@(", "@$("}
     assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext("$", 1))) == {"$[", "${", "$("}
+
+
+@skip_if_on_darwin
+@skip_if_on_windows
+def test_no_command_path_completion(jedi_xontrib, completion_context_parse):
+    assert jedi_xontrib.complete_jedi(completion_context_parse("./", 2)) is None
+    assert jedi_xontrib.complete_jedi(completion_context_parse("./e", 3)) is None
+    assert jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/", 9)) is None
+    assert jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/e", 10)) is None

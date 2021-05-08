@@ -1,5 +1,6 @@
 """Use Jedi as xonsh's python completer."""
 import builtins
+import os
 
 import xonsh
 from xonsh.built_ins import XonshSession
@@ -57,11 +58,17 @@ def complete_jedi(context: CompletionContext):
     xonsh_execer: XonshSession = builtins.__xonsh__  # type: ignore
     ctx = context.python.ctx or {}
 
-    # if this is the first word and it's a known command, don't complete.
+    # if the first word is a known command (and we're not completing it), don't complete.
     # taken from xonsh/completers/python.py
     if context.command and context.command.arg_index != 0:
         first = context.command.args[0].value
         if first in xonsh_execer.commands_cache and first not in ctx:  # type: ignore
+            return None
+
+    # if we're completing a possible command and the prefix contains a valid path, don't complete.
+    if context.command:
+        path_parts = os.path.split(context.command.prefix)
+        if len(path_parts) > 1 and os.path.isdir(os.path.join(*path_parts[:-1])):
             return None
 
     filter_func = get_filter_function()

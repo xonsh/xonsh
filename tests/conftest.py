@@ -23,6 +23,7 @@ from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
+from xonsh.parsers.completion_context import CompletionContextParser
 
 from tools import DummyShell, sp, DummyCommandsCache, DummyEnv, DummyHistory
 
@@ -158,6 +159,11 @@ def xonsh_builtins(monkeypatch, xonsh_events):
         if hasattr(builtins, attr):
             delattr(builtins, attr)
     tasks.clear()  # must to this to enable resetting all_jobs
+
+
+@pytest.fixture(scope="session")
+def completion_context_parse():
+    return CompletionContextParser().parse
 
 
 def pytest_configure(config):
