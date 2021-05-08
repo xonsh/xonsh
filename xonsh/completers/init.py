@@ -33,9 +33,9 @@ def default_completers():
             ("rmdir", complete_rmdir),
             ("xonfig", complete_xonfig),
             ("xontrib", complete_xontrib),
+            ("import", complete_import),
             ("bash", complete_from_bash),
             ("man", complete_from_man),
-            ("import", complete_import),
             ("python", complete_python),
             ("path", complete_path),
             (
