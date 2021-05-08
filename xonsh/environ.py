@@ -1508,6 +1508,11 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         "Whether Xonsh will auto-insert matching parentheses, brackets, and "
         "quotes. Only available under the prompt-toolkit shell.",
     )
+    XONSH_COPY_ON_DELETE = Var.with_default(
+        False,
+        "Whether to copy words/lines to clipboard on deletion (must be set in .xonshrc file)."
+        "Only available under the prompt-toolkit shell.",
+    )
 
 
 class AsyncPromptSetting(PTKSetting):
