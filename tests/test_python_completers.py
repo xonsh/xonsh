@@ -73,7 +73,7 @@ def test_complete_python_ctx():
     class A:
         def wow():
             pass
-    
+
     a = A()
 
     res = complete_python(CompletionContext(python=PythonContext("a.w", 2, ctx=locals())))
@@ -86,6 +86,7 @@ def test_complete_python_ctx():
     (CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="pathli"), {"pathlib"}),
     (CommandContext(args=(CommandArg("from"),), arg_index=1, prefix="pathli"), {"pathlib "}),
     (CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="os.pa"), {"os.path"}),
+    (CommandContext(args=(CommandArg("from"), CommandArg("x"),), arg_index=2), {"import"}),
     (CommandContext(args=(
         CommandArg("import"), CommandArg("os,"),
         ), arg_index=2, prefix="pathli"), {"pathlib"}),
