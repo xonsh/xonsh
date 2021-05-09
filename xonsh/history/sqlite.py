@@ -51,18 +51,28 @@ def _xh_sqlite_create_history_table(cursor):
                   sessionid TEXT,
                   out TEXT,
                   info TEXT,
-                  frequency INTEGER default 1
+                  frequency INTEGER default 1,
+                  cwd TEXT
                  )
         """.format(
                 XH_SQLITE_TABLE_NAME
             )
         )
+
         # add frequency column if not exists for backward compatibility
         try:
             cursor.execute(
                 "ALTER TABLE "
                 + XH_SQLITE_TABLE_NAME
                 + " ADD COLUMN frequency INTEGER default 1"
+            )
+        except sqlite3.OperationalError:
+            pass
+
+        # add path column if not exists for backward compatibility
+        try:
+            cursor.execute(
+                "ALTER TABLE " + XH_SQLITE_TABLE_NAME + " ADD COLUMN cwd TEXT"
             )
         except sqlite3.OperationalError:
             pass
@@ -114,6 +124,8 @@ def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout, remove_dupli
             ("sessionid", sessionid),
         ]
     )
+    if "cwd" in cmd:
+        values["cwd"] = cmd["cwd"]
     if store_stdout and "out" in cmd:
         values["out"] = cmd["out"]
     if "info" in cmd:
@@ -251,6 +263,8 @@ class SqliteHistory(History):
         self.rtns = []
         self.outs = []
         self.tss = []
+        self.cwds = []
+        self.save_cwd = builtins.__xonsh__.env.get("XONSH_HISTORY_SAVE_CWD", True)
 
         if not os.path.exists(self.filename):
             with _xh_sqlite_get_conn(filename=self.filename) as conn:
@@ -273,6 +287,7 @@ class SqliteHistory(History):
         self.outs.append(cmd.get("out"))
         self.rtns.append(cmd["rtn"])
         self.tss.append(cmd.get("ts", (None, None)))
+        self.cwds.append(cmd.get("cwd", None))
 
         opts = envs.get("HISTCONTROL", "")
         if "ignoredups" in opts and inp == self._last_hist_inp:
@@ -284,6 +299,8 @@ class SqliteHistory(History):
         if "ignorespace" in opts and cmd.get("spc"):
             # Skipping cmd starting with space
             return
+        if not self.save_cwd and "cwd" in cmd:
+            del cmd["cwd"]
 
         try:
             del cmd["spc"]
@@ -338,5 +355,6 @@ class SqliteHistory(History):
         self.rtns = []
         self.outs = []
         self.tss = []
+        self.cwds = []
 
         xh_sqlite_wipe_session(sessionid=self.sessionid, filename=self.filename)

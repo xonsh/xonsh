@@ -18,7 +18,8 @@ class HistoryEntry(types.SimpleNamespace):
     ts: two-tuple of floats
         The timestamps of when the command started and finished, including
         fractions.
-
+    cwd: str
+        The current working directory before execution the command.
     """
 
 
@@ -67,6 +68,7 @@ class History:
         self.rtns = None
         self.tss = None
         self.outs = None
+        self.cwds = None
         self.last_cmd_rtn = None
         self.last_cmd_out = None
         self.hist_size = None
@@ -87,15 +89,17 @@ class History:
                 out=self.outs[item],
                 rtn=self.rtns[item],
                 ts=self.tss[item],
+                cwd=self.cwds[item],
             )
         elif isinstance(item, slice):
             cmds = self.inps[item]
             outs = self.outs[item]
             rtns = self.rtns[item]
             tss = self.tss[item]
+            cwds = self.cwds[item]
             return [
-                HistoryEntry(cmd=c, out=o, rtn=r, ts=t)
-                for c, o, r, t in zip(cmds, outs, rtns, tss)
+                HistoryEntry(cmd=c, out=o, rtn=r, ts=t, cwd=cwd)
+                for c, o, r, t, cwd in zip(cmds, outs, rtns, tss, cwds)
             ]
         else:
             raise TypeError(

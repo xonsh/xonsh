@@ -314,6 +314,9 @@ class BaseShell(object):
         self._styler = DefaultNotGiven
         self.prompt_formatter = PromptFormatter()
         self.accumulated_inputs = ""
+        self.precwd = (
+            None  # The current working directory just before execution of the line
+        )
 
     @property
     def styler(self):
@@ -347,6 +350,7 @@ class BaseShell(object):
 
     def precmd(self, line):
         """Called just before execution of line."""
+        self.precwd = os.getcwd()
         return line if self.need_more_lines else line.lstrip()
 
     def default(self, line, raw_line=None):
@@ -391,6 +395,7 @@ class BaseShell(object):
                 ts=[ts0, ts1],
                 spc=self.src_starts_with_space,
                 tee_out=tee_out,
+                cwd=self.precwd,
             )
             self.accumulated_inputs += src
             if (
