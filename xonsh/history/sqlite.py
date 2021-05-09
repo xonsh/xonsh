@@ -147,7 +147,7 @@ def _xh_sqlite_get_count(cursor, sessionid=None):
 
 
 def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, newest_first=False):
-    sql = "SELECT inp, tsb, rtn, frequency FROM xonsh_history "
+    sql = "SELECT inp, tsb, rtn, frequency, cwd FROM xonsh_history "
     params = []
     if sessionid is not None:
         sql += "WHERE sessionid = ? "
@@ -252,7 +252,7 @@ class SqliteHistoryGC(threading.Thread):
 class SqliteHistory(History):
     """Xonsh history backend implemented with sqlite3."""
 
-    def __init__(self, gc=True, filename=None, **kwargs):
+    def __init__(self, gc=True, filename=None, save_cwd=None, **kwargs):
         super().__init__(**kwargs)
         if filename is None:
             filename = _xh_sqlite_get_file_name()
@@ -264,7 +264,11 @@ class SqliteHistory(History):
         self.outs = []
         self.tss = []
         self.cwds = []
-        self.save_cwd = builtins.__xonsh__.env.get("XONSH_HISTORY_SAVE_CWD", True)
+        self.save_cwd = (
+            save_cwd
+            if save_cwd is not None
+            else builtins.__xonsh__.env.get("XONSH_HISTORY_SAVE_CWD", True)
+        )
 
         if not os.path.exists(self.filename):
             with _xh_sqlite_get_conn(filename=self.filename) as conn:
@@ -320,10 +324,10 @@ class SqliteHistory(History):
 
     def all_items(self, newest_first=False, session_id=None):
         """Display all history items."""
-        for inp, ts, rtn, freq in xh_sqlite_items(
+        for inp, ts, rtn, freq, cwd in xh_sqlite_items(
             filename=self.filename, newest_first=newest_first, sessionid=session_id
         ):
-            yield {"inp": inp, "ts": ts, "rtn": rtn, "frequency": freq}
+            yield {"inp": inp, "ts": ts, "rtn": rtn, "frequency": freq, "cwd": cwd}
 
     def items(self, newest_first=False):
         """Display history items of current session."""

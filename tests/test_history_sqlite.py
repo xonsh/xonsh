@@ -294,3 +294,14 @@ def test_hist_on_cmd(hist, xonsh_builtins, capsys, tmpdir):
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
     assert len(xonsh_builtins.__xonsh__.history) == 6
+
+
+def test_hist_flush_with_store_cwd(hist, xonsh_builtins):
+    hist.save_cwd = True
+    hist.append({"inp": "# saving with cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
+    hist.save_cwd = False
+    hist.append({"inp": "# saving without cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
+
+    cmds = [i for i in hist.all_items()]
+    assert cmds[0]["cwd"] == "/tmp"
+    assert cmds[1]["cwd"] is None

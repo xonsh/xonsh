@@ -378,7 +378,15 @@ class JsonHistory(History):
     JsonHistory implements an extra action: ``diff``
     """
 
-    def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True, **meta):
+    def __init__(
+        self,
+        filename=None,
+        sessionid=None,
+        buffersize=100,
+        gc=True,
+        save_cwd=None,
+        **meta,
+    ):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
@@ -434,7 +442,11 @@ class JsonHistory(History):
         self.outs = JsonCommandField("out", self)
         self.rtns = JsonCommandField("rtn", self)
         self.cwds = JsonCommandField("cwd", self)
-        self.save_cwd = builtins.__xonsh__.env.get("XONSH_HISTORY_SAVE_CWD", True)
+        self.save_cwd = (
+            save_cwd
+            if save_cwd is not None
+            else builtins.__xonsh__.env.get("XONSH_HISTORY_SAVE_CWD", True)
+        )
 
     def __len__(self):
         return self._len - self._skipped
