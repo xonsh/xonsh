@@ -296,7 +296,7 @@ def test_hist_on_cmd(hist, xonsh_builtins, capsys, tmpdir):
     assert len(xonsh_builtins.__xonsh__.history) == 6
 
 
-def test_hist_flush_with_store_cwd(hist, xonsh_builtins):
+def test_hist_store_cwd(hist, xonsh_builtins):
     hist.save_cwd = True
     hist.append({"inp": "# saving with cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
     hist.save_cwd = False
