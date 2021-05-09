@@ -7,7 +7,6 @@ import shlex
 import pytest
 
 from xonsh.lazyjson import LazyJSON
-from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import (
     JsonHistory,
     _xhj_gc_commands_to_rmfiles,
@@ -16,7 +15,7 @@ from xonsh.history.json import (
     _xhj_gc_bytes_to_rmfiles,
 )
 
-from xonsh.history.main import history_main, _xh_parse_args, construct_history
+from xonsh.history.main import history_main, _xh_parse_args
 
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
@@ -316,21 +315,6 @@ def test_history_getitem(index, exp, hist, xonsh_builtins):
         assert [(e.cmd, e.out, e.rtn, e.ts) for e in entry] == exp
     else:
         assert (entry.cmd, entry.out, entry.rtn, entry.ts) == exp
-
-
-def test_construct_history_str(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = "dummy"
-    assert isinstance(construct_history(), DummyHistory)
-
-
-def test_construct_history_class(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = DummyHistory
-    assert isinstance(construct_history(), DummyHistory)
-
-
-def test_construct_history_instance(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = DummyHistory()
-    assert isinstance(construct_history(), DummyHistory)
 
 
 import time
