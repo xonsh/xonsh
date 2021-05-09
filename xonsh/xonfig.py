@@ -516,6 +516,7 @@ def _info(ns):
             ("have readline", is_readline_available()),
             ("prompt toolkit", ptk_version() or None),
             ("shell type", env.get("SHELL_TYPE")),
+            ("history backend", env.get("XONSH_HISTORY_BACKEND")),
             ("pygments", pygments_version()),
             ("on posix", bool(ON_POSIX)),
             ("on linux", bool(ON_LINUX)),
