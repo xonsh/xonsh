@@ -1050,11 +1050,6 @@ class GeneralSetting(Xettings):
         "Whether or not to store the stdin that is supplied to the "
         "``!()`` and ``![]`` operators.",
     )
-    XONSH_STORE_STDOUT = Var.with_default(
-        False,
-        "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
-        "history files.",
-    )
     XONSH_STYLE_OVERRIDES = Var(
         is_str_str_dict,
         to_str_str_dict,
@@ -1188,21 +1183,6 @@ class PromptSetting(Xettings):
         "",
         "The string used to show a shortened directory in a shortened cwd, "
         "e.g. ``'…'``.",
-    )
-    HISTCONTROL = Var(
-        is_string_set,
-        csv_to_set,
-        set_to_csv,
-        set(),
-        "A set of strings (comma-separated list in string form) of options "
-        "that determine what commands are saved to the history list. By "
-        "default all commands are saved. The option ``ignoredups`` will not "
-        "save the command if it matches the previous command. The option "
-        "``ignoreerr`` will cause any commands that fail (i.e. return non-zero "
-        "exit status) to not be added to the history list. The option "
-        "``erasedups`` will remove all previous commands that matches and updates the frequency. "
-        "Note: ``erasedups`` is supported only in sqlite backend).",
-        can_store_as_str=True,
     )
     IGNOREEOF = Var.with_default(
         False,
@@ -1404,42 +1384,11 @@ class PromptSetting(Xettings):
         "* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n",
         pattern="XONSH_GITSTATUS_*",
     )
-    XONSH_HISTORY_BACKEND = Var(
-        is_history_backend,
-        to_itself,
-        ensure_string,
-        "json",
-        "Set which history backend to use. Options are: 'json', "
-        "'sqlite', and 'dummy'. The default is 'json'. "
-        "``XONSH_HISTORY_BACKEND`` also accepts a class type that inherits "
-        "from ``xonsh.history.base.History``, or its instance.",
-    )
-    XONSH_HISTORY_FILE = Var.with_default(
-        None,
-        "Location of history file set by history backend (default) or set by user in RC file.",
-        is_configurable=False,
-        doc_default="None",
-        type_str="path",
-    )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,
         "When searching history from a partial string (by pressing up arrow), "
         "match command history anywhere in a given line (not just the start)",
         doc_default="False",
-    )
-    XONSH_HISTORY_SIZE = Var(
-        is_history_tuple,
-        to_history_tuple,
-        history_tuple_to_str,
-        (8128, "commands"),
-        "Value and units tuple that sets the size of history after garbage "
-        "collection. Canonical units are:\n\n"
-        "- ``commands`` for the number of past commands executed,\n"
-        "- ``files`` for the number of history files to keep,\n"
-        "- ``s`` for the number of seconds in the past that are allowed, and\n"
-        "- ``b`` for the number of bytes that history may consume.\n\n"
-        "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
-        doc_default="``(8128, 'commands')`` or ``'8128 commands'``",
     )
     XONSH_STDERR_PREFIX = Var.with_default(
         "",
@@ -1456,6 +1405,67 @@ class PromptSetting(Xettings):
         "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
         "For example, to have stderr appear on a red background, the "
         'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
+    )
+
+
+class PromptHistorySetting(Xettings):
+    """Interactive Prompt History"""
+
+    XONSH_HISTORY_BACKEND = Var(
+        is_history_backend,
+        to_itself,
+        ensure_string,
+        "json",
+        "Set which history backend to use. Options are: 'json', "
+        "'sqlite', and 'dummy'. The default is 'json'. "
+        "``XONSH_HISTORY_BACKEND`` also accepts a class type that inherits "
+        "from ``xonsh.history.base.History``, or its instance.",
+    )
+    XONSH_HISTORY_FILE = Var.with_default(
+        None,
+        "Location of history file set by history backend (default) or set by the user.",
+        is_configurable=False,
+        doc_default="None",
+        type_str="path",
+    )
+    HISTCONTROL = Var(
+        is_string_set,
+        csv_to_set,
+        set_to_csv,
+        set(),
+        "A set of strings (comma-separated list in string form) of options "
+        "that determine what commands are saved to the history list. By "
+        "default all commands are saved. The option ``ignoredups`` will not "
+        "save the command if it matches the previous command. The option "
+        "``ignoreerr`` will cause any commands that fail (i.e. return non-zero "
+        "exit status) to not be added to the history list. The option "
+        "``erasedups`` will remove all previous commands that matches and updates the frequency. "
+        "Note: ``erasedups`` is supported only in sqlite backend).",
+        can_store_as_str=True,
+    )
+    XONSH_HISTORY_SIZE = Var(
+        is_history_tuple,
+        to_history_tuple,
+        history_tuple_to_str,
+        (8128, "commands"),
+        "Value and units tuple that sets the size of history after garbage "
+        "collection. Canonical units are:\n\n"
+        "- ``commands`` for the number of past commands executed,\n"
+        "- ``files`` for the number of history files to keep,\n"
+        "- ``s`` for the number of seconds in the past that are allowed, and\n"
+        "- ``b`` for the number of bytes that history may consume.\n\n"
+        "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
+        doc_default="``(8128, 'commands')`` or ``'8128 commands'``",
+    )
+    XONSH_STORE_STDOUT = Var.with_default(
+        False,
+        "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
+        "history files.",
+    )
+    XONSH_HISTORY_SAVE_CWD = Var.with_default(
+        True,
+        "Save current working directory to the history.",
+        doc_default="True",
     )
 
 
