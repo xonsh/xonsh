@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [macOS-latest]
-        python-version: [3.10]
+        python-version: [ "3.10" ]
     defaults:
       run:
         shell: bash -l {0}

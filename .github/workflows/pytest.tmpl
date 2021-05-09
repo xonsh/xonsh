@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [{{ OS_IMAGE }}]
-        python-version: [{{ PYTHON_VERSION }}]
+        python-version: [ "{{ PYTHON_VERSION }}" ]
     defaults:
       run:
         shell: bash -l {0}
