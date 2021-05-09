@@ -23,9 +23,10 @@ OS_IMAGES = {
     "windows": "windows-latest",
 }
 PY_MAIN_VERSION = "3.8"
-PYTHON_VERSIONS = ["3.6", "3.7", PY_MAIN_VERSION, "3.9"]
+PY_310 = "3.10"
+PYTHON_VERSIONS = ["3.6", "3.7", PY_MAIN_VERSION, "3.9", PY_310]
 
-ALLOWED_FAILURES = []
+ALLOWED_FAILURES = [PY_310]
 
 
 def write_to_file(
