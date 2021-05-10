@@ -472,14 +472,56 @@ a
     ),
 ]
 
+UNIX_TESTS = [
+    # testing alias stack: lambda function
+    (
+        """
+def _echo():
+    echo hello
+
+aliases['echo'] = _echo
+echo
+""",
+        "hello\n",
+        0,
+    ),
+    # testing alias stack: ExecAlias
+    (
+        """
+aliases['echo'] = "echo @('hello')"
+echo
+""",
+        "hello\n",
+        0,
+    ),
+    # testing alias stack: callable alias (ExecAlias) + no binary location + infinite loop
+    (
+        """
+aliases['first'] = "second @(1)"
+aliases['second'] = "first @(1)"
+first
+""",
+        lambda out: 'Recursive calls to "first" alias.' in out,
+        0,
+    ),
+]
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 def test_script(case):
     script, exp_out, exp_rtn = case
     out, err, rtn = run_xonsh(script)
-    assert exp_out == out
+    if callable(exp_out):
+        assert exp_out(out)
+    else:
+        assert exp_out == out
     assert exp_rtn == rtn
+
+@skip_if_no_xonsh
+@skip_if_on_windows
+@pytest.mark.parametrize("case", UNIX_TESTS)
+def test_unix_tests(case):
+    test_script(case)
 
 
 ALL_PLATFORMS_STDERR = [
