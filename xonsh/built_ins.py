@@ -74,12 +74,14 @@ def resetting_signal_handle(sig, f):
 
 def helper(x, name=""):
     """Prints help about, and then returns that variable."""
+    name = name or getattr(x, "__name__", "")
     INSPECTOR.pinfo(x, oname=name, detail_level=0)
     return x
 
 
 def superhelper(x, name=""):
     """Prints help about, and then returns that variable."""
+    name = name or getattr(x, "__name__", "")
     INSPECTOR.pinfo(x, oname=name, detail_level=1)
     return x
 
