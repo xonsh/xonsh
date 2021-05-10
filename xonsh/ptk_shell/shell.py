@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import builtins
+from functools import wraps
 from types import MethodType
 
 from xonsh.events import events
@@ -27,6 +28,7 @@ from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_shift_selection_bindings,
 )
 from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
+from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 from prompt_toolkit.history import ThreadedHistory
 from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
@@ -36,6 +38,7 @@ from prompt_toolkit.styles import merge_styles, Style
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
 try:
+    from prompt_toolkit.clipboard import DummyClipboard
     from prompt_toolkit.clipboard.pyperclip import PyperclipClipboard
 
     HAVE_SYS_CLIPBOARD = True
@@ -136,6 +139,47 @@ def _style_from_pygments_cls(pygments_cls):
     return _style_from_pygments_dict(pygments_cls.styles)
 
 
+def disable_copy_on_deletion():
+    dummy_clipboard = DummyClipboard()
+    ignored_actions = [
+        "kill-line",
+        "kill-word",
+        "unix-word-rubout",
+        "unix-line-discard",
+        "backward-kill-word",
+    ]
+
+    def handle_binding(name):
+        try:
+            binding = get_by_name(name)
+        except KeyError:
+            print_warning(f"Failed to disable clipboard for ptk action {name!r}")
+            return
+
+        if getattr(binding, "xonsh_disabled_clipboard", False):
+            # binding's clipboard has already been disabled
+            return
+
+        setattr(binding, "xonsh_disabled_clipboard", True)
+        original_handler = binding.handler
+
+        # this needs to be defined inside a function so that ``binding`` will be the correct one
+        @wraps(original_handler)
+        def wrapped_handler(event):
+            app = event.app
+            prev = app.clipboard
+            app.clipboard = dummy_clipboard
+            try:
+                return original_handler(event)
+            finally:
+                app.clipboard = prev
+
+        binding.handler = wrapped_handler
+
+    for _name in ignored_actions:
+        handle_binding(_name)
+
+
 class PromptToolkitShell(BaseShell):
     """The xonsh shell for prompt_toolkit v2 and later."""
 
@@ -154,6 +198,8 @@ class PromptToolkitShell(BaseShell):
         self.history = ThreadedHistory(PromptToolkitHistory())
 
         ptk_args = {"history": self.history}
+        if not builtins.__xonsh__.env.get("XONSH_COPY_ON_DELETE", False):
+            disable_copy_on_deletion()
         if HAVE_SYS_CLIPBOARD:
             ptk_args["clipboard"] = PyperclipClipboard()
         self.prompter = PromptSession(**ptk_args)
