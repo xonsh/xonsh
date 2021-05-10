@@ -1731,7 +1731,7 @@ class XonshLexer(Python3Lexer):
         ],
     }
 
-    def get_tokens_unprocessed(self, text):
+    def get_tokens_unprocessed(self, text, **_):
         """Check first command, then call super.get_tokens_unprocessed
         with root or subproc state"""
         start = 0

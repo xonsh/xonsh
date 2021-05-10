@@ -9,6 +9,7 @@ import threading
 import importlib
 import importlib.util
 import collections.abc as cabc
+import typing as tp
 
 __version__ = "0.1.3"
 
@@ -117,9 +118,12 @@ class LazyObject(object):
         return repr(self._lazy_obj())
 
 
-def lazyobject(f):
+RT = tp.TypeVar("RT")
+
+
+def lazyobject(f: tp.Callable[..., RT]) -> RT:
     """Decorator for constructing lazy objects from a function."""
-    return LazyObject(f, f.__globals__, f.__name__)
+    return LazyObject(f, f.__globals__, f.__name__)  # type: ignore
 
 
 class LazyDict(cabc.MutableMapping):

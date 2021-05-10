@@ -369,8 +369,8 @@ class BaseShell(object):
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
         tee = Tee(encoding=enc, errors=err)
+        ts0 = time.time()
         try:
-            ts0 = time.time()
             run_compiled_code(code, self.ctx, None, "single")
             ts1 = time.time()
             if hist is not None and hist.last_cmd_rtn is None:

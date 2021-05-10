@@ -10,14 +10,14 @@ from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO_BYTES
 
 
-def _splitpath(path, sofar=[]):
+def _splitpath(path, sofar=()):
     folder, path = os.path.split(path)
     if path == "":
         return sofar[::-1]
     elif folder == "":
-        return (sofar + [path])[::-1]
+        return (sofar + (path,))[::-1]
     else:
-        return _splitpath(folder, sofar + [path])
+        return _splitpath(folder, sofar + (path,))
 
 
 @lazyobject
@@ -111,10 +111,10 @@ def compile_code(filename, code, execer, glb, loc, mode):
     """
     Wrapper for ``execer.compile`` to compile the given code
     """
+    if not code.endswith("\n"):
+        code += "\n"
+    old_filename = execer.filename
     try:
-        if not code.endswith("\n"):
-            code += "\n"
-        old_filename = execer.filename
         execer.filename = filename
         ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode, filename=filename)
     except Exception:
