@@ -194,6 +194,19 @@ def whitespace_or_bracket_after():
     )
 
 
+def wrap_selection(buffer, left, right=None):
+    selection_state = buffer.selection_state
+
+    for start, end in buffer.document.selection_ranges():
+        buffer.transform_region(start, end, lambda s: f"{left}{s}{right}")
+
+    # keep the selection of the inner expression
+    # e.g. `echo |Hello World|` -> `echo "|Hello World|"`
+    buffer.cursor_position += 1
+    selection_state.original_cursor_position += 1
+    buffer.selection_state = selection_state
+
+
 def load_xonsh_bindings() -> KeyBindingsBase:
     """
     Load custom key bindings.
@@ -236,70 +249,49 @@ def load_xonsh_bindings() -> KeyBindingsBase:
             env = builtins.__xonsh__.env
             event.cli.current_buffer.insert_text(env.get("INDENT"))
 
-    @handle("(", filter=autopair_condition & whitespace_or_bracket_after)
-    def insert_right_parens(event):
-        event.cli.current_buffer.insert_text("(")
-        event.cli.current_buffer.insert_text(")", move_cursor=False)
+    def generate_parens_handlers(left, right):
+        @handle(left, filter=autopair_condition)
+        def insert_left_paren(event):
+            buffer = event.cli.current_buffer
 
-    @handle(")", filter=autopair_condition)
-    def overwrite_right_parens(event):
-        buffer = event.cli.current_buffer
-        if buffer.document.current_char == ")":
-            buffer.cursor_position += 1
-        else:
-            buffer.insert_text(")")
+            if has_selection():
+                wrap_selection(buffer, left, right)
+            elif whitespace_or_bracket_after():
+                buffer.insert_text(left)
+                buffer.insert_text(right, move_cursor=False)
+            else:
+                buffer.insert_text(left)
 
-    @handle("[", filter=autopair_condition & whitespace_or_bracket_after)
-    def insert_right_bracket(event):
-        event.cli.current_buffer.insert_text("[")
-        event.cli.current_buffer.insert_text("]", move_cursor=False)
+        @handle(right, filter=autopair_condition)
+        def overwrite_right_paren(event):
+            buffer = event.cli.current_buffer
 
-    @handle("]", filter=autopair_condition)
-    def overwrite_right_bracket(event):
-        buffer = event.cli.current_buffer
+            if buffer.document.current_char == right:
+                buffer.cursor_position += 1
+            else:
+                buffer.insert_text(right)
 
-        if buffer.document.current_char == "]":
-            buffer.cursor_position += 1
-        else:
-            buffer.insert_text("]")
+    generate_parens_handlers("(", ")")
+    generate_parens_handlers("[", "]")
+    generate_parens_handlers("{", "}")
 
-    @handle("{", filter=autopair_condition & whitespace_or_bracket_after)
-    def insert_right_brace(event):
-        event.cli.current_buffer.insert_text("{")
-        event.cli.current_buffer.insert_text("}", move_cursor=False)
+    def generate_quote_handler(quote):
+        @handle(quote, filter=autopair_condition)
+        def insert_quote(event):
+            buffer = event.cli.current_buffer
 
-    @handle("}", filter=autopair_condition)
-    def overwrite_right_brace(event):
-        buffer = event.cli.current_buffer
+            if has_selection():
+                wrap_selection(buffer, quote, quote)
+            elif buffer.document.current_char == quote:
+                buffer.cursor_position += 1
+            elif whitespace_or_bracket_before() and whitespace_or_bracket_after():
+                buffer.insert_text(quote)
+                buffer.insert_text(quote, move_cursor=False)
+            else:
+                buffer.insert_text(quote)
 
-        if buffer.document.current_char == "}":
-            buffer.cursor_position += 1
-        else:
-            buffer.insert_text("}")
-
-    @handle("'", filter=autopair_condition)
-    def insert_right_quote(event):
-        buffer = event.cli.current_buffer
-
-        if buffer.document.current_char == "'":
-            buffer.cursor_position += 1
-        elif whitespace_or_bracket_before() and whitespace_or_bracket_after():
-            buffer.insert_text("'")
-            buffer.insert_text("'", move_cursor=False)
-        else:
-            buffer.insert_text("'")
-
-    @handle('"', filter=autopair_condition)
-    def insert_right_double_quote(event):
-        buffer = event.cli.current_buffer
-
-        if buffer.document.current_char == '"':
-            buffer.cursor_position += 1
-        elif whitespace_or_bracket_before() and whitespace_or_bracket_after():
-            buffer.insert_text('"')
-            buffer.insert_text('"', move_cursor=False)
-        else:
-            buffer.insert_text('"')
+    generate_quote_handler("'")
+    generate_quote_handler('"')
 
     @handle(Keys.Backspace, filter=autopair_condition)
     def delete_brackets_or_quotes(event):
