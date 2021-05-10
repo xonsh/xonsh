@@ -308,6 +308,8 @@ def complete_import(context: CompletionContext):
     if arg_index >= 1 and args[0].value == "import":
         # completing module to import
         return complete_module(prefix)
+    if arg_index == 2 and args[0].value == "from":
+        return {RichCompletion("import", append_space=True)}
     if arg_index > 2 and args[0].value == "from" and args[2].value == "import":
         # complete thing inside a module
         try:
