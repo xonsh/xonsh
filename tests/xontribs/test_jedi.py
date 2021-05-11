@@ -5,6 +5,8 @@ import builtins
 import importlib
 from unittest.mock import MagicMock, call
 
+from tests.tools import skip_if_on_windows, skip_if_on_darwin
+
 from xonsh.xontribs import find_xontrib
 from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import CompletionContext, PythonContext
@@ -107,12 +109,12 @@ def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
                 "int(x=None, /) -> int",
                 ("instance", "instance int"),
             ),
-            RichCompletion("x", display="xx", description="instance int"),
+            RichCompletion("xx", display="xx", description="instance int", prefix_len=1),
         ),
         (
             # from jedi when code is 'xx=3\nx'
             ("statement", "xx", "x", None, ("instance", "instance int")),
-            RichCompletion("x", display="xx", description="instance int"),
+            RichCompletion("xx", display="xx", description="instance int", prefix_len=1),
         ),
         (
             # from jedi when code is 'x.' and x=3
@@ -137,18 +139,18 @@ def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
         (
             # from '(3).from_bytes(byt'
             ("param", "bytes=", "es=", None, ("instance", "instance Sequence")),
-            RichCompletion("es=", display="bytes=", description="instance Sequence"),
+            RichCompletion("bytes=", display="bytes=", description="instance Sequence", prefix_len=3),
         ),
         (
             # from 'x.from_bytes(byt' when x=3
             ("param", "bytes=", "es=", None, None),
-            RichCompletion("es=", display="bytes=", description="param"),
+            RichCompletion("bytes=", display="bytes=", description="param", prefix_len=3),
         ),
         (
             # from 'import colle'
             ("module", "collections", "ctions", None, ("module", "module collections")),
             RichCompletion(
-                "ctions", display="collections", description="module collections"
+                "collections", display="collections", description="module collections", prefix_len=5
             ),
         ),
         (
@@ -161,23 +163,23 @@ def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
                 ("class", "class NameError"),
             ),
             RichCompletion(
-                "or", display="NameError", description="NameError(*args: object)"
+                "NameError", display="NameError", description="NameError(*args: object)", prefix_len=7
             ),
         ),
         (
             # from 'a["' when a={'name':None}
             ("string", '"name"', 'name"', None, None),
-            RichCompletion('name"', display='"name"', description="string"),
+            RichCompletion('"name"', display='"name"', description="string"),
         ),
         (
             # from 'open("/etc/pass'
             ("path", 'passwd"', 'wd"', None, None),
-            RichCompletion('wd"', display='passwd"', description="path"),
+            RichCompletion('passwd"', display='passwd"', description="path", prefix_len=4),
         ),
         (
             # from 'cla'
             ("keyword", "class", "ss", None, None),
-            RichCompletion("ss", display="class", description="keyword"),
+            RichCompletion("class", display="class", description="keyword", prefix_len=3),
         ),
     ],
 )
@@ -220,3 +222,12 @@ def test_special_tokens(jedi_xontrib):
         .issuperset(jedi_xontrib.XONSH_SPECIAL_TOKENS)
     assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext( "@", 1))) == {"@", "@(", "@$("}
     assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext("$", 1))) == {"$[", "${", "$("}
+
+
+@skip_if_on_darwin
+@skip_if_on_windows
+def test_no_command_path_completion(jedi_xontrib, completion_context_parse):
+    assert jedi_xontrib.complete_jedi(completion_context_parse("./", 2)) is None
+    assert jedi_xontrib.complete_jedi(completion_context_parse("./e", 3)) is None
+    assert jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/", 9)) is None
+    assert jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/e", 10)) is None
