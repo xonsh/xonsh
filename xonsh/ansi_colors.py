@@ -1160,8 +1160,12 @@ def ansi_style_by_name(name):
     elif not HAS_PYGMENTS:
         raise KeyError("could not find style {0!r}".format(name))
     from xonsh.pygments_cache import get_style_by_name
+    from pygments.util import ClassNotFound
 
-    pstyle = get_style_by_name(name)
+    try:
+        pstyle = get_style_by_name(name)
+    except (ModuleNotFoundError, ClassNotFound):
+        pstyle = get_style_by_name("default")
     palette = make_palette(pstyle.styles.values())
     astyle = make_ansi_style(palette)
     ANSI_STYLES[name] = astyle
