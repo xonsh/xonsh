@@ -73,6 +73,10 @@ class PythonContext(NamedTuple):
     is_sub_expression: bool = False
     ctx: Optional[Dict[str, Any]] = None  # Objects in the current execution context
 
+    def __repr__(self):
+        # don't show ctx since it might be huge
+        return f"PythonContext({self.multiline_code}, {self.cursor_index}, is_sub_expression={self.is_sub_expression})"
+
     @property
     def prefix(self):
         return self.multiline_code[: self.cursor_index]

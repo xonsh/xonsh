@@ -71,10 +71,15 @@ class Completer(object):
         else:
             completion_context = None
 
+        ctx = ctx or {}
+        return self.complete_from_context(
+            completion_context,
+            (prefix, line, begidx, endidx, ctx),
+        )
+
+    def complete_from_context(self, completion_context, old_completer_args=None):
         lprefix = 0
         completions = set()
-
-        ctx = ctx or {}
         for func in builtins.__xonsh__.completers.values():
             try:
                 if is_contextual_completer(func):
@@ -82,14 +87,16 @@ class Completer(object):
                         continue
                     out = func(completion_context)
                 else:
-                    out = func(prefix, line, begidx, endidx, ctx)
+                    if old_completer_args is None:
+                        continue
+                    out = func(*old_completer_args)
             except StopIteration:
                 # completer requested to stop collecting completions
                 break
             except Exception as e:
                 print_exception(
-                    f"Completer {func.__name__} raises exception when get "
-                    f"(prefix={repr(prefix)}, line={repr(line)}, begidx={repr(begidx)}, endidx={repr(endidx)}):\n"
+                    f"Completer {func.__name__} raises exception when gets "
+                    f"old_args={old_completer_args[:-1]} / completion_context={completion_context!r}:\n"
                     f"{e}"
                 )
                 continue
@@ -107,8 +114,10 @@ class Completer(object):
                 custom_lprefix = False
                 if completing_contextual_command:
                     lprefix = len(completion_context.command.prefix)
+                elif old_completer_args is not None:
+                    lprefix = len(old_completer_args[0])
                 else:
-                    lprefix = len(prefix)
+                    lprefix = 0
 
             if res is None or len(res) == 0:
                 continue
@@ -148,7 +157,11 @@ class Completer(object):
 
         # append spaces AFTER appending closing quote
         def append_space(comp: Completion):
-            if isinstance(comp, RichCompletion) and comp.append_space:
+            if (
+                isinstance(comp, RichCompletion)
+                and comp.append_space
+                and not comp.value.endswith(" ")
+            ):
                 return comp.replace(value=comp.value + " ")
             return comp
 
