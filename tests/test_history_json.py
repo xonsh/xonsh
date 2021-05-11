@@ -7,7 +7,6 @@ import shlex
 import pytest
 
 from xonsh.lazyjson import LazyJSON
-from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import (
     JsonHistory,
     _xhj_gc_commands_to_rmfiles,
@@ -16,7 +15,7 @@ from xonsh.history.json import (
     _xhj_gc_bytes_to_rmfiles,
 )
 
-from xonsh.history.main import history_main, _xh_parse_args, construct_history
+from xonsh.history.main import history_main, _xh_parse_args
 
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
@@ -89,6 +88,28 @@ def test_hist_flush_with_store_stdout(hist, xonsh_builtins):
         assert len(lj["cmds"]) == 1
         assert lj["cmds"][0]["inp"] == "still alive?"
         assert lj["cmds"][0]["out"].strip() == "yes"
+
+
+def test_hist_flush_with_store_cwd(hist, xonsh_builtins):
+    hf = hist.flush()
+    assert hf is None
+
+    hist.save_cwd = True
+    hist.append({"inp": "# saving with cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
+    hf = hist.flush()
+    assert hf is not None
+
+    hist.save_cwd = False
+    hist.append({"inp": "# saving without cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
+    hf = hist.flush()
+    assert hf is not None
+
+    while hf.is_alive():
+        pass
+    with LazyJSON(hist.filename) as lj:
+        assert len(lj["cmds"]) == 2
+        assert lj["cmds"][0]["cwd"] == "/tmp"
+        assert "cwd" not in  lj["cmds"][1]
 
 
 def test_hist_flush_with_hist_control(hist, xonsh_builtins):
@@ -316,21 +337,6 @@ def test_history_getitem(index, exp, hist, xonsh_builtins):
         assert [(e.cmd, e.out, e.rtn, e.ts) for e in entry] == exp
     else:
         assert (entry.cmd, entry.out, entry.rtn, entry.ts) == exp
-
-
-def test_construct_history_str(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = "dummy"
-    assert isinstance(construct_history(), DummyHistory)
-
-
-def test_construct_history_class(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = DummyHistory
-    assert isinstance(construct_history(), DummyHistory)
-
-
-def test_construct_history_instance(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["XONSH_HISTORY_BACKEND"] = DummyHistory()
-    assert isinstance(construct_history(), DummyHistory)
 
 
 import time
