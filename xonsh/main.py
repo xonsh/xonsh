@@ -297,17 +297,32 @@ def start_services(shell_kwargs, args, pre_env=None):
     env = builtins.__xonsh__.env
     for k, v in pre_env.items():
         env[k] = v
-    rc = shell_kwargs.get("rc", None)
-    rc = env.get("XONSHRC") if rc is None else rc
-    if (
+
+    # determine which RC files to load, including whether any RC directories
+    # should be scanned for such files
+    if shell_kwargs.get("norc") or (
         args.mode != XonshMode.interactive
         and not args.force_interactive
         and not args.login
     ):
-        #  Don't load xonshrc if not interactive shell
-        rc = None
+        # if --no-rc was passed, or we're not in an interactive shell and
+        # interactive mode was not forced, then disable loading RC files and dirs
+        rc = ()
+        rcd = ()
+    elif shell_kwargs.get("rc"):
+        # if an explicit --rc was passed, then we should load only that RC
+        # file, and nothing else (ignore both XONSHRC and XONSHRC_DIR)
+        rc = shell_kwargs.get("rc")
+        rcd = ()
+    else:
+        # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
+        rc = env.get("XONSHRC")
+        rcd = env.get("XONSHRC_DIR")
+
     events.on_pre_rc.fire()
-    xonshrc_context(rcfiles=rc, execer=execer, ctx=ctx, env=env, login=login)
+    xonshrc_context(
+        rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
+    )
     events.on_post_rc.fire()
     # create shell
     builtins.__xonsh__.shell = Shell(execer=execer, **shell_kwargs)
@@ -340,7 +355,7 @@ def premain(argv=None):
         args.login = True
         shell_kwargs["login"] = True
     if args.norc:
-        shell_kwargs["rc"] = ()
+        shell_kwargs["norc"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
     setattr(sys, "displayhook", _pprint_displayhook)

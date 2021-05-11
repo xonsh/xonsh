@@ -6,6 +6,7 @@ import sys
 import pprint
 import textwrap
 import locale
+import glob
 import builtins
 import warnings
 import contextlib
@@ -605,6 +606,15 @@ def default_xonshrc(env):
 
 
 @default_value
+def default_xonshrcdir(env):
+    xdgrcd = os.path.join(xonsh_config_dir(env), "rc.d")
+    if ON_WINDOWS:
+        return (os.path.join(os_environ["ALLUSERSPROFILE"], "xonsh", "rc.d"), xdgrcd)
+    else:
+        return ("/etc/xonsh/rc.d", xdgrcd)
+
+
+@default_value
 def xonsh_append_newline(env):
     """Appends a newline if we are in interactive mode"""
     return env.get("XONSH_INTERACTIVE", False)
@@ -937,6 +947,18 @@ class GeneralSetting(Xettings):
             "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
             "\nOn Windows: "
             "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``"
+        ),
+        type_str="env_path",
+    )
+    XONSHRC_DIR = Var.with_default(
+        default_xonshrcdir,
+        "A list of directories, from which all .xsh files will be loaded "
+        "at startup, sorted in lexographic order. Files in these directories "
+        "are loaded after any files in XONSHRC.",
+        doc_default=(
+            "On Linux & Mac OSX: ``['/etc/xonsh/rc.d', '~/.config/xonsh/rc.d']``\n"
+            "On Windows: "
+            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\rc.d', '~/.config/xonsh/rc.d']``"
         ),
         type_str="env_path",
     )
@@ -2129,21 +2151,40 @@ def locate_binary(name):
     return builtins.__xonsh__.commands_cache.locate_binary(name)
 
 
-def xonshrc_context(rcfiles=None, execer=None, ctx=None, env=None, login=True):
-    """Attempts to read in all xonshrc files and return the context."""
+def xonshrc_context(
+    rcfiles=None, rcdirs=None, execer=None, ctx=None, env=None, login=True
+):
+    """
+    Attempts to read in all xonshrc files and return the context.
+    The xonsh environment here is updated to reflect which RC files and
+    directory locations will have been loaded (if they existed). The updated
+    environment vars might be different (or empty) depending on CLI options
+    (--rc, --no-rc) or whether the session is interactive.
+    """
     loaded = env["LOADED_RC_FILES"] = []
     ctx = {} if ctx is None else ctx
-    if rcfiles is None:
+    if rcfiles is None and rcdirs is None:
         return env
     orig_thread = env.get("THREAD_SUBPROCS")
     env["THREAD_SUBPROCS"] = None
-    env["XONSHRC"] = tuple(rcfiles)
-    for rcfile in rcfiles:
-        if not os.path.isfile(rcfile):
-            loaded.append(False)
-            continue
-        status = xonsh_script_run_control(rcfile, ctx, env, execer=execer, login=login)
-        loaded.append(status)
+    if rcfiles is not None:
+        env["XONSHRC"] = tuple(rcfiles)
+        for rcfile in rcfiles:
+            if not os.path.isfile(rcfile):
+                loaded.append(False)
+                continue
+            status = xonsh_script_run_control(
+                rcfile, ctx, env, execer=execer, login=login
+            )
+            loaded.append(status)
+    if rcdirs is not None:
+        env["XONSHRC_DIR"] = tuple(rcdirs)
+        for rcdir in rcdirs:
+            if os.path.isdir(rcdir):
+                for rcfile in sorted(glob.glob(os.path.join(rcdir, "*.xsh"))):
+                    status = xonsh_script_run_control(
+                        rcfile, ctx, env, execer=execer, login=login
+                    )
     if env["THREAD_SUBPROCS"] is None:
         env["THREAD_SUBPROCS"] = orig_thread
     return ctx

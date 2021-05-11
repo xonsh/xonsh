@@ -100,6 +100,61 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
     assert tmpdir.strpath not in sys.path
 
 
+def test_rcdir(shell, tmpdir, monkeypatch, capsys):
+    """
+    Test that files are loaded from an rcdir, after a normal rc file,
+    and in lexographic order.
+    """
+
+    rcdir = tmpdir.join("rc.d")
+    rcdir.mkdir()
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
+    monkeypatch.setitem(os.environ, "XONSHRC", str(tmpdir.join("rc.xsh")))
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+
+    rcdir.join("2.xsh").write("print('2.xsh')")
+    rcdir.join("0.xsh").write("print('0.xsh')")
+    rcdir.join("1.xsh").write("print('1.xsh')")
+    tmpdir.join("rc.xsh").write("print('rc.xsh')")
+
+    xonsh.main.premain([])
+    stdout, stderr = capsys.readouterr()
+
+    assert "rc.xsh\n0.xsh\n1.xsh\n2.xsh" in stdout
+    assert len(stderr) == 0
+
+
+def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
+    """Test that an empty XONSHRC_DIR is not an error"""
+
+    rcdir = tmpdir.join("rc.d")
+    rcdir.mkdir()
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
+
+    xonsh.main.premain([])
+    stdout, stderr = capsys.readouterr()
+    assert len(stderr) == 0
+
+
+def test_rcdir_ignored_with_rc(shell, tmpdir, monkeypatch, capsys):
+    """Test that --rc suppresses loading XONSHRC_DIRs"""
+
+    rcdir = tmpdir.join("rc.d")
+    rcdir.mkdir()
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
+    rcdir.join("rcd.xsh").write("print('RCDIR')")
+    tmpdir.join("rc.xsh").write("print('RCFILE')")
+
+    xonsh.main.premain(["--rc", str(tmpdir.join("rc.xsh"))])
+    stdout, stderr = capsys.readouterr()
+    assert "RCDIR" not in stdout
+    assert "RCFILE" in stdout
+    assert not builtins.__xonsh__.env.get("XONSHRC_DIR")
+
+
 @pytest.mark.skipif(ON_WINDOWS, reason="See https://github.com/xonsh/xonsh/issues/3936")
 def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
     """Test that an RC file can edit the sys.path variable without losing those values."""
@@ -189,6 +244,7 @@ def test_custom_rc_with_script(shell, tmpdir):
 def test_premain_no_rc(shell, tmpdir):
     xonsh.main.premain(["--no-rc", "-i"])
     assert not builtins.__xonsh__.env.get("XONSHRC")
+    assert not builtins.__xonsh__.env.get("XONSHRC_DIR")
 
 
 @pytest.mark.parametrize(

@@ -13,8 +13,13 @@ The system-wide ``xonshrc`` file controls options that are applied to all users 
 You can create this file in ``/etc/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
 
 Xonsh also allows a per-user run control file in your home directory, either
-directly in the home directory at ``~/.xonshrc`` or, for XDG compliance, at ``~/.config/rc.xsh``. 
+directly in the home directory at ``~/.xonshrc`` or, for XDG compliance, at ``~/.config/xonsh/rc.xsh``.
 The options set per user override settings in the system-wide control file.
+
+Xonsh also supports configuration directories, from which all ``.xsh`` files will be sourced in order.
+This allows for drop-in configuration where your configuration can be split across scripts and common
+and local configuration more easily separated. By default, if the directory ``~/.config/xonsh/rc.d``
+exists, any ``xsh`` files within will be sourced at startup.
 
 Xonsh provides 2 wizards to create your own "xonshrc".  ``xonfig web`` provides basic settings, and ``xonfig wizard``
 steps you through all the available options.
