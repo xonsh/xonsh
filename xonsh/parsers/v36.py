@@ -162,7 +162,9 @@ class Parser(BaseParser):
         p[0]["comps"][0].is_async = 0
 
     def p_expr_stmt_annassign(self, p):
-        """expr_stmt : testlist_star_expr COLON test EQUALS test"""
+        """expr_stmt : testlist_star_expr COLON test EQUALS test
+        | testlist_star_expr COLON test
+        """
         p1 = p[1][0]
         lineno, col = lopen_loc(p1)
         if len(p[1]) > 1 or not isinstance(
@@ -174,7 +176,7 @@ class Parser(BaseParser):
         p[0] = ast.AnnAssign(
             target=p1,
             annotation=p[3],
-            value=p[5],
+            value=p[5] if len(p) >= 6 else None,
             simple=1,
             lineno=lineno,
             col_offset=col,
