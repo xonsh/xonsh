@@ -165,7 +165,9 @@ class Parser(BaseParser):
         """expr_stmt : testlist_star_expr COLON test EQUALS test"""
         p1 = p[1][0]
         lineno, col = lopen_loc(p1)
-        if len(p[1]) > 1 or not isinstance(p1, ast.Name):
+        if len(p[1]) > 1 or not isinstance(
+            p1, (ast.Name, ast.Attribute, ast.Subscript)
+        ):
             loc = self.currloc(lineno, col)
             self._set_error("only single target can be annotated", loc)
         store_ctx(p1)

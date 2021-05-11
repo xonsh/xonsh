@@ -167,8 +167,10 @@ def leftmostname(node):
         rtn = leftmostname(node.operand)
     elif isinstance(node, BoolOp):
         rtn = leftmostname(node.values[0])
-    elif isinstance(node, (Assign, AnnAssign)):
+    elif isinstance(node, Assign):
         rtn = leftmostname(node.targets[0])
+    elif isinstance(node, AnnAssign):
+        rtn = leftmostname(node.target)
     elif isinstance(node, (Str, Bytes, JoinedStr)):
         # handles case of "./my executable"
         rtn = leftmostname(node.s)
@@ -541,7 +543,10 @@ class CtxAwareTransformer(NodeTransformer):
         self.ctxupdate(ups)
         return node
 
-    visit_AnnAssign = visit_Assign
+    def visit_AnnAssign(self, node):
+        """Handle visiting an annotated assignment statement."""
+        self.ctxadd(leftmostname(node.target))
+        return node
 
     def visit_Import(self, node):
         """Handle visiting a import statement."""
