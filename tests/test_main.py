@@ -110,6 +110,7 @@ def test_rcdir(shell, tmpdir, monkeypatch, capsys):
     rcdir.mkdir()
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
+    monkeypatch.setitem(os.environ, "XONSHRC", str(tmpdir.join("rc.xsh")))
     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
 
     rcdir.join("2.xsh").write("print('2.xsh')")
@@ -117,7 +118,7 @@ def test_rcdir(shell, tmpdir, monkeypatch, capsys):
     rcdir.join("1.xsh").write("print('1.xsh')")
     tmpdir.join("rc.xsh").write("print('rc.xsh')")
 
-    xonsh.main.premain(["--rc", str(tmpdir.join("rc.xsh"))])
+    xonsh.main.premain([])
     stdout, stderr = capsys.readouterr()
 
     assert "rc.xsh\n0.xsh\n1.xsh\n2.xsh" in stdout
@@ -135,6 +136,23 @@ def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
     xonsh.main.premain([])
     stdout, stderr = capsys.readouterr()
     assert len(stderr) == 0
+
+
+def test_rcdir_ignored_with_rc(shell, tmpdir, monkeypatch, capsys):
+    """Test that --rc suppresses loading XONSHRC_DIRs"""
+
+    rcdir = tmpdir.join("rc.d")
+    rcdir.mkdir()
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
+    rcdir.join("rcd.xsh").write("print('RCDIR')")
+    tmpdir.join("rc.xsh").write("print('RCFILE')")
+
+    xonsh.main.premain(["--rc", str(tmpdir.join("rc.xsh"))])
+    stdout, stderr = capsys.readouterr()
+    assert "RCDIR" not in stdout
+    assert "RCFILE" in stdout
+    assert not builtins.__xonsh__.env.get("XONSHRC_DIR")
 
 
 @pytest.mark.skipif(ON_WINDOWS, reason="See https://github.com/xonsh/xonsh/issues/3936")

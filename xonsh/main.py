@@ -296,6 +296,8 @@ def start_services(shell_kwargs, args, pre_env={}):
     for k, v in pre_env.items():
         env[k] = v
 
+    # determine which RC files to load, including whether any RC directories
+    # should be scanned for such files
     if shell_kwargs.get("norc") or (
         args.mode != XonshMode.interactive
         and not args.force_interactive
@@ -305,9 +307,14 @@ def start_services(shell_kwargs, args, pre_env={}):
         # interactive mode was not forced, then disable loading RC files and dirs
         rc = ()
         rcd = ()
+    elif shell_kwargs.get("rc"):
+        # if an explicit --rc was passed, then we should load only that RC
+        # file, and nothing else (ignore both XONSHRC and XONSHRC_DIR)
+        rc = shell_kwargs.get("rc")
+        rcd = ()
     else:
-        # otherwise, get the RC files from --rc  if set, and from XONSHRC otherwise
-        rc = shell_kwargs.get("rc") or env.get("XONSHRC")
+        # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
+        rc = env.get("XONSHRC")
         rcd = env.get("XONSHRC_DIR")
 
     events.on_pre_rc.fire()
