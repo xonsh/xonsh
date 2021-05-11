@@ -156,3 +156,31 @@ def contextual_command_completer_for(cmd: str):
         return _completer
 
     return decor
+
+
+def non_exclusive_completer(func):
+    """Decorator for a non-exclusive completer
+
+    This is used to mark completers that will be collected with other completer's results.
+    """
+    func.non_exclusive = True  # type: ignore
+    return func
+
+
+def is_exclusive_completer(func):
+    return not getattr(func, "non_exclusive", False)
+
+
+def apply_lprefix(comps, lprefix):
+    if lprefix is None:
+        return comps
+
+    for comp in comps:
+        if isinstance(comp, RichCompletion):
+            if comp.prefix_len is None:
+                yield comp.replace(prefix_len=lprefix)
+            else:
+                # this comp has a custom prefix len
+                yield comp
+        else:
+            yield RichCompletion(comp, prefix_len=lprefix)

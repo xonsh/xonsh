@@ -10,6 +10,7 @@ from xonsh.completers.tools import (
     is_contextual_completer,
     RichCompletion,
     Completion,
+    non_exclusive_completer,
 )
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
 
@@ -73,6 +74,7 @@ def complete_skipper(command_context: CommandContext):
     return None
 
 
+@non_exclusive_completer
 @contextual_command_completer
 def complete_end_proc_tokens(command_context: CommandContext):
     """If there's no space following an END_PROC_TOKEN, insert one"""
@@ -85,6 +87,7 @@ def complete_end_proc_tokens(command_context: CommandContext):
     return None
 
 
+@non_exclusive_completer
 @contextual_command_completer
 def complete_end_proc_keywords(command_context: CommandContext):
     """If there's no space following an END_PROC_KEYWORD, insert one"""

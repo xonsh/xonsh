@@ -2,7 +2,11 @@
 import typing as tp
 import collections.abc as cabc
 from xonsh.parsers.completion_context import CompletionContext
-from xonsh.completers.tools import contextual_completer, RichCompletion, Completion
+from xonsh.completers.tools import (
+    contextual_completer,
+    Completion,
+    apply_lprefix,
+)
 
 from xonsh.completers.path import contextual_complete_path
 from xonsh.completers.python import complete_python
@@ -39,18 +43,3 @@ def complete_base(context: CompletionContext):
         out.update(apply_lprefix(path_comps, path_comp_len))
 
     return out
-
-
-def apply_lprefix(comps, lprefix):
-    if lprefix is None:
-        return comps
-
-    for comp in comps:
-        if isinstance(comp, RichCompletion):
-            if comp.prefix_len is None:
-                yield comp.replace(prefix_len=lprefix)
-            else:
-                # this comp has a custom prefix len
-                yield comp
-        else:
-            yield RichCompletion(comp, prefix_len=lprefix)

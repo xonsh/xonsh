@@ -9,7 +9,7 @@ import xonsh.tools as xt
 import xonsh.platform as xp
 import xonsh.lazyasd as xl
 
-from xonsh.completers.tools import RichCompletion, get_filter_function
+from xonsh.completers.tools import RichCompletion
 
 
 @xl.lazyobject
@@ -112,15 +112,6 @@ def _startswithlow(x, start, startlow=None):
 
 def _startswithnorm(x, start, startlow=None):
     return x.startswith(start)
-
-
-def _env(prefix):
-    if prefix.startswith("$"):
-        key = prefix[1:]
-        return {
-            "$" + k for k in builtins.__xonsh__.env if get_filter_function()(k, key)
-        }
-    return ()
 
 
 def _dots(prefix):
@@ -357,7 +348,6 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
     )
     paths.update(filter(filtfunc, _dots(prefix)))
-    paths.update(filter(filtfunc, _env(prefix)))
     return paths, lprefix
 
 
