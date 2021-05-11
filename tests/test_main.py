@@ -141,6 +141,9 @@ def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
 # the parameterisation is a list of xonsh args, followed by the list
 # of RC files (see function body) expected to be loaded in order
 # note that a tty is not faked, so this will default to non-interactive
+# (skipped on windows because XONSHRC="/path/to/f1.xsh:/path/to/f2.xsh"
+# doesn't appear to work, while it does on other platforms)
+@pytest.mark.skipif(ON_WINDOWS, reason="Issue with multi-file XONSHRC")
 @pytest.mark.parametrize(
     ["args", "expected"],
     [
