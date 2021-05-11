@@ -2154,7 +2154,13 @@ def locate_binary(name):
 def xonshrc_context(
     rcfiles=None, rcdirs=None, execer=None, ctx=None, env=None, login=True
 ):
-    """Attempts to read in all xonshrc files and return the context."""
+    """
+    Attempts to read in all xonshrc files and return the context.
+    The xonsh environment here is updated to reflect which RC files and
+    directory locations will have been loaded (if they existed). The updated
+    environment vars might be different (or empty) depending on CLI options
+    (--rc, --no-rc) or whether the session is interactive.
+    """
     loaded = env["LOADED_RC_FILES"] = []
     ctx = {} if ctx is None else ctx
     if rcfiles is None and rcdirs is None:
