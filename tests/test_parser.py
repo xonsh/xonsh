@@ -1413,6 +1413,10 @@ def test_equals_annotation():
     check_stmts("x : int = 42")
 
 
+def test_equals_annotation_empty():
+    check_stmts("x : int")
+
+
 def test_dict_keys():
     check_stmts('x = {"x": 1}\nx.keys()')
 

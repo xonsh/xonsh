@@ -150,6 +150,11 @@ def test_eval_eol():
     assert check_eval("0") and check_eval("0\n")
 
 
+def test_annotated_assign():
+    # issue #3959 - didn't work because of `CtxAwareTransformer`
+    assert check_exec("x : int = 42")
+
+
 def test_exec_eol():
     locs = dict()
     assert check_exec("a=0", locs=locs) and check_exec("a=0\n", locs=locs)
