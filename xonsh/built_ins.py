@@ -37,7 +37,6 @@ from xonsh.events import events
 import xonsh.procs.specs
 import xonsh.completers.init
 
-BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), "INSPECTOR")
 
 warnings.filterwarnings("once", category=DeprecationWarning)
@@ -136,9 +135,9 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = builtins.__xonsh__.env.get("CASE_SENSITIVE_COMPLETIONS")
-    glob_sorted = builtins.__xonsh__.env.get("GLOB_SORTED")
-    dotglob = builtins.__xonsh__.env.get("DOTGLOB")
+    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
+    glob_sorted = XSH.env.get("GLOB_SORTED")
+    dotglob = XSH.env.get("DOTGLOB")
     return globpath(
         s,
         ignore_case=(not csc),
@@ -182,7 +181,7 @@ def subproc_captured_inject(*cmds, envs=None):
     toks = []
     for line in o:
         line = line.rstrip(os.linesep)
-        toks.extend(builtins.__xonsh__.execer.parser.lexer.split(line))
+        toks.extend(XSH.execer.parser.lexer.split(line))
     return toks
 
 
@@ -252,16 +251,16 @@ def list_of_list_of_strs_outer_product(x):
     for los in itertools.product(*lolos):
         s = "".join(los)
         if "*" in s:
-            rtn.extend(builtins.__xonsh__.glob(s))
+            rtn.extend(XSH.glob(s))
         else:
-            rtn.append(builtins.__xonsh__.expand_path(s))
+            rtn.append(XSH.expand_path(s))
     return rtn
 
 
 def eval_fstring_field(field):
     """Evaluates the argument in Xonsh context."""
-    res = __xonsh__.execer.eval(
-        field[0].strip(), glbs=globals(), locs=builtins.__xonsh__.ctx, filename=field[1]
+    res = XSH.execer.eval(
+        field[0].strip(), glbs=globals(), locs=XSH.ctx, filename=field[1]
     )
     return res
 
@@ -327,7 +326,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
     if kind is str or kind is None:
         return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
-    execer = builtins.__xonsh__.execer
+    execer = XSH.execer
     filename = macroname + "(" + name + ")"
     if kind is AST:
         ctx = set(dir(builtins)) | set(glbs.keys())
@@ -440,7 +439,7 @@ def _eval_regular_args(raw_args, glbs, locs):
         return [], {}
     arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
     kwarglist = raw_args[len(arglist) :]
-    execer = builtins.__xonsh__.execer
+    execer = XSH.execer
     if not arglist:
         args = arglist
         kwargstr = "dict({})".format(", ".join(kwarglist))
@@ -498,44 +497,9 @@ def enter_macro(obj, raw_block, glbs, locs):
     return obj
 
 
-def load_builtins(execer=None, ctx=None):
-    """Loads the xonsh builtins into the Python builtins. Sets the
-    BUILTINS_LOADED variable to True.
-    """
-    global BUILTINS_LOADED
-    if not hasattr(builtins, "__xonsh__"):
-        builtins.__xonsh__ = XonshSession(execer=execer, ctx=ctx)
-    builtins.__xonsh__.load(execer=execer, ctx=ctx)
-    builtins.__xonsh__.link_builtins(execer=execer)
-    BUILTINS_LOADED = True
-
-
 def _lastflush(s=None, f=None):
-    if hasattr(builtins, "__xonsh__"):
-        if builtins.__xonsh__.history is not None:
-            builtins.__xonsh__.history.flush(at_exit=True)
-
-
-def unload_builtins():
-    """Removes the xonsh builtins from the Python builtins, if the
-    BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
-    """
-    global BUILTINS_LOADED
-    if not hasattr(builtins, "__xonsh__"):
-        BUILTINS_LOADED = False
-        return
-    env = getattr(builtins.__xonsh__, "env", None)
-    if isinstance(env, Env):
-        env.undo_replace_env()
-    if hasattr(builtins.__xonsh__, "pyexit"):
-        builtins.exit = builtins.__xonsh__.pyexit
-    if hasattr(builtins.__xonsh__, "pyquit"):
-        builtins.quit = builtins.__xonsh__.pyquit
-    if not BUILTINS_LOADED:
-        return
-    builtins.__xonsh__.unlink_builtins()
-    delattr(builtins, "__xonsh__")
-    BUILTINS_LOADED = False
+    if XSH.history is not None:
+        XSH.history.flush(at_exit=True)
 
 
 @contextlib.contextmanager
@@ -543,9 +507,9 @@ def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
     scope. Likely useful in testing.
     """
-    load_builtins(execer=execer)
+    XSH.load(execer=execer)
     yield
-    unload_builtins()
+    XSH.unload()
 
 
 class XonshSession:
@@ -562,8 +526,11 @@ class XonshSession:
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
+        self.builtins_loaded = False
+        self.history = None
+        self.shell = None
 
-    def load(self, execer=None, ctx=None):
+    def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
 
         Parameters
@@ -573,6 +540,8 @@ class XonshSession:
         ctx : Mapping, optional
             Context to start xonsh session with.
         """
+        if not hasattr(builtins, "__xonsh__"):
+            builtins.__xonsh__ = self
         if ctx is not None:
             self.ctx = ctx
         self.env = Env(default_env())
@@ -615,22 +584,26 @@ class XonshSession:
 
         self.builtins = _BuiltIns(execer)
 
-        self.history = None
-        self.shell = None
+        for attr, value in kwargs.items():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+        self.link_builtins(execer=execer)
+        self.builtins_loaded = True
 
     def link_builtins(self, execer=None):
         # public built-ins
-        proxy_mapping = {
-            "XonshError": "__xonsh__.builtins.XonshError",
-            "XonshCalledProcessError": "__xonsh__.builtins.XonshCalledProcessError",
-            "evalx": "__xonsh__.builtins.evalx",
-            "execx": "__xonsh__.builtins.execx",
-            "compilex": "__xonsh__.builtins.compilex",
-            "events": "__xonsh__.builtins.events",
-            "print_color": "__xonsh__.builtins.print_color",
-            "printx": "__xonsh__.builtins.printx",
-        }
-        for refname, objname in proxy_mapping.items():
+        proxy_mapping = [
+            "XonshError",
+            "XonshCalledProcessError",
+            "evalx",
+            "execx",
+            "compilex",
+            "events",
+            "print_color",
+            "printx",
+        ]
+        for refname in proxy_mapping:
+            objname = f"__xonsh__.builtins.{refname}"
             proxy = DynamicAccessProxy(refname, objname)
             setattr(builtins, refname, proxy)
 
@@ -658,6 +631,23 @@ class XonshSession:
         for name in names:
             if hasattr(builtins, name):
                 delattr(builtins, name)
+
+    def unload(self):
+        if not hasattr(builtins, "__xonsh__"):
+            self.builtins_loaded = False
+            return
+        env = getattr(self, "env", None)
+        if isinstance(env, Env):
+            env.undo_replace_env()
+        if hasattr(self, "pyexit"):
+            builtins.exit = self.pyexit
+        if hasattr(self, "pyquit"):
+            builtins.quit = self.pyquit
+        if not self.builtins_loaded:
+            return
+        self.unlink_builtins()
+        delattr(builtins, "__xonsh__")
+        self.builtins_loaded = False
 
 
 class _BuiltIns:
@@ -721,3 +711,7 @@ class DynamicAccessProxy:
 
     def __dir__(self):
         return self.obj.__dir__()
+
+
+# singleton
+XSH = XonshSession()
