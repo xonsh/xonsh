@@ -60,6 +60,7 @@ def qa(ns: argparse.Namespace):
 
     echo "---------- Running mypy ----------"
     mypy --version
+    # todo: add xontrib folder here
     mypy xonsh --exclude xonsh/ply
 
 
