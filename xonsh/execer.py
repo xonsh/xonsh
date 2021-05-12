@@ -16,7 +16,7 @@ from xonsh.tools import (
     balanced_parens,
     starting_whitespace,
 )
-from xonsh.built_ins import load_builtins, unload_builtins
+from xonsh.built_ins import XSH
 
 
 class Execer(object):
@@ -60,11 +60,11 @@ class Execer(object):
         self.scriptcache = scriptcache
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
-        load_builtins(execer=self, ctx=xonsh_ctx)
+        XSH.load(execer=self, ctx=xonsh_ctx)
 
     def __del__(self):
         if self.unload:
-            unload_builtins()
+            XSH.unload()
 
     def parse(self, input, ctx, mode="exec", filename=None, transform=True):
         """Parses xonsh code in a context-aware fashion. For context-free

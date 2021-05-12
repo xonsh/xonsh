@@ -18,6 +18,7 @@ from xonsh.built_ins import (
     path_literal,
     _BuiltIns,
     eval_fstring_field,
+    XSH,
 )
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
@@ -70,14 +71,10 @@ def ensure_attached_session(monkeypatch, session):
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    monkeypatch.setattr(
-        "xonsh.built_ins.load_builtins.__code__",
-        (lambda *args, **kwargs: None).__code__,
-    )
     added_session = False
     if not hasattr(builtins, "__xonsh__"):
         added_session = True
-        ensure_attached_session(monkeypatch, XonshSession())
+        ensure_attached_session(monkeypatch, XSH)
     execer = Execer(unload=False)
     builtins.__xonsh__.execer = execer
     yield execer

@@ -19,7 +19,7 @@ from pygments.token import (
 from tools import skip_if_on_windows
 
 from xonsh.platform import ON_WINDOWS
-from xonsh.built_ins import load_builtins, unload_builtins
+from xonsh.built_ins import XSH
 from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
 from xonsh.environ import LsColors
 from xonsh.events import events, EventManager
@@ -29,8 +29,8 @@ from tools import DummyShell
 @pytest.fixture(autouse=True)
 def load_command_cache(xonsh_builtins):
     gc.collect()
-    unload_builtins()
-    load_builtins()
+    XSH.unload()
+    XSH.load()
     if ON_WINDOWS:
         for key in ("cd", "bash"):
             builtins.aliases[key] = lambda *args, **kwargs: None

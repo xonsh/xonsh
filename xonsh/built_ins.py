@@ -21,8 +21,6 @@ import collections.abc as cabc
 from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.inspectors import Inspector
-from xonsh.aliases import Aliases, make_default_aliases
-from xonsh.environ import Env, default_env
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.tools import (
     expand_path,
@@ -31,11 +29,6 @@ from xonsh.tools import (
     XonshCalledProcessError,
     print_color,
 )
-from xonsh.commands_cache import CommandsCache
-from xonsh.events import events
-
-import xonsh.procs.specs
-import xonsh.completers.init
 
 INSPECTOR = LazyObject(Inspector, globals(), "INSPECTOR")
 
@@ -167,6 +160,9 @@ def subproc_captured_stdout(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str.
     """
+
+    import xonsh.procs.specs
+
     return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
 
 
@@ -176,6 +172,8 @@ def subproc_captured_inject(*cmds, envs=None):
     The string is split using xonsh's lexer, rather than Python's str.split()
     or shlex.split().
     """
+    import xonsh.procs.specs
+
     o = xonsh.procs.specs.run_subproc(cmds, captured="object", envs=envs)
     o.end()
     toks = []
@@ -190,6 +188,8 @@ def subproc_captured_object(*cmds, envs=None):
     Runs a subprocess, capturing the output. Returns an instance of
     CommandPipeline representing the completed command.
     """
+    import xonsh.procs.specs
+
     return xonsh.procs.specs.run_subproc(cmds, captured="object", envs=envs)
 
 
@@ -197,6 +197,8 @@ def subproc_captured_hiddenobject(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns an instance of
     HiddenCommandPipeline representing the completed command.
     """
+    import xonsh.procs.specs
+
     return xonsh.procs.specs.run_subproc(cmds, captured="hiddenobject", envs=envs)
 
 
@@ -204,6 +206,8 @@ def subproc_uncaptured(*cmds, envs=None):
     """Runs a subprocess, without capturing the output. Returns the stdout
     that was produced as a str.
     """
+    import xonsh.procs.specs
+
     return xonsh.procs.specs.run_subproc(cmds, captured=False, envs=envs)
 
 
@@ -529,6 +533,7 @@ class XonshSession:
         self.builtins_loaded = False
         self.history = None
         self.shell = None
+        self.env = None
 
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
@@ -540,6 +545,10 @@ class XonshSession:
         ctx : Mapping, optional
             Context to start xonsh session with.
         """
+        from xonsh.environ import Env, default_env
+        from xonsh.commands_cache import CommandsCache
+        from xonsh.completers.init import default_completers
+
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self
         if ctx is not None:
@@ -577,7 +586,7 @@ class XonshSession:
         self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
         self.eval_fstring_field = eval_fstring_field
 
-        self.completers = xonsh.completers.init.default_completers()
+        self.completers = default_completers()
         self.call_macro = call_macro
         self.enter_macro = enter_macro
         self.path_literal = path_literal
@@ -591,6 +600,8 @@ class XonshSession:
         self.builtins_loaded = True
 
     def link_builtins(self, execer=None):
+        from xonsh.aliases import Aliases, make_default_aliases
+
         # public built-ins
         proxy_mapping = [
             "XonshError",
@@ -637,7 +648,7 @@ class XonshSession:
             self.builtins_loaded = False
             return
         env = getattr(self, "env", None)
-        if isinstance(env, Env):
+        if self.env:
             env.undo_replace_env()
         if hasattr(self, "pyexit"):
             builtins.exit = self.pyexit
@@ -652,6 +663,8 @@ class XonshSession:
 
 class _BuiltIns:
     def __init__(self, execer=None):
+        from xonsh.events import events
+
         # public built-ins
         self.XonshError = XonshError
         self.XonshCalledProcessError = XonshCalledProcessError

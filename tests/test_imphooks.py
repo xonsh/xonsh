@@ -9,7 +9,7 @@ import pytest
 from xonsh import imphooks
 from xonsh.execer import Execer
 from xonsh.environ import Env
-from xonsh.built_ins import unload_builtins
+from xonsh.built_ins import XSH
 
 imphooks.install_import_hooks()
 
@@ -19,7 +19,7 @@ def imp_env(xonsh_builtins):
     Execer(unload=False)
     builtins.__xonsh__.env = Env({"PATH": [], "PATHEXT": []})
     yield
-    unload_builtins()
+    XSH.unload()
 
 
 def test_import():
