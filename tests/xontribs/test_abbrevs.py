@@ -44,10 +44,11 @@ ps_special_expand = (
 )
 def test_gets_expanded(abbr, val, expanded, cur, abbrevs_xontrib, _buffer):
     builtins.abbrevs[abbr] = val
-    from xontrib.abbrevs import expand_abbrev
+    from xontrib.abbrevs import Abbreviation
 
+    abbrev = Abbreviation()
     buf = _buffer(abbr)
-    expand_abbrev(buf)
+    abbrev.expand(buf)
     assert buf.text == expanded
     if cur is not None:
         assert buf.cursor_position == cur
