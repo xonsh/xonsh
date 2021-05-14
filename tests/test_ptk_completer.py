@@ -24,9 +24,7 @@ from xonsh.ptk_shell.completer import PromptToolkitCompleter
         ("x", 5, PTKCompletion("x", -5, "x")),
     ],
 )
-def test_rich_completion(
-    completion, lprefix, ptk_completion, monkeypatch, xonsh_builtins
-):
+def test_rich_completion(completion, lprefix, ptk_completion, monkeypatch, xession):
     xonsh_completer_mock = MagicMock()
     xonsh_completer_mock.complete.return_value = {completion}, lprefix
 
@@ -39,7 +37,7 @@ def test_rich_completion(
     document_mock.current_line = ""
     document_mock.cursor_position_col = 0
 
-    monkeypatch.setattr("builtins.aliases", Aliases())
+    monkeypatch.setattr(xession, "aliases", Aliases())
 
     completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
     if isinstance(completion, RichCompletion) and not ptk_completion:
@@ -180,7 +178,7 @@ EXPANSION_CASES = (
 
 
 @pytest.mark.parametrize("code, index, expected_args", EXPANSION_CASES)
-def test_alias_expansion(code, index, expected_args, monkeypatch, xonsh_builtins):
+def test_alias_expansion(code, index, expected_args, monkeypatch, xession):
     xonsh_completer_mock = MagicMock(spec=Completer)
     xonsh_completer_mock.complete.return_value = set(), 0
 
@@ -188,7 +186,7 @@ def test_alias_expansion(code, index, expected_args, monkeypatch, xonsh_builtins
     ptk_completer.reserve_space = lambda: None
     ptk_completer.suggestion_completion = lambda _, __: None
 
-    monkeypatch.setattr("builtins.aliases", Aliases(gb=["git branch"]))
+    monkeypatch.setattr(xession, "aliases", Aliases(gb=["git branch"]))
 
     list(ptk_completer.get_completions(Document(code, index), MagicMock()))
     mock_call = xonsh_completer_mock.complete.call_args

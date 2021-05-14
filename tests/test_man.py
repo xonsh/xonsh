@@ -13,12 +13,12 @@ from xonsh.parsers.completion_context import (
 
 
 @skip_if_on_windows
-def test_man_completion(monkeypatch, tmpdir, xonsh_builtins):
+def test_man_completion(monkeypatch, tmpdir, xession):
     tempdir = tmpdir.mkdir("test_man")
     monkeypatch.setitem(
         os.environ, "MANPATH", os.path.dirname(os.path.abspath(__file__))
     )
-    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tempdir)})
+    xession.env.update({"XONSH_DATA_DIR": str(tempdir)})
     completions = complete_from_man(
         CompletionContext(
             CommandContext(args=(CommandArg("yes"),), arg_index=1, prefix="--")

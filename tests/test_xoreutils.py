@@ -107,11 +107,11 @@ def test_boottime():
 
 
 @pytest.fixture
-def cat_env_fixture(xonsh_builtins):
-    with xonsh_builtins.__xonsh__.env.swap(
+def cat_env_fixture(xession):
+    with xession.env.swap(
         XONSH_ENCODING=DEFAULT_ENCODING, XONSH_ENCODING_ERRORS="surrogateescape"
     ):
-        yield xonsh_builtins
+        yield xession
 
 
 class CatLimitedBuffer(io.BytesIO):

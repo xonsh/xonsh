@@ -9,7 +9,7 @@ from xonsh.history.sqlite import SqliteHistory
 from xonsh.history.dummy import DummyHistory
 
 
-def test_shell_with_json_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
+def test_shell_with_json_history(xession, xonsh_execer, tmpdir_factory):
     """
     Check that shell successfully load JSON history from file.
     """
@@ -33,7 +33,7 @@ def test_shell_with_json_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
     )
     h.flush()
 
-    xonsh_builtins.__xonsh__.env = Env(
+    xession.env = Env(
         XONSH_DATA_DIR=tempdir,
         XONSH_INTERACTIVE=True,
         XONSH_HISTORY_BACKEND="json",
@@ -43,10 +43,10 @@ def test_shell_with_json_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
 
     Shell(xonsh_execer, shell_type="none")
 
-    assert len([i for i in xonsh_builtins.__xonsh__.history.all_items()]) == 2
+    assert len([i for i in xession.history.all_items()]) == 2
 
 
-def test_shell_with_sqlite_history(xonsh_builtins, xonsh_execer, tmpdir_factory):
+def test_shell_with_sqlite_history(xession, xonsh_execer, tmpdir_factory):
     """
     Check that shell successfully load SQLite history from file.
     """
@@ -70,7 +70,7 @@ def test_shell_with_sqlite_history(xonsh_builtins, xonsh_execer, tmpdir_factory)
     )
     h.flush()
 
-    xonsh_builtins.__xonsh__.env = Env(
+    xession.env = Env(
         XONSH_DATA_DIR=tempdir,
         XONSH_INTERACTIVE=True,
         XONSH_HISTORY_BACKEND="sqlite",
@@ -80,14 +80,14 @@ def test_shell_with_sqlite_history(xonsh_builtins, xonsh_execer, tmpdir_factory)
 
     Shell(xonsh_execer, shell_type="none")
 
-    assert len([i for i in xonsh_builtins.__xonsh__.history.all_items()]) == 2
+    assert len([i for i in xession.history.all_items()]) == 2
 
 
-def test_shell_with_dummy_history_in_not_interactive(xonsh_builtins, xonsh_execer):
+def test_shell_with_dummy_history_in_not_interactive(xession, xonsh_execer):
     """
     Check that shell use Dummy history in not interactive mode.
     """
-    xonsh_builtins.__xonsh__.env = Env(XONSH_INTERACTIVE=False)
-    xonsh_builtins.__xonsh__.history = None
+    xession.env = Env(XONSH_INTERACTIVE=False)
+    xession.history = None
     Shell(xonsh_execer, shell_type="none")
-    assert isinstance(xonsh_builtins.__xonsh__.history, DummyHistory)
+    assert isinstance(xession.history, DummyHistory)

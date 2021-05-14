@@ -1,7 +1,6 @@
 """Tests for the Jedi completer xontrib"""
 import sys
 import pytest
-import builtins
 import importlib
 from unittest.mock import MagicMock, call
 
@@ -23,14 +22,14 @@ def jedi_mock(monkeypatch):
 
 
 @pytest.fixture
-def completer_mock(monkeypatch):
+def completer_mock(monkeypatch, xession):
     completer_mock = MagicMock()
 
     # so that args will be passed
     def comp(args):
         completer_mock(args)
 
-    monkeypatch.setitem(builtins.aliases, "completer", comp)
+    monkeypatch.setitem(xession.aliases, "completer", comp)
     yield completer_mock
 
 
@@ -42,11 +41,11 @@ def jedi_xontrib(monkeypatch, source_path, jedi_mock, completer_mock):
     del sys.modules[spec.name]
 
 
-def test_completer_added(jedi_xontrib):
+def test_completer_added(jedi_xontrib, xession):
     assert "xontrib.jedi" in sys.modules
-    assert "python" not in builtins.__xonsh__.completers
-    assert "python_mode" not in builtins.__xonsh__.completers
-    assert "jedi_python" in builtins.__xonsh__.completers
+    assert "python" not in xession.completers
+    assert "python_mode" not in xession.completers
+    assert "jedi_python" in xession.completers
 
 
 @pytest.mark.parametrize(
@@ -56,7 +55,7 @@ def test_completer_added(jedi_xontrib):
     ],
 )
 @pytest.mark.parametrize("version", ["new", "old"])
-def test_jedi_api(jedi_xontrib, jedi_mock, version, context):
+def test_jedi_api(jedi_xontrib, jedi_mock, version, context, xession):
     if version == "old":
         jedi_mock.__version__ = "0.15.0"
         jedi_mock.Interpreter().completions.return_value = []
@@ -64,7 +63,7 @@ def test_jedi_api(jedi_xontrib, jedi_mock, version, context):
 
     jedi_xontrib.complete_jedi(context)
 
-    extra_namespace = {"__xonsh__": builtins.__xonsh__}
+    extra_namespace = {"__xonsh__": xession}
     try:
         extra_namespace["_"] = _
     except NameError:

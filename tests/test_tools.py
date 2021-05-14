@@ -32,7 +32,6 @@ from xonsh.tools import (
     env_path_to_str,
     escape_windows_cmd_string,
     executables_in,
-    expand_case_matching,
     expand_path,
     find_next_break,
     is_bool,
@@ -66,7 +65,6 @@ from xonsh.tools import (
     is_nonstring_seq_of_strings,
     pathsep_to_upper_seq,
     seq_to_upper_pathsep,
-    expandvars,
     is_int_as_str,
     is_slice_as_str,
     ensure_timestamp,
@@ -89,6 +87,8 @@ from xonsh.tools import (
     to_completion_mode,
     is_completions_display_value,
     to_completions_display_value,
+    expand_case_matching,
+    expandvars,
 )
 from xonsh.environ import Env
 
@@ -934,8 +934,8 @@ def expand(path):
         (b"~/../", "~/../"),
     ],
 )
-def test_env_path_getitem(inp, exp, xonsh_builtins, env):
-    xonsh_builtins.__xonsh__.env = env
+def test_env_path_getitem(inp, exp, xession, env):
+    xession.env = env
     obs = EnvPath(inp)[0]  # call to __getitem__
     if env.get("EXPAND_ENV_VARS"):
         assert expand(exp) == obs
@@ -957,9 +957,9 @@ def test_env_path_getitem(inp, exp, xonsh_builtins, env):
         ),
     ],
 )
-def test_env_path_multipath(inp, exp, xonsh_builtins, env):
+def test_env_path_multipath(inp, exp, xession, env):
     # cases that involve path-separated strings
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
     if env == TOOLS_ENV:
         obs = [i for i in EnvPath(inp)]
         assert [expand(i) for i in exp] == obs
@@ -982,8 +982,8 @@ def test_env_path_multipath(inp, exp, xonsh_builtins, env):
         (["/home/wakka", pathlib.Path("~/"), "~/"], ["/home/wakka", "~", "~/"]),
     ],
 )
-def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = TOOLS_ENV
+def test_env_path_with_pathlib_path_objects(inp, exp, xession):
+    xession.env = TOOLS_ENV
     # iterate over EnvPath to acquire all expanded paths
     obs = [i for i in EnvPath(inp)]
     assert [expand(i) for i in exp] == obs
@@ -1474,7 +1474,7 @@ def test_partial_string(leaders, prefix, quote):
     assert obs == exp
 
 
-def test_executables_in(xonsh_builtins):
+def test_executables_in(xession):
     expected = set()
     types = ("file", "directory", "brokensymlink")
     if ON_WINDOWS:
@@ -1507,7 +1507,7 @@ def test_executables_in(xonsh_builtins):
                 if executable and not _type == "brokensymlink":
                     os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
             if ON_WINDOWS:
-                xonsh_builtins.__xonsh__.env = PATHEXT_ENV
+                xession.env = PATHEXT_ENV
                 result = set(executables_in(test_path))
             else:
                 result = set(executables_in(test_path))
@@ -1562,12 +1562,12 @@ def test_expand_case_matching(inp, exp):
         (b"${'unk'}${'foo'}bar", "${'unk'}barbar"),
     ],
 )
-def test_expandvars(inp, exp, xonsh_builtins):
+def test_expandvars(inp, exp, xession):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
     env = Env(
         {"foo": "bar", "spam": "eggs", "a_bool": True, "an_int": 42, "none": None}
     )
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
     assert expandvars(inp) == exp
 
 
@@ -1589,8 +1589,8 @@ def test_expandvars(inp, exp, xonsh_builtins):
         ),
     ],
 )
-def test_ensure_timestamp(inp, fmt, exp, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["XONSH_DATETIME_FORMAT"] = "%Y-%m-%d %H:%M"
+def test_ensure_timestamp(inp, fmt, exp, xession):
+    xession.env["XONSH_DATETIME_FORMAT"] = "%Y-%m-%d %H:%M"
     obs = ensure_timestamp(inp, fmt)
     assert exp == obs
 
@@ -1607,14 +1607,14 @@ def test_ensure_timestamp(inp, fmt, exp, xonsh_builtins):
         ("~/$foo", False, "/$foo"),
     ],
 )
-def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xonsh_builtins):
+def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xession):
     if os.sep != "/":
         inp = inp.replace("/", os.sep)
         exp_end = exp_end.replace("/", os.sep)
 
     env = Env({"foo": "bar", "a_bool": True, "an_int": 42, "none": None})
     env["EXPAND_ENV_VARS"] = expand_env_vars
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
 
     path = expand_path(inp, expand_user=expand_user)
 
@@ -1728,7 +1728,7 @@ def test_deprecated_past_expiry_raises_assertion_error(expired_version):
 
 
 @skip_if_on_windows
-def test_iglobpath_no_dotfiles(xonsh_builtins):
+def test_iglobpath_no_dotfiles(xession):
     d = os.path.dirname(__file__)
     g = d + "/*"
     files = list(iglobpath(g, include_dotfiles=False))
@@ -1736,7 +1736,7 @@ def test_iglobpath_no_dotfiles(xonsh_builtins):
 
 
 @skip_if_on_windows
-def test_iglobpath_dotfiles(xonsh_builtins):
+def test_iglobpath_dotfiles(xession):
     d = os.path.dirname(__file__)
     g = d + "/*"
     files = list(iglobpath(g, include_dotfiles=True))
@@ -1744,7 +1744,7 @@ def test_iglobpath_dotfiles(xonsh_builtins):
 
 
 @skip_if_on_windows
-def test_iglobpath_no_dotfiles_recursive(xonsh_builtins):
+def test_iglobpath_no_dotfiles_recursive(xession):
     d = os.path.dirname(__file__)
     g = d + "/**"
     files = list(iglobpath(g, include_dotfiles=False))
@@ -1752,14 +1752,14 @@ def test_iglobpath_no_dotfiles_recursive(xonsh_builtins):
 
 
 @skip_if_on_windows
-def test_iglobpath_dotfiles_recursive(xonsh_builtins):
+def test_iglobpath_dotfiles_recursive(xession):
     d = os.path.dirname(__file__)
     g = d + "/**"
     files = list(iglobpath(g, include_dotfiles=True))
     assert d + "/bin/.someotherdotfile" in files
 
 
-def test_iglobpath_empty_str(monkeypatch, xonsh_builtins):
+def test_iglobpath_empty_str(monkeypatch, xession):
     # makes sure that iglobpath works, even when os.scandir() and os.listdir()
     # fail to return valid results, like an empty filename
     def mockscandir(path):
@@ -1896,14 +1896,14 @@ def test_is_completions_display_value(val, exp):
         (False, "none"),
         ("false", "none"),
         ("single", "single"),
-        ("readline", "single"),
+        ("readline", "readline"),  # todo: check this
         ("multi", "multi"),
         (True, "multi"),
         ("TRUE", "multi"),
     ],
 )
 def test_to_completions_display_value(val, exp):
-    to_completions_display_value(val) == exp
+    assert to_completions_display_value(val) == exp
 
 
 @pytest.mark.parametrize("val", [1, "", "argle"])

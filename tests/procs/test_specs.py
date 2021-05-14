@@ -13,8 +13,8 @@ from .tools import skip_if_on_windows
 
 
 @skip_if_on_windows
-def test_cmds_to_specs_thread_subproc(xonsh_builtins):
-    env = xonsh_builtins.__xonsh__.env
+def test_cmds_to_specs_thread_subproc(xession):
+    env = xession.env
     cmds = [["pwd"]]
     # First check that threadable subprocs become threadable
     env["THREAD_SUBPROCS"] = True

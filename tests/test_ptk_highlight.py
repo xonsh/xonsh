@@ -2,7 +2,6 @@
 """Test XonshLexer for pygments"""
 
 import gc
-import builtins
 
 import pytest
 from pygments.token import (
@@ -27,13 +26,13 @@ from tools import DummyShell
 
 
 @pytest.fixture(autouse=True)
-def load_command_cache(xonsh_builtins):
+def load_command_cache(xession):
     gc.collect()
     XSH.unload()
     XSH.load()
     if ON_WINDOWS:
         for key in ("cd", "bash"):
-            builtins.aliases[key] = lambda *args, **kwargs: None
+            xession.aliases[key] = lambda *args, **kwargs: None
 
 
 def check_token(code, tokens):
@@ -149,18 +148,16 @@ def events_fxt():
 
 
 @pytest.fixture
-def xonsh_builtins_ls_colors(xonsh_builtins, events_fxt):
-    x = xonsh_builtins.__xonsh__
-    xonsh_builtins.__xonsh__.shell = DummyShell()  # because load_command_cache zaps it.
-    xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit"
+def xonsh_builtins_ls_colors(xession, events_fxt):
+    xession.shell = DummyShell()  # because load_command_cache zaps it.
+    xession.shell.shell_type = "prompt_toolkit"
     lsc = LsColors(LsColors.default_settings)
-    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc  # establish LS_COLORS before style.
-    xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
+    xession.env["LS_COLORS"] = lsc  # establish LS_COLORS before style.
+    xession.shell.shell.styler = XonshStyle()  # default style
 
     events.on_lscolors_change(on_lscolors_change)
 
-    yield xonsh_builtins
-    xonsh_builtins.__xonsh__ = x
+    yield xession
 
 
 @skip_if_on_windows
@@ -176,7 +173,7 @@ def test_path(tmpdir, xonsh_builtins_ls_colors):
     )
     check_token("cd X={}".format(test_dir), [(Color.BOLD_BLUE, test_dir)])
 
-    with builtins.__xonsh__.env.swap(AUTO_CD=True):
+    with xonsh_builtins_ls_colors.env.swap(AUTO_CD=True):
         check_token(test_dir, [(Name.Constant, test_dir)])
 
 
@@ -184,7 +181,7 @@ def test_path(tmpdir, xonsh_builtins_ls_colors):
 def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors):
     """Verify colorizer returns Token.Text if file type not defined in LS_COLORS"""
 
-    lsc = xonsh_builtins_ls_colors.__xonsh__.env["LS_COLORS"]
+    lsc = xonsh_builtins_ls_colors.env["LS_COLORS"]
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
 
     lsc["di"] = ("GREEN",)

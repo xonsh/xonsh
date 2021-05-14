@@ -6,7 +6,6 @@ import sys
 from prompt_toolkit.buffer import Buffer
 from pytest import fixture, mark
 from xonsh.xontribs import find_xontrib
-import builtins
 
 
 @fixture
@@ -43,10 +42,11 @@ ps_special_expand = (
     ],
 )
 def test_gets_expanded(abbr, val, expanded, cur, abbrevs_xontrib, _buffer):
-    builtins.abbrevs[abbr] = val
-    from xontrib.abbrevs import Abbreviation
+    from xontrib import abbrevs
 
-    abbrev = Abbreviation()
+    abbrevs.abbrevs[abbr] = val
+
+    abbrev = abbrevs.Abbreviation()
     buf = _buffer(abbr)
     abbrev.expand(buf)
     assert buf.text == expanded

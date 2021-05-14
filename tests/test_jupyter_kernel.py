@@ -28,7 +28,7 @@ def test_completion_alias_expansion(
     index,
     expected_args,
     monkeypatch,
-    xonsh_builtins,
+    xession,
 ):
     xonsh_completer_mock = MagicMock(spec=Completer)
     xonsh_completer_mock.complete.return_value = set(), 0
@@ -36,8 +36,8 @@ def test_completion_alias_expansion(
     kernel = MagicMock()
     kernel.completer = xonsh_completer_mock
 
-    monkeypatch.setattr("builtins.aliases", Aliases(gb=["git branch"]))
-    monkeypatch.setattr(xonsh_builtins.__xonsh__.shell, "ctx", None, raising=False)
+    monkeypatch.setattr(xession, "aliases", Aliases(gb=["git branch"]))
+    monkeypatch.setattr(xession.shell, "ctx", None, raising=False)
 
     XonshKernel.do_complete(kernel, code, index)
     mock_call = xonsh_completer_mock.complete.call_args

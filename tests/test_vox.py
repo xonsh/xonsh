@@ -13,20 +13,20 @@ from xonsh.platform import ON_WINDOWS
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_crud(xonsh_builtins, tmpdir):
+def test_crud(xession, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
-    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     last_event = None
 
-    @xonsh_builtins.events.vox_on_create
+    @xession.builtins.events.vox_on_create
     def create(name, **_):
         nonlocal last_event
         last_event = "create", name
 
-    @xonsh_builtins.events.vox_on_delete
+    @xession.builtins.events.vox_on_delete
     def delete(name, **_):
         nonlocal last_event
         last_event = "delete", name
@@ -51,22 +51,22 @@ def test_crud(xonsh_builtins, tmpdir):
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_activate(xonsh_builtins, tmpdir):
+def test_activate(xession, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
-    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
     # I consider the case that the user doesn't have a PATH set to be unreasonable
-    xonsh_builtins.__xonsh__.env.setdefault("PATH", [])
+    xession.env.setdefault("PATH", [])
 
     last_event = None
 
-    @xonsh_builtins.events.vox_on_activate
+    @xession.builtins.events.vox_on_activate
     def activate(name, **_):
         nonlocal last_event
         last_event = "activate", name
 
-    @xonsh_builtins.events.vox_on_deactivate
+    @xession.builtins.events.vox_on_deactivate
     def deactivate(name, **_):
         nonlocal last_event
         last_event = "deactivate", name
@@ -74,30 +74,30 @@ def test_activate(xonsh_builtins, tmpdir):
     vox = Vox()
     vox.create("spam")
     vox.activate("spam")
-    assert xonsh_builtins.__xonsh__.env["VIRTUAL_ENV"] == vox["spam"].env
+    assert xession.env["VIRTUAL_ENV"] == vox["spam"].env
     assert last_event == ("activate", "spam")
     vox.deactivate()
-    assert "VIRTUAL_ENV" not in xonsh_builtins.__xonsh__.env
+    assert "VIRTUAL_ENV" not in xession.env
     assert last_event == ("deactivate", "spam")
 
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
+def test_activate_non_vox_venv(xession, tmpdir):
     """
     Create a virtual environment using Python's built-in venv module
     (not in VIRTUALENV_HOME) and verify that vox can activate it correctly.
     """
-    xonsh_builtins.__xonsh__.env.setdefault("PATH", [])
+    xession.env.setdefault("PATH", [])
 
     last_event = None
 
-    @xonsh_builtins.events.vox_on_activate
+    @xession.builtins.events.vox_on_activate
     def activate(name, path, **_):
         nonlocal last_event
         last_event = "activate", name, path
 
-    @xonsh_builtins.events.vox_on_deactivate
+    @xession.builtins.events.vox_on_deactivate
     def deactivate(name, path, **_):
         nonlocal last_event
         last_event = "deactivate", name, path
@@ -109,7 +109,7 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
         vox.activate(venv_dirname)
         vxv = vox[venv_dirname]
 
-    env = xonsh_builtins.__xonsh__.env
+    env = xession.env
     assert os.path.isabs(vxv.bin)
     assert env["PATH"][0] == vxv.bin
     assert os.path.isabs(vxv.env)
@@ -132,34 +132,34 @@ def test_activate_non_vox_venv(xonsh_builtins, tmpdir):
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_path(xonsh_builtins, tmpdir):
+def test_path(xession, tmpdir):
     """
     Test to make sure Vox properly activates and deactivates by examining $PATH
     """
-    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
     # I consider the case that the user doesn't have a PATH set to be unreasonable
-    xonsh_builtins.__xonsh__.env.setdefault("PATH", [])
+    xession.env.setdefault("PATH", [])
 
-    oldpath = list(xonsh_builtins.__xonsh__.env["PATH"])
+    oldpath = list(xession.env["PATH"])
     vox = Vox()
     vox.create("eggs")
 
     vox.activate("eggs")
 
-    assert oldpath != xonsh_builtins.__xonsh__.env["PATH"]
+    assert oldpath != xession.env["PATH"]
 
     vox.deactivate()
 
-    assert oldpath == xonsh_builtins.__xonsh__.env["PATH"]
+    assert oldpath == xession.env["PATH"]
 
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_crud_subdir(xonsh_builtins, tmpdir):
+def test_crud_subdir(xession, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
-    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     vox = Vox()
     vox.create("spam/eggs")
@@ -188,7 +188,7 @@ else:
 
     @skip_if_on_msys
     @skip_if_on_conda
-    def test_crud_path(xonsh_builtins, tmpdir):
+    def test_crud_path(xession, tmpdir):
         """
         Creates a virtual environment, gets it, enumerates it, and then deletes it.
         """
@@ -209,11 +209,11 @@ else:
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_reserved_names(xonsh_builtins, tmpdir):
+def test_reserved_names(xession, tmpdir):
     """
     Tests that reserved words are disallowed.
     """
-    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     vox = Vox()
     with pytest.raises(ValueError):
@@ -231,7 +231,7 @@ def test_reserved_names(xonsh_builtins, tmpdir):
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_autovox(xonsh_builtins, tmpdir):
+def test_autovox(xession, tmpdir):
     """
     Tests that autovox works
     """
@@ -239,7 +239,7 @@ def test_autovox(xonsh_builtins, tmpdir):
     import xonsh.dirstack
 
     # Set up an isolated venv home
-    xonsh_builtins.__xonsh__.env["VIRTUALENV_HOME"] = str(tmpdir)
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     # Makes sure that event handlers are registered
     import xontrib.autovox
@@ -247,13 +247,13 @@ def test_autovox(xonsh_builtins, tmpdir):
     importlib.reload(xontrib.autovox)
 
     # Set up enough environment for xonsh to function
-    xonsh_builtins.__xonsh__.env["PWD"] = os.getcwd()
-    xonsh_builtins.__xonsh__.env["DIRSTACK_SIZE"] = 10
-    xonsh_builtins.__xonsh__.env["PATH"] = []
+    xession.env["PWD"] = os.getcwd()
+    xession.env["DIRSTACK_SIZE"] = 10
+    xession.env["PATH"] = []
 
-    xonsh_builtins.__xonsh__.env["XONSH_SHOW_TRACEBACK"] = True
+    xession.env["XONSH_SHOW_TRACEBACK"] = True
 
-    @xonsh_builtins.events.autovox_policy
+    @xession.builtins.events.autovox_policy
     def policy(path, **_):
         print("Checking", repr(path), vox.active())
         if str(path) == str(tmpdir):
@@ -261,16 +261,16 @@ def test_autovox(xonsh_builtins, tmpdir):
 
     vox = Vox()
 
-    print(xonsh_builtins.__xonsh__.env["PWD"])
+    print(xession.env["PWD"])
     xonsh.dirstack.pushd([str(tmpdir)])
-    print(xonsh_builtins.__xonsh__.env["PWD"])
+    print(xession.env["PWD"])
     assert vox.active() is None
     xonsh.dirstack.popd([])
-    print(xonsh_builtins.__xonsh__.env["PWD"])
+    print(xession.env["PWD"])
 
     vox.create("myenv")
     xonsh.dirstack.pushd([str(tmpdir)])
-    print(xonsh_builtins.__xonsh__.env["PWD"])
+    print(xession.env["PWD"])
     assert vox.active() == "myenv"
     xonsh.dirstack.popd([])
-    print(xonsh_builtins.__xonsh__.env["PWD"])
+    print(xession.env["PWD"])

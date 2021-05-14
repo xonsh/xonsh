@@ -506,6 +506,9 @@ first
     ),
 ]
 
+if not ON_WINDOWS:
+    ALL_PLATFORMS = tuple(ALL_PLATFORMS) + tuple(UNIX_TESTS)
+
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
@@ -517,13 +520,6 @@ def test_script(case):
     else:
         assert exp_out == out
     assert exp_rtn == rtn
-
-
-@skip_if_no_xonsh
-@skip_if_on_windows
-@pytest.mark.parametrize("case", UNIX_TESTS)
-def test_unix_tests(case):
-    test_script(case)
 
 
 ALL_PLATFORMS_STDERR = [

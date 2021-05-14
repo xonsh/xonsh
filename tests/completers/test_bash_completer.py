@@ -12,10 +12,10 @@ from xonsh.parsers.completion_context import (
 
 
 @pytest.fixture(autouse=True)
-def setup(monkeypatch, tmp_path, xonsh_builtins):
-    if not xonsh_builtins.__xonsh__.env.get("BASH_COMPLETIONS"):
+def setup(monkeypatch, tmp_path, xession):
+    if not xession.env.get("BASH_COMPLETIONS"):
         monkeypatch.setitem(
-            xonsh_builtins.__xonsh__.env,
+            xession.env,
             "BASH_COMPLETIONS",
             ["/usr/share/bash-completion/bash_completion"],
         )

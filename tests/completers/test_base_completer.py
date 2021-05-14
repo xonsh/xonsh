@@ -16,8 +16,8 @@ CUR_DIR = (
 
 
 @pytest.fixture(autouse=True)
-def setup(xonsh_builtins, xonsh_execer, monkeypatch):
-    monkeypatch.setattr(xonsh_builtins.__xonsh__, "commands_cache", ["cool"])
+def setup(xession, xonsh_execer, monkeypatch):
+    monkeypatch.setattr(xession, "commands_cache", ["cool"])
 
 
 def test_empty_line():

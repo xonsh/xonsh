@@ -23,24 +23,24 @@ def chdir(adir):
     os.chdir(old_dir)
 
 
-def test_simple(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=PARENT)
+def test_simple(xession):
+    xession.env = Env(CDPATH=PARENT, PWD=PARENT)
     with chdir(PARENT):
         assert os.getcwd() != HERE
         dirstack.cd(["tests"])
         assert os.getcwd() == HERE
 
 
-def test_cdpath_simple(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
+def test_cdpath_simple(xession):
+    xession.env = Env(CDPATH=PARENT, PWD=HERE)
     with chdir(os.path.normpath("/")):
         assert os.getcwd() != HERE
         dirstack.cd(["tests"])
         assert os.getcwd() == HERE
 
 
-def test_cdpath_collision(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
+def test_cdpath_collision(xession):
+    xession.env = Env(CDPATH=PARENT, PWD=HERE)
     sub_tests = os.path.join(HERE, "tests")
     if not os.path.exists(sub_tests):
         os.mkdir(sub_tests)
@@ -50,8 +50,8 @@ def test_cdpath_collision(xonsh_builtins):
         assert os.getcwd() == os.path.join(HERE, "tests")
 
 
-def test_cdpath_expansion(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = Env(HERE=HERE, CDPATH=("~", "$HERE"))
+def test_cdpath_expansion(xession):
+    xession.env = Env(HERE=HERE, CDPATH=("~", "$HERE"))
     test_dirs = (
         os.path.join(HERE, "xonsh-test-cdpath-here"),
         os.path.expanduser("~/xonsh-test-cdpath-home"),
@@ -69,13 +69,13 @@ def test_cdpath_expansion(xonsh_builtins):
                 os.rmdir(d)
 
 
-def test_cdpath_events(xonsh_builtins, tmpdir):
-    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=os.getcwd())
+def test_cdpath_events(xession, tmpdir):
+    xession.env = Env(CDPATH=PARENT, PWD=os.getcwd())
     target = str(tmpdir)
 
     ev = None
 
-    @xonsh_builtins.events.on_chdir
+    @xession.builtins.events.on_chdir
     def handler(olddir, newdir, **kw):
         nonlocal ev
         ev = olddir, newdir
@@ -92,8 +92,8 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
         os.chdir(old_dir)
 
 
-def test_cd_autopush(xonsh_builtins, tmpdir):
-    xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
+def test_cd_autopush(xession, tmpdir):
+    xession.env = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
     target = str(tmpdir)
 
     old_dir = os.getcwd()

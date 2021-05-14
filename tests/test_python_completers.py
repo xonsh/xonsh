@@ -16,8 +16,8 @@ from xonsh.parsers.completion_context import (
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xonsh_builtins, xonsh_execer, monkeypatch):
-    monkeypatch.setitem(xonsh_builtins.__xonsh__.env, "COMPLETIONS_BRACKETS", True)
+def xonsh_execer_autouse(xession, xonsh_execer, monkeypatch):
+    monkeypatch.setitem(xession.env, "COMPLETIONS_BRACKETS", True)
     return xonsh_execer
 
 

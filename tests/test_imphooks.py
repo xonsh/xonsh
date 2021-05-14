@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Testing xonsh import hooks"""
 import os
-import builtins
 from importlib import import_module
 
 import pytest
@@ -15,9 +14,9 @@ imphooks.install_import_hooks()
 
 
 @pytest.fixture(autouse=True)
-def imp_env(xonsh_builtins):
+def imp_env(xession):
     Execer(unload=False)
-    builtins.__xonsh__.env = Env({"PATH": [], "PATHEXT": []})
+    xession.env = Env({"PATH": [], "PATHEXT": []})
     yield
     XSH.unload()
 

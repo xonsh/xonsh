@@ -5,7 +5,7 @@ import xonsh.completers.path as xcp
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xonsh_builtins, xonsh_execer):
+def xonsh_execer_autouse(xession, xonsh_execer):
     return xonsh_execer
 
 
@@ -14,8 +14,8 @@ def test_pattern_need_quotes():
     xcp.PATTERN_NEED_QUOTES.match("")
 
 
-def test_complete_path(xonsh_builtins, completion_context_parse):
-    xonsh_builtins.__xonsh__.env = {
+def test_complete_path(xession, completion_context_parse):
+    xession.env = {
         "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
@@ -27,8 +27,8 @@ def test_complete_path(xonsh_builtins, completion_context_parse):
 
 
 @patch("xonsh.completers.path._add_cdpaths")
-def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins, completion_context_parse):
-    xonsh_builtins.__xonsh__.env = {
+def test_cd_path_no_cd(mock_add_cdpaths, xession, completion_context_parse):
+    xession.env = {
         "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
@@ -42,9 +42,9 @@ def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins, completion_context_pars
 
 @pytest.mark.parametrize("quote", ('"', "'"))
 def test_complete_path_when_prefix_is_raw_path_string(
-    quote, xonsh_builtins, completion_context_parse
+    quote, xession, completion_context_parse
 ):
-    xonsh_builtins.__xonsh__.env = {
+    xession.env = {
         "CASE_SENSITIVE_COMPLETIONS": True,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,

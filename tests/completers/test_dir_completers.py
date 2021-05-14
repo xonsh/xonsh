@@ -23,10 +23,10 @@ PARENT_DIR = ".." if ON_WINDOWS else "../"
 
 
 @pytest.fixture(autouse=True)
-def setup(xonsh_builtins, xonsh_execer):
+def setup(xession, xonsh_execer):
     with tempfile.TemporaryDirectory() as tmp:
-        xonsh_builtins.__xonsh__.env["XONSH_DATA_DIR"] = tmp
-        xonsh_builtins.__xonsh__.env["CDPATH"] = set()
+        xession.env["XONSH_DATA_DIR"] = tmp
+        xession.env["CDPATH"] = set()
 
 
 @pytest.fixture(params=list(COMPLETERS))
@@ -109,22 +109,22 @@ def test_closing_quotes(cmd, dir_path):
     assert completion.append_closing_quote is False
 
 
-def test_complete_dots(xonsh_builtins):
-    with xonsh_builtins.__xonsh__.env.swap(COMPLETE_DOTS="never"):
+def test_complete_dots(xession):
+    with xession.env.swap(COMPLETE_DOTS="never"):
         dirs = complete_cmd_dirs("cd", "")
         assert CUR_DIR not in dirs and PARENT_DIR not in dirs
 
         dirs = complete_cmd_dirs("cd", ".")
         assert CUR_DIR not in dirs and PARENT_DIR not in dirs
 
-    with xonsh_builtins.__xonsh__.env.swap(COMPLETE_DOTS="matching"):
+    with xession.env.swap(COMPLETE_DOTS="matching"):
         dirs = complete_cmd_dirs("cd", "")
         assert CUR_DIR not in dirs and PARENT_DIR not in dirs
 
         dirs = complete_cmd_dirs("cd", ".")
         assert CUR_DIR in dirs and PARENT_DIR in dirs
 
-    with xonsh_builtins.__xonsh__.env.swap(COMPLETE_DOTS="always"):
+    with xession.env.swap(COMPLETE_DOTS="always"):
         dirs = complete_cmd_dirs("cd", "")
         assert CUR_DIR in dirs and PARENT_DIR in dirs
 
