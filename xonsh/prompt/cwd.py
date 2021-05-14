@@ -3,33 +3,31 @@
 
 import os
 import shutil
-import builtins
 
 import xonsh.tools as xt
 import xonsh.platform as xp
+from xonsh.built_ins import XSH
 
 
 def _replace_home(x):
     if xp.ON_WINDOWS:
-        home = (
-            builtins.__xonsh__.env["HOMEDRIVE"] + builtins.__xonsh__.env["HOMEPATH"][0]
-        )
+        home = XSH.env["HOMEDRIVE"] + XSH.env["HOMEPATH"][0]
         if x.startswith(home):
             x = x.replace(home, "~", 1)
 
-        if builtins.__xonsh__.env.get("FORCE_POSIX_PATHS"):
+        if XSH.env.get("FORCE_POSIX_PATHS"):
             x = x.replace(os.sep, os.altsep)
 
         return x
     else:
-        home = builtins.__xonsh__.env["HOME"]
+        home = XSH.env["HOME"]
         if x.startswith(home):
             x = x.replace(home, "~", 1)
         return x
 
 
 def _replace_home_cwd():
-    return _replace_home(builtins.__xonsh__.env["PWD"])
+    return _replace_home(XSH.env["PWD"])
 
 
 def _collapsed_pwd():
@@ -50,8 +48,8 @@ def _dynamically_collapsed_pwd():
     environment variable DYNAMIC_CWD_WIDTH.
     """
     original_path = _replace_home_cwd()
-    target_width, units = builtins.__xonsh__.env["DYNAMIC_CWD_WIDTH"]
-    elision_char = builtins.__xonsh__.env["DYNAMIC_CWD_ELISION_CHAR"]
+    target_width, units = XSH.env["DYNAMIC_CWD_WIDTH"]
+    elision_char = XSH.env["DYNAMIC_CWD_ELISION_CHAR"]
     if target_width == float("inf"):
         return original_path
     if units == "%":

@@ -43,7 +43,7 @@ class Execer(object):
         unload : bool, optional
             Whether or not to unload xonsh builtins upon deletion.
         xonsh_ctx : dict or None, optional
-            Xonsh xontext to load as builtins.__xonsh__.ctx
+            Xonsh xontext to load as xonsh.built_ins.XSH.ctx
         scriptcache : bool, optional
             Whether or not to use a precompiled bytecode cache when execing
             code, default: True.

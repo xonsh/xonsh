@@ -3,7 +3,6 @@
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
 import sys
-import builtins
 from ast import (
     Module,
     Num,
@@ -109,6 +108,7 @@ from ast import Ellipsis as EllipsisNode
 import textwrap
 import itertools
 
+from xonsh.built_ins import XSH
 from xonsh.tools import subproc_toks, find_next_break, get_logical_line
 
 from ast import (
@@ -314,8 +314,8 @@ def isexpression(node, ctx=None, *args, **kwargs):
     # parse string to AST
     if isinstance(node, str):
         node = node if node.endswith("\n") else node + "\n"
-        ctx = builtins.__xonsh__.ctx if ctx is None else ctx
-        node = builtins.__xonsh__.execer.parse(node, ctx, *args, **kwargs)
+        ctx = XSH.ctx if ctx is None else ctx
+        node = XSH.execer.parse(node, ctx, *args, **kwargs)
     # determin if expresission-like enough
     if isinstance(node, (Expr, Expression)):
         isexpr = True

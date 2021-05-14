@@ -19,12 +19,13 @@ from xonsh.xoreutils.pwd import pwd
 from xonsh.xoreutils.tee import tee
 from xonsh.xoreutils.tty import tty
 from xonsh.xoreutils.yes import yes
+from xonsh.built_ins import XSH
 
 __all__ = ()
 
-aliases["cat"] = cat
-aliases["echo"] = echo
-aliases["pwd"] = pwd
-aliases["tee"] = tee
-aliases["tty"] = tty
-aliases["yes"] = yes
+XSH.aliases["cat"] = cat
+XSH.aliases["echo"] = echo
+XSH.aliases["pwd"] = pwd
+XSH.aliases["tee"] = tee
+XSH.aliases["tty"] = tty
+XSH.aliases["yes"] = yes

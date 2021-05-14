@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
-import builtins
 import typing as tp
 import collections.abc as cabc
 
@@ -11,6 +10,7 @@ from xonsh.completers.tools import (
     apply_lprefix,
     is_exclusive_completer,
 )
+from xonsh.built_ins import XSH
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_exception
 
@@ -80,7 +80,7 @@ class Completer(object):
     def complete_from_context(self, completion_context, old_completer_args=None):
         lprefix = 0
         completions = set()
-        for func in builtins.__xonsh__.completers.values():
+        for func in XSH.completers.values():
             try:
                 if is_contextual_completer(func):
                     if completion_context is None:

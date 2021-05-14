@@ -1,11 +1,11 @@
 """Tools for caching xonsh code."""
-import os
-import sys
 import hashlib
 import marshal
-import builtins
+import os
+import sys
 
 from xonsh import __version__ as XONSH_VERSION
+from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO_BYTES
 
@@ -47,11 +47,10 @@ def should_use_cache(execer, mode):
     """
     if mode == "exec":
         return (execer.scriptcache or execer.cacheall) and (
-            builtins.__xonsh__.env["XONSH_CACHE_SCRIPTS"]
-            or builtins.__xonsh__.env["XONSH_CACHE_EVERYTHING"]
+            XSH.env["XONSH_CACHE_SCRIPTS"] or XSH.env["XONSH_CACHE_EVERYTHING"]
         )
     else:
-        return execer.cacheall or builtins.__xonsh__.env["XONSH_CACHE_EVERYTHING"]
+        return execer.cacheall or XSH.env["XONSH_CACHE_EVERYTHING"]
 
 
 def run_compiled_code(code, glb, loc, mode):
@@ -77,7 +76,7 @@ def get_cache_filename(fname, code=True):
     The ``code`` switch should be true if we should use the code store rather
     than the script store.
     """
-    datadir = builtins.__xonsh__.env["XONSH_DATA_DIR"]
+    datadir = XSH.env["XONSH_DATA_DIR"]
     cachedir = os.path.join(
         datadir, "xonsh_code_cache" if code else "xonsh_script_cache"
     )

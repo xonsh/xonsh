@@ -18,8 +18,8 @@ import itertools
 import contextlib
 import collections.abc as cabc
 
-from xonsh.ast import AST
-from xonsh.lazyasd import LazyObject, lazyobject
+from ast import AST
+from xonsh.lazyasd import lazyobject
 from xonsh.inspectors import Inspector
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.tools import (
@@ -30,7 +30,7 @@ from xonsh.tools import (
     print_color,
 )
 
-INSPECTOR = LazyObject(Inspector, globals(), "INSPECTOR")
+INSPECTOR = Inspector()
 
 warnings.filterwarnings("once", category=DeprecationWarning)
 
@@ -553,8 +553,9 @@ class XonshSession:
             builtins.__xonsh__ = self
         if ctx is not None:
             self.ctx = ctx
-        self.env = Env(default_env())
-        self.help = helper
+
+        self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env())
+        self.help = kwargs.pop("help") if "help" in kwargs else helper
         self.superhelp = superhelper
         self.pathsearch = pathsearch
         self.globsearch = globsearch
@@ -593,13 +594,14 @@ class XonshSession:
 
         self.builtins = _BuiltIns(execer)
 
+        aliases_given = kwargs.pop("aliases", None)
         for attr, value in kwargs.items():
             if hasattr(self, attr):
                 setattr(self, attr, value)
-        self.link_builtins(execer=execer)
+        self.link_builtins(aliases_given)
         self.builtins_loaded = True
 
-    def link_builtins(self, execer=None):
+    def link_builtins(self, aliases=None):
         from xonsh.aliases import Aliases, make_default_aliases
 
         # public built-ins
@@ -621,7 +623,9 @@ class XonshSession:
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that
         # relies on __xonsh__.env in default aliases
-        builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
+        if aliases is None:
+            aliases = Aliases(make_default_aliases())
+        self.aliases = builtins.default_aliases = builtins.aliases = aliases
         atexit.register(_lastflush)
         for sig in AT_EXIT_SIGNALS:
             resetting_signal_handle(sig, _lastflush)
@@ -648,7 +652,7 @@ class XonshSession:
             self.builtins_loaded = False
             return
         env = getattr(self, "env", None)
-        if self.env:
+        if hasattr(self.env, "undo_replace_env"):
             env.undo_replace_env()
         if hasattr(self, "pyexit"):
             builtins.exit = self.pyexit

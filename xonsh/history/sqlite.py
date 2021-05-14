@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history backend via sqlite3."""
-import builtins
 import collections
 import json
 import os
@@ -9,6 +8,7 @@ import sys
 import threading
 import time
 
+from xonsh.built_ins import XSH
 from xonsh.history.base import History
 import xonsh.tools as xt
 
@@ -18,7 +18,7 @@ XH_SQLITE_CREATED_SQL_TBL = "CREATED_SQL_TABLE"
 
 
 def _xh_sqlite_get_file_name():
-    envs = builtins.__xonsh__.env
+    envs = XSH.env
     file_name = envs.get("XONSH_HISTORY_SQLITE_FILE")
     if not file_name:
         data_dir = envs.get("XONSH_DATA_DIR")
@@ -235,7 +235,7 @@ class SqliteHistoryGC(threading.Thread):
         if self.size is not None:
             hsize, units = xt.to_history_tuple(self.size)
         else:
-            envs = builtins.__xonsh__.env
+            envs = XSH.env
             hsize, units = envs.get("XONSH_HISTORY_SIZE")
         if units != "commands":
             print(
@@ -267,7 +267,7 @@ class SqliteHistory(History):
         self.save_cwd = (
             save_cwd
             if save_cwd is not None
-            else builtins.__xonsh__.env.get("XONSH_HISTORY_SAVE_CWD", True)
+            else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
 
         if not os.path.exists(self.filename):
@@ -285,7 +285,7 @@ class SqliteHistory(History):
     def append(self, cmd):
         if not self.remember_history:
             return
-        envs = builtins.__xonsh__.env
+        envs = XSH.env
         inp = cmd["inp"].rstrip()
         self.inps.append(inp)
         self.outs.append(cmd.get("out"))
@@ -342,7 +342,7 @@ class SqliteHistory(History):
             sessionid=self.sessionid, filename=self.filename
         )
         data["all items"] = xh_sqlite_get_count(filename=self.filename)
-        envs = builtins.__xonsh__.env
+        envs = XSH.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         return data
 

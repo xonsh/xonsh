@@ -31,13 +31,14 @@ import typing as tp
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.filters import completion_is_selected, IsMultiline
 from prompt_toolkit.keys import Keys
-from xonsh.built_ins import DynamicAccessProxy
+from xonsh.built_ins import DynamicAccessProxy, XSH
 from xonsh.events import events
 from xonsh.tools import check_for_partial_string
 
 __all__ = ()
 
-builtins.__xonsh__.abbrevs = dict()
+# todo: do not assign .abbrevs and directly use abbrevs as mutable const.
+XSH.abbrevs = abbrevs = dict()
 proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
 setattr(builtins, "abbrevs", proxy)
 

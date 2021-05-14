@@ -7,7 +7,6 @@ import pprint
 import textwrap
 import locale
 import glob
-import builtins
 import warnings
 import contextlib
 import collections.abc as cabc
@@ -29,7 +28,7 @@ from xonsh.platform import (
     ON_CYGWIN,
     os_environ,
 )
-
+from xonsh.built_ins import XSH
 from xonsh.tools import (
     always_true,
     always_false,
@@ -193,12 +192,8 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    if (
-        hasattr(builtins, "__xonsh__")
-        and hasattr(builtins.__xonsh__, "execer")
-        and builtins.__xonsh__.execer is not None
-    ):
-        builtins.__xonsh__.execer.debug_level = val
+    if XSH.execer is not None:
+        XSH.execer.debug_level = val
     return val
 
 
@@ -427,7 +422,7 @@ class LsColors(cabc.MutableMapping):
     @property
     def style_name(self):
         """Current XONSH_COLOR_STYLE value"""
-        env = getattr(builtins.__xonsh__, "env", {})
+        env = getattr(XSH, "env", {})
         env_style_name = env.get("XONSH_COLOR_STYLE", "default")
         if self._style_name is None or self._style_name != env_style_name:
             self._style_name = env_style_name
@@ -479,8 +474,8 @@ class LsColors(cabc.MutableMapping):
         if filename is not None:
             cmd.append(filename)
         # get env
-        if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, "env"):
-            denv = builtins.__xonsh__.env.detype()
+        if XSH.env:
+            denv = XSH.env.detype()
         else:
             denv = None
         # run dircolors
@@ -519,7 +514,7 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
     environment. This fires exactly once upon the first time the
     ls command is called.
     """
-    env = builtins.__xonsh__.env
+    env = XSH.env
     if "LS_COLORS" not in env._d:
         # this adds it to the env too
         default_lscolors(env)
@@ -2148,7 +2143,7 @@ def _yield_executables(directory, name):
 
 def locate_binary(name):
     """Locates an executable on the file system."""
-    return builtins.__xonsh__.commands_cache.locate_binary(name)
+    return XSH.commands_cache.locate_binary(name)
 
 
 def xonshrc_context(

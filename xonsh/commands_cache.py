@@ -11,12 +11,12 @@ import pickle
 import sys
 import threading
 import time
-import builtins
 import argparse
 import collections.abc as cabc
 import typing as tp
 from pathlib import Path
 
+from xonsh.built_ins import XSH
 from xonsh.platform import ON_WINDOWS, ON_POSIX, pathbasename
 from xonsh.tools import executables_in
 from xonsh.lazyasd import lazyobject
@@ -41,7 +41,7 @@ class CommandsCache(cabc.Mapping):
         self._loaded_pickled = False
 
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
-        env = builtins.__xonsh__.env
+        env = XSH.env
         self.cache_file = (
             (Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve())
             if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
@@ -77,7 +77,7 @@ class CommandsCache(cabc.Mapping):
         name on Windows as a list, conserving the ordering in `PATHEXT`.
         Returns a list as `name` being the only item in it on other platforms."""
         if ON_WINDOWS:
-            pathext = builtins.__xonsh__.env.get("PATHEXT", [])
+            pathext = XSH.env.get("PATHEXT", [])
             name = name.upper()
             return [name + ext for ext in ([""] + pathext)]
         else:
@@ -109,9 +109,9 @@ class CommandsCache(cabc.Mapping):
 
     @property
     def all_commands(self):
-        paths = CommandsCache.remove_dups(builtins.__xonsh__.env.get("PATH", []))
+        paths = CommandsCache.remove_dups(XSH.env.get("PATH", []))
         path_immut = tuple(x for x in paths if os.path.isdir(x))
-        alss = getattr(builtins, "aliases", dict())
+        alss = getattr(XSH, "aliases", dict())
         (
             has_path_changed,
             has_alias_changed,
@@ -150,7 +150,7 @@ class CommandsCache(cabc.Mapping):
         self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
     ) -> tp.Dict[str, tp.Any]:
         """Update the cmds_cache variable in background without slowing down parseLexer"""
-        env = builtins.__xonsh__.env  # type: ignore
+        env = XSH.env  # type: ignore
 
         allcmds = {}
         for path in reversed(paths):
@@ -330,7 +330,7 @@ class CommandsCache(cabc.Mapping):
         """
         # alias stuff
         if not os.path.isabs(cmd0) and os.sep not in cmd0:
-            alss = getattr(builtins, "aliases", dict())
+            alss = getattr(XSH, "aliases", dict())
             if cmd0 in alss:
                 return self.default_predictor_alias(cmd0)
 
@@ -347,7 +347,7 @@ class CommandsCache(cabc.Mapping):
             10  # this limit is se to handle infinite loops in aliases definition
         )
         first_args = []  # contains in reverse order args passed to the aliased command
-        alss = getattr(builtins, "aliases", dict())
+        alss = getattr(XSH, "aliases", dict())
         while cmd0 in alss:
             alias_name = alss[cmd0]
             if isinstance(alias_name, (str, bytes)) or not isinstance(
@@ -507,7 +507,7 @@ def predict_env(args):
         if args[i] and args[i][0] != "-" and "=" not in args[i]:
             # args[i] is the command and the following is its arguments
             # so args[i:] is used to predict if the command is threadable
-            return builtins.__xonsh__.commands_cache.predict_threadable(args[i:])
+            return XSH.commands_cache.predict_threadable(args[i:])
     return True
 
 

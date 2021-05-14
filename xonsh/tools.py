@@ -17,7 +17,6 @@ Implementations:
 * indent()
 
 """
-import builtins
 import collections
 import collections.abc as cabc
 import contextlib
@@ -63,6 +62,13 @@ def is_superuser():
     return rtn
 
 
+@lazyobject
+def xsh():
+    from xonsh.built_ins import XSH
+
+    return XSH
+
+
 class XonshError(Exception):
     pass
 
@@ -99,8 +105,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
 def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
-    session = getattr(builtins, "__xonsh__", None)
-    env = os_environ if session is None else getattr(session, "env", os_environ)
+    env = xsh.env or os_environ
     if env.get("EXPAND_ENV_VARS", False):
         s = expandvars(s)
     if expand_user:
@@ -121,8 +126,7 @@ def _expandpath(path):
     """Performs environment variable / user expansion on a given path
     if EXPAND_ENV_VARS is set.
     """
-    session = getattr(builtins, "__xonsh__", None)
-    env = os_environ if session is None else getattr(session, "env", os_environ)
+    env = xsh.env or os_environ
     expand_user = env.get("EXPAND_ENV_VARS", False)
     return expand_path(path, expand_user=expand_user)
 
@@ -139,8 +143,7 @@ def decode_bytes(b):
     """Tries to decode the bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
     """
-    session = getattr(builtins, "__xonsh__", None)
-    env = os_environ if session is None else getattr(session, "env", os_environ)
+    env = xsh.env or os_environ
     enc = env.get("XONSH_ENCODING") or DEFAULT_ENCODING
     err = env.get("XONSH_ENCODING_ERRORS") or "strict"
     return b.decode(encoding=enc, errors=err)
@@ -332,7 +335,7 @@ def balanced_parens(line, mincol=0, maxcol=None, lexer=None):
     """Determines if parentheses are balanced in an expression."""
     line = line[mincol:maxcol]
     if lexer is None:
-        lexer = builtins.__xonsh__.execer.parser.lexer
+        lexer = xsh.execer.parser.lexer
     if "(" not in line and ")" not in line:
         return True
     cnt = 0
@@ -355,7 +358,7 @@ def find_next_break(line, mincol=0, lexer=None):
     if mincol >= 1:
         line = line[mincol:]
     if lexer is None:
-        lexer = builtins.__xonsh__.execer.parser.lexer
+        lexer = xsh.execer.parser.lexer
     if RE_END_TOKS.search(line) is None:
         return None
     maxcol = None
@@ -393,7 +396,7 @@ def subproc_toks(
     normal parentheses. Greedy is False by default.
     """
     if lexer is None:
-        lexer = builtins.__xonsh__.execer.parser.lexer
+        lexer = xsh.execer.parser.lexer
     if maxcol is None:
         maxcol = len(line) + 1
     lexer.reset()
@@ -528,11 +531,7 @@ def get_line_continuation():
     mode on Windows the backslash must be preceded by a space. This is because
     paths on Windows may end in a backslash.
     """
-    if (
-        ON_WINDOWS
-        and hasattr(builtins.__xonsh__, "env")
-        and builtins.__xonsh__.env.get("XONSH_INTERACTIVE", False)
-    ):
+    if ON_WINDOWS and hasattr(xsh, "env") and xsh.env.get("XONSH_INTERACTIVE", False):
         return " \\"
     else:
         return "\\"
@@ -703,7 +702,7 @@ def get_sep():
     """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    if ON_WINDOWS and builtins.__xonsh__.env.get("FORCE_POSIX_PATHS"):
+    if ON_WINDOWS and xsh.env.get("FORCE_POSIX_PATHS"):
         return os.altsep
     else:
         return os.sep
@@ -789,7 +788,7 @@ def _executables_in_posix(path):
 def _executables_in_windows(path):
     if not os.path.isdir(path):
         return
-    extensions = builtins.__xonsh__.env["PATHEXT"]
+    extensions = xsh.env["PATHEXT"]
     try:
         for x in os.scandir(path):
             try:
@@ -829,7 +828,7 @@ def debian_command_not_found(cmd):
     if not ON_LINUX:
         return ""
 
-    cnf = builtins.__xonsh__.commands_cache.lazyget(
+    cnf = xsh.commands_cache.lazyget(
         "command-not-found", ("/usr/lib/command-not-found",)
     )[0]
 
@@ -885,12 +884,12 @@ def suggest_commands(cmd, env, aliases):
     cmd = cmd.lower()
     suggested = {}
 
-    for alias in builtins.aliases:
+    for alias in xsh.aliases:
         if alias not in suggested:
             if levenshtein(alias.lower(), cmd, thresh) < thresh:
                 suggested[alias] = "Alias"
 
-    for _cmd in builtins.__xonsh__.commands_cache.all_commands:
+    for _cmd in xsh.commands_cache.all_commands:
         if _cmd not in suggested:
             if levenshtein(_cmd.lower(), cmd, thresh) < thresh:
                 suggested[_cmd] = "Command ({0})".format(_cmd)
@@ -920,7 +919,7 @@ def suggest_commands(cmd, env, aliases):
 
 def _get_manual_env_var(name, default=None):
     """Returns if the given variable is manually set as well as it's value."""
-    env = getattr(builtins.__xonsh__, "env", None)
+    env = getattr(xsh, "env", None)
     if env is None:
         env = os_environ
         manually_set = name in env
@@ -1865,13 +1864,13 @@ def format_color(string, **kwargs):
     shell instances method of the same name. The results of this function should
     be directly usable by print_color().
     """
-    if hasattr(builtins.__xonsh__.shell, "shell"):
-        return builtins.__xonsh__.shell.shell.format_color(string, **kwargs)
+    if hasattr(xsh.shell, "shell"):
+        return xsh.shell.shell.format_color(string, **kwargs)
     else:
         # fallback for ANSI if shell is not yet initialized
         from xonsh.ansi_colors import ansi_partial_color_format
 
-        style = builtins.__xonsh__.env.get("XONSH_COLOR_STYLE")
+        style = xsh.env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, style=style)
 
 
@@ -1880,8 +1879,8 @@ def print_color(string, **kwargs):
     method of the same name. Colors will be formatted if they have not already
     been.
     """
-    if hasattr(builtins.__xonsh__.shell, "shell"):
-        builtins.__xonsh__.shell.shell.print_color(string, **kwargs)
+    if hasattr(xsh.shell, "shell"):
+        xsh.shell.shell.print_color(string, **kwargs)
     else:
         # fallback for ANSI if shell is not yet initialized
         print(format_color(string, **kwargs))
@@ -1889,12 +1888,12 @@ def print_color(string, **kwargs):
 
 def color_style_names():
     """Returns an iterable of all available style names."""
-    return builtins.__xonsh__.shell.shell.color_style_names()
+    return xsh.shell.shell.color_style_names()
 
 
 def color_style():
     """Returns the current color map."""
-    return builtins.__xonsh__.shell.shell.color_style()
+    return xsh.shell.shell.color_style()
 
 
 def register_custom_style(
@@ -1939,7 +1938,7 @@ def _token_attr_from_stylemap(stylemap):
     """yields tokens attr, and index from a stylemap"""
     import prompt_toolkit as ptk
 
-    if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
+    if xsh.shell.shell_type == "prompt_toolkit1":
         style = ptk.styles.style_from_dict(stylemap)
         for token in stylemap:
             yield token, style.token_to_attrs[token]
@@ -1954,7 +1953,7 @@ def _token_attr_from_stylemap(stylemap):
 
 def _get_color_lookup_table():
     """Returns the prompt_toolkit win32 ColorLookupTable"""
-    if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
+    if xsh.shell.shell_type == "prompt_toolkit1":
         from prompt_toolkit.terminal.win32_output import ColorLookupTable
     else:
         from prompt_toolkit.output.win32 import ColorLookupTable
@@ -2059,8 +2058,8 @@ def hardcode_colors_for_win10(style_map):
     in conhost.exe
     """
     modified_style = {}
-    if not builtins.__xonsh__.env["PROMPT_TOOLKIT_COLOR_DEPTH"]:
-        builtins.__xonsh__.env["PROMPT_TOOLKIT_COLOR_DEPTH"] = "DEPTH_24_BIT"
+    if not xsh.env["PROMPT_TOOLKIT_COLOR_DEPTH"]:
+        xsh.env["PROMPT_TOOLKIT_COLOR_DEPTH"] = "DEPTH_24_BIT"
     # Replace all ansi colors with hardcoded colors to avoid unreadable defaults
     # in conhost.exe
     for token, style_str in style_map.items():
@@ -2107,7 +2106,7 @@ def intensify_colors_for_cmd_exe(style_map):
         6: "ansibrightyellow",  # subst yellow with bright yellow
         9: "ansicyan",  # subst intense blue with dark cyan (more readable)
     }
-    if builtins.__xonsh__.shell.shell_type == "prompt_toolkit1":
+    if xsh.shell.shell_type == "prompt_toolkit1":
         replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
@@ -2121,11 +2120,11 @@ def intensify_colors_on_win_setter(enable):
     """
     enable = to_bool(enable)
     if (
-        hasattr(builtins.__xonsh__, "shell")
-        and builtins.__xonsh__.shell is not None
-        and hasattr(builtins.__xonsh__.shell.shell.styler, "style_name")
+        hasattr(xsh, "shell")
+        and xsh.shell is not None
+        and hasattr(xsh.shell.shell.styler, "style_name")
     ):
-        delattr(builtins.__xonsh__.shell.shell.styler, "style_name")
+        delattr(xsh.shell.shell.styler, "style_name")
     return enable
 
 
@@ -2135,9 +2134,9 @@ def format_std_prepost(template, env=None):
     """
     if not template:
         return ""
-    env = builtins.__xonsh__.env if env is None else env
+    env = xsh.env if env is None else env
     invis = "\001\002"
-    if builtins.__xonsh__.shell is None:
+    if xsh.shell is None:
         # shell hasn't fully started up (probably still in xonshrc)
         from xonsh.prompt.base import PromptFormatter
         from xonsh.ansi_colors import ansi_partial_color_format
@@ -2148,7 +2147,7 @@ def format_std_prepost(template, env=None):
         s = ansi_partial_color_format(invis + s + invis, hide=False, style=style)
     else:
         # shell has fully started. do the normal thing
-        shell = builtins.__xonsh__.shell.shell
+        shell = xsh.shell.shell
         try:
             s = shell.prompt_formatter(template)
         except Exception:
@@ -2323,7 +2322,7 @@ def POSIX_ENVVAR_REGEX():
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.
     Unknown variables are left unchanged."""
-    env = builtins.__xonsh__.env
+    env = xsh.env
     if isinstance(path, bytes):
         path = path.decode(
             encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
@@ -2444,11 +2443,11 @@ def _dotglobstr(s):
 
 
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
-    s = builtins.__xonsh__.expand_path(s)
+    s = xsh.expand_path(s)
     if sort_result is None:
-        sort_result = builtins.__xonsh__.env.get("GLOB_SORTED")
+        sort_result = xsh.env.get("GLOB_SORTED")
     if include_dotfiles is None:
-        include_dotfiles = builtins.__xonsh__.env.get("DOTGLOB")
+        include_dotfiles = xsh.env.get("DOTGLOB")
     if ignore_case:
         s = expand_case_matching(s)
     if "**" in s and "**/*" not in s:
@@ -2490,7 +2489,7 @@ def ensure_timestamp(t, datetime_format=None):
     except (ValueError, TypeError):
         pass
     if datetime_format is None:
-        datetime_format = builtins.__xonsh__.env["XONSH_DATETIME_FORMAT"]
+        datetime_format = xsh.env["XONSH_DATETIME_FORMAT"]
     if isinstance(t, datetime.datetime):
         t = t.timestamp()
     else:
@@ -2500,7 +2499,7 @@ def ensure_timestamp(t, datetime_format=None):
 
 def format_datetime(dt):
     """Format datetime object to string base on $XONSH_DATETIME_FORMAT Env."""
-    format_ = builtins.__xonsh__.env["XONSH_DATETIME_FORMAT"]
+    format_ = xsh.env["XONSH_DATETIME_FORMAT"]
     return dt.strftime(format_)
 
 

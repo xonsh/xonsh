@@ -1,5 +1,4 @@
-import builtins
-
+from xonsh.built_ins import XSH
 from xonsh.parsers.completion_context import CompletionContext
 from xonsh.completers.tools import (
     contextual_completer,
@@ -25,6 +24,6 @@ def complete_environment_vars(context: CompletionContext):
     key = prefix[dollar_location + 1 :]
     lprefix = len(key) + 1
     filter_func = get_filter_function()
-    env_names = builtins.__xonsh__.env  # type: ignore
+    env_names = XSH.env
 
     return {"$" + k for k in env_names if filter_func(k, key)}, lprefix
