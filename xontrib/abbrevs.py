@@ -55,8 +55,7 @@ class Abbreviation:
 
     def expand(self, buffer: Buffer) -> bool:
         """expand the given abbr text. Return true if cursor position changed."""
-        abbrevs = getattr(builtins, "abbrevs", None)
-        if abbrevs is None:
+        if not abbrevs:
             return False
         document = buffer.document
         word = document.get_word_before_cursor(WORD=True)
@@ -93,7 +92,6 @@ EDIT_SYMBOL = "<edit>"
 
 
 def get_abbreviated(key: str, buffer) -> str:
-    abbrevs = getattr(builtins, "abbrevs", None)
     abbr = abbrevs[key]
     if callable(abbr):
         text = abbr(buffer=buffer, word=key)
