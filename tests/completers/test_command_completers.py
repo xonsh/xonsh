@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 
+import pytest
+
 from xonsh.parsers.completion_context import (
     CompletionContext,
     CommandArg,
@@ -10,6 +12,15 @@ from tests.tools import ON_WINDOWS, skip_if_on_windows, completions_from_result
 
 from xonsh.completer import Completer
 from xonsh.completers.commands import complete_command, complete_skipper
+
+
+@pytest.fixture(autouse=True)
+def xs_orig_commands_cache(xession, monkeypatch):
+    monkeypatch.setattr(
+        xession.commands_cache,
+        "locate_binary",
+        xession.commands_cache.orig_locate_binary,
+    )
 
 
 def test_complete_command(completion_context_parse):

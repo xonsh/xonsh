@@ -2,28 +2,21 @@ import builtins
 import glob
 import os
 import sys
+import types
+import typing as tp
+from unittest.mock import MagicMock
 
 import pytest
 
-from xonsh.built_ins import (
-    ensure_list_of_strs,
-    XonshSession,
-    pathsearch,
-    globsearch,
-    list_of_strs_or_callables,
-    list_of_list_of_strs_outer_product,
-    call_macro,
-    enter_macro,
-    eval_fstring_field,
-    XSH,
-)
+from xonsh.built_ins import XonshSession, XSH
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
 
-from tools import DummyShell, sp, DummyCommandsCache, DummyEnv, DummyHistory
+from xonsh import commands_cache
+from tools import DummyShell, sp, DummyEnv, DummyHistory
 
 
 @pytest.fixture
@@ -39,6 +32,20 @@ def xonsh_execer(monkeypatch):
     execer = Execer(unload=False)
     monkeypatch.setattr(XSH, "execer", execer)
     yield execer
+
+
+@pytest.fixture
+def patch_commands_cache_bins(xession, tmp_path, monkeypatch):
+    def _factory(binaries: tp.List[str]):
+        if not xession.env.get("PATH"):
+            xession.env["PATH"] = [tmp_path]
+        exec_mock = MagicMock(return_value=binaries)
+        monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
+        cc = commands_cache.CommandsCache()
+        xession.commands_cache = cc
+        return cc
+
+    return _factory
 
 
 @pytest.fixture
@@ -74,24 +81,21 @@ def xonsh_builtins(monkeypatch, xonsh_events) -> XonshSession:
     if ON_WINDOWS:
         XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
+    def locate_binary(self, name):
+        return os.path.join(os.path.dirname(__file__), "bin", name)
+
     XSH.glob = glob.glob
     XSH.exit = False
     XSH.superhelp = lambda x: x
-    XSH.pathsearch = pathsearch
-    XSH.globsearch = globsearch
     XSH.regexpath = lambda x: []
     XSH.expand_path = lambda x: x
+    XSH.history = DummyHistory()
     XSH.subproc_captured = sp
     XSH.subproc_uncaptured = sp
-    XSH.stdout_uncaptured = None
-    XSH.stderr_uncaptured = None
-    XSH.ensure_list_of_strs = ensure_list_of_strs
-    XSH.commands_cache = DummyCommandsCache()
-    XSH.all_jobs = {}
-    XSH.list_of_strs_or_callables = list_of_strs_or_callables
-    XSH.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
-    XSH.eval_fstring_field = eval_fstring_field
-    XSH.history = DummyHistory()
+
+    cc = XSH.commands_cache
+    cc.orig_locate_binary = cc.locate_binary
+    monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
     XSH.subproc_captured_stdout = sp
     XSH.subproc_captured_inject = sp
     XSH.subproc_captured_object = sp

@@ -12,7 +12,6 @@ from xonsh.commands_cache import (
     predict_true,
     predict_false,
 )
-from xonsh import commands_cache
 from tools import skip_if_on_windows
 
 
@@ -30,13 +29,10 @@ def test_predict_threadable_unknown_command(xonsh_builtins):
 
 
 @pytest.fixture
-def commands_cache_tmp(xession, tmp_path, monkeypatch):
+def commands_cache_tmp(xession, tmp_path, monkeypatch, patch_commands_cache_bins):
     xession.env["XONSH_DATA_DIR"] = tmp_path
     xession.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = True
-    xession.env["PATH"] = [tmp_path]
-    exec_mock = MagicMock(return_value=["bin1", "bin2"])
-    monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
-    return commands_cache.CommandsCache()
+    return patch_commands_cache_bins(["bin1", "bin2"])
 
 
 def test_commands_cached_between_runs(commands_cache_tmp, tmp_path):
@@ -169,8 +165,8 @@ def test_non_exist_is_only_functional_alias(xonsh_builtins):
 
 
 @skip_if_on_windows
-def test_bash_is_only_functional_alias(xonsh_builtins):
-    XSH.env["PATH"] = os.environ["PATH"].split(os.pathsep)
+def test_bash_is_only_functional_alias(xession):
+    xession.env["PATH"] = os.environ["PATH"].split(os.pathsep)
     cc = CommandsCache()
     assert not cc.is_only_functional_alias("bash")
 

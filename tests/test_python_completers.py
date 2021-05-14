@@ -86,7 +86,7 @@ def test_complete_python(code, exp):
 
 def test_complete_python_ctx():
     class A:
-        def wow():
+        def wow(self):
             pass
 
     a = A()

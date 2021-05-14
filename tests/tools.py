@@ -84,14 +84,6 @@ class DummyShell:
         return self._shell
 
 
-class DummyCommandsCache:
-    def locate_binary(self, name):
-        return os.path.join(os.path.dirname(__file__), "bin", name)
-
-    def predict_threadable(self, cmd):
-        return True
-
-
 class DummyHistory:
 
     last_cmd_rtn = 0
