@@ -283,7 +283,8 @@ def colorizable_files():
 
 
 @pytest.mark.parametrize(
-    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
+    "key,file_path",
+    [(key, file_path) for key, file_path in _cf.items() if file_path],
 )
 def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
     """test proper file codes with symlinks colored normally"""
@@ -295,7 +296,8 @@ def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLO
 
 
 @pytest.mark.parametrize(
-    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
+    "key,file_path",
+    [(key, file_path) for key, file_path in _cf.items() if file_path],
 )
 def test_colorize_file_symlink(
     key, file_path, colorizable_files, xonsh_builtins_LS_COLORS

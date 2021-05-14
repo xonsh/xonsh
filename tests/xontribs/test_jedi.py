@@ -109,12 +109,16 @@ def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
                 "int(x=None, /) -> int",
                 ("instance", "instance int"),
             ),
-            RichCompletion("xx", display="xx", description="instance int", prefix_len=1),
+            RichCompletion(
+                "xx", display="xx", description="instance int", prefix_len=1
+            ),
         ),
         (
             # from jedi when code is 'xx=3\nx'
             ("statement", "xx", "x", None, ("instance", "instance int")),
-            RichCompletion("xx", display="xx", description="instance int", prefix_len=1),
+            RichCompletion(
+                "xx", display="xx", description="instance int", prefix_len=1
+            ),
         ),
         (
             # from jedi when code is 'x.' and x=3
@@ -139,18 +143,28 @@ def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
         (
             # from '(3).from_bytes(byt'
             ("param", "bytes=", "es=", None, ("instance", "instance Sequence")),
-            RichCompletion("bytes=", display="bytes=", description="instance Sequence", prefix_len=3),
+            RichCompletion(
+                "bytes=",
+                display="bytes=",
+                description="instance Sequence",
+                prefix_len=3,
+            ),
         ),
         (
             # from 'x.from_bytes(byt' when x=3
             ("param", "bytes=", "es=", None, None),
-            RichCompletion("bytes=", display="bytes=", description="param", prefix_len=3),
+            RichCompletion(
+                "bytes=", display="bytes=", description="param", prefix_len=3
+            ),
         ),
         (
             # from 'import colle'
             ("module", "collections", "ctions", None, ("module", "module collections")),
             RichCompletion(
-                "collections", display="collections", description="module collections", prefix_len=5
+                "collections",
+                display="collections",
+                description="module collections",
+                prefix_len=5,
             ),
         ),
         (
@@ -163,7 +177,10 @@ def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
                 ("class", "class NameError"),
             ),
             RichCompletion(
-                "NameError", display="NameError", description="NameError(*args: object)", prefix_len=7
+                "NameError",
+                display="NameError",
+                description="NameError(*args: object)",
+                prefix_len=7,
             ),
         ),
         (
@@ -174,12 +191,16 @@ def test_multiline(jedi_xontrib, jedi_mock, monkeypatch):
         (
             # from 'open("/etc/pass'
             ("path", 'passwd"', 'wd"', None, None),
-            RichCompletion('passwd"', display='passwd"', description="path", prefix_len=4),
+            RichCompletion(
+                'passwd"', display='passwd"', description="path", prefix_len=4
+            ),
         ),
         (
             # from 'cla'
             ("keyword", "class", "ss", None, None),
-            RichCompletion("class", display="class", description="keyword", prefix_len=3),
+            RichCompletion(
+                "class", display="class", description="keyword", prefix_len=3
+            ),
         ),
     ],
 )
@@ -218,10 +239,15 @@ def test_rich_completions(jedi_xontrib, jedi_mock, completion, rich_completion):
 
 
 def test_special_tokens(jedi_xontrib):
-    assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext("", 0))) \
-        .issuperset(jedi_xontrib.XONSH_SPECIAL_TOKENS)
-    assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext( "@", 1))) == {"@", "@(", "@$("}
-    assert jedi_xontrib.complete_jedi(CompletionContext(python=PythonContext("$", 1))) == {"$[", "${", "$("}
+    assert jedi_xontrib.complete_jedi(
+        CompletionContext(python=PythonContext("", 0))
+    ).issuperset(jedi_xontrib.XONSH_SPECIAL_TOKENS)
+    assert jedi_xontrib.complete_jedi(
+        CompletionContext(python=PythonContext("@", 1))
+    ) == {"@", "@(", "@$("}
+    assert jedi_xontrib.complete_jedi(
+        CompletionContext(python=PythonContext("$", 1))
+    ) == {"$[", "${", "$("}
 
 
 @skip_if_on_darwin
@@ -230,4 +256,6 @@ def test_no_command_path_completion(jedi_xontrib, completion_context_parse):
     assert jedi_xontrib.complete_jedi(completion_context_parse("./", 2)) is None
     assert jedi_xontrib.complete_jedi(completion_context_parse("./e", 3)) is None
     assert jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/", 9)) is None
-    assert jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/e", 10)) is None
+    assert (
+        jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/e", 10)) is None
+    )

@@ -41,7 +41,9 @@ def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins, completion_context_pars
 
 
 @pytest.mark.parametrize("quote", ('"', "'"))
-def test_complete_path_when_prefix_is_raw_path_string(quote, xonsh_builtins, completion_context_parse):
+def test_complete_path_when_prefix_is_raw_path_string(
+    quote, xonsh_builtins, completion_context_parse
+):
     xonsh_builtins.__xonsh__.env = {
         "CASE_SENSITIVE_COMPLETIONS": True,
         "GLOB_SORTED": True,

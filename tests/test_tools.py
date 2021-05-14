@@ -1812,7 +1812,11 @@ def test_all_permutations():
             {"Literal.String.Single": "#ff0000"},
             {"Token.Literal.String.Single": "#ff0000"},
         ),  # short str key
-        ("test4", {"RED": "#ff0000"}, {"Token.Color.RED": "#ff0000"},),  # color
+        (
+            "test4",
+            {"RED": "#ff0000"},
+            {"Token.Color.RED": "#ff0000"},
+        ),  # color
     ],
 )
 def test_register_custom_style(name, styles, refrules):
@@ -1855,7 +1859,15 @@ def test_to_completion_mode(val, exp):
     assert to_completion_mode(val) == exp
 
 
-@pytest.mark.parametrize("val", ["de", "defa_ult", "men_", "menu_",])
+@pytest.mark.parametrize(
+    "val",
+    [
+        "de",
+        "defa_ult",
+        "men_",
+        "menu_",
+    ],
+)
 def test_to_completion_mode_fail(val):
     with pytest.warns(RuntimeWarning):
         obs = to_completion_mode(val)

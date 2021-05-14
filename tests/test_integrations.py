@@ -506,6 +506,7 @@ first
     ),
 ]
 
+
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 def test_script(case):
@@ -516,6 +517,7 @@ def test_script(case):
     else:
         assert exp_out == out
     assert exp_rtn == rtn
+
 
 @skip_if_no_xonsh
 @skip_if_on_windows
@@ -557,7 +559,11 @@ def test_script_stderr(case):
         ("pwd", None, lambda: os.getcwd() + "\n"),
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
-        ("$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'", None, "foo2",),
+        (
+            "$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'",
+            None,
+            "foo2",
+        ),
     ],
 )
 def test_single_command_no_windows(cmd, fmt, exp):
@@ -685,7 +691,9 @@ def test_xonsh_no_close_fds():
 @skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
-    [("cat tttt | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)
+    [
+        ("cat tttt | wc", lambda x: x > "", True),
+    ],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"

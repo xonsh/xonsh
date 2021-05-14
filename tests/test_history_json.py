@@ -109,7 +109,7 @@ def test_hist_flush_with_store_cwd(hist, xonsh_builtins):
     with LazyJSON(hist.filename) as lj:
         assert len(lj["cmds"]) == 2
         assert lj["cmds"][0]["cwd"] == "/tmp"
-        assert "cwd" not in  lj["cmds"][1]
+        assert "cwd" not in lj["cmds"][1]
 
 
 def test_hist_flush_with_hist_control(hist, xonsh_builtins):
@@ -391,8 +391,10 @@ SEC_PER_DAY = 24 * 60 * 60
 # 11p every day.  The smallest interval is thus ten hours (from 11p to 9a), so
 # we can't spend more than five hours executing the tests.
 MAX_RUNTIME = 30 * 60
-MIN_DIFF = min(HISTORY_FILES_LIST[i+1][0] - HISTORY_FILES_LIST[i][0]
-    for i in range(len(HISTORY_FILES_LIST) - 1))
+MIN_DIFF = min(
+    HISTORY_FILES_LIST[i + 1][0] - HISTORY_FILES_LIST[i][0]
+    for i in range(len(HISTORY_FILES_LIST) - 1)
+)
 assert MAX_RUNTIME < MIN_DIFF / 2
 
 

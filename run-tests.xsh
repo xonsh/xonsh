@@ -53,7 +53,7 @@ def qa(ns: argparse.Namespace):
     """QA checks"""
 
     echo "---------- Check Black formatter -----------"
-    black --check xonsh xontrib
+    black --check xonsh xontrib tests
 
     echo "---------- Running flake8 ----------"
     python -m flake8

@@ -57,7 +57,8 @@ def test_rich_completion(
 
 EXPANSION_CASES = (
     (
-        "sanity", 6,
+        "sanity",
+        6,
         dict(
             prefix="sanity",
             line="sanity",
@@ -68,7 +69,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "gb ", 3,
+        "gb ",
+        3,
         dict(
             prefix="",
             line="git branch ",
@@ -79,7 +81,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "gb ", 1,
+        "gb ",
+        1,
         dict(
             prefix="g",
             line="gb ",
@@ -90,7 +93,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "gb", 0,
+        "gb",
+        0,
         dict(
             prefix="",
             line="gb",
@@ -101,7 +105,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        " gb ", 0,
+        " gb ",
+        0,
         dict(
             prefix="",
             line=" gb ",  # the PTK completer `lstrip`s the line
@@ -112,7 +117,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "gb --", 5,
+        "gb --",
+        5,
         dict(
             prefix="--",
             line="git branch --",
@@ -123,7 +129,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "nice\ngb --", 10,
+        "nice\ngb --",
+        10,
         dict(
             prefix="--",
             line="git branch --",
@@ -134,7 +141,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "nice\n gb --", 11,
+        "nice\n gb --",
+        11,
         dict(
             prefix="--",
             line=" git branch --",
@@ -145,7 +153,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "gb -- wow", 5,
+        "gb -- wow",
+        5,
         dict(
             prefix="--",
             line="git branch -- wow",
@@ -156,7 +165,8 @@ EXPANSION_CASES = (
         ),
     ),
     (
-        "gb --wow", 5,
+        "gb --wow",
+        5,
         dict(
             prefix="--",
             line="git branch --wow",
@@ -168,13 +178,9 @@ EXPANSION_CASES = (
     ),
 )
 
-@pytest.mark.parametrize(
-    "code, index, expected_args",
-    EXPANSION_CASES
-)
-def test_alias_expansion(
-    code, index, expected_args, monkeypatch, xonsh_builtins
-):
+
+@pytest.mark.parametrize("code, index, expected_args", EXPANSION_CASES)
+def test_alias_expansion(code, index, expected_args, monkeypatch, xonsh_builtins):
     xonsh_completer_mock = MagicMock(spec=Completer)
     xonsh_completer_mock.complete.return_value = set(), 0
 
@@ -189,4 +195,7 @@ def test_alias_expansion(
     args, kwargs = mock_call
     expected_args["self"] = None
     expected_args["ctx"] = None
-    assert signature(Completer.complete).bind(None, *args, **kwargs).arguments == expected_args
+    assert (
+        signature(Completer.complete).bind(None, *args, **kwargs).arguments
+        == expected_args
+    )

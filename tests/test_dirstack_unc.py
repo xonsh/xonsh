@@ -88,8 +88,7 @@ def shares_setup(tmpdir_factory):
 
 
 def test_pushdpopd(xonsh_builtins):
-    """Simple non-UNC push/pop to verify we didn't break nonUNC case.
-    """
+    """Simple non-UNC push/pop to verify we didn't break nonUNC case."""
     xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)
 
     dirstack.cd([PARENT])
@@ -162,7 +161,7 @@ def test_uncpushd_push_to_same_share(xonsh_builtins, shares_setup):
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_push_other_push_same(xonsh_builtins, shares_setup):
     """push to a, then to b. verify drive letter is TEMP_DRIVE[2], skipping already used TEMP_DRIVE[1]
-       Then push to a again. Pop (check b unmapped and a still mapped), pop, pop (check a is unmapped)"""
+    Then push to a again. Pop (check b unmapped and a still mapped), pop, pop (check a is unmapped)"""
     if shares_setup is None:
         return
     xonsh_builtins.__xonsh__.env = Env(CDPATH=PARENT, PWD=HERE)

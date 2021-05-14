@@ -462,18 +462,21 @@ def test_lexer_split(s, exp):
     assert exp == obs
 
 
-@pytest.mark.parametrize("s", (
-    "()",  # sanity
-    "(",
-    ")",
-    "))",
-    "'string\nliteral",
-    "'''string\nliteral",
-    "string\nliteral'",
-    "\"",
-    "'",
-    "\"\"\"",
-))
+@pytest.mark.parametrize(
+    "s",
+    (
+        "()",  # sanity
+        "(",
+        ")",
+        "))",
+        "'string\nliteral",
+        "'''string\nliteral",
+        "string\nliteral'",
+        '"',
+        "'",
+        '"""',
+    ),
+)
 def test_tolerant_lexer(s):
     lexer = Lexer(tolerant=True)
     lexer.input(s)

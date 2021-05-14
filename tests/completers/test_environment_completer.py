@@ -9,11 +9,14 @@ def parser():
     return CompletionContextParser()
 
 
-@pytest.mark.parametrize("cmd", (
-    "ls $WO",
-    "ls /home/$WO",
-    "ls @('hi ' + $WO",
-))
+@pytest.mark.parametrize(
+    "cmd",
+    (
+        "ls $WO",
+        "ls /home/$WO",
+        "ls @('hi ' + $WO",
+    ),
+)
 def test_simple(cmd, xonsh_builtins, monkeypatch, parser):
     monkeypatch.setitem(xonsh_builtins.__xonsh__.env, "WOW", 1)
 
