@@ -138,6 +138,109 @@ def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
     assert len(stderr) == 0
 
 
+# the parameterisation is a list of xonsh args, followed by the list
+# of RC files (see function body) expected to be loaded in order
+# note that a tty is not faked, so this will default to non-interactive
+# (skipped on windows because XONSHRC="/path/to/f1.xsh:/path/to/f2.xsh"
+# doesn't appear to work, while it does on other platforms)
+@pytest.mark.skipif(ON_WINDOWS, reason="Issue with multi-file XONSHRC")
+@pytest.mark.parametrize(
+    ["args", "expected"],
+    [
+        # non-interactive, nothing loading
+        [[], []],
+        # interactive, normal XONSHRC and XONSHRC_DIR
+        [["-i"], ["F0", "F1", "D0", "D1"]],
+        # --no-rc wins over -i
+        [["--no-rc", "-i"], []],
+        # --no-rc wins over -i --rc
+        [["--no-rc", "-i", "--rc", "<R0>"], []],
+        # --rc does nothing in non-interactive mode
+        [["--rc", "<R0>"], []],
+        # but is respected in interactive
+        [["-i", "--rc", "<R0>"], ["R0"]],
+        # multiple invocations of --rc only use the last
+        [["-i", "--rc", "<R0>", "--rc", "<R1>"], ["R1"]],
+        # but multiple RC files can be specified after --rc
+        [["-i", "--rc", "<R0>", "<R1>"], ["R0", "R1"]],
+        # including the same file twice
+        [["-i", "--rc", "<R0>", "<R0>"], ["R0", "R0"]],
+        # scripts are non-interactive
+        [["<SC>"], ["SC"]],
+        # but -i will load the normal environment with a script
+        [["-i", "<SC>"], ["F0", "F1", "D0", "D1", "SC"]],
+        # no-rc has no effect on a script
+        [["--no-rc", "<SC>"], ["SC"]],
+        # but does prevent RC loading in -i mode
+        [["--no-rc", "-i", "<SC>"], ["SC"]],
+        # --rc doesn't work here because a script is non-interactive
+        [["--rc", "<R0>", "--", "<SC>"], ["SC"]],
+        # unless forced with -i
+        [["-i", "--rc", "<R0>", "--", "<SC>"], ["R0", "SC"]],
+        # --no-rc also wins here
+        [["-i", "--rc", "<R0>", "--no-rc", "--", "<SC>"], ["SC"]],
+        # single commands are non-interactive
+        [["-c", "pass"], []],
+        # but load RCs with -i
+        [["-i", "-c", "pass"], ["F0", "F1", "D0", "D1"]],
+        # --rc ignores without -i
+        [["--rc", "<R0>", "-c", "pass"], []],
+        # but used with -i
+        [["-i", "--rc", "<R0>", "-c", "pass"], ["R0"]],
+    ],
+    ids=lambda ae: " ".join(ae),
+)
+def test_script_startup(shell, tmpdir, monkeypatch, capsys, args, expected):
+    """
+    Test the correct scripts are loaded, in the correct order, for
+    different combinations of CLI arguments. See
+    https://github.com/xonsh/xonsh/issues/4096
+
+    This sets up a standard set of RC files which will be loaded,
+    and tests whether they print their payloads at all, or in the right
+    order, depending on the CLI arguments chosen.
+    """
+    rcdir = tmpdir.join("rc.d")
+    rcdir.mkdir()
+    # XONSHRC_DIR files, in order
+    rcdir.join("d0.xsh").write("print('D0')")
+    rcdir.join("d1.xsh").write("print('D1')")
+    # XONSHRC files, in order
+    f0 = tmpdir.join("f0.xsh")
+    f0.write("print('F0')")
+    f1 = tmpdir.join("f1.xsh")
+    f1.write("print('F1')")
+    # RC files which can be explicitly loaded with --rc
+    r0 = tmpdir.join("r0.xsh")
+    r0.write("print('R0')")
+    r1 = tmpdir.join("r1.xsh")
+    r1.write("print('R1')")
+    # a (non-RC) script which can be loaded
+    sc = tmpdir.join("sc.xsh")
+    sc.write("print('SC')")
+
+    monkeypatch.setitem(os.environ, "XONSHRC", f"{f0}:{f1}")
+    monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
+
+    # replace <RC> with the path to rc.xsh and <SC> with sc.xsh
+    args = [
+        a.replace("<R0>", str(r0)).replace("<R1>", str(r1)).replace("<SC>", str(sc))
+        for a in args
+    ]
+
+    # since we only test xonsh.premain here, a script file (SC)
+    # won't actually get run here, so won't appear in the stdout,
+    # so don't check for it (but check for a .file in the parsed args)
+    check_for_script = "SC" in expected
+    expected = [e for e in expected if e != "SC"]
+
+    xargs = xonsh.main.premain(args)
+    stdout, stderr = capsys.readouterr()
+    assert "\n".join(expected) in stdout
+    if check_for_script:
+        assert xargs.file is not None
+
+
 def test_rcdir_ignored_with_rc(shell, tmpdir, monkeypatch, capsys):
     """Test that --rc suppresses loading XONSHRC_DIRs"""
 
