@@ -1,11 +1,11 @@
 """Tests the xonsh.procs.specs"""
+import itertools
 from subprocess import Popen
 
 import pytest
 
-from xonsh.procs.specs import cmds_to_specs
-
-from xonsh.environ import Env
+from xonsh.procs.specs import cmds_to_specs, run_subproc
+from xonsh.built_ins import XSH
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 
@@ -35,3 +35,46 @@ def test_cmds_to_specs_thread_subproc(xession):
     env["THREAD_SUBPROCS"] = False
     specs = cmds_to_specs(cmds, captured="hiddenobject")
     assert specs[0].cls is ProcProxy
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "thread_subprocs, capture_always", list(itertools.product((True, False), repeat=2))
+)
+def test_capture_always(capfd, thread_subprocs, capture_always):
+    env = XSH.env
+    exp = "HELLO"
+    cmds = [["echo", "-n", exp]]
+
+    env["THREAD_SUBPROCS"] = thread_subprocs
+    env["XONSH_CAPTURE_ALWAYS"] = capture_always
+
+    hidden = run_subproc(cmds, "hiddenobject")  # ![]
+    # Check that interactive subprocs are always printed
+    assert exp in capfd.readouterr().out
+
+    if capture_always and thread_subprocs:
+        # Check that the interactive output was captured
+        assert hidden.out == exp
+    else:
+        # without THREAD_SUBPROCS capturing in ![] isn't possible
+        assert not hidden.out
+
+    # Explicitly captured commands are always captured
+    hidden = run_subproc(cmds, "object")  # !()
+    hidden.end()
+    if thread_subprocs:
+        assert not capfd.readouterr().out
+        assert hidden.out == exp
+    else:
+        # for some reason THREAD_SUBPROCS=False fails to capture in `!()` but still succeeds in `$()`
+        assert exp in capfd.readouterr().out
+        assert not hidden.out
+
+    output = run_subproc(cmds, "stdout")  # $()
+    assert not capfd.readouterr().out
+    assert output == exp
+
+    # Explicitly non-captured commands are never captured (/always printed)
+    run_subproc(cmds, captured=False)  # $[]
+    assert exp in capfd.readouterr().out
