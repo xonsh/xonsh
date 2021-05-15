@@ -73,10 +73,6 @@ def xonsh_builtins(monkeypatch, xonsh_events) -> XonshSession:
     XSH.load(
         execer=Execer(unload=False),
         ctx={},
-        env=DummyEnv(),
-        shell=DummyShell(),
-        help=lambda x: x,
-        aliases={},
     )
     if ON_WINDOWS:
         XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
@@ -84,19 +80,24 @@ def xonsh_builtins(monkeypatch, xonsh_events) -> XonshSession:
     def locate_binary(self, name):
         return os.path.join(os.path.dirname(__file__), "bin", name)
 
-    XSH.exit = False
-    XSH.history = DummyHistory()
-    XSH.subproc_captured = sp
-    XSH.subproc_uncaptured = sp
+    for attr, val in [
+        ("env", DummyEnv()),
+        ("shell", DummyShell()),
+        ("help", lambda x: x),
+        ("aliases", {}),
+        ("exit", False),
+        ("history", DummyHistory()),
+        # ("subproc_captured", sp),
+        ("subproc_uncaptured", sp),
+        ("subproc_captured_stdout", sp),
+        ("subproc_captured_inject", sp),
+        ("subproc_captured_object", sp),
+        ("subproc_captured_hiddenobject", sp),
+    ]:
+        monkeypatch.setattr(XSH, attr, val)
 
     cc = XSH.commands_cache
-    cc.orig_locate_binary = cc.locate_binary
     monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
-    XSH.subproc_captured_stdout = sp
-    XSH.subproc_captured_inject = sp
-    XSH.subproc_captured_object = sp
-    XSH.subproc_captured_hiddenobject = sp
-    # XSH.completers = None
 
     for attr, val in [
         ("evalx", eval),
