@@ -16,6 +16,16 @@ from .tools import skip_if_on_windows
 def test_cmds_to_specs_thread_subproc(xession):
     env = xession.env
     cmds = [["pwd"]]
+
+    # XONSH_CAPTURE_ALWAYS=False should disable interactive threaded subprocs
+    env["XONSH_CAPTURE_ALWAYS"] = False
+    env["THREAD_SUBPROCS"] = True
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
+    assert specs[0].cls is Popen
+
+    # Now for the other situations
+    env["XONSH_CAPTURE_ALWAYS"] = True
+
     # First check that threadable subprocs become threadable
     env["THREAD_SUBPROCS"] = True
     specs = cmds_to_specs(cmds, captured="hiddenobject")

@@ -12,15 +12,15 @@ def test_indir():
     if ON_WINDOWS:
         pytest.skip("On Windows")
     with tempfile.TemporaryDirectory() as tmpdir:
-        assert ![pwd].output.strip() != tmpdir
+        assert $(pwd).strip() != tmpdir
         with indir(tmpdir):
-            assert ![pwd].output.strip() == tmpdir
-        assert ![pwd].output.strip() != tmpdir
+            assert $(pwd).strip() == tmpdir
+        assert $(pwd).strip() != tmpdir
         try:
             with indir(tmpdir):
                 raise Exception
         except Exception:
-            assert ![pwd].output.strip() != tmpdir
+            assert $(pwd).strip() != tmpdir
 
 
 def test_rmtree():

@@ -20,6 +20,7 @@ def patched_events(monkeypatch, xonsh_events, xonsh_execer):
     monkeypatch.setitem(
         XSH.env, "RAISE_SUBPROC_ERROR", False
     )  # for the failing `grep` commands
+    monkeypatch.setitem(XSH.env, "XONSH_CAPTURE_ALWAYS", True)  # capture output of ![]
     if ON_WINDOWS:
         monkeypatch.setattr(
             XSH,
