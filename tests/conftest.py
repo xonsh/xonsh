@@ -84,11 +84,7 @@ def xonsh_builtins(monkeypatch, xonsh_events) -> XonshSession:
     def locate_binary(self, name):
         return os.path.join(os.path.dirname(__file__), "bin", name)
 
-    XSH.glob = glob.glob
     XSH.exit = False
-    XSH.superhelp = lambda x: x
-    XSH.regexpath = lambda x: []
-    XSH.expand_path = lambda x: x
     XSH.history = DummyHistory()
     XSH.subproc_captured = sp
     XSH.subproc_uncaptured = sp
