@@ -107,7 +107,7 @@ def xonsh_builtins(monkeypatch, xonsh_events) -> XonshSession:
         # be firing events on the global instance.
         ("events", xonsh_events),
     ]:
-        monkeypatch.setattr(builtins, attr, val)
+        # attributes to builtins are dynamicProxy and should pickup the following
         monkeypatch.setattr(XSH.builtins, attr, val)
 
     # todo: remove using builtins for tests at all
