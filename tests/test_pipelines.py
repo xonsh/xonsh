@@ -13,6 +13,9 @@ from xonsh.built_ins import XSH
 
 @pytest.fixture(autouse=True)
 def patched_events(monkeypatch, xonsh_events, xonsh_execer):
+    from xonsh.jobs import tasks
+
+    tasks.clear()
     # needed for ci tests
     monkeypatch.setitem(
         XSH.env, "RAISE_SUBPROC_ERROR", False
