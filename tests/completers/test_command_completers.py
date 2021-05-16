@@ -15,9 +15,9 @@ from xonsh.completers.commands import complete_command, complete_skipper
 
 
 @pytest.fixture(autouse=True)
-def xs_orig_commands_cache(xession, monkeypatch):
+def xs_orig_commands_cache(xession, monkeypatch, xonsh_execer):
     xession.unload()
-    xession.load()
+    xession.load(execer=xonsh_execer)
 
 
 def test_complete_command(completion_context_parse):
