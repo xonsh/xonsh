@@ -24,29 +24,14 @@ def test(ns: argparse.Namespace):
     `xonsh run-tests.xsh -- --junitxml=junit/test-results.%%d.xml`
     """
 
-    run_separately = [
-        'tests/test_main.py',
-        'tests/test_ptk_highlight.py',
-    ]
-
-
-    ignores = []
-    for fname in run_separately:
-        ignores.append('--ignore')
-        ignores.append(fname)
-
     args = ns.pytest_args
 
     if ns.report_coverage:
-        ![coverage run -m pytest @(_replace_args(args, 0)) @(ignores)]
-        for index, fname in enumerate(run_separately):
-            ![coverage run --append -m pytest @(_replace_args(args, index+1)) @(fname)]
+        ![coverage run -m pytest @(_replace_args(args, 0))]
         ![coverage report -m]
         ![coverage xml]
     else:
-        ![pytest @(_replace_args(args, 0)) @(ignores)]
-        for index, fname in enumerate(run_separately):
-            ![pytest @(_replace_args(args, index + 1)) @(fname)]
+        ![pytest @(_replace_args(args, 0))]
 
 
 def qa(ns: argparse.Namespace):
