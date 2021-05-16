@@ -16,7 +16,7 @@ from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, ON_MSYS,
 from xonsh.tools import unthreadable
 
 # there is not much cost initing deque
-tasks = collections.deque()
+tasks: tp.Deque[int] = collections.deque()
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
 _last_exit_time: tp.Optional[float] = None
