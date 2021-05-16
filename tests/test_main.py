@@ -124,8 +124,10 @@ def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
 
     rcdir = tmpdir.join("rc.d")
     rcdir.mkdir()
+    rc = tmpdir.join("rc.xsh")
+    rc.write_binary(b"")
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-    monkeypatch.delitem(os.environ, "XONSHRC")
+    monkeypatch.setitem(os.environ, "XONSHRC", str(rc))
     monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
 
     xonsh.main.premain([])
