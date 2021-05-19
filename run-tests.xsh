@@ -27,9 +27,7 @@ def test(ns: argparse.Namespace):
     args = ns.pytest_args
 
     if ns.report_coverage:
-        ![coverage run -m pytest @(_replace_args(args, 0))]
-        ![coverage report -m]
-        ![coverage xml]
+        ![pytest @(_replace_args(args, 0)) --cov --cov-report=xml --cov-report=term]
     else:
         ![pytest @(_replace_args(args, 0))]
 
