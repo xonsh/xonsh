@@ -1,17 +1,19 @@
 import os
-import builtins
 import typing as tp
 
 import xonsh.tools as xt
 import xonsh.platform as xp
+from xonsh.completer import Completer
 from xonsh.completers.tools import (
     get_filter_function,
     contextual_command_completer,
-    is_contextual_completer,
     RichCompletion,
     Completion,
+    non_exclusive_completer,
 )
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
+from xonsh.built_ins import XSH
+
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||
@@ -25,7 +27,7 @@ def complete_command(command: CommandContext):
     cmd = command.prefix
     out: tp.Set[Completion] = {
         RichCompletion(s, append_space=True)
-        for s in builtins.__xonsh__.commands_cache  # type: ignore
+        for s in XSH.commands_cache  # type: ignore
         if get_filter_function()(s, cmd)
     }
     if xp.ON_WINDOWS:
@@ -47,32 +49,29 @@ def complete_skipper(command_context: CommandContext):
     meaning we only need to skip commands like ``sudo``.
     """
     skip_part_num = 0
-    for skip_part_num, arg in enumerate(
-        command_context.args[: command_context.arg_index]
-    ):
-        # all the args before the current argument
+    # all the args before the current argument
+    for arg in command_context.args[: command_context.arg_index]:
         if arg.value not in SKIP_TOKENS:
             break
+        skip_part_num += 1
 
     if skip_part_num == 0:
         return None
 
-    skipped_context = CompletionContext(
-        command=command_context._replace(
-            args=command_context.args[skip_part_num:],
-            arg_index=command_context.arg_index - skip_part_num,
-        )
+    skipped_command_context = command_context._replace(
+        args=command_context.args[skip_part_num:],
+        arg_index=command_context.arg_index - skip_part_num,
     )
 
-    completers = builtins.__xonsh__.completers.values()  # type: ignore
-    for completer in completers:
-        if is_contextual_completer(completer):
-            results = completer(skipped_context)
-            if results:
-                return results
-    return None
+    if skipped_command_context.arg_index == 0:
+        # completing the command after a SKIP_TOKEN
+        return complete_command(skipped_command_context)
+
+    completer: Completer = XSH.shell.shell.completer  # type: ignore
+    return completer.complete_from_context(CompletionContext(skipped_command_context))
 
 
+@non_exclusive_completer
 @contextual_command_completer
 def complete_end_proc_tokens(command_context: CommandContext):
     """If there's no space following an END_PROC_TOKEN, insert one"""
@@ -85,6 +84,7 @@ def complete_end_proc_tokens(command_context: CommandContext):
     return None
 
 
+@non_exclusive_completer
 @contextual_command_completer
 def complete_end_proc_keywords(command_context: CommandContext):
     """If there's no space following an END_PROC_KEYWORD, insert one"""

@@ -143,6 +143,20 @@ def test_ansi_color_name_to_escape_code_for_all_styles(color, style):
 
 
 @pytest.mark.parametrize(
+    "style_name",
+    [
+        ("default"),
+        ("monokai"),  # defined in `ansi_colors.py`
+        ("rainbow_dash"),  # not in `ansi_colors.py`, but in pygments
+        ("foobar"),  # invalid, should not fail
+    ],
+)
+def test_ansi_style_by_name(style_name):
+    style = ansi_style_by_name(style_name)
+    assert style is not None
+
+
+@pytest.mark.parametrize(
     "name, styles, refrules",
     [
         ("test1", {}, {}),

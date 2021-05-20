@@ -3,10 +3,11 @@
 import os
 import sys
 import time
-import builtins
 import collections
 import threading
 import collections.abc as cabc
+
+from xonsh.built_ins import XSH
 
 try:
     import ujson as json
@@ -90,7 +91,7 @@ def _xhj_gc_bytes_to_rmfiles(hsize, files):
 
 def _xhj_get_data_dir():
     dir = xt.expanduser_abs_path(
-        os.path.join(builtins.__xonsh__.env.get("XONSH_DATA_DIR"), "history_json")
+        os.path.join(XSH.env.get("XONSH_DATA_DIR"), "history_json")
     )
     if not os.path.exists(dir):
         os.makedirs(dir)
@@ -103,9 +104,7 @@ def _xhj_get_history_files(sort=True, newest_first=False):
     """
     data_dirs = [
         _xhj_get_data_dir(),
-        builtins.__xonsh__.env.get(
-            "XONSH_DATA_DIR"
-        ),  # backwards compatibility, remove in the future
+        XSH.env.get("XONSH_DATA_DIR"),  # backwards compatibility, remove in the future
     ]
 
     files = []
@@ -118,14 +117,14 @@ def _xhj_get_history_files(sort=True, newest_first=False):
                 if f.startswith("xonsh-") and f.endswith(".json")
             ]
         except OSError:
-            if builtins.__xonsh__.env.get("XONSH_DEBUG"):
+            if XSH.env.get("XONSH_DEBUG"):
                 xt.print_exception(
                     f"Could not collect xonsh history json files from {data_dir}"
                 )
     if sort:
         files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
 
-    custom_history_file = builtins.__xonsh__.env.get("XONSH_HISTORY_FILE", None)
+    custom_history_file = XSH.env.get("XONSH_HISTORY_FILE", None)
     if custom_history_file:
         custom_history_file = xt.expanduser_abs_path(custom_history_file)
         if custom_history_file not in files:
@@ -157,7 +156,7 @@ class JsonHistoryGC(threading.Thread):
     def run(self):
         while self.wait_for_shell:
             time.sleep(0.01)
-        env = builtins.__xonsh__.env  # pylint: disable=no-member
+        env = XSH.env  # pylint: disable=no-member
         xonsh_debug = env.get("XONSH_DEBUG", 0)
         if self.size is None:
             hsize, units = env.get("XONSH_HISTORY_SIZE")
@@ -169,7 +168,7 @@ class JsonHistoryGC(threading.Thread):
             raise ValueError("Units type {0!r} not understood".format(units))
 
         size_over, rm_files = rmfiles_fn(hsize, files)
-        hist = getattr(builtins.__xonsh__, "history", None)
+        hist = getattr(XSH, "history", None)
         if hist is not None:  # remember last gc pass history size
             hist.hist_size = size_over + hsize
             hist.hist_units = units
@@ -201,7 +200,7 @@ class JsonHistoryGC(threading.Thread):
         This is sorted by the last closed time. Returns a list of
         (file_size, timestamp, number of cmds, file name) tuples.
         """
-        env = getattr(getattr(builtins, "__xonsh__", None), "env", None)
+        env = XSH.env
         if env is None:
             return []
 
@@ -283,7 +282,7 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
-        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
+        opts = XSH.env.get("HISTCONTROL", "")
         last_inp = None
         cmds = []
         for cmd in self.buffer:
@@ -305,9 +304,11 @@ class JsonHistoryFlusher(threading.Thread):
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
         if self.at_exit:
-            hist["ts"][1] = time.time()  # apply end time
+            # todo: check why this is here.
+            if "ts" in hist:
+                hist["ts"][1] = time.time()  # apply end time
             hist["locked"] = False
-        if not builtins.__xonsh__.env.get("XONSH_STORE_STDOUT", False):
+        if not XSH.env.get("XONSH_STORE_STDOUT", False):
             [cmd.pop("out") for cmd in hist["cmds"][load_hist_len:] if "out" in cmd]
         with open(self.filename, "w", newline="\n") as f:
             xlj.ljdump(hist, f, sort_keys=True)
@@ -378,7 +379,15 @@ class JsonHistory(History):
     JsonHistory implements an extra action: ``diff``
     """
 
-    def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True, **meta):
+    def __init__(
+        self,
+        filename=None,
+        sessionid=None,
+        buffersize=100,
+        gc=True,
+        save_cwd=None,
+        **meta,
+    ):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
@@ -433,6 +442,12 @@ class JsonHistory(History):
         self.inps = JsonCommandField("inp", self)
         self.outs = JsonCommandField("out", self)
         self.rtns = JsonCommandField("rtn", self)
+        self.cwds = JsonCommandField("cwd", self)
+        self.save_cwd = (
+            save_cwd
+            if save_cwd is not None
+            else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
+        )
 
     def __len__(self):
         return self._len - self._skipped
@@ -458,13 +473,16 @@ class JsonHistory(History):
         if not self.remember_history:
             return
 
-        opts = builtins.__xonsh__.env.get("HISTCONTROL", "")
+        opts = XSH.env.get("HISTCONTROL", "")
         skipped_by_ignore_space = "ignorespace" in opts and cmd.get("spc")
         if skipped_by_ignore_space:
             return None
 
         self.buffer.append(cmd)
         self._len += 1  # must come before flushing
+
+        if not self.save_cwd and "cwd" in cmd:
+            del cmd["cwd"]
 
         try:
             del cmd["spc"]
@@ -536,7 +554,7 @@ class JsonHistory(History):
                 commands = json_file.load()["cmds"]
             except (json.decoder.JSONDecodeError, ValueError):
                 # file is corrupted somehow
-                if builtins.__xonsh__.env.get("XONSH_DEBUG") > 0:
+                if XSH.env.get("XONSH_DEBUG") > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
                     print(msg.format(f), file=sys.stderr)
                 continue
@@ -555,7 +573,7 @@ class JsonHistory(History):
         data["length"] = len(self)
         data["buffersize"] = self.buffersize
         data["bufferlength"] = len(self.buffer)
-        envs = builtins.__xonsh__.env
+        envs = XSH.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         data["gc_last_size"] = f"{(self.hist_size, self.hist_units)}"
         return data
@@ -575,6 +593,7 @@ class JsonHistory(History):
         self.inps = JsonCommandField("inp", self)
         self.outs = JsonCommandField("out", self)
         self.rtns = JsonCommandField("rtn", self)
+        self.cwds = JsonCommandField("cwd", self)
         self._len = 0
         self._skipped = 0
 

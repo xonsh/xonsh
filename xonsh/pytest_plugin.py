@@ -67,8 +67,8 @@ class XshFunction(pytest.Item):
     def runtest(self, *args, **kwargs):
         self._test_func(*args, **kwargs)
 
-    def repr_failure(self, excinfo):
-        """ called when self.runtest() raises an exception. """
+    def repr_failure(self, excinfo, **_):
+        """called when self.runtest() raises an exception."""
         formatted_tb = _limited_traceback(excinfo)
         formatted_tb.insert(0, "xonsh execution failed\n")
         formatted_tb.append("{}: {}".format(excinfo.type.__name__, excinfo.value))

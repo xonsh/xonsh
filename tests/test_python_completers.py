@@ -1,13 +1,23 @@
 import pytest
 
 from tests.tools import skip_if_pre_3_8
-from xonsh.completers.python import python_signature_complete, complete_import, complete_python
-from xonsh.parsers.completion_context import CommandArg, CommandContext, CompletionContext, CompletionContextParser, PythonContext
+from xonsh.completers.python import (
+    python_signature_complete,
+    complete_import,
+    complete_python,
+)
+from xonsh.parsers.completion_context import (
+    CommandArg,
+    CommandContext,
+    CompletionContext,
+    CompletionContextParser,
+    PythonContext,
+)
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xonsh_builtins, xonsh_execer, monkeypatch):
-    monkeypatch.setitem(xonsh_builtins.__xonsh__.env, "COMPLETIONS_BRACKETS", True)
+def xonsh_execer_autouse(xession, xonsh_execer, monkeypatch):
+    monkeypatch.setitem(xession.env, "COMPLETIONS_BRACKETS", True)
     return xonsh_execer
 
 
@@ -55,15 +65,20 @@ def test_complete_python_signatures(line, end, exp):
     assert exp == obs
 
 
-@pytest.mark.parametrize("code, exp", (
-    ("x = su", "sum"),
-    ("imp", "import"),
-    ("{}.g", "{}.get("),
-    # no signature for native builtins under 3.7:
-    pytest.param("''.split(ma", "maxsplit=", marks=skip_if_pre_3_8),
-))
+@pytest.mark.parametrize(
+    "code, exp",
+    (
+        ("x = su", "sum"),
+        ("imp", "import"),
+        ("{}.g", "{}.get("),
+        # no signature for native builtins under 3.7:
+        pytest.param("''.split(ma", "maxsplit=", marks=skip_if_pre_3_8),
+    ),
+)
 def test_complete_python(code, exp):
-    res = complete_python(CompletionContext(python=PythonContext(code, len(code), ctx={})))
+    res = complete_python(
+        CompletionContext(python=PythonContext(code, len(code), ctx={}))
+    )
     assert res and len(res) == 2
     comps, _ = res
     assert exp in comps
@@ -71,30 +86,73 @@ def test_complete_python(code, exp):
 
 def test_complete_python_ctx():
     class A:
-        def wow():
+        def wow(self):
             pass
-    
+
     a = A()
 
-    res = complete_python(CompletionContext(python=PythonContext("a.w", 2, ctx=locals())))
+    res = complete_python(
+        CompletionContext(python=PythonContext("a.w", 2, ctx=locals()))
+    )
     assert res and len(res) == 2
     comps, _ = res
     assert "a.wow(" in comps
 
 
-@pytest.mark.parametrize("command, exp", (
-    (CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="pathli"), {"pathlib"}),
-    (CommandContext(args=(CommandArg("from"),), arg_index=1, prefix="pathli"), {"pathlib "}),
-    (CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="os.pa"), {"os.path"}),
-    (CommandContext(args=(
-        CommandArg("import"), CommandArg("os,"),
-        ), arg_index=2, prefix="pathli"), {"pathlib"}),
-    (CommandContext(args=(
-        CommandArg("from"), CommandArg("pathlib"), CommandArg("import"),
-        ), arg_index=3, prefix="PurePa"), {"PurePath"}),
-))
+@pytest.mark.parametrize(
+    "command, exp",
+    (
+        (
+            CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="pathli"),
+            {"pathlib"},
+        ),
+        (
+            CommandContext(args=(CommandArg("from"),), arg_index=1, prefix="pathli"),
+            {"pathlib "},
+        ),
+        (
+            CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="os.pa"),
+            {"os.path"},
+        ),
+        (
+            CommandContext(
+                args=(
+                    CommandArg("from"),
+                    CommandArg("x"),
+                ),
+                arg_index=2,
+            ),
+            {"import"},
+        ),
+        (
+            CommandContext(
+                args=(
+                    CommandArg("import"),
+                    CommandArg("os,"),
+                ),
+                arg_index=2,
+                prefix="pathli",
+            ),
+            {"pathlib"},
+        ),
+        (
+            CommandContext(
+                args=(
+                    CommandArg("from"),
+                    CommandArg("pathlib"),
+                    CommandArg("import"),
+                ),
+                arg_index=3,
+                prefix="PurePa",
+            ),
+            {"PurePath"},
+        ),
+    ),
+)
 def test_complete_import(command, exp):
-    result = complete_import(CompletionContext(command,
-        python=PythonContext("", 0)  # `complete_import` needs this
-    ))
+    result = complete_import(
+        CompletionContext(
+            command, python=PythonContext("", 0)  # `complete_import` needs this
+        )
+    )
     assert result == exp

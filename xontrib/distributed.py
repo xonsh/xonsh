@@ -1,5 +1,6 @@
 """Hooks for the distributed parallel computing library."""
 from xonsh.contexts import Functor
+from xonsh.built_ins import XSH
 
 __all__ = ["DSubmitter", "dsubmit"]
 
@@ -13,7 +14,7 @@ def dworker(args, stdin=None):
     dworker.main.main(args=args, prog_name="dworker", standalone_mode=False)
 
 
-aliases["dworker"] = dworker
+XSH.aliases["dworker"] = dworker
 
 
 class DSubmitter(Functor):

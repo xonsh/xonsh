@@ -2,7 +2,11 @@ import pytest
 
 from xonsh.completers.tools import RichCompletion
 from xonsh.completers.pip import PIP_RE, complete_pip
-from xonsh.parsers.completion_context import CompletionContext, CommandContext, CommandArg
+from xonsh.parsers.completion_context import (
+    CompletionContext,
+    CommandContext,
+    CommandArg,
+)
 
 
 @pytest.mark.parametrize(
@@ -31,10 +35,15 @@ def test_pip_list_re1(line):
 
 
 def test_commands():
-    comps = complete_pip(CompletionContext(CommandContext(
-        args=(CommandArg("pip3"),), arg_index=1,
-        prefix="c",
-    )))
+    comps = complete_pip(
+        CompletionContext(
+            CommandContext(
+                args=(CommandArg("pip3"),),
+                arg_index=1,
+                prefix="c",
+            )
+        )
+    )
     assert comps.intersection({"cache", "check", "config"})
     for comp in comps:
         assert isinstance(comp, RichCompletion)
@@ -42,9 +51,14 @@ def test_commands():
 
 
 def test_package_list():
-    comps = complete_pip(CompletionContext(CommandContext(
-        args=(CommandArg("pip3"), CommandArg("show")), arg_index=2,
-    )))
+    comps = complete_pip(
+        CompletionContext(
+            CommandContext(
+                args=(CommandArg("pip3"), CommandArg("show")),
+                arg_index=2,
+            )
+        )
+    )
     assert "Package" not in comps
     assert "-----------------------------" not in comps
     assert "pytest" in comps

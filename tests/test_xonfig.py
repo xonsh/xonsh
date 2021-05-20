@@ -30,7 +30,15 @@ def test_xonfg_help(capsys, xonsh_builtins):
 
 
 @pytest.mark.parametrize(
-    "args", [([]), (["info",]),],  # NOQA E231
+    "args",
+    [
+        ([]),
+        (
+            [
+                "info",
+            ]
+        ),
+    ],  # NOQA E231
 )
 def test_xonfig_info(args, xonsh_builtins):
     """info works, and reports no jupyter if none in environment"""
@@ -53,8 +61,8 @@ def strip_sep(path: str) -> str:
 @pytest.fixture
 def fake_lib(monkeypatch):
     """insulate sys.modules from hacking test modules may do with it.
-       Apparently, monkeypath.syspath_prepend() doesn't flush
-       imported modules, so they're still visible in other test cases.
+    Apparently, monkeypath.syspath_prepend() doesn't flush
+    imported modules, so they're still visible in other test cases.
     """
 
     # get absolute path to fake_lib, assuming this test file itself is in same folder.

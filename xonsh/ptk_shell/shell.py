@@ -3,9 +3,10 @@
 import os
 import re
 import sys
-import builtins
+from functools import wraps
 from types import MethodType
 
+from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.base_shell import BaseShell
 from xonsh.ptk_shell.formatter import PTKPromptFormatter
@@ -27,6 +28,7 @@ from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_shift_selection_bindings,
 )
 from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
+from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 from prompt_toolkit.history import ThreadedHistory
 from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts import CompleteStyle
@@ -36,6 +38,7 @@ from prompt_toolkit.styles import merge_styles, Style
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
 try:
+    from prompt_toolkit.clipboard import DummyClipboard
     from prompt_toolkit.clipboard.pyperclip import PyperclipClipboard
 
     HAVE_SYS_CLIPBOARD = True
@@ -136,6 +139,47 @@ def _style_from_pygments_cls(pygments_cls):
     return _style_from_pygments_dict(pygments_cls.styles)
 
 
+def disable_copy_on_deletion():
+    dummy_clipboard = DummyClipboard()
+    ignored_actions = [
+        "kill-line",
+        "kill-word",
+        "unix-word-rubout",
+        "unix-line-discard",
+        "backward-kill-word",
+    ]
+
+    def handle_binding(name):
+        try:
+            binding = get_by_name(name)
+        except KeyError:
+            print_warning(f"Failed to disable clipboard for ptk action {name!r}")
+            return
+
+        if getattr(binding, "xonsh_disabled_clipboard", False):
+            # binding's clipboard has already been disabled
+            return
+
+        setattr(binding, "xonsh_disabled_clipboard", True)
+        original_handler = binding.handler
+
+        # this needs to be defined inside a function so that ``binding`` will be the correct one
+        @wraps(original_handler)
+        def wrapped_handler(event):
+            app = event.app
+            prev = app.clipboard
+            app.clipboard = dummy_clipboard
+            try:
+                return original_handler(event)
+            finally:
+                app.clipboard = prev
+
+        binding.handler = wrapped_handler
+
+    for _name in ignored_actions:
+        handle_binding(_name)
+
+
 class PromptToolkitShell(BaseShell):
     """The xonsh shell for prompt_toolkit v2 and later."""
 
@@ -154,6 +198,8 @@ class PromptToolkitShell(BaseShell):
         self.history = ThreadedHistory(PromptToolkitHistory())
 
         ptk_args = {"history": self.history}
+        if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
+            disable_copy_on_deletion()
         if HAVE_SYS_CLIPBOARD:
             ptk_args["clipboard"] = PyperclipClipboard()
         self.prompter = PromptSession(**ptk_args)
@@ -186,7 +232,7 @@ class PromptToolkitShell(BaseShell):
         history.
         """
         events.on_pre_prompt_format.fire()
-        env = builtins.__xonsh__.env
+        env = XSH.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
@@ -333,7 +379,7 @@ class PromptToolkitShell(BaseShell):
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
         self.push = self._push
-        while not builtins.__xonsh__.exit:
+        while not XSH.exit:
             try:
                 line = self.singleline(auto_suggest=auto_suggest)
                 if not line:
@@ -345,13 +391,13 @@ class PromptToolkitShell(BaseShell):
             except (KeyboardInterrupt, SystemExit):
                 self.reset_buffer()
             except EOFError:
-                if builtins.__xonsh__.env.get("IGNOREEOF"):
+                if XSH.env.get("IGNOREEOF"):
                     print('Use "exit" to leave the shell.', file=sys.stderr)
                 else:
                     break
 
     def _get_prompt_tokens(self, env_name: str, prompt_name: str, **kwargs):
-        env = builtins.__xonsh__.env  # type:ignore
+        env = XSH.env  # type:ignore
         p = env.get(env_name)
 
         if not p and "default" in kwargs:
@@ -403,7 +449,7 @@ class PromptToolkitShell(BaseShell):
     @property
     def bottom_toolbar_tokens(self):
         """Returns self._bottom_toolbar_tokens if it would yield a result"""
-        if builtins.__xonsh__.env.get("BOTTOM_TOOLBAR"):
+        if XSH.env.get("BOTTOM_TOOLBAR"):
             return self._bottom_toolbar_tokens
 
     def continuation_tokens(self, width, line_number, is_soft_wrap=False):
@@ -411,7 +457,7 @@ class PromptToolkitShell(BaseShell):
         if is_soft_wrap:
             return ""
         width = width - 1
-        dots = builtins.__xonsh__.env.get("MULTILINE_PROMPT")
+        dots = XSH.env.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
         if not dots:
             return ""
@@ -444,7 +490,7 @@ class PromptToolkitShell(BaseShell):
         """
         tokens = partial_color_tokenize(string)
         if force_string and HAS_PYGMENTS:
-            env = builtins.__xonsh__.env
+            env = XSH.env
             style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             self.styler.override(style_overrides_env)
@@ -466,7 +512,7 @@ class PromptToolkitShell(BaseShell):
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
         tokens = PygmentsTokens(tokens)
-        env = builtins.__xonsh__.env
+        env = XSH.env
         style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
         if HAS_PYGMENTS:
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
@@ -495,7 +541,7 @@ class PromptToolkitShell(BaseShell):
         """Returns the current color map."""
         if not HAS_PYGMENTS:
             return DEFAULT_STYLE_DICT
-        env = builtins.__xonsh__.env
+        env = XSH.env
         self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         return self.styler.styles
 
@@ -524,7 +570,7 @@ class PromptToolkitShell(BaseShell):
         #   sys.stdout.write('\033[9999999C\n')
         if not ON_POSIX:
             return
-        stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
+        stty, _ = XSH.commands_cache.lazyget("stty", (None, None))
         if stty is None:
             return
         os.system(stty + " sane")

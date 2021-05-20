@@ -10,6 +10,7 @@ from xonsh.parsers.completion_context import CompletionContext, PythonContext
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
+from xonsh.built_ins import XSH
 
 from xonsh.completers.tools import (
     CompleterResult,
@@ -145,7 +146,7 @@ def complete_python(context: CompletionContext) -> CompleterResult:
         # this can be a command (i.e. not a subexpression)
         first = context.command.args[0].value
         ctx = context.python.ctx or {}
-        if first in builtins.__xonsh__.commands_cache and first not in ctx:  # type: ignore
+        if first in XSH.commands_cache and first not in ctx:  # type: ignore
             # this is a known command, so it won't be python code
             return None
 
@@ -206,7 +207,7 @@ def _safe_eval(expr, ctx):
     a (None, None) tuple.
     """
     _ctx = None
-    xonsh_safe_eval = builtins.__xonsh__.execer.eval
+    xonsh_safe_eval = XSH.execer.eval
     try:
         val = xonsh_safe_eval(expr, ctx, ctx, transform=False)
         _ctx = ctx
@@ -245,7 +246,7 @@ def attr_complete(prefix, ctx, filter_func):
         if _val_ is None and _ctx_ is None:
             continue
         a = getattr(val, opt)
-        if builtins.__xonsh__.env["COMPLETIONS_BRACKETS"]:
+        if XSH.env["COMPLETIONS_BRACKETS"]:
             if callable(a):
                 rpl = opt + "("
             elif isinstance(a, (cabc.Sequence, cabc.Mapping)):
@@ -308,6 +309,8 @@ def complete_import(context: CompletionContext):
     if arg_index >= 1 and args[0].value == "import":
         # completing module to import
         return complete_module(prefix)
+    if arg_index == 2 and args[0].value == "from":
+        return {RichCompletion("import", append_space=True)}
     if arg_index > 2 and args[0].value == "from" and args[2].value == "import":
         # complete thing inside a module
         try:

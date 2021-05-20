@@ -9,7 +9,6 @@ import random
 import pprint
 import tempfile
 import textwrap
-import builtins
 import argparse
 import functools
 import itertools
@@ -21,6 +20,7 @@ from xonsh.ply import ply
 
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
+from xonsh.built_ins import XSH
 from xonsh.prompt.base import is_template_string
 from xonsh.platform import (
     is_readline_available,
@@ -189,7 +189,7 @@ def _dump_xonfig_foreign_shell(path, value):
 
 def _dump_xonfig_env(path, value):
     name = os.path.basename(path.rstrip("/"))
-    detyper = builtins.__xonsh__.env.get_detyper(name)
+    detyper = XSH.env.get_detyper(name)
     dval = str(value) if detyper is None else detyper(value)
     dval = str(value) if dval is None else dval
     return "${name} = {val!r}".format(name=name, val=dval)
@@ -289,7 +289,7 @@ ENVVAR_PROMPT = "{BOLD_GREEN}>>>{RESET} "
 
 def make_exit_message():
     """Creates a message for how to exit the wizard."""
-    shell_type = builtins.__xonsh__.shell.shell_type
+    shell_type = XSH.shell.shell_type
     keyseq = "Ctrl-D" if shell_type == "readline" else "Ctrl-C"
     msg = "To exit the wizard at any time, press {BOLD_UNDERLINE_CYAN}"
     msg += keyseq + "{RESET}.\n"
@@ -299,7 +299,7 @@ def make_exit_message():
 
 def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
-    env = builtins.__xonsh__.env
+    env = XSH.env
     vd = env.get_docs(name)
     if not vd.is_configurable:
         return
@@ -345,7 +345,7 @@ def _make_flat_wiz(kidfunc, *args):
 
 def make_env_wiz():
     """Makes an environment variable wizard."""
-    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh__.env.keys()))
+    w = _make_flat_wiz(make_envvar, sorted(XSH.env.keys()))
     return w
 
 
@@ -444,8 +444,8 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
 
 
 def _wizard(ns):
-    env = builtins.__xonsh__.env
-    shell = builtins.__xonsh__.shell.shell
+    env = XSH.env
+    shell = XSH.shell.shell
     xonshrcs = env.get("XONSHRC", [])
     fname = xonshrcs[-1] if xonshrcs and ns.file is None else ns.file
     no_wiz = os.path.join(env.get("XONSH_CONFIG_DIR"), "no-wizard")
@@ -503,7 +503,7 @@ def _xonfig_format_json(data):
 
 
 def _info(ns):
-    env = builtins.__xonsh__.env
+    env = XSH.env
     data = [("xonsh", XONSH_VERSION)]
     hash_, date_ = githash()
     if hash_:
@@ -516,6 +516,7 @@ def _info(ns):
             ("have readline", is_readline_available()),
             ("prompt toolkit", ptk_version() or None),
             ("shell type", env.get("SHELL_TYPE")),
+            ("history backend", env.get("XONSH_HISTORY_BACKEND")),
             ("pygments", pygments_version()),
             ("on posix", bool(ON_POSIX)),
             ("on linux", bool(ON_LINUX)),
@@ -553,7 +554,7 @@ def _info(ns):
 
 
 def _styles(ns):
-    env = builtins.__xonsh__.env
+    env = XSH.env
     curr = env.get("XONSH_COLOR_STYLE")
     styles = sorted(color_style_names())
     if ns.json:
@@ -617,13 +618,13 @@ def _tok_colors(cmap, cols):
 def _colors(args):
     columns, _ = shutil.get_terminal_size()
     columns -= int(ON_WINDOWS)
-    style_stash = builtins.__xonsh__.env["XONSH_COLOR_STYLE"]
+    style_stash = XSH.env["XONSH_COLOR_STYLE"]
 
     if args.style is not None:
         if args.style not in color_style_names():
             print("Invalid style: {}".format(args.style))
             return
-        builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = args.style
+        XSH.env["XONSH_COLOR_STYLE"] = args.style
 
     color_map = color_style()
     akey = next(iter(color_map))
@@ -632,7 +633,7 @@ def _colors(args):
     else:
         s = _tok_colors(color_map, columns)
     print_color(s)
-    builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = style_stash
+    XSH.env["XONSH_COLOR_STYLE"] = style_stash
 
 
 def _tutorial(args):
@@ -801,7 +802,7 @@ def STRIP_COLOR_RE():
 
 
 def _align_string(string, align="<", fill=" ", width=80):
-    """ Align and pad a color formatted string """
+    """Align and pad a color formatted string"""
     linelen = len(STRIP_COLOR_RE.sub("", string))
     padlen = max(width - linelen, 0)
     if align == "^":
@@ -877,7 +878,7 @@ WELCOME_MSG = [
 
 
 def print_welcome_screen():
-    shell_type = builtins.__xonsh__.env.get("SHELL_TYPE")
+    shell_type = XSH.env.get("SHELL_TYPE")
     subst = dict(tagline=random.choice(list(TAGLINES)), version=XONSH_VERSION)
     for elem in WELCOME_MSG:
         if elem == "[SHELL_TYPE_WARNING]":

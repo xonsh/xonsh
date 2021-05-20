@@ -58,7 +58,7 @@ def get_module_docstring(module: str) -> str:
 
     spec = importlib.util.find_spec(module)
     if spec and spec.has_location and spec.origin:
-        return ast.get_docstring(ast.parse(Path(spec.origin).read_text()))
+        return ast.get_docstring(ast.parse(Path(spec.origin).read_text())) or ""
     return ""
 
 

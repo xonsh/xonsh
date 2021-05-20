@@ -23,17 +23,17 @@ from xonsh.environ import LsColors
 
 
 @pytest.fixture
-def xonsh_builtins_LS_COLORS(xonsh_builtins):
+def xs_LS_COLORS(xession):
     """Xonsh environment including LS_COLORS"""
-    e = xonsh_builtins.__xonsh__.env
+    e = xession.env
     lsc = LsColors(LsColors.default_settings)
-    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
-    xonsh_builtins.__xonsh__.shell.shell_type = "prompt_toolkit"
-    xonsh_builtins.__xonsh__.shell.shell.styler = XonshStyle()  # default style
+    xession.env["LS_COLORS"] = lsc
+    xession.shell.shell_type = "prompt_toolkit"
+    xession.shell.shell.styler = XonshStyle()  # default style
 
-    yield xonsh_builtins
+    yield xession
 
-    xonsh_builtins.__xonsh__.env = e
+    xession.env = e
 
 
 DEFAULT_STYLES = {
@@ -138,9 +138,7 @@ def test_code_by_name(name, exp):
         ),
     ],
 )
-def test_color_token_by_name(
-    in_tuple, exp_ct, exp_ansi_colors, xonsh_builtins_LS_COLORS
-):
+def test_color_token_by_name(in_tuple, exp_ct, exp_ansi_colors, xs_LS_COLORS):
     from xonsh.pyghooks import XonshStyle, color_token_by_name
 
     xs = XonshStyle()
@@ -151,13 +149,11 @@ def test_color_token_by_name(
     assert ansi_colors == exp_ansi_colors, "color token mapped to correct color string"
 
 
-def test_XonshStyle_init_file_color_tokens(xonsh_builtins_LS_COLORS):
+def test_XonshStyle_init_file_color_tokens(xs_LS_COLORS):
     xs = XonshStyle()
     assert xs.styles
     assert type(file_color_tokens) is dict
-    assert set(file_color_tokens.keys()) == set(
-        xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"].keys()
-    )
+    assert set(file_color_tokens.keys()) == set(xs_LS_COLORS.env["LS_COLORS"].keys())
 
 
 # parameterized tests for file colorization
@@ -283,9 +279,10 @@ def colorizable_files():
 
 
 @pytest.mark.parametrize(
-    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
+    "key,file_path",
+    [(key, file_path) for key, file_path in _cf.items() if file_path],
 )
-def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLORS):
+def test_colorize_file(key, file_path, colorizable_files, xs_LS_COLORS):
     """test proper file codes with symlinks colored normally"""
     ffp = colorizable_files + "/" + file_path
     stat_result = os.lstat(ffp)
@@ -295,13 +292,12 @@ def test_colorize_file(key, file_path, colorizable_files, xonsh_builtins_LS_COLO
 
 
 @pytest.mark.parametrize(
-    "key,file_path", [(key, file_path) for key, file_path in _cf.items() if file_path],
+    "key,file_path",
+    [(key, file_path) for key, file_path in _cf.items() if file_path],
 )
-def test_colorize_file_symlink(
-    key, file_path, colorizable_files, xonsh_builtins_LS_COLORS
-):
+def test_colorize_file_symlink(key, file_path, colorizable_files, xs_LS_COLORS):
     """test proper file codes with symlinks colored target."""
-    xonsh_builtins_LS_COLORS.__xonsh__.env["LS_COLORS"]["ln"] = "target"
+    xs_LS_COLORS.env["LS_COLORS"]["ln"] = "target"
     ffp = colorizable_files + "/" + file_path + "_symlink"
     stat_result = os.lstat(ffp)
     assert stat.S_ISLNK(stat_result.st_mode)
@@ -325,7 +321,7 @@ def test_colorize_file_symlink(
 import xonsh.lazyimps
 
 
-def test_colorize_file_ca(xonsh_builtins_LS_COLORS, monkeypatch):
+def test_colorize_file_ca(xs_LS_COLORS, monkeypatch):
     def mock_os_listxattr(*args, **kwards):
         return ["security.capability"]
 

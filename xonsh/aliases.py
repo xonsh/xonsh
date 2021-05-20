@@ -5,9 +5,9 @@ import re
 import sys
 import inspect
 import argparse
-import builtins
 import collections.abc as cabc
 
+from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary, make_args_env
@@ -34,6 +34,7 @@ from xonsh.tools import (
     ALIAS_KWARG_NAMES,
     unthreadable,
     print_color,
+    to_repr_pretty_,
 )
 from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
@@ -93,7 +94,7 @@ class Aliases(cabc.MutableMapping):
         if callable(value):
             return partial_eval_alias(value, acc_args=acc_args)
         else:
-            expand_path = builtins.__xonsh__.expand_path
+            expand_path = XSH.expand_path
             token, *rest = map(expand_path, value)
             if token in seen_tokens or token not in self._raw:
                 # ^ Making sure things like `egrep=egrep --color=auto` works,
@@ -114,7 +115,7 @@ class Aliases(cabc.MutableMapping):
         The command won't be expanded if the cursor's inside/behind it.
         """
         word = (line.split(maxsplit=1) or [""])[0]
-        if word in builtins.aliases and isinstance(self.get(word), cabc.Sequence):  # type: ignore
+        if word in XSH.aliases and isinstance(self.get(word), cabc.Sequence):  # type: ignore
             word_idx = line.find(word)
             word_edge = word_idx + len(word)
             if cursor_index > word_edge:
@@ -138,7 +139,7 @@ class Aliases(cabc.MutableMapping):
                 self._raw[key] = ExecAlias(val, filename=f)
             elif isexpression(val):
                 # expansion substitution
-                lexer = builtins.__xonsh__.execer.parser.lexer
+                lexer = XSH.execer.parser.lexer
                 self._raw[key] = list(map(strip_simple_quotes, lexer.split(val)))
             else:
                 # need to exec alias
@@ -184,14 +185,7 @@ class Aliases(cabc.MutableMapping):
             self.__class__.__module__, self.__class__.__name__, self._raw
         )
 
-    def _repr_pretty_(self, p, cycle):
-        name = "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
-        with p.group(0, name + "(", ")"):
-            if cycle:
-                p.text("...")
-            elif len(self):
-                p.break_()
-                p.pretty(dict(self))
+    _repr_pretty_ = to_repr_pretty_
 
 
 class ExecAlias:
@@ -210,14 +204,14 @@ class ExecAlias:
     def __call__(
         self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
-        execer = builtins.__xonsh__.execer
+        execer = XSH.execer
         frame = stack[0][0]  # execute as though we are at the call site
 
         alias_args = {"args": args}
         for i, a in enumerate(args):
             alias_args[f"arg{i}"] = a
 
-        with builtins.__xonsh__.env.swap(alias_args):
+        with XSH.env.swap(alias_args):
             execer.exec(
                 self.src,
                 glbs=frame.f_globals,
@@ -363,14 +357,14 @@ def xonsh_exit(args, stdin=None):
     if not clean_jobs():
         # Do not exit if jobs not cleaned up
         return None, None
-    builtins.__xonsh__.exit = True
+    XSH.exit = True
     print()  # gimme a newline
     return None, None
 
 
 def xonsh_reset(args, stdin=None):
-    """ Clears __xonsh__.ctx"""
-    builtins.__xonsh__.ctx.clear()
+    """Clears __xonsh__.ctx"""
+    XSH.ctx.clear()
 
 
 @lazyobject
@@ -502,7 +496,7 @@ def _SOURCE_FOREIGN_PARSER():
 
 def source_foreign(args, stdin=None, stdout=None, stderr=None):
     """Sources a file written in a foreign shell language."""
-    env = builtins.__xonsh__.env
+    env = XSH.env
     ns = _SOURCE_FOREIGN_PARSER.parse_args(args)
     ns.suppress_skip_message = (
         env.get("FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE")
@@ -553,7 +547,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
         if k not in fsenv:
             env.pop(k, None)
     # Update aliases
-    baliases = builtins.aliases
+    baliases = XSH.aliases
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
             continue  # no change from original
@@ -578,7 +572,7 @@ def source_alias(args, stdin=None):
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
     """
-    env = builtins.__xonsh__.env
+    env = XSH.env
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
     for i, fname in enumerate(args):
@@ -605,11 +599,11 @@ def source_alias(args, stdin=None):
             src = fp.read()
         if not src.endswith("\n"):
             src += "\n"
-        ctx = builtins.__xonsh__.ctx
+        ctx = XSH.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
         with env.swap(**make_args_env(args[i + 1 :])), swap_values(ctx, updates):
             try:
-                builtins.execx(src, "exec", ctx, filename=fpath)
+                XSH.builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
                 print_color(
                     "{RED}You may be attempting to source non-xonsh file! "
@@ -639,7 +633,7 @@ def source_cmd(args, stdin=None):
     args.append("--envcmd=set")
     args.append("--seterrpostcmd=if errorlevel 1 exit 1")
     args.append("--use-tmpfile=1")
-    with builtins.__xonsh__.env.swap(PROMPT="$P$G"):
+    with XSH.env.swap(PROMPT="$P$G"):
         return source_foreign(args, stdin=stdin)
 
 
@@ -660,7 +654,6 @@ def xexec(args, stdin=None):
     The '-c' option causes command to be executed with an empty environment.
     If '-a' is supplied, the shell passes name as the zeroth argument
     to the executed command.
-
 
     Notes
     -----
@@ -697,7 +690,7 @@ def xexec(args, stdin=None):
 
     denv = {}
     if not args.clean:
-        denv = builtins.__xonsh__.env.detype()
+        denv = XSH.env.detype()
 
     try:
         os.execvpe(command, args.command, denv)
@@ -755,8 +748,8 @@ def showcmd(args, stdin=None):
     optional arguments:
       -h, --help            show this help message and exit
 
-    Example:
-    -------
+    Examples
+    --------
       >>> showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """

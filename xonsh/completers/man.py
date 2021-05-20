@@ -1,12 +1,11 @@
 import os
 import re
 import pickle
-import builtins
 import subprocess
 import typing as tp
 
 from xonsh.parsers.completion_context import CommandContext
-
+from xonsh.built_ins import XSH
 import xonsh.lazyasd as xl
 
 from xonsh.completers.tools import get_filter_function, contextual_command_completer
@@ -33,7 +32,7 @@ def complete_from_man(context: CommandContext):
     """
     global OPTIONS, OPTIONS_PATH
     if OPTIONS is None:
-        datadir: str = builtins.__xonsh__.env["XONSH_DATA_DIR"]  # type: ignore
+        datadir: str = XSH.env["XONSH_DATA_DIR"]  # type: ignore
         OPTIONS_PATH = os.path.join(datadir, "man_completions_cache")
         try:
             with open(OPTIONS_PATH, "rb") as f:

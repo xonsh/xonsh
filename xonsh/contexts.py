@@ -1,8 +1,9 @@
 """Context management tools for xonsh."""
 import sys
 import textwrap
-import builtins
 from collections.abc import Mapping
+
+from xonsh.built_ins import XSH
 
 
 class Block(object):
@@ -28,7 +29,9 @@ class Block(object):
 
     def __enter__(self):
         if not hasattr(self, "macro_block"):
-            raise XonshError(self.__class__.__name__ + " must be entered as a macro!")
+            raise XSH.builtins.XonshError(
+                self.__class__.__name__ + " must be entered as a macro!"
+            )
         self.lines = self.macro_block.splitlines()
         self.glbs = self.macro_globals
         if self.macro_locals is not self.macro_globals:
@@ -93,7 +96,7 @@ class Functor(Block):
         fstr = fstr.format(name=name, sig=sig, body=body, rtn=rtn)
         glbs = self.glbs
         locs = self.locs
-        execer = builtins.__xonsh__.execer
+        execer = XSH.execer
         execer.exec(fstr, glbs=glbs, locs=locs)
         if locs is not None and name in locs:
             func = locs[name]

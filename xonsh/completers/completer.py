@@ -1,15 +1,8 @@
-import builtins
 import collections
 from xonsh.parsers.completion_context import CommandContext
 
+from xonsh.built_ins import XSH
 from xonsh.completers.tools import contextual_command_completer_for, justify
-import xonsh.lazyasd as xla
-
-
-@xla.lazyobject
-def xsh_session():
-    """return current xonshSession instance."""
-    return builtins.__xonsh__  # type: ignore
 
 
 @contextual_command_completer_for("completer")
@@ -24,7 +17,7 @@ def complete_completer(command: CommandContext):
 
     curix = command.arg_index
 
-    compnames = set(xsh_session.completers.keys())
+    compnames = set(XSH.completers.keys())
     if curix == 1:
         possible = {"list", "help", "add", "remove"}
     elif curix == 2:
@@ -39,7 +32,7 @@ def complete_completer(command: CommandContext):
         if command.args[1].value != "add":
             raise StopIteration
         if curix == 3:
-            possible = {i for i, j in xsh_session.ctx.items() if callable(j)}
+            possible = {i for i, j in XSH.ctx.items() if callable(j)}
         elif curix == 4:
             possible = (
                 {"start", "end"}
@@ -55,16 +48,16 @@ def add_one_completer(name, func, loc="end"):
     new = collections.OrderedDict()
     if loc == "start":
         new[name] = func
-        for (k, v) in xsh_session.completers.items():
+        for (k, v) in XSH.completers.items():
             new[k] = v
     elif loc == "end":
-        for (k, v) in xsh_session.completers.items():
+        for (k, v) in XSH.completers.items():
             new[k] = v
         new[name] = func
     else:
         direction, rel = loc[0], loc[1:]
         found = False
-        for (k, v) in xsh_session.completers.items():
+        for (k, v) in XSH.completers.items():
             if rel == k and direction == "<":
                 new[name] = func
                 found = True
@@ -74,14 +67,14 @@ def add_one_completer(name, func, loc="end"):
                 found = True
         if not found:
             new[name] = func
-    xsh_session.completers.clear()
-    xsh_session.completers.update(new)
+    XSH.completers.clear()
+    XSH.completers.update(new)
 
 
 def list_completers():
     """List the active completers"""
     o = "Registered Completer Functions: \n"
-    _comp = xsh_session.completers
+    _comp = XSH.completers
     ml = max((len(i) for i in _comp), default=0)
     _strs = []
     for c in _comp:
@@ -104,10 +97,10 @@ def remove_completer(name: str):
         completers in order)
     """
     err = None
-    if name not in xsh_session.completers:
+    if name not in XSH.completers:
         err = f"The name {name} is not a registered completer function."
     if err is None:
-        del xsh_session.completers[name]
+        del XSH.completers[name]
         return
     else:
         return None, err + "\n", 1

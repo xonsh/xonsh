@@ -3,7 +3,6 @@
 
 This module registers the hooks it defines when it is imported.
 """
-import builtins
 import contextlib
 import importlib
 import os
@@ -13,6 +12,7 @@ import types
 from importlib.abc import MetaPathFinder, SourceLoader, Loader
 from importlib.machinery import ModuleSpec
 
+from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lazyasd import lazyobject
@@ -57,12 +57,8 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     @property
     def execer(self):
-        if (
-            hasattr(builtins, "__xonsh__")
-            and hasattr(builtins.__xonsh__, "execer")
-            and builtins.__xonsh__.execer is not None
-        ):
-            execer = builtins.__xonsh__.execer
+        if XSH.execer is not None:
+            execer = XSH.execer
             if self._execer is not None:
                 self._execer = None
         elif self._execer is None:

@@ -27,22 +27,17 @@ from xonsh.environ import Env, Var, Xettings
 
 if tp.TYPE_CHECKING:
     from xonsh.environ import VarKeyType
+from xonsh.built_ins import XSH
 from xonsh.xontribs_meta import get_xontribs
 from xonsh.commands_cache import CommandsCache
 
 import rst_helpers
 
-if not hasattr(builtins, "__xonsh__"):
-    from argparse import Namespace
-
-    builtins.__xonsh__ = Namespace()
-    builtins.__xonsh__.load = lambda *a, **kw: None
-    builtins.__xonsh__.link_builtins = lambda *a, **kw: None
 
 spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
     # hacky runaround to import PTK-specific events
-    builtins.__xonsh__.env = Env()
+    XSH.env = Env()
     from xonsh.ptk_shell.shell import events
 else:
     from xonsh.events import events
@@ -452,9 +447,9 @@ def make_events():
 make_xontribs()
 make_events()
 
-builtins.__xonsh__.history = None
-builtins.__xonsh__.env = {}
-builtins.__xonsh__.commands_cache = CommandsCache()
+XSH.history = None
+XSH.env = {}
+XSH.commands_cache = CommandsCache()
 
 
 def setup(app):

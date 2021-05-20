@@ -3,7 +3,6 @@
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
 import sys
-import builtins
 from ast import (
     Module,
     Num,
@@ -109,6 +108,7 @@ from ast import Ellipsis as EllipsisNode
 import textwrap
 import itertools
 
+from xonsh.built_ins import XSH
 from xonsh.tools import subproc_toks, find_next_break, get_logical_line
 
 from ast import (
@@ -167,8 +167,10 @@ def leftmostname(node):
         rtn = leftmostname(node.operand)
     elif isinstance(node, BoolOp):
         rtn = leftmostname(node.values[0])
-    elif isinstance(node, (Assign, AnnAssign)):
+    elif isinstance(node, Assign):
         rtn = leftmostname(node.targets[0])
+    elif isinstance(node, AnnAssign):
+        rtn = leftmostname(node.target)
     elif isinstance(node, (Str, Bytes, JoinedStr)):
         # handles case of "./my executable"
         rtn = leftmostname(node.s)
@@ -312,8 +314,8 @@ def isexpression(node, ctx=None, *args, **kwargs):
     # parse string to AST
     if isinstance(node, str):
         node = node if node.endswith("\n") else node + "\n"
-        ctx = builtins.__xonsh__.ctx if ctx is None else ctx
-        node = builtins.__xonsh__.execer.parse(node, ctx, *args, **kwargs)
+        ctx = XSH.ctx if ctx is None else ctx
+        node = XSH.execer.parse(node, ctx, *args, **kwargs)
     # determin if expresission-like enough
     if isinstance(node, (Expr, Expression)):
         isexpr = True
@@ -354,7 +356,7 @@ class CtxAwareTransformer(NodeTransformer):
         ----------
         node : ast.AST
             A syntax tree to transform.
-        input : str
+        inp : str
             The input code in string format.
         ctx : dict
             The root context to use.
@@ -541,7 +543,10 @@ class CtxAwareTransformer(NodeTransformer):
         self.ctxupdate(ups)
         return node
 
-    visit_AnnAssign = visit_Assign
+    def visit_AnnAssign(self, node):
+        """Handle visiting an annotated assignment statement."""
+        self.ctxadd(leftmostname(node.target))
+        return node
 
     def visit_Import(self, node):
         """Handle visiting a import statement."""

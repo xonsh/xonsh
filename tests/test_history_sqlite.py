@@ -19,9 +19,9 @@ def hist():
     os.remove(h.filename)
 
 
-def test_hist_append(hist, xonsh_builtins):
+def test_hist_append(hist, xession):
     """Verify appending to the history works."""
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+    xession.env["HISTCONTROL"] = set()
     hf = hist.append({"inp": "still alive", "rtn": 1})
     assert hf is None
     items = list(hist.items())
@@ -36,8 +36,8 @@ def test_hist_append(hist, xonsh_builtins):
     assert list(hist.all_items()) == items
 
 
-def test_hist_attrs(hist, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+def test_hist_attrs(hist, xession):
+    xession.env["HISTCONTROL"] = set()
     hf = hist.append({"inp": "ls foo", "rtn": 1})
     assert hf is None
     assert "ls foo" == hist.inps[0]
@@ -73,11 +73,11 @@ CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
         ("-4:-2", CMDS[-4:-2], (len(CMDS) - 4, 1)),
     ],
 )
-def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
+def test_show_cmd_numerate(inp, commands, offset, hist, xession, capsys):
     """Verify that CLI history commands work."""
     base_idx, step = offset
-    xonsh_builtins.__xonsh__.history = hist
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+    xession.history = hist
+    xession.env["HISTCONTROL"] = set()
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
@@ -92,11 +92,11 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
     assert out.rstrip() == exp
 
 
-def test_histcontrol(hist, xonsh_builtins):
+def test_histcontrol(hist, xession):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
 
     ignore_opts = ",".join(["ignoredups", "ignoreerr", "ignorespace"])
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = ignore_opts
+    xession.env["HISTCONTROL"] = ignore_opts
     assert len(hist) == 0
 
     # An error, items() remains empty
@@ -186,10 +186,10 @@ def test_histcontrol(hist, xonsh_builtins):
     assert 0 == hist.rtns[-1]
 
 
-def test_histcontrol_erase_dup(hist, xonsh_builtins):
+def test_histcontrol_erase_dup(hist, xession):
     """Test HISTCONTROL=erasedups"""
 
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = "erasedups"
+    xession.env["HISTCONTROL"] = "erasedups"
     assert len(hist) == 0
 
     hist.append({"inp": "ls foo", "rtn": 2})
@@ -218,9 +218,9 @@ def test_histcontrol_erase_dup(hist, xonsh_builtins):
         ),
     ],
 )
-def test_history_getitem(index, exp, hist, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
-    xonsh_builtins.__xonsh__.env["XONSH_STORE_STDOUT"] = True
+def test_history_getitem(index, exp, hist, xession):
+    xession.env["HISTCONTROL"] = set()
+    xession.env["XONSH_STORE_STDOUT"] = True
     attrs = ("inp", "out", "rtn", "ts")
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
@@ -234,63 +234,74 @@ def test_history_getitem(index, exp, hist, xonsh_builtins):
         assert (entry.cmd, entry.out, entry.rtn, entry.ts) == exp
 
 
-def test_hist_clear_cmd(hist, xonsh_builtins, capsys, tmpdir):
+def test_hist_clear_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history clear command works."""
-    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tmpdir)})
-    xonsh_builtins.__xonsh__.history = hist
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+    xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xession.history = hist
+    xession.env["HISTCONTROL"] = set()
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
-    assert len(xonsh_builtins.__xonsh__.history) == 6
+    assert len(xession.history) == 6
 
     history_main(["clear"])
 
     out, err = capsys.readouterr()
     assert err.rstrip() == "History cleared"
-    assert len(xonsh_builtins.__xonsh__.history) == 0
+    assert len(xession.history) == 0
 
 
-def test_hist_off_cmd(hist, xonsh_builtins, capsys, tmpdir):
+def test_hist_off_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history off command works."""
-    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tmpdir)})
-    xonsh_builtins.__xonsh__.history = hist
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+    xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xession.history = hist
+    xession.env["HISTCONTROL"] = set()
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
-    assert len(xonsh_builtins.__xonsh__.history) == 6
+    assert len(xession.history) == 6
 
     history_main(["off"])
 
     out, err = capsys.readouterr()
     assert err.rstrip() == "History off"
-    assert len(xonsh_builtins.__xonsh__.history) == 0
+    assert len(xession.history) == 0
 
     for ts, cmd in enumerate(CMDS):  # attempt to populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
-    assert len(xonsh_builtins.__xonsh__.history) == 0
+    assert len(xession.history) == 0
 
 
-def test_hist_on_cmd(hist, xonsh_builtins, capsys, tmpdir):
+def test_hist_on_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history on command works."""
-    xonsh_builtins.__xonsh__.env.update({"XONSH_DATA_DIR": str(tmpdir)})
-    xonsh_builtins.__xonsh__.history = hist
-    xonsh_builtins.__xonsh__.env["HISTCONTROL"] = set()
+    xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xession.history = hist
+    xession.env["HISTCONTROL"] = set()
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
-    assert len(xonsh_builtins.__xonsh__.history) == 6
+    assert len(xession.history) == 6
 
     history_main(["off"])
     history_main(["on"])
 
     out, err = capsys.readouterr()
     assert err.rstrip().endswith("History on")
-    assert len(xonsh_builtins.__xonsh__.history) == 0
+    assert len(xession.history) == 0
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
-    assert len(xonsh_builtins.__xonsh__.history) == 6
+    assert len(xession.history) == 6
+
+
+def test_hist_store_cwd(hist, xession):
+    hist.save_cwd = True
+    hist.append({"inp": "# saving with cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
+    hist.save_cwd = False
+    hist.append({"inp": "# saving without cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
+
+    cmds = [i for i in hist.all_items()]
+    assert cmds[0]["cwd"] == "/tmp"
+    assert cmds[1]["cwd"] is None

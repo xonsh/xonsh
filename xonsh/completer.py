@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
-import builtins
 import typing as tp
 import collections.abc as cabc
 
-from xonsh.completers.tools import is_contextual_completer, Completion, RichCompletion
+from xonsh.completers.tools import (
+    is_contextual_completer,
+    Completion,
+    RichCompletion,
+    apply_lprefix,
+    is_exclusive_completer,
+)
+from xonsh.built_ins import XSH
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_exception
 
@@ -66,23 +72,34 @@ class Completer(object):
             completion_context = None
 
         ctx = ctx or {}
-        for func in builtins.__xonsh__.completers.values():
+        return self.complete_from_context(
+            completion_context,
+            (prefix, line, begidx, endidx, ctx),
+        )
+
+    def complete_from_context(self, completion_context, old_completer_args=None):
+        lprefix = 0
+        completions = set()
+        for func in XSH.completers.values():
             try:
                 if is_contextual_completer(func):
                     if completion_context is None:
                         continue
                     out = func(completion_context)
                 else:
-                    out = func(prefix, line, begidx, endidx, ctx)
+                    if old_completer_args is None:
+                        continue
+                    out = func(*old_completer_args)
             except StopIteration:
-                return set(), len(prefix)
+                # completer requested to stop collecting completions
+                break
             except Exception as e:
                 print_exception(
-                    f"Completer {func.__name__} raises exception when get "
-                    f"(prefix={repr(prefix)}, line={repr(line)}, begidx={repr(begidx)}, endidx={repr(endidx)}):\n"
+                    f"Completer {func.__name__} raises exception when gets "
+                    f"old_args={old_completer_args[:-1]} / completion_context={completion_context!r}:\n"
                     f"{e}"
                 )
-                return set(), len(prefix)
+                continue
 
             completing_contextual_command = (
                 is_contextual_completer(func)
@@ -97,48 +114,61 @@ class Completer(object):
                 custom_lprefix = False
                 if completing_contextual_command:
                     lprefix = len(completion_context.command.prefix)
+                elif old_completer_args is not None:
+                    lprefix = len(old_completer_args[0])
                 else:
-                    lprefix = len(prefix)
+                    lprefix = 0
 
-            if res is not None and len(res) != 0:
-                if (
-                    completing_contextual_command
-                    and completion_context.command.is_after_closing_quote
-                ):
-                    """
-                    The cursor is appending to a closed string literal, i.e. cursor at the end of ``ls "/usr/"``.
-                    1. The closing quote will be appended to all completions.
-                       I.e the completion ``/usr/bin`` will turn into ``/usr/bin"``
-                       To prevent this behavior, a completer can return a ``RichCompletion`` with ``append_closing_quote=False``.
-                    2. If not specified, lprefix will cover the closing prefix.
-                       I.e for ``ls "/usr/"``, the default lprefix will be 6 to include the closing quote.
-                       To prevent this behavior, a completer can return a different lprefix or specify it inside ``RichCompletion``.
-                    """
-                    closing_quote = completion_context.command.closing_quote
-                    if not custom_lprefix:
-                        lprefix += len(closing_quote)
+            if res is None or len(res) == 0:
+                continue
 
-                    def append_closing_quote(completion: Completion):
-                        if isinstance(completion, RichCompletion):
-                            if completion.append_closing_quote:
-                                return completion.replace(
-                                    value=completion.value + closing_quote
-                                )
-                            return completion
-                        return completion + closing_quote
+            if (
+                completing_contextual_command
+                and completion_context.command.is_after_closing_quote
+            ):
+                """
+                The cursor is appending to a closed string literal, i.e. cursor at the end of ``ls "/usr/"``.
+                1. The closing quote will be appended to all completions.
+                    I.e the completion ``/usr/bin`` will turn into ``/usr/bin"``
+                    To prevent this behavior, a completer can return a ``RichCompletion`` with ``append_closing_quote=False``.
+                2. If not specified, lprefix will cover the closing prefix.
+                    I.e for ``ls "/usr/"``, the default lprefix will be 6 to include the closing quote.
+                    To prevent this behavior, a completer can return a different lprefix or specify it inside ``RichCompletion``.
+                """
+                closing_quote = completion_context.command.closing_quote
+                if not custom_lprefix:
+                    lprefix += len(closing_quote)
 
-                    res = map(append_closing_quote, res)
+                def append_closing_quote(completion: Completion):
+                    if isinstance(completion, RichCompletion):
+                        if completion.append_closing_quote:
+                            return completion.replace(
+                                value=completion.value + closing_quote
+                            )
+                        return completion
+                    return completion + closing_quote
 
-                # append spaces AFTER appending closing quote
-                def append_space(comp: Completion):
-                    if isinstance(comp, RichCompletion) and comp.append_space:
-                        return comp.replace(value=comp.value + " ")
-                    return comp
+                res = map(append_closing_quote, res)
 
-                res = map(append_space, res)
+            completions.update(apply_lprefix(res, lprefix))
+            if is_exclusive_completer(func):
+                # we got completions for an exclusive completer
+                break
 
-                def sortkey(s):
-                    return s.lstrip(''''"''').lower()
+        # append spaces AFTER appending closing quote
+        def append_space(comp: Completion):
+            if (
+                isinstance(comp, RichCompletion)
+                and comp.append_space
+                and not comp.value.endswith(" ")
+            ):
+                return comp.replace(value=comp.value + " ")
+            return comp
 
-                return tuple(sorted(res, key=sortkey)), lprefix
-        return set(), lprefix
+        completions = map(append_space, completions)
+
+        def sortkey(s):
+            return s.lstrip(''''"''').lower()
+
+        # the last completer's lprefix is returned. other lprefix values are inside the RichCompletions.
+        return tuple(sorted(completions, key=sortkey)), lprefix

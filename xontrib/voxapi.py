@@ -12,11 +12,10 @@ import os
 import sys
 import shutil
 import logging
-import builtins
 import collections.abc
 import subprocess as sp
 
-
+from xonsh.built_ins import XSH
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 
 
@@ -123,12 +122,12 @@ class Vox(collections.abc.Mapping):
     """
 
     def __init__(self):
-        if not builtins.__xonsh__.env.get("VIRTUALENV_HOME"):
+        if not XSH.env.get("VIRTUALENV_HOME"):
             home_path = os.path.expanduser("~")
             self.venvdir = os.path.join(home_path, ".virtualenvs")
-            builtins.__xonsh__.env["VIRTUALENV_HOME"] = self.venvdir
+            XSH.env["VIRTUALENV_HOME"] = self.venvdir
         else:
-            self.venvdir = builtins.__xonsh__.env["VIRTUALENV_HOME"]
+            self.venvdir = XSH.env["VIRTUALENV_HOME"]
 
     def create(
         self,
@@ -272,7 +271,7 @@ class Vox(collections.abc.Mapping):
             the current one (throws a KeyError if there isn't one).
         """
         if name is ...:
-            env = builtins.__xonsh__.env
+            env = XSH.env
             env_paths = [env["VIRTUAL_ENV"]]
         elif isinstance(name, os.PathLike):
             env_paths = [os.fspath(name)]
@@ -331,7 +330,7 @@ class Vox(collections.abc.Mapping):
 
         Returns None if no environment is active.
         """
-        env = builtins.__xonsh__.env
+        env = XSH.env
         if "VIRTUAL_ENV" not in env:
             return
         env_path = env["VIRTUAL_ENV"]
@@ -352,7 +351,7 @@ class Vox(collections.abc.Mapping):
         name : str
             Virtual environment name or absolute path.
         """
-        env = builtins.__xonsh__.env
+        env = XSH.env
         ve = self[name]
         if "VIRTUAL_ENV" in env:
             self.deactivate()
@@ -369,7 +368,7 @@ class Vox(collections.abc.Mapping):
         """
         Deactivate the active virtual environment. Returns its name.
         """
-        env = builtins.__xonsh__.env
+        env = XSH.env
         if "VIRTUAL_ENV" not in env:
             raise NoEnvironmentActive("No environment currently active.")
 
@@ -410,4 +409,4 @@ class Vox(collections.abc.Mapping):
 
 def _get_vox_default_interpreter():
     """Return the interpreter set by the $VOX_DEFAULT_INTERPRETER if set else sys.executable"""
-    return builtins.__xonsh__.env.get("VOX_DEFAULT_INTERPRETER", sys.executable)
+    return XSH.env.get("VOX_DEFAULT_INTERPRETER", sys.executable)

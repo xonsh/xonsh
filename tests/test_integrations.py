@@ -472,13 +472,53 @@ a
     ),
 ]
 
+UNIX_TESTS = [
+    # testing alias stack: lambda function
+    (
+        """
+def _echo():
+    echo hello
+
+aliases['echo'] = _echo
+echo
+""",
+        "hello\n",
+        0,
+    ),
+    # testing alias stack: ExecAlias
+    (
+        """
+aliases['echo'] = "echo @('hello')"
+echo
+""",
+        "hello\n",
+        0,
+    ),
+    # testing alias stack: callable alias (ExecAlias) + no binary location + infinite loop
+    (
+        """
+aliases['first'] = "second @(1)"
+aliases['second'] = "first @(1)"
+first
+""",
+        lambda out: 'Recursive calls to "first" alias.' in out,
+        0,
+    ),
+]
+
+if not ON_WINDOWS:
+    ALL_PLATFORMS = tuple(ALL_PLATFORMS) + tuple(UNIX_TESTS)
+
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 def test_script(case):
     script, exp_out, exp_rtn = case
     out, err, rtn = run_xonsh(script)
-    assert exp_out == out
+    if callable(exp_out):
+        assert exp_out(out)
+    else:
+        assert exp_out == out
     assert exp_rtn == rtn
 
 
@@ -515,7 +555,11 @@ def test_script_stderr(case):
         ("pwd", None, lambda: os.getcwd() + "\n"),
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
-        ("$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'", None, "foo2",),
+        (
+            "$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'",
+            None,
+            "foo2",
+        ),
     ],
 )
 def test_single_command_no_windows(cmd, fmt, exp):
@@ -643,7 +687,9 @@ def test_xonsh_no_close_fds():
 @skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
-    [("cat tttt | wc", lambda x: x > "", True),],  # noqa E231 (black removes space)
+    [
+        ("cat tttt | wc", lambda x: x > "", True),
+    ],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
     "verify pipe between subprocesses doesn't throw an exception"

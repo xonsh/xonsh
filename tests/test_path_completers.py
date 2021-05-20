@@ -5,7 +5,7 @@ import xonsh.completers.path as xcp
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xonsh_builtins, xonsh_execer):
+def xonsh_execer_autouse(xession, xonsh_execer):
     return xonsh_execer
 
 
@@ -14,8 +14,8 @@ def test_pattern_need_quotes():
     xcp.PATTERN_NEED_QUOTES.match("")
 
 
-def test_complete_path(xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = {
+def test_complete_path(xession, completion_context_parse):
+    xession.env = {
         "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
@@ -23,12 +23,12 @@ def test_complete_path(xonsh_builtins):
         "SUGGEST_THRESHOLD": 3,
         "CDPATH": set(),
     }
-    xcp.complete_path("[1-0.1]", "[1-0.1]", 0, 7, dict())
+    xcp.complete_path(completion_context_parse("[1-0.1]", 7))
 
 
 @patch("xonsh.completers.path._add_cdpaths")
-def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = {
+def test_cd_path_no_cd(mock_add_cdpaths, xession, completion_context_parse):
+    xession.env = {
         "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
@@ -36,13 +36,15 @@ def test_cd_path_no_cd(mock_add_cdpaths, xonsh_builtins):
         "SUGGEST_THRESHOLD": 3,
         "CDPATH": ["/"],
     }
-    xcp.complete_path("a", "cat a", 4, 5, dict())
+    xcp.complete_path(completion_context_parse("cat a", 5))
     mock_add_cdpaths.assert_not_called()
 
 
 @pytest.mark.parametrize("quote", ('"', "'"))
-def test_complete_path_when_prefix_is_raw_path_string(quote, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = {
+def test_complete_path_when_prefix_is_raw_path_string(
+    quote, xession, completion_context_parse
+):
+    xession.env = {
         "CASE_SENSITIVE_COMPLETIONS": True,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
@@ -54,7 +56,7 @@ def test_complete_path_when_prefix_is_raw_path_string(quote, xonsh_builtins):
         prefix_file_name = tmp.name.replace("_dummySuffix", "")
         prefix = f"pr{quote}{prefix_file_name}"
         line = f"ls {prefix}"
-        out = xcp.complete_path(prefix, line, line.find(prefix), len(line), dict())
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
         expected = f"pr{quote}{tmp.name}{quote}"
         assert expected == out[0].pop()
 
