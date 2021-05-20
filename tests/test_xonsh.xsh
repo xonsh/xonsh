@@ -1,6 +1,3 @@
-import builtins
-
-
 def test_simple():
   assert 1 + 1 == 2
 
@@ -13,12 +10,13 @@ def test_envionment():
 
 
 def test_xonsh_party():
-  orig = builtins.__xonsh__.env.get('XONSH_INTERACTIVE')
-  builtins.__xonsh__.env['XONSH_INTERACTIVE'] = False
+  from xonsh.built_ins import XSH
+  orig = XSH.env.get('XONSH_INTERACTIVE')
+  XSH.env['XONSH_INTERACTIVE'] = False
   try:
       x = 'xonsh'
       y = 'party'
       out = $(echo @(x + '-' + y)).strip()
       assert out == 'xonsh-party', 'Out really was <' + out + '>, sorry.'
   finally:
-      builtins.__xonsh__.env['XONSH_INTERACTIVE'] = orig
+      XSH.env['XONSH_INTERACTIVE'] = orig

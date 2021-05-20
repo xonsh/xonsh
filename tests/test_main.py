@@ -20,59 +20,55 @@ def Shell(*args, **kwargs):
 
 
 @pytest.fixture
-def shell(xonsh_builtins, monkeypatch):
+def shell(xession, monkeypatch):
     """Xonsh Shell Mock"""
-    if hasattr(builtins, "__xonsh__"):
-        builtins.__xonsh__.unlink_builtins()
-        del builtins.__xonsh__
-    for xarg in dir(builtins):
-        if "__xonsh_" in xarg:
-            delattr(builtins, xarg)
     gc.collect()
     Shell.shell_type_aliases = {"rl": "readline"}
     monkeypatch.setattr(xonsh.main, "Shell", Shell)
 
 
-def test_premain_no_arg(shell, monkeypatch):
+def test_premain_no_arg(shell, monkeypatch, xession):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     xonsh.main.premain([])
-    assert builtins.__xonsh__.env.get("XONSH_LOGIN")
+    assert xession.env.get("XONSH_LOGIN")
 
 
-def test_premain_interactive(shell):
+def test_premain_interactive(shell, xession):
     xonsh.main.premain(["-i"])
-    assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
+    assert xession.env.get("XONSH_INTERACTIVE")
 
 
-def test_premain_login_command(shell):
+def test_premain_login_command(shell, xession):
     xonsh.main.premain(["-l", "-c", 'echo "hi"'])
-    assert builtins.__xonsh__.env.get("XONSH_LOGIN")
+    assert xession.env.get("XONSH_LOGIN")
 
 
-def test_premain_login(shell):
+def test_premain_login(shell, xession):
     xonsh.main.premain(["-l"])
-    assert builtins.__xonsh__.env.get("XONSH_LOGIN")
+    assert xession.env.get("XONSH_LOGIN")
 
 
-def test_premain_D(shell):
+def test_premain_D(shell, xession):
     xonsh.main.premain(["-DTEST1=1616", "-DTEST2=LOL"])
-    assert builtins.__xonsh__.env.get("TEST1") == "1616"
-    assert builtins.__xonsh__.env.get("TEST2") == "LOL"
+    assert xession.env.get("TEST1") == "1616"
+    assert xession.env.get("TEST2") == "LOL"
 
 
-def test_premain_custom_rc(shell, tmpdir, monkeypatch):
+def test_premain_custom_rc(shell, tmpdir, monkeypatch, xession):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["--rc", f.strpath])
     assert args.mode == XonshMode.interactive
-    assert f.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert f.strpath in xession.env.get("XONSHRC")
+
 
 @pytest.mark.skipif(
-    ON_WINDOWS and sys.version[:3] == "3.8", reason="weird failure on py38+windows",
-)    
-def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
+    ON_WINDOWS and sys.version[:3] == "3.8",
+    reason="weird failure on py38+windows",
+)
+def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys, xession):
     """Test that an RC file can load modules inside the same folder it is located in."""
 
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
@@ -84,11 +80,9 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys):
     rc.write("from my_python_module import *\nfrom my_xonsh_module import *")
     xonsh.main.premain(["--rc", rc.strpath])
 
-    assert rc.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert rc.strpath in xession.env.get("XONSHRC")
     assert (
-        builtins.__xonsh__.env.get("LOADED_RC_FILES")[
-            builtins.__xonsh__.env.get("XONSHRC").index(rc.strpath)
-        ]
+        xession.env.get("LOADED_RC_FILES")[xession.env.get("XONSHRC").index(rc.strpath)]
         is True
     )
 
@@ -130,7 +124,10 @@ def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
 
     rcdir = tmpdir.join("rc.d")
     rcdir.mkdir()
+    rc = tmpdir.join("rc.xsh")
+    rc.write_binary(b"")
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSHRC", str(rc))
     monkeypatch.setitem(os.environ, "XONSHRC_DIR", str(rcdir))
 
     xonsh.main.premain([])
@@ -241,7 +238,7 @@ def test_script_startup(shell, tmpdir, monkeypatch, capsys, args, expected):
         assert xargs.file is not None
 
 
-def test_rcdir_ignored_with_rc(shell, tmpdir, monkeypatch, capsys):
+def test_rcdir_ignored_with_rc(shell, tmpdir, monkeypatch, capsys, xession):
     """Test that --rc suppresses loading XONSHRC_DIRs"""
 
     rcdir = tmpdir.join("rc.d")
@@ -255,11 +252,11 @@ def test_rcdir_ignored_with_rc(shell, tmpdir, monkeypatch, capsys):
     stdout, stderr = capsys.readouterr()
     assert "RCDIR" not in stdout
     assert "RCFILE" in stdout
-    assert not builtins.__xonsh__.env.get("XONSHRC_DIR")
+    assert not xession.env.get("XONSHRC_DIR")
 
 
 @pytest.mark.skipif(ON_WINDOWS, reason="See https://github.com/xonsh/xonsh/issues/3936")
-def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
+def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys, xession):
     """Test that an RC file can edit the sys.path variable without losing those values."""
 
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
@@ -269,11 +266,9 @@ def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
     rc.write(f"import sys\nsys.path.append('{tmpdir.strpath}')\nprint('Hello, World!')")
     xonsh.main.premain(["--rc", rc.strpath])
 
-    assert rc.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert rc.strpath in xession.env.get("XONSHRC")
     assert (
-        builtins.__xonsh__.env.get("LOADED_RC_FILES")[
-            builtins.__xonsh__.env.get("XONSHRC").index(rc.strpath)
-        ]
+        xession.env.get("LOADED_RC_FILES")[xession.env.get("XONSHRC").index(rc.strpath)]
         is True
     )
 
@@ -285,7 +280,7 @@ def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys):
     assert tmpdir.strpath in sys.path
 
 
-def test_rc_with_failing_module(shell, tmpdir, monkeypatch, capsys):
+def test_rc_with_failing_module(shell, tmpdir, monkeypatch, capsys, xession):
     """Test that an RC file which imports a module that throws an exception ."""
 
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
@@ -296,11 +291,9 @@ def test_rc_with_failing_module(shell, tmpdir, monkeypatch, capsys):
     rc.write("from my_failing_module import *")
     xonsh.main.premain(["--rc", rc.strpath])
 
-    assert rc.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert rc.strpath in xession.env.get("XONSHRC")
     assert (
-        builtins.__xonsh__.env.get("LOADED_RC_FILES")[
-            builtins.__xonsh__.env.get("XONSHRC").index(rc.strpath)
-        ]
+        xession.env.get("LOADED_RC_FILES")[xession.env.get("XONSHRC").index(rc.strpath)]
         is False
     )
 
@@ -317,12 +310,12 @@ def test_no_rc_with_script(shell, tmpdir):
     assert not (args.mode == XonshMode.interactive)
 
 
-def test_force_interactive_rc_with_script(shell, tmpdir):
+def test_force_interactive_rc_with_script(shell, tmpdir, xession):
     xonsh.main.premain(["-i", "tests/sample.xsh"])
-    assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
+    assert xession.env.get("XONSH_INTERACTIVE")
 
 
-def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch):
+def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch, xession):
     """Calling a custom RC file on a script-call with the interactive flag
     should run interactively
     """
@@ -331,7 +324,7 @@ def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch):
     f.write("print('hi')")
     args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
     assert args.mode == XonshMode.interactive
-    assert f.strpath in builtins.__xonsh__.env.get("XONSHRC")
+    assert f.strpath in xession.env.get("XONSHRC")
 
 
 def test_custom_rc_with_script(shell, tmpdir):
@@ -344,23 +337,23 @@ def test_custom_rc_with_script(shell, tmpdir):
     assert not (args.mode == XonshMode.interactive)
 
 
-def test_premain_no_rc(shell, tmpdir):
+def test_premain_no_rc(shell, tmpdir, xession):
     xonsh.main.premain(["--no-rc", "-i"])
-    assert not builtins.__xonsh__.env.get("XONSHRC")
-    assert not builtins.__xonsh__.env.get("XONSHRC_DIR")
+    assert not xession.env.get("XONSHRC")
+    assert not xession.env.get("XONSHRC_DIR")
 
 
 @pytest.mark.parametrize(
     "arg", ["", "-i", "-vERSION", "-hAALP", "TTTT", "-TT", "--TTT"]
 )
-def test_premain_with_file_argument(arg, shell):
+def test_premain_with_file_argument(arg, shell, xession):
     xonsh.main.premain(["tests/sample.xsh", arg])
-    assert not (builtins.__xonsh__.env.get("XONSH_INTERACTIVE"))
+    assert not (xession.env.get("XONSH_INTERACTIVE"))
 
 
-def test_premain_interactive__with_file_argument(shell):
+def test_premain_interactive__with_file_argument(shell, xession):
     xonsh.main.premain(["-i", "tests/sample.xsh"])
-    assert builtins.__xonsh__.env.get("XONSH_INTERACTIVE")
+    assert xession.env.get("XONSH_INTERACTIVE")
 
 
 @pytest.mark.parametrize("case", ["----", "--hep", "-TT", "--TTTT"])

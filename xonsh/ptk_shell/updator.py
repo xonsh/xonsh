@@ -1,6 +1,5 @@
 """Has classes that help updating Prompt sections using Threads."""
 
-import builtins
 import concurrent.futures
 import threading
 import typing as tp
@@ -8,6 +7,7 @@ import typing as tp
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import PygmentsTokens
 
+from xonsh.built_ins import XSH
 from xonsh.prompt.base import ParsedTokens
 from xonsh.style_tools import partial_color_tokenize, style_as_faded
 
@@ -17,7 +17,7 @@ class Executor:
 
     def __init__(self):
         self.thread_pool = concurrent.futures.ThreadPoolExecutor(
-            max_workers=builtins.__xonsh__.env["ASYNC_PROMPT_THREAD_WORKERS"]
+            max_workers=XSH.env["ASYNC_PROMPT_THREAD_WORKERS"]
         )
 
         # the attribute, .cache is cleared between calls.
@@ -129,9 +129,7 @@ class AsyncPrompt:
             setattr(self.session, self.name, formatted_tokens)
             self.session.app.invalidate()
 
-        self.timer = threading.Timer(
-            builtins.__xonsh__.env["ASYNC_INVALIDATE_INTERVAL"], _invalidate
-        )
+        self.timer = threading.Timer(XSH.env["ASYNC_INVALIDATE_INTERVAL"], _invalidate)
         self.timer.start()
 
     def stop(self):

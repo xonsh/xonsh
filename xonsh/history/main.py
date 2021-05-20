@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Main entry points of the xonsh history."""
 import argparse
-import builtins
 import datetime
 import functools
 import json
@@ -9,6 +8,7 @@ import os
 import sys
 import threading
 
+from xonsh.built_ins import XSH
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
@@ -22,7 +22,7 @@ HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": Sqlite
 
 def construct_history(**kwargs):
     """Construct the history backend object."""
-    env = builtins.__xonsh__.env
+    env = XSH.env
     backend = env.get("XONSH_HISTORY_BACKEND")
     if isinstance(backend, str) and backend in HISTORY_BACKENDS:
         kls_history = HISTORY_BACKENDS[backend]
@@ -42,14 +42,14 @@ def construct_history(**kwargs):
 def _xh_session_parser(hist=None, newest_first=False, **kwargs):
     """Returns history items of current session."""
     if hist is None:
-        hist = builtins.__xonsh__.history
+        hist = XSH.history
     return hist.items()
 
 
 def _xh_all_parser(hist=None, newest_first=False, **kwargs):
     """Returns all history items."""
     if hist is None:
-        hist = builtins.__xonsh__.history
+        hist = XSH.history
     return hist.all_items(newest_first=newest_first)
 
 
@@ -356,7 +356,7 @@ def _xh_create_parser():
         help="makes the gc non-blocking, and thus return sooner",
     )
 
-    hist = builtins.__xonsh__.history
+    hist = XSH.history
     if isinstance(hist, JsonHistory):
         # add actions belong only to JsonHistory
         diff = subp.add_parser("diff", help="diff two xonsh history files")
@@ -408,7 +408,7 @@ def history_main(
     args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
 ):
     """This is the history command entry point."""
-    hist = builtins.__xonsh__.history
+    hist = XSH.history
     ns = _xh_parse_args(args)
     if not ns or not ns.action:
         return

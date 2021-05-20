@@ -7,10 +7,10 @@ from xonsh.base_shell import BaseShell
 from xonsh.shell import transform_command
 
 
-def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatch):
+def test_pwd_tracks_cwd(xession, xonsh_execer, tmpdir_factory, monkeypatch):
     asubdir = str(tmpdir_factory.mktemp("asubdir"))
     cur_wd = os.getcwd()
-    xonsh_builtins.__xonsh__.env = Env(
+    xession.env = Env(
         PWD=cur_wd, XONSH_CACHE_SCRIPTS=False, XONSH_CACHE_EVERYTHING=False
     )
 
@@ -22,17 +22,13 @@ def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatc
     bc.default('os.chdir(r"' + asubdir + '")')
 
     assert os.path.abspath(os.getcwd()) == os.path.abspath(asubdir)
-    assert os.path.abspath(os.getcwd()) == os.path.abspath(
-        xonsh_builtins.__xonsh__.env["PWD"]
-    )
-    assert "OLDPWD" in xonsh_builtins.__xonsh__.env
-    assert os.path.abspath(cur_wd) == os.path.abspath(
-        xonsh_builtins.__xonsh__.env["OLDPWD"]
-    )
+    assert os.path.abspath(os.getcwd()) == os.path.abspath(xession.env["PWD"])
+    assert "OLDPWD" in xession.env
+    assert os.path.abspath(cur_wd) == os.path.abspath(xession.env["OLDPWD"])
 
 
-def test_transform(xonsh_builtins):
-    @xonsh_builtins.events.on_transform_command
+def test_transform(xession):
+    @xession.builtins.events.on_transform_command
     def spam2egg(cmd, **_):
         if cmd == "spam":
             return "egg"

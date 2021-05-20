@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """date & time related prompt formatter"""
 import time
-import builtins
+
+from xonsh.built_ins import XSH
 
 
 def _localtime():
-    pf = builtins.__xonsh__.env.get("PROMPT_FIELDS", {})
+    pf = XSH.env.get("PROMPT_FIELDS", {})
     tf = pf.get("time_format", "%H:%M:%S")
     return time.strftime(tf, time.localtime())

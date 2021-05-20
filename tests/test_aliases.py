@@ -57,9 +57,9 @@ def test_eval_recursive(xonsh_execer, xonsh_builtins):
 
 
 @skip_if_on_windows
-def test_eval_recursive_callable_partial(xonsh_execer, xonsh_builtins):
+def test_eval_recursive_callable_partial(xonsh_execer, xession):
     ales = make_aliases()
-    xonsh_builtins.__xonsh__.env = Env(HOME=os.path.expanduser("~"))
+    xession.env = Env(HOME=os.path.expanduser("~"))
     assert ales.get("indirect_cd")(["arg2", "arg3"]) == ["..", "arg2", "arg3"]
 
 
@@ -151,44 +151,44 @@ def test_subprocess_io_operators(xonsh_execer, xonsh_builtins, alias):
 @pytest.mark.parametrize(
     "alias",
     [
-        {'echocat': 'ls'},
+        {"echocat": "ls"},
     ],
 )
 def test_dict_merging(xonsh_execer, xonsh_builtins, alias):
     ales = make_aliases()
-    assert (ales | alias)['echocat'] == ['ls']
-    assert (alias | ales)['echocat'] == ['ls']
-    assert 'echocat' not in ales
+    assert (ales | alias)["echocat"] == ["ls"]
+    assert (alias | ales)["echocat"] == ["ls"]
+    assert "echocat" not in ales
 
 
 @pytest.mark.parametrize(
     "alias",
     [
-        {'echocat': 'echo Why do people still use python2.7?'},
-        {'echocat': 'echo Why?'},
+        {"echocat": "echo Why do people still use python2.7?"},
+        {"echocat": "echo Why?"},
     ],
 )
 def test_dict_merging_assignment(xonsh_execer, xonsh_builtins, alias):
     ales = make_aliases()
     ales |= alias
 
-    assert 'echocat' in ales
-    assert ' '.join(ales['echocat']) == alias['echocat']
+    assert "echocat" in ales
+    assert " ".join(ales["echocat"]) == alias["echocat"]
 
     ales = make_aliases()
     alias |= ales
 
-    assert 'o' in alias
-    assert alias['o'] == ales['o']
+    assert "o" in alias
+    assert alias["o"] == ales["o"]
 
 
 def test_exec_alias_args(xonsh_execer, xonsh_builtins):
     stack = inspect.stack()
     try:
-        ExecAlias('myargs = $args')(['arg0'], stack=stack)
-        ExecAlias('myarg0 = $arg0')(['arg0'], stack=stack)
+        ExecAlias("myargs = $args")(["arg0"], stack=stack)
+        ExecAlias("myarg0 = $arg0")(["arg0"], stack=stack)
     except KeyError:
         assert False
 
-    assert stack[0][0].f_locals['myargs'] == ['arg0']
-    assert stack[0][0].f_locals['myarg0'] == 'arg0'
+    assert stack[0][0].f_locals["myargs"] == ["arg0"]
+    assert stack[0][0].f_locals["myarg0"] == "arg0"

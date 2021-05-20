@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh parser."""
 import ast
-import builtins
-import logging
 import textwrap
 import itertools
-import traceback
 
 import pytest
 
 from xonsh.ast import AST, With, Pass, Str, Call
+from xonsh.built_ins import XSH
 from xonsh.parser import Parser
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
@@ -45,7 +43,7 @@ def check_stmts(inp, run=True, mode="exec", debug_level=0):
 
 
 def check_xonsh_ast(xenv, inp, run=True, mode="eval", debug_level=0, return_obs=False):
-    builtins.__xonsh__.env = xenv
+    XSH.env = xenv
     obs = PARSER.parse(inp, debug_level=debug_level)
     if obs is None:
         return  # comment only
@@ -169,7 +167,7 @@ def test_fstring_adaptor(inp, exp):
     assert isinstance(joined_str_node, ast.JoinedStr)
     node = ast.Expression(body=joined_str_node)
     code = compile(node, "<test_fstring_adaptor>", mode="eval")
-    builtins.__xonsh__.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
+    XSH.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
     obs = eval(code)
     assert exp == obs
 

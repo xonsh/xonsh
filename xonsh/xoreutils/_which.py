@@ -28,8 +28,9 @@ import os
 import sys
 import stat
 import getopt
-import builtins
 import collections.abc as cabc
+
+from xonsh.built_ins import XSH
 
 r"""Find the full path to commands.
 
@@ -191,7 +192,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
     # Windows has the concept of a list of extensions (PATHEXT env var).
     if sys.platform.startswith("win"):
         if exts is None:
-            exts = builtins.__xonsh__.env["PATHEXT"]
+            exts = XSH.env["PATHEXT"]
             # If '.exe' is not in exts then obviously this is Win9x and
             # or a bogus PATHEXT, then use a reasonable default.
             for ext in exts:

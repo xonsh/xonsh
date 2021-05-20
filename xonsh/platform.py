@@ -7,7 +7,6 @@ import sys
 import ctypes  # noqa
 import signal
 import pathlib
-import builtins
 import platform
 import functools
 import subprocess
@@ -203,7 +202,9 @@ def ptk_below_max_supported():
 
 @functools.lru_cache(1)
 def best_shell_type():
-    if builtins.__xonsh__.env.get("TERM", "") == "dumb":
+    from xonsh.built_ins import XSH
+
+    if XSH.env.get("TERM", "") == "dumb":
         return "dumb"
     if has_prompt_toolkit():
         return "prompt_toolkit"
@@ -357,8 +358,10 @@ def windows_bash_command():
     """Determines the command for Bash on windows."""
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
+    from xonsh.built_ins import XSH
+
     wbc = "bash"
-    cmd_cache = builtins.__xonsh__.commands_cache
+    cmd_cache = XSH.commands_cache
     bash_on_path = cmd_cache.lazy_locate_binary("bash", ignore_alias=True)
     if bash_on_path:
         try:

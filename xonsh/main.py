@@ -25,7 +25,7 @@ from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context, make_args_env
-from xonsh.built_ins import XonshSession, load_builtins
+from xonsh.built_ins import XSH
 
 import xonsh.procs.pipelines as xpp
 
@@ -251,7 +251,7 @@ def _pprint_displayhook(value):
     if isinstance(value, xpp.HiddenCommandPipeline):
         builtins._ = value
         return
-    env = builtins.__xonsh__.env
+    env = XSH.env
     printed_val = None
     if env.get("PRETTY_PRINT_RESULTS"):
         printed_val = pretty(value)
@@ -294,7 +294,7 @@ def start_services(shell_kwargs, args, pre_env=None):
     events.on_timingprobe.fire(name="post_execer_init")
     # load rc files
     login = shell_kwargs.get("login", True)
-    env = builtins.__xonsh__.env
+    env = XSH.env
     for k, v in pre_env.items():
         env[k] = v
 
@@ -325,7 +325,7 @@ def start_services(shell_kwargs, args, pre_env=None):
     )
     events.on_post_rc.fire()
     # create shell
-    builtins.__xonsh__.shell = Shell(execer=execer, **shell_kwargs)
+    XSH.shell = Shell(execer=execer, **shell_kwargs)
     ctx["__name__"] = "__main__"
     return env
 
@@ -334,7 +334,6 @@ def premain(argv=None):
     """Setup for main xonsh entry point. Returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
-    builtins.__xonsh__ = XonshSession()
     setup_timings(argv)
     setproctitle = get_setproctitle()
     if setproctitle is not None:
@@ -349,7 +348,7 @@ def premain(argv=None):
         "login": False,
         "scriptcache": args.scriptcache,
         "cacheall": args.cacheall,
-        "ctx": builtins.__xonsh__.ctx,
+        "ctx": XSH.ctx,
     }
     if args.login or sys.argv[0].startswith("-"):
         args.login = True
@@ -455,9 +454,9 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
     events.on_post_init.fire()
-    env = builtins.__xonsh__.env
-    shell = builtins.__xonsh__.shell
-    history = builtins.__xonsh__.history
+    env = XSH.env
+    shell = XSH.shell
+    history = XSH.history
     exit_code = 0
 
     if shell and not env["XONSH_INTERACTIVE"]:
@@ -513,7 +512,7 @@ def main_xonsh(args):
 
 def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
-    builtins.__xonsh__.shell = None
+    XSH.shell = None
 
 
 @contextlib.contextmanager
@@ -523,7 +522,7 @@ def main_context(argv=None):
     up the shell.
     """
     args = premain(argv)
-    yield builtins.__xonsh__.shell
+    yield XSH.shell
     postmain(args)
 
 
@@ -568,13 +567,13 @@ def setup(
     # setup xonsh ctx and execer
     if not hasattr(builtins, "__xonsh__"):
         execer = Execer(xonsh_ctx=ctx)
-        builtins.__xonsh__ = XonshSession(ctx=ctx, execer=execer)
-        load_builtins(ctx=ctx, execer=execer)
-        builtins.__xonsh__.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
-    builtins.__xonsh__.env.update(env)
+        XSH.load(
+            ctx=ctx, execer=execer, shell=Shell(execer, ctx=ctx, shell_type=shell_type)
+        )
+    XSH.env.update(env)
     install_import_hooks()
-    builtins.aliases.update(aliases)
+    XSH.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
-    tp = builtins.__xonsh__.commands_cache.threadable_predictors
+    tp = XSH.commands_cache.threadable_predictors
     tp.update(threadable_predictors)

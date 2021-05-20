@@ -151,7 +151,7 @@ def test_swap_exception_replacement():
 
 
 @skip_if_on_unix
-def test_locate_binary_on_windows(xonsh_builtins):
+def test_locate_binary_on_windows(xession):
     files = ("file1.exe", "FILE2.BAT", "file3.txt")
     with TemporaryDirectory() as tmpdir:
         tmpdir = os.path.realpath(tmpdir)
@@ -159,10 +159,8 @@ def test_locate_binary_on_windows(xonsh_builtins):
             fpath = os.path.join(tmpdir, fname)
             with open(fpath, "w") as f:
                 f.write(fpath)
-        xonsh_builtins.__xonsh__.env.update(
-            {"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]}
-        )
-        xonsh_builtins.__xonsh__.commands_cache = CommandsCache()
+        xession.env.update({"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]})
+        xession.commands_cache = CommandsCache()
         assert locate_binary("file1") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file1.exe") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file2") == os.path.join(tmpdir, "FILE2.BAT")
@@ -170,13 +168,13 @@ def test_locate_binary_on_windows(xonsh_builtins):
         assert locate_binary("file3") is None
 
 
-def test_event_on_envvar_change(xonsh_builtins):
+def test_event_on_envvar_change(xession):
     env = Env(TEST=0)
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
     share = []
     # register
 
-    @xonsh_builtins.events.on_envvar_change
+    @xession.builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
 
@@ -186,13 +184,13 @@ def test_event_on_envvar_change(xonsh_builtins):
     assert share == ["TEST", 0, 1]
 
 
-def test_event_on_envvar_new(xonsh_builtins):
+def test_event_on_envvar_new(xession):
     env = Env()
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
     share = []
     # register
 
-    @xonsh_builtins.events.on_envvar_new
+    @xession.builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
         share.extend((name, value))
 
@@ -202,13 +200,13 @@ def test_event_on_envvar_new(xonsh_builtins):
     assert share == ["TEST", 1]
 
 
-def test_event_on_envvar_change_from_none_value(xonsh_builtins):
+def test_event_on_envvar_change_from_none_value(xession):
     env = Env(TEST=None)
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
     share = []
     # register
 
-    @xonsh_builtins.events.on_envvar_change
+    @xession.builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
 
@@ -219,13 +217,13 @@ def test_event_on_envvar_change_from_none_value(xonsh_builtins):
 
 
 @pytest.mark.parametrize("val", [1, None, True, "ok"])
-def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
+def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession):
     env = Env(TEST=val)
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
     share = []
     # register
 
-    @xonsh_builtins.events.on_envvar_change
+    @xession.builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
         share.extend((name, oldvalue, newvalue))
 
@@ -235,17 +233,17 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xonsh_builtins):
     assert share == []
 
 
-def test_events_on_envvar_called_in_right_order(xonsh_builtins):
+def test_events_on_envvar_called_in_right_order(xession):
     env = Env()
-    xonsh_builtins.__xonsh__.env = env
+    xession.env = env
     share = []
     # register
 
-    @xonsh_builtins.events.on_envvar_new
+    @xession.builtins.events.on_envvar_new
     def handler(name, value, **kwargs):
         share[:] = ["new"]
 
-    @xonsh_builtins.events.on_envvar_change
+    @xession.builtins.events.on_envvar_change
     def handler1(name, oldvalue, newvalue, **kwargs):
         share[:] = ["change"]
 
@@ -320,13 +318,13 @@ def test_lscolors_target(xonsh_builtins):
         ("pi", ("BACKGROUND_BLACK", "YELLOW"), None, "delete existing key"),
     ],
 )
-def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
+def test_lscolors_events(key_in, old_in, new_in, test, xession):
     lsc = LsColors.fromstring("fi=0:di=01;34:pi=40;33")
     # corresponding colors: [('RESET',), ('BOLD_CYAN',), ('BOLD_CYAN',), ('BACKGROUND_BLACK', 'YELLOW')]
 
     event_fired = False
 
-    @xonsh_builtins.events.on_lscolors_change
+    @xession.builtins.events.on_lscolors_change
     def handler(key, oldvalue, newvalue, **kwargs):
         nonlocal old_in, new_in, key_in, event_fired
         assert (
@@ -334,7 +332,7 @@ def test_lscolors_events(key_in, old_in, new_in, test, xonsh_builtins):
         ), "Old and new event values match"
         event_fired = True
 
-    xonsh_builtins.__xonsh__.env["LS_COLORS"] = lsc
+    xession.env["LS_COLORS"] = lsc
 
     if new_in is None:
         lsc.pop(key_in, "argle")

@@ -1,8 +1,8 @@
 import argparse as ap
-import builtins
 
 import xonsh.cli_utils as xcli
 import xonsh.lazyasd as xl
+from xonsh.built_ins import XSH
 from xonsh.completers.completer import (
     list_completers,
     remove_completer,
@@ -60,7 +60,7 @@ def _register_completer(name: str, func: str, pos="start", stack=None):
     """
     err = None
     func_name = func
-    xsh = builtins.__xonsh__  # type: ignore
+    xsh = XSH
     if name in xsh.completers:
         err = f"The name {name} is already a registered completer function."
     else:

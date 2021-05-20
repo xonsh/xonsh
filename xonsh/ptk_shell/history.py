@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """History object for use with prompt_toolkit."""
-import builtins
 
 import prompt_toolkit.history
+
+from xonsh.built_ins import XSH
 
 
 class PromptToolkitHistory(prompt_toolkit.history.History):
@@ -22,7 +23,7 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         """Loads synchronous history strings"""
         if not self.load_prev:
             return
-        hist = builtins.__xonsh__.history
+        hist = XSH.history
         if hist is None:
             return
         for cmd in hist.all_items(newest_first=True):

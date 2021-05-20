@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Tests sample inputs to PTK multiline and checks parser response"""
-import builtins
 from collections import namedtuple
 from unittest.mock import MagicMock, patch
 
@@ -10,19 +9,14 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.buffer import Buffer
 
 from xonsh.tools import ON_WINDOWS
-from xonsh.built_ins import XonshSession
-
-from tools import DummyEnv
 
 Context = namedtuple("Context", ["indent", "buffer", "accept", "cli", "cr"])
 
 
-@pytest.fixture(scope="module")
-def ctx():
+@pytest.fixture
+def ctx(xession):
     """Context in which the ptk multiline functionality will be tested."""
-    builtins.__xonsh__ = XonshSession()
-    builtins.__xonsh__.env = DummyEnv()
-    builtins.__xonsh__.env["INDENT"] = "    "
+    xession.env["INDENT"] = "    "
     from xonsh.ptk_shell.key_bindings import carriage_return
 
     ptk_buffer = Buffer()
@@ -35,8 +29,6 @@ def ctx():
         cli=cli,
         cr=carriage_return,
     )
-    del builtins.__xonsh__.env
-    del builtins.__xonsh__
 
 
 def test_colon_indent(ctx):

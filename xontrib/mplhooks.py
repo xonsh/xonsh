@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from xonsh.tools import print_color, ON_WINDOWS
 
+from xonsh.built_ins import XSH
 
 try:
     # Use iterm2_tools as an indicator for the iterm2 terminal emulator
@@ -154,7 +155,7 @@ def display_figure_with_iterm2(fig):
 def show():
     """Run the mpl display sequence by printing the most recent figure to console"""
     try:
-        minimal = __xonsh__.env["XONTRIB_MPL_MINIMAL"]
+        minimal = XSH.env["XONTRIB_MPL_MINIMAL"]
     except KeyError:
         minimal = XONTRIB_MPL_MINIMAL_DEFAULT
     fig = plt.gcf()

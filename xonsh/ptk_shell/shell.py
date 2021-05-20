@@ -3,10 +3,10 @@
 import os
 import re
 import sys
-import builtins
 from functools import wraps
 from types import MethodType
 
+from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.base_shell import BaseShell
 from xonsh.ptk_shell.formatter import PTKPromptFormatter
@@ -198,7 +198,7 @@ class PromptToolkitShell(BaseShell):
         self.history = ThreadedHistory(PromptToolkitHistory())
 
         ptk_args = {"history": self.history}
-        if not builtins.__xonsh__.env.get("XONSH_COPY_ON_DELETE", False):
+        if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
             disable_copy_on_deletion()
         if HAVE_SYS_CLIPBOARD:
             ptk_args["clipboard"] = PyperclipClipboard()
@@ -232,7 +232,7 @@ class PromptToolkitShell(BaseShell):
         history.
         """
         events.on_pre_prompt_format.fire()
-        env = builtins.__xonsh__.env
+        env = XSH.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("AUTO_SUGGEST") else None
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
@@ -379,7 +379,7 @@ class PromptToolkitShell(BaseShell):
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
         self.push = self._push
-        while not builtins.__xonsh__.exit:
+        while not XSH.exit:
             try:
                 line = self.singleline(auto_suggest=auto_suggest)
                 if not line:
@@ -391,13 +391,13 @@ class PromptToolkitShell(BaseShell):
             except (KeyboardInterrupt, SystemExit):
                 self.reset_buffer()
             except EOFError:
-                if builtins.__xonsh__.env.get("IGNOREEOF"):
+                if XSH.env.get("IGNOREEOF"):
                     print('Use "exit" to leave the shell.', file=sys.stderr)
                 else:
                     break
 
     def _get_prompt_tokens(self, env_name: str, prompt_name: str, **kwargs):
-        env = builtins.__xonsh__.env  # type:ignore
+        env = XSH.env  # type:ignore
         p = env.get(env_name)
 
         if not p and "default" in kwargs:
@@ -449,7 +449,7 @@ class PromptToolkitShell(BaseShell):
     @property
     def bottom_toolbar_tokens(self):
         """Returns self._bottom_toolbar_tokens if it would yield a result"""
-        if builtins.__xonsh__.env.get("BOTTOM_TOOLBAR"):
+        if XSH.env.get("BOTTOM_TOOLBAR"):
             return self._bottom_toolbar_tokens
 
     def continuation_tokens(self, width, line_number, is_soft_wrap=False):
@@ -457,7 +457,7 @@ class PromptToolkitShell(BaseShell):
         if is_soft_wrap:
             return ""
         width = width - 1
-        dots = builtins.__xonsh__.env.get("MULTILINE_PROMPT")
+        dots = XSH.env.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
         if not dots:
             return ""
@@ -490,7 +490,7 @@ class PromptToolkitShell(BaseShell):
         """
         tokens = partial_color_tokenize(string)
         if force_string and HAS_PYGMENTS:
-            env = builtins.__xonsh__.env
+            env = XSH.env
             style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             self.styler.override(style_overrides_env)
@@ -512,7 +512,7 @@ class PromptToolkitShell(BaseShell):
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
         tokens = PygmentsTokens(tokens)
-        env = builtins.__xonsh__.env
+        env = XSH.env
         style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
         if HAS_PYGMENTS:
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
@@ -541,7 +541,7 @@ class PromptToolkitShell(BaseShell):
         """Returns the current color map."""
         if not HAS_PYGMENTS:
             return DEFAULT_STYLE_DICT
-        env = builtins.__xonsh__.env
+        env = XSH.env
         self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         return self.styler.styles
 
@@ -570,7 +570,7 @@ class PromptToolkitShell(BaseShell):
         #   sys.stdout.write('\033[9999999C\n')
         if not ON_POSIX:
             return
-        stty, _ = builtins.__xonsh__.commands_cache.lazyget("stty", (None, None))
+        stty, _ = XSH.commands_cache.lazyget("stty", (None, None))
         if stty is None:
             return
         os.system(stty + " sane")

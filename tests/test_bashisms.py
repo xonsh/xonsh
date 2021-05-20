@@ -33,10 +33,10 @@ import pytest
         (["aa 1 2", "ab 3 4"], "echo !ab >log", "echo ab 3 4 >log"),
     ],
 )
-def test_preproc(history, inp, exp, xonsh_builtins):
+def test_preproc(history, inp, exp, xession):
     """Test the bash preprocessor."""
     from xontrib.bashisms import bash_preproc
 
-    xonsh_builtins.__xonsh__.history.inps = history
+    xession.history.inps = history
     obs = bash_preproc(inp)
     assert exp == obs

@@ -31,13 +31,14 @@ import typing as tp
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.filters import completion_is_selected, IsMultiline
 from prompt_toolkit.keys import Keys
-from xonsh.built_ins import DynamicAccessProxy
+from xonsh.built_ins import DynamicAccessProxy, XSH
 from xonsh.events import events
 from xonsh.tools import check_for_partial_string
 
 __all__ = ()
 
-builtins.__xonsh__.abbrevs = dict()
+# todo: do not assign .abbrevs and directly use abbrevs as mutable const.
+XSH.abbrevs = abbrevs = dict()
 proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
 setattr(builtins, "abbrevs", proxy)
 
@@ -47,58 +48,56 @@ class _LastExpanded(tp.NamedTuple):
     expanded: str
 
 
-last_expanded: tp.Optional[_LastExpanded] = None
+class Abbreviation:
+    """A container class to handle state related to abbreviating keywords"""
+
+    last_expanded: tp.Optional[_LastExpanded] = None
+
+    def expand(self, buffer: Buffer) -> bool:
+        """expand the given abbr text. Return true if cursor position changed."""
+        if not abbrevs:
+            return False
+        document = buffer.document
+        word = document.get_word_before_cursor(WORD=True)
+        if word in abbrevs.keys():
+            partial = document.text[: document.cursor_position]
+            startix, endix, quote = check_for_partial_string(partial)
+            if startix is not None and endix is None:
+                return False
+            text = get_abbreviated(word, buffer)
+
+            buffer.delete_before_cursor(count=len(word))
+            buffer.insert_text(text)
+
+            self.last_expanded = _LastExpanded(word, text)
+            if EDIT_SYMBOL in text:
+                set_cursor_position(buffer, text)
+                return True
+        return False
+
+    def revert(self, buffer) -> bool:
+        if self.last_expanded is None:
+            return False
+        document = buffer.document
+        expansion = self.last_expanded.expanded + " "
+        if not document.text_before_cursor.endswith(expansion):
+            return False
+        buffer.delete_before_cursor(count=len(expansion))
+        buffer.insert_text(self.last_expanded.word)
+        self.last_expanded = None
+        return True
+
+
 EDIT_SYMBOL = "<edit>"
 
 
 def get_abbreviated(key: str, buffer) -> str:
-    abbrevs = getattr(builtins, "abbrevs", None)
     abbr = abbrevs[key]
     if callable(abbr):
         text = abbr(buffer=buffer, word=key)
     else:
         text = abbr
     return text
-
-
-def expand_abbrev(buffer: Buffer) -> bool:
-    """expand the given abbr text. Return true if cursor position changed."""
-    global last_expanded
-    last_expanded = None
-    abbrevs = getattr(builtins, "abbrevs", None)
-    if abbrevs is None:
-        return False
-    document = buffer.document
-    word = document.get_word_before_cursor(WORD=True)
-    if word in abbrevs.keys():
-        partial = document.text[: document.cursor_position]
-        startix, endix, quote = check_for_partial_string(partial)
-        if startix is not None and endix is None:
-            return False
-        text = get_abbreviated(word, buffer)
-
-        buffer.delete_before_cursor(count=len(word))
-        buffer.insert_text(text)
-
-        last_expanded = _LastExpanded(word, text)
-        if EDIT_SYMBOL in text:
-            set_cursor_position(buffer, text)
-            return True
-    return False
-
-
-def revert_abbrev(buffer) -> bool:
-    global last_expanded
-    if last_expanded is None:
-        return False
-    document = buffer.document
-    expansion = last_expanded.expanded + " "
-    if not document.text_before_cursor.endswith(expansion):
-        return False
-    buffer.delete_before_cursor(count=len(expansion))
-    buffer.insert_text(last_expanded.word)
-    last_expanded = None
-    return True
 
 
 def set_cursor_position(buffer, expanded: str) -> None:
@@ -117,14 +116,15 @@ def custom_keybindings(bindings, **kw):
 
     handler = bindings.add
     insert_mode = ViInsertMode() | EmacsInsertMode()
+    abbrev = Abbreviation()
 
     @handler(" ", filter=IsMultiline() & insert_mode)
     def handle_space(event):
         buffer = event.app.current_buffer
 
         add_space = True
-        if not revert_abbrev(buffer):
-            position_changed = expand_abbrev(buffer)
+        if not abbrev.revert(buffer):
+            position_changed = abbrev.expand(buffer)
             if position_changed:
                 add_space = False
         if add_space:
@@ -140,5 +140,5 @@ def custom_keybindings(bindings, **kw):
         buffer = event.app.current_buffer
         current_char = buffer.document.current_char
         if not current_char or current_char.isspace():
-            expand_abbrev(buffer)
+            abbrev.expand(buffer)
         carriage_return(buffer, event.cli)

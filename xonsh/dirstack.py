@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Directory stack and associated utilities for the xonsh shell."""
 import argparse
-import builtins
 import glob
 import os
 import subprocess
 import typing as tp
 
+from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
@@ -145,7 +145,7 @@ def _get_cwd():
 
 
 def _change_working_directory(newdir, follow_symlinks=False):
-    env = builtins.__xonsh__.env
+    env = XSH.env
     old = env["PWD"]
     new = os.path.join(old, newdir)
 
@@ -180,10 +180,10 @@ def _try_cdpath(apath):
     # a second $ cd xonsh has no effects, to move in the nested xonsh
     # in bash a full $ cd ./xonsh is needed.
     # In xonsh a relative folder is always preferred.
-    env = builtins.__xonsh__.env
+    env = XSH.env
     cdpaths = env.get("CDPATH")
     for cdp in cdpaths:
-        globber = builtins.__xonsh__.expand_path(os.path.join(cdp, apath))
+        globber = XSH.expand_path(os.path.join(cdp, apath))
         for cdpath_prefixed_path in glob.iglob(globber):
             return cdpath_prefixed_path
     return apath
@@ -195,7 +195,7 @@ def cd(args, stdin=None):
     If no directory is specified (i.e. if `args` is None) then this
     changes to the current user's home directory.
     """
-    env = builtins.__xonsh__.env
+    env = XSH.env
     oldpwd = env.get("OLDPWD", None)
     cwd = env["PWD"]
 
@@ -307,7 +307,7 @@ def pushd(args, stdin=None):
     except SystemExit:
         return None, None, 1
 
-    env = builtins.__xonsh__.env
+    env = XSH.env
 
     pwd = env["PWD"]
 
@@ -406,7 +406,7 @@ def popd(args, stdin=None):
     except SystemExit:
         return None, None, 1
 
-    env = builtins.__xonsh__.env
+    env = XSH.env
 
     if env.get("PUSHD_MINUS"):
         BACKWARD = "-"
@@ -454,7 +454,7 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
-            env = builtins.__xonsh__.env
+            env = XSH.env
             pwd = env["PWD"]
 
             _change_working_directory(new_pwd)
@@ -515,7 +515,7 @@ def dirs(args, stdin=None):
     except SystemExit:
         return None, None
 
-    env = builtins.__xonsh__.env
+    env = XSH.env
     dirstack = [os.path.expanduser(env["PWD"])] + DIRSTACK
 
     if env.get("PUSHD_MINUS"):

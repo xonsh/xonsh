@@ -6,19 +6,20 @@ mechanics of venv searching and chdir handling.
 
 This provides no interface for end users.
 
-Developers should look at events.autovox_policy
+Developers should look at XSH.builtins.events.autovox_policy
 """
 import itertools
 from pathlib import Path
 import xontrib.voxapi as voxapi
 import warnings
+from xonsh.built_ins import XSH
 
 __all__ = ()
 
 
 _policies = []
 
-events.doc(
+XSH.builtins.events.doc(
     "autovox_policy",
     """
 autovox_policy(path: pathlib.Path) -> Union[str, pathlib.Path, None]
@@ -44,7 +45,7 @@ def get_venv(vox, dirpath):
     for path in itertools.chain((dirpath,), dirpath.parents):
         venvs = [
             vox[p]
-            for p in events.autovox_policy.fire(path=path)
+            for p in XSH.builtins.events.autovox_policy.fire(path=path)
             if p is not None and p in vox  # Filter out venvs that don't exist
         ]
         if len(venvs) == 0:
@@ -80,7 +81,7 @@ def check_for_new_venv(curdir, olddir):
 
 
 # Core mechanism: Check for venv when the current directory changes
-@events.on_chdir
+@XSH.builtins.events.on_chdir
 def cd_handler(newdir, olddir, **_):
     check_for_new_venv(Path(newdir), Path(olddir))
 
@@ -88,12 +89,12 @@ def cd_handler(newdir, olddir, **_):
 # Recalculate when venvs are created or destroyed
 
 
-@events.vox_on_create
+@XSH.builtins.events.vox_on_create
 def create_handler(**_):
     check_for_new_venv(Path.cwd(), ...)
 
 
-@events.vox_on_destroy
+@XSH.builtins.events.vox_on_destroy
 def destroy_handler(**_):
     check_for_new_venv(Path.cwd(), ...)
 
@@ -101,6 +102,6 @@ def destroy_handler(**_):
 # Initial activation before first prompt
 
 
-@events.on_post_init
+@XSH.builtins.events.on_post_init
 def load_handler(**_):
     check_for_new_venv(Path.cwd(), None)

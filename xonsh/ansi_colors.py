@@ -2,9 +2,9 @@
 import re
 import sys
 import warnings
-import builtins
 import typing as tp
 
+from xonsh.built_ins import XSH
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.lazyasd import LazyDict, lazyobject
 from xonsh.color_tools import (
@@ -49,7 +49,7 @@ def _ensure_color_map(style="default", cmap=None):
         except Exception:
             msg = "Could not find color style {0!r}, using default."
             print(msg.format(style), file=sys.stderr)
-            builtins.__xonsh__.env["XONSH_COLOR_STYLE"] = "default"
+            XSH.env["XONSH_COLOR_STYLE"] = "default"
             cmap = ANSI_STYLES["default"]
     return cmap
 
@@ -163,7 +163,7 @@ def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
 
 def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=False):
     cmap = _ensure_color_map(style=style, cmap=cmap)
-    overrides = builtins.__xonsh__.env["XONSH_STYLE_OVERRIDES"]
+    overrides = XSH.env["XONSH_STYLE_OVERRIDES"]
     if overrides:
         cmap.update(_style_dict_to_ansi(overrides))
     esc = ("\001" if hide else "") + "\033["

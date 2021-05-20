@@ -10,20 +10,19 @@ from xonsh.parsers.completion_context import (
 )
 
 
-CUR_DIR = "." if ON_WINDOWS else "./"  # for some reason this is what happens in `complete_path`
+CUR_DIR = (
+    "." if ON_WINDOWS else "./"
+)  # for some reason this is what happens in `complete_path`
 
 
 @pytest.fixture(autouse=True)
-def setup(xonsh_builtins, xonsh_execer, monkeypatch):
-    monkeypatch.setattr(xonsh_builtins.__xonsh__, "commands_cache", ["cool"])
+def setup(xession, xonsh_execer, monkeypatch):
+    monkeypatch.setattr(xession, "commands_cache", ["cool"])
 
 
 def test_empty_line():
     completions = complete_base(
-        CompletionContext(
-            command=CommandContext((), 0),
-            python=PythonContext("", 0)
-        )
+        CompletionContext(command=CommandContext((), 0), python=PythonContext("", 0))
     )
     assert completions
     for exp in ["cool", "abs"]:
@@ -33,8 +32,7 @@ def test_empty_line():
 def test_empty_subexpr():
     completions = complete_base(
         CompletionContext(
-            command=CommandContext((), 0, subcmd_opening="$("),
-            python=None
+            command=CommandContext((), 0, subcmd_opening="$("), python=None
         )
     )
     assert completions

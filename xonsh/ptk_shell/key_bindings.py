@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Key bindings for prompt_toolkit xonsh shell."""
-import builtins
 
 from prompt_toolkit import search
 from prompt_toolkit.application.current import get_app
@@ -19,6 +18,7 @@ from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 
 from xonsh.aliases import xonsh_exit
 from xonsh.tools import check_for_partial_string, get_line_continuation
+from xonsh.built_ins import XSH
 from xonsh.shell import transform_command
 
 DEDENT_TOKENS = frozenset(["raise", "return", "pass", "break", "continue"])
@@ -40,7 +40,7 @@ def carriage_return(b, cli, *, autoindent=True):
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
     current_line_blank = _is_blank(doc.current_line)
 
-    env = builtins.__xonsh__.env
+    env = XSH.env
     indent = env.get("INDENT") if autoindent else ""
 
     partial_string_info = check_for_partial_string(doc.text)
@@ -86,9 +86,7 @@ def can_compile(src):
     src = transform_command(src, show_diff=False)
     src = src.lstrip()
     try:
-        builtins.__xonsh__.execer.compile(
-            src, mode="single", glbs=None, locs=builtins.__xonsh__.ctx
-        )
+        XSH.execer.compile(src, mode="single", glbs=None, locs=XSH.ctx)
         rtn = True
     except SyntaxError:
         rtn = False
@@ -112,7 +110,7 @@ def tab_insert_indent():
 @Condition
 def tab_menu_complete():
     """Checks whether completion mode is `menu-complete`"""
-    return builtins.__xonsh__.env.get("COMPLETION_MODE") == "menu-complete"
+    return XSH.env.get("COMPLETION_MODE") == "menu-complete"
 
 
 @Condition
@@ -144,8 +142,7 @@ def end_of_line():
 def should_confirm_completion():
     """Check if completion needs confirmation"""
     return (
-        builtins.__xonsh__.env.get("COMPLETIONS_CONFIRM")
-        and get_app().current_buffer.complete_state
+        XSH.env.get("COMPLETIONS_CONFIRM") and get_app().current_buffer.complete_state
     )
 
 
@@ -155,7 +152,7 @@ def ctrl_d_condition():
     """Ctrl-D binding is only active when the default buffer is selected and
     empty.
     """
-    if builtins.__xonsh__.env.get("IGNOREEOF"):
+    if XSH.env.get("IGNOREEOF"):
         return False
     else:
         app = get_app()
@@ -167,7 +164,7 @@ def ctrl_d_condition():
 @Condition
 def autopair_condition():
     """Check if XONSH_AUTOPAIR is set"""
-    return builtins.__xonsh__.env.get("XONSH_AUTOPAIR", False)
+    return XSH.env.get("XONSH_AUTOPAIR", False)
 
 
 @Condition
@@ -222,7 +219,7 @@ def load_xonsh_bindings() -> KeyBindingsBase:
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
-        env = builtins.__xonsh__.env
+        env = XSH.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     @handle(Keys.Tab, filter=~tab_insert_indent & tab_menu_complete)
@@ -246,7 +243,7 @@ def load_xonsh_bindings() -> KeyBindingsBase:
         if b.complete_state:
             b.complete_previous()
         else:
-            env = builtins.__xonsh__.env
+            env = XSH.env
             event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     def generate_parens_handlers(left, right):

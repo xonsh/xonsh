@@ -1,10 +1,9 @@
 """Use Jedi as xonsh's python completer."""
-import builtins
 import os
 
 import xonsh
-from xonsh.built_ins import XonshSession
 from xonsh.lazyasd import lazyobject, lazybool
+from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
     get_filter_function,
     RichCompletion,
@@ -55,14 +54,13 @@ def complete_jedi(context: CompletionContext):
     if context.python is None:
         return None
 
-    xonsh_execer: XonshSession = builtins.__xonsh__  # type: ignore
     ctx = context.python.ctx or {}
 
     # if the first word is a known command (and we're not completing it), don't complete.
     # taken from xonsh/completers/python.py
     if context.command and context.command.arg_index != 0:
         first = context.command.args[0].value
-        if first in xonsh_execer.commands_cache and first not in ctx:  # type: ignore
+        if first in XSH.commands_cache and first not in ctx:  # type: ignore
             return None
 
     # if we're completing a possible command and the prefix contains a valid path, don't complete.
@@ -72,7 +70,7 @@ def complete_jedi(context: CompletionContext):
             return None
 
     filter_func = get_filter_function()
-    jedi.settings.case_insensitive_completion = not xonsh_execer.env.get(
+    jedi.settings.case_insensitive_completion = not XSH.env.get(
         "CASE_SENSITIVE_COMPLETIONS"
     )
 
@@ -83,7 +81,7 @@ def complete_jedi(context: CompletionContext):
         index - source.rfind("\n", 0, index) - 1
     )  # will be `index - (-1) - 1` if there's no newline
 
-    extra_ctx = {"__xonsh__": xonsh_execer}
+    extra_ctx = {"__xonsh__": XSH}
     try:
         extra_ctx["_"] = _
     except NameError:

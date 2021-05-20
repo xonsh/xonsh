@@ -156,8 +156,8 @@ def test_load_2nd_call(events):
     assert called == 1
 
 
-def test_typos(xonsh_builtins):
-    for name, ev in vars(xonsh_builtins.events).items():
+def test_typos(xession):
+    for name, ev in vars(xession.builtins.events).items():
         if "pytest" in name:
             continue
         assert inspect.getdoc(ev)

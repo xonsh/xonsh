@@ -4,7 +4,6 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 import ast
-import builtins
 import platform
 import subprocess
 import contextlib
@@ -13,6 +12,7 @@ from collections.abc import MutableMapping
 
 import pytest
 
+from xonsh.built_ins import XSH
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
 
@@ -82,14 +82,6 @@ class DummyShell:
         if self._shell is None:
             self._shell = DummyBaseShell()
         return self._shell
-
-
-class DummyCommandsCache:
-    def locate_binary(self, name):
-        return os.path.join(os.path.dirname(__file__), "bin", name)
-
-    def predict_threadable(self, cmd):
-        return True
 
 
 class DummyHistory:
@@ -168,12 +160,12 @@ class DummyEnv(MutableMapping):
 
 
 def check_exec(input, **kwargs):
-    builtins.__xonsh__.execer.exec(input, **kwargs)
+    XSH.execer.exec(input, **kwargs)
     return True
 
 
 def check_eval(input):
-    builtins.__xonsh__.env = Env(
+    XSH.env = Env(
         {
             "AUTO_CD": False,
             "XONSH_ENCODING": "utf-8",
@@ -182,13 +174,13 @@ def check_eval(input):
         }
     )
     if ON_WINDOWS:
-        builtins.__xonsh__.env["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
-    builtins.__xonsh__.execer.eval(input)
+        XSH.env["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
+    XSH.execer.eval(input)
     return True
 
 
 def check_parse(input):
-    tree = builtins.__xonsh__.execer.parse(input, ctx=None)
+    tree = XSH.execer.parse(input, ctx=None)
     return tree
 
 
@@ -204,22 +196,34 @@ def nodes_equal(x, y):
         type(y),
     )
     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-        assert x.lineno == y.lineno, (
-            "Ast nodes do not have the same line number : %s != %s"
-            % (x.lineno, y.lineno,)
+        assert (
+            x.lineno == y.lineno
+        ), "Ast nodes do not have the same line number : %s != %s" % (
+            x.lineno,
+            y.lineno,
         )
-        assert x.col_offset == y.col_offset, (
-            "Ast nodes do not have the same column offset number : %s != %s"
-            % (x.col_offset, y.col_offset)
+        assert (
+            x.col_offset == y.col_offset
+        ), "Ast nodes do not have the same column offset number : %s != %s" % (
+            x.col_offset,
+            y.col_offset,
         )
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x), ast.iter_fields(y)):
-        assert xname == yname, (
-            "Ast nodes fields differ : %s (of type %s) != %s (of type %s)"
-            % (xname, type(xval), yname, type(yval))
+        assert (
+            xname == yname
+        ), "Ast nodes fields differ : %s (of type %s) != %s (of type %s)" % (
+            xname,
+            type(xval),
+            yname,
+            type(yval),
         )
-        assert type(xval) == type(yval), (
-            "Ast nodes fields differ : %s (of type %s) != %s (of type %s)"
-            % (xname, type(xval), yname, type(yval))
+        assert type(xval) == type(
+            yval
+        ), "Ast nodes fields differ : %s (of type %s) != %s (of type %s)" % (
+            xname,
+            type(xval),
+            yname,
+            type(yval),
         )
     for xchild, ychild in zip(ast.iter_child_nodes(x), ast.iter_child_nodes(y)):
         assert nodes_equal(xchild, ychild), "Ast node children differs"

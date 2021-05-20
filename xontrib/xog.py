@@ -2,10 +2,11 @@
 This adds `xog` - a simple command to establish and print temporary traceback log file.
 """
 
-import builtins
 import os
 import pathlib
 import tempfile
+
+from xonsh.built_ins import XSH
 
 __all__ = ()
 
@@ -51,7 +52,7 @@ def _xog(args, stdout=None, stderr=None):
         _print_help(stdout)
         return 0
 
-    logfile = builtins.__xonsh__.env.get("XONSH_TRACEBACK_LOGFILE", "")
+    logfile = XSH.env.get("XONSH_TRACEBACK_LOGFILE", "")
     if not (logfile and os.path.isfile(logfile)):
         print("Traceback log file doesn't exist.", file=stderr)
         return -1
@@ -64,5 +65,5 @@ def _xog(args, stdout=None, stderr=None):
     return 0 if rc else -1
 
 
-builtins.__xonsh__.env["XONSH_TRACEBACK_LOGFILE"] = _get_log_file_name()
-aliases["xog"] = _xog
+XSH.env["XONSH_TRACEBACK_LOGFILE"] = _get_log_file_name()
+XSH.aliases["xog"] = _xog

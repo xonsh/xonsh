@@ -1,6 +1,5 @@
 """Tools for helping manage xontributions."""
 import argparse
-import builtins
 import functools
 import importlib
 import importlib.util
@@ -10,6 +9,7 @@ import typing as tp
 from enum import IntEnum
 from pathlib import Path
 
+from xonsh.built_ins import XSH
 from xonsh.xontribs_meta import get_xontribs
 from xonsh.tools import print_color, print_exception, unthreadable
 
@@ -68,7 +68,7 @@ def update_context(name, ctx=None):
     then __xonsh__.ctx is updated.
     """
     if ctx is None:
-        ctx = builtins.__xonsh__.ctx
+        ctx = XSH.ctx
     modctx = xontrib_context(name)
     if modctx is None:
         if not hasattr(update_context, "bad_imports"):
@@ -80,7 +80,7 @@ def update_context(name, ctx=None):
 
 def xontribs_load(names, verbose=False):
     """Load xontribs from a list of names"""
-    ctx = builtins.__xonsh__.ctx
+    ctx = XSH.ctx
     res = ExitCode.OK
     for name in names:
         if verbose:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Testing xonsh import hooks"""
 import os
-import builtins
 from importlib import import_module
 
 import pytest
@@ -9,17 +8,17 @@ import pytest
 from xonsh import imphooks
 from xonsh.execer import Execer
 from xonsh.environ import Env
-from xonsh.built_ins import unload_builtins
+from xonsh.built_ins import XSH
 
 imphooks.install_import_hooks()
 
 
 @pytest.fixture(autouse=True)
-def imp_env(xonsh_builtins):
+def imp_env(xession):
     Execer(unload=False)
-    builtins.__xonsh__.env = Env({"PATH": [], "PATHEXT": []})
+    xession.env = Env({"PATH": [], "PATHEXT": []})
     yield
-    unload_builtins()
+    XSH.unload()
 
 
 def test_import():

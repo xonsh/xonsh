@@ -1,17 +1,17 @@
 """
 Events for xonsh.
 
-In all likelihood, you want builtins.events
+In all likelihood, you want xonsh.built_ins.XSH.events
 
 The best way to "declare" an event is something like::
 
     events.doc('on_spam', "Comes with eggs")
 """
 import abc
-import builtins
 import collections.abc
 import inspect
 
+from xonsh.built_ins import XSH
 from xonsh.tools import print_exception
 
 
@@ -22,8 +22,8 @@ def has_kwargs(func):
 
 
 def debug_level():
-    if hasattr(builtins, "__xonsh__") and hasattr(builtins.__xonsh__, "env"):
-        return builtins.__xonsh__.env.get("XONSH_DEBUG")
+    if XSH.env:
+        return XSH.env.get("XONSH_DEBUG")
     # FIXME: Under py.test, return 1(?)
     else:
         return 0  # Optimize for speed, not guaranteed correctness

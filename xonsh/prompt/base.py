@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Base prompt, provides PROMPT_FIELDS and prompt related functions"""
 
-import builtins
 import itertools
 import os
 import re
@@ -13,6 +12,7 @@ import xonsh.lazyasd as xl
 import xonsh.tools as xt
 import xonsh.platform as xp
 
+from xonsh.built_ins import XSH
 from xonsh.prompt.cwd import (
     _collapsed_pwd,
     _replace_home_cwd,
@@ -43,7 +43,7 @@ class ParsedTokens(tp.NamedTuple):
 
     def process(self) -> str:
         """Wrapper that gets formatter-function from environment and returns final prompt."""
-        processor = builtins.__xonsh__.env.get(  # type: ignore
+        processor = XSH.env.get(  # type: ignore
             "PROMPT_TOKENS_FORMATTER", prompt_tokens_formatter_default
         )
         return processor(self)
@@ -93,7 +93,7 @@ class PromptFormatter:
         self.cache.clear()
 
         if fields is None:
-            self.fields = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)  # type: ignore
+            self.fields = XSH.env.get("PROMPT_FIELDS", PROMPT_FIELDS)  # type: ignore
         else:
             self.fields = fields
         try:
@@ -124,7 +124,7 @@ class PromptFormatter:
         if field is None:
             return
         elif field.startswith("$"):
-            val = builtins.__xonsh__.env[field[1:]]
+            val = XSH.env[field[1:]]
             return _format_value(val, spec, conv)
         elif field in self.fields:
             val = self._get_field_value(field, spec=spec, conv=conv, **kwargs)
@@ -226,7 +226,7 @@ def multiline_prompt(curr=""):
     # tail is the trailing whitespace
     tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
     # now to construct the actual string
-    dots = builtins.__xonsh__.env.get("MULTILINE_PROMPT")
+    dots = XSH.env.get("MULTILINE_PROMPT")
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ""
@@ -272,7 +272,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
         return False
     included_names.discard(None)
     if PROMPT_FIELDS is None:
-        fmtter = builtins.__xonsh__.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
+        fmtter = XSH.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
     else:
         fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())

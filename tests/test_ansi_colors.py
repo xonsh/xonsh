@@ -149,7 +149,7 @@ def test_ansi_color_name_to_escape_code_for_all_styles(color, style):
         ("monokai"),  # defined in `ansi_colors.py`
         ("rainbow_dash"),  # not in `ansi_colors.py`, but in pygments
         ("foobar"),  # invalid, should not fail
-    ]
+    ],
 )
 def test_ansi_style_by_name(style_name):
     style = ansi_style_by_name(style_name)

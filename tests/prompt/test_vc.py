@@ -53,14 +53,14 @@ def test_test_repo(test_repo):
         assert test_file.exists()
 
 
-def test_no_repo(xonsh_builtins, tmpdir):
-    xonsh_builtins.__xonsh__.env = Env(VC_BRANCH_TIMEOUT=2, PWD=tmpdir)
+def test_no_repo(xession, tmpdir):
+    xession.env = Env(VC_BRANCH_TIMEOUT=2, PWD=tmpdir)
     assert vc.get_hg_branch() is None
     assert vc.get_git_branch() is None
 
 
-def test_vc_get_branch(test_repo, xonsh_builtins):
-    xonsh_builtins.__xonsh__.env = Env(VC_BRANCH_TIMEOUT=2, PWD=test_repo["dir"])
+def test_vc_get_branch(test_repo, xession):
+    xession.env = Env(VC_BRANCH_TIMEOUT=2, PWD=test_repo["dir"])
     # get corresponding function from vc module
     get_branch = "get_{}_branch".format(test_repo["vc"])
     branch = getattr(vc, get_branch)()
@@ -84,9 +84,9 @@ current = yellow reverse
         assert not branch.startswith(u"\u001b[")
 
 
-def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins):
-    cache = xonsh_builtins.__xonsh__.commands_cache
-    xonsh_builtins.__xonsh__.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
+def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xession):
+    cache = xession.commands_cache
+    xession.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
     cache.is_empty = Mock(return_value=True)
     cache.locate_binary = Mock(return_value="")
     vc.current_branch()
@@ -94,10 +94,10 @@ def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins)
 
 
 def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
-    xonsh_builtins,
+    xession,
 ):
-    cache = xonsh_builtins.__xonsh__.commands_cache
-    xonsh_builtins.__xonsh__.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
+    cache = xession.commands_cache
+    xession.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
     cache.is_empty = Mock(return_value=False)
     cache.locate_binary = Mock(return_value="")
     # make lazy locate return nothing to avoid running vc binaries
@@ -106,9 +106,9 @@ def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
     assert not cache.locate_binary.called
 
 
-def test_dirty_working_directory(test_repo, xonsh_builtins):
+def test_dirty_working_directory(test_repo, xession):
     get_dwd = "{}_dirty_working_directory".format(test_repo["vc"])
-    xonsh_builtins.__xonsh__.env = Env(VC_BRANCH_TIMEOUT=2, PWD=test_repo["dir"])
+    xession.env = Env(VC_BRANCH_TIMEOUT=2, PWD=test_repo["dir"])
 
     # By default, git / hg do not care about untracked files
     Path("second-test-file").touch()
@@ -120,9 +120,9 @@ def test_dirty_working_directory(test_repo, xonsh_builtins):
 
 @pytest.mark.parametrize("include_untracked", [True, False])
 def test_git_dirty_working_directory_includes_untracked(
-    xonsh_builtins, test_repo, include_untracked
+    xession, test_repo, include_untracked
 ):
-    xonsh_builtins.__xonsh__.env = DummyEnv(VC_GIT_INCLUDE_UNTRACKED=include_untracked)
+    xession.env = DummyEnv(VC_GIT_INCLUDE_UNTRACKED=include_untracked)
     if test_repo["vc"] != "git":
         return
 

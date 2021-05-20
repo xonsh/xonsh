@@ -2,8 +2,8 @@
 """Prompt formatter for virtualenv and others"""
 
 import os
-import builtins
 
+from xonsh.built_ins import XSH
 import xonsh.platform as xp
 
 
@@ -11,9 +11,9 @@ def find_env_name():
     """Finds the current environment name from $VIRTUAL_ENV or
     $CONDA_DEFAULT_ENV if that is set.
     """
-    env_path = builtins.__xonsh__.env.get("VIRTUAL_ENV", "")
+    env_path = XSH.env.get("VIRTUAL_ENV", "")
     if len(env_path) == 0 and xp.ON_ANACONDA:
-        env_path = builtins.__xonsh__.env.get("CONDA_DEFAULT_ENV", "")
+        env_path = XSH.env.get("CONDA_DEFAULT_ENV", "")
     env_name = os.path.basename(env_path)
     return env_name
 
@@ -23,15 +23,15 @@ def env_name():
     ``{env_prefix}`` and ``{env_postfix}`` fields.
     """
     env_name = find_env_name()
-    if builtins.__xonsh__.env.get("VIRTUAL_ENV_DISABLE_PROMPT") or not env_name:
+    if XSH.env.get("VIRTUAL_ENV_DISABLE_PROMPT") or not env_name:
         # env name prompt printing disabled, or no environment; just return
         return
 
-    venv_prompt = builtins.__xonsh__.env.get("VIRTUAL_ENV_PROMPT")
+    venv_prompt = XSH.env.get("VIRTUAL_ENV_PROMPT")
     if venv_prompt is not None:
         return venv_prompt
     else:
-        pf = builtins.__xonsh__.shell.prompt_formatter
+        pf = XSH.shell.prompt_formatter
         pre = pf._get_field_value("env_prefix")
         post = pf._get_field_value("env_postfix")
         return pre + env_name + post
@@ -44,7 +44,7 @@ def vte_new_tab_cwd():
     on startup. Note that this does not return a string, it simply prints
     and flushes the escape sequence to stdout directly.
     """
-    env = builtins.__xonsh__.env
+    env = XSH.env
     t = "\033]7;file://{}{}\007"
     s = t.format(env.get("HOSTNAME"), env.get("PWD"))
     print(s, end="", flush=True)
