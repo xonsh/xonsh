@@ -1297,7 +1297,7 @@ del (
 def make_pygments_style(palette):
     """Makes a pygments style based on a color palette."""
     global Color
-    style = {getattr(Color, "DEFAULT"): "noinherit"}
+    style = {Color.DEFAULT: "noinherit"}
     for name, t in BASE_XONSH_COLORS.items():
         color = find_closest_color(t, palette)
         style[getattr(Color, name)] = "#" + color
@@ -1366,7 +1366,7 @@ def XonshTerminal256Formatter():
             super().__init__(*args, **kwargs)
             # just keep the opening token for colors.
             color_names = set(map(str, Color.subtypes))
-            for name, (opener, closer) in self.style_string.items():
+            for name, (opener, _) in self.style_string.items():
                 if name in color_names:
                     self.style_string[name] = (opener, "")
             # special case DEFAULT, because it is special.
@@ -1392,7 +1392,7 @@ def XonshHtmlFormatter():
             return ""
         elif text.startswith("var") or text.startswith("calc"):
             return text
-        assert False, "wrong color format %r" % text
+        raise AssertionError("wrong color format %r" % text)
 
     class XonshHtmlFormatterProxy(html.HtmlFormatter):
         """Proxy class for xonsh HTML formatting that understands.
@@ -1597,7 +1597,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tp.Tuple[_TokenType
 def _command_is_valid(cmd):
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (FileNotFoundError, OSError):
+    except (OSError):
         return False
     return (cmd in XSH.commands_cache and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
@@ -1609,7 +1609,7 @@ def _command_is_autocd(cmd):
         return False
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (FileNotFoundError, OSError):
+    except (OSError):
         return False
     return os.path.isdir(cmd_abspath)
 
@@ -1630,7 +1630,7 @@ def subproc_arg_callback(_, match):
         path = os.path.expanduser(text)
         path_stat = os.lstat(path)  # lstat() will raise FNF if not a real file
         yieldVal, _ = color_file(path, path_stat)
-    except (FileNotFoundError, OSError):
+    except (OSError):
         pass
 
     yield (match.start(), yieldVal, text)
@@ -1652,14 +1652,14 @@ class XonshLexer(Python3Lexer):
         if not hasattr(builtins, "__xonsh__"):
             from argparse import Namespace
 
-            setattr(builtins, "__xonsh__", Namespace())
+            builtins.__xonsh__ = Namespace()
         if not hasattr(XSH, "env"):
-            setattr(XSH, "env", {})
+            XSH.env = {}
             if ON_WINDOWS:
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
                 XSH.env["PATHEXT"] = pathext.split(os.pathsep)
-        if not hasattr(XSH, "commands_cache"):
-            setattr(XSH, "commands_cache", CommandsCache())
+        if not getattr(XSH, "commands_cache", None):
+            XSH.commands_cache = CommandsCache()
         _ = XSH.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)
 

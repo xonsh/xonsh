@@ -35,7 +35,7 @@ def _xhj_gc_commands_to_rmfiles(hsize, files):
     """
     n = 0
     ncmds = 0
-    for _, fcmds, f, _ in reversed(files):
+    for _, fcmds, _, _ in reversed(files):
         # `files` comes in with empty files included (now), don't need special handling to gc them here.
 
         if ncmds + fcmds > hsize:
@@ -45,7 +45,7 @@ def _xhj_gc_commands_to_rmfiles(hsize, files):
 
     cmds_removed = 0
     files_removed = files[:-n]
-    for _, fcmds, f, _ in files_removed:
+    for _, fcmds, _, _ in files_removed:
         cmds_removed += fcmds
 
     return cmds_removed, files_removed
@@ -62,7 +62,7 @@ def _xhj_gc_seconds_to_rmfiles(hsize, files):
     now = time.time()
     n = 0
 
-    for ts, _, f, _ in files:
+    for ts, _, _, _ in files:
         if (now - ts) < hsize:
             break
         n += 1
@@ -76,14 +76,14 @@ def _xhj_gc_bytes_to_rmfiles(hsize, files):
     """Return the history files to remove to get under the byte limit."""
     n = 0
     nbytes = 0
-    for _, _, f, fsize in reversed(files):
+    for _, _, _, fsize in reversed(files):
         if nbytes + fsize > hsize:
             break
         nbytes += fsize
         n += 1
     bytes_removed = 0
     files_removed = files[:-n]
-    for _, _, f, fsize in files_removed:
+    for _, _, _, fsize in files_removed:
         bytes_removed += fsize
 
     return bytes_removed, files_removed
@@ -241,7 +241,7 @@ class JsonHistoryGC(threading.Thread):
                         end="",
                         file=sys.stderr,
                     )
-            except (IOError, OSError, ValueError):
+            except (OSError, ValueError):
                 continue
         files.sort()  # this sorts by elements of the tuple,
         # the first of which just happens to be file mod time.

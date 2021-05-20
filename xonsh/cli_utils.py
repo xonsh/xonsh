@@ -103,6 +103,6 @@ def dispatch(**ns):
     func = ns[_FUNC_NAME]
     sign = inspect.signature(func)
     kwargs = {}
-    for name, param in sign.parameters.items():
+    for name, _ in sign.parameters.items():
         kwargs[name] = ns[name]
     return func(**kwargs)

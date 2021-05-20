@@ -33,7 +33,7 @@ def _get_git_branch(q):
     try:
         cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
         branch = xt.decode_bytes(_run_git_cmd(cmd))
-    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
+    except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
         q.put(branch.splitlines()[0] if branch else None)
@@ -179,7 +179,7 @@ def _git_dirty_working_directory(q, include_untracked):
             q.put(bool(status))
         else:
             q.put(None)
-    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
+    except (subprocess.CalledProcessError, OSError):
         q.put(None)
 
 

@@ -211,11 +211,11 @@ def _safe_eval(expr, ctx):
     try:
         val = xonsh_safe_eval(expr, ctx, ctx, transform=False)
         _ctx = ctx
-    except:  # pylint:disable=bare-except
+    except Exception:  # pylint:disable=bare-except
         try:
             val = xonsh_safe_eval(expr, builtins.__dict__, transform=False)
             _ctx = builtins.__dict__
-        except:  # pylint:disable=bare-except
+        except Exception:  # pylint:disable=bare-except
             val = _ctx = None
     return val, _ctx
 

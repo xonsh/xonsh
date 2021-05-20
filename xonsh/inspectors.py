@@ -285,7 +285,7 @@ def find_file(obj):
             except TypeError:
                 # Can happen for builtins
                 pass
-    except:  # pylint:disable=bare-except
+    except Exception:  # pylint:disable=bare-except
         pass
     return cast_unicode(fname)
 
@@ -319,7 +319,7 @@ def find_source_lines(obj):
                 lineno = inspect.getsourcelines(obj.__class__)[1]
             else:
                 lineno = None
-    except:  # pylint:disable=bare-except
+    except Exception:  # pylint:disable=bare-except
         return None
 
     return lineno
@@ -340,7 +340,7 @@ class Inspector(object):
         try:
             hdef = oname + str(inspect.signature(obj))
             return cast_unicode(hdef)
-        except:  # pylint:disable=bare-except
+        except Exception:  # pylint:disable=bare-except
             return None
 
     def noinfo(self, msg, oname):
@@ -393,7 +393,7 @@ class Inspector(object):
             if init_ds is not None:
                 lines.append(head("Init docstring:"))
                 lines.append(indent(init_ds))
-        elif hasattr(obj, "__call__"):
+        elif hasattr(obj, "__call__"):  # noqa : use callable
             call_ds = getdoc(obj.__call__)
             if call_ds:
                 lines.append(head("Call docstring:"))
@@ -410,7 +410,7 @@ class Inspector(object):
         linecache.checkcache()
         try:
             src = getsource(obj)
-        except:  # pylint:disable=bare-except
+        except Exception:  # pylint:disable=bare-except
             self.noinfo("source", oname)
         else:
             print(src)
@@ -633,7 +633,7 @@ class Inspector(object):
         try:
             bclass = obj.__class__
             out["base_class"] = str(bclass)
-        except:  # pylint:disable=bare-except
+        except Exception:  # pylint:disable=bare-except
             pass
 
         # String form, but snip if too long in ? form (full in ??)
@@ -647,7 +647,7 @@ class Inspector(object):
                         q.strip() for q in ostr.split("\n")
                     )
                 out[str_head] = ostr
-            except:  # pylint:disable=bare-except
+            except Exception:
                 pass
 
         if ospace:
@@ -656,7 +656,7 @@ class Inspector(object):
         # Length (for strings and lists)
         try:
             out["length"] = str(len(obj))
-        except:  # pylint:disable=bare-except
+        except Exception:  # pylint:disable=bare-except
             pass
 
         # Filename where object was defined
@@ -736,8 +736,8 @@ class Inspector(object):
             # objects which use instance-customized docstrings.
             if ds:
                 try:
-                    cls = getattr(obj, "__class__")
-                except:  # pylint:disable=bare-except
+                    cls = obj.__class__
+                except Exception:
                     class_ds = None
                 else:
                     class_ds = getdoc(cls)

@@ -45,7 +45,7 @@ def is_app_execution_alias(fname):
 def _is_binary(fname, limit=80):
     try:
         with open(fname, "rb") as f:
-            for i in range(limit):
+            for _ in range(limit):
                 char = f.read(1)
                 if char == b"\0":
                     return True

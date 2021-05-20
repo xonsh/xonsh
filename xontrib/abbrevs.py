@@ -40,7 +40,7 @@ __all__ = ()
 # todo: do not assign .abbrevs and directly use abbrevs as mutable const.
 XSH.abbrevs = abbrevs = dict()
 proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
-setattr(builtins, "abbrevs", proxy)
+builtins.abbrevs = proxy
 
 
 class _LastExpanded(tp.NamedTuple):

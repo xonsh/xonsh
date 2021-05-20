@@ -214,7 +214,7 @@ class PopenThread(threading.Thread):
         if reader is None:
             return 0
         i = -1
-        for i, chunk in enumerate(iter(reader.read_queue, b"")):
+        for i, chunk in enumerate(iter(reader.read_queue, b"")):  # noqa
             self._alt_mode_switch(chunk, writer, stdbuf)
         if i >= 0:
             writer.flush()

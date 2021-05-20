@@ -160,7 +160,7 @@ def disable_copy_on_deletion():
             # binding's clipboard has already been disabled
             return
 
-        setattr(binding, "xonsh_disabled_clipboard", True)
+        binding.xonsh_disabled_clipboard = True
         original_handler = binding.handler
 
         # this needs to be defined inside a function so that ``binding`` will be the correct one

@@ -53,7 +53,7 @@ class CommandsCache(cabc.Mapping):
         return self.lazyin(key)
 
     def __iter__(self):
-        for cmd, (path, is_alias) in self.all_commands.items():
+        for cmd, (path, _) in self.all_commands.items():
             if ON_WINDOWS and path is not None:
                 # All command keys are stored in uppercase on Windows.
                 # This ensures the original command name is returned.
