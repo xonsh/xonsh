@@ -67,7 +67,7 @@ def xonsh_events():
 
 
 @pytest.fixture
-def xonsh_builtins(monkeypatch, xonsh_events) -> XonshSession:
+def xonsh_builtins(monkeypatch, xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = set(dir(builtins))
     XSH.load(
