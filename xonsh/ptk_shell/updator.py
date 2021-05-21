@@ -89,7 +89,10 @@ class AsyncPrompt:
             print(f"Warn: AsyncPrompt is created without tokens - {self.name}")
             return
         for fut in concurrent.futures.as_completed(self.futures):
-            val = fut.result()
+            try:
+                val = fut.result()
+            except concurrent.futures.CancelledError:
+                continue
 
             if fut not in self.futures:
                 # rare case where the future is completed but the container is already cleared
