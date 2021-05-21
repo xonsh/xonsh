@@ -285,7 +285,7 @@ def find_file(obj):
             except TypeError:
                 # Can happen for builtins
                 pass
-    except Exception:  # pylint:disable=bare-except
+    except Exception:
         pass
     return cast_unicode(fname)
 
@@ -319,7 +319,7 @@ def find_source_lines(obj):
                 lineno = inspect.getsourcelines(obj.__class__)[1]
             else:
                 lineno = None
-    except Exception:  # pylint:disable=bare-except
+    except Exception:
         return None
 
     return lineno
@@ -340,7 +340,7 @@ class Inspector(object):
         try:
             hdef = oname + str(inspect.signature(obj))
             return cast_unicode(hdef)
-        except Exception:  # pylint:disable=bare-except
+        except Exception:
             return None
 
     def noinfo(self, msg, oname):
@@ -410,7 +410,7 @@ class Inspector(object):
         linecache.checkcache()
         try:
             src = getsource(obj)
-        except Exception:  # pylint:disable=bare-except
+        except Exception:
             self.noinfo("source", oname)
         else:
             print(src)
@@ -605,7 +605,7 @@ class Inspector(object):
             if not callable(obj):
                 if len(obj) >= 2 and isinstance(obj[1], str):
                     ds = "Alias to the system command:\n  {0}".format(obj[1])
-                else:  # pylint:disable=bare-except
+                else:
                     ds = "Alias: " + str(obj)
             else:
                 ds = "Alias to " + str(obj)
@@ -633,7 +633,7 @@ class Inspector(object):
         try:
             bclass = obj.__class__
             out["base_class"] = str(bclass)
-        except Exception:  # pylint:disable=bare-except
+        except Exception:
             pass
 
         # String form, but snip if too long in ? form (full in ??)
@@ -656,7 +656,7 @@ class Inspector(object):
         # Length (for strings and lists)
         try:
             out["length"] = str(len(obj))
-        except Exception:  # pylint:disable=bare-except
+        except Exception:
             pass
 
         # Filename where object was defined
