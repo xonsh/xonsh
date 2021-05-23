@@ -26,6 +26,10 @@ def test(ns: argparse.Namespace):
 
     args = ns.pytest_args
 
+    if not $(xonsh -c "import xonsh.main; print(xonsh.main.__file__, end='')").endswith("__amalgam__.py"):
+        echo "Tests need to run from the amalgamated xonsh! install with `pip install .` (without `-e`)"
+        exit(1)
+
     if ns.report_coverage:
         ![pytest @(_replace_args(args, 0)) --cov --cov-report=xml --cov-report=term]
     else:
