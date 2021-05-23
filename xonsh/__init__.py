@@ -3,7 +3,7 @@ __version__ = "0.9.27"
 
 # amalgamate exclude jupyter_kernel parser_table completion_parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard pytest_plugin fs macutils pygments_cache
-# amalgamate exclude jupyter_shell proc
+# amalgamate exclude jupyter_shell proc built_ins
 import os as _os
 
 if _os.getenv("XONSH_DEBUG", ""):
@@ -86,8 +86,6 @@ else:
         _sys.modules["xonsh.readline_shell"] = __amalgam__
         tracer = __amalgam__
         _sys.modules["xonsh.tracer"] = __amalgam__
-        built_ins = __amalgam__
-        _sys.modules["xonsh.built_ins"] = __amalgam__
         dumb_shell = __amalgam__
         _sys.modules["xonsh.dumb_shell"] = __amalgam__
         execer = __amalgam__
