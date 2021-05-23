@@ -393,7 +393,7 @@ class Inspector(object):
             if init_ds is not None:
                 lines.append(head("Init docstring:"))
                 lines.append(indent(init_ds))
-        elif hasattr(obj, "__call__"):  # noqa : use callable
+        elif callable(obj):
             call_ds = getdoc(obj.__call__)
             if call_ds:
                 lines.append(head("Call docstring:"))

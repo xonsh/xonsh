@@ -13,7 +13,8 @@ repos:
         name: qa
         entry: xonsh run-tests.xsh qa
         language: system
-        default_stages: [ push ]
+        stages: [ push ]
+        pass_filenames: false
         types:
           - python
 
