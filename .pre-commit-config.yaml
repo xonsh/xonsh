@@ -9,3 +9,10 @@ repos:
         language: system
         types:
           - python
+      - id: qa
+        name: qa
+        entry: xonsh run-tests.xsh qa
+        language: system
+        default_stages: [push]
+        types:
+          - python
