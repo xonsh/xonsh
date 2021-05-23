@@ -106,7 +106,7 @@ def transform_command(src, show_diff=True):
                 "converge."
             )
     debug_level = XSH.env.get("XONSH_DEBUG")
-    if show_diff and debug_level > 1 and src != raw:
+    if show_diff and debug_level >= 1 and src != raw:
         sys.stderr.writelines(
             difflib.unified_diff(
                 raw.splitlines(keepends=True),

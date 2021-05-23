@@ -49,7 +49,7 @@ def amalgamate_source():
     amalgamate.main(
         [
             "amalgamate",
-            "--debug=XONSH_DEBUG",
+            "--debug=XONSH_NO_AMALGAMATE",
             "xonsh",
             "xonsh.completers",
             "xonsh.history",
