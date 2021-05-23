@@ -4,8 +4,8 @@ import subprocess
 from typing import List
 
 
-$XONSH_DEBUG = 1
 $RAISE_SUBPROC_ERROR = True
+# $XONSH_NO_AMALGAMATE = 1
 # $XONSH_TRACE_SUBPROC = True
 
 
