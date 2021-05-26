@@ -315,7 +315,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             buf = xli.winutils.read_console_output_character(
                 x=x, y=y, fd=fd, buf=buffer, bufsize=chunksize, raw=True
             )
-        except (OSError, IOError):
+        except OSError:
             reader.closed = True
             break
         # cursor position and offset

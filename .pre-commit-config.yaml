@@ -9,3 +9,25 @@ repos:
         language: system
         types:
           - python
+      - id: qa
+        name: qa
+        entry: xonsh run-tests.xsh qa
+        language: system
+        stages: [ push ]
+        pass_filenames: false
+        types:
+          - python
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+
+      # Check for debugger imports and py37+ breakpoint() calls in python source.
+      - id: debug-statements
+
+      - id: check-added-large-files

@@ -439,7 +439,7 @@ class BaseShell(object):
         env = XSH.env
         try:
             cwd = os.getcwd()
-        except (FileNotFoundError, OSError):
+        except OSError:
             cwd = None
         if cwd is None:
             # directory has been deleted out from under us, most likely

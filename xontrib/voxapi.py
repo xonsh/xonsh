@@ -308,7 +308,7 @@ class Vox(collections.abc.Mapping):
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME."""
         bin_, lib, inc = _subdir_names()
-        for dirpath, dirnames, filenames in os.walk(self.venvdir):
+        for dirpath, dirnames, _ in os.walk(self.venvdir):
             python_exec = os.path.join(dirpath, bin_, "python")
             if ON_WINDOWS:
                 python_exec += ".exe"

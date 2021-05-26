@@ -104,7 +104,7 @@ def _discover_lexers():
         from collections import defaultdict
 
         duplicates = defaultdict(set)
-    for longname, aliases, filenames, mimetypes in get_all_lexers():
+    for longname, _, filenames, _ in get_all_lexers():
         cls = find_lexer_class(longname)
         mod = inspect.getmodule(cls)
         val = (mod.__name__, cls.__name__)

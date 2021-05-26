@@ -52,7 +52,7 @@ class XshFile(pytest.File):
         tests = [t for t in dir(mod) if t.startswith("test_")]
         for test_name in tests:
             obj = getattr(mod, test_name)
-            if hasattr(obj, "__call__"):
+            if hasattr(obj, "__call__"):  # noqa
                 yield XshFunction.from_parent(
                     self, name=test_name, test_func=obj, test_module=mod
                 )

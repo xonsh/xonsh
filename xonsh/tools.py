@@ -616,7 +616,7 @@ def subexpr_before_unbalanced(expr, ltok, rtok):
     subexpr, _, post = expr.rpartition(ltok)
     nrtoks_in_post = post.count(rtok)
     while nrtoks_in_post != 0:
-        for i in range(nrtoks_in_post):
+        for _ in range(nrtoks_in_post):
             subexpr, _, post = subexpr.rpartition(ltok)
         nrtoks_in_post = post.count(rtok)
     _, _, subexpr = subexpr.rpartition(rtok)
@@ -657,7 +657,7 @@ def safe_hasattr(obj, attr):
     try:
         getattr(obj, attr)
         return True
-    except Exception:  # pylint:disable=bare-except
+    except Exception:
         return False
 
 

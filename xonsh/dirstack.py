@@ -140,7 +140,7 @@ Fires when the current directory is changed for any reason.
 def _get_cwd():
     try:
         return os.getcwd()
-    except (OSError, FileNotFoundError):
+    except OSError:
         return None
 
 
@@ -155,7 +155,7 @@ def _change_working_directory(newdir, follow_symlinks=False):
 
     try:
         os.chdir(absnew)
-    except (OSError, FileNotFoundError):
+    except OSError:
         if new.endswith(get_sep()):
             new = new[:-1]
         if os.path.basename(new) == "..":

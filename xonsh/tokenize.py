@@ -1124,7 +1124,7 @@ def _tokenize(readline, encoding, tolerant=False):
         yield stashed
         stashed = None
 
-    for indent in indents[1:]:  # pop remaining indent levels
+    for _ in indents[1:]:  # pop remaining indent levels
         yield TokenInfo(DEDENT, "", (lnum, 0), (lnum, 0), "")
     yield TokenInfo(ENDMARKER, "", (lnum, 0), (lnum, 0), "")
 

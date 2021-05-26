@@ -362,7 +362,7 @@ def format_lazy_import(names):
 def format_from_import(names):
     """Format a from import line"""
     parts = []
-    for _, module, name, asname in names:
+    for _, module, name, asname in names:  # noqa
         if asname is None:
             parts.append(name)
         else:
@@ -441,7 +441,7 @@ def rewrite_imports(name, pkg, order, imps):
     lines = raw.splitlines(keepends=True)
     for start, stop, s in replacements[::-1]:
         lines[start] = s
-        for i in range(stop - start - 1):
+        for _ in range(stop - start - 1):
             del lines[start + 1]
     return "".join(lines)
 

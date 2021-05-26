@@ -1014,7 +1014,7 @@ class BaseParser(object):
             p0.vararg = vararg
             self._set_args_def(p0, kwargs, kwargs=True)
         else:
-            assert False
+            raise AssertionError()
 
     def p_varargslist_kwargs(self, p):
         """varargslist : POW vfpdef"""
@@ -1191,7 +1191,7 @@ class BaseParser(object):
         if p2 is None and len(p1) == 1:
             p[0] = self.expr(p1[0])
         elif p2 is None:
-            assert False
+            raise AssertionError()
         else:
             for targ in p1:
                 store_ctx(targ)
@@ -1528,7 +1528,7 @@ class BaseParser(object):
         p1, p2, p3 = p[1], p[2], p[3]
         if p3 is not None:
             if len(p3) != 1:
-                assert False
+                raise AssertionError()
             p3 = p3[0]
         p[0] = ast.Assert(test=p2, msg=p3, lineno=p1.lineno, col_offset=p1.lexpos)
 
@@ -1883,7 +1883,7 @@ class BaseParser(object):
 
     def p_lambdef_nocond(self, p):
         """lambdef_nocond : LAMBDA varargslist_opt COLON test_nocond"""
-        assert False
+        raise AssertionError()
 
     def p_or_test(self, p):
         """or_test : and_test or_and_test_list_opt"""
@@ -2271,7 +2271,7 @@ class BaseParser(object):
                         col_offset=leader.col_offset,
                     )
             else:
-                assert False
+                raise AssertionError()
             leader = p0
         return p0
 
@@ -2508,7 +2508,7 @@ class BaseParser(object):
                     )
             s = ast.increment_lineno(s, p1.lineno - 1)
             if "r" in prefix:
-                setattr(s, "is_raw", True)
+                s.is_raw = True
             p[0] = s
         else:
             s = ast.literal_eval(p1.value)
@@ -3012,7 +3012,7 @@ class BaseParser(object):
         elif p1 == "$[":
             p0 = xonsh_call("__xonsh__.subproc_uncaptured", p2, lineno=lineno, col=col)
         else:
-            assert False
+            raise AssertionError()
 
         envs = self._get_envvars(p2, lineno, col)
         if envs is not None:
@@ -3075,7 +3075,7 @@ class BaseParser(object):
                 raise ValueError("action not understood: " + action)
             del arg._cliarg_action
         if hasattr(args[0], "_xenvvars"):
-            setattr(cliargs, "_xenvvars", args[0]._xenvvars)
+            cliargs._xenvvars = args[0]._xenvvars
         return cliargs
 
     def p_pipe(self, p):
@@ -3160,7 +3160,7 @@ class BaseParser(object):
             p20._xenvvars.keys.append(p1.keys[0])
             p20._xenvvars.values.append(p1.values[0])
         else:
-            setattr(p20, "_xenvvars", p1)
+            p20._xenvvars = p1
         p[0] = p[2]
 
     #

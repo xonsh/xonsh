@@ -348,7 +348,7 @@ def bash_completions(
     cmd = os.path.basename(cmd)
     idx = n = 0
     prev = ""
-    for n, tok in enumerate(splt):
+    for n, tok in enumerate(splt):  # noqa
         if tok == prefix:
             idx = line.find(prefix, idx)
             if idx >= begidx:
@@ -386,7 +386,6 @@ def bash_completions(
     except (
         subprocess.CalledProcessError,
         FileNotFoundError,
-        UnicodeDecodeError,
         ValueError,
     ):
         return set(), 0
