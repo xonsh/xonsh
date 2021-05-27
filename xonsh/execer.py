@@ -128,7 +128,9 @@ class Execer(object):
             filename = self.filename
             self.filename = self._default_filename
         if glbs is None or locs is None:
-            frame = inspect.stack()[stacklevel][0]
+            frame = inspect.currentframe()
+            for _ in range(stacklevel):
+                frame = frame.f_back
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
