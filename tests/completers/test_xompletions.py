@@ -3,7 +3,7 @@ from xonsh.parsers.completion_context import (
     CommandContext,
     CompletionContext,
 )
-from xonsh.completers.xompletions import complete_xonfig, complete_xontrib
+from xonsh.completers.xompletions import complete_xonfig, complete_xontrib, xt
 
 
 def test_xonfig():
@@ -15,9 +15,7 @@ def test_xonfig():
 
 
 def test_xonfig_colors(monkeypatch):
-    monkeypatch.setattr(
-        "xonsh.tools.color_style_names", lambda: ["blue", "brown", "other"]
-    )
+    monkeypatch.setattr(xt, "color_style_names", lambda: ["blue", "brown", "other"])
     assert (
         complete_xonfig(
             CompletionContext(

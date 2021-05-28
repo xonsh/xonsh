@@ -75,7 +75,7 @@ class Execer(object):
             filename = self.filename
         if not transform:
             return self.parser.parse(
-                input, filename=filename, mode=mode, debug_level=(self.debug_level > 2)
+                input, filename=filename, mode=mode, debug_level=(self.debug_level >= 2)
             )
 
         # Parsing actually happens in a couple of phases. The first is a
@@ -196,7 +196,7 @@ class Execer(object):
         self, line, sbpline, last_error_line, last_error_col, maxcol=None
     ):
         """print some debugging info if asked for."""
-        if self.debug_level > 1:
+        if self.debug_level >= 1:
             msg = "{0}:{1}:{2}{3} - {4}\n" "{0}:{1}:{2}{3} + {5}"
             mstr = "" if maxcol is None else ":" + str(maxcol)
             msg = msg.format(
@@ -220,7 +220,7 @@ class Execer(object):
                     input,
                     filename=filename,
                     mode=mode,
-                    debug_level=(self.debug_level > 2),
+                    debug_level=(self.debug_level >= 2),
                 )
                 parsed = True
             except IndentationError as e:

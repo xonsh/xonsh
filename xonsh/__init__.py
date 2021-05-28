@@ -6,7 +6,7 @@ __version__ = "0.9.27"
 # amalgamate exclude jupyter_shell proc built_ins
 import os as _os
 
-if _os.getenv("XONSH_DEBUG", ""):
+if _os.getenv("XONSH_NO_AMALGAMATE", ""):
     pass
 else:
     import sys as _sys

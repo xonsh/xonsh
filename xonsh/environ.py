@@ -998,11 +998,14 @@ class GeneralSetting(Xettings):
         bool_or_int_to_str,
         0,
         "Sets the xonsh debugging level. This may be an integer or a boolean. "
-        "Setting this variable prior to stating xonsh to ``1`` or ``True`` "
-        "will suppress amalgamated imports. Setting it to ``2`` will get some "
-        "basic information like input transformation, command replacement. "
-        "With ``3`` or a higher number will make more debugging information "
+        "Setting it to ``1`` will get some basic information like input transformation, command replacement. "
+        "With ``2`` or a higher number will make more debugging information "
         "presented, like PLY parsing messages.",
+        is_configurable=False,
+    )
+    XONSH_NO_AMALGAMATE = Var.with_default(
+        False,
+        "Setting this variable prior to starting xonsh to a truthy value will suppress amalgamated imports.",
         is_configurable=False,
     )
     XONSH_DATA_DIR = Var.with_default(
