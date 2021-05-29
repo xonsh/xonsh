@@ -2,7 +2,11 @@ import collections
 from xonsh.parsers.completion_context import CommandContext
 
 from xonsh.built_ins import XSH
-from xonsh.completers.tools import contextual_command_completer_for, justify
+from xonsh.completers.tools import (
+    contextual_command_completer_for,
+    justify,
+    is_exclusive_completer,
+)
 
 
 @contextual_command_completer_for("completer")
@@ -47,8 +51,20 @@ def complete_completer(command: CommandContext):
 def add_one_completer(name, func, loc="end"):
     new = collections.OrderedDict()
     if loc == "start":
+        # Add new completer before the first exclusive one.
+        # We don't want new completers to be before the non-exclusive ones,
+        # because then they won't be used when this completer is successful.
+        # On the other hand, if the new completer is non-exclusive,
+        # we want it to be before all other exclusive completers so that is will always work.
+        items = list(XSH.completers.items())
+        first_exclusive = next(
+            (i for i, (_, v) in enumerate(items) if is_exclusive_completer(v)),
+            len(items),
+        )
+        for k, v in items[:first_exclusive]:
+            new[k] = v
         new[name] = func
-        for (k, v) in XSH.completers.items():
+        for k, v in items[first_exclusive:]:
             new[k] = v
     elif loc == "end":
         for (k, v) in XSH.completers.items():
