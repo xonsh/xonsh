@@ -89,17 +89,22 @@ def add_one_completer(name, func, loc="end"):
 
 def list_completers():
     """List the active completers"""
-    o = "Registered Completer Functions: \n"
+    o = "Registered Completer Functions: (NX = Non Exclusive)\n\n"
+    non_exclusive = " [NX]"
     _comp = XSH.completers
     ml = max((len(i) for i in _comp), default=0)
+    exclusive_len = ml + len(non_exclusive) + 1
     _strs = []
     for c in _comp:
         if _comp[c].__doc__ is None:
             doc = "No description provided"
         else:
             doc = " ".join(_comp[c].__doc__.split())
-        doc = justify(doc, 80, ml + 3)
-        _strs.append("{: >{}} : {}".format(c, ml, doc))
+        doc = justify(doc, 80, exclusive_len + 3)
+        if is_exclusive_completer(_comp[c]):
+            _strs.append("{: <{}} : {}".format(c, exclusive_len, doc))
+        else:
+            _strs.append("{: <{}} {} : {}".format(c, ml, non_exclusive, doc))
     return o + "\n".join(_strs) + "\n"
 
 
