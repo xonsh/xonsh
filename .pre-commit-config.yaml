@@ -5,8 +5,9 @@ repos:
         name: black
         # this gets run within development environment.
         # Otherwise will raise command not found or use system level binary
-        entry: black --check xonsh/ xontrib/
+        entry: black --check xonsh/ xontrib/ tests/
         language: system
+        stages: [ commit ]
         types:
           - python
       - id: qa
