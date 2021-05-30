@@ -49,7 +49,7 @@ def _register_completer(name: str, func: str, pos="start", stack=None):
         position into the list of completers at which the new
         completer should be added.  It can be one of the following values:
         * "start" indicates that the completer should be added to the start of
-                 the list of completers (it should be run before all others)
+                 the list of completers (it should be run before all other exclusive completers)
         * "end" indicates that the completer should be added to the end of the
                list of completers (it should be run after all others)
         * ">KEY", where KEY is a pre-existing name, indicates that this should
