@@ -166,6 +166,21 @@ xonsh actually uses, in the ``xonsh.completers`` module.
         if command.arg_index == 1 and 'carcolh'.startswith(command.prefix):
             return {'snail'}, len('lou ') + len(command.prefix)
 
+To understand how xonsh uses completers and their return values try
+to set :ref:`$XONSH_TRACE_COMPLETIONS <xonsh_trace_completions>` to ``True``:
+
+.. code-block:: console
+
+    >>> $XONSH_TRACE_COMPLETIONS = True
+    >>> pip c<TAB>
+    TRACE COMPLETIONS: Getting completions with context:
+    CompletionContext(command=CommandContext(args=(CommandArg(value='pip', opening_quote='', closing_quote=''),), arg_index=1, prefix='c', suffix='', opening_quote='', closing_quote='', is_after_closing_quote=False, subcmd_opening=''), python=PythonContext('pip c', 5, is_sub_expression=False))
+    TRACE COMPLETIONS: Got 3 results from exclusive completer 'pip':
+    {RichCompletion('cache', append_space=True),
+     RichCompletion('check', append_space=True),
+     RichCompletion('config', append_space=True)}
+
+
 
 Registering a Completer
 =======================

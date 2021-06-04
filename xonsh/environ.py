@@ -1080,6 +1080,10 @@ class GeneralSetting(Xettings):
         False,
         "Set to ``True`` to show arguments list of every executed subprocess command.",
     )
+    XONSH_TRACE_COMPLETIONS = Var.with_default(
+        False,
+        "Set to ``True`` to show completers invoked and their return values.",
+    )
     XONSH_TRACEBACK_LOGFILE = Var(
         is_logfile_opt,
         to_logfile_opt,
