@@ -2,7 +2,6 @@
 import re
 import sys
 import warnings
-import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.platform import HAS_PYGMENTS
@@ -282,9 +281,6 @@ def _color_name_from_ints(ints, background=False, prefix=None):
     return name
 
 
-_ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE: tp.Dict[str, tp.Tuple[str, ...]] = {}
-
-
 def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     """Converts an ANSI color code escape sequence to a tuple of color names
     in the provided style ('default' should almost be the style). For example,
@@ -294,10 +290,6 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     too, which is just the keys/values of the style dict swapped. If reversed
     style is not provided, it is computed.
     """
-    key = (escape_code, style)
-    # todo: see the cache ever used?
-    if key in _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE:
-        return _ANSI_COLOR_ESCAPE_CODE_TO_NAME_CACHE[key]
     if reversed_style is None:
         style, reversed_style = ansi_reverse_style(style, return_style=True)
     # strip some actual escape codes, if needed.
