@@ -27,32 +27,47 @@ from xonsh.tools import check_for_partial_string, get_line_continuation
 
 
 class CommandArg(NamedTuple):
+    """An argument for a command"""
+
     value: str
+    """The argument's value"""
     opening_quote: str = ""
+    """The arg's opening quote (if it exists)"""
     closing_quote: str = ""
+    """The arg's closing quote (if it exists)"""
 
     @property
     def raw_value(self):
+        """The complete argument including quotes"""
         return f"{self.opening_quote}{self.value}{self.closing_quote}"
 
 
 class CommandContext(NamedTuple):
-    args: Tuple[CommandArg, ...]
-    arg_index: int  # the current argument's index. ``-1`` if the cursor isn't in the command.
+    """
+    The object containing the current command's completion context.
+    """
 
-    # the current string arg
+    args: Tuple[CommandArg, ...]
+    """The arguments in the command"""
+    arg_index: int  # ``-1`` if the cursor isn't in the command.
+    """The current argument's index"""
+
     prefix: str = ""
+    """The current string arg's prefix"""
     suffix: str = ""
+    """The current string arg's suffix"""
     opening_quote: str = ""
+    """The current arg's opening quote if it exists (e.g. ``'``, ``r"``, ``'''``)"""
     closing_quote: str = ""
+    """The current arg's closing quote if it exists (e.g. ``'``, ``"``, ``'''``)"""
     is_after_closing_quote: bool = False
     """
     The cursor is appending to a closed string literal, i.e. cursor at the end of ``ls "/usr/"``.
     This affects the completion's behaviour - see ``Completer.complete`` in ``xonsh/completer.py``.
     """
 
-    # if this command is inside a subproc expression
-    subcmd_opening: str = ""  # e.g. "$(", "![", etc
+    subcmd_opening: str = ""
+    """If this command is inside a subproc expression (e.g. ``$(``, ``![``)"""
 
     def completing_command(self, command: str) -> bool:
         """Return whether this context is completing args for a command"""
@@ -68,10 +83,18 @@ class CommandContext(NamedTuple):
 
 
 class PythonContext(NamedTuple):
+    """
+    The object containing the current python code completion context.
+    """
+
     multiline_code: str
+    """The multi-line python code"""
     cursor_index: int
+    """The cursor's index in the multiline code"""
     is_sub_expression: bool = False
-    ctx: Optional[Dict[str, Any]] = None  # Objects in the current execution context
+    """Whether this is a sub expression (``@(...)``)"""
+    ctx: Optional[Dict[str, Any]] = None
+    """Objects in the current execution context"""
 
     def __repr__(self):
         # don't show ctx since it might be huge
@@ -79,12 +102,25 @@ class PythonContext(NamedTuple):
 
     @property
     def prefix(self):
+        """The code from the start to the cursor (may be multiline)"""
         return self.multiline_code[: self.cursor_index]
 
 
 class CompletionContext(NamedTuple):
+    """
+    The object containing the current completion context.
+    """
+
     command: Optional[CommandContext] = None
+    """
+    The current command.
+    This will be ``None`` when we can't be completing a command, e.g. ``echo @(<TAB>``.
+    """
     python: Optional[PythonContext] = None
+    """
+    The current python code.
+    This will be ``None`` when we can't be completing python, e.g. ``echo $(<TAB>``.
+    """
 
     def with_ctx(self, ctx: Dict[str, Any]) -> "CompletionContext":
         if self.python is not None:
