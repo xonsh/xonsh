@@ -16,17 +16,34 @@ environment = jinja2.Environment(
 )
 tmpl = environment.get_template("pytest.tmpl")
 
-OS_NAMES = ["linux", "macos", "windows"]
-OS_IMAGES = {
-    "linux": "ubuntu-latest",
-    "macos": "macOS-latest",
-    "windows": "windows-latest",
-}
-PY_MAIN_VERSION = "3.8"
-PY_310 = "3.10"
-PYTHON_VERSIONS = ["3.6", "3.7", PY_MAIN_VERSION, "3.9", PY_310]
 
-ALLOWED_FAILURES = [PY_310]
+def get_attrs(cls):
+    for attr, val in vars(cls).items():
+        if not attr.startswith("__"):
+            yield attr, val
+
+
+class OS:
+    linux = "ubuntu-latest"
+    macos = "macOS-latest"
+    windows = "windows-latest"
+
+
+OS_NAMES = [attr for attr, _ in get_attrs(OS)]
+
+
+class PY:
+    _36 = "3.6"
+    _37 = "3.7"
+    _38 = "3.8"
+    _39 = "3.9"
+    _310 = "3.10"
+
+
+PY_MAIN_VERSION = PY._39
+PYTHON_VERSIONS = [val for _, val in get_attrs(PY)]
+
+ALLOWED_FAILURES = [PY._310]
 
 
 def write_to_file(
@@ -35,7 +52,7 @@ def write_to_file(
     fname = os.path.join(CURR_DIR, f"{tst}-{os_name}-{python_version}.yml")
     result = tmpl.render(
         OS_NAME=os_name,
-        OS_IMAGE=OS_IMAGES[os_name],
+        OS_IMAGE=getattr(OS, os_name),
         PYTHON_VERSION=python_version,
         NAME=tst,
         allow_failure=python_version in ALLOWED_FAILURES,
@@ -49,7 +66,7 @@ def write_to_file(
 for os_name, python_version in product(OS_NAMES, PYTHON_VERSIONS):
     report_coverage = python_version == PY_MAIN_VERSION and os_name == "linux"
     if report_coverage:
-        test_cmd = "test --report-coverage -- --timeout=240"
+        test_cmd = "test --report-coverage --no-amalgam -- --timeout=240"
     else:
         test_cmd = "test -- --timeout=240"
 
@@ -62,4 +79,4 @@ for os_name, python_version in product(OS_NAMES, PYTHON_VERSIONS):
     )
 
 # qa workflow
-write_to_file("qa", "linux", "3.8", test_cmd="qa")
+write_to_file("qa", "linux", PY_MAIN_VERSION, test_cmd="qa")

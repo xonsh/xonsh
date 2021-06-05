@@ -57,8 +57,4 @@ jobs:
           python -m pip install -r requirements/tests.txt
           python -m pip install . --no-deps
       - name: Run tests
-        run: python -m xonsh run-tests.xsh test --report-coverage -- --timeout=240
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          verbose: true
+        run: python -m xonsh run-tests.xsh test -- --timeout=240

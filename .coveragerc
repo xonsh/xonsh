@@ -28,3 +28,6 @@ skip_covered = true
 skip_empty = true
 show_missing = true
 sort = Cover
+
+# something is better than nothing :)
+fail_under = 55
