@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
+import sys
 import typing as tp
 import collections.abc as cabc
 
@@ -78,9 +79,13 @@ class Completer(object):
         )
 
     def complete_from_context(self, completion_context, old_completer_args=None):
+        trace = XSH.env.get("XONSH_TRACE_COMPLETIONS")
+        if trace:
+            print("\nTRACE COMPLETIONS: Getting completions with context:")
+            sys.displayhook(completion_context)
         lprefix = 0
         completions = set()
-        for func in XSH.completers.values():
+        for name, func in XSH.completers.items():
             try:
                 if is_contextual_completer(func):
                     if completion_context is None:
@@ -121,6 +126,13 @@ class Completer(object):
 
             if res is None or len(res) == 0:
                 continue
+
+            if trace:
+                print(
+                    f"TRACE COMPLETIONS: Got {len(res)} results"
+                    f" from {'' if is_exclusive_completer(func) else 'non-'}exclusive completer '{name}':"
+                )
+                sys.displayhook(res)
 
             if (
                 completing_contextual_command
