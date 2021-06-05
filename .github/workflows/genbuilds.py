@@ -37,7 +37,7 @@ class PY:
     _37 = "3.7"
     _38 = "3.8"
     _39 = "3.9"
-    _310 = "3.10"
+    _310 = "3.10-dev"
 
 
 PY_MAIN_VERSION = PY._39
@@ -49,13 +49,16 @@ ALLOWED_FAILURES = [PY._310]
 def write_to_file(
     tst: str, os_name: str, python_version: str, report_coverage=False, **kwargs
 ):
-    fname = os.path.join(CURR_DIR, f"{tst}-{os_name}-{python_version}.yml")
+    py_major = python_version.split("-")[0]
+    fname = os.path.join(CURR_DIR, f"{tst}-{os_name}-{py_major}.yml")
+    dev_version = python_version.endswith("-dev")
     result = tmpl.render(
         OS_NAME=os_name,
         OS_IMAGE=getattr(OS, os_name),
         PYTHON_VERSION=python_version,
         NAME=tst,
         allow_failure=python_version in ALLOWED_FAILURES,
+        use_setup_py=dev_version,
         report_coverage=report_coverage,
         **kwargs,
     )
