@@ -43,7 +43,7 @@ class PY:
 PY_MAIN_VERSION = PY._39
 PYTHON_VERSIONS = [val for _, val in get_attrs(PY)]
 
-ALLOWED_FAILURES = [PY._310]
+ALLOWED_FAILURES = []
 
 
 def write_to_file(
