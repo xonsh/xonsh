@@ -19,7 +19,7 @@ jobs:
         run: |
           added_files='${{ steps.file_changes.outputs.files_added}}'
           echo $added_files
-          if [[ $added_files == *"news/"*.rst ]]; then
+          if [[ $added_files == *"news/"*.rst* ]]; then
             echo "Found news item for the PR"
           else
             echo "News item for the PR is not found. Please create one from 'news/TEMPLATE.rst'"
