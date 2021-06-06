@@ -191,18 +191,19 @@ class PromptToolkitShell(BaseShell):
     }
 
     def __init__(self, **kwargs):
+        ptk_args = kwargs.pop("ptk_args", {})
         super().__init__(**kwargs)
         if ON_WINDOWS:
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
         self.history = ThreadedHistory(PromptToolkitHistory())
 
-        ptk_args = {"history": self.history}
+        ptk_args.setdefault("history", self.history)
         if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
             disable_copy_on_deletion()
         if HAVE_SYS_CLIPBOARD:
-            ptk_args["clipboard"] = PyperclipClipboard()
-        self.prompter = PromptSession(**ptk_args)
+            ptk_args.setdefault("clipboard", PyperclipClipboard())
+        self.prompter: PromptSession = PromptSession(**ptk_args)
 
         self.prompt_formatter = PTKPromptFormatter(self.prompter)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)

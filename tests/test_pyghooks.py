@@ -149,7 +149,10 @@ def test_color_token_by_name(in_tuple, exp_ct, exp_ansi_colors, xs_LS_COLORS):
     assert ansi_colors == exp_ansi_colors, "color token mapped to correct color string"
 
 
-def test_XonshStyle_init_file_color_tokens(xs_LS_COLORS):
+def test_XonshStyle_init_file_color_tokens(xs_LS_COLORS, monkeypatch):
+    keys = list(file_color_tokens)
+    for n in keys:
+        monkeypatch.delitem(file_color_tokens, n)
     xs = XonshStyle()
     assert xs.styles
     assert type(file_color_tokens) is dict

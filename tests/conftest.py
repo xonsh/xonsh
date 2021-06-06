@@ -129,6 +129,21 @@ def completion_context_parse():
     return CompletionContextParser().parse
 
 
+@pytest.fixture
+def ptk_shell(xonsh_execer):
+    from prompt_toolkit.input import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+    from xonsh.ptk_shell.shell import PromptToolkitShell
+
+    inp = create_pipe_input()
+    out = DummyOutput()
+    shell = PromptToolkitShell(
+        execer=xonsh_execer, ctx={}, ptk_args={"input": inp, "output": out}
+    )
+    yield inp, out, shell
+    inp.close()
+
+
 def pytest_configure(config):
     """Abort test run if --flake8 requested, since it would hang on parser_test.py"""
     if config.getoption("--flake8", ""):
