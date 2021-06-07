@@ -528,6 +528,7 @@ def _info(ns):
         [
             ("on darwin", bool(ON_DARWIN)),
             ("on windows", bool(ON_WINDOWS)),
+            ("on wsl", bool(ON_WSL)),
             ("on cygwin", bool(ON_CYGWIN)),
             ("on msys2", bool(ON_MSYS)),
             ("is superuser", is_superuser()),
