@@ -524,11 +524,11 @@ def _info(ns):
     )
     if ON_LINUX:
         data.append(("distro", linux_distro()))
+        data.append(("on wsl", bool(ON_WSL))),
     data.extend(
         [
             ("on darwin", bool(ON_DARWIN)),
             ("on windows", bool(ON_WINDOWS)),
-            ("on wsl", bool(ON_WSL)),
             ("on cygwin", bool(ON_CYGWIN)),
             ("on msys2", bool(ON_MSYS)),
             ("is superuser", is_superuser()),
