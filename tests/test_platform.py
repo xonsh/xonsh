@@ -14,3 +14,6 @@ def test_githash_value_error(monkeypatch):
     sha, date_ = xp.githash()
     assert date_ is None
     assert sha is None
+
+def test_pathsplit_empty_path():
+    assert xp.pathsplit('')==('','')
