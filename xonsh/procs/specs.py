@@ -458,6 +458,8 @@ class SubprocSpec:
         return p
 
     def _run_binary(self, kwargs):
+        if not self.cmd[0]:
+            raise xt.XonshError("xonsh: subprocess mode: command is empty")
         bufsize = 1
         try:
             p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
@@ -553,6 +555,8 @@ class SubprocSpec:
         modifications and adjustments based on the actual cmd that
         was received.
         """
+        if not cmd:
+            raise xt.XonshError("xonsh: subprocess mode: command is empty")
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
