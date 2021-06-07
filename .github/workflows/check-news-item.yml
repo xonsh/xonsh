@@ -1,0 +1,27 @@
+name: Check News Item
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Check News item
+    steps:
+      - uses: actions/checkout@v2
+      - id: file_changes
+        uses: trilom/file-changes-action@v1.2.4
+        with:
+          output: ','
+      - shell: bash
+        run: |
+          added_files='${{ steps.file_changes.outputs.files_added}}'
+          echo $added_files
+          if [[ $added_files == *"news/"*.rst* ]]; then
+            echo "Found news item for the PR"
+          else
+            echo "News item for the PR is not found. Please create one from 'news/TEMPLATE.rst'"
+            exit 1
+          fi

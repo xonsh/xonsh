@@ -83,3 +83,6 @@ xonsh/webconfig/js/app.js
 # mypy
 .dmypy.json
 .mypy_cache
+
+# testmon pytest-plugin
+.testmondata

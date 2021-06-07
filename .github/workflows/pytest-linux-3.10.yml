@@ -1,4 +1,4 @@
-name: pytest windows 3.7
+name: pytest linux 3.10-dev
 
 on:
   push:
@@ -14,11 +14,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
-        python-version: [ "3.7" ]
+        os: [ubuntu-latest]
+        python-version: [ "3.10-dev" ]
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
@@ -31,14 +31,11 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.python-version }}-env-${{ hashFiles('requirements/tests.txt') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-env-
-      - name: Setup conda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          activate-environment: xonsh-test
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}  # this itself makes sure that Python version is installed
-          condarc-file: ci/condarc.yml
-          use-only-tar-bz2: true
+          python-version: ${{ matrix.python-version }}
+
       - name: Get pip cache dir
         id: pip-cache
         run: |

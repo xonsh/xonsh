@@ -1,4 +1,4 @@
-name: qa linux 3.8
+name: qa linux 3.9
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.8]
+        python-version: [ "3.9" ]
     defaults:
       run:
         shell: bash -l {0}

@@ -3,7 +3,6 @@
 
 import sys
 import pytest
-
 from xonsh.platform import minimum_required_ptk_version
 
 # verify error if ptk not installed or below min
@@ -127,4 +126,10 @@ def test_remove_ansi_osc(raw_prompt, prompt, osc_tokens):
         assert removed == ref
 
 
-# someday: initialize PromptToolkitShell and have it actually do something.
+def test_ptk_prompt(ptk_shell):
+    inp, out, shell = ptk_shell
+    text = "hello"
+    inp.send_text(f"{text}\n")  # note: terminate with '\n'
+    result = shell.singleline()
+    # todo: check rendered output using https://pyte.readthedocs.io/
+    assert result == text

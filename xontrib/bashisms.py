@@ -7,6 +7,14 @@ from xonsh.built_ins import XSH
 __all__ = ()
 
 
+def _warn_not_supported(msg: str):
+    print(
+        f"""Not supported ``{msg}`` in xontrib bashisms.
+PRs are welcome - https://github.com/xonsh/xonsh/blob/main/xontrib/bashisms.py""",
+        file=sys.stderr,
+    )
+
+
 @XSH.builtins.events.on_transform_command
 def bash_preproc(cmd, **kw):
     bang_previous = {
@@ -105,10 +113,7 @@ def _set(args):
     elif arg == "+x":
         XSH.env["XONSH_TRACE_SUBPROC"] = False
     else:
-        print(
-            "Not supported in xontrib bashisms.\nPRs are welcome - https://github.com/xonsh/xonsh/blob/master/xontrib/bashisms.py",
-            file=sys.stderr,
-        )
+        _warn_not_supported(f"set {arg}")
 
 
 XSH.aliases["set"] = _set
@@ -136,10 +141,7 @@ def _shopt(args):
     elif opt == "-u" and optname == "dotglob":
         XSH.env["DOTGLOB"] = False
     else:
-        print(
-            "Not supported in xontrib bashisms.\nPRs are welcome - https://github.com/xonsh/xonsh/blob/master/xontrib/bashisms.py",
-            file=sys.stderr,
-        )
+        _warn_not_supported(f"shopt {args}")
 
 
 XSH.aliases["shopt"] = _shopt

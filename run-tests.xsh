@@ -26,11 +26,12 @@ def test(ns: argparse.Namespace):
 
     args = ns.pytest_args
 
-    if not $(xonsh -c "import xonsh.main; print(xonsh.main.__file__, end='')").endswith("__amalgam__.py"):
+    if (not ns.no_amalgam) and not $(xonsh -c "import xonsh.main; print(xonsh.main.__file__, end='')").endswith("__amalgam__.py"):
         echo "Tests need to run from the amalgamated xonsh! install with `pip install .` (without `-e`)"
         exit(1)
 
     if ns.report_coverage:
+        $XONSH_NO_AMALGAMATE = True
         ![pytest @(_replace_args(args, 0)) --cov --cov-report=xml --cov-report=term]
     else:
         ![pytest @(_replace_args(args, 0))]
@@ -38,6 +39,7 @@ def test(ns: argparse.Namespace):
 
 def qa(ns: argparse.Namespace):
     """QA checks"""
+    $XONSH_NO_AMALGAMATE = True
 
     echo "---------- Check Black formatter -----------"
     black --check xonsh xontrib tests
@@ -66,9 +68,17 @@ if __name__ == '__main__':
     )
     test_parser.add_argument(
         '--report-coverage',
+        '-c',
         action="store_true",
         default=False,
         help="Report coverage at the end of the test",
+    )
+    test_parser.add_argument(
+        '--no-amalgam',
+        '-n',
+        action="store_true",
+        default=False,
+        help="Disable amalgamation check.",
     )
     test_parser.set_defaults(func=test)
 
