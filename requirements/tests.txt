@@ -5,6 +5,7 @@ flake8-docstrings
 flake8-bugbear
 pytest-cov
 pytest-timeout
+pytest-subprocess
 prompt-toolkit>=3.0
 pygments>=2.2
 coverage>=5.3.1

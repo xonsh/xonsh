@@ -2654,3 +2654,30 @@ def to_repr_pretty_(inst, p, cycle):
         elif len(inst):
             p.break_()
             p.pretty(dict(inst))
+
+
+class XAttr:
+    """hold attribute and value"""
+
+    __slots__ = ("name", "value")
+
+    def __init__(self, val) -> None:
+        self.value = val
+
+    def __set_name__(self, owner, name) -> None:
+        self.name: str = name
+
+    def __get__(self, instance, owner) -> "XAttr":
+        return self
+
+    def __str__(self) -> str:
+        return f"<{self.name}={self.value}>"
+
+
+class NamedConstantMeta(type):
+    """utility class to hold list of values as class-attributes"""
+
+    def __iter__(cls) -> tp.Iterator[XAttr]:
+        for attr in vars(cls):
+            if not attr.startswith("__"):
+                yield getattr(cls, attr)

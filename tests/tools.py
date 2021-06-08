@@ -101,6 +101,7 @@ class DummyEnv(MutableMapping):
     DEFAULTS = {
         "XONSH_DEBUG": 1,
         "XONSH_COLOR_STYLE": "default",
+        "VC_BRANCH_TIMEOUT": 1,
     }
 
     def __init__(self, *args, **kwargs):
