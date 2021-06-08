@@ -30,6 +30,7 @@ from xonsh.platform import (
     ON_POSIX,
     ON_LINUX,
     linux_distro,
+    ON_WSL,
     ON_DARWIN,
     ON_WINDOWS,
     ON_CYGWIN,
