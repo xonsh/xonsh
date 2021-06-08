@@ -1,5 +1,5 @@
 **Added:**
-* 'on wsl' field when running xonfig
+* 'on wsl' field when running xonfig (when linux is detected)
 
 **Changed:**
 
