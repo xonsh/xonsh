@@ -87,7 +87,7 @@ def ON_BEOS():
 @lazybool
 def ON_WSL():
     """True if we are on Windows Subsystem for Linux (WSL)"""
-    return "Microsoft" in platform.release()
+    return "microsoft" in platform.release()
 
 
 #

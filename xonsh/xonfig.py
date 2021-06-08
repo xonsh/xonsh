@@ -30,6 +30,7 @@ from xonsh.platform import (
     ON_POSIX,
     ON_LINUX,
     linux_distro,
+    ON_WSL,
     ON_DARWIN,
     ON_WINDOWS,
     ON_CYGWIN,
@@ -524,6 +525,7 @@ def _info(ns):
     )
     if ON_LINUX:
         data.append(("distro", linux_distro()))
+        data.append(("on wsl", bool(ON_WSL))),
     data.extend(
         [
             ("on darwin", bool(ON_DARWIN)),
