@@ -606,7 +606,12 @@ _bad_case = pytest.mark.skipif(
 @skip_if_no_xonsh
 def test_atdollar_no_output():
     # see issue 1521
-    script = "@$(echo)\n"
+    script = """
+def _echo(args):
+    print(' '.join(args))
+    aliases['echo'] = _echo
+@$(echo)
+"""
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert "command is empty" in err
 
