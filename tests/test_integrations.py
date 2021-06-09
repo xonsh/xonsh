@@ -602,18 +602,21 @@ _bad_case = pytest.mark.skipif(
     ON_DARWIN or ON_WINDOWS or ON_TRAVIS, reason="bad platforms"
 )
 
+
 @skip_if_no_xonsh
 def test_atdollar_no_output():
     # see issue 1521
-    script="@$(echo)\n"
+    script = "@$(echo)\n"
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert "command is empty" in err
 
+
 @skip_if_no_xonsh
 def test_empty_command():
-    script="$['']\n"
+    script = "$['']\n"
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert "command is empty" in err
+
 
 @skip_if_no_xonsh
 @_bad_case
