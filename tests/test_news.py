@@ -25,8 +25,8 @@ def check_news_file(fname):
         if "`" in l:
             if single_grave_reg.search(l):
                 pytest.fail(
-                    "{}:{}: single grave accents"
-                    " are not valid rst".format(name, i + 1),
+                    "{}:{}: single grave accents (`)"
+                    " are not valid rst. Please use ``".format(name, i + 1),
                     pytrace=True,
                 )
 
@@ -61,7 +61,14 @@ def check_news_file(fname):
         pytest.fail("{}: invalid rst".format(name), pytrace=True)
 
 
-@pytest.mark.parametrize("fname", list(os.scandir(NEWSDIR)))
+@pytest.fixture(params=list(os.scandir(NEWSDIR)))
+def fname(request):
+    if request.node.config.option.markexpr != "news":
+        pytest.skip("Run news items check explicitly")
+    return request.param
+
+
+@pytest.mark.news
 def test_news(fname):
     base, ext = os.path.splitext(fname.path)
     assert "rst" in ext

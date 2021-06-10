@@ -52,6 +52,9 @@ def qa(ns: argparse.Namespace):
     # todo: add xontrib folder here
     mypy xonsh --exclude xonsh/ply
 
+    echo "---------- Running news items check ----------"
+    pytest -m news
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
