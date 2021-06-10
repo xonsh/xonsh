@@ -1,23 +1,19 @@
 import os
-from pathlib import Path
-import shutil
 import subprocess as sp
-import tempfile
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from xonsh.environ import Env
 from xonsh.prompt import vc
-from tools import DummyEnv
-
 
 # Xonsh interaction with version control systems.
 VC_BRANCH = {"git": {"master", "main"}, "hg": {"default"}}
 
 
 @pytest.fixture(params=VC_BRANCH.keys())
-def test_repo(request, tmpdir_factory):
+def repo(request, tmpdir_factory):
     """Return a dict with vc and a temporary dir
     that is a repository for testing.
     """
@@ -35,6 +31,8 @@ def test_repo(request, tmpdir_factory):
 [user]
 name = me
 email = my@email.address
+[init]
+defaultBranch = main
 """
         )
 
@@ -45,29 +43,38 @@ email = my@email.address
     return {"vc": vc, "dir": temp_dir}
 
 
-def test_test_repo(test_repo):
-    test_vc_dir = test_repo["dir"] / ".{}".format(test_repo["vc"])
+@pytest.fixture
+def set_xenv(xession, monkeypatch):
+    def _wrapper(path):
+        monkeypatch.setattr(xession, "env", Env(VC_BRANCH_TIMEOUT=2, PWD=path))
+        return xession
+
+    return _wrapper
+
+
+def test_test_repo(repo):
+    test_vc_dir = repo["dir"] / ".{}".format(repo["vc"])
     assert test_vc_dir.is_dir()
-    if test_repo["vc"] == "git":
-        test_file = test_repo["dir"] / "test-file"
+    if repo["vc"] == "git":
+        test_file = repo["dir"] / "test-file"
         assert test_file.exists()
 
 
-def test_no_repo(xession, tmpdir):
-    xession.env = Env(VC_BRANCH_TIMEOUT=2, PWD=tmpdir)
+def test_no_repo(tmpdir, set_xenv):
+    set_xenv(tmpdir)
     assert vc.get_hg_branch() is None
     assert vc.get_git_branch() is None
 
 
-def test_vc_get_branch(test_repo, xession):
-    xession.env = Env(VC_BRANCH_TIMEOUT=2, PWD=test_repo["dir"])
+def test_vc_get_branch(repo, set_xenv):
+    set_xenv(repo["dir"])
     # get corresponding function from vc module
-    get_branch = "get_{}_branch".format(test_repo["vc"])
+    get_branch = "get_{}_branch".format(repo["vc"])
     branch = getattr(vc, get_branch)()
 
-    assert branch in VC_BRANCH[test_repo["vc"]]
-    if test_repo["vc"] == "git":
-        git_config = test_repo["dir"] / ".git/config"
+    assert branch in VC_BRANCH[repo["vc"]]
+    if repo["vc"] == "git":
+        git_config = repo["dir"] / ".git/config"
         with git_config.open("a") as f:
             f.write(
                 """
@@ -80,13 +87,12 @@ current = yellow reverse
             )
 
         branch = getattr(vc, get_branch)()
-        assert branch in VC_BRANCH[test_repo["vc"]]
+        assert branch in VC_BRANCH[repo["vc"]]
         assert not branch.startswith(u"\u001b[")
 
 
 def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xession):
     cache = xession.commands_cache
-    xession.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
     cache.is_empty = Mock(return_value=True)
     cache.locate_binary = Mock(return_value="")
     vc.current_branch()
@@ -97,7 +103,6 @@ def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
     xession,
 ):
     cache = xession.commands_cache
-    xession.env = DummyEnv(VC_BRANCH_TIMEOUT=1)
     cache.is_empty = Mock(return_value=False)
     cache.locate_binary = Mock(return_value="")
     # make lazy locate return nothing to avoid running vc binaries
@@ -106,25 +111,33 @@ def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
     assert not cache.locate_binary.called
 
 
-def test_dirty_working_directory(test_repo, xession):
-    get_dwd = "{}_dirty_working_directory".format(test_repo["vc"])
-    xession.env = Env(VC_BRANCH_TIMEOUT=2, PWD=test_repo["dir"])
+def test_dirty_working_directory(repo, set_xenv):
+    get_dwd = "{}_dirty_working_directory".format(repo["vc"])
+    set_xenv(repo["dir"])
 
     # By default, git / hg do not care about untracked files
     Path("second-test-file").touch()
     assert not getattr(vc, get_dwd)()
 
-    sp.call([test_repo["vc"], "add", "second-test-file"])
+    sp.call([repo["vc"], "add", "second-test-file"])
     assert getattr(vc, get_dwd)()
 
 
 @pytest.mark.parametrize("include_untracked", [True, False])
 def test_git_dirty_working_directory_includes_untracked(
-    xession, test_repo, include_untracked
+    xession, fake_process, include_untracked
 ):
-    xession.env = DummyEnv(VC_GIT_INCLUDE_UNTRACKED=include_untracked)
-    if test_repo["vc"] != "git":
-        return
+    xession.env["VC_GIT_INCLUDE_UNTRACKED"] = include_untracked
 
-    Path("untracked-test-file").touch()
+    if include_untracked:
+        fake_process.register_subprocess(
+            command="git status --porcelain --untracked-files=normal".split(),
+            stdout=b"?? untracked-test-file",
+        )
+    else:
+        fake_process.register_subprocess(
+            command="git status --porcelain --untracked-files=no".split(),
+            stdout=b"",
+        )
+
     assert vc.git_dirty_working_directory() == include_untracked

@@ -18,6 +18,16 @@ RE_BACKGROUND = LazyObject(
 )
 
 
+class COLORS:
+    """constants"""
+
+    RESET = "{RESET}"
+    RED = "{RED}"
+    GREEN = "{GREEN}"
+    BOLD_RED = "{BOLD_RED}"
+    BOLD_GREEN = "{BOLD_GREEN}"
+
+
 @lazyobject
 def KNOWN_XONSH_COLORS():
     """These are the minimum number of colors that need to be implemented by

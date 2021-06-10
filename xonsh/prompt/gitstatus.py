@@ -1,36 +1,20 @@
 # -*- coding: utf-8 -*-
 """Informative git status prompt formatter"""
-
-import collections
 import os
 import subprocess
 
-import xonsh.lazyasd as xl
 from xonsh.built_ins import XSH
-
-GitStatus = collections.namedtuple(
-    "GitStatus",
-    [
-        "branch",
-        "num_ahead",
-        "num_behind",
-        "untracked",
-        "changed",
-        "deleted",
-        "conflicts",
-        "staged",
-        "stashed",
-        "operations",
-        "lines_added",
-        "lines_removed",
-    ],
-)
+from xonsh.color_tools import COLORS
+from xonsh.tools import NamedConstantMeta, XAttr
 
 
-def _check_output(*args, **kwargs):
+def _check_output(*args, **kwargs) -> str:
+    denv = XSH.env.detype()
+    denv.update({"GIT_OPTIONAL_LOCKS": "0"})
+
     kwargs.update(
         dict(
-            env=XSH.env.detype(),
+            env=denv,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             universal_newlines=True,
@@ -63,60 +47,64 @@ def _check_output(*args, **kwargs):
             raise
 
 
-@xl.lazyobject
-def _DEFS():
-    DEFS = {
-        "HASH": ":",
-        "BRANCH": "{CYAN}",
-        "OPERATION": "{CYAN}",
-        "STAGED": "{RED}●",
-        "CONFLICTS": "{RED}×",
-        "CHANGED": "{BLUE}+",
-        "DELETED": "{RED}-",
-        "UNTRACKED": "…",
-        "STASHED": "⚑",
-        "CLEAN": "{BOLD_GREEN}✓",
-        "AHEAD": "↑·",
-        "BEHIND": "↓·",
-        "LINES_ADDED": "{BLUE}+",
-        "LINES_REMOVED": "{RED}-",
-    }
-    return DEFS
+class _DEFS(metaclass=NamedConstantMeta):
+    HASH_INDICATOR = XAttr(":")
+    BRANCH = XAttr("{CYAN}")
+    OPERATION = XAttr("{CYAN}")
+    STAGED = XAttr("{RED}●")
+    CONFLICTS = XAttr("{RED}×")
+    CHANGED = XAttr("{BLUE}+")
+    DELETED = XAttr("{RED}-")
+    UNTRACKED = XAttr("…")
+    STASHED = XAttr("⚑")
+    CLEAN = XAttr("{BOLD_GREEN}✓")
+    AHEAD = XAttr("↑·")
+    BEHIND = XAttr("↓·")
+    LINES_ADDED = XAttr("{BLUE}+")
+    LINES_REMOVED = XAttr("{RED}-")
 
 
-def _get_def(key):
+def _get_def(attr: XAttr) -> str:
+    key = attr.name.upper()
     def_ = XSH.env.get("XONSH_GITSTATUS_" + key)
-    return def_ if def_ is not None else _DEFS[key]
+    return def_ if def_ is not None else attr.value
 
 
-def _get_tag_or_hash():
+def _is_hidden(attr: XAttr) -> bool:
+    hidden = XSH.env.get("XONSH_GITSTATUS_FIELDS_HIDDEN") or set()
+    return attr.name.upper() in hidden or attr.name.lower() in hidden
+
+
+def _get_tag_or_hash() -> str:
     tag_or_hash = _check_output(["git", "describe", "--always"]).strip()
     hash_ = _check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
     have_tag_name = tag_or_hash != hash_
-    return tag_or_hash if have_tag_name else _get_def("HASH") + hash_
+    return tag_or_hash if have_tag_name else _get_def(_DEFS.HASH_INDICATOR) + hash_
+
+
+def _parse_int(val: str, default=0):
+    if val.isdigit():
+        return int(val)
+    return default
 
 
 def _get_files_changed():
     try:
         changed = _check_output(["git", "diff", "--numstat"])
     except subprocess.CalledProcessError:
-        return
+        return {}
 
     insert = 0
     delete = 0
-    files = 0
 
     if changed:
-        lines = changed.split("\n")
-        for line in lines:
-            x = line.split("\t")
+        for line in changed.splitlines():
+            x = line.split(maxsplit=2)
             if len(x) > 1:
-                files += 1
-                insert += int(x[0])
-                delete += int(x[1])
+                insert += _parse_int(x[0])
+                delete += _parse_int(x[1])
 
-    changed = {"files": files, "lines_added": insert, "lines_removed": delete}
-    return changed
+    return {_DEFS.LINES_ADDED: insert, _DEFS.LINES_REMOVED: delete}
 
 
 def _get_stash(gitdir):
@@ -136,19 +124,26 @@ def _gitoperation(gitdir):
         ("REVERT_HEAD", "REVERTING"),
         ("BISECT_LOG", "BISECTING"),
     )
-    return [f[1] for f in files if os.path.exists(os.path.join(gitdir, f[0]))]
+    operations = [f[1] for f in files if os.path.exists(os.path.join(gitdir, f[0]))]
+    if operations:
+        return "|" + "|".join(operations)
+    return ""
 
 
-def gitstatus():
-    """Return namedtuple with fields:
-    branch name, number of ahead commit, number of behind commit,
-    untracked number, changed number, deleted number, conflicts number,
-    staged number, stashed number, operation."""
+def _get_operation_stashed():
+    gitdir = _check_output(["git", "rev-parse", "--git-dir"]).strip()
+    stashed = _get_stash(gitdir)
+    operation = _gitoperation(gitdir)
+    return {_DEFS.OPERATION: operation, _DEFS.STASHED: stashed}
+
+
+def _get_status_fields():
+    """Return parsed values from ``git status``"""
+
     status = _check_output(["git", "status", "--porcelain", "--branch"])
     branch = ""
-    num_ahead, num_behind = 0, 0
+    ahead, behind = 0, 0
     untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
-    diffchanged = _get_files_changed()
     for line in status.splitlines():
         if line.startswith("##"):
             line = line[2:].strip()
@@ -165,9 +160,9 @@ def gitstatus():
                     divergence = divergence.strip("[]")
                     for div in divergence.split(", "):
                         if "ahead" in div:
-                            num_ahead = int(div[len("ahead ") :].strip())
+                            ahead = int(div[len("ahead ") :].strip())
                         elif "behind" in div:
-                            num_behind = int(div[len("behind ") :].strip())
+                            behind = int(div[len("behind ") :].strip())
         elif line.startswith("??"):
             untracked += 1
         else:
@@ -181,70 +176,101 @@ def gitstatus():
             elif len(line) > 0 and line[0] != " ":
                 staged += 1
 
-    gitdir = _check_output(["git", "rev-parse", "--git-dir"]).strip()
-    stashed = _get_stash(gitdir)
-    operations = _gitoperation(gitdir)
+    return {
+        _DEFS.BRANCH: branch,
+        _DEFS.AHEAD: ahead,
+        _DEFS.BEHIND: behind,
+        _DEFS.UNTRACKED: untracked,
+        _DEFS.CHANGED: changed,
+        _DEFS.DELETED: deleted,
+        _DEFS.CONFLICTS: conflicts,
+        _DEFS.STAGED: staged,
+    }
 
-    return GitStatus(
-        branch,
-        num_ahead,
-        num_behind,
-        untracked,
-        changed,
-        deleted,
-        conflicts,
-        staged,
-        stashed,
-        operations,
-        diffchanged["lines_added"],
-        diffchanged["lines_removed"],
-    )
+
+def get_gitstatus_fields():
+    """return all shown fields"""
+    fields = {}
+    for keys, provider in (
+        (
+            (
+                _DEFS.BRANCH,
+                _DEFS.AHEAD,
+                _DEFS.BEHIND,
+                _DEFS.UNTRACKED,
+                _DEFS.CHANGED,
+                _DEFS.DELETED,
+                _DEFS.CONFLICTS,
+                _DEFS.STAGED,
+            ),
+            _get_status_fields,
+        ),
+        (
+            (
+                _DEFS.OPERATION,
+                _DEFS.STASHED,
+            ),
+            _get_operation_stashed,
+        ),
+        (
+            (
+                _DEFS.LINES_ADDED,
+                _DEFS.LINES_REMOVED,
+            ),
+            _get_files_changed,
+        ),
+    ):
+        if any(map(lambda x: not _is_hidden(x), keys)):
+            try:
+                fields.update(provider())
+            except subprocess.SubprocessError:
+                return None
+    return fields
 
 
 def gitstatus_prompt():
     """Return str `BRANCH|OPERATOR|numbers`"""
-    try:
-        s = gitstatus()
-    except subprocess.SubprocessError:
+    fields = get_gitstatus_fields()
+    if fields is None:
         return None
 
-    ret = _get_def("BRANCH") + s.branch
-    if s.num_ahead > 0:
-        ret += _get_def("AHEAD") + str(s.num_ahead)
-    if s.num_behind > 0:
-        ret += _get_def("BEHIND") + str(s.num_behind)
-    if s.operations:
-        ret += _get_def("OPERATION") + "|" + "|".join(s.operations)
-    ret += "{RESET}|"
-    for category in (
-        "staged",
-        "conflicts",
-        "changed",
-        "deleted",
-        "untracked",
-        "stashed",
-        "lines_added",
-        "lines_removed",
-    ):
-        symbol = _get_def(category.upper())
-        value = getattr(s, category)
+    ret = ""
+    for fld in (_DEFS.BRANCH, _DEFS.AHEAD, _DEFS.BEHIND, _DEFS.OPERATION):
+        if not _is_hidden(fld):
+            val = fields[fld]
+            if not val:
+                continue
+            ret += _get_def(fld) + str(val)
+
+    if ret:
+        ret += COLORS.RESET + "|"
+
+    number_flds = (
+        _DEFS.STAGED,
+        _DEFS.CONFLICTS,
+        _DEFS.CHANGED,
+        _DEFS.DELETED,
+        _DEFS.UNTRACKED,
+        _DEFS.STASHED,
+        _DEFS.LINES_ADDED,
+        _DEFS.LINES_REMOVED,
+    )
+    for fld in number_flds:
+        if _is_hidden(fld):
+            continue
+        symbol = _get_def(fld)
+        value = fields[fld]
         if symbol and value > 0:
-            ret += symbol + str(value) + "{RESET}"
-    if (
-        s.staged
-        + s.conflicts
-        + s.changed
-        + s.deleted
-        + s.untracked
-        + s.stashed
-        + s.lines_added
-        + s.lines_removed
-        == 0
+            ret += symbol + str(value) + COLORS.RESET
+    if sum((fields.get(fld, 0) for fld in number_flds)) == 0 and not _is_hidden(
+        _DEFS.CLEAN
     ):
-        symbol = _get_def("CLEAN")
+        symbol = _get_def(_DEFS.CLEAN)
         if symbol:
-            ret += symbol + "{RESET}"
+            ret += symbol + COLORS.RESET
     ret = ret.rstrip("|")
-    ret += "{RESET}"
+
+    if not ret.endswith(COLORS.RESET):
+        ret += COLORS.RESET
 
     return ret
