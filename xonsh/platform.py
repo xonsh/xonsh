@@ -232,6 +232,9 @@ def pathsplit(p):
     without a drive.
     """
     n = len(p)
+    if n == 0:
+        # lazy object seps does not get initialized when n is zero
+        return "", ""
     while n and p[n - 1] not in seps:
         n -= 1
     pre = p[:n]
