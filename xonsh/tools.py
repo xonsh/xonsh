@@ -38,6 +38,7 @@ import operator
 import ast
 import string
 import typing as tp
+import shlex
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -837,7 +838,7 @@ def debian_command_not_found(cmd):
 
     c = "{0} {1}; exit 0"
     s = subprocess.check_output(
-        c.format(cnf, cmd),
+        c.format(cnf, shlex.quote(cmd)),
         universal_newlines=True,
         stderr=subprocess.STDOUT,
         shell=True,
