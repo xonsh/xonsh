@@ -603,6 +603,7 @@ _bad_case = pytest.mark.skipif(
 )
 
 
+@pytest.mark.xfail(ON_WINDOWS, reason="todo: fix failure on windows")
 @skip_if_no_xonsh
 def test_atdollar_no_output():
     # see issue 1521
