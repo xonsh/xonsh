@@ -609,7 +609,7 @@ def test_atdollar_no_output():
     script = """
 def _echo(args):
     print(' '.join(args))
-    aliases['echo'] = _echo
+aliases['echo'] = _echo
 @$(echo)
 """
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
