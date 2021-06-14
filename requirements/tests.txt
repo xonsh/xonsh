@@ -11,7 +11,10 @@ pygments>=2.2
 coverage>=5.3.1
 black==21.5b0
 pre-commit
-mypy==0.812
+
+# types related
+mypy==0.902
+types-ujson
 
 # ensure tests run with the amalgamated (==production) xonsh
 amalgamate
