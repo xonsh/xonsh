@@ -144,6 +144,30 @@ def ptk_shell(xonsh_execer):
     inp.close()
 
 
+@pytest.fixture
+def load_vox(xession, tmpdir):
+    """load vox into session"""
+
+    # Set up an isolated venv home
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
+
+    # Set up enough environment for xonsh to function
+    xession.env["PWD"] = os.getcwd()
+    xession.env["DIRSTACK_SIZE"] = 10
+    xession.env["PATH"] = []
+    xession.env["XONSH_SHOW_TRACEBACK"] = True
+
+    module = "xontrib.vox"
+    has_vox = module in sys.modules
+
+    from xonsh.xontribs import xontribs_load
+
+    xontribs_load(["vox"])
+    yield
+    if not has_vox:
+        del sys.modules["xontrib.vox"]
+
+
 def pytest_configure(config):
     """Abort test run if --flake8 requested, since it would hang on parser_test.py"""
     if config.getoption("--flake8", ""):

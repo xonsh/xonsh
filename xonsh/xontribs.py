@@ -1,6 +1,4 @@
 """Tools for helping manage xontributions."""
-import argparse
-import functools
 import importlib
 import importlib.util
 import json
@@ -10,8 +8,9 @@ from enum import IntEnum
 from pathlib import Path
 
 from xonsh.built_ins import XSH
+from xonsh.cli_utils import ArgParserAlias, Arg, Annotated, ArgCompleter
 from xonsh.xontribs_meta import get_xontribs
-from xonsh.tools import print_color, print_exception, unthreadable
+from xonsh.tools import print_color, print_exception
 
 
 class ExitCode(IntEnum):
@@ -78,8 +77,34 @@ def update_context(name, ctx=None):
     return ctx.update(modctx)
 
 
-def xontribs_load(names, verbose=False):
-    """Load xontribs from a list of names"""
+class XontribCompleter(ArgCompleter):
+    def __call__(self, *args, **kwargs):
+        meta = get_xontribs()
+        for name in meta:
+            spec = find_xontrib(name)
+            if spec is not None:
+                yield spec.name.rsplit(".")[-1]
+
+
+def xontribs_load(
+    names: Annotated[
+        tp.Sequence[str],
+        Arg(nargs="+", completer=XontribCompleter()),
+    ] = (),
+    verbose: Annotated[
+        bool,
+        Arg("-v", "--verbose", action="store_true"),
+    ] = False,
+):
+    """Load xontribs from a list of names
+
+    Parameters
+    ----------
+    names
+        names of xontribs
+    verbose
+        verbose output
+    """
     ctx = XSH.ctx
     res = ExitCode.OK
     for name in names:
@@ -92,14 +117,9 @@ def xontribs_load(names, verbose=False):
             print_exception("Failed to load xontrib {}.".format(name))
     if hasattr(update_context, "bad_imports"):
         res = ExitCode.NOT_FOUND
-        prompt_xontrib_install(update_context.bad_imports)
-        del update_context.bad_imports
+        prompt_xontrib_install(update_context.bad_imports)  # type: ignore
+        del update_context.bad_imports  # type: ignore
     return res
-
-
-def _load(ns):
-    """load xontribs"""
-    return xontribs_load(ns.names, verbose=ns.verbose)
 
 
 def xontrib_installed(names: tp.Set[str]):
@@ -118,11 +138,11 @@ def xontrib_installed(names: tp.Set[str]):
     return installed_xontribs
 
 
-def xontrib_data(ns):
+def xontrib_data(names=()):
     """Collects and returns the data about xontribs."""
     meta = get_xontribs()
     data = {}
-    names: tp.Set[str] = set() if not ns else set(ns.names)
+    names: tp.Set[str] = set(names or ())
     for xo_name in meta:
         if xo_name not in names:
             continue
@@ -148,10 +168,21 @@ def xontribs_loaded(ns=None):
     return [k for k, v in xontrib_data(ns).items() if v["loaded"]]
 
 
-def _list(ns):
-    """Lists xontribs."""
-    data = xontrib_data(ns)
-    if ns.json:
+def _list(
+    names: Annotated[tuple, Arg(nargs="*")] = (),
+    to_json: Annotated[bool, Arg("--json", action="store_true")] = False,
+):
+    """list xontribs, whether they are installed, and loaded.
+
+    Parameters
+    ----------
+    to_json
+        reports results as json
+    names
+        names of xontribs
+    """
+    data = xontrib_data(names)
+    if to_json:
         s = json.dumps(data)
         print(s)
     else:
@@ -172,40 +203,14 @@ def _list(ns):
         print_color(s[:-1])
 
 
-@functools.lru_cache()
-def _create_xontrib_parser():
-    # parse command line args
-    parser = argparse.ArgumentParser(
-        prog="xontrib", description="Manages xonsh extensions"
-    )
-    subp = parser.add_subparsers(title="action", dest="action")
-    load = subp.add_parser("load", help="loads xontribs")
-    load.add_argument(
-        "-v", "--verbose", action="store_true", default=False, dest="verbose"
-    )
-    load.add_argument("names", nargs="+", default=(), help="names of xontribs")
-    lyst = subp.add_parser(
-        "list", help=("list xontribs, whether they are " "installed, and loaded.")
-    )
-    lyst.add_argument(
-        "--json", action="store_true", default=False, help="reports results as json"
-    )
-    lyst.add_argument("names", nargs="*", default=(), help="names of xontribs")
-    return parser
+class XontribAlias(ArgParserAlias):
+    """Manage xonsh extensions"""
+
+    def build(self):
+        parser = self.create_parser()
+        parser.add_command(xontribs_load, prog="load")
+        parser.add_command(_list, prog="list")
+        return parser
 
 
-_MAIN_XONTRIB_ACTIONS = {"load": _load, "list": _list}
-
-
-@unthreadable
-def xontribs_main(args=None, stdin=None):
-    """Alias that loads xontribs"""
-    if not args or (
-        args[0] not in _MAIN_XONTRIB_ACTIONS and args[0] not in {"-h", "--help"}
-    ):
-        args.insert(0, "load")
-    parser = _create_xontrib_parser()
-    ns = parser.parse_args(args)
-    if ns.action is None:  # apply default action
-        ns = parser.parse_args(["load"] + args)
-    return _MAIN_XONTRIB_ACTIONS[ns.action](ns)
+xontribs_main = XontribAlias(threadable=False)

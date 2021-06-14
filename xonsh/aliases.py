@@ -40,7 +40,7 @@ from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
 from xonsh.ast import isexpression
 
-import xonsh.completers._aliases as xca
+import xonsh.completers.completer as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 from xonsh.xoreutils.umask import umask
@@ -720,11 +720,12 @@ class AWitchAWitch(argparse.Action):
         parser.exit()
 
 
-def xonfig(args, stdin=None):
+@lazyobject
+def xonfig():
     """Runs the xonsh configuration utility."""
     from xonsh.xonfig import xonfig_main  # lazy import
 
-    return xonfig_main(args)
+    return xonfig_main
 
 
 @unthreadable

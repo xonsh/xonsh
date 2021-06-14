@@ -1,48 +1,36 @@
 """Python virtual environment manager for xonsh."""
 
 import sys
-import textwrap
 import xontrib.voxapi as voxapi
-import xonsh.lazyasd as lazyasd
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias, ArgCompleter
+from xonsh.built_ins import XSH
 
 __all__ = ()
 
 
-class VoxHandler:
+class VenvNamesCompleter(ArgCompleter):
+    def __call__(self, command, alias: "VoxHandler", **_):
+        envs = set(alias.vox.keys())
+        from xonsh.completers.path import complete_dir
+
+        yield from envs
+
+        paths, _ = complete_dir(command)
+        yield from paths
+
+
+class VoxHandler(ArgParserAlias):
     """Vox is a virtual environment manager for xonsh."""
 
-    def parser():
-        from argparse import ArgumentParser
+    def build(self):
+        """lazily called during dispatch"""
+        self.vox = voxapi.Vox()
+        parser = self.create_parser(prog="vox")
 
-        parser = ArgumentParser(prog="vox", description=__doc__)
-        subparsers = parser.add_subparsers(dest="command")
-
-        create = subparsers.add_parser(
-            "new",
+        create = parser.add_command(
+            self.new,
             aliases=["create"],
-            help="Create a new virtual environment in $VIRTUALENV_HOME",
-        )
-        create.add_argument("name", metavar="ENV", help="The environments to create")
-
-        create.add_argument(
-            "--system-site-packages",
-            default=False,
-            action="store_true",
-            dest="system_site_packages",
-            help="Give the virtual environment access to the "
-            "system site-packages dir.",
-        )
-
-        create.add_argument(
-            "-p",
-            "--interpreter",
-            default=None,
-            help=textwrap.dedent(
-                """
-                The Python interpreter used to create the virtual environment.
-                Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
-                """
-            ).strip(),
+            args=("name", "interpreter", "system_site_packages", "activate"),
         )
 
         from xonsh.platform import ON_WINDOWS
@@ -75,121 +63,113 @@ class VoxHandler:
             "virtual environment (pip is bootstrapped "
             "by default)",
         )
-        create.add_argument(
-            "-a",
-            "--activate",
-            default=False,
-            action="store_true",
-            dest="activate",
-            help="Activate the newly created virtual environment.",
-        )
 
-        activate = subparsers.add_parser(
-            "activate", aliases=["workon", "enter"], help="Activate virtual environment"
-        )
-        activate.add_argument(
-            "name",
-            metavar="ENV",
-            help=(
-                "The environment to activate. ENV can be "
-                "either a name from the venvs shown by vox"
-                "list or the path to an arbitrary venv"
-            ),
-        )
-        deactivate = subparsers.add_parser(
-            "deactivate",
-            aliases=["exit"],
-            help="Deactivate current virtual environment",
-        )
-        deactivate.add_argument(
-            "--remove",
-            dest="remove",
-            default=False,
-            action="store_true",
-            help="Remove the virtual environment after leaving it.",
-        )
-        subparsers.add_parser(
-            "list",
-            aliases=["ls"],
-            help=("List environments available in " "$VIRTUALENV_HOME"),
-        )
-        remove = subparsers.add_parser(
-            "remove", aliases=["rm", "delete", "del"], help="Remove virtual environment"
-        )
-        remove.add_argument(
-            "names",
-            metavar="ENV",
-            nargs="+",
-            help=(
-                "The environments to remove. ENV can be "
-                "either a name from the venvs shown by vox"
-                "list or the path to an arbitrary venv"
-            ),
-        )
-        subparsers.add_parser("help", help="Show this help message")
+        parser.add_command(self.activate, aliases=["workon", "enter"])
+        parser.add_command(self.deactivate, aliases=["exit"])
+        parser.add_command(self.list, aliases=["ls"])
+        parser.add_command(self.remove, aliases=["rm", "delete", "del"])
+        parser.add_command(self.help)
         return parser
 
-    parser = lazyasd.LazyObject(parser, locals(), "parser")
-
-    aliases = {
-        "create": "new",
-        "workon": "activate",
-        "enter": "activate",
-        "exit": "deactivate",
-        "ls": "list",
-        "rm": "remove",
-        "delete": "remove",
-        "del": "remove",
-    }
-
-    def __init__(self):
-        self.vox = voxapi.Vox()
-
-    def __call__(self, args, stdin=None):
-        """Call the right handler method for a given command."""
-
-        args = self.parser.parse_args(args)
-        cmd = self.aliases.get(args.command, args.command)
-        if cmd is None:
-            self.parser.print_usage()
-        else:
-            getattr(self, "cmd_" + cmd)(args, stdin)
-
-    def cmd_new(self, args, stdin=None):
-        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``."""
+    def new(
+        self,
+        name: Annotated[str, Arg(metavar="ENV")],
+        interpreter: Annotated[
+            str,
+            Arg("-p", "--interpreter"),
+        ] = None,
+        system_site_packages: Annotated[
+            bool,
+            Arg("--system-site-packages", "--ssp", action="store_true"),
+        ] = False,
+        symlinks: bool = False,
+        with_pip: bool = True,
+        activate: Annotated[
+            bool,
+            Arg("-a", "--activate", action="store_true"),
+        ] = False,
+    ):
+        """
+            wraps around vox.create and vox.activate
+        Parameters
+        ----------
+        name : str
+            Virtual environment name
+        interpreter: str
+            Python interpreter used to create the virtual environment.
+            Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
+        system_site_packages : bool
+            If True, the system (global) site-packages dir is available to
+            created environments.
+        symlinks : bool
+            If True, attempt to symlink rather than copy files into virtual
+            environment.
+        with_pip : bool
+            If True, ensure pip is installed in the virtual environment. (Default is True)
+        activate
+            Activate the newly created virtual environment.
+        """
         print("Creating environment...")
         self.vox.create(
-            args.name,
-            system_site_packages=args.system_site_packages,
-            symlinks=args.symlinks,
-            with_pip=args.with_pip,
-            interpreter=args.interpreter,
+            name,
+            system_site_packages=system_site_packages,
+            symlinks=symlinks,
+            with_pip=with_pip,
+            interpreter=interpreter,
         )
-        if args.activate:
-            self.vox.activate(args.name)
-            print(f"Environment {args.name!r} created and activated.\n")
+        if activate:
+            self.vox.activate(name)
+            print(f"Environment {name!r} created and activated.\n")
         else:
             print(
-                f'Environment {args.name!r} created. Activate it with "vox activate {args.name}".\n'
+                f'Environment {name!r} created. Activate it with "vox activate {name}".\n'
             )
 
-    def cmd_activate(self, args, stdin=None):
-        """Activate a virtual environment."""
+    def activate(
+        self,
+        name: Annotated[
+            str, Arg(metavar="ENV", nargs="?", completer=VenvNamesCompleter())
+        ] = None,
+    ):
+        """Activate a virtual environment.
+
+        Parameters
+        ----------
+        name
+            The environment to activate.
+            ENV can be either a name from the venvs shown by ``vox list``
+            or the path to an arbitrary venv
+        """
+
+        if name is None:
+            return self.list()
 
         try:
-            self.vox.activate(args.name)
+            self.vox.activate(name)
         except KeyError:
             print(
                 'This environment doesn\'t exist. Create it with "vox new %s".\n'
-                % args.name,
+                % name,
                 file=sys.stderr,
             )
             return None
         else:
-            print('Activated "%s".\n' % args.name)
+            print('Activated "%s".\n' % name)
 
-    def cmd_deactivate(self, args, stdin=None):
-        """Deactivate the active virtual environment."""
+    def deactivate(
+        self,
+        remove: Annotated[
+            bool,
+            Arg("--remove", action="store_true"),
+        ] = False,
+    ):
+        """Deactivate the active virtual environment.
+
+        Parameters
+        ----------
+        remove
+            Remove the virtual environment after leaving it.
+        """
 
         if self.vox.active() is None:
             print(
@@ -198,13 +178,13 @@ class VoxHandler:
             )
             return None
         env_name = self.vox.deactivate()
-        if args.remove:
+        if remove:
             del self.vox[env_name]
             print(f'Environment "{env_name}" deactivated and removed.\n')
         else:
             print(f'Environment "{env_name}" deactivated.\n')
 
-    def cmd_list(self, args, stdin=None):
+    def list(self):
         """List available virtual environments."""
 
         try:
@@ -223,14 +203,28 @@ class VoxHandler:
         print("Available environments:")
         print("\n".join(envs))
 
-    def cmd_remove(self, args, stdin=None):
-        """Remove virtual environments."""
-        for name in args.names:
+    def remove(
+        self,
+        names: Annotated[
+            list,
+            Arg(metavar="ENV", nargs="+", completer=VenvNamesCompleter()),
+        ],
+    ):
+        """Remove virtual environments.
+
+        Parameters
+        ----------
+        names
+            The environments to remove. ENV can be either a name from the venvs shown by vox
+            list or the path to an arbitrary venv
+        """
+        for name in names:
             try:
                 del self.vox[name]
             except voxapi.EnvironmentInUse:
                 print(
-                    'The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate".\n'
+                    'The "%s" environment is currently active. '
+                    'In order to remove it, deactivate it first with "vox deactivate".\n'
                     % name,
                     file=sys.stderr,
                 )
@@ -242,14 +236,9 @@ class VoxHandler:
                 print('Environment "%s" removed.' % name)
         print()
 
-    def cmd_help(self, args, stdin=None):
+    def help(self):
+        """Show this help message"""
         self.parser.print_help()
 
-    @classmethod
-    def handle(cls, args, stdin=None):
-        """Runs Vox environment manager."""
-        vox = cls()
-        return vox(args, stdin=stdin)
 
-
-aliases["vox"] = VoxHandler.handle
+XSH.aliases["vox"] = VoxHandler()
