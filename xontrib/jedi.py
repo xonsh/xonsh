@@ -9,7 +9,7 @@ from xonsh.completers.tools import (
     RichCompletion,
     contextual_completer,
 )
-from xonsh.completers import _aliases
+from xonsh.completers import completer
 from xonsh.parsers.completion_context import CompletionContext
 
 __all__ = ()
@@ -163,5 +163,5 @@ def create_completion(comp: jedi.api.classes.Completion):
 xonsh.completers.base.complete_python = complete_jedi
 
 # Jedi ignores leading '@(' and friends
-_aliases._add_one_completer("jedi_python", complete_jedi, "<python")
-_aliases._remove_completer(["python"])
+completer._add_one_completer("jedi_python", complete_jedi, "<python")
+completer._remove_completer(["python"])

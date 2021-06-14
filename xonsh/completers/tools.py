@@ -201,3 +201,84 @@ def apply_lprefix(comps, lprefix):
                 yield comp
         else:
             yield RichCompletion(comp, prefix_len=lprefix)
+
+
+def _complete_argparser_action(act, **kwargs):
+    if act.choices:
+        yield from act.choices
+    elif hasattr(act, "completer") and callable(act.completer):  # type: ignore
+        from xonsh.built_ins import XSH
+
+        yield from act.completer(xsh=XSH, action=act, **kwargs)  # type: ignore
+
+
+def complete_argparser_actions(
+    parser,
+    positional: tp.Tuple[str, ...] = (),
+    current_flag: str = "",
+    **kwargs,
+):
+    """
+
+    Parameters
+    ----------
+    parser
+    positional
+        indicates the positional_arguments already filled
+    current_flag
+        when given returns completions for the flag
+    """
+    import argparse as ap
+
+    if positional:
+        sub_parsers = {}
+        for act in parser._get_positional_actions():
+            if isinstance(act.choices, dict):
+                sub_parsers = act.choices
+        if sub_parsers:
+            # get the correct parser
+            for idx, pos in enumerate(positional):
+                if pos in sub_parsers:
+                    yield from complete_argparser_actions(
+                        sub_parsers[pos], positional[idx + 1 :], current_flag, **kwargs
+                    )
+                    return
+
+    for act in parser._get_positional_actions():
+        # number of arguments it consumes
+        nargs = (
+            act.nargs
+            if isinstance(act.nargs, int)
+            else len(positional) + 1
+            if act.nargs in {ap.ONE_OR_MORE, ap.ZERO_OR_MORE}
+            else 1
+        )
+        if len(positional) >= nargs:
+            # after consuming
+            positional = positional[nargs:]
+            continue
+
+        if isinstance(act.choices, dict):  # sub-parsers
+            for choice, sub_parser in act.choices.items():
+                yield RichCompletion(choice, description=sub_parser.description or "")
+        else:
+            yield from _complete_argparser_action(act, positional=positional, **kwargs)
+        # close after a valid positional arg completion
+        break
+
+    # todo: handle consume by flag values
+    #   1. when flags come before positional
+    #   2. when flags have values given handle
+    for act in parser._get_optional_actions():
+        for flag in act.option_strings:
+            if current_flag.startswith(flag):
+                yield from _complete_argparser_action(act, **kwargs)
+            elif not current_flag:  # show flags only for root parser
+                yield RichCompletion(flag, description=act.help or "")
+
+
+def complete_argparser(parser, command: CommandContext, **kwargs):
+    """A completer function for ArgParserAlias commands"""
+    args = tuple(c.value for c in command.args[: command.arg_index])
+    position = args[1:]
+    yield from complete_argparser_actions(parser, position, command=command, **kwargs)

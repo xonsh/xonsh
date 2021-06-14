@@ -325,6 +325,10 @@ PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four, proxy_five
 def partial_proxy(f):
     """Dispatches the appropriate proxy function based on the number of args."""
     numargs = 0
+
+    if not inspect.isfunction(f) and not inspect.ismethod(f) and callable(f):
+        f = f.__call__
+
     for name, param in inspect.signature(f).parameters.items():
         if (
             param.kind == param.POSITIONAL_ONLY
