@@ -444,7 +444,7 @@ class SubprocSpec:
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         self.prep_env(kwargs)
         if callable(self.alias):
-            kwargs["env"]["__ALIAS_NAME"] = self.alias_name
+            kwargs["env"]["__ALIAS_NAME"] = self.alias_name or ""
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
