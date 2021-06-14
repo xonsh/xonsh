@@ -216,7 +216,7 @@ def complete_argparser_aliases(command: CommandContext):
     cmd = command.args[0].value
 
     alias = XSH.aliases.get(cmd)  # type: ignore
-    if not isinstance(alias, ArgParserAlias):
+    if not hasattr(alias, "parser"):
         return
 
     if command.suffix:
