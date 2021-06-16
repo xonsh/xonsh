@@ -9,6 +9,8 @@ from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
 import typing as tp
+import multiprocessing
+from multiprocessing.pool import ThreadPool
 
 from xonsh.built_ins import XSH
 from xonsh.lazyimps import os_listxattr
@@ -1628,9 +1630,20 @@ def subproc_arg_callback(_, match):
     yieldVal = Text
     try:
         path = os.path.expanduser(text)
-        path_stat = os.lstat(path)  # lstat() will raise FNF if not a real file
-        yieldVal, _ = color_file(path, path_stat)
+
+        color_file_with_lstat = lambda p: color_file(
+            p, os.lstat(p)
+        )  # lstat() will raise FNF if not a real file
+
+        pool = ThreadPool(processes=1)
+        color_async = pool.apply_async(color_file_with_lstat, (path,))
+
+        # the lstat call in the lambda and the stat call in color_file()
+        # may cause a timeout (issue #2578)
+        yieldVal, _ = color_async.get(timeout=0.5)
     except (OSError):
+        pass
+    except (multiprocessing.TimeoutError):
         pass
 
     yield (match.start(), yieldVal, text)
