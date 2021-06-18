@@ -3104,6 +3104,10 @@ class BaseParser(object):
         p1 = p[1]
         p[0] = [self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)]
 
+    def p_subproc_s1(self, p):
+        """subproc : WS subproc"""
+        p[0] = p[2]
+
     def p_subproc_amper(self, p):
         """subproc : subproc amper"""
         p1 = p[1]
