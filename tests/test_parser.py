@@ -2180,16 +2180,16 @@ def test_dollar_sub():
     check_xonsh_ast({}, "$(ls)", False)
 
 
-def test_dollar_sub_trailing_space():
-    check_xonsh_ast({}, "$(ls )", False)
-
-
-def test_dollar_sub_leading_space():
-    check_xonsh_ast({}, "$( ls)", False)
-
-
-def test_dollar_sub_leading_trailing_space():
-    check_xonsh_ast({}, "$( ls )", False)
+@pytest.mark.parametrize(
+    "expr",
+    [
+        "$(ls )",
+        "$( ls)",
+        "$( ls )",
+    ],
+)
+def test_dollar_sub_space(expr):
+    check_xonsh_ast({}, expr, False)
 
 
 def test_ls_dot():
@@ -2254,16 +2254,16 @@ def test_bang_sub():
     check_xonsh_ast({}, "!(ls)", False)
 
 
-def test_bang_sub_trailing_space():
-    check_xonsh_ast({}, "!(ls )", False)
-
-
-def test_bang_sub_leading_space():
-    check_xonsh_ast({}, "!( ls)", False)
-
-
-def test_bang_sub_leading_trailing_space():
-    check_xonsh_ast({}, "!( ls )", False)
+@pytest.mark.parametrize(
+    "expr",
+    [
+        "!(ls )",
+        "!( ls)",
+        "!( ls )",
+    ],
+)
+def test_bang_sub_space(expr):
+    check_xonsh_ast({}, expr, False)
 
 
 def test_bang_ls_dot():
