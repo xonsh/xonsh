@@ -17,7 +17,11 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 
 from xonsh.aliases import xonsh_exit
-from xonsh.tools import check_for_partial_string, get_line_continuation
+from xonsh.tools import (
+    check_for_partial_string,
+    get_line_continuation,
+    ends_with_colon_token,
+)
 from xonsh.built_ins import XSH
 from xonsh.shell import transform_command
 
@@ -49,7 +53,7 @@ def carriage_return(b, cli, *, autoindent=True):
     )
 
     # indent after a colon
-    if doc.current_line_before_cursor.strip().endswith(":") and at_end_of_line:
+    if ends_with_colon_token(doc.current_line_before_cursor) and at_end_of_line:
         b.newline(copy_margin=autoindent)
         b.insert_text(indent, fire_event=False)
     # if current line isn't blank, check dedent tokens
