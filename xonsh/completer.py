@@ -180,15 +180,15 @@ class Completer(object):
                     custom_lprefix,
                 )
 
+            if not items:  # empty completion
+                continue
+
             if trace:
                 print(
                     f"TRACE COMPLETIONS: Got {len(items)} results"
                     f" from {'' if is_exclusive_completer(func) else 'non-'}exclusive completer '{name}':"
                 )
                 sys.displayhook(items)
-
-            if not items:  # empty completion
-                continue
 
             if is_exclusive_completer(func):
                 # we got completions for an exclusive completer
@@ -201,7 +201,7 @@ class Completer(object):
             sys.displayhook(completion_context)
         lprefix = 0
         completions = set()
-        query_limit = XSH.env.get("COMPLETION_QUERY_LIMIT", 100)
+        query_limit = XSH.env.get("COMPLETION_QUERY_LIMIT")
 
         for comp in self.generate_completions(
             completion_context,
@@ -210,7 +210,11 @@ class Completer(object):
         ):
             completion, lprefix = comp
             completions.add(completion)
-            if len(completions) >= query_limit:
+            if query_limit and len(completions) >= query_limit:
+                if trace:
+                    print(
+                        "TRACE COMPLETIONS: Stopped after $COMPLETION_QUERY_LIMIT reached."
+                    )
                 break
 
         def sortkey(s):
