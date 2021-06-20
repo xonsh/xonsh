@@ -164,3 +164,13 @@ def test_quote_handling(command_context, completions, lprefix):
         isinstance(comp, RichCompletion) and not comp.append_closing_quote
         for comp in bash_completions
     )  # make sure the completer handles the closing quote by itself
+
+
+@skip_if_on_darwin
+@skip_if_on_windows
+def test_bash_completer_empty_prefix():
+    context = CompletionContext(
+        CommandContext(args=(CommandArg("git"),), arg_index=1, prefix="")
+    )
+    bash_completions, bash_lprefix = complete_from_bash(context)
+    assert {"clean", "show"}.issubset(bash_completions)

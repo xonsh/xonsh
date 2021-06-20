@@ -45,6 +45,7 @@ def complete_from_bash(context: CommandContext):
         line_args=args,
         opening_quote=opening_quote,
         closing_quote=closing_quote,
+        arg_index=context.arg_index,
     )
 
     def enrich_comps(comp: str):

@@ -291,6 +291,7 @@ def bash_completions(
     line_args=None,
     opening_quote="",
     closing_quote="",
+    arg_index=None,
     **kwargs
 ):
     """Completes based on results from BASH completion.
@@ -330,6 +331,8 @@ def bash_completions(
         The current argument's opening quote. This is passed to the `quote_paths` function.
     closing_quote : str, optional
         The closing quote that **should** be used. This is also passed to the `quote_paths` function.
+    arg_index : int, optional
+        The current prefix's index in the args.
 
     Returns
     -------
@@ -346,24 +349,30 @@ def bash_completions(
     splt = line_args or line.split()
     cmd = splt[0]
     cmd = os.path.basename(cmd)
-    idx = n = 0
     prev = ""
-    for n, tok in enumerate(splt):  # noqa
-        if tok == prefix:
-            idx = line.find(prefix, idx)
-            if idx >= begidx:
-                break
-        prev = tok
 
-    if len(prefix) == 0:
-        prefix_quoted = '""'
-        n += 1
+    if arg_index is not None:
+        n = arg_index
+        if arg_index > 0:
+            prev = splt[arg_index - 1]
     else:
-        prefix_quoted = shlex.quote(prefix)
+        # find `n` and `prev` by ourselves
+        idx = n = 0
+        for n, tok in enumerate(splt):  # noqa
+            if tok == prefix:
+                idx = line.find(prefix, idx)
+                if idx >= begidx:
+                    break
+            prev = tok
+
+        if len(prefix) == 0:
+            n += 1
+
+    prefix_quoted = shlex.quote(prefix)
 
     script = BASH_COMPLETE_SCRIPT.format(
         source=source,
-        line=" ".join(shlex.quote(p) for p in splt),
+        line=" ".join(shlex.quote(p) for p in splt if p),
         comp_line=shlex.quote(line),
         n=n,
         cmd=shlex.quote(cmd),
