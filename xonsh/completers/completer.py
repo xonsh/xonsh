@@ -222,7 +222,9 @@ def complete_argparser_aliases(command: CommandContext):
     if command.suffix:
         # completing in a middle of a word
         # (e.g. "completer some<TAB>thing")
-        return None
+        return
 
     possible = complete_argparser(alias.parser, command=command, alias=alias)
-    return {i for i in possible if i.startswith(command.prefix)}
+    for comp in possible:
+        if comp.startswith(command.prefix):
+            yield comp
