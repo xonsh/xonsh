@@ -351,6 +351,15 @@ def balanced_parens(line, mincol=0, maxcol=None, lexer=None):
     return cnt == 0
 
 
+def ends_with_colon_token(line, lexer=None):
+    """Determines whether a line ends with a colon token, ignoring comments."""
+    if lexer is None:
+        lexer = xsh.execer.parser.lexer
+    lexer.input(line)
+    toks = list(lexer)
+    return len(toks) > 0 and toks[-1].type == "COLON"
+
+
 def find_next_break(line, mincol=0, lexer=None):
     """Returns the column number of the next logical break in subproc mode.
     This function may be useful in finding the maxcol argument of
