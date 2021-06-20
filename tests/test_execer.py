@@ -75,6 +75,11 @@ def test_bad_indent():
         check_parse(code)
 
 
+def test_comment_colon_ending():
+    code = "# this is a comment:\necho hello"
+    assert check_parse(code)
+
+
 def test_good_rhs_subproc():
     # nonsense but parsable
     code = "str().split() | ![grep exit]\n"

@@ -15,6 +15,7 @@ from xonsh.tools import (
     replace_logical_line,
     balanced_parens,
     starting_whitespace,
+    ends_with_colon_token,
 )
 from xonsh.built_ins import XSH
 
@@ -268,7 +269,7 @@ class Execer(object):
                     input = "\n".join(lines)
                     continue
 
-                if last_error_line > 1 and lines[idx - 1].rstrip()[-1:] == ":":
+                if last_error_line > 1 and ends_with_colon_token(lines[idx - 1]):
                     # catch non-indented blocks and raise error.
                     prev_indent = len(lines[idx - 1]) - len(lines[idx - 1].lstrip())
                     curr_indent = len(lines[idx]) - len(lines[idx].lstrip())

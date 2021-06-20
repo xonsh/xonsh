@@ -79,6 +79,7 @@ from xonsh.tools import (
     deprecated,
     is_writable_file,
     balanced_parens,
+    ends_with_colon_token,
     iglobpath,
     all_permutations,
     register_custom_style,
@@ -627,6 +628,29 @@ def test_subexpr_before_unbalanced_parens(inp, exp):
 )
 def test_balanced_parens(line, exp):
     obs = balanced_parens(line, lexer=LEXER)
+    if exp:
+        assert obs
+    else:
+        assert not obs
+
+
+@pytest.mark.parametrize(
+    "line, exp",
+    [
+        ("if 1:", True),
+        ("elif 2: #comment", True),
+        ("elif 3: #colon comment:", True),
+        ("else: ", True),
+        ("for s in '#not-a-comment':", True),
+        ("", False),
+        ("#comment", False),
+        ("#colon comment:", False),
+        ("print('hello')", False),
+        ("print('hello') #colon comment:", False),
+    ],
+)
+def test_ends_with_colon_token(line, exp):
+    obs = ends_with_colon_token(line, lexer=LEXER)
     if exp:
         assert obs
     else:

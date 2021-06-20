@@ -29,7 +29,13 @@ from xonsh.ansi_colors import (
     ansi_color_style,
 )
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import print_exception, to_bool, columnize, carriage_return
+from xonsh.tools import (
+    print_exception,
+    to_bool,
+    columnize,
+    carriage_return,
+    ends_with_colon_token,
+)
 from xonsh.platform import (
     ON_WINDOWS,
     ON_CYGWIN,
@@ -491,7 +497,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             if len(line.strip()) == 0:
                 readline.set_pre_input_hook(None)
                 self._current_indent = ""
-            elif line.rstrip()[-1] == ":":
+            elif ends_with_colon_token(line):
                 ind = line[: len(line) - len(line.lstrip())]
                 ind += XSH.env.get("INDENT")
                 readline.set_pre_input_hook(_insert_text_func(ind, readline))
