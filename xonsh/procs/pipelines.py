@@ -249,6 +249,10 @@ class CommandPipeline:
                 proc.wait()
                 self._endtime()
                 if self.captured == "object":
+                    if stdout:
+                        b = stdout.read()
+                        s = self._decode_uninew(b, universal_newlines=True)
+                        self.lines = s.splitlines(keepends=True)
                     self.end(tee_output=False)
                 elif self.captured == "hiddenobject" and stdout:
                     b = stdout.read()
