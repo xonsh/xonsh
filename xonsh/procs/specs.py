@@ -734,6 +734,7 @@ def _update_last_spec(last):
         cmds_cache = XSH.commands_cache
         thable = (
             env.get("THREAD_SUBPROCS")
+            and (captured != "hiddenobject" or env.get("XONSH_CAPTURE_ALWAYS"))
             and cmds_cache.predict_threadable(last.args)
             and cmds_cache.predict_threadable(last.cmd)
         )

@@ -883,28 +883,33 @@ class GeneralSetting(Xettings):
         "not always happen.",
         is_configurable=False,
     )
+    XONSH_CAPTURE_ALWAYS = Var.with_default(
+        False,
+        "Try to capture output of commands run without explicit capturing.\n"
+        "If True, xonsh will capture the output of commands run directly or in ``![]``.\n"
+        "Setting to True has the following disadvantages:\n"
+        "* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).\n"
+        "  For more information see discussion at https://github.com/xonsh/xonsh/issues/3672.\n"
+        "* Stopping these commands with ^Z (i.e. ``SIGTSTP``)\n"
+        "  is disabled as it causes deadlocked terminals.\n"
+        "  ``SIGTSTP`` may still be issued and only the physical pressing\n"
+        "  of ``Ctrl+Z`` is ignored.\n\n"
+        "Regardless of this value, commands run in ``$()``, ``!()`` or with an IO redirection (``>`` or ``|``) "
+        "will always be captured.\n"
+        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True.",
+    )
     THREAD_SUBPROCS = Var(
         is_bool_or_none,
         to_bool_or_none,
         bool_or_none_to_str,
         not ON_CYGWIN,
+        "Note: The ``$XONSH_CAPTURE_ALWAYS`` variable introduces finer control "
+        "and you should probably use that instead.\n\n"
         "Whether or not to try to run subrocess mode in a Python thread, "
-        "when applicable. There are various trade-offs, which normally "
-        "affects only interactive sessions.\n\nWhen True:\n\n"
-        "* Xonsh is able capture & store the stdin, stdout, and stderr \n"
+        "when trying to capture its output. There are various trade-offs.\n\n"
+        "If True, xonsh is able capture & store the stdin, stdout, and stderr \n"
         "  of threadable subprocesses.\n"
-        "* However, stopping threaded subprocs with ^Z (i.e. ``SIGTSTP``)\n"
-        "  is disabled as it causes deadlocked terminals.\n"
-        "  ``SIGTSTP`` may still be issued and only the physical pressing\n"
-        "  of ``Ctrl+Z`` is ignored.\n"
-        "* Threadable commands are run with ``PopenThread`` and threadable \n"
-        "  aliases are run with ``ProcProxyThread``.\n\n"
-        "When False:\n\n"
-        "* Xonsh may not be able to capture stdin, stdout, and stderr streams \n"
-        "  unless explicitly asked to do so.\n"
-        "* Stopping the thread with ``Ctrl+Z`` yields to job control.\n"
-        "* Threadable commands are run with ``Popen`` and threadable \n"
-        "  alias are run with ``ProcProxy``.\n\n"
+        "The disadvantages are listed in ``$XONSH_CAPTURE_ALWAYS``.\n"
         "The desired effect is often up to the command, user, or use case.\n\n"
         "None values are for internal use only and are used to turn off "
         "threading when loading xonshrc files. This is done because Bash "
