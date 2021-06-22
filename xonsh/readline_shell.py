@@ -161,6 +161,13 @@ def setup_readline():
         except Exception:
             # this seems to fail with libedit
             print_exception("xonsh: could not load readline default init file.")
+
+    # Protection against paste jacking (issue #1154)
+    # This must be set after the init file is loaded since read_init_file()
+    # automatically disables bracketed paste
+    # (https://github.com/python/cpython/pull/24108)
+    readline.parse_and_bind("set enable-bracketed-paste on")
+
     # properly reset input typed before the first prompt
     readline.set_startup_hook(carriage_return)
 
