@@ -776,6 +776,8 @@ def _update_last_spec(last):
     # set standard error
     if last.stderr is not None:
         pass
+    elif captured == "stdout":
+        pass
     elif captured == "object":
         r, w = os.pipe()
         last.stderr = safe_open(w, "w")
