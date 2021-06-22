@@ -1617,7 +1617,7 @@ keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown bel
   For example, ``STRIKETHROUGH_RED``.
 * ``BOLDOFF_`` is a prefix modifier for removing the intensity of the font.
   It may be used with any foreground color.
-  For example, ``BOLDOFF_RED`` and ``BOLD_#112233`` are OK!
+  For example, ``BOLDOFF_RED`` and ``BOLDOFF_#112233`` are OK!
 * ``FAINTOFF_`` is a prefix modifier for removing the faintness of the font.
   For example, ``FAINTOFF_YELLOW``.
 * ``ITALICOFF_`` is a prefix modifier that removes an italic font.
