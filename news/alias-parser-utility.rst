@@ -1,7 +1,9 @@
 **Added:**
 
 * added new utility classes ``xonsh.cli_utils.ArgParserAlias``, ``xonsh.cli_utils.ArgCompleter``.
-  These are helper classes, that add coloring and completion support to the alias-commands.
+  These are helper classes, that add coloring and auto-completion support to the alias-commands.
+* added auto-completion support for pushd, vox
+* improved auto-completion of xonfig, xontrib
 
 **Changed:**
 
