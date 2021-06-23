@@ -1,0 +1,3 @@
+**Added:**
+
+* Completions for vox

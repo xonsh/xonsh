@@ -4,6 +4,8 @@ import sys
 import textwrap
 import xontrib.voxapi as voxapi
 import xonsh.lazyasd as lazyasd
+from xonsh.completers.completer import add_one_completer
+from xonsh.completers.vox import complete_vox
 
 __all__ = ()
 
@@ -252,4 +254,5 @@ class VoxHandler:
         return vox(args, stdin=stdin)
 
 
+add_one_completer("vox", complete_vox, loc="start")
 aliases["vox"] = VoxHandler.handle
