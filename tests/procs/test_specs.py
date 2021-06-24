@@ -47,6 +47,18 @@ def test_cmds_to_specs_thread_subproc(xession):
     assert specs[0].cls is ProcProxy
 
 
+@pytest.mark.parametrize("thread_subprocs", [True, False])
+def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs):
+    env = XSH.env
+    cmds = (["ls", "/root"],)
+
+    env["THREAD_SUBPROCS"] = thread_subprocs
+
+    specs = cmds_to_specs(cmds, captured="stdout")
+    assert specs[0].stdout is not None
+    assert specs[0].stderr is None
+
+
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "thread_subprocs, capture_always", list(itertools.product((True, False), repeat=2))
