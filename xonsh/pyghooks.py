@@ -245,18 +245,21 @@ def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
         try:
             styles = XSH.shell.shell.styler.styles  # type:ignore
         except AttributeError:
-            return Color
+            pass
 
     tokName = xc[0]
-    pc = color_name_to_pygments_code(xc[0], styles)
+    if styles:
+        pc = color_name_to_pygments_code(xc[0], styles)
 
-    if len(xc) > 1:
-        pc += " " + color_name_to_pygments_code(xc[1], styles)
-        tokName += "__" + xc[1]
+        if len(xc) > 1:
+            pc += " " + color_name_to_pygments_code(xc[1], styles)
+            tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
-    if token not in styles or not styles[token]:
+
+    if styles and (token not in styles or not styles[token]):
         styles[token] = pc
+
     return token
 
 

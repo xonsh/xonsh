@@ -365,6 +365,11 @@ def test_colorize_file_ca(xs_LS_COLORS, monkeypatch):
             {"completion-menu.completion.current": "#00ff00"},
             {Token.PTK.CompletionMenu.Completion.Current: "#00ff00"},
         ),  # ptk style
+        (
+            "test6",
+            {"RED": "#ff0000"},
+            {Token.Color.RED: "#ff0000"},
+        ),  # short color name
     ],
 )
 def test_register_custom_pygments_style(name, styles, refrules):
