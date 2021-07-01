@@ -1,9 +1,0 @@
-*.pyc
-*.pyo
-__pycache__
-*.out
-*.dif
-*~
-/dist
-/build
-/*.egg-info

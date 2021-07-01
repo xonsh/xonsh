@@ -12,13 +12,7 @@ help:
 	Utility file for xonsh project. Try these targets:
 	* amalgamate: Generate __amalgam__.py files
 	* clean: Remove generated files (namely, the amalgamations)
-	* xonsh/ply: Pull down most recent ply
 	""")
-
-.PHONY: xonsh/ply
-xonsh/ply:
-	git subtree pull --prefix xonsh/ply https://github.com/dabeaz/ply.git master --squash
-
 
 .PHONY: clean
 clean:
