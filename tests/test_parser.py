@@ -19,7 +19,7 @@ def xonsh_builtins_autouse(xonsh_builtins):
     return xonsh_builtins
 
 
-PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
+PARSER = Parser(yacc_optimize=False, yacc_debug=True)
 
 
 def check_ast(inp, run=True, mode="eval", debug_level=0):
