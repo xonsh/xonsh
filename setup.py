@@ -68,7 +68,6 @@ def build_tables():
     from xonsh.parser import Parser
 
     Parser(
-        lexer_table="lexer_table",
         yacc_table="parser_table",
         outputdir=os.path.join(root_dir, "xonsh"),
         yacc_debug=True,
