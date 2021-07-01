@@ -85,11 +85,7 @@ class CommandsCache(cabc.Mapping):
 
     @staticmethod
     def remove_dups(p):
-        ret = list()
-        for e in map(os.path.realpath, p):
-            if e not in ret:
-                ret.append(e)
-        return ret
+        return set(map(os.path.realpath, p))
 
     def _update_if_changed(self, paths: tp.Tuple[str, ...], aliases):
         # did PATH change?
