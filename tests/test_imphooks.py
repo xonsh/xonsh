@@ -6,19 +6,15 @@ from importlib import import_module
 import pytest
 
 from xonsh import imphooks
-from xonsh.execer import Execer
 from xonsh.environ import Env
-from xonsh.built_ins import XSH
 
 imphooks.install_import_hooks()
 
 
 @pytest.fixture(autouse=True)
 def imp_env(xession):
-    Execer(unload=False)
-    xession.env = Env({"PATH": [], "PATHEXT": []})
-    yield
-    XSH.unload()
+    xession.env = Env({"PATH": [], "PATHEXT": [], "XONSH_SHOW_TRACEBACK": True})
+    yield xession
 
 
 def test_import():
