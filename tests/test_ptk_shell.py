@@ -33,7 +33,7 @@ def test_prompt_toolkit_version_checks(
     exp_shell_type,
     warn_snip,
     monkeypatch,
-    xonsh_builtins,
+    xession,
 ):
 
     mocked_warn = ""

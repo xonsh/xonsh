@@ -81,7 +81,7 @@ def session_vars():
 
 
 @pytest.fixture
-def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
+def xession(monkeypatch, xonsh_events) -> XonshSession:
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = dict(vars(builtins).items())  # type: ignore
 
@@ -124,21 +124,9 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
         # attributes to builtins are dynamicProxy and should pickup the following
         monkeypatch.setattr(XSH.builtins, attr, val)
 
-    # todo: remove using builtins for tests at all
-    yield builtins
+    yield XSH
     XSH.unload()
-    for attr in set(dir(builtins)) - set(old_builtins):
-        if hasattr(builtins, attr):
-            delattr(builtins, attr)
-    for attr, old_value in old_builtins.items():
-        setattr(builtins, attr, old_value)
-
     tasks.clear()  # must to this to enable resetting all_jobs
-
-
-@pytest.fixture
-def xession(xonsh_builtins) -> XonshSession:
-    return XSH
 
 
 @pytest.fixture

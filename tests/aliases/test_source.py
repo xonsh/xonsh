@@ -8,7 +8,7 @@ from xonsh.aliases import source_alias
 
 
 @pytest.fixture
-def mockopen(xonsh_builtins, monkeypatch):
+def mockopen(xession, monkeypatch):
     @contextmanager
     def mocked_open(fpath, *args, **kwargs):
         yield MagicMock(read=lambda: fpath)

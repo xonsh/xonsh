@@ -425,7 +425,7 @@ def test_xonsh_failback(
     rc_shells,
     exp_shell,
     shell,
-    xonsh_builtins,
+    xession,
     monkeypatch,
     monkeypatch_stderr,
 ):
