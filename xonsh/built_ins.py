@@ -17,6 +17,7 @@ import builtins
 import itertools
 import contextlib
 import collections.abc as cabc
+import typing as tp
 
 from ast import AST
 from xonsh.lazyasd import lazyobject
@@ -530,11 +531,15 @@ class XonshSession:
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
-        self.builtins_loaded = False
+
+        self.builtins_attrs = {}
+        """attrs added to buitins"""
+
         self.history = None
         self.shell = None
         self.env = None
         self.rc_files = None
+        self.aliases = None
 
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
@@ -550,8 +555,6 @@ class XonshSession:
         from xonsh.commands_cache import CommandsCache
         from xonsh.completers.init import default_completers
 
-        if not hasattr(builtins, "__xonsh__"):
-            builtins.__xonsh__ = self
         if ctx is not None:
             self.ctx = ctx
 
@@ -566,14 +569,6 @@ class XonshSession:
         self.exit = False
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
-
-        if hasattr(builtins, "exit"):
-            self.pyexit = builtins.exit
-            del builtins.exit
-
-        if hasattr(builtins, "quit"):
-            self.pyquit = builtins.quit
-            del builtins.quit
 
         self.subproc_captured_stdout = subproc_captured_stdout
         self.subproc_captured_inject = subproc_captured_inject
@@ -598,82 +593,70 @@ class XonshSession:
         self.enter_macro = enter_macro
         self.path_literal = path_literal
 
-        self.builtins = _BuiltIns(execer)
-
         aliases_given = kwargs.pop("aliases", None)
+        self.builtins = _BuiltIns(execer, aliases_given)
+
         for attr, value in kwargs.items():
             if hasattr(self, attr):
                 setattr(self, attr, value)
-        self.link_builtins(aliases_given)
-        self.builtins_loaded = True
+        self.link_builtins()
 
-    def link_builtins(self, aliases=None):
-        from xonsh.aliases import Aliases, make_default_aliases
+    def set_builtin_attr(self, attr, value: tp.Optional[tp.Any] = None) -> None:
+        self.builtins_attrs[attr] = None
+        if value is None:
+            attr_val = getattr(builtins, attr, None)
+            if attr_val:
+                self.builtins_attrs[attr] = attr_val
+                delattr(builtins, attr)
+        else:
+            setattr(builtins, attr, value)
+
+    def link_builtins(self):
+        if self.builtins_attrs:
+            return
+        self.set_builtin_attr("__xonsh__", self)
+        self.set_builtin_attr("exit")
+        self.set_builtin_attr("quit")
 
         # public built-ins
-        proxy_mapping = [
-            "XonshError",
-            "XonshCalledProcessError",
-            "evalx",
-            "execx",
-            "compilex",
-            "events",
-            "print_color",
-            "printx",
-        ]
-        for refname in proxy_mapping:
+        for refname in dir(self.builtins):
+            if refname.startswith("_"):
+                continue
             objname = f"__xonsh__.builtins.{refname}"
             proxy = DynamicAccessProxy(refname, objname)
-            setattr(builtins, refname, proxy)
+            self.set_builtin_attr(refname, proxy)
 
-        # sneak the path search functions into the aliases
-        # Need this inline/lazy import here since we use locate_binary that
-        # relies on __xonsh__.env in default aliases
-        if aliases is None:
-            aliases = Aliases(make_default_aliases())
-        self.aliases = builtins.default_aliases = builtins.aliases = aliases
+        # backward compatibility
+        self.aliases = self.builtins.aliases
+        self.set_builtin_attr("default_aliases", self.builtins.aliases)
+
         atexit.register(_lastflush)
         for sig in AT_EXIT_SIGNALS:
             resetting_signal_handle(sig, _lastflush)
 
     def unlink_builtins(self):
-        names = [
-            "XonshError",
-            "XonshCalledProcessError",
-            "evalx",
-            "execx",
-            "compilex",
-            "default_aliases",
-            "events",
-            "print_color",
-            "printx",
-        ]
-
-        for name in names:
-            if hasattr(builtins, name):
-                delattr(builtins, name)
+        for attr, val in self.builtins_attrs.items():
+            if hasattr(builtins, attr):
+                delattr(builtins, attr)
+            if val:
+                setattr(builtins, attr, val)
+        self.builtins_attrs.clear()
 
     def unload(self):
-        if not hasattr(builtins, "__xonsh__"):
-            self.builtins_loaded = False
+        if not self.builtins_attrs:
             return
         env = getattr(self, "env", None)
         if hasattr(self.env, "undo_replace_env"):
             env.undo_replace_env()
-        if hasattr(self, "pyexit"):
-            builtins.exit = self.pyexit
-        if hasattr(self, "pyquit"):
-            builtins.quit = self.pyquit
-        if not self.builtins_loaded:
-            return
         self.unlink_builtins()
-        delattr(builtins, "__xonsh__")
-        self.builtins_loaded = False
 
 
 class _BuiltIns:
-    def __init__(self, execer=None):
+    """These attributes will be available in global context with execer"""
+
+    def __init__(self, execer=None, aliases=None):
         from xonsh.events import events
+        from xonsh.aliases import Aliases, make_default_aliases
 
         # public built-ins
         self.XonshError = XonshError
@@ -683,6 +666,12 @@ class _BuiltIns:
         self.compilex = None if execer is None else execer.compile
         self.events = events
         self.print_color = self.printx = print_color
+
+        # sneak the path search functions into the aliases
+        # Need this inline/lazy import here since we use locate_binary that
+        # relies on __xonsh__.env in default aliases
+        if aliases is None:
+            self.aliases = Aliases(make_default_aliases())
 
 
 class DynamicAccessProxy:
