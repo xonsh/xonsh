@@ -66,11 +66,17 @@ def build_tables():
     root_dir = os.path.abspath(os.path.dirname(__file__))
     sys.path.insert(0, root_dir)
     from xonsh.parser import Parser
+    from xonsh.parsers.completion_context import CompletionContextParser
 
     Parser(
         yacc_table="parser_table",
         outputdir=os.path.join(root_dir, "xonsh"),
         yacc_debug=True,
+    )
+    CompletionContextParser(
+        yacc_table="completion_parser_table",
+        outputdir=os.path.join(root_dir, "xonsh"),
+        debug=True,
     )
     sys.path.pop(0)
 
