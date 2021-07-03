@@ -13,3 +13,4 @@ include xonsh/ply/CONTRIBUTING.md
 include xonsh/ply/README.md
 include xonsh/ply/CHANGES
 global-exclude *.pyc
+include amalgamate.py
