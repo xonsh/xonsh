@@ -394,7 +394,7 @@ def bash_completions(
             raise ValueError
     except (
         subprocess.CalledProcessError,
-        FileNotFoundError,
+        OSError,
         ValueError,
     ):
         return set(), 0
