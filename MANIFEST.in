@@ -6,10 +6,5 @@ include README.rst
 include run-tests.xsh
 recursive-include tests *
 exclude tests/test_news.py
-recursive-include xonsh/ply/example *
-recursive-include xonsh/ply/doc *
-recursive-include xonsh/ply/test *
-include xonsh/ply/CONTRIBUTING.md
-include xonsh/ply/README.md
-include xonsh/ply/CHANGES
 global-exclude *.pyc
+include amalgamate.py

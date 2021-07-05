@@ -14,8 +14,6 @@ else:
     try:
         from xonsh import __amalgam__
 
-        xontribs_meta = __amalgam__
-        _sys.modules["xonsh.xontribs_meta"] = __amalgam__
         cli_utils = __amalgam__
         _sys.modules["xonsh.cli_utils"] = __amalgam__
         contexts = __amalgam__
@@ -28,6 +26,8 @@ else:
         _sys.modules["xonsh.platform"] = __amalgam__
         pretty = __amalgam__
         _sys.modules["xonsh.pretty"] = __amalgam__
+        xontribs_meta = __amalgam__
+        _sys.modules["xonsh.xontribs_meta"] = __amalgam__
         codecache = __amalgam__
         _sys.modules["xonsh.codecache"] = __amalgam__
         lazyimps = __amalgam__
@@ -46,8 +46,6 @@ else:
         _sys.modules["xonsh.commands_cache"] = __amalgam__
         completer = __amalgam__
         _sys.modules["xonsh.completer"] = __amalgam__
-        diff_history = __amalgam__
-        _sys.modules["xonsh.diff_history"] = __amalgam__
         events = __amalgam__
         _sys.modules["xonsh.events"] = __amalgam__
         foreign_shells = __amalgam__
@@ -64,8 +62,12 @@ else:
         _sys.modules["xonsh.xontribs"] = __amalgam__
         ansi_colors = __amalgam__
         _sys.modules["xonsh.ansi_colors"] = __amalgam__
+        diff_history = __amalgam__
+        _sys.modules["xonsh.diff_history"] = __amalgam__
         dirstack = __amalgam__
         _sys.modules["xonsh.dirstack"] = __amalgam__
+        execer = __amalgam__
+        _sys.modules["xonsh.execer"] = __amalgam__
         shell = __amalgam__
         _sys.modules["xonsh.shell"] = __amalgam__
         style_tools = __amalgam__
@@ -78,22 +80,20 @@ else:
         _sys.modules["xonsh.base_shell"] = __amalgam__
         environ = __amalgam__
         _sys.modules["xonsh.environ"] = __amalgam__
+        imphooks = __amalgam__
+        _sys.modules["xonsh.imphooks"] = __amalgam__
         inspectors = __amalgam__
         _sys.modules["xonsh.inspectors"] = __amalgam__
         aliases = __amalgam__
         _sys.modules["xonsh.aliases"] = __amalgam__
+        main = __amalgam__
+        _sys.modules["xonsh.main"] = __amalgam__
         readline_shell = __amalgam__
         _sys.modules["xonsh.readline_shell"] = __amalgam__
         tracer = __amalgam__
         _sys.modules["xonsh.tracer"] = __amalgam__
         dumb_shell = __amalgam__
         _sys.modules["xonsh.dumb_shell"] = __amalgam__
-        execer = __amalgam__
-        _sys.modules["xonsh.execer"] = __amalgam__
-        imphooks = __amalgam__
-        _sys.modules["xonsh.imphooks"] = __amalgam__
-        main = __amalgam__
-        _sys.modules["xonsh.main"] = __amalgam__
         del __amalgam__
     except ImportError:
         pass
