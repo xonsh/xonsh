@@ -84,12 +84,13 @@ class CommandsCache(cabc.Mapping):
             return [name]
 
     @staticmethod
-    def remove_dups(p):
-        ret = list()
-        for e in map(os.path.realpath, p):
-            if e not in ret:
-                ret.append(e)
-        return ret
+    def remove_dups(paths):
+        cont = set()
+        for p in map(os.path.realpath, paths):
+            if p not in cont:
+                cont.add(p)
+                if os.path.isdir(p):
+                    yield p
 
     def _update_if_changed(self, paths: tp.Tuple[str, ...], aliases):
         # did PATH change?
@@ -109,8 +110,7 @@ class CommandsCache(cabc.Mapping):
 
     @property
     def all_commands(self):
-        paths = CommandsCache.remove_dups(XSH.env.get("PATH", []))
-        path_immut = tuple(x for x in paths if os.path.isdir(x))
+        path_immut = tuple(CommandsCache.remove_dups(XSH.env.get("PATH", [])))
         alss = getattr(XSH, "aliases", dict())
         (
             has_path_changed,

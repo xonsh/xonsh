@@ -22,7 +22,6 @@ import collections.abc as cabc
 import contextlib
 import ctypes
 import datetime
-from distutils.version import LooseVersion
 import functools
 import glob
 import itertools
@@ -2648,6 +2647,8 @@ def _deprecated_message_suffix(deprecated_in, removed_in):
 
 
 def _deprecated_error_on_expiration(name, removed_in):
+    from distutils.version import LooseVersion
+
     if not removed_in:
         return
     elif LooseVersion(__version__) >= LooseVersion(removed_in):

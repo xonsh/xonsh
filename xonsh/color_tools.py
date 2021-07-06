@@ -474,12 +474,14 @@ def short_to_ints(short):
     return rgb_to_ints(short2rgb(short))
 
 
-def color_dist(x, y):
+def color_dist(x, y) -> float:
     return math.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2 + (x[2] - y[2]) ** 2)
 
 
 def find_closest_color(x, palette):
-    return min(sorted(palette.keys())[::-1], key=lambda k: color_dist(x, palette[k]))
+    return min(
+        sorted(palette.keys(), reverse=True), key=lambda k: color_dist(x, palette[k])
+    )
 
 
 def make_palette(strings):
