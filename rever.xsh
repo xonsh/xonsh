@@ -1,5 +1,6 @@
 from rever.activities.ghrelease import git_archive_asset
 
+from pkg_resources import parse_requirements
 
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
@@ -28,12 +29,15 @@ $TAG_TARGET = 'master'
 $GHPAGES_REPO = 'git@github.com:xonsh/xonsh-docs.git'
 
 $DOCKER_APT_DEPS = ['man']
-with open('requirements/tests.txt') as f:
-    conda_deps = f.read().split()
-with open('requirements/docs.txt') as f:
-    conda_deps += f.read().split()
-for delimiter in '=<>':
-    conda_deps = {d.lower().split(delimiter)[0] for d in conda_deps}
+
+
+def get_required_names(requirements_path):
+    with open(requirements_path) as f:
+        return {req.name.lower() for req in parse_requirements(f.read())}
+
+
+conda_deps = get_required_names('requirements/tests.txt')
+conda_deps |= get_required_names('requirements/docs.txt')
 conda_deps.discard('prompt-toolkit')
 conda_deps |= {'prompt_toolkit', 'pip', 'psutil', 'numpy', 'matplotlib'}
 $DOCKER_CONDA_DEPS = sorted(conda_deps)
