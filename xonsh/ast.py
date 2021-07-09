@@ -316,7 +316,7 @@ def isexpression(node, ctx=None, *args, **kwargs):
         node = node if node.endswith("\n") else node + "\n"
         ctx = XSH.ctx if ctx is None else ctx
         node = XSH.execer.parse(node, ctx, *args, **kwargs)
-    # determin if expresission-like enough
+    # determine if expression-like enough
     if isinstance(node, (Expr, Expression)):
         isexpr = True
     elif isinstance(node, Module) and len(node.body) == 1:
