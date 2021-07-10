@@ -142,7 +142,7 @@ class Execer(object):
         return code
 
     def eval(
-        self, input, glbs=None, locs=None, stacklevel=2, filename=None, transform=True
+        self, input, glbs={}, locs=None, stacklevel=2, filename=None, transform=True
     ):
         """Evaluates (and returns) xonsh code."""
         if isinstance(input, types.CodeType):
@@ -168,7 +168,7 @@ class Execer(object):
         self,
         input,
         mode="exec",
-        glbs=None,
+        glbs={},
         locs=None,
         stacklevel=2,
         filename=None,
