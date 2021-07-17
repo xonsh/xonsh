@@ -35,11 +35,6 @@ def _cache_renamer(path, code=False):
     return o
 
 
-def _make_if_not_exists(dirname):
-    if not os.path.isdir(dirname):
-        os.makedirs(dirname)
-
-
 def should_use_cache(execer, mode):
     """
     Return ``True`` if caching has been enabled for this mode (through command
@@ -90,7 +85,7 @@ def update_cache(ccode, cache_file_name):
     represented by ``ccode``.
     """
     if cache_file_name is not None:
-        _make_if_not_exists(os.path.dirname(cache_file_name))
+        os.makedirs(os.path.dirname(cache_file_name), exist_ok=True)
         with open(cache_file_name, "wb") as cfile:
             cfile.write(XONSH_VERSION.encode() + b"\n")
             cfile.write(bytes(PYTHON_VERSION_INFO_BYTES) + b"\n")
@@ -166,10 +161,8 @@ def code_cache_name(code):
     Return an appropriate spoofed filename for the given code.
     """
     if isinstance(code, str):
-        _code = code.encode()
-    else:
-        _code = code
-    return hashlib.md5(_code).hexdigest()
+        code = code.encode()
+    return hashlib.md5(code).hexdigest()
 
 
 def code_cache_check(cachefname):
