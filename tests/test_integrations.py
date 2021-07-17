@@ -800,3 +800,15 @@ def test_loading_correctly(monkeypatch, interactive):
         xonsh.__file__
     )  # make sure xonsh didn't fail and fallback to the system shell
     assert f"AAA {our_xonsh} BBB" in out  # ignore tty warnings/prompt text
+
+@skip_if_no_xonsh
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "x = 0; (lambda: x)()",
+        "x = 0; [x for _ in [0]]",
+    ],
+)
+def test_exec_function_scope(cmd):
+    _, _, rtn = run_xonsh(cmd, single_command=True)
+    assert rtn == 0
