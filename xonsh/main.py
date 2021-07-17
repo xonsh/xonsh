@@ -481,7 +481,9 @@ def main_xonsh(args):
                 events.on_post_cmdloop.fire()
         elif args.mode == XonshMode.single_command:
             # run a single command and exit
-            run_code_with_cache(args.command.lstrip(), shell.execer, glb=shell.ctx, mode="single")
+            run_code_with_cache(
+                args.command.lstrip(), shell.execer, glb=shell.ctx, mode="single"
+            )
             if history is not None and history.last_cmd_rtn is not None:
                 exit_code = history.last_cmd_rtn
         elif args.mode == XonshMode.script_from_file:
