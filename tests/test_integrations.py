@@ -764,8 +764,8 @@ aliases['echo'] = _echo
 @pytest.mark.parametrize(
     "cmd, exp_rtn",
     [
-        ("sys.exit(0)", 0),
-        ("sys.exit(100)", 100),
+        ("import sys; sys.exit(0)", 0),
+        ("import sys; sys.exit(100)", 100),
         ("sh -c 'exit 0'", 0),
         ("sh -c 'exit 1'", 1),
     ],
