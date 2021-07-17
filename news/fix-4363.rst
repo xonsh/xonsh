@@ -1,0 +1,23 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* <news item>
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* `execx` and `xonsh -c` previously exposed xonsh-internal code in global scope. They also did not support defining variables and then referring to them in comprehensions, generators, functions, or lambdas. - https://github.com/xonsh/xonsh/issues/4363
+
+**Security:**
+
+* <news item>
