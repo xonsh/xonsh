@@ -142,9 +142,11 @@ class Execer(object):
         return code
 
     def eval(
-        self, input, glbs={}, locs=None, stacklevel=2, filename=None, transform=True
+        self, input, glbs=None, locs=None, stacklevel=2, filename=None, transform=True
     ):
         """Evaluates (and returns) xonsh code."""
+        if glbs is None:
+            glbs = {}
         if isinstance(input, types.CodeType):
             code = input
         else:
@@ -168,13 +170,15 @@ class Execer(object):
         self,
         input,
         mode="exec",
-        glbs={},
+        glbs=None,
         locs=None,
         stacklevel=2,
         filename=None,
         transform=True,
     ):
         """Execute xonsh code."""
+        if glbs is None:
+            glbs = {}
         if isinstance(input, types.CodeType):
             code = input
         else:
