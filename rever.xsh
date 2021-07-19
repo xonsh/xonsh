@@ -31,15 +31,14 @@ $GHPAGES_REPO = 'git@github.com:xonsh/xonsh-docs.git'
 $DOCKER_APT_DEPS = ['man']
 
 
-def get_required_names(requirements_path):
+def get_requirement_args(requirements_path):
     with open(requirements_path) as f:
-        return {req.name.lower() for req in parse_requirements(f.read())}
+        return [str(req) for req in parse_requirements(f.read())]
 
-
-conda_deps = get_required_names('requirements/tests.txt')
-conda_deps |= get_required_names('requirements/docs.txt')
-conda_deps.discard('prompt-toolkit')
-conda_deps |= {'prompt_toolkit', 'pip', 'psutil', 'numpy', 'matplotlib'}
+pip_deps = get_requirement_args('requirements/tests.txt')
+pip_deps += get_requirement_args('requirements/docs.txt')
+conda_deps = {'prompt_toolkit', 'pip', 'psutil', 'numpy', 'matplotlib'}
+$DOCKER_PIP_DEPS = pip_deps
 $DOCKER_CONDA_DEPS = sorted(conda_deps)
 $DOCKER_INSTALL_COMMAND = ('rm -rf .cache/ __pycache__/ */__pycache__ */*/__pycache__ build/ && '
                            './setup.py install')
