@@ -28,7 +28,7 @@ $TAG_TARGET = 'master'
 
 $GHPAGES_REPO = 'git@github.com:xonsh/xonsh-docs.git'
 
-$DOCKER_APT_DEPS = ['man']
+$DOCKER_APT_DEPS = ['man', 'bash-completion']
 
 
 def get_requirement_args(requirements_path):
