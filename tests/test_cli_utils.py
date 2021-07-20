@@ -36,7 +36,7 @@ def test_get_doc_param():
 
 
 def test_generated_parser():
-    from xonsh.completers.completer import CompleterAlias
+    from xonsh.completers._aliases import CompleterAlias
 
     alias = CompleterAlias()
 
