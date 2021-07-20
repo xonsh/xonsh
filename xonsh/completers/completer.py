@@ -3,49 +3,35 @@ from xonsh.parsers.completion_context import CommandContext
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
-    contextual_command_completer_for,
     justify,
     is_exclusive_completer,
+    complete_argparser,
+    contextual_command_completer,
 )
+from xonsh.cli_utils import Arg, Annotated, ArgCompleter
 
 
-@contextual_command_completer_for("completer")
-def complete_completer(command: CommandContext):
-    """
-    Completion for "completer"
-    """
+@contextual_command_completer
+def complete_argparser_aliases(command: CommandContext):
+    """Completer for any alias command that has ``argparser`` in ``parser`` attribute"""
+
+    if not command.args:
+        return
+    cmd = command.args[0].value
+
+    alias = XSH.aliases.get(cmd)  # type: ignore
+    if not hasattr(alias, "parser"):
+        return
+
     if command.suffix:
         # completing in a middle of a word
         # (e.g. "completer some<TAB>thing")
-        return None
+        return
 
-    curix = command.arg_index
-
-    compnames = set(XSH.completers.keys())
-    if curix == 1:
-        possible = {"list", "help", "add", "remove"}
-    elif curix == 2:
-        first_arg = command.args[1].value
-        if first_arg == "help":
-            possible = {"list", "add", "remove"}
-        elif first_arg == "remove":
-            possible = compnames
-        else:
-            raise StopIteration
-    else:
-        if command.args[1].value != "add":
-            raise StopIteration
-        if curix == 3:
-            possible = {i for i, j in XSH.ctx.items() if callable(j)}
-        elif curix == 4:
-            possible = (
-                {"start", "end"}
-                | {">" + n for n in compnames}
-                | {"<" + n for n in compnames}
-            )
-        else:
-            raise StopIteration
-    return {i for i in possible if i.startswith(command.prefix)}
+    possible = complete_argparser(alias.parser, command=command, alias=alias)
+    for comp in possible:
+        if comp.startswith(command.prefix):
+            yield comp
 
 
 def add_one_completer(name, func, loc="end"):
@@ -108,7 +94,14 @@ def list_completers():
     return o + "\n".join(_strs) + "\n"
 
 
-def remove_completer(name: str):
+class CompletersChoices(ArgCompleter):
+    def __call__(self, xsh, **_):
+        yield from xsh.completers.keys()
+
+
+def remove_completer(
+    name: Annotated[str, Arg(completer=CompletersChoices())],
+):
     """removes a completer from xonsh
 
     Parameters
