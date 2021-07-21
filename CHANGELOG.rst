@@ -4,6 +4,124 @@ Xonsh Change Log
 
 .. current developments
 
+v0.10.0
+====================
+
+**Added:**
+
+* Added ability to set XONSH_HISTORY_FILE before loading the history backend.
+* Added ability to get the arguments list in ExecAlias using ``$args`` and ``$arg<n>`` environment variables.
+* Added instruction how to run xonsh AppImage on Alpine
+* Xonsh now supports generators as completer functions.
+* Completion Context - Allow completers to access a parsed representation of the current commandline context.
+* Added casting CommandPipeline to int, hash and str.
+* Ability to call the tool by the name from callable alias with the same name without the infinite loop error.
+* ``on wsl`` field when running xonfig (when linux is detected)
+* Help and superhelp (``obj?`` and ``obj??``) now use the ``__name__`` if available.
+* added ``$XONSH_GITSTATUS_FIELDS_TO_HIDE`` to hide unwanted fields from ``{gitstatus}`` prompt field.
+* Added number of lines added and removed to gitstatus
+* Saving current working directory (cwd) to the history.
+* Added XONSH_HISTORY_SAVE_CWD environment variable.
+* Added environment variable ``$COMPLETE_DOTS`` to specify how current and previous directories should be tab completed in cd  ('./', '../'):
+    - ``always`` Always complete paths with ./ and ../
+    - ``never`` Never complete paths with ./ and ../
+    - ``matching`` Complete if path starts with . or ..
+* Complete ``import`` keyword in ``from ... import`` statements.
+* Enabled case-insensitive completions for the ``jedi`` xontrib.
+* Non-exclusive completers that enable aggregating multiple completer results.
+* New ``$XONSH_CAPTURE_ALWAYS`` variable for opt-in interactive capturing.
+  Since this capturing breaks background jobs and some interactive programs (like ``git`` invoking an editor),
+  This behavior is now opt-in using this variable.
+  See https://github.com/xonsh/xonsh/pull/4283 and linked issues.
+* Wrap selection with quote/parens when ``$XONSH_AUTOPAIR=True``.
+* Now xonsh will work with Python 3.10. (Match statement is not supported).
+* In addition to reading single rc files at startup (``/etc/xonshrc``, ``~/.config/xonsh/rc.xsh``),
+  xonsh now also supports rc.d-style config directories, from which all files are sourced. This is
+  designed to support drop-in style configuration where you could, for example, have a common config
+  file shared across multiple machines and a separate machine specific file.
+
+  This is controlled by the environment variable ``XONSHRC_DIR``, which defaults to
+  ``["/etc/xonsh/rc.d", "~/.config/xonsh/rc.d"]``. If those directories exist, then any ``xsh`` files
+  contained within are sorted and then sourced.
+* Added xontrib-prompt-starship - Starship prompt in xonsh shell.
+* Added XONSH_SUBPROC_CAPTURED_PRINT_STDERR (default False) environment variable to hide unwanted printing the stderr when using captured object.
+* A ``$XONSH_TRACE_COMPLETIONS`` variable for completions debugging.
+* Added warning about prompt-toolkit in the welcome message.
+* Added history backend name to the xonfig.
+* `xontrib-linuxbrew <https://github.com/eugenesvk/xontrib-linuxbrew>`_ to add Homebrew's shell environment to xonsh shell on Linux
+* Added xontrib-macro-lib - the library of the useful macros for the xonsh shell: https://github.com/anki-code/xontrib-macro-lib
+
+**Changed:**
+
+* update imphooks encoding regex to match the newer version at PEP 263
+* Enabled bracketed paste mode for readline to protect against paste jacking
+* The group of environment variables around history moved to the "Interactive Prompt History" section.
+* Disabled completing subpaths for commands in ``jedi``.
+* Improved ``which`` output for non-simple aliases
+* New json history will be in XONSH_DATA_DIR/history_json directory.
+* Completers for ``and/or``, ``&&/||/|`` and environment variables are now non-exclusive.
+* Disabled ptk copying words/lines to clipboard on deletion (can be re-enabled with ``$XONSH_COPY_ON_DELETE``).
+* Separated between ``XONSH_DEBUG`` and ``XONSH_NO_AMALGAMATE``. Setting ``XONSH_DEBUG=1`` now acts like ``XONSH_DEBUG=2`` before (basic information like input transformation, command replacement) and ``XONSH_DEBUG=2`` like ``XONSH_DEBUG=1`` before (more debugging information presented, like PLY parsing messages).
+* Cleaned up available aliases for ``shell_type``
+* Speedup commands-cache by saving results between runs and use the last run's result
+* The ``completer add`` command after the non-exclusive completers.
+  This means it will not block them from adding their completions.
+* Updated the tab-completion tutorial.
+
+**Fixed:**
+
+* handle importing/decoding user modules with a 'UTF-8 with BOM' encoding (#4160)
+* Fixed XONSH_HISTORY_FILE that has the actual path from the history backend now
+* Annotated assignments (``x: int = 42``, ``x: int``).
+* Fixed xpip sudo behavior in xonsh AppImage.
+* Prevent cancelled future errors for async prompt ($ENABLE_ASYNC_PROMPT) fields from bubbling up (and destroying the prompt's formatting)
+* $() no longer silently captures stderr
+* Added catching callable argument and raising appropriate exception
+* Crashing command-not-found output for bad file names on linux.
+* Fixed error message when an empty command is run
+* Fixed @$ crash when no output is sent out by the command
+* Fixed xonsh crash when launched using `xonsh -c '$("")'`
+* now abbrevs callback will not remove word from ``buffer.text``. See https://github.com/xonsh/xonsh/issues/3642#issuecomment-793789741
+* Fixed the incorrect SyntaxError that was thrown when a subprocess command was preceded by a comment ending with a colon
+* Fixed the missing auto-indentation in readline and prompt_toolkit when a statement ending with a colon was followed by a comment
+* Fixed the incorrect auto-indentation in prompt_toolkit when a comment ended with a colon
+* Fixed JSON history garbage collection for XONSH_HISTORY_SIZE in seconds.
+* Fixed ``skip`` completer (completes ``sudo``, ``which`` and other commands).
+* In a subprocess command, having whitespace in between the left bracket and the command no longer raises a SyntaxError.
+* Reduced history reading when run script or command. Potential speed increasing.
+* Fixed crash on statup if XONSH_COLOR_STYLE is set to something invalid.
+* Fixed the colorize and/or keywords.
+* Functions can be used for $TITLE, the same way as for $PROMPT. (#4148)
+* wsl detection works on archlinux wsl2 now (and hopefully everywhere)
+* Fixed an exception when run xonfig wizard in no RC mode.
+* Bash completions now handle quoted and space-containing arguments better.
+* ``import`` completions always work.
+* Test consistent RC loading behaviour in a variety of startup scenarios
+* Absolute paths to executables don't break bash completions anymore
+* Fix colors and text in the welcome message.
+
+**Authors:**
+
+* Gil Forsyth
+* anki-code
+* Noortheen Raja
+* Gyuri Horak
+* Daniel Shimon
+* Matthias Bussonnier
+* Gordon Ball
+* cryzed
+* Peter Ye
+* Evgeny
+* Jeremy Schlatter
+* jmoranos
+* Walter A. Boring IV
+* bhawkins
+* JackofSpades707
+* Luiz Antonio Lazoti
+* francium
+
+
+
 v0.9.27
 ====================
 
