@@ -90,6 +90,16 @@ def ON_WSL():
     return "microsoft" in platform.release()
 
 
+@lazybool
+def ON_WSL1():
+    return ON_WSL and not ON_WSL2
+
+
+@lazybool
+def ON_WSL2():
+    return ON_WSL and "WSL2" in platform.release()
+
+
 #
 # Python & packages
 #
