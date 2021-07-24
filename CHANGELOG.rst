@@ -4,6 +4,21 @@ Xonsh Change Log
 
 .. current developments
 
+v0.10.1
+====================
+
+**Fixed:**
+
+* ``execx`` and ``xonsh -c`` previously exposed xonsh-internal code in global scope. They also did not support defining variables and then referring to them in comprehensions, generators, functions, or lambdas. - https://github.com/xonsh/xonsh/issues/4363
+* Short color token names can be used in ``register_custom_style()`` (#4339)
+
+**Authors:**
+
+* Gyuri Horak
+* Jeremy Schlatter
+
+
+
 v0.10.0
 ====================
 
