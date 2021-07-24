@@ -1021,7 +1021,7 @@
   first_commit: 2018-09-16 22:50:24
 - name: Gyuri Horak
   email: dyuri@horak.hu
-  num_commits: 57
+  num_commits: 58
   first_commit: 2019-06-18 12:00:16
   github: dyuri
 - name: Ke Zhang
@@ -1189,7 +1189,7 @@
   github: paugier
 - name: Daniel Shimon
   email: daniel.shimon22@gmail.com
-  num_commits: 41
+  num_commits: 47
   first_commit: 2020-07-23 08:11:36
 - name: Achim Herwig
   email: achim.herwig@wodca.de
@@ -1310,7 +1310,7 @@
   first_commit: 2021-06-08 20:12:56
 - name: Jeremy Schlatter
   email: jeremy@jeremyschlatter.com
-  num_commits: 2
+  num_commits: 3
   first_commit: 2021-07-09 22:55:54
 - name: Luiz Antonio Lazoti
   email: luizlazoti@hotmail.com

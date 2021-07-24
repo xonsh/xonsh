@@ -139,6 +139,7 @@ Authors are sorted by number of commits.
 * Jan Chren
 * Samuel Lotz
 * Jerzy Drozdz
+* Jeremy Schlatter
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -171,7 +172,6 @@ Authors are sorted by number of commits.
 * anki
 * Faris A Chugthai
 * Asaf Fisher
-* Jeremy Schlatter
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
