@@ -4,7 +4,7 @@ from pkg_resources import parse_requirements
 
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
-$ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest',
+$ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
                'tag', 'push_tag',
                'ghrelease',
                'sphinx',
