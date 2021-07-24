@@ -145,6 +145,8 @@ class Execer(object):
         self, input, glbs=None, locs=None, stacklevel=2, filename=None, transform=True
     ):
         """Evaluates (and returns) xonsh code."""
+        if glbs is None:
+            glbs = {}
         if isinstance(input, types.CodeType):
             code = input
         else:
@@ -175,6 +177,8 @@ class Execer(object):
         transform=True,
     ):
         """Execute xonsh code."""
+        if glbs is None:
+            glbs = {}
         if isinstance(input, types.CodeType):
             code = input
         else:

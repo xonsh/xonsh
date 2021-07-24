@@ -170,3 +170,17 @@ def test_exec_print(capsys):
     check_exec("print(ls)", locs=dict(ls=ls))
     out, err = capsys.readouterr()
     assert out.strip() == repr(ls)
+
+
+def test_exec_function_scope():
+    # issue 4363
+    assert check_exec("x = 0; (lambda: x)()")
+    assert check_exec("x = 0; [x for _ in [0]]")
+
+
+def test_exec_scope_reuse():
+    # Scopes should not be reused between execs.
+    # A first-pass incorrect solution to issue 4363 made this mistake.
+    assert check_exec("x = 0")
+    with pytest.raises(NameError):
+        check_exec("print(x)")

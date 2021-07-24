@@ -764,8 +764,8 @@ aliases['echo'] = _echo
 @pytest.mark.parametrize(
     "cmd, exp_rtn",
     [
-        ("sys.exit(0)", 0),
-        ("sys.exit(100)", 100),
+        ("import sys; sys.exit(0)", 0),
+        ("import sys; sys.exit(100)", 100),
         ("sh -c 'exit 0'", 0),
         ("sh -c 'exit 1'", 1),
     ],
@@ -800,3 +800,16 @@ def test_loading_correctly(monkeypatch, interactive):
         xonsh.__file__
     )  # make sure xonsh didn't fail and fallback to the system shell
     assert f"AAA {our_xonsh} BBB" in out  # ignore tty warnings/prompt text
+
+
+@skip_if_no_xonsh
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "x = 0; (lambda: x)()",
+        "x = 0; [x for _ in [0]]",
+    ],
+)
+def test_exec_function_scope(cmd):
+    _, _, rtn = run_xonsh(cmd, single_command=True)
+    assert rtn == 0
