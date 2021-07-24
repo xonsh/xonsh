@@ -1,5 +1,4 @@
 import builtins
-import glob
 import os
 import sys
 import types
@@ -8,6 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from xonsh.aliases import Aliases
 from xonsh.built_ins import XonshSession, XSH
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
@@ -84,7 +84,7 @@ def xonsh_builtins(monkeypatch, xonsh_events):
         ("env", DummyEnv()),
         ("shell", DummyShell()),
         ("help", lambda x: x),
-        ("aliases", {}),
+        ("aliases", Aliases()),
         ("exit", False),
         ("history", DummyHistory()),
         # ("subproc_captured", sp),

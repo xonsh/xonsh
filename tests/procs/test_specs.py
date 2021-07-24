@@ -100,3 +100,22 @@ def test_capture_always(capfd, thread_subprocs, capture_always):
     # Explicitly non-captured commands are never captured (/always printed)
     run_subproc(cmds, captured=False)  # $[]
     assert exp in capfd.readouterr().out
+
+
+@pytest.mark.parametrize("thread_subprocs", [False, True])
+def test_callable_alias_cls(thread_subprocs, xession):
+    class Cls:
+        def __call__(self, *args, **kwargs):
+            print(args, kwargs)
+
+    obj = Cls()
+    xession.aliases["tst"] = obj
+
+    env = xession.env
+    cmds = (["tst", "/root"],)
+
+    env["THREAD_SUBPROCS"] = thread_subprocs
+
+    spec = cmds_to_specs(cmds, captured="stdout")[0]
+    proc = spec.run()
+    assert proc.f == obj
