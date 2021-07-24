@@ -10,6 +10,7 @@ from xonsh.completers.tools import (
 @contextual_completer
 @non_exclusive_completer
 def complete_environment_vars(context: CompletionContext):
+    """Completes environment variables."""
     if context.command:
         prefix = context.command.prefix
     elif context.python:

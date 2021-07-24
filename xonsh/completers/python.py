@@ -137,8 +137,8 @@ def complete_python(context: CompletionContext) -> CompleterResult:
     """
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
-    If there are no matches, split on common delimiters and try again.
     """
+    # If there are no matches, split on common delimiters and try again.
     if context.python is None:
         return None
 
@@ -285,8 +285,8 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
 @contextual_completer
 def complete_import(context: CompletionContext):
     """
-    Completes module names and contents for "import ..." and "from ... import
-    ..."
+    Completes module names and objects for "import ..." and "from ... import
+    ...".
     """
     if not (context.command and context.python):
         # Imports are only possible in independent lines (not in `$()` or `@()`).

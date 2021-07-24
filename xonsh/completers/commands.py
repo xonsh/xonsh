@@ -44,10 +44,10 @@ def complete_command(command: CommandContext):
 def complete_skipper(command_context: CommandContext):
     """
     Skip over several tokens (e.g., sudo) and complete based on the rest of the command.
-
-    Contextual completers don't need us to skip tokens since they get the correct completion context -
-    meaning we only need to skip commands like ``sudo``.
     """
+
+    # Contextual completers don't need us to skip tokens since they get the correct completion context -
+    # meaning we only need to skip commands like ``sudo``.
     skip_part_num = 0
     # all the args before the current argument
     for arg in command_context.args[: command_context.arg_index]:
@@ -74,7 +74,7 @@ def complete_skipper(command_context: CommandContext):
 @non_exclusive_completer
 @contextual_command_completer
 def complete_end_proc_tokens(command_context: CommandContext):
-    """If there's no space following an END_PROC_TOKEN, insert one"""
+    """If there's no space following '|', '&', or ';' - insert one."""
     if command_context.opening_quote or not command_context.prefix:
         return None
     prefix = command_context.prefix
@@ -87,7 +87,7 @@ def complete_end_proc_tokens(command_context: CommandContext):
 @non_exclusive_completer
 @contextual_command_completer
 def complete_end_proc_keywords(command_context: CommandContext):
-    """If there's no space following an END_PROC_KEYWORD, insert one"""
+    """If there's no space following 'and' or 'or' - insert one."""
     if command_context.opening_quote or not command_context.prefix:
         return None
     prefix = command_context.prefix
