@@ -44,7 +44,7 @@ def test_generated_parser():
 
     positionals = alias.parser._get_positional_actions()
     add_cmd = positionals[0].choices["add"]
-    assert "adds a new completer" in add_cmd.description
+    assert "Add a new completer" in add_cmd.description
     assert (
         alias.parser.format_usage()
         == "usage: completer [-h] {add,remove,rm,list,ls} ...\n"
