@@ -260,7 +260,9 @@ def complete_argparser_actions(
 
         if isinstance(act.choices, dict):  # sub-parsers
             for choice, sub_parser in act.choices.items():
-                yield RichCompletion(choice, description=sub_parser.description or "")
+                yield RichCompletion(
+                    choice, description=sub_parser.description or "", append_space=True
+                )
         else:
             yield from _complete_argparser_action(act, positional=positional, **kwargs)
         # close after a valid positional arg completion
