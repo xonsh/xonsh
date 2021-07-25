@@ -44,7 +44,11 @@ class ArgCompleter:
         raise NotImplementedError
 
 
-def Arg(*args: str, completer: ArgCompleter = None, **kwargs):
+def Arg(
+    *args: str,
+    completer: tp.Union[ArgCompleter, tp.Callable[..., tp.Iterator[str]]] = None,
+    **kwargs,
+):
     # converting to tuple because of limitation with hashing args in py3.6
     # after dropping py36 support, the dict can be returned
     kwargs["completer"] = completer

@@ -8,8 +8,9 @@ from xonsh.completers.tools import (
     complete_argparser,
     contextual_command_completer,
     get_filter_function,
+    RichCompletion,
 )
-from xonsh.cli_utils import Arg, Annotated, ArgCompleter
+from xonsh.cli_utils import Arg, Annotated, get_doc
 
 
 @contextual_command_completer
@@ -98,15 +99,16 @@ def list_completers():
     return o + "\n".join(_strs) + "\n"
 
 
-class CompletersChoices(ArgCompleter):
-    def __call__(self, xsh, **_):
-        yield from xsh.completers.keys()
+def complete_completer_names(xsh, **_):
+    """Complete all loaded completer names"""
+    for name, comp in xsh.completers.items():
+        yield RichCompletion(name, description=get_doc(comp))
 
 
 def remove_completer(
-    name: Annotated[str, Arg(completer=CompletersChoices())],
+    name: Annotated[str, Arg(completer=complete_completer_names)],
 ):
-    """removes a completer from xonsh
+    """Removes a completer from xonsh
 
     Parameters
     ----------

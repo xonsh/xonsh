@@ -18,28 +18,30 @@ def _remove_completer(args):
     return remove_completer(args[0])
 
 
-class FuncNameChoices(xcli.ArgCompleter):
-    def __call__(self, xsh, **_):
-        for i, j in xsh.ctx.items():
-            if callable(j):
-                yield i
+def complete_func_name_choices(xsh, **_):
+    """Return all callable names in the current context"""
+    for i, j in xsh.ctx.items():
+        if callable(j):
+            yield i
 
 
-class PosCompleter(xcli.ArgCompleter):
-    def __call__(self, xsh, **_):
-        yield from {"start", "end"}
-        for k in xsh.completers.keys():
-            yield ">" + k
-            yield "<" + k
+def complete_completer_pos_choices(xsh, **_):
+    """Compute possible positions for the new completer"""
+    yield from {"start", "end"}
+    for k in xsh.completers.keys():
+        yield ">" + k
+        yield "<" + k
 
 
 def _register_completer(
     name: str,
-    func: xcli.Annotated[str, xcli.Arg(completer=FuncNameChoices())],
-    pos: xcli.Annotated[str, xcli.Arg(completer=PosCompleter(), nargs="?")] = "start",
+    func: xcli.Annotated[str, xcli.Arg(completer=complete_func_name_choices)],
+    pos: xcli.Annotated[
+        str, xcli.Arg(completer=complete_completer_pos_choices, nargs="?")
+    ] = "start",
     _stack=None,
 ):
-    """adds a new completer to xonsh
+    """Add a new completer to xonsh
 
     Parameters
     ----------
