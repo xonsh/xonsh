@@ -46,7 +46,7 @@ def ALL_COMMANDS():
 
 @contextual_command_completer
 def complete_pip(context: CommandContext):
-    """Completes python's package manager pip"""
+    """Completes python's package manager pip."""
     prefix = context.prefix
     if context.arg_index == 0 or (not PIP_RE.search(context.args[0].value)):
         return None

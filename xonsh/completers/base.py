@@ -15,10 +15,9 @@ from xonsh.completers.commands import complete_command
 
 @contextual_completer
 def complete_base(context: CompletionContext):
-    """If the line is empty, complete based on valid commands, python names,
-    and paths.  If we are completing the first argument, complete based on
-    valid commands and python names.
-    """
+    """If the line is empty, complete based on valid commands, python names, and paths."""
+    # If we are completing the first argument, complete based on
+    # valid commands and python names.
     out: tp.Set[Completion] = set()
     if context.command is None or context.command.arg_index != 0:
         # don't do unnecessary completions

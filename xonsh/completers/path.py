@@ -286,7 +286,6 @@ def _expand_one(sofar, nextone, csc):
 
 
 def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
-    """Completes based on a path name."""
     # string stuff for automatic quoting
     path_str_start = ""
     path_str_end = ""
@@ -357,6 +356,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
 
 @contextual_completer
 def complete_path(context):
+    """Completes path names."""
     if context.command:
         return contextual_complete_path(context.command)
     elif context.python:

@@ -10,7 +10,7 @@ from xonsh.completers.tools import contextual_command_completer_for
 
 @contextual_command_completer_for("xonfig")
 def complete_xonfig(command: CommandContext):
-    """Completion for ``xonfig``"""
+    """Completion for ``xonfig``."""
     curix = command.arg_index
     if curix == 1:
         possible = set(XONFIG_MAIN_ACTIONS.keys()) | {"-h"}
@@ -34,7 +34,7 @@ def _list_installed_xontribs():
 
 @contextual_command_completer_for("xontrib")
 def complete_xontrib(command: CommandContext):
-    """Completion for ``xontrib``"""
+    """Completion for ``xontrib``."""
     curix = command.arg_index
     if curix == 1:
         possible = {"list", "load"}
