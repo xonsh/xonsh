@@ -59,7 +59,7 @@ def _get_func_doc(doc: str) -> str:
     return os.linesep.join(lines)
 
 
-def _get_param_doc(doc: str, param: str) -> str:
+def _get_param_doc(doc: str, param: str) -> tp.Iterator[str]:
     section_title = "\nParameters"
     if section_title not in doc:
         return
