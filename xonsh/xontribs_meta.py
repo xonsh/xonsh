@@ -383,6 +383,16 @@ def define_xontribs():
                 url="https://github.com/con-f-use/xontrib-histcpy",
             ),
         ),
+        "homebrew": Xontrib(
+            url="https://github.com/eugenesvk/xontrib-homebrew",
+            description="Add Homebrew's shell environment to xonsh shell on macOS/Linux",
+            package=_XontribPkg(
+                name="xontrib-homebrew",
+                license="MIT",
+                install={"pip": "xpip install xontrib-homebrew"},
+                url="https://github.com/eugenesvk/xontrib-homebrew",
+            ),
+        ),
         "jedi": Xontrib(
             url="http://xon.sh",
             description="Use Jedi as xonsh's python completer.",
@@ -399,16 +409,6 @@ def define_xontribs():
                     "pip": "xpip install xontrib-kitty",
                 },
                 url="https://github.com/scopatz/xontrib-kitty",
-            ),
-        ),
-        "linuxbrew": Xontrib(
-            url="https://github.com/eugenesvk/xontrib-linuxbrew",
-            description="Add Homebrew's shell environment to xonsh shell on Linux",
-            package=_XontribPkg(
-                name="xontrib-linuxbrew",
-                license="MIT",
-                install={"pip": "xpip install xontrib-linuxbrew"},
-                url="https://github.com/eugenesvk/xontrib-linuxbrew",
             ),
         ),
         "macro_lib": Xontrib(
