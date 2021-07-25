@@ -133,7 +133,7 @@ def _get_args_kwargs(annot: tp.Any) -> tp.Tuple[tp.Sequence[str], tp.Dict[str, t
 
 def add_args(parser: ap.ArgumentParser, func: tp.Callable, allowed_params=None) -> None:
     """Using the function's annotation add arguments to the parser
-    param:Arg(*args, **kw) -> parser.add_agument(*args, *kw)
+    param:Arg(*args, **kw) -> parser.add_argument(*args, *kw)
     """
     import inspect
 
