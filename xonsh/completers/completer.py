@@ -21,6 +21,8 @@ def complete_argparser_aliases(command: CommandContext):
     cmd = command.args[0].value
 
     alias = XSH.aliases.get(cmd)  # type: ignore
+    # todo: checking isinstance(alias, ArgParserAlias) fails when amalgamated.
+    #  see https://github.com/xonsh/xonsh/pull/4267#discussion_r676066853
     if not hasattr(alias, "parser"):
         return
 

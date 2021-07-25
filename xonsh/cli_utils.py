@@ -12,7 +12,7 @@ import typing as tp
 
 
 TYPING_ANNOTATED_AVAILABLE = hasattr(tp, "Annotated")
-"""One can import ``Annotated`` from this module 
+"""One can import ``Annotated`` from this module
 which adds a stub when it is not available in ``typing``/``typing_extensions`` modules."""
 
 if TYPING_ANNOTATED_AVAILABLE:
@@ -128,7 +128,9 @@ def _get_args_kwargs(annot: tp.Any) -> tp.Tuple[tp.Sequence[str], tp.Dict[str, t
 
 
 def add_args(parser: ap.ArgumentParser, func: tp.Callable, allowed_params=None) -> None:
-    """From Arg -> parser.add_agument(*a, *kw)"""
+    """Using the function's annotation add arguments to the parser
+    param:Arg(*args, **kw) -> parser.add_agument(*args, *kw)
+    """
     import inspect
 
     # call this function when this sub-command is selected
