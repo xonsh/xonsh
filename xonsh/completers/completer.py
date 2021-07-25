@@ -7,6 +7,7 @@ from xonsh.completers.tools import (
     is_exclusive_completer,
     complete_argparser,
     contextual_command_completer,
+    get_filter_function,
 )
 from xonsh.cli_utils import Arg, Annotated, ArgCompleter
 
@@ -29,8 +30,9 @@ def complete_argparser_aliases(command: CommandContext):
         return
 
     possible = complete_argparser(alias.parser, command=command, alias=alias)
+    fltr = get_filter_function()
     for comp in possible:
-        if comp.startswith(command.prefix):
+        if fltr(comp, command.prefix):
             yield comp
 
 
