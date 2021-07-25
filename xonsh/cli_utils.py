@@ -59,25 +59,24 @@ def _get_func_doc(doc: str) -> str:
     return os.linesep.join(lines)
 
 
-def _from_index_of(container: tp.Sequence[str], key: str):
-    if key in container:
-        idx = container.index(key)
-        if idx + 1 < len(container):
-            return container[idx + 1 :]
-    return []
-
-
 def _get_param_doc(doc: str, param: str) -> str:
-    lines = tuple(doc.splitlines())
-    if "Parameters" not in lines:
-        return ""
+    section_title = "\nParameters"
+    if section_title not in doc:
+        return
+    _, doc = doc.split(section_title)
+    started = False
+    for lin in doc.splitlines():
+        if not lin:
+            continue
+        if lin.startswith(param):
+            started = True
+            continue
+        if not started:
+            continue
 
-    par_doc = []
-    for lin in _from_index_of(lines, param):
-        if lin and not lin.startswith(" "):
+        if not lin.startswith(" "):  # new section/parameter
             break
-        par_doc.append(lin)
-    return os.linesep.join(par_doc).strip()
+        yield lin
 
 
 def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None):
@@ -101,7 +100,8 @@ def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None):
 
     doc = inspect.getdoc(func) or ""
     if parameter:
-        return inspect.cleandoc(_get_param_doc(doc, parameter)).strip()
+        par_doc = os.linesep.join(_get_param_doc(doc, parameter))
+        return inspect.cleandoc(par_doc).strip()
     else:
         return _get_func_doc(doc).strip()
 
@@ -150,7 +150,9 @@ def add_args(parser: ap.ArgumentParser, func: tp.Callable, allowed_params=None) 
         if inspect.Parameter.empty != param.default:
             kwargs.setdefault("default", param.default)
 
+        # help can be set by passing help argument otherwise inferred from docstring
         kwargs.setdefault("help", get_doc(func, name))
+
         completer = kwargs.pop("completer", None)
         action = parser.add_argument(*args, **kwargs)
         if completer:
