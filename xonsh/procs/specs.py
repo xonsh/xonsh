@@ -497,7 +497,7 @@ class SubprocSpec:
             return
         if not XSH.env.get("XONSH_INTERACTIVE"):
             return
-        if pipeline_group is None or xp.ON_WSL:
+        if pipeline_group is None or xp.ON_WSL1:
             # If there is no pipeline group
             # or the platform is windows subsystem for linux (WSL)
             xonsh_preexec_fn = no_pg_xonsh_preexec_fn
