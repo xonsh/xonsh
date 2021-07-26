@@ -14,11 +14,9 @@ from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
 
 
-@pytest.fixture(autouse=True, scope="module")
-def xonsh_builtins_autouse(session_vars):
-    XSH.load(ctx={}, **session_vars)
-    yield XSH
-    XSH.unload()
+@pytest.fixture(autouse=True)
+def xonsh_builtins_autouse(xonsh_builtins):
+    return xonsh_builtins
 
 
 PARSER = Parser(yacc_optimize=False, yacc_debug=True)
