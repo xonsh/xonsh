@@ -6,6 +6,7 @@ Examples
 """
 
 import argparse as ap
+import inspect
 import os
 import sys
 import typing as tp
@@ -100,7 +101,6 @@ def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None):
     """
     if isinstance(func, str):
         return func
-    import inspect
 
     doc = inspect.getdoc(func) or ""
     if parameter:
@@ -135,7 +135,6 @@ def add_args(parser: ap.ArgumentParser, func: tp.Callable, allowed_params=None) 
     """Using the function's annotation add arguments to the parser
     param:Arg(*args, **kw) -> parser.add_argument(*args, *kw)
     """
-    import inspect
 
     # call this function when this sub-command is selected
     parser.set_defaults(**{_FUNC_NAME: func})
@@ -304,7 +303,6 @@ class ArgParser(ap.ArgumentParser):
 
 def dispatch(parser: ap.ArgumentParser, args=None, **ns):
     """call the sub-command selected by user"""
-    import inspect
 
     parsed = parser.parse_args(args)
     ns["_parsed"] = parsed
