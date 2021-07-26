@@ -27,13 +27,11 @@ def source_path():
 
 
 @pytest.fixture
-def xonsh_execer(monkeypatch, session_vars):
+def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    execer = session_vars["execer"]
-    XSH.load(execer=execer, ctx={})
+    execer = Execer(unload=False)
     monkeypatch.setattr(XSH, "execer", execer)
     yield execer
-    XSH.unload()
 
 
 @pytest.fixture
