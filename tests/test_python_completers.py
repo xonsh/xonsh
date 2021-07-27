@@ -116,6 +116,12 @@ def test_complete_python_ctx():
         ),
         (
             CommandContext(
+                args=(CommandArg("import"),), arg_index=1, prefix="sys,os.pa"
+            ),
+            {"os.path"},
+        ),
+        (
+            CommandContext(
                 args=(
                     CommandArg("from"),
                     CommandArg("x"),
@@ -143,6 +149,31 @@ def test_complete_python_ctx():
                     CommandArg("import"),
                 ),
                 arg_index=3,
+                prefix="PurePa",
+            ),
+            {"PurePath"},
+        ),
+        (
+            CommandContext(
+                args=(
+                    CommandArg("from"),
+                    CommandArg("pathlib"),
+                    CommandArg("import"),
+                ),
+                arg_index=3,
+                prefix="PosixPath,PurePa",
+            ),
+            {"PurePath"},
+        ),
+        (
+            CommandContext(
+                args=(
+                    CommandArg("from"),
+                    CommandArg("pathlib"),
+                    CommandArg("import"),
+                    CommandArg("PosixPath"),
+                ),
+                arg_index=4,
                 prefix="PurePa",
             ),
             {"PurePath"},
