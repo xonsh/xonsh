@@ -182,13 +182,10 @@ def complete_import(context: CompletionContext):
     if arg_index == 2 and args[0].value == "from":
         return {RichCompletion("import", append_space=True)}
     if arg_index > 2 and args[0].value == "from" and args[2].value == "import":
-        # complete thing inside a module
-        try:
-            mod = importlib.import_module(args[1].value)
-        except ImportError:
-            return set()
-        out = {i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix)}
-        return out
+        # complete thing inside a module, might be multiple objects
+        module = args[1].value
+        prefix = prefix.rsplit(",", 1)[-1]
+        return filter_completions(prefix, try_import(module)), len(prefix)
     return set()
 
 
