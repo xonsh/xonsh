@@ -140,3 +140,67 @@ def try_import(mod: str, only_modules=False) -> tp.List[str]:
     completions_set = {c for c in completions if isinstance(c, str)}
     completions_set.discard('__init__')
     return list(completions_set)
+
+##### Xonsh code: #####
+
+
+def filter_completions(prefix, completions):
+    filt = get_filter_function()
+    for comp in completions:
+        if filt(comp, prefix):
+            yield comp
+
+
+@contextual_completer
+def complete_import(context: CompletionContext):
+    """
+    Completes module names and objects for "import ..." and "from ... import
+    ...".
+    """
+    if not (context.command and context.python):
+        # Imports are only possible in independent lines (not in `$()` or `@()`).
+        # This means it's python code, but also can be a command as far as the parser is concerned.
+        return None
+
+    command = context.command
+
+    if command.opening_quote:
+        # can't have a quoted import
+        return None
+
+    arg_index = command.arg_index
+    prefix = command.prefix
+    args = command.args
+
+    if arg_index == 1 and args[0].value == "from":
+        # completing module to import
+        return complete_module(prefix)
+    if arg_index >= 1 and args[0].value == "import":
+        # completing module to import, might be multiple modules
+        prefix = prefix.rsplit(",", 1)[-1]
+        return complete_module(prefix), len(prefix)
+    if arg_index == 2 and args[0].value == "from":
+        return {RichCompletion("import", append_space=True)}
+    if arg_index > 2 and args[0].value == "from" and args[2].value == "import":
+        # complete thing inside a module
+        try:
+            mod = importlib.import_module(args[1].value)
+        except ImportError:
+            return set()
+        out = {i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix)}
+        return out
+    return set()
+
+
+def complete_module(prefix):
+    if not prefix:
+        modules = get_root_modules()
+    else:
+        mod = prefix.split('.')
+        if len(mod) < 2:
+            modules = get_root_modules()
+        else:
+            completion_list = try_import('.'.join(mod[:-1]), only_modules=True)
+            modules = ('.'.join(mod[:-1] + [el]) for el in completion_list)
+
+    yield from filter_completions(prefix, modules)

@@ -9,8 +9,8 @@ from xonsh.completers.path import complete_path
 from xonsh.completers.dirs import complete_cd, complete_rmdir
 from xonsh.completers.python import (
     complete_python,
-    complete_import,
 )
+from xonsh.completers.imports import complete_import
 from xonsh.completers.commands import (
     complete_skipper,
     complete_end_proc_tokens,
