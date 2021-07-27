@@ -4,6 +4,7 @@ from xonsh.completers.tools import (
     contextual_completer,
     non_exclusive_completer,
     get_filter_function,
+    RichCompletion,
 )
 
 
@@ -27,4 +28,8 @@ def complete_environment_vars(context: CompletionContext):
     filter_func = get_filter_function()
     env_names = XSH.env
 
-    return {"$" + k for k in env_names if filter_func(k, key)}, lprefix
+    return {
+        RichCompletion("$" + k, description=env_names.get_docs(k).doc)
+        for k in env_names
+        if filter_func(k, key)
+    }, lprefix
