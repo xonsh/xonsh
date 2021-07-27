@@ -278,4 +278,3 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
         return set()
     args = {p + "=" for p in sig.parameters if filter_func(p, prefix)}
     return args
-

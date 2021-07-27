@@ -9,7 +9,6 @@ Contains modified code from the IPython project (at core/completerlib.py).
 import os
 import re
 import sys
-import glob
 import inspect
 from time import time
 from importlib import import_module
@@ -20,7 +19,6 @@ import typing as tp
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.completers.tools import (
-    CompleterResult,
     contextual_completer,
     get_filter_function,
     RichCompletion,
@@ -36,10 +34,11 @@ TIMEOUT_GIVEUP = 2
 @lazyobject
 def IMPORT_RE():
     # Regular expression for the python import statement
-    return re.compile(r'(?P<name>[^\W\d]\w*?)'
-                      r'(?P<package>[/\\]__init__)?'
-                      r'(?P<suffix>%s)$' %
-                      r'|'.join(re.escape(s) for s in _suffixes))
+    return re.compile(
+        r"(?P<name>[^\W\d]\w*?)"
+        r"(?P<package>[/\\]__init__)?"
+        r"(?P<suffix>%s)$" % r"|".join(re.escape(s) for s in _suffixes)
+    )
 
 
 def module_list(path):
@@ -48,8 +47,8 @@ def module_list(path):
     folder.
     """
     # sys.path has the cwd as an empty string, but isdir/listdir need it as '.'
-    if path == '':
-        path = '.'
+    if path == "":
+        path = "."
 
     # A few local constants to be used in loops below
     pjoin = os.path.join
@@ -60,17 +59,17 @@ def module_list(path):
         # recurse more than one level into subdirectories.
         files = []
         for root, dirs, nondirs in os.walk(path, followlinks=True):
-            subdir = root[len(path)+1:]
+            subdir = root[len(path) + 1 :]
             if subdir:
                 files.extend(pjoin(subdir, f) for f in nondirs)
-                dirs[:] = [] # Do not recurse into additional subdirectories.
+                dirs[:] = []  # Do not recurse into additional subdirectories.
             else:
                 files.extend(nondirs)
 
     else:
         try:
             files = list(zipimporter(path)._files.keys())
-        except:
+        except:  # noqa
             files = []
 
     # Build a list of modules which match the import_re regex.
@@ -78,7 +77,7 @@ def module_list(path):
     for f in files:
         m = IMPORT_RE.match(f)
         if m:
-            modules.append(m.group('name'))
+            modules.append(m.group("name"))
     return list(set(modules))
 
 
@@ -90,17 +89,16 @@ def get_root_modules():
     rootmodules_cache = XSH.modules_cache
     rootmodules = list(sys.builtin_module_names)
     start_time = time()
-    store = False
     for path in sys.path:
         try:
             modules = rootmodules_cache[path]
         except KeyError:
             modules = module_list(path)
             try:
-                modules.remove('__init__')
+                modules.remove("__init__")
             except ValueError:
                 pass
-            if path not in ('', '.'): # cwd modules should not be cached
+            if path not in ("", "."):  # cwd modules should not be cached
                 rootmodules_cache[path] = modules
             if time() - start_time > TIMEOUT_GIVEUP:
                 print("\nwarning: Getting root modules is taking too long, we give up")
@@ -114,34 +112,38 @@ def is_importable(module, attr, only_modules):
     if only_modules:
         return inspect.ismodule(getattr(module, attr))
     else:
-        return not(attr[:2] == '__' and attr[-2:] == '__')
+        return not (attr[:2] == "__" and attr[-2:] == "__")
 
 
 def try_import(mod: str, only_modules=False) -> tp.List[str]:
     """
     Try to import given module and return list of potential completions.
     """
-    mod = mod.rstrip('.')
+    mod = mod.rstrip(".")
     try:
         m = import_module(mod)
-    except:
+    except Exception:
         return []
 
-    m_is_init = '__init__' in (getattr(m, '__file__', '') or '')
+    m_is_init = "__init__" in (getattr(m, "__file__", "") or "")
 
     completions = []
-    if (not hasattr(m, '__file__')) or (not only_modules) or m_is_init:
-        completions.extend( [attr for attr in dir(m) if
-                             is_importable(m, attr, only_modules)])
+    if (not hasattr(m, "__file__")) or (not only_modules) or m_is_init:
+        completions.extend(
+            [attr for attr in dir(m) if is_importable(m, attr, only_modules)]
+        )
 
-    completions.extend(getattr(m, '__all__', []))
+    completions.extend(getattr(m, "__all__", []))
     if m_is_init:
         completions.extend(module_list(os.path.dirname(m.__file__)))
     completions_set = {c for c in completions if isinstance(c, str)}
-    completions_set.discard('__init__')
+    completions_set.discard("__init__")
     return list(completions_set)
 
-##### Xonsh code: #####
+
+###############
+# Xonsh code: #
+###############
 
 
 def filter_completions(prefix, completions):
@@ -193,11 +195,11 @@ def complete_module(prefix):
     if not prefix:
         modules = get_root_modules()
     else:
-        mod = prefix.split('.')
+        mod = prefix.split(".")
         if len(mod) < 2:
             modules = get_root_modules()
         else:
-            completion_list = try_import('.'.join(mod[:-1]), only_modules=True)
-            modules = ('.'.join(mod[:-1] + [el]) for el in completion_list)
+            completion_list = try_import(".".join(mod[:-1]), only_modules=True)
+            modules = (".".join(mod[:-1] + [el]) for el in completion_list)
 
     yield from filter_completions(prefix, modules)
