@@ -92,12 +92,12 @@ def ON_WSL():
 
 @lazybool
 def ON_WSL1():
-    return ON_WSL and not ON_WSL2
+    return bool(ON_WSL) and not bool(ON_WSL2)
 
 
 @lazybool
 def ON_WSL2():
-    return ON_WSL and "WSL2" in platform.release()
+    return bool(ON_WSL) and "WSL2" in platform.release()
 
 
 #
