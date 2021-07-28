@@ -21,14 +21,14 @@ Xonsh comes pre-baked with a few keyboard shortcuts. The following is only avail
         | 2. End and execute a multiline statement.
     * - Ctrl-M
       - Same as Ctrl-J
-    * - Shift-Left OR Shift-Right *[Beta]*
+    * - Shift-Left OR Shift-Right
       - Highlight one character in either direction
-    * - Ctrl-Shift-Left OR Ctrl-Shift-Right *[Beta]*
+    * - Ctrl-Shift-Left OR Ctrl-Shift-Right
       - Highlight one word in either direction
-    * - Ctrl-X + Ctrl-C *[Beta]*
+    * - Ctrl-X + Ctrl-C
       - Copy highlighted section
-    * - Ctrl-X + Ctrl-X *[Beta]*
+    * - Ctrl-X + Ctrl-X
       - Cut highlighted section
-    * - Ctrl-V *[Beta]*
+    * - Ctrl-V
       - Paste clipboard contents
 
