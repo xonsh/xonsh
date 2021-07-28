@@ -28,8 +28,8 @@ def complete_environment_vars(context: CompletionContext):
     filter_func = get_filter_function()
     env_names = XSH.env
 
-    return {
+    return (
         RichCompletion("$" + k, description=env_names.get_docs(k).doc)
         for k in env_names
         if filter_func(k, key)
-    }, lprefix
+    ), lprefix
