@@ -3,6 +3,7 @@ pytest>=6
 flake8
 flake8-docstrings
 flake8-bugbear
+restructuredtext_lint
 pytest-cov
 pytest-timeout
 pytest-subprocess
