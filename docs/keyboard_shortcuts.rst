@@ -11,6 +11,8 @@ Xonsh comes pre-baked with a few keyboard shortcuts. The following is only avail
 
     * - Shortcut
       - Description
+    * - Ctrl-Backspace (or Ctrl-H)
+      - Delete a single word (like Alt-Backspace)
     * - Ctrl-X + Ctrl-E
       - Open the current buffer in your default text editor.
     * - Ctrl-D

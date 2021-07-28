@@ -217,6 +217,12 @@ def load_xonsh_bindings() -> KeyBindingsBase:
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
+    # Most terminals send ^H from ctrl-backspace
+    @handle(Keys.ControlH, filter=insert_mode)
+    def delete_word(event):
+        """Delete a single word (like ALT-backspace)"""
+        get_by_name("backward-kill-word").call(event)
+
     @handle(Keys.Tab, filter=tab_insert_indent)
     def insert_indent(event):
         """
