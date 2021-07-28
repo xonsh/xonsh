@@ -26,10 +26,14 @@ def complete_environment_vars(context: CompletionContext):
     key = prefix[dollar_location + 1 :]
     lprefix = len(key) + 1
     filter_func = get_filter_function()
-    env_names = XSH.env
+    env = XSH.env
 
     return (
-        RichCompletion("$" + k, description=env_names.get_docs(k).doc)
-        for k in env_names
+        RichCompletion(
+            "$" + k,
+            display=f"${k} [{type(v).__name__}]",
+            description=env.get_docs(k).doc,
+        )
+        for k, v in env.items()
         if filter_func(k, key)
     ), lprefix
