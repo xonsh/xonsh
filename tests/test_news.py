@@ -16,20 +16,19 @@ single_grave_reg = re.compile(r"[^`]`[^`]+`[^`_]")
 
 
 def check_news_file(fname):
+    import restructuredtext_lint
+
     name = fname.name
     with open(fname.path) as f:
-        lines = f.read().splitlines()
-    form = ""
-    for i, l in enumerate(lines):
-        # search the graves
-        if "`" in l:
-            if single_grave_reg.search(l):
-                pytest.fail(
-                    "{}:{}: single grave accents (`)"
-                    " are not valid rst. Please use ``".format(name, i + 1),
-                    pytrace=True,
-                )
+        content = f.read()
+    errors = restructuredtext_lint.lint(content)
 
+    if errors:
+        err_msgs = os.linesep.join((err.message for err in errors))
+        pytest.fail(f"{fname}: Invalid ReST\n{err_msgs}")
+
+    form = ""
+    for i, l in enumerate(content.splitlines()):
         # determine the form of line
         if l.startswith("**"):
             cat = l[2:].rsplit(":")[0]
