@@ -31,4 +31,6 @@ Xonsh comes pre-baked with a few keyboard shortcuts. The following is only avail
       - Cut highlighted section
     * - Ctrl-V *[Beta]*
       - Paste clipboard contents
+    * - Ctrl-Right
+      - Complete a single auto-suggestion word
 

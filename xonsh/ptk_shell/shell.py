@@ -207,7 +207,8 @@ class PromptToolkitShell(BaseShell):
 
         self.prompt_formatter = PTKPromptFormatter(self.prompter)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
-        self.key_bindings = load_xonsh_bindings()
+        ptk_bindings = self.prompter.app.key_bindings
+        self.key_bindings = load_xonsh_bindings(ptk_bindings)
         self._overrides_deprecation_warning_shown = False
 
         # Store original `_history_matches` in case we need to restore it
