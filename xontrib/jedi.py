@@ -65,8 +65,8 @@ def complete_jedi(context: CompletionContext):
 
     # if we're completing a possible command and the prefix contains a valid path, don't complete.
     if context.command:
-        path_parts = os.path.split(context.command.prefix)
-        if len(path_parts) > 1 and os.path.isdir(os.path.join(*path_parts[:-1])):
+        path_dir = os.path.dirname(context.command.prefix)
+        if path_dir and os.path.isdir(os.path.expanduser(path_dir)):
             return None
 
     filter_func = get_filter_function()
