@@ -1577,6 +1577,12 @@ class AsyncPromptSetting(PTKSetting):
 class AutoCompletionSetting(Xettings):
     """Tab-completion behavior."""
 
+    ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT = Var.with_default(
+        doc="If True, Argparser based alias completions will show options (e.g. -h, ...) without "
+        "requesting explicitly with option prefix (-).",
+        default=False,
+        type_str="bool",
+    )
     BASH_COMPLETIONS = Var.with_default(
         doc="This is a list (or tuple) of strings that specifies where the "
         "``bash_completion`` script may be found. "
