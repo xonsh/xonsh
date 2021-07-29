@@ -282,3 +282,80 @@ def test_autovox(xession, tmpdir, load_vox):
     assert vox.active() == "myenv"
     xonsh.dirstack.popd([])
     print(xession.env["PWD"])
+
+
+@pytest.fixture
+def venvs(tmpdir):
+    """create bin paths in the tmpdir"""
+    from xonsh.dirstack import _pushd, _popd
+
+    _pushd(str(tmpdir))
+    paths = []
+    for idx in range(2):
+        bin_path = tmpdir / f"venv{idx}" / "bin"
+        paths.append(bin_path)
+
+        (bin_path / "python").write("", ensure=True)
+        (bin_path / "python.exe").write("", ensure=True)
+        for file in bin_path.listdir():
+            st = os.stat(str(file))
+            os.chmod(str(file), st.st_mode | stat.S_IEXEC)
+    yield paths
+    _popd()
+
+
+_VENV_NAMES = {"--help", "venv1", "-h", "venv1/", "venv0/", "venv0"}
+if ON_WINDOWS:
+    _VENV_NAMES = {"--help", "-h", "venv1\\", "venv0\\"}
+
+
+@pytest.mark.parametrize(
+    "args, exp",
+    [
+        (
+            "vox",
+            {
+                "delete",
+                "-h",
+                "new",
+                "remove",
+                "del",
+                "workon",
+                "list",
+                "exit",
+                "ls",
+                "help",
+                "rm",
+                "deactivate",
+                "activate",
+                "enter",
+                "--help",
+                "create",
+            },
+        ),
+        (
+            "vox create",
+            {
+                "--copies",
+                "--symlinks",
+                "--ssp",
+                "--system-site-packages",
+                "--activate",
+                "--without-pip",
+                "--interpreter",
+                "-p",
+                "-a",
+                "--help",
+                "-h",
+            },
+        ),
+        ("vox activate", _VENV_NAMES),
+        ("vox rm", _VENV_NAMES),
+        ("vox rm venv1", _VENV_NAMES),  # nargs: one-or-more
+        ("vox rm venv1 venv2", _VENV_NAMES),  # nargs: one-or-more
+    ],
+)
+def test_vox_completer(args, exp, xsh_with_aliases, load_vox, venvs, monkeypatch):
+    from tests.completers.test_completer_command import check_completer
+
+    check_completer(args, exp)
