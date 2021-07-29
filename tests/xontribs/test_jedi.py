@@ -253,6 +253,7 @@ def test_special_tokens(jedi_xontrib):
 @skip_if_on_windows
 def test_no_command_path_completion(jedi_xontrib, completion_context_parse):
     assert jedi_xontrib.complete_jedi(completion_context_parse("./", 2)) is None
+    assert jedi_xontrib.complete_jedi(completion_context_parse("~/", 2)) is None
     assert jedi_xontrib.complete_jedi(completion_context_parse("./e", 3)) is None
     assert jedi_xontrib.complete_jedi(completion_context_parse("/usr/bin/", 9)) is None
     assert (
