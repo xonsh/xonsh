@@ -208,9 +208,14 @@ def wrap_selection(buffer, left, right=None):
     buffer.selection_state = selection_state
 
 
-def load_xonsh_bindings() -> KeyBindingsBase:
+def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     """
     Load custom key bindings.
+
+    Parameters
+    ----------
+    ptk_bindings :
+        The default prompt toolkit bindings. We need these to add aliases to them.
     """
     key_bindings = KeyBindings()
     handle = key_bindings.add
@@ -388,5 +393,13 @@ def load_xonsh_bindings() -> KeyBindingsBase:
         if buff.selection_state:
             buff.cut_selection()
         get_by_name("yank").call(event)
+
+    def create_alias(new_keys, original_keys):
+        bindings = ptk_bindings.get_bindings_for_keys(tuple(original_keys))
+        for original_binding in bindings:
+            handle(*new_keys, filter=original_binding.filter)(original_binding.handler)
+
+    # Complete a single auto-suggestion word
+    create_alias([Keys.ControlRight], ["escape", "f"])
 
     return key_bindings
