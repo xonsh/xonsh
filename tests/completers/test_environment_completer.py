@@ -1,5 +1,6 @@
 import pytest
 
+from xonsh.environ import Env, Var
 from xonsh.parsers.completion_context import CompletionContextParser
 from xonsh.completers.environment import complete_environment_vars
 
@@ -18,7 +19,19 @@ def parser():
     ),
 )
 def test_simple(cmd, xession, monkeypatch, parser):
-    monkeypatch.setitem(xession.env, "WOW", 1)
+    monkeypatch.setattr(xession, "env", Env({"WOW": 1}))
 
     context = parser.parse(cmd, len(cmd))
-    assert complete_environment_vars(context) == ({"$WOW"}, 3)
+    comps, lprefix = complete_environment_vars(context)
+    assert lprefix == 3
+    assert set(comps) == {"$WOW"}
+
+
+def test_rich_completions(xession, monkeypatch, parser):
+    monkeypatch.setattr(xession, "env", Env({"WOW": 1}))
+    xession.env.register("WOW", type=int, doc="Nice Docs!")
+
+    context = parser.parse("$WO", 3)
+    completion = next(complete_environment_vars(context)[0])
+    assert completion.display == "$WOW [int]"
+    assert completion.description == "Nice Docs!"
