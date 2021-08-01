@@ -892,15 +892,14 @@ def run_subproc(cmds, captured=False, envs=None):
         # sure that the shell doesn't hang. This `pause_call_resume` invocation
         # does this
         pause_call_resume(proc, int)
-    # create command or return if backgrounding (unless captured is "object").
-    if background and captured != "object":
+    # now figure out what we should return
+    if captured == "object":
+        return command  # object can be returned even if backgrounding
+    elif background:
         return
-    # now figure out what we should return.
-    if captured == "stdout":
+    elif captured == "stdout":
         command.end()
         return command.output
-    elif captured == "object":
-        return command
     elif captured == "hiddenobject":
         command.end()
         return command
