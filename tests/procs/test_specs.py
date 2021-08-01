@@ -102,6 +102,23 @@ def test_capture_always(capfd, thread_subprocs, capture_always):
     assert exp in capfd.readouterr().out
 
 
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "captured, exp_is_none",
+    [
+        ("object", False),
+        ("stdout", True),
+        ("hiddenobject", True),
+        (False, True),
+    ],
+)
+def test_run_subproc_background(captured, exp_is_none):
+
+    cmds = (["echo", "hello"], "&")
+    return_val = run_subproc(cmds, captured)
+    assert (return_val is None) == exp_is_none
+
+
 @pytest.mark.parametrize("thread_subprocs", [False, True])
 def test_callable_alias_cls(thread_subprocs, xession):
     class Cls:
