@@ -2169,39 +2169,34 @@ def xonshrc_context(
     rcfiles=None, rcdirs=None, execer=None, ctx=None, env=None, login=True
 ):
     """
-    Attempts to read in all xonshrc files and return the context.
-    The xonsh environment here is updated to reflect which RC files and
-    directory locations will have been loaded (if they existed). The updated
-    environment vars might be different (or empty) depending on CLI options
-    (--rc, --no-rc) or whether the session is interactive.
+    Attempts to read in all xonshrc files (and search xonshrc directories),
+    and returns the list of rc file paths successfully loaded, in the order
+    of loading.
     """
-    loaded = env["LOADED_RC_FILES"] = []
+    loaded = []
     ctx = {} if ctx is None else ctx
-    if rcfiles is None and rcdirs is None:
-        return env
     orig_thread = env.get("THREAD_SUBPROCS")
     env["THREAD_SUBPROCS"] = None
     if rcfiles is not None:
-        env["XONSHRC"] = tuple(rcfiles)
         for rcfile in rcfiles:
-            if not os.path.isfile(rcfile):
-                loaded.append(False)
-                continue
-            status = xonsh_script_run_control(
-                rcfile, ctx, env, execer=execer, login=login
-            )
-            loaded.append(status)
+            if os.path.isfile(rcfile):
+                status = xonsh_script_run_control(
+                    rcfile, ctx, env, execer=execer, login=login
+                )
+                if status:
+                    loaded.append(rcfile)
     if rcdirs is not None:
-        env["XONSHRC_DIR"] = tuple(rcdirs)
         for rcdir in rcdirs:
             if os.path.isdir(rcdir):
                 for rcfile in sorted(glob.glob(os.path.join(rcdir, "*.xsh"))):
                     status = xonsh_script_run_control(
                         rcfile, ctx, env, execer=execer, login=login
                     )
+                    if status:
+                        loaded.append(rcfile)
     if env["THREAD_SUBPROCS"] is None:
         env["THREAD_SUBPROCS"] = orig_thread
-    return ctx
+    return loaded
 
 
 def windows_foreign_env_fixes(ctx):
