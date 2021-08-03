@@ -60,11 +60,8 @@ from xonsh.tools import (
     csv_to_set,
     set_to_csv,
     is_int,
-    is_bool_seq,
     to_bool_or_int,
     bool_or_int_to_str,
-    csv_to_bool_seq,
-    bool_seq_to_csv,
     DefaultNotGiven,
     print_exception,
     intensify_colors_on_win_setter,
@@ -813,17 +810,6 @@ class GeneralSetting(Xettings):
     if hasattr(locale, "LC_MESSAGES"):
         LC_MESSAGES = Var.for_locale("LC_MESSAGES")
 
-    LOADED_RC_FILES = Var(
-        is_bool_seq,
-        csv_to_bool_seq,
-        bool_seq_to_csv,
-        (),
-        "Whether or not any of the xonsh run control files were loaded at "
-        "startup. This is a sequence of bools in Python that is converted "
-        "to a CSV list in string form, ie ``[True, False]`` becomes "
-        "``'True,False'``.",
-        is_configurable=False,
-    )
     OLDPWD = Var.with_default(
         ".",
         "Used to represent a previous present working directory.",
