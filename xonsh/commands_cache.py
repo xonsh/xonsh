@@ -44,7 +44,9 @@ class CommandsCache(cabc.Mapping):
         env = XSH.env
         self.cache_file = (
             (Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve())
-            if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
+            if env is not None
+            and "XONSH_DATA_DIR" in env
+            and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
             else None
         )
 
