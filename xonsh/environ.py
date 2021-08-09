@@ -1557,7 +1557,8 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         False,
         "Delete a word on CTRL-Backspace (like ALT-Backspace). "
         r"This will only work when your terminal emulator sends ``\x7f`` on backspace and "
-        r"``\x08`` on CTRL-Backspace (which is configurable on most terminal emulators).",
+        r"``\x08`` on CTRL-Backspace (which is configurable on most terminal emulators). "
+        r"On windows, the keys are reversed.",
     )
 
 
