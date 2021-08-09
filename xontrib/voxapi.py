@@ -171,6 +171,7 @@ class Vox(collections.abc.Mapping):
                 )
             )
 
+        # todo: add function to toggle system-site-packages like in pew and others
         self._create(env_path, interpreter, system_site_packages, symlinks, with_pip)
         events.vox_on_create.fire(name=name)
 
