@@ -13,6 +13,7 @@ from prompt_toolkit.filters import (
     IsSearching,
 )
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.input import ansi_escape_sequences
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 
@@ -222,11 +223,20 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
-    # Most terminals send ^H from ctrl-backspace
-    @handle(Keys.ControlH, filter=insert_mode)
-    def delete_word(event):
-        """Delete a single word (like ALT-backspace)"""
-        get_by_name("backward-kill-word").call(event)
+    if XSH.env["XONSH_CTRL_BKSP_DELETION"]:
+        # Not all terminal emulators emit the same keys for backspace, therefore
+        # ptk always maps backspace ("\x7f") to ^H ("\x08"), and all the backspace bindings are registered for ^H.
+        # This means we can't re-map backspace and instead we register a new "real-c-h" key.
+        # See https://github.com/xonsh/xonsh/issues/4407
+        # Prompt-toolkit allows using single-character keys that aren't in the `Keys` enum.
+        REAL_C_H = "\x08"
+        ansi_escape_sequences.ANSI_SEQUENCES[REAL_C_H] = REAL_C_H  # type: ignore
+        ansi_escape_sequences.REVERSE_ANSI_SEQUENCES[REAL_C_H] = REAL_C_H  # type: ignore
+
+        @handle(REAL_C_H, filter=insert_mode)
+        def delete_word(event):
+            """Delete a single word (like ALT-backspace)"""
+            get_by_name("backward-kill-word").call(event)
 
     @handle(Keys.Tab, filter=tab_insert_indent)
     def insert_indent(event):
