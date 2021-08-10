@@ -66,14 +66,25 @@ def xonsh_events():
         setattr(events, name, newevent)
 
 
+@pytest.fixture(scope="session")
+def session_vars():
+    """keep costly vars per session"""
+    from xonsh.environ import Env, default_env
+    from xonsh.commands_cache import CommandsCache
+
+    return {
+        "execer": Execer(unload=False),
+        "env": Env(default_env()),
+        "commands_cache": CommandsCache(),
+    }
+
+
 @pytest.fixture
-def xonsh_builtins(monkeypatch, xonsh_events):
+def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = set(dir(builtins))
-    XSH.load(
-        execer=Execer(unload=False),
-        ctx={},
-    )
+
+    XSH.load(ctx={}, **session_vars)
     if ON_WINDOWS:
         XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
