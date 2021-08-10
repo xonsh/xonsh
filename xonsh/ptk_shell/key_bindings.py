@@ -13,6 +13,7 @@ from prompt_toolkit.filters import (
     IsSearching,
 )
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.input import ansi_escape_sequences
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 
@@ -23,6 +24,7 @@ from xonsh.tools import (
     ends_with_colon_token,
 )
 from xonsh.built_ins import XSH
+from xonsh.platform import ON_WINDOWS
 from xonsh.shell import transform_command
 
 DEDENT_TOKENS = frozenset(["raise", "return", "pass", "break", "continue"])
@@ -222,11 +224,31 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
-    # Most terminals send ^H from ctrl-backspace
-    @handle(Keys.ControlH, filter=insert_mode)
-    def delete_word(event):
-        """Delete a single word (like ALT-backspace)"""
-        get_by_name("backward-kill-word").call(event)
+    if XSH.env["XONSH_CTRL_BKSP_DELETION"]:
+        # Not all terminal emulators emit the same keys for backspace, therefore
+        # ptk always maps backspace ("\x7f") to ^H ("\x08"), and all the backspace bindings are registered for ^H.
+        # This means we can't re-map backspace and instead we register a new "real-ctrl-bksp" key.
+        # See https://github.com/xonsh/xonsh/issues/4407
+
+        if ON_WINDOWS:
+            # On windows BKSP is "\x08" and CTRL-BKSP is "\x7f"
+            REAL_CTRL_BKSP = "\x7f"
+
+            # PTK uses a second mapping
+            from prompt_toolkit.input import win32 as ptk_win32
+
+            ptk_win32.ConsoleInputReader.mappings[b"\x7f"] = REAL_CTRL_BKSP  # type: ignore
+        else:
+            REAL_CTRL_BKSP = "\x08"
+
+        # Prompt-toolkit allows using single-character keys that aren't in the `Keys` enum.
+        ansi_escape_sequences.ANSI_SEQUENCES[REAL_CTRL_BKSP] = REAL_CTRL_BKSP  # type: ignore
+        ansi_escape_sequences.REVERSE_ANSI_SEQUENCES[REAL_CTRL_BKSP] = REAL_CTRL_BKSP  # type: ignore
+
+        @handle(REAL_CTRL_BKSP, filter=insert_mode)
+        def delete_word(event):
+            """Delete a single word (like ALT-backspace)"""
+            get_by_name("backward-kill-word").call(event)
 
     @handle(Keys.Tab, filter=tab_insert_indent)
     def insert_indent(event):

@@ -1553,6 +1553,13 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         "Whether to copy words/lines to clipboard on deletion (must be set in .xonshrc file)."
         "Only available under the prompt-toolkit shell.",
     )
+    XONSH_CTRL_BKSP_DELETION = Var.with_default(
+        False,
+        "Delete a word on CTRL-Backspace (like ALT-Backspace). "
+        r"This will only work when your terminal emulator sends ``\x7f`` on backspace and "
+        r"``\x08`` on CTRL-Backspace (which is configurable on most terminal emulators). "
+        r"On windows, the keys are reversed.",
+    )
 
 
 class AsyncPromptSetting(PTKSetting):
