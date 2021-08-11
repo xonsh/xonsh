@@ -36,7 +36,6 @@ def default_completers():
             ("pip", complete_pip),
             ("cd", complete_cd),
             ("rmdir", complete_rmdir),
-            ("xonfig", complete_xonfig),
             ("xontrib", complete_xontrib),
             ("import", complete_import),
             ("bash", complete_from_bash),
