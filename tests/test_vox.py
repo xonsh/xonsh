@@ -287,9 +287,9 @@ def test_autovox(xession, tmpdir, load_vox):
 @pytest.fixture
 def venvs(tmpdir):
     """create bin paths in the tmpdir"""
-    from xonsh.dirstack import _pushd, _popd
+    from xonsh.dirstack import pushd, popd
 
-    _pushd(str(tmpdir))
+    pushd([str(tmpdir)])
     paths = []
     for idx in range(2):
         bin_path = tmpdir / f"venv{idx}" / "bin"
@@ -301,12 +301,24 @@ def venvs(tmpdir):
             st = os.stat(str(file))
             os.chmod(str(file), st.st_mode | stat.S_IEXEC)
     yield paths
-    _popd()
+    popd([])
 
 
 _VENV_NAMES = {"--help", "venv1", "-h", "venv1/", "venv0/", "venv0"}
 if ON_WINDOWS:
     _VENV_NAMES = {"--help", "-h", "venv1\\", "venv0\\"}
+
+_PY_BINS = {"bin1", "bin2"}
+_VOX_NEW_OPTS = {
+    "--copies",
+    "--help",
+    "-h",
+    "--ssp",
+    "--symlinks",
+    "--system-site-packages",
+    "--without-pip",
+}
+_VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
 
 
 @pytest.mark.parametrize(
@@ -324,7 +336,6 @@ if ON_WINDOWS:
                 "list",
                 "exit",
                 "ls",
-                "help",
                 "rm",
                 "deactivate",
                 "activate",
@@ -351,11 +362,14 @@ if ON_WINDOWS:
         ),
         ("vox activate", _VENV_NAMES),
         ("vox rm", _VENV_NAMES),
-        ("vox rm venv1", _VENV_NAMES),  # nargs: one-or-more
-        ("vox rm venv1 venv2", _VENV_NAMES),  # nargs: one-or-more
+        ("vox rm venv1", _VENV_NAMES),  # pos nargs: one or more
+        ("vox rm venv1 venv2", _VENV_NAMES),  # pos nargs: two or more
+        ("vox new --activate --interpreter", _PY_BINS),  # option after option
+        ("vox new --interpreter", _PY_BINS),  # "option: first
+        ("vox new --activate env1 --interpreter", _PY_BINS),  # option after pos
+        ("vox new env1 --interpreter", _PY_BINS),  # "option: at end"
+        ("vox new env1 --interpreter=", _PY_BINS),  # "option: at end with
     ],
 )
-def test_vox_completer(args, exp, xsh_with_aliases, load_vox, venvs, monkeypatch):
-    from tests.completers.test_completer_command import check_completer
-
-    check_completer(args, exp)
+def test_vox_completer(args, check_completer, exp, load_vox, venvs):
+    assert check_completer(args) == exp

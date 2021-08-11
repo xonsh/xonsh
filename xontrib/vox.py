@@ -18,6 +18,11 @@ class VenvNamesCompleter(ArgCompleter):
         yield from paths
 
 
+def py_interpreter_path_completer(xsh, **_):
+    # todo: check from commands-cache
+    yield from ("bin1", "bin2")
+
+
 class VoxHandler(ArgParserAlias):
     """Vox is a virtual environment manager for xonsh."""
 
@@ -75,7 +80,7 @@ class VoxHandler(ArgParserAlias):
         name: Annotated[str, Arg(metavar="ENV")],
         interpreter: Annotated[
             str,
-            Arg("-p", "--interpreter"),
+            Arg("-p", "--interpreter", completer=py_interpreter_path_completer),
         ] = None,
         system_site_packages: Annotated[
             bool,
