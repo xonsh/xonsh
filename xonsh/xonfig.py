@@ -19,7 +19,7 @@ from xonsh.ply import ply
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import ArgParserAlias, Annotated, Arg, add_args, ArgCompleter
+from xonsh.cli_utils import ArgParserAlias, Annotated, Arg, add_args
 from xonsh.prompt.base import is_template_string
 from xonsh.platform import (
     is_readline_available,
@@ -648,12 +648,13 @@ def _tok_colors(cmap, cols):
     return toks
 
 
-class ColorCompleter(ArgCompleter):
-    def __call__(self, *args, **kwargs):
-        yield from color_style_names()
+def xonfig_color_completer(*_, **__):
+    yield from color_style_names()
 
 
-def _colors(style: Annotated[str, Arg(nargs="?", completer=ColorCompleter())] = None):
+def _colors(
+    style: Annotated[str, Arg(nargs="?", completer=xonfig_color_completer)] = None
+):
     """Preview color style
 
     Parameters
