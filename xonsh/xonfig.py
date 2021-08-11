@@ -516,7 +516,7 @@ def _xonfig_format_json(data):
 def _info(
     to_json: Annotated[bool, Arg("--json", action="store_true")] = False,
 ) -> str:
-    """displays configuration information, default action
+    """Displays configuration information
 
     Parameters
     ----------
@@ -580,11 +580,11 @@ def _info(
 def _styles(
     to_json: Annotated[bool, Arg("--json", action="store_true")] = False, _stdout=None
 ):
-    """prints available xonsh color styles
+    """Prints available xonsh color styles
 
     Parameters
     ----------
-    json
+    to_json
         reports results as json
     """
     env = XSH.env
@@ -654,12 +654,12 @@ class ColorCompleter(ArgCompleter):
 
 
 def _colors(style: Annotated[str, Arg(nargs="?", completer=ColorCompleter())] = None):
-    """preview color style
+    """Preview color style
 
     Parameters
     ----------
     style
-        style to preview, default: <current>
+        name of the style to preview. If not given, current style name is used.
     """
     columns, _ = shutil.get_terminal_size()
     columns -= int(bool(ON_WINDOWS))
