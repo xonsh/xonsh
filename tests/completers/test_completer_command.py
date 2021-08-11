@@ -1,12 +1,5 @@
 import pytest
 
-from xonsh.completers.completer import complete_argparser_aliases
-from xonsh.parsers.completion_context import (
-    CommandArg,
-    CommandContext,
-    CompletionContext,
-)
-
 
 @pytest.fixture
 def xsh_with_aliases(xession, monkeypatch):
@@ -17,47 +10,47 @@ def xsh_with_aliases(xession, monkeypatch):
     return xsh
 
 
-def check_completer(args: str, exp: set, **kwargs):
-    cmds = tuple(CommandArg(i) for i in args.split(" "))
-    arg_index = len(cmds)
-    completions = complete_argparser_aliases(
-        CompletionContext(CommandContext(args=cmds, arg_index=arg_index, **kwargs))
-    )
-    comp_values = {getattr(i, "value", i) for i in completions}
-    assert comp_values == exp
+@pytest.fixture
+def mock_completer(monkeypatch, xsh_with_aliases):
+    xsh = xsh_with_aliases
+    monkeypatch.setattr(xsh, "completers", {"one": 1, "two": 2})
+    monkeypatch.setattr(xsh, "ctx", {"three": lambda: 1, "four": lambda: 2})
+    return xsh
 
 
 @pytest.mark.parametrize(
-    "args, exp",
+    "args, positionals, options",
     [
-        (
-            "completer",
-            {"add", "remove", "rm", "list", "ls", "--help", "-h"},
-        ),
+        ("completer", {"add", "remove", "rm", "list", "ls"}, {"--help", "-h"}),
         (
             "completer add",
+            set(),
             {"--help", "-h"},
         ),
         (
             "completer add newcompleter",
-            {"--help", "-h", "three", "four"},
+            {"three", "four"},
+            {"--help", "-h"},
         ),
         (
             "completer add newcompleter three",
-            {"<one", "--help", ">two", ">one", "<two", "end", "-h", "start"},
+            {"<one", ">two", ">one", "<two", "end", "start"},
+            {"--help", "-h"},
         ),
         (
             "completer remove",
-            {"--help", "-h", "one", "two"},
+            {"one", "two"},
+            {"--help", "-h"},
         ),
         (
             "completer list",
+            set(),
             {"--help", "-h"},
         ),
     ],
 )
-def test_completer_command(args, exp, xsh_with_aliases, monkeypatch):
-    xsh = xsh_with_aliases
-    monkeypatch.setattr(xsh, "completers", {"one": 1, "two": 2})
-    monkeypatch.setattr(xsh, "ctx", {"three": lambda: 1, "four": lambda: 2})
-    check_completer(args, exp)
+def test_completer_command(args, positionals, options, mock_completer, check_completer):
+    assert check_completer(args) == positionals
+
+    mock_completer.env["ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT"] = True
+    assert check_completer(args) == positionals.union(options)

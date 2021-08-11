@@ -14,6 +14,12 @@ from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
+from xonsh.parsers.completion_context import (
+    CommandArg,
+    CommandContext,
+    CompletionContext,
+)
+from xonsh.completers.completer import complete_argparser_aliases
 
 from xonsh import commands_cache
 from tools import DummyShell, sp, DummyEnv, DummyHistory
@@ -138,6 +144,19 @@ def xession(xonsh_builtins) -> XonshSession:
 @pytest.fixture(scope="session")
 def completion_context_parse():
     return CompletionContextParser().parse
+
+
+@pytest.fixture
+def check_completer(xession):
+    def _factory(args, **kwargs):
+        cmds = tuple(CommandArg(i) for i in args.split(" "))
+        arg_index = len(cmds)
+        completions = complete_argparser_aliases(
+            CompletionContext(CommandContext(args=cmds, arg_index=arg_index, **kwargs))
+        )
+        return {getattr(i, "value", i) for i in completions}
+
+    return _factory
 
 
 @pytest.fixture
