@@ -1,5 +1,5 @@
 """Vox tests"""
-
+import pathlib
 import stat
 import os
 import subprocess as sp
@@ -9,6 +9,30 @@ from xontrib.voxapi import Vox
 
 from tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
+
+
+@pytest.fixture
+def load_vox(xession, tmpdir):
+    """load vox into session"""
+
+    # Set up an isolated venv home
+    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
+
+    # Set up enough environment for xonsh to function
+    xession.env["PWD"] = os.getcwd()
+    xession.env["DIRSTACK_SIZE"] = 10
+    xession.env["PATH"] = []
+    xession.env["XONSH_SHOW_TRACEBACK"] = True
+
+    module = "xontrib.vox"
+    has_vox = module in sys.modules
+
+    from xonsh.xontribs import xontribs_load
+
+    xontribs_load(["vox"])
+    yield
+    if not has_vox:
+        del sys.modules["xontrib.vox"]
 
 
 @skip_if_on_msys
@@ -180,31 +204,25 @@ def test_crud_subdir(xession, tmpdir):
     assert not tmpdir.join("spam", "eggs").check()
 
 
-try:
-    import pathlib
-except ImportError:
-    pass
-else:
+@skip_if_on_msys
+@skip_if_on_conda
+def test_crud_path(xession, tmpdir):
+    """
+    Creates a virtual environment, gets it, enumerates it, and then deletes it.
+    """
+    tmp = pathlib.Path(str(tmpdir))
 
-    @skip_if_on_msys
-    @skip_if_on_conda
-    def test_crud_path(xession, tmpdir):
-        """
-        Creates a virtual environment, gets it, enumerates it, and then deletes it.
-        """
-        tmp = pathlib.Path(str(tmpdir))
+    vox = Vox()
+    vox.create(tmp)
+    assert stat.S_ISDIR(tmpdir.join("lib").stat().mode)
 
-        vox = Vox()
-        vox.create(tmp)
-        assert stat.S_ISDIR(tmpdir.join("lib").stat().mode)
+    ve = vox[tmp]
+    assert ve.env == str(tmp)
+    assert os.path.isdir(ve.bin)
 
-        ve = vox[tmp]
-        assert ve.env == str(tmp)
-        assert os.path.isdir(ve.bin)
+    del vox[tmp]
 
-        del vox[tmp]
-
-        assert not tmpdir.check()
+    assert not tmpdir.check()
 
 
 @skip_if_on_msys
@@ -231,27 +249,17 @@ def test_reserved_names(xession, tmpdir):
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_autovox(xession, tmpdir):
+def test_autovox(xession, tmpdir, load_vox):
     """
     Tests that autovox works
     """
     import importlib
     import xonsh.dirstack
 
-    # Set up an isolated venv home
-    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
-
     # Makes sure that event handlers are registered
     import xontrib.autovox
 
     importlib.reload(xontrib.autovox)
-
-    # Set up enough environment for xonsh to function
-    xession.env["PWD"] = os.getcwd()
-    xession.env["DIRSTACK_SIZE"] = 10
-    xession.env["PATH"] = []
-
-    xession.env["XONSH_SHOW_TRACEBACK"] = True
 
     @xession.builtins.events.autovox_policy
     def policy(path, **_):

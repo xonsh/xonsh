@@ -145,6 +145,7 @@ class Vox(collections.abc.Mapping):
             Virtual environment name
         interpreter: str
             Python interpreter used to create the virtual environment.
+            Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
         system_site_packages : bool
             If True, the system (global) site-packages dir is available to
             created environments.
@@ -170,7 +171,8 @@ class Vox(collections.abc.Mapping):
                 )
             )
 
-        self._create(env_path, interpreter, symlinks=symlinks, with_pip=with_pip)
+        # todo: add function to toggle system-site-packages like in pew and others
+        self._create(env_path, interpreter, system_site_packages, symlinks, with_pip)
         events.vox_on_create.fire(name=name)
 
     def upgrade(self, name, symlinks=False, with_pip=True, interpreter=None):
@@ -307,7 +309,7 @@ class Vox(collections.abc.Mapping):
 
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME."""
-        bin_, lib, inc = _subdir_names()
+        bin_, _, _ = _subdir_names()
         for dirpath, dirnames, _ in os.walk(self.venvdir):
             python_exec = os.path.join(dirpath, bin_, "python")
             if ON_WINDOWS:
