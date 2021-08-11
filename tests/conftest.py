@@ -81,9 +81,9 @@ def session_vars():
 
 
 @pytest.fixture
-def xession(monkeypatch, xonsh_events) -> XonshSession:
+def xession(monkeypatch, xonsh_events, session_vars) -> XonshSession:
     """Mock out most of the builtins xonsh attributes."""
-    old_builtins = dict(vars(builtins).items())  # type: ignore
+    # todo: any call to builtins.__xonsh__ specific attrs should be blocked during tests
 
     XSH.load(ctx={}, **session_vars)
 
