@@ -3,31 +3,39 @@ from xonsh.parsers.completion_context import (
     CommandContext,
     CompletionContext,
 )
-from xonsh.completers.xompletions import complete_xonfig, complete_xontrib, xt
+from xonsh.completers.xompletions import complete_xontrib
+import pytest
 
 
-def test_xonfig():
-    assert complete_xonfig(
-        CompletionContext(
-            CommandContext(args=(CommandArg("xonfig"),), arg_index=1, prefix="-")
-        )
-    ) == {"-h"}
+@pytest.fixture
+def xsh_with_aliases(xession, monkeypatch):
+    from xonsh.aliases import Aliases, make_default_aliases
+
+    xsh = xession
+    monkeypatch.setattr(xsh, "aliases", Aliases(make_default_aliases()))
+    return xsh
 
 
-def test_xonfig_colors(monkeypatch):
-    monkeypatch.setattr(xt, "color_style_names", lambda: ["blue", "brown", "other"])
-    assert (
-        complete_xonfig(
-            CompletionContext(
-                CommandContext(
-                    args=(CommandArg("xonfig"), CommandArg("colors")),
-                    arg_index=2,
-                    prefix="b",
-                )
-            )
-        )
-        == {"blue", "brown"}
-    )
+@pytest.mark.parametrize(
+    "args, prefix, exp",
+    [
+        (
+            "xonfig",
+            "-",
+            {"-h", "--help"},
+        ),
+        (
+            "xonfig colors",
+            "b",
+            {"blue", "brown"},
+        ),
+    ],
+)
+def test_xonfig(args, prefix, exp, xsh_with_aliases, monkeypatch, check_completer):
+    from xonsh import xonfig
+
+    monkeypatch.setattr(xonfig, "color_style_names", lambda: ["blue", "brown", "other"])
+    assert check_completer(args, prefix=prefix) == exp
 
 
 def test_xontrib():
