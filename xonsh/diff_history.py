@@ -3,11 +3,8 @@
 import difflib
 import datetime
 import itertools
-import argparse
-import typing as tp
 
 from xonsh.lazyjson import LazyJSON
-from xonsh.tools import print_color
 from xonsh.color_tools import COLORS
 
 
@@ -315,42 +312,3 @@ class HistoryDiffer(object):
         if len(cd) > 0:
             s += "\n\n" + cd
         return s.rstrip()
-
-
-_HD_PARSER: tp.Optional[argparse.ArgumentParser] = None
-
-
-def dh_create_parser(p=None):
-    global _HD_PARSER
-    p_was_none = p is None
-    if _HD_PARSER is not None and p_was_none:
-        return _HD_PARSER
-    if p_was_none:
-        p = argparse.ArgumentParser(
-            "diff-history", description="diffs two xonsh history files"
-        )
-    p.add_argument(
-        "--reopen",
-        dest="reopen",
-        default=False,
-        action="store_true",
-        help="make lazy file loading reopen files each time",
-    )
-    p.add_argument(
-        "-v",
-        "--verbose",
-        dest="verbose",
-        default=False,
-        action="store_true",
-        help="whether to print even more information",
-    )
-    p.add_argument("a", help="first file in diff")
-    p.add_argument("b", help="second file in diff")
-    if p_was_none:
-        _HD_PARSER = p
-    return p
-
-
-def dh_main_action(ns, hist=None, stdout=None, stderr=None):
-    hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
-    print_color(hd.format(), file=stdout)
