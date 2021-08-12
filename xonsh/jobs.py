@@ -5,13 +5,13 @@ import sys
 import time
 import ctypes
 import signal
-import argparse
 import subprocess
 import collections
 import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
+from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, ON_MSYS, LIBC
 from xonsh.tools import unthreadable
@@ -274,19 +274,25 @@ def _clear_dead_jobs():
         del XSH.all_jobs[job]
 
 
-def print_one_job(num, outfile=sys.stdout):
-    """Print a line describing job number ``num``."""
+def format_job_string(num: int) -> str:
     try:
         job = XSH.all_jobs[num]
     except KeyError:
-        return
+        return ""
     pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
     status = job["status"]
     cmd = [" ".join(i) if isinstance(i, list) else i for i in job["cmds"]]
     cmd = " ".join(cmd)
     pid = job["pids"][-1]
     bg = " &" if job["bg"] else ""
-    print("[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid), file=outfile)
+    return "[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid)
+
+
+def print_one_job(num, outfile=sys.stdout):
+    """Print a line describing job number ``num``."""
+    info = format_job_string(num)
+    if info:
+        print(info, file=outfile)
 
 
 def get_next_job_number():
@@ -448,9 +454,17 @@ def bg(args, stdin=None):
         return res
 
 
-# todo: complete job-ids
+# todo: add tests for completer
+def job_id_completer(xsh, **_):
+    """Return currently running jobs ids"""
+    for job_id in xsh.all_jobs:
+        yield RichCompletion(str(job_id), description=format_job_string(job_id))
+
+
 def disown_fn(
-    job_ids: Annotated[tp.Sequence[int], Arg(type=int, nargs="*")],
+    job_ids: Annotated[
+        tp.Sequence[int], Arg(type=int, nargs="*", completer=job_id_completer)
+    ],
     force_auto_continue: Annotated[
         bool, Arg("-c", "--continue", action="store_true")
     ] = False,
