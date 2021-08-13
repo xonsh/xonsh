@@ -530,7 +530,11 @@ class PromptToolkitShell(BaseShell):
                 ]
             )
         ptk_print(
-            tokens, style=proxy_style, end=end, include_default_pygments_style=False
+            tokens,
+            style=proxy_style,
+            end=end,
+            include_default_pygments_style=False,
+            **kwargs,
         )
 
     def color_style_names(self):
