@@ -113,9 +113,6 @@ def _safe_getattr(obj, attr, default=None):
         return default
 
 
-CUnicodeIO = io.StringIO
-
-
 def pretty(
     obj, verbose=False, max_width=79, newline="\n", max_seq_length=MAX_SEQ_LENGTH
 ):
@@ -125,7 +122,7 @@ def pretty(
     if hasattr(obj, "xonsh_display"):
         return obj.xonsh_display()
 
-    stream = CUnicodeIO()
+    stream = io.StringIO()
     printer = RepresentationPrinter(
         stream, verbose, max_width, newline, max_seq_length=max_seq_length
     )
