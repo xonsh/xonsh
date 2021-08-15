@@ -29,21 +29,13 @@ def _register_completer(name: str, func: str, pos="start", stack=None):
 
     func
         the name of a completer function to use.  This should be a function
-         of the following arguments, and should return a set of valid completions
+         that takes a Completion Context object and marked with the
+         ``xonsh.completers.tools.contextual_completer`` decorator.
+         It should return a set of valid completions
          for the given prefix.  If this completer should not be used in a given
          context, it should return an empty set or None.
 
-         Arguments to FUNC:
-           * prefix: the string to be matched
-           * line: a string representing the whole current line, for context
-           * begidx: the index at which prefix starts in line
-           * endidx: the index at which prefix ends in line
-           * ctx: the current Python environment
-
-         If the completer expands the prefix in any way, it should return a tuple
-         of two elements: the first should be the set of completions, and the
-         second should be the length of the modified prefix (for an example, see
-         xonsh.completers.path.complete_path).
+         For more information see https://xon.sh/tutorial_completers.html#writing-a-new-completer.
 
     pos
         position into the list of completers at which the new
