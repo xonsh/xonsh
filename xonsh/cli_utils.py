@@ -11,14 +11,15 @@ import os
 import sys
 import typing as tp
 
-
-TYPING_ANNOTATED_AVAILABLE = hasattr(tp, "Annotated")
+TYPING_ANNOTATED_AVAILABLE = False
 """One can import ``Annotated`` from this module
 which adds a stub when it is not available in ``typing``/``typing_extensions`` modules."""
 
-if TYPING_ANNOTATED_AVAILABLE:
+try:
     from typing import Annotated  # noqa
-else:
+
+    TYPING_ANNOTATED_AVAILABLE = True
+except ImportError:
     try:
         from typing_extensions import Annotated  # type: ignore
 
