@@ -147,7 +147,7 @@ def completion_context_parse():
 
 
 @pytest.fixture
-def check_completer(xession):
+def check_completer(xession, completion_context_parse):
     def _factory(args, **kwargs):
         cmds = tuple(CommandArg(i) for i in args.split(" "))
         arg_index = len(cmds)
