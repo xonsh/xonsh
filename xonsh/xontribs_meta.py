@@ -548,7 +548,7 @@ def define_xontribs():
         ),
         "pyrtn": Xontrib(
             url="https://github.com/dyuri/xontrib-pyrtn",
-            description="Ipyton like In[]/Out[] to access python return values in the current session.",
+            description="IPython like In[]/Out[] to access python return values in the current session.",
             package=_XontribPkg(
                 name="xontrib-pyrtn",
                 license="MIT",
