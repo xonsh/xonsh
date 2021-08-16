@@ -462,7 +462,7 @@ class SubprocSpec:
             raise xt.XonshError("xonsh: subprocess mode: command is empty")
         bufsize = 1
         try:
-            if xp.ON_WINDOWS:
+            if xp.ON_WINDOWS and self.binary_loc is not None:
                 # launch process using full paths (https://bugs.python.org/issue8557)
                 cmd = [self.binary_loc] + self.cmd[1:]
             else:
