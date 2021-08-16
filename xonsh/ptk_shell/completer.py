@@ -98,6 +98,7 @@ class PromptToolkitCompleter(Completer):
         for comp in completions:
             # do not display quote
             if isinstance(comp, RichCompletion):
+                # ptk doesn't render newlines. This can be removed once it is supported.
                 desc = (
                     comp.description.replace(os.linesep, " ")
                     if comp.description
@@ -107,7 +108,6 @@ class PromptToolkitCompleter(Completer):
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
                     display=comp.display or comp[pre:].strip("'\""),
-                    # ptk doesn't render newlines. This can be removed once it is supported.
                     display_meta=desc,
                     style=comp.style or "",
                 )
