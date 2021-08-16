@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import subprocess as sp
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +14,7 @@ from xonsh.lib.os import indir
 
 from tools import (
     skip_if_on_msys,
+    skip_if_on_unix,
     skip_if_on_windows,
     skip_if_on_darwin,
     ON_WINDOWS,
@@ -46,9 +48,13 @@ def run_xonsh(
     stderr=sp.STDOUT,
     single_command=False,
     interactive=False,
+    path=None,
 ):
     env = dict(os.environ)
-    env["PATH"] = PATH
+    if path is None:
+        env["PATH"] = PATH
+    else:
+        env["PATH"] = path
     env["XONSH_DEBUG"] = "0"  # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
@@ -813,3 +819,37 @@ def test_loading_correctly(monkeypatch, interactive):
 def test_exec_function_scope(cmd):
     _, _, rtn = run_xonsh(cmd, single_command=True)
     assert rtn == 0
+
+
+@skip_if_on_unix
+def test_run_currentfolder():
+    """Ensure we can run an executable in the current folder
+    when file is not on path
+    """
+    batfile = Path(__file__).parent / "bin" / "hello_world.bat"
+    os.chdir(batfile.parent)
+    cmd = batfile.name
+    out, err, rtn = run_xonsh(cmd, stderr=sp.PIPE, path=os.environ["PATH"])
+    assert out.strip() == "hello world"
+
+
+@skip_if_on_unix
+def test_run_dynamic_on_path():
+    """Ensure we can run an executable which is added to the path
+    after xonsh is loaded
+    """
+    batfile = Path(__file__).parent / "bin" / "hello_world.bat"
+    cmd = f"$PATH.add(r'{batfile.parent}');![hello_world.bat]"
+    out, err, _ = run_xonsh(cmd, stderr=sp.PIPE, path=os.environ["PATH"])
+    assert err == ""
+    assert out.strip() == "hello world"
+
+
+@skip_if_on_unix
+def test_run_fail_not_on_path():
+    """Test that xonsh fails to run an executable when not on path
+    or in current folder
+    """
+    cmd = "hello_world.bat"
+    _, err, _ = run_xonsh(cmd, stderr=sp.PIPE, path=os.environ["PATH"])
+    assert "command not found: hello_world.bat" in err
