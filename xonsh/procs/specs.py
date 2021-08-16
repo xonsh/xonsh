@@ -462,7 +462,12 @@ class SubprocSpec:
             raise xt.XonshError("xonsh: subprocess mode: command is empty")
         bufsize = 1
         try:
-            p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
+            if xp.ON_WINDOWS:
+                # launch process using full paths (https://bugs.python.org/issue8557)
+                cmd = [self.binary_loc] + self.cmd[1:]
+            else:
+                cmd = self.cmd
+            p = self.cls(cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise xt.XonshError(e.format(self.cmd[0]))
