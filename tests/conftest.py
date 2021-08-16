@@ -9,6 +9,7 @@ import pytest
 
 from xonsh.aliases import Aliases
 from xonsh.built_ins import XonshSession, XSH
+from xonsh.completers._aliases import complete_argparser_aliases
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
@@ -19,7 +20,6 @@ from xonsh.parsers.completion_context import (
     CommandContext,
     CompletionContext,
 )
-from xonsh.completers.completer import complete_argparser_aliases
 
 from xonsh import commands_cache
 from tools import DummyShell, sp, DummyEnv, DummyHistory

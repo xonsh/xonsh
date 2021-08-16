@@ -17,7 +17,7 @@ from xonsh.completers.commands import (
     complete_end_proc_keywords,
 )
 from xonsh.completers.xompletions import complete_xonfig, complete_xontrib
-from xonsh.completers.completer import complete_argparser_aliases
+from xonsh.completers._aliases import complete_argparser_aliases
 from xonsh.completers.environment import complete_environment_vars
 
 
