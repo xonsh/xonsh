@@ -585,6 +585,7 @@ class XonshSession:
             if "commands_cache" in kwargs
             else CommandsCache()
         )
+        self.modules_cache = {}
         self.all_jobs = {}
         self.ensure_list_of_strs = ensure_list_of_strs
         self.list_of_strs_or_callables = list_of_strs_or_callables
