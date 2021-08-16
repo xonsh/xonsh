@@ -85,6 +85,8 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
     old_builtins = set(dir(builtins))
 
     XSH.load(ctx={}, **session_vars)
+    if ON_WINDOWS:
+        XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
     def locate_binary(self, name):
         return os.path.join(os.path.dirname(__file__), "bin", name)
@@ -104,9 +106,6 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
         ("subproc_captured_hiddenobject", sp),
     ]:
         monkeypatch.setattr(XSH, attr, val)
-
-    if ON_WINDOWS:
-        XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
     cc = XSH.commands_cache
     monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
