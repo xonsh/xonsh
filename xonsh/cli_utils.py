@@ -313,6 +313,9 @@ def dispatch(parser: ap.ArgumentParser, args=None, **ns):
     kwargs = {}
     for name, param in sign.parameters.items():
         default = None
+        # sometimes the args are skipped in the parser.
+        # like ones having _ prefix(private to the function), or some special cases like exclusive group.
+        # it is better to fill the defaults from paramspec when available.
         if param.default != inspect.Parameter.empty:
             default = param.default
         kwargs[name] = ns.get(name, default)
