@@ -5,6 +5,11 @@ import pytest
 from xonsh.aliases import xexec
 
 
+@pytest.fixture(autouse=True)
+def auto_use_xession(xession):
+    return xession
+
+
 @pytest.fixture
 def mockexecvpe(monkeypatch):
     def mocked_execvpe(_command, _args, _env):
