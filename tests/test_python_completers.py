@@ -3,9 +3,9 @@ import pytest
 from tests.tools import skip_if_pre_3_8
 from xonsh.completers.python import (
     python_signature_complete,
-    complete_import,
     complete_python,
 )
+from xonsh.completers.imports import complete_import
 from xonsh.parsers.completion_context import (
     CommandArg,
     CommandContext,
@@ -108,10 +108,16 @@ def test_complete_python_ctx():
         ),
         (
             CommandContext(args=(CommandArg("from"),), arg_index=1, prefix="pathli"),
-            {"pathlib "},
+            {"pathlib"},
         ),
         (
             CommandContext(args=(CommandArg("import"),), arg_index=1, prefix="os.pa"),
+            {"os.path"},
+        ),
+        (
+            CommandContext(
+                args=(CommandArg("import"),), arg_index=1, prefix="sys,os.pa"
+            ),
             {"os.path"},
         ),
         (
@@ -147,6 +153,31 @@ def test_complete_python_ctx():
             ),
             {"PurePath"},
         ),
+        (
+            CommandContext(
+                args=(
+                    CommandArg("from"),
+                    CommandArg("pathlib"),
+                    CommandArg("import"),
+                ),
+                arg_index=3,
+                prefix="PosixPath,PurePa",
+            ),
+            {"PurePath"},
+        ),
+        (
+            CommandContext(
+                args=(
+                    CommandArg("from"),
+                    CommandArg("pathlib"),
+                    CommandArg("import"),
+                    CommandArg("PosixPath"),
+                ),
+                arg_index=4,
+                prefix="PurePa",
+            ),
+            {"PurePath"},
+        ),
     ),
 )
 def test_complete_import(command, exp):
@@ -155,4 +186,7 @@ def test_complete_import(command, exp):
             command, python=PythonContext("", 0)  # `complete_import` needs this
         )
     )
+    if isinstance(result, tuple):
+        result, _ = result
+    result = set(result)
     assert result == exp
