@@ -546,6 +546,16 @@ def define_xontribs():
                 url="https://github.com/dyuri/xontrib-pyenv",
             ),
         ),
+        "pyrtn": Xontrib(
+            url="https://github.com/dyuri/xontrib-pyrtn",
+            description="IPython like In[]/Out[] to access python return values in the current session.",
+            package=_XontribPkg(
+                name="xontrib-pyrtn",
+                license="MIT",
+                install={"pip": "xpip install xontrib-pyrtn"},
+                url="https://github.com/dyuri/xontrib-pyrtn",
+            ),
+        ),
         "readable-traceback": Xontrib(
             url="https://github.com/6syun9/xontrib-readable-traceback",
             description="Make traceback easier to see for " "xonsh.",
