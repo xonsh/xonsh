@@ -829,7 +829,7 @@ def test_run_currentfolder():
     batfile = Path(__file__).parent / "bin" / "hello_world.bat"
     os.chdir(batfile.parent)
     cmd = batfile.name
-    out, err, rtn = run_xonsh(cmd, stderr=sp.PIPE, path=os.environ["PATH"])
+    out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
     assert out.strip() == "hello world"
 
 
@@ -840,8 +840,7 @@ def test_run_dynamic_on_path():
     """
     batfile = Path(__file__).parent / "bin" / "hello_world.bat"
     cmd = f"$PATH.add(r'{batfile.parent}');![hello_world.bat]"
-    out, err, _ = run_xonsh(cmd, stderr=sp.PIPE, path=os.environ["PATH"])
-    assert err == ""
+    out, _, _ = run_xonsh(cmd, path=os.environ["PATH"])
     assert out.strip() == "hello world"
 
 
@@ -851,5 +850,5 @@ def test_run_fail_not_on_path():
     or in current folder
     """
     cmd = "hello_world.bat"
-    _, err, _ = run_xonsh(cmd, stderr=sp.PIPE, path=os.environ["PATH"])
-    assert "command not found: hello_world.bat" in err
+    out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
+    assert out != "Hello world"
