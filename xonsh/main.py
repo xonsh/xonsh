@@ -162,13 +162,6 @@ def parser():
         default=False,
     )
     p.add_argument(
-        "--config-path",
-        help=argparse.SUPPRESS,
-        dest="config_path",
-        default=None,
-        type=path_argument,
-    )
-    p.add_argument(
         "--rc",
         help="The xonshrc files to load, these may be either xonsh "
         "files or directories containing xonsh files",
