@@ -115,6 +115,19 @@ def test_rcdir(shell, tmpdir, monkeypatch, capsys):
     assert len(stderr) == 0
 
 
+def test_rcdir_cli(shell, tmpdir, xession, monkeypatch):
+    """Test that --rc DIR works"""
+    rcdir = tmpdir.join("rcdir")
+    rcdir.mkdir()
+    rc = rcdir.join("test.xsh")
+    rc.write("print('test.xsh')")
+
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    xargs = xonsh.main.premain(["--rc", rcdir.strpath])
+    assert len(xargs.rc) == 1 and xargs.rc[0] == rcdir.strpath
+    assert rc.strpath in xession.rc_files
+
+
 def test_rcdir_empty(shell, tmpdir, monkeypatch, capsys):
     """Test that an empty XONSHRC_DIR is not an error"""
 
