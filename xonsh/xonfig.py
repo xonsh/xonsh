@@ -552,6 +552,7 @@ def _info(ns):
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
     data.extend([("xontrib", xontribs_loaded())])
+    data.extend([("RC file", XSH.rc_files)])
 
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)

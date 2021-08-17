@@ -534,6 +534,7 @@ class XonshSession:
         self.history = None
         self.shell = None
         self.env = None
+        self.rc_files = None
 
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.

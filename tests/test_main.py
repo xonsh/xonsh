@@ -61,7 +61,7 @@ def test_premain_custom_rc(shell, tmpdir, monkeypatch, xession):
     f.write("print('hi')")
     args = xonsh.main.premain(["--rc", f.strpath])
     assert args.mode == XonshMode.interactive
-    assert f.strpath in xession.env.get("XONSHRC")
+    assert f.strpath in xession.rc_files
 
 
 @pytest.mark.skipif(
@@ -80,11 +80,7 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys, xession):
     rc.write("from my_python_module import *\nfrom my_xonsh_module import *")
     xonsh.main.premain(["--rc", rc.strpath])
 
-    assert rc.strpath in xession.env.get("XONSHRC")
-    assert (
-        xession.env.get("LOADED_RC_FILES")[xession.env.get("XONSHRC").index(rc.strpath)]
-        is True
-    )
+    assert rc.strpath in xession.rc_files
 
     stdout, stderr = capsys.readouterr()
     assert "Hello,\nWorld!" in stdout
@@ -252,7 +248,7 @@ def test_rcdir_ignored_with_rc(shell, tmpdir, monkeypatch, capsys, xession):
     stdout, stderr = capsys.readouterr()
     assert "RCDIR" not in stdout
     assert "RCFILE" in stdout
-    assert not xession.env.get("XONSHRC_DIR")
+    assert str(rcdir.join("rcd.xsh")) not in xession.rc_files
 
 
 @pytest.mark.skipif(ON_WINDOWS, reason="See https://github.com/xonsh/xonsh/issues/3936")
@@ -266,11 +262,7 @@ def test_rc_with_modified_path(shell, tmpdir, monkeypatch, capsys, xession):
     rc.write(f"import sys\nsys.path.append('{tmpdir.strpath}')\nprint('Hello, World!')")
     xonsh.main.premain(["--rc", rc.strpath])
 
-    assert rc.strpath in xession.env.get("XONSHRC")
-    assert (
-        xession.env.get("LOADED_RC_FILES")[xession.env.get("XONSHRC").index(rc.strpath)]
-        is True
-    )
+    assert rc.strpath in xession.rc_files
 
     stdout, stderr = capsys.readouterr()
     assert "Hello, World!" in stdout
@@ -291,11 +283,7 @@ def test_rc_with_failing_module(shell, tmpdir, monkeypatch, capsys, xession):
     rc.write("from my_failing_module import *")
     xonsh.main.premain(["--rc", rc.strpath])
 
-    assert rc.strpath in xession.env.get("XONSHRC")
-    assert (
-        xession.env.get("LOADED_RC_FILES")[xession.env.get("XONSHRC").index(rc.strpath)]
-        is False
-    )
+    assert rc.strpath not in xession.rc_files
 
     stdout, stderr = capsys.readouterr()
     assert len(stdout) == 0
@@ -324,7 +312,7 @@ def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch, xes
     f.write("print('hi')")
     args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
     assert args.mode == XonshMode.interactive
-    assert f.strpath in xession.env.get("XONSHRC")
+    assert f.strpath in xession.rc_files
 
 
 def test_custom_rc_with_script(shell, tmpdir):
@@ -339,8 +327,7 @@ def test_custom_rc_with_script(shell, tmpdir):
 
 def test_premain_no_rc(shell, tmpdir, xession):
     xonsh.main.premain(["--no-rc", "-i"])
-    assert not xession.env.get("XONSHRC")
-    assert not xession.env.get("XONSHRC_DIR")
+    assert len(xession.rc_files) == 0
 
 
 @pytest.mark.parametrize(

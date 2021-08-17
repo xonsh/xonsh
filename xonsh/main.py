@@ -320,7 +320,7 @@ def start_services(shell_kwargs, args, pre_env=None):
         rcd = env.get("XONSHRC_DIR")
 
     events.on_pre_rc.fire()
-    xonshrc_context(
+    XSH.rc_files = xonshrc_context(
         rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
     )
     events.on_post_rc.fire()
