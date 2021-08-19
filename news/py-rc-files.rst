@@ -1,6 +1,7 @@
 **Added:**
 
-* Python 3.8+ syntax in rc control files is supported when the file is pure Python code and named ``*rc.py``
+* Pure Python control files are now supported when named ``*.py``.
+Using python files may lower the startup time by a bit.
 
 **Changed:**
 
