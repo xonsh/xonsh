@@ -12,7 +12,7 @@ import sys
 import xonsh.main
 from xonsh.main import XonshMode
 import pytest
-from tools import ON_WINDOWS, TEST_DIR, VER_FULL, skip_if_on_windows
+from tools import ON_WINDOWS, TEST_DIR, skip_if_on_windows
 
 
 def Shell(*args, **kwargs):
@@ -88,6 +88,30 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys, xession):
 
     # Check that the temporary rc's folder is not left behind on the path
     assert tmpdir.strpath not in sys.path
+
+
+def test_python_rc(shell, tmpdir, monkeypatch, capsys, xession, mocker):
+    """Test that python based control files are executed using Python's parser"""
+
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+
+    # spy on xonsh's compile method
+    spy = mocker.spy(xession.execer, "compile")
+
+    rc = tmpdir.join("rc.py")
+    rc.write("print('Hello World!')")
+    xonsh.main.premain(["--rc", rc.strpath])
+
+    assert rc.strpath in xession.rc_files
+
+    stdout, stderr = capsys.readouterr()
+    assert "Hello World!" in stdout
+    assert len(stderr) == 0
+
+    # Check that the temporary rc's folder is not left behind on the path
+    assert tmpdir.strpath not in sys.path
+    assert spy.called == False
 
 
 def test_rcdir(shell, tmpdir, monkeypatch, capsys):
