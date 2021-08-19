@@ -5,6 +5,7 @@ flake8-docstrings
 flake8-bugbear
 restructuredtext_lint
 pytest-cov
+pytest-mock
 pytest-timeout
 pytest-subprocess
 prompt-toolkit>=3.0
