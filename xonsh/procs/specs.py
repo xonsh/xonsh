@@ -44,8 +44,9 @@ def is_app_execution_alias(fname):
         return fname.stat().st_reparse_tag == stat.IO_REPARSE_TAG_APPEXECLINK
 
     # os.stat().st_reparse_tag only exists for python 3.8+
+    # so use old method as fallback
     except AttributeError:
-        return False
+        return not os.path.exists(fname) and fname.name in os.listdir(fname.parent)
 
 def _is_binary(fname, limit=80):
     try:
