@@ -108,14 +108,14 @@ def get_setproctitle():
 
 
 def path_argument(s):
-    """Return a path only if the path is actually legal
+    """Return a path only if the path is actually legal (file or directory)
 
     This is very similar to argparse.FileType, except that it doesn't return
     an open file handle, but rather simply validates the path."""
 
     s = os.path.abspath(os.path.expanduser(s))
-    if not os.path.isfile(s):
-        msg = "{0!r} must be a valid path to a file".format(s)
+    if not os.path.exists(s):
+        msg = "{0!r} must be a valid path to a file or directory".format(s)
         raise argparse.ArgumentTypeError(msg)
     return s
 
@@ -162,16 +162,9 @@ def parser():
         default=False,
     )
     p.add_argument(
-        "--config-path",
-        help=argparse.SUPPRESS,
-        dest="config_path",
-        default=None,
-        type=path_argument,
-    )
-    p.add_argument(
         "--rc",
         help="The xonshrc files to load, these may be either xonsh "
-        "files or JSON-based static configuration files.",
+        "files or directories containing xonsh files",
         dest="rc",
         nargs="+",
         type=path_argument,
@@ -179,7 +172,7 @@ def parser():
     )
     p.add_argument(
         "--no-rc",
-        help="Do not load the .xonshrc files.",
+        help="Do not load any xonsh RC files.",
         dest="norc",
         action="store_true",
         default=False,
@@ -294,6 +287,7 @@ def start_services(shell_kwargs, args, pre_env=None):
     events.on_timingprobe.fire(name="post_execer_init")
     # load rc files
     login = shell_kwargs.get("login", True)
+    rc_cli = shell_kwargs.get("rc")
     env = XSH.env
     for k, v in pre_env.items():
         env[k] = v
@@ -309,11 +303,11 @@ def start_services(shell_kwargs, args, pre_env=None):
         # interactive mode was not forced, then disable loading RC files and dirs
         rc = ()
         rcd = ()
-    elif shell_kwargs.get("rc"):
+    elif rc_cli:
         # if an explicit --rc was passed, then we should load only that RC
         # file, and nothing else (ignore both XONSHRC and XONSHRC_DIR)
-        rc = shell_kwargs.get("rc")
-        rcd = ()
+        rc = [r for r in rc_cli if os.path.isfile(r)]
+        rcd = [r for r in rc_cli if os.path.isdir(r)]
     else:
         # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
         rc = env.get("XONSHRC")
