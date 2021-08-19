@@ -1,4 +1,3 @@
-import xonsh.pretty
 from xonsh import pretty
 import re
 import pytest
@@ -12,7 +11,7 @@ cases = [
     (1.0, "1.0"),
     pytest.param(long_list, long_list_exp, id="long-list"),
     pytest.param([long_list], nested_long_list_exp, id="nested-long-list"),
-    pytest.param(xonsh.pretty.pretty, "<function xonsh.pretty.pretty>", id="function"),
+    pytest.param(re.compile, "<function re.compile>", id="function"),
     (Exception, "Exception"),
     ({}, "{}"),
     pytest.param(
