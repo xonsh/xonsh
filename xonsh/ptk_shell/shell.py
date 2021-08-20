@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import time
 from functools import wraps
 from types import MethodType
 

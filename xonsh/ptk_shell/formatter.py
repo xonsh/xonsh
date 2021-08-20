@@ -3,7 +3,6 @@
 import functools
 import typing as tp
 
-from prompt_toolkit import PromptSession
 from xonsh.prompt.base import PromptFormatter, DEFAULT_PROMPT
 from xonsh.ptk_shell.updator import PromptUpdator, AsyncPrompt
 
