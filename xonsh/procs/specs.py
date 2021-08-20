@@ -48,6 +48,7 @@ def is_app_execution_alias(fname):
     except AttributeError:
         return not os.path.exists(fname) and fname.name in os.listdir(fname.parent)
 
+
 def _is_binary(fname, limit=80):
     try:
         with open(fname, "rb") as f:
