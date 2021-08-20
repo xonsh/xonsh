@@ -43,7 +43,7 @@ def is_app_execution_alias(fname):
     try:
         return fname.stat().st_reparse_tag == stat.IO_REPARSE_TAG_APPEXECLINK
 
-    # os.stat().st_reparse_tag is python 3.8+, and os.stat(app_exec_alias) throws OSError for <= 3.7 
+    # os.stat().st_reparse_tag is python 3.8+, and os.stat(app_exec_alias) throws OSError for <= 3.7
     # so use old method as fallback
     except (AttributeError, OSError):
         return not os.path.exists(fname) and fname.name in os.listdir(fname.parent)
