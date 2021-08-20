@@ -157,37 +157,53 @@ class AsyncPrompt:
 class PromptUpdator:
     """Handle updating multiple AsyncPrompt instances prompt/rprompt/bottom_toolbar"""
 
-    def __init__(self, session: PromptSession):
+    def __init__(self, shell):
+        from xonsh.ptk_shell.shell import PromptToolkitShell
+
         self.prompts: tp.Dict[str, AsyncPrompt] = {}
-        self.prompter = session
+        self.shell: PromptToolkitShell = shell
         self.executor = Executor()
+        self.futures = {}
+        self.attrs_loaded = None
 
     def add(self, prompt_name: tp.Optional[str]) -> tp.Optional[AsyncPrompt]:
         # clear out old futures from the same prompt
         if prompt_name is None:
             return None
 
-        if prompt_name in self.prompts:
-            self.stop(prompt_name)
+        self.stop(prompt_name)
 
         self.prompts[prompt_name] = AsyncPrompt(
-            prompt_name, self.prompter, self.executor
+            prompt_name, self.shell.prompter, self.executor
         )
         return self.prompts[prompt_name]
 
+    def add_attrs(self):
+        for attr, val in self.shell.get_lazy_ptk_kwargs():
+            setattr(self.shell.prompter, attr, val)
+        self.shell.prompter.app.invalidate()
+
     def start(self):
         """after ptk prompt is created, update it in background."""
-        threads = [
-            threading.Thread(target=prompt.start_update, args=[self.on_complete])
-            for pt_name, prompt in self.prompts.items()
-        ]
+        if not self.attrs_loaded:
+            self.attrs_loaded = self.executor.thread_pool.submit(self.add_attrs)
 
-        for th in threads:
-            th.start()
+        prompts = list(self.prompts)  # removal safe
+        for pt_name in prompts:
+            if pt_name not in self.prompts:
+                continue
+            prompt = self.prompts[pt_name]
+            future = self.executor.thread_pool.submit(
+                prompt.start_update, self.on_complete
+            )
+            self.futures[pt_name] = future
 
     def stop(self, prompt_name: str):
         if prompt_name in self.prompts:
             self.prompts[prompt_name].stop()
+        if prompt_name in self.futures:
+            self.futures[prompt_name].cancel()
 
     def on_complete(self, prompt_name):
         self.prompts.pop(prompt_name, None)
+        self.futures.pop(prompt_name, None)
