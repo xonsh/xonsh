@@ -114,7 +114,14 @@ class ArgparseCompleter:
         # in the end after positionals show remaining unfilled options
         for act in options:
             for flag in act.option_strings:
-                yield RichCompletion(flag, description=act.help or "")
+                desc = ""
+                if act.help:
+                    formatter = self.parser._get_formatter()
+                    try:
+                        desc = formatter._expand_help(act)
+                    except KeyError:
+                        desc = act.help
+                yield RichCompletion(flag, description=desc)
 
     def _complete_options(self, options):
         while self.remaining_args:
