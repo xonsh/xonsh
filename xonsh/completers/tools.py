@@ -1,5 +1,4 @@
 """Xonsh completer tools."""
-
 import inspect
 import textwrap
 import typing as tp
