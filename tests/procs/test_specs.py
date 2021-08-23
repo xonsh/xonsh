@@ -60,13 +60,17 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs):
 
 
 @skip_if_on_windows
+@pytest.mark.parametrize("pipe", (True, False))
 @pytest.mark.parametrize(
     "thread_subprocs, capture_always", list(itertools.product((True, False), repeat=2))
 )
-def test_capture_always(capfd, thread_subprocs, capture_always):
+def test_capture_always(capfd, thread_subprocs, capture_always, pipe):
     env = XSH.env
-    exp = "HELLO"
+    exp = "HELLO\nBYE\n"
     cmds = [["echo", "-n", exp]]
+    if pipe:
+        exp = exp.splitlines()[1] + "\n"  # second line
+        cmds += ["|", ["grep", "--color=never", exp.strip()]]
 
     env["THREAD_SUBPROCS"] = thread_subprocs
     env["XONSH_CAPTURE_ALWAYS"] = capture_always

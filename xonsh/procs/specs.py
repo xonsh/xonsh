@@ -845,7 +845,18 @@ def cmds_to_specs(cmds, captured=False, envs=None):
             specs[i].background = True
         else:
             raise xt.XonshError(f"unrecognized redirect {redirect!r}")
+
     # Apply boundary conditions
+    if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
+        # Make sure sub-specs are always captured.
+        # I.e. ![some_alias | grep x] $(some_alias)
+        specs_to_capture = specs if captured in STDOUT_CAPTURE_KINDS else specs[:-1]
+        for spec in specs_to_capture:
+            if spec.env is None:
+                spec.env = {"XONSH_CAPTURE_ALWAYS": True}
+            else:
+                spec.env.setdefault("XONSH_CAPTURE_ALWAYS", True)
+
     _update_last_spec(specs[-1])
     return specs
 
