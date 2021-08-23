@@ -8,7 +8,7 @@ from xonsh.completers.completer import (
     remove_completer,
     add_one_completer,
 )
-from xonsh.completers.argparse import complete_argparser
+from xonsh.completers.argparser import complete_argparser
 from xonsh.completers.tools import (
     contextual_command_completer,
     get_filter_function,
