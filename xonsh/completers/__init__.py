@@ -13,6 +13,8 @@ else:
         _sys.modules["xonsh.completers.bash_completion"] = __amalgam__
         tools = __amalgam__
         _sys.modules["xonsh.completers.tools"] = __amalgam__
+        argparser = __amalgam__
+        _sys.modules["xonsh.completers.argparser"] = __amalgam__
         commands = __amalgam__
         _sys.modules["xonsh.completers.commands"] = __amalgam__
         completer = __amalgam__
