@@ -271,7 +271,7 @@ def cd(args, stdin=None):
     return None, None, 0
 
 
-def _pushd(
+def pushd_fn(
     dir_or_n: Annotated[tp.Optional[str], Arg(metavar="+N|-N|dir", nargs="?")] = None,
     cd: Annotated[bool, Arg("-n", action="store_false")] = True,
     quiet: Annotated[bool, Arg("-q", action="store_true")] = False,
@@ -368,10 +368,10 @@ def _pushd(
     return None, None, 0
 
 
-pushd = ArgParserAlias(func=_pushd, has_args=True, prog="pushd")
+pushd = ArgParserAlias(func=pushd_fn, has_args=True, prog="pushd")
 
 
-def _popd(
+def popd_fn(
     nth: Annotated[tp.Optional[str], Arg(metavar="+N|-N", nargs="?")] = None,
     cd: Annotated[bool, Arg("-n", action="store_false")] = True,
     quiet: Annotated[bool, Arg("-q", action="store_true")] = False,
@@ -455,10 +455,10 @@ def _popd(
     return None, None, 0
 
 
-popd = ArgParserAlias(func=_popd, has_args=True, prog="popd")
+popd = ArgParserAlias(func=popd_fn, has_args=True, prog="popd")
 
 
-def _dirs(
+def dirs_fn(
     nth: Annotated[tp.Optional[str], Arg(metavar="N", nargs="?")] = None,
     clear: Annotated[bool, Arg("-c", action="store_true")] = False,
     print_long: Annotated[bool, Arg("-p", action="store_true")] = False,
@@ -546,4 +546,4 @@ def _dirs(
     return out + "\n", None, 0
 
 
-dirs = ArgParserAlias(prog="dirs", func=_dirs, has_args=True)
+dirs = ArgParserAlias(prog="dirs", func=dirs_fn, has_args=True)
