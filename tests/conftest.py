@@ -111,6 +111,7 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
 
     cc = XSH.commands_cache
     monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
+    monkeypatch.setattr(cc, "_cmds_cache", {})
 
     for attr, val in [
         ("evalx", eval),

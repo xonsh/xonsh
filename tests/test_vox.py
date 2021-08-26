@@ -3,6 +3,8 @@ import pathlib
 import stat
 import os
 import subprocess as sp
+import types
+
 import pytest
 import sys
 from xontrib.voxapi import Vox
@@ -304,11 +306,30 @@ def venvs(tmpdir):
     popd([])
 
 
-_VENV_NAMES = {"--help", "venv1", "-h", "venv1/", "venv0/", "venv0"}
-if ON_WINDOWS:
-    _VENV_NAMES = {"--help", "-h", "venv1\\", "venv0\\"}
+@pytest.fixture
+def patched_cmd_cache(xession, load_vox, venvs, monkeypatch):
+    cc = xession.commands_cache
 
-_PY_BINS = {"bin1", "bin2"}
+    def no_change(self, *_):
+        return False, False, False
+
+    monkeypatch.setattr(cc, "_update_if_changed", types.MethodType(no_change, cc))
+    monkeypatch.setattr(cc, "_update_cmds_cache", types.MethodType(no_change, cc))
+    monkeypatch.setattr(cc, "cache_file", None)
+    bins = {path: (path, False) for path in _PY_BINS}
+    cc._cmds_cache.update(bins)
+    yield cc
+
+
+_VENV_NAMES = {"venv1", "venv1/", "venv0/", "venv0"}
+if ON_WINDOWS:
+    _VENV_NAMES = {"venv1\\", "venv0\\"}
+
+_HELP_OPTS = {
+    "-h",
+    "--help",
+}
+_PY_BINS = {"/bin/python2", "/bin/python3"}
 _VOX_NEW_OPTS = {
     "--copies",
     "--help",
@@ -322,13 +343,12 @@ _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
 
 
 @pytest.mark.parametrize(
-    "args, exp",
+    "args, positionals, opts",
     [
         (
             "vox",
             {
                 "delete",
-                "-h",
                 "new",
                 "remove",
                 "del",
@@ -340,12 +360,13 @@ _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
                 "deactivate",
                 "activate",
                 "enter",
-                "--help",
                 "create",
             },
+            _HELP_OPTS,
         ),
         (
             "vox create",
+            set(),
             {
                 "--copies",
                 "--symlinks",
@@ -360,16 +381,20 @@ _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
                 "-h",
             },
         ),
-        ("vox activate", _VENV_NAMES),
-        ("vox rm", _VENV_NAMES),
-        ("vox rm venv1", _VENV_NAMES),  # pos nargs: one or more
-        ("vox rm venv1 venv2", _VENV_NAMES),  # pos nargs: two or more
-        ("vox new --activate --interpreter", _PY_BINS),  # option after option
-        ("vox new --interpreter", _PY_BINS),  # "option: first
-        ("vox new --activate env1 --interpreter", _PY_BINS),  # option after pos
-        ("vox new env1 --interpreter", _PY_BINS),  # "option: at end"
-        ("vox new env1 --interpreter=", _PY_BINS),  # "option: at end with
+        ("vox activate", _VENV_NAMES, _HELP_OPTS),
+        ("vox rm", _VENV_NAMES, _HELP_OPTS),
+        ("vox rm venv1", _VENV_NAMES, _HELP_OPTS),  # pos nargs: one or more
+        ("vox rm venv1 venv2", _VENV_NAMES, _HELP_OPTS),  # pos nargs: two or more
+        ("vox new --activate --interpreter", _PY_BINS, set()),  # option after option
+        ("vox new --interpreter", _PY_BINS, set()),  # "option: first
+        ("vox new --activate env1 --interpreter", _PY_BINS, set()),  # option after pos
+        ("vox new env1 --interpreter", _PY_BINS, set()),  # "option: at end"
+        ("vox new env1 --interpreter=", _PY_BINS, set()),  # "option: at end with
     ],
 )
-def test_vox_completer(args, check_completer, exp, load_vox, venvs):
-    assert check_completer(args) == exp
+def test_vox_completer(
+    args, check_completer, positionals, opts, xession, patched_cmd_cache
+):
+    assert check_completer(args) == positionals
+    xession.env["ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT"] = True
+    assert check_completer(args) == positionals.union(opts)
