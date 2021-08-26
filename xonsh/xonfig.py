@@ -544,7 +544,7 @@ def _info(
     )
     if ON_LINUX:
         data.append(("distro", linux_distro()))
-        data.append(("on wsl", bool(ON_WSL))),
+        data.append(("on wsl", bool(ON_WSL)))
         if ON_WSL:
             data.append(("wsl version", 1 if ON_WSL1 else 2))
     data.extend(
