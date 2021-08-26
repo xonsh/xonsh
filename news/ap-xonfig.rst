@@ -1,10 +1,10 @@
 **Added:**
 
-* ``xonfig`` completions improved
+* <news item>
 
 **Changed:**
 
-* <news item>
+* ``xonfig`` now has colored help message when ran interactively.
 
 **Deprecated:**
 
