@@ -2,20 +2,19 @@
 
 import xontrib.voxapi as voxapi
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import Annotated, Arg, ArgParserAlias, ArgCompleter
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 
 __all__ = ()
 
 
-class VenvNamesCompleter(ArgCompleter):
-    def __call__(self, command, alias: "VoxHandler", **_):
-        envs = alias.vox.keys()
-        from xonsh.completers.path import complete_dir
+def venv_names_completer(command, alias: "VoxHandler", **_):
+    envs = alias.vox.keys()
+    from xonsh.completers.path import complete_dir
 
-        yield from envs
+    yield from envs
 
-        paths, _ = complete_dir(command)
-        yield from paths
+    paths, _ = complete_dir(command)
+    yield from paths
 
 
 def py_interpreter_path_completer(xsh, **_):
@@ -132,7 +131,7 @@ class VoxHandler(ArgParserAlias):
     def activate(
         self,
         name: Annotated[
-            str, Arg(metavar="ENV", nargs="?", completer=VenvNamesCompleter())
+            str, Arg(metavar="ENV", nargs="?", completer=venv_names_completer)
         ] = None,
     ):
         """Activate a virtual environment.
@@ -206,7 +205,7 @@ class VoxHandler(ArgParserAlias):
         self,
         names: Annotated[
             list,
-            Arg(metavar="ENV", nargs="+", completer=VenvNamesCompleter()),
+            Arg(metavar="ENV", nargs="+", completer=venv_names_completer),
         ],
     ):
         """Remove virtual environments.
