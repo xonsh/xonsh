@@ -141,6 +141,15 @@ def xession(xonsh_builtins) -> XonshSession:
     return XSH
 
 
+@pytest.fixture
+def xsh_with_aliases(xession, monkeypatch):
+    from xonsh.aliases import Aliases, make_default_aliases
+
+    xsh = xession
+    monkeypatch.setattr(xsh, "aliases", Aliases(make_default_aliases()))
+    return xsh
+
+
 @pytest.fixture(scope="session")
 def completion_context_parse():
     return CompletionContextParser().parse

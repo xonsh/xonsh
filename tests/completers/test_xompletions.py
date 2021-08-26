@@ -7,15 +7,6 @@ from xonsh.completers.xompletions import complete_xontrib
 import pytest
 
 
-@pytest.fixture
-def xsh_with_aliases(xession, monkeypatch):
-    from xonsh.aliases import Aliases, make_default_aliases
-
-    xsh = xession
-    monkeypatch.setattr(xsh, "aliases", Aliases(make_default_aliases()))
-    return xsh
-
-
 @pytest.mark.parametrize(
     "args, prefix, exp",
     [
