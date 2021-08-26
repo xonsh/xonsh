@@ -503,11 +503,13 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
         if ns.suppress_skip_message is None
         else ns.suppress_skip_message
     )
+    files = ()
     if ns.prevcmd is not None:
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
-        # we have filename to source
+        # we have filenames to source
         ns.prevcmd = '{} "{}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
+        files = tuple(ns.files_or_code)
     elif ns.prevcmd is None:
         ns.prevcmd = " ".join(ns.files_or_code)  # code to run, no files
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src
@@ -528,6 +530,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
         seterrpostcmd=ns.seterrpostcmd,
         show=ns.show,
         dryrun=ns.dryrun,
+        files=files,
     )
     if fsenv is None:
         if ns.dryrun:

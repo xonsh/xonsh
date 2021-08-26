@@ -31,33 +31,6 @@ lines to your ``~/.bashrc file``:
     unset scl
 
 
-Default Ubuntu .bashrc breaks Foreign Shell Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Xonsh supports importing functions from foreign shells using the
-`ForeignShellFunctionAlias` class, which calls functions as if they were
-aliases. This is implemented by executing a command that sources the file
-containing the function definition and then immediately calls the function with
-any necessary arguments.
-
-The default user ``~/.bashrc`` file in Ubuntu 15.10 has the following snippet at
-the top, which causes the script to exit immediately if not run interactively.
-
-.. code-block:: bash
-
-    # If not running interactively, don't do anything
-    case $- in
-        *i*) ;;
-          *) return;;
-    esac
-
-This means that any function you have added to the file after this point will be
-registered as a xonsh alias but will fail on execution if the 
-shell is not running interactively. Previous versions of
-Ubuntu have a different test for interactivity at the top of the file that
-yields the same problem.
-
-
 MacOS, OSX
 ----------
 
