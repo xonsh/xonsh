@@ -44,10 +44,15 @@ def test_command_not_found(monkeypatch):
     )
 
 
-def test_help(mockexecvpe):
+@pytest.mark.parametrize("cmd", ["-h", "--help"])
+def test_help(cmd, mockexecvpe, capsys, mocker):
     usage = "usage: xexec [-h] [-l] [-c] [-a NAME] ..."
-    assert usage in xexec(["-h"])
-    assert usage in xexec(["--help"])
+    exit_mock = mocker.patch("argparse._sys.exit")
+    xexec([cmd])
+    cap = capsys.readouterr()
+
+    assert exit_mock.called
+    assert usage in cap.out
 
 
 def test_a_switch(monkeypatch):
