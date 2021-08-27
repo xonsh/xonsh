@@ -297,7 +297,10 @@ class ArgParser(ap.ArgumentParser):
         doc = get_doc(func)
         kwargs.setdefault("description", doc)
         kwargs.setdefault("help", doc)
-        parser = self.commands.add_parser(kwargs.pop("prog", func.__name__), **kwargs)
+        name = kwargs.pop("prog", None)
+        if not name:
+            name = func.__name__.lstrip("_").replace("_", "-")
+        parser = self.commands.add_parser(name, **kwargs)
         add_args(parser, func, allowed_params=args)
         return parser
 

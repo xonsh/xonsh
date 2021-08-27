@@ -790,13 +790,13 @@ class XonfigAlias(ArgParserAlias):
         parser = self.create_parser(prog="xonfig")
         # register as default action
         add_args(parser, _info, allowed_params=())
-        parser.add_command(_info, prog="info")
-        parser.add_command(_web, prog="web")
-        parser.add_command(_wizard, prog="wizard")
-        parser.add_command(_styles, prog="styles")
-        parser.add_command(_colors, prog="colors")
-        parser.add_command(_tutorial, prog="tutorial")
-        parser.add_command(_jupyter_kernel, prog="jupyter-kernel")
+        parser.add_command(_info)
+        parser.add_command(_web)
+        parser.add_command(_wizard)
+        parser.add_command(_styles)
+        parser.add_command(_colors)
+        parser.add_command(_tutorial)
+        parser.add_command(_jupyter_kernel)
 
         return parser
 
