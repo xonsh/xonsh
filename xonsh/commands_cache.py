@@ -112,7 +112,9 @@ class CommandsCache(cabc.Mapping):
 
     @property
     def all_commands(self):
-        path_immut = tuple(CommandsCache.remove_dups(XSH.env.get("PATH", [])))
+        env = XSH.env
+        path = [] if env is None else XSH.env.get("PATH", [])
+        path_immut = tuple(CommandsCache.remove_dups(path))
         alss = getattr(XSH, "aliases", dict())
         (
             has_path_changed,
@@ -152,7 +154,7 @@ class CommandsCache(cabc.Mapping):
         self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
     ) -> tp.Dict[str, tp.Any]:
         """Update the cmds_cache variable in background without slowing down parseLexer"""
-        env = XSH.env  # type: ignore
+        env = XSH.env or {}  # type: ignore
 
         allcmds = {}
         for path in reversed(paths):
