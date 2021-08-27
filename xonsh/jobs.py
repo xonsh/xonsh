@@ -281,8 +281,7 @@ def format_job_string(num: int) -> str:
         return ""
     pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
     status = job["status"]
-    cmd = [" ".join(i) if isinstance(i, list) else i for i in job["cmds"]]
-    cmd = " ".join(cmd)
+    cmd = " ".join([" ".join(i) if isinstance(i, list) else i for i in job["cmds"]])
     pid = job["pids"][-1]
     bg = " &" if job["bg"] else ""
     return "[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid)
