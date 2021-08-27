@@ -639,7 +639,7 @@ def source_cmd(args, stdin=None):
         return source_foreign(args, stdin=stdin)
 
 
-def xexec(
+def xexec_fn(
     command: Annotated[tp.List[str], Arg(nargs=argparse.REMAINDER)],
     login: Annotated[bool, Arg("-l", "--login", action="store_true")] = False,
     clean: Annotated[bool, Arg("-c", "--clean", action="store_true")] = False,
@@ -702,7 +702,7 @@ def xexec(
         )
 
 
-xexec_alias = ArgParserAlias(func=xexec, has_args=True, prog="xexec")
+xexec = ArgParserAlias(func=xexec_fn, has_args=True, prog="xexec")
 
 
 def xonfig(args, stdin=None):
@@ -783,8 +783,8 @@ def make_default_aliases():
         "EOF": xonsh_exit,
         "exit": xonsh_exit,
         "quit": xonsh_exit,
-        "exec": xexec_alias,
-        "xexec": xexec_alias,
+        "exec": xexec,
+        "xexec": xexec,
         "source": source_alias,
         "source-zsh": ["source-foreign", "zsh", "--sourcer=source"],
         "source-bash": ["source-foreign", "bash", "--sourcer=source"],

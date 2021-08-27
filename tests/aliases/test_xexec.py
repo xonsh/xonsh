@@ -18,11 +18,8 @@ def mockexecvpe(monkeypatch):
     monkeypatch.setattr(os, "execvpe", mocked_execvpe)
 
 
-def test_noargs(mockexecvpe):
-    assert xexec([]) == (None, "xonsh: exec: no args specified\n", 1)
-
-
 def test_missing_command(mockexecvpe):
+    assert xexec([]) == (None, "xonsh: exec: no command specified\n", 1)
     assert xexec(["-a", "foo"]) == (None, "xonsh: exec: no command specified\n", 1)
     assert xexec(["-c"]) == (None, "xonsh: exec: no command specified\n", 1)
     assert xexec(["-l"]) == (None, "xonsh: exec: no command specified\n", 1)
