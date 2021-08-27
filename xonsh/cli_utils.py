@@ -197,6 +197,10 @@ def make_parser(
     """A bare-bones argparse builder from functions"""
     if "description" not in kwargs:
         kwargs["description"] = get_doc(func)
+    if "epilog" not in kwargs:
+        epilog = get_doc(func, epilog=True)
+        if epilog:
+            kwargs["epilog"] = epilog
     parser = ArgParser(**kwargs)
     if empty_help:
         parser.set_defaults(

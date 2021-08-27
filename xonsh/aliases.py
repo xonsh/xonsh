@@ -677,7 +677,6 @@ def xexec_fn(
     please use the xexec command directly or dive into subprocess mode
     explicitly with ![exec command]. For more details, please see
     http://xon.sh/faq.html#exec.
-    # todo: doc below params are ignored from generated CLI. make sure to show in epilog
     """
     if len(command) == 0:
         return (None, "xonsh: exec: no command specified\n", 1)
