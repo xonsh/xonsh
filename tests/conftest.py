@@ -9,11 +9,17 @@ import pytest
 
 from xonsh.aliases import Aliases
 from xonsh.built_ins import XonshSession, XSH
+from xonsh.completers._aliases import complete_argparser_aliases
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
+from xonsh.parsers.completion_context import (
+    CommandArg,
+    CommandContext,
+    CompletionContext,
+)
 
 from xonsh import commands_cache
 from tools import DummyShell, sp, DummyEnv, DummyHistory
@@ -66,14 +72,25 @@ def xonsh_events():
         setattr(events, name, newevent)
 
 
+@pytest.fixture(scope="session")
+def session_vars():
+    """keep costly vars per session"""
+    from xonsh.environ import Env, default_env
+    from xonsh.commands_cache import CommandsCache
+
+    return {
+        "execer": Execer(unload=False),
+        "env": Env(default_env()),
+        "commands_cache": CommandsCache(),
+    }
+
+
 @pytest.fixture
-def xonsh_builtins(monkeypatch, xonsh_events):
+def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = set(dir(builtins))
-    XSH.load(
-        execer=Execer(unload=False),
-        ctx={},
-    )
+
+    XSH.load(ctx={}, **session_vars)
     if ON_WINDOWS:
         XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
@@ -127,6 +144,19 @@ def xession(xonsh_builtins) -> XonshSession:
 @pytest.fixture(scope="session")
 def completion_context_parse():
     return CompletionContextParser().parse
+
+
+@pytest.fixture
+def check_completer(xession, completion_context_parse):
+    def _factory(args, **kwargs):
+        cmds = tuple(CommandArg(i) for i in args.split(" "))
+        arg_index = len(cmds)
+        completions = complete_argparser_aliases(
+            CompletionContext(CommandContext(args=cmds, arg_index=arg_index, **kwargs))
+        )
+        return {getattr(i, "value", i) for i in completions}
+
+    return _factory
 
 
 @pytest.fixture

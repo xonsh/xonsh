@@ -31,5 +31,22 @@ def test_get_doc_param():
     ]
     assert cli_utils.get_doc(func_with_doc, "multi").splitlines() == [
         "param doc",
-        "    multi line",
+        "multi line",
     ]
+
+
+def test_generated_parser():
+    from xonsh.completers._aliases import CompleterAlias
+
+    alias = CompleterAlias()
+
+    assert alias.parser.description
+
+    positionals = alias.parser._get_positional_actions()
+    add_cmd = positionals[0].choices["add"]
+    assert "Add a new completer" in add_cmd.description
+    assert (
+        alias.parser.format_usage()
+        == "usage: completer [-h] {add,remove,rm,list,ls} ...\n"
+    )
+    assert add_cmd.format_usage() == "usage: completer add [-h] name func [pos]\n"

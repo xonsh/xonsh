@@ -9,15 +9,15 @@ from xonsh.completers.path import complete_path
 from xonsh.completers.dirs import complete_cd, complete_rmdir
 from xonsh.completers.python import (
     complete_python,
-    complete_import,
 )
+from xonsh.completers.imports import complete_import
 from xonsh.completers.commands import (
     complete_skipper,
     complete_end_proc_tokens,
     complete_end_proc_keywords,
 )
-from xonsh.completers.completer import complete_completer
 from xonsh.completers.xompletions import complete_xonfig, complete_xontrib
+from xonsh.completers._aliases import complete_argparser_aliases
 from xonsh.completers.environment import complete_environment_vars
 
 
@@ -31,8 +31,8 @@ def default_completers():
             ("environment_vars", complete_environment_vars),
             # exclusive completers:
             ("base", complete_base),
-            ("completer", complete_completer),
             ("skip", complete_skipper),
+            ("argparser_aliases", complete_argparser_aliases),
             ("pip", complete_pip),
             ("cd", complete_cd),
             ("rmdir", complete_rmdir),

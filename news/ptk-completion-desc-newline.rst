@@ -1,6 +1,6 @@
 **Added:**
 
-* Add ``CTRL-Backspace`` key binding to delete a single word via ``$XONSH_CTRL_BKSPC_DELETION``.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,8 @@
 
 **Fixed:**
 
-* <news item>
+* Newline symbols in Prompt-toolkit's completions are replaced by <space>
+
 
 **Security:**
 

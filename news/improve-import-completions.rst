@@ -1,6 +1,7 @@
 **Added:**
 
-* Add ``CTRL-Backspace`` key binding to delete a single word via ``$XONSH_CTRL_BKSPC_DELETION``.
+* Complete 'import' statements with modules that aren't loaded.
+* Complete multiple modules/objects in 'import' statements.
 
 **Changed:**
 

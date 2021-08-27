@@ -1,34 +1,56 @@
-from xonsh.parsers.completion_context import (
-    CommandArg,
-    CommandContext,
-    CompletionContext,
+import pytest
+
+
+@pytest.fixture
+def xsh_with_aliases(xession, monkeypatch):
+    from xonsh.aliases import Aliases, make_default_aliases
+
+    xsh = xession
+    monkeypatch.setattr(xsh, "aliases", Aliases(make_default_aliases()))
+    return xsh
+
+
+@pytest.fixture
+def mock_completer(monkeypatch, xsh_with_aliases):
+    xsh = xsh_with_aliases
+    monkeypatch.setattr(xsh, "completers", {"one": 1, "two": 2})
+    monkeypatch.setattr(xsh, "ctx", {"three": lambda: 1, "four": lambda: 2})
+    return xsh
+
+
+@pytest.mark.parametrize(
+    "args, positionals, options",
+    [
+        ("completer", {"add", "remove", "rm", "list", "ls"}, {"--help", "-h"}),
+        (
+            "completer add",
+            set(),
+            {"--help", "-h"},
+        ),
+        (
+            "completer add newcompleter",
+            {"three", "four"},
+            {"--help", "-h"},
+        ),
+        (
+            "completer add newcompleter three",
+            {"<one", ">two", ">one", "<two", "end", "start"},
+            {"--help", "-h"},
+        ),
+        (
+            "completer remove",
+            {"one", "two"},
+            {"--help", "-h"},
+        ),
+        (
+            "completer list",
+            set(),
+            {"--help", "-h"},
+        ),
+    ],
 )
-from xonsh.completers.completer import complete_completer
+def test_completer_command(args, positionals, options, mock_completer, check_completer):
+    assert check_completer(args) == positionals
 
-
-def test_options():
-    assert (
-        complete_completer(
-            CompletionContext(
-                CommandContext(
-                    args=(CommandArg("completer"),),
-                    arg_index=1,
-                )
-            )
-        )
-        == {"add", "remove", "list", "help"}
-    )
-
-
-def test_help_options():
-    assert (
-        complete_completer(
-            CompletionContext(
-                CommandContext(
-                    args=(CommandArg("completer"), CommandArg("help")),
-                    arg_index=2,
-                )
-            )
-        )
-        == {"add", "remove", "list"}
-    )
+    mock_completer.env["ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT"] = True
+    assert check_completer(args) == positionals.union(options)

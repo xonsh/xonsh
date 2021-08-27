@@ -534,6 +534,7 @@ class XonshSession:
         self.history = None
         self.shell = None
         self.env = None
+        self.rc_files = None
 
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
@@ -580,7 +581,12 @@ class XonshSession:
         self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
         self.subproc_uncaptured = subproc_uncaptured
         self.execer = execer
-        self.commands_cache = CommandsCache()
+        self.commands_cache = (
+            kwargs.pop("commands_cache")
+            if "commands_cache" in kwargs
+            else CommandsCache()
+        )
+        self.modules_cache = {}
         self.all_jobs = {}
         self.ensure_list_of_strs = ensure_list_of_strs
         self.list_of_strs_or_callables = list_of_strs_or_callables

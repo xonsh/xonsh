@@ -171,14 +171,15 @@ class Completer(object):
 
             items = []
             for comp in res:
-                items.append(comp)
-                yield Completer._format_completion(
+                comp = Completer._format_completion(
                     comp,
                     completion_context,
                     completing_contextual_command,
                     lprefix or 0,
                     custom_lprefix,
                 )
+                items.append(comp)
+                yield comp
 
             if not items:  # empty completion
                 continue

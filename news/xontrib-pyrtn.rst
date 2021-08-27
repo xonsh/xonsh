@@ -1,6 +1,6 @@
 **Added:**
 
-* Add ``CTRL-Backspace`` key binding to delete a single word via ``$XONSH_CTRL_BKSPC_DELETION``.
+* Added `xontrib-pyrtn <https://github.com/dyuri/xontrib-pyrtn>` to xontrib list.
 
 **Changed:**
 

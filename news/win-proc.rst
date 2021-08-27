@@ -1,6 +1,6 @@
 **Added:**
 
-* Add ``CTRL-Backspace`` key binding to delete a single word via ``$XONSH_CTRL_BKSPC_DELETION``.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fix launching processes on Windows by using full paths (https://bugs.python.org/issue8557)
 
 **Security:**
 

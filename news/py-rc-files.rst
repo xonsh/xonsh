@@ -1,6 +1,7 @@
 **Added:**
 
-* Add ``CTRL-Backspace`` key binding to delete a single word via ``$XONSH_CTRL_BKSPC_DELETION``.
+* Pure Python control files are now supported when named ``*.py``.
+  Using python files may lower the startup time by a bit.
 
 **Changed:**
 

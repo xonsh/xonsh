@@ -1,6 +1,6 @@
 **Added:**
 
-* Add ``CTRL-Backspace`` key binding to delete a single word via ``$XONSH_CTRL_BKSPC_DELETION``.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed detection of App Execution Alias for latest 3.8 and 3.9 releases
 
 **Security:**
 

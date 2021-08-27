@@ -105,6 +105,10 @@ def compile_code(filename, code, execer, glb, loc, mode):
     """
     Wrapper for ``execer.compile`` to compile the given code
     """
+
+    if filename.endswith(".py") and mode == "exec":
+        return compile(code, filename, mode)
+
     if not code.endswith("\n"):
         code += "\n"
     old_filename = execer.filename

@@ -1,7 +1,9 @@
 Run Control File
 =========================
 Xonsh allows you to customize your shell behavior with run control files, called "xonshrc" files.  
-These files are written in the xonsh language (a superset of Python) and are executed exactly once at startup.   
+These files are written either in the Xonsh language (a superset of Python) or in Python and are executed
+exactly once at startup.
+
 The control file usually contains:
 
 * Assignment statements setting `environment variables <envvars.html>`_.  This includes standard OS environment variables that affect other programs and many that Xonsh uses for itself.
@@ -19,7 +21,7 @@ The options set per user override settings in the system-wide control file.
 Xonsh also supports configuration directories, from which all ``.xsh`` files will be sourced in order.
 This allows for drop-in configuration where your configuration can be split across scripts and common
 and local configuration more easily separated. By default, if the directory ``~/.config/xonsh/rc.d``
-exists, any ``xsh`` files within will be sourced at startup.
+exists, any ``*.xsh`` files within will be sourced at startup.
 
 Xonsh provides 2 wizards to create your own "xonshrc".  ``xonfig web`` provides basic settings, and ``xonfig wizard``
 steps you through all the available options.
@@ -164,6 +166,18 @@ The following is a real-world example of such a file.
 :download:`Download xonshrc <xonshrc.xsh>`
 
 .. include:: xonshrc.xsh
+    :code: xonsh
+
+
+Real world sample rc.py
+-------------------------
+
+The following is a real-world example of such a file.
+This can be set by ``env XONSHRC=rc.py xonsh`` or ``xonsh --rc=rc.py``
+
+:download:`Download rc.py <xonshrc.py>`
+
+.. include:: xonshrc.py
     :code: xonsh
 
 

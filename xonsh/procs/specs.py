@@ -3,6 +3,7 @@ import os
 import io
 import re
 import sys
+import stat
 import shlex
 import signal
 import inspect
@@ -39,7 +40,13 @@ def is_app_execution_alias(fname):
     Here we try to detect if a file is an app execution alias.
     """
     fname = pathlib.Path(fname)
-    return not os.path.exists(fname) and fname.name in os.listdir(fname.parent)
+    try:
+        return fname.stat().st_reparse_tag == stat.IO_REPARSE_TAG_APPEXECLINK
+
+    # os.stat().st_reparse_tag is python 3.8+, and os.stat(app_exec_alias) throws OSError for <= 3.7
+    # so use old method as fallback
+    except (AttributeError, OSError):
+        return not os.path.exists(fname) and fname.name in os.listdir(fname.parent)
 
 
 def _is_binary(fname, limit=80):
@@ -462,7 +469,12 @@ class SubprocSpec:
             raise xt.XonshError("xonsh: subprocess mode: command is empty")
         bufsize = 1
         try:
-            p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
+            if xp.ON_WINDOWS and self.binary_loc is not None:
+                # launch process using full paths (https://bugs.python.org/issue8557)
+                cmd = [self.binary_loc] + self.cmd[1:]
+            else:
+                cmd = self.cmd
+            p = self.cls(cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise xt.XonshError(e.format(self.cmd[0]))
