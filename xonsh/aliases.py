@@ -703,23 +703,6 @@ def xexec(args, stdin=None):
         )
 
 
-class AWitchAWitch(argparse.Action):
-    SUPPRESS = "==SUPPRESS=="
-
-    def __init__(
-        self, option_strings, version=None, dest=SUPPRESS, default=SUPPRESS, **kwargs
-    ):
-        super().__init__(
-            option_strings=option_strings, dest=dest, default=default, nargs=0, **kwargs
-        )
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        import webbrowser
-
-        webbrowser.open("https://github.com/xonsh/xonsh/commit/f49b400")
-        parser.exit()
-
-
 def xonfig(args, stdin=None):
     """Runs the xonsh configuration utility."""
     from xonsh.xonfig import xonfig_main  # lazy import
