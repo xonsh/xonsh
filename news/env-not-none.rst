@@ -17,6 +17,7 @@
 **Fixed:**
 
 * Fixed issue with environment not being iterable on session objects.
+* Fixed issue where environment is None in commands cache.
 
 **Security:**
 
