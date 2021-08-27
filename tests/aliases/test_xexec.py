@@ -45,8 +45,9 @@ def test_command_not_found(monkeypatch):
 
 
 def test_help(mockexecvpe):
-    assert xexec(["-h"]) == inspect.getdoc(xexec)
-    assert xexec(["--help"]) == inspect.getdoc(xexec)
+    usage = "usage: xexec [-h] [-l] [-c] [-a NAME] ..."
+    assert usage in xexec(["-h"])
+    assert usage in xexec(["--help"])
 
 
 def test_a_switch(monkeypatch):

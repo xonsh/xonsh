@@ -683,7 +683,7 @@ def xexec_fn(
         return (None, "xonsh: exec: no command specified\n", 1)
 
     cmd = command[0]
-    if name is not None:
+    if name:
         command[0] = name
     if login:
         command[0] = "-{}".format(command[0])
