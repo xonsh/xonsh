@@ -19,8 +19,6 @@ def colored_tracer(cmds, **_):
     cmd = " ".join(itertools.chain.from_iterable(cmds))
     print_color(f"{{GREEN}}$ {{BLUE}}{cmd}{{RESET}}", file=sys.stderr)
 
-$XONSH_SUBPROC_TRACER = colored_tracer
-
 
 def _replace_args(args: List[str], num: int) -> List[str]:
     return [
@@ -66,6 +64,7 @@ def test(
 def qa():
     """QA checks"""
     $XONSH_NO_AMALGAMATE = True
+    $XONSH_SUBPROC_TRACER = colored_tracer
 
     black --check xonsh xontrib tests
 
