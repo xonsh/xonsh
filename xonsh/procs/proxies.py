@@ -414,7 +414,7 @@ class ProcProxyThread(threading.Thread):
         self.stdout = stdout
         self.stderr = stderr
         self.close_fds = close_fds
-        self.env = env or XSH.env
+        self.env = env
         self._interrupted = False
 
         if xp.ON_WINDOWS:
@@ -510,7 +510,7 @@ class ProcProxyThread(threading.Thread):
         # run the function itself
         try:
             alias_stack = XSH.env.get("__ALIAS_STACK", "")
-            if self.env.get("__ALIAS_NAME"):
+            if self.env and self.env.get("__ALIAS_NAME"):
                 alias_stack += ":" + self.env["__ALIAS_NAME"]
 
             with STDOUT_DISPATCHER.register(sp_stdout), STDERR_DISPATCHER.register(
@@ -518,7 +518,7 @@ class ProcProxyThread(threading.Thread):
             ), xt.redirect_stdout(STDOUT_DISPATCHER), xt.redirect_stderr(
                 STDERR_DISPATCHER
             ), XSH.env.swap(
-                __ALIAS_STACK=alias_stack
+                self.env, __ALIAS_STACK=alias_stack
             ):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec, spec.stack)
         except SystemExit as e:
@@ -817,7 +817,8 @@ class ProcProxy:
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
-            r = self.f(self.args, stdin, stdout, stderr, spec, spec.stack)
+            with XSH.env.swap(self.env):
+                r = self.f(self.args, stdin, stdout, stderr, spec, spec.stack)
         except Exception:
             xt.print_exception()
             r = 1

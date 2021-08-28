@@ -449,11 +449,12 @@ class SubprocSpec:
         event_name = self._cmd_event_name()
         self._pre_run_event_fire(event_name)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
-        self.prep_env(kwargs)
         if callable(self.alias):
+            kwargs["env"] = self.env or {}
             kwargs["env"]["__ALIAS_NAME"] = self.alias_name or ""
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
+            self.prep_env_subproc(kwargs)
             self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
             self._fix_null_cmd_bytes()
             p = self._run_binary(kwargs)
@@ -493,7 +494,7 @@ class SubprocSpec:
             raise xt.XonshError(e)
         return p
 
-    def prep_env(self, kwargs):
+    def prep_env_subproc(self, kwargs):
         """Prepares the environment to use in the subprocess."""
         with XSH.env.swap(self.env) as env:
             denv = env.detype()

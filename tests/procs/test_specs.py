@@ -1,5 +1,6 @@
 """Tests the xonsh.procs.specs"""
 import itertools
+import sys
 from subprocess import Popen
 
 import pytest
@@ -7,7 +8,7 @@ import pytest
 from xonsh.procs.specs import cmds_to_specs, run_subproc
 from xonsh.built_ins import XSH
 from xonsh.procs.posix import PopenThread
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread
+from xonsh.procs.proxies import ProcProxy, ProcProxyThread, STDOUT_DISPATCHER
 
 from .tools import skip_if_on_windows
 
@@ -61,16 +62,36 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs):
 
 @skip_if_on_windows
 @pytest.mark.parametrize("pipe", (True, False))
+@pytest.mark.parametrize("alias_type", (None, "func", "exec", "simple"))
 @pytest.mark.parametrize(
     "thread_subprocs, capture_always", list(itertools.product((True, False), repeat=2))
 )
-def test_capture_always(capfd, thread_subprocs, capture_always, pipe):
+def test_capture_always(
+    capfd, thread_subprocs, capture_always, alias_type, pipe, monkeypatch
+):
     env = XSH.env
     exp = "HELLO\nBYE\n"
     cmds = [["echo", "-n", exp]]
     if pipe:
         exp = exp.splitlines()[1] + "\n"  # second line
         cmds += ["|", ["grep", "--color=never", exp.strip()]]
+
+    if alias_type:
+        first_cmd = cmds[0]
+        # Enable capfd for function aliases:
+        monkeypatch.setattr(STDOUT_DISPATCHER, "default", sys.stdout)
+        if alias_type == "func":
+            XSH.aliases["tst"] = (
+                lambda: run_subproc([first_cmd], "hiddenobject") and None
+            )  # Don't return a value
+        elif alias_type == "exec":
+            first_cmd = " ".join(repr(arg) for arg in first_cmd)
+            XSH.aliases["tst"] = f"![{first_cmd}]"
+        else:
+            # alias_type == "simple"
+            XSH.aliases["tst"] = first_cmd
+
+        cmds[0] = ["tst"]
 
     env["THREAD_SUBPROCS"] = thread_subprocs
     env["XONSH_CAPTURE_ALWAYS"] = capture_always
@@ -90,7 +111,7 @@ def test_capture_always(capfd, thread_subprocs, capture_always, pipe):
     hidden = run_subproc(cmds, "object")  # !()
     hidden.end()
     if thread_subprocs:
-        assert not capfd.readouterr().out
+        assert exp not in capfd.readouterr().out
         assert hidden.out == exp
     else:
         # for some reason THREAD_SUBPROCS=False fails to capture in `!()` but still succeeds in `$()`
@@ -98,7 +119,7 @@ def test_capture_always(capfd, thread_subprocs, capture_always, pipe):
         assert not hidden.out
 
     output = run_subproc(cmds, "stdout")  # $()
-    assert not capfd.readouterr().out
+    assert exp not in capfd.readouterr().out
     assert output == exp
 
     # Explicitly non-captured commands are never captured (/always printed)
