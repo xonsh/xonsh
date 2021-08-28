@@ -5,12 +5,13 @@ import sys
 import time
 import ctypes
 import signal
-import argparse
 import subprocess
 import collections
 import typing as tp
 
 from xonsh.built_ins import XSH
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
+from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, ON_MSYS, LIBC
 from xonsh.tools import unthreadable
@@ -273,19 +274,24 @@ def _clear_dead_jobs():
         del XSH.all_jobs[job]
 
 
-def print_one_job(num, outfile=sys.stdout):
-    """Print a line describing job number ``num``."""
+def format_job_string(num: int) -> str:
     try:
         job = XSH.all_jobs[num]
     except KeyError:
-        return
+        return ""
     pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
     status = job["status"]
-    cmd = [" ".join(i) if isinstance(i, list) else i for i in job["cmds"]]
-    cmd = " ".join(cmd)
+    cmd = " ".join([" ".join(i) if isinstance(i, list) else i for i in job["cmds"]])
     pid = job["pids"][-1]
     bg = " &" if job["bg"] else ""
-    print("[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid), file=outfile)
+    return "[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid)
+
+
+def print_one_job(num, outfile=sys.stdout):
+    """Print a line describing job number ``num``."""
+    info = format_job_string(num)
+    if info:
+        print(info, file=outfile)
 
 
 def get_next_job_number():
@@ -447,53 +453,49 @@ def bg(args, stdin=None):
         return res
 
 
-def disown(args, stdin=None):
-    """
-    xonsh command: disown
+def job_id_completer(xsh, **_):
+    """Return currently running jobs ids"""
+    for job_id in xsh.all_jobs:
+        yield RichCompletion(str(job_id), description=format_job_string(job_id))
 
-    Remove the specified jobs from the job table; the shell will no longer
+
+def disown_fn(
+    job_ids: Annotated[
+        tp.Sequence[int], Arg(type=int, nargs="*", completer=job_id_completer)
+    ],
+    force_auto_continue: Annotated[
+        bool, Arg("-c", "--continue", action="store_true")
+    ] = False,
+):
+    """Remove the specified jobs from the job table; the shell will no longer
     report their status, and will not complain if you try to exit an
-    interactive shell with them running or stopped. If no job is specified,
-    disown the current job.
+    interactive shell with them running or stopped.
 
     If the jobs are currently stopped and the $AUTO_CONTINUE option is not set
     ($AUTO_CONTINUE = False), a warning is printed containing information about
     how to make them continue after they have been disowned.
 
-    Specifying the -c or --continue option for this command is equivalent to
-    setting $AUTO_CONTINUE=True.
+    Parameters
+    ----------
+    job_ids
+        Jobs to act on or none to disown the current job
+    force_auto_continue
+        Automatically continue stopped jobs when they are disowned, equivalent to setting $AUTO_CONTINUE=True
     """
-
-    parser = argparse.ArgumentParser("disown", description=disown.__doc__)
-    parser.add_argument(
-        "job_ids",
-        type=int,
-        nargs="*",
-        help="Jobs to act on or none to use the current job",
-    )
-    parser.add_argument(
-        "-c",
-        "--continue",
-        action="store_true",
-        dest="force_auto_continue",
-        help="Automatically continue stopped jobs when they are disowned",
-    )
-
-    pargs = parser.parse_args(args)
 
     if len(tasks) == 0:
         return "", "There are no active jobs"
 
     messages = []
     # if args.job_ids is empty, use the active task
-    for tid in pargs.job_ids or [tasks[0]]:
+    for tid in job_ids or [tasks[0]]:
         try:
             current_task = get_task(tid)
         except KeyError:
             return "", f"'{tid}' is not a valid job ID"
 
         auto_cont = XSH.env.get("AUTO_CONTINUE", False)
-        if auto_cont or pargs.force_auto_continue:
+        if auto_cont or force_auto_continue:
             _continue(current_task)
         elif current_task["status"] == "stopped":
             messages.append(
@@ -509,3 +511,6 @@ def disown(args, stdin=None):
 
     if messages:
         return "".join(messages)
+
+
+disown = ArgParserAlias(prog="disown", func=disown_fn, has_args=True)
