@@ -453,7 +453,6 @@ def bg(args, stdin=None):
         return res
 
 
-# todo: add tests for completer
 def job_id_completer(xsh, **_):
     """Return currently running jobs ids"""
     for job_id in xsh.all_jobs:
