@@ -1,9 +1,3 @@
-from xonsh.parsers.completion_context import (
-    CommandArg,
-    CommandContext,
-    CompletionContext,
-)
-from xonsh.completers.xompletions import complete_xontrib
 import pytest
 
 
@@ -29,9 +23,5 @@ def test_xonfig(args, prefix, exp, xsh_with_aliases, monkeypatch, check_complete
     assert check_completer(args, prefix=prefix) == exp
 
 
-def test_xontrib():
-    assert complete_xontrib(
-        CompletionContext(
-            CommandContext(args=(CommandArg("xontrib"),), arg_index=1, prefix="l")
-        )
-    ) == {"list", "load"}
+def test_xontrib(xsh_with_aliases, check_completer):
+    assert check_completer("xontrib", prefix="l") == {"list", "load"}
