@@ -13,7 +13,7 @@ import json
 import pytest  # noqa F401
 
 from xonsh.tools import ON_WINDOWS
-from xonsh.xonfig import XONFIG_MAIN_ACTIONS, xonfig_main
+from xonsh.xonfig import xonfig_main
 
 
 def test_xonfg_help(capsys, xonsh_builtins):
@@ -25,8 +25,15 @@ def test_xonfg_help(capsys, xonsh_builtins):
     m = pat.match(capout)
     assert m[1]
     verbs = set(v.strip().lower() for v in m[1].split(","))
-    exp = set(v.lower() for v in XONFIG_MAIN_ACTIONS)
-    assert verbs == exp
+    assert verbs == {
+        "jupyter-kernel",
+        "info",
+        "styles",
+        "wizard",
+        "web",
+        "colors",
+        "tutorial",
+    }
 
 
 @pytest.mark.parametrize(

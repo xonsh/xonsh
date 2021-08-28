@@ -704,11 +704,12 @@ def xexec_fn(
 xexec = ArgParserAlias(func=xexec_fn, has_args=True, prog="xexec")
 
 
-def xonfig(args, stdin=None):
+@lazyobject
+def xonfig():
     """Runs the xonsh configuration utility."""
     from xonsh.xonfig import xonfig_main  # lazy import
 
-    return xonfig_main(args)
+    return xonfig_main
 
 
 @unthreadable

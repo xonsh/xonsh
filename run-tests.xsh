@@ -1,7 +1,8 @@
 #!/usr/bin/env xonsh
-import argparse
 import subprocess
 from typing import List
+
+import xonsh.cli_utils as xcli
 
 
 $RAISE_SUBPROC_ERROR = True
@@ -16,28 +17,41 @@ def _replace_args(args: List[str], num: int) -> List[str]:
     ]
 
 
-def test(ns: argparse.Namespace):
+def test(
+        report_cov: xcli.Arg('--report-coverage', '-c', action="store_true") = False,
+        no_amalgam: xcli.Arg('--no-amalgam', '-n', action="store_true") = False,
+        pytest_args: xcli.Arg(nargs='*')=(),
+):
     """Run pytest.
+
+    Parameters
+    ----------
+    report_cov
+        Report coverage at the end of the test
+    pytest_args
+        arbitrary arguments that gets passed to pytest's invocation.
+        Use %%d to parameterize and prevent overwrite
+    no_amalgam
+        Disable amalgamation check
 
     Examples
     --------
     `xonsh run-tests.xsh -- --junitxml=junit/test-results.%%d.xml`
     """
 
-    args = ns.pytest_args
-
-    if (not ns.no_amalgam) and not $(xonsh -c "import xonsh.main; print(xonsh.main.__file__, end='')").endswith("__amalgam__.py"):
+    if (not no_amalgam) and not $(xonsh -c "import xonsh.main; print(xonsh.main.__file__, end='')").endswith("__amalgam__.py"):
         echo "Tests need to run from the amalgamated xonsh! install with `pip install .` (without `-e`)"
         exit(1)
 
-    if ns.report_coverage:
+    if report_cov:
         $XONSH_NO_AMALGAMATE = True
-        ![pytest @(_replace_args(args, 0)) --cov --cov-report=xml --cov-report=term]
+        ![pytest @(_replace_args(pytest_args, 0)) --cov --cov-report=xml --cov-report=term]
     else:
-        ![pytest @(_replace_args(args, 0))]
+        # during CI run, some tests take longer to complete on windows
+        ![pytest @(_replace_args(pytest_args, 0)) --durations=5]
 
 
-def qa(ns: argparse.Namespace):
+def qa():
     """QA checks"""
     $XONSH_NO_AMALGAMATE = True
 
@@ -57,39 +71,11 @@ def qa(ns: argparse.Namespace):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.set_defaults(func=lambda *args: parser.print_help())
+    parser = xcli.make_parser("test commands")
+    parser.add_command(test)
+    parser.add_command(qa)
 
-    commands = parser.add_subparsers()
-
-    test_parser = commands.add_parser('test', help=test.__doc__)
-    test_parser.add_argument(
-        'pytest_args',
-        nargs='*',
-        help="arbitrary arguments that gets passed to pytest's invocation."
-             " Use %%d to parameterize and prevent overwrite "
-    )
-    test_parser.add_argument(
-        '--report-coverage',
-        '-c',
-        action="store_true",
-        default=False,
-        help="Report coverage at the end of the test",
-    )
-    test_parser.add_argument(
-        '--no-amalgam',
-        '-n',
-        action="store_true",
-        default=False,
-        help="Disable amalgamation check.",
-    )
-    test_parser.set_defaults(func=test)
-
-    qa_parser = commands.add_parser('qa', help=qa.__doc__)
-    qa_parser.set_defaults(func=qa)
-
-    args = parser.parse_args()
     try:
-        args.func(args)
+        xcli.dispatch(parser)
     except subprocess.CalledProcessError as ex:
         parser.exit(1, f"Failed with {ex}")
