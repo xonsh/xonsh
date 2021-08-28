@@ -13,6 +13,7 @@ def func_with_doc(param: str, multi: str) -> str:
     multi
         param doc
         multi line
+
     Returns
     -------
     str
@@ -32,6 +33,12 @@ def test_get_doc_param():
     assert cli_utils.get_doc(func_with_doc, "multi").splitlines() == [
         "param doc",
         "multi line",
+    ]
+    assert cli_utils.get_doc(func_with_doc, epilog=True).splitlines() == [
+        "Returns",
+        "-------",
+        "str",
+        "    return doc",
     ]
 
 

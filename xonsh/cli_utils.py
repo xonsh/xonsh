@@ -85,7 +85,21 @@ def _get_param_doc(doc: str, param: str) -> tp.Iterator[str]:
         yield lin
 
 
-def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None):
+def _get_epilog_doc(doc: str) -> str:
+    lines = doc.splitlines()
+    for idx, lin in enumerate(lines):
+        if (
+            lin.startswith("-")
+            and set(lin.strip()) == {"-"}
+            and (idx != 0)
+            and (not lines[idx - 1].startswith("Parameters"))
+        ):
+            return os.linesep.join(lines[idx - 1 :])
+
+    return ""
+
+
+def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None, epilog=False):
     """Parse the function docstring and return its help content
 
     Parameters
@@ -94,6 +108,8 @@ def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None):
         a callable/object that holds docstring
     parameter
         name of the function parameter to parse doc for
+    epilog
+        get the rest of doc (after Parameters section)
 
     Returns
     -------
@@ -105,10 +121,14 @@ def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None):
 
     doc = inspect.getdoc(func) or ""
     if parameter:
-        par_doc = os.linesep.join(_get_param_doc(doc, parameter))
-        return inspect.cleandoc(par_doc).strip()
+        doc = os.linesep.join(_get_param_doc(doc, parameter))
+    elif epilog:
+        doc = _get_epilog_doc(doc)
     else:
-        return _get_func_doc(doc).strip()
+        doc = _get_func_doc(doc)
+
+    # remove any extra noise after parse
+    return inspect.cleandoc(doc).strip()
 
 
 _FUNC_NAME = "_func_"
@@ -178,6 +198,10 @@ def make_parser(
     """A bare-bones argparse builder from functions"""
     if "description" not in kwargs:
         kwargs["description"] = get_doc(func)
+    if "epilog" not in kwargs:
+        epilog = get_doc(func, epilog=True)
+        if epilog:
+            kwargs["epilog"] = epilog
     parser = ArgParser(**kwargs)
     if empty_help:
         parser.set_defaults(

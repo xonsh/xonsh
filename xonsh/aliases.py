@@ -6,6 +6,7 @@ import sys
 import inspect
 import argparse
 import collections.abc as cabc
+import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
@@ -39,6 +40,7 @@ from xonsh.tools import (
 from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
 from xonsh.ast import isexpression
+from xonsh.cli_utils import ArgParserAlias, Arg, Annotated
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
@@ -637,23 +639,34 @@ def source_cmd(args, stdin=None):
         return source_foreign(args, stdin=stdin)
 
 
-def xexec(args, stdin=None):
-    """exec [-h|--help] [-cl] [-a name] command [args...]
+def xexec_fn(
+    command: Annotated[tp.List[str], Arg(nargs=argparse.REMAINDER)],
+    login: Annotated[bool, Arg("-l", "--login", action="store_true")] = False,
+    clean: Annotated[bool, Arg("-c", "--clean", action="store_true")] = False,
+    name: Annotated[str, Arg("-a", "--name")] = "",
+    _stdin=None,
+):
+    """exec (also aliased as xexec) uses the os.execvpe() function to
+    replace the xonsh process with the specified program.
 
-    exec (also aliased as xexec) uses the os.execvpe() function to
-    replace the xonsh process with the specified program. This provides
-    the functionality of the bash 'exec' builtin::
+    This provides the functionality of the bash 'exec' builtin::
 
         >>> exec bash -l -i
         bash $
 
-    The '-h' and '--help' options print this message and exit.
-    If the '-l' option is supplied, the shell places a dash at the
-    beginning of the zeroth argument passed to command to simulate login
-    shell.
-    The '-c' option causes command to be executed with an empty environment.
-    If '-a' is supplied, the shell passes name as the zeroth argument
-    to the executed command.
+    Parameters
+    ----------
+    command
+        program to launch along its arguments
+    login
+        the shell places a dash at the
+        beginning of the zeroth argument passed to command to simulate login
+        shell.
+    clean
+        causes command to be executed with an empty environment.
+    name
+        the shell passes name as the zeroth argument
+        to the executed command.
 
     Notes
     -----
@@ -665,42 +678,30 @@ def xexec(args, stdin=None):
     explicitly with ![exec command]. For more details, please see
     http://xon.sh/faq.html#exec.
     """
-    if len(args) == 0:
-        return (None, "xonsh: exec: no args specified\n", 1)
-
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("-h", "--help", action="store_true")
-    parser.add_argument("-l", dest="login", action="store_true")
-    parser.add_argument("-c", dest="clean", action="store_true")
-    parser.add_argument("-a", dest="name", nargs="?")
-    parser.add_argument("command", nargs=argparse.REMAINDER)
-    args = parser.parse_args(args)
-
-    if args.help:
-        return inspect.getdoc(xexec)
-
-    if len(args.command) == 0:
+    if len(command) == 0:
         return (None, "xonsh: exec: no command specified\n", 1)
 
-    command = args.command[0]
-    if args.name is not None:
-        args.command[0] = args.name
-    if args.login:
-        args.command[0] = "-{}".format(args.command[0])
+    cmd = command[0]
+    if name:
+        command[0] = name
+    if login:
+        command[0] = "-{}".format(command[0])
 
     denv = {}
-    if not args.clean:
+    if not clean:
         denv = XSH.env.detype()
 
     try:
-        os.execvpe(command, args.command, denv)
+        os.execvpe(cmd, command, denv)
     except FileNotFoundError as e:
         return (
             None,
-            "xonsh: exec: file not found: {}: {}"
-            "\n".format(e.args[1], args.command[0]),
+            "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], command[0]),
             1,
         )
+
+
+xexec = ArgParserAlias(func=xexec_fn, has_args=True, prog="xexec")
 
 
 @lazyobject
