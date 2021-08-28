@@ -465,8 +465,7 @@ def dirs_fn(
     verbose: Annotated[bool, Arg("-v", action="store_true")] = False,
     long: Annotated[bool, Arg("-l", action="store_true")] = False,
 ):
-    """Displays the list of currently remembered directories.  Can also be used
-    to clear the directory stack.
+    """Manage the list of currently remembered directories.
 
     Parameters
     ----------
