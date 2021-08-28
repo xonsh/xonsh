@@ -88,7 +88,7 @@ def session_vars():
 @pytest.fixture
 def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
     """Mock out most of the builtins xonsh attributes."""
-    old_builtins = set(dir(builtins))
+    old_builtins = dict(vars(builtins).items())  # type: ignore
 
     XSH.load(ctx={}, **session_vars)
     if ON_WINDOWS:
@@ -130,9 +130,12 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
     # todo: remove using builtins for tests at all
     yield builtins
     XSH.unload()
-    for attr in set(dir(builtins)) - old_builtins:
+    for attr in set(dir(builtins)) - set(old_builtins):
         if hasattr(builtins, attr):
             delattr(builtins, attr)
+    for attr, old_value in old_builtins.items():
+        setattr(builtins, attr, old_value)
+
     tasks.clear()  # must to this to enable resetting all_jobs
 
 
