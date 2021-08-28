@@ -69,6 +69,12 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs):
 def test_capture_always(
     capfd, thread_subprocs, capture_always, alias_type, pipe, monkeypatch
 ):
+    if not thread_subprocs and alias_type in ["func", "exec"]:
+        if pipe:
+            return pytest.skip("https://github.com/xonsh/xonsh/issues/4443")
+        else:
+            return pytest.skip("https://github.com/xonsh/xonsh/issues/4444")
+
     env = XSH.env
     exp = "HELLO\nBYE\n"
     cmds = [["echo", "-n", exp]]
