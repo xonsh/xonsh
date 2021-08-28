@@ -127,6 +127,7 @@ def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None, epilog=Fals
     else:
         doc = _get_func_doc(doc)
 
+    # remove any extra noise after parse
     return inspect.cleandoc(doc).strip()
 
 
