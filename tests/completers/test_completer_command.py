@@ -2,15 +2,6 @@ import pytest
 
 
 @pytest.fixture
-def xsh_with_aliases(xession, monkeypatch):
-    from xonsh.aliases import Aliases, make_default_aliases
-
-    xsh = xession
-    monkeypatch.setattr(xsh, "aliases", Aliases(make_default_aliases()))
-    return xsh
-
-
-@pytest.fixture
 def mock_completer(monkeypatch, xsh_with_aliases):
     xsh = xsh_with_aliases
     monkeypatch.setattr(xsh, "completers", {"one": 1, "two": 2})

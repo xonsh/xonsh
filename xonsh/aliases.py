@@ -703,11 +703,12 @@ def xexec(args, stdin=None):
         )
 
 
-def xonfig(args, stdin=None):
+@lazyobject
+def xonfig():
     """Runs the xonsh configuration utility."""
     from xonsh.xonfig import xonfig_main  # lazy import
 
-    return xonfig_main(args)
+    return xonfig_main
 
 
 @unthreadable
