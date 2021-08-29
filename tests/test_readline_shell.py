@@ -23,3 +23,22 @@ def test_render_completions(prefix, completion, prefix_len, readline_completion)
     assert _render_completions({completion}, prefix, prefix_len) == [
         readline_completion
     ]
+
+
+@pytest.mark.parametrize(
+    "line, exp",
+    [
+        [repr("hello"), None],
+        ["2 * 3", "6"],
+    ],
+)
+def test_rl_prompt_cmdloop(line, exp, readline_shell, capsys):
+    shell = readline_shell
+    shell.use_rawinput = False
+    shell.stdin.write(f"{line}\nexit\n")  # note: terminate with '\n'
+    shell.stdin.seek(0)
+    shell.cmdloop()
+    # xonsh, doesn't write all its output to shell.stdout
+    # so capture sys.stdout
+    out, err = capsys.readouterr()
+    assert out.strip() == exp or line

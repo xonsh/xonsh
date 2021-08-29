@@ -183,6 +183,21 @@ def ptk_shell(xonsh_execer):
     inp.close()
 
 
+@pytest.fixture
+def readline_shell(xonsh_execer, tmpdir, mocker):
+    from xonsh.readline_shell import ReadlineShell
+
+    inp_path = tmpdir / "in"
+    inp = inp_path.open("w+")
+    out_path = tmpdir / "out"
+    out = out_path.open("w+")
+
+    shell = ReadlineShell(execer=xonsh_execer, ctx={}, stdin=inp, stdout=out)
+    mocker.patch.object(shell, "_load_remaining_input_into_queue")
+    yield shell
+    out.close()
+
+
 def pytest_configure(config):
     """Abort test run if --flake8 requested, since it would hang on parser_test.py"""
     if config.getoption("--flake8", ""):
