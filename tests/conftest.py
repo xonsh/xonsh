@@ -195,6 +195,7 @@ def readline_shell(xonsh_execer, tmpdir, mocker):
     shell = ReadlineShell(execer=xonsh_execer, ctx={}, stdin=inp, stdout=out)
     mocker.patch.object(shell, "_load_remaining_input_into_queue")
     yield shell
+    inp.close()
     out.close()
 
 
