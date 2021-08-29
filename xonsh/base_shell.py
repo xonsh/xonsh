@@ -299,11 +299,18 @@ class Tee:
         return s
 
 
-class BaseShell(object):
+class BaseShell:
     """The xonsh shell."""
 
     def __init__(self, execer, ctx, **kwargs):
-        super().__init__()
+        """
+
+        Notes
+        -----
+        classes inheriting multiple base classes should call them explicitly
+        as done for ``ReadlineShell``
+        """
+
         self.execer = execer
         self.ctx = ctx
         self.completer = Completer() if kwargs.get("completer", True) else None

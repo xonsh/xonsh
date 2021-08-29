@@ -320,7 +320,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
     """The readline based xonsh shell."""
 
     def __init__(self, completekey="tab", stdin=None, stdout=None, **kwargs):
-        super().__init__(completekey=completekey, stdin=stdin, stdout=stdout, **kwargs)
+        BaseShell.__init__(self, **kwargs)
+        # super() doesn't pass the stdin/stdout to Cmd's init method correctly.
+        # so calling it explicitly
+        cmd.Cmd.__init__(self, completekey=completekey, stdin=stdin, stdout=stdout)
+
         setup_readline()
         self._current_indent = ""
         self._current_prompt = ""
@@ -533,16 +537,16 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         (C) Python Software Foundation, 2015.
         """
         self.preloop()
-        if self.use_rawinput and self.completekey:
-            try:
-                import readline
+        try:
+            import readline
 
+            if self.use_rawinput and self.completekey:
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
                 readline.parse_and_bind(self.completekey + ": complete")
-                have_readline = True
-            except ImportError:
-                have_readline = False
+            have_readline = True
+        except ImportError:
+            have_readline = False
         try:
             if intro is not None:
                 self.intro = intro
@@ -606,7 +610,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             try:
                 self._cmdloop(intro=intro)
             except (KeyboardInterrupt, SystemExit):
-                print()  # Gives a newline
+                print(file=self.stdout)  # Gives a newline
                 fix_readline_state_after_ctrl_c()
                 self.reset_buffer()
                 intro = None
