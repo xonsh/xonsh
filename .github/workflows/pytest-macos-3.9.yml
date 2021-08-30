@@ -1,4 +1,4 @@
-name: pytest macos 3.9
+name: pytest cov macos 3.9
 
 on:
   push:
@@ -55,6 +55,11 @@ jobs:
         run: |
           python -m pip --version
           python -m pip install -r requirements/tests.txt
-          python -m pip install . --no-deps
+          python -m pip install -e . --no-deps
       - name: Run tests
-        run: python -m xonsh run-tests.xsh test -- --timeout=240
+        run: python -m xonsh run-tests.xsh test --report-coverage --no-amalgam -- --timeout=240
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          verbose: true
+          flags: "macos"

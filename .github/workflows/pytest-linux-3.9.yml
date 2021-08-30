@@ -1,4 +1,4 @@
-name: pytest linux 3.9
+name: pytest cov linux 3.9
 
 on:
   push:
@@ -59,6 +59,7 @@ jobs:
       - name: Run tests
         run: python -m xonsh run-tests.xsh test --report-coverage --no-amalgam -- --timeout=240
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           verbose: true
+          flags: "linux"

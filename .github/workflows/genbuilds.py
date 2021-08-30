@@ -67,7 +67,7 @@ def write_to_file(
 
 # pytest workflows
 for os_name, python_version in product(OS_NAMES, PYTHON_VERSIONS):
-    report_coverage = python_version == PY_MAIN_VERSION and os_name == "linux"
+    report_coverage = python_version == PY_MAIN_VERSION
     if report_coverage:
         test_cmd = "test --report-coverage --no-amalgam -- --timeout=240"
     else:

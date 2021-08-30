@@ -1,4 +1,4 @@
-name: {{ NAME }} {{ OS_NAME }} {{ PYTHON_VERSION }}
+name: {{ NAME }}{% if report_coverage %} cov{% endif %} {{ OS_NAME }} {{ PYTHON_VERSION }}
 
 on:
   push:
@@ -76,7 +76,8 @@ jobs:
         {% endif %}
       {% if report_coverage %}
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           verbose: true
+          flags: "{{ OS_NAME }}"
       {% endif %}
