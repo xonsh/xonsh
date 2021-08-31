@@ -1,8 +1,9 @@
+import re
+
 import pytest
 
+from xonsh.procs.specs import cmds_to_specs
 from xonsh.tracer import tracermain
-import re
-from xonsh.procs.specs import cmds_to_specs, run_subproc
 
 
 def test_tracer_help(capsys, xsh_with_aliases):
