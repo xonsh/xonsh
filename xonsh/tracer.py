@@ -230,5 +230,4 @@ class TracerAlias(xcli.ArgParserAlias):
         return super().__call__(*args, **kwargs)
 
 
-# todo: write tests
 tracermain = TracerAlias()
