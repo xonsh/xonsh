@@ -7,7 +7,7 @@ import linecache
 import importlib
 import typing as tp
 
-import xonsh.cli_utils as xcli
+from xonsh.cli_utils import ArgParserAlias, Annotated, Arg
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
@@ -105,7 +105,7 @@ class TracerType(object):
     def on_files(
         self,
         _args,
-        files: xcli.Annotated[tp.Iterable[str], xcli.Arg(nargs="*")] = ("__file__",),
+        files: Annotated[tp.Iterable[str], Arg(nargs="*")] = ("__file__",),
     ):
         """begins tracing selected files.
 
@@ -127,7 +127,7 @@ class TracerType(object):
     def off_files(
         self,
         _args,
-        files: xcli.Annotated[tp.Iterable[str], xcli.Arg(nargs="*")] = ("__file__",),
+        files: Annotated[tp.Iterable[str], Arg(nargs="*")] = ("__file__",),
     ):
         """removes selected files fom tracing.
 
@@ -146,7 +146,7 @@ class TracerType(object):
 
     def toggle_color(
         self,
-        toggle: xcli.Annotated[bool, xcli.Arg(type=to_bool)] = False,
+        toggle: Annotated[bool, Arg(type=to_bool)] = False,
     ):
         """output color management for tracer
 
@@ -211,7 +211,7 @@ def _find_caller(args):
         print(msg, file=sys.stderr)
 
 
-class TracerAlias(xcli.ArgParserAlias):
+class TracerAlias(ArgParserAlias):
     """Tool for tracing xonsh code as it runs."""
 
     def build(self):
