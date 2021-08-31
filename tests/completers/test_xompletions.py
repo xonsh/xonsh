@@ -23,5 +23,32 @@ def test_xonfig(args, prefix, exp, xsh_with_aliases, monkeypatch, check_complete
     assert check_completer(args, prefix=prefix) == exp
 
 
-def test_xontrib(xsh_with_aliases, check_completer):
-    assert check_completer("xontrib", prefix="l") == {"list", "load"}
+@pytest.mark.parametrize(
+    "args, prefix, exp, exp_part",
+    [
+        (
+            "xontrib",
+            "l",
+            {"list", "load"},
+            None,
+        ),
+        (
+            "xontrib load",
+            "",
+            None,
+            {
+                # the list may vary wrt the env. so testing only part of the coreutils.
+                "abbrevs",
+                "autovox",
+                "bashisms",
+                "coreutils",
+            },
+        ),
+    ],
+)
+def test_xontrib(args, prefix, exp, exp_part, xsh_with_aliases, check_completer):
+    result = check_completer(args, prefix=prefix)
+    if exp:
+        assert result == exp
+    if exp_part:
+        assert result.issuperset(exp_part)
