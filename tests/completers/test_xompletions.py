@@ -51,4 +51,4 @@ def test_xontrib(args, prefix, exp, exp_part, xsh_with_aliases, check_completer)
     if exp:
         assert result == exp
     if exp_part:
-        assert result.issuperset(exp_part)
+        assert result.issuperset(exp_part), f"{result} doesn't contain {exp_part} "
