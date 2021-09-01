@@ -175,15 +175,13 @@ def _xh_get_history(
     return cmds
 
 
-@xla.lazyobject
-def _XH_HISTORY_SESSIONS():
-    return {
-        "session": _xh_session_parser,
-        "xonsh": _xh_all_parser,
-        "all": _xh_all_parser,
-        "zsh": _xh_zsh_hist_parser,
-        "bash": _xh_bash_hist_parser,
-    }
+_XH_HISTORY_SESSIONS = {
+    "session": _xh_session_parser,
+    "xonsh": _xh_all_parser,
+    "all": _xh_all_parser,
+    "zsh": _xh_zsh_hist_parser,
+    "bash": _xh_bash_hist_parser,
+}
 
 
 class HistoryAlias(ArgParserAlias):
@@ -191,10 +189,10 @@ class HistoryAlias(ArgParserAlias):
 
     def show(
         self,
-        slices: Annotated[tp.List[int], Arg(nargs="...")] = None,
         session: Annotated[
-            str, Arg("-s", "--session", choices=_XH_HISTORY_SESSIONS)
+            str, Arg(nargs="?", choices=_XH_HISTORY_SESSIONS)
         ] = "session",
+        slices: Annotated[tp.List[int], Arg(nargs="*")] = None,
         datetime_format: Annotated[tp.Optional[str], Arg("-f")] = None,
         start_time: Annotated[tp.Optional[str], Arg("+T", "--start-time")] = None,
         end_time: Annotated[tp.Optional[str], Arg("-T", "--end-time")] = None,
@@ -428,8 +426,17 @@ class HistoryAlias(ArgParserAlias):
 
     def __call__(self, args, *rest, **kwargs):
         if not args:
-            args = ["show"]
+            args = ["show", "session"]
+        else:
+            actions = self.parser.commands.choices
+            cmd = args[0]
+            if cmd not in actions and cmd not in {"-h", "--help"}:
+                args = ["show", "session"] + args
+
         if args[0] == "show":
+            if not any(a in _XH_HISTORY_SESSIONS for a in args):
+                args.insert(1, "session")
+
             kwargs.setdefault("lenient", True)
         return super().__call__(args, *rest, **kwargs)
 
