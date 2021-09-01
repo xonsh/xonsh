@@ -193,7 +193,11 @@ def test_history_diff(tmpdir, xession, monkeypatch, capsys):
         xession.env["HISTCONTROL"] = set()
         for ts, cmd in enumerate(CMDS):  # populate the shell history
             hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
-        hist.flush()
+        flush = hist.flush()
+        if flush.queue:
+            # make sure that flush is complete
+            time.sleep(0.1)
+
     left, right = [str(f) for f in files]
     history_main(["diff", left, right])
     out, err = capsys.readouterr()
