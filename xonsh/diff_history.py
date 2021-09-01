@@ -111,13 +111,14 @@ class HistoryDiffer(object):
     def _header_line(self, lj):
         s = lj._f.name if hasattr(lj._f, "name") else ""
         s += " (" + lj["sessionid"] + ")"
-        s += " [locked]" if lj["locked"] else " [unlocked]"
-        ts = lj["ts"].load()
-        ts0 = datetime.datetime.fromtimestamp(ts[0])
-        s += " started: " + ts0.isoformat(" ")
-        if ts[1] is not None:
-            ts1 = datetime.datetime.fromtimestamp(ts[1])
-            s += " stopped: " + ts1.isoformat(" ") + " runtime: " + str(ts1 - ts0)
+        s += " [locked]" if lj.get("locked", False) else " [unlocked]"
+        if lj.get("ts"):
+            ts = lj["ts"].load()
+            ts0 = datetime.datetime.fromtimestamp(ts[0])
+            s += " started: " + ts0.isoformat(" ")
+            if ts[1] is not None:
+                ts1 = datetime.datetime.fromtimestamp(ts[1])
+                s += " stopped: " + ts1.isoformat(" ") + " runtime: " + str(ts1 - ts0)
         return s
 
     def header(self):
@@ -160,6 +161,8 @@ class HistoryDiffer(object):
 
     def envdiff(self):
         """Computes the difference between the environments."""
+        if (not self.a.get("env")) or (not self.b.get("env")):
+            return ""
         aenv = self.a["env"].load()
         benv = self.b["env"].load()
         akeys = frozenset(aenv)
