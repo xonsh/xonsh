@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Main entry points of the xonsh history."""
-import argparse
 import datetime
-import functools
 import json
 import os
 import sys
@@ -10,13 +8,12 @@ import threading
 import typing as tp
 
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import ArgParserAlias, Annotated, Arg, add_args
+from xonsh.cli_utils import ArgParserAlias, Annotated, Arg
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
 import xonsh.diff_history as xdh
-import xonsh.lazyasd as xla
 import xonsh.tools as xt
 
 HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": SqliteHistory}
