@@ -191,20 +191,23 @@ class HistoryAlias(ArgParserAlias):
 
     def show(
         self,
-        slices: Annotated[tp.Optional[int], Arg(nargs="*")] = None,
+        slices: Annotated[tp.List[int], Arg(nargs="...")] = None,
         session: Annotated[
             str, Arg("-s", "--session", choices=_XH_HISTORY_SESSIONS)
         ] = "session",
         datetime_format: Annotated[tp.Optional[str], Arg("-f")] = None,
-        start_time: Annotated[tp.Optional[str], Arg("+T")] = None,
-        end_time: Annotated[tp.Optional[str], Arg("-T")] = None,
+        start_time: Annotated[tp.Optional[str], Arg("+T", "--start-time")] = None,
+        end_time: Annotated[tp.Optional[str], Arg("-T", "--end-time")] = None,
         location: Annotated[tp.Optional[str], Arg("-l", "--location")] = None,
-        reverse: Annotated[bool, Arg("-r", action="store_true")] = False,
-        numerate: Annotated[bool, Arg("-n", action="store_true")] = False,
-        timestamp: Annotated[bool, Arg("-t", action="store_true")] = False,
-        null_byte: Annotated[bool, Arg("-0", action="store_true")] = False,
+        reverse: Annotated[bool, Arg("-r", "--reverse", action="store_true")] = False,
+        numerate: Annotated[bool, Arg("-n", "--numerate", action="store_true")] = False,
+        timestamp: Annotated[bool, Arg("-t", "--ts", action="store_true")] = False,
+        null_byte: Annotated[
+            bool, Arg("-0", "--nb", "--null-byte", action="store_true")
+        ] = False,
         _stdout=None,
         _stderr=None,
+        _unparsed=None,
     ):
         """Display history of a session, default command
 
@@ -230,7 +233,12 @@ class HistoryAlias(ArgParserAlias):
             show command timestamps
         null_byte:
             separate commands by the null character for piping history to external filters
+        _unparsed
+            remaining args from ``parser.parse_known_args``
         """
+        slices = list(slices or ())
+        if _unparsed:
+            slices.extend(_unparsed)
         try:
             commands = _xh_get_history(
                 session,
@@ -421,6 +429,8 @@ class HistoryAlias(ArgParserAlias):
     def __call__(self, args, *rest, **kwargs):
         if not args:
             args = ["show"]
+        if args[0] == "show":
+            kwargs.setdefault("lenient", True)
         return super().__call__(args, *rest, **kwargs)
 
 
