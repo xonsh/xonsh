@@ -1,5 +1,14 @@
 """Tests bashisms xontrib."""
 import pytest
+import sys
+
+
+@pytest.fixture(name="bash_preproc", scope="module")
+def _bash_preproc():
+    from xontrib.bashisms import bash_preproc
+
+    yield bash_preproc
+    del sys.modules["xontrib.bashisms"]
 
 
 @pytest.mark.parametrize(
@@ -33,9 +42,8 @@ import pytest
         (["aa 1 2", "ab 3 4"], "echo !ab >log", "echo ab 3 4 >log"),
     ],
 )
-def test_preproc(history, inp, exp, xession):
+def test_preproc(history, inp, exp, xession, bash_preproc):
     """Test the bash preprocessor."""
-    from xontrib.bashisms import bash_preproc
 
     xession.history.inps = history
     obs = bash_preproc(inp)
