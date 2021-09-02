@@ -28,7 +28,7 @@ def test_render_completions(prefix, completion, prefix_len, readline_completion)
 @pytest.mark.parametrize(
     "line, exp",
     [
-        [repr("hello"), repr("hello")],
+        [repr("hello"), "hello"],
         ["2 * 3", "6"],
     ],
 )
