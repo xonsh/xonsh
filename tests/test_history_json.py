@@ -340,7 +340,8 @@ def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xess
     spy.assert_called_once()
 
     # assemble
-    _, kwargs = spy.call_args
+    args, _ = spy.call_args
+    _, kwargs = args
     called_with = {attr: kwargs[attr] for attr in exp_ns}
     if kwargs["_unparsed"]:
         called_with["slices"] = kwargs["_unparsed"]
