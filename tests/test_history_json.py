@@ -329,18 +329,18 @@ def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xess
         "null_byte": False,
     }
 
-    action = mocker.patch.object(history_main, "show", autospec=True)
     # clear parser instance, so that patched func can take place
     history_main._parser = None
+    spy = mocker.patch("xonsh.cli_utils._dispatch_func")
 
     # action
     history_main(shlex.split(args))
 
     # assert
-    action.assert_called_once()
+    spy.assert_called_once()
 
     # assemble
-    kwargs = action.call_args.kwargs
+    _, kwargs = spy.call_args
     called_with = {attr: kwargs[attr] for attr in exp_ns}
     if kwargs["_unparsed"]:
         called_with["slices"] = kwargs["_unparsed"]
