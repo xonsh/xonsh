@@ -187,7 +187,7 @@ class HistoryAlias(ArgParserAlias):
     def show(
         self,
         session: Annotated[
-            str, Arg(nargs="?", choices=_XH_HISTORY_SESSIONS)
+            str, Arg(nargs="?", choices=tuple(_XH_HISTORY_SESSIONS))
         ] = "session",
         slices: Annotated[tp.List[int], Arg(nargs="*")] = None,
         datetime_format: Annotated[tp.Optional[str], Arg("-f")] = None,
