@@ -86,7 +86,7 @@ def setup_readline():
     import ctypes.util
 
     uses_libedit = readline.__doc__ and "libedit" in readline.__doc__
-    readline.set_completer_delims(" \t\n")
+    readline.set_completer_delims("\n")
     # Cygwin seems to hang indefinitely when querying the readline lib
     if (not ON_CYGWIN) and (not ON_MSYS) and (not readline.__file__.endswith(".py")):
         RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
@@ -453,7 +453,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             multiline_text=prev_text + line,
             cursor_index=len(prev_text) + endidx,
         )
-        rtn_completions = _render_completions(completions, prefix, plen)
+        rtn_completions = _render_completions(completions, line, plen)
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
