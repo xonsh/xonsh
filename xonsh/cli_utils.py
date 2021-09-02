@@ -329,7 +329,7 @@ class ArgParser(ap.ArgumentParser):
         return parser
 
 
-def _dispatch_func(func, **ns):
+def _dispatch_func(func: tp.Callable, ns: tp.Dict[str, tp.Any]):
     """Final dispatch to the function based on signature."""
     sign = inspect.signature(func)
     kwargs = {}
@@ -368,7 +368,7 @@ def dispatch(parser: ap.ArgumentParser, args=None, lenient=False, **ns):
     ns.update(vars(parsed))
 
     func = ns[_FUNC_NAME]
-    return _dispatch_func(func, **ns)
+    return _dispatch_func(func, ns)
 
 
 class ArgParserAlias:
