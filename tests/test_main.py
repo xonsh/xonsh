@@ -27,6 +27,13 @@ def shell(xession, monkeypatch):
     monkeypatch.setattr(xonsh.main, "Shell", Shell)
 
 
+@pytest.fixture(autouse=True)
+def empty_xonshrc(monkeypatch):
+    # Don't use the local machine's xonshrc
+    empty_file_path = "NUL" if ON_WINDOWS else "/dev/null"
+    monkeypatch.setitem(os.environ, "XONSHRC", empty_file_path)
+
+
 def test_premain_no_arg(shell, monkeypatch, xession):
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     xonsh.main.premain([])
