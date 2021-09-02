@@ -16,6 +16,7 @@ from xonsh.history.json import (
 )
 
 from xonsh.history.main import history_main
+from xonsh import cli_utils
 
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
@@ -331,7 +332,7 @@ def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xess
 
     # clear parser instance, so that patched func can take place
     history_main._parser = None
-    spy = mocker.patch("xonsh.cli_utils._dispatch_func")
+    spy = mocker.spy(cli_utils, "_dispatch_func")
 
     # action
     history_main(shlex.split(args))
