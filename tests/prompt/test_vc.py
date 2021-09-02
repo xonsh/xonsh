@@ -91,22 +91,23 @@ current = yellow reverse
         assert not branch.startswith(u"\u001b[")
 
 
-def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xession):
+def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xession, monkeypatch):
     cache = xession.commands_cache
-    cache.is_empty = Mock(return_value=True)
-    cache.locate_binary = Mock(return_value="")
+    monkeypatch.setattr(cache, "is_empty", Mock(return_value=True))
+    monkeypatch.setattr(cache, "locate_binary", Mock(return_value=""))
     vc.current_branch()
     assert cache.locate_binary.called
 
 
 def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
     xession,
+    monkeypatch,
 ):
     cache = xession.commands_cache
-    cache.is_empty = Mock(return_value=False)
-    cache.locate_binary = Mock(return_value="")
+    monkeypatch.setattr(cache, "is_empty", Mock(return_value=False))
+    monkeypatch.setattr(cache, "locate_binary", Mock(return_value=""))
     # make lazy locate return nothing to avoid running vc binaries
-    cache.lazy_locate_binary = Mock(return_value="")
+    monkeypatch.setattr(cache, "lazy_locate_binary", Mock(return_value=""))
     vc.current_branch()
     assert not cache.locate_binary.called
 
