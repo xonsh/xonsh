@@ -41,4 +41,6 @@ def test_rl_prompt_cmdloop(line, exp, readline_shell, capsys):
     # xonsh, doesn't write all its output to shell.stdout
     # so capture sys.stdout
     out, err = capsys.readouterr()
-    assert out.strip() == exp
+
+    # sometimes the output has ansii color codes
+    assert exp in out.strip()
