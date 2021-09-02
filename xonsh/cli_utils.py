@@ -329,6 +329,21 @@ class ArgParser(ap.ArgumentParser):
         return parser
 
 
+def _dispatch_func(func, **ns):
+    """Final dispatch to the function based on signature."""
+    sign = inspect.signature(func)
+    kwargs = {}
+    for name, param in sign.parameters.items():
+        default = None
+        # sometimes the args are skipped in the parser.
+        # like ones having _ prefix(private to the function), or some special cases like exclusive group.
+        # it is better to fill the defaults from paramspec when available.
+        if param.default != inspect.Parameter.empty:
+            default = param.default
+        kwargs[name] = ns.get(name, default)
+    return func(**kwargs)
+
+
 def dispatch(parser: ap.ArgumentParser, args=None, lenient=False, **ns):
     """Call the underlying function with arguments parsed from sys.argv
 
@@ -353,17 +368,7 @@ def dispatch(parser: ap.ArgumentParser, args=None, lenient=False, **ns):
     ns.update(vars(parsed))
 
     func = ns[_FUNC_NAME]
-    sign = inspect.signature(func)
-    kwargs = {}
-    for name, param in sign.parameters.items():
-        default = None
-        # sometimes the args are skipped in the parser.
-        # like ones having _ prefix(private to the function), or some special cases like exclusive group.
-        # it is better to fill the defaults from paramspec when available.
-        if param.default != inspect.Parameter.empty:
-            default = param.default
-        kwargs[name] = ns.get(name, default)
-    return func(**kwargs)
+    return _dispatch_func(func, **ns)
 
 
 class ArgParserAlias:
