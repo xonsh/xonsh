@@ -362,7 +362,7 @@ def complete_path(context):
     elif context.python:
         line = context.python.prefix
         # simple prefix _complete_path_raw will handle gracefully:
-        prefix = line.rsplit(" ", 1)[1]
+        prefix = line.rsplit(" ", 1)[-1]
         return _complete_path_raw(prefix, line, len(line) - len(prefix), len(line), {})
     return set(), 0
 
