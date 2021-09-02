@@ -139,4 +139,4 @@ def test_ptk_prompt(line, exp, ptk_shell, capsys):
     shell.cmdloop()
     out, err = capsys.readouterr()
     # todo: check rendered output using https://pyte.readthedocs.io/
-    assert out.strip() == exp or line
+    assert out.strip() == (exp or line)
