@@ -8,7 +8,7 @@ import threading
 import typing as tp
 
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import ArgParserAlias, Annotated, Arg
+import xonsh.cli_utils as xcli
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
@@ -181,24 +181,32 @@ _XH_HISTORY_SESSIONS = {
 }
 
 
-class HistoryAlias(ArgParserAlias):
+class HistoryAlias(xcli.ArgParserAlias):
     """Try 'history <command> --help' for more info"""
 
     def show(
         self,
-        session: Annotated[
-            str, Arg(nargs="?", choices=tuple(_XH_HISTORY_SESSIONS))
+        session: xcli.Annotated[
+            str, xcli.Arg(nargs="?", choices=tuple(_XH_HISTORY_SESSIONS))
         ] = "session",
-        slices: Annotated[tp.List[int], Arg(nargs="*")] = None,
-        datetime_format: Annotated[tp.Optional[str], Arg("-f")] = None,
-        start_time: Annotated[tp.Optional[str], Arg("+T", "--start-time")] = None,
-        end_time: Annotated[tp.Optional[str], Arg("-T", "--end-time")] = None,
-        location: Annotated[tp.Optional[str], Arg("-l", "--location")] = None,
-        reverse: Annotated[bool, Arg("-r", "--reverse", action="store_true")] = False,
-        numerate: Annotated[bool, Arg("-n", "--numerate", action="store_true")] = False,
-        timestamp: Annotated[bool, Arg("-t", "--ts", action="store_true")] = False,
-        null_byte: Annotated[
-            bool, Arg("-0", "--nb", "--null-byte", action="store_true")
+        slices: xcli.Annotated[tp.List[int], xcli.Arg(nargs="*")] = None,
+        datetime_format: xcli.Annotated[tp.Optional[str], xcli.Arg("-f")] = None,
+        start_time: xcli.Annotated[
+            tp.Optional[str], xcli.Arg("+T", "--start-time")
+        ] = None,
+        end_time: xcli.Annotated[tp.Optional[str], xcli.Arg("-T", "--end-time")] = None,
+        location: xcli.Annotated[tp.Optional[str], xcli.Arg("-l", "--location")] = None,
+        reverse: xcli.Annotated[
+            bool, xcli.Arg("-r", "--reverse", action="store_true")
+        ] = False,
+        numerate: xcli.Annotated[
+            bool, xcli.Arg("-n", "--numerate", action="store_true")
+        ] = False,
+        timestamp: xcli.Annotated[
+            bool, xcli.Arg("-t", "--ts", action="store_true")
+        ] = False,
+        null_byte: xcli.Annotated[
+            bool, xcli.Arg("-0", "--nb", "--null-byte", action="store_true")
         ] = False,
         _stdout=None,
         _stderr=None,
@@ -324,7 +332,7 @@ class HistoryAlias(ArgParserAlias):
 
     @staticmethod
     def info(
-        to_json: Annotated[bool, Arg("--json", action="store_true")] = False,
+        to_json: xcli.Annotated[bool, xcli.Arg("--json", action="store_true")] = False,
         _stdout=None,
     ):
         """Display information about the current history
@@ -346,8 +354,8 @@ class HistoryAlias(ArgParserAlias):
 
     @staticmethod
     def gc(
-        size: Annotated[tp.Tuple[int, str], Arg("--size", nargs=2)] = None,
-        force: Annotated[bool, Arg("--force", action="store_true")] = False,
+        size: xcli.Annotated[tp.Tuple[int, str], xcli.Arg("--size", nargs=2)] = None,
+        force: xcli.Annotated[bool, xcli.Arg("--force", action="store_true")] = False,
         _blocking=True,
     ):
         """Launches a new history garbage collector
@@ -366,8 +374,10 @@ class HistoryAlias(ArgParserAlias):
     def diff(
         a,
         b,
-        reopen: Annotated[bool, Arg("--reopen", action="store_true")] = False,
-        verbose: Annotated[bool, Arg("-v", "--verbose", action="store_true")] = False,
+        reopen: xcli.Annotated[bool, xcli.Arg("--reopen", action="store_true")] = False,
+        verbose: xcli.Annotated[
+            bool, xcli.Arg("-v", "--verbose", action="store_true")
+        ] = False,
         _stdout=None,
     ):
         """Diff two xonsh history files

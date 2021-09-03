@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Tests the json history backend."""
 # pylint: disable=protected-access
-import os
+
 import shlex
 
 import pytest
 
-from xonsh.lazyjson import LazyJSON
 from xonsh.history.json import (
     JsonHistory,
     _xhj_gc_commands_to_rmfiles,
@@ -14,10 +13,8 @@ from xonsh.history.json import (
     _xhj_gc_seconds_to_rmfiles,
     _xhj_gc_bytes_to_rmfiles,
 )
-
-from xonsh.history.main import history_main
-from xonsh import cli_utils
-
+from xonsh.history.main import history_main, HistoryAlias
+from xonsh.lazyjson import LazyJSON
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
 IGNORE_OPTS = ",".join(["ignoredups", "ignoreerr", "ignorespace"])
@@ -331,11 +328,13 @@ def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xess
     }
 
     # clear parser instance, so that patched func can take place
-    history_main._parser = None
-    spy = mocker.spy(cli_utils, "_dispatch_func")
+    from xonsh.history import main as mod
+
+    main = HistoryAlias()
+    spy = mocker.spy(mod.xcli, "_dispatch_func")
 
     # action
-    history_main(shlex.split(args))
+    main(shlex.split(args))
 
     # assert
     spy.assert_called_once()
@@ -349,9 +348,6 @@ def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xess
 
     # assert
     assert called_with == exp_ns
-
-    # reset the mock
-    history_main._parser = None
 
 
 @pytest.mark.parametrize(
