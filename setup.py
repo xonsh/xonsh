@@ -282,8 +282,14 @@ def main():
         author="Anthony Scopatz",
         maintainer="Anthony Scopatz",
         author_email="scopatz@gmail.com",
-        url="https://github.com/xonsh/xonsh",
+        url="https://xon.sh",
         platforms="Cross Platform",
+        project_urls={
+            "Changelog": "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst",
+            "Code": "https://github.com/xonsh/xonsh",
+            "Documentation": "https://xon.sh/contents.html",
+            "Issue tracker": "https://github.com/xonsh/xonsh/issues",
+        },
         classifiers=[
             "Development Status :: 4 - Beta",
             "Environment :: Console",
