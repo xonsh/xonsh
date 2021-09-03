@@ -1940,6 +1940,7 @@ class Env(cabc.MutableMapping):
         environment variables with other values. On exit from the context
         manager, the original values are restored.
         The changes are only applied to the current thread, so that they don't leak between threads.
+        To get the thread-local overrides use `get_swapped_values` and `set_swapped_values`.
         """
         old = {}
         # single positional argument should be a dict-like object
@@ -1966,6 +1967,12 @@ class Env(cabc.MutableMapping):
                     self._set_item(k, v, thread_local=True)
             if exception is not None:
                 raise exception from None
+
+    def get_swapped_values(self):
+        return self._d.get_local_overrides()
+
+    def set_swapped_values(self, swapped_values):
+        self._d.set_local_overrides(swapped_values)
 
     #
     # Mutable mapping interface
@@ -2234,6 +2241,14 @@ class InternalEnvironDict(ChainMap):
             del self._local[key]
         except KeyError:
             pass
+
+    def get_local_overrides(self):
+        return self._local.copy()
+
+    def set_local_overrides(self, new_local):
+        local = self._local
+        local.clear()
+        local.update(new_local)
 
 
 def _yield_executables(directory, name):

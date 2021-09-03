@@ -155,13 +155,21 @@ def test_swap_exception_replacement():
 
 
 def test_thread_local_swap():
-    env = Env(a=1)
-    iter_count = 20
-    num_threads = 3
+    env = Env(a="orig")
+    iter_count = 10
+    num_threads = 4
     success_variables = [False] * (num_threads + 1)
 
-    def loop(index):
+    def loop(index, swapped_values=None):
+        if swapped_values:
+            if env["a"] != "orig":
+                success_variables[index] = False
+                return
+            env.set_swapped_values(swapped_values)
         for _ in range(iter_count):
+            if env["a"] != "swapped":
+                success_variables[index] = False
+                break
             with env.swap(a=index):
                 sleep(0.1)
                 if env["a"] == index:
@@ -171,10 +179,14 @@ def test_thread_local_swap():
                     break
             sleep(0.1)
 
-    threads = [Thread(target=loop, args=(i,)) for i in range(1, num_threads + 1)]
-    for t in threads:
-        t.start()
-    loop(0)
+    with env.swap(a="swapped"):
+        threads = [
+            Thread(target=loop, args=(i, env.get_swapped_values()))
+            for i in range(1, num_threads + 1)
+        ]
+        for t in threads:
+            t.start()
+        loop(0)
     for t in threads:
         t.join()
 
