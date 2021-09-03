@@ -154,6 +154,33 @@ def test_swap_exception_replacement():
     assert env["VAR"] == "original value"
 
 
+def test_thread_local_swap():
+    env = Env(a=1)
+    iter_count = 20
+    num_threads = 3
+    success_variables = [False] * (num_threads + 1)
+
+    def loop(index):
+        for _ in range(iter_count):
+            with env.swap(a=index):
+                sleep(0.1)
+                if env["a"] == index:
+                    success_variables[index] = True
+                else:
+                    success_variables[index] = False
+                    break
+            sleep(0.1)
+
+    threads = [Thread(target=loop, args=(i,)) for i in range(1, num_threads + 1)]
+    for t in threads:
+        t.start()
+    loop(0)
+    for t in threads:
+        t.join()
+
+    assert all(success_variables)
+
+
 @skip_if_on_unix
 def test_locate_binary_on_windows(xession):
     files = ("file1.exe", "FILE2.BAT", "file3.txt")

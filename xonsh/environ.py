@@ -1761,7 +1761,7 @@ class Env(cabc.MutableMapping):
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os_environ is used."""
-        self._d = {}
+        self._d = InternalEnvironDict()
         # sentinel value for non existing envvars
         self._no_value = object()
         self._orig_env = None
@@ -1939,17 +1939,18 @@ class Env(cabc.MutableMapping):
         """Provides a context manager for temporarily swapping out certain
         environment variables with other values. On exit from the context
         manager, the original values are restored.
+        The changes are only applied to the current thread, so that they don't leak between threads.
         """
         old = {}
         # single positional argument should be a dict-like object
         if other is not None:
             for k, v in other.items():
                 old[k] = self.get(k, NotImplemented)
-                self[k] = v
+                self._set_item(k, v, thread_local=True)
         # kwargs could also have been sent in
         for k, v in kwargs.items():
             old[k] = self.get(k, NotImplemented)
-            self[k] = v
+            self._set_item(k, v, thread_local=True)
 
         exception = None
         try:
@@ -1960,9 +1961,9 @@ class Env(cabc.MutableMapping):
             # restore the values
             for k, v in old.items():
                 if v is NotImplemented:
-                    del self[k]
+                    self._del_item(k, thread_local=True)
                 else:
-                    self[k] = v
+                    self._set_item(k, v, thread_local=True)
             if exception is not None:
                 raise exception from None
 
@@ -1989,6 +1990,9 @@ class Env(cabc.MutableMapping):
         return val
 
     def __setitem__(self, key, val):
+        self._set_item(key, val)
+
+    def _set_item(self, key, val, thread_local=False):
         validator = self.get_validator(key)
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
@@ -1996,7 +2000,10 @@ class Env(cabc.MutableMapping):
             val = converter(val)
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
-        self._d[key] = val
+        if thread_local:
+            self._d.set_locally(key, val)
+        else:
+            self._d[key] = val
         self._detyped = None
         if self.get("UPDATE_OS_ENVIRON"):
             if self._orig_env is None:
@@ -2013,8 +2020,14 @@ class Env(cabc.MutableMapping):
             events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
 
     def __delitem__(self, key):
+        self._del_item(key)
+
+    def _del_item(self, key, thread_local=False):
         if key in self._d:
-            del self._d[key]
+            if thread_local:
+                self._d.del_locally(key)
+            else:
+                del self._d[key]
             self._detyped = None
             if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
                 del os_environ[key]
