@@ -4,6 +4,7 @@
 import sys
 import pytest
 from xonsh.platform import minimum_required_ptk_version
+import pyte
 
 # verify error if ptk not installed or below min
 
@@ -126,10 +127,24 @@ def test_remove_ansi_osc(raw_prompt, prompt, osc_tokens):
         assert removed == ref
 
 
-def test_ptk_prompt(ptk_shell):
+@pytest.mark.parametrize(
+    "line, exp",
+    [
+        [repr("hello"), None],
+        ["2 * 3", "6"],
+    ],
+)
+def test_ptk_prompt(line, exp, ptk_shell, capsys):
     inp, out, shell = ptk_shell
-    text = "hello"
-    inp.send_text(f"{text}\n")  # note: terminate with '\n'
-    result = shell.singleline()
-    # todo: check rendered output using https://pyte.readthedocs.io/
-    assert result == text
+    inp.send_text(f"{line}\nexit\n")  # note: terminate with '\n'
+    shell.cmdloop()
+    screen = pyte.Screen(80, 24)
+    stream = pyte.Stream(screen)
+
+    out, _ = capsys.readouterr()
+
+    # this will remove render any color codes
+    stream.feed(out.strip())
+    out = screen.display[0].strip()
+
+    assert out.strip() == (exp or line)

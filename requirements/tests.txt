@@ -13,6 +13,7 @@ pygments>=2.2
 coverage>=5.3.1
 black==21.7b0
 pre-commit
+pyte>=0.8.0
 
 # types related
 mypy==0.910
