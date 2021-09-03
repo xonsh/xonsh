@@ -306,6 +306,7 @@ def main():
             "Topic :: System :: Shells",
             "Topic :: System :: System Shells",
         ],
+        keywords="python shell cli command-line prompt xonsh",
         packages=[
             "xonsh",
             "xonsh.ply.ply",
