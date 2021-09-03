@@ -286,7 +286,7 @@ def main():
         platforms="Cross Platform",
         project_urls={
             "Changelog": "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst",
-            "Code": "https://github.com/xonsh/xonsh",
+            "Repository": "https://github.com/xonsh/xonsh",
             "Documentation": "https://xon.sh/contents.html",
             "Issue tracker": "https://github.com/xonsh/xonsh/issues",
         },
