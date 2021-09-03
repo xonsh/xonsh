@@ -7,12 +7,14 @@ import pprint
 import textwrap
 import locale
 import glob
+import threading
 import warnings
 import contextlib
 import collections.abc as cabc
 import subprocess
 import platform
 import typing as tp
+from collections import ChainMap
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import lazyobject, LazyBool
@@ -2152,6 +2154,73 @@ class Env(cabc.MutableMapping):
             Environment variable name to deregister. Typically all caps.
         """
         self._vars.pop(name)
+
+
+class InternalEnvironDict(ChainMap):
+    """A dictionary which supports thread-local overrides.
+    There are two reasons we can't use ChainMap directly:
+    1. To use thread-local storage, we need to access the local().__dict__ directly each time to get the correct dict.
+    2. We want to set items to the local storage only if they were explicitly set there.
+    """
+
+    def __init__(self):
+        self._global = {}
+        self._thread_local = threading.local()
+        super().__init__()
+
+    @property
+    def _local(self):
+        # As per local's documentation, accessing its `__dict__` works fine (but must be done inside the thread).
+        return self._thread_local.__dict__
+
+    @property  # type: ignore
+    def maps(self):
+        # The 'maps' array needs to contain the thread-local dictionary every time we use it.
+        # We prefer getting from the local scope if possible.
+        return [self._local, self._global]
+
+    @maps.setter
+    def maps(self, _v):
+        # This is here for ChainMap.__init__.
+        pass
+
+    def __setitem__(self, key, value):
+        # If the value is overridden locally, set it locally.
+        local = self._local
+        if key in local:
+            local[key] = value
+        else:
+            self._global[key] = value
+
+    def __delitem__(self, key):
+        # If the value is overridden locally, delete it locally.
+        try:
+            del self._local[key]
+        except KeyError:
+            del self._global[key]
+
+    def pop(self, key, *args):
+        # If the value is overridden locally, pop it locally.
+        try:
+            return self._local.pop(key)
+        except KeyError:
+            return self._global.pop(key, *args)
+
+    def popitem(self):
+        # Fallback to the global dictionary if nothing is overridden locally.
+        try:
+            return self._local.popitem()
+        except KeyError:
+            return self._global.popitem()
+
+    def set_locally(self, key, value):
+        self._local[key] = value
+
+    def del_locally(self, key):
+        try:
+            del self._local[key]
+        except KeyError:
+            pass
 
 
 def _yield_executables(directory, name):
