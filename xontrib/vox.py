@@ -1,8 +1,8 @@
 """Python virtual environment manager for xonsh."""
 
+import xonsh.cli_utils as xcli
 import xontrib.voxapi as voxapi
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 
 __all__ = ()
 
@@ -23,7 +23,7 @@ def py_interpreter_path_completer(xsh, **_):
             yield path
 
 
-class VoxHandler(ArgParserAlias):
+class VoxHandler(xcli.ArgParserAlias):
     """Vox is a virtual environment manager for xonsh."""
 
     def build(self):
@@ -77,20 +77,20 @@ class VoxHandler(ArgParserAlias):
 
     def new(
         self,
-        name: Annotated[str, Arg(metavar="ENV")],
-        interpreter: Annotated[
+        name: xcli.Annotated[str, xcli.Arg(metavar="ENV")],
+        interpreter: xcli.Annotated[
             str,
-            Arg("-p", "--interpreter", completer=py_interpreter_path_completer),
+            xcli.Arg("-p", "--interpreter", completer=py_interpreter_path_completer),
         ] = None,
-        system_site_packages: Annotated[
+        system_site_packages: xcli.Annotated[
             bool,
-            Arg("--system-site-packages", "--ssp", action="store_true"),
+            xcli.Arg("--system-site-packages", "--ssp", action="store_true"),
         ] = False,
         symlinks: bool = False,
         with_pip: bool = True,
-        activate: Annotated[
+        activate: xcli.Annotated[
             bool,
-            Arg("-a", "--activate", action="store_true"),
+            xcli.Arg("-a", "--activate", action="store_true"),
         ] = False,
     ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
@@ -131,8 +131,9 @@ class VoxHandler(ArgParserAlias):
 
     def activate(
         self,
-        name: Annotated[
-            str, Arg(metavar="ENV", nargs="?", completer=venv_names_completer)
+        name: xcli.Annotated[
+            str,
+            xcli.Arg(metavar="ENV", nargs="?", completer=venv_names_completer),
         ] = None,
     ):
         """Activate a virtual environment.
@@ -161,9 +162,9 @@ class VoxHandler(ArgParserAlias):
 
     def deactivate(
         self,
-        remove: Annotated[
+        remove: xcli.Annotated[
             bool,
-            Arg("--remove", action="store_true"),
+            xcli.Arg("--remove", action="store_true"),
         ] = False,
     ):
         """Deactivate the active virtual environment.
@@ -204,9 +205,9 @@ class VoxHandler(ArgParserAlias):
 
     def remove(
         self,
-        names: Annotated[
+        names: xcli.Annotated[
             list,
-            Arg(metavar="ENV", nargs="+", completer=venv_names_completer),
+            xcli.Arg(metavar="ENV", nargs="+", completer=venv_names_completer),
         ],
     ):
         """Remove virtual environments.
