@@ -4,6 +4,7 @@
 import sys
 import pytest
 from xonsh.platform import minimum_required_ptk_version
+import pyte
 
 # verify error if ptk not installed or below min
 
@@ -137,6 +138,13 @@ def test_ptk_prompt(line, exp, ptk_shell, capsys):
     inp, out, shell = ptk_shell
     inp.send_text(f"{line}\nexit\n")  # note: terminate with '\n'
     shell.cmdloop()
-    out, err = capsys.readouterr()
-    # todo: check rendered output using https://pyte.readthedocs.io/
+    screen = pyte.Screen(80, 24)
+    stream = pyte.Stream(screen)
+
+    out, _ = capsys.readouterr()
+
+    # this will remove render any color codes
+    stream.feed(out.strip())
+    out = screen.display[0].strip()
+
     assert out.strip() == (exp or line)
