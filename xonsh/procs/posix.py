@@ -118,6 +118,8 @@ class PopenThread(threading.Thread):
             self.stderr = io.BytesIO()
         self.suspended = False
         self.prevs_are_closed = False
+        # This is so the thread will use the same swapped values as the origin one.
+        self.original_swapped_values = XSH.env.get_swapped_values()
         self.start()
 
     def run(self):
@@ -125,6 +127,8 @@ class PopenThread(threading.Thread):
         and copying bytes from captured_stdout to stdout and bytes from
         captured_stderr to stderr.
         """
+        # Set the thread-local swapped values.
+        XSH.env.set_swapped_values(self.original_swapped_values)
         proc = self.proc
         spec = self._wait_and_getattr("spec")
         # get stdin and apply parallel reader if needed.
