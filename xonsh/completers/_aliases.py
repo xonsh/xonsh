@@ -1,7 +1,4 @@
-import argparse as ap
-
 import xonsh.cli_utils as xcli
-import xonsh.lazyasd as xl
 from xonsh.built_ins import XSH
 from xonsh.completers.completer import (
     list_completers,
@@ -102,33 +99,6 @@ def _register_completer(
         _add_one_completer(name, func, pos)
     else:
         return None, err + "\n", 1
-
-
-@xl.lazyobject
-def _parser() -> ap.ArgumentParser:
-    parser = xcli.make_parser(completer_alias)
-    commands = parser.add_subparsers(title="commands")
-
-    xcli.make_parser(
-        _register_completer,
-        commands,
-        params={
-            "name": {},
-            "func": {},
-            "pos": {"default": "start", "nargs": "?"},
-        },
-        prog="add",
-    )
-
-    xcli.make_parser(
-        remove_completer,
-        commands,
-        params={"name": {}},
-        prog="remove",
-    )
-
-    xcli.make_parser(list_completers, commands, prog="list")
-    return parser
 
 
 class CompleterAlias(xcli.ArgParserAlias):
