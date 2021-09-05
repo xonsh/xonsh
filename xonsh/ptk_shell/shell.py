@@ -22,7 +22,6 @@ from xonsh.ptk_shell.key_bindings import load_xonsh_bindings
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_shift_selection_bindings,
@@ -205,7 +204,7 @@ class PromptToolkitShell(BaseShell):
             ptk_args.setdefault("clipboard", PyperclipClipboard())
         self.prompter: PromptSession = PromptSession(**ptk_args)
 
-        self.prompt_formatter = PTKPromptFormatter(self.prompter)
+        self.prompt_formatter = PTKPromptFormatter(self)
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx, self)
         ptk_bindings = self.prompter.app.key_bindings
         self.key_bindings = load_xonsh_bindings(ptk_bindings)
@@ -225,6 +224,64 @@ class PromptToolkitShell(BaseShell):
         self.key_bindings = merge_key_bindings(
             [self.key_bindings, load_emacs_shift_selection_bindings()]
         )
+
+    def get_lazy_ptk_kwargs(self):
+        """These are non-essential attributes for the PTK shell to start.
+        Lazy loading these later would save some startup time.
+        """
+        if not XSH.env.get("COLOR_INPUT"):
+            return
+
+        if HAS_PYGMENTS:
+            # these imports slowdown a little
+            from prompt_toolkit.lexers import PygmentsLexer
+
+            yield "lexer", PygmentsLexer(pyghooks.XonshLexer)
+
+        events.on_timingprobe.fire(name="on_pre_prompt_style")
+        yield "style", self.get_prompt_style()
+        events.on_timingprobe.fire(name="on_post_prompt_style")
+
+    def get_prompt_style(self):
+        env = XSH.env
+
+        style_overrides_env = env.get("PTK_STYLE_OVERRIDES", {}).copy()
+        if (
+            len(style_overrides_env) > 0
+            and not self._overrides_deprecation_warning_shown
+        ):
+            print_warning(
+                "$PTK_STYLE_OVERRIDES is deprecated, use $XONSH_STYLE_OVERRIDES instead!"
+            )
+            self._overrides_deprecation_warning_shown = True
+        style_overrides_env.update(env.get("XONSH_STYLE_OVERRIDES", {}))
+
+        if HAS_PYGMENTS:
+            style = _style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
+            if len(self.styler.non_pygments_rules) > 0:
+                try:
+                    style = merge_styles(
+                        [
+                            style,
+                            _style_from_pygments_dict(self.styler.non_pygments_rules),
+                        ]
+                    )
+                except (AttributeError, TypeError, ValueError) as style_exception:
+                    print_warning(
+                        f"Error applying style override!\n{style_exception}\n"
+                    )
+
+        else:
+            style = _style_from_pygments_dict(DEFAULT_STYLE_DICT)
+
+        if len(style_overrides_env) > 0:
+            try:
+                style = merge_styles(
+                    [style, _style_from_pygments_dict(style_overrides_env)]
+                )
+            except (AttributeError, TypeError, ValueError) as style_exception:
+                print_warning(f"Error applying style override!\n{style_exception}\n")
+        return style
 
     def singleline(
         self, auto_suggest=None, enable_history_search=True, multiline=True, **kwargs
@@ -298,58 +355,12 @@ class PromptToolkitShell(BaseShell):
             "complete_in_thread": complete_in_thread,
         }
 
-        if env.get("COLOR_INPUT"):
-            events.on_timingprobe.fire(name="on_pre_prompt_style")
-            style_overrides_env = env.get("PTK_STYLE_OVERRIDES", {}).copy()
-            if (
-                len(style_overrides_env) > 0
-                and not self._overrides_deprecation_warning_shown
-            ):
-                print_warning(
-                    "$PTK_STYLE_OVERRIDES is deprecated, use $XONSH_STYLE_OVERRIDES instead!"
-                )
-                self._overrides_deprecation_warning_shown = True
-            style_overrides_env.update(env.get("XONSH_STYLE_OVERRIDES", {}))
-
-            if HAS_PYGMENTS:
-                prompt_args["lexer"] = PygmentsLexer(pyghooks.XonshLexer)
-                style = _style_from_pygments_cls(
-                    pyghooks.xonsh_style_proxy(self.styler)
-                )
-                if len(self.styler.non_pygments_rules) > 0:
-                    try:
-                        style = merge_styles(
-                            [
-                                style,
-                                _style_from_pygments_dict(
-                                    self.styler.non_pygments_rules
-                                ),
-                            ]
-                        )
-                    except (AttributeError, TypeError, ValueError) as style_exception:
-                        print_warning(
-                            f"Error applying style override!\n{style_exception}\n"
-                        )
-
-            else:
-                style = _style_from_pygments_dict(DEFAULT_STYLE_DICT)
-
-            if len(style_overrides_env) > 0:
-                try:
-                    style = merge_styles(
-                        [style, _style_from_pygments_dict(style_overrides_env)]
-                    )
-                except (AttributeError, TypeError, ValueError) as style_exception:
-                    print_warning(
-                        f"Error applying style override!\n{style_exception}\n"
-                    )
-
-            prompt_args["style"] = style
-            events.on_timingprobe.fire(name="on_post_prompt_style")
-
         if env["ENABLE_ASYNC_PROMPT"]:
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
+        else:
+            for attr, val in self.get_lazy_ptk_kwargs():
+                prompt_args[attr] = val
 
         events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)

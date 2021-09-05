@@ -3,7 +3,6 @@
 import functools
 import typing as tp
 
-from prompt_toolkit import PromptSession
 from xonsh.prompt.base import PromptFormatter, DEFAULT_PROMPT
 from xonsh.ptk_shell.updator import PromptUpdator, AsyncPrompt
 
@@ -11,9 +10,9 @@ from xonsh.ptk_shell.updator import PromptUpdator, AsyncPrompt
 class PTKPromptFormatter(PromptFormatter):
     """A subclass of PromptFormatter to support rendering prompt sections with/without threads."""
 
-    def __init__(self, session: PromptSession):
+    def __init__(self, shell):
         super().__init__()
-        self.session = session
+        self.shell = shell
 
     def __call__(
         self,
@@ -30,7 +29,7 @@ class PTKPromptFormatter(PromptFormatter):
             # init only for async prompts
             if not hasattr(self, "updator"):
                 # updates an async prompt.
-                self.updator = PromptUpdator(self.session)
+                self.updator = PromptUpdator(self.shell)
 
             # set these attributes per call. one can enable/disable async-prompt inside a session.
             kwargs["async_prompt"] = self.updator.add(prompt_name)
