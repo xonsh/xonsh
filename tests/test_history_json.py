@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Tests the json history backend."""
 # pylint: disable=protected-access
-import os
+
 import shlex
 
 import pytest
 
-from xonsh.lazyjson import LazyJSON
 from xonsh.history.json import (
     JsonHistory,
     _xhj_gc_commands_to_rmfiles,
@@ -14,18 +13,18 @@ from xonsh.history.json import (
     _xhj_gc_seconds_to_rmfiles,
     _xhj_gc_bytes_to_rmfiles,
 )
-
-from xonsh.history.main import history_main, _xh_parse_args
-
+from xonsh.history.main import history_main, HistoryAlias
+from xonsh.lazyjson import LazyJSON
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
 IGNORE_OPTS = ",".join(["ignoredups", "ignoreerr", "ignorespace"])
 
 
 @pytest.fixture
-def hist(tmpdir, xession):
+def hist(tmpdir, xession, monkeypatch):
     file = tmpdir / "xonsh-HISTORY-TEST.json"
     h = JsonHistory(filename=str(file), here="yup", sessionid="SESSIONID", gc=False)
+    monkeypatch.setattr(xession, "history", h)
     yield h
 
 
@@ -167,7 +166,6 @@ def test_cmd_field(hist, xession):
 def test_show_cmd_numerate(inp, commands, offset, hist, xession, capsys):
     """Verify that CLI history commands work."""
     base_idx, step = offset
-    xession.history = hist
     xession.env["HISTCONTROL"] = set()
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
@@ -181,6 +179,28 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xession, capsys):
     history_main(["show", "-n"] + shlex.split(inp))
     out, err = capsys.readouterr()
     assert out.rstrip() == exp
+
+
+def test_history_diff(tmpdir, xession, monkeypatch, capsys):
+    files = [tmpdir / f"xonsh-HISTORY-TEST-{idx}.json" for idx in range(2)]
+    for file in files:
+        hist = JsonHistory(
+            filename=str(file), here="yup", sessionid="SESSIONID", gc=False
+        )
+        monkeypatch.setattr(xession, "history", hist)
+        xession.env["HISTCONTROL"] = set()
+        for ts, cmd in enumerate(CMDS):  # populate the shell history
+            hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+        flush = hist.flush()
+        if flush.queue:
+            # make sure that flush is complete
+            time.sleep(0.1)
+
+    left, right = [str(f) for f in files]
+    history_main(["diff", left, right])
+    out, err = capsys.readouterr()
+    # make sure it is called
+    assert out.rstrip()
 
 
 def test_histcontrol(hist, xession):
@@ -275,40 +295,59 @@ def test_histcontrol(hist, xession):
 @pytest.mark.parametrize("args", ["-h", "--help", "show -h", "show --help"])
 def test_parse_args_help(args, capsys):
     with pytest.raises(SystemExit):
-        args = _xh_parse_args(shlex.split(args))
+        history_main(shlex.split(args))
     assert "show this help message and exit" in capsys.readouterr()[0]
 
 
 @pytest.mark.parametrize(
-    "args, exp",
+    "args, session, slice, numerate, reverse",
     [
-        ("", ("show", "session", [], False, False)),
-        ("1:5", ("show", "session", ["1:5"], False, False)),
-        ("show", ("show", "session", [], False, False)),
-        ("show 15", ("show", "session", ["15"], False, False)),
-        ("show bash 3:5 15:66", ("show", "bash", ["3:5", "15:66"], False, False)),
-        ("show -r", ("show", "session", [], False, True)),
-        ("show -rn bash", ("show", "bash", [], True, True)),
-        ("show -n -r -30:20", ("show", "session", ["-30:20"], True, True)),
-        ("show -n zsh 1:2:3", ("show", "zsh", ["1:2:3"], True, False)),
+        ("", "session", [], False, False),
+        ("1:5", "session", ["1:5"], False, False),
+        ("show", "session", [], False, False),
+        ("show 15", "session", ["15"], False, False),
+        ("show bash 3:5 15:66", "bash", ["3:5", "15:66"], False, False),
+        ("show -r", "session", [], False, True),
+        ("show -rn bash", "bash", [], True, True),
+        ("show -n -r -30:20", "session", ["-30:20"], True, True),
+        ("show -n zsh 1:2:3", "zsh", ["1:2:3"], True, False),
     ],
 )
-def test_parser_show(args, exp):
+def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xession):
     # use dict instead of argparse.Namespace for pretty pytest diff
     exp_ns = {
-        "action": exp[0],
-        "session": exp[1],
-        "slices": exp[2],
-        "numerate": exp[3],
-        "reverse": exp[4],
+        "session": session,
+        "slices": slice,
+        "numerate": numerate,
+        "reverse": reverse,
         "start_time": None,
         "end_time": None,
         "datetime_format": None,
         "timestamp": False,
         "null_byte": False,
     }
-    ns = _xh_parse_args(shlex.split(args))
-    assert ns.__dict__ == exp_ns
+
+    # clear parser instance, so that patched func can take place
+    from xonsh.history import main as mod
+
+    main = HistoryAlias()
+    spy = mocker.spy(mod.xcli, "_dispatch_func")
+
+    # action
+    main(shlex.split(args))
+
+    # assert
+    spy.assert_called_once()
+
+    # assemble
+    args, _ = spy.call_args
+    _, kwargs = args
+    called_with = {attr: kwargs[attr] for attr in exp_ns}
+    if kwargs["_unparsed"]:
+        called_with["slices"] = kwargs["_unparsed"]
+
+    # assert
+    assert called_with == exp_ns
 
 
 @pytest.mark.parametrize(
@@ -511,7 +550,6 @@ def test__xhj_gc_xx_to_rmfiles(fn, hsize, in_files, exp_size, exp_files, xession
 def test_hist_clear_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history clear command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
-    xession.history = hist
     xession.env["HISTCONTROL"] = set()
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
@@ -528,7 +566,6 @@ def test_hist_clear_cmd(hist, xession, capsys, tmpdir):
 def test_hist_off_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history off command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
-    xession.history = hist
     xession.env["HISTCONTROL"] = set()
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
@@ -550,7 +587,6 @@ def test_hist_off_cmd(hist, xession, capsys, tmpdir):
 def test_hist_on_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history on command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
-    xession.history = hist
     xession.env["HISTCONTROL"] = set()
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history

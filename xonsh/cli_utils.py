@@ -329,14 +329,8 @@ class ArgParser(ap.ArgumentParser):
         return parser
 
 
-def dispatch(parser: ap.ArgumentParser, args=None, **ns):
-    """call the sub-command selected by user"""
-
-    parsed = parser.parse_args(args)
-    ns["_parsed"] = parsed
-    ns.update(vars(parsed))
-
-    func = ns[_FUNC_NAME]
+def _dispatch_func(func: tp.Callable, ns: tp.Dict[str, tp.Any]):
+    """Final dispatch to the function based on signature."""
     sign = inspect.signature(func)
     kwargs = {}
     for name, param in sign.parameters.items():
@@ -348,6 +342,33 @@ def dispatch(parser: ap.ArgumentParser, args=None, **ns):
             default = param.default
         kwargs[name] = ns.get(name, default)
     return func(**kwargs)
+
+
+def dispatch(parser: ap.ArgumentParser, args=None, lenient=False, **ns):
+    """Call the underlying function with arguments parsed from sys.argv
+
+    Parameters
+    ----------
+    parser
+        root parser
+    args
+        sys.argv as parsed by Alias
+    lenient
+        if True, then use parser_know_args and pass the extra arguments as `_unparsed`
+    ns
+        a dict that will be passed to underlying function
+    """
+
+    if lenient:
+        parsed, unparsed = parser.parse_known_args(args)
+        ns["_unparsed"] = unparsed
+    else:
+        parsed = parser.parse_args(args)
+    ns["_parsed"] = parsed
+    ns.update(vars(parsed))
+
+    func = ns[_FUNC_NAME]
+    return _dispatch_func(func, ns)
 
 
 class ArgParserAlias:
@@ -393,7 +414,14 @@ class ArgParserAlias:
         return parser
 
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self,
+        args,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        **kwargs,
     ):
         return dispatch(
             self.parser,
@@ -405,6 +433,7 @@ class ArgParserAlias:
             _stderr=stderr,
             _spec=spec,
             _stack=stack,
+            **kwargs,
         )
 
 

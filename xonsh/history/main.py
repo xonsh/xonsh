@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """Main entry points of the xonsh history."""
-import argparse
 import datetime
-import functools
 import json
 import os
 import sys
 import threading
+import typing as tp
 
 from xonsh.built_ins import XSH
+import xonsh.cli_utils as xcli
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
 import xonsh.diff_history as xdh
-import xonsh.lazyasd as xla
 import xonsh.tools as xt
 
 HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": SqliteHistory}
@@ -173,283 +172,280 @@ def _xh_get_history(
     return cmds
 
 
-def _xh_show_history(hist, ns, stdout=None, stderr=None):
-    """Show the requested portion of shell history.
-    Accepts same parameters with `_xh_get_history`.
-    """
-    try:
-        commands = _xh_get_history(
-            ns.session,
-            slices=ns.slices,
-            start_time=ns.start_time,
-            end_time=ns.end_time,
-            datetime_format=ns.datetime_format,
-        )
-    except Exception as err:
-        print("history: error: {}".format(err), file=stderr)
-        return
-    if ns.reverse:
-        commands = reversed(list(commands))
-    end = "\0" if ns.null_byte else "\n"
-    if ns.numerate and ns.timestamp:
-        for c in commands:
-            dt = datetime.datetime.fromtimestamp(c["ts"])
-            print(
-                "{}:({}) {}".format(c["ind"], xt.format_datetime(dt), c["inp"]),
-                file=stdout,
-                end=end,
-            )
-    elif ns.numerate:
-        for c in commands:
-            print("{}: {}".format(c["ind"], c["inp"]), file=stdout, end=end)
-    elif ns.timestamp:
-        for c in commands:
-            dt = datetime.datetime.fromtimestamp(c["ts"])
-            print(
-                "({}) {}".format(xt.format_datetime(dt), c["inp"]), file=stdout, end=end
-            )
-    else:
-        for c in commands:
-            print(c["inp"], file=stdout, end=end)
-
-
-@xla.lazyobject
-def _XH_HISTORY_SESSIONS():
-    return {
-        "session": _xh_session_parser,
-        "xonsh": _xh_all_parser,
-        "all": _xh_all_parser,
-        "zsh": _xh_zsh_hist_parser,
-        "bash": _xh_bash_hist_parser,
-    }
-
-
-_XH_MAIN_ACTIONS = {
-    "show",
-    "id",
-    "file",
-    "info",
-    "diff",
-    "gc",
-    "flush",
-    "off",
-    "on",
-    "clear",
+_XH_HISTORY_SESSIONS = {
+    "session": _xh_session_parser,
+    "xonsh": _xh_all_parser,
+    "all": _xh_all_parser,
+    "zsh": _xh_zsh_hist_parser,
+    "bash": _xh_bash_hist_parser,
 }
 
 
-@functools.lru_cache()
-def _xh_create_parser():
-    """Create a parser for the "history" command."""
-    p = argparse.ArgumentParser(
-        prog="history", description="try 'history <command> --help' " "for more info"
-    )
-    subp = p.add_subparsers(title="commands", dest="action")
-    # session action
-    show = subp.add_parser(
-        "show", prefix_chars="-+", help="display history of a session, default command"
-    )
-    show.add_argument(
-        "-r",
-        dest="reverse",
-        default=False,
-        action="store_true",
-        help="reverses the direction",
-    )
-    show.add_argument(
-        "-n",
-        dest="numerate",
-        default=False,
-        action="store_true",
-        help="numerate each command",
-    )
-    show.add_argument(
-        "-t",
-        dest="timestamp",
-        default=False,
-        action="store_true",
-        help="show command timestamps",
-    )
-    show.add_argument(
-        "-T", dest="end_time", default=None, help="show only commands before timestamp"
-    )
-    show.add_argument(
-        "+T", dest="start_time", default=None, help="show only commands after timestamp"
-    )
-    show.add_argument(
-        "-f",
-        dest="datetime_format",
-        default=None,
-        help="the datetime format to be used for" "filtering and printing",
-    )
-    show.add_argument(
-        "-0",
-        dest="null_byte",
-        default=False,
-        action="store_true",
-        help="separate commands by the null character for piping "
-        "history to external filters",
-    )
-    show.add_argument(
-        "session",
-        nargs="?",
-        choices=_XH_HISTORY_SESSIONS.keys(),
-        default="session",
-        metavar="session",
-        help="{} (default: current session, all is an alias for xonsh)"
-        "".format(", ".join(map(repr, _XH_HISTORY_SESSIONS.keys()))),
-    )
-    show.add_argument(
-        "slices",
-        nargs="*",
-        default=None,
-        metavar="slice",
-        help="integer or slice notation",
-    )
-    # 'id' subcommand
-    subp.add_parser("id", help="display the current session id")
-    # 'file' subcommand
-    subp.add_parser("file", help="display the current history filename")
-    # 'info' subcommand
-    info = subp.add_parser(
-        "info", help=("display information about the " "current history")
-    )
-    info.add_argument(
-        "--json",
-        dest="json",
-        default=False,
-        action="store_true",
-        help="print in JSON format",
-    )
+class HistoryAlias(xcli.ArgParserAlias):
+    """Try 'history <command> --help' for more info"""
 
-    # gc
-    gcp = subp.add_parser("gc", help="launches a new history garbage collector")
-    gcp.add_argument(
-        "--size",
-        nargs=2,
-        dest="size",
-        default=None,
-        help=(
-            "next two arguments represent the history size and "
-            'units; e.g. "--size 8128 commands"'
-        ),
-    )
-    gcp.add_argument(
-        "--force",
-        dest="force_gc",
-        default=False,
-        action="store_true",
-        help="perform garbage collection even if history much bigger than configured limit",
-    )
-    bgcp = gcp.add_mutually_exclusive_group()
-    bgcp.add_argument(
-        "--blocking",
-        dest="blocking",
-        default=True,
-        action="store_true",
-        help=("ensures that the gc blocks the main thread, " "default True"),
-    )
-    bgcp.add_argument(
-        "--non-blocking",
-        dest="blocking",
-        action="store_false",
-        help="makes the gc non-blocking, and thus return sooner",
-    )
+    def show(
+        self,
+        session: xcli.Annotated[
+            str, xcli.Arg(nargs="?", choices=tuple(_XH_HISTORY_SESSIONS))
+        ] = "session",
+        slices: xcli.Annotated[tp.List[int], xcli.Arg(nargs="*")] = None,
+        datetime_format: xcli.Annotated[tp.Optional[str], xcli.Arg("-f")] = None,
+        start_time: xcli.Annotated[
+            tp.Optional[str], xcli.Arg("+T", "--start-time")
+        ] = None,
+        end_time: xcli.Annotated[tp.Optional[str], xcli.Arg("-T", "--end-time")] = None,
+        location: xcli.Annotated[tp.Optional[str], xcli.Arg("-l", "--location")] = None,
+        reverse: xcli.Annotated[
+            bool, xcli.Arg("-r", "--reverse", action="store_true")
+        ] = False,
+        numerate: xcli.Annotated[
+            bool, xcli.Arg("-n", "--numerate", action="store_true")
+        ] = False,
+        timestamp: xcli.Annotated[
+            bool, xcli.Arg("-t", "--ts", action="store_true")
+        ] = False,
+        null_byte: xcli.Annotated[
+            bool, xcli.Arg("-0", "--nb", "--null-byte", action="store_true")
+        ] = False,
+        _stdout=None,
+        _stderr=None,
+        _unparsed=None,
+    ):
+        """Display history of a session, default command
 
-    hist = XSH.history
-    if isinstance(hist, JsonHistory):
-        # add actions belong only to JsonHistory
-        diff = subp.add_parser("diff", help="diff two xonsh history files")
-        xdh.dh_create_parser(p=diff)
+        Parameters
+        ----------
+        session:
+            The history session to get. (all is an alias for xonsh)
+        slices:
+            integer or slice notation to get only portions of history.
+        datetime_format
+            the datetime format to be used for filtering and printing
+        start_time:
+            show only commands after timestamp
+        end_time:
+            show only commands before timestamp
+        location:
+            The history file location (bash or zsh)
+        reverse:
+            Reverses the direction
+        numerate:
+            Numerate each command
+        timestamp:
+            show command timestamps
+        null_byte:
+            separate commands by the null character for piping history to external filters
+        _unparsed
+            remaining args from ``parser.parse_known_args``
+        """
+        slices = list(slices or ())
+        if _unparsed:
+            slices.extend(_unparsed)
+        try:
+            commands = _xh_get_history(
+                session,
+                slices=slices,
+                start_time=start_time,
+                end_time=end_time,
+                datetime_format=datetime_format,
+                location=location,
+            )
+        except Exception as err:
+            self.parser.error(err)
+            return
 
-    # 'flush' subcommand
-    subp.add_parser("flush", help="flush the current history to disk")
-
-    # 'off' subcommand
-    subp.add_parser("off", help="history will not be saved for this session")
-
-    # 'on' subcommand
-    subp.add_parser(
-        "on", help="history will be saved for the rest of the session (default)"
-    )
-
-    # 'clear' subcommand
-    subp.add_parser("clear", help="one-time wipe of session history")
-
-    return p
-
-
-def _xh_parse_args(args):
-    """Prepare and parse arguments for the history command.
-
-    Add default action for ``history`` and
-    default session for ``history show``.
-    """
-    parser = _xh_create_parser()
-    if not args:
-        args = ["show", "session"]
-    elif args[0] not in _XH_MAIN_ACTIONS and args[0] not in ("-h", "--help"):
-        args = ["show", "session"] + args
-    if args[0] == "show":
-        if not any(a in _XH_HISTORY_SESSIONS for a in args):
-            args.insert(1, "session")
-        ns, slices = parser.parse_known_args(args)
-        if slices:
-            if not ns.slices:
-                ns.slices = slices
-            else:
-                ns.slices.extend(slices)
-    else:
-        ns = parser.parse_args(args)
-    return ns
-
-
-def history_main(
-    args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-):
-    """This is the history command entry point."""
-    hist = XSH.history
-    ns = _xh_parse_args(args)
-    if not ns or not ns.action:
-        return
-    if ns.action == "show":
-        _xh_show_history(hist, ns, stdout=stdout, stderr=stderr)
-    elif ns.action == "info":
-        data = hist.info()
-        if ns.json:
-            s = json.dumps(data)
-            print(s, file=stdout)
+        if reverse:
+            commands = reversed(list(commands))
+        end = "\0" if null_byte else "\n"
+        if numerate and timestamp:
+            for c in commands:
+                dt = datetime.datetime.fromtimestamp(c["ts"])
+                print(
+                    "{}:({}) {}".format(c["ind"], xt.format_datetime(dt), c["inp"]),
+                    file=_stdout,
+                    end=end,
+                )
+        elif numerate:
+            for c in commands:
+                print("{}: {}".format(c["ind"], c["inp"]), file=_stdout, end=end)
+        elif timestamp:
+            for c in commands:
+                dt = datetime.datetime.fromtimestamp(c["ts"])
+                print(
+                    "({}) {}".format(xt.format_datetime(dt), c["inp"]),
+                    file=_stdout,
+                    end=end,
+                )
         else:
-            lines = ["{0}: {1}".format(k, v) for k, v in data.items()]
-            print("\n".join(lines), file=stdout)
-    elif ns.action == "id":
+            for c in commands:
+                print(c["inp"], file=_stdout, end=end)
+
+    @staticmethod
+    def id_cmd(_stdout):
+        """Display the current session id"""
+        hist = XSH.history
         if not hist.sessionid:
             return
-        print(str(hist.sessionid), file=stdout)
-    elif ns.action == "file":
-        if not hist.filename:
-            return
-        print(str(hist.filename), file=stdout)
-    elif ns.action == "gc":
-        hist.run_gc(size=ns.size, blocking=ns.blocking, force=ns.force_gc)
-    elif ns.action == "diff":
-        if isinstance(hist, JsonHistory):
-            xdh.dh_main_action(ns)
-    elif ns.action == "flush":
+        print(str(hist.sessionid), file=_stdout)
+
+    @staticmethod
+    def flush(_stdout):
+        """Flush the current history to disk"""
+
+        hist = XSH.history
         hf = hist.flush()
         if isinstance(hf, threading.Thread):
             hf.join()
-    elif ns.action == "off":
+
+    @staticmethod
+    def off():
+        """History will not be saved for this session"""
+        hist = XSH.history
         if hist.remember_history:
             hist.clear()
             hist.remember_history = False
             print("History off", file=sys.stderr)
-    elif ns.action == "on":
+
+    @staticmethod
+    def on():
+        """History will be saved for the rest of the session (default)"""
+        hist = XSH.history
         if not hist.remember_history:
             hist.remember_history = True
             print("History on", file=sys.stderr)
-    elif ns.action == "clear":
+
+    @staticmethod
+    def clear():
+        """One-time wipe of session history"""
+        hist = XSH.history
         hist.clear()
         print("History cleared", file=sys.stderr)
-    else:
-        print("Unknown history action {}".format(ns.action), file=sys.stderr)
+
+    @staticmethod
+    def file(_stdout):
+        """Display the current history filename"""
+        hist = XSH.history
+        if not hist.filename:
+            return
+        print(str(hist.filename), file=_stdout)
+
+    @staticmethod
+    def info(
+        to_json: xcli.Annotated[bool, xcli.Arg("--json", action="store_true")] = False,
+        _stdout=None,
+    ):
+        """Display information about the current history
+
+        Parameters
+        ----------
+        to_json: -j, --json
+            print in JSON format
+        """
+        hist = XSH.history
+
+        data = hist.info()
+        if to_json:
+            s = json.dumps(data)
+            print(s, file=_stdout)
+        else:
+            lines = ["{0}: {1}".format(k, v) for k, v in data.items()]
+            print("\n".join(lines), file=_stdout)
+
+    @staticmethod
+    def gc(
+        size: xcli.Annotated[tp.Tuple[int, str], xcli.Arg("--size", nargs=2)] = None,
+        force: xcli.Annotated[bool, xcli.Arg("--force", action="store_true")] = False,
+        _blocking=True,
+    ):
+        """Launches a new history garbage collector
+
+        Parameters
+        ----------
+        size
+            Next two arguments represent the history size and units; e.g. "--size 8128 commands"
+        force
+            perform garbage collection even if history much bigger than configured limit
+        """
+        hist = XSH.history
+        hist.run_gc(size=size, blocking=_blocking, force=force)
+
+    @staticmethod
+    def diff(
+        a,
+        b,
+        reopen: xcli.Annotated[bool, xcli.Arg("--reopen", action="store_true")] = False,
+        verbose: xcli.Annotated[
+            bool, xcli.Arg("-v", "--verbose", action="store_true")
+        ] = False,
+        _stdout=None,
+    ):
+        """Diff two xonsh history files
+
+        Parameters
+        ----------
+        left:
+            The first file to diff
+        right:
+            The second file to diff
+        reopen:
+            make lazy file loading reopen files each time
+        verbose:
+            whether to print even more information
+        """
+
+        hist = XSH.history
+        if isinstance(hist, JsonHistory):
+            hd = xdh.HistoryDiffer(a, b, reopen=reopen, verbose=verbose)
+            xt.print_color(hd.format(), file=_stdout)
+
+    def build(self):
+        parser = self.create_parser(prog="history")
+        parser.add_command(self.show, prefix_chars="-+")
+        parser.add_command(self.id_cmd, prog="id")
+        parser.add_command(self.file)
+        parser.add_command(self.info)
+        parser.add_command(self.flush)
+        parser.add_command(self.off)
+        parser.add_command(self.on)
+        parser.add_command(self.clear)
+
+        gcp = parser.add_command(self.gc)
+        bgcp = gcp.add_mutually_exclusive_group()
+        bgcp.add_argument(
+            "--blocking",
+            dest="_blocking",
+            default=True,
+            action="store_true",
+            help="ensures that the gc blocks the main thread, default True",
+        )
+        bgcp.add_argument(
+            "--non-blocking",
+            dest="_blocking",
+            action="store_false",
+            help="makes the gc non-blocking, and thus return sooner",
+        )
+        if isinstance(XSH.history, JsonHistory):
+            # add actions belong only to JsonHistory
+            parser.add_command(self.diff)
+
+        return parser
+
+    def __call__(self, args, *rest, **kwargs):
+        if not args:
+            args = ["show", "session"]
+        else:
+            actions = self.parser.commands.choices
+            cmd = args[0]
+            if cmd not in actions and cmd not in {"-h", "--help"}:
+                args = ["show", "session"] + args
+
+        if args[0] == "show":
+            if not any(a in _XH_HISTORY_SESSIONS for a in args):
+                args.insert(1, "session")
+
+            kwargs.setdefault("lenient", True)
+        return super().__call__(args, *rest, **kwargs)
+
+
+history_main = HistoryAlias()
