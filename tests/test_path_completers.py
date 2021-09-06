@@ -71,3 +71,18 @@ def test_path_from_partial_string(prefix):
     else:
         expected = (f"{quote}{string}{quote}", string, f"{prefix}{quote}", quote)
     assert out == expected
+
+
+@pytest.mark.parametrize("num_args", (0, 1, 2, 3))
+def test_path_in_python_code(num_args, completion_context_parse):
+    with tempfile.NamedTemporaryFile(prefix="long_name") as tmp:
+        args = []
+        if num_args:
+            args = ["blah"] * 3 + [tmp.name[:-2]]
+            args = args[-num_args:]
+
+        inner_line = " ".join(map(repr, args))
+        exp = xcp.complete_path(completion_context_parse(inner_line, len(inner_line)))
+        line = "@(" + inner_line
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        assert out == exp
