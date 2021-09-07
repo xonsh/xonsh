@@ -285,7 +285,6 @@ class EnvPath(cabc.MutableSequence):
         elif replace:
             # https://stackoverflow.com/a/25251306/1621381
             self._l = list(filter(lambda x: x != data, self._l))
-            # self._l.remove(data)
             self._l.insert(0 if front else len(self._l), data)
 
 
