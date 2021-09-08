@@ -670,8 +670,7 @@ class _BuiltIns:
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that
         # relies on __xonsh__.env in default aliases
-        if aliases is None:
-            self.aliases = Aliases(make_default_aliases())
+        self.aliases = aliases or Aliases(make_default_aliases())
 
 
 class DynamicAccessProxy:
