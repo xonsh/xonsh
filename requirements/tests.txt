@@ -16,6 +16,7 @@ black==22.1.0
 isort >= 5.10
 pre-commit
 pyte>=0.8.0
+virtualenv>=20.7.2
 
 # types related
 mypy==0.941
