@@ -1,7 +1,7 @@
 **Added:**
 
-* new environment variable ``$XONSH_SUBPROC_TRACER``
-  to provide custom function to format ``$XONSH_TRACE_SUBPROC`` output
+* new environment variable ``$XONSH_TRACE_SUBPROC_FUNC``
+  to handle ``$XONSH_TRACE_SUBPROC`` output
 
 **Changed:**
 

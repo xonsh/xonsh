@@ -11,8 +11,7 @@ import itertools
 
 $RAISE_SUBPROC_ERROR = True
 # $XONSH_NO_AMALGAMATE = 1
-$XONSH_TRACE_SUBPROC = True
-
+# $XONSH_TRACE_SUBPROC = True
 
 
 def colored_tracer(cmds, **_):
@@ -64,7 +63,8 @@ def test(
 def qa():
     """QA checks"""
     $XONSH_NO_AMALGAMATE = True
-    $XONSH_SUBPROC_TRACER = colored_tracer
+    $XONSH_TRACE_SUBPROC_FUNC = colored_tracer
+    $XONSH_TRACE_SUBPROC = True
 
     black --check xonsh xontrib tests
 

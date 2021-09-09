@@ -875,7 +875,7 @@ def run_subproc(cmds, captured=False, envs=None):
     """
     trace_call = XSH.env.get("XONSH_TRACE_SUBPROC")
     if trace_call:
-        tracer = XSH.env.get("XONSH_SUBPROC_TRACER")
+        tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC")
         if callable(tracer):
             tracer(cmds, captured=captured)
         else:

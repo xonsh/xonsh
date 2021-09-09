@@ -1076,7 +1076,7 @@ class GeneralSetting(Xettings):
         False,
         "Set to ``True`` to show completers invoked and their return values.",
     )
-    XONSH_SUBPROC_TRACER = Var.with_default(
+    XONSH_TRACE_SUBPROC_FUNC = Var.with_default(
         None,
         doc=(
             "A callback function used to format the trace output shown when $XONSH_TRACE_SUBPROC=True."
