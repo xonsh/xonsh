@@ -928,9 +928,9 @@ def test_env_path_to_str(inp, exp):
     "left, right, exp",
     [
         (
-                EnvPath(["/home/wakka"]),
-                ["/home/jawaka"],
-                EnvPath(["/home/wakka", "/home/jawaka"]),
+            EnvPath(["/home/wakka"]),
+            ["/home/jawaka"],
+            EnvPath(["/home/wakka", "/home/jawaka"]),
         ),
         (["a"], EnvPath(["b"]), EnvPath(["a", "b"])),
         (EnvPath(["c"]), EnvPath(["d"]), EnvPath(["c", "d"])),
@@ -946,24 +946,27 @@ def test_env_path_add_replace_no_dupes_front_replace_existing():
     # Test replaces without dupes when added to front when adding existing entry
     path = EnvPath(["/home/wakka", "/home/wakka/bin"])
     path.add("/home/wakka/bin", front=True, replace=True)
-    exp = ["/home/wakka/bin", "/home/wakka"]
-    assert exp == path
+    assert path == ["/home/wakka/bin", "/home/wakka"]
 
 
 def test_env_path_add_replace_no_dupes_front_replace_multiple():
     # Test replaces without dupes when added to front when multiple existing occurrences
     path = EnvPath(["/home/wakka", "/home/wakka/bin", "/home/wakka/bin"])
     path.add("/home/wakka/bin", front=True, replace=True)
-    exp = ["/home/wakka/bin", "/home/wakka"]
-    assert exp == path
+    assert path == ["/home/wakka/bin", "/home/wakka"]
 
 
 def test_env_path_add_replace_no_dupes_back_replace_multiple():
     # Test replaces without dupes when not added to front
     path = EnvPath(["/home/wakka", "/home/wakka/bin", "/home/wakka/bin"])
     path.add("/home/wakka/bin", front=False, replace=True)
-    exp = ["/home/wakka", "/home/wakka/bin"]
-    assert exp == path
+    assert path == ["/home/wakka", "/home/wakka/bin"]
+
+
+def test_env_path_add_pathlib():
+    path = EnvPath(["/home/wakka", "/home/wakka/bin", "/home/wakka/bin"])
+    path.add(pathlib.Path("/home/wakka/bin"), front=False, replace=True)
+    assert path == ["/home/wakka", "/home/wakka/bin"]
 
 
 # helper
@@ -996,12 +999,12 @@ def test_env_path_getitem(inp, exp, xession, env):
     "inp, exp",
     [
         (
-                os.pathsep.join(["xonsh_dir", "../", ".", "~/"]),
-                ["xonsh_dir", "../", ".", "~/"],
+            os.pathsep.join(["xonsh_dir", "../", ".", "~/"]),
+            ["xonsh_dir", "../", ".", "~/"],
         ),
         (
-                "/home/wakka" + os.pathsep + "/home/jakka" + os.pathsep + "~/",
-                ["/home/wakka", "/home/jakka", "~/"],
+            "/home/wakka" + os.pathsep + "/home/jakka" + os.pathsep + "~/",
+            ["/home/wakka", "/home/jakka", "~/"],
         ),
     ],
 )
@@ -1023,8 +1026,8 @@ def test_env_path_multipath(inp, exp, xession, env):
         (pathlib.Path("~/"), ["~"]),
         (pathlib.Path("."), ["."]),
         (
-                ["/home/wakka", pathlib.Path("/home/jakka"), "~/"],
-                ["/home/wakka", "/home/jakka".replace("/", os.sep), "~/"],
+            ["/home/wakka", pathlib.Path("/home/jakka"), "~/"],
+            ["/home/wakka", "/home/jakka".replace("/", os.sep), "~/"],
         ),
         (["/home/wakka", pathlib.Path("../"), "../"], ["/home/wakka", "..", "../"]),
         (["/home/wakka", pathlib.Path("~/"), "~/"], ["/home/wakka", "~", "~/"]),
@@ -1052,8 +1055,8 @@ def mkpath(*paths):
     "inp, exp",
     [
         (
-                [mkpath("home", "wakka"), mkpath("home", "jakka"), mkpath("home", "yakka")],
-                [mkpath("home", "wakka"), mkpath("home", "jakka")],
+            [mkpath("home", "wakka"), mkpath("home", "jakka"), mkpath("home", "yakka")],
+            [mkpath("home", "wakka"), mkpath("home", "jakka")],
         )
     ],
 )
@@ -1066,8 +1069,8 @@ def test_env_path_slice_get_all_except_last_element(inp, exp):
     "inp, exp",
     [
         (
-                [mkpath("home", "wakka"), mkpath("home", "jakka"), mkpath("home", "yakka")],
-                [mkpath("home", "jakka"), mkpath("home", "yakka")],
+            [mkpath("home", "wakka"), mkpath("home", "jakka"), mkpath("home", "yakka")],
+            [mkpath("home", "jakka"), mkpath("home", "yakka")],
         )
     ],
 )
@@ -1080,14 +1083,14 @@ def test_env_path_slice_get_all_except_first_element(inp, exp):
     "inp, exp_a, exp_b",
     [
         (
-                [
-                    mkpath("home", "wakka"),
-                    mkpath("home", "jakka"),
-                    mkpath("home", "yakka"),
-                    mkpath("home", "takka"),
-                ],
-                [mkpath("home", "wakka"), mkpath("home", "yakka")],
-                [mkpath("home", "jakka"), mkpath("home", "takka")],
+            [
+                mkpath("home", "wakka"),
+                mkpath("home", "jakka"),
+                mkpath("home", "yakka"),
+                mkpath("home", "takka"),
+            ],
+            [mkpath("home", "wakka"), mkpath("home", "yakka")],
+            [mkpath("home", "jakka"), mkpath("home", "takka")],
         )
     ],
 )
@@ -1102,14 +1105,14 @@ def test_env_path_slice_path_with_step(inp, exp_a, exp_b):
     "inp, exp",
     [
         (
-                [
-                    mkpath("home", "wakka"),
-                    mkpath("home", "xakka"),
-                    mkpath("other", "zakka"),
-                    mkpath("another", "akka"),
-                    mkpath("home", "bakka"),
-                ],
-                [mkpath("other", "zakka"), mkpath("another", "akka")],
+            [
+                mkpath("home", "wakka"),
+                mkpath("home", "xakka"),
+                mkpath("other", "zakka"),
+                mkpath("another", "akka"),
+                mkpath("home", "bakka"),
+            ],
+            [mkpath("other", "zakka"), mkpath("another", "akka")],
         )
     ],
 )
@@ -1256,8 +1259,8 @@ def test_ensure_slice(inp, exp):
     [
         ((range(50), slice(25, 40)), list(i for i in range(25, 40))),
         (
-                ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [slice(1, 4), slice(6, None)]),
-                [2, 3, 4, 7, 8, 9, 10],
+            ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [slice(1, 4), slice(6, None)]),
+            [2, 3, 4, 7, 8, 9, 10],
         ),
         (([1, 2, 3, 4, 5], [slice(-2, None), slice(-5, -3)]), [4, 5, 1, 2]),
     ],
@@ -1453,25 +1456,25 @@ def test_escape_windows_cmd_string(st, esc):
         ("", '""', None),
         ("foo", "foo", '"foo"'),
         (
-                r'arg1 "hallo, "world""  "\some\path with\spaces")',
-                r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"',
-                None,
+            r'arg1 "hallo, "world""  "\some\path with\spaces")',
+            r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"',
+            None,
         ),
         (
-                r'"argument"2" argument3 argument4',
-                r'"\"argument\"2\" argument3 argument4"',
-                None,
+            r'"argument"2" argument3 argument4',
+            r'"\"argument\"2\" argument3 argument4"',
+            None,
         ),
         (r'"\foo\bar bar\foo\" arg', r'"\"\foo\bar bar\foo\\\" arg"', None),
         (
-                r"\\machine\dir\file.bat",
-                r"\\machine\dir\file.bat",
-                r'"\\machine\dir\file.bat"',
+            r"\\machine\dir\file.bat",
+            r"\\machine\dir\file.bat",
+            r'"\\machine\dir\file.bat"',
         ),
         (
-                r'"\\machine\dir space\file.bat"',
-                r'"\"\\machine\dir space\file.bat\""',
-                None,
+            r'"\\machine\dir space\file.bat"',
+            r'"\"\\machine\dir space\file.bat\""',
+            None,
         ),
     ],
 )
@@ -1625,15 +1628,15 @@ def test_expandvars(inp, exp, xession):
         (572392800.0, None, 572392800.0),
         ("42.1459", None, 42.1459),
         (
-                dt.datetime(2016, 8, 2, 13, 24),
-                None,
-                dt.datetime(2016, 8, 2, 13, 24).timestamp(),
+            dt.datetime(2016, 8, 2, 13, 24),
+            None,
+            dt.datetime(2016, 8, 2, 13, 24).timestamp(),
         ),
         ("2016-8-10 16:14", None, dt.datetime(2016, 8, 10, 16, 14).timestamp()),
         (
-                "2016/8/10 16:14:40",
-                "%Y/%m/%d %H:%M:%S",
-                dt.datetime(2016, 8, 10, 16, 14, 40).timestamp(),
+            "2016/8/10 16:14:40",
+            "%Y/%m/%d %H:%M:%S",
+            dt.datetime(2016, 8, 10, 16, 14, 40).timestamp(),
         ),
     ],
 )
@@ -1687,17 +1690,17 @@ def test_swap_values():
     "arguments, expected_docstring",
     [
         (
-                {"deprecated_in": "0.5.10", "removed_in": "0.6.0"},
-                "my_function has been deprecated in version 0.5.10 and will be removed "
-                "in version 0.6.0",
+            {"deprecated_in": "0.5.10", "removed_in": "0.6.0"},
+            "my_function has been deprecated in version 0.5.10 and will be removed "
+            "in version 0.6.0",
         ),
         (
-                {"deprecated_in": "0.5.10"},
-                "my_function has been deprecated in version 0.5.10",
+            {"deprecated_in": "0.5.10"},
+            "my_function has been deprecated in version 0.5.10",
         ),
         (
-                {"removed_in": "0.6.0"},
-                "my_function has been deprecated and will be removed in version 0.6.0",
+            {"removed_in": "0.6.0"},
+            "my_function has been deprecated and will be removed in version 0.6.0",
         ),
         ({}, "my_function has been deprecated"),
     ],
@@ -1714,18 +1717,18 @@ def test_deprecated_docstrings_with_empty_docstring(arguments, expected_docstrin
     "arguments, expected_docstring",
     [
         (
-                {"deprecated_in": "0.5.10", "removed_in": "0.6.0"},
-                "Does nothing.\n\nmy_function has been deprecated in version 0.5.10 and "
-                "will be removed in version 0.6.0",
+            {"deprecated_in": "0.5.10", "removed_in": "0.6.0"},
+            "Does nothing.\n\nmy_function has been deprecated in version 0.5.10 and "
+            "will be removed in version 0.6.0",
         ),
         (
-                {"deprecated_in": "0.5.10"},
-                "Does nothing.\n\nmy_function has been deprecated in version 0.5.10",
+            {"deprecated_in": "0.5.10"},
+            "Does nothing.\n\nmy_function has been deprecated in version 0.5.10",
         ),
         (
-                {"removed_in": "0.6.0"},
-                "Does nothing.\n\nmy_function has been deprecated and will be removed "
-                "in version 0.6.0",
+            {"removed_in": "0.6.0"},
+            "Does nothing.\n\nmy_function has been deprecated and will be removed "
+            "in version 0.6.0",
         ),
         ({}, "Does nothing.\n\nmy_function has been deprecated"),
     ],
@@ -1851,19 +1854,19 @@ def test_all_permutations():
     [
         ("test1", {}, {}),  # empty styles
         (
-                "test2",
-                {"Token.Literal.String.Single": "#ff0000"},
-                {"Token.Literal.String.Single": "#ff0000"},
+            "test2",
+            {"Token.Literal.String.Single": "#ff0000"},
+            {"Token.Literal.String.Single": "#ff0000"},
         ),  # str key
         (
-                "test3",
-                {"Literal.String.Single": "#ff0000"},
-                {"Token.Literal.String.Single": "#ff0000"},
+            "test3",
+            {"Literal.String.Single": "#ff0000"},
+            {"Token.Literal.String.Single": "#ff0000"},
         ),  # short str key
         (
-                "test4",
-                {"RED": "#ff0000"},
-                {"Token.Color.RED": "#ff0000"},
+            "test4",
+            {"RED": "#ff0000"},
+            {"Token.Color.RED": "#ff0000"},
         ),  # color
     ],
 )

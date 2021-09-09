@@ -280,6 +280,7 @@ class EnvPath(cabc.MutableSequence):
         None
 
         """
+        data = str(expand_path(data))
         if data not in self._l:
             self._l.insert(0 if front else len(self._l), data)
         elif replace:
