@@ -944,29 +944,66 @@ def test_env_path_add(left, right, exp):
 
 def test_env_path_add_replace_no_dupes_front_replace_existing():
     # Test replaces without dupes when added to front when adding existing entry
-    path = EnvPath(["/home/wakka", "/home/wakka/bin"])
-    path.add("/home/wakka/bin", front=True, replace=True)
-    assert path == ["/home/wakka/bin", "/home/wakka"]
+    path = EnvPath(
+        [os.pathsep.join(["home", "wakka"]), os.pathsep.join(["home", "wakka", "bin"])]
+    )
+    path.add(os.pathsep.join(["home", "wakka", "bin"]), front=True, replace=True)
+    assert path == [
+        os.pathsep.join(["home", "wakka", "bin"]),
+        os.pathsep.join(["home", "wakka"]),
+    ]
 
 
 def test_env_path_add_replace_no_dupes_front_replace_multiple():
     # Test replaces without dupes when added to front when multiple existing occurrences
-    path = EnvPath(["/home/wakka", "/home/wakka/bin", "/home/wakka/bin"])
-    path.add("/home/wakka/bin", front=True, replace=True)
-    assert path == ["/home/wakka/bin", "/home/wakka"]
+    path = EnvPath(
+        [
+            os.pathsep.join(["home", "wakka"]),
+            os.pathsep.join(["home", "wakka", "bin"]),
+            os.pathsep.join(["home", "wakka", "bin"]),
+        ]
+    )
+    path.add(os.pathsep.join(["home", "wakka", "bin"]), front=True, replace=True)
+    assert path == [
+        os.pathsep.join(["home", "wakka", "bin"]),
+        os.pathsep.join(["home", "wakka"]),
+    ]
 
 
 def test_env_path_add_replace_no_dupes_back_replace_multiple():
     # Test replaces without dupes when not added to front
-    path = EnvPath(["/home/wakka", "/home/wakka/bin", "/home/wakka/bin"])
-    path.add("/home/wakka/bin", front=False, replace=True)
-    assert path == ["/home/wakka", "/home/wakka/bin"]
+    path = EnvPath(
+        [
+            os.pathsep.join(["home", "wakka"]),
+            os.pathsep.join(["home", "wakka", "bin"]),
+            os.pathsep.join(["home", "wakka", "bin"]),
+        ]
+    )
+    path.add(os.pathsep.join(["home", "wakka", "bin"]), front=False, replace=True)
+    assert path == [
+        os.pathsep.join(["home", "wakka"]),
+        os.pathsep.join(["home", "wakka", "bin"]),
+    ]
 
 
 def test_env_path_add_pathlib():
-    path = EnvPath(["/home/wakka", "/home/wakka/bin", "/home/wakka/bin"])
-    path.add(pathlib.Path("/home/wakka/bin"), front=False, replace=True)
-    assert path == ["/home/wakka", "/home/wakka/bin"]
+    os.pathsep.join(["home", "wakka", "bin"])
+    path = EnvPath(
+        [
+            os.pathsep.join(["home", "wakka"]),
+            os.pathsep.join(["home", "wakka", "bin"]),
+            os.pathsep.join(["home", "wakka", "bin"]),
+        ]
+    )
+    path.add(
+        pathlib.Path(os.pathsep.join(["home", "wakka", "bin"])),
+        front=False,
+        replace=True,
+    )
+    assert path == [
+        os.pathsep.join(["home", "wakka"]),
+        os.pathsep.join(["home", "wakka", "bin"]),
+    ]
 
 
 # helper
