@@ -18,7 +18,7 @@ command:
 
 .. code-block:: console
 
-   $ xpip install --update xonsh
+   $ xpip install --upgrade xonsh
 
 ``xpip`` (note the "x" at the  beginning of ``xpip``) is a predefined alias pointing to the ``pip`` command associated with the Python executable running this xonsh.
 
