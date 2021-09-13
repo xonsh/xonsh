@@ -451,6 +451,8 @@ class ProcProxyThread(threading.Thread):
             self.old_int_handler = signal.signal(signal.SIGINT, self._signal_int)
         # start up the proc
         super().__init__()
+        # This is so the thread will use the same swapped values as the origin one.
+        self.original_swapped_values = XSH.env.get_swapped_values()
         self.start()
 
     def __del__(self):
@@ -463,6 +465,8 @@ class ProcProxyThread(threading.Thread):
         """
         if self.f is None:
             return
+        # Set the thread-local swapped values.
+        XSH.env.set_swapped_values(self.original_swapped_values)
         spec = self._wait_and_getattr("spec")
         last_in_pipeline = spec.last_in_pipeline
         if last_in_pipeline:

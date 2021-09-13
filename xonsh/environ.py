@@ -7,12 +7,14 @@ import pprint
 import textwrap
 import locale
 import glob
+import threading
 import warnings
 import contextlib
 import collections.abc as cabc
 import subprocess
 import platform
 import typing as tp
+from collections import ChainMap
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.lazyasd import lazyobject, LazyBool
@@ -1759,7 +1761,7 @@ class Env(cabc.MutableMapping):
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os_environ is used."""
-        self._d = {}
+        self._d = InternalEnvironDict()
         # sentinel value for non existing envvars
         self._no_value = object()
         self._orig_env = None
@@ -1937,17 +1939,19 @@ class Env(cabc.MutableMapping):
         """Provides a context manager for temporarily swapping out certain
         environment variables with other values. On exit from the context
         manager, the original values are restored.
+        The changes are only applied to the current thread, so that they don't leak between threads.
+        To get the thread-local overrides use `get_swapped_values` and `set_swapped_values`.
         """
         old = {}
         # single positional argument should be a dict-like object
         if other is not None:
             for k, v in other.items():
                 old[k] = self.get(k, NotImplemented)
-                self[k] = v
+                self._set_item(k, v, thread_local=True)
         # kwargs could also have been sent in
         for k, v in kwargs.items():
             old[k] = self.get(k, NotImplemented)
-            self[k] = v
+            self._set_item(k, v, thread_local=True)
 
         exception = None
         try:
@@ -1958,11 +1962,17 @@ class Env(cabc.MutableMapping):
             # restore the values
             for k, v in old.items():
                 if v is NotImplemented:
-                    del self[k]
+                    self._del_item(k, thread_local=True)
                 else:
-                    self[k] = v
+                    self._set_item(k, v, thread_local=True)
             if exception is not None:
                 raise exception from None
+
+    def get_swapped_values(self):
+        return self._d.get_local_overrides()
+
+    def set_swapped_values(self, swapped_values):
+        self._d.set_local_overrides(swapped_values)
 
     #
     # Mutable mapping interface
@@ -1987,6 +1997,9 @@ class Env(cabc.MutableMapping):
         return val
 
     def __setitem__(self, key, val):
+        self._set_item(key, val)
+
+    def _set_item(self, key, val, thread_local=False):
         validator = self.get_validator(key)
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
@@ -1994,7 +2007,10 @@ class Env(cabc.MutableMapping):
             val = converter(val)
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
-        self._d[key] = val
+        if thread_local:
+            self._d.set_locally(key, val)
+        else:
+            self._d[key] = val
         self._detyped = None
         if self.get("UPDATE_OS_ENVIRON"):
             if self._orig_env is None:
@@ -2011,8 +2027,14 @@ class Env(cabc.MutableMapping):
             events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
 
     def __delitem__(self, key):
+        self._del_item(key)
+
+    def _del_item(self, key, thread_local=False):
         if key in self._d:
-            del self._d[key]
+            if thread_local:
+                self._d.del_locally(key)
+            else:
+                del self._d[key]
             self._detyped = None
             if self.get("UPDATE_OS_ENVIRON") and key in os_environ:
                 del os_environ[key]
@@ -2152,6 +2174,81 @@ class Env(cabc.MutableMapping):
             Environment variable name to deregister. Typically all caps.
         """
         self._vars.pop(name)
+
+
+class InternalEnvironDict(ChainMap):
+    """A dictionary which supports thread-local overrides.
+    There are two reasons we can't use ChainMap directly:
+    1. To use thread-local storage, we need to access the local().__dict__ directly each time to get the correct dict.
+    2. We want to set items to the local storage only if they were explicitly set there.
+    """
+
+    def __init__(self):
+        self._global = {}
+        self._thread_local = threading.local()
+        super().__init__()
+
+    @property
+    def _local(self):
+        # As per local's documentation, accessing its `__dict__` works fine (but must be done inside the thread).
+        return self._thread_local.__dict__
+
+    @property  # type: ignore
+    def maps(self):
+        # The 'maps' array needs to contain the thread-local dictionary every time we use it.
+        # We prefer getting from the local scope if possible.
+        return [self._local, self._global]
+
+    @maps.setter
+    def maps(self, _v):
+        # This is here for ChainMap.__init__.
+        pass
+
+    def __setitem__(self, key, value):
+        # If the value is overridden locally, set it locally.
+        local = self._local
+        if key in local:
+            local[key] = value
+        else:
+            self._global[key] = value
+
+    def __delitem__(self, key):
+        # If the value is overridden locally, delete it locally.
+        try:
+            del self._local[key]
+        except KeyError:
+            del self._global[key]
+
+    def pop(self, key, *args):
+        # If the value is overridden locally, pop it locally.
+        try:
+            return self._local.pop(key)
+        except KeyError:
+            return self._global.pop(key, *args)
+
+    def popitem(self):
+        # Fallback to the global dictionary if nothing is overridden locally.
+        try:
+            return self._local.popitem()
+        except KeyError:
+            return self._global.popitem()
+
+    def set_locally(self, key, value):
+        self._local[key] = value
+
+    def del_locally(self, key):
+        try:
+            del self._local[key]
+        except KeyError:
+            pass
+
+    def get_local_overrides(self):
+        return self._local.copy()
+
+    def set_local_overrides(self, new_local):
+        local = self._local
+        local.clear()
+        local.update(new_local)
 
 
 def _yield_executables(directory, name):

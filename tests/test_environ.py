@@ -6,7 +6,10 @@ import re
 import pathlib
 import datetime
 import itertools
+from random import shuffle
 from tempfile import TemporaryDirectory
+from threading import Thread
+from time import sleep
 
 import pytest
 
@@ -20,6 +23,7 @@ from xonsh.environ import (
     LsColors,
     default_value,
     Var,
+    InternalEnvironDict,
 )
 
 from tools import skip_if_on_unix
@@ -148,6 +152,45 @@ def test_swap_exception_replacement():
     except Exception:
         assert env["VAR"] == "original value"
     assert env["VAR"] == "original value"
+
+
+def test_thread_local_swap():
+    env = Env(a="orig")
+    iter_count = 10
+    num_threads = 4
+    success_variables = [False] * (num_threads + 1)
+
+    def loop(index, swapped_values=None):
+        if swapped_values:
+            if env["a"] != "orig":
+                success_variables[index] = False
+                return
+            env.set_swapped_values(swapped_values)
+        for _ in range(iter_count):
+            if env["a"] != "swapped":
+                success_variables[index] = False
+                break
+            with env.swap(a=index):
+                sleep(0.1)
+                if env["a"] == index:
+                    success_variables[index] = True
+                else:
+                    success_variables[index] = False
+                    break
+            sleep(0.1)
+
+    with env.swap(a="swapped"):
+        threads = [
+            Thread(target=loop, args=(i, env.get_swapped_values()))
+            for i in range(1, num_threads + 1)
+        ]
+        for t in threads:
+            t.start()
+        loop(0)
+    for t in threads:
+        t.join()
+
+    assert all(success_variables)
 
 
 @skip_if_on_unix
@@ -547,3 +590,49 @@ def test_env_get_defaults():
 def test_var_with_default_initer(val, validator):
     var = Var.with_default(val)
     assert var.validate.__name__ == validator
+
+
+def test_thread_local_dict():
+    d = InternalEnvironDict()
+    d["a"] = 1
+    assert d["a"] == 1
+    d.set_locally("a", 2)
+    assert d["a"] == 2
+    d.set_locally("a", 3)
+    assert d["a"] == 3
+    d["a"] = 4
+    assert d["a"] == 4
+    d.del_locally("a")
+    assert d["a"] == 1
+    d.set_locally("a", 5)
+    assert d.pop("a") == 5
+    assert d["a"] == 1
+    d.set_locally("a", 6)
+    assert d.popitem() == ("a", 6)
+    assert d["a"] == 1
+    assert d.pop("a", "nope") == 1
+    assert d.pop("a", "nope") == "nope"
+    assert "a" not in d
+
+
+def test_thread_local_dict_multiple():
+    d = InternalEnvironDict()
+    num_threads = 5
+    thread_values = [None] * num_threads
+
+    def thread(i):
+        d.set_locally("a", i ** 2)
+        sleep(0.1)
+        thread_values[i] = d["a"]
+        sleep(0.1)
+        d.del_locally("a")
+        sleep(0.1)
+
+    threads = [Thread(target=thread, args=(i,)) for i in range(num_threads)]
+    shuffle(threads)
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert thread_values == [i ** 2 for i in range(num_threads)]

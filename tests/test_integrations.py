@@ -518,6 +518,21 @@ first
         lambda out: 'Recursive calls to "first" alias.' in out,
         0,
     ),
+    # testing alias stack: parallel threaded callable aliases.
+    # This breaks if the __ALIAS_STACK variables leak between threads.
+    (
+        """
+from time import sleep
+aliases['a'] = lambda: print(1, end="") or sleep(0.2) or print(1, end="")
+aliases['b'] = 'a'
+a | a
+a | a
+a | b | a
+a | a | b | b
+""",
+        "1" * 2 * 4,
+        0,
+    ),
 ]
 
 if not ON_WINDOWS:

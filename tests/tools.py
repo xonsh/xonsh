@@ -151,6 +151,14 @@ class DummyEnv(MutableMapping):
             else:
                 self[k] = v
 
+    @staticmethod
+    def get_swapped_values():
+        return {}
+
+    @staticmethod
+    def set_swapped_values(_):
+        pass
+
     def is_manually_set(self, key):
         return False
 
