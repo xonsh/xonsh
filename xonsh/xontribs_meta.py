@@ -675,7 +675,7 @@ def define_xontribs():
         ),
         "z": Xontrib(
             url="https://github.com/AstraLuma/xontrib-z",
-            description="Tracks your most used directories, based on 'frequency'.",
+            description="Tracks your most used directories, based on 'frecency'.",
             package=_XontribPkg(
                 name="xontrib-z",
                 license="GPLv3",
