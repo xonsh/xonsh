@@ -141,7 +141,7 @@ def define_xontribs():
             ),
         ),
         "avox_poetry": Xontrib(
-            url="github.com/jnoortheen/xontrib-avox-poetry",
+            url="https://github.com/jnoortheen/xontrib-avox-poetry",
             description="auto-activate venv as one cd into a poetry project folder. "
             "Activate ``.venv`` inside the project folder is also supported.",
             package=_XontribPkg(
@@ -193,7 +193,7 @@ def define_xontribs():
             package=core_pkg,
         ),
         "broot": Xontrib(
-            url="github.com/jnoortheen/xontrib-broot",
+            url="https://github.com/jnoortheen/xontrib-broot",
             description="supports broot with br alias",
             package=_XontribPkg(
                 name="xontrib-broot",
@@ -203,7 +203,7 @@ def define_xontribs():
             ),
         ),
         "powerline3": Xontrib(
-            url="github.com/jnoortheen/xontrib-powerline3",
+            url="https://github.com/jnoortheen/xontrib-powerline3",
             description="Powerline theme with native $PROMPT_FIELDS support.",
             package=_XontribPkg(
                 name="xontrib-powerline3",
