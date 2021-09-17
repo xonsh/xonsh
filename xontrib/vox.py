@@ -153,12 +153,11 @@ class VoxHandler(xcli.ArgParserAlias):
             self.vox.activate(name)
         except KeyError:
             self.parser.error(
-                'This environment doesn\'t exist. Create it with "vox new %s".\n'
-                % name,
+                f'This environment doesn\'t exist. Create it with "vox new {name}".\n',
             )
             return None
         else:
-            print('Activated "%s".\n' % name)
+            print(f'Activated "{name}".\n')
 
     def deactivate(
         self,
@@ -227,9 +226,9 @@ class VoxHandler(xcli.ArgParserAlias):
                     'In order to remove it, deactivate it first with "vox deactivate".\n',
                 )
             except KeyError:
-                self.parser.error('"%s" environment doesn\'t exist.\n' % name)
+                self.parser.error(f'"{name}" environment doesn\'t exist.\n')
             else:
-                print('Environment "%s" removed.' % name)
+                print(f'Environment "{name}" removed.')
         print()
 
 
