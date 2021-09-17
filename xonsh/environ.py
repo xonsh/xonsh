@@ -1078,6 +1078,19 @@ class GeneralSetting(Xettings):
         False,
         "Set to ``True`` to show completers invoked and their return values.",
     )
+    XONSH_TRACE_SUBPROC_FUNC = Var.with_default(
+        None,
+        doc=(
+            "A callback function used to format the trace output shown when $XONSH_TRACE_SUBPROC=True."
+        ),
+        doc_default="""\
+By default it just prints ``cmds`` like below.
+
+.. code-block:: python
+def tracer(cmds: list, captured: Union[bool, str]):
+    print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
+""",
+    )
     XONSH_TRACEBACK_LOGFILE = Var(
         is_logfile_opt,
         to_logfile_opt,

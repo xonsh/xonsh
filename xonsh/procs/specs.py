@@ -885,8 +885,12 @@ def run_subproc(cmds, captured=False, envs=None):
 
     Lastly, the captured argument affects only the last real command.
     """
-    if XSH.env.get("XONSH_TRACE_SUBPROC"):
-        print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
+    if XSH.env.get("XONSH_TRACE_SUBPROC", False):
+        tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC")
+        if callable(tracer):
+            tracer(cmds, captured=captured)
+        else:
+            print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
     captured = specs[-1].captured

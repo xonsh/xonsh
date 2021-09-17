@@ -1,13 +1,22 @@
 #!/usr/bin/env xonsh
+import sys
 import subprocess
 from typing import List
 
 import xonsh.cli_utils as xcli
 
+from xonsh.tools import print_color
+import itertools
+
 
 $RAISE_SUBPROC_ERROR = True
 # $XONSH_NO_AMALGAMATE = 1
 # $XONSH_TRACE_SUBPROC = True
+
+
+def colored_tracer(cmds, **_):
+    cmd = " ".join(itertools.chain.from_iterable(cmds))
+    print_color(f"{{GREEN}}$ {{BLUE}}{cmd}{{RESET}}", file=sys.stderr)
 
 
 def _replace_args(args: List[str], num: int) -> List[str]:
@@ -54,19 +63,17 @@ def test(
 def qa():
     """QA checks"""
     $XONSH_NO_AMALGAMATE = True
+    $XONSH_TRACE_SUBPROC_FUNC = colored_tracer
+    $XONSH_TRACE_SUBPROC = True
 
-    echo "---------- Check Black formatter -----------"
     black --check xonsh xontrib tests
 
-    echo "---------- Running flake8 ----------"
     python -m flake8
 
-    echo "---------- Running mypy ----------"
     mypy --version
     # todo: add xontrib folder here
     mypy xonsh --exclude xonsh/ply
 
-    echo "---------- Running news items check ----------"
     pytest -m news
 
 
