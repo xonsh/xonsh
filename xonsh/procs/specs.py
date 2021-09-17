@@ -873,8 +873,7 @@ def run_subproc(cmds, captured=False, envs=None):
 
     Lastly, the captured argument affects only the last real command.
     """
-    trace_call = XSH.env.get("XONSH_TRACE_SUBPROC")
-    if trace_call:
+    if XSH.env.get("XONSH_TRACE_SUBPROC", False):
         tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC")
         if callable(tracer):
             tracer(cmds, captured=captured)
