@@ -139,3 +139,19 @@ def complete_argparser_aliases(command: CommandContext):
     for comp in possible:
         if fltr(comp, command.prefix):
             yield comp
+
+
+@contextual_command_completer
+def complete_xonsh_command(command: CommandContext):
+    """Completer for ``xonsh`` command using its ``argparser``"""
+
+    if (not command.args) or (command.args[0].value != "xonsh"):
+        return
+
+    from xonsh.main import parser
+
+    possible = complete_argparser(parser, command=command)
+    fltr = get_filter_function()
+    for comp in possible:
+        if fltr(comp, command.prefix):
+            yield comp

@@ -24,6 +24,37 @@ def test_xonfig(args, prefix, exp, xsh_with_aliases, monkeypatch, check_complete
 
 
 @pytest.mark.parametrize(
+    "args, prefix, exp",
+    [
+        (
+            "xonsh",
+            "-",
+            {
+                "--cache-everything",
+                "--help",
+                "--interactive",
+                "--login",
+                "--no-rc",
+                "--no-script-cache",
+                "--rc",
+                "--shell-type",
+                "--timings",
+                "--version",
+                "-D",
+                "-V",
+                "-c",
+                "-h",
+                "-i",
+                "-l",
+            },
+        ),
+    ],
+)
+def test_xonsh(args, prefix, exp, xession, check_completer):
+    assert check_completer(args, prefix=prefix) == exp
+
+
+@pytest.mark.parametrize(
     "args, prefix, exp, exp_part",
     [
         (

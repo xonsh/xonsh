@@ -16,7 +16,7 @@ from xonsh.completers.commands import (
     complete_end_proc_tokens,
     complete_end_proc_keywords,
 )
-from xonsh.completers._aliases import complete_argparser_aliases
+from xonsh.completers._aliases import complete_argparser_aliases, complete_xonsh_command
 from xonsh.completers.environment import complete_environment_vars
 
 
@@ -32,6 +32,7 @@ def default_completers():
             ("base", complete_base),
             ("skip", complete_skipper),
             ("argparser_aliases", complete_argparser_aliases),
+            ("xonsh", complete_xonsh_command),
             ("pip", complete_pip),
             ("cd", complete_cd),
             ("rmdir", complete_rmdir),
