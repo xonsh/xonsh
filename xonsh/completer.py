@@ -144,7 +144,7 @@ class Completer(object):
                 print_exception(
                     f"Completer {func.__name__} raises exception when gets "
                     f"old_args={old_completer_args[:-1]} / completion_context={completion_context!r}:\n"
-                    f"{e}"
+                    f"{type(e)} - {e}"
                 )
                 continue
 
