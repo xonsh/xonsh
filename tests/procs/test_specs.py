@@ -10,7 +10,7 @@ from xonsh.built_ins import XSH
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread, STDOUT_DISPATCHER
 
-from .tools import skip_if_on_windows
+from tests.tools import skip_if_on_windows
 
 
 @skip_if_on_windows
