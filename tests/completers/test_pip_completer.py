@@ -3,6 +3,7 @@ import os
 import pytest
 
 from xonsh.completers.pip import PIP_RE
+from tests.tools import ON_WINDOWS
 
 
 @pytest.mark.parametrize(
@@ -38,6 +39,8 @@ def test_pip_list_re1(line):
     ],
 )
 def test_completions(line, prefix, exp, check_completer, xession, tmp_path):
+    if ON_WINDOWS:
+        line = line.replace("pip", "pip.exe")
     xession.env["XONSH_DATA_DIR"] = tmp_path
     xession.env["PATH"] = os.environ["PATH"]
     comps = check_completer(line, prefix=prefix)
