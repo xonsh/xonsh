@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from xonsh.completers.pip import PIP_RE
@@ -28,14 +30,16 @@ def test_pip_list_re1(line):
     assert PIP_RE.search(line) is None
 
 
-def test_commands(check_completer):
-    comps = check_completer("pip", prefix="c")
+@pytest.mark.parametrize(
+    "line, prefix, exp",
+    [
+        ["pip", "c", {"cache", "check", "config"}],
+        ["pip show", "", {"setuptools", "wheel", "pip"}],
+    ],
+)
+def test_completions(line, prefix, exp, check_completer, xession, tmp_path):
+    xession.env["XONSH_DATA_DIR"] = tmp_path
+    xession.env["PATH"] = os.environ["PATH"]
+    comps = check_completer(line, prefix=prefix)
 
-    assert comps.intersection({"cache", "check", "config"})
-
-
-def test_package_list(check_completer):
-    comps = check_completer("pip show")
-    assert "Package" not in comps
-    assert "-----------------------------" not in comps
-    assert "setuptools" in comps
+    assert comps.intersection(exp)
