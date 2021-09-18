@@ -34,31 +34,14 @@ def test_pip_list_re1(line):
     assert PIP_RE.search(line) is None
 
 
-def test_commands():
-    comps = complete_pip(
-        CompletionContext(
-            CommandContext(
-                args=(CommandArg("pip3"),),
-                arg_index=1,
-                prefix="c",
-            )
-        )
-    )
+def test_commands(check_completer):
+    comps = check_completer("pip3", prefix="c")
+
     assert comps.intersection({"cache", "check", "config"})
-    for comp in comps:
-        assert isinstance(comp, RichCompletion)
-        assert comp.append_space
 
 
-def test_package_list():
-    comps = complete_pip(
-        CompletionContext(
-            CommandContext(
-                args=(CommandArg("pip3"), CommandArg("show")),
-                arg_index=2,
-            )
-        )
-    )
+def test_package_list(check_completer):
+    comps = check_completer("pip3 show")
     assert "Package" not in comps
     assert "-----------------------------" not in comps
     assert "pytest" in comps
