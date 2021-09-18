@@ -29,13 +29,13 @@ def test_pip_list_re1(line):
 
 
 def test_commands(check_completer):
-    comps = check_completer("pip3", prefix="c")
+    comps = check_completer("pip", prefix="c")
 
     assert comps.intersection({"cache", "check", "config"})
 
 
 def test_package_list(check_completer):
-    comps = check_completer("pip3 show")
+    comps = check_completer("pip show")
     assert "Package" not in comps
     assert "-----------------------------" not in comps
-    assert "pytest" in comps
+    assert "setuptools" in comps
