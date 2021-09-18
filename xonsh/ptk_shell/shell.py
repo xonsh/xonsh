@@ -346,7 +346,7 @@ class PromptToolkitShell(BaseShell):
             "editing_mode": editing_mode,
             "prompt_continuation": self.continuation_tokens,
             "enable_history_search": enable_history_search,
-            "reserve_space_for_menu": 0,
+            "reserve_space_for_menu": env.get("COMPLETIONS_MENU_ROWS", None),
             "key_bindings": self.key_bindings,
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
