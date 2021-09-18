@@ -1,10 +1,17 @@
 import pytest
 
+from xonsh.completers._aliases import complete_argparser_aliases
+
 
 @pytest.fixture
 def mock_completer(monkeypatch, xsh_with_aliases):
+    def dummy_completer(*_):
+        return
+
     xsh = xsh_with_aliases
-    monkeypatch.setattr(xsh, "completers", {"one": 1, "two": 2})
+    monkeypatch.setattr(
+        xsh, "completers", {"one": dummy_completer, "two": complete_argparser_aliases}
+    )
     monkeypatch.setattr(xsh, "ctx", {"three": lambda: 1, "four": lambda: 2})
     return xsh
 

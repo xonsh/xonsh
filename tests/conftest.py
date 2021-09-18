@@ -10,17 +10,11 @@ import pytest
 from xonsh.aliases import Aliases
 from xonsh.built_ins import XonshSession, XSH
 from xonsh.completer import Completer
-from xonsh.completers._aliases import complete_argparser_aliases
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
-from xonsh.parsers.completion_context import (
-    CommandArg,
-    CommandContext,
-    CompletionContext,
-)
 
 from xonsh import commands_cache
 from tools import DummyShell, sp, DummyEnv, DummyHistory
@@ -160,7 +154,7 @@ def completion_context_parse():
 
 
 @pytest.fixture
-def check_completer(xession, completion_context_parse):
+def check_completer(xession):
     """Helper function to run completer and parse the results as set of strings"""
 
     comp = Completer()
