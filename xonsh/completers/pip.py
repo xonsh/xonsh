@@ -1,5 +1,4 @@
 """Completers for pip."""
-import os
 import re
 import shlex
 import subprocess
