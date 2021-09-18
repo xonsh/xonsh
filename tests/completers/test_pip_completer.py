@@ -1,12 +1,6 @@
 import pytest
 
-from xonsh.completers.tools import RichCompletion
-from xonsh.completers.pip import PIP_RE, complete_pip
-from xonsh.parsers.completion_context import (
-    CompletionContext,
-    CommandContext,
-    CommandArg,
-)
+from xonsh.completers.pip import PIP_RE
 
 
 @pytest.mark.parametrize(
