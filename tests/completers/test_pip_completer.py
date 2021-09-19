@@ -7,7 +7,16 @@ from tests.tools import ON_WINDOWS
 
 
 @pytest.mark.parametrize(
-    "line", ["pip", "xpip", "/usr/bin/pip3", r"C:\Python\Scripts\pip"]
+    "line",
+    [
+        "pip",
+        "pip.exe",
+        "pip3.6.exe",
+        "xpip",
+        "/usr/bin/pip3",
+        r"C:\Python\Scripts\pip",
+        r"C:\Python\Scripts\pip.exe",
+    ],
 )
 def test_pip_re(line):
     assert PIP_RE.search(line)
@@ -38,11 +47,13 @@ def test_pip_list_re1(line):
         ["pip show", "", {"setuptools", "wheel", "pip"}],
     ],
 )
-def test_completions(line, prefix, exp, check_completer, xession, tmp_path):
+def test_completions(
+    line, prefix, exp, check_completer, xession, monkeypatch, session_vars
+):
     if ON_WINDOWS:
         line = line.replace("pip", "pip.exe")
-    xession.env["XONSH_DATA_DIR"] = tmp_path
-    xession.env["PATH"] = os.environ["PATH"]
+    # needs original env for subproc all on all platforms
+    monkeypatch.setattr(xession, "env", session_vars["env"])
     comps = check_completer(line, prefix=prefix)
 
     assert comps.intersection(exp)
