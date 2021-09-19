@@ -5,7 +5,6 @@ from xonsh.completers.completer import (
     remove_completer,
     add_one_completer,
 )
-from xonsh.completers.argparser import complete_argparser
 from xonsh.completers.tools import (
     contextual_command_completer,
     get_filter_function,
@@ -116,17 +115,23 @@ completer_alias = CompleterAlias()
 
 
 @contextual_command_completer
-def complete_argparser_aliases(command: CommandContext):
-    """Completer for any alias command that has ``argparser`` in ``parser`` attribute"""
+def complete_aliases(command: CommandContext):
+    """Complete any alias that has ``xonsh_complete`` attribute.
+
+    The said attribute should be a function. The current command context is passed to it.
+    """
 
     if not command.args:
         return
     cmd = command.args[0].value
 
+    if cmd not in XSH.aliases:
+        # only complete aliases
+        return
     alias = XSH.aliases.get(cmd)  # type: ignore
-    # todo: checking isinstance(alias, ArgParserAlias) fails when amalgamated.
-    #  see https://github.com/xonsh/xonsh/pull/4267#discussion_r676066853
-    if not hasattr(alias, "parser"):
+
+    completer = getattr(alias, "xonsh_complete", None)
+    if not completer:
         return
 
     if command.suffix:
@@ -134,7 +139,7 @@ def complete_argparser_aliases(command: CommandContext):
         # (e.g. "completer some<TAB>thing")
         return
 
-    possible = complete_argparser(alias.parser, command=command, alias=alias)
+    possible = completer(command=command, alias=alias)
     fltr = get_filter_function()
     for comp in possible:
         if fltr(comp, command.prefix):
