@@ -5,7 +5,6 @@ from xonsh.completers.base import complete_base
 from xonsh.parsers.completion_context import (
     CompletionContext,
     CommandContext,
-    CommandArg,
     PythonContext,
 )
 

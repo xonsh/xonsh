@@ -1608,7 +1608,7 @@ def test_yield_x_y():
 
 
 @skip_if_pre_3_8
-def test_return_x_starexpr():
+def test_yield_x_starexpr():
     check_stmts("yield x, *[y, z]", False)
 
 

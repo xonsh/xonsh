@@ -85,9 +85,9 @@ def shares_setup(tmpdir_factory):
     # (left over from assert fail aborted test)
     os.chdir(HERE)
     for dl in _unc_tempDrives:
-        rtn = subprocess.call(["net", "use", dl, "/delete"], universal_newlines=True)
-    for s, d, l in shares:
-        rtn = subprocess.call(["net", "use", d, "/delete"], universal_newlines=True)
+        subprocess.call(["net", "use", dl, "/delete"], universal_newlines=True)
+    for _, d, _ in shares:
+        subprocess.call(["net", "use", d, "/delete"], universal_newlines=True)
         # subprocess.call(['net', 'share', s, '/delete'], universal_newlines=True) # fails with access denied,
         # unless I wait > 10 sec. see http://stackoverflow.com/questions/38448413/access-denied-in-net-share-delete
 

@@ -63,10 +63,14 @@ def assert_tokens_equal(x, y):
     return True
 
 
+def lex_input(inp: str):
+    lex = Lexer()
+    lex.input(inp)
+    return list(lex)
+
+
 def check_token(inp, exp):
-    l = Lexer()
-    l.input(inp)
-    obs = list(l)
+    obs = lex_input(inp)
     if len(obs) != 1:
         msg = "The observed sequence does not have length-1: {0!r} != 1\n"
         msg += "# obs\n{1}"
@@ -75,16 +79,12 @@ def check_token(inp, exp):
 
 
 def check_tokens(inp, exp):
-    l = Lexer()
-    l.input(inp)
-    obs = list(l)
+    obs = lex_input(inp)
     return assert_tokens_equal(exp, obs)
 
 
 def check_tokens_subproc(inp, exp, stop=-1):
-    l = Lexer()
-    l.input("$[{}]".format(inp))
-    obs = list(l)[1:stop]
+    obs = lex_input("$[{}]".format(inp))[1:stop]
     return assert_tokens_equal(exp, obs)
 
 
@@ -428,9 +428,7 @@ def test_ioredir(case):
 @pytest.mark.parametrize("case", [">", ">>", "<", "e>", "> ", ">>   ", "<  ", "e> "])
 def test_redir_whitespace(case):
     inp = "![{}/path/to/file]".format(case)
-    l = Lexer()
-    l.input(inp)
-    obs = list(l)
+    obs = lex_input(inp)
     assert obs[2].type == "WS"
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from xonsh.environ import Env, Var
+from xonsh.environ import Env
 from xonsh.parsers.completion_context import CompletionContextParser
 from xonsh.completers.environment import complete_environment_vars
 

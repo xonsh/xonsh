@@ -1,4 +1,3 @@
-import re
 import pytest
 import tempfile
 from os import sep
@@ -74,7 +73,7 @@ def complete_cmd_dirs(*a, **kw):
 def test_non_dir(cmd):
     with tempfile.NamedTemporaryFile(dir=".", suffix="_dummySuffix") as tmp:
         with pytest.raises(StopIteration):  # tmp is a file
-            completions = complete_cmd(cmd, tmp.name[:-2])
+            complete_cmd(cmd, tmp.name[:-2])
 
 
 @pytest.fixture(scope="module")

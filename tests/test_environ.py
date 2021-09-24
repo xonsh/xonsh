@@ -5,7 +5,6 @@ import os
 import re
 import pathlib
 import datetime
-import itertools
 from random import shuffle
 from tempfile import TemporaryDirectory
 from threading import Thread
@@ -480,7 +479,7 @@ def test_register_var_path():
     # Empty string is None to avoid uncontrolled converting empty string to Path('.')
     path = ""
     env["MY_PATH_VAR"] = path
-    assert env["MY_PATH_VAR"] == None
+    assert env["MY_PATH_VAR"] is None
 
     with pytest.raises(TypeError):
         env["MY_PATH_VAR"] = 42
