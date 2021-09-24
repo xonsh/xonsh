@@ -1,9 +1,7 @@
-import os
-
 import pytest
 
-from xonsh.completers.pip import PIP_RE
 from tests.tools import ON_WINDOWS
+from xonsh.completers.pip import PIP_RE
 
 
 @pytest.mark.parametrize(
