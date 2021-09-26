@@ -679,7 +679,7 @@ def test_multiple_partial_string_arg(commandline, context):
     ),
 )
 @pytest.mark.parametrize("malformation", NESTING_MALFORMATIONS)
-def test_malformed_subcmd(malformation, nesting, keyword, commands, context):
+def test_malformed_subcmd_1(malformation, nesting, keyword, commands, context):
     joined_command = keyword.join(commands)
     nested_joined = nesting.replace(X, joined_command)
     malformed_commandline = malformation(nested_joined)

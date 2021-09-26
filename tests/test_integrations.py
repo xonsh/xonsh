@@ -741,7 +741,7 @@ def test_xonsh_no_close_fds():
     ],  # noqa E231 (black removes space)
 )
 def test_pipe_between_subprocs(cmd, fmt, exp):
-    "verify pipe between subprocesses doesn't throw an exception"
+    """verify pipe between subprocesses doesn't throw an exception"""
     check_run_xonsh(cmd, fmt, exp)
 
 

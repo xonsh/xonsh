@@ -118,7 +118,7 @@ def test_python_rc(shell, tmpdir, monkeypatch, capsys, xession, mocker):
 
     # Check that the temporary rc's folder is not left behind on the path
     assert tmpdir.strpath not in sys.path
-    assert spy.called == False
+    assert not spy.called
 
 
 def test_rcdir(shell, tmpdir, monkeypatch, capsys):

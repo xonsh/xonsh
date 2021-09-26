@@ -1,5 +1,4 @@
 import os
-import inspect
 import pytest
 
 from xonsh.aliases import xexec

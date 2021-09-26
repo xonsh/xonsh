@@ -10,7 +10,6 @@ from xonsh.parsers.completion_context import (
     CommandArg,
     CommandContext,
     CompletionContext,
-    CompletionContextParser,
     PythonContext,
 )
 
