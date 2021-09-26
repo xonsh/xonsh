@@ -287,14 +287,20 @@ def test_autovox(xession, tmpdir, load_vox):
 
 
 @pytest.fixture
-def venvs(tmpdir):
+def venv_home(tmpdir):
+    """Path where VENVs are created"""
+    return tmpdir
+
+
+@pytest.fixture
+def venvs(venv_home):
     """create bin paths in the tmpdir"""
     from xonsh.dirstack import pushd, popd
 
-    pushd([str(tmpdir)])
+    pushd([str(venv_home)])
     paths = []
     for idx in range(2):
-        bin_path = tmpdir / f"venv{idx}" / "bin"
+        bin_path = venv_home / f"venv{idx}" / "bin"
         paths.append(bin_path)
 
         (bin_path / "python").write("", ensure=True)
@@ -393,9 +399,11 @@ _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
     ],
 )
 def test_vox_completer(
-    args, check_completer, positionals, opts, xession, patched_cmd_cache, tmp_path
+    args, check_completer, positionals, opts, xession, patched_cmd_cache, venv_home
 ):
-    xession.env["XONSH_DATA_DIR"] = tmp_path
-    assert check_completer(args) == positionals
+    xession.env["XONSH_DATA_DIR"] = venv_home
+    if positionals:
+        assert check_completer(args) == positionals
     xession.env["ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT"] = True
-    assert check_completer(args) == positionals.union(opts)
+    if opts:
+        assert check_completer(args) == positionals.union(opts)
