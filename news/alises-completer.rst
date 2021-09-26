@@ -1,7 +1,6 @@
 **Added:**
 
-* Added interface to complete any alias that has ``xonsh_complete`` attribute.
-It is a function with ``fn(**kwargs) -> Iterator[RichCompletion | str]`` signature.
+* Added interface to complete any alias that has ``xonsh_complete`` attribute. It is a function with ``fn(**kwargs) -> Iterator[RichCompletion | str]`` signature.
 
 
 **Changed:**
