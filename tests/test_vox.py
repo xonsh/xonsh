@@ -393,8 +393,9 @@ _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
     ],
 )
 def test_vox_completer(
-    args, check_completer, positionals, opts, xession, patched_cmd_cache
+    args, check_completer, positionals, opts, xession, patched_cmd_cache, tmp_path
 ):
+    xession.env["XONSH_DATA_DIR"] = tmp_path
     assert check_completer(args) == positionals
     xession.env["ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT"] = True
     assert check_completer(args) == positionals.union(opts)
