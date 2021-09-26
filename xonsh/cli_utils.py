@@ -444,7 +444,11 @@ class ArgparseCompleter:
             kwargs.update(self.kwargs)
             yield from act.completer(xsh=XSH, action=act, completer=self, **kwargs)  # type: ignore
 
-        if getattr(act, "choices", None) and not isinstance(act.choices, dict):
+        if (
+            hasattr(act, "choices")
+            and act.choices
+            and not isinstance(act.choices, dict)
+        ):
             # any sequence or iterable
             yield from act.choices
 
