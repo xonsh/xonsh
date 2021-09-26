@@ -1,10 +1,10 @@
 """Completers for pip."""
-# pylint: disable=invalid-name, missing-docstring, unsupported-membership-test
-# pylint: disable=unused-argument, not-an-iterable
 import re
+import shlex
 import subprocess
 
 import xonsh.lazyasd as xl
+from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
     contextual_command_completer,
     get_filter_function,
@@ -13,70 +13,44 @@ from xonsh.completers.tools import (
 from xonsh.parsers.completion_context import CommandContext
 
 
-PIP_LIST_COMMANDS = {"uninstall", "show"}
-
-
 @xl.lazyobject
 def PIP_RE():
-    return re.compile(r"\bx?pip(?:\d|\.)*$")
-
-
-@xl.lazyobject
-def PACKAGE_IGNORE_PATTERN():
-    # These are the first and second lines in `pip list`'s output
-    return re.compile(r"^Package$|^-+$")
-
-
-@xl.lazyobject
-def ALL_COMMANDS():
-    try:
-        help_text = str(
-            subprocess.check_output(["pip", "--help"], stderr=subprocess.DEVNULL)
-        )
-    except FileNotFoundError:
-        try:
-            help_text = str(
-                subprocess.check_output(["pip3", "--help"], stderr=subprocess.DEVNULL)
-            )
-        except FileNotFoundError:
-            return []
-    commands = re.findall(r"  (\w+)  ", help_text)
-    return [c for c in commands if c not in ["completion", "help"]]
+    return re.compile(r"\bx?pip(?:\d|\.)*(exe)?$")
 
 
 @contextual_command_completer
 def complete_pip(context: CommandContext):
     """Completes python's package manager pip."""
     prefix = context.prefix
-    if context.arg_index == 0 or (not PIP_RE.search(context.args[0].value)):
+
+    if context.arg_index == 0 or (not PIP_RE.search(context.args[0].value.lower())):
         return None
     filter_func = get_filter_function()
 
-    if context.arg_index == 2 and context.args[1].value in PIP_LIST_COMMANDS:
-        # `pip show PREFIX` - complete package names
-        try:
-            enc_items = subprocess.check_output(
-                [context.args[0].value, "list"], stderr=subprocess.DEVNULL
-            )
-        except FileNotFoundError:
-            return None
-        packages = (
-            line.split(maxsplit=1)[0] for line in enc_items.decode("utf-8").splitlines()
-        )
-        return {
-            package
-            for package in packages
-            if filter_func(package, prefix)
-            and not PACKAGE_IGNORE_PATTERN.match(package)
+    args = [arg.raw_value for arg in context.args]
+    env = XSH.env.detype()
+    env.update(
+        {
+            "PIP_AUTO_COMPLETE": "1",
+            "COMP_WORDS": " ".join(args),
+            "COMP_CWORD": str(len(context.args)),
         }
+    )
 
-    if context.arg_index == 1:
-        # `pip PREFIX` - complete pip commands
-        suggestions = {
-            RichCompletion(c, append_space=True)
-            for c in ALL_COMMANDS
-            if filter_func(c, prefix)
-        }
-        return suggestions
+    try:
+        proc = subprocess.run(
+            [args[0]],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            env=env,
+        )
+    except FileNotFoundError:
+        return None
+
+    if proc.stdout:
+        out = shlex.split(proc.stdout.decode())
+        for cmp in out:
+            if filter_func(cmp, prefix):
+                yield RichCompletion(cmp, append_space=True)
 
     return None

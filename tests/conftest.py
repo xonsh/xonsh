@@ -9,17 +9,12 @@ import pytest
 
 from xonsh.aliases import Aliases
 from xonsh.built_ins import XonshSession, XSH
-from xonsh.completers._aliases import complete_argparser_aliases
+from xonsh.completer import Completer
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
-from xonsh.parsers.completion_context import (
-    CommandArg,
-    CommandContext,
-    CompletionContext,
-)
 
 from xonsh import commands_cache
 from tools import DummyShell, sp, DummyEnv, DummyHistory
@@ -91,8 +86,6 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
     old_builtins = dict(vars(builtins).items())  # type: ignore
 
     XSH.load(ctx={}, **session_vars)
-    if ON_WINDOWS:
-        XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
     def locate_binary(self, name):
         return os.path.join(os.path.dirname(__file__), "bin", name)
@@ -112,6 +105,9 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
         ("subproc_captured_hiddenobject", sp),
     ]:
         monkeypatch.setattr(XSH, attr, val)
+
+    if ON_WINDOWS:
+        XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
     cc = XSH.commands_cache
     monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
@@ -159,14 +155,25 @@ def completion_context_parse():
 
 
 @pytest.fixture
-def check_completer(xession, completion_context_parse):
-    def _factory(args, **kwargs):
-        cmds = tuple(CommandArg(i) for i in args.split(" "))
-        arg_index = len(cmds)
-        completions = complete_argparser_aliases(
-            CompletionContext(CommandContext(args=cmds, arg_index=arg_index, **kwargs))
+def check_completer(xession):
+    """Helper function to run completer and parse the results as set of strings"""
+
+    comp = Completer()
+
+    def _factory(line: str, prefix=""):
+        line = line.strip()
+        if prefix:
+            begidx = len(line) + 1
+            endidx = begidx + len(prefix)
+            line = " ".join([line, prefix])
+        else:
+            line += " "
+            begidx = endidx = len(line)
+        completions, _ = comp.complete(
+            prefix, line, begidx, endidx, cursor_index=len(line), multiline_text=line
         )
-        return {getattr(i, "value", i) for i in completions}
+        # just return the bare completions without appended-space for easier assertions
+        return {getattr(i, "value", i).strip() for i in completions}
 
     return _factory
 

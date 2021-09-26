@@ -1,16 +1,20 @@
 import pytest
 
-from xonsh.completers.tools import RichCompletion
-from xonsh.completers.pip import PIP_RE, complete_pip
-from xonsh.parsers.completion_context import (
-    CompletionContext,
-    CommandContext,
-    CommandArg,
-)
+from tests.tools import ON_WINDOWS
+from xonsh.completers.pip import PIP_RE
 
 
 @pytest.mark.parametrize(
-    "line", ["pip", "xpip", "/usr/bin/pip3", r"C:\Python\Scripts\pip"]
+    "line",
+    [
+        "pip",
+        "pip.exe",
+        "pip3.6.exe",
+        "xpip",
+        "/usr/bin/pip3",
+        r"C:\Python\Scripts\pip",
+        r"C:\Python\Scripts\pip.exe",
+    ],
 )
 def test_pip_re(line):
     assert PIP_RE.search(line)
@@ -34,31 +38,20 @@ def test_pip_list_re1(line):
     assert PIP_RE.search(line) is None
 
 
-def test_commands():
-    comps = complete_pip(
-        CompletionContext(
-            CommandContext(
-                args=(CommandArg("pip3"),),
-                arg_index=1,
-                prefix="c",
-            )
-        )
-    )
-    assert comps.intersection({"cache", "check", "config"})
-    for comp in comps:
-        assert isinstance(comp, RichCompletion)
-        assert comp.append_space
+@pytest.mark.parametrize(
+    "line, prefix, exp",
+    [
+        ["pip", "c", {"cache", "check", "config"}],
+        ["pip show", "", {"setuptools", "wheel", "pip"}],
+    ],
+)
+def test_completions(
+    line, prefix, exp, check_completer, xession, monkeypatch, session_vars
+):
+    if ON_WINDOWS:
+        line = line.replace("pip", "pip.exe")
+    # needs original env for subproc all on all platforms
+    monkeypatch.setattr(xession, "env", session_vars["env"])
+    comps = check_completer(line, prefix=prefix)
 
-
-def test_package_list():
-    comps = complete_pip(
-        CompletionContext(
-            CommandContext(
-                args=(CommandArg("pip3"), CommandArg("show")),
-                arg_index=2,
-            )
-        )
-    )
-    assert "Package" not in comps
-    assert "-----------------------------" not in comps
-    assert "pytest" in comps
+    assert comps.intersection(exp)
