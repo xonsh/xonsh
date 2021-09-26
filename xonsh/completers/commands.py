@@ -1,5 +1,4 @@
 import os
-import typing as tp
 
 import xonsh.tools as xt
 import xonsh.platform as xp
@@ -8,7 +7,6 @@ from xonsh.completers.tools import (
     get_filter_function,
     contextual_command_completer,
     RichCompletion,
-    Completion,
     non_exclusive_completer,
 )
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
@@ -24,20 +22,24 @@ def complete_command(command: CommandContext):
     """
     Returns a list of valid commands starting with the first argument
     """
+
     cmd = command.prefix
-    out: tp.Set[Completion] = {
-        RichCompletion(s, append_space=True)
-        for s in XSH.commands_cache  # type: ignore
-        if get_filter_function()(s, cmd)
-    }
+    show_desc = (XSH.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
+    for s, (path, is_alias) in XSH.commands_cache.all_commands.items():
+        if get_filter_function()(s, cmd):
+            kwargs = {}
+            if show_desc:
+                kwargs["description"] = "Alias" if is_alias else path
+            yield RichCompletion(s, append_space=True, **kwargs)
     if xp.ON_WINDOWS:
-        out |= {i for i in xt.executables_in(".") if i.startswith(cmd)}
+        for i in xt.executables_in("."):
+            if i.startswith(cmd):
+                yield RichCompletion(i, append_space=True)
     base = os.path.basename(cmd)
     if os.path.isdir(base):
-        out |= {
-            os.path.join(base, i) for i in xt.executables_in(base) if i.startswith(cmd)
-        }
-    return out
+        for i in xt.executables_in(base):
+            if i.startswith(cmd):
+                yield RichCompletion(os.path.join(base, i))
 
 
 @contextual_command_completer
