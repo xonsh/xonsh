@@ -62,6 +62,7 @@ class _DEFS(metaclass=NamedConstantMeta):
     BEHIND = XAttr("↓·")
     LINES_ADDED = XAttr("{BLUE}+")
     LINES_REMOVED = XAttr("{RED}-")
+    SEPARATOR = XAttr("{RESET}|")
 
 
 def _get_def(attr: XAttr) -> str:
@@ -243,7 +244,7 @@ def gitstatus_prompt():
             ret += _get_def(fld) + str(val)
 
     if ret:
-        ret += COLORS.RESET + "|"
+        ret += "|"
 
     number_flds = (
         _DEFS.STAGED,
@@ -272,5 +273,7 @@ def gitstatus_prompt():
 
     if not ret.endswith(COLORS.RESET):
         ret += COLORS.RESET
+
+    ret = ret.replace("|", _get_def(_DEFS.SEPARATOR))
 
     return ret
