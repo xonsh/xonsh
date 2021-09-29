@@ -1404,6 +1404,10 @@ class PromptSetting(Xettings):
         ),
         pattern="XONSH_GITSTATUS_*",
     )
+    XONSH_GITSTATUS_BRANCHES_HIDDEN = Var.with_default(
+        (),
+        "Branch names to hide in {gitstatus} prompt.",
+    )
     XONSH_GITSTATUS_FIELDS_HIDDEN = Var.with_default(
         (),
         "Fields to hide in {gitstatus} prompt (all fields below are shown by default.) \n\n"

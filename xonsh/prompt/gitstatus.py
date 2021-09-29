@@ -155,6 +155,9 @@ def _get_status_fields():
                 branch = line
             else:
                 branch, rest = line.split("...")
+                hidden = XSH.env.get("XONSH_GITSTATUS_BRANCHES_HIDDEN")
+                if hidden and branch in hidden:
+                    branch = ""
                 if " " in rest:
                     divergence = rest.split(" ", 1)[-1]
                     divergence = divergence.strip("[]")
@@ -236,7 +239,7 @@ def gitstatus_prompt():
 
     ret = ""
     for fld in (_DEFS.BRANCH, _DEFS.AHEAD, _DEFS.BEHIND, _DEFS.OPERATION):
-        if not _is_hidden(fld):
+        if not _is_hidden(fld) and fld:
             val = fields[fld]
             if not val:
                 continue
