@@ -884,7 +884,8 @@ def command_not_found(cmd, env):
     return rtn
 
 
-def suggest_commands(cmd, env, aliases):
+@functools.lru_cache()
+def suggest_commands(cmd, env):
     """Suggests alternative commands given an environment and aliases."""
     if not env.get("SUGGEST_COMMANDS"):
         return ""

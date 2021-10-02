@@ -488,9 +488,9 @@ class SubprocSpec:
                     )
             e = "xonsh: subprocess mode: command not found: {0}".format(cmd0)
             env = XSH.env
-            sug = xt.suggest_commands(cmd0, env, XSH.aliases)
+            sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:
-                e += "\n" + xt.suggest_commands(cmd0, env, XSH.aliases)
+                e += "\n" + xt.suggest_commands(cmd0, env)
             raise xt.XonshError(e)
         return p
 
