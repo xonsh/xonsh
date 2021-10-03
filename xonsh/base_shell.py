@@ -357,7 +357,11 @@ class BaseShell:
 
     def precmd(self, line):
         """Called just before execution of line."""
-        self.precwd = os.getcwd()
+        try:
+            self.precwd = os.getcwd()
+        except Exception as f:
+            print_warning(str(f))
+            self.precwd = "/"
         return line if self.need_more_lines else line.lstrip()
 
     def default(self, line, raw_line=None):
