@@ -359,7 +359,7 @@ class BaseShell:
         """Called just before execution of line."""
         try:
             self.precwd = os.getcwd()
-        except Exception as f:
+        except FileNotFoundError as f:
             print_warning(str(f))
             self.precwd = "/"
         return line if self.need_more_lines else line.lstrip()
