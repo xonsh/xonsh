@@ -360,7 +360,6 @@ class BaseShell:
         try:
             self.precwd = os.getcwd()
         except FileNotFoundError as f:
-            print_warning(str(f))
             self.precwd = "/"
         return line if self.need_more_lines else line.lstrip()
 
