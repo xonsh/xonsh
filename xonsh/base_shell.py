@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import time
+from os.path import expanduser
 
 from xonsh.built_ins import XSH
 from xonsh.tools import (
@@ -360,7 +361,7 @@ class BaseShell:
         try:
             self.precwd = os.getcwd()
         except FileNotFoundError as f:
-            self.precwd = "/"
+            self.precwd = expanduser("~")
         return line if self.need_more_lines else line.lstrip()
 
     def default(self, line, raw_line=None):
