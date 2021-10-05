@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fix  Crash with FileNotFoundError when current working directory is deleted #4467
 
 **Security:**
 
