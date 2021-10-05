@@ -360,7 +360,7 @@ class BaseShell:
         """Called just before execution of line."""
         try:
             self.precwd = os.getcwd()
-        except FileNotFoundError as f:
+        except FileNotFoundError:
             self.precwd = expanduser("~")
         return line if self.need_more_lines else line.lstrip()
 
