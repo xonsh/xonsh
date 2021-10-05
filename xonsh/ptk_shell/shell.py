@@ -335,6 +335,11 @@ class PromptToolkitShell(BaseShell):
         ):
             self.prompter.default_buffer._history_matches = self._history_matches_orig
 
+        menu_rows = env.get("COMPLETIONS_MENU_ROWS", None)
+        if menu_rows:
+            # https://github.com/xonsh/xonsh/pull/4477#pullrequestreview-767982976
+            menu_rows += 1
+
         prompt_args = {
             "mouse_support": mouse_support,
             "auto_suggest": auto_suggest,
@@ -346,7 +351,7 @@ class PromptToolkitShell(BaseShell):
             "editing_mode": editing_mode,
             "prompt_continuation": self.continuation_tokens,
             "enable_history_search": enable_history_search,
-            "reserve_space_for_menu": 0,
+            "reserve_space_for_menu": menu_rows,
             "key_bindings": self.key_bindings,
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
