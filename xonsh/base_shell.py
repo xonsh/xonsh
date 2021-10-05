@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import time
+from os.path import expanduser
 
 from xonsh.built_ins import XSH
 from xonsh.tools import (
@@ -357,7 +358,10 @@ class BaseShell:
 
     def precmd(self, line):
         """Called just before execution of line."""
-        self.precwd = os.getcwd()
+        try:
+            self.precwd = os.getcwd()
+        except FileNotFoundError:
+            self.precwd = expanduser("~")
         return line if self.need_more_lines else line.lstrip()
 
     def default(self, line, raw_line=None):
