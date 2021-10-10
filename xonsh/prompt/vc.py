@@ -31,7 +31,7 @@ def _run_git_cmd(cmd):
 
 def _get_git_branch(q):
     try:
-        cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+        cmd = ["git", "branch", "--show-current"]
         branch = xt.decode_bytes(_run_git_cmd(cmd))
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
