@@ -209,7 +209,7 @@ def define_xontribs():
                 name="xontrib-powerline3",
                 license="MIT",
                 install={"pip": "xpip install xontrib-powerline3"},
-                url="https://github.com/jnoortheen/xontrib-broot",
+                url="https://github.com/jnoortheen/xontrib-powerline3",
             ),
         ),
         "cd": Xontrib(
