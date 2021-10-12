@@ -485,6 +485,8 @@ class LsColors(cabc.MutableMapping):
             )
         except (subprocess.CalledProcessError, FileNotFoundError):
             return cls(cls.default_settings)
+        if not out:
+            return cls(cls.default_settings)
         s = out.splitlines()[0]
         _, _, s = s.partition("'")
         s, _, _ = s.rpartition("'")
