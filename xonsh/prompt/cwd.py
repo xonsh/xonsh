@@ -27,7 +27,8 @@ def _replace_home(x):
 
 
 def _replace_home_cwd():
-    return _replace_home(XSH.env["PWD"])
+    pwd = XSH.env["PWD"].replace("{", "{{").replace("}", "}}")
+    return _replace_home(pwd)
 
 
 def _collapsed_pwd():
