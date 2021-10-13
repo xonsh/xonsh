@@ -128,6 +128,7 @@ class Vox(collections.abc.Mapping):
             XSH.env["VIRTUALENV_HOME"] = self.venvdir
         else:
             self.venvdir = XSH.env["VIRTUALENV_HOME"]
+        self.force_removals = False
 
     def create(
         self,
@@ -404,6 +405,15 @@ class Vox(collections.abc.Mapping):
         except KeyError:
             # No current venv, ... fails
             pass
+
+        env_path = os.path.abspath(env_path)
+        if not self.force_removals:
+            answer = input(
+                f"The directory {env_path} and all of its content will be deleted. Do you want to continue? [Y/n]"
+            )
+            if "n" in answer:
+                return
+
         shutil.rmtree(env_path)
 
         events.vox_on_delete.fire(name=name)

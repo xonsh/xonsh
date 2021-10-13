@@ -208,6 +208,7 @@ class VoxHandler(xcli.ArgParserAlias):
             list,
             xcli.Arg(metavar="ENV", nargs="+", completer=venv_names_completer),
         ],
+        force=False,
     ):
         """Remove virtual environments.
 
@@ -216,7 +217,10 @@ class VoxHandler(xcli.ArgParserAlias):
         names
             The environments to remove. ENV can be either a name from the venvs shown by vox
             list or the path to an arbitrary venv
+        force : -f, --force
+            Delete virtualenv without prompt
         """
+        self.vox.force_removals = force
         for name in names:
             try:
                 del self.vox[name]
