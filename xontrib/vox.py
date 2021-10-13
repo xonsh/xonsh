@@ -153,16 +153,15 @@ class VoxHandler(xcli.ArgParserAlias):
         else:
             print(f'Activated "{name}".\n')
 
-    def deactivate(
-        self,
-        remove=False,
-    ):
+    def deactivate(self, remove=False, force=False):
         """Deactivate the active virtual environment.
 
         Parameters
         ----------
         remove: -r, --remove
             Remove the virtual environment after leaving it.
+        force: -f, --force-removal
+            Remove the virtual environment without prompt
         """
 
         if self.vox.active() is None:
@@ -171,6 +170,7 @@ class VoxHandler(xcli.ArgParserAlias):
             )
         env_name = self.vox.deactivate()
         if remove:
+            self.vox.force_removals = force
             del self.vox[env_name]
             print(f'Environment "{env_name}" deactivated and removed.\n')
         else:
@@ -199,6 +199,7 @@ class VoxHandler(xcli.ArgParserAlias):
             list,
             xcli.Arg(metavar="ENV", nargs="+", completer=venv_names_completer),
         ],
+        force=False,
     ):
         """Remove virtual environments.
 
@@ -207,7 +208,10 @@ class VoxHandler(xcli.ArgParserAlias):
         names
             The environments to remove. ENV can be either a name from the venvs shown by vox
             list or the path to an arbitrary venv
+        force : -f, --force
+            Delete virtualenv without prompt
         """
+        self.vox.force_removals = force
         for name in names:
             try:
                 del self.vox[name]

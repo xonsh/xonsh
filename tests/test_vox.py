@@ -57,7 +57,8 @@ def test_crud(xession, tmpdir):
         nonlocal last_event
         last_event = "delete", name
 
-    vox = Vox()
+    vox = Vox(force_removals=True)
+    vox.create("spam")
     vox.create("spam")
     assert stat.S_ISDIR(tmpdir.join("spam").stat().mode)
     assert last_event == ("create", "spam")
@@ -187,7 +188,7 @@ def test_crud_subdir(xession, tmpdir):
     """
     xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
-    vox = Vox()
+    vox = Vox(force_removals=True)
     vox.create("spam/eggs")
     assert stat.S_ISDIR(tmpdir.join("spam", "eggs").stat().mode)
 
@@ -214,7 +215,7 @@ def test_crud_path(xession, tmpdir):
     """
     tmp = pathlib.Path(str(tmpdir))
 
-    vox = Vox()
+    vox = Vox(force_removals=True)
     vox.create(tmp)
     assert stat.S_ISDIR(tmpdir.join("lib").stat().mode)
 

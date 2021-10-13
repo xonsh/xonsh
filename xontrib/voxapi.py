@@ -121,13 +121,14 @@ class Vox(collections.abc.Mapping):
     2. ``bin``: The full path to the bin/Scripts directory of the environment
     """
 
-    def __init__(self):
+    def __init__(self, force_removals=False):
         if not XSH.env.get("VIRTUALENV_HOME"):
             home_path = os.path.expanduser("~")
             self.venvdir = os.path.join(home_path, ".virtualenvs")
             XSH.env["VIRTUALENV_HOME"] = self.venvdir
         else:
             self.venvdir = XSH.env["VIRTUALENV_HOME"]
+        self.force_removals = force_removals
 
     def create(
         self,
@@ -404,6 +405,15 @@ class Vox(collections.abc.Mapping):
         except KeyError:
             # No current venv, ... fails
             pass
+
+        env_path = os.path.abspath(env_path)
+        if not self.force_removals:
+            answer = input(
+                f"The directory {env_path} and all of its content will be deleted. Do you want to continue? [Y/n]"
+            )
+            if "n" in answer:
+                return
+
         shutil.rmtree(env_path)
 
         events.vox_on_delete.fire(name=name)
