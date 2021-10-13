@@ -3,12 +3,11 @@ import os
 import re
 import sys
 import inspect
-import argparse
 import linecache
 import importlib
-import functools
 import typing as tp
 
+from xonsh.cli_utils import ArgParserAlias, Annotated, Arg
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
@@ -103,6 +102,61 @@ class TracerType(object):
                 self._last = curr
         return self.trace
 
+    def on_files(
+        self,
+        _args,
+        files: Annotated[tp.Iterable[str], Arg(nargs="*")] = ("__file__",),
+    ):
+        """begins tracing selected files.
+
+        Parameters
+        ----------
+        _args
+            argv from alias parser
+        files
+            file paths to watch, use "__file__" (default) to select the current file.
+        """
+
+        for f in files:
+            if f == "__file__":
+                f = _find_caller(_args)
+            if f is None:
+                continue
+            self.start(f)
+
+    def off_files(
+        self,
+        _args,
+        files: Annotated[tp.Iterable[str], Arg(nargs="*")] = ("__file__",),
+    ):
+        """removes selected files fom tracing.
+
+        Parameters
+        ----------
+        files
+            file paths to stop watching, use ``__file__`` (default) to select the current file.
+
+        """
+        for f in files:
+            if f == "__file__":
+                f = _find_caller(_args)
+            if f is None:
+                continue
+            self.stop(f)
+
+    def toggle_color(
+        self,
+        toggle: Annotated[bool, Arg(type=to_bool)] = False,
+    ):
+        """output color management for tracer
+
+        Parameters
+        ----------
+        toggle
+            true/false, y/n, etc. to toggle color usage.
+        """
+        self.color_output(toggle)
+
 
 tracer = LazyObject(TracerType, globals(), "tracer")
 
@@ -157,85 +211,23 @@ def _find_caller(args):
         print(msg, file=sys.stderr)
 
 
-def _on(ns, args):
-    """Turns on tracing for files."""
-    for f in ns.files:
-        if f == "__file__":
-            f = _find_caller(args)
-        if f is None:
-            continue
-        tracer.start(f)
+class TracerAlias(ArgParserAlias):
+    """Tool for tracing xonsh code as it runs."""
+
+    def build(self):
+        parser = self.create_parser(prog="trace")
+        parser.add_command(tracer.on_files, prog="on", aliases=["start", "add"])
+        parser.add_command(tracer.off_files, prog="off", aliases=["stop", "del", "rm"])
+        parser.add_command(tracer.toggle_color, prog="color", aliases=["ls"])
+        return parser
+
+    def __call__(self, *args, **kwargs):
+        spec = kwargs["spec"]
+        usecolor = (
+            spec.captured not in xpp.STDOUT_CAPTURE_KINDS
+        ) and sys.stdout.isatty()
+        tracer.color_output(usecolor)
+        return super().__call__(*args, **kwargs)
 
 
-def _off(ns, args):
-    """Turns off tracing for files."""
-    for f in ns.files:
-        if f == "__file__":
-            f = _find_caller(args)
-        if f is None:
-            continue
-        tracer.stop(f)
-
-
-def _color(ns, args):
-    """Manages color action for tracer CLI."""
-    tracer.color_output(ns.toggle)
-
-
-@functools.lru_cache(1)
-def _tracer_create_parser():
-    """Creates tracer argument parser"""
-    p = argparse.ArgumentParser(
-        prog="trace", description="tool for tracing xonsh code as it runs."
-    )
-    subp = p.add_subparsers(title="action", dest="action")
-    onp = subp.add_parser(
-        "on", aliases=["start", "add"], help="begins tracing selected files."
-    )
-    onp.add_argument(
-        "files",
-        nargs="*",
-        default=["__file__"],
-        help=(
-            'file paths to watch, use "__file__" (default) to select '
-            "the current file."
-        ),
-    )
-    off = subp.add_parser(
-        "off", aliases=["stop", "del", "rm"], help="removes selected files fom tracing."
-    )
-    off.add_argument(
-        "files",
-        nargs="*",
-        default=["__file__"],
-        help=(
-            'file paths to stop watching, use "__file__" (default) to '
-            "select the current file."
-        ),
-    )
-    col = subp.add_parser("color", help="output color management for tracer.")
-    col.add_argument(
-        "toggle", type=to_bool, help="true/false, y/n, etc. to toggle color usage."
-    )
-    return p
-
-
-_TRACER_MAIN_ACTIONS = {
-    "on": _on,
-    "add": _on,
-    "start": _on,
-    "rm": _off,
-    "off": _off,
-    "del": _off,
-    "stop": _off,
-    "color": _color,
-}
-
-
-def tracermain(args=None, stdin=None, stdout=None, stderr=None, spec=None):
-    """Main function for tracer command-line interface."""
-    parser = _tracer_create_parser()
-    ns = parser.parse_args(args)
-    usecolor = (spec.captured not in xpp.STDOUT_CAPTURE_KINDS) and sys.stdout.isatty()
-    tracer.color_output(usecolor)
-    return _TRACER_MAIN_ACTIONS[ns.action](ns, args)
+tracermain = TracerAlias()
