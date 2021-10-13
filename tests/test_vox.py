@@ -3,6 +3,8 @@ import pathlib
 import stat
 import os
 import subprocess as sp
+import types
+
 import pytest
 import sys
 from xontrib.voxapi import Vox
@@ -282,3 +284,126 @@ def test_autovox(xession, tmpdir, load_vox):
     assert vox.active() == "myenv"
     xonsh.dirstack.popd([])
     print(xession.env["PWD"])
+
+
+@pytest.fixture
+def venv_home(tmpdir):
+    """Path where VENVs are created"""
+    return tmpdir
+
+
+@pytest.fixture
+def venvs(venv_home):
+    """create bin paths in the tmpdir"""
+    from xonsh.dirstack import pushd, popd
+
+    pushd([str(venv_home)])
+    paths = []
+    for idx in range(2):
+        bin_path = venv_home / f"venv{idx}" / "bin"
+        paths.append(bin_path)
+
+        (bin_path / "python").write("", ensure=True)
+        (bin_path / "python.exe").write("", ensure=True)
+        for file in bin_path.listdir():
+            st = os.stat(str(file))
+            os.chmod(str(file), st.st_mode | stat.S_IEXEC)
+    yield paths
+    popd([])
+
+
+@pytest.fixture
+def patched_cmd_cache(xession, load_vox, venvs, monkeypatch):
+    cc = xession.commands_cache
+
+    def no_change(self, *_):
+        return False, False, False
+
+    monkeypatch.setattr(cc, "_update_if_changed", types.MethodType(no_change, cc))
+    monkeypatch.setattr(cc, "_update_cmds_cache", types.MethodType(no_change, cc))
+    monkeypatch.setattr(cc, "cache_file", None)
+    bins = {path: (path, False) for path in _PY_BINS}
+    cc._cmds_cache.update(bins)
+    yield cc
+
+
+_VENV_NAMES = {"venv1", "venv1/", "venv0/", "venv0"}
+if ON_WINDOWS:
+    _VENV_NAMES = {"venv1\\", "venv0\\"}
+
+_HELP_OPTS = {
+    "-h",
+    "--help",
+}
+_PY_BINS = {"/bin/python2", "/bin/python3"}
+_VOX_NEW_OPTS = {
+    "--copies",
+    "--help",
+    "-h",
+    "--ssp",
+    "--symlinks",
+    "--system-site-packages",
+    "--without-pip",
+}
+_VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
+
+
+@pytest.mark.parametrize(
+    "args, positionals, opts",
+    [
+        (
+            "vox",
+            {
+                "delete",
+                "new",
+                "remove",
+                "del",
+                "workon",
+                "list",
+                "exit",
+                "ls",
+                "rm",
+                "deactivate",
+                "activate",
+                "enter",
+                "create",
+            },
+            _HELP_OPTS,
+        ),
+        (
+            "vox create",
+            set(),
+            {
+                "--copies",
+                "--symlinks",
+                "--ssp",
+                "--system-site-packages",
+                "--activate",
+                "--without-pip",
+                "--interpreter",
+                "-p",
+                "-a",
+                "--help",
+                "-h",
+            },
+        ),
+        ("vox activate", _VENV_NAMES, _HELP_OPTS),
+        ("vox rm", _VENV_NAMES, _HELP_OPTS),
+        ("vox rm venv1", _VENV_NAMES, _HELP_OPTS),  # pos nargs: one or more
+        ("vox rm venv1 venv2", _VENV_NAMES, _HELP_OPTS),  # pos nargs: two or more
+        ("vox new --activate --interpreter", _PY_BINS, set()),  # option after option
+        ("vox new --interpreter", _PY_BINS, set()),  # "option: first
+        ("vox new --activate env1 --interpreter", _PY_BINS, set()),  # option after pos
+        ("vox new env1 --interpreter", _PY_BINS, set()),  # "option: at end"
+        ("vox new env1 --interpreter=", _PY_BINS, set()),  # "option: at end with
+    ],
+)
+def test_vox_completer(
+    args, check_completer, positionals, opts, xession, patched_cmd_cache, venv_home
+):
+    xession.env["XONSH_DATA_DIR"] = venv_home
+    if positionals:
+        assert check_completer(args) == positionals
+    xession.env["ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT"] = True
+    if opts:
+        assert check_completer(args) == positionals.union(opts)
