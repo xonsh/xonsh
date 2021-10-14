@@ -2100,6 +2100,9 @@ class Env(cabc.MutableMapping):
     def __repr__(self):
         return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
 
+    def __hash__(self) -> int:
+        return hash(str(self._d))
+
     def _repr_pretty_(self, p, cycle):
         name = f"{self.__class__.__module__}.{self.__class__.__name__}"
         with p.group(1, name + "(", ")"):
