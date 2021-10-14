@@ -21,8 +21,7 @@ exclude = '''
 
 )
 |
-(
-    # and these additional random rules
+(   # and these additional random rules
     /(  __pycache__
      |  \.circleci
      |  \.github
@@ -36,3 +35,5 @@ exclude = '''
 extend_exclude = '''
 ((xonsh/parser_table.py)|(xonsh/completion_parser_table.py))
 '''
+
+force_exclude = '''.*/__amalgam__.py'''

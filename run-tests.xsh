@@ -70,9 +70,8 @@ def qa():
 
     python -m flake8
 
-    mypy --version
     # todo: add xontrib folder here
-    mypy xonsh --exclude xonsh/ply
+    mypy xonsh
 
     pytest -m news
 
