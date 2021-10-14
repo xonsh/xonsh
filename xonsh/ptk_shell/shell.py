@@ -474,7 +474,7 @@ class PromptToolkitShell(BaseShell):
         """Displays dots in multiline prompt"""
         if is_soft_wrap:
             return ""
-        width = width - 1
+        width -= 1
         dots = XSH.env.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
         if not dots:
