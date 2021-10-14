@@ -65,21 +65,26 @@ def write_to_file(
     (CURR_DIR / fname).write_text(result)
 
 
-# pytest workflows
-for os_name, python_version in product(OS_NAMES, PYTHON_VERSIONS):
-    report_coverage = python_version == PY_MAIN_VERSION
-    if report_coverage:
-        test_cmd = "test --report-coverage --no-amalgam -- --timeout=240"
-    else:
-        test_cmd = "test -- --timeout=240"
+def main():
+    # pytest workflows
+    for os_name, python_version in product(OS_NAMES, PYTHON_VERSIONS):
+        report_coverage = python_version == PY_MAIN_VERSION
+        if report_coverage:
+            test_cmd = "test --report-coverage --no-amalgam -- --timeout=240"
+        else:
+            test_cmd = "test -- --timeout=240"
 
-    write_to_file(
-        "pytest",
-        os_name,
-        python_version,
-        report_coverage=report_coverage,
-        test_cmd=test_cmd,
-    )
+        write_to_file(
+            "pytest",
+            os_name,
+            python_version,
+            report_coverage=report_coverage,
+            test_cmd=test_cmd,
+        )
 
-# qa workflow
-write_to_file("qa", "linux", PY_MAIN_VERSION, test_cmd="qa")
+    # qa workflow
+    write_to_file("qa", "linux", PY_MAIN_VERSION, test_cmd="qa")
+
+
+if __name__ == "__main__":
+    main()

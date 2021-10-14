@@ -55,6 +55,6 @@ jobs:
         run: |
           python -m pip --version
           python -m pip install -r requirements/tests.txt
-          python -m pip install . --no-deps
+          python -m pip install -e . --no-deps
       - name: Run tests
         run: python -m xonsh run-tests.xsh qa
