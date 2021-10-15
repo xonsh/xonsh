@@ -8,6 +8,7 @@ pytest-cov
 pytest-mock
 pytest-timeout
 pytest-subprocess
+pytest-rerunfailures
 prompt-toolkit>=3.0
 pygments>=2.2
 coverage>=5.3.1

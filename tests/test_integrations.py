@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 import xonsh
-from xonsh.lib.os import indir
+from xonsh.dirstack import with_pushd
 
 from tools import (
     skip_if_on_msys,
@@ -541,6 +541,7 @@ if not ON_WINDOWS:
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
+@pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
     out, err, rtn = run_xonsh(script)
@@ -726,7 +727,7 @@ def test_xonsh_no_close_fds():
         "b:\n"
         "\tsleep 1\n"
     )
-    with tempfile.TemporaryDirectory() as d, indir(d):
+    with tempfile.TemporaryDirectory() as d, with_pushd(d):
         with open("Makefile", "w") as f:
             f.write(makefile)
         out = sp.check_output(["make", "-sj2", "SHELL=xonsh"], universal_newlines=True)

@@ -7,6 +7,7 @@ import glob
 import os
 import subprocess
 import typing as tp
+from contextlib import contextmanager
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
@@ -546,3 +547,13 @@ def dirs_fn(
 
 
 dirs = ArgParserAlias(prog="dirs", func=dirs_fn, has_args=True)
+
+
+@contextmanager
+def with_pushd(d):
+    """Use pushd as a context manager"""
+    pushd_fn(d)
+    try:
+        yield
+    finally:
+        popd_fn()
