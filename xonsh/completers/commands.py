@@ -96,3 +96,11 @@ def complete_end_proc_keywords(command_context: CommandContext):
     if prefix in END_PROC_KEYWORDS:
         return {RichCompletion(prefix, append_space=True)}
     return None
+
+
+@contextual_command_completer
+def complete_xompletions():
+    """For the given command load completions lazily"""
+    # function to load module from xompletions
+    # way to associate regex and respective xompletions/<file-name>
+    # return the completions if available

@@ -19,7 +19,7 @@ def PIP_RE():
 
 
 @contextual_command_completer
-def complete_pip(context: CommandContext):
+def xonsh_complete(context: CommandContext):
     """Completes python's package manager pip."""
     prefix = context.prefix
 
