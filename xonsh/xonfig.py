@@ -673,6 +673,9 @@ def _colors(
         XSH.env["XONSH_COLOR_STYLE"] = style
 
     color_map = color_style()
+    if not color_map:
+        print("Empty color map - using non-interactive shell?")
+        return
     akey = next(iter(color_map))
     if isinstance(akey, str):
         s = _str_colors(color_map, columns)
