@@ -641,9 +641,9 @@ def source_cmd(args, stdin=None):
 
 def xexec_fn(
     command: Annotated[tp.List[str], Arg(nargs=argparse.REMAINDER)],
-    login: Annotated[bool, Arg("-l", "--login", action="store_true")] = False,
-    clean: Annotated[bool, Arg("-c", "--clean", action="store_true")] = False,
-    name: Annotated[str, Arg("-a", "--name")] = "",
+    login=False,
+    clean=False,
+    name="",
     _stdin=None,
 ):
     """exec (also aliased as xexec) uses the os.execvpe() function to
@@ -658,13 +658,13 @@ def xexec_fn(
     ----------
     command
         program to launch along its arguments
-    login
+    login : -l, --login
         the shell places a dash at the
         beginning of the zeroth argument passed to command to simulate login
         shell.
-    clean
+    clean : -c, --clean
         causes command to be executed with an empty environment.
-    name
+    name : -a, --name
         the shell passes name as the zeroth argument
         to the executed command.
 

@@ -463,9 +463,7 @@ def disown_fn(
     job_ids: Annotated[
         tp.Sequence[int], Arg(type=int, nargs="*", completer=job_id_completer)
     ],
-    force_auto_continue: Annotated[
-        bool, Arg("-c", "--continue", action="store_true")
-    ] = False,
+    force_auto_continue=False,
 ):
     """Remove the specified jobs from the job table; the shell will no longer
     report their status, and will not complain if you try to exit an
@@ -479,7 +477,7 @@ def disown_fn(
     ----------
     job_ids
         Jobs to act on or none to disown the current job
-    force_auto_continue
+    force_auto_continue : -c, --continue
         Automatically continue stopped jobs when they are disowned, equivalent to setting $AUTO_CONTINUE=True
     """
 

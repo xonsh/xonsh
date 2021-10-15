@@ -445,16 +445,16 @@ def make_xonfig_wizard(default_file=None, confirm=False, no_wizard_file=None):
 
 
 def _wizard(
-    rcfile: Annotated[str, Arg("--file")] = None,
-    confirm: Annotated[bool, Arg("--confirm", action="store_true")] = False,
+    rcfile=None,
+    confirm=False,
 ):
     """Launch configurator in terminal
 
     Parameters
     -------
-    rcfile
+    rcfile : -f, --file
         config file location, default=$XONSHRC
-    confirm
+    confirm : -c, --confirm
         confirm that the wizard should be run.
     """
     env = XSH.env
@@ -514,13 +514,13 @@ def _xonfig_format_json(data):
 
 
 def _info(
-    to_json: Annotated[bool, Arg("--json", action="store_true")] = False,
+    to_json=False,
 ) -> str:
     """Displays configuration information
 
     Parameters
     ----------
-    to_json
+    to_json : -j, --json
         reports results as json
     """
     env = XSH.env
@@ -577,14 +577,12 @@ def _info(
     return s
 
 
-def _styles(
-    to_json: Annotated[bool, Arg("--json", action="store_true")] = False, _stdout=None
-):
+def _styles(to_json=False, _stdout=None):
     """Prints available xonsh color styles
 
     Parameters
     ----------
-    to_json
+    to_json: -j, --json
         reports results as json
     """
     env = XSH.env
@@ -691,13 +689,13 @@ def _tutorial():
 
 def _web(
     _args,
-    browser: Annotated[bool, Arg("--no-browser", action="store_false")] = True,
+    browser=True,
 ):
     """Launch configurator in browser.
 
     Parameters
     ----------
-    browser
+    browser : --nb, --no-browser
         don't open browser
     """
 
@@ -707,19 +705,19 @@ def _web(
 
 
 def _jupyter_kernel(
-    user: Annotated[bool, Arg("--user", action="store_true")] = False,
-    prefix: Annotated[str, Arg("--prefix")] = None,
-    root: Annotated[str, Arg("--root")] = None,
+    user=False,
+    prefix=None,
+    root=None,
 ):
     """Generate xonsh kernel for jupyter.
 
     Parameters
     ----------
-    user
+    user : -u, --user
         Install kernel spec in user config directory.
-    prefix
+    prefix : -p, --prefix
         Installation prefix for bin, lib, etc.
-    root
+    root : -r, --root
         Install relative to this alternate root directory.
     """
     try:
