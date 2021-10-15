@@ -165,21 +165,29 @@ def add_args(
             allowed_params is not None and name not in allowed_params
         ):
             continue
-        args, kwargs = _get_args_kwargs(param.annotation)
+        flags, kwargs = _get_args_kwargs(param.annotation)
+        if not flags:  # load from docstring
+            flags = doc.flags.get(name)
 
-        if args:  # optional argument. eg. --option
+        if flags:  # optional argument. eg. --option
             kwargs.setdefault("dest", name)
         else:  # positional argument
-            args = [name]
+            flags = [name]
 
         if inspect.Parameter.empty != param.default:
             kwargs.setdefault("default", param.default)
+
+            # for booleans set action automatically
+            if flags and type(param.default) == bool and "action" not in kwargs:
+                # opposite of default value
+                act_name = "store_true" if param.default == False else "store_false"
+                kwargs.setdefault("action", act_name)
 
         # help can be set by passing help argument otherwise inferred from docstring
         kwargs.setdefault("help", doc.params.get(name))
 
         completer = kwargs.pop("completer", None)
-        action = parser.add_argument(*args, **kwargs)
+        action = parser.add_argument(*flags, **kwargs)
         if completer:
             action.completer = completer  # type: ignore
         action.help = action.help or ""
