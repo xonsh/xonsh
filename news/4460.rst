@@ -1,0 +1,23 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* <news item>
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* Handle ``None`` value on XSH.env if ``$UPDATE_OS_ENVIRON`` is set to ``True``
+
+**Security:**
+
+* <news item>
