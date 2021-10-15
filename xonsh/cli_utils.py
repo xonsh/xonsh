@@ -97,12 +97,13 @@ class NumpyDoc:
     @staticmethod
     def get_func_doc(doc):
         lines = doc.splitlines()
-        desc = []
         token = "Parameters"
-        idx = 0
         if token in lines:
             idx = lines.index(token)
             desc = lines[:idx]
+        else:
+            desc = lines
+            idx = len(lines)
         return NumpyDoc.join(desc), lines[idx + 2 :]
 
     @staticmethod
@@ -178,7 +179,12 @@ def add_args(
             kwargs.setdefault("default", param.default)
 
             # for booleans set action automatically
-            if flags and type(param.default) == bool and "action" not in kwargs:
+            if (
+                flags
+                and (type(param.default) == bool)
+                and ("action" not in kwargs)
+                and ("type" not in kwargs)
+            ):
                 # opposite of default value
                 act_name = "store_true" if param.default == False else "store_false"
                 kwargs.setdefault("action", act_name)
