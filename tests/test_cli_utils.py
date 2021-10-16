@@ -1,10 +1,9 @@
 """Test module xonsh/cli_utils.py"""
-import pytest
 
 from xonsh import cli_utils
 
 
-def func_with_doc(param: str, multi: str, optional=False) -> str:
+def func_with_doc(param: str, multi: str, optional=False):
     """func doc
     multi-line
 
@@ -23,7 +22,7 @@ def func_with_doc(param: str, multi: str, optional=False) -> str:
     str
         return doc
     """
-    return param + multi
+    return param + multi, optional
 
 
 def test_get_doc_param():

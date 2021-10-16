@@ -108,7 +108,7 @@ class NumpyDoc:
 
     @staticmethod
     def get_param_doc(lines: tp.List[str]):
-        docs = defaultdict(list)
+        docs: tp.Dict[str, tp.List[str]] = defaultdict(list)
         name = None
 
         while lines:
@@ -186,7 +186,7 @@ def add_args(
                 and ("type" not in kwargs)
             ):
                 # opposite of default value
-                act_name = "store_true" if param.default == False else "store_false"
+                act_name = "store_false" if param.default else "store_true"
                 kwargs.setdefault("action", act_name)
 
         # help can be set by passing help argument otherwise inferred from docstring
