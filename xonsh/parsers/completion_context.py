@@ -71,7 +71,7 @@ class CommandContext(NamedTuple):
 
     def completing_command(self, command: str) -> bool:
         """Return whether this context is completing args for a command"""
-        return self.arg_index > 0 and self.args[0].value == command
+        return self.arg_index > 0 and self.command == command
 
     @property
     def raw_prefix(self):

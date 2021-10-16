@@ -1,23 +1,29 @@
 import pytest
 
 from tests.tools import ON_WINDOWS
-from xonsh.completers.pip import PIP_RE
+from xonsh.completers.commands import complete_xompletions
+
+
+regex_cases = [
+    "pip",
+    "pip.exe",
+    "pip3.6.exe",
+    "xpip",
+]
+
+if ON_WINDOWS:
+    regex_cases.append(r"C:\Python\Scripts\pip")
+    regex_cases.append(r"C:\Python\Scripts\pip.exe")
+else:
+    regex_cases.append("/usr/bin/pip3")
 
 
 @pytest.mark.parametrize(
     "line",
-    [
-        "pip",
-        "pip.exe",
-        "pip3.6.exe",
-        "xpip",
-        "/usr/bin/pip3",
-        r"C:\Python\Scripts\pip",
-        r"C:\Python\Scripts\pip.exe",
-    ],
+    regex_cases,
 )
 def test_pip_re(line):
-    assert PIP_RE.search(line)
+    assert complete_xompletions.search_completer(line)
 
 
 @pytest.mark.parametrize(
@@ -35,7 +41,7 @@ def test_pip_re(line):
     ],
 )
 def test_pip_list_re1(line):
-    assert PIP_RE.search(line) is None
+    assert complete_xompletions.search_completer(line) is None
 
 
 @pytest.mark.parametrize(
