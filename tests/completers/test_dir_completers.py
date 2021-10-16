@@ -1,15 +1,10 @@
-import pytest
 import tempfile
 from os import sep
 
-from xonsh.completers.tools import RichCompletion
-from xonsh.parsers.completion_context import (
-    CompletionContext,
-    CommandContext,
-    CommandArg,
-)
+import pytest
 
 from tests.tools import ON_WINDOWS
+from xonsh.completers.tools import RichCompletion
 
 CUR_DIR = "." if ON_WINDOWS else "./"
 PARENT_DIR = ".." if ON_WINDOWS else "../"
@@ -25,31 +20,6 @@ def setup(xession, xonsh_execer):
 @pytest.fixture(params=["cd", "rmdir"])
 def cmd(request):
     return request.param
-
-
-def complete_cmd_(cmd, prefix, opening_quote="", closing_quote=""):
-    result = COMPLETERS[cmd](
-        CompletionContext(
-            CommandContext(
-                args=(CommandArg(cmd),),
-                arg_index=1,
-                prefix=prefix,
-                opening_quote=opening_quote,
-                closing_quote=closing_quote,
-                is_after_closing_quote=bool(closing_quote),
-            )
-        )
-    )
-    assert result and len(result) == 2
-    completions, lprefix = result
-    assert lprefix == len(opening_quote) + len(prefix) + len(
-        closing_quote
-    )  # should override the quotes
-    return completions
-
-
-def complete_cmd_dirs(*a, **kw):
-    return [r.value for r in complete_cmd(*a, **kw)]
 
 
 def test_non_dir(cmd, check_completer):
