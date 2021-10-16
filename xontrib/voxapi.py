@@ -121,14 +121,14 @@ class Vox(collections.abc.Mapping):
     2. ``bin``: The full path to the bin/Scripts directory of the environment
     """
 
-    def __init__(self):
+    def __init__(self, force_removals=False):
         if not XSH.env.get("VIRTUALENV_HOME"):
             home_path = os.path.expanduser("~")
             self.venvdir = os.path.join(home_path, ".virtualenvs")
             XSH.env["VIRTUALENV_HOME"] = self.venvdir
         else:
             self.venvdir = XSH.env["VIRTUALENV_HOME"]
-        self.force_removals = False
+        self.force_removals = force_removals
 
     def create(
         self,
