@@ -69,7 +69,12 @@ class VoxHandler(xcli.ArgParserAlias):
         parser.add_command(self.remove, aliases=["rm", "delete", "del"])
         parser.add_command(self.info)
         parser.add_command(self.runin)
-        parser.add_command(self.runinall)
+        parser.add_command(self.runin_all)
+        parser.add_command(self.toggle_ssp)
+        parser.add_command(self.wipe)
+        parser.add_command(self.project_set)
+        parser.add_command(self.project_get)
+
         return parser
 
     def new(
@@ -366,11 +371,24 @@ class VoxHandler(xcli.ArgParserAlias):
         Parameters
         ----------
         venv
-            Name of the virtualenv under $VIRTUALENV_HOME, while default being currently active venv.
+            Name of the virtualenv, while the default being currently active venv.
         project_path
-            Path to the project, while default being current directory.
+            Path to the project, while the default being current directory.
         """
-        # todo
+        env_dir = self._get_env_dir(venv)  # current
+
+        project = os.path.abspath(project_path or ".")
+        if not os.path.exists(env_dir):
+            self.parser.error(f"Environment '{env_dir}' doesn't exist.")
+        if not os.path.isdir(project):
+            self.parser.error(f"{project} does not exist")
+
+        project_file = self._get_project_file()
+        project_file.write_text(project)
+
+    def _get_project_file(self, venv=None):
+        env_dir = Path(self._get_env_dir(venv))  # current
+        return env_dir / ".project"
 
     def project_get(self, venv=None):
         """Return a virtualenv's project directory.
@@ -380,6 +398,16 @@ class VoxHandler(xcli.ArgParserAlias):
         venv
             Name of the virtualenv under $VIRTUALENV_HOME, while default being currently active venv.
         """
+
+        project_file = self._get_project_file(venv)
+        if project_file.exists():
+            project_dir = project_file.read_text()
+            if os.path.exists(project_dir):
+                return project_dir
+            else:
+                self.parser.error(
+                    f"Corrupted or outdated: {project_file}\nDirectory: {project_dir} doesn't exist."
+                )
 
     def wipe(self, venv=None):
         """Remove all installed packages from the current (or supplied) env.
