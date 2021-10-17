@@ -1,6 +1,7 @@
 """Python virtual environment manager for xonsh."""
 import os.path
 import subprocess
+import sys
 import tempfile
 import typing as tp
 from pathlib import Path
@@ -8,7 +9,7 @@ from pathlib import Path
 import xonsh.cli_utils as xcli
 import xontrib.voxapi as voxapi
 from xonsh.built_ins import XSH
-
+from xonsh.platform import ON_WINDOWS
 
 __all__ = ()
 
@@ -41,8 +42,6 @@ class VoxHandler(xcli.ArgParserAlias):
             self.new,
             aliases=["create"],
         )
-
-        from xonsh.platform import ON_WINDOWS
 
         group = create.add_mutually_exclusive_group()
         group.add_argument(
@@ -248,11 +247,34 @@ class VoxHandler(xcli.ArgParserAlias):
                 print(f'Environment "{name}" removed.')
         print()
 
-    def _in_venv(self):
-        return
+    def _in_venv(self, env_dir: str, command: str, *args, **kwargs):
+        env = XSH.env.detype()
+        env["VIRTUAL_ENV"] = env_dir
+        env["PATH"] = os.pathsep.join(
+            [
+                os.path.join(env_dir, self.vox.sub_dirs[0]),
+                env["PATH"],
+            ]
+        )
+        for key in ("PYTHONHOME", "__PYVENV_LAUNCHER__"):
+            if key in env:
+                del env[key]
+
+        try:
+            return subprocess.check_call(
+                [command] + list(args), shell=ON_WINDOWS, **kwargs
+            )
+            # need to have shell=True on windows, otherwise the PYTHONPATH
+            # won't inherit the PATH
+        except OSError as e:
+            if e.errno == 2:
+                self.parser.error(f"Unable to find {command}")
+            raise
 
     def runin(
-        self, venv: str, command: xcli.Annotated[tp.List[str], xcli.Arg(nargs="...")]
+        self,
+        venv: str,
+        args: xcli.Annotated[tp.List[str], xcli.Arg(nargs="...")],
     ):
         """Run the command in the given environment
 
@@ -260,26 +282,38 @@ class VoxHandler(xcli.ArgParserAlias):
         ----------
         venv
             The environment to run the command for
-        command
+        args
             The actual command to run
 
         Examples
         --------
-          vox runin venv1 flake8 .
+          vox runin venv1 black --check-only
         """
-        # breakpoint()
-        env_dir = self._get_env_dir()
-        print(locals())
+        env_dir = self._get_env_dir(venv)
+        if not args:
+            self.parser.error("No command is passed")
+        self._in_venv(env_dir, *args)
 
-    def runinall(self, command):
+    def runin_all(
+        self,
+        args: xcli.Annotated[tp.List[str], xcli.Arg(nargs="...")],
+    ):
         """Run the command in all environments found under $VIRTUALENV_HOME
 
         Parameters
         ----------
-        command
-            The actual command to run
+        args
+            The actual command to run with arguments
         """
-        # todo: implement
+        errors = False
+        for env in self.vox:
+            print("\n%s:" % env)
+            try:
+                self.runin(env, *args)
+            except subprocess.CalledProcessError as e:
+                errors = True
+                print(e, file=sys.stderr)
+        sys.exit(errors)
 
     def _sitepackages_dir(self, venv_path: str):
         env_python = self.vox.get_binary_path("python", venv_path)
