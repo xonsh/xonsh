@@ -172,7 +172,6 @@ class Vox(collections.abc.Mapping):
                 )
             )
 
-        # todo: add function to toggle system-site-packages like in pew and others
         self._create(env_path, interpreter, system_site_packages, symlinks, with_pip)
         events.vox_on_create.fire(name=name)
 
@@ -421,4 +420,9 @@ class Vox(collections.abc.Mapping):
 
 def _get_vox_default_interpreter():
     """Return the interpreter set by the $VOX_DEFAULT_INTERPRETER if set else sys.executable"""
-    return XSH.env.get("VOX_DEFAULT_INTERPRETER", sys.executable)
+    default = "python"
+    if default in XSH.commands_cache:
+        default = XSH.commands_cache[default]
+    else:
+        default = sys.executable
+    return XSH.env.get("VOX_DEFAULT_INTERPRETER", default)
