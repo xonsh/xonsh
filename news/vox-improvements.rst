@@ -6,7 +6,7 @@
     * runinall
     * new
 
-        * ``--associate`` : to associate venv with project directory
+        * ``--link`` : to associate venv with project directory
         * ``--temp`` : to create temporary virtualenvs
 
     * activate

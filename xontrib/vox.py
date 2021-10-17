@@ -9,6 +9,7 @@ from pathlib import Path
 import xonsh.cli_utils as xcli
 import xontrib.voxapi as voxapi
 from xonsh.built_ins import XSH
+from xonsh.dirstack import pushd_fn
 from xonsh.platform import ON_WINDOWS
 
 __all__ = ()
@@ -28,6 +29,12 @@ def py_interpreter_path_completer(xsh, **_):
     for _, (path, is_alias) in xsh.commands_cache.all_commands.items():
         if not is_alias and ("/python" in path or "/pypy" in path):
             yield path
+
+
+_venv_option = xcli.Annotated[
+    tp.Optional[str],
+    xcli.Arg(metavar="ENV", nargs="?", completer=venv_names_completer),
+]
 
 
 class VoxHandler(xcli.ArgParserAlias):
@@ -90,7 +97,7 @@ class VoxHandler(xcli.ArgParserAlias):
         temporary=False,
         packages: xcli.Annotated[tp.Sequence[str], xcli.Arg(nargs="*")] = (),
         requirements: xcli.Annotated[tp.Sequence[str], xcli.Arg(action="append")] = (),
-        associate=False,
+        link_project_dir=False,
     ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
@@ -117,13 +124,9 @@ class VoxHandler(xcli.ArgParserAlias):
             Install one or more packages (by repeating the option) after the environment is created using pip
         requirements: -r, --requirements
             The argument value is passed to ``pip -r`` to be installed.
-        associate: -l, --link, --associate
-            Associate an current directory with the new environment.
+        link_project_dir: -l, --link, --link-project
+            Associate the current directory with the new environment.
         """
-        # todo:
-        #  2. implement associate
-        #  3. -i option to mention package to install
-        #  4. -r option to mention requirements.txt
 
         print("Creating environment...")
 
@@ -138,8 +141,23 @@ class VoxHandler(xcli.ArgParserAlias):
             with_pip=(not without_pip),
             interpreter=interpreter,
         )
+        if link_project_dir:
+            self.project_set(name)
+
+        if packages:
+            self.runin(name, ["pip", "install", *packages])
+
+        if requirements:
+
+            def _generate_args():
+                for req in requirements:
+                    yield "-r"
+                    yield req
+
+            self.runin(name, ["pip", "install"] + list(_generate_args()))
+
         if activate:
-            self.vox.activate(name)
+            self.activate(name)
             print(f"Environment {name!r} created and activated.\n")
         else:
             print(
@@ -148,10 +166,7 @@ class VoxHandler(xcli.ArgParserAlias):
 
     def activate(
         self,
-        name: xcli.Annotated[
-            str,
-            xcli.Arg(metavar="ENV", nargs="?", completer=venv_names_completer),
-        ] = None,
+        name: _venv_option = None,
         no_cd=False,
     ):
         """Activate a virtual environment.
@@ -165,7 +180,7 @@ class VoxHandler(xcli.ArgParserAlias):
         no_cd: -n, --no-cd
             Do not change current working directory even if a project path is associated with ENV.
         """
-        # todo: implement no-cd
+
         if name is None:
             return self.list()
 
@@ -176,8 +191,12 @@ class VoxHandler(xcli.ArgParserAlias):
                 f'This environment doesn\'t exist. Create it with "vox new {name}".\n',
             )
             return None
-        else:
-            print(f'Activated "{name}".\n')
+
+        print(f'Activated "{name}".\n')
+        if not no_cd:
+            project_dir = self._get_project_dir(name)
+            if project_dir:
+                pushd_fn(project_dir)
 
     def deactivate(self, remove=False, force=False):
         """Deactivate the active virtual environment.
@@ -267,7 +286,7 @@ class VoxHandler(xcli.ArgParserAlias):
 
         try:
             return subprocess.check_call(
-                [command] + list(args), shell=ON_WINDOWS, **kwargs
+                [command] + list(args), shell=ON_WINDOWS, env=env, **kwargs
             )
             # need to have shell=True on windows, otherwise the PYTHONPATH
             # won't inherit the PATH
@@ -278,7 +297,10 @@ class VoxHandler(xcli.ArgParserAlias):
 
     def runin(
         self,
-        venv: str,
+        venv: xcli.Annotated[
+            str,
+            xcli.Arg(completer=venv_names_completer),
+        ],
         args: xcli.Annotated[tp.List[str], xcli.Arg(nargs="...")],
     ):
         """Run the command in the given environment
@@ -365,7 +387,11 @@ class VoxHandler(xcli.ArgParserAlias):
             with ngsp_file.open("w"):
                 print("Disabled global site-packages")
 
-    def project_set(self, venv=None, project_path=None):
+    def project_set(
+        self,
+        venv: _venv_option = None,
+        project_path=None,
+    ):
         """Bind an existing virtualenv to an existing project.
 
         Parameters
@@ -386,11 +412,21 @@ class VoxHandler(xcli.ArgParserAlias):
         project_file = self._get_project_file()
         project_file.write_text(project)
 
-    def _get_project_file(self, venv=None):
+    def _get_project_file(
+        self,
+        venv=None,
+    ):
         env_dir = Path(self._get_env_dir(venv))  # current
         return env_dir / ".project"
 
-    def project_get(self, venv=None):
+    def _get_project_dir(self, venv=None):
+        project_file = self._get_project_file(venv)
+        if project_file.exists():
+            project_dir = project_file.read_text()
+            if os.path.exists(project_dir):
+                return project_dir
+
+    def project_get(self, venv: _venv_option = None):
         """Return a virtualenv's project directory.
 
         Parameters
@@ -398,18 +434,16 @@ class VoxHandler(xcli.ArgParserAlias):
         venv
             Name of the virtualenv under $VIRTUALENV_HOME, while default being currently active venv.
         """
+        project_dir = self._get_project_dir(venv)
+        if project_dir:
+            print(project_dir)
+        else:
+            project_file = self._get_project_file(venv)
+            self.parser.error(
+                f"Corrupted or outdated: {project_file}\nDirectory: {project_dir} doesn't exist."
+            )
 
-        project_file = self._get_project_file(venv)
-        if project_file.exists():
-            project_dir = project_file.read_text()
-            if os.path.exists(project_dir):
-                return project_dir
-            else:
-                self.parser.error(
-                    f"Corrupted or outdated: {project_file}\nDirectory: {project_dir} doesn't exist."
-                )
-
-    def wipe(self, venv=None):
+    def wipe(self, venv: _venv_option = None):
         """Remove all installed packages from the current (or supplied) env.
 
         Parameters
@@ -434,7 +468,7 @@ class VoxHandler(xcli.ArgParserAlias):
         else:
             print("Nothing to remove")
 
-    def info(self, venv=None):
+    def info(self, venv: _venv_option = None):
         """Prints the path for the supplied env
 
         Parameters
