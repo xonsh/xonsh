@@ -1,8 +1,13 @@
 """Python virtual environment manager for xonsh."""
+import os.path
+import subprocess
+import tempfile
+import typing as tp
 
 import xonsh.cli_utils as xcli
 import xontrib.voxapi as voxapi
 from xonsh.built_ins import XSH
+
 
 __all__ = ()
 
@@ -31,11 +36,9 @@ class VoxHandler(xcli.ArgParserAlias):
         self.vox = voxapi.Vox()
         parser = self.create_parser(prog="vox")
 
-        # todo: completer for interpreter
         create = parser.add_command(
             self.new,
             aliases=["create"],
-            args=("name", "interpreter", "system_site_packages", "activate"),
         )
 
         from xonsh.platform import ON_WINDOWS
@@ -45,7 +48,7 @@ class VoxHandler(xcli.ArgParserAlias):
             "--symlinks",
             default=not ON_WINDOWS,
             action="store_true",
-            dest="symlinks",
+            dest="_symlinks",
             help="Try to use symlinks rather than copies, "
             "when symlinks are not the default for "
             "the platform.",
@@ -54,38 +57,35 @@ class VoxHandler(xcli.ArgParserAlias):
             "--copies",
             default=ON_WINDOWS,
             action="store_false",
-            dest="symlinks",
+            dest="_symlinks",
             help="Try to use copies rather than symlinks, "
             "even when symlinks are the default for "
             "the platform.",
-        )
-        create.add_argument(
-            "--without-pip",
-            dest="with_pip",
-            default=True,
-            action="store_false",
-            help="Skips installing or upgrading pip in the "
-            "virtual environment (pip is bootstrapped "
-            "by default)",
         )
 
         parser.add_command(self.activate, aliases=["workon", "enter"])
         parser.add_command(self.deactivate, aliases=["exit"])
         parser.add_command(self.list, aliases=["ls"])
         parser.add_command(self.remove, aliases=["rm", "delete", "del"])
+        parser.add_command(self.info)
+        parser.add_command(self.runin)
+        parser.add_command(self.runinall)
         return parser
 
     def new(
         self,
         name: xcli.Annotated[str, xcli.Arg(metavar="ENV")],
         interpreter: xcli.Annotated[
-            str,
-            xcli.Arg("-p", "--interpreter", completer=py_interpreter_path_completer),
+            str, xcli.Arg(completer=py_interpreter_path_completer)
         ] = None,
         system_site_packages=False,
-        symlinks: bool = False,
-        with_pip: bool = True,
+        _symlinks=False,
+        without_pip=False,
         activate=False,
+        temporary=False,
+        packages: xcli.Annotated[tp.Sequence[str], xcli.Arg(nargs="*")] = (),
+        requirements: xcli.Annotated[tp.Sequence[str], xcli.Arg(action="append")] = (),
+        associate=False,
     ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
@@ -93,26 +93,45 @@ class VoxHandler(xcli.ArgParserAlias):
         ----------
         name : str
             Virtual environment name
-        interpreter: str
+        interpreter: -p, --interpreter
             Python interpreter used to create the virtual environment.
             Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
         system_site_packages : --system-site-packages, --ssp
             If True, the system (global) site-packages dir is available to
             created environments.
-        symlinks : bool
+        _symlinks : bool
             If True, attempt to symlink rather than copy files into virtual
             environment.
-        with_pip : bool
-            If True, ensure pip is installed in the virtual environment. (Default is True)
+        without_pip : --without-pip, --wp
+            Skips installing or upgrading pip in the virtual environment
         activate : -a, --activate
             Activate the newly created virtual environment.
+        temporary: -t, --temp
+            Create the virtualenv under a temporary directory.
+        packages: -i, --install
+            Install one or more packages (by repeating the option) after the environment is created using pip
+        requirements: -r, --requirements
+            The argument value is passed to ``pip -r`` to be installed.
+        associate: -l, --link, --associate
+            Associate an current directory with the new environment.
         """
+        # todo:
+        #  2. implement associate
+        #  3. -i option to mention package to install
+        #  4. -r option to mention requirements.txt
+
         print("Creating environment...")
+        print(locals())
+
+        if temporary:
+            path = tempfile.mkdtemp(prefix=f"vox-env-{name}")
+            name = os.path.join(path, name)
+
         self.vox.create(
             name,
             system_site_packages=system_site_packages,
-            symlinks=symlinks,
-            with_pip=with_pip,
+            symlinks=_symlinks,
+            with_pip=(not without_pip),
             interpreter=interpreter,
         )
         if activate:
@@ -129,6 +148,7 @@ class VoxHandler(xcli.ArgParserAlias):
             str,
             xcli.Arg(metavar="ENV", nargs="?", completer=venv_names_completer),
         ] = None,
+        no_cd=False,
     ):
         """Activate a virtual environment.
 
@@ -138,8 +158,10 @@ class VoxHandler(xcli.ArgParserAlias):
             The environment to activate.
             ENV can be either a name from the venvs shown by ``vox list``
             or the path to an arbitrary venv
+        no_cd: -n, --no-cd
+            Do not change current working directory even if a project path is associated with ENV.
         """
-
+        # todo: implement no-cd
         if name is None:
             return self.list()
 
@@ -225,6 +247,97 @@ class VoxHandler(xcli.ArgParserAlias):
             else:
                 print(f'Environment "{name}" removed.')
         print()
+
+    def runin(self, environment, command):
+        """Run the command in the given environment
+
+        Parameters
+        ----------
+        environment
+            The environment to run the command for
+        command
+            The actual command to run
+
+        Examples
+        --------
+          vox runin venv1 flake8 .
+        """
+        # todo: implement
+
+    def runinall(self, command):
+        """Run the command in all environments found under $VIRTUALENV_HOME
+
+        Parameters
+        ----------
+        command
+            The actual command to run
+        """
+        # todo: implement
+
+    def toggle_ssp(self):
+        """Controls whether the active virtualenv will access the packages
+        in the global Python site-packages directory."""
+        # todo:
+
+    def project_set(self, venv=None, project_path=None):
+        """Bind an existing virtualenv to an existing project.
+
+        Parameters
+        ----------
+        venv
+            Name of the virtualenv under $VIRTUALENV_HOME, while default being currently active venv.
+        project_path
+            Path to the project, while default being current directory.
+        """
+        # todo
+
+    def project_get(self, venv=None):
+        """Return a virtualenv's project directory.
+
+        Parameters
+        ----------
+        venv
+            Name of the virtualenv under $VIRTUALENV_HOME, while default being currently active venv.
+        """
+
+    def wipe(self, venv=None):
+        """Remove all installed packages from the current (or supplied) env.
+
+        Parameters
+        ----------
+        venv
+            name of the venv
+        """
+        try:
+            env_dir = self.vox[venv or ...].env
+        except KeyError:
+            self.parser.error("Virtualenv is not active")
+            return
+        pip_bin = self.vox.get_binary_path("pip", env_dir)
+        all_pkgs = set(
+            subprocess.check_output([pip_bin, "freeze", "--local"])
+            .decode()
+            .splitlines()
+        )
+        pkgs = set(p for p in all_pkgs if len(p.split("==")) == 2)
+        ignored = sorted(all_pkgs - pkgs)
+        to_remove = set(p.split("==")[0] for p in pkgs)
+        if to_remove:
+            print("Ignoring:\n %s" % "\n ".join(ignored))
+            print("Uninstalling packages:\n %s" % "\n ".join(to_remove))
+            return subprocess.run([pip_bin, "uninstall", "-y", *to_remove])
+        else:
+            print("Nothing to remove")
+
+    def info(self, venv=None):
+        """Prints the path for the supplied env
+
+        Parameters
+        ----------
+        venv
+            name of the venv
+        """
+        print(self.vox[venv or ...])
 
 
 XSH.aliases["vox"] = VoxHandler()

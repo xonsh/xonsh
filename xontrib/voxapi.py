@@ -129,6 +129,7 @@ class Vox(collections.abc.Mapping):
         else:
             self.venvdir = XSH.env["VIRTUALENV_HOME"]
         self.force_removals = force_removals
+        self.sub_dirs = _subdir_names()
 
     def create(
         self,
@@ -168,7 +169,7 @@ class Vox(collections.abc.Mapping):
         if not self._check_reserved(env_path):
             raise ValueError(
                 "venv can't contain reserved names ({})".format(
-                    ", ".join(_subdir_names())
+                    ", ".join(self.sub_dirs)
                 )
             )
 
@@ -257,10 +258,9 @@ class Vox(collections.abc.Mapping):
         if return_code != 0:
             raise SystemExit(return_code)
 
-    @staticmethod
-    def _check_reserved(name):
+    def _check_reserved(self, name):
         return (
-            os.path.basename(name) not in _subdir_names()
+            os.path.basename(name) not in self.sub_dirs
         )  # FIXME: Check the middle components, too
 
     def __getitem__(self, name):
@@ -307,11 +307,17 @@ class Vox(collections.abc.Mapping):
         else:
             return True
 
+    def get_binary_path(self, binary, *dirs):
+        bin_, _, _ = self.sub_dirs
+        python_exec = binary
+        if ON_WINDOWS:
+            python_exec += ".exe"
+        return os.path.join(*dirs, bin_, python_exec)
+
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME."""
-        bin_, _, _ = _subdir_names()
         for dirpath, dirnames, _ in os.walk(self.venvdir):
-            python_exec = os.path.join(dirpath, bin_, "python")
+            python_exec = self.get_binary_path("python", dirpath)
             if ON_WINDOWS:
                 python_exec += ".exe"
             if os.access(python_exec, os.X_OK):
