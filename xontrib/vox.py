@@ -3,6 +3,7 @@ import os.path
 import subprocess
 import tempfile
 import typing as tp
+from pathlib import Path
 
 import xonsh.cli_utils as xcli
 import xontrib.voxapi as voxapi
@@ -121,7 +122,6 @@ class VoxHandler(xcli.ArgParserAlias):
         #  4. -r option to mention requirements.txt
 
         print("Creating environment...")
-        print(locals())
 
         if temporary:
             path = tempfile.mkdtemp(prefix=f"vox-env-{name}")
@@ -248,12 +248,17 @@ class VoxHandler(xcli.ArgParserAlias):
                 print(f'Environment "{name}" removed.')
         print()
 
-    def runin(self, environment, command):
+    def _in_venv(self):
+        return
+
+    def runin(
+        self, venv: str, command: xcli.Annotated[tp.List[str], xcli.Arg(nargs="...")]
+    ):
         """Run the command in the given environment
 
         Parameters
         ----------
-        environment
+        venv
             The environment to run the command for
         command
             The actual command to run
@@ -262,7 +267,9 @@ class VoxHandler(xcli.ArgParserAlias):
         --------
           vox runin venv1 flake8 .
         """
-        # todo: implement
+        # breakpoint()
+        env_dir = self._get_env_dir()
+        print(locals())
 
     def runinall(self, command):
         """Run the command in all environments found under $VIRTUALENV_HOME
@@ -274,10 +281,50 @@ class VoxHandler(xcli.ArgParserAlias):
         """
         # todo: implement
 
+    def _sitepackages_dir(self, venv_path: str):
+        env_python = self.vox.get_binary_path("python", venv_path)
+        if not os.path.exists(env_python):
+            self.parser.error("ERROR: no virtualenv active")
+            return
+
+        return Path(
+            subprocess.check_output(
+                [
+                    str(env_python),
+                    "-c",
+                    "import distutils; \
+    print(distutils.sysconfig.get_python_lib())",
+                ]
+            ).decode()
+        )
+
+    def _get_env_dir(self, venv=None):
+        venv = venv or "..."
+        try:
+            env_dir = self.vox[venv].env
+        except KeyError:
+            # check whether the venv is a valid path to an environment
+            if os.path.exists(venv) and os.path.exists(
+                self.vox.get_binary_path("python", venv)
+            ):
+                return venv
+            self.parser.error("No virtualenv is found")
+            return
+        return env_dir
+
     def toggle_ssp(self):
         """Controls whether the active virtualenv will access the packages
         in the global Python site-packages directory."""
-        # todo:
+        # https://virtualenv.pypa.io/en/legacy/userguide.html#the-system-site-packages-option
+        env_dir = self._get_env_dir()  # current
+        site = self._sitepackages_dir(env_dir)
+        ngsp_file = site.parent / "no-global-site-packages.txt"
+        if ngsp_file.exists():
+            ngsp_file.unlink()
+            print("Enabled global site-packages")
+        else:
+            with ngsp_file.open("w"):
+                print("Disabled global site-packages")
 
     def project_set(self, venv=None, project_path=None):
         """Bind an existing virtualenv to an existing project.
@@ -308,11 +355,7 @@ class VoxHandler(xcli.ArgParserAlias):
         venv
             name of the venv
         """
-        try:
-            env_dir = self.vox[venv or ...].env
-        except KeyError:
-            self.parser.error("Virtualenv is not active")
-            return
+        env_dir = self._get_env_dir(venv)
         pip_bin = self.vox.get_binary_path("pip", env_dir)
         all_pkgs = set(
             subprocess.check_output([pip_bin, "freeze", "--local"])
