@@ -4,7 +4,6 @@
 import os
 
 from xonsh.built_ins import XSH
-import xonsh.platform as xp
 
 
 def find_env_name():
