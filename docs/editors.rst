@@ -44,7 +44,7 @@ Xonsh Comint buffer
 You can use xonsh as your `interactive shell in Emacs
 <https://www.gnu.org/software/emacs/manual/html_node/emacs/Interactive-Shell.html>`_
 in a Comint buffer. This way you keep all the Emacs editing power
-in the shell, but you loose xonsh's completion feature.
+in the shell, but you lose xonsh's completion feature.
 
 Make sure you install xonsh with readline support and in your
 ``.xonshrc`` file define
