@@ -443,7 +443,9 @@ class Lexer(object):
         pass
 
     def reset(self):
-        pass
+        self._token_stream = iter(())
+        self.last = None
+        self.beforelast = None
 
     def input(self, s):
         """Calls the lexer on the string s."""
