@@ -162,8 +162,8 @@ class Execer(object):
                 filename=filename,
                 transform=transform,
             )
-        if code is None:
-            return None  # handles comment only input
+            if code is None:
+                return None  # handles comment only input
         return eval(code, glbs, locs)
 
     def exec(
@@ -195,8 +195,8 @@ class Execer(object):
                 filename=filename,
                 transform=transform,
             )
-        if code is None:
-            return None  # handles comment only input
+            if code is None:
+                return None  # handles comment only input
         return exec(code, glbs, locs)
 
     def _print_debug_wrapping(
