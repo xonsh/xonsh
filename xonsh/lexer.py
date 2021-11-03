@@ -496,7 +496,7 @@ class Lexer(object):
     def tokens(self):
         if self._tokens is None:
             kwlist = kwmod.kwlist[:]
-            if PYTHON_VERSION_INFO >= (3, 9, 0) and PYTHON_VERSION_INFO < (3, 10):
+            if (3, 9, 0) <= PYTHON_VERSION_INFO < (3, 10):
                 kwlist.remove("__peg_parser__")
             t = (
                 tuple(token_map.values())
