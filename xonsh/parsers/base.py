@@ -278,7 +278,7 @@ class BaseParser(object):
         self.tokens = lexer.tokens
 
         self._lines = None
-        self.xonsh_code = None
+        self._source = None
         self._attach_nocomma_tok_rules()
         self._attach_nocloser_base_rules()
         self._attach_nodedent_base_rules()
@@ -494,7 +494,7 @@ class BaseParser(object):
         self.lexer.reset()
         self._last_yielded_token = None
         self._lines = None
-        self.xonsh_code = None
+        self._source = None
         self._error = None
 
     def parse(self, s, filename="<code>", mode="exec", debug_level=0):
@@ -516,7 +516,7 @@ class BaseParser(object):
         tree : AST
         """
         self.reset()
-        self.xonsh_code = s
+        self._source = s
         self.lexer.fname = filename
         while self.parser is None:
             time.sleep(0.01)  # block until the parser is ready
@@ -618,8 +618,8 @@ class BaseParser(object):
 
     @property
     def lines(self):
-        if self._lines is None and self.xonsh_code is not None:
-            self._lines = self.xonsh_code.splitlines(keepends=True)
+        if self._lines is None and self._source is not None:
+            self._lines = self._source.splitlines(keepends=True)
         return self._lines
 
     def source_slice(self, start, stop):
@@ -647,7 +647,7 @@ class BaseParser(object):
         raise SyntaxError()
 
     def _parse_error(self, msg, loc):
-        raise_parse_error(msg, loc, self.xonsh_code, self.lines)
+        raise_parse_error(msg, loc, self._source, self.lines)
 
     #
     # Precedence of operators
