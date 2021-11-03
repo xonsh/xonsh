@@ -431,7 +431,11 @@ class Lexer(object):
         self.fname = ""
         self.last = None
         self.beforelast = None
-        self.tolerant = tolerant
+        self._tolerant = tolerant
+
+    @property
+    def tolerant(self):
+        return self._tolerant
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
@@ -442,7 +446,7 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self._token_stream = get_tokens(s, self.tolerant)
+        self._token_stream = get_tokens(s, self._tolerant)
 
     def token(self):
         """Retrieves the next token."""
