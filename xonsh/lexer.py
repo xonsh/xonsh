@@ -466,28 +466,28 @@ class Lexer(object):
         """Splits a string into a list of strings which are whitespace-separated
         tokens.
         """
-        vals = []
         self.input(s)
+        elements = []
         l = c = -1
         ws = "WS"
         nl = "\n"
-        for t in self:
-            if t.type == ws:
+        for token in self:
+            if token.type == ws:
                 continue
-            elif l < t.lineno:
-                vals.append(t.value)
-            elif len(vals) > 0 and c == t.lexpos:
-                vals[-1] = vals[-1] + t.value
+            elif l < token.lineno:
+                elements.append(token.value)
+            elif len(elements) > 0 and c == token.lexpos:
+                elements[-1] = elements[-1] + token.value
             else:
-                vals.append(t.value)
-            nnl = t.value.count(nl)
+                elements.append(token.value)
+            nnl = token.value.count(nl)
             if nnl == 0:
-                l = t.lineno
-                c = t.lexpos + len(t.value)
+                l = token.lineno
+                c = token.lexpos + len(token.value)
             else:
-                l = t.lineno + nnl
-                c = len(t.value.rpartition(nl)[-1])
-        return vals
+                l = token.lineno + nnl
+                c = len(token.value.rpartition(nl)[-1])
+        return elements
 
     #
     # All the tokens recognized by the lexer
