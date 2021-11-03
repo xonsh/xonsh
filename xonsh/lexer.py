@@ -432,6 +432,7 @@ class Lexer(object):
         self.last = None
         self.beforelast = None
         self._tolerant = tolerant
+        self._token_stream = iter(())
 
     @property
     def tolerant(self):
@@ -450,8 +451,7 @@ class Lexer(object):
 
     def token(self):
         """Retrieves the next token."""
-        self.beforelast = self.last
-        self.last = next(self._token_stream, None)
+        self.beforelast, self.last = self.last, next(self._token_stream, None)
         return self.last
 
     def __iter__(self):
