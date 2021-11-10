@@ -47,7 +47,6 @@ class XonshSession:
         # Loadable state
         self.execer = None
         self.ctx = None
-        self.builtins_loaded = False
         self.history = None
         self.shell = None
         self.env = None
@@ -61,6 +60,7 @@ class XonshSession:
         self.all_jobs = None
         self.completers = None
         self.builtins = None
+        self.aliases = None
         self._default_builtin_names = None
 
         self._py_exit = None
@@ -102,6 +102,9 @@ class XonshSession:
         from xonsh.environ import Env, default_env
         from xonsh.commands_cache import CommandsCache
         from xonsh.completers.init import default_completers
+        # Need this inline/lazy import here since we use locate_binary that
+        # relies on __xonsh__.env in default aliases
+        from xonsh.aliases import Aliases, make_default_aliases
 
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self
@@ -130,17 +133,23 @@ class XonshSession:
         self.builtins = xonsh.built_ins.create_builtins_namespace(execer)
         self._default_builtin_names = frozenset(vars(self.builtins))
 
-        aliases_given = kwargs.pop("aliases", None)
-        for attr, value in kwargs.items():
-            if hasattr(self, attr):
-                setattr(self, attr, value)
-        self.link_builtins(aliases_given)
-        self.builtins_loaded = True
+        self._link_builtins(self._default_builtin_names)
+
+        # Sneak the path search functions into the aliases
+        aliases = kwargs.pop("aliases", None)
+        if aliases is None:
+            aliases = Aliases(make_default_aliases())
+        self.aliases = builtins.default_aliases = builtins.aliases = aliases
 
         # Cleanup on exit
         atexit.register(_lastflush)
         for sig in AT_EXIT_SIGNALS:
             resetting_signal_handle(sig, _lastflush)
+
+        # Write any remaining attributes
+        for attr, value in kwargs.items():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
 
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
@@ -158,30 +167,20 @@ class XonshSession:
         if self._py_quit is not None:
             builtins.quit = self._py_quit
 
-    def link_builtins(self, aliases=None):
-        from xonsh.aliases import Aliases, make_default_aliases
-
+    def _link_builtins(self, names):
         # public Xonsh built-ins to Python builtins
-        for name in self._default_builtin_names:
+        for name in names:
             ref = f"__xonsh__.builtins.{name}"
             proxy = xonsh.built_ins.DynamicAccessProxy(name, ref)
             setattr(builtins, name, proxy)
 
-        # sneak the path search functions into the aliases
-        # Need this inline/lazy import here since we use locate_binary that
-        # relies on __xonsh__.env in default aliases
-        if aliases is None:
-            aliases = Aliases(make_default_aliases())
-        self.aliases = builtins.default_aliases = builtins.aliases = aliases
-
-    def unlink_builtins(self):
-        for name in self._default_builtin_names:
+    def _unlink_builtins(self, names):
+        for name in names:
             if hasattr(builtins, name):
                 delattr(builtins, name)
 
     def unload(self):
         if not hasattr(builtins, "__xonsh__"):
-            self.builtins_loaded = False
             return
 
         env = getattr(self, "env", None)
@@ -189,12 +188,8 @@ class XonshSession:
             env.undo_replace_env()
 
         self._restore_python_exit()
-        if not self.builtins_loaded:
-            return
-
-        self.unlink_builtins()
+        self._unlink_builtins(self._default_builtin_names)
         delattr(builtins, "__xonsh__")
-        self.builtins_loaded = False
 
 
 # singleton
