@@ -104,7 +104,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
 def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
-    env = xsh.XSH.env or os_environ
+    env = os_environ if xsh.XSH is None else xsh.XSH.env
     if env.get("EXPAND_ENV_VARS", False):
         s = expandvars(s)
     if expand_user:
@@ -125,7 +125,7 @@ def _expandpath(path):
     """Performs environment variable / user expansion on a given path
     if EXPAND_ENV_VARS is set.
     """
-    env = xsh.XSH.env or os_environ
+    env = os_environ if xsh.XSH is None else xsh.XSH.env
     expand_user = env.get("EXPAND_ENV_VARS", False)
     return expand_path(path, expand_user=expand_user)
 
@@ -336,7 +336,7 @@ def balanced_parens(line, mincol=0, maxcol=None, lexer=None):
     """Determines if parentheses are balanced in an expression."""
     line = line[mincol:maxcol]
     if lexer is None:
-        lexer = xsh.execer.parser.lexer
+        lexer = xsh.XSH.execer.parser.lexer
     if "(" not in line and ")" not in line:
         return True
     cnt = 0
@@ -354,7 +354,7 @@ def balanced_parens(line, mincol=0, maxcol=None, lexer=None):
 def ends_with_colon_token(line, lexer=None):
     """Determines whether a line ends with a colon token, ignoring comments."""
     if lexer is None:
-        lexer = xsh.execer.parser.lexer
+        lexer = xsh.XSH.execer.parser.lexer
     lexer.input(line)
     toks = list(lexer)
     return len(toks) > 0 and toks[-1].type == "COLON"
@@ -368,7 +368,7 @@ def find_next_break(line, mincol=0, lexer=None):
     if mincol >= 1:
         line = line[mincol:]
     if lexer is None:
-        lexer = xsh.execer.parser.lexer
+        lexer = xsh.XSH.execer.parser.lexer
     if RE_END_TOKS.search(line) is None:
         return None
     maxcol = None
@@ -406,7 +406,7 @@ def subproc_toks(
     normal parentheses. Greedy is False by default.
     """
     if lexer is None:
-        lexer = xsh.execer.parser.lexer
+        lexer = xsh.XSH.execer.parser.lexer
     if maxcol is None:
         maxcol = len(line) + 1
     lexer.reset()
@@ -838,7 +838,7 @@ def debian_command_not_found(cmd):
     if not ON_LINUX:
         return ""
 
-    cnf = xsh.commands_cache.lazyget(
+    cnf = xsh.XSH.commands_cache.lazyget(
         "command-not-found", ("/usr/lib/command-not-found",)
     )[0]
 
@@ -895,12 +895,12 @@ def suggest_commands(cmd, env):
     cmd = cmd.lower()
     suggested = {}
 
-    for alias in xsh.aliases:
+    for alias in xsh.XSH.aliases:
         if alias not in suggested:
             if levenshtein(alias.lower(), cmd, thresh) < thresh:
                 suggested[alias] = "Alias"
 
-    for _cmd in xsh.commands_cache.all_commands:
+    for _cmd in xsh.XSH.commands_cache.all_commands:
         if _cmd not in suggested:
             if levenshtein(_cmd.lower(), cmd, thresh) < thresh:
                 suggested[_cmd] = "Command ({0})".format(_cmd)
@@ -1875,8 +1875,8 @@ def format_color(string, **kwargs):
     shell instances method of the same name. The results of this function should
     be directly usable by print_color().
     """
-    if hasattr(xsh.shell, "shell"):
-        return xsh.shell.shell.format_color(string, **kwargs)
+    if hasattr(xsh.XSH.shell, "shell"):
+        return xsh.XSH.shell.shell.format_color(string, **kwargs)
     else:
         # fallback for ANSI if shell is not yet initialized
         from xonsh.ansi_colors import ansi_partial_color_format
@@ -1890,8 +1890,8 @@ def print_color(string, **kwargs):
     method of the same name. Colors will be formatted if they have not already
     been.
     """
-    if hasattr(xsh.shell, "shell"):
-        xsh.shell.shell.print_color(string, **kwargs)
+    if hasattr(xsh.XSH.shell, "shell"):
+        xsh.XSH.shell.shell.print_color(string, **kwargs)
     else:
         # fallback for ANSI if shell is not yet initialized
         print(format_color(string, **kwargs))
@@ -1899,12 +1899,12 @@ def print_color(string, **kwargs):
 
 def color_style_names():
     """Returns an iterable of all available style names."""
-    return xsh.shell.shell.color_style_names()
+    return xsh.XSH.shell.shell.color_style_names()
 
 
 def color_style():
     """Returns the current color map."""
-    return xsh.shell.shell.color_style()
+    return xsh.XSH.shell.shell.color_style()
 
 
 def register_custom_style(
@@ -1949,7 +1949,7 @@ def _token_attr_from_stylemap(stylemap):
     """yields tokens attr, and index from a stylemap"""
     import prompt_toolkit as ptk
 
-    if xsh.shell.shell_type == "prompt_toolkit1":
+    if xsh.XSH.shell.shell_type == "prompt_toolkit1":
         style = ptk.styles.style_from_dict(stylemap)
         for token in stylemap:
             yield token, style.token_to_attrs[token]
@@ -1964,7 +1964,7 @@ def _token_attr_from_stylemap(stylemap):
 
 def _get_color_lookup_table():
     """Returns the prompt_toolkit win32 ColorLookupTable"""
-    if xsh.shell.shell_type == "prompt_toolkit1":
+    if xsh.XSH.shell.shell_type == "prompt_toolkit1":
         from prompt_toolkit.terminal.win32_output import ColorLookupTable
     else:
         from prompt_toolkit.output.win32 import ColorLookupTable
@@ -2117,7 +2117,7 @@ def intensify_colors_for_cmd_exe(style_map):
         6: "ansibrightyellow",  # subst yellow with bright yellow
         9: "ansicyan",  # subst intense blue with dark cyan (more readable)
     }
-    if xsh.shell.shell_type == "prompt_toolkit1":
+    if xsh.XSH.shell.shell_type == "prompt_toolkit1":
         replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
@@ -2132,10 +2132,10 @@ def intensify_colors_on_win_setter(enable):
     enable = to_bool(enable)
     if (
         hasattr(xsh, "shell")
-        and xsh.shell is not None
-        and hasattr(xsh.shell.shell.styler, "style_name")
+        and xsh.XSH.shell is not None
+        and hasattr(xsh.XSH.shell.shell.styler, "style_name")
     ):
-        delattr(xsh.shell.shell.styler, "style_name")
+        delattr(xsh.XSH.shell.shell.styler, "style_name")
     return enable
 
 
@@ -2147,7 +2147,7 @@ def format_std_prepost(template, env=None):
         return ""
     env = xsh.XSH.env if env is None else env
     invis = "\001\002"
-    if xsh.shell is None:
+    if xsh.XSH.shell is None:
         # shell hasn't fully started up (probably still in xonshrc)
         from xonsh.prompt.base import PromptFormatter
         from xonsh.ansi_colors import ansi_partial_color_format
@@ -2158,7 +2158,7 @@ def format_std_prepost(template, env=None):
         s = ansi_partial_color_format(invis + s + invis, hide=False, style=style)
     else:
         # shell has fully started. do the normal thing
-        shell = xsh.shell.shell
+        shell = xsh.XSH.shell.shell
         try:
             s = shell.prompt_formatter(template)
         except Exception:
@@ -2454,7 +2454,7 @@ def _dotglobstr(s):
 
 
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
-    s = xsh.expand_path(s)
+    s = xsh.XSH.expand_path(s)
     if sort_result is None:
         sort_result = xsh.XSH.env.get("GLOB_SORTED")
     if include_dotfiles is None:
