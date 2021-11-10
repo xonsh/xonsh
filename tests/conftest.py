@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from xonsh.aliases import Aliases
-from xonsh.built_ins import XonshSession, XSH
+from xonsh.session import XonshSession, XSH
 from xonsh.completer import Completer
 from xonsh.execer import Execer
 from xonsh.jobs import tasks

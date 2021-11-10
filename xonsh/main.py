@@ -342,7 +342,6 @@ def premain(argv=None):
         "login": False,
         "scriptcache": args.scriptcache,
         "cacheall": args.cacheall,
-        "ctx": XSH.ctx,
     }
     if args.login or sys.argv[0].startswith("-"):
         args.login = True
