@@ -1,5 +1,5 @@
 import atexit
-import builtins
+import builtins as _builtins
 import signal
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.lazyasd import lazyobject
@@ -53,15 +53,16 @@ def _create_builtins_namespace(execer, aliases):
         events=events,
         print_color=print_color,
         printx=print_color,
-        default_aliases = aliases,
-        aliases = aliases
+        default_aliases=aliases,
+        aliases=aliases
     )
 
 
 class XonshSession:
     """All components defining a xonsh session."""
 
-    def __init__(self, execer, ctx=None, env=None, aliases=None):
+    def __init__(self, execer, ctx=None, env=None, aliases=None, history=None,
+                 shell=None, commands_cache=None, builtins=None):
         from xonsh.environ import Env, default_env
         from xonsh.commands_cache import CommandsCache
         from xonsh.completers.init import default_completers
@@ -72,32 +73,33 @@ class XonshSession:
         # Loadable state
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
-        self.env = Env(default_env() if env is None else {})
-        self.history = None
-        self.shell = None
+        self.env = Env(default_env()) if env is None else env
+        self.history = history
+        self.shell = shell
         self.rc_files = None
         self.exit = False
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
-        self.shell = None
 
         cache_path = (
             (Path(env["XONSH_DATA_DIR"]).joinpath("commands-cache.pickle").resolve())
             if env is not None
-            and "XONSH_DATA_DIR" in env
-            and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
+               and "XONSH_DATA_DIR" in env
+               and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
             else None
         )
-        self.commands_cache = CommandsCache(cache_path)
+        self.commands_cache = CommandsCache(
+            cache_path) if commands_cache is None else commands_cache
         self.modules_cache = {}
         self.all_jobs = {}
 
         self.completers = default_completers()
 
         # Sneak the path search functions into the aliases
-        self.aliases = Aliases(make_default_aliases() if aliases is None else aliases)
+        self.aliases = Aliases(make_default_aliases()) if aliases is None else aliases
 
-        self.builtins = _create_builtins_namespace(execer, self.aliases)
+        self.builtins = _create_builtins_namespace(execer,
+                                                   self.aliases) if builtins is None else builtins
         self._default_builtin_names = frozenset(vars(self.builtins))
 
         self._py_exit = None
@@ -128,31 +130,31 @@ class XonshSession:
 
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
-        if hasattr(builtins, "exit"):
-            self._py_exit = builtins.exit
-            del builtins.exit
+        if hasattr(_builtins, "exit"):
+            self._py_exit = _builtins.exit
+            del _builtins.exit
 
-        if hasattr(builtins, "quit"):
-            self._py_quit = builtins.quit
-            del builtins.quit
+        if hasattr(_builtins, "quit"):
+            self._py_quit = _builtins.quit
+            del _builtins.quit
 
     def _restore_python_exit(self):
         if self._py_exit is not None:
-            builtins.exit = self._py_exit
+            _builtins.exit = self._py_exit
         if self._py_quit is not None:
-            builtins.quit = self._py_quit
+            _builtins.quit = self._py_quit
 
     def _link_builtins(self, names):
         # public Xonsh built-ins to Python builtins
         for name in names:
             ref = f"__xonsh__.builtins.{name}"
             proxy = xonsh.built_ins.DynamicAccessProxy(name, ref)
-            setattr(builtins, name, proxy)
+            setattr(_builtins, name, proxy)
 
     def _unlink_builtins(self, names):
         for name in names:
-            if hasattr(builtins, name):
-                delattr(builtins, name)
+            if hasattr(_builtins, name):
+                delattr(_builtins, name)
 
     def _load(self):
         """Load the session into the Python namespace"""
@@ -163,16 +165,17 @@ class XonshSession:
         def _lastflush(s=None, f=None):
             if self.history is not None:
                 self.history.flush(at_exit=True)
+
         atexit.register(_lastflush)
         for sig in AT_EXIT_SIGNALS:
             resetting_signal_handle(sig, _lastflush)
 
         # Make sure we have __xonsh__
-        builtins.__xonsh__ = self
+        _builtins.__xonsh__ = self
 
     def _unload(self):
         """Unload the session from the Python namespace"""
-        if not hasattr(builtins, "__xonsh__"):
+        if not hasattr(_builtins, "__xonsh__"):
             return
 
         env = getattr(self, "env", None)
@@ -181,7 +184,7 @@ class XonshSession:
 
         self._restore_python_exit()
         self._unlink_builtins(self._default_builtin_names)
-        delattr(builtins, "__xonsh__")
+        delattr(_builtins, "__xonsh__")
 
 
 # Current instance
