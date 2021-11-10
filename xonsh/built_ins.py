@@ -484,18 +484,20 @@ def xonsh_builtins(execer=None):
     XSH.unload()
 
 
-class _BuiltIns:
-    def __init__(self, execer=None):
-        from xonsh.events import events
+def create_builtins_namespace(execer):
+    from xonsh.events import events
 
+    return types.SimpleNamespace(
         # public built-ins
-        self.XonshError = XonshError
-        self.XonshCalledProcessError = XonshCalledProcessError
-        self.evalx = None if execer is None else execer.eval
-        self.execx = None if execer is None else execer.exec
-        self.compilex = None if execer is None else execer.compile
-        self.events = events
-        self.print_color = self.printx = print_color
+        XonshError=XonshError,
+        XonshCalledProcessError=XonshCalledProcessError,
+        evalx=None if execer is None else execer.eval,
+        execx=None if execer is None else execer.exec,
+        compilex=None if execer is None else execer.compile,
+        events=events,
+        print_color=print_color,
+        printx=print_color,
+    )
 
 
 class DynamicAccessProxy:

@@ -122,7 +122,7 @@ class XonshSession:
         self.enter_macro = xonsh.built_ins.enter_macro
         self.path_literal = xonsh.built_ins.path_literal
 
-        self.builtins = xonsh.built_ins._BuiltIns(execer)
+        self.builtins = xonsh.built_ins.create_builtins_namespace(execer)
         self._default_builtin_names = frozenset(vars(self.builtins))
 
         aliases_given = kwargs.pop("aliases", None)
