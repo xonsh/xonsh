@@ -50,23 +50,11 @@ def find_source_encoding(src):
 class XonshImportHook(MetaPathFinder, SourceLoader):
     """Implements the import hook for xonsh source files."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, execer, *args, **kwargs):
         super(XonshImportHook, self).__init__(*args, **kwargs)
         self._filenames = {}
-        self._execer = None
+        self._execer = execer
 
-    @property
-    def execer(self):
-        if xsh.XSH.execer is not None:
-            execer = xsh.XSH.execer
-            if self._execer is not None:
-                self._execer = None
-        elif self._execer is None:
-            self._execer = execer = Execer()
-            # TODO push session
-        else:
-            execer = self._execer
-        return execer
 
     #
     # MetaPathFinder methods
@@ -118,7 +106,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
             msg = "xonsh file {0!r} could not be found".format(fullname)
             raise ImportError(msg)
         src = self.get_source(fullname)
-        execer = self.execer
+        execer = self._execer
         execer.filename = filename
         ctx = {}  # dummy for modules
         code = execer.compile(src, glbs=ctx, locs=ctx)
@@ -322,7 +310,7 @@ class XonshImportEventLoader(Loader):
         return object.__getattribute__(self, name)
 
 
-def install_import_hooks():
+def install_import_hooks(execer):
     """
     Install Xonsh import hooks in ``sys.meta_path`` in order for ``.xsh`` files
     to be importable and import events to be fired.
@@ -336,8 +324,9 @@ def install_import_hooks():
             found_imp = True
         elif isinstance(hook, XonshImportEventHook):
             found_event = True
+    # TODO what if found already - reuse execer?
     if not found_imp:
-        sys.meta_path.append(XonshImportHook())
+        sys.meta_path.append(XonshImportHook(execer))
     if not found_event:
         sys.meta_path.insert(0, XonshImportEventHook())
 
