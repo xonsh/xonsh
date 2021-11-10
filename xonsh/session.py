@@ -134,8 +134,6 @@ class XonshSession:
         # relies on __xonsh__.env in default aliases
         from xonsh.aliases import Aliases, make_default_aliases
 
-        if not hasattr(builtins, "__xonsh__"):
-            builtins.__xonsh__ = self
         if ctx is not None:
             self.ctx = ctx
 
@@ -178,6 +176,9 @@ class XonshSession:
         for attr, value in kwargs.items():
             if hasattr(self, attr):
                 setattr(self, attr, value)
+
+        # Make sure we have __xonsh__
+        builtins.__xonsh__ = self
 
     def unload(self):
         if not hasattr(builtins, "__xonsh__"):
