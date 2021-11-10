@@ -89,6 +89,34 @@ class XonshSession:
         self.enter_macro = xonsh.built_ins.enter_macro
         self.path_literal = xonsh.built_ins.path_literal
 
+    def _disable_python_exit(self):
+        # Disable Python interactive quit/exit
+        if hasattr(builtins, "exit"):
+            self._py_exit = builtins.exit
+            del builtins.exit
+
+        if hasattr(builtins, "quit"):
+            self._py_quit = builtins.quit
+            del builtins.quit
+
+    def _restore_python_exit(self):
+        if self._py_exit is not None:
+            builtins.exit = self._py_exit
+        if self._py_quit is not None:
+            builtins.quit = self._py_quit
+
+    def _link_builtins(self, names):
+        # public Xonsh built-ins to Python builtins
+        for name in names:
+            ref = f"__xonsh__.builtins.{name}"
+            proxy = xonsh.built_ins.DynamicAccessProxy(name, ref)
+            setattr(builtins, name, proxy)
+
+    def _unlink_builtins(self, names):
+        for name in names:
+            if hasattr(builtins, name):
+                delattr(builtins, name)
+
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
 
@@ -150,34 +178,6 @@ class XonshSession:
         for attr, value in kwargs.items():
             if hasattr(self, attr):
                 setattr(self, attr, value)
-
-    def _disable_python_exit(self):
-        # Disable Python interactive quit/exit
-        if hasattr(builtins, "exit"):
-            self._py_exit = builtins.exit
-            del builtins.exit
-
-        if hasattr(builtins, "quit"):
-            self._py_quit = builtins.quit
-            del builtins.quit
-
-    def _restore_python_exit(self):
-        if self._py_exit is not None:
-            builtins.exit = self._py_exit
-        if self._py_quit is not None:
-            builtins.quit = self._py_quit
-
-    def _link_builtins(self, names):
-        # public Xonsh built-ins to Python builtins
-        for name in names:
-            ref = f"__xonsh__.builtins.{name}"
-            proxy = xonsh.built_ins.DynamicAccessProxy(name, ref)
-            setattr(builtins, name, proxy)
-
-    def _unlink_builtins(self, names):
-        for name in names:
-            if hasattr(builtins, name):
-                delattr(builtins, name)
 
     def unload(self):
         if not hasattr(builtins, "__xonsh__"):
