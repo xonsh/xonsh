@@ -523,10 +523,3 @@ class DynamicAccessProxy:
 
     def __dir__(self):
         return self.obj.__dir__()
-
-
-# TODO: remove this in the future
-@lazyobject
-def XSH():
-    from .session import XSH
-    return XSH
