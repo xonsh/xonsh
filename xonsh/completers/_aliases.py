@@ -1,5 +1,5 @@
 import xonsh.cli_utils as xcli
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.completers.completer import (
     list_completers,
     remove_completer,
@@ -76,7 +76,7 @@ def _register_completer(
     """
     err = None
     func_name = func
-    xsh = XSH
+    xsh = xsh.XSH
     if name in xsh.completers:
         err = f"The name {name} is already a registered completer function."
     else:
@@ -123,7 +123,7 @@ def complete_argparser_aliases(command: CommandContext):
         return
     cmd = command.args[0].value
 
-    alias = XSH.aliases.get(cmd)  # type: ignore
+    alias = xsh.XSH.aliases.get(cmd)  # type: ignore
     # todo: checking isinstance(alias, ArgParserAlias) fails when amalgamated.
     #  see https://github.com/xonsh/xonsh/pull/4267#discussion_r676066853
     if not hasattr(alias, "parser"):

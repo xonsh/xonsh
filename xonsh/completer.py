@@ -11,7 +11,7 @@ from xonsh.completers.tools import (
     apply_lprefix,
     is_exclusive_completer,
 )
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_exception
 
@@ -127,7 +127,7 @@ class Completer(object):
     def generate_completions(
         completion_context, old_completer_args, trace: bool
     ) -> tp.Iterator[tp.Tuple[Completion, int]]:
-        for name, func in XSH.completers.items():
+        for name, func in xsh.XSH.completers.items():
             try:
                 if is_contextual_completer(func):
                     if completion_context is None:
@@ -196,13 +196,13 @@ class Completer(object):
                 break
 
     def complete_from_context(self, completion_context, old_completer_args=None):
-        trace = XSH.env.get("XONSH_TRACE_COMPLETIONS")
+        trace = xsh.XSH.env.get("XONSH_TRACE_COMPLETIONS")
         if trace:
             print("\nTRACE COMPLETIONS: Getting completions with context:")
             sys.displayhook(completion_context)
         lprefix = 0
         completions = set()
-        query_limit = XSH.env.get("COMPLETION_QUERY_LIMIT")
+        query_limit = xsh.XSH.env.get("COMPLETION_QUERY_LIMIT")
 
         for comp in self.generate_completions(
             completion_context,

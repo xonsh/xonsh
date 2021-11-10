@@ -6,7 +6,7 @@ from subprocess import Popen
 import pytest
 
 from xonsh.procs.specs import cmds_to_specs, run_subproc
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread, STDOUT_DISPATCHER
 
@@ -50,7 +50,7 @@ def test_cmds_to_specs_thread_subproc(xession):
 
 @pytest.mark.parametrize("thread_subprocs", [True, False])
 def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs):
-    env = XSH.env
+    env = xsh.XSH.env
     cmds = (["ls", "/root"],)
 
     env["THREAD_SUBPROCS"] = thread_subprocs
@@ -76,7 +76,7 @@ def test_capture_always(
         else:
             return pytest.skip("https://github.com/xonsh/xonsh/issues/4444")
 
-    env = XSH.env
+    env = xsh.XSH.env
     exp = "HELLO\nBYE\n"
     cmds = [["echo", "-n", exp]]
     if pipe:
@@ -88,15 +88,15 @@ def test_capture_always(
         # Enable capfd for function aliases:
         monkeypatch.setattr(STDOUT_DISPATCHER, "default", sys.stdout)
         if alias_type == "func":
-            XSH.aliases["tst"] = (
+            xsh.XSH.aliases["tst"] = (
                 lambda: run_subproc([first_cmd], "hiddenobject") and None
             )  # Don't return a value
         elif alias_type == "exec":
             first_cmd = " ".join(repr(arg) for arg in first_cmd)
-            XSH.aliases["tst"] = f"![{first_cmd}]"
+            xsh.XSH.aliases["tst"] = f"![{first_cmd}]"
         else:
             # alias_type == "simple"
-            XSH.aliases["tst"] = first_cmd
+            xsh.XSH.aliases["tst"] = first_cmd
 
         cmds[0] = ["tst"]
 

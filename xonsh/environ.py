@@ -30,7 +30,7 @@ from xonsh.platform import (
     ON_CYGWIN,
     os_environ,
 )
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.tools import (
     always_true,
     always_false,
@@ -192,8 +192,8 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    if XSH.execer is not None:
-        XSH.execer.debug_level = val
+    if xsh.XSH.execer is not None:
+        xsh.XSH.execer.debug_level = val
     return val
 
 
@@ -422,7 +422,7 @@ class LsColors(cabc.MutableMapping):
     @property
     def style_name(self):
         """Current XONSH_COLOR_STYLE value"""
-        env = getattr(XSH, "env", {}) or {}
+        env = getattr(xsh.XSH, "env", {}) or {}
         env_style_name = env.get("XONSH_COLOR_STYLE", "default")
         if self._style_name is None or self._style_name != env_style_name:
             self._style_name = env_style_name
@@ -474,8 +474,8 @@ class LsColors(cabc.MutableMapping):
         if filename is not None:
             cmd.append(filename)
         # get env
-        if XSH.env:
-            denv = XSH.env.detype()
+        if xsh.XSH.env:
+            denv = xsh.XSH.env.detype()
         else:
             denv = None
         # run dircolors
@@ -516,7 +516,7 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
     environment. This fires exactly once upon the first time the
     ls command is called.
     """
-    env = XSH.env
+    env = xsh.XSH.env
     if "LS_COLORS" not in env._d:
         # this adds it to the env too
         default_lscolors(env)
@@ -2285,7 +2285,7 @@ def _yield_executables(directory, name):
 
 def locate_binary(name):
     """Locates an executable on the file system."""
-    return XSH.commands_cache.locate_binary(name)
+    return xsh.XSH.commands_cache.locate_binary(name)
 
 
 def xonshrc_context(

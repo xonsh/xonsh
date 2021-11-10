@@ -17,7 +17,7 @@ from zmq.eventloop import ioloop, zmqstream
 from zmq.error import ZMQError
 
 from xonsh import __version__ as version
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.main import setup
 from xonsh.completer import Completer
 from xonsh.commands_cache import predict_true
@@ -362,8 +362,8 @@ class XonshKernel:
                 "payload": [],
                 "user_expressions": {},
             }
-        shell = XSH.shell
-        hist = XSH.history
+        shell = xsh.XSH.shell
+        hist = xsh.XSH.history
         try:
             shell.default(code, self, parent_header)
             interrupted = False
@@ -420,7 +420,7 @@ class XonshKernel:
 
     def do_complete(self, code: str, pos: int):
         """Get completions."""
-        shell = XSH.shell  # type: ignore
+        shell = xsh.XSH.shell  # type: ignore
         line_start = code.rfind("\n", 0, pos) + 1
         line_stop = code.find("\n", pos)
         if line_stop == -1:
@@ -429,7 +429,7 @@ class XonshKernel:
             line_stop += 1
         line = code[line_start:line_stop]
         endidx = pos - line_start
-        line_ex: str = XSH.aliases.expand_alias(line, endidx)  # type: ignore
+        line_ex: str = xsh.XSH.aliases.expand_alias(line, endidx)  # type: ignore
 
         begidx = line[:endidx].rfind(" ") + 1 if line[:endidx].rfind(" ") >= 0 else 0
         prefix = line[begidx:endidx]
@@ -492,11 +492,11 @@ if __name__ == "__main__":
         xontribs=["coreutils"],
         threadable_predictors={"git": predict_true, "man": predict_true},
     )
-    if XSH.commands_cache.is_only_functional_alias("cat"):  # type:ignore
+    if xsh.XSH.commands_cache.is_only_functional_alias("cat"):  # type:ignore
         # this is needed if the underlying system doesn't have cat
         # we supply our own, because we can
-        XSH.aliases["cat"] = "xonsh-cat"  # type:ignore
-        XSH.env["PAGER"] = "xonsh-cat"  # type:ignore
-    shell = XSH.shell  # type:ignore
+        xsh.XSH.aliases["cat"] = "xonsh-cat"  # type:ignore
+        xsh.XSH.env["PAGER"] = "xonsh-cat"  # type:ignore
+    shell = xsh.XSH.shell  # type:ignore
     kernel = shell.kernel = XonshKernel()
     kernel.start()

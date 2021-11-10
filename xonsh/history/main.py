@@ -7,7 +7,7 @@ import sys
 import threading
 import typing as tp
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 import xonsh.cli_utils as xcli
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
@@ -21,7 +21,7 @@ HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": Sqlite
 
 def construct_history(**kwargs):
     """Construct the history backend object."""
-    env = XSH.env
+    env = xsh.XSH.env
     backend = env.get("XONSH_HISTORY_BACKEND")
     if isinstance(backend, str) and backend in HISTORY_BACKENDS:
         kls_history = HISTORY_BACKENDS[backend]
@@ -41,14 +41,14 @@ def construct_history(**kwargs):
 def _xh_session_parser(hist=None, newest_first=False, **kwargs):
     """Returns history items of current session."""
     if hist is None:
-        hist = XSH.history
+        hist = xsh.XSH.history
     return hist.items()
 
 
 def _xh_all_parser(hist=None, newest_first=False, **kwargs):
     """Returns all history items."""
     if hist is None:
-        hist = XSH.history
+        hist = xsh.XSH.history
     return hist.all_items(newest_first=newest_first)
 
 
@@ -284,7 +284,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     @staticmethod
     def id_cmd(_stdout):
         """Display the current session id"""
-        hist = XSH.history
+        hist = xsh.XSH.history
         if not hist.sessionid:
             return
         print(str(hist.sessionid), file=_stdout)
@@ -293,7 +293,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     def flush(_stdout):
         """Flush the current history to disk"""
 
-        hist = XSH.history
+        hist = xsh.XSH.history
         hf = hist.flush()
         if isinstance(hf, threading.Thread):
             hf.join()
@@ -301,7 +301,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     @staticmethod
     def off():
         """History will not be saved for this session"""
-        hist = XSH.history
+        hist = xsh.XSH.history
         if hist.remember_history:
             hist.clear()
             hist.remember_history = False
@@ -310,7 +310,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     @staticmethod
     def on():
         """History will be saved for the rest of the session (default)"""
-        hist = XSH.history
+        hist = xsh.XSH.history
         if not hist.remember_history:
             hist.remember_history = True
             print("History on", file=sys.stderr)
@@ -318,14 +318,14 @@ class HistoryAlias(xcli.ArgParserAlias):
     @staticmethod
     def clear():
         """One-time wipe of session history"""
-        hist = XSH.history
+        hist = xsh.XSH.history
         hist.clear()
         print("History cleared", file=sys.stderr)
 
     @staticmethod
     def file(_stdout):
         """Display the current history filename"""
-        hist = XSH.history
+        hist = xsh.XSH.history
         if not hist.filename:
             return
         print(str(hist.filename), file=_stdout)
@@ -342,7 +342,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         to_json: -j, --json
             print in JSON format
         """
-        hist = XSH.history
+        hist = xsh.XSH.history
 
         data = hist.info()
         if to_json:
@@ -367,7 +367,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         force
             perform garbage collection even if history much bigger than configured limit
         """
-        hist = XSH.history
+        hist = xsh.XSH.history
         hist.run_gc(size=size, blocking=_blocking, force=force)
 
     @staticmethod
@@ -394,7 +394,7 @@ class HistoryAlias(xcli.ArgParserAlias):
             whether to print even more information
         """
 
-        hist = XSH.history
+        hist = xsh.XSH.history
         if isinstance(hist, JsonHistory):
             hd = xdh.HistoryDiffer(a, b, reopen=reopen, verbose=verbose)
             xt.print_color(hd.format(), file=_stdout)
@@ -425,7 +425,7 @@ class HistoryAlias(xcli.ArgParserAlias):
             action="store_false",
             help="makes the gc non-blocking, and thus return sooner",
         )
-        if isinstance(XSH.history, JsonHistory):
+        if isinstance(xsh.XSH.history, JsonHistory):
             # add actions belong only to JsonHistory
             parser.add_command(self.diff)
 

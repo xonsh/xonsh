@@ -10,7 +10,7 @@ from collections.abc import MutableMapping
 from keyword import iskeyword
 import typing as tp
 
-from xonsh.built_ins import XSH
+import xonsh.session
 from xonsh.lazyimps import os_listxattr
 
 from pygments.lexer import inherit, bygroups, include
@@ -268,8 +268,9 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if XSH.shell is not None:
-        styles = __xonsh__.shell.shell.styler.styles
+    session = xonsh.session.XSH
+    if session.shell is not None:
+        styles = session.shell.shell.styler.styles
     else:
         styles = None
     color = Color.DEFAULT
@@ -383,6 +384,9 @@ class XonshStyle(Style):
 
     @style_name.setter
     def style_name(self, value):
+        # TODO don't use global
+        session = xonsh.session.XSH
+
         if self._style_name == value:
             return
         if value not in STYLES:
@@ -394,7 +398,7 @@ class XonshStyle(Style):
                     file=sys.stderr,
                 )
                 value = "default"
-                XSH.env["XONSH_COLOR_STYLE"] = value
+                session.env["XONSH_COLOR_STYLE"] = value
         cmap = STYLES[value]
         if value == "default":
             self._smap = XONSH_BASE_STYLE.copy()
@@ -415,11 +419,11 @@ class XonshStyle(Style):
         )
         self._style_name = value
 
-        for file_type, xonsh_color in XSH.env.get("LS_COLORS", {}).items():
+        for file_type, xonsh_color in session.env.get("LS_COLORS", {}).items():
             color_token = color_token_by_name(xonsh_color, self.styles)
             file_color_tokens[file_type] = color_token
 
-        if ON_WINDOWS and "prompt_toolkit" in XSH.shell.shell_type:
+        if ON_WINDOWS and "prompt_toolkit" in session.shell.shell_type:
             self.enhance_colors_for_cmd_exe()
 
     @style_name.deleter
@@ -438,7 +442,9 @@ class XonshStyle(Style):
         When using the default style all blue and dark red colors
         are changed to CYAN and intense red.
         """
-        env = XSH.env
+        # TODO dont use global
+        session = xonsh.session.XSH
+        env = session.env
         # Ensure we are not using the new Windows Terminal, ConEmu or Visual Stuio Code
         if "WT_SESSION" in env or "CONEMUANSI" in env or "VSCODE_PID" in env:
             return
@@ -1602,13 +1608,17 @@ def _command_is_valid(cmd):
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     except (OSError):
         return False
-    return (cmd in XSH.commands_cache and not iskeyword(cmd)) or (
+    # TODO get this from the lexer
+    session = xonsh.session.XSH
+    return (cmd in session.commands_cache and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
     )
 
 
 def _command_is_autocd(cmd):
-    if not XSH.env.get("AUTO_CD", False):
+    # TODO get this from the lexer
+    session = xonsh.session.XSH
+    if not session.env.get("AUTO_CD", False):
         return False
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
@@ -1653,17 +1663,11 @@ class XonshLexer(Python3Lexer):
         # If the lexer is loaded as a pygment plugin, we have to mock
         # __xonsh__.env and __xonsh__.commands_cache
         if not hasattr(builtins, "__xonsh__"):
-            from argparse import Namespace
+            session = xonsh.session.XonshSession(None)
+        else:
+            session = xonsh.session.XSH
 
-            builtins.__xonsh__ = Namespace()
-        if not hasattr(XSH, "env"):
-            XSH.env = {}
-            if ON_WINDOWS:
-                pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
-                XSH.env["PATHEXT"] = pathext.split(os.pathsep)
-        if not getattr(XSH, "commands_cache", None):
-            XSH.commands_cache = CommandsCache()
-        _ = XSH.commands_cache.all_commands  # NOQA
+        _ = session.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)
 
     tokens = {

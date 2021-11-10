@@ -9,7 +9,7 @@ import subprocess
 import collections
 import typing as tp
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
@@ -260,7 +260,7 @@ def get_next_task():
 
 
 def get_task(tid):
-    return XSH.all_jobs[tid]
+    return xsh.XSH.all_jobs[tid]
 
 
 def _clear_dead_jobs():
@@ -271,12 +271,12 @@ def _clear_dead_jobs():
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
-        del XSH.all_jobs[job]
+        del xsh.XSH.all_jobs[job]
 
 
 def format_job_string(num: int) -> str:
     try:
-        job = XSH.all_jobs[num]
+        job = xsh.XSH.all_jobs[num]
     except KeyError:
         return ""
     pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
@@ -298,7 +298,7 @@ def get_next_job_number():
     """Get the lowest available unique job number (for the next job created)."""
     _clear_dead_jobs()
     i = 1
-    while i in XSH.all_jobs:
+    while i in xsh.XSH.all_jobs:
         i += 1
     return i
 
@@ -309,8 +309,8 @@ def add_job(info):
     info["started"] = time.time()
     info["status"] = "running"
     tasks.appendleft(num)
-    XSH.all_jobs[num] = info
-    if info["bg"] and XSH.env.get("XONSH_INTERACTIVE"):
+    xsh.XSH.all_jobs[num] = info
+    if info["bg"] and xsh.XSH.env.get("XONSH_INTERACTIVE"):
         print_one_job(num)
 
 
@@ -323,12 +323,12 @@ def clean_jobs():
     warning if any exist, and return False. Otherwise, return True.
     """
     jobs_clean = True
-    if XSH.env["XONSH_INTERACTIVE"]:
+    if xsh.XSH.env["XONSH_INTERACTIVE"]:
         _clear_dead_jobs()
 
-        if XSH.all_jobs:
+        if xsh.XSH.all_jobs:
             global _last_exit_time
-            hist = XSH.history
+            hist = xsh.XSH.history
             if hist is not None and len(hist.tss) > 0:
                 last_cmd_start = hist.tss[-1][0]
             else:
@@ -341,12 +341,12 @@ def clean_jobs():
                 # unfinished jobs in this case.
                 kill_all_jobs()
             else:
-                if len(XSH.all_jobs) > 1:
+                if len(xsh.XSH.all_jobs) > 1:
                     msg = "there are unfinished jobs"
                 else:
                     msg = "there is an unfinished job"
 
-                if XSH.env["SHELL_TYPE"] != "prompt_toolkit":
+                if xsh.XSH.env["SHELL_TYPE"] != "prompt_toolkit":
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
@@ -371,7 +371,7 @@ def kill_all_jobs():
     Send SIGKILL to all child processes (called when exiting xonsh).
     """
     _clear_dead_jobs()
-    for job in XSH.all_jobs.values():
+    for job in xsh.XSH.all_jobs.values():
         _kill(job)
 
 
@@ -408,7 +408,7 @@ def resume_job(args, wording):
         except (ValueError, IndexError):
             return "", "Invalid job: {}\n".format(args[0])
 
-        if tid not in XSH.all_jobs:
+        if tid not in xsh.XSH.all_jobs:
             return "", "Invalid job: {}\n".format(args[0])
     else:
         return "", "{} expects 0 or 1 arguments, not {}\n".format(wording, len(args))
@@ -420,7 +420,7 @@ def resume_job(args, wording):
     job = get_task(tid)
     job["bg"] = False
     job["status"] = "running"
-    if XSH.env.get("XONSH_INTERACTIVE"):
+    if xsh.XSH.env.get("XONSH_INTERACTIVE"):
         print_one_job(tid)
     pipeline = job["pipeline"]
     pipeline.resume(job)
@@ -494,7 +494,7 @@ def disown_fn(
         except KeyError:
             return "", f"'{tid}' is not a valid job ID"
 
-        auto_cont = XSH.env.get("AUTO_CONTINUE", False)
+        auto_cont = xsh.XSH.env.get("AUTO_CONTINUE", False)
         if auto_cont or force_auto_continue:
             _continue(current_task)
         elif current_task["status"] == "stopped":
@@ -506,7 +506,7 @@ def disown_fn(
 
         # Stop tracking this task
         tasks.remove(tid)
-        del XSH.all_jobs[tid]
+        del xsh.XSH.all_jobs[tid]
         messages.append(f"Removed job {tid} ({current_task['status']})")
 
     if messages:

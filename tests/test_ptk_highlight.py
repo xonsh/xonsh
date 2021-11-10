@@ -18,7 +18,7 @@ from pygments.token import (
 from tools import skip_if_on_windows
 
 from xonsh.platform import ON_WINDOWS
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
 from xonsh.environ import LsColors
 from xonsh.events import events, EventManager
@@ -28,8 +28,8 @@ from tools import DummyShell
 @pytest.fixture(autouse=True)
 def load_command_cache(xession):
     gc.collect()
-    XSH.unload()
-    XSH.load()
+    xsh.XSH.unload()
+    xsh.XSH.load()
     if ON_WINDOWS:
         for key in ("cd", "bash"):
             xession.aliases[key] = lambda *args, **kwargs: None

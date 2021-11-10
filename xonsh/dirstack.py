@@ -9,7 +9,7 @@ import subprocess
 import typing as tp
 from contextlib import contextmanager
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
@@ -148,7 +148,7 @@ def _get_cwd():
 
 
 def _change_working_directory(newdir, follow_symlinks=False):
-    env = XSH.env
+    env = xsh.XSH.env
     old = env["PWD"]
     new = os.path.join(old, newdir)
 
@@ -183,10 +183,10 @@ def _try_cdpath(apath):
     # a second $ cd xonsh has no effects, to move in the nested xonsh
     # in bash a full $ cd ./xonsh is needed.
     # In xonsh a relative folder is always preferred.
-    env = XSH.env
+    env = xsh.XSH.env
     cdpaths = env.get("CDPATH")
     for cdp in cdpaths:
-        globber = XSH.expand_path(os.path.join(cdp, apath))
+        globber = xsh.XSH.expand_path(os.path.join(cdp, apath))
         for cdpath_prefixed_path in glob.iglob(globber):
             return cdpath_prefixed_path
     return apath
@@ -198,7 +198,7 @@ def cd(args, stdin=None):
     If no directory is specified (i.e. if `args` is None) then this
     changes to the current user's home directory.
     """
-    env = XSH.env
+    env = xsh.XSH.env
     oldpwd = env.get("OLDPWD", None)
     cwd = env["PWD"]
 
@@ -304,7 +304,7 @@ def pushd_fn(
     """
     global DIRSTACK
 
-    env = XSH.env
+    env = xsh.XSH.env
 
     pwd = env["PWD"]
 
@@ -395,7 +395,7 @@ def popd_fn(
     """
     global DIRSTACK
 
-    env = XSH.env
+    env = xsh.XSH.env
 
     if env.get("PUSHD_MINUS"):
         BACKWARD = "-"
@@ -441,7 +441,7 @@ def popd_fn(
 
     if new_pwd is not None:
         if cd:
-            env = XSH.env
+            env = xsh.XSH.env
             pwd = env["PWD"]
 
             _change_working_directory(new_pwd)
@@ -486,7 +486,7 @@ def dirs_fn(
     """
     global DIRSTACK
 
-    env = XSH.env
+    env = xsh.XSH.env
     dirstack = [os.path.expanduser(env["PWD"])] + DIRSTACK
 
     if env.get("PUSHD_MINUS"):

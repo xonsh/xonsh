@@ -1,4 +1,4 @@
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.parsers.completion_context import CompletionContext
 from xonsh.completers.tools import (
     contextual_completer,
@@ -26,7 +26,7 @@ def complete_environment_vars(context: CompletionContext):
     key = prefix[dollar_location + 1 :]
     lprefix = len(key) + 1
     filter_func = get_filter_function()
-    env = XSH.env
+    env = xsh.XSH.env
 
     return (
         RichCompletion(

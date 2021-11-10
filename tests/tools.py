@@ -12,7 +12,7 @@ from collections.abc import MutableMapping
 
 import pytest
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
 
@@ -169,12 +169,12 @@ class DummyEnv(MutableMapping):
 
 
 def check_exec(input, **kwargs):
-    XSH.execer.exec(input, **kwargs)
+    xsh.XSH.execer.exec(input, **kwargs)
     return True
 
 
 def check_eval(input):
-    XSH.env = Env(
+    xsh.XSH.env = Env(
         {
             "AUTO_CD": False,
             "XONSH_ENCODING": "utf-8",
@@ -183,13 +183,13 @@ def check_eval(input):
         }
     )
     if ON_WINDOWS:
-        XSH.env["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
-    XSH.execer.eval(input)
+        xsh.XSH.env["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
+    xsh.XSH.execer.eval(input)
     return True
 
 
 def check_parse(input):
-    tree = XSH.execer.parse(input, ctx=None)
+    tree = xsh.XSH.execer.parse(input, ctx=None)
     return tree
 
 

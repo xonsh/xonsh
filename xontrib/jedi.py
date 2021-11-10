@@ -3,7 +3,7 @@ import os
 
 import xonsh
 from xonsh.lazyasd import lazyobject, lazybool
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.completers.tools import (
     get_filter_function,
     RichCompletion,
@@ -60,7 +60,7 @@ def complete_jedi(context: CompletionContext):
     # taken from xonsh/completers/python.py
     if context.command and context.command.arg_index != 0:
         first = context.command.args[0].value
-        if first in XSH.commands_cache and first not in ctx:  # type: ignore
+        if first in xsh.XSH.commands_cache and first not in ctx:  # type: ignore
             return None
 
     # if we're completing a possible command and the prefix contains a valid path, don't complete.
@@ -70,7 +70,7 @@ def complete_jedi(context: CompletionContext):
             return None
 
     filter_func = get_filter_function()
-    jedi.settings.case_insensitive_completion = not XSH.env.get(
+    jedi.settings.case_insensitive_completion = not xsh.XSH.env.get(
         "CASE_SENSITIVE_COMPLETIONS"
     )
 
@@ -81,7 +81,7 @@ def complete_jedi(context: CompletionContext):
         index - source.rfind("\n", 0, index) - 1
     )  # will be `index - (-1) - 1` if there's no newline
 
-    extra_ctx = {"__xonsh__": XSH}
+    extra_ctx = {"__xonsh__": xsh.XSH}
     try:
         extra_ctx["_"] = _
     except NameError:

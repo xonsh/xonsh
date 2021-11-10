@@ -7,7 +7,7 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.application.current import get_app
 
 from xonsh.completers.tools import RichCompletion
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 class PromptToolkitCompleter(Completer):
@@ -27,7 +27,7 @@ class PromptToolkitCompleter(Completer):
 
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
-        env = XSH.env
+        env = xsh.XSH.env
         should_complete = complete_event.completion_requested or env.get(
             "UPDATE_COMPLETIONS_ON_KEYPRESS"
         )
@@ -38,7 +38,7 @@ class PromptToolkitCompleter(Completer):
         line = document.current_line
 
         endidx = document.cursor_position_col
-        line_ex = XSH.aliases.expand_alias(line, endidx)
+        line_ex = xsh.XSH.aliases.expand_alias(line, endidx)
 
         begidx = line[:endidx].rfind(" ") + 1 if line[:endidx].rfind(" ") >= 0 else 0
         prefix = line[begidx:endidx]
@@ -141,7 +141,7 @@ class PromptToolkitCompleter(Completer):
 
         if window and window.render_info:
             h = window.render_info.content_height
-            r = XSH.env.get("COMPLETIONS_MENU_ROWS")
+            r = xsh.XSH.env.get("COMPLETIONS_MENU_ROWS")
             size = h + r
             last_h = render._last_screen.height if render._last_screen else 0
             last_h = max(render._min_available_height, last_h)

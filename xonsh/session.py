@@ -3,8 +3,13 @@ import builtins
 import signal
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.lazyasd import lazyobject
+from xonsh.tools import print_color, XonshCalledProcessError, XonshError
 import xonsh.built_ins
 import sys
+from pathlib import Path
+import contextlib
+import types
+
 
 @lazyobject
 def AT_EXIT_SIGNALS():
@@ -35,33 +40,66 @@ def resetting_signal_handle(sig, f):
     signal.signal(sig, newh)
 
 
-def _lastflush(s=None, f=None):
-    if XSH.history is not None:
-        XSH.history.flush(at_exit=True)
+def _create_builtins_namespace(execer, aliases):
+    from xonsh.events import events
+
+    return types.SimpleNamespace(
+        # public built-ins
+        XonshError=XonshError,
+        XonshCalledProcessError=XonshCalledProcessError,
+        evalx=None if execer is None else execer.eval,
+        execx=None if execer is None else execer.exec,
+        compilex=None if execer is None else execer.compile,
+        events=events,
+        print_color=print_color,
+        printx=print_color,
+        default_aliases = aliases,
+        aliases = aliases
+    )
 
 
 class XonshSession:
     """All components defining a xonsh session."""
 
-    def __init__(self):
+    def __init__(self, execer, ctx=None, env=None, aliases=None):
+        from xonsh.environ import Env, default_env
+        from xonsh.commands_cache import CommandsCache
+        from xonsh.completers.init import default_completers
+        # Need this inline/lazy import here since we use locate_binary that
+        # relies on __xonsh__.env in default aliases
+        from xonsh.aliases import Aliases, make_default_aliases
+
         # Loadable state
-        self.execer = None
-        self.ctx = None
+        self.execer = execer
+        self.ctx = {} if ctx is None else ctx
+        self.env = Env(default_env() if env is None else {})
         self.history = None
         self.shell = None
-        self.env = None
         self.rc_files = None
         self.exit = False
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
-        self.execer = None
-        self.commands_cache = None
-        self.modules_cache = None
-        self.all_jobs = None
-        self.completers = None
-        self.builtins = None
-        self.aliases = None
-        self._default_builtin_names = None
+        self.shell = None
+
+        cache_file = (
+            (Path(env["XONSH_DATA_DIR"]).joinpath("commands-cache.pickle").resolve())
+            if env is not None
+            and "XONSH_DATA_DIR" in env
+            and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
+            else None
+        )
+
+        self.commands_cache = CommandsCache(cache_file)
+        self.modules_cache = {}
+        self.all_jobs = {}
+
+        self.completers = default_completers()
+
+        # Sneak the path search functions into the aliases
+        self.aliases = Aliases(make_default_aliases() if aliases is None else aliases)
+
+        self.builtins = _create_builtins_namespace(execer, self.aliases)
+        self._default_builtin_names = frozenset(vars(self.builtins))
 
         self._py_exit = None
         self._py_quit = None
@@ -117,70 +155,24 @@ class XonshSession:
             if hasattr(builtins, name):
                 delattr(builtins, name)
 
-    def load(self, execer=None, ctx=None, **kwargs):
-        """Loads the session with default values.
-
-        Parameters
-        ----------
-        execer : Execer, optional
-            Xonsh execution object, may be None to start
-        ctx : Mapping, optional
-            Context to start xonsh session with.
-        """
-        from xonsh.environ import Env, default_env
-        from xonsh.commands_cache import CommandsCache
-        from xonsh.completers.init import default_completers
-        # Need this inline/lazy import here since we use locate_binary that
-        # relies on __xonsh__.env in default aliases
-        from xonsh.aliases import Aliases, make_default_aliases
-
-        if ctx is not None:
-            self.ctx = ctx
-
-        self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env())
-
-        self.exit = False
-        self.stdout_uncaptured = None
-        self.stderr_uncaptured = None
-
-        self.execer = execer
-        self.commands_cache = (
-            kwargs.pop("commands_cache")
-            if "commands_cache" in kwargs
-            else CommandsCache()
-        )
-        self.modules_cache = {}
-        self.all_jobs = {}
-
-        self.completers = default_completers()
-
+    def _load(self):
+        """Load the session into the Python namespace"""
         self._disable_python_exit()
-
-        self.builtins = xonsh.built_ins.create_builtins_namespace(execer)
-        self._default_builtin_names = frozenset(vars(self.builtins))
-
         self._link_builtins(self._default_builtin_names)
 
-        # Sneak the path search functions into the aliases
-        aliases = kwargs.pop("aliases", None)
-        if aliases is None:
-            aliases = Aliases(make_default_aliases())
-        self.aliases = builtins.default_aliases = builtins.aliases = aliases
-
         # Cleanup on exit
+        def _lastflush(s=None, f=None):
+            if self.history is not None:
+                self.history.flush(at_exit=True)
         atexit.register(_lastflush)
         for sig in AT_EXIT_SIGNALS:
             resetting_signal_handle(sig, _lastflush)
 
-        # Write any remaining attributes
-        for attr, value in kwargs.items():
-            if hasattr(self, attr):
-                setattr(self, attr, value)
-
         # Make sure we have __xonsh__
         builtins.__xonsh__ = self
 
-    def unload(self):
+    def _unload(self):
+        """Unload the session from the Python namespace"""
         if not hasattr(builtins, "__xonsh__"):
             return
 
@@ -193,5 +185,42 @@ class XonshSession:
         delattr(builtins, "__xonsh__")
 
 
-# singleton
-XSH = XonshSession()
+# Current instance
+XSH = None
+
+_XSH_STACK = []
+
+
+def push_session(session):
+    global XSH
+
+    if XSH is not None:
+        XSH._unload()
+
+    XSH = session
+    _XSH_STACK.append(session)
+
+    session._load()
+
+
+def pop_session():
+    global XSH
+
+    if XSH is not None:
+        XSH._unload()
+
+    session = _XSH_STACK.pop()
+    XSH = session
+
+    session._load()
+    return session
+
+
+@contextlib.contextmanager
+def session_as(session):
+    push_session(session)
+
+    try:
+        yield
+    finally:
+        assert pop_session() is session

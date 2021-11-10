@@ -212,9 +212,9 @@ def ptk_below_max_supported():
 
 @functools.lru_cache(1)
 def best_shell_type():
-    from xonsh.built_ins import XSH
+    import xonsh.session as xsh
 
-    if XSH.env.get("TERM", "") == "dumb":
+    if xsh.XSH.env.get("TERM", "") == "dumb":
         return "dumb"
     if has_prompt_toolkit():
         return "prompt_toolkit"
@@ -371,10 +371,10 @@ def windows_bash_command():
     """Determines the command for Bash on windows."""
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
-    from xonsh.built_ins import XSH
+    import xonsh.session as xsh
 
     wbc = "bash"
-    cmd_cache = XSH.commands_cache
+    cmd_cache = xsh.XSH.commands_cache
     bash_on_path = cmd_cache.lazy_locate_binary("bash", ignore_alias=True)
     if bash_on_path:
         try:

@@ -8,7 +8,7 @@ import typing as tp
 from enum import IntEnum
 from pathlib import Path
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.cli_utils import ArgParserAlias, Arg, Annotated
 from xonsh.completers.tools import RichCompletion
 from xonsh.xontribs_meta import get_xontribs
@@ -69,7 +69,7 @@ def update_context(name, ctx=None):
     then __xonsh__.ctx is updated.
     """
     if ctx is None:
-        ctx = XSH.ctx
+        ctx = xsh.XSH.ctx
     modctx = xontrib_context(name)
     if modctx is None:
         if not hasattr(update_context, "bad_imports"):
@@ -111,7 +111,7 @@ def xontribs_load(
     verbose
         verbose output
     """
-    ctx = XSH.ctx
+    ctx = xsh.XSH.ctx
     res = ExitCode.OK
     for name in names:
         if verbose:

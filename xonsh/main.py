@@ -25,7 +25,7 @@ from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_import_hooks
 from xonsh.events import events
 from xonsh.environ import xonshrc_context, make_args_env
-from xonsh.built_ins import XSH
+import xonsh.session
 
 import xonsh.procs.pipelines as xpp
 
@@ -244,7 +244,7 @@ def _pprint_displayhook(value):
     if isinstance(value, xpp.HiddenCommandPipeline):
         builtins._ = value
         return
-    env = XSH.env
+    env = xonsh.session.XSH.env
     printed_val = None
     if env.get("PRETTY_PRINT_RESULTS"):
         printed_val = pretty(value)
@@ -278,17 +278,20 @@ def start_services(shell_kwargs, args, pre_env=None):
     ctx = shell_kwargs.get("ctx", {})
     debug = to_bool_or_int(os.getenv("XONSH_DEBUG", "0"))
     events.on_timingprobe.fire(name="pre_execer_init")
+
     execer = Execer(
-        xonsh_ctx=ctx,
         debug_level=debug,
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
+    session = xonsh.session.XonshSession(execer=execer, ctx=ctx)
+    xonsh.session.push_session(session)
+
     events.on_timingprobe.fire(name="post_execer_init")
     # load rc files
     login = shell_kwargs.get("login", True)
     rc_cli = shell_kwargs.get("rc")
-    env = XSH.env
+    env = session.env
     for k, v in pre_env.items():
         env[k] = v
 
@@ -314,18 +317,19 @@ def start_services(shell_kwargs, args, pre_env=None):
         rcd = env.get("XONSHRC_DIR")
 
     events.on_pre_rc.fire()
-    XSH.rc_files = xonshrc_context(
+    session.rc_files = xonshrc_context(
         rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
     )
     events.on_post_rc.fire()
     # create shell
-    XSH.shell = Shell(execer=execer, **shell_kwargs)
+    session.shell = Shell(execer=execer, **shell_kwargs)
     ctx["__name__"] = "__main__"
     return env
 
 
 def premain(argv=None):
     """Setup for main xonsh entry point. Returns parsed arguments."""
+    print(__file__, "PREMAIN")
     if argv is None:
         argv = sys.argv[1:]
     setup_timings(argv)
@@ -438,6 +442,7 @@ def main(argv=None):
 
 def main_xonsh(args):
     """Main entry point for xonsh cli."""
+    print(__file__, "MAIN_XONSh")
     if not ON_WINDOWS:
 
         def func_sig_ttin_ttou(n, f):
@@ -447,9 +452,11 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
     events.on_post_init.fire()
-    env = XSH.env
-    shell = XSH.shell
-    history = XSH.history
+
+    session = xonsh.session.XSH
+    env = session.env
+    shell = session.shell
+    history = session.history
     exit_code = 0
 
     if shell and not env["XONSH_INTERACTIVE"]:
@@ -507,7 +514,7 @@ def main_xonsh(args):
 
 def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
-    XSH.shell = None
+    xonsh.session.XSH.shell = None
 
 
 @contextlib.contextmanager
@@ -517,7 +524,7 @@ def main_context(argv=None):
     up the shell.
     """
     args = premain(argv)
-    yield XSH.shell
+    yield xonsh.session.XSH.shell
     postmain(args)
 
 
@@ -558,17 +565,21 @@ def setup(
     threadable_predictors : dict-like, optional
         Threadable predictors to start up with. These overide the defaults.
     """
+    print(__file__, "SETUP")
     ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
     if not hasattr(builtins, "__xonsh__"):
-        execer = Execer(xonsh_ctx=ctx)
-        XSH.load(
-            ctx=ctx, execer=execer, shell=Shell(execer, ctx=ctx, shell_type=shell_type)
-        )
-    XSH.env.update(env)
+        execer = Execer()
+        session = xonsh.session.XonshSession(execer, ctx)
+        session.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
+        xonsh.session.push_session(session)
+    else:
+        session = xonsh.session.XSH
+
+    session.env.update(env)
     install_import_hooks()
-    XSH.aliases.update(aliases)
+    session.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
-    tp = XSH.commands_cache.threadable_predictors
+    tp = session.commands_cache.threadable_predictors
     tp.update(threadable_predictors)

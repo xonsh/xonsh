@@ -12,7 +12,7 @@ import functools
 from pathlib import Path
 
 from xonsh.tools import print_exception
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_MSYS
 
 
@@ -35,7 +35,7 @@ def _cwd_release_wrapper(func):
     displayed. This works by temporarily setting
     the workdir to the users home directory.
     """
-    env = XSH.env
+    env = xsh.XSH.env
     if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
         return func if not hasattr(func, "_orgfunc") else func._orgfunc
 
@@ -57,7 +57,7 @@ def _cwd_release_wrapper(func):
                 except (FileNotFoundError, NotADirectoryError):
                     print_exception()
                     newpath = _chdir_up(pwd)
-                    XSH.env["PWD"] = newpath
+                    xsh.XSH.env["PWD"] = newpath
                     raise KeyboardInterrupt
             return out
 
@@ -70,7 +70,7 @@ def _cwd_restore_wrapper(func):
     directory. Designed to wrap completer callbacks from the
     prompt_toolkit or readline.
     """
-    env = XSH.env
+    env = xsh.XSH.env
     if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
         return func if not hasattr(func, "_orgfunc") else func._orgfunc
 
@@ -91,7 +91,7 @@ def _cwd_restore_wrapper(func):
         return wrapper
 
 
-@XSH.builtins.events.on_ptk_create
+@xsh.XSH.builtins.events.on_ptk_create
 def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
     if ON_WINDOWS and not ON_CYGWIN and not ON_MSYS:
         prompter.prompt = _cwd_release_wrapper(prompter.prompt)

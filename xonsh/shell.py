@@ -15,7 +15,7 @@ from xonsh.tools import XonshError, print_exception, simple_random_choice
 from xonsh.events import events
 from xonsh.history.dummy import DummyHistory
 import xonsh.history.main as xhm
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 events.doc(
     "on_transform_command",
@@ -105,7 +105,7 @@ def transform_command(src, show_diff=True):
                 "the recursion limit number of iterations to "
                 "converge."
             )
-    debug_level = XSH.env.get("XONSH_DEBUG")
+    debug_level = xsh.XSH.env.get("XONSH_DEBUG")
     if show_diff and debug_level >= 1 and src != raw:
         sys.stderr.writelines(
             difflib.unified_diff(
@@ -199,11 +199,11 @@ class Shell(object):
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
-        env = XSH.env
+        env = xsh.XSH.env
 
         # build history backend before creating shell
         if env.get("XONSH_INTERACTIVE"):
-            XSH.history = hist = xhm.construct_history(
+            xsh.XSH.history = hist = xhm.construct_history(
                 env=env.detype(),
                 ts=[time.time(), None],
                 locked=True,
@@ -211,7 +211,7 @@ class Shell(object):
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:
-            XSH.history = hist = DummyHistory()
+            xsh.XSH.history = hist = DummyHistory()
             env["XONSH_HISTORY_FILE"] = None
 
         shell_type = self.choose_shell_type(shell_type, env)

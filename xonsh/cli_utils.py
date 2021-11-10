@@ -266,13 +266,13 @@ class RstHelpFormatter(ap.RawTextHelpFormatter):
 
 
 def get_argparse_formatter_class():
-    from xonsh.built_ins import XSH
+    import xonsh.session as xsh
     from xonsh.platform import HAS_PYGMENTS
 
     if (
         hasattr(sys, "stderr")
         and sys.stderr.isatty()
-        and XSH.env.get("XONSH_INTERACTIVE")
+        and xsh.XSH.env.get("XONSH_INTERACTIVE")
         and HAS_PYGMENTS
     ):
         return RstHelpFormatter

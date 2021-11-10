@@ -15,7 +15,7 @@ import time
 import timeit
 import itertools
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.lazyasd import lazyobject, lazybool
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
@@ -188,7 +188,7 @@ def timeit_alias(args, stdin=None):
     repeat = 3
     precision = 3
     # setup
-    ctx = XSH.ctx
+    ctx = xsh.XSH.ctx
     timer = Timer(timer=clock)
     stmt = " ".join(args)
     innerstr = INNER_TEMPLATE.format(stmt=stmt)
@@ -196,13 +196,13 @@ def timeit_alias(args, stdin=None):
     # Minimum time above which compilation time will be reported
     tc_min = 0.1
     t0 = clock()
-    innercode = XSH.builtins.compilex(
+    innercode = xsh.XSH.builtins.compilex(
         innerstr, filename="<xonsh-timeit>", mode="exec", glbs=ctx
     )
     tc = clock() - t0
     # get inner func
     ns = {}
-    XSH.builtins.execx(innercode, glbs=ctx, locs=ns, mode="exec")
+    xsh.XSH.builtins.execx(innercode, glbs=ctx, locs=ns, mode="exec")
     timer.inner = ns["inner"]
     # Check if there is a huge difference between the best and worst timings.
     worst_tuning = 0

@@ -11,7 +11,7 @@ import collections.abc as cabc
 import typing as tp
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.jsonutils import serialize_xonsh_json
 
 
@@ -714,8 +714,8 @@ class PromptVisitor(StateVisitor):
             singleline() method. See BaseShell for mor details.
         """
         super().__init__(tree=tree, state=state)
-        self.env = XSH.env
-        self.shell = XSH.shell.shell
+        self.env = xsh.XSH.env
+        self.shell = xsh.XSH.shell.shell
         self.shell_kwargs = kwargs
 
     def visit_wizard(self, node):

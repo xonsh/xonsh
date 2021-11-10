@@ -7,7 +7,7 @@ import itertools
 import pytest
 
 from xonsh.ast import AST, With, Pass, Str, Call
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.parser import Parser
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
@@ -43,7 +43,7 @@ def check_stmts(inp, run=True, mode="exec", debug_level=0):
 
 
 def check_xonsh_ast(xenv, inp, run=True, mode="eval", debug_level=0, return_obs=False):
-    XSH.env = xenv
+    xsh.XSH.env = xenv
     obs = PARSER.parse(inp, debug_level=debug_level)
     if obs is None:
         return  # comment only
@@ -167,7 +167,7 @@ def test_fstring_adaptor(inp, exp):
     assert isinstance(joined_str_node, ast.JoinedStr)
     node = ast.Expression(body=joined_str_node)
     code = compile(node, "<test_fstring_adaptor>", mode="eval")
-    XSH.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
+    xsh.XSH.env = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
     obs = eval(code)
     assert exp == obs
 

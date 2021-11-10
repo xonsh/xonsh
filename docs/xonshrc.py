@@ -1,6 +1,6 @@
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
-env = XSH.env
+env = xsh.XSH.env
 # adjust some paths
 env["PATH"].append("/home/scopatz/sandbox/bin")
 env["LD_LIBRARY_PATH"] = ["/home/scopatz/.local/lib", "/home/scopatz/miniconda3/lib"]
@@ -10,9 +10,9 @@ def _quit_awesome(args, stdin=None):
     print("awesome python code")
 
 
-XSH.aliases["qa"] = _quit_awesome
+xsh.XSH.aliases["qa"] = _quit_awesome
 # setting aliases as list are faster since they don't involve parser.
-XSH.aliases["gc"] = ["git", "commit"]
+xsh.XSH.aliases["gc"] = ["git", "commit"]
 
 # some customization options, see https://xon.sh/envvars.html for details
 env["MULTILINE_PROMPT"] = "`·.,¸,.·*¯`·.,¸,.·*¯"

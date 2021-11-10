@@ -108,7 +108,7 @@ from ast import Ellipsis as EllipsisNode
 import textwrap
 import itertools
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.tools import subproc_toks, find_next_break, get_logical_line
 
 from ast import (
@@ -314,8 +314,8 @@ def isexpression(node, ctx=None, *args, **kwargs):
     # parse string to AST
     if isinstance(node, str):
         node = node if node.endswith("\n") else node + "\n"
-        ctx = XSH.ctx if ctx is None else ctx
-        node = XSH.execer.parse(node, ctx, *args, **kwargs)
+        ctx = xsh.XSH.ctx if ctx is None else ctx
+        node = xsh.XSH.execer.parse(node, ctx, *args, **kwargs)
     # determine if expression-like enough
     if isinstance(node, (Expr, Expression)):
         isexpr = True

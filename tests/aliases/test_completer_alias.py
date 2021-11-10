@@ -1,6 +1,6 @@
 import pytest
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.completers._aliases import add_one_completer
 from xonsh.completers.tools import non_exclusive_completer
 
@@ -30,6 +30,6 @@ NON_EXCLUSIVE = non_exclusive_completer(lambda: None)
     ),
 )
 def test_add_completer_start(monkeypatch, initial, exp):
-    monkeypatch.setattr(XSH, "completers", initial)
+    monkeypatch.setattr(xsh.XSH, "completers", initial)
     add_one_completer("new", SIMPLE, "start")
-    assert list(XSH.completers.keys()) == exp
+    assert list(xsh.XSH.completers.keys()) == exp

@@ -2,7 +2,7 @@
 import shlex
 import sys
 import re
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 __all__ = ()
 
@@ -15,7 +15,7 @@ PRs are welcome - https://github.com/xonsh/xonsh/blob/main/xontrib/bashisms.py""
     )
 
 
-@XSH.builtins.events.on_transform_command
+@xsh.XSH.builtins.events.on_transform_command
 def bash_preproc(cmd, **kw):
     bang_previous = {
         "!": lambda x: x,
@@ -26,7 +26,7 @@ def bash_preproc(cmd, **kw):
 
     def replace_bang(m):
         arg = m.group(1)
-        inputs = XSH.history.inps
+        inputs = xsh.XSH.history.inps
 
         # Dissect the previous command.
         if arg in bang_previous:
@@ -56,21 +56,21 @@ def alias(args, stdin=None):
                 # shlex.split to remove quotes, e.g. "foo='echo hey'" into
                 # "foo=echo hey"
                 name, cmd = shlex.split(arg)[0].split("=", 1)
-                XSH.aliases[name] = shlex.split(cmd)
-            elif arg in XSH.aliases:
-                print("{}={}".format(arg, XSH.aliases[arg]))
+                xsh.XSH.aliases[name] = shlex.split(cmd)
+            elif arg in xsh.XSH.aliases:
+                print("{}={}".format(arg, xsh.XSH.aliases[arg]))
             else:
                 print("alias: {}: not found".format(arg), file=sys.stderr)
                 ret = 1
     else:
-        for alias, cmd in XSH.aliases.items():
+        for alias, cmd in xsh.XSH.aliases.items():
             print("{}={}".format(alias, cmd))
 
     return ret
 
 
-XSH.aliases["alias"] = alias
-XSH.env["THREAD_SUBPROCS"] = False
+xsh.XSH.aliases["alias"] = alias
+xsh.XSH.env["THREAD_SUBPROCS"] = False
 
 
 def _unset(args):
@@ -79,12 +79,12 @@ def _unset(args):
 
     for v in args:
         try:
-            XSH.env.pop(v)
+            xsh.XSH.env.pop(v)
         except KeyError:
             print(f"{v} not found", file=sys.stderr)
 
 
-XSH.aliases["unset"] = _unset
+xsh.XSH.aliases["unset"] = _unset
 
 
 def _export(args):
@@ -94,29 +94,29 @@ def _export(args):
     for eq in args:
         if "=" in eq:
             name, val = shlex.split(eq)[0].split("=", 1)
-            XSH.env[name] = val
+            xsh.XSH.env[name] = val
         else:
             print(f"{eq} equal sign not found", file=sys.stderr)
 
 
-XSH.aliases["export"] = _export
+xsh.XSH.aliases["export"] = _export
 
 
 def _set(args):
     arg = args[0]
     if arg == "-e":
-        XSH.env["RAISE_SUBPROC_ERROR"] = True
+        xsh.XSH.env["RAISE_SUBPROC_ERROR"] = True
     elif arg == "+e":
-        XSH.env["RAISE_SUBPROC_ERROR"] = False
+        xsh.XSH.env["RAISE_SUBPROC_ERROR"] = False
     elif arg == "-x":
-        XSH.env["XONSH_TRACE_SUBPROC"] = True
+        xsh.XSH.env["XONSH_TRACE_SUBPROC"] = True
     elif arg == "+x":
-        XSH.env["XONSH_TRACE_SUBPROC"] = False
+        xsh.XSH.env["XONSH_TRACE_SUBPROC"] = False
     else:
         _warn_not_supported(f"set {arg}")
 
 
-XSH.aliases["set"] = _set
+xsh.XSH.aliases["set"] = _set
 
 
 def _shopt(args):
@@ -126,7 +126,7 @@ def _shopt(args):
     args_len = len(args)
     if args_len == 0:
         for so in supported_shopt:
-            onoff = "on" if so in XSH.env and XSH.env[so] else "off"
+            onoff = "on" if so in xsh.XSH.env and xsh.XSH.env[so] else "off"
             print(f"dotglob\t{onoff}")
         return
     elif args_len < 2 or args[0] in ["-h", "--help"]:
@@ -137,14 +137,14 @@ def _shopt(args):
     optname = args[1]
 
     if opt == "-s" and optname == "dotglob":
-        XSH.env["DOTGLOB"] = True
+        xsh.XSH.env["DOTGLOB"] = True
     elif opt == "-u" and optname == "dotglob":
-        XSH.env["DOTGLOB"] = False
+        xsh.XSH.env["DOTGLOB"] = False
     else:
         _warn_not_supported(f"shopt {args}")
 
 
-XSH.aliases["shopt"] = _shopt
+xsh.XSH.aliases["shopt"] = _shopt
 
 
-XSH.aliases["complete"] = "completer list"
+xsh.XSH.aliases["complete"] = "completer list"

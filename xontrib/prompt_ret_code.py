@@ -1,10 +1,10 @@
 from xonsh.tools import ON_WINDOWS as _ON_WINDOWS
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 def _ret_code_color():
-    if XSH.history.rtns:
-        color = "blue" if XSH.history.rtns[-1] == 0 else "red"
+    if xsh.XSH.history.rtns:
+        color = "blue" if xsh.XSH.history.rtns[-1] == 0 else "red"
     else:
         color = "blue"
     if _ON_WINDOWS:
@@ -20,8 +20,8 @@ def _ret_code_color():
 
 
 def _ret_code():
-    if XSH.history.rtns:
-        return_code = XSH.history.rtns[-1]
+    if xsh.XSH.history.rtns:
+        return_code = xsh.XSH.history.rtns[-1]
         if return_code != 0:
             return "[{}]".format(return_code)
     return None
@@ -29,7 +29,7 @@ def _ret_code():
 
 def _update():
 
-    env = XSH.env
+    env = xsh.XSH.env
 
     env["PROMPT"] = env["PROMPT"].replace(
         "{prompt_end}{RESET}", "{ret_code_color}{ret_code}{prompt_end}{RESET}"

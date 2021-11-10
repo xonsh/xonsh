@@ -64,9 +64,9 @@ def is_superuser():
 
 @lazyobject
 def xsh():
-    from xonsh.built_ins import XSH
+    import xonsh.session as xsh
 
-    return XSH
+    return xsh.XSH
 
 
 class XonshError(Exception):

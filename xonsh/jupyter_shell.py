@@ -3,7 +3,7 @@ import io
 import sys
 
 from xonsh.base_shell import BaseShell
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 class StdJupyterRedirectBuf(io.RawIOBase):
@@ -61,13 +61,13 @@ class StdJupyterRedirect(io.TextIOBase):
     @property
     def encoding(self):
         """The encoding of the stream"""
-        env = XSH.env
+        env = xsh.XSH.env
         return getattr(self.std, "encoding", env.get("XONSH_ENCODING"))
 
     @property
     def errors(self):
         """The encoding errors of the stream"""
-        env = XSH.env
+        env = xsh.XSH.env
         return getattr(self.std, "errors", env.get("XONSH_ENCODING_ERRORS"))
 
     @property

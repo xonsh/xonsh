@@ -3,13 +3,13 @@
 import os
 import subprocess
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.color_tools import COLORS
 from xonsh.tools import NamedConstantMeta, XAttr
 
 
 def _check_output(*args, **kwargs) -> str:
-    denv = XSH.env.detype()
+    denv = xsh.XSH.env.detype()
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
 
     kwargs.update(
@@ -20,7 +20,7 @@ def _check_output(*args, **kwargs) -> str:
             universal_newlines=True,
         )
     )
-    timeout = XSH.env["VC_BRANCH_TIMEOUT"]
+    timeout = xsh.XSH.env["VC_BRANCH_TIMEOUT"]
     # See https://docs.python.org/3/library/subprocess.html#subprocess.Popen.communicate
     with subprocess.Popen(*args, **kwargs) as proc:
         try:
@@ -67,12 +67,12 @@ class _DEFS(metaclass=NamedConstantMeta):
 
 def _get_def(attr: XAttr) -> str:
     key = attr.name.upper()
-    def_ = XSH.env.get("XONSH_GITSTATUS_" + key)
+    def_ = xsh.XSH.env.get("XONSH_GITSTATUS_" + key)
     return def_ if def_ is not None else attr.value
 
 
 def _is_hidden(attr: XAttr) -> bool:
-    hidden = XSH.env.get("XONSH_GITSTATUS_FIELDS_HIDDEN") or set()
+    hidden = xsh.XSH.env.get("XONSH_GITSTATUS_FIELDS_HIDDEN") or set()
     return attr.name.upper() in hidden or attr.name.lower() in hidden
 
 

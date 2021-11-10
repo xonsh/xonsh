@@ -1,7 +1,7 @@
 import argparse as ap
 import typing as tp
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import CommandContext
 
@@ -63,10 +63,10 @@ class ArgparseCompleter:
             yield from act.choices
         elif hasattr(act, "completer") and callable(act.completer):  # type: ignore
             # call the completer function
-            from xonsh.built_ins import XSH
+            import xonsh.session as xsh
 
             kwargs.update(self.kwargs)
-            yield from act.completer(xsh=XSH, action=act, completer=self, **kwargs)  # type: ignore
+            yield from act.completer(xsh=xsh.XSH, action=act, completer=self, **kwargs)  # type: ignore
 
     def _complete_pos(self, act):
         if isinstance(act.choices, dict):  # sub-parsers
@@ -103,7 +103,7 @@ class ArgparseCompleter:
             return
 
         # complete remaining options only if requested or enabled
-        show_opts = XSH.env.get("ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT", False)
+        show_opts = xsh.XSH.env.get("ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT", False)
         if not show_opts:
             if not (
                 self.command.prefix

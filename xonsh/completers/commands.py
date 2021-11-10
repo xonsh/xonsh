@@ -12,7 +12,7 @@ from xonsh.completers.tools import (
     non_exclusive_completer,
 )
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
@@ -27,7 +27,7 @@ def complete_command(command: CommandContext):
     cmd = command.prefix
     out: tp.Set[Completion] = {
         RichCompletion(s, append_space=True)
-        for s in XSH.commands_cache  # type: ignore
+        for s in xsh.XSH.commands_cache  # type: ignore
         if get_filter_function()(s, cmd)
     }
     if xp.ON_WINDOWS:
@@ -67,7 +67,7 @@ def complete_skipper(command_context: CommandContext):
         # completing the command after a SKIP_TOKEN
         return complete_command(skipped_command_context)
 
-    completer: Completer = XSH.shell.shell.completer  # type: ignore
+    completer: Completer = xsh.XSH.shell.shell.completer  # type: ignore
     return completer.complete_from_context(CompletionContext(skipped_command_context))
 
 

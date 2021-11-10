@@ -8,7 +8,7 @@ from xonsh.parsers.completion_context import CompletionContext, PythonContext
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 from xonsh.completers.tools import (
     CompleterResult,
@@ -144,7 +144,7 @@ def complete_python(context: CompletionContext) -> CompleterResult:
         # this can be a command (i.e. not a subexpression)
         first = context.command.args[0].value
         ctx = context.python.ctx or {}
-        if first in XSH.commands_cache and first not in ctx:  # type: ignore
+        if first in xsh.XSH.commands_cache and first not in ctx:  # type: ignore
             # this is a known command, so it won't be python code
             return None
 
@@ -205,7 +205,7 @@ def _safe_eval(expr, ctx):
     a (None, None) tuple.
     """
     _ctx = None
-    xonsh_safe_eval = XSH.execer.eval
+    xonsh_safe_eval = xsh.XSH.execer.eval
     try:
         val = xonsh_safe_eval(expr, ctx, ctx, transform=False)
         _ctx = ctx
@@ -244,7 +244,7 @@ def attr_complete(prefix, ctx, filter_func):
         if _val_ is None and _ctx_ is None:
             continue
         a = getattr(val, opt)
-        if XSH.env["COMPLETIONS_BRACKETS"]:
+        if xsh.XSH.env["COMPLETIONS_BRACKETS"]:
             if callable(a):
                 rpl = opt + "("
             elif isinstance(a, (cabc.Sequence, cabc.Mapping)):

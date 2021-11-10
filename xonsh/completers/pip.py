@@ -4,7 +4,7 @@ import shlex
 import subprocess
 
 import xonsh.lazyasd as xl
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.completers.tools import (
     contextual_command_completer,
     get_filter_function,
@@ -28,7 +28,7 @@ def complete_pip(context: CommandContext):
     filter_func = get_filter_function()
 
     args = [arg.raw_value for arg in context.args]
-    env = XSH.env.detype()
+    env = xsh.XSH.env.detype()
     env.update(
         {
             "PIP_AUTO_COMPLETE": "1",

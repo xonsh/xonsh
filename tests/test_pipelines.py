@@ -8,7 +8,7 @@ import pytest
 from xonsh.platform import ON_WINDOWS
 from xonsh.procs.pipelines import CommandPipeline
 from tests.tools import skip_if_on_windows, skip_if_on_unix
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 @pytest.fixture(autouse=True)
@@ -18,12 +18,12 @@ def patched_events(monkeypatch, xonsh_events, xonsh_execer):
     tasks.clear()
     # needed for ci tests
     monkeypatch.setitem(
-        XSH.env, "RAISE_SUBPROC_ERROR", False
+        xsh.XSH.env, "RAISE_SUBPROC_ERROR", False
     )  # for the failing `grep` commands
-    monkeypatch.setitem(XSH.env, "XONSH_CAPTURE_ALWAYS", True)  # capture output of ![]
+    monkeypatch.setitem(xsh.XSH.env, "XONSH_CAPTURE_ALWAYS", True)  # capture output of ![]
     if ON_WINDOWS:
         monkeypatch.setattr(
-            XSH,
+            xsh.XSH,
             "aliases",
             {
                 "echo": "cmd /c echo".split(),

@@ -8,7 +8,7 @@ import pytest
 from xonsh import imphooks
 from xonsh.execer import Execer
 from xonsh.environ import Env
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 imphooks.install_import_hooks()
 
@@ -18,7 +18,7 @@ def imp_env(xession):
     Execer(unload=False)
     xession.env = Env({"PATH": [], "PATHEXT": []})
     yield
-    XSH.unload()
+    xsh.XSH.unload()
 
 
 def test_import():

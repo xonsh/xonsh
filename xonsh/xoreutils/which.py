@@ -7,7 +7,7 @@ import xonsh
 from xonsh.xoreutils import _which
 import xonsh.platform as xp
 import xonsh.procs.pipelines as xpp
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 @functools.lru_cache()
@@ -76,7 +76,7 @@ def _which_create_parser():
 
 def print_global_object(arg, stdout):
     """Print the object."""
-    obj = XSH.ctx.get(arg)
+    obj = xsh.XSH.ctx.get(arg)
     print("global object of {}".format(type(obj)), file=stdout)
 
 
@@ -88,7 +88,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
         p, f = os.path.split(abs_name)
         f = next(s.name for s in os.scandir(p) if s.name.lower() == f.lower())
         abs_name = os.path.join(p, f)
-        if XSH.env.get("FORCE_POSIX_PATHS", False):
+        if xsh.XSH.env.get("FORCE_POSIX_PATHS", False):
             abs_name.replace(os.sep, os.altsep)
     if verbose:
         print(f"{abs_name} ({from_where})", file=stdout)
@@ -99,7 +99,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
 
 def print_alias(arg, stdout, verbose=False):
     """Print the alias."""
-    alias = XSH.aliases[arg]
+    alias = xsh.XSH.aliases[arg]
     if not verbose:
         if not callable(alias):
             print(" ".join(alias), file=stdout)
@@ -114,7 +114,7 @@ def print_alias(arg, stdout, verbose=False):
             file=stdout,
         )
         if callable(alias) and not isinstance(alias, xonsh.aliases.ExecAlias):
-            XSH.superhelp(alias)
+            xsh.XSH.superhelp(alias)
 
 
 def which(args, stdin=None, stdout=None, stderr=None, spec=None):
@@ -141,16 +141,16 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         if pargs.exts:
             exts = pargs.exts
         else:
-            exts = XSH.env["PATHEXT"]
+            exts = xsh.XSH.env["PATHEXT"]
     else:
         exts = None
     failures = []
     for arg in pargs.args:
         nmatches = 0
-        if pargs.all and arg in XSH.ctx:
+        if pargs.all and arg in xsh.XSH.ctx:
             print_global_object(arg, stdout)
             nmatches += 1
-        if arg in XSH.aliases and not pargs.skip:
+        if arg in xsh.XSH.aliases and not pargs.skip:
             print_alias(arg, stdout, verbose)
             nmatches += 1
             if not pargs.all:
@@ -159,7 +159,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         # from os.environ so we temporarily override it with
         # __xosnh_env__['PATH']
         original_os_path = xp.os_environ["PATH"]
-        xp.os_environ["PATH"] = XSH.env.detype()["PATH"]
+        xp.os_environ["PATH"] = xsh.XSH.env.detype()["PATH"]
         matches = _which.whichgen(arg, exts=exts, verbose=verbose)
         for abs_name, from_where in matches:
             print_path(abs_name, from_where, stdout, verbose, captured)

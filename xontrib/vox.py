@@ -2,7 +2,7 @@
 
 import xonsh.cli_utils as xcli
 import xontrib.voxapi as voxapi
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 __all__ = ()
 
@@ -232,4 +232,4 @@ class VoxHandler(xcli.ArgParserAlias):
         print()
 
 
-XSH.aliases["vox"] = VoxHandler()
+xsh.XSH.aliases["vox"] = VoxHandler()

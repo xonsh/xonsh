@@ -4,12 +4,12 @@ Alt+Left/Right remains unmodified to jump over smaller word segments.
 """
 from prompt_toolkit.keys import Keys
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 __all__ = ()
 
 
-@XSH.builtins.events.on_ptk_create
+@xsh.XSH.builtins.events.on_ptk_create
 def custom_keybindings(bindings, **kw):
 
     # Key bindings for jumping over whole words (everything that's not

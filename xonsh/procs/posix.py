@@ -12,7 +12,7 @@ import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 import xonsh.lazyimps as xli
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 from xonsh.procs.readers import (
     BufferedFDParallelReader,
@@ -56,7 +56,7 @@ class PopenThread(threading.Thread):
         self.daemon = True
 
         self.lock = threading.RLock()
-        env = XSH.env
+        env = xsh.XSH.env
         # stdin setup
         self.orig_stdin = stdin
         if stdin is None:
@@ -119,7 +119,7 @@ class PopenThread(threading.Thread):
         self.suspended = False
         self.prevs_are_closed = False
         # This is so the thread will use the same swapped values as the origin one.
-        self.original_swapped_values = XSH.env.get_swapped_values()
+        self.original_swapped_values = xsh.XSH.env.get_swapped_values()
         self.start()
 
     def run(self):
@@ -128,7 +128,7 @@ class PopenThread(threading.Thread):
         captured_stderr to stderr.
         """
         # Set the thread-local swapped values.
-        XSH.env.set_swapped_values(self.original_swapped_values)
+        xsh.XSH.env.set_swapped_values(self.original_swapped_values)
         proc = self.proc
         spec = self._wait_and_getattr("spec")
         # get stdin and apply parallel reader if needed.

@@ -6,14 +6,14 @@ from xonsh.completers.path import _quote_paths
 from xonsh.completers.bash_completion import bash_completions
 from xonsh.completers.tools import contextual_command_completer, RichCompletion
 from xonsh.parsers.completion_context import CommandContext
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 @contextual_command_completer
 def complete_from_bash(context: CommandContext):
     """Completes based on results from BASH completion."""
-    env = XSH.env.detype()  # type: ignore
-    paths = XSH.env.get("BASH_COMPLETIONS", ())  # type: ignore
+    env = xsh.XSH.env.detype()  # type: ignore
+    paths = xsh.XSH.env.get("BASH_COMPLETIONS", ())  # type: ignore
     command = xp.bash_command()
     args = [arg.value for arg in context.args]
     prefix = context.prefix  # without the quotes

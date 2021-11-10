@@ -11,7 +11,7 @@ import sys
 import threading
 
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.lazyasd import LazyObject
 
 RE_REMOVE_ANSI = LazyObject(
@@ -24,7 +24,7 @@ RE_REMOVE_ANSI = LazyObject(
 def _run_git_cmd(cmd):
     # create a safe detyped env dictionary and update with the additional git environment variables
     # when running git status commands we do not want to acquire locks running command like git status
-    denv = dict(XSH.env.detype())
+    denv = dict(xsh.XSH.env.detype())
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
     return subprocess.check_output(cmd, env=denv, stderr=subprocess.DEVNULL)
 
@@ -44,7 +44,7 @@ def get_git_branch():
     be determined (timeout, not in a git repo, etc.) then this returns None.
     """
     branch = None
-    timeout = XSH.env.get("VC_BRANCH_TIMEOUT")
+    timeout = xsh.XSH.env.get("VC_BRANCH_TIMEOUT")
     q = queue.Queue()
 
     t = threading.Thread(target=_get_git_branch, args=(q,))
@@ -60,7 +60,7 @@ def get_git_branch():
 
 
 def _get_hg_root(q):
-    _curpwd = XSH.env["PWD"]
+    _curpwd = xsh.XSH.env["PWD"]
     while True:
         if not os.path.isdir(_curpwd):
             return False
@@ -82,7 +82,7 @@ def get_hg_branch(root=None):
     """Try to get the mercurial branch of the current directory,
     return None if not in a repo or subprocess.TimeoutExpired if timed out.
     """
-    env = XSH.env
+    env = xsh.XSH.env
     timeout = env["VC_BRANCH_TIMEOUT"]
     q = queue.Queue()
     t = threading.Thread(target=_get_hg_root, args=(q,))
@@ -125,7 +125,7 @@ _FIRST_BRANCH_TIMEOUT = True
 
 def _first_branch_timeout_message():
     global _FIRST_BRANCH_TIMEOUT
-    sbtm = XSH.env["SUPPRESS_BRANCH_TIMEOUT_MESSAGE"]
+    sbtm = xsh.XSH.env["SUPPRESS_BRANCH_TIMEOUT_MESSAGE"]
     if not _FIRST_BRANCH_TIMEOUT or sbtm:
         return
     _FIRST_BRANCH_TIMEOUT = False
@@ -143,7 +143,7 @@ def _first_branch_timeout_message():
 
 def _vc_has(binary):
     """This allows us to locate binaries after git only if necessary"""
-    cmds = XSH.commands_cache
+    cmds = xsh.XSH.commands_cache
     if cmds.is_empty():
         return bool(cmds.locate_binary(binary, ignore_alias=True))
     else:
@@ -187,7 +187,7 @@ def git_dirty_working_directory():
     """Returns whether or not the git directory is dirty. If this could not
     be determined (timeout, file not found, etc.) then this returns None.
     """
-    env = XSH.env
+    env = xsh.XSH.env
     timeout = env.get("VC_BRANCH_TIMEOUT")
     include_untracked = env.get("VC_GIT_INCLUDE_UNTRACKED")
     q = queue.Queue()
@@ -206,7 +206,7 @@ def hg_dirty_working_directory():
     """Computes whether or not the mercurial working directory is dirty or not.
     If this cannot be determined, None is returned.
     """
-    env = XSH.env
+    env = xsh.XSH.env
     cwd = env["PWD"]
     denv = env.detype()
     vcbt = env["VC_BRANCH_TIMEOUT"]

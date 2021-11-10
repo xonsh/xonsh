@@ -3,7 +3,7 @@ import re
 import ast
 import glob
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.parsers.completion_context import CommandContext
 
 import xonsh.tools as xt
@@ -27,7 +27,7 @@ def PATTERN_NEED_QUOTES():
 
 def cd_in_command(line):
     """Returns True if "cd" is a token in the line, False otherwise."""
-    lexer = XSH.execer.parser.lexer
+    lexer = xsh.XSH.execer.parser.lexer
     lexer.reset()
     lexer.input(line)
     have_cd = False
@@ -81,7 +81,7 @@ def _path_from_partial_string(inp, pos=None):
     except (SyntaxError, ValueError):
         return None
     if isinstance(val, bytes):
-        env = XSH.env
+        env = xsh.XSH.env
         val = val.decode(
             encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
         )
@@ -103,7 +103,7 @@ def _normpath(p):
         p = os.path.join(os.curdir, p)
     if trailing_slash:
         p = os.path.join(p, "")
-    if xp.ON_WINDOWS and XSH.env.get("FORCE_POSIX_PATHS"):
+    if xp.ON_WINDOWS and xsh.XSH.env.get("FORCE_POSIX_PATHS"):
         p = p.replace(os.sep, os.altsep)
     return p
 
@@ -119,7 +119,7 @@ def _startswithnorm(x, start, startlow=None):
 
 
 def _dots(prefix):
-    complete_dots = XSH.env.get("COMPLETE_DOTS", "matching").lower()
+    complete_dots = xsh.XSH.env.get("COMPLETE_DOTS", "matching").lower()
     if complete_dots == "never":
         return ()
     slash = xt.get_sep()
@@ -138,7 +138,7 @@ def _dots(prefix):
 
 def _add_cdpaths(paths, prefix):
     """Completes current prefix using CDPATH"""
-    env = XSH.env
+    env = xsh.XSH.env
     csc = env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = env.get("GLOB_SORTED")
     for cdp in env.get("CDPATH"):
@@ -160,7 +160,7 @@ def _quote_to_use(x):
 
 
 def _is_directory_in_cdpath(path):
-    env = XSH.env
+    env = xsh.XSH.env
     for cdp in env.get("CDPATH"):
         if os.path.isdir(os.path.join(cdp, path)):
             return True
@@ -168,7 +168,7 @@ def _is_directory_in_cdpath(path):
 
 
 def _quote_paths(paths, start, end, append_end=True, cdpath=False):
-    expand_path = XSH.expand_path
+    expand_path = xsh.XSH.expand_path
     out = set()
     space = " "
     backslash = "\\"
@@ -275,7 +275,7 @@ def _subsequence_match_iter(ref, typed):
 
 def _expand_one(sofar, nextone, csc):
     out = set()
-    glob_sorted = XSH.env.get("GLOB_SORTED")
+    glob_sorted = xsh.XSH.env.get("GLOB_SORTED")
     for i in sofar:
         _glob = os.path.join(_joinpath(i), "*") if i is not None else "*"
         for j in xt.iglobpath(_glob, sort_result=glob_sorted):
@@ -305,7 +305,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
             append_end = False
     tilde = "~"
     paths = set()
-    env = XSH.env
+    env = xsh.XSH.env
     csc = env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = env.get("GLOB_SORTED")
     prefix = glob.escape(prefix)

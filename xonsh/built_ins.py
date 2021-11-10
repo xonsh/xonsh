@@ -474,32 +474,6 @@ def enter_macro(obj, raw_block, glbs, locs):
     return obj
 
 
-@contextlib.contextmanager
-def xonsh_builtins(execer=None):
-    """A context manager for using the xonsh builtins only in a limited
-    scope. Likely useful in testing.
-    """
-    XSH.load(execer=execer)
-    yield
-    XSH.unload()
-
-
-def create_builtins_namespace(execer):
-    from xonsh.events import events
-
-    return types.SimpleNamespace(
-        # public built-ins
-        XonshError=XonshError,
-        XonshCalledProcessError=XonshCalledProcessError,
-        evalx=None if execer is None else execer.eval,
-        execx=None if execer is None else execer.exec,
-        compilex=None if execer is None else execer.compile,
-        events=events,
-        print_color=print_color,
-        printx=print_color,
-    )
-
-
 class DynamicAccessProxy:
     """Proxies access dynamically."""
 

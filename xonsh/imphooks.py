@@ -12,7 +12,7 @@ import types
 from importlib.abc import MetaPathFinder, SourceLoader, Loader
 from importlib.machinery import ModuleSpec
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lazyasd import lazyobject
@@ -57,12 +57,13 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     @property
     def execer(self):
-        if XSH.execer is not None:
-            execer = XSH.execer
+        if xsh.XSH.execer is not None:
+            execer = xsh.XSH.execer
             if self._execer is not None:
                 self._execer = None
         elif self._execer is None:
-            self._execer = execer = Execer(unload=False)
+            self._execer = execer = Execer()
+            # TODO push session
         else:
             execer = self._execer
         return execer

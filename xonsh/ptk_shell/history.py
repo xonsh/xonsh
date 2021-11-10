@@ -3,7 +3,7 @@
 
 import prompt_toolkit.history
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 class PromptToolkitHistory(prompt_toolkit.history.History):
@@ -23,7 +23,7 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         """Loads synchronous history strings"""
         if not self.load_prev:
             return
-        hist = XSH.history
+        hist = xsh.XSH.history
         if hist is None:
             return
         for cmd in hist.all_items(newest_first=True):

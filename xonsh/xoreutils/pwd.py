@@ -1,11 +1,11 @@
 """A pwd implementation for xonsh."""
 import os
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 def pwd(args, stdin, stdout, stderr):
     """A pwd implementation"""
-    e = XSH.env["PWD"]
+    e = xsh.XSH.env["PWD"]
     if "-h" in args or "--help" in args:
         print(PWD_HELP, file=stdout)
         return 0

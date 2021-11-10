@@ -6,7 +6,7 @@ import os
 import pathlib
 import tempfile
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 __all__ = ()
 
@@ -52,7 +52,7 @@ def _xog(args, stdout=None, stderr=None):
         _print_help(stdout)
         return 0
 
-    logfile = XSH.env.get("XONSH_TRACEBACK_LOGFILE", "")
+    logfile = xsh.XSH.env.get("XONSH_TRACEBACK_LOGFILE", "")
     if not (logfile and os.path.isfile(logfile)):
         print("Traceback log file doesn't exist.", file=stderr)
         return -1
@@ -65,5 +65,5 @@ def _xog(args, stdout=None, stderr=None):
     return 0 if rc else -1
 
 
-XSH.env["XONSH_TRACEBACK_LOGFILE"] = _get_log_file_name()
-XSH.aliases["xog"] = _xog
+xsh.XSH.env["XONSH_TRACEBACK_LOGFILE"] = _get_log_file_name()
+xsh.XSH.aliases["xog"] = _xog

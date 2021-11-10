@@ -16,7 +16,7 @@ from importlib.machinery import all_suffixes
 from zipimport import zipimporter
 import typing as tp
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.lazyasd import lazyobject
 from xonsh.completers.tools import (
     contextual_completer,
@@ -86,7 +86,7 @@ def get_root_modules():
     Returns a list containing the names of all the modules available in the
     folders of the pythonpath.
     """
-    rootmodules_cache = XSH.modules_cache
+    rootmodules_cache = xsh.XSH.modules_cache
     rootmodules = list(sys.builtin_module_names)
     start_time = time()
     for path in sys.path:

@@ -84,7 +84,8 @@ def session_vars():
 def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = dict(vars(builtins).items())  # type: ignore
-
+    assert False
+    # TODO fixme
     XSH.load(ctx={}, **session_vars)
 
     def locate_binary(self, name):

@@ -1,7 +1,7 @@
 """
 Events for xonsh.
 
-In all likelihood, you want xonsh.built_ins.XSH.events
+In all likelihood, you want xonsh.built_ins.xsh.XSH.events
 
 The best way to "declare" an event is something like::
 
@@ -11,7 +11,7 @@ import abc
 import collections.abc
 import inspect
 
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.tools import print_exception
 
 
@@ -22,8 +22,9 @@ def has_kwargs(func):
 
 
 def debug_level():
-    if XSH.env:
-        return XSH.env.get("XONSH_DEBUG")
+    return 0 # TODO FIXME
+    if xsh.XSH.env:
+        return xsh.XSH.env.get("XONSH_DEBUG")
     # FIXME: Under py.test, return 1(?)
     else:
         return 0  # Optimize for speed, not guaranteed correctness

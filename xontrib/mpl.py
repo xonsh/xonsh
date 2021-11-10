@@ -4,7 +4,7 @@ is imported.
 
 from xonsh.tools import unthreadable
 from xonsh.lazyasd import lazyobject
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 
 
 __all__ = ()
@@ -18,7 +18,7 @@ def mpl(args, stdin=None):
     show()
 
 
-XSH.aliases["mpl"] = mpl
+xsh.XSH.aliases["mpl"] = mpl
 
 
 @lazyobject
@@ -30,10 +30,10 @@ def pylab_helpers():
     return m
 
 
-@XSH.builtins.events.on_import_post_exec_module
+@xsh.XSH.builtins.events.on_import_post_exec_module
 def interactive_pyplot(module=None, **kwargs):
     """This puts pyplot in interactive mode once it is imported."""
-    if module.__name__ != "matplotlib.pyplot" or not XSH.env.get("XONSH_INTERACTIVE"):
+    if module.__name__ != "matplotlib.pyplot" or not xsh.XSH.env.get("XONSH_INTERACTIVE"):
         return
     # Since we are in interactive mode, let's monkey-patch plt.show
     # to try to never block.
@@ -59,7 +59,7 @@ def interactive_pyplot(module=None, **kwargs):
     module.show = xonsh_show
 
     # register figure drawer
-    @XSH.builtins.events.on_postcommand
+    @xsh.XSH.builtins.events.on_postcommand
     def redraw_mpl_figure(**kwargs):
         """Redraws the current matplotlib figure after each command."""
         pylab_helpers.Gcf.draw_all()

@@ -18,7 +18,7 @@ from xonsh.ply import ply
 
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.built_ins import XSH
+import xonsh.session as xsh
 from xonsh.cli_utils import ArgParserAlias, Annotated, Arg, add_args
 from xonsh.prompt.base import is_template_string
 from xonsh.platform import (
@@ -190,7 +190,7 @@ def _dump_xonfig_foreign_shell(path, value):
 
 def _dump_xonfig_env(path, value):
     name = os.path.basename(path.rstrip("/"))
-    detyper = XSH.env.get_detyper(name)
+    detyper = xsh.XSH.env.get_detyper(name)
     dval = str(value) if detyper is None else detyper(value)
     dval = str(value) if dval is None else dval
     return "${name} = {val!r}".format(name=name, val=dval)
@@ -290,7 +290,7 @@ ENVVAR_PROMPT = "{BOLD_GREEN}>>>{RESET} "
 
 def make_exit_message():
     """Creates a message for how to exit the wizard."""
-    shell_type = XSH.shell.shell_type
+    shell_type = xsh.XSH.shell.shell_type
     keyseq = "Ctrl-D" if shell_type == "readline" else "Ctrl-C"
     msg = "To exit the wizard at any time, press {BOLD_UNDERLINE_CYAN}"
     msg += keyseq + "{RESET}.\n"
@@ -300,7 +300,7 @@ def make_exit_message():
 
 def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
-    env = XSH.env
+    env = xsh.XSH.env
     vd = env.get_docs(name)
     if not vd.is_configurable:
         return
@@ -346,7 +346,7 @@ def _make_flat_wiz(kidfunc, *args):
 
 def make_env_wiz():
     """Makes an environment variable wizard."""
-    w = _make_flat_wiz(make_envvar, sorted(XSH.env.keys()))
+    w = _make_flat_wiz(make_envvar, sorted(xsh.XSH.env.keys()))
     return w
 
 
@@ -457,8 +457,8 @@ def _wizard(
     confirm
         confirm that the wizard should be run.
     """
-    env = XSH.env
-    shell = XSH.shell.shell
+    env = xsh.XSH.env
+    shell = xsh.XSH.shell.shell
     xonshrcs = env.get("XONSHRC", [])
     fname = xonshrcs[-1] if xonshrcs and rcfile is None else rcfile
     no_wiz = os.path.join(env.get("XONSH_CONFIG_DIR"), "no-wizard")
@@ -523,7 +523,7 @@ def _info(
     to_json
         reports results as json
     """
-    env = XSH.env
+    env = xsh.XSH.env
     data: tp.List[tp.Any] = [("xonsh", XONSH_VERSION)]
     hash_, date_ = githash()
     if hash_:
@@ -570,7 +570,7 @@ def _info(
     data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
 
     data.extend([("xontrib", xontribs_loaded())])
-    data.extend([("RC file", XSH.rc_files)])
+    data.extend([("RC file", xsh.XSH.rc_files)])
 
     formatter = _xonfig_format_json if to_json else _xonfig_format_human
     s = formatter(data)
@@ -587,7 +587,7 @@ def _styles(
     to_json
         reports results as json
     """
-    env = XSH.env
+    env = xsh.XSH.env
     curr = env.get("XONSH_COLOR_STYLE")
     styles = sorted(color_style_names())
     if to_json:
@@ -664,13 +664,13 @@ def _colors(
     """
     columns, _ = shutil.get_terminal_size()
     columns -= int(bool(ON_WINDOWS))
-    style_stash = XSH.env["XONSH_COLOR_STYLE"]
+    style_stash = xsh.XSH.env["XONSH_COLOR_STYLE"]
 
     if style is not None:
         if style not in color_style_names():
             print("Invalid style: {}".format(style))
             return
-        XSH.env["XONSH_COLOR_STYLE"] = style
+        xsh.XSH.env["XONSH_COLOR_STYLE"] = style
 
     color_map = color_style()
     if not color_map:
@@ -682,7 +682,7 @@ def _colors(
     else:
         s = _tok_colors(color_map, columns)
     print_color(s)
-    XSH.env["XONSH_COLOR_STYLE"] = style_stash
+    xsh.XSH.env["XONSH_COLOR_STYLE"] = style_stash
 
 
 def _tutorial():
@@ -889,7 +889,7 @@ WELCOME_MSG = [
 
 
 def print_welcome_screen():
-    shell_type = XSH.env.get("SHELL_TYPE")
+    shell_type = xsh.XSH.env.get("SHELL_TYPE")
     subst = dict(tagline=random.choice(list(TAGLINES)), version=XONSH_VERSION)
     for elem in WELCOME_MSG:
         if elem == "[SHELL_TYPE_WARNING]":
