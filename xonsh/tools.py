@@ -53,6 +53,12 @@ from xonsh.platform import (
 )
 
 
+@lazyobject
+def xsh():
+    import xonsh.session
+    return xonsh.session
+
+
 @functools.lru_cache(1)
 def is_superuser():
     if ON_WINDOWS:
@@ -60,13 +66,6 @@ def is_superuser():
     else:
         rtn = os.getuid() == 0
     return rtn
-
-
-@lazyobject
-def xsh():
-    import xonsh.session as xsh
-
-    return xsh.XSH
 
 
 class XonshError(Exception):
@@ -105,7 +104,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
 def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
-    env = xsh.env or os_environ
+    env = xsh.XSH.env or os_environ
     if env.get("EXPAND_ENV_VARS", False):
         s = expandvars(s)
     if expand_user:
@@ -126,7 +125,7 @@ def _expandpath(path):
     """Performs environment variable / user expansion on a given path
     if EXPAND_ENV_VARS is set.
     """
-    env = xsh.env or os_environ
+    env = xsh.XSH.env or os_environ
     expand_user = env.get("EXPAND_ENV_VARS", False)
     return expand_path(path, expand_user=expand_user)
 
@@ -143,7 +142,7 @@ def decode_bytes(b):
     """Tries to decode the bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
     """
-    env = xsh.env or os_environ
+    env = xsh.XSH.env or os_environ
     enc = env.get("XONSH_ENCODING") or DEFAULT_ENCODING
     err = env.get("XONSH_ENCODING_ERRORS") or "strict"
     return b.decode(encoding=enc, errors=err)
@@ -542,7 +541,7 @@ def get_line_continuation():
     mode on Windows the backslash must be preceded by a space. This is because
     paths on Windows may end in a backslash.
     """
-    if ON_WINDOWS and hasattr(xsh, "env") and xsh.env.get("XONSH_INTERACTIVE", False):
+    if ON_WINDOWS and hasattr(xsh, "env") and xsh.XSH.env.get("XONSH_INTERACTIVE", False):
         return " \\"
     else:
         return "\\"
@@ -713,7 +712,7 @@ def get_sep():
     """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    if ON_WINDOWS and xsh.env.get("FORCE_POSIX_PATHS"):
+    if ON_WINDOWS and xsh.XSH.env.get("FORCE_POSIX_PATHS"):
         return os.altsep
     else:
         return os.sep
@@ -799,7 +798,7 @@ def _executables_in_posix(path):
 def _executables_in_windows(path):
     if not os.path.isdir(path):
         return
-    extensions = xsh.env["PATHEXT"]
+    extensions = xsh.XSH.env["PATHEXT"]
     try:
         for x in os.scandir(path):
             try:
@@ -1882,7 +1881,7 @@ def format_color(string, **kwargs):
         # fallback for ANSI if shell is not yet initialized
         from xonsh.ansi_colors import ansi_partial_color_format
 
-        style = xsh.env.get("XONSH_COLOR_STYLE")
+        style = xsh.XSH.env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, style=style)
 
 
@@ -2070,8 +2069,8 @@ def hardcode_colors_for_win10(style_map):
     in conhost.exe
     """
     modified_style = {}
-    if not xsh.env["PROMPT_TOOLKIT_COLOR_DEPTH"]:
-        xsh.env["PROMPT_TOOLKIT_COLOR_DEPTH"] = "DEPTH_24_BIT"
+    if not xsh.XSH.env["PROMPT_TOOLKIT_COLOR_DEPTH"]:
+        xsh.XSH.env["PROMPT_TOOLKIT_COLOR_DEPTH"] = "DEPTH_24_BIT"
     # Replace all ansi colors with hardcoded colors to avoid unreadable defaults
     # in conhost.exe
     for token, style_str in style_map.items():
@@ -2146,7 +2145,7 @@ def format_std_prepost(template, env=None):
     """
     if not template:
         return ""
-    env = xsh.env if env is None else env
+    env = xsh.XSH.env if env is None else env
     invis = "\001\002"
     if xsh.shell is None:
         # shell hasn't fully started up (probably still in xonshrc)
@@ -2334,7 +2333,7 @@ def POSIX_ENVVAR_REGEX():
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.
     Unknown variables are left unchanged."""
-    env = xsh.env
+    env = xsh.XSH.env
     if isinstance(path, bytes):
         path = path.decode(
             encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
@@ -2457,9 +2456,9 @@ def _dotglobstr(s):
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     s = xsh.expand_path(s)
     if sort_result is None:
-        sort_result = xsh.env.get("GLOB_SORTED")
+        sort_result = xsh.XSH.env.get("GLOB_SORTED")
     if include_dotfiles is None:
-        include_dotfiles = xsh.env.get("DOTGLOB")
+        include_dotfiles = xsh.XSH.env.get("DOTGLOB")
     if ignore_case:
         s = expand_case_matching(s)
     if "**" in s and "**/*" not in s:
@@ -2501,7 +2500,7 @@ def ensure_timestamp(t, datetime_format=None):
     except (ValueError, TypeError):
         pass
     if datetime_format is None:
-        datetime_format = xsh.env["XONSH_DATETIME_FORMAT"]
+        datetime_format = xsh.XSH.env["XONSH_DATETIME_FORMAT"]
     if isinstance(t, datetime.datetime):
         t = t.timestamp()
     else:
@@ -2511,7 +2510,7 @@ def ensure_timestamp(t, datetime_format=None):
 
 def format_datetime(dt):
     """Format datetime object to string base on $XONSH_DATETIME_FORMAT Env."""
-    format_ = xsh.env["XONSH_DATETIME_FORMAT"]
+    format_ = xsh.XSH.env["XONSH_DATETIME_FORMAT"]
     return dt.strftime(format_)
 
 
