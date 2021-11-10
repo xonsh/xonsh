@@ -18,7 +18,7 @@ def venv_names_completer(command, alias: "VoxHandler", **_):
 
 
 def py_interpreter_path_completer(xsh, **_):
-    for _, (path, is_alias) in xsh.commands_cache.all_commands.items():
+    for _, (path, is_alias) in xsh.commands_cache.update_cache().items():
         if not is_alias and ("/python" in path or "/pypy" in path):
             yield path
 

@@ -1,6 +1,8 @@
 # setup import hooks
 import xonsh.imphooks
+import xonsh.execer
 
-xonsh.imphooks.install_import_hooks()
+execer = xonsh.execer.Execer()
+xonsh.imphooks.install_import_hooks(execer)
 
 del xonsh

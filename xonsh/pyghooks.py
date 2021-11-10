@@ -1667,7 +1667,7 @@ class XonshLexer(Python3Lexer):
         else:
             session = xonsh.session.XSH
 
-        _ = session.commands_cache.all_commands  # NOQA
+        session.commands_cache.update_cache()  # NOQA
         super().__init__(*args, **kwargs)
 
     tokens = {

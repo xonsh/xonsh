@@ -900,7 +900,7 @@ def suggest_commands(cmd, env):
             if levenshtein(alias.lower(), cmd, thresh) < thresh:
                 suggested[alias] = "Alias"
 
-    for _cmd in xsh.XSH.commands_cache.all_commands:
+    for _cmd in xsh.XSH.commands_cache.update_cache():
         if _cmd not in suggested:
             if levenshtein(_cmd.lower(), cmd, thresh) < thresh:
                 suggested[_cmd] = "Command ({0})".format(_cmd)
