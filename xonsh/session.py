@@ -44,6 +44,7 @@ class XonshSession:
     """All components defining a xonsh session."""
 
     def __init__(self):
+        # Loadable state
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
@@ -51,6 +52,29 @@ class XonshSession:
         self.shell = None
         self.env = None
         self.rc_files = None
+
+        self.help = xonsh.built_ins.helper
+        self.superhelp = xonsh.built_ins.superhelper
+        self.pathsearch = xonsh.built_ins.pathsearch
+        self.globsearch = xonsh.built_ins.globsearch
+        self.regexsearch = xonsh.built_ins.regexsearch
+        self.glob = xonsh.built_ins.globpath
+        self.expand_path = xonsh.built_ins.expand_path
+
+        self.subproc_captured_stdout = xonsh.built_ins.subproc_captured_stdout
+        self.subproc_captured_inject = xonsh.built_ins.subproc_captured_inject
+        self.subproc_captured_object = xonsh.built_ins.subproc_captured_object
+        self.subproc_captured_hiddenobject = xonsh.built_ins.subproc_captured_hiddenobject
+        self.subproc_uncaptured = xonsh.built_ins.subproc_uncaptured
+
+        self.ensure_list_of_strs = xonsh.built_ins.ensure_list_of_strs
+        self.list_of_strs_or_callables = xonsh.built_ins.list_of_strs_or_callables
+        self.list_of_list_of_strs_outer_product = xonsh.built_ins.list_of_list_of_strs_outer_product
+        self.eval_fstring_field = xonsh.built_ins.eval_fstring_field
+
+        self.call_macro = xonsh.built_ins.call_macro
+        self.enter_macro = xonsh.built_ins.enter_macro
+        self.path_literal = xonsh.built_ins.path_literal
 
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
@@ -72,13 +96,7 @@ class XonshSession:
             self.ctx = ctx
 
         self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env())
-        self.help = xonsh.built_ins.helper
-        self.superhelp = xonsh.built_ins.superhelper
-        self.pathsearch = xonsh.built_ins.pathsearch
-        self.globsearch = xonsh.built_ins.globsearch
-        self.regexsearch = xonsh.built_ins.regexsearch
-        self.glob = xonsh.built_ins.globpath
-        self.expand_path = xonsh.built_ins.expand_path
+
         self.exit = False
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
@@ -91,11 +109,6 @@ class XonshSession:
             self.pyquit = builtins.quit
             del builtins.quit
 
-        self.subproc_captured_stdout = xonsh.built_ins.subproc_captured_stdout
-        self.subproc_captured_inject = xonsh.built_ins.subproc_captured_inject
-        self.subproc_captured_object = xonsh.built_ins.subproc_captured_object
-        self.subproc_captured_hiddenobject = xonsh.built_ins.subproc_captured_hiddenobject
-        self.subproc_uncaptured = xonsh.built_ins.subproc_uncaptured
         self.execer = execer
         self.commands_cache = (
             kwargs.pop("commands_cache")
@@ -104,15 +117,8 @@ class XonshSession:
         )
         self.modules_cache = {}
         self.all_jobs = {}
-        self.ensure_list_of_strs = xonsh.built_ins.ensure_list_of_strs
-        self.list_of_strs_or_callables = xonsh.built_ins.list_of_strs_or_callables
-        self.list_of_list_of_strs_outer_product = xonsh.built_ins.list_of_list_of_strs_outer_product
-        self.eval_fstring_field = xonsh.built_ins.eval_fstring_field
 
         self.completers = default_completers()
-        self.call_macro = xonsh.built_ins.call_macro
-        self.enter_macro = xonsh.built_ins.enter_macro
-        self.path_literal = xonsh.built_ins.path_literal
 
         self.builtins = xonsh.built_ins.create_builtins_namespace(execer)
         self._default_builtin_names = frozenset(vars(self.builtins))
