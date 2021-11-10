@@ -571,8 +571,8 @@ def setup(
     if not hasattr(builtins, "__xonsh__"):
         execer = Execer()
         session = xonsh.session.XonshSession(execer, ctx)
-        session.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
         xonsh.session.push_session(session)
+        session.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
     else:
         session = xonsh.session.XSH
 
