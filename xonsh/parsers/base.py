@@ -622,7 +622,7 @@ class BaseParser(object):
             self._lines = self._source.splitlines(keepends=True)
         return self._lines
 
-    def source_slice(self, start, stop):
+    def _source_slice(self, start, stop):
         """Gets the original source code from two (line, col) tuples in
         source-space (i.e. lineno start at 1).
         """
@@ -1759,7 +1759,7 @@ class BaseParser(object):
         p3, p5 = p[3], p[5]
         beg = (p3.lineno, p3.lexpos)
         end = (p5.lineno, p5.lexpos)
-        s = self.source_slice(beg, end)
+        s = self._source_slice(beg, end)
         s = textwrap.dedent(s)
         p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
 
@@ -1768,7 +1768,7 @@ class BaseParser(object):
         p1, p3 = p[1], p[3]
         beg = (p1.lineno, p1.lexpos + 1)
         end = (p3.lineno, p3.lexpos)
-        s = self.source_slice(beg, end).strip()
+        s = self._source_slice(beg, end).strip()
         p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
 
     def _attach_nodedent_base_rules(self):
@@ -2573,7 +2573,7 @@ class BaseParser(object):
             ends = p2 + ends
         elts = []
         for beg, end in zip(begins, ends):
-            s = self.source_slice(beg, end).strip()
+            s = self._source_slice(beg, end).strip()
             if not s:
                 if len(begins) == 1:
                     break
@@ -3137,7 +3137,7 @@ class BaseParser(object):
         p3 = p[3]
         l = p1.lineno
         c = p1.lexpos + 1
-        subcmd = self.source_slice((l, c), (p3.lineno, p3.lexpos))
+        subcmd = self._source_slice((l, c), (p3.lineno, p3.lexpos))
         subcmd = subcmd.strip() + "\n"
         p0 = [
             ast.Str(s="xonsh", lineno=l, col_offset=c),
@@ -3177,7 +3177,7 @@ class BaseParser(object):
         p3, p5 = p[3], p[5]
         beg = (p3.lineno, p3.lexpos + 1)
         end = (p5.lineno, p5.lexpos)
-        s = self.source_slice(beg, end).strip()
+        s = self._source_slice(beg, end).strip()
         node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
         p[2][-1].elts.append(node)
 
