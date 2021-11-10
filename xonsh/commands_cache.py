@@ -30,14 +30,14 @@ class CommandsCache(cabc.Mapping):
     the command has an alias.
     """
 
-    def __init__(self, cache_file):
+    def __init__(self, cache_path):
         self._cmds_cache = {}
         self._path_checksum = None
         self._alias_checksum = None
         self._path_mtime = -1
         self.threadable_predictors = default_threadable_predictors()
         self._loaded_pickled = False
-        self.cache_file = cache_file
+        self._cache_path = cache_path
 
     def __contains__(self, key):
         _ = self.all_commands
@@ -122,7 +122,7 @@ class CommandsCache(cabc.Mapping):
                 self.set_cmds_cache(self._cmds_cache)
             return self._cmds_cache
 
-        if self.cache_file and self.cache_file.exists():
+        if self._cache_path and self._cache_path.exists():
             # pickle the result only if XONSH_DATA_DIR is set
             if not self._loaded_pickled:
                 # first time load the commands from cache-file
@@ -167,18 +167,18 @@ class CommandsCache(cabc.Mapping):
         return self.set_cmds_cache(allcmds)
 
     def get_cached_commands(self) -> tp.Dict[str, str]:
-        if self.cache_file and self.cache_file.exists():
+        if self._cache_path and self._cache_path.exists():
             try:
-                return pickle.loads(self.cache_file.read_bytes()) or {}
+                return pickle.loads(self._cache_path.read_bytes()) or {}
             except Exception:
                 # the file is corrupt
-                self.cache_file.unlink(missing_ok=True)
+                self._cache_path.unlink(missing_ok=True)
         return {}
 
     def set_cmds_cache(self, allcmds: tp.Dict[str, tp.Any]) -> tp.Dict[str, tp.Any]:
         """write cmds to cache-file and instance-attribute"""
-        if self.cache_file:
-            self.cache_file.write_bytes(pickle.dumps(allcmds))
+        if self._cache_path:
+            self._cache_path.write_bytes(pickle.dumps(allcmds))
         self._cmds_cache = allcmds
         return allcmds
 

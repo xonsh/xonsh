@@ -81,15 +81,14 @@ class XonshSession:
         self.stderr_uncaptured = None
         self.shell = None
 
-        cache_file = (
+        cache_path = (
             (Path(env["XONSH_DATA_DIR"]).joinpath("commands-cache.pickle").resolve())
             if env is not None
             and "XONSH_DATA_DIR" in env
             and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
             else None
         )
-
-        self.commands_cache = CommandsCache(cache_file)
+        self.commands_cache = CommandsCache(cache_path)
         self.modules_cache = {}
         self.all_jobs = {}
 
