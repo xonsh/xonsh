@@ -72,7 +72,7 @@ class XonshSession:
             self.ctx = ctx
 
         self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env())
-        self.help = kwargs.pop("help") if "help" in kwargs else xonsh.built_ins.helper
+        self.help = xonsh.built_ins.helper
         self.superhelp = xonsh.built_ins.superhelper
         self.pathsearch = xonsh.built_ins.pathsearch
         self.globsearch = xonsh.built_ins.globsearch
