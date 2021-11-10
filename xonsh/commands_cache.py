@@ -30,7 +30,7 @@ class CommandsCache(cabc.Mapping):
     the command has an alias.
     """
 
-    def __init__(self, cache_path):
+    def __init__(self, cache_path=None):
         self._cmds_cache = {}
         self._path_checksum = None
         self._alias_checksum = None
