@@ -46,12 +46,25 @@ class XonshSession:
     def __init__(self):
         # Loadable state
         self.execer = None
-        self.ctx = {}
+        self.ctx = None
         self.builtins_loaded = False
         self.history = None
         self.shell = None
         self.env = None
         self.rc_files = None
+        self.exit = False
+        self.stdout_uncaptured = None
+        self.stderr_uncaptured = None
+        self.execer = None
+        self.commands_cache = None
+        self.modules_cache = None
+        self.all_jobs = None
+        self.completers = None
+        self.builtins = None
+        self._default_builtin_names = None
+
+        self._py_exit = None
+        self._py_quit = None
 
         self.help = xonsh.built_ins.helper
         self.superhelp = xonsh.built_ins.superhelper
@@ -101,14 +114,6 @@ class XonshSession:
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
 
-        if hasattr(builtins, "exit"):
-            self.pyexit = builtins.exit
-            del builtins.exit
-
-        if hasattr(builtins, "quit"):
-            self.pyquit = builtins.quit
-            del builtins.quit
-
         self.execer = execer
         self.commands_cache = (
             kwargs.pop("commands_cache")
@@ -120,6 +125,8 @@ class XonshSession:
 
         self.completers = default_completers()
 
+        self._disable_python_exit()
+
         self.builtins = xonsh.built_ins.create_builtins_namespace(execer)
         self._default_builtin_names = frozenset(vars(self.builtins))
 
@@ -130,14 +137,35 @@ class XonshSession:
         self.link_builtins(aliases_given)
         self.builtins_loaded = True
 
+        # Cleanup on exit
+        atexit.register(_lastflush)
+        for sig in AT_EXIT_SIGNALS:
+            resetting_signal_handle(sig, _lastflush)
+
+    def _disable_python_exit(self):
+        # Disable Python interactive quit/exit
+        if hasattr(builtins, "exit"):
+            self._py_exit = builtins.exit
+            del builtins.exit
+
+        if hasattr(builtins, "quit"):
+            self._py_quit = builtins.quit
+            del builtins.quit
+
+    def _restore_python_exit(self):
+        if self._py_exit is not None:
+            builtins.exit = self._py_exit
+        if self._py_quit is not None:
+            builtins.quit = self._py_quit
+
     def link_builtins(self, aliases=None):
         from xonsh.aliases import Aliases, make_default_aliases
 
-        # public built-ins
-        for refname in self._default_builtin_names:
-            objname = f"__xonsh__.builtins.{refname}"
-            proxy = xonsh.built_ins.DynamicAccessProxy(refname, objname)
-            setattr(builtins, refname, proxy)
+        # public Xonsh built-ins to Python builtins
+        for name in self._default_builtin_names:
+            ref = f"__xonsh__.builtins.{name}"
+            proxy = xonsh.built_ins.DynamicAccessProxy(name, ref)
+            setattr(builtins, name, proxy)
 
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that
@@ -145,9 +173,6 @@ class XonshSession:
         if aliases is None:
             aliases = Aliases(make_default_aliases())
         self.aliases = builtins.default_aliases = builtins.aliases = aliases
-        atexit.register(_lastflush)
-        for sig in AT_EXIT_SIGNALS:
-            resetting_signal_handle(sig, _lastflush)
 
     def unlink_builtins(self):
         for name in self._default_builtin_names:
@@ -158,15 +183,15 @@ class XonshSession:
         if not hasattr(builtins, "__xonsh__"):
             self.builtins_loaded = False
             return
+
         env = getattr(self, "env", None)
         if hasattr(self.env, "undo_replace_env"):
             env.undo_replace_env()
-        if hasattr(self, "pyexit"):
-            builtins.exit = self.pyexit
-        if hasattr(self, "pyquit"):
-            builtins.quit = self.pyquit
+
+        self._restore_python_exit()
         if not self.builtins_loaded:
             return
+
         self.unlink_builtins()
         delattr(builtins, "__xonsh__")
         self.builtins_loaded = False
