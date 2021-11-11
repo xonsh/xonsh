@@ -549,6 +549,20 @@ class XonshSession:
         self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
         self.eval_fstring_field = eval_fstring_field
 
+        # Session attributes
+        self.exit = None
+        self.stdout_uncaptured = None
+        self.stderr_uncaptured = None
+        self._py_exit = None
+        self._py_quit = None
+        self.execer = None
+        self.commands_cache = None
+        self.modules_cache = None
+        self.all_jobs = None
+        self.completers = None
+        self.builtins = None
+        self._initial_builtin_names = None
+
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
 
@@ -575,11 +589,11 @@ class XonshSession:
         self.stderr_uncaptured = None
 
         if hasattr(builtins, "exit"):
-            self.pyexit = builtins.exit
+            self._py_exit = builtins.exit
             del builtins.exit
 
         if hasattr(builtins, "quit"):
-            self.pyquit = builtins.quit
+            self._py_quit = builtins.quit
             del builtins.quit
 
         self.execer = execer
@@ -594,7 +608,7 @@ class XonshSession:
         self.completers = default_completers()
 
         self.builtins = get_default_builtins(execer)
-        self._default_builtin_names = frozenset(vars(self.builtins))
+        self._initial_builtin_names = frozenset(vars(self.builtins))
 
         aliases_given = kwargs.pop("aliases", None)
         for attr, value in kwargs.items():
@@ -607,7 +621,7 @@ class XonshSession:
         from xonsh.aliases import Aliases, make_default_aliases
 
         # public built-ins
-        for refname in self._default_builtin_names:
+        for refname in self._initial_builtin_names:
             objname = f"__xonsh__.builtins.{refname}"
             proxy = DynamicAccessProxy(refname, objname)
             setattr(builtins, refname, proxy)
@@ -623,7 +637,7 @@ class XonshSession:
             resetting_signal_handle(sig, _lastflush)
 
     def unlink_builtins(self):
-        for name in self._default_builtin_names:
+        for name in self._initial_builtin_names:
             if hasattr(builtins, name):
                 delattr(builtins, name)
 
@@ -635,9 +649,9 @@ class XonshSession:
         if hasattr(self.env, "undo_replace_env"):
             env.undo_replace_env()
         if hasattr(self, "pyexit"):
-            builtins.exit = self.pyexit
+            builtins.exit = self._py_exit
         if hasattr(self, "pyquit"):
-            builtins.quit = self.pyquit
+            builtins.quit = self._py_quit
         if not self.builtins_loaded:
             return
         self.unlink_builtins()
