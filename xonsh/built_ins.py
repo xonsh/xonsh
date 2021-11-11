@@ -527,6 +527,28 @@ class XonshSession:
         self.env = None
         self.rc_files = None
 
+        # AST-invoked functions
+        self.help = helper
+        self.superhelp = superhelper
+        self.pathsearch = pathsearch
+        self.globsearch = globsearch
+        self.regexsearch = regexsearch
+        self.glob = globpath
+        self.expand_path = expand_path
+
+        self.subproc_captured_stdout = subproc_captured_stdout
+        self.subproc_captured_inject = subproc_captured_inject
+        self.subproc_captured_object = subproc_captured_object
+        self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
+        self.subproc_uncaptured = subproc_uncaptured
+        self.call_macro = call_macro
+        self.enter_macro = enter_macro
+        self.path_literal = path_literal
+
+        self.list_of_strs_or_callables = list_of_strs_or_callables
+        self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
+        self.eval_fstring_field = eval_fstring_field
+
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
 
@@ -547,13 +569,7 @@ class XonshSession:
             self.ctx = ctx
 
         self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env())
-        self.help = kwargs.pop("help") if "help" in kwargs else helper
-        self.superhelp = superhelper
-        self.pathsearch = pathsearch
-        self.globsearch = globsearch
-        self.regexsearch = regexsearch
-        self.glob = globpath
-        self.expand_path = expand_path
+
         self.exit = False
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
@@ -566,11 +582,6 @@ class XonshSession:
             self.pyquit = builtins.quit
             del builtins.quit
 
-        self.subproc_captured_stdout = subproc_captured_stdout
-        self.subproc_captured_inject = subproc_captured_inject
-        self.subproc_captured_object = subproc_captured_object
-        self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
-        self.subproc_uncaptured = subproc_uncaptured
         self.execer = execer
         self.commands_cache = (
             kwargs.pop("commands_cache")
@@ -579,15 +590,8 @@ class XonshSession:
         )
         self.modules_cache = {}
         self.all_jobs = {}
-        self.ensure_list_of_strs = ensure_list_of_strs
-        self.list_of_strs_or_callables = list_of_strs_or_callables
-        self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
-        self.eval_fstring_field = eval_fstring_field
 
         self.completers = default_completers()
-        self.call_macro = call_macro
-        self.enter_macro = enter_macro
-        self.path_literal = path_literal
 
         self.builtins = _BuiltIns(execer)
 
