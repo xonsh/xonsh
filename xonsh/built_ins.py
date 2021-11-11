@@ -682,7 +682,7 @@ def get_default_builtins(execer=None):
         compilex=None if execer is None else execer.compile,
         events=events,
         print_color=print_color,
-        printx=print_color
+        printx=print_color,
     )
 
 
