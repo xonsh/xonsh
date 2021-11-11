@@ -500,11 +500,6 @@ def enter_macro(obj, raw_block, glbs, locs):
     return obj
 
 
-def _lastflush(s=None, f=None):
-    if XSH.history is not None:
-        XSH.history.flush(at_exit=True)
-
-
 @contextlib.contextmanager
 def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
@@ -628,6 +623,16 @@ class XonshSession:
         self.link_builtins(aliases_given)
         self.builtins_loaded = True
 
+        def flush_on_exit(s=None, f=None):
+            if self.history is not None:
+                self.history.flush(at_exit=True)
+
+        atexit.register(flush_on_exit)
+
+        # Add one-shot handler for exit
+        for sig in AT_EXIT_SIGNALS:
+            resetting_signal_handle(sig, flush_on_exit)
+
     def link_builtins(self, aliases=None):
         from xonsh.aliases import Aliases, make_default_aliases
 
@@ -643,9 +648,6 @@ class XonshSession:
         if aliases is None:
             aliases = Aliases(make_default_aliases())
         self.aliases = builtins.default_aliases = builtins.aliases = aliases
-        atexit.register(_lastflush)
-        for sig in AT_EXIT_SIGNALS:
-            resetting_signal_handle(sig, _lastflush)
 
     def unlink_builtins(self):
         for name in self._initial_builtin_names:
