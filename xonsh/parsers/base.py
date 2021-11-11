@@ -4,7 +4,7 @@ import os
 import re
 import time
 import textwrap
-from threading import Thread
+from threading import Event, Thread
 from ast import parse as pyparse
 from collections.abc import Iterable, Sequence, Mapping
 import typing as tp
@@ -238,20 +238,6 @@ def raise_parse_error(
     raise err
 
 
-class YaccLoader(Thread):
-    """Thread to load (but not shave) the yacc parser."""
-
-    def __init__(self, parser, yacc_kwargs, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.daemon = True
-        self.parser = parser
-        self.yacc_kwargs = yacc_kwargs
-        self.start()
-
-    def run(self):
-        self.parser.parser = yacc.yacc(**self.yacc_kwargs)
-
-
 class BaseParser(object):
     """A base class that parses the xonsh language."""
 
@@ -292,12 +278,22 @@ class BaseParser(object):
         if outputdir is None:
             outputdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         yacc_kwargs["outputdir"] = outputdir
+
+        self._parser_loaded = Event()
         if yacc_debug:
             # create parser on main thread
-            self.parser = yacc.yacc(**yacc_kwargs)
+            self._parser = yacc.yacc(**yacc_kwargs)
+            self._parser_loaded.set()
+
         else:
-            self.parser = None
-            YaccLoader(self, yacc_kwargs)
+            self._parser = None
+
+            def create_parser():
+                self._parser = yacc.yacc(**yacc_kwargs)
+                self._parser_loaded.set()
+
+            self._parser_thread = Thread(target=create_parser)
+            self._parser_thread.start()
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -520,9 +516,10 @@ class BaseParser(object):
         self.reset()
         self.xonsh_code = s
         self.lexer.fname = filename
-        while self.parser is None:
-            time.sleep(0.01)  # block until the parser is ready
-        tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
+
+        self._parser_loaded.wait()
+
+        tree = self._parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         if self._error is not None:
             self._parse_error(self._error[0], self._error[1])
         if tree is not None:
