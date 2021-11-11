@@ -656,9 +656,9 @@ class XonshSession:
         if not hasattr(builtins, "__xonsh__"):
             self.builtins_loaded = False
             return
-        env = getattr(self, "env", None)
+
         if hasattr(self.env, "undo_replace_env"):
-            env.undo_replace_env()
+            self.env.undo_replace_env()
 
         self._restore_python_exit()
 
