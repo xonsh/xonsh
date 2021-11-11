@@ -9,7 +9,10 @@ from xonsh.execer import Execer
 from xonsh.environ import Env
 from xonsh.built_ins import XSH
 
-imphooks.install_import_hooks()
+# TODO: don't modify global state like this
+if XSH.execer is None:
+    XSH.load(execer=Execer())
+imphooks.install_import_hooks(XSH.execer)
 
 
 @pytest.fixture(autouse=True)

@@ -272,7 +272,6 @@ def start_services(shell_kwargs, args, pre_env=None):
     """
     if pre_env is None:
         pre_env = {}
-    install_import_hooks()
     # create execer, which loads builtins
     ctx = shell_kwargs.get("ctx", {})
     debug = to_bool_or_int(os.getenv("XONSH_DEBUG", "0"))
@@ -284,6 +283,9 @@ def start_services(shell_kwargs, args, pre_env=None):
     )
     XSH.load(ctx=ctx, execer=execer)
     events.on_timingprobe.fire(name="post_execer_init")
+
+    install_import_hooks(execer)
+
     # load rc files
     login = shell_kwargs.get("login", True)
     rc_cli = shell_kwargs.get("rc")
@@ -570,7 +572,7 @@ def setup(
         )
         XSH.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
     XSH.env.update(env)
-    install_import_hooks()
+    install_import_hooks(XSH.execer)
     XSH.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
