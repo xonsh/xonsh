@@ -563,6 +563,22 @@ class XonshSession:
         self.builtins = None
         self._initial_builtin_names = None
 
+    def _disable_python_exit(self):
+        # Disable Python interactive quit/exit
+        if hasattr(builtins, "exit"):
+            self._py_exit = builtins.exit
+            del builtins.exit
+
+        if hasattr(builtins, "quit"):
+            self._py_quit = builtins.quit
+            del builtins.quit
+
+    def _restore_python_exit(self):
+        if self._py_exit is not None:
+            builtins.exit = self._py_exit
+        if self._py_quit is not None:
+            builtins.quit = self._py_quit
+
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
 
@@ -588,13 +604,7 @@ class XonshSession:
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
 
-        if hasattr(builtins, "exit"):
-            self._py_exit = builtins.exit
-            del builtins.exit
-
-        if hasattr(builtins, "quit"):
-            self._py_quit = builtins.quit
-            del builtins.quit
+        self._disable_python_exit()
 
         self.execer = execer
         self.commands_cache = (
@@ -648,10 +658,9 @@ class XonshSession:
         env = getattr(self, "env", None)
         if hasattr(self.env, "undo_replace_env"):
             env.undo_replace_env()
-        if hasattr(self, "pyexit"):
-            builtins.exit = self._py_exit
-        if hasattr(self, "pyquit"):
-            builtins.quit = self._py_quit
+
+        self._restore_python_exit()
+
         if not self.builtins_loaded:
             return
         self.unlink_builtins()
