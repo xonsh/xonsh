@@ -13,6 +13,7 @@ from importlib.machinery import ModuleSpec
 
 from xonsh.built_ins import XSH
 from xonsh.events import events
+from xonsh.tools import print_warning
 from xonsh.execer import Execer
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
@@ -308,7 +309,10 @@ class XonshImportEventLoader(Loader):
         return object.__getattribute__(self, name)
 
 
-def install_import_hooks(execer):
+ARG_NOT_PRESENT = object()
+
+
+def install_import_hooks(execer=ARG_NOT_PRESENT):
     """
     Install Xonsh import hooks in ``sys.meta_path`` in order for ``.xsh`` files
     to be importable and import events to be fired.
@@ -316,6 +320,16 @@ def install_import_hooks(execer):
     Can safely be called many times, will be no-op if xonsh import hooks are
     already present.
     """
+    if execer is ARG_NOT_PRESENT:
+        print_warning(
+            "No execer was passed to install_import_hooks. "
+            "This will become an error in future."
+        )
+        execer = XSH.execer
+        if execer is None:
+            execer = Execer()
+            XSH.load(execer=execer)
+
     found_imp = found_event = False
     for hook in sys.meta_path:
         if isinstance(hook, XonshImportHook):
