@@ -278,11 +278,11 @@ def start_services(shell_kwargs, args, pre_env=None):
     debug = to_bool_or_int(os.getenv("XONSH_DEBUG", "0"))
     events.on_timingprobe.fire(name="pre_execer_init")
     execer = Execer(
-        xonsh_ctx=ctx,
         debug_level=debug,
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
+    XSH.load(ctx=ctx, execer=execer)
     events.on_timingprobe.fire(name="post_execer_init")
     # load rc files
     login = shell_kwargs.get("login", True)
@@ -509,6 +509,7 @@ def main_xonsh(args):
 
 def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
+    XSH.unload()
     XSH.shell = None
 
 
@@ -563,10 +564,11 @@ def setup(
     ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
     if not hasattr(builtins, "__xonsh__"):
-        execer = Execer(xonsh_ctx=ctx)
+        execer = Execer()
         XSH.load(
-            ctx=ctx, execer=execer, shell=Shell(execer, ctx=ctx, shell_type=shell_type)
+            ctx=ctx, execer=execer
         )
+        XSH.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
     XSH.env.update(env)
     install_import_hooks()
     XSH.aliases.update(aliases)

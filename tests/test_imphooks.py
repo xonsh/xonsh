@@ -14,7 +14,7 @@ imphooks.install_import_hooks()
 
 @pytest.fixture(autouse=True)
 def imp_env(xession):
-    Execer(unload=False)
+    xession.load(execer=Execer())
     xession.env = Env({"PATH": [], "PATHEXT": []})
     yield
     XSH.unload()

@@ -30,7 +30,9 @@ def source_path():
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    execer = Execer(unload=False)
+    execer = Execer()
+    XSH.load(execer=execer)
+    # TODO this monkeypatch *shouldn't* be useful now.
     monkeypatch.setattr(XSH, "execer", execer)
     yield execer
 
@@ -73,8 +75,10 @@ def session_vars():
     from xonsh.environ import Env, default_env
     from xonsh.commands_cache import CommandsCache
 
+    execer = Execer()
+    XSH.load(execer=execer)
     return {
-        "execer": Execer(unload=False),
+        "execer": execer,
         "env": Env(default_env()),
         "commands_cache": CommandsCache(),
     }

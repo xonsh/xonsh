@@ -56,12 +56,14 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     @property
     def execer(self):
+        # TODO: we should be given the execer in constructor
         if XSH.execer is not None:
             execer = XSH.execer
             if self._execer is not None:
                 self._execer = None
         elif self._execer is None:
-            self._execer = execer = Execer(unload=False)
+            self._execer = execer = Execer()
+            XSH.load(execer=execer)
         else:
             execer = self._execer
         return execer
