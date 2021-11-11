@@ -562,6 +562,7 @@ class XonshSession:
         self.completers = None
         self.builtins = None
         self._initial_builtin_names = None
+        self.aliases = None
 
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
