@@ -8,7 +8,6 @@ import re
 
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
-import typing as tp
 
 from xonsh.ply.ply.lex import LexToken
 
@@ -413,27 +412,27 @@ def _get_token_types():
     if PYTHON_VERSION_INFO >= (3, 9, 0) and PYTHON_VERSION_INFO < (3, 10):
         kwlist.remove("__peg_parser__")
     return (
-            tuple(token_map.values())
-            + (
-                "NAME",  # name tokens
-                "BANG",  # ! tokens
-                "WS",  # whitespace in subprocess mode
-                "LPAREN",
-                "RPAREN",  # ( )
-                "LBRACKET",
-                "RBRACKET",  # [ ]
-                "LBRACE",
-                "RBRACE",  # { }
-                "AT_LPAREN",  # @(
-                "BANG_LPAREN",  # !(
-                "BANG_LBRACKET",  # ![
-                "DOLLAR_LPAREN",  # $(
-                "DOLLAR_LBRACE",  # ${
-                "DOLLAR_LBRACKET",  # $[
-                "ATDOLLAR_LPAREN",  # @$(
-                "ERRORTOKEN",  # whoops!
-            )
-            + tuple(i.upper() for i in kwlist)
+        tuple(token_map.values())
+        + (
+            "NAME",  # name tokens
+            "BANG",  # ! tokens
+            "WS",  # whitespace in subprocess mode
+            "LPAREN",
+            "RPAREN",  # ( )
+            "LBRACKET",
+            "RBRACKET",  # [ ]
+            "LBRACE",
+            "RBRACE",  # { }
+            "AT_LPAREN",  # @(
+            "BANG_LPAREN",  # !(
+            "BANG_LBRACKET",  # ![
+            "DOLLAR_LPAREN",  # $(
+            "DOLLAR_LBRACE",  # ${
+            "DOLLAR_LBRACKET",  # $[
+            "ATDOLLAR_LPAREN",  # @$(
+            "ERRORTOKEN",  # whoops!
+        )
+        + tuple(i.upper() for i in kwlist)
     )
 
 
@@ -511,4 +510,3 @@ class Lexer(object):
                 l = t.lineno + nnl
                 c = len(t.value.rpartition(nl)[-1])
         return vals
-

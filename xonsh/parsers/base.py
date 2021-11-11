@@ -2,7 +2,6 @@
 """Implements the base xonsh parser."""
 import os
 import re
-import time
 import textwrap
 from threading import Event, Thread
 from ast import parse as pyparse
