@@ -275,16 +275,35 @@ class BaseParser(object):
             xonsh dir.
         """
         self.lexer = lexer = Lexer()
-        self.tokens = lexer.tokens
+        self.tokens = lexer.TOKENS
 
         self._lines = None
         self.xonsh_code = None
-        self._attach_nocomma_tok_rules()
-        self._attach_nocloser_base_rules()
-        self._attach_nodedent_base_rules()
-        self._attach_nonewline_base_rules()
-        self._attach_subproc_arg_part_rules()
 
+        yacc_kwargs = dict(
+            module=self,
+            debug=yacc_debug,
+            start="start_symbols",
+            optimize=yacc_optimize,
+            tabmodule=yacc_table,
+        )
+        if not yacc_debug:
+            yacc_kwargs["errorlog"] = yacc.NullLogger()
+        if outputdir is None:
+            outputdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        yacc_kwargs["outputdir"] = outputdir
+        if yacc_debug:
+            # create parser on main thread
+            self.parser = yacc.yacc(**yacc_kwargs)
+        else:
+            self.parser = None
+            YaccLoader(self, yacc_kwargs)
+
+        # Keeps track of the last token given to yacc (the lookahead token)
+        self._last_yielded_token = None
+        self._error = None
+
+    def __init_subclass__(cls):
         opt_rules = [
             "newlines",
             "arglist",
@@ -331,7 +350,7 @@ class BaseParser(object):
             "any_raw_toks",
         ]
         for rule in opt_rules:
-            self._opt_rule(rule)
+            cls._opt_rule(rule)
 
         list_rules = [
             "comma_tfpdef",
@@ -367,7 +386,7 @@ class BaseParser(object):
             "comma_nocomma",
         ]
         for rule in list_rules:
-            self._list_rule(rule)
+            cls._list_rule(rule)
 
         tok_rules = [
             "def",
@@ -464,30 +483,13 @@ class BaseParser(object):
             "xorequal",
         ]
         for rule in tok_rules:
-            self._tok_rule(rule)
+            cls._tok_rule(rule)
 
-        yacc_kwargs = dict(
-            module=self,
-            debug=yacc_debug,
-            start="start_symbols",
-            optimize=yacc_optimize,
-            tabmodule=yacc_table,
-        )
-        if not yacc_debug:
-            yacc_kwargs["errorlog"] = yacc.NullLogger()
-        if outputdir is None:
-            outputdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        yacc_kwargs["outputdir"] = outputdir
-        if yacc_debug:
-            # create parser on main thread
-            self.parser = yacc.yacc(**yacc_kwargs)
-        else:
-            self.parser = None
-            YaccLoader(self, yacc_kwargs)
-
-        # Keeps track of the last token given to yacc (the lookahead token)
-        self._last_yielded_token = None
-        self._error = None
+        cls._attach_nocomma_tok_rules()
+        cls._attach_nocloser_base_rules()
+        cls._attach_nodedent_base_rules()
+        cls._attach_nonewline_base_rules()
+        cls._attach_subproc_arg_part_rules()
 
     def reset(self):
         """Resets for clean parsing."""
@@ -540,7 +542,8 @@ class BaseParser(object):
         """Gets the next-to-last and last token seen by the lexer."""
         return self.lexer.beforelast, self.lexer.last
 
-    def _opt_rule(self, rulename):
+    @classmethod
+    def _opt_rule(cls, rulename):
         """For a rule name, creates an associated optional rule.
         '_opt' is appended to the rule name.
         """
@@ -550,9 +553,10 @@ class BaseParser(object):
 
         optfunc.__doc__ = ("{0}_opt : empty\n" "        | {0}").format(rulename)
         optfunc.__name__ = "p_" + rulename + "_opt"
-        setattr(self.__class__, optfunc.__name__, optfunc)
+        setattr(cls, optfunc.__name__, optfunc)
 
-    def _list_rule(self, rulename):
+    @classmethod
+    def _list_rule(cls, rulename):
         """For a rule name, creates an associated list rule.
         '_list' is appended to the rule name.
         """
@@ -564,9 +568,10 @@ class BaseParser(object):
             rulename
         )
         listfunc.__name__ = "p_" + rulename + "_list"
-        setattr(self.__class__, listfunc.__name__, listfunc)
+        setattr(cls, listfunc.__name__, listfunc)
 
-    def _tok_rule(self, rulename):
+    @classmethod
+    def _tok_rule(cls, rulename):
         """For a rule name, creates a rule that returns the corresponding token.
         '_tok' is appended to the rule name.
         """
@@ -583,7 +588,7 @@ class BaseParser(object):
 
         tokfunc.__doc__ = "{0}_tok : {1}".format(rulename, rulename.upper())
         tokfunc.__name__ = "p_" + rulename + "_tok"
-        setattr(self.__class__, tokfunc.__name__, tokfunc)
+        setattr(cls, tokfunc.__name__, tokfunc)
 
     def currloc(self, lineno, column=None):
         """Returns the current location."""
@@ -1771,12 +1776,13 @@ class BaseParser(object):
         s = self.source_slice(beg, end).strip()
         p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
 
-    def _attach_nodedent_base_rules(self):
-        toks = set(self.tokens)
+    @classmethod
+    def _attach_nodedent_base_rules(cls):
+        toks = set(Lexer.TOKENS)
         toks.remove("DEDENT")
         ts = "\n       | ".join(sorted(toks))
         doc = "nodedent : " + ts + "\n"
-        self.p_nodedent_base.__func__.__doc__ = doc
+        cls.p_nodedent_base.__doc__ = doc
 
     def p_nodedent_base(self, p):
         # see above attachment function
@@ -1804,8 +1810,9 @@ class BaseParser(object):
         """
         pass
 
-    def _attach_nonewline_base_rules(self):
-        toks = set(self.tokens)
+    @classmethod
+    def _attach_nonewline_base_rules(cls):
+        toks = set(Lexer.TOKENS)
         toks -= {
             "NEWLINE",
             "LPAREN",
@@ -1824,7 +1831,7 @@ class BaseParser(object):
         }
         ts = "\n        | ".join(sorted(toks))
         doc = "nonewline : " + ts + "\n"
-        self.p_nonewline_base.__func__.__doc__ = doc
+        cls.p_nonewline_base.__doc__ = doc
 
     def p_nonewline_base(self, p):
         # see above attachment function
@@ -2419,8 +2426,9 @@ class BaseParser(object):
         self._append_subproc_bang(p)
         p[0] = self._dollar_rules(p)
 
-    def _attach_nocloser_base_rules(self):
-        toks = set(self.tokens)
+    @classmethod
+    def _attach_nocloser_base_rules(cls):
+        toks = set(Lexer.TOKENS)
         toks -= {
             "LPAREN",
             "RPAREN",
@@ -2438,7 +2446,7 @@ class BaseParser(object):
         }
         ts = "\n       | ".join(sorted(toks))
         doc = "nocloser : " + ts + "\n"
-        self.p_nocloser_base.__func__.__doc__ = doc
+        cls.p_nocloser_base.__doc__ = doc
 
     def p_nocloser_base(self, p):
         # see above attachment function
@@ -2601,8 +2609,9 @@ class BaseParser(object):
         """
         p[0] = [p[1]]
 
-    def _attach_nocomma_tok_rules(self):
-        toks = set(self.tokens)
+    @classmethod
+    def _attach_nocomma_tok_rules(cls):
+        toks = set(Lexer.TOKENS)
         toks -= {
             "COMMA",
             "LPAREN",
@@ -2621,7 +2630,7 @@ class BaseParser(object):
         }
         ts = "\n            | ".join(sorted(toks))
         doc = "nocomma_tok : " + ts + "\n"
-        self.p_nocomma_tok.__func__.__doc__ = doc
+        cls.p_nocomma_tok.__doc__ = doc
 
     # The following grammar rules are no-ops because we don't need to glue the
     # source code back together piece-by-piece. Instead, we simply look for
@@ -3366,8 +3375,9 @@ class BaseParser(object):
             p0 = [p1, p2]
         p[0] = p0
 
-    def _attach_subproc_arg_part_rules(self):
-        toks = set(self.tokens)
+    @classmethod
+    def _attach_subproc_arg_part_rules(cls):
+        toks = set(Lexer.TOKENS)
         toks -= {
             "AND",
             "OR",
@@ -3400,7 +3410,7 @@ class BaseParser(object):
         }
         ts = "\n                 | ".join(sorted([t.lower() + "_tok" for t in toks]))
         doc = "subproc_arg_part : " + ts + "\n"
-        self.p_subproc_arg_part.__func__.__doc__ = doc
+        cls.p_subproc_arg_part.__doc__ = doc
 
     def p_subproc_arg_part(self, p):
         # Many tokens cannot be part of this rule, such as $, ', ", ()

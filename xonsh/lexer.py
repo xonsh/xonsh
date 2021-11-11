@@ -408,10 +408,39 @@ def _new_token(type, value, pos):
     return o
 
 
+def _get_token_types():
+    kwlist = kwmod.kwlist[:]
+    if PYTHON_VERSION_INFO >= (3, 9, 0) and PYTHON_VERSION_INFO < (3, 10):
+        kwlist.remove("__peg_parser__")
+    return (
+            tuple(token_map.values())
+            + (
+                "NAME",  # name tokens
+                "BANG",  # ! tokens
+                "WS",  # whitespace in subprocess mode
+                "LPAREN",
+                "RPAREN",  # ( )
+                "LBRACKET",
+                "RBRACKET",  # [ ]
+                "LBRACE",
+                "RBRACE",  # { }
+                "AT_LPAREN",  # @(
+                "BANG_LPAREN",  # !(
+                "BANG_LBRACKET",  # ![
+                "DOLLAR_LPAREN",  # $(
+                "DOLLAR_LBRACE",  # ${
+                "DOLLAR_LBRACKET",  # $[
+                "ATDOLLAR_LPAREN",  # @$(
+                "ERRORTOKEN",  # whoops!
+            )
+            + tuple(i.upper() for i in kwlist)
+    )
+
+
 class Lexer(object):
     """Implements a lexer for the xonsh language."""
 
-    _tokens: tp.Optional[tp.Tuple[str, ...]] = None
+    TOKENS = _get_token_types()
 
     def __init__(self, tolerant=False):
         """
@@ -483,37 +512,3 @@ class Lexer(object):
                 c = len(t.value.rpartition(nl)[-1])
         return vals
 
-    #
-    # All the tokens recognized by the lexer
-    #
-    @property
-    def tokens(self):
-        if self._tokens is None:
-            kwlist = kwmod.kwlist[:]
-            if PYTHON_VERSION_INFO >= (3, 9, 0) and PYTHON_VERSION_INFO < (3, 10):
-                kwlist.remove("__peg_parser__")
-            t = (
-                tuple(token_map.values())
-                + (
-                    "NAME",  # name tokens
-                    "BANG",  # ! tokens
-                    "WS",  # whitespace in subprocess mode
-                    "LPAREN",
-                    "RPAREN",  # ( )
-                    "LBRACKET",
-                    "RBRACKET",  # [ ]
-                    "LBRACE",
-                    "RBRACE",  # { }
-                    "AT_LPAREN",  # @(
-                    "BANG_LPAREN",  # !(
-                    "BANG_LBRACKET",  # ![
-                    "DOLLAR_LPAREN",  # $(
-                    "DOLLAR_LBRACE",  # ${
-                    "DOLLAR_LBRACKET",  # $[
-                    "ATDOLLAR_LPAREN",  # @$(
-                    "ERRORTOKEN",  # whoops!
-                )
-                + tuple(i.upper() for i in kwlist)
-            )
-            self._tokens = t
-        return self._tokens
