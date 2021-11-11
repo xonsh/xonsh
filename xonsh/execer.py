@@ -16,7 +16,6 @@ from xonsh.tools import (
     starting_whitespace,
     ends_with_colon_token,
 )
-from xonsh.built_ins import XSH
 
 
 class Execer:
