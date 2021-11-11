@@ -593,7 +593,7 @@ class XonshSession:
 
         self.completers = default_completers()
 
-        self.builtins = _BuiltIns(execer)
+        self.builtins = get_default_builtins(execer)
 
         aliases_given = kwargs.pop("aliases", None)
         for attr, value in kwargs.items():
@@ -666,19 +666,19 @@ class XonshSession:
         self.builtins_loaded = False
 
 
-class _BuiltIns:
-    def __init__(self, execer=None):
-        from xonsh.events import events
+def get_default_builtins(execer=None):
+    from xonsh.events import events
 
-        # public built-ins
-        self.XonshError = XonshError
-        self.XonshCalledProcessError = XonshCalledProcessError
-        self.evalx = None if execer is None else execer.eval
-        self.execx = None if execer is None else execer.exec
-        self.compilex = None if execer is None else execer.compile
-        self.events = events
-        self.print_color = self.printx = print_color
-
+    return types.SimpleNamespace(
+        XonshError=XonshError,
+        XonshCalledProcessError=XonshCalledProcessError,
+        evalx=None if execer is None else execer.eval,
+        execx=None if execer is None else execer.exec,
+        compilex=None if execer is None else execer.compile,
+        events=events,
+        print_color=print_color,
+        printx=print_color
+    )
 
 class DynamicAccessProxy:
     """Proxies access dynamically."""
