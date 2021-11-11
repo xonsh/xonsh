@@ -50,7 +50,7 @@ class CommandsCache(cabc.Mapping):
         )
 
     def __contains__(self, key):
-        _ = self.all_commands
+        self.update_cache()
         return self.lazyin(key)
 
     def __iter__(self):
@@ -67,10 +67,11 @@ class CommandsCache(cabc.Mapping):
             yield cmd, (path, is_alias)
 
     def __len__(self):
+        self.update_cache()
         return len(self.all_commands)
 
     def __getitem__(self, key):
-        _ = self.all_commands
+        self.update_cache()
         return self.lazyget(key)
 
     def is_empty(self):
@@ -116,6 +117,10 @@ class CommandsCache(cabc.Mapping):
 
     @property
     def all_commands(self):
+        self.update_cache()
+        return self._cmds_cache
+
+    def update_cache(self):
         env = XSH.env
         path = [] if env is None else XSH.env.get("PATH", [])
         path_immut = tuple(CommandsCache.remove_dups(path))
@@ -152,7 +157,6 @@ class CommandsCache(cabc.Mapping):
             worker.start()
         else:
             self._update_cmds_cache(path_immut, alss)
-        return self._cmds_cache
 
     def _update_cmds_cache(
         self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
@@ -244,7 +248,7 @@ class CommandsCache(cabc.Mapping):
             (default ``False``)
         """
         # make sure the cache is up to date by accessing the property
-        _ = self.all_commands
+        self.update_cache()
         return self.lazy_locate_binary(name, ignore_alias)
 
     def lazy_locate_binary(self, name, ignore_alias=False):
@@ -282,7 +286,7 @@ class CommandsCache(cabc.Mapping):
         no underlying executable. For example, the "cd" command is only available
         as a functional alias.
         """
-        _ = self.all_commands
+        self.update_cache()
         return self.lazy_is_only_functional_alias(name)
 
     def lazy_is_only_functional_alias(self, name):
