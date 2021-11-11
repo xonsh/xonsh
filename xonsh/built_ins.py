@@ -518,17 +518,9 @@ def xonsh_builtins(execer=None):
 class XonshSession:
     """All components defining a xonsh session."""
 
-    def __init__(self, execer=None, ctx=None):
-        """
-        Parameters
-        ----------
-        execer : Execer, optional
-            Xonsh execution object, may be None to start
-        ctx : Mapping, optional
-            Context to start xonsh session with.
-        """
-        self.execer = execer
-        self.ctx = {} if ctx is None else ctx
+    def __init__(self):
+        self.execer = None
+        self.ctx = {}
         self.builtins_loaded = False
         self.history = None
         self.shell = None
