@@ -27,7 +27,6 @@ class Execer:
         debug_level=0,
         parser_args=None,
         unload=True,
-        xonsh_ctx=None,
         scriptcache=True,
         cacheall=False,
     ):
