@@ -7,35 +7,12 @@ from xonsh.parsers.base import store_ctx, lopen_loc, BaseParser
 class Parser(BaseParser):
     """A Python v3.6 compliant parser for the xonsh language."""
 
-    def __init__(
-        self,
-        yacc_optimize=True,
-        yacc_table="xonsh.parser_table",
-        yacc_debug=False,
-        outputdir=None,
-    ):
-        """
-        Parameters
-        ----------
-        yacc_optimize : bool, optional
-            Set to false when unstable and true when parser is stable.
-        yacc_table : str, optional
-            Parser module used when optimized.
-        yacc_debug : debug, optional
-            Dumps extra debug info.
-        outputdir : str or None, optional
-            The directory to place generated tables within.
-        """
-        # Rule creation and modification *must* take place before super()
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+
         tok_rules = ["await", "async"]
         for rule in tok_rules:
-            self._tok_rule(rule)
-        super().__init__(
-            yacc_optimize=yacc_optimize,
-            yacc_table=yacc_table,
-            yacc_debug=yacc_debug,
-            outputdir=outputdir,
-        )
+            cls._tok_rule(rule)
 
     def p_classdef_or_funcdef(self, p):
         """
