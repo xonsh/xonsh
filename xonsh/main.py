@@ -567,9 +567,7 @@ def setup(
     # setup xonsh ctx and execer
     if not hasattr(builtins, "__xonsh__"):
         execer = Execer()
-        XSH.load(
-            ctx=ctx, execer=execer
-        )
+        XSH.load(ctx=ctx, execer=execer)
         XSH.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
     XSH.env.update(env)
     install_import_hooks(XSH.execer)
