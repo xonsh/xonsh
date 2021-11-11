@@ -594,6 +594,7 @@ class XonshSession:
         self.completers = default_completers()
 
         self.builtins = get_default_builtins(execer)
+        self._default_builtin_names = frozenset(vars(self.builtins))
 
         aliases_given = kwargs.pop("aliases", None)
         for attr, value in kwargs.items():
@@ -606,17 +607,7 @@ class XonshSession:
         from xonsh.aliases import Aliases, make_default_aliases
 
         # public built-ins
-        proxy_mapping = [
-            "XonshError",
-            "XonshCalledProcessError",
-            "evalx",
-            "execx",
-            "compilex",
-            "events",
-            "print_color",
-            "printx",
-        ]
-        for refname in proxy_mapping:
+        for refname in self._default_builtin_names:
             objname = f"__xonsh__.builtins.{refname}"
             proxy = DynamicAccessProxy(refname, objname)
             setattr(builtins, refname, proxy)
@@ -632,19 +623,7 @@ class XonshSession:
             resetting_signal_handle(sig, _lastflush)
 
     def unlink_builtins(self):
-        names = [
-            "XonshError",
-            "XonshCalledProcessError",
-            "evalx",
-            "execx",
-            "compilex",
-            "default_aliases",
-            "events",
-            "print_color",
-            "printx",
-        ]
-
-        for name in names:
+        for name in self._default_builtin_names:
             if hasattr(builtins, name):
                 delattr(builtins, name)
 
@@ -679,6 +658,7 @@ def get_default_builtins(execer=None):
         print_color=print_color,
         printx=print_color
     )
+
 
 class DynamicAccessProxy:
     """Proxies access dynamically."""
