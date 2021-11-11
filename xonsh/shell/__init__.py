@@ -220,15 +220,15 @@ class Shell(object):
 
         # actually make the shell
         if shell_type == "none":
-            from xonsh.base_shell import BaseShell as shell_class
+            from xonsh.shell.base import BaseShell as shell_class
         elif shell_type == "prompt_toolkit":
-            from xonsh.ptk_shell.shell import PromptToolkitShell as shell_class
+            from xonsh.shell.ptk.shell import PromptToolkitShell as shell_class
         elif shell_type == "readline":
-            from xonsh.readline_shell import ReadlineShell as shell_class
+            from xonsh.shell.readline import ReadlineShell as shell_class
         elif shell_type == "jupyter":
-            from xonsh.jupyter_shell import JupyterShell as shell_class
+            from xonsh.shell.jupyter import JupyterShell as shell_class
         elif shell_type == "dumb":
-            from xonsh.dumb_shell import DumbShell as shell_class
+            from xonsh.shell.dumb import DumbShell as shell_class
         else:
             raise XonshError("{} is not recognized as a shell type".format(shell_type))
         self.shell = shell_class(execer=self.execer, ctx=self.ctx, **kwargs)

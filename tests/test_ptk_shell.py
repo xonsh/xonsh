@@ -8,7 +8,7 @@ import pyte
 
 # verify error if ptk not installed or below min
 
-from xonsh.ptk_shell.shell import tokenize_ansi, remove_ansi_osc
+from xonsh.shell.ptk import tokenize_ansi, remove_ansi_osc
 from xonsh.shell import Shell
 
 

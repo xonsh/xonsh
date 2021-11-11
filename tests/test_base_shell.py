@@ -3,7 +3,7 @@
 import os
 
 from xonsh.environ import Env
-from xonsh.base_shell import BaseShell
+from xonsh.shell.base import BaseShell
 from xonsh.shell import transform_command
 
 

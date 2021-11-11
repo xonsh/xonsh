@@ -15,7 +15,6 @@ from pathlib import Path
 # make current docs directory modules importable
 sys.path.append(str(Path(__file__).parent.resolve()))
 
-import builtins
 import inspect
 import importlib
 import typing as tp
@@ -38,7 +37,7 @@ spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
     # hacky runaround to import PTK-specific events
     XSH.env = Env()
-    from xonsh.ptk_shell.shell import events
+    from xonsh.shell.ptk import events
 else:
     from xonsh.events import events
 

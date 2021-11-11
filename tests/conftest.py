@@ -183,7 +183,7 @@ def check_completer(xession):
 def ptk_shell(xonsh_execer):
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output import DummyOutput
-    from xonsh.ptk_shell.shell import PromptToolkitShell
+    from xonsh.shell.ptk import PromptToolkitShell
 
     inp = create_pipe_input()
     out = DummyOutput()
@@ -196,7 +196,7 @@ def ptk_shell(xonsh_execer):
 
 @pytest.fixture
 def readline_shell(xonsh_execer, tmpdir, mocker):
-    from xonsh.readline_shell import ReadlineShell
+    from xonsh.shell.readline import ReadlineShell
 
     inp_path = tmpdir / "in"
     inp = inp_path.open("w+")

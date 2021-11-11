@@ -1,1 +1,1 @@
-from xonsh.ptk_shell.history import *  # noqa: F403 F401
+from xonsh.shell.ptk.history import *  # noqa: F403 F401

@@ -318,7 +318,7 @@ def main():
         packages=[
             "xonsh",
             "xonsh.ply.ply",
-            "xonsh.ptk_shell",
+            "xonsh.ptk",
             "xonsh.ptk2",
             "xonsh.procs",
             "xonsh.parsers",

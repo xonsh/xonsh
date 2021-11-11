@@ -22,7 +22,7 @@ import collections
 import xonsh.completers.tools as xct
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.base_shell import BaseShell
+from xonsh.shell.base import BaseShell
 from xonsh.ansi_colors import (
     ansi_partial_color_format,
     ansi_color_style_names,
@@ -82,7 +82,6 @@ def setup_readline():
         )
         return
 
-    import ctypes
     import ctypes.util
 
     uses_libedit = readline.__doc__ and "libedit" in readline.__doc__

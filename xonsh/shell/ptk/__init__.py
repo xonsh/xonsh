@@ -8,17 +8,17 @@ from types import MethodType
 
 from xonsh.built_ins import XSH
 from xonsh.events import events
-from xonsh.base_shell import BaseShell
-from xonsh.ptk_shell.formatter import PTKPromptFormatter
+from xonsh.shell.base import BaseShell
+from xonsh.shell.ptk.formatter import PTKPromptFormatter
 from xonsh.shell import transform_command
 from xonsh.tools import print_exception, print_warning, carriage_return
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_POSIX
 from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.pygments_cache import get_all_styles
-from xonsh.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
-from xonsh.ptk_shell.completer import PromptToolkitCompleter
-from xonsh.ptk_shell.key_bindings import load_xonsh_bindings
+from xonsh.shell.ptk.history import PromptToolkitHistory, _cust_history_matches
+from xonsh.shell.ptk.completer import PromptToolkitCompleter
+from xonsh.shell.ptk.key_bindings import load_xonsh_bindings
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory

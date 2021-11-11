@@ -14,7 +14,7 @@ import pytest
 
 from xonsh.built_ins import XSH
 from xonsh.environ import Env
-from xonsh.base_shell import BaseShell
+from xonsh.shell.base import BaseShell
 
 
 VER_MAJOR_MINOR = sys.version_info[:2]
