@@ -617,6 +617,16 @@ def define_xontribs():
                 url="https://github.com/zasdfgbnm/tcg/tree/master/shells/xonsh",
             ),
         ),
+        "up": Xontrib(
+            url="https://github.com/oh-my-xonsh/xontrib-up",
+            description="The fast way to go up directories.",
+            package=_XontribPkg(
+                name="xonsh-up",
+                license="MIT",
+                install={"pip": "xpip install xonsh-up"},
+                url="https://github.com/oh-my-xonsh/xontrib-up",
+            ),
+        ),
         "vox": Xontrib(
             url="http://xon.sh",
             description="Python virtual environment manager for xonsh.",
