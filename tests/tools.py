@@ -189,7 +189,7 @@ def check_eval(input):
 
 
 def check_parse(input):
-    tree = XSH.execer.parse(input, ctx=None)
+    tree = XSH.execer.parser.parse(input, ctx=None)
     return tree
 
 
