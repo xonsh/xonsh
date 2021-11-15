@@ -323,6 +323,7 @@ def main():
             "xonsh.procs",
             "xonsh.parsers",
             "xonsh.xoreutils",
+            "xonsh.shell",
             "xontrib",
             "xonsh.completers",
             "xonsh.history",
