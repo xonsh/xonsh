@@ -65,6 +65,12 @@ class Aliases(cabc.MutableMapping):
 
     def register(self, func):
         """Decorator to register the given function by name"""
+        name = func.__name__
+
+        # Strip leading underscore
+        if name.startswith("_"):
+            name = name[1:]
+            
         self[func.__name__] = func
         return func
 
