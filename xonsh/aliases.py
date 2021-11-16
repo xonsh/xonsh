@@ -71,7 +71,7 @@ class Aliases(cabc.MutableMapping):
         if name.startswith("_"):
             name = name[1:]
             
-        self[func.__name__] = func
+        self[name] = func
         return func
 
     def get(self, key, default=None):
