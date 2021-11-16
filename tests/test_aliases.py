@@ -192,3 +192,21 @@ def test_exec_alias_args(xonsh_builtins):
 
     assert stack[0][0].f_locals["myargs"] == ["arg0"]
     assert stack[0][0].f_locals["myarg0"] == "arg0"
+
+
+def test_decorator(xonsh_builtins):
+    aliases = Aliases()
+    @aliases.register
+    def debug():
+        return "DEBUG"
+
+    assert aliases['debug'] is debug
+
+
+def test_private_decorator(xonsh_builtins):
+    aliases = Aliases()
+    @aliases.register
+    def _debug():
+        return "DEBUG"
+
+    assert aliases['debug'] is _debug
