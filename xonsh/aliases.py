@@ -66,6 +66,7 @@ class Aliases(cabc.MutableMapping):
     def register(self, func):
         """Decorator to register the given function by name"""
         self[func.__name__] = func
+        return func
 
     def get(self, key, default=None):
         """Returns the (possibly modified) value. If the key is not present,
