@@ -396,8 +396,8 @@ class ArgparseCompleter:
 
         self.command = command
         kwargs["command"] = command
+        # will be sent to completer function
         self.kwargs = kwargs
-        """will be sent to completer function"""
 
     @staticmethod
     def get_parser(parser, args) -> tp.Tuple[ap.ArgumentParser, tp.Tuple[str, ...]]:
