@@ -1320,3 +1320,9 @@
   email: francium@users.noreply.github.com
   num_commits: 1
   first_commit: 2021-04-15 16:36:34
+- name: Vasilis Gerakaris
+  email: vasilis.gerakaris@navarino.gr
+  alternate_emails:
+    - vgerak@gmail.com
+- name: Samuel Dion-Girardeau
+  email: samueldg@users.noreply.github.com
