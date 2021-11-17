@@ -1,7 +1,7 @@
 import collections
 
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import Arg, Annotated, get_doc
+from xonsh.cli_utils import Arg, Annotated, NumpyDoc
 from xonsh.completers.tools import (
     justify,
     is_exclusive_completer,
@@ -72,7 +72,8 @@ def list_completers():
 def complete_completer_names(xsh, **_):
     """Complete all loaded completer names"""
     for name, comp in xsh.completers.items():
-        yield RichCompletion(name, description=get_doc(comp))
+        doc = NumpyDoc(comp)
+        yield RichCompletion(name, description=doc.description)
 
 
 def remove_completer(

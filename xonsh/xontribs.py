@@ -97,10 +97,7 @@ def xontribs_load(
         tp.Sequence[str],
         Arg(nargs="+", completer=xontrib_names_completer),
     ] = (),
-    verbose: Annotated[
-        bool,
-        Arg("-v", "--verbose", action="store_true"),
-    ] = False,
+    verbose=False,
 ):
     """Load xontribs from a list of names
 
@@ -108,7 +105,7 @@ def xontribs_load(
     ----------
     names
         names of xontribs
-    verbose
+    verbose : -v, --verbose
         verbose output
     """
     ctx = XSH.ctx
@@ -176,13 +173,13 @@ def xontribs_loaded(ns=None):
 
 def _list(
     names: Annotated[tuple, Arg(nargs="*")] = (),
-    to_json: Annotated[bool, Arg("--json", action="store_true")] = False,
+    to_json=False,
 ):
     """List xontribs, whether they are installed, and loaded.
 
     Parameters
     ----------
-    to_json
+    to_json : -j, --json
         reports results as json
     names
         names of xontribs

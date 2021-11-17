@@ -82,16 +82,10 @@ class VoxHandler(xcli.ArgParserAlias):
             str,
             xcli.Arg("-p", "--interpreter", completer=py_interpreter_path_completer),
         ] = None,
-        system_site_packages: xcli.Annotated[
-            bool,
-            xcli.Arg("--system-site-packages", "--ssp", action="store_true"),
-        ] = False,
+        system_site_packages=False,
         symlinks: bool = False,
         with_pip: bool = True,
-        activate: xcli.Annotated[
-            bool,
-            xcli.Arg("-a", "--activate", action="store_true"),
-        ] = False,
+        activate=False,
     ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
@@ -102,7 +96,7 @@ class VoxHandler(xcli.ArgParserAlias):
         interpreter: str
             Python interpreter used to create the virtual environment.
             Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
-        system_site_packages : bool
+        system_site_packages : --system-site-packages, --ssp
             If True, the system (global) site-packages dir is available to
             created environments.
         symlinks : bool
@@ -110,7 +104,7 @@ class VoxHandler(xcli.ArgParserAlias):
             environment.
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
-        activate
+        activate : -a, --activate
             Activate the newly created virtual environment.
         """
         print("Creating environment...")
@@ -161,16 +155,13 @@ class VoxHandler(xcli.ArgParserAlias):
 
     def deactivate(
         self,
-        remove: xcli.Annotated[
-            bool,
-            xcli.Arg("--remove", action="store_true"),
-        ] = False,
+        remove=False,
     ):
         """Deactivate the active virtual environment.
 
         Parameters
         ----------
-        remove
+        remove: -r, --remove
             Remove the virtual environment after leaving it.
         """
 

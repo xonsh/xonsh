@@ -274,8 +274,8 @@ def cd(args, stdin=None):
 
 def pushd_fn(
     dir_or_n: Annotated[tp.Optional[str], Arg(metavar="+N|-N|dir", nargs="?")] = None,
-    cd: Annotated[bool, Arg("-n", action="store_false")] = True,
-    quiet: Annotated[bool, Arg("-q", action="store_true")] = False,
+    cd=True,
+    quiet=False,
 ):
     r"""Adds a directory to the top of the directory stack, or rotates the stack,
     making the new top of the stack the current working directory.
@@ -296,10 +296,10 @@ def pushd_fn(
         * -N :
             Brings the Nth directory (counting from the right of the list printed by dirs, starting with zero)
             to the top of the list by rotating the stack.
-    cd
+    cd : -n, --cd
         Suppresses the normal change of directory when adding directories to the stack,
         so that only the stack is manipulated.
-    quiet
+    quiet : -q, --quiet
         Do not call dirs, regardless of $PUSHD_SILENT
     """
     global DIRSTACK
@@ -374,8 +374,8 @@ pushd = ArgParserAlias(func=pushd_fn, has_args=True, prog="pushd")
 
 def popd_fn(
     nth: Annotated[tp.Optional[str], Arg(metavar="+N|-N", nargs="?")] = None,
-    cd: Annotated[bool, Arg("-n", action="store_false")] = True,
-    quiet: Annotated[bool, Arg("-q", action="store_true")] = False,
+    cd=True,
+    quiet=False,
 ):
     """When no arguments are given, popd removes the top directory from the stack
     and performs a cd to the new top directory.
@@ -384,13 +384,13 @@ def popd_fn(
 
     Parameters
     ----------
-    cd
+    cd : -n, --cd
         Suppresses the normal change of directory when removing directories from the stack,
         so that only the stack is manipulated.
     nth
         Removes the Nth directory (counting from the left/right of the list printed by dirs w.r.t. -/+ prefix),
         starting with zero.
-    quiet
+    quiet : -q, --quiet
         Do not call dirs, regardless of $PUSHD_SILENT
     """
     global DIRSTACK
@@ -461,10 +461,10 @@ popd = ArgParserAlias(func=popd_fn, has_args=True, prog="popd")
 
 def dirs_fn(
     nth: Annotated[tp.Optional[str], Arg(metavar="N", nargs="?")] = None,
-    clear: Annotated[bool, Arg("-c", action="store_true")] = False,
-    print_long: Annotated[bool, Arg("-p", action="store_true")] = False,
-    verbose: Annotated[bool, Arg("-v", action="store_true")] = False,
-    long: Annotated[bool, Arg("-l", action="store_true")] = False,
+    clear=False,
+    print_long=False,
+    verbose=False,
+    long=False,
 ):
     """Manage the list of currently remembered directories.
 
@@ -473,14 +473,14 @@ def dirs_fn(
     nth
         Displays the Nth directory (counting from the left/right according to +/x prefix respectively),
         starting with zero
-    clear
+    clear : -c
         Clears the directory stack by deleting all of the entries.
-    print_long
+    print_long : -p
         Print the directory stack with one entry per line.
-    verbose
+    verbose : -v
         Print the directory stack with one entry per line,
         prefixing each entry with its index in the stack.
-    long
+    long : -l
         Produces a longer listing; the default listing format
         uses a tilde to denote the home directory.
     """

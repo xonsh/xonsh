@@ -10,6 +10,7 @@ import inspect
 import os
 import sys
 import typing as tp
+from collections import defaultdict
 
 TYPING_ANNOTATED_AVAILABLE = False
 """One can import ``Annotated`` from this module
@@ -57,78 +58,75 @@ def Arg(
     return args, tuple(kwargs.items())
 
 
-def _get_func_doc(doc: str) -> str:
-    lines = doc.splitlines()
-    if "Parameters" in lines:
-        idx = lines.index("Parameters")
-        lines = lines[:idx]
-    return os.linesep.join(lines)
+class NumpyDoc:
+    """Represent parsed function docstring"""
 
+    def __init__(self, func):
+        """Parse the function docstring and return its help content
 
-def _get_param_doc(doc: str, param: str) -> tp.Iterator[str]:
-    section_title = "\nParameters"
-    if section_title not in doc:
-        return
-    _, doc = doc.split(section_title)
-    started = False
-    for lin in doc.splitlines():
-        if not lin:
-            continue
-        if lin.startswith(param):
-            started = True
-            continue
-        if not started:
-            continue
+        Parameters
+        ----------
+        func
+            a callable/object that holds docstring
+        """
 
-        if not lin.startswith(" "):  # new section/parameter
-            break
-        yield lin
+        doc: str = inspect.getdoc(func) or ""
+        self.description, rest = self.get_func_doc(doc)
 
+        params, rest = self.get_param_doc(rest)
+        self.params = {}
+        self.flags = {}
+        for head, lines in params.items():
+            parts = [st.strip() for st in head.split(":")]
+            if len(parts) == 2:
+                name, flag = parts
+                if flag and flag.startswith("-"):
+                    self.flags[name] = [st.strip() for st in flag.split(",")]
+            else:
+                name = parts[0]
 
-def _get_epilog_doc(doc: str) -> str:
-    lines = doc.splitlines()
-    for idx, lin in enumerate(lines):
-        if (
-            lin.startswith("-")
-            and set(lin.strip()) == {"-"}
-            and (idx != 0)
-            and (not lines[idx - 1].startswith("Parameters"))
-        ):
-            return os.linesep.join(lines[idx - 1 :])
+            self.params[name] = self.join(lines)
 
-    return ""
+        self.epilog = self.join(rest)
 
+    @staticmethod
+    def join(lines):
+        # remove any extra noise after parse
+        return inspect.cleandoc(os.linesep.join(lines)).strip()
 
-def get_doc(func: tp.Union[tp.Callable, str], parameter: str = None, epilog=False):
-    """Parse the function docstring and return its help content
+    @staticmethod
+    def get_func_doc(doc):
+        lines = doc.splitlines()
+        token = "Parameters"
+        if token in lines:
+            idx = lines.index(token)
+            desc = lines[:idx]
+        else:
+            desc = lines
+            idx = len(lines)
+        return NumpyDoc.join(desc), lines[idx + 2 :]
 
-    Parameters
-    ----------
-    func
-        a callable/object that holds docstring
-    parameter
-        name of the function parameter to parse doc for
-    epilog
-        get the rest of doc (after Parameters section)
+    @staticmethod
+    def get_param_doc(lines: tp.List[str]):
+        docs: tp.Dict[str, tp.List[str]] = defaultdict(list)
+        name = None
 
-    Returns
-    -------
-    str
-        doc of the parameter/function
-    """
-    if isinstance(func, str):
-        return func
+        while lines:
+            # check new section by checking next line
+            if len(lines) > 1 and (set(lines[1].strip()) == {"-"}):
+                break
 
-    doc = inspect.getdoc(func) or ""
-    if parameter:
-        doc = os.linesep.join(_get_param_doc(doc, parameter))
-    elif epilog:
-        doc = _get_epilog_doc(doc)
-    else:
-        doc = _get_func_doc(doc)
+            lin = lines.pop(0)
 
-    # remove any extra noise after parse
-    return inspect.cleandoc(doc).strip()
+            if not lin:
+                continue
+
+            if lin.startswith(" ") and name:
+                docs[name].append(lin)
+            else:
+                name = lin
+
+        return docs, lines
 
 
 _FUNC_NAME = "_func_"
@@ -152,35 +150,50 @@ def _get_args_kwargs(annot: tp.Any) -> tp.Tuple[tp.Sequence[str], tp.Dict[str, t
     return args, kwargs
 
 
-def add_args(parser: ap.ArgumentParser, func: tp.Callable, allowed_params=None) -> None:
+def add_args(
+    parser: ap.ArgumentParser, func: tp.Callable, allowed_params=None, doc=None
+) -> None:
     """Using the function's annotation add arguments to the parser
     param:Arg(*args, **kw) -> parser.add_argument(*args, *kw)
     """
 
     # call this function when this sub-command is selected
     parser.set_defaults(**{_FUNC_NAME: func})
-
+    doc = doc or NumpyDoc(func)
     sign = inspect.signature(func)
     for name, param in sign.parameters.items():
         if name.startswith("_") or (
             allowed_params is not None and name not in allowed_params
         ):
             continue
-        args, kwargs = _get_args_kwargs(param.annotation)
+        flags, kwargs = _get_args_kwargs(param.annotation)
+        if not flags:  # load from docstring
+            flags = doc.flags.get(name)
 
-        if args:  # optional argument. eg. --option
+        if flags:  # optional argument. eg. --option
             kwargs.setdefault("dest", name)
         else:  # positional argument
-            args = [name]
+            flags = [name]
 
         if inspect.Parameter.empty != param.default:
             kwargs.setdefault("default", param.default)
 
+            # for booleans set action automatically
+            if (
+                flags
+                and (type(param.default) == bool)
+                and ("action" not in kwargs)
+                and ("type" not in kwargs)
+            ):
+                # opposite of default value
+                act_name = "store_false" if param.default else "store_true"
+                kwargs.setdefault("action", act_name)
+
         # help can be set by passing help argument otherwise inferred from docstring
-        kwargs.setdefault("help", get_doc(func, name))
+        kwargs.setdefault("help", doc.params.get(name))
 
         completer = kwargs.pop("completer", None)
-        action = parser.add_argument(*args, **kwargs)
+        action = parser.add_argument(*flags, **kwargs)
         if completer:
             action.completer = completer  # type: ignore
         action.help = action.help or ""
@@ -196,12 +209,12 @@ def make_parser(
     **kwargs,
 ) -> "ArgParser":
     """A bare-bones argparse builder from functions"""
+    doc = NumpyDoc(func)
     if "description" not in kwargs:
-        kwargs["description"] = get_doc(func)
+        kwargs["description"] = doc.description
     if "epilog" not in kwargs:
-        epilog = get_doc(func, epilog=True)
-        if epilog:
-            kwargs["epilog"] = epilog
+        if doc.epilog:
+            kwargs["epilog"] = doc.epilog
     parser = ArgParser(**kwargs)
     if empty_help:
         parser.set_defaults(
@@ -318,9 +331,9 @@ class ArgParser(ap.ArgumentParser):
         if not self.commands:
             self.commands = self.add_subparsers(title="commands", dest="command")
 
-        doc = get_doc(func)
-        kwargs.setdefault("description", doc)
-        kwargs.setdefault("help", doc)
+        doc = NumpyDoc(func)
+        kwargs.setdefault("description", doc.description)
+        kwargs.setdefault("help", doc.description)
         name = kwargs.pop("prog", None)
         if not name:
             name = func.__name__.lstrip("_").replace("_", "-")
@@ -444,6 +457,6 @@ __all__ = (
     "ArgParser",
     "make_parser",
     "add_args",
-    "get_doc",
+    "NumpyDoc",
     "dispatch",
 )

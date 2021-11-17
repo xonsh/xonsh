@@ -1,8 +1,9 @@
 """Test module xonsh/cli_utils.py"""
+
 from xonsh import cli_utils
 
 
-def func_with_doc(param: str, multi: str) -> str:
+def func_with_doc(param: str, multi: str, optional=False):
     """func doc
     multi-line
 
@@ -13,33 +14,37 @@ def func_with_doc(param: str, multi: str) -> str:
     multi
         param doc
         multi line
+    optional : -o, --opt
+        an optional parameter with flags defined in description
 
     Returns
     -------
     str
         return doc
     """
-    return param + multi
+    return param + multi, optional
 
 
 def test_get_doc_param():
-    assert cli_utils.get_doc(func_with_doc).splitlines() == [
+    doc = cli_utils.NumpyDoc(func_with_doc)
+    assert doc.description.splitlines() == [
         "func doc",
         "multi-line",
     ]
-    assert cli_utils.get_doc(func_with_doc, "param").splitlines() == [
-        "param doc",
-    ]
-    assert cli_utils.get_doc(func_with_doc, "multi").splitlines() == [
-        "param doc",
-        "multi line",
-    ]
-    assert cli_utils.get_doc(func_with_doc, epilog=True).splitlines() == [
+    assert doc.epilog.splitlines() == [
         "Returns",
         "-------",
         "str",
         "    return doc",
     ]
+    assert doc.params["param"].splitlines() == [
+        "param doc",
+    ]
+    assert doc.params["multi"].splitlines() == [
+        "param doc",
+        "multi line",
+    ]
+    assert doc.flags == {"optional": ["-o", "--opt"]}
 
 
 def test_generated_parser():
