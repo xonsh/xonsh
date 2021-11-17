@@ -1,0 +1,23 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* <news item>
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* Add quotes in autocomplete when filename contains brackets
+
+**Security:**
+
+* <news item>
