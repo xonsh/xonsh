@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 551
+  num_commits: 555
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -261,7 +261,7 @@
   github: neruok
 - name: Gordon Ball
   email: gordon@chronitis.net
-  num_commits: 28
+  num_commits: 30
   first_commit: 2016-10-17 09:17:05
   github: chronitis
 - name: Tzu-ping Chung
@@ -351,7 +351,7 @@
   github: JakeHedman
 - name: Alexander Sosedkin
   email: monk@unboiled.info
-  num_commits: 6
+  num_commits: 7
   first_commit: 2016-09-24 02:35:09
   github: t184256
 - name: Klaus Alexander Seistrup
@@ -435,7 +435,7 @@
   github: funkyfuture
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 2659
+  num_commits: 2661
   first_commit: 2015-01-21 17:04:13
   github: scopatz
 - name: anatoly techtonik
@@ -1021,7 +1021,7 @@
   first_commit: 2018-09-16 22:50:24
 - name: Gyuri Horak
   email: dyuri@horak.hu
-  num_commits: 58
+  num_commits: 59
   first_commit: 2019-06-18 12:00:16
   github: dyuri
 - name: Ke Zhang
@@ -1131,7 +1131,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 66
+  num_commits: 103
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1189,7 +1189,7 @@
   github: paugier
 - name: Daniel Shimon
   email: daniel.shimon22@gmail.com
-  num_commits: 47
+  num_commits: 64
   first_commit: 2020-07-23 08:11:36
 - name: Achim Herwig
   email: achim.herwig@wodca.de
@@ -1278,7 +1278,7 @@
   first_commit: 2021-02-08 10:50:51
 - name: Evgeny
   email: eugenesvk@users.noreply.github.com
-  num_commits: 6
+  num_commits: 7
   first_commit: 2021-02-22 09:32:34
 - name: Adam Schwalm
   email: adamschwalm@gmail.com
@@ -1294,7 +1294,7 @@
   first_commit: 2021-04-26 22:41:54
 - name: Peter Ye
   email: 46109467+yaxollum@users.noreply.github.com
-  num_commits: 8
+  num_commits: 9
   first_commit: 2021-06-11 14:11:19
 - name: Walter A. Boring IV
   email: waboring@hemna.com
@@ -1323,6 +1323,50 @@
 - name: Vasilis Gerakaris
   email: vasilis.gerakaris@navarino.gr
   alternate_emails:
-    - vgerak@gmail.com
+  - vgerak@gmail.com
+  num_commits: 4
+  first_commit: 2021-10-14 17:00:39
 - name: Samuel Dion-Girardeau
   email: samueldg@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-09-05 03:45:00
+- name: FranzAtGithub
+  email: 62662135+FranzAtGithub@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-09-14 12:55:19
+- name: IJR222
+  email: isaacjohnr22@gmail.com
+  num_commits: 1
+  first_commit: 2021-11-02 08:52:05
+- name: Shanmukha Vishnu
+  email: 50124557+iam-shanmukha@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-10-05 10:08:56
+- name: Ali Uneri
+  email: auneri@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-08-16 15:02:12
+- name: Eleni E
+  email: Contessina@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-11-17 13:58:09
+- name: Kaarel Pärtel
+  email: kaarelp2rtel@gmail.com
+  num_commits: 1
+  first_commit: 2021-11-17 13:39:28
+- name: Gabriele N. Tornetta
+  email: P403n1x87@users.noreply.github.com
+  num_commits: 2
+  first_commit: 2021-10-07 11:22:51
+- name: cmidkiff87
+  email: 39914727+cmidkiff87@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2021-08-21 09:18:13
+- name: Michael Ramsey
+  email: mike@hackerdise.me
+  num_commits: 1
+  first_commit: 2021-09-14 12:54:18
+- name: circuit10
+  email: heath.mitchell27@gmail.com
+  num_commits: 1
+  first_commit: 2021-10-15 09:00:18
