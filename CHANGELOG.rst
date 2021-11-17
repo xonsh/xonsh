@@ -4,6 +4,93 @@ Xonsh Change Log
 
 .. current developments
 
+v0.11.0
+====================
+
+
+
+v0.11.0
+====================
+
+**Added:**
+
+* added new utility classes ``xonsh.cli_utils.ArgParserAlias``, ``xonsh.cli_utils.ArgCompleter``.
+  These are helper classes, that add coloring and auto-completion support to the alias-commands.
+* when ``$ENABLE_ASYNC_PROMPT=True`` lazy load ``prompt-toolkit``'s color-input support.
+* Add ``CTRL-Right`` key binding to complete a single auto-suggestion word.
+* Show environment variables' type and descriptions when completing them.
+* Add ``CTRL-Backspace`` key binding to delete a single word via ``$XONSH_CTRL_BKSPC_DELETION``.
+* Improved ``pip``/``xpip`` completer.
+* Separator used by gitstatus can now be styled using ``XONSH_GITSTATUS_SEPARATOR``.
+* Complete 'import' statements with modules that aren't loaded.
+* Complete multiple modules/objects in 'import' statements.
+* Multiple new metadata fields in ``setup.py``
+* Pure Python control files are now supported when named ``*.py``.
+  Using python files may lower the startup time by a bit.
+* new environment variable ``$XONSH_TRACE_SUBPROC_FUNC``
+  to handle ``$XONSH_TRACE_SUBPROC`` output
+* Added `xontrib-pyrtn <https://github.com/dyuri/xontrib-pyrtn>` to xontrib list.
+
+**Changed:**
+
+* Display error message when running `xonfig colors` in a non-interactive shell
+* Using ``ArgparserAlias`` for ``dirs``, ``popd``, ``pushd``
+* use ``ArgparserAlias`` for ``disown`` alias with completion support
+* ``history`` alias now has colored help message and completion support when running interactively.
+* using ``ArgparserAlias`` for ``trace`` alias with completion support
+* improve ``vox`` CLI completions
+* use ArgparserAlias for ``xexec``. Now it supports completions.
+* ``xonfig`` now has colored help message when ran interactively.
+* Using ``ArgparserAlias`` to improve ``xontrib`` completions
+* Changed !() to also capture background subprocesses
+* Suggested commands are cached for better performance.
+* Improved pipelines performance by using a mutable buffer.
+* Curly braces { } in directory names are now escaped in the prompt
+* The ``--rc`` argument is extended to support directories as well as files.
+  Passing a directory will result in all ``*.xsh`` files in the directory being
+  sorted and loaded at startup (equivalent to using the environment variable
+  ``XONSHRC_DIR``).
+* The environment variables ``XONSHRC`` and ``XONSHRC_DIR`` are no longer updated by xonsh on
+  startup according to which files were actually loaded. This caused problems if xonsh is called
+  recursively, as the child shells would inherit the modified startup environment of the parent.
+  These variables will now be left untouched, and the actual RC files loaded (according to those
+  variables and command line arguments) can be seen in the output of ``xonfig``.
+* Replaced `xontrib-linuxbrew <https://github.com/eugenesvk/xontrib-linuxbrew>`_ with `xontrib-homebrew <https://github.com/eugenesvk/xontrib-homebrew>`_, which also supports Homebrew on macOS
+
+**Removed:**
+
+* Completely dropped the deprecated ``--config-path`` argument, which no longer
+  did anything.
+* The environment variable ``LOADED_RC_FILES`` is no longer set. It contained a list of booleans
+  as to which RC files had been successfully loaded, but it required knowledge of the RC loading
+  internals to interpret which status corresponded to which file. As above, the (successfully)
+  loaded RC files are now shown in ``xonfig``.
+
+**Fixed:**
+
+* Add quotes in autocomplete when filename contains brackets
+* Handle ``None`` value on XSH.env if ``$UPDATE_OS_ENVIRON`` is set to ``True``
+* Implemented `__hash__` method to Env, so that it can be used in `lru_cache` without crashing.
+* Make sure aliases are always captured regardless of ``$XONSH_CAPTURE_ALWAYS``
+* ``fromdircolors`` doesn't crash if output from subprocess call to ``dircolors`` returns
+  nothing (usually due to permission errors)
+* Fixed issue with environment not being iterable on session objects.
+* Fixed issue where environment is None in commands cache.
+* ``${...}.swap()`` can be called from multiple threads safetly.
+* Piping multiple function aliases doesn't raise a recursion error anymore.
+* Fixed detection of App Execution Alias for latest 3.8 and 3.9 releases
+* ``Jedi`` completer doesn't complete paths with ``~``.
+* Sometimes the completion menu doesn't take space when cursor is at the bottom of the screen.
+* vox now passes system-site-packages option
+* Fix Duplicate paths left over when add paths to Path via xonsh.tools.EnvPath
+* Fix  Crash with FileNotFoundError when current working directory is deleted #4467
+* Completing a single-arg python code segment (e.g. ``@(/etc/hos<TAB>)``).
+* Fixed pipelines in WSL2
+* Newline symbols in Prompt-toolkit's completions are replaced by <space>
+* Fix launching processes on Windows by using full paths (https://bugs.python.org/issue8557)
+
+
+
 v0.10.1
 ====================
 
@@ -235,7 +322,7 @@ v0.9.25
 * Environment variable ``$COMPLETION_MODE`` controls kind of TAB completion used with prompt-toolkit shell.
   ``default``, the default, retains prior Xonsh behavior: first TAB displays the common prefix of matching completions,
   next TAB selects the first or next available completion.
-  ``menu-complete`` enables TAB behavior like ``readline`` command ``menu-complete``.  First TAB selects the first matching 
+  ``menu-complete`` enables TAB behavior like ``readline`` command ``menu-complete``.  First TAB selects the first matching
   completion, subsequent TABs cycle through available completions till the last one.  Next TAB after that displays
   the common prefix, then the cycle repeats.
 * Added timing probes for prompt tokens, lexer and before prompt.
@@ -408,8 +495,8 @@ v0.9.23
 * Added ``print_color`` and ``printx`` functions to builtins as reference to ``xonsh.tools.print_color``.
 * Added to xontrib whole_word_jumping: Shift+Delete hotkey to delete whole word.
 * Added "Advanced String Literals" to the "Tutorial".
-* ``xonfig jupyter-kernel`` new subcommand to generate xonsh kernel spec for jupyter.  
-  Installing a new xonsh kernel for jupyter automatically removes any other one registered with jupyter, 
+* ``xonfig jupyter-kernel`` new subcommand to generate xonsh kernel spec for jupyter.
+  Installing a new xonsh kernel for jupyter automatically removes any other one registered with jupyter,
   otherwise the new one might not be used.
 * Added xontrib ``powerline-binding`` (https://github.com/dyuri/xontrib-powerline-binding) - uses ``powerline`` to render the prompt.
 
@@ -422,8 +509,8 @@ v0.9.23
 * The ``path`` type in ``${...}.register`` was renamed to ``env_path`` as it should be and added
   new ``path`` type instead that represent ``pathlib.Path``. Now you can register typed environment
   variables that will be converted to ``Path``.
-* xonsh/environ.py: new rule: for "registered" environment variables (in ``DEFAULT_VARS`` or via ``env.register()``), 
-  if default is set to ``DefaultNotGiven``, then variable has no default and raises ``KeyError`` if it is not 
+* xonsh/environ.py: new rule: for "registered" environment variables (in ``DEFAULT_VARS`` or via ``env.register()``),
+  if default is set to ``DefaultNotGiven``, then variable has no default and raises ``KeyError`` if it is not
   actually defined in environment.  Likewise, ``"var" in __xonsh__.env`` will return False.
 * Changed defaults for ANSICON, TERM and VIRTUAL_ENV to ``DefaultNotGiven``, so code can rationally test whether
   the expected external program has defined these variables.  No need to do this for variables that xonsh
@@ -437,7 +524,7 @@ v0.9.23
 * ptk key binding for TAB -- hitting TAB to start completion now automatically selects the first displayed completion (if any).
   hitting TAB when in insert mode inserts TAB, as heretofore.  This more exactly follows behavior of readline ``menu-complete``.
   There is no configuration option for tailoring this behavior.
-* ``xonfig info`` displays whether jupyter detected in environment and 
+* ``xonfig info`` displays whether jupyter detected in environment and
   also path of xonsh jupyter kernel spec, if any.
 * xontrib-argcomplete and xontrib-pipeliner description improvement.
 
@@ -448,7 +535,7 @@ v0.9.23
 **Removed:**
 
 * Deprecated ``--config-path`` argument suppressed from help.
-* setup no longer (tries to) install jupyter kernel automatically, 
+* setup no longer (tries to) install jupyter kernel automatically,
   user must run ``xonfig jupyter-kernel`` manually.
 
 **Fixed:**
@@ -463,7 +550,7 @@ v0.9.23
 * Fixed xpg xontrib link
 * Fix crash when xonsh tries to run windows app execution aliases.
 * Setup wasn't consistently detecting jupyter in environment; ``python setup.py install`` worked, but
-  ``pip install .`` wouldn't (because pip mucks with ``sys.path``), 
+  ``pip install .`` wouldn't (because pip mucks with ``sys.path``),
   nor would install from wheel (because it doesn't run ``setup.py``).
 * ``xonfig info`` now displays actual value of ON_MSYS and ON_CYGWIN instead of lazy bool type.
   (maybe was happening only on Windows?)
@@ -549,7 +636,7 @@ v0.9.21
 
 **Changed:**
 
-* Rewrote Installation and Configuration sections of Getting Started doc 
+* Rewrote Installation and Configuration sections of Getting Started doc
   to clarify install from packages, and generally improve flow.
 
 **Fixed:**
