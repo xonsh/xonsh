@@ -1,5 +1,6 @@
 **Added:**
-* `Aliases.register` to register an alias function.
+
+* ``Aliases.register`` to register an alias function.
 
 **Changed:**
 
