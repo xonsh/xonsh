@@ -318,12 +318,11 @@ def main():
         packages=[
             "xonsh",
             "xonsh.ply.ply",
-            "xonsh.ptk",
-            "xonsh.ptk2",
             "xonsh.procs",
             "xonsh.parsers",
             "xonsh.xoreutils",
             "xonsh.shell",
+            "xonsh.shell.ptk",
             "xontrib",
             "xonsh.completers",
             "xonsh.history",
