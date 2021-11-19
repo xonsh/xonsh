@@ -6,6 +6,23 @@ Editor and IDE Support
 .. contents::
    :local:
 
+Sublime Text
+============
+There is a `xonsh package`_ for **Sublime Text 4** (build > 4075). To install:
+
+- Via **Package Control**: open (``^``/``⌘`` ``⇧`` ``P``) ``Command Palette`` → ``Package Control: Install Package`` → ``xonsh``
+- **Manually**: clone the repository to your `Sublime Text packages`_ directory and rename it to ``xonsh``
+
+  .. code-block:: sh
+
+    cd /path/to/sublime/packages/directory
+    git clone https://github.com/eugenesvk/sublime-xonsh.git
+    mv sublime-xonsh xonsh
+
+.. _xonsh package: https://packagecontrol.io/packages/xonsh
+.. _Sublime Text packages: https://www.sublimetext.com/docs/packages.html
+
+
 Visual Studio Code (VSCode)
 ===========================
 There is `xonsh extension for VSCode`_. To install search "xonsh" using extensions
