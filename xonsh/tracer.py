@@ -222,9 +222,9 @@ class TracerAlias(ArgParserAlias):
         return parser
 
     def __call__(self, *args, **kwargs):
-        spec = kwargs["spec"]
+        spec = kwargs.get("spec")
         usecolor = (
-            spec.captured not in xpp.STDOUT_CAPTURE_KINDS
+            spec and (spec.captured not in xpp.STDOUT_CAPTURE_KINDS)
         ) and sys.stdout.isatty()
         tracer.color_output(usecolor)
         return super().__call__(*args, **kwargs)
