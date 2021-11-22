@@ -344,7 +344,7 @@ def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
                 )
         except ValueError as exc:
             warnings.warn(
-                'could not parse alias "{0}": {1!r}'.format(key, exc),
+                f'could not parse alias "{key}": {exc!r}',
                 RuntimeWarning,
             )
             continue
@@ -429,7 +429,7 @@ class ForeignShellBaseAlias(object):
         input = self.INPUT.format(args=" ".join(args), **self._input_kwargs())
         if len(self.files) > 0:
             input = (
-                "".join(['{} "{}"\n'.format(self.sourcer, f) for f in self.files])
+                "".join(['f{self.sourcer} "{f}"\n' for f in self.files])
                 + input
             )
         cmd = [self.shell] + list(self.extra_args) + ["-ic", input]
@@ -453,7 +453,7 @@ class ForeignShellBaseAlias(object):
             + "("
             + ", ".join(
                 [
-                    "{k}={v!r}".format(k=k, v=v)
+                    f"{k}={v!r}"
                     for k, v in sorted(self._input_kwargs().items())
                 ]
             )
@@ -567,8 +567,7 @@ def ensure_shell(shell):
         shell = dict(shell)
     shell_keys = set(shell.keys())
     if not (shell_keys <= VALID_SHELL_PARAMS):
-        msg = "unknown shell keys: {0}"
-        raise KeyError(msg.format(shell_keys - VALID_SHELL_PARAMS))
+        raise KeyError(f"unknown shell keys: {shell_keys - VALID_SHELL_PARAMS}")
     shell["shell"] = ensure_string(shell["shell"]).lower()
     if "interactive" in shell_keys:
         shell["interactive"] = to_bool(shell["interactive"])
@@ -670,9 +669,8 @@ def load_foreign_aliases(shells):
                 del shaliases[alias]
                 if XSH.env.get("XONSH_DEBUG") >= 1:
                     print(
-                        "aliases: ignoring alias {!r} of shell {!r} "
-                        "which tries to override xonsh alias."
-                        "".format(alias, shell["shell"]),
+                        f"aliases: ignoring alias {alias!r} of shell {shell['shell']!r} "
+                        "which tries to override xonsh alias.",
                         file=sys.stderr,
                     )
         aliases.update(shaliases)

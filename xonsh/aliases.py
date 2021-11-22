@@ -509,7 +509,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
     elif os.path.isfile(ns.files_or_code[0]):
         # we have filenames to source
         ns.prevcmd = "".join(
-            ["{} {}\n".format(ns.sourcer, f) for f in ns.files_or_code]
+            [f"{ns.sourcer} {f}\n" for f in ns.files_or_code]
         )
         files = tuple(ns.files_or_code)
     elif ns.prevcmd is None:
