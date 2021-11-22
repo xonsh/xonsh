@@ -266,6 +266,17 @@ def define_xontribs():
             "cross-platform.",
             package=core_pkg,
         ),
+        "default-command": Xontrib(
+            url="https://github.com/oh-my-xonsh/xontrib-default-command",
+            description="Run a default command when you press "
+            "return on an empty command line.",
+            package=_XontribPkg(
+                name="xonsh-default-command",
+                license="MIT",
+                install={"pip": "xpip install xonsh-default-command"},
+                url="https://github.com/oh-my-xonsh/xontrib-default-command",
+            ),
+        ),
         "direnv": Xontrib(
             url="https://github.com/74th/xonsh-direnv",
             description="Supports direnv.",
@@ -615,6 +626,16 @@ def define_xontribs():
                 license="MIT",
                 install={"pip": "xpip install xonsh-tcg"},
                 url="https://github.com/zasdfgbnm/tcg/tree/master/shells/xonsh",
+            ),
+        ),
+        "up": Xontrib(
+            url="https://github.com/oh-my-xonsh/xontrib-up",
+            description="The fast way to go up directories.",
+            package=_XontribPkg(
+                name="xonsh-up",
+                license="MIT",
+                install={"pip": "xpip install xonsh-up"},
+                url="https://github.com/oh-my-xonsh/xontrib-up",
             ),
         ),
         "vox": Xontrib(
