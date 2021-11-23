@@ -16,7 +16,6 @@ import time
 import typing as tp
 from pathlib import Path
 
-from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
 from xonsh.tools import executables_in
@@ -32,7 +31,7 @@ class CommandsCache(cabc.Mapping):
 
     CACHE_FILE = "commands-cache.pickle"
 
-    def __init__(self):
+    def __init__(self, env=None, aliases=None):
         self._cmds_cache = {}
         self._path_checksum = None
         self._alias_checksum = None
@@ -40,13 +39,16 @@ class CommandsCache(cabc.Mapping):
         self.threadable_predictors = default_threadable_predictors()
         self._loaded_pickled = False
 
+        # Path to the cache-file where all commands/aliases are cached for pre-loading"""
+        self.env = env or {}
+        self.aliases = aliases or {}
         # force it to load from env by setting it to None
         self._cache_file = None
 
     @property
     def cache_file(self):
         """Keeping a property that lies on instance-attribute"""
-        env = XSH.env or {}
+        env = self.env
         # Path to the cache-file where all commands/aliases are cached for pre-loading
         if self._cache_file is None:
             if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE"):
@@ -87,13 +89,12 @@ class CommandsCache(cabc.Mapping):
         """Returns whether the cache is populated or not."""
         return len(self._cmds_cache) == 0
 
-    @staticmethod
-    def get_possible_names(name):
+    def get_possible_names(self, name):
         """Generates the possible `PATHEXT` extension variants of a given executable
         name on Windows as a list, conserving the ordering in `PATHEXT`.
         Returns a list as `name` being the only item in it on other platforms."""
         if ON_WINDOWS:
-            pathext = XSH.env.get("PATHEXT", [])
+            pathext = self.env.get("PATHEXT", [])
             name = name.upper()
             return [name + ext for ext in ([""] + pathext)]
         else:
@@ -134,21 +135,18 @@ class CommandsCache(cabc.Mapping):
         #   this will sped up a little and will work on systems with large number of binaries in their $PATH
         #   1. cache per PATH and on-demand
         #   2. remove usage of XSH
-        env = XSH.env or {}
+        env = self.env
         paths = tuple(CommandsCache.remove_dups(env.get("PATH") or []))
-
-        # in case it is empty or unset
-        alss = {} if XSH.aliases is None else XSH.aliases
 
         (
             no_new_paths,
             no_new_alias,
             no_new_bins,
-        ) = tuple(self._check_changes(paths, alss))
+        ) = tuple(self._check_changes(paths, self.aliases))
 
         if no_new_paths and no_new_bins:
             if not no_new_alias:  # only aliases have changed
-                for cmd, alias in alss.items():
+                for cmd, alias in self.aliases.items():
                     key = cmd.upper() if ON_WINDOWS else cmd
                     if key in self._cmds_cache:
                         self._cmds_cache[key] = (self._cmds_cache[key][0], alias)
@@ -167,12 +165,12 @@ class CommandsCache(cabc.Mapping):
             # also start a thread that updates the cache in the bg
             worker = threading.Thread(
                 target=self._update_cmds_cache,
-                args=[paths, alss],
+                args=[paths, self.aliases],
                 daemon=True,
             )
             worker.start()
         else:
-            self._update_cmds_cache(paths, alss)
+            self._update_cmds_cache(paths, self.aliases)
         return self._cmds_cache
 
     @staticmethod
@@ -196,14 +194,14 @@ class CommandsCache(cabc.Mapping):
         self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
     ) -> tp.Dict[str, tp.Any]:
         """Update the cmds_cache variable in background without slowing down parseLexer"""
-        env = XSH.env or {}  # type: ignore
+
         allcmds = {}
 
         for cmd, path in self._get_all_cmds(paths).items():
             key = cmd.upper() if ON_WINDOWS else cmd
             allcmds[key] = (path, aliases.get(key, None))
 
-        warn_cnt = env.get("COMMANDS_CACHE_SIZE_WARNING")
+        warn_cnt = self.env.get("COMMANDS_CACHE_SIZE_WARNING")
         if warn_cnt and len(allcmds) > warn_cnt:
             print(
                 f"Warning! Found {len(allcmds):,} executable files in the PATH directories!",
@@ -374,8 +372,7 @@ class CommandsCache(cabc.Mapping):
         """
         # alias stuff
         if not os.path.isabs(cmd0) and os.sep not in cmd0:
-            alss = getattr(XSH, "aliases", dict())
-            if cmd0 in alss:
+            if cmd0 in self.aliases:
                 return self.default_predictor_alias(cmd0)
 
         # other default stuff
@@ -391,9 +388,8 @@ class CommandsCache(cabc.Mapping):
             10  # this limit is se to handle infinite loops in aliases definition
         )
         first_args = []  # contains in reverse order args passed to the aliased command
-        alss = getattr(XSH, "aliases", dict())
-        while cmd0 in alss:
-            alias_name = alss[cmd0]
+        while cmd0 in self.aliases:
+            alias_name = self.aliases
             if isinstance(alias_name, (str, bytes)) or not isinstance(
                 alias_name, cabc.Sequence
             ):
@@ -467,12 +463,12 @@ class CommandsCache(cabc.Mapping):
 #
 
 
-def predict_true(args):
+def predict_true(_, __):
     """Always say the process is threadable."""
     return True
 
 
-def predict_false(args):
+def predict_false(_, __):
     """Never say the process is threadable."""
     return False
 
@@ -485,7 +481,7 @@ def SHELL_PREDICTOR_PARSER():
     return p
 
 
-def predict_shell(args):
+def predict_shell(args, _):
     """Predict the backgroundability of the normal shell interface, which
     comes down to whether it is being run in subproc mode.
     """
@@ -507,7 +503,7 @@ def HELP_VER_PREDICTOR_PARSER():
     return p
 
 
-def predict_help_ver(args):
+def predict_help_ver(args, _):
     """Predict the backgroundability of commands that have help & version
     switches: -h, --help, -v, -V, --version. If either of these options is
     present, the command is assumed to print to stdout normally and is therefore
@@ -530,7 +526,7 @@ def HG_PREDICTOR_PARSER():
     return p
 
 
-def predict_hg(args):
+def predict_hg(args, _):
     """Predict if mercurial is about to be run in interactive mode.
     If it is interactive, predict False. If it isn't, predict True.
     Also predict False for certain commands, such as split.
@@ -542,7 +538,7 @@ def predict_hg(args):
         return not ns.interactive
 
 
-def predict_env(args):
+def predict_env(args, cmd_cache: CommandsCache):
     """Predict if env is launching a threadable command or not.
     The launched command is extracted from env args, and the predictor of
     lauched command is used."""
@@ -551,7 +547,7 @@ def predict_env(args):
         if args[i] and args[i][0] != "-" and "=" not in args[i]:
             # args[i] is the command and the following is its arguments
             # so args[i:] is used to predict if the command is threadable
-            return XSH.commands_cache.predict_threadable(args[i:])
+            return cmd_cache.predict_threadable(args[i:])
     return True
 
 
