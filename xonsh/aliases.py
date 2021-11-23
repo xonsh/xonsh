@@ -508,9 +508,7 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
         # we have filenames to source
-        ns.prevcmd = "".join(
-            [f"{ns.sourcer} {f}\n" for f in ns.files_or_code]
-        )
+        ns.prevcmd = "".join([f"{ns.sourcer} {f}\n" for f in ns.files_or_code])
         files = tuple(ns.files_or_code)
     elif ns.prevcmd is None:
         ns.prevcmd = " ".join(ns.files_or_code)  # code to run, no files

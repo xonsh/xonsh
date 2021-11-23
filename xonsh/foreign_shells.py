@@ -428,10 +428,7 @@ class ForeignShellBaseAlias(object):
         args, streaming = self._is_streaming(args)
         input = self.INPUT.format(args=" ".join(args), **self._input_kwargs())
         if len(self.files) > 0:
-            input = (
-                "".join(['f{self.sourcer} "{f}"\n' for f in self.files])
-                + input
-            )
+            input = "".join(['f{self.sourcer} "{f}"\n' for f in self.files]) + input
         cmd = [self.shell] + list(self.extra_args) + ["-ic", input]
         env = XSH.env
         denv = env.detype()
@@ -451,12 +448,7 @@ class ForeignShellBaseAlias(object):
         return (
             self.__class__.__name__
             + "("
-            + ", ".join(
-                [
-                    f"{k}={v!r}"
-                    for k, v in sorted(self._input_kwargs().items())
-                ]
-            )
+            + ", ".join([f"{k}={v!r}" for k, v in sorted(self._input_kwargs().items())])
             + ")"
         )
 
