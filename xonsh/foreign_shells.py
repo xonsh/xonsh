@@ -2,7 +2,6 @@
 """Tools to help interface with foreign shells, such as Bash."""
 import os
 import re
-import json
 import shlex
 import sys
 import tempfile
@@ -31,62 +30,21 @@ echo __XONSH_FUNCS_END__
 {postcmd}
 {seterrpostcmd}"""
 
-DEFAULT_BASH_FUNCSCMD = r"""# get function names from declare
+DEFAULT_BASH_FUNCSCMD = """# get function names from declare
 declstr=$(echo $(declare -F))
 read -r -a decls <<< $declstr
-funcnames=""
 for((n=0;n<${#decls[@]};n++)); do
   if (( $(($n % 3 )) == 2 )); then
-    # get every 3rd entry
-    funcnames="$funcnames ${decls[$n]}"
+    echo -n "${decls[$n]} "
   fi
 done
-
-# get functions locations: funcname lineno filename
-shopt -s extdebug
-namelocfilestr=$(declare -F $funcnames)
-shopt -u extdebug
-
-# print just names and files as JSON object
-read -r -a namelocfile <<< $namelocfilestr
-sep=" "
-namefile="{"
-while IFS='' read -r line || [[ -n "$line" ]]; do
-  name=${line%%"$sep"*}
-  locfile=${line#*"$sep"}
-  loc=${locfile%%"$sep"*}
-  file=${locfile#*"$sep"}
-  namefile="${namefile}\"${name}\":\"${file//\\/\\\\}\","
-done <<< "$namelocfilestr"
-if [[ "{" == "${namefile}" ]]; then
-  namefile="${namefile}}"
-else
-  namefile="${namefile%?}}"
-fi
-echo $namefile"""
+echo"""
 
 DEFAULT_ZSH_FUNCSCMD = """# get function names
-autoload -U is-at-least  # We'll need to version check zsh
-namefile="{"
 for name in ${(ok)functions}; do
-  # force zsh to load the func in order to get the filename,
-  # but use +X so that it isn't executed.
-  autoload +X $name || continue
-  loc=$(whence -v $name)
-  loc=${(z)loc}
-  if is-at-least 5.2; then
-    file=${loc[-1]}
-  else
-    file=${loc[7,-1]}
-  fi
-  namefile="${namefile}\\"${name}\\":\\"${(Q)file:A}\\","
+  echo -n "$name "
 done
-if [[ "{" == "${namefile}" ]]; then
-  namefile="${namefile}}"
-else
-  namefile="${namefile%?}}"
-fi
-echo ${namefile}"""
+echo"""
 
 
 # mapping of shell name aliases to keys in other lookup dictionaries.
@@ -164,6 +122,7 @@ def foreign_shell_data(
     seterrpostcmd=None,
     show=False,
     dryrun=False,
+    files=(),
 ):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
@@ -225,6 +184,8 @@ def foreign_shell_data(
         Whether or not to display the script that will be run.
     dryrun : bool, optional
         Whether or not to actually run and process the command.
+    files : tuple of str, optional
+        Paths to source.
 
     Returns
     -------
@@ -297,8 +258,20 @@ def foreign_shell_data(
         if use_tmpfile:
             os.remove(tmpfile.name)
     env = parse_env(s)
-    aliases = parse_aliases(s, shell=shell, sourcer=sourcer, extra_args=extra_args)
-    funcs = parse_funcs(s, shell=shell, sourcer=sourcer, extra_args=extra_args)
+    aliases = parse_aliases(
+        s,
+        shell=shell,
+        sourcer=sourcer,
+        files=files,
+        extra_args=extra_args,
+    )
+    funcs = parse_funcs(
+        s,
+        shell=shell,
+        sourcer=sourcer,
+        files=files,
+        extra_args=extra_args,
+    )
     aliases.update(funcs)
     return env, aliases
 
@@ -336,7 +309,7 @@ def FS_EXEC_ALIAS_RE():
     return re.compile(r";|`|\$\(")
 
 
-def parse_aliases(s, shell, sourcer=None, extra_args=()):
+def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
     """Parses the aliases portion of string into a dict."""
     m = ALIAS_RE.search(s)
     if m is None:
@@ -362,17 +335,17 @@ def parse_aliases(s, shell, sourcer=None, extra_args=()):
                 value = shlex.split(value)
             else:
                 # alias is more complex, use ExecAlias, but via shell
-                filename = "<foreign-shell-exec-alias:" + key + ">"
                 value = ForeignShellExecAlias(
                     src=value,
                     shell=shell,
-                    filename=filename,
                     sourcer=sourcer,
+                    files=files,
                     extra_args=extra_args,
                 )
         except ValueError as exc:
             warnings.warn(
-                'could not parse alias "{0}": {1!r}'.format(key, exc), RuntimeWarning
+                f'could not parse alias "{key}": {exc!r}',
+                RuntimeWarning,
             )
             continue
         aliases[key] = value
@@ -386,7 +359,7 @@ def FUNCS_RE():
     )
 
 
-def parse_funcs(s, shell, sourcer=None, extra_args=()):
+def parse_funcs(s, shell, sourcer=None, files=(), extra_args=()):
     """Parses the funcs portion of a string into a dict of callable foreign
     function wrappers.
     """
@@ -396,31 +369,16 @@ def parse_funcs(s, shell, sourcer=None, extra_args=()):
     g1 = m.group(1)
     if ON_WINDOWS:
         g1 = g1.replace(os.sep, os.altsep)
-    try:
-        namefiles = json.loads(g1.strip())
-    except json.decoder.JSONDecodeError as exc:
-        msg = (
-            "{0!r}\n\ncould not parse {1} functions:\n"
-            "  s  = {2!r}\n"
-            "  g1 = {3!r}\n\n"
-            "Note: you may be seeing this error if you use zsh with "
-            "prezto. Prezto overwrites GNU coreutils functions (like echo) "
-            "with its own zsh functions. Please try disabling prezto."
-        )
-        warnings.warn(msg.format(exc, shell, s, g1), RuntimeWarning)
-        return {}
-    sourcer = DEFAULT_SOURCERS.get(shell, "source") if sourcer is None else sourcer
+    funcnames = g1.split()
     funcs = {}
-    for funcname, filename in namefiles.items():
-        if funcname.startswith("_") or not filename:
+    for funcname in funcnames:
+        if funcname.startswith("_"):
             continue  # skip private functions and invalid files
-        if not os.path.isabs(filename):
-            filename = os.path.abspath(filename)
         wrapper = ForeignShellFunctionAlias(
             funcname=funcname,
             shell=shell,
             sourcer=sourcer,
-            filename=filename,
+            files=files,
             extra_args=extra_args,
         )
         funcs[funcname] = wrapper
@@ -432,32 +390,30 @@ class ForeignShellBaseAlias(object):
     they were aliases. This does not currently support taking stdin.
     """
 
-    INPUT = "echo ForeignShellBaseAlias {shell} {filename} {args}\n"
+    INPUT = "echo ForeignShellBaseAlias {shell} {args}\n"
 
-    def __init__(self, shell, filename, sourcer=None, extra_args=()):
+    def __init__(self, shell, sourcer=None, files=(), extra_args=()):
         """
         Parameters
         ----------
         shell : str
             Name or path to shell
-        filename : str
-            Where the function is defined, path to source.
         sourcer : str or None, optional
             Command to source foreign files with.
+        files : tuple of str, optional
+            Paths to source.
         extra_args : tuple of str, optional
             Additional command line options to pass into the shell.
         """
         sourcer = DEFAULT_SOURCERS.get(shell, "source") if sourcer is None else sourcer
         self.shell = shell
-        self.filename = filename
         self.sourcer = sourcer
+        self.files = files
         self.extra_args = extra_args
 
     def _input_kwargs(self):
         return {
             "shell": self.shell,
-            "filename": self.filename,
-            "sourcer": self.sourcer,
             "extra_args": self.extra_args,
         }
 
@@ -471,7 +427,9 @@ class ForeignShellBaseAlias(object):
     ):
         args, streaming = self._is_streaming(args)
         input = self.INPUT.format(args=" ".join(args), **self._input_kwargs())
-        cmd = [self.shell] + list(self.extra_args) + ["-c", input]
+        if len(self.files) > 0:
+            input = "".join(['f{self.sourcer} "{f}"\n' for f in self.files]) + input
+        cmd = [self.shell] + list(self.extra_args) + ["-ic", input]
         env = XSH.env
         denv = env.detype()
         if streaming:
@@ -490,23 +448,18 @@ class ForeignShellBaseAlias(object):
         return (
             self.__class__.__name__
             + "("
-            + ", ".join(
-                [
-                    "{k}={v!r}".format(k=k, v=v)
-                    for k, v in sorted(self._input_kwargs().items())
-                ]
-            )
+            + ", ".join([f"{k}={v!r}" for k, v in sorted(self._input_kwargs().items())])
             + ")"
         )
 
     @staticmethod
     def _is_streaming(args):
         """Test and modify args if --xonsh-stream is present."""
-        if "--xonsh-stream" not in args:
-            return args, False
+        if "--xonsh-nostream" not in args:
+            return args, True
         args = list(args)
-        args.remove("--xonsh-stream")
-        return args, True
+        args.remove("--xonsh-nostream")
+        return args, False
 
 
 class ForeignShellFunctionAlias(ForeignShellBaseAlias):
@@ -514,9 +467,9 @@ class ForeignShellFunctionAlias(ForeignShellBaseAlias):
     they were aliases. This does not currently support taking stdin.
     """
 
-    INPUT = '{sourcer} "{filename}"\n' "{funcname} {args}\n"
+    INPUT = "{funcname} {args}\n"
 
-    def __init__(self, funcname, shell, filename, sourcer=None, extra_args=()):
+    def __init__(self, funcname, shell, sourcer=None, files=(), extra_args=()):
         """
         Parameters
         ----------
@@ -524,15 +477,15 @@ class ForeignShellFunctionAlias(ForeignShellBaseAlias):
             function name
         shell : str
             Name or path to shell
-        filename : str
-            Where the function is defined, path to source.
         sourcer : str or None, optional
             Command to source foreign files with.
+        files : tuple of str, optional
+            Paths to source.
         extra_args : tuple of str, optional
             Additional command line options to pass into the shell.
         """
         super().__init__(
-            shell=shell, filename=filename, sourcer=sourcer, extra_args=extra_args
+            shell=shell, sourcer=sourcer, files=files, extra_args=extra_args
         )
         self.funcname = funcname
 
@@ -551,8 +504,8 @@ class ForeignShellExecAlias(ForeignShellBaseAlias):
         self,
         src,
         shell,
-        filename="<foreign-shell-exec-alias>",
         sourcer=None,
+        files=(),
         extra_args=(),
     ):
         """
@@ -562,15 +515,15 @@ class ForeignShellExecAlias(ForeignShellBaseAlias):
             Source code in the shell language
         shell : str
             Name or path to shell
-        filename : str
-            Where the function is defined, path to source.
         sourcer : str or None, optional
             Command to source foreign files with.
+        files : tuple of str, optional
+            Paths to source.
         extra_args : tuple of str, optional
             Additional command line options to pass into the shell.
         """
         super().__init__(
-            shell=shell, filename=filename, sourcer=sourcer, extra_args=extra_args
+            shell=shell, sourcer=sourcer, files=files, extra_args=extra_args
         )
         self.src = src.strip()
 
@@ -606,8 +559,7 @@ def ensure_shell(shell):
         shell = dict(shell)
     shell_keys = set(shell.keys())
     if not (shell_keys <= VALID_SHELL_PARAMS):
-        msg = "unknown shell keys: {0}"
-        raise KeyError(msg.format(shell_keys - VALID_SHELL_PARAMS))
+        raise KeyError(f"unknown shell keys: {shell_keys - VALID_SHELL_PARAMS}")
     shell["shell"] = ensure_string(shell["shell"]).lower()
     if "interactive" in shell_keys:
         shell["interactive"] = to_bool(shell["interactive"])
@@ -709,9 +661,8 @@ def load_foreign_aliases(shells):
                 del shaliases[alias]
                 if XSH.env.get("XONSH_DEBUG") >= 1:
                     print(
-                        "aliases: ignoring alias {!r} of shell {!r} "
-                        "which tries to override xonsh alias."
-                        "".format(alias, shell["shell"]),
+                        f"aliases: ignoring alias {alias!r} of shell {shell['shell']!r} "
+                        "which tries to override xonsh alias.",
                         file=sys.stderr,
                     )
         aliases.update(shaliases)

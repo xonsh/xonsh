@@ -93,6 +93,13 @@ the ``source-foreign`` alias where the ``shell`` argument is automatically set
 to ``bash``.
 
 
+``source-zsh``
+==============
+Like the ``source`` command but for ZSH files. This is a thin wrapper around
+the ``source-foreign`` alias where the ``shell`` argument is automatically set
+to ``zsh``.
+
+
 ``source-foreign``
 ====================
 Like the ``source`` command but for files in foreign (non-xonsh) languages.
