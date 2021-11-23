@@ -1595,10 +1595,19 @@ class AutoCompletionSetting(Xettings):
     """Tab-completion behavior."""
 
     ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT = Var.with_default(
-        doc="If True, Argparser based alias completions will show options (e.g. -h, ...) without "
-        "requesting explicitly with option prefix (-).",
+        doc="""\
+If True, :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions
+will show options (e.g. -h, ...) without requesting explicitly with option prefix (e.g. '-').""",
         default=False,
-        type_str="bool",
+    )
+    ALIAS_COMPLETIONS_OPTIONS_LONGEST = Var.with_default(
+        doc="""\
+Whether to show all options or just the longest for
+the :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions.
+For example, with ``-h``, ``--help`` both denoting ``help`` action.
+If True, then only ``--help`` is shown.
+This is to reduce the noise in generated completions.""",
+        default=False,
     )
     BASH_COMPLETIONS = Var.with_default(
         doc="This is a list (or tuple) of strings that specifies where the "
