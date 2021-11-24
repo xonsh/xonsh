@@ -209,8 +209,10 @@ def add_args(
         if completer:
             action.completer = completer  # type: ignore
         action.help = action.help or ""
-        if action.default and "%(default)s" not in action.help:
-            action.help += os.linesep + " (default: %(default)s)"
+        if (action.default or action.default is False) and (
+            "%(default)s" not in action.help
+        ):
+            action.help += os.linesep + " (default: '%(default)s')"
         if action.type and "%(type)s" not in action.help:
             action.help += " (type: %(type)s)"
 
