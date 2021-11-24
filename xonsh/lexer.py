@@ -33,7 +33,7 @@ from xonsh.tokenize import (
     GREATER,
     LESS,
     RIGHTSHIFT,
-    tokenize,
+    _tokenize,
     TokenError,
     HAS_WALRUS,
 )
@@ -370,11 +370,12 @@ def get_tokens(s, tolerant):
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
     """
+    input_cp = io.BytesIO(s.encode("utf-8"))
     state = {
         "indents": [0],
         "last": None,
         "pymode": [(True, "", "", (0, 0))],
-        "stream": tokenize(io.BytesIO(s.encode("utf-8")).readline, tolerant),
+        "stream": _tokenize(input_cp.readline, "utf-8", tolerant),
         "tolerant": tolerant,
     }
     while True:

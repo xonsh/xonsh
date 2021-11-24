@@ -13,7 +13,7 @@ Original file credits:
                   'Skip Montanaro, Raymond Hettinger, Trent Nelson, '
                   'Michael Foord')
 """
-
+import functools
 import re
 import io
 import sys
@@ -375,6 +375,7 @@ PseudoToken = Whitespace + group(
 )
 
 
+@functools.lru_cache(maxsize=None)
 def _compile(expr):
     return re.compile(expr, re.UNICODE)
 
@@ -1023,7 +1024,7 @@ def _tokenize(readline, encoding, tolerant=False):
                         stashed = None
                     yield TokenInfo(COMMENT, token, spos, epos, line)
                 # Xonsh-specific Regex Globbing
-                elif re.match(SearchPath, token):
+                elif _compile(SearchPath).match(token):
                     yield TokenInfo(SEARCHPATH, token, spos, epos, line)
                 elif token in triple_quoted:
                     endprog = _compile(endpats[token])
