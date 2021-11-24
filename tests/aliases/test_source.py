@@ -4,7 +4,7 @@ import pytest
 import builtins
 from contextlib import contextmanager
 from unittest.mock import MagicMock
-from xonsh.aliases import source_alias
+from xonsh.aliases import source_alias, make_default_aliases
 
 
 @pytest.fixture
@@ -39,3 +39,40 @@ def test_source_path(mockopen, mocked_execx_checker):
     path_bar = os.path.join("tests", "bin", "bar")
     assert mocked_execx_checker[0].endswith(path_foo)
     assert mocked_execx_checker[1].endswith(path_bar)
+
+
+@pytest.mark.parametrize(
+    "alias",
+    [
+        "source-bash",
+        "source-zsh",
+    ],
+)
+def test_source_foreign_fn_parser(alias, xession):
+    aliases = make_default_aliases()
+    source_bash = aliases[alias]
+
+    positionals = [act.dest for act in source_bash.parser._get_positional_actions()]
+    options = [act.dest for act in source_bash.parser._get_optional_actions()]
+
+    assert positionals == ["files_or_code"]
+    assert options == [
+        "help",
+        "interactive",
+        "login",
+        "envcmd",
+        "aliascmd",
+        "extra_args",
+        "safe",
+        "prevcmd",
+        "postcmd",
+        "funcscmd",
+        "sourcer",
+        "use_tmpfile",
+        "seterrprevcmd",
+        "seterrpostcmd",
+        "overwrite_aliases",
+        "suppress_skip_message",
+        "show",
+        "dryrun",
+    ]

@@ -6,6 +6,7 @@ Examples
 """
 
 import argparse as ap
+import functools
 import inspect
 import os
 import sys
@@ -64,7 +65,7 @@ def Arg(
 class NumpyDoc:
     """Represent parsed function docstring"""
 
-    def __init__(self, func):
+    def __init__(self, func, prefix_chars="-", follow_wraps=True):
         """Parse the function docstring and return its help content
 
         Parameters
@@ -72,6 +73,9 @@ class NumpyDoc:
         func
             a callable/object that holds docstring
         """
+
+        if follow_wraps and isinstance(func, functools.partial):
+            func = func.func
 
         doc: str = inspect.getdoc(func) or ""
         self.description, rest = self.get_func_doc(doc)
@@ -83,7 +87,7 @@ class NumpyDoc:
             parts = [st.strip() for st in head.split(":")]
             if len(parts) == 2:
                 name, flag = parts
-                if flag and flag.startswith("-"):
+                if flag and any(map(flag.startswith, prefix_chars)):
                     self.flags[name] = [st.strip() for st in flag.split(",")]
             else:
                 name = parts[0]
@@ -154,15 +158,20 @@ def _get_args_kwargs(annot: tp.Any) -> tp.Tuple[tp.Sequence[str], tp.Dict[str, t
 
 
 def add_args(
-    parser: ap.ArgumentParser, func: tp.Callable, allowed_params=None, doc=None
+    parser: ap.ArgumentParser,
+    func: tp.Callable,
+    allowed_params=None,
+    doc=None,
 ) -> None:
     """Using the function's annotation add arguments to the parser
-    param:Arg(*args, **kw) -> parser.add_argument(*args, *kw)
+
+    basically converts ``def fn(param : Arg(*args, **kw), ...): ...``
+        -> into equivalent ``parser.add_argument(*args, *kw)`` call.
     """
 
     # call this function when this sub-command is selected
     parser.set_defaults(**{_FUNC_NAME: func})
-    doc = doc or NumpyDoc(func)
+    doc = doc or NumpyDoc(func, parser.prefix_chars)
     sign = inspect.signature(func)
     for name, param in sign.parameters.items():
         if name.startswith("_") or (
@@ -577,6 +586,7 @@ class ArgParserAlias:
         has_args = has_args or bool(allowed_params)
         if has_args:
             kwargs.setdefault("empty_help", False)
+
         parser = make_parser(func, **kwargs)
         if has_args:
             add_args(parser, func, allowed_params=allowed_params)

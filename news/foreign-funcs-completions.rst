@@ -1,6 +1,6 @@
 **Added:**
 
-* auto-completion support for command : ``source-foreign``
+* auto-completion support for commands : ``source-foreign``, ``source-bash``, ``source-zsh``, ``source-cmd``
 
 **Changed:**
 
