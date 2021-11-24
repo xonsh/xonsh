@@ -40,8 +40,8 @@ class CommandsCache(cabc.Mapping):
         self._loaded_pickled = False
 
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
-        self.env = env or {}
-        self.aliases = aliases or {}
+        self.env = {} if env is None else env
+        self.aliases = {} if aliases is None else aliases or {}
         # force it to load from env by setting it to None
         self._cache_file = None
 
@@ -336,7 +336,7 @@ class CommandsCache(cabc.Mapping):
         thread, rather than the main thread.
         """
         predictor = self.get_predictor_threadable(cmd[0])
-        return predictor(cmd[1:])
+        return predictor(cmd[1:], self)
 
     def get_predictor_threadable(self, cmd0):
         """Return the predictor whether a command list is able to be run on a
@@ -404,7 +404,7 @@ class CommandsCache(cabc.Mapping):
             if alias_recursion_limit == 0:
                 return predict_true
         predictor_cmd0 = self.get_predictor_threadable(cmd0)
-        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1)
+        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1, self)
 
     def default_predictor_readbin(self, name, cmd0, timeout, failure):
         """Make a default predictor by

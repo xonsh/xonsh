@@ -597,11 +597,6 @@ class XonshSession:
         self._disable_python_exit()
 
         self.execer = execer
-        self.commands_cache = (
-            kwargs.pop("commands_cache")
-            if "commands_cache" in kwargs
-            else CommandsCache()
-        )
         self.modules_cache = {}
         self.all_jobs = {}
 
@@ -615,6 +610,11 @@ class XonshSession:
             if hasattr(self, attr):
                 setattr(self, attr, value)
         self.link_builtins(aliases_given)
+        self.commands_cache = (
+            kwargs.pop("commands_cache")
+            if "commands_cache" in kwargs
+            else CommandsCache(self.env, self.aliases)
+        )
         self.builtins_loaded = True
 
         def flush_on_exit(s=None, f=None):

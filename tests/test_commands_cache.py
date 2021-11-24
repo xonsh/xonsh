@@ -99,7 +99,7 @@ def test_predict_shell_parser(args):
 
 @pytest.mark.parametrize("args", TRUE_SHELL_ARGS)
 def test_predict_shell_true(args):
-    assert predict_shell(args)
+    assert predict_shell(args, None)
 
 
 FALSE_SHELL_ARGS = [[], ["-c"], ["-i"], ["-i", "-l"]]
@@ -107,7 +107,7 @@ FALSE_SHELL_ARGS = [[], ["-c"], ["-i"], ["-i", "-l"]]
 
 @pytest.mark.parametrize("args", FALSE_SHELL_ARGS)
 def test_predict_shell_false(args):
-    assert not predict_shell(args)
+    assert not predict_shell(args, None)
 
 
 PATTERN_BIN_USING_TTY_OR_NOT = [
