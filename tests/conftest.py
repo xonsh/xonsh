@@ -85,7 +85,13 @@ def session_vars():
 
 
 @pytest.fixture
-def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
+def dummy_env(session_vars):
+    env = session_vars["env"]
+    return env
+
+
+@pytest.fixture
+def xonsh_builtins(monkeypatch, xonsh_events, session_vars, dummy_env):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = dict(vars(builtins).items())  # type: ignore
 
@@ -95,7 +101,7 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
         return os.path.join(os.path.dirname(__file__), "bin", name)
 
     for attr, val in [
-        ("env", DummyEnv()),
+        ("env", dummy_env),
         ("shell", DummyShell()),
         ("help", lambda x: x),
         ("aliases", Aliases()),
