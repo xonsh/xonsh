@@ -6,7 +6,6 @@ import os
 import pytest  # noqa F401
 
 from xonsh import dirstack
-from xonsh.environ import Env
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -22,7 +21,7 @@ def chdir(adir):
 
 
 def test_simple(xession):
-    xession.env = Env(CDPATH=PARENT, PWD=PARENT)
+    xession.env.update(dict(CDPATH=PARENT, PWD=PARENT))
     with chdir(PARENT):
         assert os.getcwd() != HERE
         dirstack.cd(["tests"])
@@ -30,7 +29,7 @@ def test_simple(xession):
 
 
 def test_cdpath_simple(xession):
-    xession.env = Env(CDPATH=PARENT, PWD=HERE)
+    xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
     with chdir(os.path.normpath("/")):
         assert os.getcwd() != HERE
         dirstack.cd(["tests"])
@@ -38,7 +37,7 @@ def test_cdpath_simple(xession):
 
 
 def test_cdpath_collision(xession):
-    xession.env = Env(CDPATH=PARENT, PWD=HERE)
+    xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
     sub_tests = os.path.join(HERE, "tests")
     if not os.path.exists(sub_tests):
         os.mkdir(sub_tests)
@@ -49,7 +48,7 @@ def test_cdpath_collision(xession):
 
 
 def test_cdpath_expansion(xession):
-    xession.env = Env(HERE=HERE, CDPATH=("~", "$HERE"))
+    xession.env.update(dict(HERE=HERE, CDPATH=("~", "$HERE")))
     test_dirs = (
         os.path.join(HERE, "xonsh-test-cdpath-here"),
         os.path.expanduser("~/xonsh-test-cdpath-home"),
@@ -68,7 +67,7 @@ def test_cdpath_expansion(xession):
 
 
 def test_cdpath_events(xession, tmpdir):
-    xession.env = Env(CDPATH=PARENT, PWD=os.getcwd())
+    xession.env.update(dict(CDPATH=PARENT, PWD=os.getcwd()))
     target = str(tmpdir)
 
     ev = None
@@ -91,7 +90,7 @@ def test_cdpath_events(xession, tmpdir):
 
 
 def test_cd_autopush(xession, tmpdir):
-    xession.env = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
+    xession.env.update(dict(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True))
     target = str(tmpdir)
 
     old_dir = os.getcwd()

@@ -8,7 +8,6 @@ import sys
 
 import pytest
 from xonsh import dirstack
-from xonsh.environ import Env
 from xonsh.dirstack import DIRSTACK
 from xonsh.platform import ON_WINDOWS
 from xonsh.dirstack import _unc_tempDrives
@@ -93,7 +92,7 @@ def shares_setup(tmpdir_factory):
 
 def test_pushdpopd(xession):
     """Simple non-UNC push/pop to verify we didn't break nonUNC case."""
-    xession.env = Env(CDPATH=PARENT, PWD=HERE)
+    xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
 
     dirstack.cd([PARENT])
     owd = os.getcwd()
@@ -106,7 +105,7 @@ def test_pushdpopd(xession):
 
 
 def test_cd_dot(xession):
-    xession.env = Env(PWD=os.getcwd())
+    xession.env.update(dict(PWD=os.getcwd()))
 
     owd = os.getcwd().casefold()
     dirstack.cd(["."])
@@ -117,7 +116,7 @@ def test_cd_dot(xession):
 def test_uncpushd_simple_push_pop(xession, shares_setup):
     if shares_setup is None:
         return
-    xession.env = Env(CDPATH=PARENT, PWD=HERE)
+    xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
     dirstack.cd([PARENT])
     owd = os.getcwd()
     assert owd.casefold() == xession.env["PWD"].casefold()
@@ -134,7 +133,7 @@ def test_uncpushd_simple_push_pop(xession, shares_setup):
 def test_uncpushd_push_to_same_share(xession, shares_setup):
     if shares_setup is None:
         return
-    xession.env = Env(CDPATH=PARENT, PWD=HERE)
+    xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
 
     dirstack.cd([PARENT])
     owd = os.getcwd()
@@ -168,7 +167,7 @@ def test_uncpushd_push_other_push_same(xession, shares_setup):
     Then push to a again. Pop (check b unmapped and a still mapped), pop, pop (check a is unmapped)"""
     if shares_setup is None:
         return
-    xession.env = Env(CDPATH=PARENT, PWD=HERE)
+    xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
 
     dirstack.cd([PARENT])
     owd = os.getcwd()

@@ -17,7 +17,7 @@ from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
 
 from xonsh import commands_cache
-from tools import DummyShell, sp, DummyEnv, DummyHistory
+from tools import DummyShell, sp, DummyHistory
 
 
 @pytest.fixture
@@ -85,13 +85,23 @@ def session_vars():
 
 
 @pytest.fixture
-def dummy_env(session_vars):
-    env = session_vars["env"]
+def env():
+    from xonsh.environ import Env
+
+    initial_vars = {
+        "UPDATE_OS_ENVIRON": False,
+        "XONSH_DEBUG": 1,
+        "XONSH_COLOR_STYLE": "default",
+        "VC_BRANCH_TIMEOUT": 1,
+        "XONSH_ENCODING": "utf-8",
+        "XONSH_ENCODING_ERRORS": "strict",
+    }
+    env = Env(initial_vars)
     return env
 
 
 @pytest.fixture
-def xonsh_builtins(monkeypatch, xonsh_events, session_vars, dummy_env):
+def xonsh_builtins(monkeypatch, xonsh_events, session_vars, env):
     """Mock out most of the builtins xonsh attributes."""
     old_builtins = dict(vars(builtins).items())  # type: ignore
 
@@ -101,7 +111,7 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars, dummy_env):
         return os.path.join(os.path.dirname(__file__), "bin", name)
 
     for attr, val in [
-        ("env", dummy_env),
+        ("env", env),
         ("shell", DummyShell()),
         ("help", lambda x: x),
         ("aliases", Aliases()),
@@ -115,9 +125,6 @@ def xonsh_builtins(monkeypatch, xonsh_events, session_vars, dummy_env):
         ("subproc_captured_hiddenobject", sp),
     ]:
         monkeypatch.setattr(XSH, attr, val)
-
-    if ON_WINDOWS:
-        XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
 
     cc = XSH.commands_cache
     monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))

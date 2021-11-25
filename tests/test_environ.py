@@ -208,9 +208,8 @@ def test_locate_binary_on_windows(xession):
         assert locate_binary("file3") is None
 
 
-def test_event_on_envvar_change(xession):
-    env = Env(TEST=0)
-    xession.env = env
+def test_event_on_envvar_change(xession, env):
+    env["TEST"] = 0
     share = []
     # register
 
@@ -224,9 +223,7 @@ def test_event_on_envvar_change(xession):
     assert share == ["TEST", 0, 1]
 
 
-def test_event_on_envvar_new(xession):
-    env = Env()
-    xession.env = env
+def test_event_on_envvar_new(xession, env):
     share = []
     # register
 
@@ -240,9 +237,8 @@ def test_event_on_envvar_new(xession):
     assert share == ["TEST", 1]
 
 
-def test_event_on_envvar_change_from_none_value(xession):
-    env = Env(TEST=None)
-    xession.env = env
+def test_event_on_envvar_change_from_none_value(xession, env):
+    env["TEST"] = None
     share = []
     # register
 
@@ -257,9 +253,8 @@ def test_event_on_envvar_change_from_none_value(xession):
 
 
 @pytest.mark.parametrize("val", [1, None, True, "ok"])
-def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession):
-    env = Env(TEST=val)
-    xession.env = env
+def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession, env):
+    env["TEST"] = val
     share = []
     # register
 
@@ -273,9 +268,7 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession):
     assert share == []
 
 
-def test_events_on_envvar_called_in_right_order(xession):
-    env = Env()
-    xession.env = env
+def test_events_on_envvar_called_in_right_order(xession, env):
     share = []
     # register
 

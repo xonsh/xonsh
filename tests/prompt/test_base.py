@@ -76,8 +76,6 @@ def test_format_prompt_with_broken_template_in_func(inp, formatter):
 
 
 def test_format_prompt_with_invalid_func(formatter, xession):
-    xession.env = Env()
-
     def p():
         foo = bar  # raises exception # noqa
         return "{user}"
@@ -86,7 +84,6 @@ def test_format_prompt_with_invalid_func(formatter, xession):
 
 
 def test_format_prompt_with_func_that_raises(formatter, capsys, xession):
-    xession.env = Env()
     template = "tt {zerodiv} tt"
     exp = "tt {BACKGROUND_RED}{ERROR:zerodiv}{RESET} tt"
     fields = {"zerodiv": lambda: 1 / 0}
@@ -96,13 +93,11 @@ def test_format_prompt_with_func_that_raises(formatter, capsys, xession):
     assert "prompt: error" in err
 
 
-def test_format_prompt_with_no_env(formatter, xession, live_fields):
+def test_format_prompt_with_no_env(formatter, xession, live_fields, env):
     xession.shell.prompt_formatter = formatter
 
-    env = Env()
     env.pop("VIRTUAL_ENV", None)  # For virtualenv
     env.pop("CONDA_DEFAULT_ENV", None)  # For conda/CircleCI
-    xession.env = env
 
     assert formatter("{env_name}", fields=live_fields) == ""
 
@@ -111,8 +106,7 @@ def test_format_prompt_with_no_env(formatter, xession, live_fields):
 def test_format_prompt_with_various_envs(formatter, xession, live_fields, envname):
     xession.shell.prompt_formatter = formatter
 
-    env = Env(VIRTUAL_ENV=envname)
-    xession.env = env
+    xession.env["VIRTUAL_ENV"] = envname
 
     exp = live_fields["env_prefix"] + envname + live_fields["env_postfix"]
     assert formatter("{env_name}", fields=live_fields) == exp
@@ -123,8 +117,7 @@ def test_format_prompt_with_various_envs(formatter, xession, live_fields, envnam
 def test_format_prompt_with_various_prepost(formatter, xession, live_fields, pre, post):
     xession.shell.prompt_formatter = formatter
 
-    env = Env(VIRTUAL_ENV="env")
-    xession.env = env
+    xession.env["VIRTUAL_ENV"] = "env"
 
     live_fields.update({"env_prefix": pre, "env_postfix": post})
 
@@ -134,9 +127,7 @@ def test_format_prompt_with_various_prepost(formatter, xession, live_fields, pre
 
 def test_noenv_with_disable_set(formatter, xession, live_fields):
     xession.shell.prompt_formatter = formatter
-
-    env = Env(VIRTUAL_ENV="env", VIRTUAL_ENV_DISABLE_PROMPT=1)
-    xession.env = env
+    xession.env.update(dict(VIRTUAL_ENV="env", VIRTUAL_ENV_DISABLE_PROMPT=1))
 
     exp = ""
     assert formatter("{env_name}", fields=live_fields) == exp
@@ -148,10 +139,13 @@ def test_custom_env_overrides_default(formatter, xession, live_fields, disable):
 
     prompt = "!venv active! "
 
-    env = Env(
-        VIRTUAL_ENV="env", VIRTUAL_ENV_PROMPT=prompt, VIRTUAL_ENV_DISABLE_PROMPT=disable
+    xession.env.update(
+        dict(
+            VIRTUAL_ENV="env",
+            VIRTUAL_ENV_PROMPT=prompt,
+            VIRTUAL_ENV_DISABLE_PROMPT=disable,
+        )
     )
-    xession.env = env
 
     exp = "" if disable else prompt
     assert formatter("{env_name}", fields=live_fields) == exp

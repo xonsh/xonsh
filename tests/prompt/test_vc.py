@@ -46,7 +46,7 @@ defaultBranch = main
 @pytest.fixture
 def set_xenv(xession, monkeypatch):
     def _wrapper(path):
-        monkeypatch.setattr(xession, "env", Env(VC_BRANCH_TIMEOUT=2, PWD=path))
+        xession.env.update(dict(VC_BRANCH_TIMEOUT=2, PWD=path))
         return xession
 
     return _wrapper
