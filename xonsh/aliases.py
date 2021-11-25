@@ -399,7 +399,7 @@ def source_foreign_fn(
         Name or path to the foreign shell
     files_or_code
         file paths to source or code in the target language.
-    interactive : -i, --interactive
+    interactive : -n, --non-interactive
         whether the sourced shell should be interactive
     login : -l, --login
         whether the sourced shell should be login
@@ -409,7 +409,7 @@ def source_foreign_fn(
         command to print aliases
     extra_args : --extra-args
         extra arguments needed to run the shell
-    safe : -s, --safe
+    safe : -u, --unsafe
         whether the source shell should be run safely, and not raise any errors, even if they occur.
     prevcmd : -p, --prevcmd
         command(s) to run before any other commands, replaces traditional source.
