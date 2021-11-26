@@ -170,13 +170,22 @@ def add_args(
         ):
             continue
         flags, kwargs = _get_args_kwargs(param.annotation)
-        if not flags:  # load from docstring
+        if (not flags) and (name in doc.flags):  # load from docstring
             flags = doc.flags.get(name)
 
         if flags:  # optional argument. eg. --option
             kwargs.setdefault("dest", name)
         else:  # positional argument
             flags = [name]
+
+            # checks for optional positional arg
+            if (
+                (inspect.Parameter.empty != param.default)
+                and (param.default is None)
+                and ("nargs" not in kwargs)
+                and ("action" not in kwargs)
+            ):
+                kwargs.setdefault("nargs", "?")
 
         if inspect.Parameter.empty != param.default:
             kwargs.setdefault("default", param.default)

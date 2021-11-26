@@ -57,7 +57,8 @@ def test_crud(xession, tmpdir):
         nonlocal last_event
         last_event = "delete", name
 
-    vox = Vox()
+    vox = Vox(force_removals=True)
+    vox.create("spam")
     vox.create("spam")
     assert stat.S_ISDIR(tmpdir.join("spam").stat().mode)
     assert last_event == ("create", "spam")
@@ -187,7 +188,7 @@ def test_crud_subdir(xession, tmpdir):
     """
     xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
-    vox = Vox()
+    vox = Vox(force_removals=True)
     vox.create("spam/eggs")
     assert stat.S_ISDIR(tmpdir.join("spam", "eggs").stat().mode)
 
@@ -214,7 +215,7 @@ def test_crud_path(xession, tmpdir):
     """
     tmp = pathlib.Path(str(tmpdir))
 
-    vox = Vox()
+    vox = Vox(force_removals=True)
     vox.create(tmp)
     assert stat.S_ISDIR(tmpdir.join("lib").stat().mode)
 
@@ -338,14 +339,13 @@ _HELP_OPTS = {
 _PY_BINS = {"/bin/python2", "/bin/python3"}
 _VOX_NEW_OPTS = {
     "--copies",
-    "--help",
-    "-h",
     "--ssp",
     "--symlinks",
     "--system-site-packages",
     "--without-pip",
-}
+}.union(_HELP_OPTS)
 _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
+_VOX_RM_OPTS = {"-f", "--force"}.union(_HELP_OPTS)
 
 
 @pytest.mark.parametrize(
@@ -361,36 +361,49 @@ _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
                 "workon",
                 "list",
                 "exit",
+                "info",
                 "ls",
                 "rm",
                 "deactivate",
                 "activate",
                 "enter",
                 "create",
+                "project-get",
+                "project-set",
+                "runin",
+                "runin-all",
+                "toggle-ssp",
+                "wipe",
             },
             _HELP_OPTS,
         ),
         (
             "vox create",
             set(),
-            {
-                "--copies",
-                "--symlinks",
-                "--ssp",
-                "--system-site-packages",
-                "--activate",
-                "--without-pip",
-                "--interpreter",
-                "-p",
-                "-a",
-                "--help",
-                "-h",
-            },
+            _VOX_NEW_OPTS.union(
+                {
+                    "-a",
+                    "--activate",
+                    "--wp",
+                    "--without-pip",
+                    "-p",
+                    "--interpreter",
+                    "-i",
+                    "--install",
+                    "-l",
+                    "--link",
+                    "--link-project",
+                    "-r",
+                    "--requirements",
+                    "-t",
+                    "--temp",
+                }
+            ),
         ),
-        ("vox activate", _VENV_NAMES, _HELP_OPTS),
-        ("vox rm", _VENV_NAMES, _HELP_OPTS),
-        ("vox rm venv1", _VENV_NAMES, _HELP_OPTS),  # pos nargs: one or more
-        ("vox rm venv1 venv2", _VENV_NAMES, _HELP_OPTS),  # pos nargs: two or more
+        ("vox activate", _VENV_NAMES, _HELP_OPTS.union({"-n", "--no-cd"})),
+        ("vox rm", _VENV_NAMES, _VOX_RM_OPTS),
+        ("vox rm venv1", _VENV_NAMES, _VOX_RM_OPTS),  # pos nargs: one or more
+        ("vox rm venv1 venv2", _VENV_NAMES, _VOX_RM_OPTS),  # pos nargs: two or more
         ("vox new --activate --interpreter", _PY_BINS, set()),  # option after option
         ("vox new --interpreter", _PY_BINS, set()),  # "option: first
         ("vox new --activate env1 --interpreter", _PY_BINS, set()),  # option after pos

@@ -121,13 +121,15 @@ class Vox(collections.abc.Mapping):
     2. ``bin``: The full path to the bin/Scripts directory of the environment
     """
 
-    def __init__(self):
+    def __init__(self, force_removals=False):
         if not XSH.env.get("VIRTUALENV_HOME"):
             home_path = os.path.expanduser("~")
             self.venvdir = os.path.join(home_path, ".virtualenvs")
             XSH.env["VIRTUALENV_HOME"] = self.venvdir
         else:
             self.venvdir = XSH.env["VIRTUALENV_HOME"]
+        self.force_removals = force_removals
+        self.sub_dirs = _subdir_names()
 
     def create(
         self,
@@ -167,11 +169,10 @@ class Vox(collections.abc.Mapping):
         if not self._check_reserved(env_path):
             raise ValueError(
                 "venv can't contain reserved names ({})".format(
-                    ", ".join(_subdir_names())
+                    ", ".join(self.sub_dirs)
                 )
             )
 
-        # todo: add function to toggle system-site-packages like in pew and others
         self._create(env_path, interpreter, system_site_packages, symlinks, with_pip)
         events.vox_on_create.fire(name=name)
 
@@ -257,10 +258,9 @@ class Vox(collections.abc.Mapping):
         if return_code != 0:
             raise SystemExit(return_code)
 
-    @staticmethod
-    def _check_reserved(name):
+    def _check_reserved(self, name):
         return (
-            os.path.basename(name) not in _subdir_names()
+            os.path.basename(name) not in self.sub_dirs
         )  # FIXME: Check the middle components, too
 
     def __getitem__(self, name):
@@ -307,11 +307,17 @@ class Vox(collections.abc.Mapping):
         else:
             return True
 
+    def get_binary_path(self, binary, *dirs):
+        bin_, _, _ = self.sub_dirs
+        python_exec = binary
+        if ON_WINDOWS:
+            python_exec += ".exe"
+        return os.path.join(*dirs, bin_, python_exec)
+
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME."""
-        bin_, _, _ = _subdir_names()
         for dirpath, dirnames, _ in os.walk(self.venvdir):
-            python_exec = os.path.join(dirpath, bin_, "python")
+            python_exec = self.get_binary_path("python", dirpath)
             if ON_WINDOWS:
                 python_exec += ".exe"
             if os.access(python_exec, os.X_OK):
@@ -404,6 +410,15 @@ class Vox(collections.abc.Mapping):
         except KeyError:
             # No current venv, ... fails
             pass
+
+        env_path = os.path.abspath(env_path)
+        if not self.force_removals:
+            answer = input(
+                f"The directory {env_path} and all of its content will be deleted. Do you want to continue? [Y/n]"
+            )
+            if "n" in answer:
+                return
+
         shutil.rmtree(env_path)
 
         events.vox_on_delete.fire(name=name)
@@ -411,4 +426,9 @@ class Vox(collections.abc.Mapping):
 
 def _get_vox_default_interpreter():
     """Return the interpreter set by the $VOX_DEFAULT_INTERPRETER if set else sys.executable"""
-    return XSH.env.get("VOX_DEFAULT_INTERPRETER", sys.executable)
+    default = "python"
+    if default in XSH.commands_cache:
+        default = XSH.commands_cache[default]
+    else:
+        default = sys.executable
+    return XSH.env.get("VOX_DEFAULT_INTERPRETER", default)
