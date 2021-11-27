@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
+import functools
 import os
 import re
 import sys
@@ -29,7 +30,6 @@ from xonsh.tools import (
     XonshError,
     argvquote,
     escape_windows_cmd_string,
-    to_bool,
     swap_values,
     strip_simple_quotes,
     ALIAS_KWARG_NAMES,
@@ -369,176 +369,116 @@ def xonsh_reset(args, stdin=None):
     XSH.ctx.clear()
 
 
-@lazyobject
-def _SOURCE_FOREIGN_PARSER():
-    desc = "Sources a file written in a foreign shell language."
-    parser = argparse.ArgumentParser("source-foreign", description=desc)
-    parser.add_argument("shell", help="Name or path to the foreign shell")
-    parser.add_argument(
-        "files_or_code",
-        nargs="+",
-        help="file paths to source or code in the target " "language.",
-    )
-    parser.add_argument(
-        "-i",
-        "--interactive",
-        type=to_bool,
-        default=True,
-        help="whether the sourced shell should be interactive",
-        dest="interactive",
-    )
-    parser.add_argument(
-        "-l",
-        "--login",
-        type=to_bool,
-        default=False,
-        help="whether the sourced shell should be login",
-        dest="login",
-    )
-    parser.add_argument(
-        "--envcmd", default=None, dest="envcmd", help="command to print environment"
-    )
-    parser.add_argument(
-        "--aliascmd", default=None, dest="aliascmd", help="command to print aliases"
-    )
-    parser.add_argument(
-        "--extra-args",
-        default=(),
-        dest="extra_args",
-        type=(lambda s: tuple(s.split())),
-        help="extra arguments needed to run the shell",
-    )
-    parser.add_argument(
-        "-s",
-        "--safe",
-        type=to_bool,
-        default=True,
-        help="whether the source shell should be run safely, "
-        "and not raise any errors, even if they occur.",
-        dest="safe",
-    )
-    parser.add_argument(
-        "-p",
-        "--prevcmd",
-        default=None,
-        dest="prevcmd",
-        help="command(s) to run before any other commands, "
-        "replaces traditional source.",
-    )
-    parser.add_argument(
-        "--postcmd",
-        default="",
-        dest="postcmd",
-        help="command(s) to run after all other commands",
-    )
-    parser.add_argument(
-        "--funcscmd",
-        default=None,
-        dest="funcscmd",
-        help="code to find locations of all native functions " "in the shell language.",
-    )
-    parser.add_argument(
-        "--sourcer",
-        default=None,
-        dest="sourcer",
-        help="the source command in the target shell " "language, default: source.",
-    )
-    parser.add_argument(
-        "--use-tmpfile",
-        type=to_bool,
-        default=False,
-        help="whether the commands for source shell should be "
-        "written to a temporary file.",
-        dest="use_tmpfile",
-    )
-    parser.add_argument(
-        "--seterrprevcmd",
-        default=None,
-        dest="seterrprevcmd",
-        help="command(s) to set exit-on-error before any" "other commands.",
-    )
-    parser.add_argument(
-        "--seterrpostcmd",
-        default=None,
-        dest="seterrpostcmd",
-        help="command(s) to set exit-on-error after all" "other commands.",
-    )
-    parser.add_argument(
-        "--overwrite-aliases",
-        default=False,
-        action="store_true",
-        dest="overwrite_aliases",
-        help="flag for whether or not sourced aliases should "
-        "replace the current xonsh aliases.",
-    )
-    parser.add_argument(
-        "--suppress-skip-message",
-        default=None,
-        action="store_true",
-        dest="suppress_skip_message",
-        help="flag for whether or not skip messages should be suppressed.",
-    )
-    parser.add_argument(
-        "--show",
-        default=False,
-        action="store_true",
-        dest="show",
-        help="Will show the script output.",
-    )
-    parser.add_argument(
-        "-d",
-        "--dry-run",
-        default=False,
-        action="store_true",
-        dest="dryrun",
-        help="Will not actually source the file.",
-    )
-    return parser
+def source_foreign_fn(
+    shell: str,
+    files_or_code: Annotated[tp.List[str], Arg(nargs="+")],
+    interactive=True,
+    login=False,
+    envcmd=None,
+    aliascmd=None,
+    extra_args="",
+    safe=True,
+    prevcmd="",
+    postcmd="",
+    funcscmd="",
+    sourcer=None,
+    use_tmpfile=False,
+    seterrprevcmd=None,
+    seterrpostcmd=None,
+    overwrite_aliases=False,
+    suppress_skip_message=False,
+    show=False,
+    dryrun=False,
+    _stderr=None,
+):
+    """Sources a file written in a foreign shell language.
 
-
-def source_foreign(args, stdin=None, stdout=None, stderr=None):
-    """Sources a file written in a foreign shell language."""
+    Parameters
+    ----------
+    shell
+        Name or path to the foreign shell
+    files_or_code
+        file paths to source or code in the target language.
+    interactive : -n, --non-interactive
+        whether the sourced shell should be interactive
+    login : -l, --login
+        whether the sourced shell should be login
+    envcmd : --envcmd
+        command to print environment
+    aliascmd : --aliascmd
+        command to print aliases
+    extra_args : --extra-args
+        extra arguments needed to run the shell
+    safe : -u, --unsafe
+        whether the source shell should be run safely, and not raise any errors, even if they occur.
+    prevcmd : -p, --prevcmd
+        command(s) to run before any other commands, replaces traditional source.
+    postcmd : --postcmd
+        command(s) to run after all other commands
+    funcscmd : --funcscmd
+        code to find locations of all native functions in the shell language.
+    sourcer : --sourcer
+        the source command in the target shell language.
+        If this is not set, a default value will attempt to be
+        looked up based on the shell name.
+    use_tmpfile : --use-tmpfile
+        whether the commands for source shell should be written to a temporary file.
+    seterrprevcmd : --seterrprevcmd
+        command(s) to set exit-on-error before any other commands.
+    seterrpostcmd : --seterrpostcmd
+        command(s) to set exit-on-error after all other commands.
+    overwrite_aliases : --overwrite-aliases
+        flag for whether or not sourced aliases should replace the current xonsh aliases.
+    suppress_skip_message : --suppress-skip-message
+        flag for whether or not skip messages should be suppressed.
+    show : --show
+        show the script output.
+    dryrun : -d, --dry-run
+        Will not actually source the file.
+    """
+    extra_args = tuple(extra_args.split())
     env = XSH.env
-    ns = _SOURCE_FOREIGN_PARSER.parse_args(args)
-    ns.suppress_skip_message = (
+    suppress_skip_message = (
         env.get("FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE")
-        if ns.suppress_skip_message is None
-        else ns.suppress_skip_message
+        if not suppress_skip_message
+        else suppress_skip_message
     )
-    files = ()
-    if ns.prevcmd is not None:
+    files: tp.Tuple[str, ...] = ()
+    if prevcmd:
         pass  # don't change prevcmd if given explicitly
-    elif os.path.isfile(ns.files_or_code[0]):
+    elif os.path.isfile(files_or_code[0]):
+        if not sourcer:
+            return (None, "xonsh: error: `sourcer` command is not mentioned.\n", 1)
         # we have filenames to source
-        ns.prevcmd = "".join([f"{ns.sourcer} {f}\n" for f in ns.files_or_code])
-        files = tuple(ns.files_or_code)
-    elif ns.prevcmd is None:
-        ns.prevcmd = " ".join(ns.files_or_code)  # code to run, no files
+        prevcmd = "".join([f"{sourcer} {f}\n" for f in files_or_code])
+        files = tuple(files_or_code)
+    elif not prevcmd:
+        prevcmd = " ".join(files_or_code)  # code to run, no files
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src
     fsenv, fsaliases = foreign_shell_data(
-        shell=ns.shell,
-        login=ns.login,
-        interactive=ns.interactive,
-        envcmd=ns.envcmd,
-        aliascmd=ns.aliascmd,
-        extra_args=ns.extra_args,
-        safe=ns.safe,
-        prevcmd=ns.prevcmd,
-        postcmd=ns.postcmd,
-        funcscmd=ns.funcscmd,
-        sourcer=ns.sourcer,
-        use_tmpfile=ns.use_tmpfile,
-        seterrprevcmd=ns.seterrprevcmd,
-        seterrpostcmd=ns.seterrpostcmd,
-        show=ns.show,
-        dryrun=ns.dryrun,
+        shell=shell,
+        login=login,
+        interactive=interactive,
+        envcmd=envcmd,
+        aliascmd=aliascmd,
+        extra_args=extra_args,
+        safe=safe,
+        prevcmd=prevcmd,
+        postcmd=postcmd,
+        funcscmd=funcscmd or None,  # the default is None in the called function
+        sourcer=sourcer,
+        use_tmpfile=use_tmpfile,
+        seterrprevcmd=seterrprevcmd,
+        seterrpostcmd=seterrpostcmd,
+        show=show,
+        dryrun=dryrun,
         files=files,
     )
     if fsenv is None:
-        if ns.dryrun:
+        if dryrun:
             return
         else:
-            msg = "xonsh: error: Source failed: {0!r}\n".format(ns.prevcmd)
+            msg = "xonsh: error: Source failed: {0!r}\n".format(prevcmd)
             msg += "xonsh: error: Possible reasons: File not found or syntax error\n"
             return (None, msg, 1)
     # apply results
@@ -556,9 +496,9 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
             continue  # no change from original
-        elif ns.overwrite_aliases or k not in baliases:
+        elif overwrite_aliases or k not in baliases:
             baliases[k] = v
-        elif ns.suppress_skip_message:
+        elif suppress_skip_message:
             pass
         else:
             msg = (
@@ -568,7 +508,12 @@ def source_foreign(args, stdin=None, stdout=None, stderr=None):
                 'You may prevent this message with "--suppress-skip-message" or '
                 '"$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = True".'
             )
-            print(msg.format(k, ns.shell), file=stderr)
+            print(msg.format(k, shell), file=_stderr)
+
+
+source_foreign = ArgParserAlias(
+    func=source_foreign_fn, has_args=True, prog="source-foreign"
+)
 
 
 @unthreadable
@@ -621,9 +566,54 @@ def source_alias(args, stdin=None):
                 raise
 
 
-def source_cmd(args, stdin=None):
-    """Simple cmd.exe-specific wrapper around source-foreign."""
-    args = list(args)
+def source_cmd_fn(
+    files: Annotated[tp.List[str], Arg(nargs="+")],
+    login=False,
+    aliascmd=None,
+    extra_args="",
+    safe=True,
+    postcmd="",
+    funcscmd="",
+    seterrprevcmd=None,
+    overwrite_aliases=False,
+    suppress_skip_message=False,
+    show=False,
+    dryrun=False,
+    _stderr=None,
+):
+    """
+        Source cmd.exe files
+
+    Parameters
+    ----------
+    files
+        paths to source files.
+    login : -l, --login
+        whether the sourced shell should be login
+    envcmd : --envcmd
+        command to print environment
+    aliascmd : --aliascmd
+        command to print aliases
+    extra_args : --extra-args
+        extra arguments needed to run the shell
+    safe : -s, --safe
+        whether the source shell should be run safely, and not raise any errors, even if they occur.
+    postcmd : --postcmd
+        command(s) to run after all other commands
+    funcscmd : --funcscmd
+        code to find locations of all native functions in the shell language.
+    seterrprevcmd : --seterrprevcmd
+        command(s) to set exit-on-error before any other commands.
+    overwrite_aliases : --overwrite-aliases
+        flag for whether or not sourced aliases should replace the current xonsh aliases.
+    suppress_skip_message : --suppress-skip-message
+        flag for whether or not skip messages should be suppressed.
+    show : --show
+        show the script output.
+    dryrun : -d, --dry-run
+        Will not actually source the file.
+    """
+    args = list(files)
     fpath = locate_binary(args[0])
     args[0] = fpath if fpath else args[0]
     if not os.path.isfile(args[0]):
@@ -631,15 +621,32 @@ def source_cmd(args, stdin=None):
     prevcmd = "call "
     prevcmd += " ".join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
-    args.append("--prevcmd={}".format(prevcmd))
-    args.insert(0, "cmd")
-    args.append("--interactive=0")
-    args.append("--sourcer=call")
-    args.append("--envcmd=set")
-    args.append("--seterrpostcmd=if errorlevel 1 exit 1")
-    args.append("--use-tmpfile=1")
     with XSH.env.swap(PROMPT="$P$G"):
-        return source_foreign(args, stdin=stdin)
+        return source_foreign_fn(
+            shell="cmd",
+            files_or_code=args,
+            interactive=True,
+            sourcer="call",
+            envcmd="set",
+            seterrpostcmd="if errorlevel 1 exit 1",
+            use_tmpfile=True,
+            prevcmd=prevcmd,
+            #     from this function
+            login=login,
+            aliascmd=aliascmd,
+            extra_args=extra_args,
+            safe=safe,
+            postcmd=postcmd,
+            funcscmd=funcscmd,
+            seterrprevcmd=seterrprevcmd,
+            overwrite_aliases=overwrite_aliases,
+            suppress_skip_message=suppress_skip_message,
+            show=show,
+            dryrun=dryrun,
+        )
+
+
+source_cmd = ArgParserAlias(func=source_cmd_fn, has_args=True, prog="source-cmd")
 
 
 def xexec_fn(
@@ -789,8 +796,16 @@ def make_default_aliases():
         "exec": xexec,
         "xexec": xexec,
         "source": source_alias,
-        "source-zsh": ["source-foreign", "zsh", "--sourcer=source"],
-        "source-bash": ["source-foreign", "bash", "--sourcer=source"],
+        "source-zsh": ArgParserAlias(
+            func=functools.partial(source_foreign_fn, "zsh", sourcer="source"),
+            has_args=True,
+            prog="source-zsh",
+        ),
+        "source-bash": ArgParserAlias(
+            func=functools.partial(source_foreign_fn, "bash", sourcer="source"),
+            has_args=True,
+            prog="source-bash",
+        ),
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
