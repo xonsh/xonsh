@@ -13,7 +13,6 @@ from xonsh.completer import Completer
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
-from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
 
 from xonsh import commands_cache
