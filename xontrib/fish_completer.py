@@ -1,5 +1,9 @@
 from xonsh.completers import completer
-from xonsh.completers.tools import RichCompletion, contextual_command_completer
+from xonsh.completers.tools import (
+    RichCompletion,
+    contextual_command_completer,
+    get_filter_function,
+)
 
 import subprocess as sp
 from xonsh.built_ins import XSH
@@ -27,10 +31,13 @@ def fish_proc_completer(ctx: CommandContext):
     args = ["fish", "-c", f"complete -C '{line}'"]
     env = XSH.env.detype()
     output = sp.check_output(args, env=env).decode()
+    filter_func = get_filter_function()
+
     if output:
-        yield from map(
-            create_rich_completion, output.strip().splitlines(keepends=False)
-        )
+        for line in output.strip().splitlines(keepends=False):
+            comp = create_rich_completion(line)
+            if filter_func(comp, ctx.prefix):
+                yield comp
 
 
 completer.add_one_completer("fish", fish_proc_completer, "<bash")
