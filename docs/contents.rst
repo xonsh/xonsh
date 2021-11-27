@@ -14,6 +14,8 @@ the xonsh shell
 
 .. include:: contributing.rst
 
+.. include:: python-versions-support-policy.rst
+
 .. include:: contact.rst
 
 .. include:: links.rst
