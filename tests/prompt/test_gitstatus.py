@@ -3,6 +3,11 @@ import pytest
 from xonsh.prompt import gitstatus
 
 
+@pytest.fixture(autouse=True)
+def git_no_stash(mocker):
+    return mocker.patch.object(gitstatus, "_get_stash", return_value=0)
+
+
 @pytest.mark.parametrize(
     "hidden, exp",
     [
