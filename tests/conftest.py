@@ -18,6 +18,9 @@ from xonsh.parsers.completion_context import CompletionContextParser
 from xonsh import commands_cache
 from tools import DummyShell, sp, DummyHistory
 
+# todo: only two fixture, xonsh, and xonsh_mocked,
+#   remove all xonsh_execer, builtins, aliases ...
+
 
 @pytest.fixture
 def source_path():
