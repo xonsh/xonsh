@@ -306,10 +306,10 @@ def main():
             "Natural Language :: English",
             "Operating System :: OS Independent",
             "Programming Language :: Python :: 3 :: Only",
-            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3",
             "Topic :: System :: Shells",
             "Topic :: System :: System Shells",
@@ -381,7 +381,7 @@ def main():
             "gnureadline; platform_system=='Darwin'",
         ],
     }
-    skw["python_requires"] = ">=3.6"
+    skw["python_requires"] = ">=3.7"
     setup(**skw)
 
 
