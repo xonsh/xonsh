@@ -414,6 +414,7 @@ class ArgparseCompleter:
 
         self.parser, self.remaining_args = self.get_parser(parser, args[1:])
 
+        self.long_opts_only = XSH.env.get("ALIAS_COMPLETIONS_OPTIONS_LONGEST", False)
         self.command = command
         kwargs["command"] = command
         # will be sent to completer function
@@ -518,7 +519,7 @@ class ArgparseCompleter:
 
         # in the end after positionals show remaining unfilled options
         for act in options:
-            for flag in act.option_strings:
+            for flag in sorted(act.option_strings, key=len, reverse=True):
                 desc = ""
                 if act.help:
                     formatter = self.parser._get_formatter()
@@ -527,6 +528,8 @@ class ArgparseCompleter:
                     except KeyError:
                         desc = act.help
                 yield RichCompletion(flag, description=desc)
+                if self.long_opts_only:
+                    break
 
     def _complete_options(self, options):
         while self.remaining_args:
