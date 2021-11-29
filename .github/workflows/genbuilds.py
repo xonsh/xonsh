@@ -33,12 +33,10 @@ OS_NAMES = [attr for attr, _ in get_attrs(OS)]
 
 
 class PY:
-    _36 = "3.6"
     _37 = "3.7"
     _38 = "3.8"
     _39 = "3.9"
     _310 = "3.10"
-    # _310 = "3.10-dev"
 
 
 PY_MAIN_VERSION = PY._39
