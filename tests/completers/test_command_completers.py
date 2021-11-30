@@ -26,11 +26,12 @@ def test_complete_command(completion_context_parse):
     else:
         command = "grep"
 
-    assert command in set(
-        complete_command(
+    assert command in {
+        str(comp).lower()
+        for comp in complete_command(
             completion_context_parse(command[:-1], len(command) - 1).command
         )
-    )
+    }
 
 
 @skip_if_on_windows
