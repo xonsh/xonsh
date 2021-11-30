@@ -24,6 +24,7 @@ def test_empty_line(check_completer):
     completions = check_completer("")
 
     assert completions
+    assert completions.issuperset({"cool", "abs"})
     for exp in ["cool", "abs"]:
         assert exp in completions
 
@@ -34,7 +35,7 @@ def test_empty_subexpr():
             command=CommandContext((), 0, subcmd_opening="$("), python=None
         )
     )
+    completions = set(map(str, completions))
     assert completions
-    for exp in ["cool"]:
-        assert exp in completions
+    assert completions.issuperset({"cool"})
     assert "abs" not in completions

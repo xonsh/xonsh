@@ -25,7 +25,7 @@ def complete_command(command: CommandContext):
 
     cmd = command.prefix
     show_desc = (XSH.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
-    for s, (path, is_alias) in XSH.commands_cache.all_commands.items():
+    for s, (path, is_alias) in XSH.commands_cache.iter_commands():
         if get_filter_function()(s, cmd):
             kwargs = {}
             if show_desc:
