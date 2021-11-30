@@ -3,9 +3,7 @@ import os
 import tempfile
 import pytest
 
-from xonsh.xoreutils import _which
-from xonsh.xoreutils import uptime
-from xonsh.xoreutils import cat
+from xonsh.xoreutils import _which, uptime, cat
 from xonsh.tools import ON_WINDOWS
 from xonsh.platform import DEFAULT_ENCODING
 
@@ -174,8 +172,15 @@ class TestCat:
     def teardown_method(self, _method):
         os.remove(self.tempfile)
 
-    def test_cat_single_file_work_exist_content(self, cat_env_fixture):
-        content = "this is a content\nfor testing xoreutil's cat"
+    @pytest.mark.parametrize(
+        "content",
+        [
+            "this is a content\nfor testing xoreutil's cat",
+            "this is a content withe \\n\nfor testing xoreutil's cat\n",
+            "",
+        ],
+    )
+    def test_cat_single_file_work_exist_content(self, cat_env_fixture, content):
         with open(self.tempfile, "w") as f:
             f.write(content)
         expected_content = content.replace("\n", os.linesep)
@@ -190,40 +195,6 @@ class TestCat:
         stdout.flush()
         stderr.flush()
         assert stdout_buf.getvalue() == bytes(expected_content, "utf-8")
-        assert stderr_buf.getvalue() == b""
-
-    def test_cat_single_file_with_end_newline(self, cat_env_fixture):
-        content = "this is a content withe \\n\nfor testing xoreutil's cat\n"
-        with open(self.tempfile, "w") as f:
-            f.write(content)
-        expected_content = content.replace("\n", os.linesep)
-
-        stdin = io.StringIO()
-        stdout_buf = io.BytesIO()
-        stderr_buf = io.BytesIO()
-        stdout = io.TextIOWrapper(stdout_buf)
-        stderr = io.TextIOWrapper(stderr_buf)
-        opts = cat._cat_parse_args([])
-        cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr)
-        stdout.flush()
-        stderr.flush()
-        assert stdout_buf.getvalue() == bytes(expected_content, "utf-8")
-        assert stderr_buf.getvalue() == b""
-
-    def test_cat_empty_file(self, cat_env_fixture):
-        with open(self.tempfile, "w") as f:
-            f.write("")
-
-        stdin = io.StringIO()
-        stdout_buf = io.BytesIO()
-        stderr_buf = io.BytesIO()
-        stdout = io.TextIOWrapper(stdout_buf)
-        stderr = io.TextIOWrapper(stderr_buf)
-        opts = cat._cat_parse_args([])
-        cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr)
-        stdout.flush()
-        stderr.flush()
-        assert stdout_buf.getvalue() == b""
         assert stderr_buf.getvalue() == b""
 
     @pytest.mark.skipif(
