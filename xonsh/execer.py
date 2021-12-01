@@ -79,6 +79,7 @@ class Execer(object):
                 input, filename=filename, mode=mode, debug_level=(self.debug_level >= 2)
             )
 
+        # [Phase 1]
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Normally, all subprocess
         # lines should be wrapped in $(), to indicate that they are a
@@ -92,11 +93,15 @@ class Execer(object):
         # grammar whitespace aware, and then ignore all of the whitespace
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
-        # the first time. This is a context-free phase.
+        # the first time. This is a context-free phase. By the end of this
+        # parse operation, we will have a tree which contains *some* subproc
+        # nodes, and some subproc-as-Python nodes. We now need a context-
+        # aware phase to disambiguate the two.
         tree, input = self._parse_ctx_free(input, mode=mode, filename=filename)
         if tree is None:
             return None
 
+        # [Phase 2]
         # Now we need to perform context-aware AST transformation. This is
         # because the "ls -l" is valid Python. The only way that we know
         # it is not actually Python is by checking to see if the first token
