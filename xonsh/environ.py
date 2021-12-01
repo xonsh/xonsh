@@ -887,7 +887,7 @@ class GeneralSetting(Xettings):
         "  of ``Ctrl+Z`` is ignored.\n\n"
         "Regardless of this value, commands run in ``$()``, ``!()`` or with an IO redirection (``>`` or ``|``) "
         "will always be captured.\n"
-        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True."
+        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True.",
     )
     THREAD_SUBPROCS = Var(
         is_bool_or_none,
