@@ -30,7 +30,7 @@ can be thought of as having the following structure:
          'ts': [start, stop],  # timestamps for the command
          'rtn': int, # command return code
          'out' str,  # stdout and stderr of command, for subproc commands
-                     # this is only available on Linux. Off by default.
+                     # this is only available select OSs. Off by default.
          },
         ...
         ],
@@ -389,8 +389,9 @@ Exciting Technical Detail: Teeing and Pseudo Terminals
 Xonsh is able to capture all stdout and stderr transparently and responsively. For aliases,
 Python code, or xonsh code, this isn't a big deal. It is easy to redirect information
 flowing through ``sys.stdout`` and ``sys.stderr``.  For subprocess commands, this is
-considerably harder. Storing stdout is disabled by default, but can be enabled by setting:
-``$XONSH_STORE_STDOUT=True`` in your ``~/.xonshrc`` file.
+considerably harder. Capturing stdout during the session is disabled by default but can be
+enabled by setting ``$XONSH_CAPTURE_ALWAYS=True``. Storing stdout to the history backend
+is disabled by default but can be enabled by setting ``$XONSH_STORE_STDOUT=True``.
 
 To be able to tee stdout and stderr and still have the terminal responsive, xonsh implements
 its own teeing pseudo-terminal on top of the Python standard library ``pty`` module. You

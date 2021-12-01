@@ -876,7 +876,8 @@ class GeneralSetting(Xettings):
     XONSH_CAPTURE_ALWAYS = Var.with_default(
         False,
         "Try to capture output of commands run without explicit capturing.\n"
-        "If True, xonsh will capture the output of commands run directly or in ``![]``.\n"
+        "If True, xonsh will capture the output of commands run directly or in ``![]``"
+        "to the session history.\n"
         "Setting to True has the following disadvantages:\n"
         "* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).\n"
         "  For more information see discussion at https://github.com/xonsh/xonsh/issues/3672.\n"
@@ -886,7 +887,7 @@ class GeneralSetting(Xettings):
         "  of ``Ctrl+Z`` is ignored.\n\n"
         "Regardless of this value, commands run in ``$()``, ``!()`` or with an IO redirection (``>`` or ``|``) "
         "will always be captured.\n"
-        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True.",
+        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True."
     )
     THREAD_SUBPROCS = Var(
         is_bool_or_none,
@@ -1492,8 +1493,8 @@ class PromptHistorySetting(Xettings):
     )
     XONSH_STORE_STDOUT = Var.with_default(
         False,
-        "Whether or not to store the ``stdout`` and ``stderr`` streams in the "
-        "history files.",
+        "Store the ``stdout`` and ``stderr`` streams to the history. "
+        "Requires that XONSH_CAPTURE_ALWAYS is True.",
     )
     XONSH_HISTORY_SAVE_CWD = Var.with_default(
         True,
