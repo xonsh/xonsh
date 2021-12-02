@@ -15,7 +15,7 @@ from xonsh.tools import ON_WINDOWS
 from xonsh.xonfig import xonfig_main
 
 
-def test_xonfg_help(capsys, xonsh_builtins):
+def test_xonfg_help(capsys, xession):
     """verify can invoke it, and usage knows about all the options"""
     with pytest.raises(SystemExit):
         xonfig_main(["-h"])
@@ -46,7 +46,7 @@ def test_xonfg_help(capsys, xonsh_builtins):
         ),
     ],  # NOQA E231
 )
-def test_xonfig_info(args, xonsh_builtins):
+def test_xonfig_info(args, xession):
     """info works, and reports no jupyter if none in environment"""
     capout = xonfig_main(args)
     assert capout.startswith("+---")
@@ -89,7 +89,7 @@ def fake_lib(monkeypatch):
         del sys.modules[m]
 
 
-def test_xonfig_kernel_with_jupyter(monkeypatch, capsys, fake_lib, xonsh_builtins):
+def test_xonfig_kernel_with_jupyter(monkeypatch, capsys, fake_lib, xession):
     cap_args = None
     cap_spec = None
 
@@ -129,6 +129,6 @@ def test_xonfig_kernel_with_jupyter(monkeypatch, capsys, fake_lib, xonsh_builtin
     assert cap_spec["argv"][2] == "xonsh.jupyter_kernel"
 
 
-def test_xonfig_kernel_no_jupyter(capsys, xonsh_builtins):
+def test_xonfig_kernel_no_jupyter(capsys, xession):
     with pytest.raises(ImportError):
         rc = xonfig_main(["jupyter-kernel"])  # noqa F841

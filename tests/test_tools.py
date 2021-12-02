@@ -535,7 +535,7 @@ mom"""
 
 
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
-def test_get_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
+def test_get_logical_line(src, idx, exp_line, exp_n, xession):
     lines = src.splitlines()
     line, n, start = get_logical_line(lines, idx)
     assert exp_line == line
@@ -543,7 +543,7 @@ def test_get_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
 
 
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
-def test_replace_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
+def test_replace_logical_line(src, idx, exp_line, exp_n, xession):
     lines = src.splitlines()
     logical = exp_line
     while idx > 0 and lines[idx - 1].endswith("\\"):

@@ -15,14 +15,14 @@ from xonsh.commands_cache import (
 from tools import skip_if_on_windows
 
 
-def test_commands_cache_lazy(xonsh_builtins):
+def test_commands_cache_lazy(xession):
     cc = CommandsCache()
     assert not cc.lazyin("xonsh")
     assert 0 == len(list(cc.lazyiter()))
     assert 0 == cc.lazylen()
 
 
-def test_predict_threadable_unknown_command(xonsh_builtins):
+def test_predict_threadable_unknown_command(xession):
     cc = CommandsCache()
     result = cc.predict_threadable(["command_should_not_found"])
     assert isinstance(result, bool)
@@ -153,7 +153,7 @@ PATTERN_BIN_USING_TTY_OR_NOT = [
 
 @pytest.mark.parametrize("args", PATTERN_BIN_USING_TTY_OR_NOT)
 @skip_if_on_windows
-def test_commands_cache_predictor_default(args, xonsh_builtins, tmp_path):
+def test_commands_cache_predictor_default(args, xession, tmp_path):
     cc = CommandsCache()
     use_tty, patterns = args
     file = tmp_path / "testfile"
@@ -181,7 +181,7 @@ def test_cd_is_only_functional_alias(xession):
     assert cc.is_only_functional_alias("cd")
 
 
-def test_non_exist_is_only_functional_alias(xonsh_builtins):
+def test_non_exist_is_only_functional_alias(xession):
     cc = CommandsCache()
     assert not cc.is_only_functional_alias("<not really a command name>")
 

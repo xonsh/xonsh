@@ -146,7 +146,7 @@ def test_list_of_strs_or_callables(exp, inp):
         ([["y", "z"], ["a", "b"]], ["ya", "yb", "za", "zb"]),
     ],
 )
-def test_list_of_list_of_strs_outer_product(xonsh_builtins, inp, exp):
+def test_list_of_list_of_strs_outer_product(xession, inp, exp):
     obs = list_of_list_of_strs_outer_product(inp)
     assert exp == obs
 

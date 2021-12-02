@@ -14,8 +14,8 @@ from tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
 
 
 @pytest.fixture(autouse=True)
-def xonsh_builtins_autouse(xonsh_builtins):
-    return xonsh_builtins
+def xonsh_builtins_autouse(xession):
+    return xession
 
 
 PARSER = Parser(yacc_optimize=False, yacc_debug=True)

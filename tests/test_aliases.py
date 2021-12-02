@@ -25,7 +25,7 @@ def make_aliases():
     return ales
 
 
-def test_imports(xonsh_builtins):
+def test_imports(xession):
     ales = make_aliases()
     expected = {
         "o": ["omg", "lala"],
@@ -38,17 +38,17 @@ def test_imports(xonsh_builtins):
     assert raw == expected
 
 
-def test_eval_normal(xonsh_builtins):
+def test_eval_normal(xession):
     ales = make_aliases()
     assert ales.get("o") == ["omg", "lala"]
 
 
-def test_eval_self_reference(xonsh_builtins):
+def test_eval_self_reference(xession):
     ales = make_aliases()
     assert ales.get("ls") == ["ls", "-  -"]
 
 
-def test_eval_recursive(xonsh_builtins):
+def test_eval_recursive(xession):
     ales = make_aliases()
     assert ales.get("color_ls") == ["ls", "-  -", "--color=true"]
 
@@ -73,7 +73,7 @@ def _return_to_sender_all(args, stdin, stdout, stderr, spec, stack):
     )
 
 
-def test_recursive_callable_partial_all(xonsh_builtins):
+def test_recursive_callable_partial_all(xession):
     ales = Aliases({"rtn": _return_to_sender_all, "rtn-recurse": ["rtn", "arg1"]})
     alias = ales.get("rtn-recurse")
     assert callable(alias)
@@ -88,7 +88,7 @@ def _return_to_sender_handles(args, stdin, stdout, stderr):
     return args, {"stdin": stdin, "stdout": stdout, "stderr": stderr}
 
 
-def test_recursive_callable_partial_handles(xonsh_builtins):
+def test_recursive_callable_partial_handles(xession):
     ales = Aliases({"rtn": _return_to_sender_handles, "rtn-recurse": ["rtn", "arg1"]})
     alias = ales.get("rtn-recurse")
     assert callable(alias)
@@ -103,7 +103,7 @@ def _return_to_sender_none():
     return "wakka", {}
 
 
-def test_recursive_callable_partial_none(xonsh_builtins):
+def test_recursive_callable_partial_none(xession):
     ales = Aliases({"rtn": _return_to_sender_none, "rtn-recurse": ["rtn"]})
     alias = ales.get("rtn-recurse")
     assert callable(alias)
@@ -122,7 +122,7 @@ def test_recursive_callable_partial_none(xonsh_builtins):
         "echo 'hi';  echo 'there'",
     ],
 )
-def test_subprocess_logical_operators(xonsh_builtins, alias):
+def test_subprocess_logical_operators(xession, alias):
     ales = make_aliases()
     ales["echocat"] = alias
     assert isinstance(ales["echocat"], ExecAlias)
@@ -139,7 +139,7 @@ def test_subprocess_logical_operators(xonsh_builtins, alias):
         "echo 'h|i << x > 3' | grep x",
     ],
 )
-def test_subprocess_io_operators(xonsh_builtins, alias):
+def test_subprocess_io_operators(xession, alias):
     ales = make_aliases()
     ales["echocat"] = alias
     assert isinstance(ales["echocat"], ExecAlias)
@@ -151,7 +151,7 @@ def test_subprocess_io_operators(xonsh_builtins, alias):
         {"echocat": "ls"},
     ],
 )
-def test_dict_merging(xonsh_builtins, alias):
+def test_dict_merging(xession, alias):
     ales = make_aliases()
     assert (ales | alias)["echocat"] == ["ls"]
     assert (alias | ales)["echocat"] == ["ls"]
@@ -165,7 +165,7 @@ def test_dict_merging(xonsh_builtins, alias):
         {"echocat": "echo Why?"},
     ],
 )
-def test_dict_merging_assignment(xonsh_builtins, alias):
+def test_dict_merging_assignment(xession, alias):
     ales = make_aliases()
     ales |= alias
 
@@ -179,7 +179,7 @@ def test_dict_merging_assignment(xonsh_builtins, alias):
     assert alias["o"] == ales["o"]
 
 
-def test_exec_alias_args(xonsh_builtins):
+def test_exec_alias_args(xession):
     stack = inspect.stack()
     try:
         ExecAlias("myargs = $args")(["arg0"], stack=stack)
