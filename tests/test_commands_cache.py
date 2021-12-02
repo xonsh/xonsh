@@ -112,14 +112,38 @@ def test_predict_shell_false(args):
 
 
 PATTERN_BIN_USING_TTY_OR_NOT = [
-    (False, {10: b"isnotatty"}),
-    (False, {12: b"isatty"}),
-    (False, {151: b"gpm"}),
-    (False, {10: b"isatty", 100: b"tcgetattr"}),
-    (False, {10: b"isatty", 100: b"tcsetattr"}),
-    (True, {10: b"isatty", 100: b"tcsetattr", 1000: b"tcgetattr"}),
-    (True, {1000: b"libncurses"}),
-    (True, {4094: b"libgpm"}),
+    (
+        False,
+        {10: b"isnotatty"},
+    ),
+    (
+        False,
+        {12: b"isatty"},
+    ),
+    (
+        False,
+        {151: b"gpm"},
+    ),
+    (
+        False,
+        {10: b"isatty", 100: b"tcgetattr"},
+    ),
+    (
+        False,
+        {10: b"isatty", 100: b"tcsetattr"},
+    ),
+    (
+        True,
+        {10: b"isatty", 100: b"tcsetattr", 1000: b"tcgetattr"},
+    ),
+    (
+        True,
+        {1000: b"libncurses"},
+    ),
+    (
+        True,
+        {4094: b"libgpm"},
+    ),
     (
         True,
         {2045: b"tcgetattr", 4095: b"tcgetattr", 6140: b"tcsetattr", 8190: b"isatty"},
@@ -129,25 +153,23 @@ PATTERN_BIN_USING_TTY_OR_NOT = [
 
 @pytest.mark.parametrize("args", PATTERN_BIN_USING_TTY_OR_NOT)
 @skip_if_on_windows
-def test_commands_cache_predictor_default(args, xonsh_builtins):
+def test_commands_cache_predictor_default(args, xonsh_builtins, tmp_path):
     cc = CommandsCache()
     use_tty, patterns = args
-    f = open("testfile", "wb")
+    file = tmp_path / "testfile"
     where = list(patterns.keys())
     where.sort()
 
-    pos = 0
-    for w in where:
-        f.write(b"\x20" * (w - pos))
-        f.write(patterns[w])
-        pos = w + len(patterns[w])
+    with file.open("wb") as f:
+        pos = 0
+        for w in where:
+            f.write(b"\x20" * (w - pos))
+            f.write(patterns[w])
+            pos = w + len(patterns[w])
 
-    f.write(b"\x20" * (pos // 2))
-    f.close()
+        f.write(b"\x20" * (pos // 2))
 
-    result = cc.default_predictor_readbin(
-        "", os.getcwd() + os.sep + "testfile", timeout=1, failure=None
-    )
+    result = cc.default_predictor_readbin("", str(file), timeout=1, failure=None)
     expected = predict_false if use_tty else predict_true
     assert result == expected
 
