@@ -36,6 +36,24 @@ def xonsh_execer(monkeypatch, xonsh_session):
 
 
 @pytest.fixture
+def xonsh_execer_exec(xonsh_execer):
+    def factory(input, **kwargs):
+        xonsh_execer.exec(input, **kwargs)
+        return True
+
+    return factory
+
+
+@pytest.fixture
+def xonsh_execer_parse(xonsh_execer):
+    def factory(input):
+        tree = XSH.execer.parse(input, ctx=None)
+        return tree
+
+    return factory
+
+
+@pytest.fixture
 def patch_commands_cache_bins(xession, tmp_path, monkeypatch):
     def _factory(binaries: tp.List[str]):
         if not xession.env.get("PATH"):

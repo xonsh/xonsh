@@ -8,8 +8,6 @@ from collections import defaultdict
 
 import pytest
 
-from xonsh.built_ins import XSH
-from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
 
 
@@ -90,36 +88,6 @@ class DummyHistory:
 
     def flush(self, *args, **kwargs):
         pass
-
-
-#
-# Execer tools
-#
-
-
-def check_exec(input, **kwargs):
-    XSH.execer.exec(input, **kwargs)
-    return True
-
-
-def check_eval(input):
-    XSH.env = Env(
-        {
-            "AUTO_CD": False,
-            "XONSH_ENCODING": "utf-8",
-            "XONSH_ENCODING_ERRORS": "strict",
-            "PATH": [],
-        }
-    )
-    if ON_WINDOWS:
-        XSH.env["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
-    XSH.execer.eval(input)
-    return True
-
-
-def check_parse(input):
-    tree = XSH.execer.parse(input, ctx=None)
-    return tree
 
 
 #
