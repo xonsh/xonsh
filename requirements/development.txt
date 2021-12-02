@@ -1,4 +1,4 @@
 -r tests.txt
 sniffer
-pyinotify
+pyinotify; sys_platform == 'linux'
 jinja2 >= 2
