@@ -2,7 +2,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from xonsh.environ import Env
 from xonsh.prompt.base import PromptFormatter, PROMPT_FIELDS
 
 

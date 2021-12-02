@@ -5,7 +5,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from xonsh.environ import Env
 from xonsh.prompt import vc
 
 # Xonsh interaction with version control systems.
