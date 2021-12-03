@@ -202,7 +202,6 @@ class CommandsCache(cabc.Mapping):
         if self.cache_file:
             self.cache_file.write_bytes(pickle.dumps(allcmds))
         self._cmds_cache = allcmds
-        print(len(self._cmds_cache), "set from 1")
         return allcmds
 
     def cached_name(self, name):
