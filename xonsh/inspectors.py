@@ -8,7 +8,6 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
 import os
-import io
 import sys
 import types
 import inspect
