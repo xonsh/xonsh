@@ -56,4 +56,10 @@ Projects that use xonsh
 - `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
 - `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the ssh.
 
+
+The xonsh shell community
+*************************
+
+The xonsh shell is developed by a community of volunteers and has no organization that can get grants, donations or additional support. There are two major ways to help the xonsh shell: to spread the good word about xonsh in the world (`write a tweet`_) and to help improve the xonsh shell (`solve an issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_). We welcome new contributors!
+
 .. _write a tweet: https://twitter.com/intent/tweet?text=xonsh%20is%20a%20Python-powered,%20cross-platform,%20Unix-gazing%20shell%20language%20and%20command%20prompt.&url=https://github.com/xonsh/xonsh
