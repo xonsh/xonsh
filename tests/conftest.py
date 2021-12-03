@@ -109,6 +109,7 @@ def env():
         "VC_BRANCH_TIMEOUT": 1,
         "XONSH_ENCODING": "utf-8",
         "XONSH_ENCODING_ERRORS": "strict",
+        "COMMANDS_CACHE_SAVE_INTERMEDIATE": False,
     }
     env = Env(initial_vars)
     return env

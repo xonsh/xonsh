@@ -178,6 +178,7 @@ def test_commands_cache_predictor_default(args, xession, tmp_path):
 def test_cd_is_only_functional_alias(xession):
     cc = CommandsCache()
     xession.aliases["cd"] = lambda args: os.chdir(args[0])
+    xession.env["PATH"] = []
     assert cc.is_only_functional_alias("cd")
 
 
