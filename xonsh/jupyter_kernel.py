@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Hooks for Jupyter Xonsh Kernel."""
 import sys
 import json
@@ -41,7 +40,7 @@ def bind(socket, connection, port):
     if port <= 0:
         return socket.bind_to_random_port(connection)
     else:
-        socket.bind("{}:{}".format(connection, port))
+        socket.bind(f"{connection}:{port}")
     return port
 
 
@@ -112,7 +111,7 @@ class XonshKernel:
             }
         else:
             self.dprint(1, "Loading simple_kernel with args:", sys.argv)
-            self.dprint(1, "Reading config file {!r}...".format(ns.config_file))
+            self.dprint(1, f"Reading config file {ns.config_file!r}...")
             with open(ns.config_file) as f:
                 config = json.load(f)
         return config
@@ -260,25 +259,25 @@ class XonshKernel:
 
     def run_thread(self, loop, name):
         """Run main thread"""
-        self.dprint(2, "Starting loop for {name!r}...".format(name=name))
+        self.dprint(2, f"Starting loop for {name!r}...")
         while not self.exiting:
-            self.dprint(2, "{} Loop!".format(name))
+            self.dprint(2, f"{name} Loop!")
             try:
                 loop.start()
             except ZMQError as e:
-                self.dprint(1, "{} ZMQError!\n  {}".format(name, e))
+                self.dprint(1, f"{name} ZMQError!\n  {e}")
                 if e.errno == errno.EINTR:
                     continue
                 else:
                     raise
             except Exception:
-                self.dprint(2, "{} Exception!".format(name))
+                self.dprint(2, f"{name} Exception!")
                 if self.exiting:
                     break
                 else:
                     raise
             else:
-                self.dprint(2, "{} Break!".format(name))
+                self.dprint(2, f"{name} Break!")
                 break
 
     def heartbeat_loop(self):
@@ -352,7 +351,7 @@ class XonshKernel:
         user_expressions=None,
         allow_stdin=False,
         parent_header=None,
-        **kwargs
+        **kwargs,
     ):
         """Execute user code."""
         if len(code.strip()) == 0:

@@ -54,7 +54,7 @@ class SourceCache(Mapping):
 SOURCES = SourceCache()
 
 
-class GlobalNames(object):
+class GlobalNames:
     """Stores globally defined names that have been seen on ast nodes."""
 
     impnodes = frozenset(["import", "importfrom"])
@@ -74,7 +74,7 @@ class GlobalNames(object):
             val = sorted(val)
             if all([val[0][0] == x[0] for x in val[1:]]):
                 continue
-            s += "WARNING: {0!r} defined in multiple locations:\n".format(key)
+            s += f"WARNING: {key!r} defined in multiple locations:\n"
             for loc in val:
                 s += "  {}:{} ({})\n".format(*loc)
         if len(s) > 0:
@@ -92,7 +92,7 @@ class GlobalNames(object):
                 return
             self.cache[name].add(e)
         else:
-            self.cache[name] = set([e])
+            self.cache[name] = {e}
 
     def add(self, node, istopnode=False):
         """Adds the names from the node to the cache."""
@@ -266,7 +266,7 @@ def depsort(graph):
         nodeps = {m for m in remaining if len(graph[m].pkgdeps - solved) == 0}
         if len(nodeps) == 0:
             msg = (
-                "\nsolved order = {0}\nremaining = {1}\nCycle detected in "
+                "\nsolved order = {}\nremaining = {}\nCycle detected in "
                 "module graph!"
             ).format(pprint.pformat(seder), pprint.pformat(remaining))
             raise RuntimeError(msg)
@@ -457,7 +457,7 @@ def sorted_futures(graph):
 def amalgamate(order, graph, pkg):
     """Create amalgamated source."""
     src = (
-        '"""Amalgamation of {0} package, made up of the following '
+        '"""Amalgamation of {} package, made up of the following '
         "modules, in order:\n\n* "
     ).format(pkg)
     src += "\n* ".join(order)
@@ -552,13 +552,13 @@ def main(args=None):
             continue
         print("Amalgamating " + pkg)
         exclude = read_exclude(pkg)
-        print("  excluding {}".format(pprint.pformat(exclude or None)))
+        print(f"  excluding {pprint.pformat(exclude or None)}")
         graph = make_graph(pkg, exclude=exclude)
         order = depsort(graph)
         src = amalgamate(order, graph, pkg)
         write_amalgam(src, pkg)
         rewrite_init(pkg, order, debug=debug)
-        print("  collapsed {} modules".format(len(order)))
+        print(f"  collapsed {len(order)} modules")
 
 
 if __name__ == "__main__":

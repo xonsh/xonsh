@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests the xonsh main function."""
-from __future__ import unicode_literals, print_function
 from contextlib import contextmanager
 
 import builtins

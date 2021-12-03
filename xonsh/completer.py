@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
 import sys
 import typing as tp
@@ -16,7 +15,7 @@ from xonsh.parsers.completion_context import CompletionContext, CompletionContex
 from xonsh.tools import print_exception
 
 
-class Completer(object):
+class Completer:
     """This provides a list of optional completions for the xonsh shell."""
 
     def __init__(self):

@@ -164,16 +164,12 @@ def _REDIR_OUT():
 
 @xl.lazyobject
 def _E2O_MAP():
-    return frozenset(
-        {"{}>{}".format(e, o) for e in _REDIR_ERR for o in _REDIR_OUT if o != ""}
-    )
+    return frozenset({f"{e}>{o}" for e in _REDIR_ERR for o in _REDIR_OUT if o != ""})
 
 
 @xl.lazyobject
 def _O2E_MAP():
-    return frozenset(
-        {"{}>{}".format(o, e) for e in _REDIR_ERR for o in _REDIR_OUT if o != ""}
-    )
+    return frozenset({f"{o}>{e}" for e in _REDIR_ERR for o in _REDIR_OUT if o != ""})
 
 
 def _is_redirect(x):
@@ -184,7 +180,7 @@ def safe_open(fname, mode, buffering=-1):
     """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
     try:
-        return io.open(fname, mode, buffering=buffering)
+        return open(fname, mode, buffering=buffering)
     except PermissionError:
         raise xt.XonshError(f"xonsh: {fname}: permission denied")
     except FileNotFoundError:
@@ -486,7 +482,7 @@ class SubprocSpec:
                     return self.cls(
                         ["man", cmd0.rstrip("?")], bufsize=bufsize, **kwargs
                     )
-            e = "xonsh: subprocess mode: command not found: {0}".format(cmd0)
+            e = f"xonsh: subprocess mode: command not found: {cmd0}"
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:

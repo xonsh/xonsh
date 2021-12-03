@@ -23,7 +23,7 @@ terminal = LazyObject(
 )
 
 
-class TracerType(object):
+class TracerType:
     """Represents a xonsh tracer object, which keeps track of all tracing
     state. This is a singleton.
     """
@@ -33,7 +33,7 @@ class TracerType(object):
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:
-            cls._inst = super(TracerType, cls).__new__(cls, *args, **kwargs)
+            cls._inst = super().__new__(cls, *args, **kwargs)
         return cls._inst
 
     def __init__(self):

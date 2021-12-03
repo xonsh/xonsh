@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests the xonfig command.
    Actually, just a down payment on a full test.
    Currently exercises only these options:
@@ -24,7 +23,7 @@ def test_xonfg_help(capsys, xonsh_builtins):
     pat = re.compile(r"^usage:\s*xonfig[^\n]*{([\w,-]+)}", re.MULTILINE)
     m = pat.match(capout)
     assert m[1]
-    verbs = set(v.strip().lower() for v in m[1].split(","))
+    verbs = {v.strip().lower() for v in m[1].split(",")}
     assert verbs == {
         "jupyter-kernel",
         "info",
@@ -101,7 +100,7 @@ def test_xonfig_kernel_with_jupyter(monkeypatch, capsys, fake_lib, xonsh_builtin
         nonlocal cap_spec
         cap_args = dict(args=args, kw=kwargs)
         spec_file = os.path.join(args[1], "kernel.json")
-        cap_spec = json.load(open(spec_file, "r"))
+        cap_spec = json.load(open(spec_file))
 
     def mock_get_kernel_spec(*args, **kwargs):
         raise jupyter_client.kernelspec.NoSuchKernel

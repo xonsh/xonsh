@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """Testing dirstack"""
-from __future__ import unicode_literals, print_function
 
 from contextlib import contextmanager
 import os
@@ -62,7 +60,7 @@ def test_cdpath_expansion(xession):
                 os.mkdir(d)
             assert os.path.exists(
                 dirstack._try_cdpath(d)
-            ), "dirstack._try_cdpath: could not resolve {0}".format(d)
+            ), f"dirstack._try_cdpath: could not resolve {d}"
     finally:
         for d in test_dirs:
             if os.path.exists(d):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests the xonsh history."""
 # pylint: disable=protected-access
 import os
@@ -81,10 +80,7 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xession, capsys):
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
-    exp = (
-        "{}: {}".format(base_idx + idx * step, cmd)
-        for idx, cmd in enumerate(list(commands))
-    )
+    exp = (f"{base_idx + idx * step}: {cmd}" for idx, cmd in enumerate(list(commands)))
     exp = "\n".join(exp)
 
     history_main(["show", "-n"] + shlex.split(inp))

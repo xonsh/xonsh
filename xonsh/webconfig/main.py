@@ -27,7 +27,7 @@ def colors(config):
     style = config["colors"]
     if style == "default":
         return []
-    return ["$XONSH_COLOR_STYLE = {!r}".format(style)]
+    return [f"$XONSH_COLOR_STYLE = {style!r}"]
 
 
 @renderer
@@ -59,7 +59,7 @@ def insert_into_xonshrc(
     # get current contents
     fname = os.path.expanduser(xonshrc)
     if os.path.isfile(fname):
-        with open(fname, "r") as f:
+        with open(fname) as f:
             s = f.read()
         before, _, s = s.partition(prefix)
         _, _, after = s.partition(suffix)
@@ -120,15 +120,15 @@ def main(args=None):
     while port <= 9310:
         try:
             with socketserver.TCPServer(("", port), Handler) as httpd:
-                url = "http://localhost:{0}".format(port)
-                print("Web config started at '{0}'. Hit Crtl+C to stop.".format(url))
+                url = f"http://localhost:{port}"
+                print(f"Web config started at '{url}'. Hit Crtl+C to stop.")
                 if ns.browser:
                     import webbrowser
 
                     webbrowser.open(url)
                 httpd.serve_forever()
             break
-        except socket.error:
+        except OSError:
             type, value = sys.exc_info()[:2]
             if "Address already in use" not in str(value):
                 raise

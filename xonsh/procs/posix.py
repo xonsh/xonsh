@@ -28,12 +28,12 @@ MODE_NUMS = ("1049", "47", "1047")
 
 @xl.lazyobject
 def START_ALTERNATE_MODE():
-    return frozenset("\x1b[?{0}h".format(i).encode() for i in MODE_NUMS)
+    return frozenset(f"\x1b[?{i}h".encode() for i in MODE_NUMS)
 
 
 @xl.lazyobject
 def END_ALTERNATE_MODE():
-    return frozenset("\x1b[?{0}l".format(i).encode() for i in MODE_NUMS)
+    return frozenset(f"\x1b[?{i}l".encode() for i in MODE_NUMS)
 
 
 @xl.lazyobject

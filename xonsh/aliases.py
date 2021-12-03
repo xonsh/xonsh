@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
 import functools
 import os
@@ -183,7 +182,7 @@ class Aliases(cabc.MutableMapping):
         return str(self._raw)
 
     def __repr__(self):
-        return "{0}.{1}({2})".format(
+        return "{}.{}({})".format(
             self.__class__.__module__, self.__class__.__name__, self._raw
         )
 
@@ -222,7 +221,7 @@ class ExecAlias:
             )
 
     def __repr__(self):
-        return "ExecAlias({0!r}, filename={1!r})".format(self.src, self.filename)
+        return f"ExecAlias({self.src!r}, filename={self.filename!r})"
 
 
 class PartialEvalAliasBase:
@@ -478,7 +477,7 @@ def source_foreign_fn(
         if dryrun:
             return
         else:
-            msg = "xonsh: error: Source failed: {0!r}\n".format(prevcmd)
+            msg = f"xonsh: error: Source failed: {prevcmd!r}\n"
             msg += "xonsh: error: Possible reasons: File not found or syntax error\n"
             return (None, msg, 1)
     # apply results
@@ -531,7 +530,7 @@ def source_alias(args, stdin=None):
             fpath = locate_binary(fname)
             if fpath is None:
                 if env.get("XONSH_DEBUG"):
-                    print("source: {}: No such file".format(fname), file=sys.stderr)
+                    print(f"source: {fname}: No such file", file=sys.stderr)
                 if i == 0:
                     raise RuntimeError(
                         "must source at least one file, " + fname + " does not exist."
@@ -545,7 +544,7 @@ def source_alias(args, stdin=None):
                 "then please use the appropriate source command. "
                 "For example, source-bash script.sh"
             )
-        with open(fpath, "r", encoding=encoding, errors=errors) as fp:
+        with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
         if not src.endswith("\n"):
             src += "\n"
@@ -617,7 +616,7 @@ def source_cmd_fn(
     fpath = locate_binary(args[0])
     args[0] = fpath if fpath else args[0]
     if not os.path.isfile(args[0]):
-        return (None, "xonsh: error: File not found: {}\n".format(args[0]), 1)
+        return (None, f"xonsh: error: File not found: {args[0]}\n", 1)
     prevcmd = "call "
     prevcmd += " ".join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
@@ -695,7 +694,7 @@ def xexec_fn(
     if name:
         command[0] = name
     if login:
-        command[0] = "-{}".format(command[0])
+        command[0] = f"-{command[0]}"
 
     denv = {}
     if not clean:

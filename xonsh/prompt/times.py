@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """date & time related prompt formatter"""
 import time
 

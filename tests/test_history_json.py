@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests the json history backend."""
 # pylint: disable=protected-access
 
@@ -170,10 +169,7 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xession, capsys):
     for ts, cmd in enumerate(CMDS):  # populate the shell history
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
-    exp = (
-        "{}: {}".format(base_idx + idx * step, cmd)
-        for idx, cmd in enumerate(list(commands))
-    )
+    exp = (f"{base_idx + idx * step}: {cmd}" for idx, cmd in enumerate(list(commands)))
     exp = "\n".join(exp)
 
     history_main(["show", "-n"] + shlex.split(inp))
@@ -196,7 +192,7 @@ def test_history_diff(tmpdir, xession, monkeypatch, capsys):
             # make sure that flush is complete
             time.sleep(0.1)
 
-    left, right = [str(f) for f in files]
+    left, right = (str(f) for f in files)
     history_main(["diff", left, right])
     out, err = capsys.readouterr()
     # make sure it is called

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements JSON version of xonsh history backend."""
 import os
 import sys
@@ -165,7 +164,7 @@ class JsonHistoryGC(threading.Thread):
         files = self.files(only_unlocked=True)
         rmfiles_fn = self.gc_units_to_rmfiles.get(units)
         if rmfiles_fn is None:
-            raise ValueError("Units type {0!r} not understood".format(units))
+            raise ValueError(f"Units type {units!r} not understood")
 
         size_over, rm_files = rmfiles_fn(hsize, files)
         hist = getattr(XSH, "history", None)
@@ -256,7 +255,7 @@ class JsonHistoryFlusher(threading.Thread):
         self, filename, buffer, queue, cond, at_exit=False, skip=None, *args, **kwargs
     ):
         """Thread for flushing history."""
-        super(JsonHistoryFlusher, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.filename = filename
         self.buffer = buffer
         self.queue = queue
@@ -299,7 +298,7 @@ class JsonHistoryFlusher(threading.Thread):
 
             cmds.append(cmd)
             last_inp = cmd["inp"]
-        with open(self.filename, "r", newline="\n") as f:
+        with open(self.filename, newline="\n") as f:
             hist = xlj.LazyJSON(f).load()
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
@@ -360,7 +359,7 @@ class JsonCommandField(cabc.Sequence):
         queue.append(self)
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
-            with open(self.hist.filename, "r", newline="\n") as f:
+            with open(self.hist.filename, newline="\n") as f:
                 lj = xlj.LazyJSON(f, reopen=False)
                 rtn = lj["cmds"][key].get(self.field, self.default)
                 if isinstance(rtn, xlj.LJNode):
@@ -411,9 +410,7 @@ class JsonHistory(History):
         if filename is None:
             # pylint: disable=no-member
             data_dir = _xhj_get_data_dir()
-            self.filename = os.path.join(
-                data_dir, "xonsh-{0}.json".format(self.sessionid)
-            )
+            self.filename = os.path.join(data_dir, f"xonsh-{self.sessionid}.json")
         else:
             self.filename = filename
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The xonsh built-ins.
 
 Note that this module is named 'built_ins' so as not to be confused with the
@@ -294,7 +293,7 @@ def _convert_kind_flag(x):
     x = x.lower()
     kind = MACRO_FLAG_KINDS.get(x, None)
     if kind is None:
-        raise TypeError("{0!r} not a recognized macro type.".format(x))
+        raise TypeError(f"{x!r} not a recognized macro type.")
     return kind
 
 
@@ -455,7 +454,7 @@ def _eval_regular_args(raw_args, glbs, locs):
     else:
         argstr = "({},)".format(", ".join(arglist))
         kwargstr = "dict({})".format(", ".join(kwarglist))
-        both = "({}, {})".format(argstr, kwargstr)
+        both = f"({argstr}, {kwargstr})"
         args, kwargs = execer.eval(both, glbs=glbs, locs=locs)
     return args, kwargs
 

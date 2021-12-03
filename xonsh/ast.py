@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The xonsh abstract syntax tree node."""
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
@@ -339,7 +338,7 @@ class CtxAwareTransformer(NodeTransformer):
         parser : xonsh.Parser
             A parse instance to try to parse subprocess statements with.
         """
-        super(CtxAwareTransformer, self).__init__()
+        super().__init__()
         self.parser = parser
         self.input = None
         self.contexts = []
@@ -420,7 +419,7 @@ class CtxAwareTransformer(NodeTransformer):
             returnline=False,
             lexer=self.parser.lexer,
         )
-        if spline is None or spline != "![{}]".format(line[mincol:maxcol].strip()):
+        if spline is None or spline != f"![{line[mincol:maxcol].strip()}]":
             # failed to get something consistent, try greedy wrap
             spline = subproc_toks(
                 line,
@@ -638,7 +637,7 @@ def pdump(s, **kwargs):
     lens = len(s) + 1
     if lens == 1:
         return s
-    i = min([s.find(o) % lens for o in openers])
+    i = min(s.find(o) % lens for o in openers)
     if i == lens - 1:
         return s
     closer = closers[openers.find(s[i])]

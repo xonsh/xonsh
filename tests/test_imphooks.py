@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing xonsh import hooks"""
 import os
 from importlib import import_module
@@ -67,5 +66,5 @@ def test_get_source():
     mod = import_module("sample")
     loader = mod.__loader__
     source = loader.get_source("sample")
-    with open(os.path.join(TEST_DIR, "sample.xsh"), "rt") as srcfile:
+    with open(os.path.join(TEST_DIR, "sample.xsh")) as srcfile:
         assert source == srcfile.read()

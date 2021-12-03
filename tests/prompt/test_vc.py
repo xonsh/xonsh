@@ -23,7 +23,7 @@ def repo(request, tmpdir_factory):
     try:
         sp.call([vc, "init"])
     except FileNotFoundError:
-        pytest.skip("cannot find {} executable".format(vc))
+        pytest.skip(f"cannot find {vc} executable")
     if vc == "git":
         git_config = temp_dir / ".git/config"
         git_config.write_text(
@@ -88,7 +88,7 @@ current = yellow reverse
 
         branch = getattr(vc, get_branch)()
         assert branch in VC_BRANCH[repo["vc"]]
-        assert not branch.startswith(u"\u001b[")
+        assert not branch.startswith("\u001b[")
 
 
 def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xession, monkeypatch):

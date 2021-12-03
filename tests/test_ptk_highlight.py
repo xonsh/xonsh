@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Test XonshLexer for pygments"""
 
 import gc
@@ -46,7 +45,7 @@ def check_token(code, tokens):
                 break
             tks = tks[1:]
         else:
-            msg = "Token {!r} missing: {!r}".format(tk, list(lx.get_tokens(code)))
+            msg = f"Token {tk!r} missing: {list(lx.get_tokens(code))!r}"
             pytest.fail(msg)
             break
 
@@ -164,14 +163,12 @@ def xonsh_builtins_ls_colors(xession, events_fxt):
 def test_path(tmpdir, xonsh_builtins_ls_colors):
 
     test_dir = str(tmpdir.mkdir("xonsh-test-highlight-path"))
+    check_token(f"cd {test_dir}", [(Name.Builtin, "cd"), (Color.BOLD_BLUE, test_dir)])
     check_token(
-        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.BOLD_BLUE, test_dir)]
+        f"cd {test_dir}-xxx",
+        [(Name.Builtin, "cd"), (Text, f"{test_dir}-xxx")],
     )
-    check_token(
-        "cd {}-xxx".format(test_dir),
-        [(Name.Builtin, "cd"), (Text, "{}-xxx".format(test_dir))],
-    )
-    check_token("cd X={}".format(test_dir), [(Color.BOLD_BLUE, test_dir)])
+    check_token(f"cd X={test_dir}", [(Color.BOLD_BLUE, test_dir)])
 
     with xonsh_builtins_ls_colors.env.swap(AUTO_CD=True):
         check_token(test_dir, [(Name.Constant, test_dir)])
@@ -186,13 +183,11 @@ def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors):
 
     lsc["di"] = ("GREEN",)
 
-    check_token(
-        "cd {}".format(test_dir), [(Name.Builtin, "cd"), (Color.GREEN, test_dir)]
-    )
+    check_token(f"cd {test_dir}", [(Name.Builtin, "cd"), (Color.GREEN, test_dir)])
 
     del lsc["di"]
 
-    check_token("cd {}".format(test_dir), [(Name.Builtin, "cd"), (Text, test_dir)])
+    check_token(f"cd {test_dir}", [(Name.Builtin, "cd"), (Text, test_dir)])
 
 
 @skip_if_on_windows

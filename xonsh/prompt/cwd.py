@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """CWD related prompt formatter"""
 
 import os

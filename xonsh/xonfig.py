@@ -193,11 +193,11 @@ def _dump_xonfig_env(path, value):
     detyper = XSH.env.get_detyper(name)
     dval = str(value) if detyper is None else detyper(value)
     dval = str(value) if dval is None else dval
-    return "${name} = {val!r}".format(name=name, val=dval)
+    return f"${name} = {dval!r}"
 
 
 def _dump_xonfig_xontribs(path, value):
-    return "xontrib load {0}".format(" ".join(value))
+    return "xontrib load {}".format(" ".join(value))
 
 
 @lazyobject
@@ -666,7 +666,7 @@ def _colors(
 
     if style is not None:
         if style not in color_style_names():
-            print("Invalid style: {}".format(style))
+            print(f"Invalid style: {style}")
             return
         XSH.env["XONSH_COLOR_STYLE"] = style
 
@@ -752,7 +752,7 @@ def _jupyter_kernel(
         old_jup_kernel = ksm.get_kernel_spec(XONSH_JUPYTER_KERNEL)
         if not old_jup_kernel.resource_dir.startswith(prefix):
             print(
-                "Removing existing Jupyter kernel found at {0}".format(
+                "Removing existing Jupyter kernel found at {}".format(
                     old_jup_kernel.resource_dir
                 )
             )
@@ -771,13 +771,13 @@ def _jupyter_kernel(
             json.dump(spec, f, sort_keys=True)
 
         print("Installing Jupyter kernel spec:")
-        print("  root: {0!r}".format(root))
+        print(f"  root: {root!r}")
         if user:
-            print("  as user: {0}".format(user))
+            print(f"  as user: {user}")
         elif root and prefix:
-            print("  combined prefix {0!r}".format(prefix))
+            print(f"  combined prefix {prefix!r}")
         else:
-            print("  prefix: {0!r}".format(prefix))
+            print(f"  prefix: {prefix!r}")
         ksm.install_kernel_spec(
             d, XONSH_JUPYTER_KERNEL, user=user, prefix=(None if user else prefix)
         )

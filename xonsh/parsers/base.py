@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
 import os
 import re
@@ -27,7 +26,7 @@ RE_STRINGPREFIX = LazyObject(
 )
 
 
-class Location(object):
+class Location:
     """Location in a file."""
 
     def __init__(self, fname, lineno, column=None):
@@ -37,9 +36,9 @@ class Location(object):
         self.column = column
 
     def __str__(self):
-        s = "{0}:{1}".format(self.fname, self.lineno)
+        s = f"{self.fname}:{self.lineno}"
         if self.column is not None:
-            s += ":{0}".format(self.column)
+            s += f":{self.column}"
         return s
 
 
@@ -233,7 +232,7 @@ def raise_parse_error(
             err_line_pointer = "\n{}\n{: >{}}".format(err_line, "^", col)
         else:
             err_line_pointer = ""
-    err = SyntaxError("{0}: {1}{2}".format(loc, msg, err_line_pointer))
+    err = SyntaxError(f"{loc}: {msg}{err_line_pointer}")
     err.loc = loc  # type: ignore
     raise err
 
@@ -252,7 +251,7 @@ class YaccLoader(Thread):
         self.parser.parser = yacc.yacc(**self.yacc_kwargs)
 
 
-class BaseParser(object):
+class BaseParser:
     """A base class that parses the xonsh language."""
 
     def __init__(
@@ -579,9 +578,9 @@ class BaseParser(object):
             elif t is not None and t.type == uprule:
                 p[0] = t
             else:
-                raise TypeError("token for {0!r} not found.".format(rulename))
+                raise TypeError(f"token for {rulename!r} not found.")
 
-        tokfunc.__doc__ = "{0}_tok : {1}".format(rulename, rulename.upper())
+        tokfunc.__doc__ = f"{rulename}_tok : {rulename.upper()}"
         tokfunc.__name__ = "p_" + rulename + "_tok"
         setattr(self.__class__, tokfunc.__name__, tokfunc)
 
@@ -1204,7 +1203,7 @@ class BaseParser(object):
         op = self._augassign_op[p2]
         if op is None:
             self._set_error(
-                "operation {0!r} not supported".format(p2),
+                f"operation {p2!r} not supported",
                 self.currloc(lineno=p.lineno, column=p.lexpos),
             )
         p[0] = ast.AugAssign(
@@ -2152,7 +2151,7 @@ class BaseParser(object):
         op = self._term_binops[p1.value]
         if op is None:
             self._set_error(
-                "operation {0!r} not supported".format(p1),
+                f"operation {p1!r} not supported",
                 self.currloc(lineno=p.lineno, column=p.lexpos),
             )
         p[0] = [op(lineno=p1.lineno, col_offset=p1.lexpos), p[2]]
@@ -3398,7 +3397,7 @@ class BaseParser(object):
             "ATDOLLAR_LPAREN",
             "AMPERSAND",
         }
-        ts = "\n                 | ".join(sorted([t.lower() + "_tok" for t in toks]))
+        ts = "\n                 | ".join(sorted(t.lower() + "_tok" for t in toks))
         doc = "subproc_arg_part : " + ts + "\n"
         self.p_subproc_arg_part.__func__.__doc__ = doc
 
@@ -3455,5 +3454,5 @@ class BaseParser(object):
                     p.value, self.currloc(lineno=p.lineno, column=p.lexpos)
                 )
         else:
-            msg = ("code: {0}".format(p.value),)
+            msg = (f"code: {p.value}",)
             self._parse_error(msg, self.currloc(lineno=p.lineno, column=p.lexpos))

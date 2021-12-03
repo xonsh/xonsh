@@ -23,7 +23,7 @@ def _ret_code():
     if XSH.history.rtns:
         return_code = XSH.history.rtns[-1]
         if return_code != 0:
-            return "[{}]".format(return_code)
+            return f"[{return_code}]"
     return None
 
 

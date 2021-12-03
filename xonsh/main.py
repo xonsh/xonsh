@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The main xonsh script."""
 import os
 import sys
@@ -115,7 +114,7 @@ def path_argument(s):
 
     s = os.path.abspath(os.path.expanduser(s))
     if not os.path.exists(s):
-        msg = "{0!r} must be a valid path to a file or directory".format(s)
+        msg = f"{s!r} must be a valid path to a file or directory"
         raise argparse.ArgumentTypeError(msg)
     return s
 
@@ -422,7 +421,7 @@ def _failback_to_other_shells(args, err):
     if foreign_shell:
         traceback.print_exc()
         print("Xonsh encountered an issue during launch", file=sys.stderr)
-        print("Failback to {}".format(foreign_shell), file=sys.stderr)
+        print(f"Failback to {foreign_shell}", file=sys.stderr)
         os.execlp(foreign_shell, foreign_shell)
     else:
         raise err
@@ -494,7 +493,7 @@ def main_xonsh(args):
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
             else:
-                print("xonsh: {0}: No such file or directory.".format(args.file))
+                print(f"xonsh: {args.file}: No such file or directory.")
                 exit_code = 1
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin

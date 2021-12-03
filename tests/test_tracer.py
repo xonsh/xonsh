@@ -15,5 +15,5 @@ def test_tracer_help(capsys, xsh_with_aliases):
     pat = re.compile(r"^usage:\s*trace[^\n]*{([\w,-]+)}", re.MULTILINE)
     m = pat.match(capout)
     assert m[1]
-    verbs = set(v.strip().lower() for v in m[1].split(","))
+    verbs = {v.strip().lower() for v in m[1].split(",")}
     assert verbs == {"rm", "start", "add", "on", "off", "del", "color", "stop", "ls"}

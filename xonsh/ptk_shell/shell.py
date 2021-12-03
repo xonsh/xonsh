@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
 import os
 import re

@@ -14,7 +14,7 @@ import typing as tp
 __version__ = "0.1.3"
 
 
-class LazyObject(object):
+class LazyObject:
     def __init__(self, load, ctx, name):
         """Lazily loads an object via the load function the first time an
         attribute is accessed. Once loaded it will replace itself in the
@@ -200,7 +200,7 @@ def lazydict(f):
     return LazyDict(f, f.__globals__, f.__name__)
 
 
-class LazyBool(object):
+class LazyBool:
     def __init__(self, load, ctx, name):
         """Boolean like object that lazily computes it boolean value when it is
         first asked. Once loaded, this result will replace itself

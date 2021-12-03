@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 import os
 

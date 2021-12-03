@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests foreign shells."""
-from __future__ import unicode_literals, print_function
 import os
 import subprocess
 
@@ -89,7 +87,7 @@ def test_foreign_bash_data():
 def test_foreign_cmd_data():
     env = (("ENV_TO_BE_REMOVED", "test"),)
     batchfile = os.path.join(os.path.dirname(__file__), "batch.bat")
-    source_cmd = 'call "{}"\necho off'.format(batchfile)
+    source_cmd = f'call "{batchfile}"\necho off'
     try:
         obsenv, _ = foreign_shell_data(
             "cmd",

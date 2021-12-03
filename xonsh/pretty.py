@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python advanced pretty printer.  This pretty printer is intended to
 replace the old `pprint` python module which does not allow developers
@@ -146,7 +145,7 @@ def pretty_print(
     sys.stdout.flush()
 
 
-class _PrettyPrinterBase(object):
+class _PrettyPrinterBase:
     @contextlib.contextmanager
     def indent(self, indent):
         """with statement support for indenting/dedenting."""
@@ -421,7 +420,7 @@ class RepresentationPrinter(PrettyPrinter):
         return printer
 
 
-class Printable(object):
+class Printable:
     def output(self, stream, output_width):
         return output_width
 
@@ -469,7 +468,7 @@ class Group(Printable):
         self.want_break = False
 
 
-class GroupQueue(object):
+class GroupQueue:
     def __init__(self, *groups):
         self.queue = []
         for group in groups:
@@ -753,7 +752,7 @@ def _exception_pprint(obj, p, cycle):
     """Base pprint for all exceptions."""
     name = getattr(obj.__class__, "__qualname__", obj.__class__.__name__)
     if obj.__class__.__module__ not in ("exceptions", "builtins"):
-        name = "%s.%s" % (obj.__class__.__module__, name)
+        name = f"{obj.__class__.__module__}.{name}"
     step = len(name) + 1
     p.begin_group(step, name + "(")
     for idx, arg in enumerate(getattr(obj, "args", ())):

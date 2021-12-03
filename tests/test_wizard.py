@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
-from __future__ import unicode_literals, print_function
 import os
 
 import pytest  # noqa F401
@@ -69,7 +67,7 @@ def test_state_visitor_store():
 
 def dump_xonfig_env_mock(path, value):
     name = os.path.basename(path.rstrip("/"))
-    return "${name} = {val!r}".format(name=name, val=value)
+    return f"${name} = {value!r}"
 
 
 def test_tuple_store_and_write():

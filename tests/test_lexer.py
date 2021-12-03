@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
-from __future__ import unicode_literals, print_function
 import os
 import sys
 from collections.abc import Sequence
@@ -28,7 +26,7 @@ def ensure_tuple(x):
     elif isinstance(x, Sequence):
         x = tuple(x)
     else:
-        raise TypeError("{0} is not a sequence".format(x))
+        raise TypeError(f"{x} is not a sequence")
     return x
 
 
@@ -42,7 +40,7 @@ def tokens_equal(x, y):
 def assert_token_equal(x, y):
     """Asserts that two tokens are equal."""
     if not tokens_equal(x, y):
-        msg = "The tokens differ: {0!r} != {1!r}".format(x, y)
+        msg = f"The tokens differ: {x!r} != {y!r}"
         pytest.fail(msg)
     return True
 
@@ -84,7 +82,7 @@ def check_tokens(inp, exp):
 
 
 def check_tokens_subproc(inp, exp, stop=-1):
-    obs = lex_input("$[{}]".format(inp))[1:stop]
+    obs = lex_input(f"$[{inp}]")[1:stop]
     return assert_tokens_equal(exp, obs)
 
 
@@ -395,7 +393,7 @@ def test_path_fstring_literal():
 def test_regex_globs():
     for i in (".*", r"\d*", ".*#{1,2}"):
         for p in ("", "r", "g", "@somethingelse", "p", "pg"):
-            c = "{}`{}`".format(p, i)
+            c = f"{p}`{i}`"
             assert check_token(c, ["SEARCHPATH", c, 0])
 
 
@@ -427,7 +425,7 @@ def test_ioredir(case):
 
 @pytest.mark.parametrize("case", [">", ">>", "<", "e>", "> ", ">>   ", "<  ", "e> "])
 def test_redir_whitespace(case):
-    inp = "![{}/path/to/file]".format(case)
+    inp = f"![{case}/path/to/file]"
     obs = lex_input(inp)
     assert obs[2].type == "WS"
 

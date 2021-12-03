@@ -28,7 +28,7 @@ def _print_duplicate_message(duplicates):
     import sys
 
     for filename, vals in sorted(duplicates.items()):
-        msg = "for {0} ambiquity between:\n  ".format(filename)
+        msg = f"for {filename} ambiquity between:\n  "
         vals = [m + ":" + c for m, c in vals]
         msg += "\n  ".join(sorted(vals))
         print(msg, file=sys.stderr)

@@ -33,15 +33,15 @@ def bash_preproc(cmd, **kw):
             try:
                 return bang_previous[arg](inputs[-1])
             except IndexError:
-                print("xonsh: no history for '!{}'".format(arg))
+                print(f"xonsh: no history for '!{arg}'")
                 return ""
 
         # Look back in history for a matching command.
         else:
             try:
-                return next((x for x in reversed(inputs) if x.startswith(arg)))
+                return next(x for x in reversed(inputs) if x.startswith(arg))
             except StopIteration:
-                print("xonsh: no previous commands match '!{}'".format(arg))
+                print(f"xonsh: no previous commands match '!{arg}'")
                 return ""
 
     return re.sub(r"!([!$^*]|[\w]+)", replace_bang, cmd)
@@ -58,13 +58,13 @@ def alias(args, stdin=None):
                 name, cmd = shlex.split(arg)[0].split("=", 1)
                 XSH.aliases[name] = shlex.split(cmd)
             elif arg in XSH.aliases:
-                print("{}={}".format(arg, XSH.aliases[arg]))
+                print(f"{arg}={XSH.aliases[arg]}")
             else:
-                print("alias: {}: not found".format(arg), file=sys.stderr)
+                print(f"alias: {arg}: not found", file=sys.stderr)
                 ret = 1
     else:
         for alias, cmd in XSH.aliases.items():
-            print("{}={}".format(alias, cmd))
+            print(f"{alias}={cmd}")
 
     return ret
 

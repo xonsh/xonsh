@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Directory stack and associated utilities for the xonsh shell.
 https://www.gnu.org/software/bash/manual/html_node/Directory-Stack-Builtins.html
 """
@@ -221,11 +220,11 @@ def cd(args, stdin=None):
                 try:
                     num = int(d[1:])
                 except ValueError:
-                    return "", "cd: Invalid destination: {0}\n".format(d), 1
+                    return "", f"cd: Invalid destination: {d}\n", 1
                 if num == 0:
                     return None, None, 0
                 elif num < 0:
-                    return "", "cd: Invalid destination: {0}\n".format(d), 1
+                    return "", f"cd: Invalid destination: {d}\n", 1
                 elif num > len(DIRSTACK):
                     e = "cd: Too few elements in dirstack ({0} elements)\n"
                     return "", e.format(len(DIRSTACK)), 1
@@ -237,18 +236,18 @@ def cd(args, stdin=None):
         return (
             "",
             (
-                "cd takes 0 or 1 arguments, not {0}. An additional `-P` "
+                "cd takes 0 or 1 arguments, not {}. An additional `-P` "
                 "flag can be passed in first position to follow symlinks."
                 "\n".format(len(args))
             ),
             1,
         )
     if not os.path.exists(d):
-        return "", "cd: no such file or directory: {0}\n".format(d), 1
+        return "", f"cd: no such file or directory: {d}\n", 1
     if not os.path.isdir(d):
-        return "", "cd: {0} is not a directory\n".format(d), 1
+        return "", f"cd: {d} is not a directory\n", 1
     if not os.access(d, os.X_OK):
-        return "", "cd: permission denied: {0}\n".format(d), 1
+        return "", f"cd: permission denied: {d}\n", 1
     if (
         ON_WINDOWS
         and _is_unc_path(d)
@@ -511,7 +510,7 @@ def dirs_fn(
         pad = len(str(len(o) - 1))
         for (ix, e) in enumerate(o):
             blanks = " " * (pad - len(str(ix)))
-            out += "\n{0}{1} {2}".format(blanks, ix, e)
+            out += f"\n{blanks}{ix} {e}"
         out = out[1:]
     elif print_long:
         out = "\n".join(o)

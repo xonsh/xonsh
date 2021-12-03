@@ -701,7 +701,7 @@ def test_subshells(cmd, fmt, exp):
 @pytest.mark.parametrize("cmd, exp", [("pwd", lambda: os.getcwd() + "\n")])
 def test_redirect_out_to_file(cmd, exp, tmpdir):
     outfile = tmpdir.mkdir("xonsh_test_dir").join("xonsh_test_file")
-    command = "{} > {}\n".format(cmd, outfile)
+    command = f"{cmd} > {outfile}\n"
     out, _, _ = run_xonsh(command)
     content = outfile.read()
     if callable(exp):

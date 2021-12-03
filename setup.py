@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: ascii -*-
 """The xonsh installer."""
 # Note: Do not embed any non-ASCII characters in this file until pip has been
 # fixed. See https://github.com/xonsh/xonsh/issues/487.
@@ -111,7 +110,7 @@ def dirty_version():
         _date = ""
         print("failed to get commit date", file=sys.stderr)
     with open("xonsh/dev.githash", "w") as f:
-        f.write("{}|{}".format(sha, _date))
+        f.write(f"{sha}|{_date}")
     print("wrote git version: " + sha, file=sys.stderr)
     return True
 
@@ -122,13 +121,13 @@ ORIGINAL_VERSION_LINE = None
 def replace_version(N):
     """Replace version in `__init__.py` with devN suffix"""
     global ORIGINAL_VERSION_LINE
-    with open("xonsh/__init__.py", "r") as f:
+    with open("xonsh/__init__.py") as f:
         raw = f.read()
     lines = raw.splitlines()
     msg_assert = "__version__ must be the first line of the __init__.py"
     assert "__version__" in lines[0], msg_assert
     ORIGINAL_VERSION_LINE = lines[0]
-    lines[0] = lines[0].rstrip(' "') + '.dev{}"'.format(N)
+    lines[0] = lines[0].rstrip(' "') + f'.dev{N}"'
     upd = "\n".join(lines) + "\n"
     with open("xonsh/__init__.py", "w") as f:
         f.write(upd)
@@ -138,7 +137,7 @@ def restore_version():
     """If we touch the version in __init__.py discard changes after install."""
     if ORIGINAL_VERSION_LINE is None:
         return
-    with open("xonsh/__init__.py", "r") as f:
+    with open("xonsh/__init__.py") as f:
         raw = f.read()
     lines = raw.splitlines()
     lines[0] = ORIGINAL_VERSION_LINE
@@ -225,12 +224,10 @@ class install_scripts_rewrite(install_scripts):
                     bs_cmd = self.get_finalized_command("build_scripts")
                     exec_param = getattr(bs_cmd, "executable", None)
 
-                    with open(file, "r") as f:
+                    with open(file) as f:
                         content = f.read()
 
-                    processed = content.replace(
-                        " python3 ", ' "{}" '.format(exec_param)
-                    )
+                    processed = content.replace(" python3 ", f' "{exec_param}" ')
 
                     with open(file, "w") as f:
                         f.write(processed)
@@ -262,9 +259,7 @@ class xdevelop(develop):
     def install_script(self, dist, script_name, script_text, dev_path=None):
         if script_name == "xon.sh":
             # change default python3 to the concrete python binary used to install/develop inside xon.sh script
-            script_text = script_text.replace(
-                " python3 ", ' "{}" '.format(sys.executable)
-            )
+            script_text = script_text.replace(" python3 ", f' "{sys.executable}" ')
         super().install_script(dist, script_name, script_text, dev_path)
 
 
@@ -278,7 +273,7 @@ def main():
             print(logo)
     except UnicodeEncodeError:
         pass
-    with open(os.path.join(os.path.dirname(__file__), "README.rst"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "README.rst")) as f:
         readme = f.read()
     scripts = ["scripts/xon.sh"]
     skw = dict(

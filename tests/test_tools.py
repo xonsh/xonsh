@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests xonsh tools."""
 import datetime as dt
 import os
@@ -128,49 +127,49 @@ def test_subproc_toks_ls_l():
 
 def test_subproc_toks_git():
     s = 'git commit -am "hello doc"'
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_git_semi():
     s = 'git commit -am "hello doc"'
-    exp = "![{0}];".format(s)
+    exp = f"![{s}];"
     obs = subproc_toks(s + ";", lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_git_nl():
     s = 'git commit -am "hello doc"'
-    exp = "![{0}]\n".format(s)
+    exp = f"![{s}]\n"
     obs = subproc_toks(s + "\n", lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_bash_macro():
     s = "bash -c ! export var=42; echo $var"
-    exp = "![{0}]\n".format(s)
+    exp = f"![{s}]\n"
     obs = subproc_toks(s + "\n", lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_python_macro():
     s = 'python -c ! import os; print(os.path.abspath("/"))'
-    exp = "![{0}]\n".format(s)
+    exp = f"![{s}]\n"
     obs = subproc_toks(s + "\n", lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_indent_ls():
     s = "ls -l"
-    exp = INDENT + "![{0}]".format(s)
+    exp = INDENT + f"![{s}]"
     obs = subproc_toks(INDENT + s, mincol=len(INDENT), lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_indent_ls_nl():
     s = "ls -l"
-    exp = INDENT + "![{0}]\n".format(s)
+    exp = INDENT + f"![{s}]\n"
     obs = subproc_toks(
         INDENT + s + "\n", mincol=len(INDENT), lexer=LEXER, returnline=True
     )
@@ -179,28 +178,28 @@ def test_subproc_toks_indent_ls_nl():
 
 def test_subproc_toks_indent_ls_no_min():
     s = "ls -l"
-    exp = INDENT + "![{0}]".format(s)
+    exp = INDENT + f"![{s}]"
     obs = subproc_toks(INDENT + s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_indent_ls_no_min_nl():
     s = "ls -l"
-    exp = INDENT + "![{0}]\n".format(s)
+    exp = INDENT + f"![{s}]\n"
     obs = subproc_toks(INDENT + s + "\n", lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_indent_ls_no_min_semi():
     s = "ls"
-    exp = INDENT + "![{0}];".format(s)
+    exp = INDENT + f"![{s}];"
     obs = subproc_toks(INDENT + s + ";", lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_indent_ls_no_min_semi_nl():
     s = "ls"
-    exp = INDENT + "![{0}];\n".format(s)
+    exp = INDENT + f"![{s}];\n"
     obs = subproc_toks(INDENT + s + ";\n", lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -208,7 +207,7 @@ def test_subproc_toks_indent_ls_no_min_semi_nl():
 def test_subproc_toks_ls_comment():
     s = "ls -l"
     com = "  # lets list"
-    exp = "![{0}]{1}".format(s, com)
+    exp = f"![{s}]{com}"
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -216,7 +215,7 @@ def test_subproc_toks_ls_comment():
 def test_subproc_toks_ls_42_comment():
     s = "ls 42"
     com = "  # lets list"
-    exp = "![{0}]{1}".format(s, com)
+    exp = f"![{s}]{com}"
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -224,7 +223,7 @@ def test_subproc_toks_ls_42_comment():
 def test_subproc_toks_ls_str_comment():
     s = 'ls "wakka"'
     com = "  # lets list"
-    exp = "![{0}]{1}".format(s, com)
+    exp = f"![{s}]{com}"
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -233,7 +232,7 @@ def test_subproc_toks_indent_ls_comment():
     ind = "    "
     s = "ls -l"
     com = "  # lets list"
-    exp = "{0}![{1}]{2}".format(ind, s, com)
+    exp = f"{ind}![{s}]{com}"
     obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -242,7 +241,7 @@ def test_subproc_toks_indent_ls_str():
     ind = "    "
     s = 'ls "wakka"'
     com = "  # lets list"
-    exp = "{0}![{1}]{2}".format(ind, s, com)
+    exp = f"{ind}![{s}]{com}"
     obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -250,8 +249,8 @@ def test_subproc_toks_indent_ls_str():
 def test_subproc_toks_ls_l_semi_ls_first():
     lsdl = "ls -l"
     ls = "ls"
-    s = "{0}; {1}".format(lsdl, ls)
-    exp = "![{0}]; {1}".format(lsdl, ls)
+    s = f"{lsdl}; {ls}"
+    exp = f"![{lsdl}]; {ls}"
     obs = subproc_toks(s, lexer=LEXER, maxcol=6, returnline=True)
     assert exp == obs
 
@@ -259,8 +258,8 @@ def test_subproc_toks_ls_l_semi_ls_first():
 def test_subproc_toks_ls_l_semi_ls_second():
     lsdl = "ls -l"
     ls = "ls"
-    s = "{0}; {1}".format(lsdl, ls)
-    exp = "{0}; ![{1}]".format(lsdl, ls)
+    s = f"{lsdl}; {ls}"
+    exp = f"{lsdl}; ![{ls}]"
     obs = subproc_toks(s, lexer=LEXER, mincol=7, returnline=True)
     assert exp == obs
 
@@ -268,8 +267,8 @@ def test_subproc_toks_ls_l_semi_ls_second():
 def test_subproc_toks_hello_mom_first():
     fst = "echo 'hello'"
     sec = "echo 'mom'"
-    s = "{0}; {1}".format(fst, sec)
-    exp = "![{0}]; {1}".format(fst, sec)
+    s = f"{fst}; {sec}"
+    exp = f"![{fst}]; {sec}"
     obs = subproc_toks(s, lexer=LEXER, maxcol=len(fst) + 1, returnline=True)
     assert exp == obs
 
@@ -277,8 +276,8 @@ def test_subproc_toks_hello_mom_first():
 def test_subproc_toks_hello_mom_second():
     fst = "echo 'hello'"
     sec = "echo 'mom'"
-    s = "{0}; {1}".format(fst, sec)
-    exp = "{0}; ![{1}]".format(fst, sec)
+    s = f"{fst}; {sec}"
+    exp = f"{fst}; ![{sec}]"
     obs = subproc_toks(s, lexer=LEXER, mincol=len(fst), returnline=True)
     assert exp == obs
 
@@ -305,7 +304,7 @@ def test_subproc_toks_hello_bad_trailing_triple_quotes():
 
 def test_subproc_toks_hello_mom_triple_quotes_nl():
     s = 'echo """hello\nmom"""'
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -360,44 +359,44 @@ def test_subproc_toks_semicolon_only():
 
 def test_subproc_toks_pyeval():
     s = "echo @(1+1)"
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_pyeval_multiline_string():
     s = 'echo @("""hello\nmom""")'
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_twopyeval():
     s = "echo @(1+1) @(40 + 2)"
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_pyeval_parens():
     s = "echo @(1+1)"
-    inp = "({0})".format(s)
-    exp = "(![{0}])".format(s)
+    inp = f"({s})"
+    exp = f"(![{s}])"
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_twopyeval_parens():
     s = "echo @(1+1) @(40+2)"
-    inp = "({0})".format(s)
-    exp = "(![{0}])".format(s)
+    inp = f"({s})"
+    exp = f"(![{s}])"
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_pyeval_nested():
     s = "echo @(min(1, 42))"
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
@@ -423,65 +422,65 @@ def test_subproc_toks_pyeval_nested():
 )
 def test_subproc_toks_and_or(phrase):
     s = "echo " + phrase
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_pyeval_nested_parens():
     s = "echo @(min(1, 42))"
-    inp = "({0})".format(s)
-    exp = "(![{0}])".format(s)
+    inp = f"({s})"
+    exp = f"(![{s}])"
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_capstdout():
     s = "echo $(echo bat)"
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_capproc():
     s = "echo !(echo bat)"
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_pyeval_redirect():
     s = 'echo @("foo") > bar'
-    inp = "{0}".format(s)
-    exp = "![{0}]".format(s)
+    inp = f"{s}"
+    exp = f"![{s}]"
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
     assert exp == obs
 
 
 def test_subproc_toks_greedy_parens():
     s = "(sort)"
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
     assert exp == obs
 
 
 def test_subproc_toks_greedy_parens_inp():
     s = "(sort) < input.txt"
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
     assert exp == obs
 
 
 def test_subproc_toks_greedy_parens_statements():
     s = '(echo "abc"; sleep 1; echo "def")'
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
     assert exp == obs
 
 
 def test_subproc_toks_greedy_parens_statements_with_grep():
     s = '(echo "abc"; sleep 1; echo "def") | grep'
-    exp = "![{0}]".format(s)
+    exp = f"![{s}]"
     obs = subproc_toks(s, lexer=LEXER, returnline=True, greedy=True)
     assert exp == obs
 
@@ -1572,7 +1571,7 @@ def test_executables_in(xession):
     with TemporaryDirectory() as test_path:
         for _type in types:
             for executable in executables:
-                fname = "%s_%s" % (_type, executable)
+                fname = f"{_type}_{executable}"
                 if _type == "none":
                     continue
                 if _type == "file" and executable:

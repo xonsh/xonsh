@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tools for inspecting Python objects.
 
 This file was forked from the IPython project:
@@ -104,7 +103,7 @@ def get_encoding(obj):
         # Print only text files, not extension binaries.  Note that
         # getsourcelines returns lineno with 1-offset and page() uses
         # 0-offset, so we must adjust.
-        with io.open(ofile, "rb") as buf:  # Tweaked to use io.open for Python 2
+        with open(ofile, "rb") as buf:  # Tweaked to use io.open for Python 2
             encoding, _ = detect_encoding(buf.readline)
         return encoding
 
@@ -325,7 +324,7 @@ def find_source_lines(obj):
     return lineno
 
 
-class Inspector(object):
+class Inspector:
     """Inspects objects."""
 
     def __init__(self, str_detail_level=0):
@@ -604,7 +603,7 @@ class Inspector(object):
         if isalias:
             if not callable(obj):
                 if len(obj) >= 2 and isinstance(obj[1], str):
-                    ds = "Alias to the system command:\n  {0}".format(obj[1])
+                    ds = f"Alias to the system command:\n  {obj[1]}"
                 else:
                     ds = "Alias: " + str(obj)
             else:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Base prompt, provides PROMPT_FIELDS and prompt related functions"""
 
 import itertools
@@ -146,7 +145,7 @@ class PromptFormatter:
         except Exception:
             print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
-            value = "{{BACKGROUND_RED}}{{ERROR:{}}}{{RESET}}".format(field)
+            value = f"{{BACKGROUND_RED}}{{ERROR:{field}}}{{RESET}}"
         return value
 
 
@@ -267,7 +266,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
     """Returns whether or not the string is a valid template."""
     template = template() if callable(template) else template
     try:
-        included_names = set(i[1] for i in xt.FORMATTER.parse(template))
+        included_names = {i[1] for i in xt.FORMATTER.parse(template)}
     except ValueError:
         return False
     included_names.discard(None)

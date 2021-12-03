@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
-from __future__ import unicode_literals, print_function
 import os
 import sys
 import ast
@@ -200,27 +198,29 @@ def check_parse(input):
 
 def nodes_equal(x, y):
     __tracebackhide__ = True
-    assert type(x) == type(y), "Ast nodes do not have the same type: '%s' != '%s' " % (
+    assert type(x) == type(
+        y
+    ), "Ast nodes do not have the same type: '{}' != '{}' ".format(
         type(x),
         type(y),
     )
     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
         assert (
             x.lineno == y.lineno
-        ), "Ast nodes do not have the same line number : %s != %s" % (
+        ), "Ast nodes do not have the same line number : {} != {}".format(
             x.lineno,
             y.lineno,
         )
         assert (
             x.col_offset == y.col_offset
-        ), "Ast nodes do not have the same column offset number : %s != %s" % (
+        ), "Ast nodes do not have the same column offset number : {} != {}".format(
             x.col_offset,
             y.col_offset,
         )
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x), ast.iter_fields(y)):
         assert (
             xname == yname
-        ), "Ast nodes fields differ : %s (of type %s) != %s (of type %s)" % (
+        ), "Ast nodes fields differ : {} (of type {}) != {} (of type {})".format(
             xname,
             type(xval),
             yname,
@@ -228,7 +228,7 @@ def nodes_equal(x, y):
         )
         assert type(xval) == type(
             yval
-        ), "Ast nodes fields differ : %s (of type %s) != %s (of type %s)" % (
+        ), "Ast nodes fields differ : {} (of type {}) != {} (of type {})".format(
             xname,
             type(xval),
             yname,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Completer implementation to use with prompt_toolkit."""
 import os
 
