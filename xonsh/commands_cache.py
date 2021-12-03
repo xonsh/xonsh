@@ -98,7 +98,7 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isdir(p):
                     yield p
 
-    def _update_if_changed(self, paths: tp.Tuple[str, ...], aliases):
+    def _check_changes(self, paths: tp.Tuple[str, ...], aliases):
         # did PATH change?
         path_hash = hash(paths)
         yield path_hash == self._path_checksum
@@ -120,20 +120,20 @@ class CommandsCache(cabc.Mapping):
         return self._cmds_cache
 
     def update_cache(self):
-        env = XSH.env
-        path = [] if env is None else XSH.env.get("PATH", [])
-        path_immut = tuple(CommandsCache.remove_dups(path))
+        env = XSH.env or {}
+        paths = tuple(CommandsCache.remove_dups(env.get("PATH") or []))
 
         # in case it is empty or unset
         alss = {} if XSH.aliases is None else XSH.aliases
 
         (
-            has_path_changed,
-            has_alias_changed,
-            has_any_path_updated,
-        ) = tuple(self._update_if_changed(path_immut, alss))
-        if has_path_changed and has_any_path_updated:
-            if not has_alias_changed:
+            no_new_paths,
+            no_new_alias,
+            no_new_bins,
+        ) = tuple(self._check_changes(paths, alss))
+
+        if no_new_paths and no_new_bins:
+            if not no_new_alias:  # only aliases have changed
                 for cmd, alias in alss.items():
                     key = cmd.upper() if ON_WINDOWS else cmd
                     if key in self._cmds_cache:
@@ -153,12 +153,13 @@ class CommandsCache(cabc.Mapping):
             # also start a thread that updates the cache in the bg
             worker = threading.Thread(
                 target=self._update_cmds_cache,
-                args=[path_immut, alss],
+                args=[paths, alss],
                 daemon=True,
             )
             worker.start()
         else:
-            self._update_cmds_cache(path_immut, alss)
+            self._update_cmds_cache(paths, alss)
+        return self._cmds_cache
 
     def _update_cmds_cache(
         self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
@@ -201,6 +202,7 @@ class CommandsCache(cabc.Mapping):
         if self.cache_file:
             self.cache_file.write_bytes(pickle.dumps(allcmds))
         self._cmds_cache = allcmds
+        print(len(self._cmds_cache), "set from 1")
         return allcmds
 
     def cached_name(self, name):
