@@ -434,7 +434,7 @@ class Vox(collections.abc.Mapping):
 
 def _get_vox_default_interpreter():
     """Return the interpreter set by the $VOX_DEFAULT_INTERPRETER if set else sys.executable"""
-    default = "python"
+    default = "python3"
     if default in XSH.commands_cache:
         default = XSH.commands_cache.locate_binary(default)
     else:
