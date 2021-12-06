@@ -105,7 +105,7 @@ def default_env():
 
 
 @pytest.fixture
-def env():
+def env(tmpdir):
     from xonsh.environ import Env
 
     initial_vars = {
@@ -116,6 +116,8 @@ def env():
         "XONSH_ENCODING": "utf-8",
         "XONSH_ENCODING_ERRORS": "strict",
         "COMMANDS_CACHE_SAVE_INTERMEDIATE": False,
+        "XONSH_DATA_DIR": str(tmpdir),
+        # "PATH": default_env["PATH"],
     }
     env = Env(initial_vars)
     return env
@@ -124,7 +126,11 @@ def env():
 @pytest.fixture
 def xonsh_session(xonsh_events, session_vars, default_env) -> XonshSession:
     """a fixture to use where XonshSession is fully loaded without any mocks"""
-    XSH.load(ctx={}, **session_vars, env=default_env)
+    XSH.load(
+        ctx={},
+        **session_vars,
+        env=default_env,
+    )
     yield XSH
     XSH.unload()
     tasks.clear()  # must to this to enable resetting all_jobs
@@ -173,6 +179,10 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             if attr in attrs:
                 continue
             monkeypatch.setattr(xonsh_session, attr, val)
+
+        monkeypatch.setattr(
+            xonsh_session, "commands_cache", commands_cache.CommandsCache()
+        ),
 
         cc = xonsh_session.commands_cache
         monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))

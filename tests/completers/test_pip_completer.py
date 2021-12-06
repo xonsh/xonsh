@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from tests.tools import ON_WINDOWS
@@ -46,6 +48,9 @@ def test_pip_list_re1(line):
     ],
 )
 def test_completions(line, prefix, exp, check_completer, xession):
+    # use the actual PATH
+    xession.env["PATH"] = os.environ["PATH"]
+
     if ON_WINDOWS:
         line = line.replace("pip", "pip.exe")
     comps = check_completer(line, prefix=prefix)
