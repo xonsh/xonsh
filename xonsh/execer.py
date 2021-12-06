@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
 import sys
 import types
@@ -20,7 +19,7 @@ from xonsh.tools import (
 from xonsh.built_ins import XSH
 
 
-class Execer(object):
+class Execer:
     """Executes xonsh code in a context."""
 
     def __init__(

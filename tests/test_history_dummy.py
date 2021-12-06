@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests the dummy history backend."""
 # pylint: disable=protected-access
 

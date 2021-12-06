@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Import hooks for importing xonsh source files.
 
 This module registers the hooks it defines when it is imported.
@@ -51,7 +50,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
     """Implements the import hook for xonsh source files."""
 
     def __init__(self, *args, **kwargs):
-        super(XonshImportHook, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._filenames = {}
         self._execer = None
 
@@ -114,7 +113,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         """Gets the code object for a xonsh file."""
         filename = self.get_filename(fullname)
         if filename is None:
-            msg = "xonsh file {0!r} could not be found".format(fullname)
+            msg = f"xonsh file {fullname!r} could not be found"
             raise ImportError(msg)
         src = self.get_source(fullname)
         execer = self.execer

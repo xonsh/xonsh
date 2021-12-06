@@ -77,7 +77,7 @@ def _which_create_parser():
 def print_global_object(arg, stdout):
     """Print the object."""
     obj = XSH.ctx.get(arg)
-    print("global object of {}".format(type(obj)), file=stdout)
+    print(f"global object of {type(obj)}", file=stdout)
 
 
 def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
@@ -109,7 +109,7 @@ def print_alias(arg, stdout, verbose=False):
             print(alias, file=stdout)
     else:
         print(
-            "aliases['{}'] = {}".format(arg, alias),
+            f"aliases['{arg}'] = {alias}",
             flush=True,
             file=stdout,
         )

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the xonsh history backend via sqlite3."""
 import collections
 import json
@@ -90,14 +89,14 @@ ON {XH_SQLITE_TABLE_NAME}(inp);"""
 
 def _xh_sqlite_get_frequency(cursor, input):
     # type: (sqlite3.Cursor, str) -> int
-    sql = "SELECT sum(frequency) FROM {} WHERE inp=?".format(XH_SQLITE_TABLE_NAME)
+    sql = f"SELECT sum(frequency) FROM {XH_SQLITE_TABLE_NAME} WHERE inp=?"
     cursor.execute(sql, (input,))
     return cursor.fetchone()[0] or 0
 
 
 def _xh_sqlite_erase_dups(cursor, input):
     freq = _xh_sqlite_get_frequency(cursor, input)
-    sql = "DELETE FROM {} WHERE inp=?".format(XH_SQLITE_TABLE_NAME)
+    sql = f"DELETE FROM {XH_SQLITE_TABLE_NAME} WHERE inp=?"
     cursor.execute(sql, (input,))
     return freq
 

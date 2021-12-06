@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the xonsh parser for Python v3.6."""
 import xonsh.ast as ast
 from xonsh.parsers.base import store_ctx, lopen_loc, BaseParser

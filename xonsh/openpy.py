@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tools to open ``*.py`` files as Unicode.
 
 Uses the encoding specified within the file, as per PEP 263.
@@ -48,7 +47,7 @@ def source_to_unicode(txt, errors="replace", skip_encoding_cookie=True):
     text = io.TextIOWrapper(buf, encoding, errors=errors, line_buffering=True)
     text.mode = "r"
     if skip_encoding_cookie:
-        return u"".join(strip_encoding_cookie(text))
+        return "".join(strip_encoding_cookie(text))
     else:
         return text.read()
 
@@ -67,8 +66,7 @@ def strip_encoding_cookie(filelike):
             yield second
     except StopIteration:
         return
-    for line in it:
-        yield line
+    yield from it
 
 
 def read_py_file(filename, skip_encoding_cookie=True):

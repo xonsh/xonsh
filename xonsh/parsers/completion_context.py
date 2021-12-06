@@ -748,7 +748,7 @@ class CompletionContextParser:
             raise_parse_error("no further code")
 
         raise_parse_error(
-            "code: {0}".format(p.value),
+            f"code: {p.value}",
             Location("input", p.lineno, p.lexpos - self.line_indices[p.lineno - 1]),
             self.current_input,
             self.current_input.splitlines(keepends=True),

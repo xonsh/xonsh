@@ -329,11 +329,11 @@ _redir_map = (
     "o>2",
     "1>2",
 )
-IORedirect = group(group(*_redir_map), "{}>>?".format(group(*_redir_names)))
+IORedirect = group(group(*_redir_map), f"{group(*_redir_names)}>>?")
 
 _redir_check_0 = set(_redir_map)
-_redir_check_1 = {"{}>".format(i) for i in _redir_names}.union(_redir_check_0)
-_redir_check_2 = {"{}>>".format(i) for i in _redir_names}.union(_redir_check_1)
+_redir_check_1 = {f"{i}>" for i in _redir_names}.union(_redir_check_0)
+_redir_check_2 = {f"{i}>>" for i in _redir_names}.union(_redir_check_1)
 _redir_check = frozenset(_redir_check_2)
 
 Operator = group(
@@ -788,7 +788,7 @@ def detect_encoding(readline):
         except UnicodeDecodeError:
             msg = "invalid or missing encoding declaration"
             if filename is not None:
-                msg = "{} for {!r}".format(msg, filename)
+                msg = f"{msg} for {filename!r}"
             raise SyntaxError(msg)
 
         match = cookie_re.match(line_string)
@@ -802,7 +802,7 @@ def detect_encoding(readline):
             if filename is None:
                 msg = "unknown encoding: " + encoding
             else:
-                msg = "unknown encoding for {!r}: {}".format(filename, encoding)
+                msg = f"unknown encoding for {filename!r}: {encoding}"
             raise SyntaxError(msg)
 
         if bom_found:
@@ -811,7 +811,7 @@ def detect_encoding(readline):
                 if filename is None:
                     msg = "encoding problem: utf-8"
                 else:
-                    msg = "encoding problem for {!r}: utf-8".format(filename)
+                    msg = f"encoding problem for {filename!r}: utf-8"
                 raise SyntaxError(msg)
             encoding += "-sig"
         return encoding
@@ -1177,7 +1177,7 @@ def tokenize_main():
             args = (filename,) + location + (message,)
             perror("%s:%d:%d: error: %s" % args)
         elif filename:
-            perror("%s: error: %s" % (filename, message))
+            perror(f"{filename}: error: {message}")
         else:
             perror("error: %s" % message)
         sys.exit(1)

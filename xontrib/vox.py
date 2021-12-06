@@ -458,9 +458,9 @@ class VoxHandler(xcli.ArgParserAlias):
             .decode()
             .splitlines()
         )
-        pkgs = set(p for p in all_pkgs if len(p.split("==")) == 2)
+        pkgs = {p for p in all_pkgs if len(p.split("==")) == 2}
         ignored = sorted(all_pkgs - pkgs)
-        to_remove = set(p.split("==")[0] for p in pkgs)
+        to_remove = {p.split("==")[0] for p in pkgs}
         if to_remove:
             print("Ignoring:\n %s" % "\n ".join(ignored))
             print("Uninstalling packages:\n %s" % "\n ".join(to_remove))

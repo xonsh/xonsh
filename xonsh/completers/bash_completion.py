@@ -110,7 +110,7 @@ def _get_bash_completions_source(paths=None):
         paths = _BASH_COMPLETIONS_PATHS_DEFAULT
     for path in map(pathlib.Path, paths):
         if path.is_file():
-            return 'source "{}"'.format(path.as_posix())
+            return f'source "{path.as_posix()}"'
     return None
 
 
@@ -292,7 +292,7 @@ def bash_completions(
     opening_quote="",
     closing_quote="",
     arg_index=None,
-    **kwargs
+    **kwargs,
 ):
     """Completes based on results from BASH completion.
 
@@ -418,7 +418,7 @@ def bash_completions(
     if "-o noquote" not in complete_stmt:
         out, need_quotes = quote_paths(out, opening_quote, closing_quote)
     if "-o nospace" in complete_stmt:
-        out = set([x.rstrip() for x in out])
+        out = {x.rstrip() for x in out}
 
     return out, max(len(prefix) - strip_len, 0)
 

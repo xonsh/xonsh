@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tools to help interface with foreign shells, such as Bash."""
 import os
 import re
@@ -385,7 +384,7 @@ def parse_funcs(s, shell, sourcer=None, files=(), extra_args=()):
     return funcs
 
 
-class ForeignShellBaseAlias(object):
+class ForeignShellBaseAlias:
     """This class is responsible for calling foreign shell functions as if
     they were aliases. This does not currently support taking stdin.
     """
@@ -578,9 +577,9 @@ def ensure_shell(shell):
     if "currenv" in shell_keys and not isinstance(shell["currenv"], tuple):
         ce = shell["currenv"]
         if isinstance(ce, cabc.Mapping):
-            ce = tuple([(ensure_string(k), v) for k, v in ce.items()])
+            ce = tuple((ensure_string(k), v) for k, v in ce.items())
         elif isinstance(ce, cabc.Sequence):
-            ce = tuple([(ensure_string(k), v) for k, v in ce])
+            ce = tuple((ensure_string(k), v) for k, v in ce)
         else:
             raise RuntimeError("unrecognized type for currenv")
         shell["currenv"] = ce

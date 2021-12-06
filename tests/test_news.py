@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing that news entries are well formed."""
 import os
 import re
@@ -24,7 +23,7 @@ def check_news_file(fname):
     errors = restructuredtext_lint.lint(content)
 
     if errors:
-        err_msgs = os.linesep.join((err.message for err in errors))
+        err_msgs = os.linesep.join(err.message for err in errors)
         pytest.fail(f"{fname}: Invalid ReST\n{err_msgs}")
 
     form = ""
@@ -50,14 +49,14 @@ def check_news_file(fname):
         elif l.strip() == "":
             form += "0"
         else:
-            pytest.fail("{}:{}: invalid rst".format(name, i + 1), pytrace=True)
+            pytest.fail(f"{name}:{i + 1}: invalid rst", pytrace=True)
     # The file should have:
     #   empty lines around categories
     #   at least one content line in a non null category
     reg = re.compile(r"^(3(0|$)|20(1|4)(1|0|4)*0|204$)+$")
     if not reg.match(form):
         print(form)
-        pytest.fail("{}: invalid rst".format(name), pytrace=True)
+        pytest.fail(f"{name}: invalid rst", pytrace=True)
 
 
 @pytest.fixture(params=list(os.scandir(NEWSDIR)))

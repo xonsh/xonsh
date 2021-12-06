@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements a lazy JSON file class that wraps around json data."""
 import io
 import weakref
@@ -206,7 +205,7 @@ class LazyJSON(LJNode):
         self._f = f
         self.reopen = reopen
         if not reopen and isinstance(f, str):
-            self._f = open(f, "r", newline="\n")
+            self._f = open(f, newline="\n")
         self._load_index()
         self.root = weakref.proxy(self)
         self.is_mapping = isinstance(self.offsets, cabc.Mapping)

@@ -303,7 +303,7 @@ CC = 6
 def githash():
     """Returns a tuple contains two strings: the hash and the date."""
     install_base = os.path.dirname(__file__)
-    githash_file = "{}/dev.githash".format(install_base)
+    githash_file = f"{install_base}/dev.githash"
     if not os.path.exists(githash_file):
         return None, None
     sha = None
@@ -417,7 +417,7 @@ if ON_WINDOWS:
         def __init__(self):
             import nt
 
-            self._upperkeys = dict((k.upper(), k) for k in nt.environ)
+            self._upperkeys = {k.upper(): k for k in nt.environ}
 
         def _sync(self):
             """Ensure that the case sensitive map of the keys are

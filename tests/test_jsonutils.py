@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing xonsh json hooks"""
 import json
 

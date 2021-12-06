@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Prompt formatter for simple version control branches"""
 # pylint:disable=no-member, invalid-name
 
@@ -96,7 +95,7 @@ def get_hg_branch(root=None):
         # get branch name
         branch_path = root / ".hg" / "branch"
         if branch_path.exists():
-            with open(branch_path, "r") as branch_file:
+            with open(branch_path) as branch_file:
                 branch = branch_file.read().strip()
         else:
             branch = "default"

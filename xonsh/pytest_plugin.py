@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Pytest plugin for testing xsh files."""
 import sys
 import importlib
@@ -71,8 +70,8 @@ class XshFunction(pytest.Item):
         """called when self.runtest() raises an exception."""
         formatted_tb = _limited_traceback(excinfo)
         formatted_tb.insert(0, "xonsh execution failed\n")
-        formatted_tb.append("{}: {}".format(excinfo.type.__name__, excinfo.value))
+        formatted_tb.append(f"{excinfo.type.__name__}: {excinfo.value}")
         return "".join(formatted_tb)
 
     def reportinfo(self):
-        return self.fspath, 0, "xonsh test: {}".format(self.name)
+        return self.fspath, 0, f"xonsh test: {self.name}"

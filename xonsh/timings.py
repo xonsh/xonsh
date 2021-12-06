@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Timing related functionality for the xonsh shell.
 
 The following time_it alias and Timer was forked from the IPython project:
@@ -117,7 +116,7 @@ def format_time(timespan, precision=3):
             value = int(leftover / length)
             if value > 0:
                 leftover = leftover % length
-                time.append("{0}{1}".format(str(value), suffix))
+                time.append(f"{str(value)}{suffix}")
             if leftover < 1:
                 break
         return " ".join(time)
@@ -230,18 +229,18 @@ def timeit_alias(args, stdin=None):
         if worst > 4 * best and best > 0 and worst > 1e-5:
             print(
                 (
-                    "The slowest run took {0:0.2f} times longer than the "
+                    "The slowest run took {:0.2f} times longer than the "
                     "fastest. This could mean that an intermediate result "
                     "is being cached."
                 ).format(worst / best)
             )
         print(
-            "{0} loops, best of {1}: {2} per loop".format(
+            "{} loops, best of {}: {} per loop".format(
                 number, repeat, format_time(best, precision)
             )
         )
         if tc > tc_min:
-            print("Compiler time: {0:.2f} s".format(tc))
+            print(f"Compiler time: {tc:.2f} s")
     return
 
 
@@ -327,8 +326,8 @@ def setup_timings(argv):
             times = list(_timings.items())
             times = sorted(times, key=lambda x: x[1])
             width = max(len(s) for s, _ in times) + 2
-            header_format = "|{{:<{}}}|{{:^11}}|{{:^11}}|".format(width)
-            entry_format = "|{{:<{}}}|{{:^11.3f}}|{{:^11.3f}}|".format(width)
+            header_format = f"|{{:<{width}}}|{{:^11}}|{{:^11}}|"
+            entry_format = f"|{{:<{width}}}|{{:^11.3f}}|{{:^11.3f}}|"
             sepline = "|{}|{}|{}|".format("-" * width, "-" * 11, "-" * 11)
             # Print result table
             print(" Debug level: {}".format(os.getenv("XONSH_DEBUG", "Off")))

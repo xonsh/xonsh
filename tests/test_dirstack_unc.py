@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing dirstack"""
 # from __future__ import unicode_literals, print_function
 
@@ -19,7 +18,7 @@ PARENT = os.path.dirname(HERE)
 
 
 def drive_in_use(letter):
-    return ON_WINDOWS and os.system("vol {}: 2>nul>nul".format(letter)) == 0
+    return ON_WINDOWS and os.system(f"vol {letter}: 2>nul>nul") == 0
 
 
 MAX_TEMP_DRIVES = 4

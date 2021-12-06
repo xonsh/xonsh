@@ -27,7 +27,7 @@ class Parser(ThreeEightParser):
             if isinstance(p1, Index):
                 p1 = p1.value
                 is_subscript = True
-            if any((isinstance(p, Index) for p in p2)):
+            if any(isinstance(p, Index) for p in p2):
                 is_subscript = True
 
             after_comma = [p.value if isinstance(p, Index) else p for p in p2]

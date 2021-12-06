@@ -426,21 +426,21 @@ class ProcProxyThread(threading.Thread):
                 self.errread = xli.msvcrt.open_osfhandle(self.errread.Detach(), 0)
 
         if self.p2cwrite != -1:
-            self.stdin = io.open(self.p2cwrite, "wb", -1)
+            self.stdin = open(self.p2cwrite, "wb", -1)
             if universal_newlines:
                 self.stdin = io.TextIOWrapper(
                     self.stdin, write_through=True, line_buffering=False
                 )
         elif isinstance(stdin, int) and stdin != 0:
-            self.stdin = io.open(stdin, "wb", -1)
+            self.stdin = open(stdin, "wb", -1)
 
         if self.c2pread != -1:
-            self.stdout = io.open(self.c2pread, "rb", -1)
+            self.stdout = open(self.c2pread, "rb", -1)
             if universal_newlines:
                 self.stdout = io.TextIOWrapper(self.stdout)
 
         if self.errread != -1:
-            self.stderr = io.open(self.errread, "rb", -1)
+            self.stderr = open(self.errread, "rb", -1)
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
@@ -487,14 +487,14 @@ class ProcProxyThread(threading.Thread):
             sp_stdin = None
         elif self.p2cread != -1:
             sp_stdin = io.TextIOWrapper(
-                io.open(self.p2cread, "rb", -1), encoding=enc, errors=err
+                open(self.p2cread, "rb", -1), encoding=enc, errors=err
             )
         else:
             sp_stdin = sys.stdin
         # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(
-                io.open(self.c2pwrite, "wb", -1), encoding=enc, errors=err
+                open(self.c2pwrite, "wb", -1), encoding=enc, errors=err
             )
         else:
             sp_stdout = sys.stdout
@@ -503,7 +503,7 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
             sp_stderr = io.TextIOWrapper(
-                io.open(self.errwrite, "wb", -1), encoding=enc, errors=err
+                open(self.errwrite, "wb", -1), encoding=enc, errors=err
             )
         else:
             sp_stderr = sys.stderr
@@ -809,7 +809,7 @@ class ProcProxy:
             stdin = None
         else:
             if isinstance(self.stdin, int):
-                inbuf = io.open(self.stdin, "rb", -1)
+                inbuf = open(self.stdin, "rb", -1)
             else:
                 inbuf = self.stdin
             stdin = io.TextIOWrapper(inbuf, encoding=enc, errors=err)
@@ -835,9 +835,7 @@ class ProcProxy:
             if handle < 3:
                 buf = sysbuf
             else:
-                buf = io.TextIOWrapper(
-                    io.open(handle, "wb", -1), encoding=enc, errors=err
-                )
+                buf = io.TextIOWrapper(open(handle, "wb", -1), encoding=enc, errors=err)
         elif hasattr(handle, "encoding"):
             # must be a text stream, no need to wrap.
             buf = handle

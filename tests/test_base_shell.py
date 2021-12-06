@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """(A down payment on) Testing for ``xonsh.base_shell.BaseShell`` and associated classes"""
 import os
 

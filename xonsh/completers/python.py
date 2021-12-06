@@ -239,7 +239,7 @@ def attr_complete(prefix, ctx, filter_func):
     prelen = len(prefix)
     for opt in opts:
         # check whether these options actually work (e.g., disallow 7.imag)
-        _expr = "{0}.{1}".format(expr, opt)
+        _expr = f"{expr}.{opt}"
         _val_, _ctx_ = _safe_eval(_expr, _ctx)
         if _val_ is None and _ctx_ is None:
             continue

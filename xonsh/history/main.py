@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Main entry points of the xonsh history."""
 import datetime
 import json
@@ -31,7 +30,7 @@ def construct_history(**kwargs):
         return backend
     else:
         print(
-            "Unknown history backend: {}. Using JSON version".format(backend),
+            f"Unknown history backend: {backend}. Using JSON version",
             file=sys.stderr,
         )
         kls_history = JsonHistory
@@ -60,7 +59,7 @@ def _xh_find_histfile_var(file_list, default=None):
         f = xt.expanduser_abs_path(f)
         if not os.path.isfile(f):
             continue
-        with open(f, "r") as rc_file:
+        with open(f) as rc_file:
             for line in rc_file:
                 if line.startswith("HISTFILE="):
                     hist_file = line.split("=", 1)[1].strip("'\"\n")
@@ -82,7 +81,7 @@ def _xh_bash_hist_parser(location=None, **kwargs):
             os.path.join("~", ".bash_history"),
         )
     if location:
-        with open(location, "r", errors="backslashreplace") as bash_hist:
+        with open(location, errors="backslashreplace") as bash_hist:
             for ind, line in enumerate(bash_hist):
                 yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
     else:
@@ -97,7 +96,7 @@ def _xh_zsh_hist_parser(location=None, **kwargs):
             os.path.join("~", ".zsh_history"),
         )
     if location:
-        with open(location, "r", errors="backslashreplace") as zsh_hist:
+        with open(location, errors="backslashreplace") as zsh_hist:
             for ind, line in enumerate(zsh_hist):
                 if line.startswith(":"):
                     try:
@@ -131,7 +130,7 @@ def _xh_get_history(
     datetime_format=None,
     start_time=None,
     end_time=None,
-    location=None
+    location=None,
 ):
     """Get the requested portion of shell history.
 
@@ -339,7 +338,7 @@ class HistoryAlias(xcli.ArgParserAlias):
             s = json.dumps(data)
             print(s, file=_stdout)
         else:
-            lines = ["{0}: {1}".format(k, v) for k, v in data.items()]
+            lines = [f"{k}: {v}" for k, v in data.items()]
             print("\n".join(lines), file=_stdout)
 
     @staticmethod

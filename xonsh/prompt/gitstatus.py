@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Informative git status prompt formatter"""
 import os
 import subprocess
@@ -112,7 +111,7 @@ def _get_stash(gitdir):
     try:
         with open(os.path.join(gitdir, "logs/refs/stash")) as f:
             return sum(1 for _ in f)
-    except IOError:
+    except OSError:
         return 0
 
 
@@ -263,7 +262,7 @@ def gitstatus_prompt():
         value = fields[fld]
         if symbol and value > 0:
             ret += symbol + str(value) + COLORS.RESET
-    if sum((fields.get(fld, 0) for fld in number_flds)) == 0 and not _is_hidden(
+    if sum(fields.get(fld, 0) for fld in number_flds) == 0 and not _is_hidden(
         _DEFS.CLEAN
     ):
         symbol = _get_def(_DEFS.CLEAN)

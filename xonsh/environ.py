@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import os
 import re
@@ -180,7 +179,7 @@ def locale_convert(key):
             locale.setlocale(LOCALE_CATS[key], val)
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
-            msg = "Failed to set locale {0!r} to {1!r}".format(key, val)
+            msg = f"Failed to set locale {key!r} to {val!r}"
             warnings.warn(msg, RuntimeWarning)
         return val
 
@@ -390,7 +389,7 @@ class LsColors(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
+        return f"{self.__class__.__module__}.{self.__class__.__name__}(...)"
 
     _repr_pretty_ = to_repr_pretty_
 
@@ -1400,10 +1399,8 @@ class PromptSetting(Xettings):
         None,
         "Symbols for gitstatus prompt. Default values are: \n\n"
         + "\n".join(
-            (
-                f"* ``XONSH_GITSTATUS_{fld.name}``: ``{fld.value}``"
-                for fld in GITSTATUS_FIELD_DEFS
-            )
+            f"* ``XONSH_GITSTATUS_{fld.name}``: ``{fld.value}``"
+            for fld in GITSTATUS_FIELD_DEFS
         ),
         pattern="XONSH_GITSTATUS_*",
     )
@@ -1411,11 +1408,9 @@ class PromptSetting(Xettings):
         (),
         "Fields to hide in {gitstatus} prompt (all fields below are shown by default.) \n\n"
         + "\n".join(
-            (
-                f"* ``{fld.name}``\n"
-                for fld in GITSTATUS_FIELD_DEFS
-                if not fld.name.startswith("HASH")
-            )
+            f"* ``{fld.name}``\n"
+            for fld in GITSTATUS_FIELD_DEFS
+            if not fld.name.startswith("HASH")
         ),
     )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
@@ -2084,11 +2079,11 @@ class Env(cabc.MutableMapping):
         """
         yield from (
             set(self._d)
-            | set(
+            | {
                 k
                 for k in self._vars.keys()
                 if self._vars[k].default is not DefaultNotGiven
-            )
+            }
         )
 
     def __iter__(self):
@@ -2108,7 +2103,7 @@ class Env(cabc.MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return "{0}.{1}(...)".format(self.__class__.__module__, self.__class__.__name__)
+        return f"{self.__class__.__module__}.{self.__class__.__name__}(...)"
 
     def __hash__(self) -> int:
         return hash(str(self._d))

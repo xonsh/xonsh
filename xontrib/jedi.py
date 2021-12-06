@@ -101,7 +101,7 @@ def complete_jedi(context: CompletionContext):
     except Exception:
         pass
 
-    res = set(create_completion(comp) for comp in script_comp if should_complete(comp))
+    res = {create_completion(comp) for comp in script_comp if should_complete(comp)}
 
     if index > 0:
         last_char = source[index - 1]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing for ``xonsh.shell.Shell``"""
 import os
 

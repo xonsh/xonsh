@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
 import difflib
 import datetime
@@ -78,7 +77,7 @@ def highlighted_ndiff(a, b):
     return s
 
 
-class HistoryDiffer(object):
+class HistoryDiffer:
     """This class helps diff two xonsh history files."""
 
     def __init__(self, afile, bfile, reopen=False, verbose=False):
@@ -141,7 +140,7 @@ class HistoryDiffer(object):
             bval = benv[key]
             if aval == bval:
                 continue
-            s += "{0!r} is in both, but differs\n".format(key)
+            s += f"{key!r} is in both, but differs\n"
             s += bold_str_diff(aval, bval, sm=sm) + "\n"
         return s
 
@@ -150,12 +149,10 @@ class HistoryDiffer(object):
         if len(only_x) == 0:
             return ""
         if self.verbose:
-            xstr = ",\n".join(
-                ["    {0!r}: {1!r}".format(key, xenv[key]) for key in only_x]
-            )
+            xstr = ",\n".join([f"    {key!r}: {xenv[key]!r}" for key in only_x])
             xstr = "\n" + xstr
         else:
-            xstr = ", ".join(["{0!r}".format(key) for key in only_x])
+            xstr = ", ".join([f"{key!r}" for key in only_x])
         in_x = "These vars are only in {color}{xid}{reset}: {{{xstr}}}\n\n"
         return in_x.format(xid=xid, color=color, reset=COLORS.RESET, xstr=xstr)
 

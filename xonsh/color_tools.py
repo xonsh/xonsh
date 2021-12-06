@@ -464,9 +464,9 @@ def RE_RGB6():
 
 def rgb_to_ints(rgb):
     if len(rgb) == 6:
-        return tuple([int(h, 16) for h in RE_RGB6.split(rgb)[1:4]])
+        return tuple(int(h, 16) for h in RE_RGB6.split(rgb)[1:4])
     else:
-        return tuple([int(h * 2, 16) for h in RE_RGB3.split(rgb)[1:4]])
+        return tuple(int(h * 2, 16) for h in RE_RGB3.split(rgb)[1:4])
 
 
 def short_to_ints(short):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Test initialization of prompt_toolkit shell"""
 
 import sys

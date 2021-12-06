@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Misc. xonsh tools.
 
 The following implementations were forked from the IPython project:
@@ -294,7 +293,7 @@ def FORMATTER():
     return string.Formatter()
 
 
-class DefaultNotGivenType(object):
+class DefaultNotGivenType:
     """Singleton for representing when no default value is given."""
 
     __inst: tp.Optional["DefaultNotGivenType"] = None
@@ -904,7 +903,7 @@ def suggest_commands(cmd, env):
     for _cmd in xsh.commands_cache.all_commands:
         if _cmd not in suggested:
             if levenshtein(_cmd.lower(), cmd, thresh) < thresh:
-                suggested[_cmd] = "Command ({0})".format(_cmd)
+                suggested[_cmd] = f"Command ({_cmd})"
 
     suggested = collections.OrderedDict(
         sorted(
@@ -917,13 +916,13 @@ def suggest_commands(cmd, env):
         rtn = command_not_found(cmd, env)
     else:
         oneof = "" if num == 1 else "one of "
-        tips = "Did you mean {}the following?".format(oneof)
+        tips = f"Did you mean {oneof}the following?"
         items = list(suggested.popitem(False) for _ in range(num))
         length = max(len(key) for key, _ in items) + 2
         alternatives = "\n".join(
             "    {: <{}} {}".format(key + ":", length, val) for key, val in items
         )
-        rtn = "{}\n{}".format(tips, alternatives)
+        rtn = f"{tips}\n{alternatives}"
         c = command_not_found(cmd, env)
         rtn += ("\n\n" + c) if len(c) > 0 else ""
     return rtn
@@ -1448,12 +1447,12 @@ def ensure_slice(x):
             groups = (int(i) if i else None for i in m.groups())
             s = slice(*groups)
         else:
-            raise ValueError("cannot convert {!r} to slice".format(x))
+            raise ValueError(f"cannot convert {x!r} to slice")
     except TypeError:
         try:
             s = slice(*(int(i) for i in x))
         except (TypeError, ValueError):
-            raise ValueError("cannot convert {!r} to slice".format(x))
+            raise ValueError(f"cannot convert {x!r} to slice")
     return s
 
 
@@ -1616,7 +1615,7 @@ def ptk2_color_depth_setter(x):
     elif x in {"", None}:
         x = ""
     else:
-        msg = '"{}" is not a valid value for $PROMPT_TOOLKIT_COLOR_DEPTH. '.format(x)
+        msg = f'"{x}" is not a valid value for $PROMPT_TOOLKIT_COLOR_DEPTH. '
         warnings.warn(msg, RuntimeWarning)
         x = ""
     if x == "" and "PROMPT_TOOLKIT_COLOR_DEPTH" in os_environ:
@@ -1641,7 +1640,7 @@ def to_completions_display_value(x):
     elif x in {"single", "readline"}:
         pass
     else:
-        msg = '"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x)
+        msg = f'"{x}" is not a valid value for $COMPLETIONS_DISPLAY. '
         msg += 'Using "multi".'
         warnings.warn(msg, RuntimeWarning)
         x = "multi"
@@ -1689,7 +1688,7 @@ def to_dict(x):
     try:
         x = ast.literal_eval(x)
     except (ValueError, SyntaxError):
-        msg = '"{}" can not be converted to Python dictionary.'.format(x)
+        msg = f'"{x}" can not be converted to Python dictionary.'
         warnings.warn(msg, RuntimeWarning)
         x = dict()
     return x
@@ -1701,7 +1700,7 @@ def to_str_str_dict(x):
         return x
     x = to_dict(x)
     if not is_str_str_dict(x):
-        msg = '"{}" can not be converted to str:str dictionary.'.format(x)
+        msg = f'"{x}" can not be converted to str:str dictionary.'
         warnings.warn(msg, RuntimeWarning)
         x = dict()
     return x
@@ -1862,7 +1861,7 @@ def to_history_tuple(x):
 
 def history_tuple_to_str(x):
     """Converts a valid history tuple to a canonical string."""
-    return "{0} {1}".format(*x)
+    return "{} {}".format(*x)
 
 
 def all_permutations(iterable):
@@ -2040,9 +2039,7 @@ def _win10_color_map():
         "ansibrightyellow": (249, 241, 165),
         "ansiwhite": (242, 242, 242),
     }
-    return {
-        k: "#{0:02x}{1:02x}{2:02x}".format(r, g, b) for k, (r, g, b) in cmap.items()
-    }
+    return {k: f"#{r:02x}{g:02x}{b:02x}" for k, (r, g, b) in cmap.items()}
 
 
 WIN10_COLOR_MAP = LazyObject(_win10_color_map, globals(), "WIN10_COLOR_MAP")
@@ -2373,7 +2370,7 @@ def backup_file(fname):
 
     base, ext = os.path.splitext(fname)
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-    newfname = "%s.%s%s" % (base, timestamp, ext)
+    newfname = f"{base}.{timestamp}{ext}"
     shutil.move(fname, newfname)
 
 
@@ -2416,11 +2413,11 @@ def expand_case_matching(s):
         elif c.isalpha():
             folded = c.casefold()
             if len(folded) == 1:
-                c = "[{0}{1}]".format(c.upper(), c.lower())
+                c = f"[{c.upper()}{c.lower()}]"
             else:
-                newc = ["[{0}{1}]?".format(f.upper(), f.lower()) for f in folded[:-1]]
+                newc = [f"[{f.upper()}{f.lower()}]?" for f in folded[:-1]]
                 newc = "".join(newc)
-                newc += "[{0}{1}{2}]".format(folded[-1].upper(), folded[-1].lower(), c)
+                newc += f"[{folded[-1].upper()}{folded[-1].lower()}{c}]"
                 c = newc
         t.append(c)
     return "".join(t)
@@ -2614,7 +2611,7 @@ def deprecated(deprecated_in=None, removed_in=None):
         message_suffix = ""
 
     def decorated(func):
-        warning_message = "{} has been deprecated".format(func.__name__)
+        warning_message = f"{func.__name__} has been deprecated"
         warning_message += message_suffix
 
         @functools.wraps(func)
@@ -2624,7 +2621,7 @@ def deprecated(deprecated_in=None, removed_in=None):
             warnings.warn(warning_message, DeprecationWarning)
 
         wrapped.__doc__ = (
-            "{}\n\n{}".format(wrapped.__doc__, warning_message)
+            f"{wrapped.__doc__}\n\n{warning_message}"
             if wrapped.__doc__
             else warning_message
         )
@@ -2640,9 +2637,9 @@ def _deprecated_message_suffix(deprecated_in, removed_in):
             deprecated_in, removed_in
         )
     elif deprecated_in and not removed_in:
-        message_suffix = " in version {}".format(deprecated_in)
+        message_suffix = f" in version {deprecated_in}"
     elif not deprecated_in and removed_in:
-        message_suffix = " and will be removed in version {}".format(removed_in)
+        message_suffix = f" and will be removed in version {removed_in}"
     else:
         message_suffix = None
 
@@ -2655,13 +2652,11 @@ def _deprecated_error_on_expiration(name, removed_in):
     if not removed_in:
         return
     elif LooseVersion(__version__) >= LooseVersion(removed_in):
-        raise AssertionError(
-            "{} has passed its version {} expiry date!".format(name, removed_in)
-        )
+        raise AssertionError(f"{name} has passed its version {removed_in} expiry date!")
 
 
 def to_repr_pretty_(inst, p, cycle):
-    name = "{0}.{1}".format(inst.__class__.__module__, inst.__class__.__name__)
+    name = f"{inst.__class__.__module__}.{inst.__class__.__name__}"
     with p.group(0, name + "(", ")"):
         if cycle:
             p.text("...")

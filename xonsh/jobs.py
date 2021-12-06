@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Job control for the xonsh shell."""
 import os
 import sys
@@ -284,7 +283,7 @@ def format_job_string(num: int) -> str:
     cmd = " ".join([" ".join(i) if isinstance(i, list) else i for i in job["cmds"]])
     pid = job["pids"][-1]
     bg = " &" if job["bg"] else ""
-    return "[{}]{} {}: {}{} ({})".format(num, pos, status, cmd, bg, pid)
+    return f"[{num}]{pos} {status}: {cmd}{bg} ({pid})"
 
 
 def print_one_job(num, outfile=sys.stdout):
@@ -350,7 +349,7 @@ def clean_jobs():
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
-                print("xonsh: {}".format(msg), file=sys.stderr)
+                print(f"xonsh: {msg}", file=sys.stderr)
                 print("-" * 5, file=sys.stderr)
                 jobs([], stdout=sys.stderr)
                 print("-" * 5, file=sys.stderr)
@@ -406,12 +405,12 @@ def resume_job(args, wording):
             else:
                 tid = int(args[0])
         except (ValueError, IndexError):
-            return "", "Invalid job: {}\n".format(args[0])
+            return "", f"Invalid job: {args[0]}\n"
 
         if tid not in XSH.all_jobs:
-            return "", "Invalid job: {}\n".format(args[0])
+            return "", f"Invalid job: {args[0]}\n"
     else:
-        return "", "{} expects 0 or 1 arguments, not {}\n".format(wording, len(args))
+        return "", f"{wording} expects 0 or 1 arguments, not {len(args)}\n"
 
     # Put this one on top of the queue
     tasks.remove(tid)

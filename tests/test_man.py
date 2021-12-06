@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import pytest  # noqa F401
 from xonsh.completers.man import complete_from_man

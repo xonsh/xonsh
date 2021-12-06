@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -78,8 +77,8 @@ source_suffix = ".rst"
 master_doc = "contents"
 
 # General information about the project.
-project = u"xonsh"
-copyright = u"2015, Anthony Scopatz"
+project = "xonsh"
+copyright = "2015, Anthony Scopatz"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -251,7 +250,7 @@ htmlhelp_basename = "xonshdoc"
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "xonsh.tex", u"xonsh documentation", u"Anthony Scopatz", "manual")
+    ("index", "xonsh.tex", "xonsh documentation", "Anthony Scopatz", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -376,7 +375,7 @@ def make_xontribs():
         else:
             pkg = d.package.name
             if d.package.url:
-                pkg = "`{0} website <{1}>`_".format(pkg, d.package.url)
+                pkg = f"`{pkg} website <{d.package.url}>`_"
             if d.package.license:
                 pkg = pkg + ", " + d.package.license
             inst = ""
@@ -397,7 +396,7 @@ def make_xontribs():
                 "on startup.)\n\n"
                 ".. code-block:: xonsh\n\n"
             )
-            usage += "    xontrib load {}\n\n".format(name)
+            usage += f"    xontrib load {name}\n\n"
         s += sec.format(
             low=name.lower(),
             title=title,

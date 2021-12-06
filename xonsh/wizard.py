@@ -18,7 +18,7 @@ from xonsh.jsonutils import serialize_xonsh_json
 #
 # Nodes themselves
 #
-class Node(object):
+class Node:
     """Base type of all nodes."""
 
     attrs: tp.Union[tp.Tuple[str, ...], str] = ()
@@ -289,7 +289,7 @@ class StateFile(Input):
         if val is None:
             self.prompt = "filename: "
         else:
-            self.prompt = "filename [default={0!r}]: ".format(val)
+            self.prompt = f"filename [default={val!r}]: "
 
 
 class SaveJSON(StateFile):
@@ -443,7 +443,7 @@ def _lowername(cls):
     return cls.__name__.lower()
 
 
-class Visitor(object):
+class Visitor:
     """Super-class for all classes that should walk over a tree of nodes.
     This implements the visit() method.
     """
@@ -488,7 +488,7 @@ class PrettyFormatter(Visitor):
         for aname in node.attrs:
             a = getattr(node, aname)
             t.append(self.visit(a) if isinstance(a, Node) else pprint.pformat(a))
-        t = ["{0}={1}".format(n, x) for n, x in zip(node.attrs, t)]
+        t = [f"{n}={x}" for n, x in zip(node.attrs, t)]
         s += textwrap.indent(",\n".join(t), self.indent)
         self.level -= 1
         s += "\n)"
@@ -500,7 +500,7 @@ class PrettyFormatter(Visitor):
             if node.path is None:
                 return s + "])"
             else:
-                return s + "], path={0!r})".format(node.path)
+                return s + f"], path={node.path!r})"
         s += "\n"
         self.level += 1
         s += textwrap.indent(",\n".join(map(self.visit, node.children)), self.indent)
@@ -512,40 +512,40 @@ class PrettyFormatter(Visitor):
         return s
 
     def visit_message(self, node):
-        return "Message({0!r})".format(node.message)
+        return f"Message({node.message!r})"
 
     def visit_question(self, node):
         s = node.__class__.__name__ + "(\n"
         self.level += 1
-        s += self.indent + "question={0!r},\n".format(node.question)
+        s += self.indent + f"question={node.question!r},\n"
         s += self.indent + "responses={"
         if len(node.responses) == 0:
             s += "}"
         else:
             s += "\n"
             t = sorted(node.responses.items())
-            t = ["{0!r}: {1}".format(k, self.visit(v)) for k, v in t]
+            t = [f"{k!r}: {self.visit(v)}" for k, v in t]
             s += textwrap.indent(",\n".join(t), 2 * self.indent)
             s += "\n" + self.indent + "}"
         if node.converter is not None:
-            s += ",\n" + self.indent + "converter={0!r}".format(node.converter)
+            s += ",\n" + self.indent + f"converter={node.converter!r}"
         if node.path is not None:
-            s += ",\n" + self.indent + "path={0!r}".format(node.path)
+            s += ",\n" + self.indent + f"path={node.path!r}"
         self.level -= 1
         s += "\n)"
         return s
 
     def visit_input(self, node):
-        s = "{0}(prompt={1!r}".format(node.__class__.__name__, node.prompt)
+        s = f"{node.__class__.__name__}(prompt={node.prompt!r}"
         if node.converter is None and node.path is None:
             return s + "\n)"
         if node.converter is not None:
-            s += ",\n" + self.indent + "converter={0!r}".format(node.converter)
-        s += ",\n" + self.indent + "show_conversion={0!r}".format(node.show_conversion)
-        s += ",\n" + self.indent + "confirm={0!r}".format(node.confirm)
-        s += ",\n" + self.indent + "retry={0!r}".format(node.retry)
+            s += ",\n" + self.indent + f"converter={node.converter!r}"
+        s += ",\n" + self.indent + f"show_conversion={node.show_conversion!r}"
+        s += ",\n" + self.indent + f"confirm={node.confirm!r}"
+        s += ",\n" + self.indent + f"retry={node.retry!r}"
         if node.path is not None:
-            s += ",\n" + self.indent + "path={0!r}".format(node.path)
+            s += ",\n" + self.indent + f"path={node.path!r}"
         s += "\n)"
         return s
 
@@ -557,7 +557,7 @@ class PrettyFormatter(Visitor):
         return s
 
     def visit_while(self, node):
-        s = "{0}(cond={1!r}".format(node.__class__.__name__, node.cond)
+        s = f"{node.__class__.__name__}(cond={node.cond!r}"
         s += ",\n" + self.indent + "body=["
         if len(node.body) > 0:
             s += "\n"
@@ -566,10 +566,10 @@ class PrettyFormatter(Visitor):
             self.level -= 1
             s += "\n" + self.indent
         s += "]"
-        s += ",\n" + self.indent + "idxname={0!r}".format(node.idxname)
-        s += ",\n" + self.indent + "beg={0!r}".format(node.beg)
+        s += ",\n" + self.indent + f"idxname={node.idxname!r}"
+        s += ",\n" + self.indent + f"beg={node.beg!r}"
         if node.path is not None:
-            s += ",\n" + self.indent + "path={0!r}".format(node.path)
+            s += ",\n" + self.indent + f"path={node.path!r}"
         s += "\n)"
         return s
 
@@ -584,7 +584,7 @@ def ensure_str_or_int(x):
     except (ValueError, SyntaxError):
         pass
     if not isinstance(x, (int, str)):
-        msg = "{0!r} could not be converted to int or str".format(x)
+        msg = f"{x!r} could not be converted to int or str"
         raise ValueError(msg)
     return x
 
@@ -604,7 +604,7 @@ def canon_path(path, indices=None):
     return tuple(map(ensure_str_or_int, path.split("/")))
 
 
-class UnstorableType(object):
+class UnstorableType:
     """Represents an unstorable return value for when no input was given
     or such input was skipped. Typically represented by the Unstorable
     singleton.
@@ -614,7 +614,7 @@ class UnstorableType(object):
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:
-            cls._inst = super(UnstorableType, cls).__new__(cls, *args, **kwargs)
+            cls._inst = super().__new__(cls, *args, **kwargs)
         return cls._inst
 
 
@@ -825,9 +825,9 @@ class PromptVisitor(StateVisitor):
         if fname is None or len(fname) == 0:
             fname = node.default_file
         if os.path.isfile(fname):
-            with open(fname, "r") as f:
+            with open(fname) as f:
                 self.state = json.load(f)
-            print_color("{{GREEN}}{0!r} loaded.{{RESET}}".format(fname))
+            print_color(f"{{GREEN}}{fname!r} loaded.{{RESET}}")
         else:
             print_color(
                 ("{{RED}}{0!r} could not be found, " "continuing.{{RESET}}").format(
@@ -855,7 +855,7 @@ class PromptVisitor(StateVisitor):
         if fname is None or len(fname) == 0:
             fname = node.default_file
         if os.path.isfile(fname):
-            with open(fname, "r") as f:
+            with open(fname) as f:
                 s = f.read()
             before, _, s = s.partition(node.prefix)
             _, _, after = s.partition(node.suffix)
