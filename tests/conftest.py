@@ -18,9 +18,6 @@ from xonsh.parsers.completion_context import CompletionContextParser
 from xonsh import commands_cache
 from tools import DummyShell, sp, DummyHistory
 
-# todo: only two fixture, xonsh, and xonsh_mocked,
-#   remove all xonsh_execer, builtins, aliases ...
-
 
 @pytest.fixture
 def source_path():
@@ -65,6 +62,18 @@ def patch_commands_cache_bins(xession, tmp_path, monkeypatch):
         return cc
 
     return _factory
+
+
+@pytest.fixture
+def patch_locate_binary(monkeypatch):
+    def locate_binary(self, name):
+        return os.path.join(os.path.dirname(__file__), "bin", name)
+
+    def factory(cc: commands_cache.CommandsCache):
+        monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
+        return cc
+
+    return factory
 
 
 @pytest.fixture
@@ -143,9 +152,6 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
     session = []
     old_builtins = dict(vars(builtins).items())  # type: ignore
 
-    def locate_binary(self, name):
-        return os.path.join(os.path.dirname(__file__), "bin", name)
-
     def factory(*attrs: str):
         """
 
@@ -182,11 +188,7 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
 
         monkeypatch.setattr(
             xonsh_session, "commands_cache", commands_cache.CommandsCache()
-        ),
-
-        cc = xonsh_session.commands_cache
-        monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
-        monkeypatch.setattr(cc, "_cmds_cache", {})
+        )
 
         for attr, val in [
             ("evalx", eval),
