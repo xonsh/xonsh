@@ -87,15 +87,21 @@ def xonsh_events():
 
 @pytest.fixture(scope="session")
 def session_vars():
-    """keep costly vars per session"""
-    from xonsh.environ import Env, default_env
+    """keep costly vars per session, to speedup test fixture creation"""
     from xonsh.commands_cache import CommandsCache
 
     return {
         "execer": Execer(unload=False),
-        "env": Env(default_env()),
         "commands_cache": CommandsCache(),
     }
+
+
+@pytest.fixture
+def default_env():
+    """environment as if they created for use during actual session"""
+    from xonsh.environ import Env, default_env
+
+    return Env(default_env())
 
 
 @pytest.fixture
@@ -116,9 +122,9 @@ def env():
 
 
 @pytest.fixture
-def xonsh_session(xonsh_events, session_vars) -> XonshSession:
+def xonsh_session(xonsh_events, session_vars, default_env) -> XonshSession:
     """a fixture to use where XonshSession is fully loaded without any mocks"""
-    XSH.load(ctx={}, **session_vars)
+    XSH.load(ctx={}, **session_vars, env=default_env)
     yield XSH
     XSH.unload()
     tasks.clear()  # must to this to enable resetting all_jobs

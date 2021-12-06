@@ -45,13 +45,9 @@ def test_pip_list_re1(line):
         ["pip show", "", {"setuptools", "wheel", "pip"}],
     ],
 )
-def test_completions(
-    line, prefix, exp, check_completer, xession, monkeypatch, session_vars
-):
+def test_completions(line, prefix, exp, check_completer, xession):
     if ON_WINDOWS:
         line = line.replace("pip", "pip.exe")
-    # needs original env for subproc all on all platforms
-    monkeypatch.setattr(xession, "env", session_vars["env"])
     comps = check_completer(line, prefix=prefix)
 
     assert comps.intersection(exp)
