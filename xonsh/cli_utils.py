@@ -570,6 +570,8 @@ class ArgParserAlias:
             unthreadable(self)
         self._parser = None
         self.kwargs = kwargs
+        self.stdout = None
+        self.stderr = None
 
     def build(self):
         """Sub-classes should return constructed ArgumentParser"""
@@ -599,6 +601,20 @@ class ArgParserAlias:
         completer = ArgparseCompleter(self.parser, command=command, **kwargs)
         yield from completer.complete()
 
+    def write_to(self, stream: str, *args, **kwargs):
+        value = getattr(self, stream)
+        out = getattr(sys, stream) if value is None else value
+        kwargs.setdefault("file", out)
+        print(*args, **kwargs)
+
+    def err(self, *args, **kwargs):
+        """Write text to error stream"""
+        return self.write_to("stderr", *args, **kwargs)
+
+    def out(self, *args, **kwargs):
+        """Write text to output stream"""
+        return self.write_to("stdout", *args, **kwargs)
+
     def __call__(
         self,
         args,
@@ -609,7 +625,9 @@ class ArgParserAlias:
         stack=None,
         **kwargs,
     ):
-        return dispatch(
+        self.stdout = stdout
+        self.stderr = stderr
+        result = dispatch(
             self.parser,
             args,
             _parser=self.parser,
@@ -621,6 +639,11 @@ class ArgParserAlias:
             _stack=stack,
             **kwargs,
         )
+
+        # free the reference to input/output. Otherwise it will result in errors
+        self.stdout = None
+        self.stderr = None
+        return result
 
 
 __all__ = (

@@ -21,6 +21,20 @@ class Completer:
     def __init__(self):
         self.context_parser = CompletionContextParser()
 
+    def complete_line(self, line: str, prefix: str = None):
+        """Handy wrapper to build completion-context when cursor is at the end"""
+        line = line.strip()
+        if prefix:
+            begidx = len(line) + 1
+            endidx = begidx + len(prefix)
+            line = " ".join([line, prefix])
+        else:
+            line += " "
+            begidx = endidx = len(line)
+        return self.complete(
+            prefix, line, begidx, endidx, cursor_index=len(line), multiline_text=line
+        )
+
     def complete(
         self,
         prefix,
