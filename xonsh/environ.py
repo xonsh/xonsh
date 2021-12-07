@@ -1605,6 +1605,12 @@ If True, then only ``--help`` is shown.
 This is to reduce the noise in generated completions.""",
         default=False,
     )
+    CMD_COMPLETIONS_SHOW_DESC = Var.with_default(
+        doc="If True, command completions will show description part with path to the binary and alias in case of "
+        "xonsh functions.",
+        default=False,
+        type_str="bool",
+    )
     BASH_COMPLETIONS = Var.with_default(
         doc="This is a list (or tuple) of strings that specifies where the "
         "``bash_completion`` script may be found. "
