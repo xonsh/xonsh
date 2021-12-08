@@ -1,3 +1,4 @@
+import functools
 import importlib.util
 import os
 import re
@@ -101,31 +102,31 @@ def complete_end_proc_keywords(command_context: CommandContext):
     return None
 
 
-class CommandCompleter:
-    """Lazy completer with its own state"""
+class ModuleMatcher:
+    """Reusable module matcher. Can be used by other completers like Python to find matching script completions"""
 
-    def __init__(self):
+    def __init__(self, base: str):
         # list of pre-defined patterns. More can be added using the public method ``.wrap``
         self._patterns: tp.Dict[str, str] = {
             r"\bx?pip(?:\d|\.)*(exe)?$": "pip",
         }
         self._compiled: tp.Dict[str, tp.Pattern] = {}
         self.contextual = True
+        self.base = base
 
     def wrap(self, pattern: str, module: str):
-        """For any commands matching the pattern complete form the ``module``"""
+        """For any commands matching the pattern complete from the ``module``"""
         self._patterns[pattern] = module
 
-    @staticmethod
-    def get_module(name):
+    def get_module(self, name):
         try:
-            return importlib.import_module(f"xompletions.{name}")
+            return importlib.import_module(f"{self.base}.{name}")
         except ModuleNotFoundError:
             pass
 
     def search_completer(self, cmd: str, cleaned=False):
         if not cleaned:
-            cmd = self.clean_cmd_name(cmd)
+            cmd = CommandCompleter.clean_cmd_name(cmd)
         # try any pattern match
         for pattern, mod_name in self._patterns.items():
             # lazy compile regex
@@ -135,26 +136,43 @@ class CommandCompleter:
             if regex.match(cmd):
                 return self.get_module(mod_name)
 
+
+class CommandCompleter:
+    """Lazily complete commands from `xompletions` package
+
+    The base-name (case-insensitive) of the executable is used to find the matching completer module
+    or the regex patterns.
+    """
+
+    def __init__(self):
+        self.contextual = True
+        self.matcher = ModuleMatcher("xompletions")
+
     @staticmethod
+    @functools.lru_cache(10)
     def clean_cmd_name(cmd: str):
-        cmd_name = cmd.lower()
-        cmd_name = os.path.split(cmd_name)[-1]
-        if cmd_name.endswith(".exe"):
-            # windows handling
-            cmd_name = cmd_name.replace(".exe", "")
+        cmd_name = os.path.basename(cmd).lower()
+        exts = XSH.env.get("PATHEXT", [])
+        for ex in exts:
+            if cmd_name.endswith(ex.lower()):
+                # windows handling
+                cmd_name = cmd_name.rstrip(ex.lower())
+                break
         return cmd_name
 
-    def __call__(self, full_ctx: CommandContext):
+    def __call__(self, full_ctx: CompletionContext):
         """For the given command load completions lazily"""
-        if not full_ctx.command:
+
+        # completion for commands only
+        ctx = full_ctx.command
+        if not ctx:
             return
 
-        ctx = full_ctx.command
         if ctx.arg_index == 0:
             return
 
         cmd_name = self.clean_cmd_name(ctx.command)
-        module = self.get_module(cmd_name) or self.search_completer(
+        module = self.matcher.get_module(cmd_name) or self.matcher.search_completer(
             cmd_name, cleaned=True
         )
 
@@ -164,6 +182,8 @@ class CommandCompleter:
         if hasattr(module, "xonsh_complete"):
             func = module.xonsh_complete
             return func(ctx)
+
+        # todo: python completions, django manage.py completions
 
 
 complete_xompletions = CommandCompleter()
