@@ -1,5 +1,7 @@
 """Xonsh completer tools."""
 import inspect
+import shlex
+import subprocess
 import textwrap
 import typing as tp
 from functools import wraps
@@ -201,3 +203,35 @@ def apply_lprefix(comps, lprefix):
                 yield comp
         else:
             yield RichCompletion(comp, prefix_len=lprefix)
+
+
+def bash_complete_completer(ctx: CommandContext, **env):
+    """Helper function to complete commands such as ``pip``,``django-admin``,... that use bash's ``complete``"""
+    prefix = ctx.prefix
+
+    filter_func = get_filter_function()
+
+    args = [arg.raw_value for arg in ctx.args]
+    env.update(
+        {
+            "COMP_WORDS": " ".join(args),
+            "COMP_CWORD": str(len(ctx.args)),
+        }
+    )
+    env.update(XSH.env.detype())
+
+    try:
+        proc = subprocess.run(
+            [args[0]],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            env=env,
+        )
+    except FileNotFoundError:
+        return None
+
+    if proc.stdout:
+        out = shlex.split(proc.stdout.decode())
+        for cmp in out:
+            if filter_func(cmp, prefix):
+                yield RichCompletion(cmp, append_space=True)

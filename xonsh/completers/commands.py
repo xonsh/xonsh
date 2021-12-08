@@ -183,7 +183,5 @@ class CommandCompleter:
             func = module.xonsh_complete
             return func(ctx)
 
-        # todo: python completions, django manage.py completions
-
 
 complete_xompletions = CommandCompleter()
