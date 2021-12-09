@@ -1,6 +1,5 @@
 """Test XonshLexer for pygments"""
 
-import gc
 
 import pytest
 from pygments.token import (
@@ -16,7 +15,6 @@ from pygments.token import (
 )
 from tools import skip_if_on_windows
 
-from xonsh.platform import ON_WINDOWS
 from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
 from xonsh.environ import LsColors
 from xonsh.events import events, EventManager
@@ -25,10 +23,8 @@ from tools import DummyShell
 
 @pytest.fixture
 def xsh(xession, monkeypatch):
-    gc.collect()
-    if ON_WINDOWS:
-        for key in ("cd", "bash"):
-            monkeypatch.setitem(xession.aliases, key, lambda *args, **kwargs: None)
+    for key in ("cd", "bash"):
+        monkeypatch.setitem(xession.aliases, key, lambda *args, **kwargs: None)
 
 
 @pytest.fixture()
