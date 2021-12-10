@@ -16,9 +16,10 @@ from tools import skip_if_on_windows
 
 
 def test_commands_cache_lazy(xession):
-    assert not xession.commands_cache.lazyin("xonsh")
-    assert 0 == len(list(xession.commands_cache.lazyiter()))
-    assert 0 == xession.commands_cache.lazylen()
+    cc = CommandsCache()  # new instance will have self._cmds_cache filled
+    assert not cc.lazyin("xonsh")
+    assert 0 == len(list(cc.lazyiter()))
+    assert 0 == cc.lazylen()
 
 
 def test_predict_threadable_unknown_command(xession):
@@ -76,7 +77,6 @@ def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path, monkeypat
     assert str(cc.cache_file) == str(file)
     assert cc.all_commands == bins
     assert cc._loaded_pickled
-    # assert update_cmds_cache.assert_called()
 
 
 TRUE_SHELL_ARGS = [
