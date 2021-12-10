@@ -5,7 +5,6 @@ A background predictor is a function that accepts a single argument list
 and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
-import functools
 import os
 import pickle
 import sys

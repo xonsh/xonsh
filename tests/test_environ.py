@@ -11,7 +11,6 @@ from time import sleep
 import pytest
 
 from xonsh.tools import always_true, DefaultNotGiven
-from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
     locate_binary,
