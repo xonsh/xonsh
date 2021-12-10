@@ -16,7 +16,7 @@ from xonsh.events import events
 from xonsh.parsers.completion_context import CompletionContextParser
 
 from xonsh import commands_cache
-from tools import DummyShell, sp, DummyHistory
+from tools import DummyShell, sp, DummyHistory, copy_env
 
 
 @pytest.fixture
@@ -53,13 +53,10 @@ def xonsh_execer_parse(xonsh_execer):
 @pytest.fixture
 def patch_commands_cache_bins(xession, tmp_path, monkeypatch):
     def _factory(binaries: tp.List[str]):
-        if not xession.env.get("PATH"):
-            xession.env["PATH"] = [tmp_path]
+        xession.env["PATH"] = [tmp_path]
         exec_mock = MagicMock(return_value=binaries)
         monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
-        cc = commands_cache.CommandsCache()
-        xession.commands_cache = cc
-        return cc
+        return xession.commands_cache
 
     return _factory
 
@@ -95,26 +92,16 @@ def xonsh_events():
 
 
 @pytest.fixture(scope="session")
-def session_vars():
-    """keep costly vars per session, to speedup test fixture creation"""
-    from xonsh.commands_cache import CommandsCache
-
-    return {
-        "execer": Execer(unload=False),
-        "commands_cache": CommandsCache(),
-    }
-
-
-@pytest.fixture
-def default_env():
-    """environment as if they created for use during actual session"""
+def session_os_env():
+    """Env with values from os.environ like real session"""
     from xonsh.environ import Env, default_env
 
     return Env(default_env())
 
 
-@pytest.fixture
-def env(tmpdir):
+@pytest.fixture(scope="session")
+def session_env():
+    """Env with some initial values that doesn't load from os.environ"""
     from xonsh.environ import Env
 
     initial_vars = {
@@ -125,20 +112,56 @@ def env(tmpdir):
         "XONSH_ENCODING": "utf-8",
         "XONSH_ENCODING_ERRORS": "strict",
         "COMMANDS_CACHE_SAVE_INTERMEDIATE": False,
-        "XONSH_DATA_DIR": str(tmpdir),
-        # "PATH": default_env["PATH"],
     }
     env = Env(initial_vars)
     return env
 
 
+@pytest.fixture(scope="session")
+def session_execer():
+    return Execer(
+        unload=False,
+        load=False,  # loading session is controlled by the fixture
+    )
+
+
+@pytest.fixture(scope="session")
+def session_cmds():
+    return commands_cache.CommandsCache()
+
+
 @pytest.fixture
-def xonsh_session(xonsh_events, session_vars, default_env) -> XonshSession:
+def os_env(session_os_env):
+    """A mutable copy of Original session_os_env"""
+
+    return copy_env(session_os_env)
+
+
+@pytest.fixture
+def env(tmpdir, session_env):
+    """a mutable copy of session_env"""
+    env_copy = copy_env(session_env)
+    initial_vars = {"XONSH_DATA_DIR": str(tmpdir)}
+
+    env_copy.update(initial_vars)
+    return env_copy
+
+
+@pytest.fixture
+def xonsh_session(
+    xonsh_events, session_execer, session_cmds, os_env, monkeypatch
+) -> XonshSession:
     """a fixture to use where XonshSession is fully loaded without any mocks"""
+
+    # force reloading value from env
+    monkeypatch.setattr(session_cmds, "_cache_file", None)
+    monkeypatch.setattr(session_cmds, "_loaded_pickled", False)
+
     XSH.load(
         ctx={},
-        **session_vars,
-        env=default_env,
+        execer=session_execer,
+        commands_cache=session_cmds,
+        env=os_env,
     )
     yield XSH
     XSH.unload()
@@ -185,10 +208,6 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             if attr in attrs:
                 continue
             monkeypatch.setattr(xonsh_session, attr, val)
-
-        monkeypatch.setattr(
-            xonsh_session, "commands_cache", commands_cache.CommandsCache()
-        )
 
         for attr, val in [
             ("evalx", eval),

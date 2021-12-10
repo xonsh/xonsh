@@ -16,26 +16,23 @@ from tools import skip_if_on_windows
 
 
 def test_commands_cache_lazy(xession):
-    cc = CommandsCache()
-    assert not cc.lazyin("xonsh")
-    assert 0 == len(list(cc.lazyiter()))
-    assert 0 == cc.lazylen()
+    assert not xession.commands_cache.lazyin("xonsh")
+    assert 0 == len(list(xession.commands_cache.lazyiter()))
+    assert 0 == xession.commands_cache.lazylen()
 
 
 def test_predict_threadable_unknown_command(xession):
-    cc = CommandsCache()
-    result = cc.predict_threadable(["command_should_not_found"])
+    result = xession.commands_cache.predict_threadable(["command_should_not_found"])
     assert isinstance(result, bool)
 
 
 @pytest.fixture
 def commands_cache_tmp(xession, tmp_path, monkeypatch, patch_commands_cache_bins):
-    xession.env["XONSH_DATA_DIR"] = tmp_path
     xession.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = True
     return patch_commands_cache_bins(["bin1", "bin2"])
 
 
-def test_commands_cached_between_runs(commands_cache_tmp, tmp_path):
+def test_commands_cached_between_runs(commands_cache_tmp, tmp_path, tmpdir):
     # 1. no pickle file
     # 2. return empty result first and create a thread to populate result
     # 3. once the result is available then next call to cc.all_commands returns
@@ -76,8 +73,10 @@ def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path, monkeypat
     }
 
     file.write_bytes(pickle.dumps(bins))
+    assert str(cc.cache_file) == str(file)
     assert cc.all_commands == bins
     assert cc._loaded_pickled
+    # assert update_cmds_cache.assert_called()
 
 
 TRUE_SHELL_ARGS = [
@@ -154,7 +153,6 @@ PATTERN_BIN_USING_TTY_OR_NOT = [
 @pytest.mark.parametrize("args", PATTERN_BIN_USING_TTY_OR_NOT)
 @skip_if_on_windows
 def test_commands_cache_predictor_default(args, xession, tmp_path):
-    cc = CommandsCache()
     use_tty, patterns = args
     file = tmp_path / "testfile"
     where = list(patterns.keys())
@@ -169,34 +167,32 @@ def test_commands_cache_predictor_default(args, xession, tmp_path):
 
         f.write(b"\x20" * (pos // 2))
 
-    result = cc.default_predictor_readbin("", str(file), timeout=1, failure=None)
+    result = xession.commands_cache.default_predictor_readbin(
+        "", str(file), timeout=1, failure=None
+    )
     expected = predict_false if use_tty else predict_true
     assert result == expected
 
 
 @skip_if_on_windows
 def test_cd_is_only_functional_alias(xession):
-    cc = CommandsCache()
     xession.aliases["cd"] = lambda args: os.chdir(args[0])
     xession.env["PATH"] = []
-    assert cc.is_only_functional_alias("cd")
+    assert xession.commands_cache.is_only_functional_alias("cd")
 
 
 def test_non_exist_is_only_functional_alias(xession):
-    cc = CommandsCache()
-    assert not cc.is_only_functional_alias("<not really a command name>")
+    assert not xession.commands_cache.is_only_functional_alias(
+        "<not really a command name>"
+    )
 
 
 @skip_if_on_windows
 def test_bash_is_only_functional_alias(xession):
-    xession.env["PATH"] = os.environ["PATH"].split(os.pathsep)
-    cc = CommandsCache()
-    assert not cc.is_only_functional_alias("bash")
+    assert not xession.commands_cache.is_only_functional_alias("bash")
 
 
 @skip_if_on_windows
 def test_bash_and_is_alias_is_only_functional_alias(xession):
-    xession.env["PATH"] = os.environ["PATH"].split(os.pathsep)
-    cc = CommandsCache()
     xession.aliases["bash"] = lambda args: os.chdir(args[0])
-    assert not cc.is_only_functional_alias("bash")
+    assert not xession.commands_cache.is_only_functional_alias("bash")

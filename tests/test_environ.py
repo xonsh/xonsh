@@ -200,7 +200,6 @@ def test_locate_binary_on_windows(xession):
             with open(fpath, "w") as f:
                 f.write(fpath)
         xession.env.update({"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]})
-        xession.commands_cache = CommandsCache()
         assert locate_binary("file1") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file1.exe") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file2") == os.path.join(tmpdir, "FILE2.BAT")

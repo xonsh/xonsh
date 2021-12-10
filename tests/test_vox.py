@@ -288,7 +288,6 @@ def patched_cmd_cache(xession, vox, venvs, monkeypatch):
 
     monkeypatch.setattr(cc, "_check_changes", types.MethodType(no_change, cc))
     monkeypatch.setattr(cc, "_update_cmds_cache", types.MethodType(no_change, cc))
-    monkeypatch.setattr(cc, "cache_file", None)
     bins = {path: (path, False) for path in _PY_BINS}
     cc._cmds_cache.update(bins)
     yield cc
