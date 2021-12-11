@@ -16,7 +16,7 @@ from tools import skip_if_on_windows
 
 
 def test_commands_cache_lazy(xession):
-    cc = CommandsCache()  # new instance will have self._cmds_cache filled
+    cc = xession.commands_cache
     assert not cc.lazyin("xonsh")
     assert 0 == len(list(cc.lazyiter()))
     assert 0 == cc.lazylen()

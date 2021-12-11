@@ -5,6 +5,7 @@ A background predictor is a function that accepts a single argument list
 and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
+import functools
 import os
 import pickle
 import sys
@@ -171,14 +172,32 @@ class CommandsCache(cabc.Mapping):
         return self._cmds_cache
 
     @staticmethod
-    def _get_all_cmds(env, paths: tp.Sequence[str], aliases: tp.Dict[str, str]):
+    @functools.lru_cache(maxsize=10)
+    def _get_all_cmds(paths: tp.Sequence[str]):
+        """Cache results when possible
+
+        This will be helpful especially during tests where the PATH will be the same mostly.
+        """
+
+        def _getter():
+            for path in reversed(paths):
+                # iterate backwards so that entries at the front of PATH overwrite
+                # entries at the back.
+                for cmd in executables_in(path):
+                    yield cmd, os.path.join(path, cmd)
+
+        return dict(_getter())
+
+    def _update_cmds_cache(
+        self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
+    ) -> tp.Dict[str, tp.Any]:
+        """Update the cmds_cache variable in background without slowing down parseLexer"""
+        env = XSH.env or {}  # type: ignore
         allcmds = {}
-        for path in reversed(paths):
-            # iterate backwards so that entries at the front of PATH overwrite
-            # entries at the back.
-            for cmd in executables_in(path):
-                key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (os.path.join(path, cmd), aliases.get(key, None))
+
+        for cmd, path in self._get_all_cmds(paths).items():
+            key = cmd.upper() if ON_WINDOWS else cmd
+            allcmds[key] = (path, aliases.get(key, None))
 
         warn_cnt = env.get("COMMANDS_CACHE_SIZE_WARNING")
         if warn_cnt and len(allcmds) > warn_cnt:
@@ -191,15 +210,8 @@ class CommandsCache(cabc.Mapping):
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (cmd, True)  # type: ignore
-        return allcmds
 
-    def _update_cmds_cache(
-        self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
-    ) -> tp.Dict[str, tp.Any]:
-        """Update the cmds_cache variable in background without slowing down parseLexer"""
-        env = XSH.env or {}  # type: ignore
-
-        return self.set_cmds_cache(self._get_all_cmds(env, paths, aliases))
+        return self.set_cmds_cache(allcmds)
 
     def get_cached_commands(self) -> tp.Dict[str, str]:
         if self.cache_file and self.cache_file.exists():

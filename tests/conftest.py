@@ -125,11 +125,6 @@ def session_execer():
     )
 
 
-@pytest.fixture(scope="session")
-def session_cmds():
-    return commands_cache.CommandsCache()
-
-
 @pytest.fixture
 def os_env(session_os_env):
     """A mutable copy of Original session_os_env"""
@@ -148,19 +143,13 @@ def env(tmpdir, session_env):
 
 
 @pytest.fixture
-def xonsh_session(
-    xonsh_events, session_execer, session_cmds, os_env, monkeypatch
-) -> XonshSession:
+def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch) -> XonshSession:
     """a fixture to use where XonshSession is fully loaded without any mocks"""
-
-    # force reloading value from env
-    monkeypatch.setattr(session_cmds, "_cache_file", None)
-    monkeypatch.setattr(session_cmds, "_loaded_pickled", False)
 
     XSH.load(
         ctx={},
         execer=session_execer,
-        commands_cache=session_cmds,
+        commands_cache=commands_cache.CommandsCache(),
         env=os_env,
     )
     yield XSH
