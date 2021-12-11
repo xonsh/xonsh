@@ -167,13 +167,13 @@ def test_thread_local_swap():
                 success_variables[index] = False
                 break
             with env.swap(a=index):
-                sleep(0.1)
+                sleep(0.01)
                 if env["a"] == index:
                     success_variables[index] = True
                 else:
                     success_variables[index] = False
                     break
-            sleep(0.1)
+            sleep(0.01)
 
     with env.swap(a="swapped"):
         threads = [
