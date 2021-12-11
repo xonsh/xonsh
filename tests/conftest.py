@@ -187,6 +187,10 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             ("aliases", Aliases()),
             ("exit", False),
             ("history", DummyHistory()),
+            (
+                "commands_cache",
+                commands_cache.CommandsCache(),
+            ),  # since env,aliases change , patch cmds-cache
             # ("subproc_captured", sp),
             ("subproc_uncaptured", sp),
             ("subproc_captured_stdout", sp),

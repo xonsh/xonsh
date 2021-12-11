@@ -2,13 +2,16 @@ import itertools
 import typing as tp
 
 import pytest
-
+from unittest import mock
 from xonsh.parsers.completion_context import (
     CommandArg,
     CommandContext,
     CompletionContextParser,
     PythonContext,
 )
+
+import xonsh.parsers.completion_context as ctx
+from tests.tools import ON_WINDOWS
 
 
 DEBUG = False
@@ -21,8 +24,19 @@ PARSER: tp.Optional[CompletionContextParser] = None
 def parser():
     global PARSER
     PARSER = CompletionContextParser(debug=DEBUG)
+    patcher = None
+    if ON_WINDOWS:
+        # on-windows has an option for interactive sessions. Overriding the lazyObject
+        patcher = mock.patch.object(
+            ctx,
+            "LINE_CONT_REPLACEMENT_DIFF",
+            ("\\\n", "", -2),
+        )
+        patcher.start()
     yield
     PARSER = None
+    if ON_WINDOWS and patcher:
+        patcher.stop()
 
 
 def parse(command, inner_index):

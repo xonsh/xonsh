@@ -23,17 +23,23 @@ from xonsh.environ import LsColors
 
 
 @pytest.fixture
-def xs_LS_COLORS(xession):
+def xs_LS_COLORS(xession, os_env, monkeypatch):
     """Xonsh environment including LS_COLORS"""
-    e = xession.env
+
+    # original env is needed on windows. since it will skip enhanced coloring
+    # for some emulators
+    monkeypatch.setattr(xession, "env", os_env)
+
     lsc = LsColors(LsColors.default_settings)
     xession.env["LS_COLORS"] = lsc
+
+    # todo: a separate test for this as True
+    xession.env["INTENSIFY_COLORS_ON_WIN"] = False
+
     xession.shell.shell_type = "prompt_toolkit"
     xession.shell.shell.styler = XonshStyle()  # default style
 
     yield xession
-
-    xession.env = e
 
 
 DEFAULT_STYLES = {
