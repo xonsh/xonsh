@@ -59,6 +59,6 @@ def test_generated_parser():
     assert "Add a new completer" in add_cmd.description
     assert (
         alias.parser.format_usage()
-        == "usage: completer [-h] {add,remove,rm,list,ls} ...\n"
+        == "usage: completer [-h] {add,remove,rm,list,ls,complete} ...\n"
     )
     assert add_cmd.format_usage() == "usage: completer add [-h] name func [pos]\n"

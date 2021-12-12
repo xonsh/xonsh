@@ -158,23 +158,17 @@ def completion_context_parse():
 @pytest.fixture
 def check_completer(xession):
     """Helper function to run completer and parse the results as set of strings"""
+    completer = Completer()
 
-    comp = Completer()
+    def _factory(line: str, prefix="", send_original=False):
+        completions, _ = completer.complete_line(line, prefix=prefix)
+        values = {getattr(i, "value", i).strip() for i in completions}
 
-    def _factory(line: str, prefix=""):
-        line = line.strip()
-        if prefix:
-            begidx = len(line) + 1
-            endidx = begidx + len(prefix)
-            line = " ".join([line, prefix])
-        else:
-            line += " "
-            begidx = endidx = len(line)
-        completions, _ = comp.complete(
-            prefix, line, begidx, endidx, cursor_index=len(line), multiline_text=line
-        )
-        # just return the bare completions without appended-space for easier assertions
-        return {getattr(i, "value", i).strip() for i in completions}
+        if send_original:
+            # just return the bare completions without appended-space for easier assertions
+            return values, completions
+
+        return values
 
     return _factory
 

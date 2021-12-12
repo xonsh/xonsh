@@ -19,7 +19,11 @@ def mock_completer(monkeypatch, xsh_with_aliases):
 @pytest.mark.parametrize(
     "args, positionals, options",
     [
-        ("completer", {"add", "remove", "rm", "list", "ls"}, {"--help", "-h"}),
+        (
+            "completer",
+            {"add", "remove", "rm", "list", "ls", "complete"},
+            {"--help", "-h"},
+        ),
         (
             "completer add",
             set(),

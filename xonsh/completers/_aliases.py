@@ -103,11 +103,43 @@ def _register_completer(
 class CompleterAlias(xcli.ArgParserAlias):
     """CLI to add/remove/list xonsh auto-complete functions"""
 
+    def complete(
+        self,
+        line: xcli.Annotated["list[str]", xcli.Arg(nargs="...")],
+        prefix: "str | None" = None,
+    ):
+        """Output the completions to stdout
+
+        Parameters
+        ----------
+        line
+            pass the CLI arguments as if they were typed
+        prefix : -p, --prefix
+            word at cursor
+
+        Examples
+        --------
+        To get completions such as `git checkout`
+
+        $ completer complete --prefix=check git
+        """
+        from xonsh.completer import Completer
+
+        completer = Completer()
+        completions, prefix_length = completer.complete_line(
+            " ".join(line), prefix=prefix
+        )
+
+        self.out(f"Prefix Length: {prefix_length}")
+        for comp in completions:
+            self.out(repr(comp))
+
     def build(self):
         parser = self.create_parser(prog="completer")
         parser.add_command(_register_completer, prog="add")
         parser.add_command(remove_completer, prog="remove", aliases=["rm"])
         parser.add_command(list_completers, prog="list", aliases=["ls"])
+        parser.add_command(self.complete)
         return parser
 
 
