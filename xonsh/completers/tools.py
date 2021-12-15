@@ -205,7 +205,7 @@ def apply_lprefix(comps, lprefix):
             yield RichCompletion(comp, prefix_len=lprefix)
 
 
-def bash_complete_completer(ctx: CommandContext, **env):
+def bash_complete_completer(ctx: CommandContext, **env: str):
     """Helper function to complete commands such as ``pip``,``django-admin``,... that use bash's ``complete``"""
     prefix = ctx.prefix
 
@@ -215,7 +215,7 @@ def bash_complete_completer(ctx: CommandContext, **env):
     env.update(
         {
             "COMP_WORDS": " ".join(args),
-            "COMP_CWORD": str(len(ctx.args)),
+            "COMP_CWORD": str(ctx.arg_index),
         }
     )
     env.update(XSH.env.detype())
