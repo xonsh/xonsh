@@ -482,7 +482,7 @@ class LsColors(cabc.MutableMapping):
             out = subprocess.check_output(
                 cmd, env=denv, universal_newlines=True, stderr=subprocess.DEVNULL
             )
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except (subprocess.CalledProcessError, FileNotFoundError, OSError):
             return cls(cls.default_settings)
         if not out:
             return cls(cls.default_settings)
