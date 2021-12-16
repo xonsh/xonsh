@@ -484,6 +484,11 @@ class LsColors(cabc.MutableMapping):
             )
         except (subprocess.CalledProcessError, FileNotFoundError):
             return cls(cls.default_settings)
+        except OSError:
+            # necessary to catch OSError: [WinError 740] The requested operation requires elevation
+            if ON_WINDOWS:
+                return cls(cls.default_settings)
+            raise
         if not out:
             return cls(cls.default_settings)
         s = out.splitlines()[0]
