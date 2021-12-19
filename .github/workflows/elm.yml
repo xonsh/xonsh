@@ -14,20 +14,25 @@ jobs:
     name: Python 3.7 Elm Check Ubuntu
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        with:
-          path: ~/conda_pkgs_dir
-          key: elm-env-${{ hashFiles('ci/environment-elm.yml') }}
-          restore-keys: |
-            elm-env-
+      - name: Set cache date # reset cache every week
+        run: echo "DATE=$(date +'%Y%m%U')" >> $GITHUB_ENV
       - name: Setup conda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          activate-environment: elm-xonsh-test
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          use-mamba: true
+          activate-environment: conda-env
           environment-file: ci/environment-elm.yml
-          auto-update-conda: true
-          python-version: 3.7
-          condarc-file: ci/condarc.yml
+#      https://github.com/conda-incubator/setup-miniconda#caching-environments
+      - uses: actions/cache@v2
+        with:
+          path: /usr/share/miniconda3/envs/conda-env
+          key: ubuntu-${{ hashFiles('ci/environment-elm.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        id: cache
       - shell: bash -l {0}
         run: |
           python -m pip install . --no-deps
