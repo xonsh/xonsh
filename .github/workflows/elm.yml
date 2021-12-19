@@ -22,18 +22,18 @@ jobs:
           miniforge-variant: Mambaforge
           miniforge-version: latest
           use-mamba: true
-          activate-environment: conda-env
+          activate-environment: xonsh-elm-env
 #      https://github.com/conda-incubator/setup-miniconda#caching-environments
       - uses: actions/cache@v2
         with:
-          path: /usr/share/miniconda3/envs/conda-env
+          path: /usr/share/miniconda3/envs
           key: ubuntu-${{ hashFiles('ci/environment-elm.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
           CACHE_NUMBER: 0
         id: cache
       - name: Update environment
-        run: mamba env update -n conda-env -f ci/environment-elm.yml
+        run: mamba env update -f ci/environment-elm.yml
         if: steps.cache.outputs.cache-hit != 'true'
       - shell: bash -l {0}
         run: |
