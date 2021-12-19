@@ -345,7 +345,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     def gc(
         size: xcli.Annotated[tp.Tuple[int, str], xcli.Arg(nargs=2)] = None,
         force=False,
-        _blocking=True,
+        blocking=True,
     ):
         """Launches a new history garbage collector
 
@@ -355,9 +355,11 @@ class HistoryAlias(xcli.ArgParserAlias):
             Next two arguments represent the history size and units; e.g. "--size 8128 commands"
         force : -f, --force
             perform garbage collection even if history much bigger than configured limit
+        blocking : -n, --non-blocking
+            makes the gc non-blocking, and thus return sooner. By default it runs on main thread blocking input.
         """
         hist = XSH.history
-        hist.run_gc(size=size, blocking=_blocking, force=force)
+        hist.run_gc(size=size, blocking=blocking, force=force)
 
     @staticmethod
     def diff(
@@ -386,6 +388,23 @@ class HistoryAlias(xcli.ArgParserAlias):
             hd = xdh.HistoryDiffer(a, b, reopen=reopen, verbose=verbose)
             xt.print_color(hd.format(), file=_stdout)
 
+    def transfer(
+        self,
+        name: str,
+    ):
+        """Transfer history entries between different Xonsh backends
+
+        Parameters
+        ----------
+        name
+            Name of the history backend
+
+        Notes
+        -----
+        When imported from other shells no translation is done.
+        """
+        # todo:
+
     def build(self):
         parser = self.create_parser(prog="history")
         parser.add_command(self.show, prefix_chars="-+")
@@ -396,22 +415,9 @@ class HistoryAlias(xcli.ArgParserAlias):
         parser.add_command(self.off)
         parser.add_command(self.on)
         parser.add_command(self.clear)
+        parser.add_command(self.gc)
+        parser.add_command(self._import)
 
-        gcp = parser.add_command(self.gc)
-        bgcp = gcp.add_mutually_exclusive_group()
-        bgcp.add_argument(
-            "--blocking",
-            dest="_blocking",
-            default=True,
-            action="store_true",
-            help="ensures that the gc blocks the main thread, default True",
-        )
-        bgcp.add_argument(
-            "--non-blocking",
-            dest="_blocking",
-            action="store_false",
-            help="makes the gc non-blocking, and thus return sooner",
-        )
         if isinstance(XSH.history, JsonHistory):
             # add actions belong only to JsonHistory
             parser.add_command(self.diff)
