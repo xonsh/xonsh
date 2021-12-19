@@ -588,7 +588,6 @@ class ArgParserAlias:
 
         Can be used to update action's attributes
         """
-        parser.add_argument()
         return
 
     @property
