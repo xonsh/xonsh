@@ -18,10 +18,10 @@ import xonsh.tools as xt
 HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": SqliteHistory}
 
 
-def construct_history(**kwargs):
+def construct_history(backend=None, **kwargs) -> "History":
     """Construct the history backend object."""
     env = XSH.env
-    backend = env.get("XONSH_HISTORY_BACKEND")
+    backend = backend or env.get("XONSH_HISTORY_BACKEND", "json")
     if isinstance(backend, str) and backend in HISTORY_BACKENDS:
         kls_history = HISTORY_BACKENDS[backend]
     elif xt.is_class(backend):
@@ -183,11 +183,14 @@ _XH_HISTORY_SESSIONS = {
 class HistoryAlias(xcli.ArgParserAlias):
     """Try 'history <command> --help' for more info"""
 
+    def hook_add_argument(self, parser, action, param):
+        if any(map(lambda x: parser.prog.endswith(x), ("show", "transfer"))):
+            if param in {"session", "source", "target"}:
+                action.choices = tuple(_XH_HISTORY_SESSIONS)
+
     def show(
         self,
-        session: xcli.Annotated[
-            str, xcli.Arg(nargs="?", choices=tuple(_XH_HISTORY_SESSIONS))
-        ] = "session",
+        session: xcli.Annotated[str, xcli.Arg(nargs="?")] = "session",
         slices: xcli.Annotated[tp.List[int], xcli.Arg(nargs="*")] = None,
         datetime_format: tp.Optional[str] = None,
         start_time: tp.Optional[str] = None,
@@ -390,20 +393,42 @@ class HistoryAlias(xcli.ArgParserAlias):
 
     def transfer(
         self,
-        name: str,
+        source: str,
+        source_file: "str|None" = None,
+        target: "str|None" = None,
+        target_file: "str|None" = None,
     ):
-        """Transfer history entries between different Xonsh backends
+        """Transfer entries between history backends.
 
         Parameters
         ----------
-        name
-            Name of the history backend
+        source
+            Name of the source history backend
+        source_file : --source-file, --sf
+            Override the default location of the history file of the backend.
+        target : --target, -t
+            Name of the target history backend. (default: $XONSH_HISTORY_BACKEND)
+        target_file : --target-file, --tf
+            Path to the location of the history file.
 
         Notes
         -----
-        When imported from other shells no translation is done.
+        It will not remove duplicate entries, use $HISTCONTROL for managing such entries.
         """
-        # todo:
+
+        if source == target:
+            self.err("source and target backend can't be the same")
+            return
+
+        source = construct_history(backend=source, filename=source_file, gc=False)
+        target = construct_history(backend=target, filename=target_file, gc=False)
+
+        for entry in source.all_items():
+            target.append(entry)
+
+        target.flush()
+
+        self.out("done.")
 
     def build(self):
         parser = self.create_parser(prog="history")
@@ -416,7 +441,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         parser.add_command(self.on)
         parser.add_command(self.clear)
         parser.add_command(self.gc)
-        parser.add_command(self._import)
+        parser.add_command(self.transfer)
 
         if isinstance(XSH.history, JsonHistory):
             # add actions belong only to JsonHistory

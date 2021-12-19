@@ -217,6 +217,10 @@ def add_args(
         action = parser.add_argument(*flags, **kwargs)
         if completer:
             action.completer = completer  # type: ignore
+        if hasattr(func, "__self__"):
+            inst = func.__self__
+            if hasattr(inst, "hook_add_argument"):
+                inst.hook_add_argument(parser=parser, action=action, param=name)
         action.help = action.help or ""
         if (action.default or action.default is False) and (
             "%(default)s" not in action.help
@@ -578,6 +582,14 @@ class ArgParserAlias:
         if self.kwargs:
             return self.create_parser(**self.kwargs)
         raise NotImplementedError
+
+    def hook_add_argument(self, parser: "ArgParser", action: "ap.Action", param: str):
+        """Hook into parser.add_argument step.
+
+        Can be used to update action's attributes
+        """
+        parser.add_argument()
+        return
 
     @property
     def parser(self):
