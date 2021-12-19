@@ -420,13 +420,13 @@ class HistoryAlias(xcli.ArgParserAlias):
             self.err("source and target backend can't be the same")
             return
 
-        source = construct_history(backend=source, filename=source_file, gc=False)
-        target = construct_history(backend=target, filename=target_file, gc=False)
+        src = construct_history(backend=source, filename=source_file, gc=False)
+        dest = construct_history(backend=target, filename=target_file, gc=False)
 
-        for entry in source.all_items():
-            target.append(entry)
+        for entry in src.all_items():
+            dest.append(entry)
 
-        target.flush()
+        dest.flush()
 
         self.out("done.")
 

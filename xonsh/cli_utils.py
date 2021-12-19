@@ -217,10 +217,10 @@ def add_args(
         action = parser.add_argument(*flags, **kwargs)
         if completer:
             action.completer = completer  # type: ignore
-        if hasattr(func, "__self__"):
-            inst = func.__self__
-            if hasattr(inst, "hook_add_argument"):
-                inst.hook_add_argument(parser=parser, action=action, param=name)
+
+        cls_inst = getattr(func, "__self__", None)
+        if cls_inst and hasattr(cls_inst, "hook_add_argument"):
+            cls_inst.hook_add_argument(parser=parser, action=action, param=name)
         action.help = action.help or ""
         if (action.default or action.default is False) and (
             "%(default)s" not in action.help
