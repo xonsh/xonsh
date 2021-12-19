@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import socketserver
+from urllib import parse
 from http import server
 from pprint import pprint
 from argparse import ArgumentParser
@@ -76,22 +77,45 @@ def insert_into_xonshrc(
 
 
 class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
-    def _set_headers(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
+    def _send(self, data: "bytes|dict|str", status=200):
+        self.send_response(status)
+
+        if isinstance(data, bytes):
+            content_type = "text/html"
+        elif isinstance(data, dict):
+            content_type = "application/json"
+            data = json.dumps(data).encode()
+        else:
+            content_type = "text/html"
+            data = str(data).encode()
+
+        self.send_header("Content-type", content_type)
+        self.send_header("Content-Length", str(len(data)))
         self.end_headers()
+        self.wfile.write(data)
+        self.wfile.flush()
+
+    def _read(self):
+        content_len = int(self.headers.get("content-length", 0))
+        return self.rfile.read(content_len)
+
+    def do_GET(self) -> None:
+        url = parse.urlparse(self.path)
+        if url.path == "/data.json":
+            qs = parse.parse_qs(url.query)
+            return self._send(qs)
+        else:
+            return super().do_GET()
 
     def do_POST(self):
         """Reads post request body"""
-        self._set_headers()
-        content_len = int(self.headers.get("content-length", 0))
-        post_body = self.rfile.read(content_len)
+        post_body = self._read()
         config = json.loads(post_body)
         print("Web Config Values:")
         pprint(config)
         fname = insert_into_xonshrc(config)
         print("Wrote out to " + fname)
-        self.wfile.write(b"received post request:<br>" + post_body)
+        self._send(b"received post request:<br>" + post_body)
 
 
 def make_parser():
