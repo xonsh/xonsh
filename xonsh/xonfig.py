@@ -698,7 +698,7 @@ def _web(
 
     Parameters
     ----------
-    browser : --nb, --no-browser
+    browser : --nb, --no-browser, -n
         don't open browser
     """
 

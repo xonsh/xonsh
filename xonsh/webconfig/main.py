@@ -8,6 +8,7 @@ from http import server
 from pprint import pprint
 from argparse import ArgumentParser
 import typing as tp
+from . import xonsh_data
 
 RENDERERS: tp.List[tp.Callable] = []
 
@@ -102,8 +103,17 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
     def do_GET(self) -> None:
         url = parse.urlparse(self.path)
         if url.path == "/data.json":
-            qs = parse.parse_qs(url.query)
-            return self._send(qs)
+            colors = list(xonsh_data.render_colors())
+            prompts = list(xonsh_data.render_prompts())
+            return self._send(
+                {
+                    "xontribs": list(xonsh_data.render_xontribs()),
+                    "colors": colors,
+                    "prompts": prompts,
+                    "colorValue": colors[0],
+                    "promptValue": prompts[0],
+                }
+            )
         else:
             return super().do_GET()
 
@@ -122,6 +132,7 @@ def make_parser():
     p = ArgumentParser("xonfig web")
     p.add_argument(
         "--no-browser",
+        "-n",
         action="store_false",
         dest="browser",
         default=True,
@@ -131,6 +142,10 @@ def make_parser():
 
 
 def main(args=None):
+    from xonsh.main import setup
+
+    setup()
+
     p = make_parser()
     ns = p.parse_args(args=args)
 
@@ -161,4 +176,5 @@ def main(args=None):
 
 
 if __name__ == "__main__":
+    # watchexec -r -e py -- python -m xonsh.webconfig --no-browser
     main()
