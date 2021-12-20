@@ -2,6 +2,7 @@
 """script for compiling elm source and dumping it to the js folder."""
 import os
 import io
+import sys
 import tempfile
 from pprint import pprint
 
@@ -13,17 +14,29 @@ from xonsh.tools import print_color, format_color
 from xonsh.style_tools import partial_color_tokenize
 from xonsh.color_tools import rgb_to_ints
 from xonsh.pygments_cache import get_all_styles
-from xonsh.pyghooks import XonshStyle, xonsh_style_proxy, XonshHtmlFormatter, Token, XonshLexer
+from xonsh.pyghooks import (
+    XonshStyle,
+    xonsh_style_proxy,
+    XonshHtmlFormatter,
+    Token,
+    XonshLexer,
+)
 from xonsh.prompt.base import PromptFormatter
 from xonsh.xontribs_meta import get_xontribs, Xontrib
+from xonsh.built_ins import (
+    XSH,
+    subproc_captured_stdout as capt,
+    subproc_uncaptured as run,
+)
 
 
-$RAISE_SUBPROC_ERROR = True
-$XONSH_SHOW_TRACEBACK = False
+# $RAISE_SUBPROC_ERROR = True
+# $XONSH_SHOW_TRACEBACK = False
 
 #
 # helper funcs
 #
+
 
 def escape(s):
     return s.replace("\n", "").replace('"', '\\"')
@@ -33,8 +46,8 @@ def invert_color(orig):
     r, g, b = rgb_to_ints(orig)
     inverted = [255 - r, 255 - g, 255 - b]
     new = [hex(n)[2:] for n in inverted]
-    new = [n if len(n) == 2 else '0' + n for n in new]
-    return ''.join(new)
+    new = [n if len(n) == 2 else "0" + n for n in new]
+    return "".join(new)
 
 
 def html_format(s, style="default"):
@@ -43,7 +56,7 @@ def html_format(s, style="default"):
     # make sure we have a foreground color
     fgcolor = proxy_style._styles[Token.Text][0]
     if not fgcolor:
-        fgcolor = invert_color(proxy_style.background_color[1:].strip('#'))
+        fgcolor = invert_color(proxy_style.background_color[1:].strip("#"))
     # need to generate stream before creating formatter so that all tokens actually exist
     if isinstance(s, str):
         token_stream = partial_color_tokenize(s)
@@ -62,12 +75,12 @@ def html_format(s, style="default"):
 
 def rst_to_html(s):
     template = "%(body)s"
-    with tempfile.NamedTemporaryFile('w+') as t, tempfile.NamedTemporaryFile('w+') as f:
+    with tempfile.NamedTemporaryFile("w+") as t, tempfile.NamedTemporaryFile("w+") as f:
         t.write(template)
         t.flush()
         f.write(s)
         f.flush()
-        html = $(rst2html5.py --template @(t.name) @(f.name))
+        html = capt([["rst2html5.py", "--template", t.name, f.name]])
     return html
 
 
@@ -85,32 +98,58 @@ import String
 
 # render prompts
 PROMPTS = [
-    ("default", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
-                '{branch_color}{curr_branch: {}}{RESET} {BOLD_BLUE}'
-                '{prompt_end}{RESET} '),
-    ("debian chroot", '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{RESET}> '),
-    ("minimalist", '{BOLD_GREEN}{cwd_base}{RESET} ) '),
-    ("terlar", '{env_name}{BOLD_GREEN}{user}{RESET}@{hostname}:'
-               '{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{RESET} '),
-    ("default with git status", '{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}'
-                '{branch_color}{gitstatus: {}}{RESET} {BOLD_BLUE}'
-                '{prompt_end}{RESET} '),
-    ("robbyrussell", '{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{RESET} '),
+    (
+        "default",
+        "{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}"
+        "{branch_color}{curr_branch: {}}{RESET} {BOLD_BLUE}"
+        "{prompt_end}{RESET} ",
+    ),
+    ("debian chroot", "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{RESET}> "),
+    ("minimalist", "{BOLD_GREEN}{cwd_base}{RESET} ) "),
+    (
+        "terlar",
+        "{env_name}{BOLD_GREEN}{user}{RESET}@{hostname}:"
+        "{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{RESET} ",
+    ),
+    (
+        "default with git status",
+        "{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}"
+        "{branch_color}{gitstatus: {}}{RESET} {BOLD_BLUE}"
+        "{prompt_end}{RESET} ",
+    ),
+    ("robbyrussell", "{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{RESET} "),
     ("just a dollar", "$ "),
-    ("simple pythonista", "{INTENSE_RED}{user}{RESET} at {INTENSE_PURPLE}{hostname}{RESET} "
-                          "in {BOLD_GREEN}{cwd}{RESET}\\n↪ "),
-    ("informative", "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
-                    "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\\n> "),
-    ("informative Version Control", "{YELLOW}{env_name} "
-                    "{BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} "),
+    (
+        "simple pythonista",
+        "{INTENSE_RED}{user}{RESET} at {INTENSE_PURPLE}{hostname}{RESET} "
+        "in {BOLD_GREEN}{cwd}{RESET}\\n↪ ",
+    ),
+    (
+        "informative",
+        "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
+        "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\\n> ",
+    ),
+    (
+        "informative Version Control",
+        "{YELLOW}{env_name} " "{BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} ",
+    ),
     ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> "),
-    ("classic with git status", "{gitstatus} {RESET}{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> "),
+    (
+        "classic with git status",
+        "{gitstatus} {RESET}{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> ",
+    ),
     ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{RESET}> "),
     ("sorin", "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{RESET} "),
-    ("acidhub", "❰{INTENSE_GREEN}{user}{RESET}❙{YELLOW}{cwd}{RESET}{env_name}❱{gitstatus}≻ "),
-    ("nim", "{INTENSE_GREEN}┬─[{YELLOW}{user}{RESET}@{BLUE}{hostname}{RESET}:{cwd}"
-            "{INTENSE_GREEN}]─[{localtime}]─[{RESET}G:{INTENSE_GREEN}{curr_branch}=]"
-            "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{RESET} "),
+    (
+        "acidhub",
+        "❰{INTENSE_GREEN}{user}{RESET}❙{YELLOW}{cwd}{RESET}{env_name}❱{gitstatus}≻ ",
+    ),
+    (
+        "nim",
+        "{INTENSE_GREEN}┬─[{YELLOW}{user}{RESET}@{BLUE}{hostname}{RESET}:{cwd}"
+        "{INTENSE_GREEN}]─[{localtime}]─[{RESET}G:{INTENSE_GREEN}{curr_branch}=]"
+        "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{RESET} ",
+    ),
 ]
 
 prompt_header = """type alias PromptData =
@@ -122,16 +161,17 @@ prompt_header = """type alias PromptData =
 prompts : List PromptData
 prompts ="""
 
+
 def render_prompts(lines):
     print_color("Rendering {GREEN}prompts{RESET}")
     prompt_format = PromptFormatter()
-    fields = dict($PROMPT_FIELDS)
+    fields = dict(XSH.env.get("PROMPT_FIELDS") or {})
     fields.update(
         cwd="~/snail/stuff",
         cwd_base="stuff",
         user="lou",
         hostname="carcolh",
-        env_name=fields['env_prefix'] + "env" + fields["env_postfix"],
+        env_name=fields["env_prefix"] + "env" + fields["env_postfix"],
         curr_branch="branch",
         gitstatus="{CYAN}branch|{BOLD_BLUE}+2{RESET}⚑7",
         branch_color="{BOLD_INTENSE_RED}",
@@ -159,19 +199,20 @@ type alias ColorData =
 colors : List ColorData
 colors ="""
 
+
 def render_colors(lines):
     print_color("Rendering {GREEN}color styles{RESET}")
     source = (
-        'import sys\n'
+        "import sys\n"
         'echo "Welcome $USER on" @(sys.platform)\n\n'
-        'def func(x=42):\n'
+        "def func(x=42):\n"
         '    d = {"xonsh": True}\n'
         '    return d.get("xonsh") and you\n\n'
-        '# This is a comment\n'
-        '![env | uniq | sort | grep PATH]\n'
+        "# This is a comment\n"
+        "![env | uniq | sort | grep PATH]\n"
     )
     lexer = XonshLexer()
-    lexer.add_filter('tokenmerge')
+    lexer.add_filter("tokenmerge")
     token_stream = list(pygments.lex(source, lexer=lexer))
     token_stream = [(t, s.replace("\n", "\\n")) for t, s in token_stream]
     lines.append(color_header)
@@ -228,8 +269,8 @@ def write_xonsh_data():
     render_colors(lines)
     render_xontribs(lines)
     src = "\n".join(lines) + "\n"
-    xdelm = os.path.join('elm-src', 'XonshData.elm')
-    with open(xdelm, 'w') as f:
+    xdelm = os.path.join("elm-src", "XonshData.elm")
+    with open(xdelm, "w") as f:
         f.write(src)
 
 
@@ -237,45 +278,66 @@ def write_xonsh_data():
 # now compile the sources
 #
 SOURCES = [
-    'App.elm',
+    "App.elm",
 ]
-with ${...}.swap(RAISE_SUBPROC_ERROR=False):
-    HAVE_UGLIFY = bool(!(which uglifyjs e>o))
 
-UGLIFY_FLAGS = ('pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9",'
-                'pure_getters,keep_fargs=false,unsafe_comps,unsafe')
+HAVE_UGLIFY = False
+UGLIFY_FLAGS = (
+    'pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9",'
+    "pure_getters,keep_fargs=false,unsafe_comps,unsafe"
+)
 
 
-def compile():
+def compile(debug=False):
+    if not debug:
+        with XSH.env.swap(RAISE_SUBPROC_ERROR=False):
+            HAVE_UGLIFY = bool(capt(["which", "uglifyjs"]))
     for source in SOURCES:
         base = os.path.splitext(source.lower())[0]
-        src = os.path.join('elm-src', source)
-        js_target = os.path.join('js', base + '.js')
-        print_color('Compiling {YELLOW}' + src + '{RESET} -> {GREEN}' +
-                    js_target + '{RESET}')
-        $XONSH_SHOW_TRACEBACK = False
+        src = os.path.join("elm-src", source)
+        js_target = os.path.join("js", base + ".js")
+        print_color(
+            "Compiling {YELLOW}" + src + "{RESET} -> {GREEN}" + js_target + "{RESET}"
+        )
+        XSH.env["XONSH_SHOW_TRACEBACK"] = True
         try:
-            ![elm make --optimize --output @(js_target) @(src)]
-        except Exception:
+            args = ["elm", "make", "--output", js_target, src]
+            if not debug:
+                args.append("--optimize")
+            run(args)
+        except Exception as ex:
+            print(ex)
             import sys
+
             sys.exit(1)
         new_files = [js_target]
-        min_target = os.path.join('js', base + '.min.js')
+        min_target = os.path.join("js", base + ".min.js")
         if os.path.exists(min_target):
-            ![rm -v @(min_target)]
-        if HAVE_UGLIFY:
-            print_color('Minifying {YELLOW}' + js_target + '{RESET} -> {GREEN}' +
-                        min_target + '{RESET}')
-            ![uglifyjs @(js_target) --compress @(UGLIFY_FLAGS) |
-              uglifyjs --mangle --output @(min_target)]
+            run(["rm", "-v", min_target])
+        if (not debug) and HAVE_UGLIFY:
+            print_color(
+                "Minifying {YELLOW}"
+                + js_target
+                + "{RESET} -> {GREEN}"
+                + min_target
+                + "{RESET}"
+            )
+            run(
+                ["uglifyjs", js_target, "--compress", UGLIFY_FLAGS],
+                "|",
+                ["uglifyjs", "--mangle", "--output", min_target],
+            )
             new_files.append(min_target)
-        ![ls -l @(new_files)]
+        run(["ls", "-l"] + new_files)
 
 
-def main():
-    write_xonsh_data()
-    compile()
+def main(*args):
+    # write_xonsh_data()
+    print(args)
+    debug = "--debug" in args
+    compile(debug)
 
 
 if __name__ == "__main__":
-    main()
+    XSH.load()
+    main(*sys.argv)
