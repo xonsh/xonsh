@@ -18,10 +18,10 @@ import xonsh.tools as xt
 HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": SqliteHistory}
 
 
-def construct_history(**kwargs):
+def construct_history(backend=None, **kwargs) -> "History":
     """Construct the history backend object."""
     env = XSH.env
-    backend = env.get("XONSH_HISTORY_BACKEND")
+    backend = backend or env.get("XONSH_HISTORY_BACKEND", "json")
     if isinstance(backend, str) and backend in HISTORY_BACKENDS:
         kls_history = HISTORY_BACKENDS[backend]
     elif xt.is_class(backend):
@@ -183,11 +183,14 @@ _XH_HISTORY_SESSIONS = {
 class HistoryAlias(xcli.ArgParserAlias):
     """Try 'history <command> --help' for more info"""
 
+    def hook_add_argument(self, parser, action, param):
+        if any(map(lambda x: parser.prog.endswith(x), ("show", "transfer"))):
+            if param in {"session", "source", "target"}:
+                action.choices = tuple(_XH_HISTORY_SESSIONS)
+
     def show(
         self,
-        session: xcli.Annotated[
-            str, xcli.Arg(nargs="?", choices=tuple(_XH_HISTORY_SESSIONS))
-        ] = "session",
+        session: xcli.Annotated[str, xcli.Arg(nargs="?")] = "session",
         slices: xcli.Annotated[tp.List[int], xcli.Arg(nargs="*")] = None,
         datetime_format: tp.Optional[str] = None,
         start_time: tp.Optional[str] = None,
@@ -345,7 +348,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     def gc(
         size: xcli.Annotated[tp.Tuple[int, str], xcli.Arg(nargs=2)] = None,
         force=False,
-        _blocking=True,
+        blocking=True,
     ):
         """Launches a new history garbage collector
 
@@ -355,9 +358,11 @@ class HistoryAlias(xcli.ArgParserAlias):
             Next two arguments represent the history size and units; e.g. "--size 8128 commands"
         force : -f, --force
             perform garbage collection even if history much bigger than configured limit
+        blocking : -n, --non-blocking
+            makes the gc non-blocking, and thus return sooner. By default it runs on main thread blocking input.
         """
         hist = XSH.history
-        hist.run_gc(size=size, blocking=_blocking, force=force)
+        hist.run_gc(size=size, blocking=blocking, force=force)
 
     @staticmethod
     def diff(
@@ -386,6 +391,45 @@ class HistoryAlias(xcli.ArgParserAlias):
             hd = xdh.HistoryDiffer(a, b, reopen=reopen, verbose=verbose)
             xt.print_color(hd.format(), file=_stdout)
 
+    def transfer(
+        self,
+        source: str,
+        source_file: "str|None" = None,
+        target: "str|None" = None,
+        target_file: "str|None" = None,
+    ):
+        """Transfer entries between history backends.
+
+        Parameters
+        ----------
+        source
+            Name of the source history backend
+        source_file : --source-file, --sf
+            Override the default location of the history file of the backend.
+        target : --target, -t
+            Name of the target history backend. (default: $XONSH_HISTORY_BACKEND)
+        target_file : --target-file, --tf
+            Path to the location of the history file.
+
+        Notes
+        -----
+        It will not remove duplicate entries, use $HISTCONTROL for managing such entries.
+        """
+
+        if source == target:
+            self.err("source and target backend can't be the same")
+            return
+
+        src = construct_history(backend=source, filename=source_file, gc=False)
+        dest = construct_history(backend=target, filename=target_file, gc=False)
+
+        for entry in src.all_items():
+            dest.append(entry)
+
+        dest.flush()
+
+        self.out("done.")
+
     def build(self):
         parser = self.create_parser(prog="history")
         parser.add_command(self.show, prefix_chars="-+")
@@ -396,22 +440,9 @@ class HistoryAlias(xcli.ArgParserAlias):
         parser.add_command(self.off)
         parser.add_command(self.on)
         parser.add_command(self.clear)
+        parser.add_command(self.gc)
+        parser.add_command(self.transfer)
 
-        gcp = parser.add_command(self.gc)
-        bgcp = gcp.add_mutually_exclusive_group()
-        bgcp.add_argument(
-            "--blocking",
-            dest="_blocking",
-            default=True,
-            action="store_true",
-            help="ensures that the gc blocks the main thread, default True",
-        )
-        bgcp.add_argument(
-            "--non-blocking",
-            dest="_blocking",
-            action="store_false",
-            help="makes the gc non-blocking, and thus return sooner",
-        )
         if isinstance(XSH.history, JsonHistory):
             # add actions belong only to JsonHistory
             parser.add_command(self.diff)
