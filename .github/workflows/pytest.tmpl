@@ -25,6 +25,7 @@ jobs:
     {% endraw %}
     steps:
       - uses: actions/checkout@v2
+      {% if not use_setup_py %}
       - uses: actions/cache@v2
         with:{% raw %}
           path: |
@@ -33,13 +34,14 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.python-version }}-env-${{ hashFiles('requirements/tests.txt') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-env-{% endraw %}
+      {% endif %}
 
       {% if use_setup_py %}
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: {{ '${{ matrix.python-version }}' }}
-
+          cache: 'pip'
       {% else %}
       - name: Setup conda
         uses: conda-incubator/setup-miniconda@v2
@@ -50,6 +52,7 @@ jobs:
           condarc-file: ci/condarc.yml
           use-only-tar-bz2: true
       {% endif %}
+      {% if not use_setup_py %}
       - name: Get pip cache dir
         id: pip-cache
         run: |
@@ -64,6 +67,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       {% endraw %}
+      {% endif %}
       - name: Install dependencies
         run: |
           python -m pip --version
