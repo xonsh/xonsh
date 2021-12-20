@@ -42,6 +42,7 @@ jobs:
         with:
           python-version: {{ '${{ matrix.python-version }}' }}
           cache: 'pip'
+          cache-dependency-path: 'requirements/tests.txt'
       {% else %}
       - name: Setup conda
         uses: conda-incubator/setup-miniconda@v2
