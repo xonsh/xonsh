@@ -30,6 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip --version
+          python -m pip install wheel
           python -m pip install -r requirements/tests.txt
           python -m pip install -e . --no-deps
       - name: Run tests
