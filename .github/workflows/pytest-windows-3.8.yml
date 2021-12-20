@@ -16,9 +16,6 @@ jobs:
       matrix:
         os: [windows-latest]
         python-version: [ "3.8" ]
-    defaults:
-      run:
-        shell: bash
 
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:

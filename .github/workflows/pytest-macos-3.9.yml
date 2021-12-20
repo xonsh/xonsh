@@ -16,9 +16,6 @@ jobs:
       matrix:
         os: [macOS-latest]
         python-version: [ "3.9" ]
-    defaults:
-      run:
-        shell: bash
 
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:

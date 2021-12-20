@@ -16,10 +16,11 @@ jobs:
       matrix:
         os: [{{ OS_IMAGE }}]
         python-version: [ "{{ PYTHON_VERSION }}" ]
+    {% if not use_setup_py %}
     defaults:
       run:
         shell: bash{% if not use_setup_py %} -l {0}{% endif %}
-
+    {% endif %}
     {% raw %}
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     {% endraw %}
