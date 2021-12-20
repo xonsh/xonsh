@@ -224,7 +224,9 @@ colorButton cd =
     in
     Card.config [ Card.secondary, Card.attrs [] ]
         |> Card.header [ class "text-center" ]
-            [ h3 [] [ text cd.name ]
+            [ Button.button [ Button.primary, Button.attrs [ onClick (ColorSelect cd) ] ]
+                [ h3 [] [ text cd.name ]
+                ]
             ]
         |> Card.block []
             [ Block.custom <| span [] display
