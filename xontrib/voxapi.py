@@ -14,6 +14,7 @@ import shutil
 import logging
 import collections.abc
 import subprocess as sp
+import typing
 
 from xonsh.built_ins import XSH
 from xonsh.platform import ON_POSIX, ON_WINDOWS
@@ -61,9 +62,11 @@ Fired after an environment is deleted (through vox).
 )
 
 
-VirtualEnvironment = collections.namedtuple(
-    "VirtualEnvironment", ["env", "bin", "lib", "inc"]
-)
+class VirtualEnvironment(typing.NamedTuple):
+    env: str
+    bin: str
+    lib: str
+    inc: str
 
 
 def _subdir_names():
@@ -157,9 +160,11 @@ class Vox(collections.abc.Mapping):
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
         """
-        interpreter = (
-            _get_vox_default_interpreter() if interpreter is None else interpreter
-        )
+
+        if interpreter is None:
+            interpreter = _get_vox_default_interpreter()
+            print(f"Using Interpreter: {interpreter}")
+
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
         if isinstance(name, os.PathLike):
@@ -194,13 +199,15 @@ class Vox(collections.abc.Mapping):
         with_pip : bool
             If True, ensure pip is installed in the virtual environment.
         """
-        interpreter = (
-            _get_vox_default_interpreter() if interpreter is None else interpreter
-        )
+
+        if interpreter is None:
+            interpreter = _get_vox_default_interpreter()
+            print(f"Using Interpreter: {interpreter}")
+
         # venv doesn't reload this, so we have to do it ourselves.
         # Is there a bug for this in Python? There should be.
-        env_path, bin_path = self[name]
-        cfgfile = os.path.join(env_path, "pyvenv.cfg")
+        venv = self[name]
+        cfgfile = os.path.join(venv.env, "pyvenv.cfg")
         cfgops = {}
         with open(cfgfile) as cfgfile:
             for line in cfgfile:
@@ -217,7 +224,8 @@ class Vox(collections.abc.Mapping):
         # END things we shouldn't be doing.
 
         # Ok, do what we came here to do.
-        self._create(env_path, interpreter, upgrade=True, **flags)
+        self._create(venv.env, interpreter, upgrade=True, **flags)
+        return venv
 
     @staticmethod
     def _create(
@@ -229,7 +237,7 @@ class Vox(collections.abc.Mapping):
         upgrade=False,
     ):
         version_output = sp.check_output(
-            [interpreter, "--version"], stderr=sp.STDOUT, universal_newlines=True
+            [interpreter, "--version"], stderr=sp.STDOUT, text=True
         )
 
         interpreter_major_version = int(version_output.split()[-1].split(".")[0])
@@ -263,7 +271,7 @@ class Vox(collections.abc.Mapping):
             os.path.basename(name) not in self.sub_dirs
         )  # FIXME: Check the middle components, too
 
-    def __getitem__(self, name):
+    def __getitem__(self, name) -> "VirtualEnvironment":
         """Get information about a virtual environment.
 
         Parameters
@@ -428,7 +436,7 @@ def _get_vox_default_interpreter():
     """Return the interpreter set by the $VOX_DEFAULT_INTERPRETER if set else sys.executable"""
     default = "python"
     if default in XSH.commands_cache:
-        default = XSH.commands_cache[default]
+        default = XSH.commands_cache.locate_binary(default)
     else:
         default = sys.executable
     return XSH.env.get("VOX_DEFAULT_INTERPRETER", default)
