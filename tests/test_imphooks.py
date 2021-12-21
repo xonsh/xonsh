@@ -5,20 +5,14 @@ from importlib import import_module
 import pytest
 
 from xonsh import imphooks
-from xonsh.execer import Execer
 from xonsh.environ import Env
 from xonsh.built_ins import XSH
-
-# TODO: don't modify global state like this
-if XSH.execer is None:
-    XSH.load(execer=Execer())
-imphooks.install_import_hooks(XSH.execer)
 
 
 @pytest.fixture(autouse=True)
 def imp_env(xession):
-    xession.load(execer=Execer())
     xession.env = Env({"PATH": [], "PATHEXT": []})
+    imphooks.install_import_hooks(xession.execer)
     yield
     XSH.unload()
 
