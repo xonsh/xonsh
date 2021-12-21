@@ -26,7 +26,6 @@ class Execer:
         filename="<xonsh-code>",
         debug_level=0,
         parser_args=None,
-        unload=True,
         scriptcache=True,
         cacheall=False,
     ):
@@ -50,7 +49,6 @@ class Execer:
         self.filename = filename
         self._default_filename = filename
         self.debug_level = debug_level
-        self.unload = unload
         self.scriptcache = scriptcache
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)

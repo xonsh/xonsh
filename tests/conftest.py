@@ -119,10 +119,7 @@ def session_env():
 
 @pytest.fixture(scope="session")
 def session_execer():
-    return Execer(
-        unload=False,
-        load=False,  # loading session is controlled by the fixture
-    )
+    return Execer()
 
 
 @pytest.fixture
