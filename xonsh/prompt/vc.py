@@ -1,6 +1,6 @@
 """Prompt formatter for simple version control branches"""
 # pylint:disable=no-member, invalid-name
-
+import contextlib
 import os
 import pathlib
 import queue
@@ -29,13 +29,18 @@ def _run_git_cmd(cmd):
 
 
 def _get_git_branch(q):
-    try:
-        cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-        branch = xt.decode_bytes(_run_git_cmd(cmd))
-    except (subprocess.CalledProcessError, OSError):
-        q.put(None)
-    else:
-        q.put(branch.splitlines()[0] if branch else None)
+    # from https://git-blame.blogspot.com/2013/06/checking-current-branch-programatically.html
+    for cmds in [
+        "git symbolic-ref --short HEAD",
+        "git show-ref --head -s --abbrev",  # in detached mode return sha1
+    ]:
+        with contextlib.suppress(subprocess.CalledProcessError, OSError):
+            branch = xt.decode_bytes(_run_git_cmd(cmds.split()))
+            if branch:
+                q.put(os.path.basename(branch.splitlines()[0]))
+                return
+    # all failed
+    q.put(None)
 
 
 def get_git_branch():
