@@ -550,7 +550,6 @@ class XonshSession:
         self.stderr_uncaptured = None
         self._py_exit = None
         self._py_quit = None
-        self.execer = None
         self.commands_cache = None
         self.modules_cache = None
         self.all_jobs = None

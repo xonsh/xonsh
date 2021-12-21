@@ -67,7 +67,6 @@ class CommandsCache(cabc.Mapping):
             yield cmd, (path, is_alias)
 
     def __len__(self):
-        self.update_cache()
         return len(self.all_commands)
 
     def __getitem__(self, key):
