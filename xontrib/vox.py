@@ -45,31 +45,7 @@ class VoxHandler(xcli.ArgParserAlias):
         self.vox = voxapi.Vox()
         parser = self.create_parser(prog="vox")
 
-        create = parser.add_command(
-            self.new,
-            aliases=["create"],
-        )
-
-        group = create.add_mutually_exclusive_group()
-        group.add_argument(
-            "--symlinks",
-            default=not ON_WINDOWS,
-            action="store_true",
-            dest="_symlinks",
-            help="Try to use symlinks rather than copies, "
-            "when symlinks are not the default for "
-            "the platform.",
-        )
-        group.add_argument(
-            "--copies",
-            default=ON_WINDOWS,
-            action="store_false",
-            dest="_symlinks",
-            help="Try to use copies rather than symlinks, "
-            "even when symlinks are the default for "
-            "the platform.",
-        )
-
+        parser.add_command(self.new, aliases=["create"])
         parser.add_command(self.activate, aliases=["workon", "enter"])
         parser.add_command(self.deactivate, aliases=["exit"])
         parser.add_command(self.list, aliases=["ls"])
@@ -81,17 +57,30 @@ class VoxHandler(xcli.ArgParserAlias):
         parser.add_command(self.wipe)
         parser.add_command(self.project_set)
         parser.add_command(self.project_get)
+        parser.add_command(self.upgrade)
 
         return parser
+
+    def hook_pre_add_argument(self, param: str, func, flags, kwargs):
+        if func.__name__ in {"new", "upgrade"}:
+            if ON_WINDOWS and param == "symlinks":
+                # copies by default on windows
+                kwargs["default"] = False
+                kwargs["action"] = "store_true"
+                kwargs["help"] = "Try to use symlinks rather than copies"
+                flags = ["--symlinks"]
+        return flags, kwargs
+
+    def hook_post_add_argument(self, action, param: str, **_):
+        if param == "interpreter":
+            action.completer = py_interpreter_path_completer
 
     def new(
         self,
         name: xcli.Annotated[str, xcli.Arg(metavar="ENV")],
-        interpreter: xcli.Annotated[
-            str, xcli.Arg(completer=py_interpreter_path_completer)
-        ] = None,
+        interpreter: "str|None" = None,
         system_site_packages=False,
-        _symlinks=False,
+        symlinks=True,
         without_pip=False,
         activate=False,
         temporary=False,
@@ -111,9 +100,8 @@ class VoxHandler(xcli.ArgParserAlias):
         system_site_packages : --system-site-packages, --ssp
             If True, the system (global) site-packages dir is available to
             created environments.
-        _symlinks : bool
-            If True, attempt to symlink rather than copy files into virtual
-            environment.
+        symlinks : --copies
+            Try to use copies rather than symlinks.
         without_pip : --without-pip, --wp
             Skips installing or upgrading pip in the virtual environment
         activate : -a, --activate
@@ -137,7 +125,7 @@ class VoxHandler(xcli.ArgParserAlias):
         self.vox.create(
             name,
             system_site_packages=system_site_packages,
-            symlinks=_symlinks,
+            symlinks=symlinks,
             with_pip=(not without_pip),
             interpreter=interpreter,
         )
@@ -449,7 +437,7 @@ class VoxHandler(xcli.ArgParserAlias):
         Parameters
         ----------
         venv
-            name of the venv
+            name of the venv. Defaults to currently active venv
         """
         env_dir = self._get_env_dir(venv)
         pip_bin = self.vox.get_binary_path("pip", env_dir)
@@ -477,6 +465,36 @@ class VoxHandler(xcli.ArgParserAlias):
             name of the venv
         """
         print(self.vox[venv or ...])
+
+    def upgrade(
+        self,
+        name: _venv_option = None,
+        interpreter: "str|None" = None,
+        symlinks=True,
+        with_pip=False,
+    ):
+        """Upgrade the environment directory to use this version
+        of Python, assuming Python has been upgraded in-place.
+
+        WARNING: If a virtual environment was created with symlinks or without PIP, you must
+        specify these options again on upgrade.
+
+        Parameters
+        ----------
+        name
+            Name or the path to the virtual environment
+        interpreter: -p, --interpreter
+            Python interpreter used to create the virtual environment.
+            Can be configured via the $VOX_DEFAULT_INTERPRETER environment variable.
+        symlinks : --copies
+            Try to use copies rather than symlinks.
+        with_pip : --without-pip, --wp
+            Skips installing or upgrading pip in the virtual environment
+        """
+        venv = self.vox.upgrade(
+            name or ..., symlinks=symlinks, with_pip=with_pip, interpreter=interpreter
+        )
+        print(venv)
 
 
 XSH.aliases["vox"] = VoxHandler()

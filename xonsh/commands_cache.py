@@ -69,7 +69,7 @@ class CommandsCache(cabc.Mapping):
     def __len__(self):
         return len(self.all_commands)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> "tuple[str, bool]":
         self.update_cache()
         return self.lazyget(key)
 

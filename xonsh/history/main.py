@@ -183,8 +183,8 @@ _XH_HISTORY_SESSIONS = {
 class HistoryAlias(xcli.ArgParserAlias):
     """Try 'history <command> --help' for more info"""
 
-    def hook_add_argument(self, parser, action, param):
-        if any(map(lambda x: parser.prog.endswith(x), ("show", "transfer"))):
+    def hook_post_add_argument(self, action, param, func, **_):
+        if func.__name__ in {"show", "transfer"}:
             if param in {"session", "source", "target"}:
                 action.choices = tuple(_XH_HISTORY_SESSIONS)
 

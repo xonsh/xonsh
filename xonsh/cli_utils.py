@@ -214,16 +214,31 @@ def add_args(
         kwargs.setdefault("help", doc.params.get(name))
 
         completer = kwargs.pop("completer", None)
+        cls_inst = getattr(func, "__self__", None)
+
+        if cls_inst and isinstance(cls_inst, ArgParserAlias):
+            flags, kwargs = cls_inst.hook_pre_add_argument(
+                param=name, func=func, flags=flags, kwargs=kwargs
+            )
+
         action = parser.add_argument(*flags, **kwargs)
+
         if completer:
             action.completer = completer  # type: ignore
 
-        cls_inst = getattr(func, "__self__", None)
-        if cls_inst and hasattr(cls_inst, "hook_add_argument"):
-            cls_inst.hook_add_argument(parser=parser, action=action, param=name)
+        if cls_inst and isinstance(cls_inst, ArgParserAlias):
+            cls_inst.hook_post_add_argument(
+                parser=parser, action=action, param=name, func=func
+            )
+
         action.help = action.help or ""
-        if (action.default or action.default is False) and (
-            "%(default)s" not in action.help
+        # Don't show default when
+        # 1. None : No value is given for the option
+        # 2. bool : in case of flags the default is opposite of the flag's meaning
+        if (
+            action.default
+            and (not isinstance(action.default, bool))
+            and ("%(default)s" not in action.help)
         ):
             action.help += os.linesep + " (default: '%(default)s')"
         if action.type and "%(type)s" not in action.help:
@@ -583,7 +598,17 @@ class ArgParserAlias:
             return self.create_parser(**self.kwargs)
         raise NotImplementedError
 
-    def hook_add_argument(self, parser: "ArgParser", action: "ap.Action", param: str):
+    def hook_pre_add_argument(self, param: str, func, flags, kwargs):
+        """Hook to update arguments that are passed to parser.add_argument"""
+        return flags, kwargs
+
+    def hook_post_add_argument(
+        self,
+        parser: "ArgParser|ap.ArgumentParser",
+        action: "ap.Action",
+        param: str,
+        func: "tp.Callable",
+    ):
         """Hook into parser.add_argument step.
 
         Can be used to update action's attributes
