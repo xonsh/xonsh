@@ -1804,7 +1804,7 @@ class Env(cabc.MutableMapping):
             self[key] = val
         if ON_WINDOWS:
             path_key = next((k for k in self._d if k.upper() == "PATH"), None)
-            if path_key:
+            if path_key is not None:
                 self["PATH"] = self._d.pop(path_key)
         if "PATH" not in self._d:
             # this is here so the PATH is accessible to subprocs and so that

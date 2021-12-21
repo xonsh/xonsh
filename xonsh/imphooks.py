@@ -13,6 +13,7 @@ from importlib.machinery import ModuleSpec
 
 from xonsh.built_ins import XSH
 from xonsh.events import events
+from xonsh.tools import print_warning
 from xonsh.execer import Execer
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
@@ -49,22 +50,10 @@ def find_source_encoding(src):
 class XonshImportHook(MetaPathFinder, SourceLoader):
     """Implements the import hook for xonsh source files."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, execer, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._filenames = {}
-        self._execer = None
-
-    @property
-    def execer(self):
-        if XSH.execer is not None:
-            execer = XSH.execer
-            if self._execer is not None:
-                self._execer = None
-        elif self._execer is None:
-            self._execer = execer = Execer(unload=False)
-        else:
-            execer = self._execer
-        return execer
+        self._execer = execer
 
     #
     # MetaPathFinder methods
@@ -116,7 +105,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
             msg = f"xonsh file {fullname!r} could not be found"
             raise ImportError(msg)
         src = self.get_source(fullname)
-        execer = self.execer
+        execer = self._execer
         execer.filename = filename
         ctx = {}  # dummy for modules
         code = execer.compile(src, glbs=ctx, locs=ctx)
@@ -320,7 +309,10 @@ class XonshImportEventLoader(Loader):
         return object.__getattribute__(self, name)
 
 
-def install_import_hooks():
+ARG_NOT_PRESENT = object()
+
+
+def install_import_hooks(execer=ARG_NOT_PRESENT):
     """
     Install Xonsh import hooks in ``sys.meta_path`` in order for ``.xsh`` files
     to be importable and import events to be fired.
@@ -328,6 +320,16 @@ def install_import_hooks():
     Can safely be called many times, will be no-op if xonsh import hooks are
     already present.
     """
+    if execer is ARG_NOT_PRESENT:
+        print_warning(
+            "No execer was passed to install_import_hooks. "
+            "This will become an error in future."
+        )
+        execer = XSH.execer
+        if execer is None:
+            execer = Execer()
+            XSH.load(execer=execer)
+
     found_imp = found_event = False
     for hook in sys.meta_path:
         if isinstance(hook, XonshImportHook):
@@ -335,7 +337,7 @@ def install_import_hooks():
         elif isinstance(hook, XonshImportEventHook):
             found_event = True
     if not found_imp:
-        sys.meta_path.append(XonshImportHook())
+        sys.meta_path.append(XonshImportHook(execer))
     if not found_event:
         sys.meta_path.insert(0, XonshImportEventHook())
 

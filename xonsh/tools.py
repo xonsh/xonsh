@@ -2128,11 +2128,7 @@ def intensify_colors_on_win_setter(enable):
     environment variable.
     """
     enable = to_bool(enable)
-    if (
-        hasattr(xsh, "shell")
-        and xsh.shell is not None
-        and hasattr(xsh.shell.shell.styler, "style_name")
-    ):
+    if xsh.shell is not None and hasattr(xsh.shell.shell.styler, "style_name"):
         delattr(xsh.shell.shell.styler, "style_name")
     return enable
 

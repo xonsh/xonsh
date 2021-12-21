@@ -16,7 +16,6 @@ from xonsh.tools import (
     starting_whitespace,
     ends_with_colon_token,
 )
-from xonsh.built_ins import XSH
 
 
 class Execer:
@@ -28,7 +27,6 @@ class Execer:
         debug_level=0,
         parser_args=None,
         unload=True,
-        xonsh_ctx=None,
         scriptcache=True,
         cacheall=False,
     ):
@@ -40,10 +38,6 @@ class Execer:
             Debugging level to use in lexing and parsing.
         parser_args : dict, optional
             Arguments to pass down to the parser.
-        unload : bool, optional
-            Whether or not to unload xonsh builtins upon deletion.
-        xonsh_ctx : dict or None, optional
-            Xonsh xontext to load as xonsh.built_ins.XSH.ctx
         scriptcache : bool, optional
             Whether or not to use a precompiled bytecode cache when execing
             code, default: True.
@@ -60,11 +54,6 @@ class Execer:
         self.scriptcache = scriptcache
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
-        XSH.load(execer=self, ctx=xonsh_ctx)
-
-    def __del__(self):
-        if self.unload:
-            XSH.unload()
 
     def parse(self, input, ctx, mode="exec", filename=None, transform=True):
         """Parses xonsh code in a context-aware fashion. For context-free

@@ -500,11 +500,6 @@ def enter_macro(obj, raw_block, glbs, locs):
     return obj
 
 
-def _lastflush(s=None, f=None):
-    if XSH.history is not None:
-        XSH.history.flush(at_exit=True)
-
-
 @contextlib.contextmanager
 def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
@@ -518,22 +513,66 @@ def xonsh_builtins(execer=None):
 class XonshSession:
     """All components defining a xonsh session."""
 
-    def __init__(self, execer=None, ctx=None):
-        """
-        Parameters
-        ----------
-        execer : Execer, optional
-            Xonsh execution object, may be None to start
-        ctx : Mapping, optional
-            Context to start xonsh session with.
-        """
-        self.execer = execer
-        self.ctx = {} if ctx is None else ctx
+    def __init__(self):
+        self.execer = None
+        self.ctx = {}
         self.builtins_loaded = False
         self.history = None
         self.shell = None
         self.env = None
         self.rc_files = None
+
+        # AST-invoked functions
+        self.help = helper
+        self.superhelp = superhelper
+        self.pathsearch = pathsearch
+        self.globsearch = globsearch
+        self.regexsearch = regexsearch
+        self.glob = globpath
+        self.expand_path = expand_path
+
+        self.subproc_captured_stdout = subproc_captured_stdout
+        self.subproc_captured_inject = subproc_captured_inject
+        self.subproc_captured_object = subproc_captured_object
+        self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
+        self.subproc_uncaptured = subproc_uncaptured
+        self.call_macro = call_macro
+        self.enter_macro = enter_macro
+        self.path_literal = path_literal
+
+        self.list_of_strs_or_callables = list_of_strs_or_callables
+        self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
+        self.eval_fstring_field = eval_fstring_field
+
+        # Session attributes
+        self.exit = None
+        self.stdout_uncaptured = None
+        self.stderr_uncaptured = None
+        self._py_exit = None
+        self._py_quit = None
+        self.commands_cache = None
+        self.modules_cache = None
+        self.all_jobs = None
+        self.completers = None
+        self.builtins = None
+        self._initial_builtin_names = None
+        self.aliases = None
+
+    def _disable_python_exit(self):
+        # Disable Python interactive quit/exit
+        if hasattr(builtins, "exit"):
+            self._py_exit = builtins.exit
+            del builtins.exit
+
+        if hasattr(builtins, "quit"):
+            self._py_quit = builtins.quit
+            del builtins.quit
+
+    def _restore_python_exit(self):
+        if self._py_exit is not None:
+            builtins.exit = self._py_exit
+        if self._py_quit is not None:
+            builtins.quit = self._py_quit
 
     def load(self, execer=None, ctx=None, **kwargs):
         """Loads the session with default values.
@@ -555,30 +594,13 @@ class XonshSession:
             self.ctx = ctx
 
         self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env())
-        self.help = kwargs.pop("help") if "help" in kwargs else helper
-        self.superhelp = superhelper
-        self.pathsearch = pathsearch
-        self.globsearch = globsearch
-        self.regexsearch = regexsearch
-        self.glob = globpath
-        self.expand_path = expand_path
+
         self.exit = False
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
 
-        if hasattr(builtins, "exit"):
-            self.pyexit = builtins.exit
-            del builtins.exit
+        self._disable_python_exit()
 
-        if hasattr(builtins, "quit"):
-            self.pyquit = builtins.quit
-            del builtins.quit
-
-        self.subproc_captured_stdout = subproc_captured_stdout
-        self.subproc_captured_inject = subproc_captured_inject
-        self.subproc_captured_object = subproc_captured_object
-        self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
-        self.subproc_uncaptured = subproc_uncaptured
         self.execer = execer
         self.commands_cache = (
             kwargs.pop("commands_cache")
@@ -587,17 +609,11 @@ class XonshSession:
         )
         self.modules_cache = {}
         self.all_jobs = {}
-        self.ensure_list_of_strs = ensure_list_of_strs
-        self.list_of_strs_or_callables = list_of_strs_or_callables
-        self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
-        self.eval_fstring_field = eval_fstring_field
 
         self.completers = default_completers()
-        self.call_macro = call_macro
-        self.enter_macro = enter_macro
-        self.path_literal = path_literal
 
-        self.builtins = _BuiltIns(execer)
+        self.builtins = get_default_builtins(execer)
+        self._initial_builtin_names = frozenset(vars(self.builtins))
 
         aliases_given = kwargs.pop("aliases", None)
         for attr, value in kwargs.items():
@@ -606,21 +622,21 @@ class XonshSession:
         self.link_builtins(aliases_given)
         self.builtins_loaded = True
 
+        def flush_on_exit(s=None, f=None):
+            if self.history is not None:
+                self.history.flush(at_exit=True)
+
+        atexit.register(flush_on_exit)
+
+        # Add one-shot handler for exit
+        for sig in AT_EXIT_SIGNALS:
+            resetting_signal_handle(sig, flush_on_exit)
+
     def link_builtins(self, aliases=None):
         from xonsh.aliases import Aliases, make_default_aliases
 
         # public built-ins
-        proxy_mapping = [
-            "XonshError",
-            "XonshCalledProcessError",
-            "evalx",
-            "execx",
-            "compilex",
-            "events",
-            "print_color",
-            "printx",
-        ]
-        for refname in proxy_mapping:
+        for refname in self._initial_builtin_names:
             objname = f"__xonsh__.builtins.{refname}"
             proxy = DynamicAccessProxy(refname, objname)
             setattr(builtins, refname, proxy)
@@ -631,24 +647,9 @@ class XonshSession:
         if aliases is None:
             aliases = Aliases(make_default_aliases())
         self.aliases = builtins.default_aliases = builtins.aliases = aliases
-        atexit.register(_lastflush)
-        for sig in AT_EXIT_SIGNALS:
-            resetting_signal_handle(sig, _lastflush)
 
     def unlink_builtins(self):
-        names = [
-            "XonshError",
-            "XonshCalledProcessError",
-            "evalx",
-            "execx",
-            "compilex",
-            "default_aliases",
-            "events",
-            "print_color",
-            "printx",
-        ]
-
-        for name in names:
+        for name in self._initial_builtin_names:
             if hasattr(builtins, name):
                 delattr(builtins, name)
 
@@ -656,13 +657,12 @@ class XonshSession:
         if not hasattr(builtins, "__xonsh__"):
             self.builtins_loaded = False
             return
-        env = getattr(self, "env", None)
+
         if hasattr(self.env, "undo_replace_env"):
-            env.undo_replace_env()
-        if hasattr(self, "pyexit"):
-            builtins.exit = self.pyexit
-        if hasattr(self, "pyquit"):
-            builtins.quit = self.pyquit
+            self.env.undo_replace_env()
+
+        self._restore_python_exit()
+
         if not self.builtins_loaded:
             return
         self.unlink_builtins()
@@ -670,18 +670,19 @@ class XonshSession:
         self.builtins_loaded = False
 
 
-class _BuiltIns:
-    def __init__(self, execer=None):
-        from xonsh.events import events
+def get_default_builtins(execer=None):
+    from xonsh.events import events
 
-        # public built-ins
-        self.XonshError = XonshError
-        self.XonshCalledProcessError = XonshCalledProcessError
-        self.evalx = None if execer is None else execer.eval
-        self.execx = None if execer is None else execer.exec
-        self.compilex = None if execer is None else execer.compile
-        self.events = events
-        self.print_color = self.printx = print_color
+    return types.SimpleNamespace(
+        XonshError=XonshError,
+        XonshCalledProcessError=XonshCalledProcessError,
+        evalx=None if execer is None else execer.eval,
+        execx=None if execer is None else execer.exec,
+        compilex=None if execer is None else execer.compile,
+        events=events,
+        print_color=print_color,
+        printx=print_color,
+    )
 
 
 class DynamicAccessProxy:
