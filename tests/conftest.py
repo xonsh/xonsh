@@ -212,3 +212,24 @@ def pytest_configure(config):
     """Abort test run if --flake8 requested, since it would hang on parser_test.py"""
     if config.getoption("--flake8", ""):
         pytest.exit("pytest-flake8 no longer supported, use flake8 instead.")
+
+
+@pytest.fixture
+def load_xontrib():
+    to_unload = []
+
+    def wrapper(*names: str):
+        from xonsh.xontribs import xontribs_load
+
+        for name in names:
+            module = f"xontrib.{name}"
+            if module not in sys.modules:
+                to_unload.append(module)
+
+            xontribs_load([name])
+        return
+
+    yield wrapper
+
+    for mod in to_unload:
+        del sys.modules[mod]
