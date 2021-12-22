@@ -11,11 +11,15 @@ from xontrib.voxapi import Vox
 
 from tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from xontrib.vox import VoxHandler
 
 
 @pytest.fixture
-def load_vox(xession, tmpdir):
-    """load vox into session"""
+def vox(xession, tmpdir, load_xontrib) -> "VoxHandler":
+    """vox Alias function"""
 
     # Set up an isolated venv home
     xession.env["VIRTUALENV_HOME"] = str(tmpdir)
@@ -26,152 +30,114 @@ def load_vox(xession, tmpdir):
     xession.env["PATH"] = []
     xession.env["XONSH_SHOW_TRACEBACK"] = True
 
-    module = "xontrib.vox"
-    has_vox = module in sys.modules
+    load_xontrib("vox")
 
-    from xonsh.xontribs import xontribs_load
+    yield xession.aliases["vox"]
 
-    xontribs_load(["vox"])
-    yield
-    if not has_vox:
-        del sys.modules["xontrib.vox"]
+
+@pytest.fixture
+def record_events(xession):
+    class Listener:
+        def __init__(self):
+            self.last = None
+
+        def listener(self, name):
+            def _wrapper(**kwargs):
+                self.last = (name,) + tuple(kwargs.values())
+
+            return _wrapper
+
+        def __call__(self, *events: str):
+            for name in events:
+                event = getattr(xession.builtins.events, name)
+                event(self.listener(name))
+
+    yield Listener()
 
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_crud(xession, tmpdir):
+def test_vox_flow(xession, vox, record_events, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
     xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
-    last_event = None
+    record_events(
+        "vox_on_create", "vox_on_delete", "vox_on_activate", "vox_on_deactivate"
+    )
 
-    @xession.builtins.events.vox_on_create
-    def create(name, **_):
-        nonlocal last_event
-        last_event = "create", name
-
-    @xession.builtins.events.vox_on_delete
-    def delete(name, **_):
-        nonlocal last_event
-        last_event = "delete", name
-
-    vox = Vox(force_removals=True)
-    vox.create("spam")
-    vox.create("spam")
+    vox(["create", "spam"])
     assert stat.S_ISDIR(tmpdir.join("spam").stat().mode)
-    assert last_event == ("create", "spam")
+    assert record_events.last == ("vox_on_create", "spam")
 
-    ve = vox["spam"]
+    ve = vox.vox["spam"]
     assert ve.env == str(tmpdir.join("spam"))
     assert os.path.isdir(ve.bin)
 
-    assert "spam" in vox
-    assert "spam" in list(vox)
+    assert "spam" in vox.vox
+    assert "spam" in list(vox.vox)
 
-    del vox["spam"]
-
-    assert not tmpdir.join("spam").check()
-    assert last_event == ("delete", "spam")
-
-
-@skip_if_on_msys
-@skip_if_on_conda
-def test_activate(xession, tmpdir):
-    """
-    Creates a virtual environment, gets it, enumerates it, and then deletes it.
-    """
-    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
-    # I consider the case that the user doesn't have a PATH set to be unreasonable
-    xession.env.setdefault("PATH", [])
-
-    last_event = None
-
-    @xession.builtins.events.vox_on_activate
-    def activate(name, **_):
-        nonlocal last_event
-        last_event = "activate", name
-
-    @xession.builtins.events.vox_on_deactivate
-    def deactivate(name, **_):
-        nonlocal last_event
-        last_event = "deactivate", name
-
-    vox = Vox()
-    vox.create("spam")
-    vox.activate("spam")
-    assert xession.env["VIRTUAL_ENV"] == vox["spam"].env
-    assert last_event == ("activate", "spam")
+    # activate/deactivate
+    vox(["activate", "spam"])
+    assert xession.env["VIRTUAL_ENV"] == vox.vox["spam"].env
+    assert record_events.last == ("vox_on_activate", "spam", str(ve.env))
     vox.deactivate()
     assert "VIRTUAL_ENV" not in xession.env
-    assert last_event == ("deactivate", "spam")
+    assert record_events.last == ("vox_on_deactivate", "spam", str(ve.env))
+
+    # removal
+    vox(["rm", "spam", "--force"])
+    assert not tmpdir.join("spam").check()
+    assert record_events.last == ("vox_on_delete", "spam")
 
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_activate_non_vox_venv(xession, tmpdir):
+def test_activate_non_vox_venv(xession, vox, record_events, tmpdir):
     """
     Create a virtual environment using Python's built-in venv module
     (not in VIRTUALENV_HOME) and verify that vox can activate it correctly.
     """
     xession.env.setdefault("PATH", [])
 
-    last_event = None
-
-    @xession.builtins.events.vox_on_activate
-    def activate(name, path, **_):
-        nonlocal last_event
-        last_event = "activate", name, path
-
-    @xession.builtins.events.vox_on_deactivate
-    def deactivate(name, path, **_):
-        nonlocal last_event
-        last_event = "deactivate", name, path
+    record_events("vox_on_activate", "vox_on_deactivate")
 
     with tmpdir.as_cwd():
         venv_dirname = "venv"
         sp.run([sys.executable, "-m", "venv", venv_dirname])
-        vox = Vox()
-        vox.activate(venv_dirname)
-        vxv = vox[venv_dirname]
+        vox(["activate", venv_dirname])
+        vxv = vox.vox[venv_dirname]
 
     env = xession.env
     assert os.path.isabs(vxv.bin)
     assert env["PATH"][0] == vxv.bin
     assert os.path.isabs(vxv.env)
     assert env["VIRTUAL_ENV"] == vxv.env
-    assert last_event == (
-        "activate",
+    assert record_events.last == (
+        "vox_on_activate",
         venv_dirname,
-        str(pathlib.Path(str(tmpdir)) / "venv"),
+        str(pathlib.Path(str(tmpdir)) / venv_dirname),
     )
 
-    vox.deactivate()
+    vox(["deactivate"])
     assert not env["PATH"]
     assert "VIRTUAL_ENV" not in env
-    assert last_event == (
-        "deactivate",
-        tmpdir.join(venv_dirname),
-        str(pathlib.Path(str(tmpdir)) / "venv"),
+    assert record_events.last == (
+        "vox_on_deactivate",
+        venv_dirname,
+        str(pathlib.Path(str(tmpdir)) / venv_dirname),
     )
 
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_path(xession, tmpdir):
+def test_path(xession, vox, tmpdir, a_venv):
     """
     Test to make sure Vox properly activates and deactivates by examining $PATH
     """
-    xession.env["VIRTUALENV_HOME"] = str(tmpdir)
-    # I consider the case that the user doesn't have a PATH set to be unreasonable
-    xession.env.setdefault("PATH", [])
-
     oldpath = list(xession.env["PATH"])
-    vox = Vox()
-    vox.create("eggs")
-
-    vox.activate("eggs")
+    vox(["activate", a_venv.basename])
 
     assert oldpath != xession.env["PATH"]
 
@@ -250,41 +216,35 @@ def test_reserved_names(xession, tmpdir):
             vox.create("spameggs/bin")
 
 
+@pytest.mark.parametrize("registered", [False, True])
 @skip_if_on_msys
 @skip_if_on_conda
-def test_autovox(xession, tmpdir, load_vox):
+def test_autovox(xession, tmpdir, vox, a_venv, load_xontrib, registered):
     """
     Tests that autovox works
     """
-    import importlib
-    import xonsh.dirstack
+    from xonsh.dirstack import pushd, popd
 
     # Makes sure that event handlers are registered
-    import xontrib.autovox
+    load_xontrib("autovox")
 
-    importlib.reload(xontrib.autovox)
+    env_name = a_venv.basename
+    env_path = str(a_venv)
 
-    @xession.builtins.events.autovox_policy
+    # init properly
+    assert vox.parser
+
     def policy(path, **_):
-        print("Checking", repr(path), vox.active())
-        if str(path) == str(tmpdir):
-            return "myenv"
+        if str(path) == env_path:
+            return env_name
 
-    vox = Vox()
+    if registered:
+        xession.builtins.events.autovox_policy(policy)
 
-    print(xession.env["PWD"])
-    xonsh.dirstack.pushd([str(tmpdir)])
-    print(xession.env["PWD"])
-    assert vox.active() is None
-    xonsh.dirstack.popd([])
-    print(xession.env["PWD"])
-
-    vox.create("myenv")
-    xonsh.dirstack.pushd([str(tmpdir)])
-    print(xession.env["PWD"])
-    assert vox.active() == "myenv"
-    xonsh.dirstack.popd([])
-    print(xession.env["PWD"])
+    pushd([env_path])
+    value = env_name if registered else None
+    assert vox.vox.active() == value
+    popd([])
 
 
 @pytest.fixture
@@ -295,14 +255,15 @@ def venv_home(tmpdir):
 
 @pytest.fixture
 def venvs(venv_home):
-    """create bin paths in the tmpdir"""
+    """Create virtualenv with names venv0, venv1"""
     from xonsh.dirstack import pushd, popd
 
     pushd([str(venv_home)])
     paths = []
     for idx in range(2):
-        bin_path = venv_home / f"venv{idx}" / "bin"
-        paths.append(bin_path)
+        env_path = venv_home / f"venv{idx}"
+        bin_path = env_path / "bin"
+        paths.append(env_path)
 
         (bin_path / "python").write("", ensure=True)
         (bin_path / "python.exe").write("", ensure=True)
@@ -314,7 +275,12 @@ def venvs(venv_home):
 
 
 @pytest.fixture
-def patched_cmd_cache(xession, load_vox, venvs, monkeypatch):
+def a_venv(venvs):
+    return venvs[0]
+
+
+@pytest.fixture
+def patched_cmd_cache(xession, vox, venvs, monkeypatch):
     cc = xession.commands_cache
 
     def no_change(self, *_):
@@ -337,14 +303,19 @@ _HELP_OPTS = {
     "--help",
 }
 _PY_BINS = {"/bin/python2", "/bin/python3"}
+
 _VOX_NEW_OPTS = {
-    "--copies",
     "--ssp",
-    "--symlinks",
     "--system-site-packages",
     "--without-pip",
 }.union(_HELP_OPTS)
 _VOX_NEW_EXP = _PY_BINS.union(_VOX_NEW_OPTS)
+
+if ON_WINDOWS:
+    _VOX_NEW_OPTS.add("--symlinks")
+else:
+    _VOX_NEW_OPTS.add("--copies")
+
 _VOX_RM_OPTS = {"-f", "--force"}.union(_HELP_OPTS)
 
 
@@ -374,6 +345,7 @@ _VOX_RM_OPTS = {"-f", "--force"}.union(_HELP_OPTS)
                 "runin-all",
                 "toggle-ssp",
                 "wipe",
+                "upgrade",
             },
             _HELP_OPTS,
         ),
