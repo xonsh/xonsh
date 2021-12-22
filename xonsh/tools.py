@@ -2643,11 +2643,11 @@ def _deprecated_message_suffix(deprecated_in, removed_in):
 
 
 def _deprecated_error_on_expiration(name, removed_in):
-    from distutils.version import LooseVersion
+    from packaging.version import Version
 
     if not removed_in:
         return
-    elif LooseVersion(__version__) >= LooseVersion(removed_in):
+    elif Version(__version__) >= Version(removed_in):
         raise AssertionError(f"{name} has passed its version {removed_in} expiry date!")
 
 
