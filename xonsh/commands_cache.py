@@ -123,7 +123,10 @@ class CommandsCache(cabc.Mapping):
         env = XSH.env
         path = [] if env is None else XSH.env.get("PATH", [])
         path_immut = tuple(CommandsCache.remove_dups(path))
-        alss = getattr(XSH, "aliases", dict())
+
+        # in case it is empty or unset
+        alss = {} if XSH.aliases is None else XSH.aliases
+
         (
             has_path_changed,
             has_alias_changed,
