@@ -81,6 +81,27 @@ class CommandContext(NamedTuple):
         else:
             return f"{self.opening_quote}{self.prefix}"
 
+    @property
+    def command(self):
+        if self.args:
+            return self.args[0].raw_value
+        return None
+
+    @property
+    def words_before_cursor(self) -> str:
+        """words without current prefix"""
+        return " ".join([arg.raw_value for arg in self.args[: self.arg_index]])
+
+    @property
+    def text_before_cursor(self) -> str:
+        """full text before cursor including prefix"""
+        return self.words_before_cursor + " " + self.prefix
+
+    @property
+    def begidx(self) -> int:
+        """cursor's position"""
+        return len(self.text_before_cursor)
+
 
 class PythonContext(NamedTuple):
     """

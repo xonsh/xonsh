@@ -1,43 +1,56 @@
 from xonsh.completers import completer
-from xonsh.completers.tools import (
-    RichCompletion,
-    contextual_command_completer,
-    get_filter_function,
-)
-
+from xonsh.completers.tools import RichCompletion, contextual_command_completer
+import os
 import subprocess as sp
 from xonsh.built_ins import XSH
 from xonsh.parsers.completion_context import CommandContext
 
 
-def create_rich_completion(line: str):
+def create_rich_completion(line: str, append_space=False):
     line = line.strip()
     if "\t" in line:
         cmd, desc = map(str.strip, line.split("\t", maxsplit=1))
     else:
         cmd, desc = line, ""
+
+    # special treatment for path completions.
+    # not appending space even if it is a single candidate.
+    if cmd.endswith(os.pathsep):
+        append_space = False
+
     return RichCompletion(
-        str(cmd),
-        description=str(desc),
-        append_space=True,
+        cmd,
+        description=desc,
+        append_space=append_space,
     )
 
 
 @contextual_command_completer
 def fish_proc_completer(ctx: CommandContext):
     """Populate completions using fish shell and remove bash-completer"""
-    args = [arg.value for arg in ctx.args] + [ctx.prefix]
-    line = " ".join(args)
-    args = ["fish", "-c", f"complete -C '{line}'"]
+    if not ctx.args:
+        return
+    line = ctx.text_before_cursor
+
+    script_lines = [
+        f"complete --no-files {ctx.command}",  # switch off basic file completions for the executable
+        f"complete -C '{line}'",
+    ]
+    args = ["fish", "-c", "; ".join(script_lines)]
     env = XSH.env.detype()
-    output = sp.check_output(args, env=env).decode()
-    filter_func = get_filter_function()
+    try:
+        output = sp.check_output(args, env=env).decode()
+    except Exception as ex:
+        print(f"Failed to get fish-completions: {ex}")
+        return
 
     if output:
-        for line in output.strip().splitlines(keepends=False):
-            comp = create_rich_completion(line)
-            if filter_func(comp, ctx.prefix):
-                yield comp
+        lines = output.strip().splitlines(keepends=False)
+        # if there is a single completion candidate then maybe it is over
+        append_space = len(lines) == 1
+        for line in lines:
+            comp = create_rich_completion(line, append_space)
+            yield comp
 
 
 completer.add_one_completer("fish", fish_proc_completer, "<bash")
