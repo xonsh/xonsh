@@ -1,4 +1,3 @@
-import builtins
 import os
 import sys
 import types
@@ -158,8 +157,8 @@ def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch) -> XonshSes
 def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
     """Mock out most of the builtins xonsh attributes."""
 
+    # make sure that all other fixtures call this mock only one time
     session = []
-    old_builtins = dict(vars(builtins).items())  # type: ignore
 
     def factory(*attrs: str):
         """
@@ -215,11 +214,6 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
 
     yield factory
     session.clear()
-    for attr in set(dir(builtins)) - set(old_builtins):
-        if hasattr(builtins, attr):
-            delattr(builtins, attr)
-    for attr, old_value in old_builtins.items():
-        setattr(builtins, attr, old_value)
 
 
 @pytest.fixture
