@@ -431,6 +431,32 @@ You can also exclude a release::
     $ xonsh release.xsh --no-conda
 
 
+-----------------------
+Cross-platform testing
+-----------------------
+Most of the time, an actual VM machine is needed to test the nuances of cross platform testing. 
+But alas here are some other ways to test things
+
+1. Windows 
+
+
+ - `wine <https://www.winehq.org/>`_ can be used to emulate the development environment. It provides cmd.exe with its default installation. 
+ 
+2. OS X
+
+ - `darlinghq <https://www.darlinghq.org/>`_ can be used to emulate the development environment for Linux users. 
+   Windows users can use Linux inside a virtual machine or WSL to run the same.
+ - `OSX KVM <https://github.com/kholia/OSX-KVM>` can be used for virtualization.
+
+3. Linux
+
+ - It far easier to test things for Linux. `docker <https://www.docker.com/>`_ is available on all three platforms. 
+
+One can leverage the Github Actions to provide a reverse shell to test things out. 
+Solutions like `actions-tmate <https://mxschmitt.github.io/action-tmate/>`_ are available, 
+but they should not in any way violate the Github Action policies. 
+
+
 Document History
 ===================
 Portions of this page have been forked from the PyNE documentation,
