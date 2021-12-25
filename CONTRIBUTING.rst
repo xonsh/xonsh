@@ -444,8 +444,9 @@ But alas here are some other ways to test things
  
 2. OS X
 
- - `darlinghq <https://www.darlinghq.org/>`_ can be used to emulate the development environment for Linux users.
- - Windows users can use Linux inside a virtual machine or WSL to run the same.
+ - `darlinghq <https://www.darlinghq.org/>`_ can be used to emulate the development environment for Linux users. 
+   Windows users can use Linux inside a virtual machine or WSL to run the same.
+ - `OSX KVM <https://github.com/kholia/OSX-KVM>` can be used for virtualization.
 
 3. Linux
 
