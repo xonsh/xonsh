@@ -3,7 +3,7 @@ import os
 import tempfile
 import pytest
 
-from xonsh.xoreutils import _which, uptime, cat
+from xonsh.xoreutils import _which, cat
 from xonsh.tools import ON_WINDOWS
 from xonsh.platform import DEFAULT_ENCODING
 
