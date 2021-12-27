@@ -10,6 +10,7 @@ to standard output.
 This file was forked from the uptime project: https://github.com/Cairnarvon/uptime
 Copyright (c) 2012, Koen Crolla, All rights reserved.
 """
+import contextlib
 import ctypes
 import functools
 import os
@@ -72,6 +73,13 @@ def _boot_time_beos() -> "float|None":
 
 def _boot_time_bsd() -> "float|None":
     """Returns uptime in seconds or None, on BSD (including OS X)."""
+    # https://docs.python.org/3/library/time.html#time.CLOCK_UPTIME
+    with contextlib.suppress(Exception):
+        ut_flag = getattr(time, "CLOCK_UPTIME", None)
+        if ut_flag is not None:
+            ut = time.clock_gettime(ut_flag)
+            return time.time() - ut
+
     if not hasattr(xp.LIBC, "sysctlbyname"):
         # Not BSD.
         return None
