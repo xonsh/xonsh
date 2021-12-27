@@ -7,13 +7,10 @@ This version of uname was written in Python for the xonsh project: http://xon.sh
 
 Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 """
-import os
 import platform
 import sys
 
-from xonsh.xoreutils.util import arg_handler
 from xonsh.cli_utils import ArgParserAlias
-from xonsh import __version__
 
 
 def uname_fn(
@@ -101,7 +98,7 @@ def uname_main(args=None):
     """
     import sys
     from xonsh.main import setup
-    from xonsh.built_ins import subproc_uncaptured, XSH
+    from xonsh.built_ins import subproc_uncaptured
     from xonsh.xontribs import xontribs_load
 
     setup()
