@@ -154,7 +154,7 @@ def render_prompts():
         branch_color="{BOLD_INTENSE_RED}",
         localtime="15:56:07",
     )
-    for i, (name, template) in enumerate(PROMPTS):
+    for name, template in PROMPTS:
         display = html_format(prompt_format(template, fields=fields))
         yield {"name": name, "value": escape(template), "display": escape(display)}
 
@@ -175,7 +175,7 @@ def render_colors():
     token_stream = [(t, s.replace("\n", "\\n")) for t, s in token_stream]
     styles = sorted(get_all_styles())
     styles.insert(0, styles.pop(styles.index("default")))
-    for i, style in enumerate(styles):
+    for style in styles:
         try:
             display = html_format(token_stream, style=style)
         except Exception as ex:
@@ -197,6 +197,6 @@ def get_xontrib_item(xontrib_name: str, xontrib: Xontrib):
 
 def render_xontribs():
     md = get_xontribs()
-    for i, xontrib_name in enumerate(md):
+    for xontrib_name in md:
         xontrib = md[xontrib_name]
         yield get_xontrib_item(xontrib_name, xontrib)
