@@ -263,3 +263,13 @@ def boottime() -> "float":
     if btime is None:
         return _boot_time_monotonic()
     return btime
+
+
+def main(args=None):
+    from xonsh.xoreutils.util import run_alias
+
+    run_alias("uptime", args)
+
+
+if __name__ == "__main__":
+    main()
