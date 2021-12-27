@@ -7,213 +7,86 @@ This version of uname was written in Python for the xonsh project: http://xon.sh
 
 Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 """
+import os
 import platform
 import sys
 
 from xonsh.xoreutils.util import arg_handler
+from xonsh.cli_utils import ArgParserAlias
 from xonsh import __version__
 
 
-def uname(args, stdin, stdout, stderr):
-    """
-    Print certain system information.
+def uname_fn(
+    all=False,
+    kernel_name=False,
+    node_name=False,
+    kernel_release=False,
+    kernel_version=False,
+    machine=False,
+    processor=False,
+    hardware_platform=False,
+    operating_system=False,
+):
+    """This version of uname was written in Python for the xonsh project: https://xon.sh
+
+    Based on uname from GNU coreutils: http://www.gnu.org/software/coreutils/
+
 
     Parameters
     ----------
-    args : list or None
-           Arguments like -a
-    stdin : sys.stdin
-            The standard input
-    stdout : sys.stdout
-           The standard output
-    stderr : sys.stderr
-           The standard error
+    all : -a, --all
+        print all information, in the following order, except omit -p and -i if unknown
+    kernel_name : -s, --kernel-name
+        print the kernel name
+    node_name : -n, --nodename
+        print the network node hostname
+    kernel_release : -r, --kernel-release
+        print the kernel release
+    kernel_version : -v, --kernel-version
+        print the kernel version
+    machine : -m, --machine
+        print the machine hardware name
+    processor : -p, --processor
+        print the processor type (non-portable)
+    hardware_platform : -i, --hardware-platform
+        print the hardware platform (non-portable)
+    operating_system : -o, --operating-system
+        print the operating system
     """
-    if stdout is None:
-        stdout = sys.stdout
 
-    opts = _uname_parse_args(args)
+    info = platform.uname()
 
-    newline = "\n"
-    # if os.name == "nt":
-    #     newline = "\r\n"
+    def gen_lines():
+        if all or node_name:
+            yield info.node
 
-    if opts is None:
-        opts = {
-            "kernel_name": False,
-            "nodename": False,
-            "kernel_release": False,
-            "kernel_version": False,
-            "machine": False,
-            "processor": False,
-            "hardware_platform": False,
-            "operating_system": False,
-            "version": False,
-            "help": False,
-        }
+        if all or kernel_release:
+            yield info.release
 
-    # control
-    everything_is_false = True
-    for key, value in opts.items():
-        if key not in [
-            "all",
-            "kernel_name",
-            "nodename",
-            "kernel_release",
-            "kernel_version",
-            "machine",
-            "processor",
-            "hardware_platform",
-            "operating_system",
-            "version",
-            "help",
-        ]:
-            stdout.write(f"{__name__}: unrecognized option '{key}'{newline}")
-            stdout.write(f"Try 'uname --help' for more information.{newline}")
-            stdout.flush()
-            opts["help"] = True
-        if value:
-            everything_is_false = False
+        if all or kernel_version:
+            yield info.version
 
-    if opts["help"]:
-        stdout.write(
-            "This version of uname was written in Python for the xonsh project: http://xon.sh{newline}"
-            "Based on uname from GNU coreutils: http://www.gnu.org/software/coreutils/{newline}"
-            "{newline}"
-            "Usage: uname [OPTION]...{newline}"
-            "Print certain system information.  With no OPTION, same as -s.{newline}"
-            "{newline}"
-            "  -a, --all                print all information, in the following order,{newline}"
-            "                             except omit -p and -i if unknown:{newline}"
-            "  -s, --kernel-name        print the kernel name{newline}"
-            "  -n, --nodename           print the network node hostname{newline}"
-            "  -r, --kernel-release     print the kernel release{newline}"
-            "  -v, --kernel-version     print the kernel version{newline}"
-            "  -m, --machine            print the machine hardware name{newline}"
-            "  -p, --processor          print the processor type (non-portable){newline}"
-            "  -i, --hardware-platform  print the hardware platform (non-portable){newline}"
-            "  -o, --operating-system   print the operating system{newline}"
-            "      --help     display this help and exit{newline}"
-            "      --version  output version information and exit{newline}".format(
-                newline=newline
-            )
-        )
-        stdout.flush()
-        return 0
+        if all or machine:
+            yield info.machine
 
-    if everything_is_false:
-        opts["kernel_name"] = True
+        if all or processor:
+            yield info.processor or "unknown"
 
-    if opts["version"]:
-        stdout.write(f"uname (xonsh) {__version__}{newline}")
-        stdout.flush()
-        return 0
+        if all or hardware_platform:
+            yield "unknown"
 
-    line = []
-    if "all" in opts and opts["all"]:
-        opts["kernel_name"] = True
-        opts["nodename"] = True
-        opts["kernel_release"] = True
-        opts["kernel_version"] = True
-        opts["machine"] = True
-        opts["processor"] = False
-        opts["hardware_platform"] = False
-        opts["operating_system"] = True
+        if all or operating_system:
+            yield sys.platform
 
-    if opts["kernel_name"]:
-        line.append(platform.uname().system)
+    lines = list(gen_lines())
+    if all or kernel_name or (not lines):
+        lines.insert(0, info.system)
+    line = " ".join(lines)
 
-    if opts["nodename"]:
-        line.append(platform.uname().node)
-
-    if opts["kernel_release"]:
-        line.append(platform.uname().release)
-
-    if opts["kernel_version"]:
-        line.append(platform.uname().version)
-
-    if opts["machine"]:
-        line.append(platform.uname().machine)
-
-    if opts["processor"]:
-        if len(platform.uname().processor) <= 0:
-            line.append("unknown")
-        else:
-            line.append(platform.uname().processor)
-
-    if opts["hardware_platform"]:
-        line.append("unknown")
-
-    if opts["operating_system"]:
-        line.append(sys.platform)
-
-    if line:
-        stdout.write(f"{' '.join(line)}{newline}")
-        stdout.flush()
+    return line
 
 
-def _uname_parse_args(args):
-    """
-    Internal function for parse args
-
-    Parameters
-    ----------
-    args : list
-           Arguments like -a
-
-    Returns
-    -------
-    list or None
-        A clean arguments list.
-    """
-    out = {
-        "all": False,
-        "kernel_name": False,
-        "nodename": False,
-        "kernel_release": False,
-        "kernel_version": False,
-        "machine": False,
-        "processor": False,
-        "hardware_platform": False,
-        "operating_system": False,
-        "version": False,
-        "help": False,
-    }
-
-    arg_handler(args, out, "-a", "all", True, "--all")
-    arg_handler(args, out, "-s", "kernel_name", True, "--kernel-name")
-    arg_handler(args, out, "-n", "nodename", True, "--nodename")
-    arg_handler(args, out, "-r", "kernel_release", True, "--kernel-release")
-    arg_handler(args, out, "-v", "kernel_version", True, "--kernel-version")
-    arg_handler(args, out, "-m", "machine", True, "--machine")
-    arg_handler(args, out, "-p", "processor", True, "--processor")
-    arg_handler(args, out, "-i", "hardware_platform", True, "--hardware-platform")
-    arg_handler(args, out, "-o", "operating_system", True, "--operating-system")
-    arg_handler(args, out, None, "version", True, "--version")
-    arg_handler(args, out, None, "help", True, "--help")
-
-    return out
-
-
-UNAME_HELP = """This version of uname was written in Python for the xonsh project: http://xon.sh
-Based on uname from GNU coreutils: http://www.gnu.org/software/coreutils/
-
-Usage: uname [OPTION]...
-Print certain system information.  With no OPTION, same as -s.
-
-  -a, --all                print all information, in the following order,
-                             except omit -p and -i if unknown:
-  -s, --kernel-name        print the kernel name
-  -n, --nodename           print the network node hostname
-  -r, --kernel-release     print the kernel release
-  -v, --kernel-version     print the kernel version
-  -m, --machine            print the machine hardware name
-  -p, --processor          print the processor type (non-portable)
-  -i, --hardware-platform  print the hardware platform (non-portable)
-  -o, --operating-system   print the operating system
-      --help     display this help and exit
-      --version  output version information and exit
-"""
+uname = ArgParserAlias(func=uname_fn, has_args=True, prog="uname")
 
 
 def uname_main(args=None):
@@ -228,10 +101,15 @@ def uname_main(args=None):
     """
     import sys
     from xonsh.main import setup
+    from xonsh.built_ins import subproc_uncaptured, XSH
+    from xonsh.xontribs import xontribs_load
 
     setup()
+
+    xontribs_load(["coreutils"])
     args = sys.argv[1:] if args is None else args
-    uname(args, sys.stdin, sys.stdout, sys.stderr)
+
+    subproc_uncaptured(["uname"] + args)
 
 
 if __name__ == "__main__":
