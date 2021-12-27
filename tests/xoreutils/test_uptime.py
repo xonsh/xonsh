@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 
 import importlib
 import sys
@@ -17,23 +16,23 @@ uptime_helpers = [f for f in vars(uptime) if f.startswith("_uptime_")]
 
 
 class NormalTest(unittest.TestCase):
-    """	
-    This class just calls each of the functions normally and ensures they don't	
-    do dumb things like throw exceptions or return complex numbers.	
+    """
+    This class just calls each of the functions normally and ensures they don't
+    do dumb things like throw exceptions or return complex numbers.
     """
 
     def tearDown(self):
-        """	
-        __boottime affects how boottime() and its helpers work, and it may be	
-        set as a side-effect by any function. To be on the safe side, just	
-        reload the whole module every time.	
+        """
+        __boottime affects how boottime() and its helpers work, and it may be
+        set as a side-effect by any function. To be on the safe side, just
+        reload the whole module every time.
         """
         importlib.reload(uptime)
 
     def basic_test(self, func, rettypes):
-        """	
-        Calls a given function and checks if it returns something of a type	
-        in the sequence rettypes.	
+        """
+        Calls a given function and checks if it returns something of a type
+        in the sequence rettypes.
         """
         ret = func()
         self.assertTrue(any(isinstance(ret, t) for t in rettypes))
@@ -56,9 +55,9 @@ class NormalTest(unittest.TestCase):
 
 
 class BrokenCtypesTest(NormalTest):
-    """	
-    It's ridiculous how many platforms don't have ctypes. This class simulates	
-    that.	
+    """
+    It's ridiculous how many platforms don't have ctypes. This class simulates
+    that.
     """
 
     @classmethod
@@ -73,10 +72,10 @@ class OtherTest(unittest.TestCase):
         importlib.reload(uptime)
 
     def test_equality_guarantee(self):
-        """	
-        If uptime.uptime and uptime.boottime are the only functions called,	
-        it is guaranteed that the uptime subtracted from the current time is	
-        the reported boot time, or that both are None.	
+        """
+        If uptime.uptime and uptime.boottime are the only functions called,
+        it is guaranteed that the uptime subtracted from the current time is
+        the reported boot time, or that both are None.
         """
         # Test uptime.boottime() original function
         up = uptime.uptime()
@@ -97,13 +96,13 @@ class OtherTest(unittest.TestCase):
             self.assertTrue(boot1 == boot2)
 
     def test_broken_datetime(self):
-        """	
-        datetime was introduced in Python 2.3, and though we officially only	
-        support Python 2.5+ (because of ctypes), there are some platforms that	
-        only have older versions available for which we can still provide	
-        meaningful answers (Plan 9, mostly).	
-        Importing uptime shouldn't immediately fail for them, but calling	
-        boottime and its helpers should raise a RuntimeError.	
+        """
+        datetime was introduced in Python 2.3, and though we officially only
+        support Python 2.5+ (because of ctypes), there are some platforms that
+        only have older versions available for which we can still provide
+        meaningful answers (Plan 9, mostly).
+        Importing uptime shouldn't immediately fail for them, but calling
+        boottime and its helpers should raise a RuntimeError.
         """
         uptime.datetime = None
         self.assertRaises(RuntimeError, uptime.boottime)
@@ -112,8 +111,8 @@ class OtherTest(unittest.TestCase):
 
 
 def run_suite(suite):
-    """	
-    unittest is basically a disaster, so let's do this ourselves.	
+    """
+    unittest is basically a disaster, so let's do this ourselves.
     """
     sys.stdout.write("Running %d tests... \n" % tests.countTestCases())
 
@@ -128,7 +127,7 @@ def run_suite(suite):
     for problems, kind in ((res.errors, "error"), (res.failures, "failure")):
         if len(problems):
             head = "%d %s%s" % (len(problems), kind, "s" if len(problems) != 1 else "")
-            sys.stdout.write("\033[1;31m%s\n%s\033[0m\n" % (head, "⎻" * len(head)))
+            sys.stdout.write("\033[1;31m{}\n{}\033[0m\n".format(head, "⎻" * len(head)))
 
         for problem in problems:
             func = problem[0]._testMethodName[5:]
