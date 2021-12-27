@@ -249,17 +249,17 @@ def _get_boot_time_func():
     return _boot_time_monotonic
 
 
-@functools.lru_cache(None)
-def uptime():
+def uptime(args):
     """Returns uptime in seconds if even remotely possible, or None if not."""
     bt = boottime()
-    return time.time() - bt
+    return str(time.time() - bt)
 
 
 @functools.lru_cache(None)
-def boottime():
+def boottime() -> "float":
     """Returns boot time if remotely possible, or None if not."""
     func = _get_boot_time_func()
     btime = func()
     if btime is None:
         return _boot_time_monotonic()
+    return btime
