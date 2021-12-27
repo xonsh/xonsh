@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 import os
+import string
 import sys
 import json
 import socketserver
+from pathlib import Path
 from urllib import parse
 from http import server
 from pprint import pprint
 from argparse import ArgumentParser
 import typing as tp
+
+from . import tags as t
 from . import xonsh_data
 
 RENDERERS: tp.List[tp.Callable] = []
@@ -114,8 +118,24 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
                     "promptValue": prompts[0],
                 }
             )
-        else:
-            return super().do_GET()
+        if url.path == "/":
+            path = Path(__file__).with_name("index.html")
+            tmpl = string.Template(path.read_text())
+            navlinks = [
+                t.nav_item()[
+                    t.nav_link(href="/")["Colors"],
+                ],
+                t.nav_item()[
+                    t.nav_link(href="/")["Prompts"],
+                ],
+                t.nav_item()[
+                    t.nav_link(href="/")["Xontribs"],
+                ],
+            ]
+
+            data = tmpl.substitute(navlinks=t.to_str(navlinks), body="")
+            return self._send(data)
+        return super().do_GET()
 
     def do_POST(self):
         """Reads post request body"""
