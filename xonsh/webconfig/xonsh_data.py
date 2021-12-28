@@ -180,10 +180,10 @@ def render_colors():
             display = html_format(token_stream, style=style)
         except Exception as ex:
             logging.error(
-                f"Failed to format Xonsh code ({ex}). {style=}", exc_info=True
+                f"Failed to format Xonsh code {ex!r}. {style!r}", exc_info=True
             )
             display = source
-        yield {"name": style, "display": escape(display)}
+        yield style, escape(display)
 
 
 def get_xontrib_item(xontrib_name: str, xontrib: Xontrib):

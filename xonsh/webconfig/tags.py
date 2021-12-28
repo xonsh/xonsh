@@ -1,64 +1,81 @@
+import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import *
 import xml.etree.ElementTree as etree
+from functools import partial
 
 
 class Elem(etree.Element):
     def __init__(
         self,
         tag: "str",
-        attrib: "dict[str, str]" = None,
-        klass: "str|None" = None,
+        *cls: str,
         **kwargs: "str",
     ):
         super().__init__(tag)
-        if attrib:
-            kwargs.update(attrib)
-        self.set_attrib(klass, **kwargs)
+        self.set_attrib(*cls, **kwargs)
 
-    def __getitem__(self, item: "int|str|tuple[Elem]"):
+    def __getitem__(self, item: "int|str|Elem|tuple[Elem]"):
         """nice sub-tree"""
         if isinstance(item, int):
             return super().__getitem__(item)
         if isinstance(item, str):
             self.text = item
+        elif isinstance(item, etree.Element):
+            self.append(item)
+        elif isinstance(item, tuple) and isinstance(item[0], str):
+            self.text = "".join(item)
         else:
-            self.extend(item)
+            try:
+                self.extend(item)
+            except Exception as ex:
+                logging.error(
+                    f"Failed to extend node list. {ex!r} : {item} : {self.to_str()}"
+                )
         return self
 
-    def set_attrib(self, klass=None, **kwargs: str):
+    def set_attrib(self, *cls: str, **kwargs: str):
+        klass = " ".join(cls)
         classes = [klass, self.attrib.pop("class", "")]
         self.attrib["class"] = " ".join(filter(None, classes))
         self.attrib.update(kwargs)
 
-    def __call__(self, klass=None, **kwargs: str):
-        self.set_attrib(klass, **kwargs)
+    def __call__(self, *cls: str, **kwargs: str):
+        self.set_attrib(*cls, **kwargs)
         return self
 
     def to_str(self) -> bytes:
         return etree.tostring(self)
 
 
-class Tags:
-    """collection of tags"""
+div = partial(Elem, "div")
+row = partial(div, "row")
+col_sm = partial(div, "col-sm")
+col_md = partial(div, "col-md")
 
-    def __getattr__(self, name: str):
-        """wrap around the element"""
-        return Elem(name)
+br = partial(Elem, "br")
+
+h3 = partial(Elem, "h3")
+h4 = partial(Elem, "h4")
+h5 = partial(Elem, "h5")
+card_title = partial(h5, "card-title")
+
+li = partial(Elem, "li")
+nav_item = partial(li, "nav-item")
+
+p = partial(Elem, "p")
+pre = partial(Elem, "pre")
+code = partial(Elem, "code")
+
+a = partial(Elem, "a")
+nav_link = partial(a, "nav-link")
 
 
-def li(**kwargs):
-    return Elem("li", **kwargs)
-
-
-def nav_item(**kwargs):
-    return li(klass="nav-item", **kwargs)
-
-
-def a(**kwargs):
-    return Elem("a", **kwargs)
-
-
-def nav_link(**kwargs):
-    return a(klass="nav-link", **kwargs)
+card = partial(div, "card")
+card_body = partial(div, "card-body")
+card_text = partial(div, "card-text")
 
 
 def to_pretty(txt: str):
@@ -69,13 +86,13 @@ def to_pretty(txt: str):
     return "".join(txt.splitlines(keepends=True)[1:])
 
 
-def to_str(elems: "list[Elem]|Elem", debug=False) -> str:
+def to_str(elems: "Iterable[Elem]|Elem", debug=False) -> str:
     def _to_str():
-        if isinstance(elems, list):
+        if isinstance(elems, Elem):
+            yield etree.tostring(elems)
+        else:
             for el in elems:
                 yield etree.tostring(el)
-        else:
-            yield etree.tostring(elems)
 
     txt = b"".join(_to_str()).decode()
     if debug:
@@ -83,11 +100,7 @@ def to_str(elems: "list[Elem]|Elem", debug=False) -> str:
     return txt
 
 
-# dynamic new tags
-T = Tags()
-
 if __name__ == "__main__":
-
     nav = nav_item()[
         nav_link(href="/")["Colors"],
     ]
