@@ -110,12 +110,12 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         params = parse.parse_qs(url.query)
 
         route_cls = Routes.registry.get(url.path)
-        if hasattr(route_cls, "get"):
+        if route_cls and hasattr(route_cls, "get"):
             route = route_cls(url=url, params=params, env=XSH.env or {})
             path = Path(__file__).with_name("index.html")
             tmpl = string.Template(path.read_text())
             navlinks = t.to_str(route.get_nav_links())
-            body = t.to_str(route.get())
+            body = t.to_str(route.get())  # type: ignore
             data = tmpl.substitute(navlinks=navlinks, body=body)
             return self._send(data)
         return super().do_GET()

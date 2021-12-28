@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import *
+    from typing import Type
 
-    RouteT = TypeVar("Route", bound="Routes")
 import logging
 
 from . import xonsh_data, tags as t
@@ -12,7 +11,7 @@ from urllib import parse
 
 class Routes:
     path: str
-    registry: "dict[str, Type[RouteT]]" = {}
+    registry: "dict[str, Type[Routes]]" = {}
     navbar = False
     nav_title: "str|None" = None
 

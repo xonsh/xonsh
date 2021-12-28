@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import *
+    from typing import Iterable
 import xml.etree.ElementTree as etree
 from functools import partial
 
@@ -17,7 +17,7 @@ class Elem(etree.Element):
         super().__init__(tag)
         self.set_attrib(*cls, **kwargs)
 
-    def __getitem__(self, item: "int|str|Elem|tuple[Elem]"):
+    def __getitem__(self, item: "int|str|Elem|tuple[Elem, ...]"):  # type: ignore
         """nice sub-tree"""
         if isinstance(item, int):
             return super().__getitem__(item)
@@ -32,7 +32,7 @@ class Elem(etree.Element):
                 self.extend(item)
             except Exception as ex:
                 logging.error(
-                    f"Failed to extend node list. {ex!r} : {item} : {self.to_str()}"
+                    f"Failed to extend node list. {ex!r} : {item!r} : {self.to_str()!r}"
                 )
         return self
 
@@ -88,7 +88,7 @@ def to_pretty(txt: str):
     import xml.dom.minidom
 
     dom = xml.dom.minidom.parseString(txt)
-    txt: str = dom.toprettyxml()
+    txt = dom.toprettyxml()
     return "".join(txt.splitlines(keepends=True)[1:])
 
 
