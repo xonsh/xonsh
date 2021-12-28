@@ -156,7 +156,7 @@ def render_prompts():
     )
     for name, template in PROMPTS:
         display = html_format(prompt_format(template, fields=fields))
-        yield {"name": name, "value": escape(template), "display": escape(display)}
+        yield name, {"value": escape(template), "display": escape(display)}
 
 
 def render_colors():

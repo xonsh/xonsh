@@ -39,6 +39,32 @@ class Routes:
                     t.nav_link(href=page.path)[page.nav_title],
                 ]
 
+    def to_card(self, name: str, display: str, clickable=False, header=""):
+        try:
+            display = t.etree.fromstring(display)
+        except Exception as ex:
+            logging.error(f"Failed to parse color-display {ex!r}. {display!r}")
+            display = t.pre()[display]
+        params = parse.urlencode({"selected": name})
+        url = self.path + "?" + params
+
+        title = name
+        if clickable:
+            title = t.a("stretched-link", href=url)[name]
+
+        card = t.card()
+
+        if header:
+            card.append(t.div("card-header")[header])
+
+        card.append(
+            t.card_body()[
+                t.card_title()[title],
+                display,
+            ]
+        )
+        return card
+
 
 class XonshData(Routes):
     path = "/data.json"
@@ -62,26 +88,6 @@ class ColorsPage(Routes):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.colors = dict(xonsh_data.render_colors())
-
-    def to_card(self, name: str, display: str, clickable=False):
-        try:
-            display = t.etree.fromstring(display)
-        except Exception as ex:
-            logging.error(f"Failed to parse color-display {ex!r}. {display!r}")
-            display = t.pre()[display]
-        params = parse.urlencode({"selected": name})
-        url = self.path + "?" + params
-
-        title = name
-        if clickable:
-            title = t.a("stretched-link", href=url)[name]
-
-        return t.card()[
-            t.card_body()[
-                t.card_title()[title],
-                display,
-            ],
-        ]
 
     def get_cols(self):
         for name, display in self.colors.items():
@@ -123,8 +129,39 @@ class PromptsPage(Routes):
     path = "/prompts"
     nav_title = "Prompts"
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.prompts = dict(xonsh_data.render_prompts())
+
+    def get_selected(self):
+        name = "default"
+        selected = self.params.get("selected")
+        if selected:
+            name = selected[0]
+        name = name if name in self.prompts else "default"
+
+        prompt = self.prompts[name]
+        card = self.to_card(name, prompt["display"])
+        return t.row()[
+            t.col()[card],
+        ]
+
+    def get_cols(self):
+        for name, prompt in self.prompts.items():
+            yield t.row()[
+                t.col()[
+                    self.to_card(name, prompt["display"], clickable=True),
+                ]
+            ]
+
     def get(self):
-        return
+        # banner
+        yield self.get_selected()
+
+        yield t.br()
+        yield t.br()
+        # rest
+        yield from self.get_cols()
 
 
 class XontribsPage(Routes):

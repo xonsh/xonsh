@@ -52,6 +52,7 @@ class Elem(etree.Element):
 
 div = partial(Elem, "div")
 row = partial(div, "row")
+col = partial(div, "col")
 col_sm = partial(div, "col-sm")
 col_md = partial(div, "col-md")
 
