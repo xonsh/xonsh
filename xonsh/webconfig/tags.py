@@ -75,8 +75,13 @@ nav_link = partial(a, "nav-link")
 
 
 card = partial(div, "card")
+card_header = partial(div, "card-header")
 card_body = partial(div, "card-body")
 card_text = partial(div, "card-text")
+
+btn = partial(Elem, "button", "btn", type="button")
+btn_primary = partial(btn, "btn-primary")
+btn_primary_sm = partial(btn_primary, "btn-sm")
 
 
 def to_pretty(txt: str):

@@ -186,17 +186,15 @@ def render_colors():
         yield style, escape(display)
 
 
-def get_xontrib_item(xontrib_name: str, xontrib: Xontrib):
+def format_xontrib(xontrib: Xontrib):
     return {
-        "name": xontrib_name,
         "url": xontrib.url,
         "license": xontrib.package.license if xontrib.package else "",
-        "description": escape(rst_to_html(xontrib.description)),
+        "display": escape(rst_to_html(xontrib.description)),
     }
 
 
 def render_xontribs():
     md = get_xontribs()
-    for xontrib_name in md:
-        xontrib = md[xontrib_name]
-        yield get_xontrib_item(xontrib_name, xontrib)
+    for xontrib_name, xontrib in md.items():
+        yield xontrib_name, format_xontrib(xontrib)

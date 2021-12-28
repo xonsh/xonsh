@@ -39,12 +39,16 @@ class Routes:
                     t.nav_link(href=page.path)[page.nav_title],
                 ]
 
-    def to_card(self, name: str, display: str, clickable=False, header=""):
+    @staticmethod
+    def get_display(display):
         try:
             display = t.etree.fromstring(display)
         except Exception as ex:
             logging.error(f"Failed to parse color-display {ex!r}. {display!r}")
             display = t.pre()[display]
+        return display
+
+    def to_card(self, name: str, display: str, clickable=False, header=""):
         params = parse.urlencode({"selected": name})
         url = self.path + "?" + params
 
@@ -55,12 +59,12 @@ class Routes:
         card = t.card()
 
         if header:
-            card.append(t.div("card-header")[header])
+            card.append(t.card_header()[header])
 
         card.append(
             t.card_body()[
                 t.card_title()[title],
-                display,
+                self.get_display(display),
             ]
         )
         return card
@@ -168,5 +172,30 @@ class XontribsPage(Routes):
     path = "/xontribs"
     nav_title = "Xontribs"
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.xontribs = dict(xonsh_data.render_xontribs())
+
+    def xontrib_card(self, name, data):
+        # todo: button to remove/add
+        title = t.a(href=data["url"])[name]
+        display = data["display"]
+        header = t.card_header()[
+            title,
+            t.btn_primary("ml-2", "p-1")["Add"],
+        ]
+        return t.card()[
+            header,
+            t.card_body()[
+                self.get_display(display),
+            ],
+        ]
+
     def get(self):
-        return
+        for name, data in self.xontribs.items():
+            yield t.row()[
+                t.col()[
+                    self.xontrib_card(name, data),
+                ]
+            ]
+            yield t.br()

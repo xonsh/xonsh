@@ -10,9 +10,10 @@ from http import server
 from pprint import pprint
 from argparse import ArgumentParser
 import typing as tp
+from xonsh.built_ins import XSH
 
-from . import tags as t
-from . import xonsh_data
+from xonsh.webconfig import tags as t
+from xonsh.webconfig.routes import Routes
 
 RENDERERS: tp.List[tp.Callable] = []
 
@@ -106,34 +107,16 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
 
     def do_GET(self) -> None:
         url = parse.urlparse(self.path)
-        if url.path == "/data.json":
-            colors = list(xonsh_data.render_colors())
-            prompts = list(xonsh_data.render_prompts())
-            return self._send(
-                {
-                    "xontribs": list(xonsh_data.render_xontribs()),
-                    "colors": colors,
-                    "prompts": prompts,
-                    "colorValue": colors[0],
-                    "promptValue": prompts[0],
-                }
-            )
-        if url.path == "/":
+        params = parse.parse_qs(url.query)
+
+        route_cls = Routes.registry.get(url.path)
+        if hasattr(route_cls, "get"):
+            route = route_cls(url=url, params=params, env=XSH.env or {})
             path = Path(__file__).with_name("index.html")
             tmpl = string.Template(path.read_text())
-            navlinks = [
-                t.nav_item()[
-                    t.nav_link(href="/")["Colors"],
-                ],
-                t.nav_item()[
-                    t.nav_link(href="/")["Prompts"],
-                ],
-                t.nav_item()[
-                    t.nav_link(href="/")["Xontribs"],
-                ],
-            ]
-
-            data = tmpl.substitute(navlinks=t.to_str(navlinks), body="")
+            navlinks = t.to_str(route.get_nav_links())
+            body = t.to_str(route.get())
+            data = tmpl.substitute(navlinks=navlinks, body=body)
             return self._send(data)
         return super().do_GET()
 
@@ -177,7 +160,9 @@ def main(args=None):
     Handler = XonshConfigHTTPRequestHandler
     while port <= 9310:
         try:
-            with socketserver.TCPServer(("", port), Handler) as httpd:
+            socketserver.ThreadingTCPServer.allow_reuse_address = True
+
+            with socketserver.ThreadingTCPServer(("", port), Handler) as httpd:
                 url = f"http://localhost:{port}"
                 print(f"Web config started at '{url}'. Hit Crtl+C to stop.")
                 if ns.browser:
