@@ -30,7 +30,7 @@ from xonsh.xontribs_meta import get_xontribs, Xontrib
 #
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=None)
 def get_html_formatter():
     from pygments.formatters.html import HtmlFormatter
     from pygments.lexers.markup import RstLexer
