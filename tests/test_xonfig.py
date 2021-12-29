@@ -10,9 +10,10 @@ import re
 import sys
 import json
 import pytest  # noqa F401
-
+import io
 from xonsh.tools import ON_WINDOWS
 from xonsh.xonfig import xonfig_main
+from xonsh.webconfig import main as web_main
 
 
 def test_xonfg_help(capsys, xession):
@@ -132,3 +133,62 @@ def test_xonfig_kernel_with_jupyter(monkeypatch, capsys, fake_lib, xession):
 def test_xonfig_kernel_no_jupyter(capsys, xession):
     with pytest.raises(ImportError):
         rc = xonfig_main(["jupyter-kernel"])  # noqa F841
+
+
+@pytest.fixture
+def request_factory():
+    class MockSocket:
+        def getsockname(self):
+            return ("sockname",)
+
+        def sendall(self, data):
+            self.data = data
+
+    class MockRequest:
+        _sock = MockSocket()
+
+        def __init__(self, path: str, method: str):
+            self._path = path
+            self.data = b""
+            self.method = method.upper()
+
+        def makefile(self, *args, **kwargs):
+            if args[0] == "rb":
+                return io.BytesIO(f"{self.method} {self._path} HTTP/1.0".encode())
+            elif args[0] == "wb":
+                return io.BytesIO(b"")
+            else:
+                raise ValueError("Unknown file type to make", args, kwargs)
+
+        def sendall(self, data):
+            self.data = data
+
+    return MockRequest
+
+
+@pytest.fixture
+def get_req(request_factory):
+    from urllib import parse
+
+    def factory(path, data: "dict[str, str]|None" = None):
+        if data:
+            path = path + "?" + parse.urlencode(data)
+        request = request_factory(path, "get")
+        handle = web_main.XonshConfigHTTPRequestHandler(request, (0, 0), None)
+        return request, handle, request.data.decode()
+
+    return factory
+
+
+class TestXonfigWeb:
+    def test_colors_get(self, get_req):
+        _, _, resp = get_req("/")
+        assert "Colors" in resp
+
+    def test_xontribs_get(self, get_req):
+        _, _, resp = get_req("/xontribs")
+        assert "Xontribs" in resp
+
+    def test_prompts_get(self, get_req):
+        _, _, resp = get_req("/prompts")
+        assert "Prompts" in resp
