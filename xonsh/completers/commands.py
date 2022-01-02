@@ -1,8 +1,10 @@
 import functools
-import importlib.util
+import importlib
+import importlib.util as im_util
 import os
 import re
 import typing as tp
+from collections import OrderedDict
 
 import xonsh.tools as xt
 import xonsh.platform as xp
@@ -15,6 +17,7 @@ from xonsh.completers.tools import (
 )
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
 from xonsh.built_ins import XSH
+from xonsh.environ import scan_dir_for_source_files
 
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
@@ -105,7 +108,18 @@ def complete_end_proc_keywords(command_context: CommandContext):
 class ModuleMatcher:
     """Reusable module matcher. Can be used by other completers like Python to find matching script completions"""
 
-    def __init__(self, base: str):
+    extensions = (".py", ".xsh")
+
+    def __init__(self, base: str, extra_paths: "list[str]"):
+        """Helper class to search and load Python modules
+
+        Parameters
+        ----------
+        base
+            namespace package
+        extra_paths
+            extra search paths to use if finding module on namespace package fails
+        """
         # list of pre-defined patterns. More can be added using the public method ``.wrap``
         self._patterns: tp.Dict[str, str] = {
             r"\bx?pip(?:\d|\.)*(exe)?$": "pip",
@@ -113,19 +127,68 @@ class ModuleMatcher:
         self._compiled: tp.Dict[str, tp.Pattern] = {}
         self.contextual = True
         self.base = base
+        # unique but maintain order
+        self._paths = OrderedDict([(pth, None) for pth in extra_paths])
+        self._file_names_cache: "dict[str, str]" = {}
+        self._path_st_mtimes: "dict[str, float]" = {}
 
     def wrap(self, pattern: str, module: str):
         """For any commands matching the pattern complete from the ``module``"""
         self._patterns[pattern] = module
 
+    def _get_new_paths(self):
+        for path in self._paths:
+            if not os.path.isdir(path):
+                continue
+            # check if path is updated
+            old_mtime = self._path_st_mtimes.get(path, 0)
+            new_mtime = os.stat(path).st_mtime
+            if old_mtime >= new_mtime:
+                continue
+            self._path_st_mtimes[path] = os.stat(path).st_mtime
+            yield path
+
+    def _find_file_path(self, name):
+        # `importlib.machinery.FileFinder` wasn't useful as the findspec handles '.' differently
+        if name in self._file_names_cache:
+            return self._file_names_cache[name]
+
+        found = None
+        entries = {}
+        for path in self._get_new_paths():
+            for file, entry in scan_dir_for_source_files(path):
+                file_name = os.path.splitext(entry.name)[0]
+                if file_name not in entries:
+                    # do not override. prefer the first one that appears on the path list
+                    entries[file_name] = file
+                if file_name == name:
+                    found = file
+            if found:
+                # search a directory completely since we cache path-mtime
+                break
+        self._file_names_cache.update(entries)
+        return found
+
+    @staticmethod
+    def import_module(path, pkg: str, name):
+        """given the file location import as module"""
+        spec = im_util.spec_from_file_location(f"{pkg}.{name}", path)
+        if not spec:
+            return
+        module = im_util.module_from_spec(spec)
+        if not spec.loader:
+            return
+        spec.loader.exec_module(module)  # type: ignore
+        return module
+
+    @functools.lru_cache(maxsize=10)
     def get_module(self, name):
         try:
-            # todo: not just namespace package,
-            #  add an environment variable to get list of paths to check for completions like fish
-            #  - https://fishshell.com/docs/current/completions.html#where-to-put-completions
             return importlib.import_module(f"{self.base}.{name}")
         except ModuleNotFoundError:
-            pass
+            file = self._find_file_path(name)
+            if file:
+                return self.import_module(file, self.base, name)
 
     def search_completer(self, cmd: str, cleaned=False):
         if not cleaned:
@@ -149,7 +212,16 @@ class CommandCompleter:
 
     def __init__(self):
         self.contextual = True
-        self.matcher = ModuleMatcher("xompletions")
+        self._matcher = None
+
+    @property
+    def matcher(self):
+        if self._matcher is None:
+            self._matcher = ModuleMatcher(
+                "xompletions",
+                extra_paths=XSH.env.get("XONSH_COMPLETER_DIRS", []),
+            )
+        return self._matcher
 
     @staticmethod
     @functools.lru_cache(10)

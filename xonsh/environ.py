@@ -1,11 +1,11 @@
 """Environment for the xonsh shell."""
+import inspect
 import os
 import re
 import sys
 import pprint
 import textwrap
 import locale
-import glob
 import threading
 import warnings
 import contextlib
@@ -569,10 +569,38 @@ def xonsh_data_dir(env):
 
 @default_value
 def xonsh_config_dir(env):
-    """Ensures and returns the $XONSH_CONFIG_DIR"""
+    """``$XDG_CONFIG_HOME/xonsh``"""
     xcd = os.path.expanduser(os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh"))
     os.makedirs(xcd, exist_ok=True)
     return xcd
+
+
+@default_value
+def xdg_data_dirs(env):
+    r"""
+    On Windows: ``[%ProgramData%]`` (normally C:\ProgramData)
+        - More Info: https://docs.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-folderlocations-programdata
+    On Linux and Unix based systemd it is the same as in open-desktop standard: ``['/usr/share', '/usr/local/share']``
+    """
+    if ON_WINDOWS:
+        return [os_environ["ProgramData"]]
+    return [
+        os.path.join("/usr", "share"),
+        os.path.join("/usr", "local", "share"),
+    ]
+
+
+@default_value
+def xonsh_sys_config_dir(env):
+    """
+    On Linux & Mac OSX: ``'/etc/xonsh'``
+    On Windows: ``'%ALLUSERSPROFILE%\\\\xonsh'``
+    """
+    if ON_WINDOWS:
+        etc_path = os_environ["ALLUSERSPROFILE"]
+    else:
+        etc_path = "/etc"
+    return os.path.join(etc_path, "xonsh")
 
 
 def xonshconfig(env):
@@ -583,17 +611,16 @@ def xonshconfig(env):
 
 
 @default_value
-def default_xonshrc(env):
-    """Creates a new instance of the default xonshrc tuple."""
-    xcdrc = os.path.join(xonsh_config_dir(env), "rc.xsh")
-    if ON_WINDOWS:
-        dxrc = (
-            os.path.join(os_environ["ALLUSERSPROFILE"], "xonsh", "xonshrc"),
-            xcdrc,
-            os.path.expanduser("~/.xonshrc"),
-        )
-    else:
-        dxrc = ("/etc/xonshrc", xcdrc, os.path.expanduser("~/.xonshrc"))
+def default_xonshrc(env) -> "tuple[str, ...]":
+    """
+    ``['$XONSH_SYS_CONFIG_DIR/xonshrc', '$XONSH_CONFIG_DIR/xonsh/rc.xsh', '~/.xonshrc']``
+    """
+
+    dxrc = (
+        os.path.join(xonsh_sys_config_dir(env), "xonshrc"),
+        os.path.join(xonsh_config_dir(env), "rc.xsh"),
+        os.path.expanduser("~/.xonshrc"),
+    )
     # Check if old config file exists and issue warning
     old_config_filename = xonshconfig(env)
     if os.path.isfile(old_config_filename):
@@ -606,13 +633,44 @@ def default_xonshrc(env):
     return dxrc
 
 
+def get_config_paths(env: "Env", name: str):
+    return (
+        os.path.join(xonsh_sys_config_dir(env), name),
+        os.path.join(xonsh_config_dir(env), name),
+    )
+
+
 @default_value
 def default_xonshrcdir(env):
-    xdgrcd = os.path.join(xonsh_config_dir(env), "rc.d")
-    if ON_WINDOWS:
-        return (os.path.join(os_environ["ALLUSERSPROFILE"], "xonsh", "rc.d"), xdgrcd)
-    else:
-        return ("/etc/xonsh/rc.d", xdgrcd)
+    """``['$XONSH_SYS_CONFIG_DIR/rc.d', '$XONSH_CONFIG_DIR/rc.d']``\n"""
+    return get_config_paths(env, "rc.d")
+
+
+@default_value
+def default_completer_dirs(env):
+    """By default, the following paths are searched.
+    1. ``$XONSH_CONFIG_DIR/completions`` - user level completions
+    2. ``$XONSH_SYS_CONFIG_DIR/completions`` - system level completions
+    3. ``$XONSH_DATA_DIR/generated_completions`` - auto generated completers from man pages
+    4. ``$XDG_DATA_DIRS/xonsh/vendor_completions`` - completers from other programs can be placed here.
+
+    Other than this, Python package namespace ``xompletions`` can be used to put completer modules as well.
+    """
+    # inspired from - https://fishshell.com/docs/current/completions.html#where-to-put-completions
+    return [
+        os.path.join(env["XONSH_CONFIG_DIR"], "completions"),
+        os.path.join(env["XONSH_SYS_CONFIG_DIR"], "completions"),
+        os.path.join(env["XONSH_DATA_DIR"], "generated_completions"),
+    ] + [
+        os.path.join(parent, "xonsh", "vendor_completions")
+        for parent in env["XDG_DATA_DIRS"]
+    ]
+
+
+@default_value
+def xonfig_data_files(env):
+    """``['$XONSH_SYS_CONFIG_DIR/xonfig-data.json', '$XONSH_CONFIG_DIR/xonfig-data.json']``\n"""
+    return get_config_paths(env, "xonfig-data.json")
 
 
 @default_value
@@ -698,6 +756,9 @@ class Var(tp.NamedTuple):
             kwargs.update(
                 {"validate": validator, "convert": convertor, "detype": detyper}
             )
+
+        if doc_default == DefaultNotGiven and is_callable_default(default):
+            doc_default = inspect.getdoc(default) or DefaultNotGiven
         return Var(default=default, doc=doc, doc_default=doc_default, **kwargs)
 
     @classmethod
@@ -933,29 +994,35 @@ class GeneralSetting(Xettings):
         doc_default="``~/.local/share``",
         type_str="str",
     )
+    XDG_DATA_DIRS = Var.with_default(
+        xdg_data_dirs,
+        "A list of directories where system level data files are stored.",
+        type_str="env_path",
+    )
     XONSHRC = Var.with_default(
         default_xonshrc,
         "A list of the locations of run control files, if they exist.  User "
         "defined run control file will supersede values set in system-wide "
         "control file if there is a naming collision. $THREAD_SUBPROCS=None "
         "when reading in run control files.",
-        doc_default=(
-            "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``\n"
-            "\nOn Windows: "
-            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.config/xonsh/rc.xsh', '~/.xonshrc']``"
-        ),
         type_str="env_path",
     )
     XONSHRC_DIR = Var.with_default(
         default_xonshrcdir,
-        "A list of directories, from which all .xsh files will be loaded "
+        "A list of directories, from which all .xsh|.py files will be loaded "
         "at startup, sorted in lexographic order. Files in these directories "
         "are loaded after any files in XONSHRC.",
-        doc_default=(
-            "On Linux & Mac OSX: ``['/etc/xonsh/rc.d', '~/.config/xonsh/rc.d']``\n"
-            "On Windows: "
-            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\rc.d', '~/.config/xonsh/rc.d']``"
-        ),
+        type_str="env_path",
+    )
+    XONSH_COMPLETER_DIRS = Var.with_default(
+        default_completer_dirs,
+        """\
+A list of paths where Xonsh searches for command completions.
+Any completions defined are lazy loaded when needed.
+The name of the completer file should match that of the completing command.
+The file should contain a function with the signature
+``xonsh_complete(ctx: CommandContext) -> Iterator[RichCompletion|str]``.
+""",
         type_str="env_path",
     )
     XONSH_APPEND_NEWLINE = Var.with_default(
@@ -976,9 +1043,14 @@ class GeneralSetting(Xettings):
     )
     XONSH_CONFIG_DIR = Var.with_default(
         xonsh_config_dir,
-        "This is the location where xonsh configuration information is stored.",
+        "This is the location where xonsh user-level configuration information is stored.",
         is_configurable=False,
-        doc_default="``$XDG_CONFIG_HOME/xonsh``",
+        type_str="str",
+    )
+    XONSH_SYS_CONFIG_DIR = Var.with_default(
+        xonsh_sys_config_dir,
+        "This is the location where xonsh system-level configuration information is stored.",
+        is_configurable=False,
         type_str="str",
     )
     XONSH_COLOR_STYLE = Var.with_default(
@@ -1011,7 +1083,7 @@ class GeneralSetting(Xettings):
     )
     XONSH_DATA_DIR = Var.with_default(
         xonsh_data_dir,
-        "This is the location where xonsh data files are stored, such as " "history.",
+        "This is the location where xonsh data files are stored, such as history, generated completers ...",
         doc_default="``$XDG_DATA_HOME/xonsh``",
         type_str="str",
     )
@@ -2304,6 +2376,15 @@ def locate_binary(name):
     return XSH.commands_cache.locate_binary(name)
 
 
+def scan_dir_for_source_files(path: str):
+    if not os.path.isdir(path):
+        return
+    with os.scandir(path) as it:
+        for entry in it:
+            if entry.is_file() and (entry.name.endswith((".py", ".xsh"))):
+                yield os.path.join(path, entry.name), entry
+
+
 def xonshrc_context(
     rcfiles=None, rcdirs=None, execer=None, ctx=None, env=None, login=True
 ):
@@ -2324,15 +2405,15 @@ def xonshrc_context(
                 )
                 if status:
                     loaded.append(rcfile)
+
     if rcdirs is not None:
         for rcdir in rcdirs:
-            if os.path.isdir(rcdir):
-                for rcfile in sorted(glob.glob(os.path.join(rcdir, "*.xsh"))):
-                    status = xonsh_script_run_control(
-                        rcfile, ctx, env, execer=execer, login=login
-                    )
-                    if status:
-                        loaded.append(rcfile)
+            for rcfile in sorted(dict(scan_dir_for_source_files(rcdir))):
+                status = xonsh_script_run_control(
+                    rcfile, ctx, env, execer=execer, login=login
+                )
+                if status:
+                    loaded.append(rcfile)
     if env["THREAD_SUBPROCS"] is None:
         env["THREAD_SUBPROCS"] = orig_thread
     return loaded
