@@ -668,12 +668,6 @@ def default_completer_dirs(env):
 
 
 @default_value
-def xonfig_data_files(env):
-    """``['$XONSH_SYS_CONFIG_DIR/xonfig-data.json', '$XONSH_CONFIG_DIR/xonfig-data.json']``\n"""
-    return get_config_paths(env, "xonfig-data.json")
-
-
-@default_value
 def xonsh_append_newline(env):
     """Appends a newline if we are in interactive mode"""
     return env.get("XONSH_INTERACTIVE", False)
