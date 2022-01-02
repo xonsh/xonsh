@@ -52,3 +52,18 @@ def test_xontrib(args, prefix, exp, exp_part, xsh_with_aliases, check_completer)
         assert result == exp
     if exp_part:
         assert result.issuperset(exp_part), f"{result} doesn't contain {exp_part} "
+
+
+def test_module_matcher(tmp_path, xession):
+    from xonsh.completers import commands
+
+    for idx, ext in enumerate(commands.ModuleMatcher.extensions):
+        (tmp_path / f"a{idx}{ext}").write_text("def xonsh_complete(): pass")
+
+    matcher = commands.ModuleMatcher("xompletions", [str(tmp_path)])
+    assert matcher.get_module("pip").xonsh_complete
+    assert matcher.get_module("a0").xonsh_complete
+    # todo: fix *.xsh import
+    #  the import-hook returns None for some reason
+    #  -- xonsh/imphooks.py:247
+    # assert matcher.get_module("a1").xonsh_complete
