@@ -17,23 +17,23 @@ class Elem(etree.Element):
         super().__init__(tag)
         self.set_attrib(*cls, **kwargs)
 
-    def __getitem__(self, item: "int|str|Elem|tuple[Elem, ...]"):  # type: ignore
+    def __getitem__(self, item: "int|str|Elem|Iterable[Elem]"):  # type: ignore
         """nice sub-tree"""
         if isinstance(item, int):
             return super().__getitem__(item)
         if isinstance(item, str):
-            self.text = item
+            self.text = (self.text or "") + item
         elif isinstance(item, etree.Element):
             self.append(item)
-        elif isinstance(item, tuple) and isinstance(item[0], str):
-            self.text = "".join(item)
         else:
-            try:
-                self.extend(item)
-            except Exception as ex:
-                logging.error(
-                    f"Failed to extend node list. {ex!r} : {item!r} : {self.to_str()!r}"
-                )
+            for ele in item:
+                try:
+                    _ = self[ele]  # recursive call
+                except Exception as ex:
+                    logging.error(
+                        f"Failed to append to node list. {ex!r} : {item!r}>{ele!r} : {self.to_str()!r}"
+                    )
+                    break
         return self
 
     def set_attrib(self, *cls: str, **kwargs: str):
@@ -73,6 +73,8 @@ code = partial(Elem, "code")
 a = partial(Elem, "a")
 nav_link = partial(a, "nav-link")
 
+form = partial(Elem, "form")
+inline_form = partial(form, "d-inline")
 
 card = partial(div, "card")
 card_header = partial(div, "card-header")

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Type
+    from typing import Type, Any
 
 import logging
 
@@ -47,25 +47,24 @@ class Routes:
             display = t.pre()[display]
         return display
 
-    def to_card(self, name: str, display: str, clickable=False, header=""):
+    def to_card(self, name: str, display: str, clickable=False, header=()):
         params = parse.urlencode({"selected": name})
         url = self.path + "?" + params
 
-        title = name
-        if clickable:
-            title = t.a("stretched-link", href=url)[name]
+        def get_body():
+            if not header:
+                body_title = name
+                if clickable:
+                    body_title = t.a("stretched-link", href=url)[name]
+                yield t.card_title()[body_title]
+            yield self.get_display(display)
 
         card = t.card()
 
         if header:
             card.append(t.card_header()[header])
 
-        card.append(
-            t.card_body()[
-                t.card_title()[title],
-                self.get_display(display),
-            ]
-        )
+        card.append(t.card_body()[get_body()])
         return card
 
 
@@ -91,6 +90,7 @@ class ColorsPage(Routes):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.colors = dict(xonsh_data.render_colors())
+        self.var_name = "XONSH_COLOR_STYLE"
 
     def get_cols(self):
         for name, display in self.colors.items():
@@ -100,19 +100,26 @@ class ColorsPage(Routes):
 
     def get_selected(self):
         selected = self.params.get("selected")
-        if selected:
+        current = self.env.get(self.var_name)
+        if selected and selected != current:
             name = selected[0]
+            # update env-variable
+            form = t.inline_form(method="post")[
+                t.btn_primary("ml-2", "p-1", type="submit", name=self.var_name)[
+                    f"Update ${self.var_name}",
+                ],
+            ]
+            header = (
+                f"Selected: {name}",
+                form,
+            )
         else:
-            name = self.env.get("XONSH_COLOR_STYLE")
+            name = current
+            header = (f"Current: {name}",)
         name = name if name in self.colors else "default"
         display = self.colors[name]
-        card = self.to_card(name, display)
-        # todo: show form to set color
-        card.append(
-            t.div("card-footer")[
-                "Set Color",
-            ]
-        )
+
+        card = self.to_card(name, display, header=header)
         return t.row()[
             t.div("col")[card],
         ]
@@ -126,6 +133,12 @@ class ColorsPage(Routes):
         # rest
         cols = list(self.get_cols())
         yield t.row()[cols]
+
+    def post(self, _):
+        selected = self.params.get("selected")
+        if selected:
+            self.env[self.var_name] = selected[0]
+        # todo: update rc file
 
 
 class PromptsPage(Routes):
@@ -178,17 +191,14 @@ class XontribsPage(Routes):
     def xontrib_card(self, name, data):
         # todo: button to remove/add
         title = t.a(href=data["url"])[name]
-        display = data["display"]
-        header = t.card_header()[
-            title,
-            t.btn_primary("ml-2", "p-1")["Add"],
-        ]
-        return t.card()[
-            header,
-            t.card_body()[
-                self.get_display(display),
-            ],
-        ]
+        return self.to_card(
+            name,
+            data["display"],
+            header=(
+                title,
+                t.btn_primary("ml-2", "p-1")["Load"],
+            ),
+        )
 
     def get(self):
         for name, data in self.xontribs.items():
@@ -198,3 +208,11 @@ class XontribsPage(Routes):
                 ]
             ]
             yield t.br()
+
+
+class EnvVariablesPage(Routes):
+    path = "/vars"
+    # nav_title = ""
+
+    def post(self):
+        return
