@@ -126,7 +126,12 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         return self.rfile.read(content_len)
 
     def render_get(self, route):
-        path = Path.cwd() / "index.html"
+        try:
+            webconfig = Path(__file__).parent
+        except Exception:
+            # in case of thread missing __file__ definition
+            webconfig = Path.cwd()
+        path = webconfig / "index.html"
         tmpl = string.Template(path.read_text())
         navlinks = t.to_str(route.get_nav_links())
         msgs = t.to_str(route.get_err_msgs())
