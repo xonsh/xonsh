@@ -39,7 +39,7 @@ def fish_proc_completer(ctx: CommandContext):
     args = ["fish", "-c", "; ".join(script_lines)]
     env = XSH.env.detype()
     try:
-        output = sp.check_output(args, env=env).decode()
+        output = sp.check_output(args, env=env, stderr=sp.DEVNULL).decode()
     except Exception as ex:
         print(f"Failed to get fish-completions: {ex}")
         return
