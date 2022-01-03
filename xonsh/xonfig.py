@@ -702,9 +702,9 @@ def _web(
         don't open browser
     """
 
-    import subprocess
+    from xonsh.webconfig import main
 
-    subprocess.run([sys.executable, "-m", "xonsh.webconfig"] + _args[1:])
+    main.main(_args[1:])
 
 
 def _jupyter_kernel(
@@ -802,7 +802,7 @@ class XonfigAlias(ArgParserAlias):
         return parser
 
 
-xonfig_main = XonfigAlias()
+xonfig_main = XonfigAlias(threadable=False)
 
 
 @lazyobject

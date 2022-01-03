@@ -308,7 +308,7 @@ class EnvVariablesPage(Routes):
 
     def get_header(self):
         yield t.tr()[
-            t.th()["Name"],
+            t.th("text-right")["Name"],
             t.th()["Value"],
         ]
 
@@ -320,7 +320,7 @@ class EnvVariablesPage(Routes):
             envvar = self.env.get_docs(name)
             html = xonsh_data.rst_to_html(envvar.doc)
             yield t.tr()[
-                t.td()[str(name)],
+                t.td("text-right")[str(name)],
                 t.td()[
                     t.p()[repr(value)],
                     t.small()[self.get_display(html)],
@@ -344,7 +344,7 @@ class AliasesPage(Routes):
 
     def get_header(self):
         yield t.tr()[
-            t.th()["Name"],
+            t.th("text-right")["Name"],
             t.th()["Value"],
         ]
 
@@ -360,7 +360,7 @@ class AliasesPage(Routes):
             #  2. way to update string aliases
 
             yield t.tr()[
-                t.td()[str(name)],
+                t.td("text-right")[str(name)],
                 t.td()[
                     t.p()[repr(alias)],
                 ],
@@ -368,7 +368,7 @@ class AliasesPage(Routes):
 
     def get_table(self):
         rows = list(self.get_rows())
-        yield t.tbl("table-striped")[
+        yield t.tbl("table-sm", "table-striped")[
             self.get_header(),
             rows,
         ]
@@ -395,7 +395,7 @@ class AbbrevsPage(Routes):
 
     def get_header(self):
         yield t.tr()[
-            t.th()["Name"],
+            t.th("text-right")["Name"],
             t.th()["Value"],
         ]
 
@@ -410,7 +410,7 @@ class AbbrevsPage(Routes):
             #  2. way to update
 
             yield t.tr()[
-                t.td()[str(name)],
+                t.td("text-right")[str(name)],
                 t.td()[
                     t.p()[repr(display)],
                 ],
@@ -418,7 +418,7 @@ class AbbrevsPage(Routes):
 
     def get_table(self):
         rows = list(self.get_rows())
-        yield t.tbl("table-striped")[
+        yield t.tbl("table-sm", "table-striped")[
             self.get_header(),
             rows,
         ]

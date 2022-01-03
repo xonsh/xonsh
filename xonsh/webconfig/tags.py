@@ -39,7 +39,9 @@ class Elem(etree.Element):
     def set_attrib(self, *cls: str, **kwargs: str):
         klass = " ".join(cls)
         classes = [klass, self.attrib.pop("class", "")]
-        self.attrib["class"] = " ".join(filter(None, classes))
+        cls_str = " ".join(filter(None, classes))
+        if cls_str:
+            self.attrib["class"] = cls_str
         self.attrib.update(kwargs)
 
     def __call__(self, *cls: str, **kwargs: str):
