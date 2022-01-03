@@ -1,8 +1,6 @@
 **Added:**
 
 * ``xonfig web`` can now update ``abbrevs/aliases/env-variables``.
-  The meta data will get stored in ``$XONFIG_DATA_FILE`` location
-  (a .json file) which is configurable.
 
 **Changed:**
 
