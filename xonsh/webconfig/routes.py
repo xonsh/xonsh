@@ -166,7 +166,7 @@ class PromptsPage(Routes):
             name = ps_names[0]
             if name in self.prompts:
                 return f"Selected: {name}", name
-        return f"Current: ", None
+        return "Current: ", None
 
     def get_selected(self):
         header, cur_sel = self._get_selected_header()
@@ -198,7 +198,7 @@ class PromptsPage(Routes):
             ],
             t.card_footer("py-1")[
                 t.btn_primary("py-1", type="submit")[
-                    f"Set",
+                    "Set",
                 ],
             ],
         ]
