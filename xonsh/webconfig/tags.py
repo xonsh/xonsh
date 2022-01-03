@@ -80,6 +80,9 @@ card = partial(div, "card")
 card_header = partial(div, "card-header")
 card_body = partial(div, "card-body")
 card_text = partial(div, "card-text")
+card_footer = partial(div, "card-footer")
+
+textarea = partial(Elem, "textarea")
 
 btn = partial(Elem, "button", "btn", type="button")
 btn_primary = partial(btn, "btn-primary")
@@ -96,11 +99,17 @@ def to_pretty(txt: str):
 
 def to_str(elems: "Iterable[Elem]|Elem", debug=False) -> str:
     def _to_str():
-        if isinstance(elems, Elem):
+        if isinstance(elems, etree.Element):
             yield etree.tostring(elems)
         else:
-            for el in elems:
-                yield etree.tostring(el)
+            for idx, el in enumerate(elems):
+                try:
+                    yield etree.tostring(el)
+                except Exception:
+                    logging.error(
+                        f"Failed to serialize {el!r}. ({elems!r}.{idx!r})",
+                        exc_info=True,
+                    )
 
     txt = b"".join(_to_str()).decode()
     if debug:

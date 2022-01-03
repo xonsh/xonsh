@@ -159,7 +159,9 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         route = self._get_route("post")
         if route is not None:
             # redirect after form submission
-            data = cgi.FieldStorage(self.rfile)
+            data = cgi.FieldStorage(
+                self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST"}
+            )
             new_route = route.post(data) or route
             return self._send(redirect=new_route.path)
         post_body = self._read()

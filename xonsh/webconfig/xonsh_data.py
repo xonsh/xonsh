@@ -5,11 +5,8 @@ import logging
 
 import pygments
 
-from xonsh.built_ins import (
-    XSH,
-)
 from xonsh.color_tools import rgb_to_ints
-from xonsh.prompt.base import PromptFormatter
+from xonsh.prompt.base import PromptFormatter, default_prompt
 from xonsh.pyghooks import (
     XonshStyle,
     xonsh_style_proxy,
@@ -84,65 +81,75 @@ def rst_to_html(text):
 
 
 # render prompts
-PROMPTS = [
-    (
-        "default",
-        "{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}"
-        "{branch_color}{curr_branch: {}}{RESET} {BOLD_BLUE}"
-        "{prompt_end}{RESET} ",
-    ),
-    ("debian chroot", "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{RESET}> "),
-    ("minimalist", "{BOLD_GREEN}{cwd_base}{RESET} ) "),
-    (
-        "terlar",
-        "{env_name}{BOLD_GREEN}{user}{RESET}@{hostname}:"
-        "{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{RESET} ",
-    ),
-    (
-        "default with git status",
-        "{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}"
-        "{branch_color}{gitstatus: {}}{RESET} {BOLD_BLUE}"
-        "{prompt_end}{RESET} ",
-    ),
-    ("robbyrussell", "{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{RESET} "),
-    ("just a dollar", "$ "),
-    (
-        "simple pythonista",
-        "{INTENSE_RED}{user}{RESET} at {INTENSE_PURPLE}{hostname}{RESET} "
-        "in {BOLD_GREEN}{cwd}{RESET}\\n↪ ",
-    ),
-    (
-        "informative",
-        "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
-        "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\\n> ",
-    ),
-    (
-        "informative Version Control",
-        "{YELLOW}{env_name} " "{BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} ",
-    ),
-    ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> "),
-    (
-        "classic with git status",
-        "{gitstatus} {RESET}{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> ",
-    ),
-    ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{RESET}> "),
-    ("sorin", "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{RESET} "),
-    (
-        "acidhub",
-        "❰{INTENSE_GREEN}{user}{RESET}❙{YELLOW}{cwd}{RESET}{env_name}❱{gitstatus}≻ ",
-    ),
-    (
-        "nim",
-        "{INTENSE_GREEN}┬─[{YELLOW}{user}{RESET}@{BLUE}{hostname}{RESET}:{cwd}"
-        "{INTENSE_GREEN}]─[{localtime}]─[{RESET}G:{INTENSE_GREEN}{curr_branch}=]"
-        "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{RESET} ",
-    ),
-]
+def get_named_prompts():
+    return [
+        (
+            "default",
+            default_prompt(),
+        ),
+        ("debian chroot", "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{RESET}> "),
+        ("minimalist", "{BOLD_GREEN}{cwd_base}{RESET} ) "),
+        (
+            "terlar",
+            "{env_name}{BOLD_GREEN}{user}{RESET}@{hostname}:"
+            "{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{RESET} ",
+        ),
+        (
+            "default with git status",
+            "{env_name}{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}"
+            "{branch_color}{gitstatus: {}}{RESET} {BOLD_BLUE}"
+            "{prompt_end}{RESET} ",
+        ),
+        ("robbyrussell", "{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{RESET} "),
+        ("just a dollar", "$ "),
+        (
+            "simple pythonista",
+            "{INTENSE_RED}{user}{RESET} at {INTENSE_PURPLE}{hostname}{RESET} "
+            "in {BOLD_GREEN}{cwd}{RESET}\\n↪ ",
+        ),
+        (
+            "informative",
+            "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
+            "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\\n> ",
+        ),
+        (
+            "informative Version Control",
+            "{YELLOW}{env_name} " "{BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} ",
+        ),
+        ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> "),
+        (
+            "classic with git status",
+            "{gitstatus} {RESET}{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> ",
+        ),
+        ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{RESET}> "),
+        (
+            "sorin",
+            "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{RESET} ",
+        ),
+        (
+            "acidhub",
+            "❰{INTENSE_GREEN}{user}{RESET}❙{YELLOW}{cwd}{RESET}{env_name}❱{gitstatus}≻ ",
+        ),
+        (
+            "nim",
+            "{INTENSE_GREEN}┬─[{YELLOW}{user}{RESET}@{BLUE}{hostname}{RESET}:{cwd}"
+            "{INTENSE_GREEN}]─[{localtime}]─[{RESET}G:{INTENSE_GREEN}{curr_branch}=]"
+            "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{RESET} ",
+        ),
+    ]
 
 
-def render_prompts():
+def get_initial(env, prompt_format, fields):
+    template = env.get_stringified("PROMPT")
+    return {
+        "value": template,
+        "display": escape(html_format(prompt_format(template, fields=fields))),
+    }
+
+
+def render_prompts(env):
     prompt_format = PromptFormatter()
-    fields = dict(XSH.env.get("PROMPT_FIELDS") or {})
+    fields = dict(env.get("PROMPT_FIELDS") or {})
     fields.update(
         cwd="~/snail/stuff",
         cwd_base="stuff",
@@ -154,9 +161,13 @@ def render_prompts():
         branch_color="{BOLD_INTENSE_RED}",
         localtime="15:56:07",
     )
-    for name, template in PROMPTS:
+    yield get_initial(env, prompt_format, fields)
+    for name, template in get_named_prompts():
         display = html_format(prompt_format(template, fields=fields))
-        yield name, {"value": escape(template), "display": escape(display)}
+        yield name, {
+            "value": template,
+            "display": escape(display),
+        }
 
 
 def render_colors():

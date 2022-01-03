@@ -2150,6 +2150,11 @@ class Env(cabc.MutableMapping):
         else:
             return default
 
+    def get_stringified(self, key, default=None):
+        value = self.get(key, default)
+        detyper = self.get_detyper(key)
+        return detyper(value)
+
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.
         This include string & compiled regular expression keys.
