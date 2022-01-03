@@ -2280,6 +2280,11 @@ class Env(cabc.MutableMapping):
         """
         self._vars.pop(name)
 
+    def is_configurable(self, name):
+        if name not in self._vars:
+            return False
+        return self._vars[name].is_configurable
+
 
 class InternalEnvironDict(ChainMap):
     """A dictionary which supports thread-local overrides.

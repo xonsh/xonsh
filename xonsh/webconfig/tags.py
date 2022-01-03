@@ -86,6 +86,12 @@ card_footer = partial(div, "card-footer")
 
 textarea = partial(Elem, "textarea")
 
+table = partial(Elem, "table")
+tbl = partial(table, "table")  # bootstrap table
+tr = partial(Elem, "tr")
+th = partial(Elem, "th")
+td = partial(Elem, "td")
+
 btn = partial(Elem, "button", "btn", type="button")
 btn_primary = partial(btn, "btn-primary")
 btn_primary_sm = partial(btn_primary, "btn-sm")

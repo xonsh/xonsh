@@ -2,6 +2,8 @@ import cgi
 import sys
 from typing import TYPE_CHECKING
 
+from xonsh.environ import Env
+
 if TYPE_CHECKING:
     from typing import Type
 
@@ -27,7 +29,7 @@ class Routes:
     ):
         self.url = url
         self.params = params
-        self.env = env or {}
+        self.env: "Env" = Env() if env is None else env
 
     def __init_subclass__(cls, **kwargs):
         cls.registry[cls.path] = cls
@@ -295,7 +297,30 @@ class XontribsPage(Routes):
 
 class EnvVariablesPage(Routes):
     path = "/vars"
-    # nav_title = ""
+    nav_title = "Variables"
 
-    def post(self):
-        return
+    def get_header(self):
+        yield t.tr()[
+            t.th()["Name"],
+            t.th()["Value"],
+        ]
+
+    def get_rows(self):
+        for name in sorted(self.env.keys()):
+            if not self.env.is_configurable(name):
+                continue
+            value = self.env[name]
+            yield t.tr()[
+                t.td()[str(name)],
+                t.td()[repr(value)],
+            ]
+
+    def get_table(self):
+        rows = list(self.get_rows())
+        yield t.tbl("table-striped")[
+            self.get_header(),
+            rows,
+        ]
+
+    def get(self):
+        yield t.div("table-responsive")[self.get_table()]
