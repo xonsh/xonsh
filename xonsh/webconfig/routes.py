@@ -1,8 +1,6 @@
 import cgi
 import inspect
-import shlex
 import sys
-from functools import cached_property
 from typing import TYPE_CHECKING
 
 from xonsh.environ import Env
