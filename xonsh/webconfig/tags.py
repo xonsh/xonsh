@@ -69,6 +69,7 @@ li = partial(Elem, "li")
 nav_item = partial(li, "nav-item")
 
 p = partial(Elem, "p")
+small = partial(Elem, "small")
 pre = partial(Elem, "pre")
 code = partial(Elem, "code")
 

@@ -144,7 +144,7 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         route_cls = Routes.registry.get(url.path)
         if route_cls and hasattr(route_cls, method):
             params = parse.parse_qs(url.query)
-            return route_cls(url=url, params=params, env=XSH.env or {})
+            return route_cls(url=url, params=params, xsh=XSH)
 
     def do_GET(self) -> None:
         route = self._get_route("get")

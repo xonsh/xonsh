@@ -1,8 +1,12 @@
 import cgi
+import inspect
+import shlex
 import sys
+from functools import cached_property
 from typing import TYPE_CHECKING
 
 from xonsh.environ import Env
+from ..built_ins import XonshSession
 
 if TYPE_CHECKING:
     from typing import Type
@@ -25,11 +29,12 @@ class Routes:
         self,
         url: "parse.ParseResult",
         params: "dict[str, list[str]]",
-        env=None,
+        xsh: "XonshSession",
     ):
         self.url = url
         self.params = params
-        self.env: "Env" = Env() if env is None else env
+        self.env: "Env" = xsh.env
+        self.xsh = xsh
 
     def __init_subclass__(cls, **kwargs):
         cls.registry[cls.path] = cls
@@ -44,9 +49,11 @@ class Routes:
             klass = []
             if page.path == self.url.path:
                 klass.append("active")
-            if page.nav_title:
+
+            title = page.nav_title() if callable(page.nav_title) else page.nav_title
+            if title:
                 yield t.nav_item(*klass)[
-                    t.nav_link(href=page.path)[page.nav_title],
+                    t.nav_link(href=page.path)[title],
                 ]
 
     def get_err_msgs(self):
@@ -310,9 +317,103 @@ class EnvVariablesPage(Routes):
             if not self.env.is_configurable(name):
                 continue
             value = self.env[name]
+            envvar = self.env.get_docs(name)
+            html = xonsh_data.rst_to_html(envvar.doc)
             yield t.tr()[
                 t.td()[str(name)],
-                t.td()[repr(value)],
+                t.td()[
+                    t.p()[repr(value)],
+                    t.small()[self.get_display(html)],
+                ],
+            ]
+
+    def get_table(self):
+        rows = list(self.get_rows())
+        yield t.tbl("table-striped")[
+            self.get_header(),
+            rows,
+        ]
+
+    def get(self):
+        yield t.div("table-responsive")[self.get_table()]
+
+
+class AliasesPage(Routes):
+    path = "/alias"
+    nav_title = "Aliases"
+
+    def get_header(self):
+        yield t.tr()[
+            t.th()["Name"],
+            t.th()["Value"],
+        ]
+
+    def get_rows(self):
+        if not self.xsh.aliases:
+            return
+        for name in sorted(self.xsh.aliases.keys()):
+            alias = self.xsh.aliases[name]
+            if callable(alias):
+                continue
+            # todo:
+            #  1. do not edit default aliases as well
+            #  2. way to update string aliases
+
+            yield t.tr()[
+                t.td()[str(name)],
+                t.td()[
+                    t.p()[repr(alias)],
+                ],
+            ]
+
+    def get_table(self):
+        rows = list(self.get_rows())
+        yield t.tbl("table-striped")[
+            self.get_header(),
+            rows,
+        ]
+
+    def get(self):
+        yield t.div("table-responsive")[self.get_table()]
+
+
+class AbbrevsPage(Routes):
+    path = "/abbrevs"
+    mod_name = XontribsPage.mod_name("abbrevs")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # lazy import as to not load by accident
+        from xontrib.abbrevs import abbrevs  # type: ignore
+
+        self.abbrevs: "dict[str, str]" = abbrevs
+
+    @classmethod
+    def nav_title(cls):
+        if cls.mod_name in sys.modules:
+            return "Abbrevs"
+
+    def get_header(self):
+        yield t.tr()[
+            t.th()["Name"],
+            t.th()["Value"],
+        ]
+
+    def get_rows(self):
+        for name in sorted(self.abbrevs.keys()):
+            alias = self.abbrevs[name]
+            if callable(alias):
+                display = inspect.getsource(alias)
+            else:
+                display = str(alias)
+            # todo:
+            #  2. way to update
+
+            yield t.tr()[
+                t.td()[str(name)],
+                t.td()[
+                    t.p()[repr(display)],
+                ],
             ]
 
     def get_table(self):
