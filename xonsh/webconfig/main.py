@@ -129,8 +129,9 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         path = Path.cwd() / "index.html"
         tmpl = string.Template(path.read_text())
         navlinks = t.to_str(route.get_nav_links())
+        msgs = t.to_str(route.get_err_msgs())
         body = t.to_str(route.get())  # type: ignore
-        data = tmpl.substitute(navlinks=navlinks, body=body)
+        data = tmpl.substitute(navlinks=navlinks, body=msgs + body)
         return self._send(data)
 
     def _get_route(self, method: str):
@@ -160,7 +161,10 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         if route is not None:
             # redirect after form submission
             data = cgi.FieldStorage(
-                self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST"}
+                self.rfile,
+                headers=self.headers,
+                environ={"REQUEST_METHOD": "POST"},
+                keep_blank_values=True,
             )
             new_route = route.post(data) or route
             return self._send(redirect=new_route.path)

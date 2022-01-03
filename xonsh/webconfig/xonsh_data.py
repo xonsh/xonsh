@@ -27,12 +27,12 @@ from xonsh.xontribs_meta import get_xontribs, Xontrib
 #
 
 
-@functools.lru_cache(maxsize=None)
-def get_html_formatter():
+@functools.lru_cache(maxsize=4)
+def get_rst_formatter(**kwargs):
     from pygments.formatters.html import HtmlFormatter
     from pygments.lexers.markup import RstLexer
 
-    return RstLexer(), HtmlFormatter()
+    return RstLexer(), HtmlFormatter(**kwargs)
 
 
 def escape(s):
@@ -74,7 +74,11 @@ def rst_to_html(text):
     try:
         from pygments import highlight
 
-        lexer, formatter = get_html_formatter()
+        lexer, formatter = get_rst_formatter(
+            noclasses=True,
+            cssstyles="background: transparent",
+            style="monokai",  # a dark bg style
+        )
         return highlight(text, lexer, formatter)
     except ImportError:
         return text

@@ -1,4 +1,5 @@
 import cgi
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,6 +16,8 @@ class Routes:
     registry: "dict[str, Type[Routes]]" = {}
     navbar = False
     nav_title: "str|None" = None
+    err_msgs: "list" = []
+    """session storage for error messages"""
 
     def __init__(
         self,
@@ -29,6 +32,11 @@ class Routes:
     def __init_subclass__(cls, **kwargs):
         cls.registry[cls.path] = cls
 
+    def err(self, msg: str):
+        html = xonsh_data.rst_to_html(msg)
+        tree = t.etree.fromstring(html)
+        self.err_msgs.append(tree)
+
     def get_nav_links(self):
         for page in self.registry.values():
             klass = []
@@ -38,6 +46,13 @@ class Routes:
                 yield t.nav_item(*klass)[
                     t.nav_link(href=page.path)[page.nav_title],
                 ]
+
+    def get_err_msgs(self):
+        if not self.err_msgs:
+            return
+        for msg in self.err_msgs:
+            yield t.alert("alert-danger")[msg]
+        self.err_msgs.clear()
 
     def get_sel_url(self, name):
         params = parse.urlencode({"selected": name})
@@ -163,7 +178,7 @@ class PromptsPage(Routes):
             prompt: str = cont["value"]
             display = cont["display"]
         # update env-variable
-        input = t.textarea(
+        txt_area = t.textarea(
             "form-control",
             name=self.var_name,
             rows=str(len(prompt.splitlines())),
@@ -173,11 +188,11 @@ class PromptsPage(Routes):
             t.card_header()[header],
             t.card_body()[
                 t.card_title()["Edit"],
-                input,
+                txt_area,
                 t.br(),
                 t.card_title()["Preview"],
                 t.p("text-muted")[
-                    "It is not a live preview. Click `Set` to get the updated view."
+                    "It is not a live preview. `Set` to get the updated view."
                 ],
                 self.get_display(display),
             ],
@@ -222,17 +237,36 @@ class XontribsPage(Routes):
         super().__init__(**kwargs)
         self.xontribs = dict(xonsh_data.render_xontribs())
 
+    @staticmethod
+    def mod_name(name):
+        return f"xontrib.{name}"
+
+    @staticmethod
+    def is_loaded(name):
+        return XontribsPage.mod_name(name) in sys.modules
+
     def xontrib_card(self, name, data):
-        # todo: button to remove/add
+        from xonsh.xontribs import find_xontrib
+
         title = t.a(href=data["url"])[name]
-        return self.to_card(
-            name,
-            data["display"],
-            header=(
-                title,
-                t.btn_primary("ml-2", "p-1")["Load"],
-            ),
-        )
+        if find_xontrib(name):
+            act_label = "Add"
+            if self.is_loaded(name):
+                act_label = "Remove"
+            action = t.inline_form(method="post")[
+                t.btn_primary("ml-2", "p-1", type="submit", name=name)[
+                    act_label,
+                ],
+            ]
+        else:
+            title = title("stretched-link")  # add class
+            action = ""
+        return t.card()[
+            t.card_header()[title, action],
+            t.card_body()[
+                self.get_display(data["display"]),
+            ],
+        ]
 
     def get(self):
         for name, data in self.xontribs.items():
@@ -242,6 +276,21 @@ class XontribsPage(Routes):
                 ]
             ]
             yield t.br()
+
+    def post(self, data: "cgi.FieldStorage"):
+        if not data.keys():
+            return
+        name = data.keys()[0]
+        if self.is_loaded(name):
+            # todo: update rc file
+            del sys.modules[self.mod_name(name)]
+        else:
+            from xonsh.xontribs import xontribs_load
+
+            _, err, _ = xontribs_load([name])
+            if err:
+                self.err(err)
+            # todo: write to rc file
 
 
 class EnvVariablesPage(Routes):

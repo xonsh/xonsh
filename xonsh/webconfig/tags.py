@@ -56,6 +56,8 @@ col = partial(div, "col")
 col_sm = partial(div, "col-sm")
 col_md = partial(div, "col-md")
 
+alert = partial(div, "alert", role="alert")
+
 br = partial(Elem, "br")
 
 h3 = partial(Elem, "h3")
