@@ -27,23 +27,23 @@ def renderer(f):
 
 @renderer
 def prompt(config):
-    return ["$PROMPT = {!r}".format(config["prompt"])]
+    prompt = config.get("prompt")
+    if prompt:
+        yield f"$PROMPT = {prompt!r}"
 
 
 @renderer
 def colors(config):
-    style = config["colors"]
-    if style == "default":
-        return []
-    return [f"$XONSH_COLOR_STYLE = {style!r}"]
+    style = config.get("color")
+    if style:
+        yield f"$XONSH_COLOR_STYLE = {style!r}"
 
 
 @renderer
 def xontribs(config):
-    xtribs = config["xontribs"]
-    if not xtribs:
-        return []
-    return ["xontrib load " + " ".join(xtribs)]
+    xtribs = config.get("xontribs")
+    if xtribs:
+        yield "xontrib load " + " ".join(xtribs)
 
 
 def config_to_xonsh(

@@ -74,6 +74,12 @@ class Routes:
             display = t.pre()[display]
         return display
 
+    def update_rc(self, **kwargs):
+        # todo: handle updates and deletion as well
+        from xonsh.webconfig.main import insert_into_xonshrc
+
+        insert_into_xonshrc(kwargs)
+
 
 class ColorsPage(Routes):
     path = "/"
@@ -142,7 +148,7 @@ class ColorsPage(Routes):
         selected = self.params.get("selected")
         if selected:
             self.env[self.var_name] = selected[0]
-        # todo: update rc file
+            self.update_rc(color=selected[0])
 
 
 class PromptsPage(Routes):
@@ -232,8 +238,9 @@ class PromptsPage(Routes):
 
     def post(self, data: "cgi.FieldStorage"):
         if data:
-            self.env[self.var_name] = data.getvalue(self.var_name)
-        # todo: update rc file
+            prompt = data.getvalue(self.var_name)
+            self.env[self.var_name] = prompt
+            self.update_rc(prompt=prompt)
 
 
 class XontribsPage(Routes):
@@ -297,7 +304,8 @@ class XontribsPage(Routes):
             _, err, _ = xontribs_load([name])
             if err:
                 self.err(err)
-            # todo: write to rc file
+            else:
+                self.update_rc(xontribs=[name])
 
 
 class EnvVariablesPage(Routes):
