@@ -104,6 +104,9 @@ for root, dirs, files in os.walk(path):
 """,
         """lambda x: x + 1
 """,
+        """def f(x):
+    return [i for i in x if i is not None and i < 10]
+    """,
     ],
 )
 def test_unmodified(inp):
