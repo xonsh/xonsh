@@ -521,6 +521,11 @@ class CtxAwareTransformer(NodeTransformer):
                 node.values[i] = self.try_subproc_toks(val, strip_expr=True)
         return node
 
+    def visit_comprehension(self, node):
+        """Handles visiting list comprehensions, set comprehensions,
+        dictionary comprehensions, and generator expressions."""
+        return node  # do not descend into any comprehensions
+
     #
     # Context aggregator visitors
     #
