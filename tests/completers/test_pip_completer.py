@@ -45,9 +45,9 @@ def test_pip_list_re1(line):
         ["pip show", "", {"setuptools", "wheel", "pip"}],
     ],
 )
-def test_completions(line, prefix, exp, check_completer, xession, os_env):
+def test_completions(line, prefix, exp, check_completer, xession, os_env, monkeypatch):
     # use the actual PATH from os. Otherwise subproc will fail on windows. `unintialized python...`
-    xession.env.update(os_env)
+    monkeypatch.setattr(xession, "env", os_env)
 
     if ON_WINDOWS:
         line = line.replace("pip", "pip.exe")
