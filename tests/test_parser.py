@@ -730,6 +730,14 @@ def test_dict_three():
     check_ast("{42: 65, 6: 28, 1: 2}")
 
 
+def test_dict_from_dict_one():
+    check_ast('{**{"x": 2}}')
+
+
+def test_dict_from_dict_one_comma():
+    check_ast('{**{"x": 2},}')
+
+
 def test_dict_from_dict_two_xy():
     check_ast('{"x": 1, **{"y": 2}}')
 
@@ -740,6 +748,20 @@ def test_dict_from_dict_two_x_first():
 
 def test_dict_from_dict_two_x_second():
     check_ast('{**{"x": 2}, "x": 1}')
+
+
+def test_dict_from_dict_two_x_none():
+    check_ast('{**{"x": 1}, **{"x": 2}}')
+
+
+@pytest.mark.parametrize("third", [True, False])
+@pytest.mark.parametrize("second", [True, False])
+@pytest.mark.parametrize("first", [True, False])
+def test_dict_from_dict_three_xyz(first, second, third):
+    val1 = '"x": 1' if first else '**{"x": 1}'
+    val2 = '"y": 2' if second else '**{"y": 2}'
+    val3 = '"z": 3' if third else '**{"z": 3}'
+    check_ast("{" + val1 + "," + val2 + "," + val3 + "}")
 
 
 def test_unpack_range_tuple():
