@@ -1,16 +1,16 @@
 from xonsh.prompt.cwd import _replace_home_cwd
-from xonsh.built_ins import XSH
 
 
-def test_cwd_escapes_curly_brackets_with_more_curly_brackets():
-    XSH.env["PWD"] = "{foo}"
+def test_cwd_escapes_curly_brackets_with_more_curly_brackets(xession, tmpdir):
+    xession.env["HOME"] = str(tmpdir)
+    xession.env["PWD"] = "{foo}"
     assert _replace_home_cwd() == "{{foo}}"
 
-    XSH.env["PWD"] = "{{foo}}"
+    xession.env["PWD"] = "{{foo}}"
     assert _replace_home_cwd() == "{{{{foo}}}}"
 
-    XSH.env["PWD"] = "{"
+    xession.env["PWD"] = "{"
     assert _replace_home_cwd() == "{{"
 
-    XSH.env["PWD"] = "}}"
+    xession.env["PWD"] = "}}"
     assert _replace_home_cwd() == "}}}}"

@@ -6,7 +6,6 @@ from subprocess import Popen
 import pytest
 
 from xonsh.procs.specs import cmds_to_specs, run_subproc
-from xonsh.built_ins import XSH
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread, STDOUT_DISPATCHER
 
@@ -49,8 +48,8 @@ def test_cmds_to_specs_thread_subproc(xession):
 
 
 @pytest.mark.parametrize("thread_subprocs", [True, False])
-def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs):
-    env = XSH.env
+def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs, xonsh_session):
+    env = xonsh_session.env
     cmds = (["ls", "/root"],)
 
     env["THREAD_SUBPROCS"] = thread_subprocs
@@ -68,7 +67,7 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs):
 )
 @pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_capture_always(
-    capfd, thread_subprocs, capture_always, alias_type, pipe, monkeypatch
+    capfd, thread_subprocs, capture_always, alias_type, pipe, monkeypatch, xonsh_session
 ):
     if not thread_subprocs and alias_type in ["func", "exec"]:
         if pipe:
@@ -76,7 +75,7 @@ def test_capture_always(
         else:
             return pytest.skip("https://github.com/xonsh/xonsh/issues/4444")
 
-    env = XSH.env
+    env = xonsh_session.env
     exp = "HELLO\nBYE\n"
     cmds = [["echo", "-n", exp]]
     if pipe:
@@ -88,15 +87,15 @@ def test_capture_always(
         # Enable capfd for function aliases:
         monkeypatch.setattr(STDOUT_DISPATCHER, "default", sys.stdout)
         if alias_type == "func":
-            XSH.aliases["tst"] = (
+            xonsh_session.aliases["tst"] = (
                 lambda: run_subproc([first_cmd], "hiddenobject") and None
             )  # Don't return a value
         elif alias_type == "exec":
             first_cmd = " ".join(repr(arg) for arg in first_cmd)
-            XSH.aliases["tst"] = f"![{first_cmd}]"
+            xonsh_session.aliases["tst"] = f"![{first_cmd}]"
         else:
             # alias_type == "simple"
-            XSH.aliases["tst"] = first_cmd
+            xonsh_session.aliases["tst"] = first_cmd
 
         cmds[0] = ["tst"]
 

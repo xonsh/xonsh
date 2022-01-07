@@ -90,7 +90,6 @@ from xonsh.tools import (
     expand_case_matching,
     expandvars,
 )
-from xonsh.environ import Env
 
 from tools import skip_if_on_windows
 
@@ -536,7 +535,7 @@ mom"""
 
 
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
-def test_get_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
+def test_get_logical_line(src, idx, exp_line, exp_n, xession):
     lines = src.splitlines()
     line, n, start = get_logical_line(lines, idx)
     assert exp_line == line
@@ -544,7 +543,7 @@ def test_get_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
 
 
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
-def test_replace_logical_line(src, idx, exp_line, exp_n, xonsh_builtins):
+def test_replace_logical_line(src, idx, exp_line, exp_n, xession):
     lines = src.splitlines()
     logical = exp_line
     while idx > 0 and lines[idx - 1].endswith("\\"):
@@ -1651,10 +1650,9 @@ def test_expand_case_matching(inp, exp):
 )
 def test_expandvars(inp, exp, xession):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
-    env = Env(
-        {"foo": "bar", "spam": "eggs", "a_bool": True, "an_int": 42, "none": None}
+    xession.env.update(
+        dict({"foo": "bar", "spam": "eggs", "a_bool": True, "an_int": 42, "none": None})
     )
-    xession.env = env
     assert expandvars(inp) == exp
 
 
@@ -1699,9 +1697,8 @@ def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xession):
         inp = inp.replace("/", os.sep)
         exp_end = exp_end.replace("/", os.sep)
 
-    env = Env({"foo": "bar", "a_bool": True, "an_int": 42, "none": None})
-    env["EXPAND_ENV_VARS"] = expand_env_vars
-    xession.env = env
+    xession.env.update({"foo": "bar", "a_bool": True, "an_int": 42, "none": None})
+    xession.env["EXPAND_ENV_VARS"] = expand_env_vars
 
     path = expand_path(inp, expand_user=expand_user)
 

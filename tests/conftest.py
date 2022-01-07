@@ -1,4 +1,3 @@
-import builtins
 import os
 import sys
 import types
@@ -13,11 +12,10 @@ from xonsh.completer import Completer
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
 from xonsh.events import events
-from xonsh.platform import ON_WINDOWS
 from xonsh.parsers.completion_context import CompletionContextParser
 
 from xonsh import commands_cache
-from tools import DummyShell, sp, DummyEnv, DummyHistory
+from tools import DummyShell, sp, DummyHistory, copy_env
 
 
 @pytest.fixture
@@ -28,27 +26,50 @@ def source_path():
 
 
 @pytest.fixture
-def xonsh_execer(monkeypatch):
+def xonsh_execer(monkeypatch, xonsh_session):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    execer = Execer()
-    XSH.load(execer=execer)
-    # TODO this monkeypatch *shouldn't* be useful now.
-    monkeypatch.setattr(XSH, "execer", execer)
-    yield execer
+    yield xonsh_session.execer
+
+
+@pytest.fixture
+def xonsh_execer_exec(xonsh_execer):
+    def factory(input, **kwargs):
+        xonsh_execer.exec(input, **kwargs)
+        return True
+
+    return factory
+
+
+@pytest.fixture
+def xonsh_execer_parse(xonsh_execer):
+    def factory(input):
+        tree = XSH.execer.parse(input, ctx=None)
+        return tree
+
+    return factory
 
 
 @pytest.fixture
 def patch_commands_cache_bins(xession, tmp_path, monkeypatch):
     def _factory(binaries: tp.List[str]):
-        if not xession.env.get("PATH"):
-            xession.env["PATH"] = [tmp_path]
+        xession.env["PATH"] = [tmp_path]
         exec_mock = MagicMock(return_value=binaries)
         monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
-        cc = commands_cache.CommandsCache()
-        xession.commands_cache = cc
-        return cc
+        return xession.commands_cache
 
     return _factory
+
+
+@pytest.fixture
+def patch_locate_binary(monkeypatch):
+    def locate_binary(self, name):
+        return os.path.join(os.path.dirname(__file__), "bin", name)
+
+    def factory(cc: commands_cache.CommandsCache):
+        monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
+        return cc
+
+    return factory
 
 
 @pytest.fixture
@@ -70,88 +91,140 @@ def xonsh_events():
 
 
 @pytest.fixture(scope="session")
-def session_vars():
-    """keep costly vars per session"""
+def session_os_env():
+    """Env with values from os.environ like real session"""
     from xonsh.environ import Env, default_env
-    from xonsh.commands_cache import CommandsCache
 
-    execer = Execer()
-    XSH.load(execer=execer)
-    return {
-        "execer": execer,
-        "env": Env(default_env()),
-        "commands_cache": CommandsCache(),
+    return Env(default_env())
+
+
+@pytest.fixture(scope="session")
+def session_env():
+    """Env with some initial values that doesn't load from os.environ"""
+    from xonsh.environ import Env
+
+    initial_vars = {
+        "UPDATE_OS_ENVIRON": False,
+        "XONSH_DEBUG": 1,
+        "XONSH_COLOR_STYLE": "default",
+        "VC_BRANCH_TIMEOUT": 1,
+        "XONSH_ENCODING": "utf-8",
+        "XONSH_ENCODING_ERRORS": "strict",
+        "COMMANDS_CACHE_SAVE_INTERMEDIATE": False,
     }
+    env = Env(initial_vars)
+    return env
+
+
+@pytest.fixture(scope="session")
+def session_execer():
+    return Execer()
 
 
 @pytest.fixture
-def xonsh_builtins(monkeypatch, xonsh_events, session_vars):
-    """Mock out most of the builtins xonsh attributes."""
-    old_builtins = dict(vars(builtins).items())  # type: ignore
+def os_env(session_os_env):
+    """A mutable copy of Original session_os_env"""
 
-    XSH.load(ctx={}, **session_vars)
+    return copy_env(session_os_env)
 
-    def locate_binary(self, name):
-        return os.path.join(os.path.dirname(__file__), "bin", name)
 
-    for attr, val in [
-        ("env", DummyEnv()),
-        ("shell", DummyShell()),
-        ("help", lambda x: x),
-        ("aliases", Aliases()),
-        ("exit", False),
-        ("history", DummyHistory()),
-        # ("subproc_captured", sp),
-        ("subproc_uncaptured", sp),
-        ("subproc_captured_stdout", sp),
-        ("subproc_captured_inject", sp),
-        ("subproc_captured_object", sp),
-        ("subproc_captured_hiddenobject", sp),
-    ]:
-        monkeypatch.setattr(XSH, attr, val)
+@pytest.fixture
+def env(tmpdir, session_env):
+    """a mutable copy of session_env"""
+    env_copy = copy_env(session_env)
+    initial_vars = {"XONSH_DATA_DIR": str(tmpdir)}
 
-    if ON_WINDOWS:
-        XSH.env["PATHEXT"] = [".EXE", ".BAT", ".CMD"]
+    env_copy.update(initial_vars)
+    return env_copy
 
-    cc = XSH.commands_cache
-    monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))
-    monkeypatch.setattr(cc, "_cmds_cache", {})
 
-    for attr, val in [
-        ("evalx", eval),
-        ("execx", None),
-        ("compilex", None),
-        # Unlike all the other stuff, this has to refer to the "real" one because all modules that would
-        # be firing events on the global instance.
-        ("events", xonsh_events),
-    ]:
-        # attributes to builtins are dynamicProxy and should pickup the following
-        monkeypatch.setattr(XSH.builtins, attr, val)
+@pytest.fixture
+def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch) -> XonshSession:
+    """a fixture to use where XonshSession is fully loaded without any mocks"""
 
-    # todo: remove using builtins for tests at all
-    yield builtins
+    XSH.load(
+        ctx={},
+        execer=session_execer,
+        commands_cache=commands_cache.CommandsCache(),
+        env=os_env,
+    )
+    yield XSH
     XSH.unload()
-    for attr in set(dir(builtins)) - set(old_builtins):
-        if hasattr(builtins, attr):
-            delattr(builtins, attr)
-    for attr, old_value in old_builtins.items():
-        setattr(builtins, attr, old_value)
-
     tasks.clear()  # must to this to enable resetting all_jobs
 
 
 @pytest.fixture
-def xession(xonsh_builtins) -> XonshSession:
-    return XSH
+def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
+    """Mock out most of the builtins xonsh attributes."""
+
+    # make sure that all other fixtures call this mock only one time
+    session = []
+
+    def factory(*attrs: str):
+        """
+
+        Parameters
+        ----------
+        attrs
+            do not mock the given attributes
+
+        Returns
+        -------
+        XonshSession
+            with most of the attributes mocked out
+        """
+        if session:
+            raise RuntimeError("The factory should be called only once per test")
+
+        for attr, val in [
+            ("env", env),
+            ("shell", DummyShell()),
+            ("help", lambda x: x),
+            ("aliases", Aliases()),
+            ("exit", False),
+            ("history", DummyHistory()),
+            (
+                "commands_cache",
+                commands_cache.CommandsCache(),
+            ),  # since env,aliases change , patch cmds-cache
+            # ("subproc_captured", sp),
+            ("subproc_uncaptured", sp),
+            ("subproc_captured_stdout", sp),
+            ("subproc_captured_inject", sp),
+            ("subproc_captured_object", sp),
+            ("subproc_captured_hiddenobject", sp),
+        ]:
+            if attr in attrs:
+                continue
+            monkeypatch.setattr(xonsh_session, attr, val)
+
+        for attr, val in [
+            ("evalx", eval),
+            ("execx", None),
+            ("compilex", None),
+            # Unlike all the other stuff, this has to refer to the "real" one because all modules that would
+            # be firing events on the global instance.
+            ("events", xonsh_events),
+        ]:
+            # attributes to builtins are dynamicProxy and should pickup the following
+            monkeypatch.setattr(xonsh_session.builtins, attr, val)
+
+        session.append(xonsh_session)
+        return xonsh_session
+
+    yield factory
+    session.clear()
 
 
 @pytest.fixture
-def xsh_with_aliases(xession, monkeypatch):
-    from xonsh.aliases import Aliases, make_default_aliases
+def xession(mock_xonsh_session) -> XonshSession:
+    """Mock out most of the builtins xonsh attributes."""
+    return mock_xonsh_session()
 
-    xsh = xession
-    monkeypatch.setattr(xsh, "aliases", Aliases(make_default_aliases()))
-    return xsh
+
+@pytest.fixture
+def xsh_with_aliases(mock_xonsh_session) -> XonshSession:
+    return mock_xonsh_session("aliases")
 
 
 @pytest.fixture(scope="session")
@@ -160,7 +233,7 @@ def completion_context_parse():
 
 
 @pytest.fixture
-def check_completer(xession):
+def check_completer():
     """Helper function to run completer and parse the results as set of strings"""
     completer = Completer()
 

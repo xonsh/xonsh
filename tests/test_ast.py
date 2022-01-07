@@ -6,7 +6,7 @@ from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, isexpression
 
 import pytest
 
-from tools import check_parse, nodes_equal
+from tools import nodes_equal
 
 
 @pytest.fixture(autouse=True)
@@ -45,20 +45,20 @@ def test_gather_load_store_names_tuple():
         "l = 1",  # ls remains undefined.
     ],
 )
-def test_multilline_num(xonsh_execer, line1):
+def test_multilline_num(xonsh_execer_parse, line1):
     # Subprocess transformation happens on the second line,
     # because not all variables are known.
     code = line1 + "\nls -l\n"
-    tree = check_parse(code)
+    tree = xonsh_execer_parse(code)
     lsnode = tree.body[1]
     assert 2 == min_line(lsnode)
     assert isinstance(lsnode.value, Call)
 
 
-def test_multilline_no_transform():
+def test_multilline_no_transform(xonsh_execer_parse):
     # No subprocess transformations happen here, since all variables are known.
     code = "ls = 1\nl = 1\nls -l\n"
-    tree = check_parse(code)
+    tree = xonsh_execer_parse(code)
     lsnode = tree.body[2]
     assert 3 == min_line(lsnode)
     assert isinstance(lsnode.value, BinOp)
@@ -109,10 +109,10 @@ for root, dirs, files in os.walk(path):
     """,
     ],
 )
-def test_unmodified(inp):
+def test_unmodified(inp, xonsh_execer_parse):
     # Context sensitive parsing should not modify AST
     exp = pyast.parse(inp)
-    obs = check_parse(inp)
+    obs = xonsh_execer_parse(inp)
 
     assert nodes_equal(exp, obs)
 
@@ -121,8 +121,8 @@ def test_unmodified(inp):
     "test_input",
     ["echo; echo && echo\n", "echo; echo && echo a\n", "true && false && true\n"],
 )
-def test_whitespace_subproc(test_input):
-    assert check_parse(test_input)
+def test_whitespace_subproc(test_input, xonsh_execer_parse):
+    assert xonsh_execer_parse(test_input)
 
 
 @pytest.mark.parametrize(

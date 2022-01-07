@@ -5,6 +5,7 @@ A background predictor is a function that accepts a single argument list
 and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
+import functools
 import os
 import pickle
 import sys
@@ -39,15 +40,24 @@ class CommandsCache(cabc.Mapping):
         self.threadable_predictors = default_threadable_predictors()
         self._loaded_pickled = False
 
-        # Path to the cache-file where all commands/aliases are cached for pre-loading"""
-        env = XSH.env
-        self.cache_file = (
-            (Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve())
-            if env is not None
-            and "XONSH_DATA_DIR" in env
-            and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE")
-            else None
-        )
+        # force it to load from env by setting it to None
+        self._cache_file = None
+
+    @property
+    def cache_file(self):
+        """Keeping a property that lies on instance-attribute"""
+        env = XSH.env or {}
+        # Path to the cache-file where all commands/aliases are cached for pre-loading
+        if self._cache_file is None:
+            if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE"):
+                self._cache_file = (
+                    Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve()
+                )
+            else:
+                # set a falsy value other than None
+                self._cache_file = ""
+
+        return self._cache_file
 
     def __contains__(self, key):
         self.update_cache()
@@ -98,7 +108,7 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isdir(p):
                     yield p
 
-    def _update_if_changed(self, paths: tp.Tuple[str, ...], aliases):
+    def _check_changes(self, paths: tp.Tuple[str, ...], aliases):
         # did PATH change?
         path_hash = hash(paths)
         yield path_hash == self._path_checksum
@@ -120,20 +130,20 @@ class CommandsCache(cabc.Mapping):
         return self._cmds_cache
 
     def update_cache(self):
-        env = XSH.env
-        path = [] if env is None else XSH.env.get("PATH", [])
-        path_immut = tuple(CommandsCache.remove_dups(path))
+        env = XSH.env or {}
+        paths = tuple(CommandsCache.remove_dups(env.get("PATH") or []))
 
         # in case it is empty or unset
         alss = {} if XSH.aliases is None else XSH.aliases
 
         (
-            has_path_changed,
-            has_alias_changed,
-            has_any_path_updated,
-        ) = tuple(self._update_if_changed(path_immut, alss))
-        if has_path_changed and has_any_path_updated:
-            if not has_alias_changed:
+            no_new_paths,
+            no_new_alias,
+            no_new_bins,
+        ) = tuple(self._check_changes(paths, alss))
+
+        if no_new_paths and no_new_bins:
+            if not no_new_alias:  # only aliases have changed
                 for cmd, alias in alss.items():
                     key = cmd.upper() if ON_WINDOWS else cmd
                     if key in self._cmds_cache:
@@ -153,26 +163,41 @@ class CommandsCache(cabc.Mapping):
             # also start a thread that updates the cache in the bg
             worker = threading.Thread(
                 target=self._update_cmds_cache,
-                args=[path_immut, alss],
+                args=[paths, alss],
                 daemon=True,
             )
             worker.start()
         else:
-            self._update_cmds_cache(path_immut, alss)
+            self._update_cmds_cache(paths, alss)
+        return self._cmds_cache
+
+    @staticmethod
+    @functools.lru_cache(maxsize=10)
+    def _get_all_cmds(paths: tp.Sequence[str]):
+        """Cache results when possible
+
+        This will be helpful especially during tests where the PATH will be the same mostly.
+        """
+
+        def _getter():
+            for path in reversed(paths):
+                # iterate backwards so that entries at the front of PATH overwrite
+                # entries at the back.
+                for cmd in executables_in(path):
+                    yield cmd, os.path.join(path, cmd)
+
+        return dict(_getter())
 
     def _update_cmds_cache(
         self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
     ) -> tp.Dict[str, tp.Any]:
         """Update the cmds_cache variable in background without slowing down parseLexer"""
         env = XSH.env or {}  # type: ignore
-
         allcmds = {}
-        for path in reversed(paths):
-            # iterate backwards so that entries at the front of PATH overwrite
-            # entries at the back.
-            for cmd in executables_in(path):
-                key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (os.path.join(path, cmd), aliases.get(key, None))
+
+        for cmd, path in self._get_all_cmds(paths).items():
+            key = cmd.upper() if ON_WINDOWS else cmd
+            allcmds[key] = (path, aliases.get(key, None))
 
         warn_cnt = env.get("COMMANDS_CACHE_SIZE_WARNING")
         if warn_cnt and len(allcmds) > warn_cnt:
@@ -185,6 +210,7 @@ class CommandsCache(cabc.Mapping):
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (cmd, True)  # type: ignore
+
         return self.set_cmds_cache(allcmds)
 
     def get_cached_commands(self) -> tp.Dict[str, str]:

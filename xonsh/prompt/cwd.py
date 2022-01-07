@@ -8,21 +8,16 @@ import xonsh.platform as xp
 from xonsh.built_ins import XSH
 
 
-def _replace_home(x):
-    if xp.ON_WINDOWS:
-        home = XSH.env["HOMEDRIVE"] + XSH.env["HOMEPATH"][0]
-        if x.startswith(home):
-            x = x.replace(home, "~", 1)
+def _replace_home(x: str):
+    home = os.path.expanduser("~")
+    if x.startswith(home):
+        x = x.replace(home, "~", 1)
 
-        if XSH.env.get("FORCE_POSIX_PATHS"):
+    if xp.ON_WINDOWS:
+        if XSH.env.get("FORCE_POSIX_PATHS") and os.altsep:
             x = x.replace(os.sep, os.altsep)
 
-        return x
-    else:
-        home = XSH.env["HOME"]
-        if x.startswith(home):
-            x = x.replace(home, "~", 1)
-        return x
+    return x
 
 
 def _replace_home_cwd():

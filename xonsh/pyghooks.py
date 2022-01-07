@@ -2,7 +2,6 @@
 import os
 import re
 import sys
-import builtins
 import stat
 from collections import ChainMap
 from collections.abc import MutableMapping
@@ -268,7 +267,7 @@ def partial_color_tokenize(template):
     These sub-strings maybe templates themselves.
     """
     if XSH.shell is not None:
-        styles = __xonsh__.shell.shell.styler.styles
+        styles = XSH.shell.shell.styler.styles
     else:
         styles = None
     color = Color.DEFAULT
@@ -1651,16 +1650,12 @@ class XonshLexer(Python3Lexer):
     def __init__(self, *args, **kwargs):
         # If the lexer is loaded as a pygment plugin, we have to mock
         # __xonsh__.env and __xonsh__.commands_cache
-        if not hasattr(builtins, "__xonsh__"):
-            from argparse import Namespace
-
-            builtins.__xonsh__ = Namespace()
         if not hasattr(XSH, "env"):
             XSH.env = {}
             if ON_WINDOWS:
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
                 XSH.env["PATHEXT"] = pathext.split(os.pathsep)
-        if not getattr(XSH, "commands_cache", None):
+        if getattr(XSH, "commands_cache", None) is None:
             XSH.commands_cache = CommandsCache()
         _ = XSH.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)

@@ -8,7 +8,7 @@ from xonsh.aliases import source_alias, make_default_aliases
 
 
 @pytest.fixture
-def mockopen(xonsh_builtins, monkeypatch):
+def mockopen(xession, monkeypatch):
     @contextmanager
     def mocked_open(fpath, *args, **kwargs):
         yield MagicMock(read=lambda: fpath)
@@ -33,7 +33,9 @@ def test_source_current_dir(mockopen, monkeypatch, mocked_execx_checker):
     assert mocked_execx_checker == ["foo", "bar"]
 
 
-def test_source_path(mockopen, mocked_execx_checker):
+def test_source_path(mockopen, mocked_execx_checker, patch_locate_binary, xession):
+    patch_locate_binary(xession.commands_cache)
+
     source_alias(["foo", "bar"])
     path_foo = os.path.join("tests", "bin", "foo")
     path_bar = os.path.join("tests", "bin", "bar")

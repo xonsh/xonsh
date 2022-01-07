@@ -1,7 +1,6 @@
 """(A down payment on) Testing for ``xonsh.base_shell.BaseShell`` and associated classes"""
 import os
 
-from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
 from xonsh.shell import transform_command
 
@@ -9,8 +8,8 @@ from xonsh.shell import transform_command
 def test_pwd_tracks_cwd(xession, xonsh_execer, tmpdir_factory, monkeypatch):
     asubdir = str(tmpdir_factory.mktemp("asubdir"))
     cur_wd = os.getcwd()
-    xession.env = Env(
-        PWD=cur_wd, XONSH_CACHE_SCRIPTS=False, XONSH_CACHE_EVERYTHING=False
+    xession.env.update(
+        dict(PWD=cur_wd, XONSH_CACHE_SCRIPTS=False, XONSH_CACHE_EVERYTHING=False)
     )
 
     monkeypatch.setattr(xonsh_execer, "cacheall", False, raising=False)

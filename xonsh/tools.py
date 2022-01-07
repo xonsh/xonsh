@@ -541,10 +541,12 @@ def get_line_continuation():
     mode on Windows the backslash must be preceded by a space. This is because
     paths on Windows may end in a backslash.
     """
-    if ON_WINDOWS and hasattr(xsh, "env") and xsh.env.get("XONSH_INTERACTIVE", False):
-        return " \\"
-    else:
-        return "\\"
+    if ON_WINDOWS:
+        env = getattr(xsh, "env", None) or {}
+        if env.get("XONSH_INTERACTIVE", False):
+            return " \\"
+
+    return "\\"
 
 
 def get_logical_line(lines, idx):

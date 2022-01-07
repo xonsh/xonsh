@@ -1,17 +1,15 @@
 """Tests the xonsh lexer."""
+import copy
 import os
 import sys
 import ast
 import platform
 import subprocess
-import contextlib
+import threading
 from collections import defaultdict
-from collections.abc import MutableMapping
 
 import pytest
 
-from xonsh.built_ins import XSH
-from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
 
 
@@ -24,9 +22,6 @@ ON_CONDA = True in [
     conda in pytest.__file__.lower() for conda in ["conda", "anaconda", "miniconda"]
 ]
 ON_TRAVIS = "TRAVIS" in os.environ and "CI" in os.environ
-ON_AZURE_PIPELINES = os.environ.get("TF_BUILD", "") == "True"
-print("ON_AZURE_PIPELINES", repr(ON_AZURE_PIPELINES))
-print("os.environ['TF_BUILD']", repr(os.environ.get("TF_BUILD", "")))
 TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
@@ -39,10 +34,6 @@ skip_if_on_msys = pytest.mark.skipif(
 )
 
 skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason="Unix stuff")
-
-skip_if_on_azure_pipelines = pytest.mark.skipif(
-    ON_AZURE_PIPELINES, reason="not suitable for azure"
-)
 
 skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason="Windows stuff")
 
@@ -92,103 +83,6 @@ class DummyHistory:
 
     def flush(self, *args, **kwargs):
         pass
-
-
-class DummyEnv(MutableMapping):
-
-    DEFAULTS = {
-        "XONSH_DEBUG": 1,
-        "XONSH_COLOR_STYLE": "default",
-        "VC_BRANCH_TIMEOUT": 1,
-    }
-
-    def __init__(self, *args, **kwargs):
-        self._d = self.DEFAULTS.copy()
-        self._d.update(dict(*args, **kwargs))
-
-    def detype(self):
-        return {k: str(v) for k, v in self._d.items()}
-
-    def __getitem__(self, k):
-        if k is ...:
-            return self
-        else:
-            return self._d[k]
-
-    def __setitem__(self, k, v):
-        assert k is not ...
-        self._d[k] = v
-
-    def __delitem__(self, k):
-        assert k is not ...
-        del self._d[k]
-
-    def __len__(self):
-        return len(self._d)
-
-    def __iter__(self):
-        yield from self._d
-
-    @contextlib.contextmanager
-    def swap(self, other=None, **kwargs):
-        old = {}
-        # single positional argument should be a dict-like object
-        if other is not None:
-            for k, v in other.items():
-                old[k] = self.get(k, NotImplemented)
-                self[k] = v
-        # kwargs could also have been sent in
-        for k, v in kwargs.items():
-            old[k] = self.get(k, NotImplemented)
-            self[k] = v
-        yield self
-        # restore the values
-        for k, v in old.items():
-            if v is NotImplemented:
-                del self[k]
-            else:
-                self[k] = v
-
-    @staticmethod
-    def get_swapped_values():
-        return {}
-
-    @staticmethod
-    def set_swapped_values(_):
-        pass
-
-    def is_manually_set(self, key):
-        return False
-
-
-#
-# Execer tools
-#
-
-
-def check_exec(input, **kwargs):
-    XSH.execer.exec(input, **kwargs)
-    return True
-
-
-def check_eval(input):
-    XSH.env = Env(
-        {
-            "AUTO_CD": False,
-            "XONSH_ENCODING": "utf-8",
-            "XONSH_ENCODING_ERRORS": "strict",
-            "PATH": [],
-        }
-    )
-    if ON_WINDOWS:
-        XSH.env["PATHEXT"] = [".COM", ".EXE", ".BAT", ".CMD"]
-    XSH.execer.eval(input)
-    return True
-
-
-def check_parse(input):
-    tree = XSH.execer.parse(input, ctx=None)
-    return tree
 
 
 #
@@ -245,3 +139,17 @@ def completions_from_result(results):
     if results is None:
         return set()
     return results
+
+
+def copy_env(old):
+    from xonsh.environ import Env, InternalEnvironDict
+
+    env: Env = copy.copy(old)
+    internal = InternalEnvironDict()
+    internal._global = env._d._global.copy()
+    internal._thread_local = threading.local()
+
+    env._d = internal
+    env._vars = env._vars.copy()
+    env._detyped = None
+    return env

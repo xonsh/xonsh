@@ -11,7 +11,6 @@ from time import sleep
 import pytest
 
 from xonsh.tools import always_true, DefaultNotGiven
-from xonsh.commands_cache import CommandsCache
 from xonsh.environ import (
     Env,
     locate_binary,
@@ -168,13 +167,13 @@ def test_thread_local_swap():
                 success_variables[index] = False
                 break
             with env.swap(a=index):
-                sleep(0.1)
+                sleep(0.01)
                 if env["a"] == index:
                     success_variables[index] = True
                 else:
                     success_variables[index] = False
                     break
-            sleep(0.1)
+            sleep(0.01)
 
     with env.swap(a="swapped"):
         threads = [
@@ -200,7 +199,6 @@ def test_locate_binary_on_windows(xession):
             with open(fpath, "w") as f:
                 f.write(fpath)
         xession.env.update({"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]})
-        xession.commands_cache = CommandsCache()
         assert locate_binary("file1") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file1.exe") == os.path.join(tmpdir, "file1.exe")
         assert locate_binary("file2") == os.path.join(tmpdir, "FILE2.BAT")
@@ -208,9 +206,8 @@ def test_locate_binary_on_windows(xession):
         assert locate_binary("file3") is None
 
 
-def test_event_on_envvar_change(xession):
-    env = Env(TEST=0)
-    xession.env = env
+def test_event_on_envvar_change(xession, env):
+    env["TEST"] = 0
     share = []
     # register
 
@@ -224,9 +221,7 @@ def test_event_on_envvar_change(xession):
     assert share == ["TEST", 0, 1]
 
 
-def test_event_on_envvar_new(xession):
-    env = Env()
-    xession.env = env
+def test_event_on_envvar_new(xession, env):
     share = []
     # register
 
@@ -240,9 +235,8 @@ def test_event_on_envvar_new(xession):
     assert share == ["TEST", 1]
 
 
-def test_event_on_envvar_change_from_none_value(xession):
-    env = Env(TEST=None)
-    xession.env = env
+def test_event_on_envvar_change_from_none_value(xession, env):
+    env["TEST"] = None
     share = []
     # register
 
@@ -257,9 +251,8 @@ def test_event_on_envvar_change_from_none_value(xession):
 
 
 @pytest.mark.parametrize("val", [1, None, True, "ok"])
-def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession):
-    env = Env(TEST=val)
-    xession.env = env
+def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession, env):
+    env["TEST"] = val
     share = []
     # register
 
@@ -273,9 +266,7 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession):
     assert share == []
 
 
-def test_events_on_envvar_called_in_right_order(xession):
-    env = Env()
-    xession.env = env
+def test_events_on_envvar_called_in_right_order(xession, env):
     share = []
     # register
 
@@ -341,7 +332,7 @@ def test_delitem_default():
     assert env[a_key] == a_value
 
 
-def test_lscolors_target(xonsh_builtins):
+def test_lscolors_target(xession):
     lsc = LsColors.fromstring("ln=target")
     assert lsc["ln"] == ("RESET",)
     assert lsc.is_target("ln")

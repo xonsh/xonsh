@@ -5,16 +5,13 @@ from importlib import import_module
 import pytest
 
 from xonsh import imphooks
-from xonsh.environ import Env
-from xonsh.built_ins import XSH
 
 
 @pytest.fixture(autouse=True)
 def imp_env(xession):
-    xession.env = Env({"PATH": [], "PATHEXT": []})
+    xession.env.update({"PATH": [], "PATHEXT": []})
     imphooks.install_import_hooks(xession.execer)
     yield
-    XSH.unload()
 
 
 def test_import():

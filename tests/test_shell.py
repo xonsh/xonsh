@@ -1,7 +1,6 @@
 """Testing for ``xonsh.shell.Shell``"""
 import os
 
-from xonsh.environ import Env
 from xonsh.shell import Shell
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
@@ -32,12 +31,14 @@ def test_shell_with_json_history(xession, xonsh_execer, tmpdir_factory):
     )
     h.flush()
 
-    xession.env = Env(
-        XONSH_DATA_DIR=tempdir,
-        XONSH_INTERACTIVE=True,
-        XONSH_HISTORY_BACKEND="json",
-        XONSH_HISTORY_FILE=history_file,
-        # XONSH_DEBUG=1  # to show errors
+    xession.env.update(
+        dict(
+            XONSH_DATA_DIR=tempdir,
+            XONSH_INTERACTIVE=True,
+            XONSH_HISTORY_BACKEND="json",
+            XONSH_HISTORY_FILE=history_file,
+            # XONSH_DEBUG=1  # to show errors
+        )
     )
 
     Shell(xonsh_execer, shell_type="none")
@@ -69,12 +70,14 @@ def test_shell_with_sqlite_history(xession, xonsh_execer, tmpdir_factory):
     )
     h.flush()
 
-    xession.env = Env(
-        XONSH_DATA_DIR=tempdir,
-        XONSH_INTERACTIVE=True,
-        XONSH_HISTORY_BACKEND="sqlite",
-        XONSH_HISTORY_FILE=history_file,
-        # XONSH_DEBUG=1  # to show errors
+    xession.env.update(
+        dict(
+            XONSH_DATA_DIR=tempdir,
+            XONSH_INTERACTIVE=True,
+            XONSH_HISTORY_BACKEND="sqlite",
+            XONSH_HISTORY_FILE=history_file,
+            # XONSH_DEBUG=1  # to show errors
+        )
     )
 
     Shell(xonsh_execer, shell_type="none")
@@ -86,7 +89,7 @@ def test_shell_with_dummy_history_in_not_interactive(xession, xonsh_execer):
     """
     Check that shell use Dummy history in not interactive mode.
     """
-    xession.env = Env(XONSH_INTERACTIVE=False)
+    xession.env["XONSH_INTERACTIVE"] = False
     xession.history = None
     Shell(xonsh_execer, shell_type="none")
     assert isinstance(xession.history, DummyHistory)

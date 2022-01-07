@@ -99,7 +99,7 @@ def test_activate_non_vox_venv(xession, vox, record_events, tmpdir):
     Create a virtual environment using Python's built-in venv module
     (not in VIRTUALENV_HOME) and verify that vox can activate it correctly.
     """
-    xession.env.setdefault("PATH", [])
+    xession.env["PATH"] = []
 
     record_events("vox_on_activate", "vox_on_deactivate")
 
@@ -286,9 +286,8 @@ def patched_cmd_cache(xession, vox, venvs, monkeypatch):
     def no_change(self, *_):
         return False, False, False
 
-    monkeypatch.setattr(cc, "_update_if_changed", types.MethodType(no_change, cc))
+    monkeypatch.setattr(cc, "_check_changes", types.MethodType(no_change, cc))
     monkeypatch.setattr(cc, "_update_cmds_cache", types.MethodType(no_change, cc))
-    monkeypatch.setattr(cc, "cache_file", None)
     bins = {path: (path, False) for path in _PY_BINS}
     cc._cmds_cache.update(bins)
     yield cc
