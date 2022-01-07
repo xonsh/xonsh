@@ -7,7 +7,7 @@ import pyte
 
 # verify error if ptk not installed or below min
 
-from xonsh.ptk_shell.shell import tokenize_ansi, remove_ansi_osc
+from xonsh.ptk_shell.shell import tokenize_ansi
 from xonsh.shell import Shell
 
 
@@ -97,33 +97,6 @@ def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
     ansi_tokens = tokenize_ansi(prompt_tokens)
     for token, text in zip(ansi_tokens, ansi_string_parts):
         assert token[1] == text
-
-
-@pytest.mark.parametrize(
-    "raw_prompt, prompt, osc_tokens",
-    [
-        # no title
-        ("test prompt", "test prompt", []),
-        # starts w/ title
-        ("\033]0;TITLE THIS\007test prompt", "test prompt", ["\033]0;TITLE THIS\007"]),
-        # ends w/ title
-        ("test prompt\033]0;TITLE THIS\007", "test prompt", ["\033]0;TITLE THIS\007"]),
-        # title in the middle
-        ("test \033]0;TITLE THIS\007prompt", "test prompt", ["\033]0;TITLE THIS\007"]),
-        # title + iTerm2 OSC exapmle
-        (
-            "test \033]0;TITLE THIS\007prompt \033]133;A\007here",
-            "test prompt here",
-            ["\033]0;TITLE THIS\007", "\033]133;A\007"],
-        ),
-    ],
-)
-def test_remove_ansi_osc(raw_prompt, prompt, osc_tokens):
-    checked_prompt, removed_osc = remove_ansi_osc(raw_prompt)
-    assert prompt == checked_prompt
-    assert len(removed_osc) == len(osc_tokens)
-    for removed, ref in zip(removed_osc, osc_tokens):
-        assert removed == ref
 
 
 @pytest.mark.parametrize(

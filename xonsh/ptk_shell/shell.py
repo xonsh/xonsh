@@ -43,7 +43,6 @@ try:
 except ImportError:
     HAVE_SYS_CLIPBOARD = False
 
-ANSI_OSC_PATTERN = re.compile("\x1b].*?\007")
 CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
 Token = _TokenType()
 
@@ -82,19 +81,6 @@ def tokenize_ansi(tokens):
         else:
             ansi_tokens.append((style, text))
     return ansi_tokens
-
-
-def remove_ansi_osc(prompt):
-    """Removes the ANSI OSC escape codes - ``prompt_toolkit`` does not support them.
-    Some terminal emulators - like iTerm2 - uses them for various things.
-
-    See: https://www.iterm2.com/documentation-escape-codes.html
-    """
-
-    osc_tokens = ANSI_OSC_PATTERN.findall(prompt)
-    prompt = ANSI_OSC_PATTERN.sub("", prompt)
-
-    return prompt, osc_tokens
 
 
 def _pygments_token_to_classname(token):
@@ -358,7 +344,6 @@ class PromptToolkitShell(BaseShell):
             "refresh_interval": refresh_interval,
             "complete_in_thread": complete_in_thread,
         }
-
         if env["ENABLE_ASYNC_PROMPT"]:
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
@@ -427,16 +412,6 @@ class PromptToolkitShell(BaseShell):
         except Exception:  # pylint: disable=broad-except
             print_exception()
 
-        p, osc_tokens = remove_ansi_osc(p)
-
-        if kwargs.get("handle_osc_tokens"):
-            # handle OSC tokens
-            for osc in osc_tokens:
-                if osc[2:4] == "0;":
-                    env["TITLE"] = osc[4:-1]
-                else:
-                    print(osc, file=sys.__stdout__, flush=True)
-
         toks = partial_color_tokenize(p)
 
         return tokenize_ansi(PygmentsTokens(toks))
@@ -447,7 +422,7 @@ class PromptToolkitShell(BaseShell):
             carriage_return()
             self._first_prompt = False
 
-        tokens = self._get_prompt_tokens("PROMPT", "message", handle_osc_tokens=True)
+        tokens = self._get_prompt_tokens("PROMPT", "message")
         self.settitle()
         return tokens
 
