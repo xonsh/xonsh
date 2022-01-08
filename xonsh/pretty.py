@@ -118,7 +118,7 @@ def pretty(
     """
     Pretty print the object's representation.
     """
-    if hasattr(obj, "xonsh_display"):
+    if _safe_getattr(obj, "xonsh_display"):
         return obj.xonsh_display()
 
     stream = io.StringIO()
