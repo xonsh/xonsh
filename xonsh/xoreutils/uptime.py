@@ -10,23 +10,20 @@ to standard output.
 This file was forked from the uptime project: https://github.com/Cairnarvon/uptime
 Copyright (c) 2012, Koen Crolla, All rights reserved.
 """
+import contextlib
+import ctypes
+import functools
 import os
+import struct
 import sys
 import time
-import ctypes
-import struct
-import typing as tp
 
-import xonsh.platform as xp
 import xonsh.lazyimps as xlimps
-import xonsh.lazyasd as xl
-
-_BOOTTIME: tp.Optional[float] = None
+import xonsh.platform as xp
 
 
-def _uptime_osx():
+def _boot_time_osx() -> "float|None":
     """Returns the uptime on mac / darwin."""
-    global _BOOTTIME
     bt = xlimps.macutils.sysctlbyname(b"kern.boottime", return_str=False)
     if len(bt) == 4:
         bt = struct.unpack_from("@hh", bt)
@@ -39,62 +36,50 @@ def _uptime_osx():
     bt = bt[0] + bt[1] * 1e-6
     if bt == 0.0:
         return None
-    _BOOTTIME = bt
-    return time.time() - bt
+    return bt
 
 
-def _uptime_linux():
-    """Returns uptime in seconds or None, on Linux."""
-    # With procfs
-    try:
-        with open("/proc/uptime") as f:
-            up = float(f.readline().split()[0])
-        return up
-    except (OSError, ValueError):
-        pass
-    buf = ctypes.create_string_buffer(128)  # 64 suffices on 32-bit, whatever.
-    if xp.LIBC.sysinfo(buf) < 0:
-        return None
-    up = struct.unpack_from("@l", buf.raw)[0]
-    if up < 0:
-        up = None
-    return up
-
-
-def _boottime_linux():
+def _boot_time_linux() -> "float|None":
     """A way to figure out the boot time directly on Linux."""
-    global _BOOTTIME
+    # from the answer here -
+    # https://stackoverflow.com/questions/42471475/fastest-way-to-get-system-uptime-in-python-in-linux
+    bt_flag = getattr(time, "CLOCK_BOOTTIME", None)
+    if bt_flag is not None:
+        return time.clock_gettime(bt_flag)
     try:
         with open("/proc/stat") as f:
             for line in f:
                 if line.startswith("btime"):
-                    _BOOTTIME = float(line.split()[1])
-        return _BOOTTIME
+                    return float(line.split()[1])
     except (OSError, IndexError):
         return None
 
 
-def _uptime_amiga():
+def _boot_time_amiga() -> "float|None":
     """Returns uptime in seconds or None, on AmigaOS."""
-    global _BOOTTIME
     try:
-        _BOOTTIME = os.stat("RAM:").st_ctime
-        return time.time() - _BOOTTIME
+        return os.stat("RAM:").st_ctime
     except (NameError, OSError):
         return None
 
 
-def _uptime_beos():
+def _boot_time_beos() -> "float|None":
     """Returns uptime in seconds on None, on BeOS/Haiku."""
     if not hasattr(xp.LIBC, "system_time"):
         return None
     xp.LIBC.system_time.restype = ctypes.c_int64
-    return xp.LIBC.system_time() / 1000000.0
+    return time.time() - (xp.LIBC.system_time() / 1000000.0)
 
 
-def _uptime_bsd():
+def _boot_time_bsd() -> "float|None":
     """Returns uptime in seconds or None, on BSD (including OS X)."""
-    global _BOOTTIME
+    # https://docs.python.org/3/library/time.html#time.CLOCK_UPTIME
+    with contextlib.suppress(Exception):
+        ut_flag = getattr(time, "CLOCK_UPTIME", None)
+        if ut_flag is not None:
+            ut = time.clock_gettime(ut_flag)
+            return time.time() - ut
+
     if not hasattr(xp.LIBC, "sysctlbyname"):
         # Not BSD.
         return None
@@ -111,24 +96,20 @@ def _uptime_bsd():
     # OS X disagrees what that second value is.
     if usec > 1000000:
         usec = 0.0
-    _BOOTTIME = sec + usec / 1000000.0
-    up = time.time() - _BOOTTIME
-    if up < 0:
-        up = None
-    return up
+    return sec + usec / 1000000.0
 
 
-def _uptime_minix():
+def _boot_time_minix():
     """Returns uptime in seconds or None, on MINIX."""
     try:
         with open("/proc/uptime") as f:
             up = float(f.read())
-        return up
+        return time.time() - up
     except (OSError, ValueError):
         return None
 
 
-def _uptime_plan9():
+def _boot_time_plan9():
     """Returns uptime in seconds or None, on Plan 9."""
     # Apparently Plan 9 only has Python 2.2, which I'm not prepared to
     # support. Maybe some Linuxes implement /dev/time, though, someone was
@@ -141,19 +122,19 @@ def _uptime_plan9():
         #  -- cons(3)
         with open("/dev/time") as f:
             s, ns, ct, cf = f.read().split()
-        return float(ct) / float(cf)
+        return time.time() - (float(ct) / float(cf))
     except (OSError, ValueError):
         return None
 
 
-def _uptime_solaris():
+def _boot_time_solaris():
     """Returns uptime in seconds or None, on Solaris."""
-    global _BOOTTIME
     try:
         kstat = ctypes.CDLL("libkstat.so")
     except (AttributeError, OSError):
         return None
 
+    _BOOTTIME = None
     # kstat doesn't have uptime, but it does have boot time.
     # Unfortunately, getting at it isn't perfectly straightforward.
     # First, let's pretend to be kstat.h
@@ -202,83 +183,93 @@ def _uptime_solaris():
             _BOOTTIME = data.contents.value.time
     # Clean-up.
     kstat.kstat_close(kc)
-    if _BOOTTIME is not None:
-        return time.time() - _BOOTTIME
-    return None
+    return _BOOTTIME
 
 
-def _uptime_syllable():
+def _boot_time_syllable():
     """Returns uptime in seconds or None, on Syllable."""
-    global _BOOTTIME
     try:
-        _BOOTTIME = os.stat("/dev/pty/mst/pty0").st_mtime
-        return time.time() - _BOOTTIME
+        return os.stat("/dev/pty/mst/pty0").st_mtime
     except (NameError, OSError):
         return None
 
 
-def _uptime_windows():
+def _boot_time_windows():
     """
     Returns uptime in seconds or None, on Windows. Warning: may return
     incorrect answers after 49.7 days on versions older than Vista.
     """
+    uptime = None
     if hasattr(xp.LIBC, "GetTickCount64"):
         # Vista/Server 2008 or later.
         xp.LIBC.GetTickCount64.restype = ctypes.c_uint64
-        return xp.LIBC.GetTickCount64() / 1000.0
+        uptime = xp.LIBC.GetTickCount64() / 1000.0
     if hasattr(xp.LIBC, "GetTickCount"):
         # WinCE and Win2k or later; gives wrong answers after 49.7 days.
         xp.LIBC.GetTickCount.restype = ctypes.c_uint32
-        return xp.LIBC.GetTickCount() / 1000.0
+        uptime = xp.LIBC.GetTickCount() / 1000.0
+    if uptime:
+        return time.time() - uptime
     return None
 
 
-@xl.lazyobject
-def _UPTIME_FUNCS():
-    return {
-        "amiga": _uptime_amiga,
-        "aros12": _uptime_amiga,
-        "beos5": _uptime_beos,
-        "cygwin": _uptime_linux,
-        "darwin": _uptime_osx,
-        "haiku1": _uptime_beos,
-        "linux": _uptime_linux,
-        "linux-armv71": _uptime_linux,
-        "linux2": _uptime_linux,
-        "minix3": _uptime_minix,
-        "sunos5": _uptime_solaris,
-        "syllable": _uptime_syllable,
-        "win32": _uptime_windows,
-        "wince": _uptime_windows,
-    }
+def _boot_time_monotonic():
+    # https://stackoverflow.com/a/68197354/5048394
+    if hasattr(time, "CLOCK_MONOTONIC"):
+        # this will work on unix systems
+        monotime = time.clock_gettime(time.CLOCK_MONOTONIC)
+    else:
+        monotime = time.time()
+    return time.time() - monotime
 
 
-def uptime():
+def _get_boot_time_func():
+    plat = sys.platform
+    if plat.startswith(("amiga", "aros12")):
+        return _boot_time_amiga
+    if plat.startswith(("beos5", "haiku1")):
+        return _boot_time_beos()
+    if plat.startswith(("cygwin", "linux")):
+        # "cygwin", "linux","linux-armv71": "linux2"
+        return _boot_time_linux
+    if plat.startswith("minix3"):
+        return _boot_time_minix
+    if plat.startswith("darwin"):
+        return _boot_time_osx
+    if plat.startswith("sunos5"):
+        return _boot_time_solaris
+    if plat.startswith("syllable"):
+        return _boot_time_syllable
+
+    # tried with all unix stuff
+    if plat.startswith("win"):
+        return _boot_time_windows
+
+    # fallback
+    return _boot_time_monotonic
+
+
+def uptime(args):
     """Returns uptime in seconds if even remotely possible, or None if not."""
-    if _BOOTTIME is not None:
-        return time.time() - _BOOTTIME
-    up = _UPTIME_FUNCS.get(sys.platform, _uptime_bsd)()
-    if up is None:
-        up = (
-            _uptime_bsd()
-            or _uptime_plan9()
-            or _uptime_linux()
-            or _uptime_windows()
-            or _uptime_solaris()
-            or _uptime_beos()
-            or _uptime_amiga()
-            or _uptime_syllable()
-            or _uptime_osx()
-        )
-    return up
+    bt = boottime()
+    return str(time.time() - bt)
 
 
-def boottime():
+@functools.lru_cache(None)
+def boottime() -> "float":
     """Returns boot time if remotely possible, or None if not."""
-    global _BOOTTIME
-    if _BOOTTIME is None:
-        up = uptime()
-        if up is None:
-            return None
-        _BOOTTIME = time.time() - up
-    return _BOOTTIME
+    func = _get_boot_time_func()
+    btime = func()
+    if btime is None:
+        return _boot_time_monotonic()
+    return btime
+
+
+def main(args=None):
+    from xonsh.xoreutils.util import run_alias
+
+    run_alias("uptime", args)
+
+
+if __name__ == "__main__":
+    main()

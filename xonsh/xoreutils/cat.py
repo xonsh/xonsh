@@ -5,7 +5,7 @@ import time
 
 import xonsh.procs.pipelines as xpp
 from xonsh.built_ins import XSH
-from xonsh.xoreutils.util import arg_handler
+from xonsh.xoreutils.util import arg_handler, run_alias
 
 
 def _cat_line(
@@ -156,14 +156,9 @@ Examples:
 #      --version  output version information and exit"""
 
 
-def cat_main(args=None):
-    import sys
-    from xonsh.main import setup
-
-    setup()
-    args = sys.argv[1:] if args is None else args
-    cat(args, sys.stdin, sys.stdout, sys.stderr)
+def main(args=None):
+    run_alias("cat", args)
 
 
 if __name__ == "__main__":
-    cat_main()
+    main()

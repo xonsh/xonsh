@@ -17,3 +17,17 @@ def arg_handler(args, out, short, key, val, long=None):
                 out[k] = val
         else:
             out[key] = val
+
+
+def run_alias(name: str, args=None):
+    import sys
+    from xonsh.main import setup
+    from xonsh.built_ins import subproc_uncaptured
+    from xonsh.xontribs import xontribs_load
+
+    setup()
+
+    xontribs_load(["coreutils"])
+    args = sys.argv[1:] if args is None else args
+
+    subproc_uncaptured([name] + args)
