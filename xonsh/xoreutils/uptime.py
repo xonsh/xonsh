@@ -228,7 +228,7 @@ def _get_boot_time_func():
     if plat.startswith(("amiga", "aros12")):
         return _boot_time_amiga
     if plat.startswith(("beos5", "haiku1")):
-        return _boot_time_beos()
+        return _boot_time_beos
     if plat.startswith(("cygwin", "linux")):
         # "cygwin", "linux","linux-armv71": "linux2"
         return _boot_time_linux
