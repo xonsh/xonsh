@@ -1,6 +1,7 @@
 **Added:**
 
-* Command completions can be put as a module inside ``xompletions`` package. It will be loaded lazily.
+* Python files with command completions can be put inside ``xompletions`` namespace package,
+  they will get loaded lazily.
 
 **Changed:**
 
