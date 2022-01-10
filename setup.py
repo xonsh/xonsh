@@ -323,10 +323,12 @@ def main():
             "xonsh.prompt",
             "xonsh.lib",
             "xonsh.webconfig",
+            "xompletions",
         ],
         package_dir={
             "xonsh": "xonsh",
             "xontrib": "xontrib",
+            "xompletions": "xompletions",
             "xonsh.lib": "xonsh/lib",
             "xonsh.webconfig": "xonsh/webconfig",
         },

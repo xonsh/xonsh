@@ -1,23 +1,22 @@
 import pytest
 
-from tests.tools import ON_WINDOWS
-from xonsh.completers.pip import PIP_RE
+from xonsh.completers.commands import complete_xompletions
+
+
+regex_cases = [
+    "pip",
+    "pip.exe",
+    "pip3.6.exe",
+    "xpip",
+]
 
 
 @pytest.mark.parametrize(
     "line",
-    [
-        "pip",
-        "pip.exe",
-        "pip3.6.exe",
-        "xpip",
-        "/usr/bin/pip3",
-        r"C:\Python\Scripts\pip",
-        r"C:\Python\Scripts\pip.exe",
-    ],
+    regex_cases,
 )
 def test_pip_re(line):
-    assert PIP_RE.search(line)
+    assert complete_xompletions.matcher.search_completer(line)
 
 
 @pytest.mark.parametrize(
@@ -35,7 +34,7 @@ def test_pip_re(line):
     ],
 )
 def test_pip_list_re1(line):
-    assert PIP_RE.search(line) is None
+    assert complete_xompletions.matcher.search_completer(line) is None
 
 
 @pytest.mark.parametrize(
@@ -49,8 +48,6 @@ def test_completions(line, prefix, exp, check_completer, xession, os_env, monkey
     # use the actual PATH from os. Otherwise subproc will fail on windows. `unintialized python...`
     monkeypatch.setattr(xession, "env", os_env)
 
-    if ON_WINDOWS:
-        line = line.replace("pip", "pip.exe")
     comps = check_completer(line, prefix=prefix)
 
     assert comps.intersection(exp)

@@ -154,8 +154,9 @@ class Completer:
                 # completer requested to stop collecting completions
                 break
             except Exception as e:
+                name = func.__name__ if hasattr(func, "__name__") else str(func)
                 print_exception(
-                    f"Completer {func.__name__} raises exception when gets "
+                    f"Completer {name} raises exception when gets "
                     f"old_args={old_completer_args[:-1]} / completion_context={completion_context!r}:\n"
                     f"{type(e)} - {e}"
                 )

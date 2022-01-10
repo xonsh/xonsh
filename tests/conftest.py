@@ -232,10 +232,15 @@ def completion_context_parse():
     return CompletionContextParser().parse
 
 
+@pytest.fixture(scope="session")
+def completer_obj():
+    return Completer()
+
+
 @pytest.fixture
-def check_completer():
+def check_completer(completer_obj):
     """Helper function to run completer and parse the results as set of strings"""
-    completer = Completer()
+    completer = completer_obj
 
     def _factory(line: str, prefix="", send_original=False):
         completions, _ = completer.complete_line(line, prefix=prefix)
