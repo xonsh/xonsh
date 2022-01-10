@@ -120,6 +120,9 @@ class ModuleMatcher:
 
     def get_module(self, name):
         try:
+            # todo: not just namespace package,
+            #  add an environment variable to get list of paths to check for completions like fish
+            #  - https://fishshell.com/docs/current/completions.html#where-to-put-completions
             return importlib.import_module(f"{self.base}.{name}")
         except ModuleNotFoundError:
             pass
