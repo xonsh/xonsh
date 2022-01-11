@@ -36,7 +36,6 @@ if ON_DARWIN:
             except ProcessLookupError:
                 pass
 
-
 elif ON_WINDOWS:
     pass
 elif ON_CYGWIN or ON_MSYS:
@@ -51,7 +50,6 @@ elif ON_CYGWIN or ON_MSYS:
                     os.kill(pid, signal)
                 except Exception:
                     pass
-
 
 else:
 
@@ -106,7 +104,6 @@ if ON_WINDOWS:
                 except subprocess.CalledProcessError:
                     pass  # ignore error if process closed before we got here
         return wait_for_active_job(last_task=active_task)
-
 
 else:
 

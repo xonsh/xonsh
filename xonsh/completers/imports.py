@@ -152,7 +152,8 @@ def try_import(mod: str, only_modules=False) -> tp.List[str]:
         completions.extend(m_all)
 
     if m_is_init:
-        completions.extend(module_list(os.path.dirname(m.__file__)))
+        if m.__file__:
+            completions.extend(module_list(os.path.dirname(m.__file__)))
     completions_set = {c for c in completions if isinstance(c, str)}
     completions_set.discard("__init__")
     return list(completions_set)
