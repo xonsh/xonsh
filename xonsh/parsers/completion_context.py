@@ -807,7 +807,7 @@ class CompletionContextParser:
             # obj is multiple commands
             return self.expand_commands_span(cast(Commands, obj), new_span)
         elif isinstance(obj.value, PythonContext):
-            return self.try_expand_python_context(obj, new_span)
+            return self.try_expand_python_context(obj, new_span)  # type: ignore
         return None
 
     def expand_command_span(
