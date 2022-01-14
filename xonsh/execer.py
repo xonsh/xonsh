@@ -128,7 +128,7 @@ class Execer:
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
         tree = self.parse(input, ctx, mode=mode, filename=filename, transform=transform)
         if tree is None:
-            return None  # handles comment only input
+            return compile("pass", filename, mode)  # handles comment only input
         code = compile(tree, filename, mode)
         return code
 
