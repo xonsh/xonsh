@@ -1,0 +1,31 @@
+name: Build and deploy docs
+
+on:
+  pull_request:
+    branches:
+    - main
+    tags:
+      - '*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Xonsh docs to gh-pages
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: 'requirements/docs.txt'
+      - run: pip install -r requirements/docs.txt
+      - name: Build Docs
+        run: cd docs && make html
+      - name: Deploy to dev-branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          external_repository: xonsh/xonsh-docs
+          publish_dir: ./docs/_build/html
+          destination_dir: dev
