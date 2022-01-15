@@ -421,9 +421,9 @@ class Vox(collections.abc.Mapping):
 
         env_path = os.path.abspath(env_path)
         if not self.force_removals:
-            answer = input(
-                f"The directory {env_path} and all of its content will be deleted. Do you want to continue? [Y/n]"
-            )
+            print(f"The directory {env_path}")
+            print("and all of its content will be deleted.")
+            answer = input("Do you want to continue? [Y/n]")
             if "n" in answer:
                 return
 
