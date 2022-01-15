@@ -1,6 +1,7 @@
 name: Build and deploy docs
 
 on:
+#  push:
   pull_request:
     branches:
     - main
@@ -27,7 +28,7 @@ jobs:
       - name: Deploy to dev-branch
         uses: peaceiris/actions-gh-pages@v3
         with:
-          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           external_repository: xonsh/xonsh-docs
           publish_dir: ./docs/_build/html
           destination_dir: dev
