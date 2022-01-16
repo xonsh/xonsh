@@ -7,19 +7,17 @@ documentation. For example::
 
 will create help for aliases.
 """
+import importlib
 import io
 import textwrap
-import importlib
-from docutils import nodes, statemachine, utils
+
+from docutils import nodes
 
 try:
     from docutils.utils.error_reporting import ErrorString  # the new way
 except ImportError:
     from docutils.error_reporting import ErrorString  # the old way
-from docutils.parsers.rst import Directive, convert_directive_function
-from docutils.parsers.rst import directives, roles, states
-from docutils.parsers.rst.roles import set_classes
-from docutils.transforms import misc
+from docutils.parsers.rst import Directive
 from docutils.statemachine import ViewList
 
 from sphinx.util.nodes import nested_parse_with_titles

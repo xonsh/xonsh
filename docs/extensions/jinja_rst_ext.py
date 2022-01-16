@@ -6,7 +6,9 @@ from pathlib import Path
 
 import jinja2
 
-cur_dir = Path(__file__).parent.resolve()
+from . import rst_helpers
+
+cur_dir = Path(__file__).parent.parent.resolve()
 
 
 def rstjinja(app, docname, source):
@@ -17,8 +19,12 @@ def rstjinja(app, docname, source):
     if app.builder.format != "html":
         return
 
-    ctx = app.config.jinja_contexts.get(docname)
-    if ctx is not None:
+    appctx = app.config.jinja_contexts.get(docname)
+    if appctx is not None:
+        ctx = {
+            "rst": rst_helpers,
+        }
+        ctx.update(appctx)
         environment = jinja2.Environment(
             trim_blocks=True,
             lstrip_blocks=True,
@@ -36,7 +42,7 @@ def rstjinja(app, docname, source):
         source[0] = rendered
 
         # for debugging purpose write output
-        # Path(cur_dir / "_build" / f"{docname}.rst.out").write_text(rendered)
+        Path(cur_dir / "_build" / f"{docname}.rst.out").write_text(rendered)
 
 
 def setup(app):

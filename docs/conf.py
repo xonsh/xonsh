@@ -19,6 +19,7 @@ import importlib
 import typing as tp
 
 os.environ["XONSH_DEBUG"] = "1"
+os.environ["XONSH_NO_AMALGAMATE"] = "1"
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import Env, Var, Xettings
@@ -28,8 +29,6 @@ if tp.TYPE_CHECKING:
 from xonsh.built_ins import XSH
 from xonsh.xontribs_meta import get_xontribs
 from xonsh.commands_cache import CommandsCache
-
-import rst_helpers
 
 
 spec = importlib.util.find_spec("prompt_toolkit")
@@ -59,9 +58,9 @@ extensions = [
     "sphinx.ext.viewcode",
     #'sphinx.ext.autosummary',
     "numpydoc",
-    "cmdhelp",
+    "extensions.cmdhelp",
     "runthis.sphinxext",
-    "jinja_rst_ext",
+    "extensions.jinja_rst_ext",
     "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
 ]
 
@@ -333,7 +332,6 @@ jinja_contexts = {
     # file-name envvars.rst
     "envvars": {
         "env_vars": make_envvars(),
-        "rst": rst_helpers,
     },
 }
 
