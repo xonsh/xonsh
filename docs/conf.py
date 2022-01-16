@@ -69,7 +69,10 @@ extensions = [
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".rst.jinja2": "restructuredtext",
+}
 
 # The encoding of source files.
 # source_encoding = 'utf-8'
@@ -332,7 +335,7 @@ def make_envvars():
 jinja_contexts = {
     # file-name envvars.rst
     "envvars": {
-        "env_vars": make_envvars(),
+        "make_envvars": make_envvars,
     },
 }
 

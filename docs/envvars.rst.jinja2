@@ -1,4 +1,11 @@
+Environment Variables
+=====================
+The following displays information about the environment variables that
+affect xonsh performance in some way. It also lists their default values, if
+applicable.
+
 {% set ns = namespace(root_index='') %}
+{% set env_vars = make_envvars() %}
 
 {% macro list_table(vars) %}
     {% for vardoc in rst.iterator_for_divmod(vars.values()) %}
