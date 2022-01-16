@@ -62,6 +62,7 @@ extensions = [
     "cmdhelp",
     "runthis.sphinxext",
     "jinja_rst_ext",
+    "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
 ]
 
 # Add any paths that contain templates here, relative to this directory.
