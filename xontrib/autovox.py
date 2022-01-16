@@ -17,8 +17,6 @@ from xonsh.built_ins import XSH
 __all__ = ()
 
 
-_policies = []
-
 XSH.builtins.events.doc(
     "autovox_policy",
     """

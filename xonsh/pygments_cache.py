@@ -15,12 +15,16 @@ The cache file is created on first use, if it does not already exist.
 """
 import os
 import importlib
+import typing as tp
+
+if tp.TYPE_CHECKING:
+    from pygments.style import Style
 
 
 # Global storage variables
 __version__ = "0.1.1"
-CACHE = None
-CUSTOM_STYLES = {}
+CACHE: "dict[str, tp.Any] | None" = None
+CUSTOM_STYLES: "dict[str, Style]" = {}
 DEBUG = False
 
 
@@ -267,14 +271,14 @@ def cache_filename():
         )
 
 
-def add_custom_style(name, style):
+def add_custom_style(name: str, style: "Style"):
     """Register custom style to be able to retrieve it by ``get_style_by_name``.
 
     Parameters
     ----------
-    name : str
+    name
         Style name.
-    style : pygments.Style
+    style
         Custom style to add.
     """
     CUSTOM_STYLES[name] = style

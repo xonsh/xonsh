@@ -229,7 +229,7 @@ class VoxHandler(xcli.ArgParserAlias):
     def remove(
         self,
         names: xcli.Annotated[
-            list,
+            tp.List[str],
             xcli.Arg(metavar="ENV", nargs="+", completer=venv_names_completer),
         ],
         force=False,
@@ -274,7 +274,7 @@ class VoxHandler(xcli.ArgParserAlias):
 
         try:
             return subprocess.check_call(
-                [command] + list(args), shell=ON_WINDOWS, env=env, **kwargs
+                [command] + list(args), shell=bool(ON_WINDOWS), env=env, **kwargs
             )
             # need to have shell=True on windows, otherwise the PYTHONPATH
             # won't inherit the PATH
@@ -289,7 +289,7 @@ class VoxHandler(xcli.ArgParserAlias):
             str,
             xcli.Arg(completer=venv_names_completer),
         ],
-        args: xcli.Annotated[tp.List[str], xcli.Arg(nargs="...")],
+        args: xcli.Annotated[tp.Sequence[str], xcli.Arg(nargs="...")],
     ):
         """Run the command in the given environment
 
@@ -311,7 +311,7 @@ class VoxHandler(xcli.ArgParserAlias):
 
     def runin_all(
         self,
-        args: xcli.Annotated[tp.List[str], xcli.Arg(nargs="...")],
+        args: xcli.Annotated[tp.Sequence[str], xcli.Arg(nargs="...")],
     ):
         """Run the command in all environments found under $VIRTUALENV_HOME
 
