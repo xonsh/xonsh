@@ -56,6 +56,7 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.viewcode",
+    "sphinx.ext.duration",
     #'sphinx.ext.autosummary',
     "numpydoc",
     "extensions.cmdhelp",
@@ -173,7 +174,7 @@ if not on_rtd:
     }
 
     # Add any paths that contain custom themes here, relative to this directory.
-    html_theme_path = ["_theme", csp.get_theme_dir()]
+    html_theme_path = ["_theme"]
     templates_path = ["_templates_overwrite"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
