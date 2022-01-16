@@ -57,7 +57,7 @@ extensions = [
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.viewcode",
     "sphinx.ext.duration",
-    #'sphinx.ext.autosummary',
+    "sphinx.ext.autosummary",
     "numpydoc",
     "extensions.cmdhelp",
     "runthis.sphinxext",
@@ -109,6 +109,7 @@ exclude_patterns = [
     "api/blank.rst",
     "_build",
     "_static",
+    "_templates",
 ]
 
 # List of directories, relative to source directory, that shouldn't be searched
@@ -178,7 +179,7 @@ if not on_rtd:
 
     # Add any paths that contain custom themes here, relative to this directory.
     html_theme_path = ["_theme"]
-    templates_path = ["_templates_overwrite"]
+    templates_path = ["_templates_overwrite", "_templates"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -277,7 +278,7 @@ latex_documents = [
 # Autodocumentation Flags
 autodoc_member_order = "groupwise"
 autoclass_content = "both"
-autosummary_generate = []
+autosummary_generate = True
 
 # Prevent numpy from making silly tables
 numpydoc_show_class_members = False

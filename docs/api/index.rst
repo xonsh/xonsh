@@ -15,75 +15,80 @@ For those of you who want the gritty details.
 
 **Language:**
 
-.. toctree::
-    :maxdepth: 1
+.. autosummary::
+    :toctree: _autosummary/lang
+    :template: api-summary-module.rst
+    :recursive:
 
-    lexer
-    parser
-    ast
-    execer
-    imphooks
+    xonsh.lexer
+    xonsh.parser
+    xonsh.ast
+    xonsh.execer
+    xonsh.imphooks
 
 
 **Command Prompt:**
 
-.. toctree::
-    :maxdepth: 1
+.. autosummary::
+    :toctree: _autosummary/cmd
+    :template: api-summary-module.rst
+    :recursive:
 
-    built_ins
-    environ
-    aliases
-    dirstack
-    jobs
-    procs/index
-    inspectors
-    history/index
-    completer
-    completers/index
-    prompt/index
-    shell
-    base_shell
-    readline_shell
-    ptk_shell/shell
-    ptk_shell/history
-    ptk_shell/completer
-    ptk_shell/key_bindings
-    pretty
-    diff_history
-    xoreutils/index
+    xonsh.built_ins
+    xonsh.environ
+    xonsh.aliases
+    xonsh.dirstack
+    xonsh.jobs
+    xonsh.procs
+    xonsh.inspectors
+    xonsh.history
+    xonsh.completer
+    xonsh.completers
+    xonsh.prompt
+    xonsh.shell
+    xonsh.base_shell
+    xonsh.readline_shell
+    xonsh.ptk_shell
+    xonsh.pretty
+    xonsh.diff_history
+    xonsh.xoreutils
 
 
 **Helpers:**
 
-.. toctree::
-    :maxdepth: 1
+.. autosummary::
+    :toctree: _autosummary/helpers
+    :template: api-summary-module.rst
+    :recursive:
 
-    events
-    tools
-    platform
-    jsonutils
-    lazyjson
-    lazyasd
-    openpy
-    foreign_shells
-    commands_cache
-    tracer
-    main
-    color_tools
-    pyghooks
-    jupyter_kernel
-    jupyter_shell
-    dumb_shell
-    wizard
-    xonfig
-    xontribs_meta
-    codecache
-    contexts
+    xonsh.events
+    xonsh.tools
+    xonsh.platform
+    xonsh.jsonutils
+    xonsh.lazyjson
+    xonsh.lazyasd
+    xonsh.openpy
+    xonsh.foreign_shells
+    xonsh.commands_cache
+    xonsh.tracer
+    xonsh.main
+    xonsh.color_tools
+    xonsh.pyghooks
+    xonsh.jupyter_kernel
+    xonsh.jupyter_shell
+    xonsh.dumb_shell
+    xonsh.wizard
+    xonsh.xonfig
+    xonsh.xontribs_meta
+    xonsh.codecache
+    xonsh.contexts
 
 
 **Xontribs:**
 
-.. toctree::
-    :maxdepth: 1
-    mplhooks
-    vox
+.. autosummary::
+    :toctree: _autosummary/xontribs
+    :template: api-summary-module.rst
+    :recursive:
+
+    xontrib
