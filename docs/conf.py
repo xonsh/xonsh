@@ -27,6 +27,9 @@ from xonsh.environ import Env, Var, Xettings
 if tp.TYPE_CHECKING:
     from xonsh.environ import VarKeyType
 from xonsh.built_ins import XSH
+import xonsh.main as xmain
+
+xmain.setup()
 from xonsh.xontribs_meta import get_xontribs
 from xonsh.commands_cache import CommandsCache
 
