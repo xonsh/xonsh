@@ -1,8 +1,9 @@
 """Tests for subprocess lib"""
 import tempfile
+from subprocess import CalledProcessError
 
 from xonsh.lib.os import indir
-from xonsh.lib.subprocess import run, check_call, check_output, CalledProcessError
+from xonsh.lib.subprocess import run, check_call, check_output
 
 import pytest
 
@@ -39,7 +40,7 @@ def test_check_call_raises():
     if ON_WINDOWS:
         pytest.skip("On Windows")
     try:
-        check_call('false')
+        check_call(['false'])
         got_raise = False
     except CalledProcessError:
         got_raise = True
