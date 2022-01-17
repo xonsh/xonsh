@@ -1,7 +1,13 @@
 name: Build and deploy docs
 
 on:
-#  push:
+  push:
+    branches:
+      - pr1-gh-docs # tmp testing # todo: remove
+      - main
+    tags:
+      - '*.*.*'
+  # todo: remove below once test succeeds
   pull_request:
     branches:
     - main
@@ -25,10 +31,23 @@ jobs:
           pip install . --no-deps
       - name: Build Docs
         run: cd docs && make html
-      - name: Deploy to dev-branch
+      - name: Deploy to dev if not tagged
+        if: "!startsWith(github.ref, 'refs/tags/v')"
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          external_repository: xonsh/xonsh-docs
+#          external_repository: xonsh/xonsh-docs
           publish_dir: ./docs/_build/html
           destination_dir: dev # latest as in main branch
+      - name: Deploy to stable if tagged
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          #          external_repository: xonsh/xonsh-docs
+          publish_dir: ./docs/_build/html
+#          # todo: move to stable folder deploying to root clutters.
+#          #    Also it would make hard deploying multiple versions.
+#          destination_dir: stable # latest as in main branch
+
+

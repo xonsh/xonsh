@@ -30,8 +30,6 @@ import xonsh.main as xmain
 
 xmain.setup()
 from xonsh.xontribs_meta import get_xontribs
-from xonsh.commands_cache import CommandsCache
-
 
 spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
@@ -156,8 +154,6 @@ modindex_common_prefix = ["xonsh."]
 # further.  For a list of options available for each theme, see the
 # documentation.
 if not on_rtd:
-
-    import cloud_sptheme as csp
 
     html_theme = "cloud"
 
