@@ -26,7 +26,6 @@ from xonsh.environ import Env, Var, Xettings
 
 if tp.TYPE_CHECKING:
     from xonsh.environ import VarKeyType
-from xonsh.built_ins import XSH
 import xonsh.main as xmain
 
 xmain.setup()
@@ -37,7 +36,6 @@ from xonsh.commands_cache import CommandsCache
 spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
     # hacky runaround to import PTK-specific events
-    XSH.env = Env()
     from xonsh.ptk_shell.shell import events
 else:
     from xonsh.events import events
@@ -451,10 +449,6 @@ def make_events():
 
 make_xontribs()
 make_events()
-
-XSH.history = None
-XSH.env = {}
-XSH.commands_cache = CommandsCache()
 
 
 def setup(app):

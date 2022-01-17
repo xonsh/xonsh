@@ -31,4 +31,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           external_repository: xonsh/xonsh-docs
           publish_dir: ./docs/_build/html
-          destination_dir: dev
+          destination_dir: dev # latest as in main branch
