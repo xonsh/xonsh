@@ -277,7 +277,7 @@ class BaseParser:
         self.tokens = lexer.tokens
 
         self._lines = None
-        self.xonsh_code = None
+        self._source = None
         self._attach_nocomma_tok_rules()
         self._attach_nocloser_base_rules()
         self._attach_nodedent_base_rules()
@@ -493,7 +493,7 @@ class BaseParser:
         self.lexer.reset()
         self._last_yielded_token = None
         self._lines = None
-        self.xonsh_code = None
+        self._source = None
         self._error = None
 
     def parse(self, s, filename="<code>", mode="exec", debug_level=0):
@@ -515,7 +515,7 @@ class BaseParser:
         tree : AST
         """
         self.reset()
-        self.xonsh_code = s
+        self._source = s
         self.lexer.fname = filename
         while self.parser is None:
             time.sleep(0.01)  # block until the parser is ready
@@ -617,11 +617,11 @@ class BaseParser:
 
     @property
     def lines(self):
-        if self._lines is None and self.xonsh_code is not None:
-            self._lines = self.xonsh_code.splitlines(keepends=True)
+        if self._lines is None and self._source is not None:
+            self._lines = self._source.splitlines(keepends=True)
         return self._lines
 
-    def source_slice(self, start, stop):
+    def _source_slice(self, start, stop):
         """Gets the original source code from two (line, col) tuples in
         source-space (i.e. lineno start at 1).
         """
@@ -646,7 +646,7 @@ class BaseParser:
         raise SyntaxError()
 
     def _parse_error(self, msg, loc):
-        raise_parse_error(msg, loc, self.xonsh_code, self.lines)
+        raise_parse_error(msg, loc, self._source, self.lines)
 
     #
     # Precedence of operators
@@ -1758,7 +1758,7 @@ class BaseParser:
         p3, p5 = p[3], p[5]
         beg = (p3.lineno, p3.lexpos)
         end = (p5.lineno, p5.lexpos)
-        s = self.source_slice(beg, end)
+        s = self._source_slice(beg, end)
         s = textwrap.dedent(s)
         p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
 
@@ -1767,7 +1767,7 @@ class BaseParser:
         p1, p3 = p[1], p[3]
         beg = (p1.lineno, p1.lexpos + 1)
         end = (p3.lineno, p3.lexpos)
-        s = self.source_slice(beg, end).strip()
+        s = self._source_slice(beg, end).strip()
         p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
 
     def _attach_nodedent_base_rules(self):
@@ -2572,7 +2572,7 @@ class BaseParser:
             ends = p2 + ends
         elts = []
         for beg, end in zip(begins, ends):
-            s = self.source_slice(beg, end).strip()
+            s = self._source_slice(beg, end).strip()
             if not s:
                 if len(begins) == 1:
                     break
@@ -3146,7 +3146,7 @@ class BaseParser:
         p3 = p[3]
         l = p1.lineno
         c = p1.lexpos + 1
-        subcmd = self.source_slice((l, c), (p3.lineno, p3.lexpos))
+        subcmd = self._source_slice((l, c), (p3.lineno, p3.lexpos))
         subcmd = subcmd.strip() + "\n"
         p0 = [
             ast.Str(s="xonsh", lineno=l, col_offset=c),
@@ -3186,7 +3186,7 @@ class BaseParser:
         p3, p5 = p[3], p[5]
         beg = (p3.lineno, p3.lexpos + 1)
         end = (p5.lineno, p5.lexpos)
-        s = self.source_slice(beg, end).strip()
+        s = self._source_slice(beg, end).strip()
         node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
         p[2][-1].elts.append(node)
 

@@ -430,23 +430,29 @@ class Lexer:
         self.fname = ""
         self.last = None
         self.beforelast = None
-        self.tolerant = tolerant
+        self._tolerant = tolerant
+        self._token_stream = iter(())
+
+    @property
+    def tolerant(self):
+        return self._tolerant
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
         pass
 
     def reset(self):
-        pass
+        self._token_stream = iter(())
+        self.last = None
+        self.beforelast = None
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self.token_stream = get_tokens(s, self.tolerant)
+        self._token_stream = get_tokens(s, self._tolerant)
 
     def token(self):
         """Retrieves the next token."""
-        self.beforelast = self.last
-        self.last = next(self.token_stream, None)
+        self.beforelast, self.last = self.last, next(self._token_stream, None)
         return self.last
 
     def __iter__(self):
@@ -459,28 +465,28 @@ class Lexer:
         """Splits a string into a list of strings which are whitespace-separated
         tokens.
         """
-        vals = []
         self.input(s)
+        elements = []
         l = c = -1
         ws = "WS"
         nl = "\n"
-        for t in self:
-            if t.type == ws:
+        for token in self:
+            if token.type == ws:
                 continue
-            elif l < t.lineno:
-                vals.append(t.value)
-            elif len(vals) > 0 and c == t.lexpos:
-                vals[-1] = vals[-1] + t.value
+            elif l < token.lineno:
+                elements.append(token.value)
+            elif len(elements) > 0 and c == token.lexpos:
+                elements[-1] = elements[-1] + token.value
             else:
-                vals.append(t.value)
-            nnl = t.value.count(nl)
+                elements.append(token.value)
+            nnl = token.value.count(nl)
             if nnl == 0:
-                l = t.lineno
-                c = t.lexpos + len(t.value)
+                l = token.lineno
+                c = token.lexpos + len(token.value)
             else:
-                l = t.lineno + nnl
-                c = len(t.value.rpartition(nl)[-1])
-        return vals
+                l = token.lineno + nnl
+                c = len(token.value.rpartition(nl)[-1])
+        return elements
 
     #
     # All the tokens recognized by the lexer
@@ -489,7 +495,7 @@ class Lexer:
     def tokens(self):
         if self._tokens is None:
             kwlist = kwmod.kwlist[:]
-            if PYTHON_VERSION_INFO >= (3, 9, 0) and PYTHON_VERSION_INFO < (3, 10):
+            if (3, 9, 0) <= PYTHON_VERSION_INFO < (3, 10):
                 kwlist.remove("__peg_parser__")
             t = (
                 tuple(token_map.values())
