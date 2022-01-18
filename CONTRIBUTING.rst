@@ -301,36 +301,12 @@ new module ``mymod``.  The following explains how to add hooks.
 ------------------------
 Python Hooks
 ------------------------
-Python documentation lives in the ``docs/api`` directory.
-First, create a file in this directory that represents the new module called
-``mymod.rst``.
-The ``docs/api`` directory matches the structure of the ``xonsh/`` directory.
-So if your module is in a sub-package, you'll need to go into the sub-package's
-directory before creating ``mymod.rst``.
-The contents of this file should be as follows:
-
-**mymod.rst:**
-
-.. code-block:: rst
-
-    .. _xonsh_mymod:
-
-    =======================================
-    My Awesome Module -- :mod:`xonsh.mymod`
-    =======================================
-
-    .. currentmodule:: xonsh.mymod
-
-    .. automodule:: xonsh.mymod
-        :members:
-
+Python API documentation is generated for the entries in ``docs/api.rst``.
+`sphinx-autosummary<https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_
+is used to generate documentation for the modules.
+Mention your module ``mymod`` under appropriate header.
 This will discover all of the docstrings in ``mymod`` and create the
-appropriate webpage. Now, you need to hook this page up to the rest of the
-website.
-
-Go into the ``index.rst`` file in ``docs/xonsh`` or other subdirectory and add
-``mymod`` to the appropriate ``toctree`` (which stands for table-of-contents
-tree). Note that every sub-package has its own ``index.rst`` file.
+appropriate webpage.
 
 
 Building the Website
@@ -437,27 +413,27 @@ You can also exclude a release::
 -----------------------
 Cross-platform testing
 -----------------------
-Most of the time, an actual VM machine is needed to test the nuances of cross platform testing. 
+Most of the time, an actual VM machine is needed to test the nuances of cross platform testing.
 But alas here are some other ways to test things
 
-1. Windows 
+1. Windows
 
 
- - `wine <https://www.winehq.org/>`_ can be used to emulate the development environment. It provides cmd.exe with its default installation. 
- 
+ - `wine <https://www.winehq.org/>`_ can be used to emulate the development environment. It provides cmd.exe with its default installation.
+
 2. OS X
 
- - `darlinghq <https://www.darlinghq.org/>`_ can be used to emulate the development environment for Linux users. 
+ - `darlinghq <https://www.darlinghq.org/>`_ can be used to emulate the development environment for Linux users.
    Windows users can use Linux inside a virtual machine or WSL to run the same.
  - `OSX KVM <https://github.com/kholia/OSX-KVM>` can be used for virtualization.
 
 3. Linux
 
- - It far easier to test things for Linux. `docker <https://www.docker.com/>`_ is available on all three platforms. 
+ - It far easier to test things for Linux. `docker <https://www.docker.com/>`_ is available on all three platforms.
 
-One can leverage the Github Actions to provide a reverse shell to test things out. 
-Solutions like `actions-tmate <https://mxschmitt.github.io/action-tmate/>`_ are available, 
-but they should not in any way violate the Github Action policies. 
+One can leverage the Github Actions to provide a reverse shell to test things out.
+Solutions like `actions-tmate <https://mxschmitt.github.io/action-tmate/>`_ are available,
+but they should not in any way violate the Github Action policies.
 
 
 Document History

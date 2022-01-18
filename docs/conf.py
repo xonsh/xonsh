@@ -19,23 +19,21 @@ import importlib
 import typing as tp
 
 os.environ["XONSH_DEBUG"] = "1"
+os.environ["XONSH_NO_AMALGAMATE"] = "1"
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import Env, Var, Xettings
 
 if tp.TYPE_CHECKING:
     from xonsh.environ import VarKeyType
-from xonsh.built_ins import XSH
+import xonsh.main as xmain
+
+xmain.setup()
 from xonsh.xontribs_meta import get_xontribs
-from xonsh.commands_cache import CommandsCache
-
-import rst_helpers
-
 
 spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
     # hacky runaround to import PTK-specific events
-    XSH.env = Env()
     from xonsh.ptk_shell.shell import events
 else:
     from xonsh.events import events
@@ -57,18 +55,23 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.viewcode",
-    #'sphinx.ext.autosummary',
+    "sphinx.ext.duration",
+    "sphinx.ext.autosummary",
     "numpydoc",
-    "cmdhelp",
+    "extensions.cmdhelp",
     "runthis.sphinxext",
-    "jinja_rst_ext",
+    "extensions.jinja_rst_ext",
+    "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".rst.jinja2": "restructuredtext",
+}
 
 # The encoding of source files.
 # source_encoding = 'utf-8'
@@ -105,6 +108,7 @@ exclude_patterns = [
     "api/blank.rst",
     "_build",
     "_static",
+    "_templates",
 ]
 
 # List of directories, relative to source directory, that shouldn't be searched
@@ -151,8 +155,6 @@ modindex_common_prefix = ["xonsh."]
 # documentation.
 if not on_rtd:
 
-    import cloud_sptheme as csp
-
     html_theme = "cloud"
 
     html_theme_options = {
@@ -173,8 +175,8 @@ if not on_rtd:
     }
 
     # Add any paths that contain custom themes here, relative to this directory.
-    html_theme_path = ["_theme", csp.get_theme_dir()]
-    templates_path = ["_templates_overwrite"]
+    html_theme_path = ["_theme"]
+    templates_path = ["_templates_overwrite", "_templates"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -273,7 +275,7 @@ latex_documents = [
 # Autodocumentation Flags
 autodoc_member_order = "groupwise"
 autoclass_content = "both"
-autosummary_generate = []
+autosummary_generate = True
 
 # Prevent numpy from making silly tables
 numpydoc_show_class_members = False
@@ -331,8 +333,7 @@ def make_envvars():
 jinja_contexts = {
     # file-name envvars.rst
     "envvars": {
-        "env_vars": make_envvars(),
-        "rst": rst_helpers,
+        "make_envvars": make_envvars,
     },
 }
 
@@ -444,10 +445,6 @@ def make_events():
 
 make_xontribs()
 make_events()
-
-XSH.history = None
-XSH.env = {}
-XSH.commands_cache = CommandsCache()
 
 
 def setup(app):

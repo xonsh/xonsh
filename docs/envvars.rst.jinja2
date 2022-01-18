@@ -1,0 +1,57 @@
+Environment Variables
+=====================
+The following displays information about the environment variables that
+affect xonsh performance in some way. It also lists their default values, if
+applicable.
+
+{% set ns = namespace(root_index='') %}
+{% set env_vars = make_envvars() %}
+
+{% macro list_table(vars) %}
+    {% for vardoc in rst.iterator_for_divmod(vars.values()) %}
+{% if loop.index0 % 3 == 0 %}* {% else %}  {% endif %}- {% if vardoc %}{{ rst.to_ref_string(vardoc.info.title) }}{% endif %}
+
+    {% endfor %}
+{% endmacro %}
+
+{#titular table#}
+{% for cls, envgrp in env_vars.children.items() recursive %}
+    {% if not loop.depth0 %}
+        {% set ns.root_index=loop.index %}
+    {% endif %}
+
+.. list-table:: {{ rst.to_ref_string(cls.get_group_title()) }}
+    :header-rows: 0
+
+    {{ list_table(envgrp.vars)|indent(4) }}
+    {% if envgrp.children %}{{ loop(envgrp.children.items()) }}{% endif %}
+{% endfor %}
+
+{#variables doc#}
+{% for cls, envgrp in env_vars.children.items() recursive %}
+
+.. _{{ rst.to_valid_id(cls.get_group_title()) }}:
+
+{{ cls.get_group_title() }}
+{{ rst.underline_title(cls.get_group_title(), loop.depth0) }}
+{{ cls.get_group_description() }}
+
+{% for key, vardoc in envgrp.vars.items() %}
+
+.. _{{ rst.to_valid_id(vardoc.info.title) }}:
+
+{{ vardoc.info.title }}
+{{ rst.underline_title(vardoc.info.title) }}
+{{ vardoc.info.docstr }}
+
+**configurable:** {{ vardoc.info.configurable }}
+
+**default:** {{ vardoc.info.default }}
+
+**store_as_str:** {{ vardoc.info.store_as_str }}
+
+-------
+{% endfor %}
+
+{% if envgrp.children %}{{ loop(envgrp.children.items()) }}{% endif %}
+{% endfor %}

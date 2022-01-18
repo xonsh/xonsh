@@ -10,3 +10,4 @@ doctr
 tornado
 runthis-sphinxext
 livereload
+myst-parser

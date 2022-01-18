@@ -1,4 +1,4 @@
-"""The xonsh abstract syntax tree node."""
+"""Abstract Syntax Tree handler"""
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
 import sys
