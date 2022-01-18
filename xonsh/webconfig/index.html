@@ -1,19 +1,32 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Xonsh Web Config</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="stylesheet" href="/js/bootstrap.min.css">
-  <script src="/js/app.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Xonsh Web Config</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/js/bootstrap.min.css">
+    <!--  <script src="/js/app.js"></script>-->
 </head>
 
 <body>
-  <div id="elm"></div>
-  <script>
-  var app = Elm.Main.init({
-    node: document.getElementById('elm')
-  });
-  </script>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">
+        <img src="/js/xonsh_sticker.svg" width="30" height="30" class="d-inline-block align-top" alt="">
+        Xonsh
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!--    <div class="collapse navbar-collapse" id="navbarSupportedContent">-->
+    <ul class="navbar-nav mx-auto">
+        $navlinks
+    </ul>
+    <!--    </div>-->
+</nav>
+<div class="container-lg m-4">
+    $body
+</div>
 </body>
 </html>

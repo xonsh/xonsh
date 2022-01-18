@@ -668,12 +668,6 @@ def default_completer_dirs(env):
 
 
 @default_value
-def xonfig_data_files(env):
-    """``['$XONSH_SYS_CONFIG_DIR/xonfig-data.json', '$XONSH_CONFIG_DIR/xonfig-data.json']``\n"""
-    return get_config_paths(env, "xonfig-data.json")
-
-
-@default_value
 def xonsh_append_newline(env):
     """Appends a newline if we are in interactive mode"""
     return env.get("XONSH_INTERACTIVE", False)
@@ -2156,6 +2150,11 @@ class Env(cabc.MutableMapping):
         else:
             return default
 
+    def get_stringified(self, key, default=None):
+        value = self.get(key, default)
+        detyper = self.get_detyper(key)
+        return detyper(value)
+
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.
         This include string & compiled regular expression keys.
@@ -2280,6 +2279,11 @@ class Env(cabc.MutableMapping):
             Environment variable name to deregister. Typically all caps.
         """
         self._vars.pop(name)
+
+    def is_configurable(self, name):
+        if name not in self._vars:
+            return False
+        return self._vars[name].is_configurable
 
 
 class InternalEnvironDict(ChainMap):

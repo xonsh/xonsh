@@ -54,7 +54,7 @@ def prompt_xontrib_install(names: tp.List[str]):
             if xontrib.package:
                 packages.append(xontrib.package.name)
 
-    print(
+    return (
         "The following xontribs are enabled but not installed: \n"
         "   {xontribs}\n"
         "To install them run \n"
@@ -110,6 +110,8 @@ def xontribs_load(
     """
     ctx = XSH.ctx
     res = ExitCode.OK
+    stdout = None
+    stderr = None
     for name in names:
         if verbose:
             print(f"loading xontrib {name!r}")
@@ -120,9 +122,9 @@ def xontribs_load(
             print_exception(f"Failed to load xontrib {name}.")
     if hasattr(update_context, "bad_imports"):
         res = ExitCode.NOT_FOUND
-        prompt_xontrib_install(update_context.bad_imports)  # type: ignore
+        stderr = prompt_xontrib_install(update_context.bad_imports)  # type: ignore
         del update_context.bad_imports  # type: ignore
-    return res
+    return stdout, stderr, res
 
 
 def xontrib_installed(names: tp.Set[str]):
