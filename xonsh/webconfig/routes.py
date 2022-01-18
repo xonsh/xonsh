@@ -4,6 +4,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from xonsh.environ import Env
+from .file_writes import insert_into_xonshrc
 from ..built_ins import XonshSession
 
 if TYPE_CHECKING:
@@ -76,8 +77,6 @@ class Routes:
 
     def update_rc(self, **kwargs):
         # todo: handle updates and deletion as well
-        from xonsh.webconfig.main import insert_into_xonshrc
-
         insert_into_xonshrc(kwargs)
 
 
