@@ -6,6 +6,10 @@ on:
       - main
     tags:
       - '*.*.*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,12 +29,13 @@ jobs:
       - name: Build Docs
         run: cd docs && make html
       - uses: tibdex/github-app-token@v1
+        if: github.event_name != 'pull_request'
         id: generate-token
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Deploy to dev if not tagged
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/v')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
@@ -38,7 +43,7 @@ jobs:
           publish_dir: ./docs/_build/html
           destination_dir: dev # latest as in main branch
       - name: Deploy to stable if tagged
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
