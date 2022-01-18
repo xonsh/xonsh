@@ -6,12 +6,6 @@ on:
       - main
     tags:
       - '*.*.*'
-  # todo: remove below once test succeeds
-  pull_request:
-    branches:
-    - main
-    tags:
-      - '*.*.*'
 
 jobs:
   build:
