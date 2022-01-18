@@ -3,10 +3,10 @@ from xonsh.lazyasd import lazyobject
 from xonsh.tools import print_warning
 
 
-_WARNINGS_PRINTED = set()
+_WARNINGS_PRINTED: "set[str]" = set()
 
 
-def _print_proc_warning(msg):
+def _print_proc_warning(msg: str):
     global _WARNINGS_PRINTED
     if msg not in _WARNINGS_PRINTED:
         print_warning(msg)

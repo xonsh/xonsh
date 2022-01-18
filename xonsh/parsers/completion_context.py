@@ -154,7 +154,7 @@ class CompletionContext(NamedTuple):
 
 class ExpansionOperation(enum.Enum):
     NEVER_EXPAND = object()
-    SIMPLE_ARG_EXPANSION = None  # the default
+    SIMPLE_ARG_EXPANSION: "Any" = None  # the default
 
 
 class Missing(enum.Enum):

@@ -604,6 +604,7 @@ class ArgParserAlias:
 
     def hook_post_add_argument(
         self,
+        *,
         parser: "ArgParser|ap.ArgumentParser",
         action: "ap.Action",
         param: str,

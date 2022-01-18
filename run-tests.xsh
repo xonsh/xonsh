@@ -66,12 +66,13 @@ def qa():
     $XONSH_TRACE_SUBPROC_FUNC = colored_tracer
     $XONSH_TRACE_SUBPROC = True
 
-    black --check xonsh xontrib tests
+    black --check xonsh xontrib tests xompletions
 
     python -m flake8
 
-    # todo: add xontrib folder here
     mypy xonsh
+    mypy xontrib --namespace-packages --explicit-package-bases
+    mypy xompletions --namespace-packages --explicit-package-bases
 
     pytest -m news
 

@@ -17,6 +17,8 @@ import shutil
 import importlib
 import threading
 import collections
+import typing as tp
+
 
 import xonsh.completers.tools as xct
 from xonsh.built_ins import XSH
@@ -46,12 +48,14 @@ from xonsh.platform import (
 from xonsh.lazyimps import pygments, pyghooks, winutils
 from xonsh.events import events
 
-readline = None
-RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
-RL_COMPLETION_QUERY_ITEMS = None
+if tp.TYPE_CHECKING:
+    from types import ModuleType
+
+readline: "ModuleType|None" = None
+RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None  # type: tp.Any
+RL_COMPLETION_QUERY_ITEMS: "tp.Any" = None
 RL_CAN_RESIZE = False
-RL_DONE = None
-RL_VARIABLE_VALUE = None
+RL_VARIABLE_VALUE: "tp.Callable[..., tp.Any]|None" = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
 

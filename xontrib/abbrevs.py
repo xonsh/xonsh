@@ -37,10 +37,22 @@ from xonsh.tools import check_for_partial_string
 
 __all__ = ()
 
-# todo: do not assign .abbrevs and directly use abbrevs as mutable const.
-XSH.abbrevs = abbrevs = dict()
+
+if tp.TYPE_CHECKING:
+
+    class AbbrCallType(tp.Protocol):
+        def __call__(self, word: str, buffer: Buffer) -> str:
+            ...
+
+    AbbrValType = tp.Union[str, AbbrCallType]
+
+abbrevs: "dict[str, AbbrValType]" = dict()
+
+# XSH.builtins is a namespace and extendable
+XSH.builtins.abbrevs = abbrevs
+
 proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
-builtins.abbrevs = proxy
+builtins.abbrevs = proxy  # type: ignore
 
 
 class _LastExpanded(tp.NamedTuple):
