@@ -41,7 +41,7 @@ def test_pip_list_re1(line):
     "line, prefix, exp",
     [
         ["pip", "c", {"cache", "check", "config"}],
-        ["pip show", "", {"setuptools", "wheel", "pip"}],
+        ["pip show", "", {"pytest", "flake8"}],
     ],
 )
 def test_completions(line, prefix, exp, check_completer, xession, os_env, monkeypatch):

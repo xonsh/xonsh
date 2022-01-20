@@ -1,7 +1,9 @@
 """Xonsh completer tools."""
 import inspect
+import os
 import shlex
 import subprocess
+import sys
 import textwrap
 import typing as tp
 from functools import wraps
@@ -9,6 +11,7 @@ from functools import wraps
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
+import xonsh.tools as xt
 
 
 def _filter_normal(s, x):
@@ -205,33 +208,79 @@ def apply_lprefix(comps, lprefix):
             yield RichCompletion(comp, prefix_len=lprefix)
 
 
+def completion_from_cmd_output(line: str, append_space=False):
+    line = line.strip()
+    if "\t" in line:
+        cmd, desc = map(str.strip, line.split("\t", maxsplit=1))
+    else:
+        cmd, desc = line, ""
+
+    # special treatment for path completions.
+    # not appending space even if it is a single candidate.
+    if cmd.endswith(os.pathsep) or (os.altsep and cmd.endswith(os.altsep)):
+        append_space = False
+
+    return RichCompletion(
+        cmd,
+        description=desc,
+        append_space=append_space,
+    )
+
+
+def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars: str):
+    env = {}
+
+    # env.detype is mutable, so update the newly created variable
+    env.update(XSH.env.detype())
+
+    env.update(env_vars)  # prefer passed env variables
+
+    filter_func = get_filter_function()
+
+    if sep is None:
+        sep = os.linesep
+
+    try:
+        proc = subprocess.run(
+            args,
+            env=env,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+        )
+    except FileNotFoundError:
+        return
+    except Exception as ex:
+        xt.print_exception(f"Failed to get completions from sub-proc: {args} ({ex!r})")
+        return
+
+    if proc.stdout:
+        output = proc.stdout.decode().strip()
+        if callable(sep):
+            lines = sep(output)
+        else:
+            lines = output.split(sep)
+
+        # if there is a single completion candidate then maybe it is over
+        append_space = len(lines) == 1
+        for line in lines:
+            if filter_prefix and (not filter_func(line, filter_prefix)):
+                continue
+            comp = completion_from_cmd_output(line, append_space)
+            yield comp
+
+
 def comp_based_completer(ctx: CommandContext, **env: str):
     """Helper function to complete commands such as ``pip``,``django-admin``,... that use bash's ``complete``"""
     prefix = ctx.prefix
 
-    filter_func = get_filter_function()
+    args = [arg.value for arg in ctx.args]
+    if prefix:
+        args.append(prefix)
 
-    args = [arg.raw_value for arg in ctx.args]
-    env.update(
-        {
-            "COMP_WORDS": " ".join(args),
-            "COMP_CWORD": str(ctx.arg_index),
-        }
+    yield from complete_from_sub_proc(
+        args[0],
+        sep=shlex.split,
+        COMP_WORDS=os.sep.join(args) + os.sep,
+        COMP_CWORD=str(ctx.arg_index),
+        **env,
     )
-    env.update(XSH.env.detype())
-
-    try:
-        proc = subprocess.run(
-            [args[0]],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            env=env,
-        )
-    except FileNotFoundError:
-        return None
-
-    if proc.stdout:
-        out = shlex.split(proc.stdout.decode())
-        for cmp in out:
-            if filter_func(cmp, prefix):
-                yield RichCompletion(cmp, append_space=True)
