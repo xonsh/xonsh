@@ -279,7 +279,7 @@ def comp_based_completer(ctx: CommandContext, **env: str):
     yield from complete_from_sub_proc(
         args[0],
         sep=shlex.split,
-        COMP_WORDS=os.sep.join(args) + os.sep,
+        COMP_WORDS=os.linesep.join(args) + os.linesep,
         COMP_CWORD=str(ctx.arg_index),
         **env,
     )
