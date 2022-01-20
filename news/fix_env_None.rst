@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Environment-variables of no predefined type or path environment variables are now represented as strings via the empty string.
+* Environment-variables of no predefined type or path environment variables are now represented as strings via the empty string. 
 
 **Deprecated:**
 
