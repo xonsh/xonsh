@@ -3,15 +3,14 @@ import inspect
 import os
 import shlex
 import subprocess
-import sys
 import textwrap
 import typing as tp
 from functools import wraps
 
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
-import xonsh.tools as xt
 
 
 def _filter_normal(s, x):
