@@ -189,3 +189,21 @@ def test_exec_alias_args(xession):
 
     assert stack[0][0].f_locals["myargs"] == ["arg0"]
     assert stack[0][0].f_locals["myarg0"] == "arg0"
+
+
+def test_register_decorator(xession):
+    aliases = Aliases()
+
+    @aliases.register
+    def debug():
+        ...
+
+    @aliases.register("name")
+    def with_options():
+        ...
+
+    @aliases.register
+    def _private():
+        ...
+
+    assert set(aliases) == {"debug", "name", "private"}

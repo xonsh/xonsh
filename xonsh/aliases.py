@@ -6,6 +6,7 @@ import sys
 import inspect
 import argparse
 import collections.abc as cabc
+import types
 import typing as tp
 
 from xonsh.built_ins import XSH
@@ -56,6 +57,45 @@ class Aliases(cabc.MutableMapping):
     def __init__(self, *args, **kwargs):
         self._raw = {}
         self.update(*args, **kwargs)
+
+    @staticmethod
+    def _get_func_name(func):
+        name = func.__name__
+
+        # Strip leading underscore
+        if name.startswith("_"):
+            name = name[1:]
+        return name
+
+    def _register(self, func, name="", dash_case=True):
+        name = name or self._get_func_name(func)
+
+        if dash_case:
+            name = name.replace("_", "-")
+
+        self[name] = func
+        return func
+
+    @tp.overload
+    def register(self, func: types.FunctionType) -> types.FunctionType:
+        """simple usage"""
+
+    @tp.overload
+    def register(
+        self, name: str, *, dash_case: bool = True
+    ) -> tp.Callable[[types.FunctionType], types.FunctionType]:
+        ...
+
+    def register(self, func_or_name, name=None, dash_case=True):
+        """Decorator to register the given function by name."""
+
+        if isinstance(func_or_name, types.FunctionType):
+            return self._register(func_or_name, name, dash_case)
+
+        def wrapper(func):
+            return self._register(func, func_or_name, dash_case)
+
+        return wrapper
 
     def get(self, key, default=None):
         """Returns the (possibly modified) value. If the key is not present,
