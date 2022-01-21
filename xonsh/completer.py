@@ -9,6 +9,7 @@ from xonsh.completers.tools import (
     RichCompletion,
     apply_lprefix,
     is_exclusive_completer,
+    get_filter_function,
 )
 from xonsh.built_ins import XSH
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
@@ -140,6 +141,8 @@ class Completer:
     def generate_completions(
         completion_context, old_completer_args, trace: bool
     ) -> tp.Iterator[tp.Tuple[Completion, int]]:
+        filter_func = get_filter_function()
+
         for name, func in XSH.completers.items():
             try:
                 if is_contextual_completer(func):
@@ -167,24 +170,39 @@ class Completer:
                 and completion_context is not None
                 and completion_context.command is not None
             )
+
+            ### set comp-defaults
+
+            # the default is that the completer function filters out as necessary
+            # we can change that once fuzzy/substring matches are added
+            is_filtered = True
+            custom_lprefix = False
+            prefix = ""
+            if completing_contextual_command:
+                prefix = completion_context.command.prefix
+            elif old_completer_args is not None:
+                prefix = old_completer_args[0]
+            lprefix = len(prefix)
+
             if isinstance(out, cabc.Sequence):
-                res, lprefix = out
-                custom_lprefix = True
+                # update comp-defaults from
+                res, lprefix_filtered = out
+                if isinstance(lprefix_filtered, bool):
+                    is_filtered = lprefix_filtered
+                else:
+                    lprefix = lprefix_filtered
+                    custom_lprefix = True
             else:
                 res = out
-                custom_lprefix = False
-                if completing_contextual_command:
-                    lprefix = len(completion_context.command.prefix)
-                elif old_completer_args is not None:
-                    lprefix = len(old_completer_args[0])
-                else:
-                    lprefix = 0
 
             if res is None:
                 continue
 
             items = []
             for comp in res:
+                if not is_filtered:
+                    if filter_func(comp, prefix):
+                        continue
                 comp = Completer._format_completion(
                     comp,
                     completion_context,

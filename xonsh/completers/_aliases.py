@@ -5,10 +5,7 @@ from xonsh.completers.completer import (
     remove_completer,
     add_one_completer,
 )
-from xonsh.completers.tools import (
-    contextual_command_completer,
-    get_filter_function,
-)
+from xonsh.completers.tools import contextual_command_completer
 from xonsh.parsers.completion_context import CommandContext
 
 # for backward compatibility
@@ -172,7 +169,4 @@ def complete_aliases(command: CommandContext):
         return
 
     possible = completer(command=command, alias=alias)
-    fltr = get_filter_function()
-    for comp in possible:
-        if fltr(comp, command.prefix):
-            yield comp
+    return possible, False
