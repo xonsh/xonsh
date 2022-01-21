@@ -226,7 +226,7 @@ def completion_from_cmd_output(line: str, append_space=False):
     )
 
 
-def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars: str):
+def sub_proc_get_output(*args, **env_vars: str) -> "None|bytes":
     env = {}
 
     # env.detype is mutable, so update the newly created variable
@@ -234,26 +234,28 @@ def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars:
 
     env.update(env_vars)  # prefer passed env variables
 
-    filter_func = get_filter_function()
-
-    if sep is None:
-        sep = os.linesep
-
     try:
-        proc = subprocess.run(
+        return subprocess.run(
             args,
             env=env,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-        )
+        ).stdout
     except FileNotFoundError:
         return
     except Exception as ex:
         xt.print_exception(f"Failed to get completions from sub-proc: {args} ({ex!r})")
         return
 
-    if proc.stdout:
-        output = proc.stdout.decode().strip()
+
+def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars: str):
+    if sep is None:
+        sep = os.linesep
+    filter_func = get_filter_function()
+    stdout = sub_proc_get_output(*args, **env_vars)
+
+    if stdout:
+        output = stdout.decode().strip()
         if callable(sep):
             lines = sep(output)
         else:
