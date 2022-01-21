@@ -211,12 +211,20 @@ simple:
 
 * ``\w*PATH``: any variable whose name ends in PATH is a list of strings.
 * ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
-* ``XONSH_HISTORY_SIZE``: this variable is an int.
-* ``CASE_SENSITIVE_COMPLETIONS``: this variable is a boolean.
+
+Futhermore, a number of predefined environment variables listed `here <envvars.html>`_ have a static type.
+For example,
+* ``XONSH_HISTORY_SIZE``: is an int, and
+* ``CASE_SENSITIVE_COMPLETIONS``: is a boolean.
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).
-When in xonsh, you'll always have the typed version.  Here are a couple of
+When in xonsh, you'll always have the typed version.
+
+Variables that do not match the rules above are converted to strings using ``str``,
+except they are ``None``. In this case the empty string is used.
+
+Here are a couple of
 PATH examples:
 
 .. code-block:: xonshcon

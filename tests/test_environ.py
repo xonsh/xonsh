@@ -443,7 +443,7 @@ def test_register_custom_var_bool(val, converted):
         (32, "32"),
         (0, "0"),
         (27.0, "27.0"),
-        (None, "None"),
+        (None, ""),
         ("lol", "lol"),
         ("false", "false"),
         ("no", "no"),

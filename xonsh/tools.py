@@ -1226,8 +1226,8 @@ def always_none(x):
 
 
 def ensure_string(x):
-    """Returns a string if x is not a string, and x if it already is."""
-    return str(x)
+    """Returns a string if x is not a string, and x if it already is. If x is None, the empty string is returned."""
+    return str(x) if x is not None else ""
 
 
 def is_path(x):
@@ -1242,11 +1242,10 @@ def is_env_path(x):
 
 def str_to_path(x):
     """Converts a string to a path."""
-    if x is None:
+    if x is None or x == "":
         return None
     elif isinstance(x, str):
-        # checking x is needed to avoid uncontrolled converting empty string to Path('.')
-        return pathlib.Path(x) if x else None
+        return pathlib.Path(x)
     elif isinstance(x, pathlib.Path):
         return x
     elif isinstance(x, EnvPath) and len(x) == 1:
@@ -1267,7 +1266,7 @@ def str_to_env_path(x):
 
 def path_to_str(x):
     """Converts a path to a string."""
-    return str(x)
+    return str(x) if x is not None else ""
 
 
 def env_path_to_str(x):
