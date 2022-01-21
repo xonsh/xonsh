@@ -215,7 +215,10 @@ class Completer:
             print("\nTRACE COMPLETIONS: Getting completions with context:")
             sys.displayhook(completion_context)
         lprefix = 0
-        completions = set()
+
+        # using dict to keep order py3.6+
+        completions = {}
+
         query_limit = XSH.env.get("COMPLETION_QUERY_LIMIT")
 
         for comp in self.generate_completions(
@@ -224,7 +227,7 @@ class Completer:
             trace,
         ):
             completion, lprefix = comp
-            completions.add(completion)
+            completions[completion] = None
             if query_limit and len(completions) >= query_limit:
                 if trace:
                     print(
@@ -233,6 +236,7 @@ class Completer:
                 break
 
         def sortkey(s):
+            # todo: should sort with prefix > substring > fuzzy
             return s.lstrip(''''"''').lower()
 
         # the last completer's lprefix is returned. other lprefix values are inside the RichCompletions.
