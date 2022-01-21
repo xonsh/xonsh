@@ -82,17 +82,15 @@ class Aliases(cabc.MutableMapping):
         self[name] = func
         return func
 
-    if tp.TYPE_CHECKING:
+    @tp.overload
+    def register(self, func: types.FunctionType) -> types.FunctionType:
+        """simple usage"""
 
-        @tp.overload
-        def register(self, func: types.FunctionType) -> types.FunctionType:
-            """simple usage"""
-
-        @tp.overload
-        def register(
-            self, name: str, *, dash_case: bool = True
-        ) -> tp.Callable[[types.FunctionType], types.FunctionType]:
-            ...
+    @tp.overload
+    def register(
+        self, name: str, *, dash_case: bool = True
+    ) -> tp.Callable[[types.FunctionType], types.FunctionType]:
+        ...
 
     def register(self, func_or_name, name=None, dash_case=True):
         """Decorator to register the given function by name."""
