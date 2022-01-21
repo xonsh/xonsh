@@ -200,9 +200,8 @@ class Completer:
 
             items = []
             for comp in res:
-                if not is_filtered:
-                    if filter_func(comp, prefix):
-                        continue
+                if (not is_filtered) and (not filter_func(comp, prefix)):
+                    continue
                 comp = Completer._format_completion(
                     comp,
                     completion_context,

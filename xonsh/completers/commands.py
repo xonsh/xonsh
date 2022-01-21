@@ -188,9 +188,9 @@ class ModuleMatcher:
         ]:
             with contextlib.suppress(ModuleNotFoundError):
                 return importlib.import_module(f"{self.base}.{name}")
-        file = self._find_file_path(name)
+        file = self._find_file_path(module)
         if file:
-            return self.import_module(file, self.base, name)
+            return self.import_module(file, self.base, module)
 
     def search_completer(self, cmd: str, cleaned=False):
         if not cleaned:
