@@ -224,7 +224,14 @@ def xession(mock_xonsh_session) -> XonshSession:
 
 @pytest.fixture
 def xsh_with_aliases(mock_xonsh_session) -> XonshSession:
+    """Xonsh mock-session with default set of aliases"""
     return mock_xonsh_session("aliases")
+
+
+@pytest.fixture
+def xsh_with_env(mock_xonsh_session) -> XonshSession:
+    """Xonsh mock-session with os.environ"""
+    return mock_xonsh_session("env")
 
 
 @pytest.fixture(scope="session")
@@ -243,7 +250,8 @@ def check_completer(completer_obj):
     completer = completer_obj
 
     def _factory(line: str, prefix="", send_original=False):
-        completions, _ = completer.complete_line(line, prefix=prefix)
+        line += " " + prefix
+        completions, _ = completer.complete_line(line)
         values = {getattr(i, "value", i).strip() for i in completions}
 
         if send_original:
