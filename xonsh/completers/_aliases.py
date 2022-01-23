@@ -102,8 +102,7 @@ class CompleterAlias(xcli.ArgParserAlias):
 
     def complete(
         self,
-        line: xcli.Annotated["list[str]", xcli.Arg(nargs="...")],
-        prefix: "str | None" = None,
+        line: str,
     ):
         """Output the completions to stdout
 
@@ -116,16 +115,18 @@ class CompleterAlias(xcli.ArgParserAlias):
 
         Examples
         --------
-        To get completions such as `git checkout`
+        To get completions such as ``pip install``
 
-        $ completer complete --prefix=check git
+            $ completer complete 'pip in'
+
+        To get ``pip`` sub-commands, pass the command with a space at the end
+
+            $ completer complete 'pip '
         """
         from xonsh.completer import Completer
 
         completer = Completer()
-        completions, prefix_length = completer.complete_line(
-            " ".join(line), prefix=prefix
-        )
+        completions, prefix_length = completer.complete_line(line)
 
         self.out(f"Prefix Length: {prefix_length}")
         for comp in completions:

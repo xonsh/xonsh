@@ -22,18 +22,29 @@ class Completer:
     def __init__(self):
         self.context_parser = CompletionContextParser()
 
-    def complete_line(self, line: str, prefix: str = None):
-        """Handy wrapper to build completion-context when cursor is at the end"""
-        line = line.strip()
-        if prefix:
-            begidx = len(line) + 1
-            endidx = begidx + len(prefix)
-            line = " ".join([line, prefix])
-        else:
-            line += " "
-            begidx = endidx = len(line)
+    def complete_line(self, text: str):
+        """Handy wrapper to build completion-context when cursor is at the end.
+
+        Notes
+        -----
+        suffix is not supported; text after last space is parsed as prefix.
+        """
+        ctx = self.context_parser.parse(text, len(text))
+        cmd_ctx = ctx.command
+        prefix = cmd_ctx.prefix
+
+        line = text
+        begidx = text.rfind(prefix)
+        endidx = begidx + len(prefix)
+
         return self.complete(
-            prefix, line, begidx, endidx, cursor_index=len(line), multiline_text=line
+            prefix,
+            line,
+            begidx,
+            endidx,
+            cursor_index=len(line),
+            multiline_text=line,
+            completion_context=ctx,
         )
 
     def complete(
@@ -45,6 +56,7 @@ class Completer:
         ctx=None,
         multiline_text=None,
         cursor_index=None,
+        completion_context=None,
     ):
         """Complete the string, given a possible execution context.
 
@@ -75,7 +87,11 @@ class Completer:
             Length of the prefix to be replaced in the completion.
         """
 
-        if multiline_text is not None and cursor_index is not None:
+        if (
+            (multiline_text is not None)
+            and (cursor_index is not None)
+            and (completion_context is None)
+        ):
             completion_context: tp.Optional[
                 CompletionContext
             ] = self.context_parser.parse(
@@ -83,8 +99,6 @@ class Completer:
                 cursor_index,
                 ctx,
             )
-        else:
-            completion_context = None
 
         ctx = ctx or {}
         return self.complete_from_context(
