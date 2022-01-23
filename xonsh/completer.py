@@ -185,7 +185,7 @@ class Completer:
                 and completion_context.command is not None
             )
 
-            ### set comp-defaults
+            # -- set comp-defaults --
 
             # the default is that the completer function filters out as necessary
             # we can change that once fuzzy/substring matches are added
