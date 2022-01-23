@@ -35,6 +35,8 @@ from xonsh.tools import (
     unthreadable,
     print_color,
     to_repr_pretty_,
+    to_shlvl,
+    adjust_shlvl,
 )
 from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
