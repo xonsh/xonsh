@@ -5,7 +5,7 @@ from xonsh.parsers.completion_context import CommandContext
 
 
 def _complete(cmd, *args):
-    out = sub_proc_get_output(cmd, "__complete", *args)
+    out, _ = sub_proc_get_output(cmd, "__complete", *args)
     if out:
         # directives
         # shellCompDirectiveError 1

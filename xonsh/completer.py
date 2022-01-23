@@ -22,6 +22,23 @@ class Completer:
     def __init__(self):
         self.context_parser = CompletionContextParser()
 
+    def parse(
+        self, text: str, cursor_index: "None|int" = None, ctx=None
+    ) -> "CompletionContext":
+        """
+            parse the given text
+        Parameters
+        ----------
+        text
+            multi-line text
+        cursor_index
+            position of the cursor. If not given, then it is considered to be at the end.
+        ctx
+            Execution context
+        """
+        cursor_index = len(text) if cursor_index is None else cursor_index
+        return self.context_parser.parse(text, cursor_index, ctx)
+
     def complete_line(self, text: str):
         """Handy wrapper to build completion-context when cursor is at the end.
 
@@ -29,7 +46,7 @@ class Completer:
         -----
         suffix is not supported; text after last space is parsed as prefix.
         """
-        ctx = self.context_parser.parse(text, len(text))
+        ctx = self.parse(text)
         cmd_ctx = ctx.command
         prefix = cmd_ctx.prefix
 
@@ -92,9 +109,7 @@ class Completer:
             and (cursor_index is not None)
             and (completion_context is None)
         ):
-            completion_context: tp.Optional[
-                CompletionContext
-            ] = self.context_parser.parse(
+            completion_context: tp.Optional[CompletionContext] = self.parse(
                 multiline_text,
                 cursor_index,
                 ctx,

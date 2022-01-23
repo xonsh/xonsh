@@ -610,7 +610,7 @@ class XonshSession:
         self.modules_cache = {}
         self.all_jobs = {}
 
-        self.completers = default_completers()
+        self.completers = default_completers(self.commands_cache)
 
         self.builtins = get_default_builtins(execer)
         self._initial_builtin_names = frozenset(vars(self.builtins))
