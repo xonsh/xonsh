@@ -1428,6 +1428,7 @@ def SLICE_REG():
         r"(?P<start>(?:-\d)?\d*):(?P<end>(?:-\d)?\d*):?(?P<step>(?:-\d)?\d*)"
     )
 
+
 def to_shlvl(x):
     """Converts a value to an $SHLVL integer according to bash's behaviour (variables.c::adjust_shell_level)."""
     if x is None:
@@ -1439,9 +1440,11 @@ def to_shlvl(x):
     except ValueError:
         return 0
 
+
 def is_valid_shlvl(x):
     """Checks whether a variable is a proper $SHLVL integer."""
     return isinstance(x, int) and to_shlvl(x) == x
+
 
 def adjust_shlvl(old_lvl: int, change: int):
     """Adjusts an $SHLVL integer according to bash's behaviour (variables.c::adjust_shell_level)."""
@@ -1451,6 +1454,7 @@ def adjust_shlvl(old_lvl: int, change: int):
     elif new_level >= 1000:
         new_level = 1
     return new_level
+
 
 def ensure_slice(x):
     """Try to convert an object into a slice, complain on failure"""

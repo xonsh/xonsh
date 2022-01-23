@@ -518,7 +518,7 @@ def source_foreign_fn(
     # apply results
     denv = env.detype()
     for k, v in fsenv.items():
-        if k == "SHLVL": # ignore $SHLVL as sourcing should not change $SHLVL
+        if k == "SHLVL":  # ignore $SHLVL as sourcing should not change $SHLVL
             continue
         if k in denv and v == denv[k]:
             continue  # no change from original

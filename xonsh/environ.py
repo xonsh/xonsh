@@ -89,7 +89,7 @@ from xonsh.tools import (
     to_repr_pretty_,
     to_shlvl,
     is_valid_shlvl,
-    adjust_shlvl
+    adjust_shlvl,
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -919,7 +919,7 @@ class GeneralSetting(Xettings):
         str,
         0,
         "Shell nesting level typed as integer, mirrors bash's $SHLVL.",
-        is_configurable=False
+        is_configurable=False,
     )
     XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
         False,
