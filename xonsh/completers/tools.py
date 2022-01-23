@@ -250,7 +250,7 @@ def sub_proc_get_output(*args, **env_vars: str) -> "None|bytes":
 
 def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars: str):
     if sep is None:
-        sep = os.linesep
+        sep = str.splitlines
     filter_func = get_filter_function()
     stdout = sub_proc_get_output(*args, **env_vars)
 
