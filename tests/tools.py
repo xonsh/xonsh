@@ -1,6 +1,7 @@
 """Tests the xonsh lexer."""
 import copy
 import os
+import shutil
 import sys
 import ast
 import platform
@@ -42,6 +43,12 @@ skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason="not Mac friendly")
 skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason="not Travis CI friendly")
 
 skip_if_pre_3_8 = pytest.mark.skipif(VER_FULL < (3, 8), reason="Python >= 3.8 feature")
+
+
+def skip_if_not_has(exe: str):
+    has_exe = shutil.which(exe)
+
+    return pytest.mark.skipif(not has_exe, reason=f"{exe} is not available.")
 
 
 def sp(cmd):

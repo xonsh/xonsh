@@ -1,9 +1,8 @@
 import pytest
 
-import shutil
+from tests.tools import skip_if_not_has
 
-has_gh = shutil.which("gh")
-pytestmark = pytest.mark.skipif(not has_gh, reason="gh is not available")
+pytestmark = skip_if_not_has("gh")
 
 
 @pytest.mark.parametrize(

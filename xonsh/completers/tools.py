@@ -242,10 +242,10 @@ def sub_proc_get_output(*args, **env_vars: str) -> "None|bytes":
             stdout=subprocess.PIPE,
         ).stdout
     except FileNotFoundError:
-        return
+        return None
     except Exception as ex:
         xt.print_exception(f"Failed to get completions from sub-proc: {args} ({ex!r})")
-        return
+        return None
 
 
 def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars: str):
