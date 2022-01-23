@@ -249,8 +249,9 @@ def check_completer(completer_obj):
     """Helper function to run completer and parse the results as set of strings"""
     completer = completer_obj
 
-    def _factory(line: str, prefix="", send_original=False):
-        line += " " + prefix
+    def _factory(line: str, prefix: "None|str" = "", send_original=False):
+        if prefix is not None:
+            line += " " + prefix
         completions, _ = completer.complete_line(line)
         values = {getattr(i, "value", i).strip() for i in completions}
 

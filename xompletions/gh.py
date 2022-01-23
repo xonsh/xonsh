@@ -23,11 +23,3 @@ def xonsh_complete(ctx: CommandContext):
     cmd, *args = [arg.value for arg in ctx.args] + [ctx.prefix]
 
     return _complete(cmd, *args)
-
-
-if __name__ == "__main__":
-    from xonsh.main import setup
-
-    setup()
-    print(list(_complete("gh", "repo")))
-    print(list(_complete("gh", "repo", "")))
