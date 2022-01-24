@@ -533,6 +533,62 @@ a | a | b | b
         "1" * 2 * 4,
         0,
     ),
+    # test $SHLVL
+    (
+        """
+# test parsing of $SHLVL
+
+$SHLVL = "1"
+echo $SHLVL # == 1
+
+$SHLVL = 1
+echo $SHLVL # == 1
+
+$SHLVL = "-13"
+echo $SHLVL # == 0
+
+$SHLVL = "error"
+echo $SHLVL # == 0
+
+$SHLVL = 999
+echo $SHLVL # == 999
+
+$SHLVL = 1000
+echo $SHLVL # == 1
+
+# sourcing a script should maintain $SHLVL
+
+$SHLVL = 5
+touch temp_shlvl_test.sh
+source-bash temp_shlvl_test.sh
+rm temp_shlvl_test.sh
+echo $SHLVL # == 5
+
+# creating a subshell should increment the child's $SHLVL and maintain the parents $SHLVL
+
+$SHLVL = 5
+xonsh -c r'echo $SHLVL' # == 6
+echo $SHLVL # == 5
+
+# replacing the current process with another process should derease $SHLVL
+# (so that if the new process is a shell, $SHLVL is maintained)
+
+$SHLVL = 5
+xexec python3 -c 'import os; print(os.environ["SHLVL"])' # == 4
+""",
+        """1
+1
+0
+0
+999
+1
+5
+6
+5
+4
+""",
+        0,
+    ),
 ]
 
 if not ON_WINDOWS:

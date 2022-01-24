@@ -35,6 +35,8 @@ from xonsh.tools import (
     unthreadable,
     print_color,
     to_repr_pretty_,
+    to_shlvl,
+    adjust_shlvl,
 )
 from xonsh.timings import timeit_alias
 from xonsh.xontribs import xontribs_main
@@ -518,6 +520,8 @@ def source_foreign_fn(
     # apply results
     denv = env.detype()
     for k, v in fsenv.items():
+        if k == "SHLVL":  # ignore $SHLVL as sourcing should not change $SHLVL
+            continue
         if k in denv and v == denv[k]:
             continue  # no change from original
         env[k] = v
@@ -734,6 +738,11 @@ def xexec_fn(
     denv = {}
     if not clean:
         denv = XSH.env.detype()
+
+        # decrement $SHLVL to mirror bash's behaviour
+        if "SHLVL" in denv:
+            old_shlvl = to_shlvl(denv["SHLVL"])
+            denv["SHLVL"] = str(adjust_shlvl(old_shlvl, -1))
 
     try:
         os.execvpe(cmd, command, denv)

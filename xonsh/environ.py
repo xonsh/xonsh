@@ -87,6 +87,9 @@ from xonsh.tools import (
     to_int_or_none,
     DefaultNotGivenType,
     to_repr_pretty_,
+    to_shlvl,
+    is_valid_shlvl,
+    adjust_shlvl,
 )
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -909,6 +912,14 @@ class GeneralSetting(Xettings):
         "This is most useful in xonsh scripts or modules where failures "
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``.",
+    )
+    SHLVL = Var(
+        is_valid_shlvl,
+        to_shlvl,
+        str,
+        0,
+        "Shell nesting level typed as integer, mirrors bash's $SHLVL.",
+        is_configurable=False,
     )
     XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
         False,
@@ -2496,6 +2507,9 @@ def default_env(env=None):
         del ctx["PROMPT"]
     except KeyError:
         pass
+    # increment $SHLVL
+    old_shlvl = to_shlvl(ctx.get("SHLVL", None))
+    ctx["SHLVL"] = adjust_shlvl(old_shlvl, 1)
     # finalize env
     if env is not None:
         ctx.update(env)
