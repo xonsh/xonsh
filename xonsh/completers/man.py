@@ -1,33 +1,15 @@
 import functools
 import json
-import os
-import re
-import pickle
 import subprocess
 import textwrap
-import typing as tp
 from pathlib import Path
 
-from xonsh.parsers.completion_context import CommandContext
 from xonsh.built_ins import XSH
-import xonsh.lazyasd as xl
-
 from xonsh.completers.tools import (
-    get_filter_function,
     contextual_command_completer,
-    sub_proc_get_output,
     RichCompletion,
 )
-
-
-@xl.lazyobject
-def SCRAPE_RE():
-    return re.compile(r"^(?:\s*(?:-\w|--[a-z0-9-]+)[\s,])+", re.M)
-
-
-@xl.lazyobject
-def INNER_OPTIONS_RE():
-    return re.compile(r"-\w|--[a-z0-9-]+")
+from xonsh.parsers.completion_context import CommandContext
 
 
 @functools.lru_cache(maxsize=None)

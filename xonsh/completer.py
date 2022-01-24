@@ -40,7 +40,7 @@ class Completer:
         return self.context_parser.parse(text, cursor_index, ctx)
 
     def complete_line(self, text: str):
-        """Handy wrapper to build completion-context when cursor is at the end.
+        """Handy wrapper to build command-completion-context when cursor is at the end.
 
         Notes
         -----
@@ -48,6 +48,8 @@ class Completer:
         """
         ctx = self.parse(text)
         cmd_ctx = ctx.command
+        if not cmd_ctx:
+            raise RuntimeError("Only Command context is empty")
         prefix = cmd_ctx.prefix
 
         line = text
