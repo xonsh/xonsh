@@ -58,24 +58,24 @@ def generate_options_of(cmd: str):
         """split as header-body based on indent"""
         header = ""
         body = []
-        for line in textwrap.dedent(text).splitlines():
+        for line in textwrap.dedent(text.replace("\n\t", "\n    ")).splitlines():
             if not line.strip():
                 continue
-            if line.startswith(" "):
+            if line.startswith((" ", "\t")):
                 body.append(line)
             else:
                 if header or body:
                     yield header, body
 
                 # found new section
-                header = line.strip().lower()
+                header = line.strip()
                 body = []
         if header or body:
             yield header, body
 
     def get_opt_headers(text: str):
         for header, lines in get_headers(text):
-            if header in {
+            if header.lower() in {
                 "description",
                 "options",
                 "command options",
@@ -94,7 +94,7 @@ def generate_options_of(cmd: str):
                 rest.append(part)
         return options, " ".join(rest)
 
-    for header, body in get_opt_headers(out.decode()):
+    for _, body in get_opt_headers(out.decode()):
         # return old section if
         for opt, lines in get_headers(body):
             if opt.startswith("-"):

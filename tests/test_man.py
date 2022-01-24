@@ -11,7 +11,11 @@ from xonsh.completers.man import complete_from_man
     "cmd,exp,set_manpath",
     [
         ["yes --", {"--version", "--help"}, True],
-        ["man --", {"--help"}, False],
+        [
+            "man --",
+            {"-k", "-F", "-P", "-W", "-a", "-m", "-H"},
+            False,
+        ],
     ],
 )
 def test_man_completion(tmpdir, xession, completer_obj, cmd, exp, set_manpath):
@@ -19,4 +23,8 @@ def test_man_completion(tmpdir, xession, completer_obj, cmd, exp, set_manpath):
         xession.env["MANPATH"] = os.path.dirname(os.path.abspath(__file__))
     ctx = completer_obj.parse(cmd)
     completions = set(map(str, complete_from_man(ctx)))
-    assert completions == exp
+    if set_manpath:
+        assert completions == exp
+    else:
+        # BSD & Linux have different man page version
+        assert completions.issuperset(exp)
