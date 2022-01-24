@@ -30,7 +30,7 @@ def INNER_OPTIONS_RE():
     return re.compile(r"-\w|--[a-z0-9-]+")
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=None)
 def get_man_completions_path() -> Path:
     env = XSH.env or {}
     datadir = Path(env["XONSH_DATA_DIR"]) / "man_completions_cache"
