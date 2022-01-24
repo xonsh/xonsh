@@ -92,7 +92,7 @@ def generate_options_of(cmd: str):
 
 
 @functools.lru_cache(maxsize=10)
-def get_options_of(cmd: str) -> "dict[str, tuple[str, ...]]":
+def _parse_man_page_options(cmd: str) -> "dict[str, tuple[str, ...]]":
     path = get_man_completions_path() / f"{cmd}.json"
     if path.exists():
         return json.loads(path.read_text())
@@ -112,5 +112,5 @@ def complete_from_man(context: CommandContext):
         return
     cmd = context.args[0].value
 
-    for desc, opts in get_options_of(cmd).items():
+    for desc, opts in _parse_man_page_options(cmd).items():
         yield RichCompletion(value=opts[-1], display=", ".join(opts), description=desc)
