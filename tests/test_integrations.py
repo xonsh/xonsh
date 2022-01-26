@@ -589,6 +589,24 @@ xexec python3 -c 'import os; print(os.environ["SHLVL"])' # == 4
 """,
         0,
     ),
+    # test piping long output to command that prematurely closes the end of its pipe. (#4655)
+    (
+        """
+echo @(\"\"\"
+for i in range(1, 1000001):
+  print(i)
+\"\"\") > /tmp/tst.py
+
+xonsh /tmp/tst.py | head -n 5 # raises BrokenPipeError if run with python
+""",
+        """1
+2
+3
+4
+5
+""",
+        0,
+    ),
 ]
 
 if not ON_WINDOWS:

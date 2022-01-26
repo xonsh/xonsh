@@ -448,6 +448,9 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
+        # setup a default signal handler that tells the kernel to not propagate SIGPIPE to xonsh (#4655)
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
     events.on_post_init.fire()
     env = XSH.env
     shell = XSH.shell
