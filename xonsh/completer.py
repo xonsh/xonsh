@@ -26,7 +26,8 @@ class Completer:
         self, text: str, cursor_index: "None|int" = None, ctx=None
     ) -> "CompletionContext":
         """
-            parse the given text
+        Parse the given text
+        
         Parameters
         ----------
         text
