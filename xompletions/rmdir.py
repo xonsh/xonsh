@@ -1,14 +1,14 @@
-from xonsh.completers.man import complete_from_man
 from xonsh.completers.path import complete_dir
-from xonsh.parsers.completion_context import CompletionContext, CommandContext
+from xonsh.parsers.completion_context import CommandContext
 
 
-def xonsh_complete(command: CommandContext):
+def xonsh_complete(ctx: CommandContext):
     """
     Completion for "rmdir", includes only valid directory names.
     """
-    opts = complete_from_man(CompletionContext(command))
-    comps, lp = complete_dir(command)
-    if len(comps) == 0 and len(opts) == 0:
-        raise StopIteration
-    return comps | opts, lp
+    # if starts with the given prefix then it will get completions from man page
+    if not ctx.prefix.startswith("-") and ctx.arg_index > 0:
+        comps, lprefix = complete_dir(ctx)
+        if not comps:
+            raise StopIteration  # no further file completions
+        return comps, lprefix

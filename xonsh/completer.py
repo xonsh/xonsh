@@ -9,6 +9,7 @@ from xonsh.completers.tools import (
     RichCompletion,
     apply_lprefix,
     is_exclusive_completer,
+    get_filter_function,
 )
 from xonsh.built_ins import XSH
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
@@ -21,18 +22,48 @@ class Completer:
     def __init__(self):
         self.context_parser = CompletionContextParser()
 
-    def complete_line(self, line: str, prefix: str = None):
-        """Handy wrapper to build completion-context when cursor is at the end"""
-        line = line.strip()
-        if prefix:
-            begidx = len(line) + 1
-            endidx = begidx + len(prefix)
-            line = " ".join([line, prefix])
-        else:
-            line += " "
-            begidx = endidx = len(line)
+    def parse(
+        self, text: str, cursor_index: "None|int" = None, ctx=None
+    ) -> "CompletionContext":
+        """Parse the given text
+
+        Parameters
+        ----------
+        text
+            multi-line text
+        cursor_index
+            position of the cursor. If not given, then it is considered to be at the end.
+        ctx
+            Execution context
+        """
+        cursor_index = len(text) if cursor_index is None else cursor_index
+        return self.context_parser.parse(text, cursor_index, ctx)
+
+    def complete_line(self, text: str):
+        """Handy wrapper to build command-completion-context when cursor is at the end.
+
+        Notes
+        -----
+        suffix is not supported; text after last space is parsed as prefix.
+        """
+        ctx = self.parse(text)
+        cmd_ctx = ctx.command
+        if not cmd_ctx:
+            raise RuntimeError("Only Command context is empty")
+        prefix = cmd_ctx.prefix
+
+        line = text
+        begidx = text.rfind(prefix)
+        endidx = begidx + len(prefix)
+
         return self.complete(
-            prefix, line, begidx, endidx, cursor_index=len(line), multiline_text=line
+            prefix,
+            line,
+            begidx,
+            endidx,
+            cursor_index=len(line),
+            multiline_text=line,
+            completion_context=ctx,
         )
 
     def complete(
@@ -44,6 +75,7 @@ class Completer:
         ctx=None,
         multiline_text=None,
         cursor_index=None,
+        completion_context=None,
     ):
         """Complete the string, given a possible execution context.
 
@@ -74,16 +106,16 @@ class Completer:
             Length of the prefix to be replaced in the completion.
         """
 
-        if multiline_text is not None and cursor_index is not None:
-            completion_context: tp.Optional[
-                CompletionContext
-            ] = self.context_parser.parse(
+        if (
+            (multiline_text is not None)
+            and (cursor_index is not None)
+            and (completion_context is None)
+        ):
+            completion_context: tp.Optional[CompletionContext] = self.parse(
                 multiline_text,
                 cursor_index,
                 ctx,
             )
-        else:
-            completion_context = None
 
         ctx = ctx or {}
         return self.complete_from_context(
@@ -140,6 +172,8 @@ class Completer:
     def generate_completions(
         completion_context, old_completer_args, trace: bool
     ) -> tp.Iterator[tp.Tuple[Completion, int]]:
+        filter_func = get_filter_function()
+
         for name, func in XSH.completers.items():
             try:
                 if is_contextual_completer(func):
@@ -167,24 +201,38 @@ class Completer:
                 and completion_context is not None
                 and completion_context.command is not None
             )
+
+            # -- set comp-defaults --
+
+            # the default is that the completer function filters out as necessary
+            # we can change that once fuzzy/substring matches are added
+            is_filtered = True
+            custom_lprefix = False
+            prefix = ""
+            if completing_contextual_command:
+                prefix = completion_context.command.prefix
+            elif old_completer_args is not None:
+                prefix = old_completer_args[0]
+            lprefix = len(prefix)
+
             if isinstance(out, cabc.Sequence):
-                res, lprefix = out
-                custom_lprefix = True
+                # update comp-defaults from
+                res, lprefix_filtered = out
+                if isinstance(lprefix_filtered, bool):
+                    is_filtered = lprefix_filtered
+                else:
+                    lprefix = lprefix_filtered
+                    custom_lprefix = True
             else:
                 res = out
-                custom_lprefix = False
-                if completing_contextual_command:
-                    lprefix = len(completion_context.command.prefix)
-                elif old_completer_args is not None:
-                    lprefix = len(old_completer_args[0])
-                else:
-                    lprefix = 0
 
             if res is None:
                 continue
 
             items = []
             for comp in res:
+                if (not is_filtered) and (not filter_func(comp, prefix)):
+                    continue
                 comp = Completer._format_completion(
                     comp,
                     completion_context,
@@ -215,7 +263,10 @@ class Completer:
             print("\nTRACE COMPLETIONS: Getting completions with context:")
             sys.displayhook(completion_context)
         lprefix = 0
-        completions = set()
+
+        # using dict to keep order py3.6+
+        completions = {}
+
         query_limit = XSH.env.get("COMPLETION_QUERY_LIMIT")
 
         for comp in self.generate_completions(
@@ -224,7 +275,7 @@ class Completer:
             trace,
         ):
             completion, lprefix = comp
-            completions.add(completion)
+            completions[completion] = None
             if query_limit and len(completions) >= query_limit:
                 if trace:
                     print(
@@ -233,6 +284,7 @@ class Completer:
                 break
 
         def sortkey(s):
+            # todo: should sort with prefix > substring > fuzzy
             return s.lstrip(''''"''').lower()
 
         # the last completer's lprefix is returned. other lprefix values are inside the RichCompletions.

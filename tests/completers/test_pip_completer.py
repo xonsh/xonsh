@@ -1,3 +1,6 @@
+import json
+import subprocess
+
 import pytest
 
 from xonsh.completers.commands import complete_xompletions
@@ -37,17 +40,23 @@ def test_pip_list_re1(line):
     assert complete_xompletions.matcher.search_completer(line) is None
 
 
+def pip_installed():
+    out = subprocess.check_output(["pip", "list", "--format=json"]).decode()
+    pkgs = json.loads(out)
+    return {p["name"] for p in pkgs}
+
+
 @pytest.mark.parametrize(
     "line, prefix, exp",
     [
         ["pip", "c", {"cache", "check", "config"}],
-        ["pip show", "", {"setuptools", "wheel", "pip"}],
+        ["pip show", "", pip_installed],
     ],
 )
-def test_completions(line, prefix, exp, check_completer, xession, os_env, monkeypatch):
+def test_completions(line, prefix, exp, check_completer, xsh_with_env):
     # use the actual PATH from os. Otherwise subproc will fail on windows. `unintialized python...`
-    monkeypatch.setattr(xession, "env", os_env)
-
     comps = check_completer(line, prefix=prefix)
 
+    if callable(exp):
+        exp = exp()
     assert comps.intersection(exp)

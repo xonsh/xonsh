@@ -9,6 +9,7 @@ import pyte
 
 from xonsh.ptk_shell.shell import tokenize_ansi
 from xonsh.shell import Shell
+from tests.tools import ON_WINDOWS
 
 
 @pytest.mark.parametrize(
@@ -105,6 +106,10 @@ def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
         [repr("hello"), None],
         ["2 * 3", "6"],
     ],
+)
+@pytest.mark.xfail(
+    ON_WINDOWS,
+    reason="Recent versions use Proactor event loop. This may need some handling",
 )
 def test_ptk_prompt(line, exp, ptk_shell, capsys):
     inp, out, shell = ptk_shell

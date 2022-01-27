@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import importlib
 import importlib.util as im_util
@@ -121,9 +122,7 @@ class ModuleMatcher:
             extra search paths to use if finding module on namespace package fails
         """
         # list of pre-defined patterns. More can be added using the public method ``.wrap``
-        self._patterns: tp.Dict[str, str] = {
-            r"\bx?pip(?:\d|\.)*(exe)?$": "pip",
-        }
+        self._patterns: tp.Dict[str, str] = {}
         self._compiled: tp.Dict[str, tp.Pattern] = {}
         self.contextual = True
         self.base = base
@@ -182,13 +181,16 @@ class ModuleMatcher:
         return module
 
     @functools.lru_cache(maxsize=10)
-    def get_module(self, name):
-        try:
-            return importlib.import_module(f"{self.base}.{name}")
-        except ModuleNotFoundError:
-            file = self._find_file_path(name)
-            if file:
-                return self.import_module(file, self.base, name)
+    def get_module(self, module: str):
+        for name in [
+            module,
+            f"_{module}",  # naming convention to not clash with actual python package
+        ]:
+            with contextlib.suppress(ModuleNotFoundError):
+                return importlib.import_module(f"{self.base}.{name}")
+        file = self._find_file_path(module)
+        if file:
+            return self.import_module(file, self.base, module)
 
     def search_completer(self, cmd: str, cleaned=False):
         if not cleaned:
@@ -221,6 +223,7 @@ class CommandCompleter:
                 "xompletions",
                 extra_paths=XSH.env.get("XONSH_COMPLETER_DIRS", []),
             )
+            self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
         return self._matcher
 
     @staticmethod
