@@ -25,9 +25,8 @@ class Completer:
     def parse(
         self, text: str, cursor_index: "None|int" = None, ctx=None
     ) -> "CompletionContext":
-        """
-        Parse the given text
-        
+        """Parse the given text
+
         Parameters
         ----------
         text
