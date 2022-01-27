@@ -1,6 +1,6 @@
 **Added:**
 
-* native completer for ``git``, no longer bash is needed for completing git.
+* completions from man page will now show the description for the options if available.
 
 **Changed:**
 

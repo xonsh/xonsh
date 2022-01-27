@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import pytest  # noqa F401
 
@@ -11,11 +12,11 @@ from xonsh.completers.man import complete_from_man
     "cmd,exp",
     [
         [
-            "yes -",
+            "yes",
             {"--version", "--help"},
         ],
         [
-            "man -",
+            "man",
             {
                 "--all",
                 "--apropos",
@@ -63,7 +64,7 @@ from xonsh.completers.man import complete_from_man
 )
 def test_man_completion(xession, check_completer, cmd, exp):
     xession.env["MANPATH"] = os.path.dirname(os.path.abspath(__file__))
-    completions = check_completer(cmd, complete_fn=complete_from_man, prefix=None)
+    completions = check_completer(cmd, complete_fn=complete_from_man, prefix="-")
     assert completions == exp
 
 
@@ -72,7 +73,7 @@ def test_man_completion(xession, check_completer, cmd, exp):
     "cmd,exp",
     [
         [
-            "man -",
+            "man",
             {
                 "--path",
                 "--preformat",
@@ -96,9 +97,36 @@ def test_man_completion(xession, check_completer, cmd, exp):
                 "-t",
             },
         ],
+        [
+            "ar",
+            {
+                "-L",
+                "-S",
+                "-T",
+                "-a",
+                "-b",
+                "-c",
+                "-d",
+                "-i",
+                "-m",
+                "-o",
+                "-p",
+                "-q",
+                "-r",
+                "-s",
+                "-t",
+                "-u",
+                "-x",
+            },
+        ],
     ],
 )
 def test_bsd_man_page_completions(xession, check_completer, cmd, exp):
+    proc = subprocess.run([cmd, "--version"], stderr=subprocess.PIPE)
+    if (cmd == "ar" and proc.returncode != 1) or (
+        cmd == "man" and proc.stderr.strip() not in {b"man, version 1.6g"}
+    ):
+        pytest.skip("A different man page version is installed")
     # BSD & Linux have different man page version
-    completions = check_completer(cmd, complete_fn=complete_from_man, prefix=None)
+    completions = check_completer(cmd, complete_fn=complete_from_man, prefix="-")
     assert completions == exp

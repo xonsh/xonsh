@@ -136,5 +136,10 @@ def complete_from_man(context: CommandContext):
         return
     cmd = context.args[0].value
 
-    for desc, opts in _parse_man_page_options(cmd).items():
-        yield RichCompletion(value=opts[-1], display=", ".join(opts), description=desc)
+    def completions():
+        for desc, opts in _parse_man_page_options(cmd).items():
+            yield RichCompletion(
+                value=opts[-1], display=", ".join(opts), description=desc
+            )
+
+    return completions(), False
