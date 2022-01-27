@@ -13,12 +13,20 @@ from xonsh.lazyasd import lazyobject
 from xonsh.parsers.completion_context import CompletionContext, CommandContext
 
 
-def _filter_normal(s, x):
-    return s.startswith(x)
+def _filter_with_func(text, prefix, func):
+    if isinstance(text, RichCompletion) and text.display:
+        parts = [p.strip() for p in text.display.split(",")]
+        return any(map(lambda part: func(part.strip(), prefix), parts))
+    return func(text, prefix)
 
 
-def _filter_ignorecase(s, x):
-    return s.lower().startswith(x.lower())
+def _filter_normal(text, prefix):
+    return _filter_with_func(text, prefix, str.startswith)
+
+
+def _filter_ignorecase(text, prefix):
+    func = lambda txt, pre: txt.lower().startswith(pre.lower())
+    return _filter_with_func(text, prefix, func)
 
 
 def get_filter_function():

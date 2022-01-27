@@ -73,31 +73,6 @@ def test_man_completion(xession, check_completer, cmd, exp):
     "cmd,exp",
     [
         [
-            "man",
-            {
-                "--path",
-                "--preformat",
-                "-B",
-                "-C",
-                "-D",
-                "-H",
-                "-K",
-                "-M",
-                "-P",
-                "-S",
-                "-W",
-                "-a",
-                "-c",
-                "-d",
-                "-f",
-                "-h",
-                "-k",
-                "-m",
-                "-p",
-                "-t",
-            },
-        ],
-        [
             "ar",
             {
                 "-L",
