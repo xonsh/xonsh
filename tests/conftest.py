@@ -249,10 +249,35 @@ def check_completer(completer_obj):
     """Helper function to run completer and parse the results as set of strings"""
     completer = completer_obj
 
-    def _factory(line: str, prefix: "None|str" = "", send_original=False):
+    def _factory(
+        line: str, prefix: "None|str" = "", send_original=False, complete_fn=None
+    ):
+        """
+
+        Parameters
+        ----------
+        line
+        prefix
+        send_original
+            if True, return the original result from the completer (e.g. RichCompletion instances ...)
+        complete_fn
+            if given, use that to get the completions
+
+        Returns
+        -------
+            completions as set of string if not send
+        """
         if prefix is not None:
             line += " " + prefix
-        completions, _ = completer.complete_line(line)
+        if complete_fn is None:
+            completions, _ = completer.complete_line(line)
+        else:
+            ctx = completer_obj.parse(line)
+            out = complete_fn(ctx)
+            if isinstance(out, tuple):
+                completions = out[0]
+            else:
+                completions = out
         values = {getattr(i, "value", i).strip() for i in completions}
 
         if send_original:

@@ -1,5 +1,7 @@
 import functools
 import json
+import re
+import shutil
 import subprocess
 import textwrap
 from pathlib import Path
@@ -15,7 +17,9 @@ from xonsh.parsers.completion_context import CommandContext
 @functools.lru_cache(maxsize=None)
 def get_man_completions_path() -> Path:
     env = XSH.env or {}
-    datadir = Path(env["XONSH_DATA_DIR"]) / "man_completions_cache"
+    datadir = Path(env["XONSH_DATA_DIR"]) / "generated_completions" / "man"
+    if datadir.exists() and (not datadir.is_dir()):
+        shutil.move(datadir, datadir.with_suffix(".bkp"))
     if not datadir.exists():
         datadir.mkdir(exist_ok=True, parents=True)
     return datadir
@@ -31,6 +35,13 @@ def _get_man_page(cmd: str):
     return subprocess.check_output(["col", "-b"], stdin=manpage.stdout, env=env)
 
 
+@functools.lru_cache(maxsize=None)
+def _man_option_string_regex():
+    return re.compile(
+        r"(?:(,\s?)|^|(\sor\s))(?P<option>-[\w]|--[\w-]+)(?=\[?(\s|,|=\w+|$))"
+    )
+
+
 def generate_options_of(cmd: str):
     out = _get_man_page(cmd)
     if not out:
@@ -38,6 +49,8 @@ def generate_options_of(cmd: str):
 
     def get_headers(text: str):
         """split as header-body based on indent"""
+        if not text:
+            return
         header = ""
         body = []
         for line in textwrap.dedent(text.replace("\n\t", "\n    ")).splitlines():
@@ -55,30 +68,36 @@ def generate_options_of(cmd: str):
         if header or body:
             yield header, body
 
-    def get_opt_headers(text: str):
-        for header, lines in get_headers(text):
-            if header.lower() in {
-                "description",
-                "options",
-                "command options",
-            }:
-                yield header, "\n".join(lines)
-
     def split_options_string(text: str):
-        done_options = False
-        options = []
-        rest = []
-        for part in text.split():
-            if (not done_options) and part.startswith("-"):
-                options.append(part.rstrip(","))
-            else:
-                done_options = True
-                rest.append(part)
-        return options, " ".join(rest)
+        text = text.strip()
+        regex = _man_option_string_regex()
 
-    for _, body in get_opt_headers(out.decode()):
+        regex.findall(text)
+        options = []
+        for match in regex.finditer(text):
+            option = match.groupdict().pop("option", None)
+            if option:
+                options.append(option)
+            text = text[match.end() :]
+        return options, text.strip()
+
+    def get_option_section():
+        option_sect = dict(get_headers(out.decode()))
+        small_names = {k.lower(): k for k in option_sect}
+        for head in (
+            "options",
+            "command options",
+            "description",
+        ):  # prefer sections in this order
+            if head in small_names:
+                title = small_names[head]
+                return "\n".join(option_sect[title])
+
+    def get_options(text):
+        """finally get the options"""
         # return old section if
-        for opt, lines in get_headers(body):
+        for opt, lines in get_headers(text):
+            # todo: some have [+-] or such vague notations
             if opt.startswith("-"):
                 # sometime a single line will have both desc and options
                 option_strings, rest = split_options_string(opt)
@@ -87,8 +106,13 @@ def generate_options_of(cmd: str):
                     descs.append(rest)
                 if lines:
                     descs.append(textwrap.dedent("\n".join(lines)))
+                if option_strings:
+                    yield ". ".join(descs), tuple(option_strings)
+            elif lines:
+                # sometimes the options are nested inside subheaders
+                yield from get_options("\n".join(lines))
 
-                yield "\n".join(descs), tuple(option_strings)
+    yield from get_options(get_option_section())
 
 
 @functools.lru_cache(maxsize=10)

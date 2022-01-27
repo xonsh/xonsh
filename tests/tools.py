@@ -40,6 +40,8 @@ skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason="Windows stuff")
 
 skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason="not Mac friendly")
 
+skip_if_not_on_darwin = pytest.mark.skipif(not ON_DARWIN, reason="Mac only")
+
 skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason="not Travis CI friendly")
 
 skip_if_pre_3_8 = pytest.mark.skipif(VER_FULL < (3, 8), reason="Python >= 3.8 feature")
