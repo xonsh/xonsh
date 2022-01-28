@@ -289,9 +289,25 @@ class EnvPath(cabc.MutableSequence):
             self._l.insert(0 if front else len(self._l), data)
 
 
+class FlexibleFormatter(string.Formatter):
+    """Support nested fields inside conditional formatters
+
+    e.g. template ``{user:| {RED}{}{RESET}}`` will become ``| {RED}user{RESET}`` when user=user.
+    """
+
+    def get_value(self, key: "int|str", args, kwargs) -> str:
+        if isinstance(key, int):
+            return args[key]
+        else:
+            if key in kwargs:
+                return kwargs[key]
+            # in case of colors, this will work without nested braces
+            return "{" + key + "}"
+
+
 @lazyobject
 def FORMATTER():
-    return string.Formatter()
+    return FlexibleFormatter()
 
 
 class DefaultNotGivenType:
