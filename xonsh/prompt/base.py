@@ -1,5 +1,6 @@
 """Base prompt, provides PROMPT_FIELDS and prompt related functions"""
 
+import collections.abc as cabc
 import itertools
 import os
 import re
@@ -11,16 +12,9 @@ import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.prompt.cwd import (
-    _collapsed_pwd,
-    _dynamically_collapsed_pwd,
-    _replace_home_cwd,
-)
-from xonsh.prompt.env import env_name, vte_new_tab_cwd
-from xonsh.prompt.gitstatus import gitstatus_prompt
-from xonsh.prompt.job import _current_job
-from xonsh.prompt.times import _localtime
-from xonsh.prompt.vc import branch_bg_color, branch_color, current_branch
+
+if tp.TYPE_CHECKING:
+    from xonsh.built_ins import XonshSession
 
 
 @xt.lazyobject
@@ -150,7 +144,18 @@ class PromptFormatter:
 
 @xl.lazyobject
 def PROMPT_FIELDS():
-    return dict(
+    from xonsh.prompt.cwd import (
+        _collapsed_pwd,
+        _replace_home_cwd,
+        _dynamically_collapsed_pwd,
+    )
+    from xonsh.prompt.job import _current_job
+    from xonsh.prompt.env import env_name, vte_new_tab_cwd
+    from xonsh.prompt.vc import current_branch, branch_color, branch_bg_color
+    from xonsh.prompt import gitstatus
+    from xonsh.prompt.times import _localtime
+
+    fields = dict(
         user=xp.os_environ.get("USERNAME" if xp.ON_WINDOWS else "USER", "<user>"),
         prompt_end="#" if xt.is_superuser() else "$",
         hostname=socket.gethostname().split(".", 1)[0],
@@ -166,10 +171,19 @@ def PROMPT_FIELDS():
         env_prefix="(",
         env_postfix=") ",
         vte_new_tab_cwd=vte_new_tab_cwd,
-        gitstatus=gitstatus_prompt,
+        gitstatus=gitstatus.gitstatus_prompt,
         time_format="%H:%M:%S",
         localtime=_localtime,
     )
+
+    # add gitstatus_* fields
+    for fld in gitstatus._DEFS:
+        if fld in {gitstatus._DEFS.HASH_INDICATOR, gitstatus._DEFS.SEPARATOR}:
+            continue
+        name = f"gitstatus_{fld.name.lower()}"
+        fields[name] = getattr(gitstatus, name)
+
+    return fields
 
 
 def default_prompt():
@@ -277,7 +291,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
     return included_names <= known_names
 
 
-def _format_value(val, spec, conv):
+def _format_value(val, spec, conv) -> str:
     """Formats a value from a template string {val!conv:spec}. The spec is
     applied as a format string itself, but if the value is None, the result
     will be empty. The purpose of this is to allow optional parts in a
@@ -293,3 +307,54 @@ def _format_value(val, spec, conv):
     if not isinstance(val, str):
         val = str(val)
     return val
+
+
+class PromptFields(cabc.MutableMapping):
+    def get(self, key: "str|tp.Type[PromptField]") -> "str|PromptField":
+        # todo: implement getting the instance i.e. the result if callable
+        #   also cache values per prompt
+        return
+
+
+class PromptField:
+    prefix = ""
+    suffix = ""
+
+    join = ""
+    """in case this combines values from other prompt fields"""
+
+    fields: "tp.Tuple[str|tp.Type[PromptField], ...]" = ()
+    """in case of combining values from other fields, list them here"""
+
+    def __init__(self, ctx: "tp.Dict[str, tp.Any]", xsh: "XonshSession"):
+        self.ctx = ctx
+        self.xsh = xsh
+
+        # todo: here $PROMPT_FIELDS should have a custom class
+        #  and have custom get() that returns the result
+        self.container = {}
+
+        self.value = self.get_value()
+
+    def get_value(self):
+        if self.fields:
+            return self.join.join(self.gets(*self.fields))
+        raise NotImplementedError
+
+    def __bool__(self):
+        return bool(self.value)
+
+    def __str__(self):
+        return format(self)
+
+    def __format__(self, format_spec: str):
+        return self.prefix + format(self.value, format_spec) + self.suffix
+
+    def get(self, fld, default=None):
+        return self.container.get(fld, default=default)
+
+    def gets(self, *flds):
+        for fld in flds:
+            val = self.get(fld)
+            if val:
+                yield format(val)
