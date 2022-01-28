@@ -1,14 +1,30 @@
-"""Informative git status prompt formatter"""
+"""Informative git status prompt formatter.
+
+Each part of the status field is extendable and customizable.
+
+For example, if you do not want to lines_added or lines_removed in the final prompt
+subclass the status field, and remove these two from the fields attribute ::
+
+    import xonsh.prompt.gitstatus as gs
+    gs.GSNumbers.fields = (
+        GSStaged,
+        GSConflicts,
+        GSChanged,
+        GSDeleted,
+        GSUntracked,
+        GSStashed,
+    )
+
+"""
+
 import os
 import subprocess
 
-from xonsh.built_ins import XSH
-from xonsh.color_tools import COLORS
-from xonsh.tools import NamedConstantMeta, XAttr
+from xonsh.prompt.base import PromptField
 
 
-def _check_output(*args, **kwargs) -> str:
-    denv = XSH.env.detype()
+def _check_output(xsh, *args, **kwargs) -> str:
+    denv = xsh.env.detype()
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
 
     kwargs.update(
@@ -19,7 +35,7 @@ def _check_output(*args, **kwargs) -> str:
             universal_newlines=True,
         )
     )
-    timeout = XSH.env["VC_BRANCH_TIMEOUT"]
+    timeout = xsh.env["VC_BRANCH_TIMEOUT"]
     # See https://docs.python.org/3/library/subprocess.html#subprocess.Popen.communicate
     with subprocess.Popen(*args, **kwargs) as proc:
         try:
@@ -46,40 +62,31 @@ def _check_output(*args, **kwargs) -> str:
             raise
 
 
-class _DEFS(metaclass=NamedConstantMeta):
-    HASH_INDICATOR = XAttr(":")
-    BRANCH = XAttr("{CYAN}")
-    OPERATION = XAttr("{CYAN}")
-    STAGED = XAttr("{RED}●")
-    CONFLICTS = XAttr("{RED}×")
-    CHANGED = XAttr("{BLUE}+")
-    DELETED = XAttr("{RED}-")
-    UNTRACKED = XAttr("…")
-    STASHED = XAttr("⚑")
-    CLEAN = XAttr("{BOLD_GREEN}✓")
-    AHEAD = XAttr("↑·")
-    BEHIND = XAttr("↓·")
-    LINES_ADDED = XAttr("{BLUE}+")
-    LINES_REMOVED = XAttr("{RED}-")
-    SEPARATOR = XAttr("{RESET}|")
+class GSField(PromptField):
+    """base class to ease implementing other GS* fields"""
+
+    args = ()
+    info_field = None
+
+    def check_output(self, *args: str):
+        return _check_output(self.xsh, args).strip()
+
+    def get_value(self):
+        return self.check_output(*self.args)
 
 
-def _get_def(attr: XAttr) -> str:
-    key = attr.name.upper()
-    def_ = XSH.env.get("XONSH_GITSTATUS_" + key)
-    return def_ if def_ is not None else attr.value
+class GSHash(GSField):
+    prefix = ":"
+    args = ("git", "rev-parse", "--short", "HEAD")
 
 
-def _is_hidden(attr: XAttr) -> bool:
-    hidden = XSH.env.get("XONSH_GITSTATUS_FIELDS_HIDDEN") or set()
-    return attr.name.upper() in hidden or attr.name.lower() in hidden
+class GSTag(GSField):
+    args = ("git", "describe", "--always")
 
 
-def _get_tag_or_hash() -> str:
-    tag_or_hash = _check_output(["git", "describe", "--always"]).strip()
-    hash_ = _check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
-    have_tag_name = tag_or_hash != hash_
-    return tag_or_hash if have_tag_name else _get_def(_DEFS.HASH_INDICATOR) + hash_
+class GSTagOrHash(GSField):
+    def get_value(self):
+        return self.get(GSTag) or self.get(GSHash)
 
 
 def _parse_int(val: str, default=0):
@@ -88,191 +95,198 @@ def _parse_int(val: str, default=0):
     return default
 
 
-def _get_files_changed():
-    try:
-        changed = _check_output(["git", "diff", "--numstat"])
-    except subprocess.CalledProcessError:
-        return {}
-
-    insert = 0
-    delete = 0
-
-    if changed:
-        for line in changed.splitlines():
-            x = line.split(maxsplit=2)
-            if len(x) > 1:
-                insert += _parse_int(x[0])
-                delete += _parse_int(x[1])
-
-    return {_DEFS.LINES_ADDED: insert, _DEFS.LINES_REMOVED: delete}
+class GSDir(GSField):
+    args = ("git", "rev-parse", "--git-dir")
 
 
-def _get_stash(gitdir):
-    try:
-        with open(os.path.join(gitdir, "logs/refs/stash")) as f:
-            return sum(1 for _ in f)
-    except OSError:
-        return 0
+class GSStashed(GSField):
+    prefix = "⚑"
+
+    def get_value(self):
+        gitdir = self.get(GSDir)
+        try:
+            with open(os.path.join(gitdir, "logs/refs/stash")) as f:
+                return sum(1 for _ in f)
+        except OSError:
+            return 0
 
 
-def _gitoperation(gitdir):
-    files = (
-        ("rebase-merge", "REBASE"),
-        ("rebase-apply", "AM/REBASE"),
-        ("MERGE_HEAD", "MERGING"),
-        ("CHERRY_PICK_HEAD", "CHERRY-PICKING"),
-        ("REVERT_HEAD", "REVERTING"),
-        ("BISECT_LOG", "BISECTING"),
-    )
-    operations = [f[1] for f in files if os.path.exists(os.path.join(gitdir, f[0]))]
-    if operations:
-        return "|" + "|".join(operations)
-    return ""
+class GSOperation(GSField):
+    prefix = "{CYAN}"
+    separator = "|"
+
+    def get_value(self):
+        gitdir = self.get(GSDir)
+
+        files = (
+            ("rebase-merge", "REBASE"),
+            ("rebase-apply", "AM/REBASE"),
+            ("MERGE_HEAD", "MERGING"),
+            ("CHERRY_PICK_HEAD", "CHERRY-PICKING"),
+            ("REVERT_HEAD", "REVERTING"),
+            ("BISECT_LOG", "BISECTING"),
+        )
+        operations = [f[1] for f in files if os.path.exists(os.path.join(gitdir, f[0]))]
+        if operations:
+            return self.separator + self.separator.join(operations)
 
 
-def _get_operation_stashed():
-    gitdir = _check_output(["git", "rev-parse", "--git-dir"]).strip()
-    stashed = _get_stash(gitdir)
-    operation = _gitoperation(gitdir)
-    return {_DEFS.OPERATION: operation, _DEFS.STASHED: stashed}
+class GSNumstat(GSField):
+    def get_value(self):
+        changed = self.check_output("git", "diff", "--numstat")
+
+        insert = 0
+        delete = 0
+
+        if changed:
+            for line in changed.splitlines():
+                x = line.split(maxsplit=2)
+                if len(x) > 1:
+                    insert += _parse_int(x[0])
+                    delete += _parse_int(x[1])
+
+        return insert, delete
 
 
-def _get_status_fields():
+class GSPorcelain(GSField):
+    args = ("git", "status", "--porcelain", "--branch")
+
+
+class GSInfo(GSField):
     """Return parsed values from ``git status``"""
 
-    status = _check_output(["git", "status", "--porcelain", "--branch"])
-    branch = ""
-    ahead, behind = 0, 0
-    untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
-    for line in status.splitlines():
-        if line.startswith("##"):
-            line = line[2:].strip()
-            if "Initial commit on" in line:
-                branch = line.split()[-1]
-            elif "no branch" in line:
-                branch = _get_tag_or_hash()
-            elif "..." not in line:
-                branch = line
+    def get_value(self):
+        status = self.get(GSPorcelain)
+        branch = ""
+        ahead, behind = 0, 0
+        untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
+        for line in status.splitlines():
+            if line.startswith("##"):
+                line = line[2:].strip()
+                if "Initial commit on" in line:
+                    branch = line.split()[-1]
+                elif "no branch" in line:
+                    branch = self.get(GSTagOrHash)
+                elif "..." not in line:
+                    branch = line
+                else:
+                    branch, rest = line.split("...")
+                    if " " in rest:
+                        divergence = rest.split(" ", 1)[-1]
+                        divergence = divergence.strip("[]")
+                        for div in divergence.split(", "):
+                            if "ahead" in div:
+                                ahead = int(div[len("ahead ") :].strip())
+                            elif "behind" in div:
+                                behind = int(div[len("behind ") :].strip())
+            elif line.startswith("??"):
+                untracked += 1
             else:
-                branch, rest = line.split("...")
-                if " " in rest:
-                    divergence = rest.split(" ", 1)[-1]
-                    divergence = divergence.strip("[]")
-                    for div in divergence.split(", "):
-                        if "ahead" in div:
-                            ahead = int(div[len("ahead ") :].strip())
-                        elif "behind" in div:
-                            behind = int(div[len("behind ") :].strip())
-        elif line.startswith("??"):
-            untracked += 1
-        else:
-            if len(line) > 1:
-                if line[1] == "M":
-                    changed += 1
-                elif line[1] == "D":
-                    deleted += 1
-            if len(line) > 0 and line[0] == "U":
-                conflicts += 1
-            elif len(line) > 0 and line[0] != " ":
-                staged += 1
+                if len(line) > 1:
+                    if line[1] == "M":
+                        changed += 1
+                    elif line[1] == "D":
+                        deleted += 1
+                if len(line) > 0 and line[0] == "U":
+                    conflicts += 1
+                elif len(line) > 0 and line[0] != " ":
+                    staged += 1
 
-    return {
-        _DEFS.BRANCH: branch,
-        _DEFS.AHEAD: ahead,
-        _DEFS.BEHIND: behind,
-        _DEFS.UNTRACKED: untracked,
-        _DEFS.CHANGED: changed,
-        _DEFS.DELETED: deleted,
-        _DEFS.CONFLICTS: conflicts,
-        _DEFS.STAGED: staged,
-    }
+        return {
+            "branch": branch,
+            "ahead": ahead,
+            "behind": behind,
+            "untracked": untracked,
+            "changed": changed,
+            "deleted": deleted,
+            "conflicts": conflicts,
+            "staged": staged,
+        }
 
 
-def get_gitstatus_fields():
-    """return all shown fields"""
-    fields = {}
-    for keys, provider in (
-        (
-            (
-                _DEFS.BRANCH,
-                _DEFS.AHEAD,
-                _DEFS.BEHIND,
-                _DEFS.UNTRACKED,
-                _DEFS.CHANGED,
-                _DEFS.DELETED,
-                _DEFS.CONFLICTS,
-                _DEFS.STAGED,
-            ),
-            _get_status_fields,
-        ),
-        (
-            (
-                _DEFS.OPERATION,
-                _DEFS.STASHED,
-            ),
-            _get_operation_stashed,
-        ),
-        (
-            (
-                _DEFS.LINES_ADDED,
-                _DEFS.LINES_REMOVED,
-            ),
-            _get_files_changed,
-        ),
-    ):
-        if any(map(lambda x: not _is_hidden(x), keys)):
-            try:
-                fields.update(provider())
-            except subprocess.SubprocessError:
-                return None
-    return fields
+class GSBranch(GSField):
+    prefix = "{CYAN}"
+    info_field = "branch"
 
 
-def gitstatus_prompt():
-    """Return str `BRANCH|OPERATOR|numbers`"""
-    fields = get_gitstatus_fields()
-    if fields is None:
-        return None
+class GSAhead(GSField):
+    prefix = "↑·"
+    info_field = "ahead"
 
-    ret = ""
-    for fld in (_DEFS.BRANCH, _DEFS.AHEAD, _DEFS.BEHIND, _DEFS.OPERATION):
-        if not _is_hidden(fld):
-            val = fields[fld]
-            if not val:
-                continue
-            ret += _get_def(fld) + str(val)
 
-    if ret:
-        ret += "|"
+class GSBehind(GSField):
+    prefix = "↓·"
+    info_field = "behind"
 
-    number_flds = (
-        _DEFS.STAGED,
-        _DEFS.CONFLICTS,
-        _DEFS.CHANGED,
-        _DEFS.DELETED,
-        _DEFS.UNTRACKED,
-        _DEFS.STASHED,
-        _DEFS.LINES_ADDED,
-        _DEFS.LINES_REMOVED,
+
+class GSUntracked(GSField):
+    prefix = "…"
+    info_field = "untracked"
+
+
+class GSChanged(GSField):
+    prefix = "{BLUE}+"
+    info_field = "changed"
+
+
+class GSDeleted(GSField):
+    prefix = "{RED}-"
+    info_field = "deleted"
+
+
+class GSConflicts(GSField):
+    prefix = "{RED}×"
+    info_field = "conflicts"
+
+
+class GSStaged(GSField):
+    info_field = "staged"
+    prefix = "{RED}●"
+
+
+class GSLinesAdded(GSField):
+    prefix = "{BLUE}+"
+
+    def get_value(self):
+        return self.get(GSNumstat)[0]
+
+
+class GSLinesRemoved(GSField):
+    prefix = "{RED}-"
+
+    def get_value(self):
+        return self.get(GSNumstat)[-1]
+
+
+class GSNumbers(GSField):
+    fields = (
+        GSStaged,
+        GSConflicts,
+        GSChanged,
+        GSDeleted,
+        GSUntracked,
+        GSStashed,
+        GSLinesAdded,
+        GSLinesRemoved,
     )
-    for fld in number_flds:
-        if _is_hidden(fld):
-            continue
-        symbol = _get_def(fld)
-        value = fields[fld]
-        if symbol and value > 0:
-            ret += symbol + str(value) + COLORS.RESET
-    if sum(fields.get(fld, 0) for fld in number_flds) == 0 and not _is_hidden(
-        _DEFS.CLEAN
-    ):
-        symbol = _get_def(_DEFS.CLEAN)
-        if symbol:
-            ret += symbol + COLORS.RESET
-    ret = ret.rstrip("|")
 
-    if not ret.endswith(COLORS.RESET):
-        ret += COLORS.RESET
 
-    ret = ret.replace("|", _get_def(_DEFS.SEPARATOR))
+class GSClean(GSField):
+    prefix = "{BOLD_GREEN}"
+    symbol = "✓"
 
-    return ret
+    def get_value(self):
+        changes = self.get(GSNumbers)
+        if not changes:
+            return self.symbol
+
+
+class GSBranchPart(GSField):
+    fields = (GSBranch, GSAhead, GSBehind, GSOperation)
+
+
+class GSPrompt(GSField):
+    """Return str `BRANCH|OPERATOR|numbers`"""
+
+    join = "{RESET}|"
+    fields = (GSBranchPart, GSNumbers, GSClean)
