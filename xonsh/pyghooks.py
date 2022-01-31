@@ -1732,7 +1732,7 @@ class XonshLexer(Python3Lexer):
         with root or subproc state"""
         start = 0
         state = ("root",)
-        m = re.match(fr"(\s*)({COMMAND_TOKEN_RE})", text)
+        m = re.match(rf"(\s*)({COMMAND_TOKEN_RE})", text)
         if m is not None:
             yield m.start(1), Whitespace, m.group(1)
             start = m.end(1)
