@@ -1,9 +1,9 @@
 """Tests the xonsh lexer."""
 import os
 
-from tools import skip_if_on_unix, skip_if_on_windows, ON_WINDOWS
-
 import pytest
+
+from tools import ON_WINDOWS, skip_if_on_unix, skip_if_on_windows
 
 
 @pytest.fixture

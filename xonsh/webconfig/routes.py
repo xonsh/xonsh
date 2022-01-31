@@ -4,16 +4,18 @@ import sys
 from typing import TYPE_CHECKING
 
 from xonsh.environ import Env
-from .file_writes import insert_into_xonshrc
+
 from ..built_ins import XonshSession
+from .file_writes import insert_into_xonshrc
 
 if TYPE_CHECKING:
     from typing import Type
 
 import logging
-
-from . import xonsh_data, tags as t
 from urllib import parse
+
+from . import tags as t
+from . import xonsh_data
 
 
 class Routes:

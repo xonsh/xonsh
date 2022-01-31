@@ -20,8 +20,8 @@ from xonsh.xoreutils.echo import echo
 from xonsh.xoreutils.pwd import pwd
 from xonsh.xoreutils.tee import tee
 from xonsh.xoreutils.tty import tty
-from xonsh.xoreutils.uname import uname
 from xonsh.xoreutils.umask import umask
+from xonsh.xoreutils.uname import uname
 from xonsh.xoreutils.uptime import uptime
 from xonsh.xoreutils.yes import yes
 

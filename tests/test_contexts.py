@@ -3,7 +3,6 @@ from textwrap import dedent
 
 from xonsh.contexts import Block, Functor
 
-
 #
 # helpers
 #

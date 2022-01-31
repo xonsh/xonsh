@@ -1,11 +1,8 @@
 import pytest
 
 from tests.tools import skip_if_pre_3_8
-from xonsh.completers.python import (
-    python_signature_complete,
-    complete_python,
-)
 from xonsh.completers.imports import complete_import
+from xonsh.completers.python import complete_python, python_signature_complete
 from xonsh.parsers.completion_context import (
     CommandArg,
     CommandContext,

@@ -21,8 +21,9 @@ def arg_handler(args, out, short, key, val, long=None):
 
 def run_alias(name: str, args=None):
     import sys
-    from xonsh.main import setup
+
     from xonsh.built_ins import subproc_uncaptured
+    from xonsh.main import setup
     from xonsh.xontribs import xontribs_load
 
     setup()

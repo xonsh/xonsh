@@ -1,5 +1,5 @@
 from xonsh.completers import completer
-from xonsh.completers.tools import contextual_command_completer, complete_from_sub_proc
+from xonsh.completers.tools import complete_from_sub_proc, contextual_command_completer
 from xonsh.parsers.completion_context import CommandContext
 
 

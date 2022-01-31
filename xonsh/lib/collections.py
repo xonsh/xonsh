@@ -1,10 +1,9 @@
 """Base class for chaining DBs"""
 
 import itertools
-
+import typing as tp
 from collections import ChainMap
 from collections.abc import MutableMapping, MutableSequence, MutableSet
-import typing as tp
 
 
 class ChainDBDefaultType:

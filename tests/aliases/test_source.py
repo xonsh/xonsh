@@ -1,10 +1,11 @@
-import os.path
-import pytest
-
 import builtins
+import os.path
 from contextlib import contextmanager
 from unittest.mock import MagicMock
-from xonsh.aliases import source_alias, make_default_aliases
+
+import pytest
+
+from xonsh.aliases import make_default_aliases, source_alias
 
 
 @pytest.fixture

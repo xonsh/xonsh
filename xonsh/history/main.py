@@ -6,14 +6,14 @@ import sys
 import threading
 import typing as tp
 
-from xonsh.built_ins import XSH
 import xonsh.cli_utils as xcli
+import xonsh.diff_history as xdh
+import xonsh.tools as xt
+from xonsh.built_ins import XSH
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
-import xonsh.diff_history as xdh
-import xonsh.tools as xt
 
 HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": SqliteHistory}
 

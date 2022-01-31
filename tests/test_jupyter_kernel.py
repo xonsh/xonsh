@@ -1,11 +1,12 @@
 import sys
-import pytest
 from inspect import signature
 from unittest.mock import MagicMock
 
+import pytest
+
+from tests.test_ptk_completer import EXPANSION_CASES
 from xonsh.aliases import Aliases
 from xonsh.completer import Completer
-from tests.test_ptk_completer import EXPANSION_CASES
 
 XonshKernel = None
 

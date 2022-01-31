@@ -5,11 +5,10 @@ from subprocess import Popen
 
 import pytest
 
-from xonsh.procs.specs import cmds_to_specs, run_subproc
-from xonsh.procs.posix import PopenThread
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread, STDOUT_DISPATCHER
-
 from tests.tools import skip_if_on_windows
+from xonsh.procs.posix import PopenThread
+from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
+from xonsh.procs.specs import cmds_to_specs, run_subproc
 
 
 @skip_if_on_windows

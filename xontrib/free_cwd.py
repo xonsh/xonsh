@@ -7,13 +7,13 @@
     if any extensions are enabled that hook the prompt and relies on
     ``os.getcwd()``.
 """
-import os
 import functools
+import os
 from pathlib import Path
 
-from xonsh.tools import print_exception
 from xonsh.built_ins import XSH
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_MSYS
+from xonsh.platform import ON_CYGWIN, ON_MSYS, ON_WINDOWS
+from xonsh.tools import print_exception
 
 
 def _chdir_up(path):

@@ -77,13 +77,13 @@ without open / close parameters.  You can also use this code::
             Portions (c) 2009 by Robert Kern.
 :license: BSD License.
 """
+import collections
+import contextlib
+import datetime
 import io
 import re
 import sys
 import types
-import datetime
-import contextlib
-import collections
 
 from xonsh.lazyasd import LazyObject, lazyobject
 

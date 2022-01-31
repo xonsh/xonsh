@@ -3,8 +3,8 @@ import json
 
 import pytest
 
-from xonsh.tools import EnvPath
 from xonsh.jsonutils import serialize_xonsh_json
+from xonsh.tools import EnvPath
 
 
 @pytest.mark.parametrize(

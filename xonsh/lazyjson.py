@@ -1,8 +1,8 @@
 """Implements a lazy JSON file class that wraps around json data."""
+import collections.abc as cabc
+import contextlib
 import io
 import weakref
-import contextlib
-import collections.abc as cabc
 
 try:
     import ujson as json

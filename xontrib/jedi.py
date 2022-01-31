@@ -2,14 +2,14 @@
 import os
 
 import xonsh
-from xonsh.lazyasd import lazyobject, lazybool
 from xonsh.built_ins import XSH
+from xonsh.completers import _aliases
 from xonsh.completers.tools import (
-    get_filter_function,
     RichCompletion,
     contextual_completer,
+    get_filter_function,
 )
-from xonsh.completers import _aliases
+from xonsh.lazyasd import lazybool, lazyobject
 from xonsh.parsers.completion_context import CompletionContext
 
 __all__ = ()

@@ -6,22 +6,22 @@ import os
 import re
 from collections import defaultdict
 from typing import (
+    Any,
     Dict,
-    Optional,
-    Tuple,
+    Generic,
     List,
     NamedTuple,
-    Generic,
+    Optional,
+    Tuple,
     TypeVar,
     Union,
-    Any,
     cast,
     overload,
 )
 
 from xonsh.lazyasd import lazyobject
 from xonsh.lexer import Lexer
-from xonsh.parsers.base import raise_parse_error, Location
+from xonsh.parsers.base import Location, raise_parse_error
 from xonsh.ply.ply import yacc
 from xonsh.tools import check_for_partial_string, get_line_continuation
 

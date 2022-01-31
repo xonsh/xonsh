@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from prompt_toolkit.application import Application
-from prompt_toolkit.document import Document
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.document import Document
 
 from xonsh.tools import ON_WINDOWS
 

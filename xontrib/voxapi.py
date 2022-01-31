@@ -8,22 +8,20 @@ Vox defines several events related to the life cycle of virtual environments:
 * ``vox_on_deactivate(env: str, path: pathlib.Path) -> None``
 * ``vox_on_delete(env: str) -> None``
 """
-import os
-import sys
-import shutil
-import logging
 import collections.abc
+import logging
+import os
+import shutil
 import subprocess as sp
+import sys
 import typing
 
 from xonsh.built_ins import XSH
-from xonsh.platform import ON_POSIX, ON_WINDOWS
-
 
 # This is because builtins aren't globally created during testing.
 # FIXME: Is there a better way?
 from xonsh.events import events
-
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 
 events.doc(
     "vox_on_create",

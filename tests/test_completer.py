@@ -1,13 +1,13 @@
 """Tests for the base completer's logic (xonsh/completer.py)"""
 
 import pytest
+
+from xonsh.completer import Completer
 from xonsh.completers.tools import (
     RichCompletion,
     contextual_command_completer,
     non_exclusive_completer,
 )
-
-from xonsh.completer import Completer
 from xonsh.parsers.completion_context import CommandContext
 
 

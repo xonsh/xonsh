@@ -1,6 +1,6 @@
 import ast
-import keyword
 import collections
+import keyword
 
 _all_keywords = frozenset(keyword.kwlist)
 

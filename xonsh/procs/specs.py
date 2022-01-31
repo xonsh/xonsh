@@ -1,33 +1,32 @@
 """Subprocess specification and related utilities."""
-import os
+import contextlib
+import inspect
 import io
+import os
+import pathlib
 import re
-import sys
-import stat
 import shlex
 import signal
-import inspect
-import pathlib
+import stat
 import subprocess
-import contextlib
+import sys
 
-from xonsh.built_ins import XSH
-import xonsh.tools as xt
-import xonsh.lazyasd as xl
-import xonsh.platform as xp
 import xonsh.environ as xenv
-import xonsh.lazyimps as xli
 import xonsh.jobs as xj
-
-from xonsh.procs.readers import ConsoleParallelReader
-from xonsh.procs.posix import PopenThread
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread
+import xonsh.lazyasd as xl
+import xonsh.lazyimps as xli
+import xonsh.platform as xp
+import xonsh.tools as xt
+from xonsh.built_ins import XSH
 from xonsh.procs.pipelines import (
-    pause_call_resume,
+    STDOUT_CAPTURE_KINDS,
     CommandPipeline,
     HiddenCommandPipeline,
-    STDOUT_CAPTURE_KINDS,
+    pause_call_resume,
 )
+from xonsh.procs.posix import PopenThread
+from xonsh.procs.proxies import ProcProxy, ProcProxyThread
+from xonsh.procs.readers import ConsoleParallelReader
 
 
 @xl.lazyobject

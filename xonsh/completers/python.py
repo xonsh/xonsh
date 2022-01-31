@@ -1,21 +1,20 @@
 """Completers for Python code"""
-import re
-import inspect
 import builtins
-import warnings
 import collections.abc as cabc
-from xonsh.parsers.completion_context import CompletionContext, PythonContext
+import inspect
+import re
+import warnings
 
-import xonsh.tools as xt
 import xonsh.lazyasd as xl
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
-
 from xonsh.completers.tools import (
     CompleterResult,
+    RichCompletion,
     contextual_completer,
     get_filter_function,
-    RichCompletion,
 )
+from xonsh.parsers.completion_context import CompletionContext, PythonContext
 
 
 @xl.lazyobject

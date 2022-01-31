@@ -1,11 +1,11 @@
 from xonsh.built_ins import XSH
-from xonsh.parsers.completion_context import CompletionContext
 from xonsh.completers.tools import (
-    contextual_completer,
-    non_exclusive_completer,
-    get_filter_function,
     RichCompletion,
+    contextual_completer,
+    get_filter_function,
+    non_exclusive_completer,
 )
+from xonsh.parsers.completion_context import CompletionContext
 
 
 @contextual_completer

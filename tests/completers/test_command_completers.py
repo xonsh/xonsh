@@ -2,16 +2,14 @@ from unittest.mock import Mock
 
 import pytest
 
-from xonsh.parsers.completion_context import (
-    CompletionContext,
-    CommandArg,
-    CommandContext,
-)
-
-from tests.tools import ON_WINDOWS, skip_if_on_windows, completions_from_result
-
+from tests.tools import ON_WINDOWS, completions_from_result, skip_if_on_windows
 from xonsh.completer import Completer
 from xonsh.completers.commands import complete_command, complete_skipper
+from xonsh.parsers.completion_context import (
+    CommandArg,
+    CommandContext,
+    CompletionContext,
+)
 
 
 @pytest.fixture(autouse=True)

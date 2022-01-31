@@ -5,26 +5,26 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.filters import (
     Condition,
-    IsMultiline,
-    HasSelection,
     EmacsInsertMode,
-    ViInsertMode,
+    HasSelection,
+    IsMultiline,
     IsSearching,
+    ViInsertMode,
 )
-from prompt_toolkit.keys import Keys
 from prompt_toolkit.input import ansi_escape_sequences
-from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
+from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
+from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
-from xonsh.tools import (
-    check_for_partial_string,
-    get_line_continuation,
-    ends_with_colon_token,
-)
 from xonsh.built_ins import XSH
 from xonsh.platform import ON_WINDOWS
 from xonsh.shell import transform_command
+from xonsh.tools import (
+    check_for_partial_string,
+    ends_with_colon_token,
+    get_line_continuation,
+)
 
 DEDENT_TOKENS = frozenset(["raise", "return", "pass", "break", "continue"])
 

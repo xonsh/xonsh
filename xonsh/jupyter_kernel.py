@@ -1,25 +1,25 @@
 """Hooks for Jupyter Xonsh Kernel."""
-import sys
-import json
-import hmac
-import uuid
+import datetime
 import errno
 import hashlib
-import datetime
+import hmac
+import json
+import sys
 import threading
-from pprint import pformat
+import uuid
 from argparse import ArgumentParser
 from collections.abc import Set
+from pprint import pformat
 
 import zmq
-from zmq.eventloop import ioloop, zmqstream
 from zmq.error import ZMQError
+from zmq.eventloop import ioloop, zmqstream
 
 from xonsh import __version__ as version
 from xonsh.built_ins import XSH
-from xonsh.main import setup
-from xonsh.completer import Completer
 from xonsh.commands_cache import predict_true
+from xonsh.completer import Completer
+from xonsh.main import setup
 
 MAX_SIZE = 8388608  # 8 Mb
 DELIM = b"<IDS|MSG>"

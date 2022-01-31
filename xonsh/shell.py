@@ -1,20 +1,20 @@
 """The xonsh shell"""
+import difflib
 import sys
 import time
-import difflib
 import warnings
 
-from xonsh.platform import (
-    best_shell_type,
-    ptk_above_min_supported,
-    has_prompt_toolkit,
-    minimum_required_ptk_version,
-)
-from xonsh.tools import XonshError, print_exception, simple_random_choice
-from xonsh.events import events
-from xonsh.history.dummy import DummyHistory
 import xonsh.history.main as xhm
 from xonsh.built_ins import XSH
+from xonsh.events import events
+from xonsh.history.dummy import DummyHistory
+from xonsh.platform import (
+    best_shell_type,
+    has_prompt_toolkit,
+    minimum_required_ptk_version,
+    ptk_above_min_supported,
+)
+from xonsh.tools import XonshError, print_exception, simple_random_choice
 
 events.doc(
     "on_transform_command",

@@ -2,10 +2,9 @@
 is imported.
 """
 
-from xonsh.tools import unthreadable
-from xonsh.lazyasd import lazyobject
 from xonsh.built_ins import XSH
-
+from xonsh.lazyasd import lazyobject
+from xonsh.tools import unthreadable
 
 __all__ = ()
 

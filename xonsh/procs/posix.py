@@ -1,25 +1,23 @@
 """Interface for running subprocess-mode commands on posix systems."""
-import os
-import io
-import sys
-import time
 import array
+import io
+import os
 import signal
-import threading
 import subprocess
+import sys
+import threading
+import time
 
 import xonsh.lazyasd as xl
+import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
-import xonsh.lazyimps as xli
 from xonsh.built_ins import XSH
-
 from xonsh.procs.readers import (
     BufferedFDParallelReader,
     NonBlockingFDReader,
     safe_fdclose,
 )
-
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.

@@ -2,18 +2,18 @@
 compatibility layers to make use of the 'best' implementation available
 on a platform.
 """
-import os
-import sys
+import collections.abc as cabc
 import ctypes  # noqa
-import signal
+import functools
+import importlib.util
+import os
 import pathlib
 import platform
-import functools
+import signal
 import subprocess
-import collections.abc as cabc
-import importlib.util
+import sys
 
-from xonsh.lazyasd import LazyBool, lazyobject, lazybool
+from xonsh.lazyasd import LazyBool, lazybool, lazyobject
 
 # do not import any xonsh-modules here to avoid circular dependencies
 
@@ -196,7 +196,7 @@ def ptk_above_min_supported():
 def win_ansi_support():
     if ON_WINDOWS:
         try:
-            from prompt_toolkit.utils import is_windows_vt100_supported, is_conemu_ansi
+            from prompt_toolkit.utils import is_conemu_ansi, is_windows_vt100_supported
         except ImportError:
             return False
         return is_conemu_ansi() or is_windows_vt100_supported()

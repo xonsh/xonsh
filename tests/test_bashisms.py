@@ -1,6 +1,7 @@
 """Tests bashisms xontrib."""
-import pytest
 import sys
+
+import pytest
 
 
 @pytest.fixture(name="bash_preproc", scope="module")

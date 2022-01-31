@@ -3,38 +3,37 @@
 Written using a hybrid of ``tokenize`` and PLY.
 """
 import io
-import re
 
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
+import re
 import typing as tp
-
-from xonsh.ply.ply.lex import LexToken
 
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
+from xonsh.ply.ply.lex import LexToken
 from xonsh.tokenize import (
-    OP,
-    IOREDIRECT,
-    STRING,
-    DOLLARNAME,
-    NUMBER,
-    SEARCHPATH,
-    NEWLINE,
-    INDENT,
-    DEDENT,
-    NL,
     COMMENT,
+    DEDENT,
+    DOLLARNAME,
     ENCODING,
     ENDMARKER,
-    NAME,
     ERRORTOKEN,
     GREATER,
-    LESS,
-    RIGHTSHIFT,
-    tokenize,
-    TokenError,
     HAS_WALRUS,
+    INDENT,
+    IOREDIRECT,
+    LESS,
+    NAME,
+    NEWLINE,
+    NL,
+    NUMBER,
+    OP,
+    RIGHTSHIFT,
+    SEARCHPATH,
+    STRING,
+    TokenError,
+    tokenize,
 )
 
 

@@ -1,5 +1,5 @@
 """Provides some Mac / Darwin based utility functions for xonsh."""
-from ctypes import c_uint, byref, create_string_buffer
+from ctypes import byref, c_uint, create_string_buffer
 
 from xonsh.platform import LIBC
 

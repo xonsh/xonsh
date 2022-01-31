@@ -5,7 +5,6 @@ import pytest
 
 from xonsh.completers.commands import complete_xompletions
 
-
 regex_cases = [
     "pip",
     "pip.exe",

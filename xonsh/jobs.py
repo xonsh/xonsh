@@ -1,18 +1,18 @@
 """Job control for the xonsh shell."""
-import os
-import sys
-import time
+import collections
 import ctypes
+import os
 import signal
 import subprocess
-import collections
+import sys
+import time
 import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
-from xonsh.platform import FD_STDERR, ON_DARWIN, ON_WINDOWS, ON_CYGWIN, ON_MSYS, LIBC
+from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
 from xonsh.tools import unthreadable
 
 # there is not much cost initing deque

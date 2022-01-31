@@ -6,17 +6,17 @@ The following time_it alias and Timer was forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
-import os
 import gc
-import sys
+import itertools
 import math
+import os
+import sys
 import time
 import timeit
-import itertools
 
 from xonsh.built_ins import XSH
-from xonsh.lazyasd import lazyobject, lazybool
 from xonsh.events import events
+from xonsh.lazyasd import lazybool, lazyobject
 from xonsh.platform import ON_WINDOWS
 
 

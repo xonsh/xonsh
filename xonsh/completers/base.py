@@ -1,14 +1,11 @@
 """Base completer for xonsh."""
 import collections.abc as cabc
-from xonsh.parsers.completion_context import CompletionContext
-from xonsh.completers.tools import (
-    contextual_completer,
-    apply_lprefix,
-)
 
+from xonsh.completers.commands import complete_command
 from xonsh.completers.path import contextual_complete_path
 from xonsh.completers.python import complete_python
-from xonsh.completers.commands import complete_command
+from xonsh.completers.tools import apply_lprefix, contextual_completer
+from xonsh.parsers.completion_context import CompletionContext
 
 
 @contextual_completer

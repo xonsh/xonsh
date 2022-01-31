@@ -1,5 +1,6 @@
 """Implements the xonsh history backend."""
 import collections
+
 from xonsh.history.base import History
 
 

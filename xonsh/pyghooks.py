@@ -1,69 +1,63 @@
 """Hooks for pygments syntax highlighting."""
 import os
 import re
-import sys
 import stat
+import sys
+import typing as tp
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
-import typing as tp
 
-from xonsh.built_ins import XSH
-from xonsh.lazyimps import os_listxattr
-
-from pygments.lexer import inherit, bygroups, include
+import pygments.util
+from pygments.lexer import bygroups, include, inherit
 from pygments.lexers.agile import Python3Lexer
+from pygments.style import Style
 from pygments.token import (
+    Comment,
+    Error,
+    Generic,
     Keyword,
     Name,
-    Comment,
-    String,
-    Error,
     Number,
     Operator,
-    Generic,
-    Whitespace,
-    Token,
     Punctuation,
+    String,
     Text,
+    Token,
+    Whitespace,
     _TokenType,
 )
-from pygments.style import Style
-import pygments.util
 
-from xonsh.commands_cache import CommandsCache
-from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
-from xonsh.tools import (
-    ON_WINDOWS,
-    intensify_colors_for_cmd_exe,
-    ANSICOLOR_NAMES_MAP,
-    PTK_NEW_OLD_COLOR_MAP,
-    hardcode_colors_for_win10,
-    FORMATTER,
-)
-
+from xonsh.built_ins import XSH
 from xonsh.color_tools import (
-    RE_BACKGROUND,
     BASE_XONSH_COLORS,
+    RE_BACKGROUND,
     RE_XONSH_COLOR,
-    make_palette,
     find_closest_color,
     iscolor,
+    make_palette,
     warn_deprecated_no_color,
 )
-from xonsh.style_tools import norm_name, DEFAULT_STYLE_DICT
-from xonsh.lazyimps import terminal256, html
+from xonsh.commands_cache import CommandsCache
+from xonsh.events import events
+from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.lazyimps import html, os_listxattr, terminal256
 from xonsh.platform import (
     os_environ,
-    win_ansi_support,
     ptk_version_info,
     pygments_version_info,
+    win_ansi_support,
 )
-
-from xonsh.pygments_cache import get_style_by_name, add_custom_style
-
-from xonsh.events import events
-
+from xonsh.pygments_cache import add_custom_style, get_style_by_name
+from xonsh.style_tools import DEFAULT_STYLE_DICT, norm_name
+from xonsh.tools import (
+    ANSICOLOR_NAMES_MAP,
+    FORMATTER,
+    ON_WINDOWS,
+    PTK_NEW_OLD_COLOR_MAP,
+    hardcode_colors_for_win10,
+    intensify_colors_for_cmd_exe,
+)
 
 #
 # Colors and Styles

@@ -1,8 +1,9 @@
-import pytest
 from inspect import signature
 from unittest.mock import MagicMock
-from prompt_toolkit.document import Document
+
+import pytest
 from prompt_toolkit.completion import Completion as PTKCompletion
+from prompt_toolkit.document import Document
 
 from xonsh.aliases import Aliases
 from xonsh.completer import Completer

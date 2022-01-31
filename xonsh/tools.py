@@ -16,6 +16,7 @@ Implementations:
 * indent()
 
 """
+import ast
 import collections
 import collections.abc as cabc
 import contextlib
@@ -24,24 +25,23 @@ import datetime
 import functools
 import glob
 import itertools
+import operator
 import os
 import pathlib
 import re
+import shlex
+import string
 import subprocess
 import sys
 import threading
 import traceback
-import warnings
-import operator
-import ast
-import string
 import typing as tp
-import shlex
+import warnings
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
-from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
+from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.platform import (
     DEFAULT_ENCODING,
     ON_LINUX,
@@ -2171,8 +2171,8 @@ def format_std_prepost(template, env=None):
     invis = "\001\002"
     if xsh.shell is None:
         # shell hasn't fully started up (probably still in xonshrc)
-        from xonsh.prompt.base import PromptFormatter
         from xonsh.ansi_colors import ansi_partial_color_format
+        from xonsh.prompt.base import PromptFormatter
 
         pf = PromptFormatter()
         s = pf(template)

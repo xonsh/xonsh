@@ -3,10 +3,10 @@
 import os
 import shlex
 
-from xonsh.history.sqlite import SqliteHistory
-from xonsh.history.main import history_main
-
 import pytest
+
+from xonsh.history.main import history_main
+from xonsh.history.sqlite import SqliteHistory
 
 
 @pytest.fixture

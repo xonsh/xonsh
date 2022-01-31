@@ -1,9 +1,9 @@
 """Lazy imports that may apply across the xonsh package."""
-import os
 import importlib
+import os
 
-from xonsh.platform import ON_WINDOWS, ON_DARWIN
 from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.platform import ON_DARWIN, ON_WINDOWS
 
 pygments = LazyObject(
     lambda: importlib.import_module("pygments"), globals(), "pygments"

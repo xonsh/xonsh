@@ -7,9 +7,9 @@ import sys
 import threading
 import time
 
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.history.base import History
-import xonsh.tools as xt
 
 XH_SQLITE_CACHE = threading.local()
 XH_SQLITE_TABLE_NAME = "xonsh_history"

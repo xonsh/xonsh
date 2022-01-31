@@ -1,20 +1,20 @@
 """Implements the xonsh executer."""
-import sys
-import types
-import inspect
 import builtins
 import collections.abc as cabc
+import inspect
+import sys
+import types
 
 from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
 from xonsh.tools import (
-    subproc_toks,
+    balanced_parens,
+    ends_with_colon_token,
     find_next_break,
     get_logical_line,
     replace_logical_line,
-    balanced_parens,
     starting_whitespace,
-    ends_with_colon_token,
+    subproc_toks,
 )
 
 

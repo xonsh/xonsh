@@ -6,23 +6,23 @@ Contains modified code from the IPython project (at core/completerlib.py).
 # Distributed under the terms of the Modified BSD License.
 """
 
+import inspect
 import os
 import re
 import sys
-import inspect
-from time import time
+import typing as tp
 from importlib import import_module
 from importlib.machinery import all_suffixes
+from time import time
 from zipimport import zipimporter
-import typing as tp
 
 from xonsh.built_ins import XSH
-from xonsh.lazyasd import lazyobject
 from xonsh.completers.tools import (
+    RichCompletion,
     contextual_completer,
     get_filter_function,
-    RichCompletion,
 )
+from xonsh.lazyasd import lazyobject
 from xonsh.parsers.completion_context import CompletionContext
 
 _suffixes = all_suffixes()

@@ -1,20 +1,19 @@
 """Command pipeline tools."""
+import io
 import os
 import re
-import io
-import sys
-import time
 import signal
-import threading
 import subprocess
+import sys
+import threading
+import time
 
-import xonsh.lazyasd as xl
-import xonsh.tools as xt
-import xonsh.platform as xp
 import xonsh.jobs as xj
+import xonsh.lazyasd as xl
+import xonsh.platform as xp
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
-
-from xonsh.procs.readers import NonBlockingFDReader, ConsoleParallelReader, safe_fdclose
+from xonsh.procs.readers import ConsoleParallelReader, NonBlockingFDReader, safe_fdclose
 
 
 @xl.lazyobject

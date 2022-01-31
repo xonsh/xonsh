@@ -1,22 +1,20 @@
 """Constructor for xonsh completer objects."""
 import collections
 
-from xonsh.completers.man import complete_from_man
-from xonsh.completers.bash import complete_from_bash
+from xonsh.completers._aliases import complete_aliases
 from xonsh.completers.base import complete_base
-from xonsh.completers.path import complete_path
-from xonsh.completers.python import (
-    complete_python,
-)
-from xonsh.completers.imports import complete_import
+from xonsh.completers.bash import complete_from_bash
 from xonsh.completers.commands import (
-    complete_skipper,
-    complete_end_proc_tokens,
     complete_end_proc_keywords,
+    complete_end_proc_tokens,
+    complete_skipper,
     complete_xompletions,
 )
-from xonsh.completers._aliases import complete_aliases
 from xonsh.completers.environment import complete_environment_vars
+from xonsh.completers.imports import complete_import
+from xonsh.completers.man import complete_from_man
+from xonsh.completers.path import complete_path
+from xonsh.completers.python import complete_python
 
 
 def default_completers(cmd_cache):

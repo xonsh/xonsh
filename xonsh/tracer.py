@@ -1,20 +1,20 @@
 """Implements a xonsh tracer."""
+import importlib
+import inspect
+import linecache
 import os
 import re
 import sys
-import inspect
-import linecache
-import importlib
 import typing as tp
 
-from xonsh.cli_utils import ArgParserAlias, Annotated, Arg
-from xonsh.lazyasd import LazyObject
-from xonsh.platform import HAS_PYGMENTS
-from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
-from xonsh.inspectors import find_file
-from xonsh.lazyimps import pygments, pyghooks
 import xonsh.procs.pipelines as xpp
 import xonsh.prompt.cwd as prompt
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
+from xonsh.inspectors import find_file
+from xonsh.lazyasd import LazyObject
+from xonsh.lazyimps import pyghooks, pygments
+from xonsh.platform import HAS_PYGMENTS
+from xonsh.tools import DefaultNotGiven, normabspath, print_color, to_bool
 
 terminal = LazyObject(
     lambda: importlib.import_module("pygments.formatters.terminal"),

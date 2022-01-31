@@ -1,11 +1,10 @@
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
-import difflib
 import datetime
+import difflib
 import itertools
 
-from xonsh.lazyjson import LazyJSON
 from xonsh.color_tools import COLORS
-
+from xonsh.lazyjson import LazyJSON
 
 # intern some strings
 REPLACE_S = "replace"

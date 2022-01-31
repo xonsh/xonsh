@@ -3,22 +3,21 @@
 
 import pytest
 from pygments.token import (
-    Keyword,
-    Name,
-    String,
     Error,
+    Keyword,
+    Literal,
+    Name,
     Number,
     Operator,
     Punctuation,
+    String,
     Text,
-    Literal,
 )
-from tools import skip_if_on_windows
 
-from xonsh.pyghooks import XonshLexer, Color, XonshStyle, on_lscolors_change
+from tools import DummyShell, skip_if_on_windows
 from xonsh.environ import LsColors
-from xonsh.events import events, EventManager
-from tools import DummyShell
+from xonsh.events import EventManager, events
+from xonsh.pyghooks import Color, XonshLexer, XonshStyle, on_lscolors_change
 
 
 @pytest.fixture

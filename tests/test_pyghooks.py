@@ -1,25 +1,24 @@
 """Tests pygments hooks."""
-import pytest
 import os
-import stat
 import pathlib
-
+import stat
 from tempfile import TemporaryDirectory
-from xonsh.platform import ON_WINDOWS
 
+import pytest
+
+from xonsh.environ import LsColors
+from xonsh.platform import ON_WINDOWS
 from xonsh.pyghooks import (
-    XonshStyle,
     Color,
     Token,
-    color_name_to_pygments_code,
+    XonshStyle,
     code_by_name,
     color_file,
+    color_name_to_pygments_code,
     file_color_tokens,
     get_style_by_name,
     register_custom_pygments_style,
 )
-
-from xonsh.environ import LsColors
 
 
 @pytest.fixture

@@ -3,29 +3,29 @@
 Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
+import atexit
+import builtins
+import collections.abc as cabc
+import contextlib
+import inspect
+import itertools
 import os
+import pathlib
 import re
+import signal
 import sys
 import types
-import signal
-import atexit
-import pathlib
-import inspect
 import warnings
-import builtins
-import itertools
-import contextlib
-import collections.abc as cabc
-
 from ast import AST
-from xonsh.lazyasd import lazyobject
+
 from xonsh.inspectors import Inspector
+from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.tools import (
+    XonshCalledProcessError,
+    XonshError,
     expand_path,
     globpath,
-    XonshError,
-    XonshCalledProcessError,
     print_color,
 )
 
@@ -584,9 +584,9 @@ class XonshSession:
         ctx : Mapping, optional
             Context to start xonsh session with.
         """
-        from xonsh.environ import Env, default_env
         from xonsh.commands_cache import CommandsCache
         from xonsh.completers.init import default_completers
+        from xonsh.environ import Env, default_env
 
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self

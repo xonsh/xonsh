@@ -1,13 +1,13 @@
 """Implements the which xoreutil."""
-import os
 import argparse
 import functools
+import os
 
 import xonsh
-from xonsh.xoreutils import _which
 import xonsh.platform as xp
 import xonsh.procs.pipelines as xpp
 from xonsh.built_ins import XSH
+from xonsh.xoreutils import _which
 
 
 @functools.lru_cache()

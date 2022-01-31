@@ -1,56 +1,55 @@
 """The xonsh configuration (xonfig) utility."""
-import os
-import re
 import ast
-import sys
+import collections
+import contextlib
+import itertools
 import json
-import shutil
-import random
+import os
 import pprint
+import random
+import re
+import shutil
+import sys
 import tempfile
 import textwrap
-import itertools
-import contextlib
-import collections
 import typing as tp
-
-from xonsh.ply import ply
 
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import ArgParserAlias, Annotated, Arg, add_args
-from xonsh.prompt.base import is_template_string
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias, add_args
+from xonsh.foreign_shells import CANON_SHELL_NAMES
+from xonsh.lazyasd import lazyobject
 from xonsh.platform import (
-    is_readline_available,
-    ptk_version,
-    PYTHON_VERSION_INFO,
-    pygments_version,
-    ON_POSIX,
+    DEFAULT_ENCODING,
+    ON_CYGWIN,
+    ON_DARWIN,
     ON_LINUX,
-    linux_distro,
+    ON_MSYS,
+    ON_POSIX,
+    ON_WINDOWS,
     ON_WSL,
     ON_WSL1,
-    ON_DARWIN,
-    ON_WINDOWS,
-    ON_CYGWIN,
-    DEFAULT_ENCODING,
-    ON_MSYS,
+    PYTHON_VERSION_INFO,
     githash,
+    is_readline_available,
+    linux_distro,
+    ptk_version,
+    pygments_version,
 )
+from xonsh.ply import ply
+from xonsh.prompt.base import is_template_string
 from xonsh.tools import (
-    to_bool,
-    is_string,
-    print_exception,
-    is_superuser,
-    color_style_names,
-    print_color,
     color_style,
+    color_style_names,
+    is_string,
+    is_superuser,
+    print_color,
+    print_exception,
+    to_bool,
 )
-from xonsh.foreign_shells import CANON_SHELL_NAMES
 from xonsh.xontribs import find_xontrib, xontribs_loaded
-from xonsh.xontribs_meta import get_xontribs, Xontrib
-from xonsh.lazyasd import lazyobject
+from xonsh.xontribs_meta import Xontrib, get_xontribs
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """

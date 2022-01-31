@@ -1,14 +1,14 @@
 """Lazy and self destructive containers for speeding up module import."""
 # Copyright 2015-2016, the xonsh developers. All rights reserved.
-import os
-import sys
-import time
-import types
 import builtins
-import threading
+import collections.abc as cabc
 import importlib
 import importlib.util
-import collections.abc as cabc
+import os
+import sys
+import threading
+import time
+import types
 import typing as tp
 
 __version__ = "0.1.3"

@@ -8,7 +8,7 @@ import string
 import sys
 import typing as tp
 from argparse import ArgumentParser
-from http import server, HTTPStatus
+from http import HTTPStatus, server
 from pathlib import Path
 from pprint import pprint
 from urllib import parse

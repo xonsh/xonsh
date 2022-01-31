@@ -3,25 +3,23 @@ This requires Xonsh installed in venv or otherwise available on PATH
 """
 import os
 import shutil
-import tempfile
 import subprocess as sp
+import tempfile
 from pathlib import Path
 
 import pytest
 
 import xonsh
-from xonsh.dirstack import with_pushd
-
 from tools import (
+    ON_DARWIN,
+    ON_TRAVIS,
+    ON_WINDOWS,
+    skip_if_on_darwin,
     skip_if_on_msys,
     skip_if_on_unix,
     skip_if_on_windows,
-    skip_if_on_darwin,
-    ON_WINDOWS,
-    ON_DARWIN,
-    ON_TRAVIS,
 )
-
+from xonsh.dirstack import with_pushd
 
 PATH = (
     os.path.join(os.path.abspath(os.path.dirname(__file__)), "bin")

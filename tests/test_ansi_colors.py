@@ -3,13 +3,12 @@ import pytest
 
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
-    ansi_reverse_style,
     ansi_color_name_to_escape_code,
     ansi_color_style_names,
+    ansi_reverse_style,
     ansi_style_by_name,
     register_custom_ansi_style,
 )
-
 
 DEFAULT_CMAP = {
     # Reset

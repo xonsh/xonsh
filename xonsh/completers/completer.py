@@ -1,12 +1,8 @@
 import collections
 
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import Arg, Annotated, NumpyDoc
-from xonsh.completers.tools import (
-    justify,
-    is_exclusive_completer,
-    RichCompletion,
-)
+from xonsh.cli_utils import Annotated, Arg, NumpyDoc
+from xonsh.completers.tools import RichCompletion, is_exclusive_completer, justify
 
 
 def add_one_completer(name, func, loc="end"):

@@ -1,7 +1,9 @@
 """Event tests"""
 import inspect
+
 import pytest
-from xonsh.events import EventManager, Event, LoadEvent
+
+from xonsh.events import Event, EventManager, LoadEvent
 
 
 @pytest.fixture

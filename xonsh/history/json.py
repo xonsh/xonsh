@@ -1,10 +1,10 @@
 """Implements JSON version of xonsh history backend."""
+import collections
+import collections.abc as cabc
 import os
 import sys
-import time
-import collections
 import threading
-import collections.abc as cabc
+import time
 
 from xonsh.built_ins import XSH
 
@@ -13,10 +13,10 @@ try:
 except ImportError:
     import json  # type: ignore
 
-from xonsh.history.base import History
-import xonsh.tools as xt
 import xonsh.lazyjson as xlj
+import xonsh.tools as xt
 import xonsh.xoreutils.uptime as uptime
+from xonsh.history.base import History
 
 
 def _xhj_gc_commands_to_rmfiles(hsize, files):

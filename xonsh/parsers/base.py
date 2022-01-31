@@ -1,24 +1,22 @@
 """Implements the base xonsh parser."""
 import os
 import re
-import time
 import textwrap
-from threading import Thread
-from ast import parse as pyparse
-from collections.abc import Iterable, Sequence, Mapping
+import time
 import typing as tp
-
-from xonsh.ply.ply import yacc
+from ast import parse as pyparse
+from collections.abc import Iterable, Mapping, Sequence
+from threading import Thread
 
 from xonsh import ast
-from xonsh.ast import has_elts, xonsh_call, load_attribute_chain
-from xonsh.lexer import Lexer, LexToken
-from xonsh.platform import PYTHON_VERSION_INFO
-from xonsh.tokenize import SearchPath, StringPrefix
+from xonsh.ast import has_elts, load_attribute_chain, xonsh_call
 from xonsh.lazyasd import LazyObject
+from xonsh.lexer import Lexer, LexToken
 from xonsh.parsers.context_check import check_contexts
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
-
+from xonsh.platform import PYTHON_VERSION_INFO
+from xonsh.ply.ply import yacc
+from xonsh.tokenize import SearchPath, StringPrefix
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCHPATH")
 RE_STRINGPREFIX = LazyObject(

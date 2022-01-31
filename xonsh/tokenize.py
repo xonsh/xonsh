@@ -14,14 +14,15 @@ Original file credits:
                   'Michael Foord')
 """
 
-import re
-import io
-import sys
-import codecs
 import builtins
-import itertools
+import codecs
 import collections
+import io
+import itertools
+import re
+import sys
 import token
+import typing as tp
 from token import (
     AMPER,
     AMPEREQUAL,
@@ -52,11 +53,11 @@ from token import (
     LSQB,
     MINEQUAL,
     MINUS,
+    N_TOKENS,
     NAME,
     NEWLINE,
     NOTEQUAL,
     NUMBER,
-    N_TOKENS,
     OP,
     PERCENT,
     PERCENTEQUAL,
@@ -78,7 +79,6 @@ from token import (
     VBAREQUAL,
     tok_name,
 )
-import typing as tp
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
