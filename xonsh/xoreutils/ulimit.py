@@ -1,5 +1,6 @@
 """An ulimit implementation for xonsh."""
 import resource
+
 from xonsh.tools import print_exception
 
 # all the resource types we know

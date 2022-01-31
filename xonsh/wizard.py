@@ -1,18 +1,18 @@
 """Tools for creating command-line and web-based wizards from a tree of nodes.
 """
-import os
-import re
 import ast
-import json
-import pprint
-import fnmatch
-import textwrap
 import collections.abc as cabc
+import fnmatch
+import json
+import os
+import pprint
+import re
+import textwrap
 import typing as tp
 
-from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 from xonsh.built_ins import XSH
 from xonsh.jsonutils import serialize_xonsh_json
+from xonsh.tools import backup_file, print_color, to_bool, to_bool_or_break
 
 
 #

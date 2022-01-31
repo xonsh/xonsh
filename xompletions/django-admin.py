@@ -1,7 +1,6 @@
 """Completers for pip."""
 
 from xonsh.completers.tools import comp_based_completer
-
 from xonsh.parsers.completion_context import CommandContext
 
 

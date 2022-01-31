@@ -20,29 +20,28 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import os
 import ctypes
+import os
 import subprocess
-from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
+from ctypes import POINTER, byref, c_char_p, c_int, c_ulong, c_void_p
 from ctypes.wintypes import (
-    HANDLE,
     BOOL,
     DWORD,
-    HWND,
+    HANDLE,
     HINSTANCE,
     HKEY,
+    HWND,
+    LPCSTR,
+    LPCWSTR,
     LPDWORD,
     SHORT,
-    LPCWSTR,
-    WORD,
     SMALL_RECT,
-    LPCSTR,
+    WORD,
 )
 
-from xonsh.lazyasd import lazyobject
 from xonsh import lazyimps  # we aren't amalgamated in this module.
 from xonsh import platform
-
+from xonsh.lazyasd import lazyobject
 
 __all__ = ("sudo",)
 

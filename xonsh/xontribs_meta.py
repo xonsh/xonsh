@@ -5,8 +5,8 @@ This modules is the place where one would define the xontribs.
 import ast
 import functools
 import importlib.util
-from pathlib import Path
 import typing as tp
+from pathlib import Path
 
 from xonsh.lazyasd import LazyObject, lazyobject
 

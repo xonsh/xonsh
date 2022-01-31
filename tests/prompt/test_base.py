@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from xonsh.prompt.base import PromptFormatter, PROMPT_FIELDS
+from xonsh.prompt.base import PROMPT_FIELDS, PromptFormatter
 
 
 @pytest.fixture

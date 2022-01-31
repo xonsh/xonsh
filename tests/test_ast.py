@@ -1,12 +1,11 @@
 """Xonsh AST tests."""
 import ast as pyast
 
-from xonsh import ast
-from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, isexpression
-
 import pytest
 
 from tools import nodes_equal
+from xonsh import ast
+from xonsh.ast import BinOp, Call, Name, Store, Tuple, isexpression, min_line
 
 
 @pytest.fixture(autouse=True)

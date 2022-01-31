@@ -1,17 +1,17 @@
 """Vox tests"""
+import os
 import pathlib
 import stat
-import os
 import subprocess as sp
+import sys
 import types
+from typing import TYPE_CHECKING
 
 import pytest
-import sys
-from xontrib.voxapi import Vox
 
 from tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
-from typing import TYPE_CHECKING
+from xontrib.voxapi import Vox
 
 if TYPE_CHECKING:
     from xontrib.vox import VoxHandler
@@ -223,7 +223,7 @@ def test_autovox(xession, tmpdir, vox, a_venv, load_xontrib, registered):
     """
     Tests that autovox works
     """
-    from xonsh.dirstack import pushd, popd
+    from xonsh.dirstack import popd, pushd
 
     # Makes sure that event handlers are registered
     load_xontrib("autovox")
@@ -256,7 +256,7 @@ def venv_home(tmpdir):
 @pytest.fixture
 def venvs(venv_home):
     """Create virtualenv with names venv0, venv1"""
-    from xonsh.dirstack import pushd, popd
+    from xonsh.dirstack import popd, pushd
 
     pushd([str(venv_home)])
     paths = []

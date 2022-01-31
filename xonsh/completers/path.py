@@ -1,19 +1,14 @@
-import os
-import re
 import ast
 import glob
+import os
+import re
 
-from xonsh.built_ins import XSH
-from xonsh.parsers.completion_context import CommandContext
-
-import xonsh.tools as xt
-import xonsh.platform as xp
 import xonsh.lazyasd as xl
-
-from xonsh.completers.tools import (
-    RichCompletion,
-    contextual_completer,
-)
+import xonsh.platform as xp
+import xonsh.tools as xt
+from xonsh.built_ins import XSH
+from xonsh.completers.tools import RichCompletion, contextual_completer
+from xonsh.parsers.completion_context import CommandContext
 
 
 @xl.lazyobject

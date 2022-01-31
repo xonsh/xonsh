@@ -3,8 +3,8 @@
 import os
 import shutil
 
-import xonsh.tools as xt
 import xonsh.platform as xp
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
 
 

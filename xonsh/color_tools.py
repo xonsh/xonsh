@@ -5,10 +5,10 @@ color codes. Parts of this file were originally forked from Micah Elliott
 http://MicahElliott.com Copyright (C) 2011 Micah Elliott. All rights reserved.
 WTFPL http://sam.zoy.org/wtfpl/
 """
-import re
 import math
+import re
 
-from xonsh.lazyasd import lazyobject, LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.tools import print_warning
 
 _NO_COLOR_WARNING_SHOWN = False

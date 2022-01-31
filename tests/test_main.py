@@ -1,16 +1,16 @@
 """Tests the xonsh main function."""
-from contextlib import contextmanager
-
 import builtins
 import gc
 import os
 import os.path
 import sys
+from contextlib import contextmanager
+
+import pytest
 
 import xonsh.main
-from xonsh.main import XonshMode
-import pytest
 from tools import ON_WINDOWS, TEST_DIR, skip_if_on_windows
+from xonsh.main import XonshMode
 
 
 def Shell(*args, **kwargs):

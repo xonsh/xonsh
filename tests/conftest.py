@@ -6,16 +6,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from tools import DummyHistory, DummyShell, copy_env, sp
+from xonsh import commands_cache
 from xonsh.aliases import Aliases
-from xonsh.built_ins import XonshSession, XSH
+from xonsh.built_ins import XSH, XonshSession
 from xonsh.completer import Completer
+from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.jobs import tasks
-from xonsh.events import events
 from xonsh.parsers.completion_context import CompletionContextParser
-
-from xonsh import commands_cache
-from tools import DummyShell, sp, DummyHistory, copy_env
 
 
 @pytest.fixture
@@ -293,6 +292,7 @@ def check_completer(completer_obj):
 def ptk_shell(xonsh_execer):
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output import DummyOutput
+
     from xonsh.ptk_shell.shell import PromptToolkitShell
 
     inp = create_pipe_input()

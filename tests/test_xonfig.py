@@ -5,15 +5,17 @@
    - xonfig jupyter_kernel
 
 """
+import io
+import json
 import os
 import re
 import sys
-import json
+
 import pytest  # noqa F401
-import io
+
 from xonsh.tools import ON_WINDOWS
-from xonsh.xonfig import xonfig_main
 from xonsh.webconfig import main as web_main
+from xonsh.xonfig import xonfig_main
 
 
 def test_xonfg_help(capsys, xession):

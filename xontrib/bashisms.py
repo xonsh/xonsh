@@ -1,7 +1,8 @@
 """Bash-like interface extensions for xonsh."""
+import re
 import shlex
 import sys
-import re
+
 from xonsh.built_ins import XSH
 
 __all__ = ()

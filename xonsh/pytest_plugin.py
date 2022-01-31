@@ -1,7 +1,7 @@
 """Pytest plugin for testing xsh files."""
-import sys
 import importlib
-from traceback import format_list, extract_tb
+import sys
+from traceback import extract_tb, format_list
 
 import pytest
 

@@ -1,7 +1,8 @@
-from xonsh import pretty
 import re
+
 import pytest
 
+from xonsh import pretty
 
 long_list = ["str"] * 30
 long_list_exp = "[" + (",\n ".join(["'str'"] * 30) + "]")

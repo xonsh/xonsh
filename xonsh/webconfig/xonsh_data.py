@@ -8,16 +8,15 @@ import pygments
 from xonsh.color_tools import rgb_to_ints
 from xonsh.prompt.base import PromptFormatter, default_prompt
 from xonsh.pyghooks import (
+    Token,
+    XonshHtmlFormatter,
+    XonshLexer,
     XonshStyle,
     xonsh_style_proxy,
-    XonshHtmlFormatter,
-    Token,
-    XonshLexer,
 )
 from xonsh.pygments_cache import get_all_styles
 from xonsh.style_tools import partial_color_tokenize
-from xonsh.xontribs_meta import get_xontribs, Xontrib
-
+from xonsh.xontribs_meta import Xontrib, get_xontribs
 
 # $RAISE_SUBPROC_ERROR = True
 # $XONSH_SHOW_TRACEBACK = False

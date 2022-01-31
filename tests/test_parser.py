@@ -1,15 +1,14 @@
 """Tests the xonsh parser."""
 import ast
-import textwrap
 import itertools
+import textwrap
 
 import pytest
 
-from xonsh.ast import AST, With, Pass, Str, Call
+from tools import VER_MAJOR_MINOR, nodes_equal, skip_if_pre_3_8
+from xonsh.ast import AST, Call, Pass, Str, With
 from xonsh.parser import Parser
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
-
-from tools import nodes_equal, skip_if_pre_3_8, VER_MAJOR_MINOR
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 """Hooks for the distributed parallel computing library."""
-from xonsh.contexts import Functor
 from xonsh.built_ins import XSH
+from xonsh.contexts import Functor
 
 __all__ = ["DSubmitter", "dsubmit"]
 

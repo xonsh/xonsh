@@ -1,14 +1,13 @@
 """Matplotlib hooks, for what its worth."""
-from io import BytesIO
 import shutil
+from io import BytesIO
 
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-
-from xonsh.tools import print_color, ON_WINDOWS
+import numpy as np
 
 from xonsh.built_ins import XSH
+from xonsh.tools import ON_WINDOWS, print_color
 
 try:
     # Use iterm2_tools as an indicator for the iterm2 terminal emulator

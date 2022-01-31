@@ -1,51 +1,50 @@
 """Aliases for the xonsh shell."""
+import argparse
+import collections.abc as cabc
 import functools
+import inspect
 import os
 import re
 import sys
-import inspect
-import argparse
-import collections.abc as cabc
 import types
 import typing as tp
-
-from xonsh.built_ins import XSH
-from xonsh.lazyasd import lazyobject
-from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
-from xonsh.environ import locate_binary, make_args_env
-from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import jobs, fg, bg, clean_jobs, disown
-from xonsh.platform import (
-    ON_ANACONDA,
-    ON_DARWIN,
-    ON_WINDOWS,
-    ON_FREEBSD,
-    ON_NETBSD,
-    ON_OPENBSD,
-    ON_DRAGONFLY,
-    IN_APPIMAGE,
-)
-from xonsh.tools import (
-    XonshError,
-    argvquote,
-    escape_windows_cmd_string,
-    swap_values,
-    strip_simple_quotes,
-    ALIAS_KWARG_NAMES,
-    unthreadable,
-    print_color,
-    to_repr_pretty_,
-    to_shlvl,
-    adjust_shlvl,
-)
-from xonsh.timings import timeit_alias
-from xonsh.xontribs import xontribs_main
-from xonsh.ast import isexpression
-from xonsh.cli_utils import ArgParserAlias, Arg, Annotated
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
+from xonsh.ast import isexpression
+from xonsh.built_ins import XSH
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
+from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
+from xonsh.environ import locate_binary, make_args_env
+from xonsh.foreign_shells import foreign_shell_data
+from xonsh.jobs import bg, clean_jobs, disown, fg, jobs
+from xonsh.lazyasd import lazyobject
+from xonsh.platform import (
+    IN_APPIMAGE,
+    ON_ANACONDA,
+    ON_DARWIN,
+    ON_DRAGONFLY,
+    ON_FREEBSD,
+    ON_NETBSD,
+    ON_OPENBSD,
+    ON_WINDOWS,
+)
+from xonsh.timings import timeit_alias
+from xonsh.tools import (
+    ALIAS_KWARG_NAMES,
+    XonshError,
+    adjust_shlvl,
+    argvquote,
+    escape_windows_cmd_string,
+    print_color,
+    strip_simple_quotes,
+    swap_values,
+    to_repr_pretty_,
+    to_shlvl,
+    unthreadable,
+)
+from xonsh.xontribs import xontribs_main
 
 
 @lazyobject

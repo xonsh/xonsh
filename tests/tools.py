@@ -1,18 +1,17 @@
 """Tests the xonsh lexer."""
+import ast
 import copy
 import os
-import shutil
-import sys
-import ast
 import platform
+import shutil
 import subprocess
+import sys
 import threading
 from collections import defaultdict
 
 import pytest
 
 from xonsh.base_shell import BaseShell
-
 
 VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]

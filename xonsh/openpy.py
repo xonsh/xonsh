@@ -17,7 +17,6 @@ import re
 from xonsh.lazyasd import LazyObject
 from xonsh.tokenize import detect_encoding, tokopen
 
-
 cookie_comment_re = LazyObject(
     lambda: re.compile(r"^\s*#.*coding[:=]\s*([-\w.]+)", re.UNICODE),
     globals(),

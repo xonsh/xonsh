@@ -1,9 +1,9 @@
 import xonsh.cli_utils as xcli
 from xonsh.built_ins import XSH
 from xonsh.completers.completer import (
+    add_one_completer,
     list_completers,
     remove_completer,
-    add_one_completer,
 )
 from xonsh.completers.tools import contextual_command_completer
 from xonsh.parsers.completion_context import CommandContext

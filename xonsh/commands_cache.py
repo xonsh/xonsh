@@ -5,21 +5,21 @@ A background predictor is a function that accepts a single argument list
 and returns whether or not the process can be run in the background (returns
 True) or must be run the foreground (returns False).
 """
+import argparse
+import collections.abc as cabc
 import functools
 import os
 import pickle
 import sys
 import threading
 import time
-import argparse
-import collections.abc as cabc
 import typing as tp
 from pathlib import Path
 
 from xonsh.built_ins import XSH
-from xonsh.platform import ON_WINDOWS, ON_POSIX, pathbasename
-from xonsh.tools import executables_in
 from xonsh.lazyasd import lazyobject
+from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
+from xonsh.tools import executables_in
 
 
 class CommandsCache(cabc.Mapping):

@@ -1,6 +1,6 @@
 """Completers for gh CLI"""
 
-from xonsh.completers.tools import sub_proc_get_output, completion_from_cmd_output
+from xonsh.completers.tools import completion_from_cmd_output, sub_proc_get_output
 from xonsh.parsers.completion_context import CommandContext
 
 

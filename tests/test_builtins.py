@@ -2,29 +2,27 @@
 import os
 import re
 import types
-from ast import AST, Module, Interactive, Expression
+from ast import AST, Expression, Interactive, Module
 
 import pytest
 
+from tools import skip_if_on_windows
 from xonsh.built_ins import (
-    reglob,
-    pathsearch,
-    helper,
-    superhelper,
-    ensure_list_of_strs,
-    list_of_strs_or_callables,
-    list_of_list_of_strs_outer_product,
-    regexsearch,
-    expand_path,
-    convert_macro_arg,
-    in_macro_call,
     call_macro,
+    convert_macro_arg,
+    ensure_list_of_strs,
     enter_macro,
+    expand_path,
+    helper,
+    in_macro_call,
+    list_of_list_of_strs_outer_product,
+    list_of_strs_or_callables,
+    pathsearch,
+    regexsearch,
+    reglob,
+    superhelper,
 )
 from xonsh.environ import Env
-
-from tools import skip_if_on_windows
-
 
 HOME_PATH = os.path.expanduser("~")
 

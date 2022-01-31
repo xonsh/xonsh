@@ -1,7 +1,7 @@
 """Implements a umask command for xonsh."""
 
-import re
 import os
+import re
 
 import xonsh.lazyasd as xl
 

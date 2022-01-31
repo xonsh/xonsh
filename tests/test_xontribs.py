@@ -1,6 +1,8 @@
 """xontrib tests, such as they are"""
 import sys
+
 import pytest
+
 from xonsh.xontribs import xontrib_context, xontribs_load, xontribs_loaded
 
 

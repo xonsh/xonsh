@@ -1,104 +1,104 @@
 """Environment for the xonsh shell."""
-import inspect
-import os
-import re
-import sys
-import pprint
-import textwrap
-import locale
-import threading
-import warnings
-import contextlib
 import collections.abc as cabc
-import subprocess
+import contextlib
+import inspect
+import locale
+import os
 import platform
+import pprint
+import re
+import subprocess
+import sys
+import textwrap
+import threading
 import typing as tp
+import warnings
 from collections import ChainMap
 
+import xonsh.prompt.base as prompt
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.lazyasd import lazyobject, LazyBool
-from xonsh.codecache import run_script_with_cache
-from xonsh.dirstack import _get_cwd
-from xonsh.events import events
-from xonsh.platform import (
-    BASH_COMPLETIONS_DEFAULT,
-    DEFAULT_ENCODING,
-    PATH_DEFAULT,
-    ON_WINDOWS,
-    ON_LINUX,
-    ON_CYGWIN,
-    os_environ,
-)
-from xonsh.built_ins import XSH
-from xonsh.tools import (
-    always_true,
-    always_false,
-    detype,
-    ensure_string,
-    is_path,
-    str_to_path,
-    path_to_str,
-    is_env_path,
-    str_to_env_path,
-    env_path_to_str,
-    is_bool,
-    to_bool,
-    bool_to_str,
-    is_bool_or_none,
-    to_bool_or_none,
-    bool_or_none_to_str,
-    is_history_tuple,
-    to_history_tuple,
-    history_tuple_to_str,
-    is_float,
-    is_string,
-    is_string_or_callable,
-    is_completions_display_value,
-    to_completions_display_value,
-    is_completion_mode,
-    to_completion_mode,
-    is_string_set,
-    csv_to_set,
-    set_to_csv,
-    is_int,
-    to_bool_or_int,
-    bool_or_int_to_str,
-    DefaultNotGiven,
-    print_exception,
-    intensify_colors_on_win_setter,
-    is_dynamic_cwd_width,
-    to_dynamic_cwd_tuple,
-    dynamic_cwd_tuple_to_str,
-    is_logfile_opt,
-    to_logfile_opt,
-    logfile_opt_to_str,
-    executables_in,
-    is_nonstring_seq_of_strings,
-    pathsep_to_upper_seq,
-    seq_to_upper_pathsep,
-    print_color,
-    is_history_backend,
-    to_itself,
-    swap_values,
-    ptk2_color_depth_setter,
-    is_str_str_dict,
-    to_str_str_dict,
-    dict_to_str,
-    to_int_or_none,
-    DefaultNotGivenType,
-    to_repr_pretty_,
-    to_shlvl,
-    is_valid_shlvl,
-    adjust_shlvl,
-)
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
     ansi_color_name_to_escape_code,
     ansi_reverse_style,
     ansi_style_by_name,
 )
-import xonsh.prompt.base as prompt
+from xonsh.built_ins import XSH
+from xonsh.codecache import run_script_with_cache
+from xonsh.dirstack import _get_cwd
+from xonsh.events import events
+from xonsh.lazyasd import LazyBool, lazyobject
+from xonsh.platform import (
+    BASH_COMPLETIONS_DEFAULT,
+    DEFAULT_ENCODING,
+    ON_CYGWIN,
+    ON_LINUX,
+    ON_WINDOWS,
+    PATH_DEFAULT,
+    os_environ,
+)
 from xonsh.prompt.gitstatus import _DEFS as GITSTATUS_FIELD_DEFS
+from xonsh.tools import (
+    DefaultNotGiven,
+    DefaultNotGivenType,
+    adjust_shlvl,
+    always_false,
+    always_true,
+    bool_or_int_to_str,
+    bool_or_none_to_str,
+    bool_to_str,
+    csv_to_set,
+    detype,
+    dict_to_str,
+    dynamic_cwd_tuple_to_str,
+    ensure_string,
+    env_path_to_str,
+    executables_in,
+    history_tuple_to_str,
+    intensify_colors_on_win_setter,
+    is_bool,
+    is_bool_or_none,
+    is_completion_mode,
+    is_completions_display_value,
+    is_dynamic_cwd_width,
+    is_env_path,
+    is_float,
+    is_history_backend,
+    is_history_tuple,
+    is_int,
+    is_logfile_opt,
+    is_nonstring_seq_of_strings,
+    is_path,
+    is_str_str_dict,
+    is_string,
+    is_string_or_callable,
+    is_string_set,
+    is_valid_shlvl,
+    logfile_opt_to_str,
+    path_to_str,
+    pathsep_to_upper_seq,
+    print_color,
+    print_exception,
+    ptk2_color_depth_setter,
+    seq_to_upper_pathsep,
+    set_to_csv,
+    str_to_env_path,
+    str_to_path,
+    swap_values,
+    to_bool,
+    to_bool_or_int,
+    to_bool_or_none,
+    to_completion_mode,
+    to_completions_display_value,
+    to_dynamic_cwd_tuple,
+    to_history_tuple,
+    to_int_or_none,
+    to_itself,
+    to_logfile_opt,
+    to_repr_pretty_,
+    to_shlvl,
+    to_str_str_dict,
+)
 
 events.doc(
     "on_envvar_new",

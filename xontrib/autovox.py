@@ -9,9 +9,10 @@ This provides no interface for end users.
 Developers should look at XSH.builtins.events.autovox_policy
 """
 import itertools
-from pathlib import Path
-import xontrib.voxapi as voxapi
 import warnings
+from pathlib import Path
+
+import xontrib.voxapi as voxapi
 from xonsh.built_ins import XSH
 
 __all__ = ()

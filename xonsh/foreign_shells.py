@@ -1,19 +1,18 @@
 """Tools to help interface with foreign shells, such as Bash."""
+import collections.abc as cabc
+import functools
 import os
 import re
 import shlex
+import subprocess
 import sys
 import tempfile
-import subprocess
 import warnings
-import functools
-import collections.abc as cabc
 
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
-from xonsh.tools import to_bool, ensure_string
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_MSYS
-
+from xonsh.platform import ON_CYGWIN, ON_MSYS, ON_WINDOWS
+from xonsh.tools import ensure_string, to_bool
 
 COMMAND = """{seterrprevcmd}
 {prevcmd}

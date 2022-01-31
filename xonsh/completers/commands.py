@@ -7,19 +7,18 @@ import re
 import typing as tp
 from collections import OrderedDict
 
-import xonsh.tools as xt
 import xonsh.platform as xp
+import xonsh.tools as xt
+from xonsh.built_ins import XSH
 from xonsh.completer import Completer
 from xonsh.completers.tools import (
-    get_filter_function,
-    contextual_command_completer,
     RichCompletion,
+    contextual_command_completer,
+    get_filter_function,
     non_exclusive_completer,
 )
-from xonsh.parsers.completion_context import CompletionContext, CommandContext
-from xonsh.built_ins import XSH
 from xonsh.environ import scan_dir_for_source_files
-
+from xonsh.parsers.completion_context import CommandContext, CompletionContext
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||

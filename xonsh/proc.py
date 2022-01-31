@@ -2,7 +2,6 @@
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import print_warning
 
-
 _WARNINGS_PRINTED: "set[str]" = set()
 
 

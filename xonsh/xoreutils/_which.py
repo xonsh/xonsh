@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # Copyright (c) 2002-2007 ActiveState Software Inc.
 
+import collections.abc as cabc
+import getopt
+
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -25,10 +28,8 @@
 # Home:
 #   http://trentm.com/projects/which/
 import os
-import sys
 import stat
-import getopt
-import collections.abc as cabc
+import sys
 
 from xonsh.built_ins import XSH
 

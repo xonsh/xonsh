@@ -1,8 +1,8 @@
 """Tests the xonsh environment."""
-import os
-import re
-import pathlib
 import datetime
+import os
+import pathlib
+import re
 from random import shuffle
 from tempfile import TemporaryDirectory
 from threading import Thread
@@ -10,19 +10,18 @@ from time import sleep
 
 import pytest
 
-from xonsh.tools import always_true, DefaultNotGiven
+from tools import skip_if_on_unix
 from xonsh.environ import (
     Env,
-    locate_binary,
-    default_env,
-    make_args_env,
-    LsColors,
-    default_value,
-    Var,
     InternalEnvironDict,
+    LsColors,
+    Var,
+    default_env,
+    default_value,
+    locate_binary,
+    make_args_env,
 )
-
-from tools import skip_if_on_unix
+from xonsh.tools import DefaultNotGiven, always_true
 
 
 def test_env_normal():

@@ -8,20 +8,19 @@ import sys
 import typing as tp
 
 import xonsh.lazyasd as xl
-import xonsh.tools as xt
 import xonsh.platform as xp
-
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.prompt.cwd import (
     _collapsed_pwd,
-    _replace_home_cwd,
     _dynamically_collapsed_pwd,
+    _replace_home_cwd,
 )
-from xonsh.prompt.job import _current_job
 from xonsh.prompt.env import env_name, vte_new_tab_cwd
-from xonsh.prompt.vc import current_branch, branch_color, branch_bg_color
 from xonsh.prompt.gitstatus import gitstatus_prompt
+from xonsh.prompt.job import _current_job
 from xonsh.prompt.times import _localtime
+from xonsh.prompt.vc import branch_bg_color, branch_color, current_branch
 
 
 @xt.lazyobject

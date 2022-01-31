@@ -4,15 +4,14 @@ import os
 import pytest  # noqa F401
 
 from xonsh.wizard import (
-    Wizard,
+    FileInserter,
+    Message,
     Pass,
     PrettyFormatter,
-    Message,
     Question,
     StateVisitor,
-    FileInserter,
+    Wizard,
 )
-
 
 TREE0 = Wizard(children=[Pass(), Message(message="yo")])
 TREE1 = Question("wakka?", {"jawaka": Pass()})

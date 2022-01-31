@@ -5,14 +5,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from xonsh.commands_cache import (
-    CommandsCache,
-    predict_shell,
-    SHELL_PREDICTOR_PARSER,
-    predict_true,
-    predict_false,
-)
 from tools import skip_if_on_windows
+from xonsh.commands_cache import (
+    SHELL_PREDICTOR_PARSER,
+    CommandsCache,
+    predict_false,
+    predict_shell,
+    predict_true,
+)
 
 
 def test_commands_cache_lazy(xession):

@@ -1,14 +1,14 @@
 """Tests for the Jedi completer xontrib"""
-import sys
-import pytest
 import importlib
+import sys
 from unittest.mock import MagicMock, call
 
-from tests.tools import skip_if_on_windows, skip_if_on_darwin
+import pytest
 
-from xonsh.xontribs import find_xontrib
+from tests.tools import skip_if_on_darwin, skip_if_on_windows
 from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import CompletionContext, PythonContext
+from xonsh.xontribs import find_xontrib
 
 
 @pytest.fixture

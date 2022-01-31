@@ -1,7 +1,7 @@
 """Tests lazy json functionality."""
 from io import StringIO
 
-from xonsh.lazyjson import index, ljdump, LazyJSON, LJNode
+from xonsh.lazyjson import LazyJSON, LJNode, index, ljdump
 
 
 def test_index_int():

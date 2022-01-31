@@ -1,18 +1,19 @@
 """This module provides the implementation for the retrieving completion results
 from bash.
 """
+import functools
+
 # developer note: this file should not perform any action on import.
 #                 This file comes from https://github.com/xonsh/py-bash-completion
 #                 and should be edited there!
 import os
-import re
-import sys
-import shlex
-import shutil
 import pathlib
 import platform
-import functools
+import re
+import shlex
+import shutil
 import subprocess
+import sys
 import typing as tp
 
 __version__ = "0.2.7"

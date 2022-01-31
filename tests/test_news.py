@@ -4,7 +4,6 @@ import re
 
 import pytest
 
-
 NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "news")
 
 CATEGORIES = frozenset(

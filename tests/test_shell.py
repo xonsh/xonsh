@@ -1,10 +1,10 @@
 """Testing for ``xonsh.shell.Shell``"""
 import os
 
-from xonsh.shell import Shell
+from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
-from xonsh.history.dummy import DummyHistory
+from xonsh.shell import Shell
 
 
 def test_shell_with_json_history(xession, xonsh_execer, tmpdir_factory):

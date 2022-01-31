@@ -6,22 +6,21 @@ The contents of `subprocess.py` (and, thus, the reproduced methods) are
 Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se> and were
 licensed to the Python Software foundation under a Contributor Agreement.
 """
-import os
-import io
-import sys
-import time
-import signal
-import inspect
-import functools
-import threading
-import subprocess
 import collections.abc as cabc
+import functools
+import inspect
+import io
+import os
+import signal
+import subprocess
+import sys
+import threading
+import time
 
-import xonsh.tools as xt
-import xonsh.platform as xp
 import xonsh.lazyimps as xli
+import xonsh.platform as xp
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
-
 from xonsh.procs.readers import safe_fdclose
 
 

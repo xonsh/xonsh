@@ -1,12 +1,11 @@
 """Testing dirstack"""
 
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
 
 import pytest  # noqa F401
 
 from xonsh import dirstack
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)

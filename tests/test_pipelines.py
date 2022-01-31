@@ -3,11 +3,12 @@ Tests for command pipelines.
 """
 
 import os
+
 import pytest
 
+from tests.tools import skip_if_on_unix, skip_if_on_windows
 from xonsh.platform import ON_WINDOWS
 from xonsh.procs.pipelines import CommandPipeline
-from tests.tools import skip_if_on_windows, skip_if_on_unix
 
 
 @pytest.fixture(autouse=True)

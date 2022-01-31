@@ -5,30 +5,30 @@ import sys
 import time
 from os.path import expanduser
 
+from xonsh.ansi_colors import ansi_partial_color_format
 from xonsh.built_ins import XSH
+from xonsh.codecache import (
+    code_cache_check,
+    code_cache_name,
+    get_cache_filename,
+    run_compiled_code,
+    should_use_cache,
+    update_cache,
+)
+from xonsh.completer import Completer
+from xonsh.events import events
+from xonsh.lazyimps import pyghooks, pygments
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
+from xonsh.prompt.base import PromptFormatter, multiline_prompt
+from xonsh.shell import transform_command
 from xonsh.tools import (
-    XonshError,
-    print_exception,
     DefaultNotGiven,
+    XonshError,
     check_for_partial_string,
     format_std_prepost,
     get_line_continuation,
+    print_exception,
 )
-from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
-from xonsh.codecache import (
-    should_use_cache,
-    code_cache_name,
-    code_cache_check,
-    get_cache_filename,
-    update_cache,
-    run_compiled_code,
-)
-from xonsh.completer import Completer
-from xonsh.prompt.base import multiline_prompt, PromptFormatter
-from xonsh.events import events
-from xonsh.shell import transform_command
-from xonsh.lazyimps import pygments, pyghooks
-from xonsh.ansi_colors import ansi_partial_color_format
 
 if ON_WINDOWS:
     import ctypes

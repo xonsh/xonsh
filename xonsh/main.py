@@ -1,33 +1,31 @@
 """The main xonsh script."""
-import os
-import sys
-import enum
 import argparse
 import builtins
 import contextlib
+import enum
+import os
 import signal
+import sys
 import traceback
 
+import xonsh.procs.pipelines as xpp
 from xonsh import __version__
-from xonsh.timings import setup_timings
-from xonsh.lazyasd import lazyobject
-from xonsh.shell import Shell
-from xonsh.pretty import pretty
+from xonsh.built_ins import XSH
+from xonsh.codecache import run_code_with_cache, run_script_with_cache
+from xonsh.environ import make_args_env, xonshrc_context
+from xonsh.events import events
 from xonsh.execer import Execer
+from xonsh.imphooks import install_import_hooks
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import print_color, to_bool_or_int
+from xonsh.lazyasd import lazyobject
+from xonsh.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
-from xonsh.codecache import run_script_with_cache, run_code_with_cache
+from xonsh.pretty import pretty
+from xonsh.shell import Shell
+from xonsh.timings import setup_timings
+from xonsh.tools import print_color, to_bool_or_int
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import xontribs_load
-from xonsh.lazyimps import pygments, pyghooks
-from xonsh.imphooks import install_import_hooks
-from xonsh.events import events
-from xonsh.environ import xonshrc_context, make_args_env
-from xonsh.built_ins import XSH
-
-import xonsh.procs.pipelines as xpp
-
 
 events.transmogrify("on_post_init", "LoadEvent")
 events.doc(

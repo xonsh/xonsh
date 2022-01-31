@@ -5,35 +5,35 @@ import sys
 from functools import wraps
 from types import MethodType
 
-from xonsh.built_ins import XSH
-from xonsh.events import events
-from xonsh.base_shell import BaseShell
-from xonsh.ptk_shell.formatter import PTKPromptFormatter
-from xonsh.shell import transform_command
-from xonsh.tools import print_exception, print_warning, carriage_return
-from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_POSIX
-from xonsh.style_tools import partial_color_tokenize, _TokenType, DEFAULT_STYLE_DICT
-from xonsh.lazyimps import pygments, pyghooks, winutils
-from xonsh.pygments_cache import get_all_styles
-from xonsh.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
-from xonsh.ptk_shell.completer import PromptToolkitCompleter
-from xonsh.ptk_shell.key_bindings import load_xonsh_bindings
-
 from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.enums import EditingMode
+from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
+from prompt_toolkit.history import ThreadedHistory
 from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_shift_selection_bindings,
 )
-from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
-from prompt_toolkit.history import ThreadedHistory
-from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
+from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
 from prompt_toolkit.shortcuts import CompleteStyle
+from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts.prompt import PromptSession
-from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
-from prompt_toolkit.styles import merge_styles, Style
+from prompt_toolkit.styles import Style, merge_styles
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
+
+from xonsh.base_shell import BaseShell
+from xonsh.built_ins import XSH
+from xonsh.events import events
+from xonsh.lazyimps import pyghooks, pygments, winutils
+from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS
+from xonsh.ptk_shell.completer import PromptToolkitCompleter
+from xonsh.ptk_shell.formatter import PTKPromptFormatter
+from xonsh.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
+from xonsh.ptk_shell.key_bindings import load_xonsh_bindings
+from xonsh.pygments_cache import get_all_styles
+from xonsh.shell import transform_command
+from xonsh.style_tools import DEFAULT_STYLE_DICT, _TokenType, partial_color_tokenize
+from xonsh.tools import carriage_return, print_exception, print_warning
 
 try:
     from prompt_toolkit.clipboard import DummyClipboard

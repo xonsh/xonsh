@@ -7,21 +7,20 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
-import os
-import sys
-import types
 import inspect
 import itertools
 import linecache
+import os
+import sys
+import types
 
 from xonsh.lazyasd import LazyObject
-from xonsh.tokenize import detect_encoding
+from xonsh.lazyimps import pyghooks, pygments
 from xonsh.openpy import read_py_file
-from xonsh.tools import cast_unicode, safe_hasattr, indent, print_color, format_color
 from xonsh.platform import HAS_PYGMENTS
-from xonsh.lazyimps import pygments, pyghooks
 from xonsh.style_tools import partial_color_tokenize
-
+from xonsh.tokenize import detect_encoding
+from xonsh.tools import cast_unicode, format_color, indent, print_color, safe_hasattr
 
 # builtin docstrings to ignore
 _func_call_docstring = LazyObject(

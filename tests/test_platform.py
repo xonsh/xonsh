@@ -1,7 +1,7 @@
+import builtins
 from contextlib import contextmanager
 from unittest.mock import MagicMock
 
-import builtins
 import xonsh.platform as xp
 
 

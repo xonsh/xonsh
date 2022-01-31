@@ -9,10 +9,10 @@ from enum import IntEnum
 from pathlib import Path
 
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import ArgParserAlias, Arg, Annotated
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
-from xonsh.xontribs_meta import get_xontribs
 from xonsh.tools import print_color, print_exception
+from xonsh.xontribs_meta import get_xontribs
 
 
 class ExitCode(IntEnum):

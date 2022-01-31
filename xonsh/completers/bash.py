@@ -1,12 +1,12 @@
 """Xonsh hooks into bash completions."""
 
-import xonsh.tools as xt
 import xonsh.platform as xp
-from xonsh.completers.path import _quote_paths
-from xonsh.completers.bash_completion import bash_completions
-from xonsh.completers.tools import contextual_command_completer, RichCompletion
-from xonsh.parsers.completion_context import CommandContext
+import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.completers.bash_completion import bash_completions
+from xonsh.completers.path import _quote_paths
+from xonsh.completers.tools import RichCompletion, contextual_command_completer
+from xonsh.parsers.completion_context import CommandContext
 
 
 @contextual_command_completer

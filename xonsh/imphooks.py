@@ -8,15 +8,15 @@ import os
 import re
 import sys
 import types
-from importlib.abc import MetaPathFinder, SourceLoader, Loader
+from importlib.abc import Loader, MetaPathFinder, SourceLoader
 from importlib.machinery import ModuleSpec
 
 from xonsh.built_ins import XSH
 from xonsh.events import events
-from xonsh.tools import print_warning
 from xonsh.execer import Execer
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
+from xonsh.tools import print_warning
 
 
 @lazyobject

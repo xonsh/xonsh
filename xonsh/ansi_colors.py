@@ -4,21 +4,20 @@ import sys
 import warnings
 
 from xonsh.built_ins import XSH
-from xonsh.platform import HAS_PYGMENTS
-from xonsh.lazyasd import LazyDict, lazyobject
 from xonsh.color_tools import (
-    RE_XONSH_COLOR,
     BASE_XONSH_COLORS,
-    make_palette,
+    RE_XONSH_COLOR,
     find_closest_color,
+    iscolor,
+    make_palette,
     rgb2short,
     rgb_to_256,
     short_to_ints,
-    iscolor,
     warn_deprecated_no_color,
 )
+from xonsh.lazyasd import LazyDict, lazyobject
+from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import FORMATTER
-
 
 # pygments modifier to ANSI escape code mapping
 _PART_STYLE_CODE_MAPPING = {
@@ -1151,8 +1150,9 @@ def ansi_style_by_name(name):
         return ANSI_STYLES[name]
     elif not HAS_PYGMENTS:
         raise KeyError(f"could not find style {name!r}")
-    from xonsh.pygments_cache import get_style_by_name
     from pygments.util import ClassNotFound
+
+    from xonsh.pygments_cache import get_style_by_name
 
     try:
         pstyle = get_style_by_name(name)

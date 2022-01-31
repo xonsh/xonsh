@@ -1,17 +1,17 @@
 """A (tab-)completer for xonsh."""
+import collections.abc as cabc
 import sys
 import typing as tp
-import collections.abc as cabc
 
+from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
-    is_contextual_completer,
     Completion,
     RichCompletion,
     apply_lprefix,
-    is_exclusive_completer,
     get_filter_function,
+    is_contextual_completer,
+    is_exclusive_completer,
 )
-from xonsh.built_ins import XSH
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_exception
 

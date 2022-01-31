@@ -301,7 +301,7 @@ class RstHelpFormatter(ap.RawTextHelpFormatter):
         return text
 
     def _format_usage(self, usage, actions, groups, prefix):
-        from pygments.token import Name, Generic
+        from pygments.token import Generic, Name
 
         text = super()._format_usage(usage, actions, groups, prefix)
         parts = text.split(self._prog, maxsplit=1)

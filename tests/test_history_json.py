@@ -7,12 +7,12 @@ import pytest
 
 from xonsh.history.json import (
     JsonHistory,
+    _xhj_gc_bytes_to_rmfiles,
     _xhj_gc_commands_to_rmfiles,
     _xhj_gc_files_to_rmfiles,
     _xhj_gc_seconds_to_rmfiles,
-    _xhj_gc_bytes_to_rmfiles,
 )
-from xonsh.history.main import history_main, HistoryAlias
+from xonsh.history.main import HistoryAlias, history_main
 from xonsh.lazyjson import LazyJSON
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
@@ -372,9 +372,8 @@ def test_history_getitem(index, exp, hist, xession):
         assert (entry.cmd, entry.out, entry.rtn, entry.ts) == exp
 
 
-import time
 import calendar
-
+import time
 
 HF_FIRST_DAY = calendar.timegm(time.struct_time((2018, 5, 13, 0, 0, 0, 0, 0, 0)))
 

@@ -1,13 +1,12 @@
 """Testing built_ins.Aliases"""
 
+import inspect
 import os
 
 import pytest
-import inspect
-
-from xonsh.aliases import Aliases, ExecAlias
 
 from tools import skip_if_on_windows
+from xonsh.aliases import Aliases, ExecAlias
 
 
 def cd(args, stdin=None, **kwargs):

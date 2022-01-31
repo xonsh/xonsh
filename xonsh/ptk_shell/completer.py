@@ -1,12 +1,12 @@
 """Completer implementation to use with prompt_toolkit."""
 import os
 
-from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.application.current import get_app
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.completion import Completer, Completion
 
-from xonsh.completers.tools import RichCompletion
 from xonsh.built_ins import XSH
+from xonsh.completers.tools import RichCompletion
 
 
 class PromptToolkitCompleter(Completer):

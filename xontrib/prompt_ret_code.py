@@ -1,5 +1,5 @@
-from xonsh.tools import ON_WINDOWS as _ON_WINDOWS
 from xonsh.built_ins import XSH
+from xonsh.tools import ON_WINDOWS as _ON_WINDOWS
 
 
 def _ret_code_color():

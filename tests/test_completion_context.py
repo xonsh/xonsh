@@ -1,18 +1,17 @@
 import itertools
 import typing as tp
+from unittest import mock
 
 import pytest
-from unittest import mock
+
+import xonsh.parsers.completion_context as ctx
+from tests.tools import ON_WINDOWS
 from xonsh.parsers.completion_context import (
     CommandArg,
     CommandContext,
     CompletionContextParser,
     PythonContext,
 )
-
-import xonsh.parsers.completion_context as ctx
-from tests.tools import ON_WINDOWS
-
 
 DEBUG = False
 MISSING = object()

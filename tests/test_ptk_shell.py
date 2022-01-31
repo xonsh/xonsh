@@ -1,15 +1,16 @@
 """Test initialization of prompt_toolkit shell"""
 
 import sys
-import pytest
-from xonsh.platform import minimum_required_ptk_version
+
 import pyte
+import pytest
 
-# verify error if ptk not installed or below min
-
+from tests.tools import ON_WINDOWS
+from xonsh.platform import minimum_required_ptk_version
 from xonsh.ptk_shell.shell import tokenize_ansi
 from xonsh.shell import Shell
-from tests.tools import ON_WINDOWS
+
+# verify error if ptk not installed or below min
 
 
 @pytest.mark.parametrize(

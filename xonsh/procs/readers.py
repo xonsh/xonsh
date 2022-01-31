@@ -1,11 +1,11 @@
 """File handle readers and related tools."""
-import os
-import io
-import sys
-import time
-import queue
 import ctypes
+import io
+import os
+import queue
+import sys
 import threading
+import time
 
 import xonsh.lazyimps as xli
 from xonsh.built_ins import XSH
