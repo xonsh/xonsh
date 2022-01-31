@@ -93,7 +93,7 @@ cookie_re = LazyObject(
     "cookie_re",
 )
 blank_re = LazyObject(
-    lambda: re.compile(br"^[ \t\f]*(?:[#\r\n]|$)", re.ASCII), globals(), "blank_re"
+    lambda: re.compile(rb"^[ \t\f]*(?:[#\r\n]|$)", re.ASCII), globals(), "blank_re"
 )
 
 #

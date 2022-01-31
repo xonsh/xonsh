@@ -609,7 +609,7 @@ def test_thread_local_dict_multiple():
     thread_values = [None] * num_threads
 
     def thread(i):
-        d.set_locally("a", i ** 2)
+        d.set_locally("a", i**2)
         sleep(0.1)
         thread_values[i] = d["a"]
         sleep(0.1)
@@ -623,4 +623,4 @@ def test_thread_local_dict_multiple():
     for t in threads:
         t.join()
 
-    assert thread_values == [i ** 2 for i in range(num_threads)]
+    assert thread_values == [i**2 for i in range(num_threads)]

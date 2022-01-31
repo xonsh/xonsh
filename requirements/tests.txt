@@ -12,7 +12,7 @@ pytest-rerunfailures
 prompt-toolkit>=3.0
 pygments>=2.2
 coverage>=5.3.1
-black==21.12b0
+black==22.1.0
 pre-commit
 pyte>=0.8.0
 
