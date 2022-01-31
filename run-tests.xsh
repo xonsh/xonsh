@@ -67,6 +67,7 @@ def qa():
     $XONSH_TRACE_SUBPROC = True
 
     black --check xonsh xontrib tests xompletions
+    isort --check xonsh xontrib tests xompletions
 
     python -m flake8
 
