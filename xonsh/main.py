@@ -515,8 +515,12 @@ def main_xonsh(args):
         exit_code = 1
     finally:
         if exc_info != (None, None, None):
-            traceback.print_exception(*exc_info)
-            exit_code = 1
+            err_type, err, _ = exc_info
+            if err_type is SystemExit:
+                raise err
+            else:
+                traceback.print_exception(*exc_info)
+                exit_code = 1
         events.on_exit.fire()
         postmain(args)
         return exit_code

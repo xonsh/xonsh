@@ -395,6 +395,8 @@ class BaseShell:
             print(e.args[0], file=sys.stderr)
             if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
+        except (SystemExit, KeyboardInterrupt) as err:
+            raise err
         except BaseException:
             print_exception(exc_info=exc_info)
             if hist is not None and hist.last_cmd_rtn is None:
