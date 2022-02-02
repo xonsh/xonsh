@@ -523,7 +523,7 @@ def main_xonsh(args):
                 exit_code = 1
         events.on_exit.fire()
         postmain(args)
-        return exit_code
+    return exit_code
 
 
 def postmain(args=None):
