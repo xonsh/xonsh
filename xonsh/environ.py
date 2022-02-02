@@ -2466,26 +2466,30 @@ class _RcPath(str):
 
 
 def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
-    """Loads a xonsh file and applies it as a run control."""
+    """Loads a xonsh file and applies it as a run control.
+    Any exceptions are logged here, returns boolean indicating success.
+    """
     if execer is None:
         return False
     updates = {"__file__": filename, "__name__": os.path.abspath(filename)}
     rc_dir = _RcPath(os.path.dirname(filename))
     sys.path.append(rc_dir)
-    try:
-        with swap_values(ctx, updates):
-            run_script_with_cache(filename, execer, ctx)
-        loaded = True
-    except SyntaxError as err:
-        msg = "syntax error in xonsh run control file {0!r}: {1!s}"
-        print_exception(msg.format(filename, err))
-        loaded = False
-    except Exception as err:
-        msg = "error running xonsh run control file {0!r}: {1!s}"
-        print_exception(msg.format(filename, err))
-        loaded = False
-    finally:
-        sys.path = list(filter(lambda p: p is not rc_dir, sys.path))
+    with swap_values(ctx, updates):
+        try:
+            exc_info = run_script_with_cache(filename, execer, ctx)
+        except SyntaxError:
+            exc_info = sys.exc_info()
+        if exc_info != (None, None, None):
+            err_type, err, _ = exc_info
+            loaded = False
+            if err_type is SyntaxError:
+                msg = "syntax error in xonsh run control file {0!r}: {1!s}"
+            else:
+                msg = "error running xonsh run control file {0!r}: {1!s}"
+            print_exception(msg.format(filename, err), exc_info=exc_info)
+        else:
+            loaded = True
+    sys.path = list(filter(lambda p: p is not rc_dir, sys.path))
     return loaded
 
 
