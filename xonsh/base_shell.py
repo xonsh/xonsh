@@ -385,7 +385,9 @@ class BaseShell:
         tee = Tee(encoding=enc, errors=err)
         ts0 = time.time()
         try:
-            run_compiled_code(code, self.ctx, None, "single")
+            exc_info = run_compiled_code(code, self.ctx, None, "single")
+            if exc_info != (None, None, None):
+                raise exc_info[1]
             ts1 = time.time()
             if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 0  # returncode for success
@@ -393,8 +395,8 @@ class BaseShell:
             print(e.args[0], file=sys.stderr)
             if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
-        except Exception:  # pylint: disable=broad-except
-            print_exception()
+        except BaseException:
+            print_exception(exc_info=exc_info)
             if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
         finally:
@@ -504,7 +506,9 @@ class BaseShell:
             self.need_more_lines = True
             return src, None
         try:
-            code = self.execer.compile(src, mode="single", glbs=self.ctx, locs=None)
+            code = self.execer.compile(
+                src, mode="single", glbs=self.ctx, locs=None, filename="<stdin>"
+            )
             if _cache:
                 update_cache(code, cachefname)
             self.reset_buffer()

@@ -979,8 +979,27 @@ def print_warning(msg):
     sys.stderr.write(msg)
 
 
-def print_exception(msg=None):
-    """Print exceptions with/without traceback."""
+def print_exception(msg=None, exc_info=None):
+    """Print given exception (or current if None) with/without traceback and set sys.last_type, sys.last_value, sys.last_traceback accordingly."""
+
+    # is no exec_info() triple is given, use the exception beeing handled at the moment
+    if exc_info is None:
+        exc_info = sys.exc_info()
+
+    # these values (initialized with their default for traceback.print_exception) control how an exception is printed
+    limit = None
+    chain = True
+
+    # remove traceback noise for syntax errors as the internal state
+    # of the parser is not helpful in normal operation (XONSH_DEBUG == 0)
+    # and to be consistent with python
+    _, debug_level = _get_manual_env_var("XONSH_DEBUG", 0)
+    if debug_level == 0 and issubclass(exc_info[0], SyntaxError):
+        limit = 0
+        chain = False
+
+    sys.last_type, sys.last_value, sys.last_traceback = exc_info
+
     manually_set_trace, show_trace = _get_manual_env_var("XONSH_SHOW_TRACEBACK", False)
     manually_set_logfile, log_file = _get_manual_env_var("XONSH_TRACEBACK_LOGFILE")
     if (not manually_set_trace) and (not manually_set_logfile):
@@ -1001,7 +1020,7 @@ def print_exception(msg=None):
                 "xonsh: To log full traceback to a file set: "
                 "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
             )
-        traceback.print_exc()
+        traceback.print_exception(*exc_info, limit=limit, chain=chain)
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
     log_file = to_logfile_opt(log_file)
@@ -1009,22 +1028,22 @@ def print_exception(msg=None):
         # if log_file <> '' or log_file <> None, append
         # traceback log there as well
         with open(os.path.abspath(log_file), "a") as f:
-            traceback.print_exc(file=f)
+            traceback.print_exception(*exc_info, limit=limit, chain=chain, file=f)
 
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
-        display_error_message()
+        display_error_message(exc_info)
     if msg:
         msg = msg if msg.endswith("\n") else msg + "\n"
         sys.stderr.write(msg)
 
 
-def display_error_message(strip_xonsh_error_types=True):
+def display_error_message(exc_info, strip_xonsh_error_types=True):
     """
-    Prints the error message of the current exception on stderr.
+    Prints the error message of the given sys.exc_info() triple on stderr.
     """
-    exc_type, exc_value, exc_traceback = sys.exc_info()
+    exc_type, exc_value, exc_traceback = exc_info
     exception_only = traceback.format_exception_only(exc_type, exc_value)
     if exc_type is XonshError and strip_xonsh_error_types:
         exception_only[0] = exception_only[0].partition(": ")[-1]

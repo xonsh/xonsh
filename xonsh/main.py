@@ -23,7 +23,7 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.pretty import pretty
 from xonsh.shell import Shell
 from xonsh.timings import setup_timings
-from xonsh.tools import print_color, to_bool_or_int
+from xonsh.tools import display_error_message, print_color, to_bool_or_int
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import xontribs_load
 
@@ -275,6 +275,7 @@ def start_services(shell_kwargs, args, pre_env=None):
     debug = to_bool_or_int(os.getenv("XONSH_DEBUG", "0"))
     events.on_timingprobe.fire(name="pre_execer_init")
     execer = Execer(
+        filename="<stdin>",
         debug_level=debug,
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
@@ -455,6 +456,10 @@ def main_xonsh(args):
     if shell and not env["XONSH_INTERACTIVE"]:
         shell.ctx.update({"exit": sys.exit})
 
+    # store a sys.exc_info() tuple to record any exception that might occur in the user code that we are about to execute
+    # if this does not change, no exceptions were thrown. Otherwise, print a traceback that does not expose xonsh internals
+    exc_info = None, None, None
+
     try:
         if args.mode == XonshMode.interactive:
             # enter the shell
@@ -476,8 +481,12 @@ def main_xonsh(args):
                 events.on_post_cmdloop.fire()
         elif args.mode == XonshMode.single_command:
             # run a single command and exit
-            run_code_with_cache(
-                args.command.lstrip(), shell.execer, glb=shell.ctx, mode="single"
+            exc_info = run_code_with_cache(
+                args.command.lstrip(),
+                "<string>",
+                shell.execer,
+                glb=shell.ctx,
+                mode="single",
             )
             if history is not None and history.last_cmd_rtn is not None:
                 exit_code = history.last_cmd_rtn
@@ -489,7 +498,7 @@ def main_xonsh(args):
                 env.update(make_args_env())  # $ARGS is not sys.argv
                 env["XONSH_SOURCE"] = path
                 shell.ctx.update({"__file__": args.file, "__name__": "__main__"})
-                run_script_with_cache(
+                exc_info = run_script_with_cache(
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
             else:
@@ -498,13 +507,19 @@ def main_xonsh(args):
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
             code = sys.stdin.read()
-            run_code_with_cache(
-                code, shell.execer, glb=shell.ctx, loc=None, mode="exec"
+            exc_info = run_code_with_cache(
+                code, "<stdin>", shell.execer, glb=shell.ctx, loc=None, mode="exec"
             )
+    except SyntaxError:
+        display_error_message(sys.exc_info())
+        exit_code = 1
     finally:
+        if exc_info != (None, None, None):
+            traceback.print_exception(*exc_info)
+            exit_code = 1
         events.on_exit.fire()
-    postmain(args)
-    return exit_code
+        postmain(args)
+        return exit_code
 
 
 def postmain(args=None):
@@ -564,7 +579,7 @@ def setup(
     ctx = {} if ctx is None else ctx
     # setup xonsh ctx and execer
     if not hasattr(builtins, "__xonsh__"):
-        execer = Execer()
+        execer = Execer(filename="<stdin>")
         XSH.load(ctx=ctx, execer=execer)
         XSH.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
     XSH.env.update(env)
