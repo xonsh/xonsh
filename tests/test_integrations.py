@@ -655,8 +655,8 @@ def test_eof_syntax_error():
     """Ensures syntax errors for EOF appear on last line."""
     script = "x = 1\na = (1, 0\n"
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
-    assert ":0:0: EOF in multi-line statement" not in err
-    assert ":2:0: EOF in multi-line statement" in err
+    assert "line 0" not in err
+    assert "EOF in multi-line statement" in err and "line 2" in err
 
 
 @skip_if_no_xonsh
@@ -669,8 +669,8 @@ def test_open_quote_syntax_error():
         'echo "This is line 6"\n'
     )
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
-    assert """:3:5: ('code: "This is line 3"',)""" not in err
-    assert ':5:4: "' in err
+    assert """('code: "This is line 3"',)""" not in err
+    assert "line 5" in err
     assert "SyntaxError:" in err
 
 

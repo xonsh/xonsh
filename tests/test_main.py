@@ -487,8 +487,10 @@ def test_xonsh_failback_script_from_file(shell, monkeypatch, monkeypatch_stderr)
 
     script = os.path.join(TEST_DIR, "scripts", "raise.xsh")
     monkeypatch.setattr(sys, "argv", ["xonsh", script])
-    with pytest.raises(Exception):
-        xonsh.main.main()
+
+    # changed in #4662: User-Code exceptions are now caught in main and handled there
+    # => we expect that no exception is thrown
+
     assert len(checker) == 0
 
 
