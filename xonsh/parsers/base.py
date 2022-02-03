@@ -235,7 +235,7 @@ def raise_parse_error(
 
     # if loc is available, construct a proper SyntaxError with all fields
     if loc:
-        err.msg = str(msg) if msg else None
+        err.msg = str(msg) if msg else ""
         err.filename = loc.fname
         err.lineno = loc.lineno
         err.offset = loc.column
