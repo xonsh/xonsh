@@ -511,8 +511,14 @@ def main_xonsh(args):
                 code, "<stdin>", shell.execer, glb=shell.ctx, loc=None, mode="exec"
             )
     except SyntaxError:
-        display_error_message(sys.exc_info())
         exit_code = 1
+        debug_level = env.get("XONSH_DEBUG", 0)
+        if debug_level == 0:
+            # print error without tracktrace
+            display_error_message(sys.exc_info())
+        else:
+            # pass error to finally clause
+            exc_info = sys.exc_info()
     finally:
         if exc_info != (None, None, None):
             err_type, err, _ = exc_info

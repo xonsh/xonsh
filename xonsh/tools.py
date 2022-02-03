@@ -990,11 +990,23 @@ def print_exception(msg=None, exc_info=None):
     limit = None
     chain = True
 
-    # remove traceback noise for syntax errors as the internal state
-    # of the parser is not helpful in normal operation (XONSH_DEBUG == 0)
-    # and to be consistent with python
     _, debug_level = _get_manual_env_var("XONSH_DEBUG", 0)
-    if debug_level == 0 and issubclass(exc_info[0], SyntaxError):
+
+    # the interal state of the parsers stack is
+    # not helpful in normal operation (XONSH_DEBUG == 0).
+    # this is also done to be consistent with python
+    is_syntax_error = issubclass(exc_info[0], SyntaxError)
+
+    # XonshErrors don't show where in the users code they occured
+    # (most are reported deeper in the callstack, e.g. see procs/pipelines.py),
+    # but only show non-helpful xonsh internals.
+    # These are only relevent when developing/debugging xonsh itself.
+    # Therefore, dont print these traces until this gets overhauled.
+    is_xonsh_error = exc_info[0] in (XonshError, XonshCalledProcessError)
+
+    # hide unhelpful traces if not debugging
+    hide_stacktrace = debug_level == 0 and (is_syntax_error or is_xonsh_error)
+    if hide_stacktrace:
         limit = 0
         chain = False
 

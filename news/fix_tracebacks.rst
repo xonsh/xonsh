@@ -6,7 +6,8 @@
 
 * Made stacktraces behave like in python, i.e. when something in user-provided code fails (both interactively and non-interactively), only that part is shown, and the (static) part of the stacktrace showing the location where the user code was called in xonsh remains hidden. When an unexpected exception occurs inside xonsh, everything is shown like before.
 * run_compiled_code, run_script_with_cache, run_code_with_cache now return sys.exc_info() triples instead of throwing errors
-* SyntaxError tracebacks now by default hide the internal parser state (like in python); set XONSH_DEBUG >= 1 to enable it again in interactive mode.
+* SyntaxError tracebacks now by default hide the internal parser state (like in python); set XONSH_DEBUG >= 1 to enable it again.
+* XonshError tracebacks now by default hide xonshs internal state; set XONSH_DEBUG >= 1 to enable it again.
 * run_code_with_cache takes a new parameter display_filename to override the filename shown in exceptions (this is independent of caching)
 
 **Deprecated:**
