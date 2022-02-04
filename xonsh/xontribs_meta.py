@@ -360,6 +360,16 @@ def define_xontribs():
                 url="https://github.com/dyuri/xontrib-gitinfo",
             ),
         ),
+        "gruvbox": Xontrib(
+            url="https://github.com/rpdelaney/xontrib-gruvbox",
+            description="A gruvbox color scheme for xonsh",
+            package=_XontribPkg(
+                name="xontrib-gruvbox",
+                license="MIT",
+                install={"pip": "xpip install xontrib-gruvbox"},
+                url="https://github.com/rpdelaney/xontrib-gruvbox",
+            ),
+        ),
         "history_encrypt": Xontrib(
             url="https://github.com/anki-code/xontrib-history-encrypt",
             description="History backend that encrypt the xonsh shell commands history "
