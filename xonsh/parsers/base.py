@@ -232,6 +232,15 @@ def raise_parse_error(
             err_line_pointer = ""
     err = SyntaxError(f"{loc}: {msg}{err_line_pointer}")
     err.loc = loc  # type: ignore
+
+    # if loc is available, construct a proper SyntaxError with all fields
+    if loc:
+        err.msg = str(msg) if msg else ""
+        err.filename = loc.fname
+        err.lineno = loc.lineno
+        err.offset = loc.column
+        err.text = err_line
+
     raise err
 
 
