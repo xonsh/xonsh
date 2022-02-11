@@ -365,7 +365,7 @@ class Parser(ThreeSixParser):
             kwarg=p[9],
             defaults=[],
         )
-        self._set_regular_args(p0, p[1], p[2], p[3], p[4])
+        self._set_regular_args(p0, *p[1:5])
         self._set_var_args(p0, p[6], None)
         p[0] = p0
 
