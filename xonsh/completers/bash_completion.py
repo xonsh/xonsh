@@ -410,10 +410,10 @@ def bash_completions(
     # Ensure input to `commonprefix` is a list (now required by Python 3.6)
     commprefix = os.path.commonprefix(list(out))
 
-    if prefix.startswith('~') and commprefix and prefix not in commprefix:
+    if prefix.startswith("~") and commprefix and prefix not in commprefix:
         home_ = os.path.expanduser("~")
-        out = {f'~/{os.path.relpath(p, home_)}' for p in out}
-        commprefix = f'~/{os.path.relpath(commprefix, home_)}'
+        out = {f"~/{os.path.relpath(p, home_)}" for p in out}
+        commprefix = f"~/{os.path.relpath(commprefix, home_)}"
 
     strip_len = 0
     strip_prefix = prefix.strip("\"'")
