@@ -130,6 +130,10 @@ class CommandsCache(cabc.Mapping):
         return self._cmds_cache
 
     def update_cache(self):
+        # todo: remove use and use shutil.which and aliases instance to check whether it is a command
+        #   this will sped up a little and will work on systems with large number of binaries in their $PATH
+        #   1. cache per PATH and on-demand
+        #   2. remove usage of XSH
         env = XSH.env or {}
         paths = tuple(CommandsCache.remove_dups(env.get("PATH") or []))
 
