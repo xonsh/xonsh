@@ -204,7 +204,7 @@ Running the Tests - Basic
 
 Run all the tests using pytest::
 
-    $ py.test -q
+    $ pytest -q
 
 Use "-q" to keep pytest from outputting a bunch of info for every test.
 
@@ -214,16 +214,16 @@ Running the Tests - Advanced
 
 To perform all unit tests::
 
-    $ py.test
+    $ pytest
 
 If you want to run specific tests you can specify the test names to
 execute. For example to run test_aliases::
 
-    $ py.test test_aliases.py
+    $ pytest test_aliases.py
 
 Note that you can pass multiple test names in the above examples::
 
-    $ py.test test_aliases.py test_environ.py
+    $ pytest test_aliases.py test_environ.py
 
 ----------------------------------
 Writing the Tests - Advanced
@@ -241,7 +241,7 @@ has to be prefixed with `test_`::
 The conftest.py in tests directory defines fixtures for mocking various
 parts of xonsh for more test isolation. For a list of the various fixtures::
 
-    $ py.test --fixtures
+    $ pytest --fixtures
 
 when writing tests it's best to use pytest features i.e. parametrization::
 

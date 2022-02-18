@@ -24,7 +24,7 @@ def has_kwargs(func):
 def debug_level():
     if XSH.env:
         return XSH.env.get("XONSH_DEBUG")
-    # FIXME: Under py.test, return 1(?)
+    # FIXME: Under pytest, return 1(?)
     else:
         return 0  # Optimize for speed, not guaranteed correctness
 
