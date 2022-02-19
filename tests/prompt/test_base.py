@@ -1,8 +1,11 @@
+import functools
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from xonsh.prompt.base import PROMPT_FIELDS, PromptFormatter
+from xonsh.prompt import env as prompt_env
 
 
 @pytest.fixture
@@ -118,10 +121,10 @@ def test_format_prompt_with_various_prepost(formatter, xession, live_fields, pre
 
     xession.env["VIRTUAL_ENV"] = "env"
 
-    live_fields.update({"env_prefix": pre, "env_postfix": post})
-
+    lf_copy = dict(live_fields)  # live_fields fixture is not idempotent!
+    lf_copy.update({"env_prefix": pre, "env_postfix": post})
     exp = pre + "env" + post
-    assert formatter("{env_name}", fields=live_fields) == exp
+    assert formatter("{env_name}", fields=lf_copy) == exp
 
 
 def test_noenv_with_disable_set(formatter, xession, live_fields):
@@ -130,6 +133,65 @@ def test_noenv_with_disable_set(formatter, xession, live_fields):
 
     exp = ""
     assert formatter("{env_name}", fields=live_fields) == exp
+
+
+class TestPromptFromVenvCfg:
+    WANTED = "wanted"
+    CONFIGS = [
+        f"prompt = '{WANTED}'",
+        f'prompt = "{WANTED}"',
+        f'\t prompt =  "{WANTED}"   ',
+        f"prompt \t=    {WANTED}   ",
+        "nothing = here",
+    ]
+    CONFIGS.extend([f"other = fluff\n{t}\nmore = fluff" for t in CONFIGS])
+
+    @pytest.mark.parametrize("text", CONFIGS)
+    def test_prompt_from_venv_cfg(self, monkeypatch, text):
+        monkeypatch.setattr(Path, "is_file", lambda *_: True)
+        monkeypatch.setattr(Path, "read_text", lambda *_: text)
+        wanted = self.WANTED if self.WANTED in text else None
+        assert prompt_env.prompt_from_pyvenv_cfg(Path("dontccare")) == wanted
+
+
+class TestEnvNamePrompt:
+    def test_no_prompt(self, formatter, live_fields):
+        assert formatter("{env_name}", fields=live_fields) == ""
+
+    def test_search_order(self, monkeypatch, formatter, xession, live_fields):
+        xession.shell.prompt_formatter = formatter
+
+        first = "first"
+        second = "second"
+        third = "third"
+
+        monkeypatch.setattr(prompt_env, "prompt_from_pyvenv_cfg", lambda *_: second)
+        fmt = functools.partial(formatter, "{env_name}", fields=live_fields)
+        xession.env.update(dict(VIRTUAL_ENV_PROMPT=first, VIRTUAL_ENV=third))
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        assert fmt() == first
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
+        assert fmt() == ""
+
+        del xession.env["VIRTUAL_ENV_PROMPT"]
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        assert fmt() == f"({second}) "
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
+        assert fmt() == ""
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        monkeypatch.setattr(prompt_env, "prompt_from_pyvenv_cfg", lambda *_: None)
+        assert fmt() == f"({third}) "
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
+        assert fmt() == ""
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        del xession.env["VIRTUAL_ENV"]
+        assert fmt() == ""
 
 
 @pytest.mark.parametrize("disable", [0, 1])
