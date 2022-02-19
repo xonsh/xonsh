@@ -1,8 +1,9 @@
 """Tests the xonsh match statement."""
 
 import ast
+
+from test_parser import check_xonsh_ast, parser, xsh
 from tools import skip_if_pre_3_10
-from test_parser import check_xonsh_ast, xsh, parser
 
 
 @skip_if_pre_3_10
@@ -27,8 +28,8 @@ for x in [1, 2, "3\\n", 4, {5 : "e"}]:
         case _:
             raise f"no match for {x}"
 """
-
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)
 
     assert ctx["result"] == ["a", "b", "c", "d", "e"]
 
@@ -50,8 +51,8 @@ def f(x):
 
 result = [f(x) for x in ['first', 'second', 'third']]
 """
-
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)
 
     assert ctx["result"] == ["first", ("s", "cond", "second"), (["thi", "d"], "third")]
     assert all(undefined not in ctx for undefined in ["x", "y", "s", "cond", "_"])
@@ -70,8 +71,8 @@ def reverse(x):
 
 result = [reverse(x) for x in ['part', 'trap', '']]
 """
-
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)
 
     assert ctx["result"] == ["part"[::-1], "trap"[::-1], ""]
     assert all(undefined not in ctx for undefined in ["head", "tail"])
@@ -91,8 +92,8 @@ match x:
                         pass
 
 """
-
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)
 
     assert ctx["result"] == "a"
 
@@ -155,8 +156,8 @@ match html:
     case list(https_urls) -> @find_urls`https:.*`:
         pass
 """
-
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)
 
     assert ctx["contains_urls"]
     assert not ctx["contains_ftp"]
@@ -185,8 +186,8 @@ match range(10):
         raise Exception
 
 """
-
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)
 
     assert ctx["pi"] == 3.141
     assert ctx["total"] == 45
@@ -221,8 +222,8 @@ def lengthy(l):
 lengthiness = [lengthy("lengthy"), lengthy(""), lengthy(0)]
 
 """
-
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)
 
     assert ctx["classification"] == [True, True, False, True, False]
     assert ctx["lengthiness"] == [True, False, "tertium non datur does not hold"]
@@ -256,10 +257,8 @@ class ExpectNonlocal():
 
 assert ExpectNonlocal(None).should_be_generated_as_nonlocal == "None"
 """
-
-    tree = check_xonsh_ast(
-        {}, src, run=True, return_obs=True, mode="exec", globals=(ctx := dict())
-    )
+    ctx = dict()
+    tree = check_xonsh_ast({}, src, run=True, return_obs=True, mode="exec", globals=ctx)
 
     generated_source = ast.unparse(tree)
 
@@ -305,4 +304,5 @@ else:
     assert False, "NameError not thrown"
 
 """
-    check_xonsh_ast({}, src, run=True, mode="exec", globals=(ctx := dict()))
+    ctx = dict()
+    check_xonsh_ast({}, src, run=True, mode="exec", globals=ctx)

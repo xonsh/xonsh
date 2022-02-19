@@ -21,13 +21,8 @@ from ast import AST
 from xonsh.inspectors import Inspector
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS
-from xonsh.tools import (
-    XonshCalledProcessError,
-    XonshError,
-    expand_path,
-    globpath,
-    print_color,
-)
+from xonsh.tools import (XonshCalledProcessError, XonshError, expand_path,
+                         globpath, print_color)
 
 INSPECTOR = Inspector()
 
@@ -700,7 +695,8 @@ def build_regex_match_transformer(pattern, return_groups):
     def transformer(subject):
         import re
 
-        if m := re.fullmatch(pattern, str(subject)):
+        m = re.fullmatch(pattern, str(subject))
+        if m:
             if return_groups:
                 return list(m.groups())
             else:
