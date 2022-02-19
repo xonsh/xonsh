@@ -1,5 +1,5 @@
 """Prompt formatter for virtualenv and others"""
-
+import functools
 import re
 from pathlib import Path
 
@@ -20,29 +20,28 @@ def env_name():
         return virtual_env_prompt
     virtual_env = XSH.env.get("VIRTUAL_ENV")
     if virtual_env:
-        venv_path = Path(virtual_env)
-        pyvenv_cfg_prompt = prompt_from_pyvenv_cfg(venv_path)
-        if pyvenv_cfg_prompt:
-            return surround_env_name(pyvenv_cfg_prompt)
-        return surround_env_name(venv_path.name)
-    from_conda = XSH.env.get("CONDA_DEFAULT_ENV")
-    if from_conda:
-        return surround_env_name(from_conda)
-    return
+        name = determine_env_name(virtual_env)
+        if name:
+            return surround_env_name(name)
+    conda_default_env = XSH.env.get("CONDA_DEFAULT_ENV")
+    if conda_default_env:
+        return surround_env_name(conda_default_env)
 
 
-def prompt_from_pyvenv_cfg(venv_path):
-    """Grab the prompt from the venv configuration, if it exists.
+@functools.lru_cache(maxsize=5)
+def determine_env_name(virtual_env):
+    """Use prompt setting from pyvenv.cfg or basename of virtual_env.
 
     Tries to be resilient to subtle changes in whitespace and quoting in the
     configuration file format as it adheres to no clear standard.
     """
-    assert isinstance(venv_path, Path), venv_path
+    venv_path = Path(virtual_env)
     pyvenv_cfg = venv_path / "pyvenv.cfg"
     if pyvenv_cfg.is_file():
         match = re.search(r"prompt\s*=\s*(.*)", pyvenv_cfg.read_text())
         if match:
             return match.group(1).strip().lstrip("'\"").rstrip("'\"")
+    return venv_path.name
 
 
 def surround_env_name(name):
