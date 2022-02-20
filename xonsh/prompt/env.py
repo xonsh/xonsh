@@ -7,7 +7,7 @@ from typing import Optional
 from xonsh.built_ins import XSH
 
 
-def env_name() -> Optional[str]:
+def env_name() -> str:
     """Build env_name based on different sources. Respect order of precedence.
 
     Name from VIRTUAL_ENV_PROMPT will be used as-is.
@@ -15,7 +15,7 @@ def env_name() -> Optional[str]:
     ``{env_postfix}`` fields.
     """
     if XSH.env.get("VIRTUAL_ENV_DISABLE_PROMPT"):
-        return
+        return ""
     virtual_env_prompt = XSH.env.get("VIRTUAL_ENV_PROMPT")
     if virtual_env_prompt:
         return virtual_env_prompt
