@@ -2,7 +2,6 @@
 import functools
 import re
 from pathlib import Path
-from typing import Optional
 
 from xonsh.built_ins import XSH
 
