@@ -147,10 +147,10 @@ class TestPromptFromVenvCfg:
 
     @pytest.mark.parametrize("text", CONFIGS)
     def test_determine_env_name_from_cfg(self, monkeypatch, tmp_path, text):
-        monkeypatch.setattr(prompt_env, "surround_env_name", lambda x: x)
+        monkeypatch.setattr(prompt_env, "_surround_env_name", lambda x: x)
         (tmp_path / "pyvenv.cfg").write_text(text)
         wanted = self.WANTED if self.WANTED in text else tmp_path.name
-        assert prompt_env.determine_env_name(tmp_path) == wanted
+        assert prompt_env._determine_env_name(tmp_path) == wanted
 
 
 class TestEnvNamePrompt:
@@ -195,7 +195,7 @@ class TestEnvNamePrompt:
         pyvenv_cfg.unlink()
         # In the interest of speed the calls are cached, but if the user
         # fiddles with environments this will bite them. I will not do anythin
-        prompt_env.determine_env_name.cache_clear()
+        prompt_env._determine_env_name.cache_clear()
         assert fmt() == f"({third}) "
 
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
@@ -221,9 +221,9 @@ class TestEnvNamePrompt:
         """
         cfg = tmp_path / "pyvenv.cfg"
         cfg.write_text("prompt=fromfile")
-        assert prompt_env.determine_env_name(cfg.parent) == "fromfile"
+        assert prompt_env._determine_env_name(cfg.parent) == "fromfile"
         cfg.unlink()
-        assert prompt_env.determine_env_name(cfg.parent) == cfg.parent.name
+        assert prompt_env._determine_env_name(cfg.parent) == cfg.parent.name
 
 
 @pytest.mark.parametrize("disable", [0, 1])

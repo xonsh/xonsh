@@ -2,8 +2,27 @@
 import functools
 import re
 from pathlib import Path
+from typing import Optional
 
 from xonsh.built_ins import XSH
+
+
+def find_env_name() -> Optional[str]:
+    """Find current environment name from available sources.
+
+    If ``$VIRTUAL_ENV`` is set, it is determined from the prompt setting in
+    ``<venv>/pyvenv.cfg`` or from the folder name of the environment.
+
+    Otherwise - if it is set - from ``$CONDA_DEFAULT_ENV``.
+    """
+    virtual_env = XSH.env.get("VIRTUAL_ENV")
+    if virtual_env:
+        name = _determine_env_name(virtual_env)
+        if name:
+            return name
+    conda_default_env = XSH.env.get("CONDA_DEFAULT_ENV")
+    if conda_default_env:
+        return conda_default_env
 
 
 def env_name() -> str:
@@ -18,18 +37,12 @@ def env_name() -> str:
     virtual_env_prompt = XSH.env.get("VIRTUAL_ENV_PROMPT")
     if virtual_env_prompt:
         return virtual_env_prompt
-    virtual_env = XSH.env.get("VIRTUAL_ENV")
-    if virtual_env:
-        name = determine_env_name(virtual_env)
-        if name:
-            return surround_env_name(name)
-    conda_default_env = XSH.env.get("CONDA_DEFAULT_ENV")
-    if conda_default_env:
-        return surround_env_name(conda_default_env)
+    found_envname = find_env_name()
+    return _surround_env_name(found_envname) if found_envname else ""
 
 
 @functools.lru_cache(maxsize=5)
-def determine_env_name(virtual_env: str) -> str:
+def _determine_env_name(virtual_env: str) -> str:
     """Use prompt setting from pyvenv.cfg or basename of virtual_env.
 
     Tries to be resilient to subtle changes in whitespace and quoting in the
@@ -44,7 +57,7 @@ def determine_env_name(virtual_env: str) -> str:
     return venv_path.name
 
 
-def surround_env_name(name: str) -> str:
+def _surround_env_name(name: str) -> str:
     pf = XSH.shell.prompt_formatter
     pre = pf._get_field_value("env_prefix")
     post = pf._get_field_value("env_postfix")
