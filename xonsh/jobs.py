@@ -264,7 +264,6 @@ else:
         if active_task is None:
             return last_task
         obj = active_task["obj"]
-        backgrounded = False
         try:
             _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         except ChildProcessError as e:  # No child processes

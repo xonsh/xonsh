@@ -967,20 +967,21 @@ class GeneralSetting(Xettings):
     )
     XONSH_CAPTURE_ALWAYS = Var.with_default(
         False,
-        "Try to capture output of commands run without explicit capturing.\n"
-        "If True, xonsh will capture the output of commands run directly or in ``![]``"
-        "to the session history.\n"
-        "Setting to True has the following disadvantages:\n"
-        "* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).\n"
-        "  For more information see discussion at https://github.com/xonsh/xonsh/issues/3672.\n"
-        "* Stopping these commands with ^Z (i.e. ``SIGTSTP``)\n"
-        "  is disabled as it causes deadlocked terminals.\n"
-        "  ``SIGTSTP`` may still be issued and only the physical pressing\n"
-        "  of ``Ctrl+Z`` is ignored.\n\n"
-        "Regardless of this value, commands run in ``$()``, ``!()`` or with an IO redirection (``>`` or ``|``) "
-        "will always be captured.\n"
-        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True.",
+        """\
+Try to capture output of commands run without explicit capturing.
+If True, xonsh will capture the output of commands run directly or in ``![]``to the session history.
+Setting to True has the following disadvantages:
+* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).
+  For more information see discussion at https://github.com/xonsh/xonsh/issues/3672.
+* Stopping these commands with ^Z (i.e. ``SIGTSTP``)
+  is disabled as it causes deadlocked terminals.
+  ``SIGTSTP`` may still be issued and only the physical pressing
+  of ``Ctrl+Z`` is ignored.
+Regardless of this value, commands run in ``$()``, ``!()``
+or with an IO redirection (``>`` or ``|``) will always be captured.
+""",
     )
+    # todo: remove THread_subprocs completely and use asyncio.read_pipe
     THREAD_SUBPROCS = Var(
         is_bool_or_none,
         to_bool_or_none,

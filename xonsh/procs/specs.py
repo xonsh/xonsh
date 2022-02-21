@@ -10,6 +10,7 @@ import signal
 import stat
 import subprocess
 import sys
+import typing as tp
 
 import xonsh.environ as xenv
 import xonsh.jobs as xj
@@ -18,15 +19,23 @@ import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.procs.async_proc import StreamReader
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
     HiddenCommandPipeline,
     resume_process,
 )
-from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
+
+if tp.TYPE_CHECKING:
+    CapturedValue = tp.Literal[
+        "stdout",  # $() - stdout capture
+        "object",  # !() - full capture
+        "hiddenobject",  # ![] - nocapture
+        False,  # $[] - nocapture
+    ]
 
 
 @xl.lazyobject
@@ -282,7 +291,7 @@ class SubprocSpec:
         stderr=None,
         universal_newlines=False,
         close_fds=False,
-        captured=False,
+        captured: "CapturedValue" = False,
         env=None,
     ):
         """
@@ -344,11 +353,14 @@ class SubprocSpec:
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
+        # todo: rename this to text, a more friendly name. we should use bytes whenever possible though
+        #   just use bytes everywhere and use locale.getpreferredencoding(False) for decoding
+        #   and bytes.splitlines for getting lines
         self.universal_newlines = universal_newlines
         self.close_fds = close_fds
         self.captured = captured
         if env is not None:
-            self.env = {
+            self.env: "None | dict" = {
                 k: v if not (isinstance(v, list)) or len(v) > 1 else v[0]
                 for (k, v) in env.items()
             }
@@ -439,11 +451,26 @@ class SubprocSpec:
     # Execution methods
     #
 
+    def _get_kwargs(self) -> "tp.Iterator[tp.Tuple[str, tp.Any]]":
+        for name in self.kwnames:
+            val = getattr(self, name)
+            if isinstance(val, StreamHandler):
+                val = val.write_bin
+            yield name, val
+
+    def _close_write_handles(self):
+        """we need to close the writers so that readers will get notified when the program exits"""
+        for name in ["stdout", "stderr"]:
+            val = getattr(self, name)
+            if isinstance(val, StreamHandler):
+                val.close()
+
     def run(self, *, pipeline_group=None):
         """Launches the subprocess and returns the object."""
         event_name = self._cmd_event_name()
         self._pre_run_event_fire(event_name)
-        kwargs = {n: getattr(self, n) for n in self.kwnames}
+        kwargs = dict(self._get_kwargs())
+
         if callable(self.alias):
             kwargs["env"] = self.env or {}
             kwargs["env"]["__ALIAS_NAME"] = self.alias_name or ""
@@ -471,6 +498,7 @@ class SubprocSpec:
             else:
                 cmd = self.cmd
             p = self.cls(cmd, bufsize=bufsize, **kwargs)
+            self._close_write_handles()
         except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise xt.XonshError(e.format(self.cmd[0])) from ex
@@ -713,7 +741,14 @@ class SubprocSpec:
         self.stack = stack
 
 
-def _safe_pipe_properties(fd, use_tty=False):
+def _get_winsize(stream):
+    if stream.isatty():
+        return xli.fcntl.ioctl(stream.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+
+
+def _safe_pipe_properties(
+    fd, _type: "tp.Literal['in', 'out', 'err']" = "out", use_tty=False
+):
     """Makes sure that a pipe file descriptor properties are reasonable."""
     if not use_tty:
         return
@@ -728,43 +763,60 @@ def _safe_pipe_properties(fd, use_tty=False):
     # newly created PTYs have a stardard size (24x80), set size to the same size
     # than the current terminal
     winsize = None
-    if sys.stdin.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    elif sys.stdout.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    elif sys.stderr.isatty():
-        winsize = xli.fcntl.ioctl(sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+
+    if _type == "in":
+        winsize = _get_winsize(sys.stdin)
+    elif _type == "err":
+        winsize = _get_winsize(sys.stderr)
+    elif _type == "out":
+        winsize = _get_winsize(sys.stdout)
     if winsize is not None:
         xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
 
 
+class StreamHandler:
+    def __init__(self, capture=False, tee=False, use_tty=False) -> None:
+        self.capture = capture
+        self.tee = tee
+
+        if tee and use_tty:
+            # it is two-way
+            parent, child = xli.pty.openpty()
+            _safe_pipe_properties(child, use_tty=use_tty)
+            _safe_pipe_properties(parent, use_tty=use_tty)
+        else:
+            # one-way pipe
+            parent, child = os.pipe()
+
+        self.write_bin = safe_open(child, "wb")
+        read_bin = safe_open(parent, "rb")
+
+        # start async reading
+        self.reader = StreamReader()
+        self.reader.start(read_bin)
+
+    def close(self):
+        self.write_bin.close()
+
+
 def _update_last_spec(last):
     env = XSH.env
-    captured = last.captured
     last.last_in_pipeline = True
-    if not captured:
+    if not last.captured:  # $[]
         return
+    tee_err, tee_out = False, False
     callable_alias = callable(last.alias)
-    if callable_alias:
-        if last.cls is ProcProxy and captured == "hiddenobject":
-            # a ProcProxy run using ![] should not be captured
-            return
-    else:
+    if not callable_alias:
         cmds_cache = XSH.commands_cache
-        thable = (
-            env.get("THREAD_SUBPROCS")
-            and (captured != "hiddenobject" or env.get("XONSH_CAPTURE_ALWAYS"))
-            and cmds_cache.predict_threadable(last.args)
+        if (
+            env.get("XONSH_CAPTURE_ALWAYS")
             and cmds_cache.predict_threadable(last.cmd)
-        )
-        if captured and thable:
-            last.cls = PopenThread
-        elif not thable:
-            # foreground processes should use Popen
-            last.threadable = False
-            if captured == "object" or captured == "hiddenobject":
-                # CommandPipeline objects should not pipe stdout, stderr
-                return
+            and cmds_cache.predict_threadable(last.args)
+        ):
+            # stream to std-fds while capturing
+            tee_err, tee_out = True, True
+        # todo: remove usage of last.threadable attribute
+        # last.threadable = False
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = xp.ON_POSIX and not callable_alias
@@ -772,11 +824,9 @@ def _update_last_spec(last):
     # set standard out
     if last.stdout is not None:
         last.universal_newlines = True
-    elif captured in STDOUT_CAPTURE_KINDS:
+    elif last.captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
-        r, w = os.pipe()
-        last.stdout = safe_open(w, "wb")
-        last.captured_stdout = safe_open(r, "rb")
+        last.stdout = StreamHandler(capture=True)
     elif XSH.stdout_uncaptured is not None:
         last.universal_newlines = True
         last.stdout = XSH.stdout_uncaptured
@@ -785,34 +835,22 @@ def _update_last_spec(last):
         last.universal_newlines = True
         last.stdout = None  # must truly stream on windows
         last.captured_stdout = ConsoleParallelReader(1)
-    else:
-        last.universal_newlines = True
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
-        _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = safe_open(w, "w")
-        _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = safe_open(r, "r")
+    elif tee_out:
+        last.universal_newlines = False
+        last.stdout = StreamHandler(tee=True, use_tty=use_tty)
     # set standard error
-    if last.stderr is not None:
+    if (last.stderr is not None) or (last.captured == "stdout"):
         pass
-    elif captured == "stdout":
-        pass
-    elif captured == "object":
-        r, w = os.pipe()
-        last.stderr = safe_open(w, "w")
-        last.captured_stderr = safe_open(r, "r")
+    elif last.captured == "object":
+        last.stderr = StreamHandler(capture=True)
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
     elif xp.ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
-    else:
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
-        _safe_pipe_properties(w, use_tty=use_tty)
-        last.stderr = safe_open(w, "w")
-        _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stderr = safe_open(r, "r")
+    elif tee_err:
+        last.stderr = StreamHandler(tee=True, use_tty=use_tty)
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.
@@ -820,7 +858,6 @@ def _update_last_spec(last):
     # redirect stderr to stdout, if we should
     if callable_alias and last.stderr == subprocess.STDOUT:
         last._stderr = last.stdout
-        last.captured_stderr = last.captured_stdout
 
 
 def cmds_to_specs(cmds, captured=False, envs=None):
@@ -828,7 +865,6 @@ def cmds_to_specs(cmds, captured=False, envs=None):
     ready to be executed.
     """
     # first build the subprocs independently and separate from the redirects
-    i = 0
     specs = []
     redirects = []
     for i, cmd in enumerate(cmds):
@@ -854,6 +890,7 @@ def cmds_to_specs(cmds, captured=False, envs=None):
             raise xt.XonshError(f"unrecognized redirect {redirect!r}")
 
     # Apply boundary conditions
+    # todo: when captured=stdout, only capture stdout and not touch stderr
     if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
         # Make sure sub-specs are always captured.
         # I.e. ![some_alias | grep x] $(some_alias)
@@ -872,7 +909,9 @@ def _should_set_title():
     return XSH.env.get("XONSH_INTERACTIVE") and XSH.shell is not None
 
 
-def run_subproc(cmds, captured=False, envs=None):
+def run_subproc(
+    cmds, captured=False, envs=None
+) -> "None | CommandPipeline | HiddenCommandPipeline":
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
     a special connecting character.  For example::

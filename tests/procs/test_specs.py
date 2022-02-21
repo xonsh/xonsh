@@ -2,9 +2,11 @@
 import itertools
 import sys
 from subprocess import Popen
+from typing import NamedTuple
 
 import pytest
 
+from xonsh.procs.pipelines import CommandPipeline, HiddenCommandPipeline
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import SubprocSpec, cmds_to_specs, run_subproc
@@ -147,6 +149,44 @@ def test_run_subproc_background(captured, exp_is_none):
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
+
+
+class Cmd(NamedTuple):
+    cmds: tuple
+    out: "str|None" = None
+    err: "str|None" = None
+
+
+samples = [
+    Cmd((["echo", "hello"],), out="hello"),  # working
+    Cmd((["echo", "hello"], "|", ["wc", "-c"]), out="6"),  # failing
+]
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("cmd", samples)
+@pytest.mark.parametrize(
+    "captured",
+    [
+        # "object",
+        # "hiddenobject",
+        "stdout",
+        # False,
+    ],
+)
+def test_run_subproc(captured, cmd, xession):
+    # todo: parameterize backgrounding
+    return_val = run_subproc(cmd.cmds, captured)
+    if isinstance(return_val, CommandPipeline):
+        assert return_val.output == cmd.out
+        assert return_val.errors == cmd.err
+    elif isinstance(return_val, HiddenCommandPipeline):
+        assert return_val.returncode == 0
+        # todo: use capsys to see what sys.stdout got
+    elif isinstance(return_val, str):
+        assert return_val.strip() == cmd.out
+    else:
+        assert return_val is None
 
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])

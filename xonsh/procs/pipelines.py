@@ -1,5 +1,4 @@
 """Command pipeline tools."""
-import asyncio
 import io
 import os
 import re
@@ -15,11 +14,10 @@ import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.procs.async_proc import ReadProtocol
 from xonsh.procs.readers import ConsoleParallelReader, NonBlockingFDReader, safe_fdclose
 
 if tp.TYPE_CHECKING:
-    from xonsh.procs.specs import StreamHandler, SubprocSpec
+    from xonsh.procs.specs import SubprocSpec
 
 
 @xl.lazyobject
@@ -190,7 +188,7 @@ class CommandPipeline:
 
     def __repr__(self):
         s = self.__class__.__name__ + "(\n  "
-        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
+        # s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
         s += "\n)"
         return s
 
@@ -238,55 +236,74 @@ class CommandPipeline:
         if proc is None:
             return
         timeout = XSH.env.get("XONSH_PROC_FREQUENCY")
-        # get the correct stdout
-        stdout = proc.stdout
-        if (
-            stdout is None or spec.stdout is None or not safe_readable(stdout)
-        ) and spec.captured_stdout is not None:
-            stdout = spec.captured_stdout
-        if hasattr(stdout, "buffer"):
-            stdout = stdout.buffer
-        if stdout is not None and not isinstance(stdout, self.nonblocking):
-            stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
-        if (
-            not stdout
-            or self.captured == "stdout"
-            or not safe_readable(stdout)
-            or not spec.threadable
-        ):
-            # we get here if the process is not threadable or the
-            # class is the real Popen
-            PrevProcCloser(pipeline=self)
-            task = xj.wait_for_active_job()
-            if task is None or task["status"] != "stopped":
-                proc.wait()
-                self._endtime()
-                if self.captured == "object":
-                    self.end(tee_output=False)
-                elif self.captured == "hiddenobject" and stdout:
-                    b = stdout.read()
-                    lines = b.splitlines(keepends=True)
-                    yield from lines
-                    self.end(tee_output=False)
-                elif self.captured == "stdout":
-                    b = stdout.read()
-                    s = self._decode_uninew(b, universal_newlines=True)
-                    self.lines = s.splitlines(keepends=True)
-            return
+
+        def _readlines(stream) -> "list[bytes]":
+            if hasattr(stream, "readlines"):
+                return safe_readlines(stream, 1024)
+            if hasattr(stream, "read"):
+                return stream.read(timeout).splitlines(keepends=True)
+            return []
+
+        def get_corr_std_stream(stream: "tp.Literal['stdout', 'stderr']"):
+            """get the correct stdout"""
+            stdx = getattr(proc, stream)
+            spec_stdx = getattr(spec, stream)
+            is_stream_handler = False
+            if stdx is None or spec_stdx is None or not safe_readable(stdx):
+                capt_stdx = getattr(spec, f"captured_{stream}")
+                if capt_stdx is None:
+                    if hasattr(spec_stdx, "reader"):  # a StreamHandler
+                        stdx = spec_stdx.reader
+                        is_stream_handler = True
+                else:
+                    stdx = capt_stdx
+            if hasattr(stdx, "buffer"):
+                stdx = stdx.buffer
+            if (
+                stdx is not None
+                and (not isinstance(stdx, self.nonblocking))
+                and (not is_stream_handler)
+            ):
+                stdx = NonBlockingFDReader(stdx.fileno(), timeout=timeout)
+            return stdx
+
+        stdout = get_corr_std_stream("stdout")
+
+        # if (
+        #     not stdout
+        #     or self.captured == "stdout"
+        #     or not safe_readable(stdout)
+        #     or not spec.threadable
+        # ):
+        #     # we get here if the process is not threadable or the
+        #     # class is the real Popen
+        #     PrevProcCloser(pipeline=self)
+        #     task = xj.wait_for_active_job()
+        #     if task is None or task["status"] != "stopped":
+        #         proc.wait()
+        #         self._endtime()
+        #         if self.captured == "object":
+        #             self.end(tee_output=False)
+        #         elif self.captured == "hiddenobject" and stdout:
+        #             b = stdout.read()
+        #             lines = b.splitlines(keepends=True)
+        #             yield from lines
+        #             self.end(tee_output=False)
+        #         elif self.captured == "stdout":
+        #             reader = spec.stdout.reader
+        #             # reader.stall()
+        #             # reader.wait()
+        #             breakpoint()
+        #             b = reader.read()
+        #             s = self._decode_uninew(b, universal_newlines=True)
+        #             self.lines = s.splitlines(keepends=True)
+        #     return
         # get the correct stderr
-        stderr = proc.stderr
-        if (
-            stderr is None or spec.stderr is None or not safe_readable(stderr)
-        ) and spec.captured_stderr is not None:
-            stderr = spec.captured_stderr
-        if hasattr(stderr, "buffer"):
-            stderr = stderr.buffer
-        if stderr is not None and not isinstance(stderr, self.nonblocking):
-            stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
+        stderr = get_corr_std_stream("stderr")
         # read from process while it is running
         check_prev_done = len(self.procs) == 1
         prev_end_time = None
-        i = j = cnt = 1
+        cnt = 1
         while proc.poll() is None:
             if getattr(proc, "suspended", False):
                 return
@@ -303,13 +320,14 @@ class CommandPipeline:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            stdout_lines = safe_readlines(stdout, 1024)
+
+            stdout_lines = _readlines(stdout)
             i = len(stdout_lines)
-            if i != 0:
+            if i:
                 yield from stdout_lines
-            stderr_lines = safe_readlines(stderr, 1024)
+            stderr_lines = _readlines(stderr)
             j = len(stderr_lines)
-            if j != 0:
+            if j:
                 self.stream_stderr(stderr_lines)
             if not check_prev_done:
                 # if we are piping...
@@ -334,12 +352,12 @@ class CommandPipeline:
                 cnt = 1
             time.sleep(timeout * cnt)
         # read from process now that it is over
-        yield from safe_readlines(stdout)
-        self.stream_stderr(safe_readlines(stderr))
+        yield from _readlines(stdout)
+        self.stream_stderr(_readlines(stderr))
         proc.wait()
         self._endtime()
-        yield from safe_readlines(stdout)
-        self.stream_stderr(safe_readlines(stderr))
+        yield from _readlines(stdout)
+        self.stream_stderr(_readlines(stderr))
         if self.captured == "object":
             self.end(tee_output=False)
 
