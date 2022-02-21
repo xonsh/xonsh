@@ -87,6 +87,7 @@ class VoxHandler(xcli.ArgParserAlias):
         packages: xcli.Annotated[tp.Sequence[str], xcli.Arg(nargs="*")] = (),
         requirements: xcli.Annotated[tp.Sequence[str], xcli.Arg(action="append")] = (),
         link_project_dir=False,
+        prompt: "str|None" = None,
     ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
@@ -114,6 +115,8 @@ class VoxHandler(xcli.ArgParserAlias):
             The argument value is passed to ``pip -r`` to be installed.
         link_project_dir: -l, --link, --link-project
             Associate the current directory with the new environment.
+        prompt: --prompt
+            Provides an alternative prompt prefix for this environment.
         """
 
         print("Creating environment...")
@@ -128,6 +131,7 @@ class VoxHandler(xcli.ArgParserAlias):
             symlinks=symlinks,
             with_pip=(not without_pip),
             interpreter=interpreter,
+            prompt=prompt,
         )
         if link_project_dir:
             self.project_set(name)

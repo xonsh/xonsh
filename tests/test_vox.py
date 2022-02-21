@@ -368,6 +368,7 @@ _VOX_RM_OPTS = {"-f", "--force"}.union(_HELP_OPTS)
                     "--requirements",
                     "-t",
                     "--temp",
+                    "--prompt",
                 }
             ),
         ),
