@@ -1,7 +1,9 @@
+import functools
 from unittest.mock import Mock
 
 import pytest
 
+from xonsh.prompt import env as prompt_env
 from xonsh.prompt.base import PROMPT_FIELDS, PromptFormatter
 
 
@@ -118,10 +120,10 @@ def test_format_prompt_with_various_prepost(formatter, xession, live_fields, pre
 
     xession.env["VIRTUAL_ENV"] = "env"
 
-    live_fields.update({"env_prefix": pre, "env_postfix": post})
-
+    lf_copy = dict(live_fields)  # live_fields fixture is not idempotent!
+    lf_copy.update({"env_prefix": pre, "env_postfix": post})
     exp = pre + "env" + post
-    assert formatter("{env_name}", fields=live_fields) == exp
+    assert formatter("{env_name}", fields=lf_copy) == exp
 
 
 def test_noenv_with_disable_set(formatter, xession, live_fields):
@@ -130,6 +132,98 @@ def test_noenv_with_disable_set(formatter, xession, live_fields):
 
     exp = ""
     assert formatter("{env_name}", fields=live_fields) == exp
+
+
+class TestPromptFromVenvCfg:
+    WANTED = "wanted"
+    CONFIGS = [
+        f"prompt = '{WANTED}'",
+        f'prompt = "{WANTED}"',
+        f'\t prompt =  "{WANTED}"   ',
+        f"prompt \t=    {WANTED}   ",
+        "nothing = here",
+    ]
+    CONFIGS.extend([f"other = fluff\n{t}\nmore = fluff" for t in CONFIGS])
+
+    @pytest.mark.parametrize("text", CONFIGS)
+    def test_determine_env_name_from_cfg(self, monkeypatch, tmp_path, text):
+        monkeypatch.setattr(prompt_env, "_surround_env_name", lambda x: x)
+        (tmp_path / "pyvenv.cfg").write_text(text)
+        wanted = self.WANTED if self.WANTED in text else tmp_path.name
+        assert prompt_env._determine_env_name(tmp_path) == wanted
+
+
+class TestEnvNamePrompt:
+    def test_no_prompt(self, formatter, live_fields):
+        assert formatter("{env_name}", fields=live_fields) == ""
+
+    def test_search_order(self, monkeypatch, tmp_path, formatter, xession, live_fields):
+        xession.shell.prompt_formatter = formatter
+
+        first = "first"
+        second = "second"
+        third = "third"
+        fourth = "fourth"
+
+        pyvenv_cfg = tmp_path / third / "pyvenv.cfg"
+        pyvenv_cfg.parent.mkdir()
+        pyvenv_cfg.write_text(f"prompt={second}")
+
+        fmt = functools.partial(formatter, "{env_name}", fields=live_fields)
+        xession.env.update(
+            dict(
+                VIRTUAL_ENV_PROMPT=first,
+                VIRTUAL_ENV=str(pyvenv_cfg.parent),
+                CONDA_DEFAULT_ENV=fourth,
+            )
+        )
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        assert fmt() == first
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
+        assert fmt() == ""
+
+        del xession.env["VIRTUAL_ENV_PROMPT"]
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        assert fmt() == f"({second}) "
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
+        assert fmt() == ""
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        pyvenv_cfg.unlink()
+        # In the interest of speed the calls are cached, but if the user
+        # fiddles with environments this will bite them. I will not do anythin
+        prompt_env._determine_env_name.cache_clear()
+        assert fmt() == f"({third}) "
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
+        assert fmt() == ""
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        del xession.env["VIRTUAL_ENV"]
+        assert fmt() == f"({fourth}) "
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
+        assert fmt() == ""
+
+        xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
+        del xession.env["CONDA_DEFAULT_ENV"]
+        assert fmt() == ""
+
+    @pytest.mark.xfail(reason="caching introduces stale values")
+    def test_env_name_updates_on_filesystem_change(self, tmp_path):
+        """Due to cache, user might get stale value.
+
+        if user fiddles with env folder or the config, they might get a stale
+        value from the cache.
+        """
+        cfg = tmp_path / "pyvenv.cfg"
+        cfg.write_text("prompt=fromfile")
+        assert prompt_env._determine_env_name(cfg.parent) == "fromfile"
+        cfg.unlink()
+        assert prompt_env._determine_env_name(cfg.parent) == cfg.parent.name
 
 
 @pytest.mark.parametrize("disable", [0, 1])
