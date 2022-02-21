@@ -1,4 +1,5 @@
 """Command pipeline tools."""
+import asyncio
 import io
 import os
 import re
@@ -7,17 +8,23 @@ import subprocess
 import sys
 import threading
 import time
+import typing as tp
 
 import xonsh.jobs as xj
 import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.procs.async_proc import ReadProtocol
 from xonsh.procs.readers import ConsoleParallelReader, NonBlockingFDReader, safe_fdclose
+
+if tp.TYPE_CHECKING:
+    from xonsh.procs.specs import StreamHandler, SubprocSpec
 
 
 @xl.lazyobject
 def STDOUT_CAPTURE_KINDS():
+    # todo: remove this and use the Literal
     return frozenset(["stdout", "object"])
 
 
@@ -111,7 +118,7 @@ class CommandPipeline:
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
 
-    def __init__(self, specs):
+    def __init__(self, specs: "list[SubprocSpec]"):
         """
         Parameters
         ----------
@@ -137,11 +144,11 @@ class CommandPipeline:
         starttime : floats or None
             Pipeline start timestamp.
         """
-        self.starttime = None
+        self.starttime: "float | None" = None
         self.ended = False
-        self.procs = []
+        self.procs: "list[subprocess.Popen]" = []
         self.specs = specs
-        self.spec = specs[-1]
+        self.spec: "SubprocSpec" = specs[-1]
         self.captured = specs[-1].captured
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
@@ -365,6 +372,7 @@ class CommandPipeline:
         nl = b"\n"
         cr = b"\r"
         crnl = b"\r\n"
+
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
@@ -539,18 +547,19 @@ class CommandPipeline:
 
     def _close_proc(self):
         """Closes last proc's stdout."""
-        s = self.spec
-        p = self.proc
-        self._safe_close(s.stdin)
-        self._safe_close(s.stdout)
-        self._safe_close(s.stderr)
-        self._safe_close(s.captured_stdout)
-        self._safe_close(s.captured_stderr)
-        if p is None:
+        spec = self.spec
+        self._safe_close(spec.stdin)
+        self._safe_close(spec.stdout)
+        self._safe_close(spec.stderr)
+        # self._safe_close(spec.captured_stdout)
+        self._safe_close(spec.captured_stderr)
+
+        proc = self.proc
+        if proc is None:
             return
-        self._safe_close(p.stdin)
-        self._safe_close(p.stdout)
-        self._safe_close(p.stderr)
+        self._safe_close(proc.stdin)
+        self._safe_close(proc.stdout)
+        self._safe_close(proc.stderr)
 
     def _set_input(self):
         """Sets the input variable."""
