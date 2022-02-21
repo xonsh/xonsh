@@ -139,6 +139,7 @@ class Vox(collections.abc.Mapping):
         system_site_packages=False,
         symlinks=False,
         with_pip=True,
+        prompt=None,
     ):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
@@ -157,8 +158,9 @@ class Vox(collections.abc.Mapping):
             environment.
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
+        prompt: str
+            Provides an alternative prompt prefix for this environment.
         """
-
         if interpreter is None:
             interpreter = _get_vox_default_interpreter()
             print(f"Using Interpreter: {interpreter}")
@@ -176,7 +178,14 @@ class Vox(collections.abc.Mapping):
                 )
             )
 
-        self._create(env_path, interpreter, system_site_packages, symlinks, with_pip)
+        self._create(
+            env_path,
+            interpreter,
+            system_site_packages,
+            symlinks,
+            with_pip,
+            prompt=prompt,
+        )
         events.vox_on_create.fire(name=name)
 
     def upgrade(self, name, symlinks=False, with_pip=True, interpreter=None):
@@ -219,6 +228,9 @@ class Vox(collections.abc.Mapping):
             "symlinks": symlinks,
             "with_pip": with_pip,
         }
+        prompt = cfgops.get("prompt")
+        if prompt:
+            flags["prompt"] = prompt.lstrip("'\"").rstrip("'\"")
         # END things we shouldn't be doing.
 
         # Ok, do what we came here to do.
@@ -233,6 +245,7 @@ class Vox(collections.abc.Mapping):
         symlinks=False,
         with_pip=True,
         upgrade=False,
+        prompt=None,
     ):
         version_output = sp.check_output(
             [interpreter, "--version"], stderr=sp.STDOUT, text=True
@@ -255,8 +268,10 @@ class Vox(collections.abc.Mapping):
             with_pip,
             upgrade,
         ]
-        cmd = [arg for arg in cmd if arg]  # remove empty args
+        if prompt and module == "venv":
+            cmd.extend(["--prompt", prompt])
 
+        cmd = [arg for arg in cmd if arg]  # remove empty args
         logging.debug(cmd)
 
         return_code = sp.call(cmd)
