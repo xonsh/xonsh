@@ -21,8 +21,13 @@ from ast import AST
 from xonsh.inspectors import Inspector
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS
-from xonsh.tools import (XonshCalledProcessError, XonshError, expand_path,
-                         globpath, print_color)
+from xonsh.tools import (
+    XonshCalledProcessError,
+    XonshError,
+    expand_path,
+    globpath,
+    print_color,
+)
 
 INSPECTOR = Inspector()
 
@@ -553,14 +558,6 @@ class XonshSession:
         self._initial_builtin_names = None
         self.aliases = None
 
-        # Xonsh transformer-match statements
-        self.build_regex_match_transformer = build_regex_match_transformer
-        self.build_predicate_match_transformer = build_predicate_match_transformer
-        self.build_not_predicate_match_transformer = (
-            build_not_predicate_match_transformer
-        )
-        self.MatchProxyDict = MatchProxyDict
-
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
         if hasattr(builtins, "exit"):
@@ -686,52 +683,6 @@ def get_default_builtins(execer=None):
         print_color=print_color,
         printx=print_color,
     )
-
-
-# Xonsh match transformer-pattern builders
-
-
-def build_regex_match_transformer(pattern, return_groups):
-    def transformer(subject):
-        import re
-
-        m = re.fullmatch(pattern, str(subject))
-        if m:
-            if return_groups:
-                return list(m.groups())
-            else:
-                return subject
-
-        raise ValueError()
-
-    return transformer
-
-
-def build_predicate_match_transformer(predicate):
-    def transformer(subject):
-        if predicate(subject):
-            return subject
-        else:
-            raise ValueError()
-
-    return transformer
-
-
-def build_not_predicate_match_transformer(predicate):
-    def transformer(subject):
-        if not predicate(subject):
-            return subject
-        else:
-            raise ValueError()
-
-    return transformer
-
-
-# a dict that enables access via attributes.
-class MatchProxyDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(MatchProxyDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
 
 
 class DynamicAccessProxy:
