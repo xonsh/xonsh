@@ -7,9 +7,7 @@ handle
 """
 
 import ast
-import uuid
 
-from xonsh.parsers.base import RE_SEARCHPATH
 from xonsh.parsers.v39 import Parser as ThreeNineParser
 from xonsh.ply.ply import yacc
 
@@ -82,7 +80,7 @@ class Parser(ThreeNineParser):
             case [_, _, pattern, _, guard, _, suite]:
                 p[0] = ast.match_case(pattern=pattern, body=suite, guard=guard, **loc)
             case _:
-                assert False
+                raise AssertionError()
 
     def p_case_block_list_nonempty(self, p):
         """
@@ -95,7 +93,7 @@ class Parser(ThreeNineParser):
             case [_, case_block, case_block_list_nonempty]:
                 p[0] = [case_block] + case_block_list_nonempty
             case _:
-                assert False
+                raise AssertionError()
 
     # subject expression
     def p_subject_expr_single_value(self, p):
@@ -113,7 +111,7 @@ class Parser(ThreeNineParser):
                     elts=[test_or_star_expr], ctx=ast.Load(), **self.get_line_cols(p, 1)
                 )
             case _:
-                assert False
+                raise AssertionError()
 
     def p_subject_expr_multiple_values(self, p):
         """
@@ -129,7 +127,7 @@ class Parser(ThreeNineParser):
                     **self.get_line_cols(p, 1),
                 )
             case _:
-                assert False
+                raise AssertionError()
 
     # patterns
     def p_closed_pattern(self, p):
@@ -215,7 +213,7 @@ class Parser(ThreeNineParser):
         match p[1]:
             case ast.JoinedStr():
 
-                assert False, "patterns may not match formatted string literals"
+                raise AssertionError("patterns may not match formatted string literals")
                 # TODO: raise SyntaxError instead
                 # (doing so currently somehow causes an IndexError in tools.py:get_logical_line)
 
@@ -236,7 +234,7 @@ class Parser(ThreeNineParser):
             case "False":
                 value = False
             case _:
-                assert False
+                raise AssertionError()
 
         p[0] = value
 
@@ -266,7 +264,7 @@ class Parser(ThreeNineParser):
                 build_complex = True
                 negate_left_side = True
             case _:
-                assert False
+                raise AssertionError()
 
         if build_complex:
             # TODO raise syntax error instead (see reason in p_literal_expr_number_or_string_literal_list)
@@ -333,7 +331,7 @@ class Parser(ThreeNineParser):
             case [_, _, _]:
                 p[0] = ast.MatchSequence(patterns=[], **self.get_line_cols(p, 1))
             case _:
-                assert False
+                raise AssertionError()
 
     def p_maybe_sequence_pattern(self, p):
         """
@@ -364,7 +362,7 @@ class Parser(ThreeNineParser):
                     **self.get_line_cols(p, 1),
                 )
             case _:
-                assert False
+                raise AssertionError()
 
     def p_open_sequence_pattern(self, p):
         """
@@ -442,7 +440,7 @@ class Parser(ThreeNineParser):
             case [_, name, "=", pattern, ",", class_pattern_keyword_part]:
                 p[0] = ([], [(name, pattern)] + class_pattern_keyword_part)
             case _:
-                assert False
+                raise AssertionError()
 
     # returns ( [pattern], [ (name, pattern) ]  )
     def p_class_pattern_positional_part_skip(self, p):
@@ -464,7 +462,7 @@ class Parser(ThreeNineParser):
             case [_, pattern, ",", (names, patterns)]:
                 p[0] = ([pattern] + names, patterns)
             case _:
-                assert False
+                raise AssertionError()
 
     # returns [ (name, pattern) ]
     def p_class_pattern_keyword_part(self, p):
@@ -483,7 +481,7 @@ class Parser(ThreeNineParser):
             case [_, name, "=", pattern, ",", class_pattern_keyword_part]:
                 p[0] = [(name, pattern)] + class_pattern_keyword_part
             case _:
-                assert False
+                raise AssertionError()
 
     # Mapping pattern
 
@@ -516,7 +514,7 @@ class Parser(ThreeNineParser):
             case [_, str(double_star_pattern)]:
                 p[0] = [], [], double_star_pattern
             case _:
-                assert False
+                raise AssertionError()
 
     def p_mapping_pattern_args_item_part_skip(self, p):
         """
@@ -529,7 +527,7 @@ class Parser(ThreeNineParser):
             case [_, rest]:
                 p[0] = [], [], rest
             case _:
-                assert False
+                raise AssertionError()
 
     def p_mapping_pattern_args_item_part(self, p):
         """
@@ -542,7 +540,7 @@ class Parser(ThreeNineParser):
             case [_, (key, value), ",", (keys, values, rest)]:
                 p[0] = [key] + keys, [value] + values, rest
             case _:
-                assert False
+                raise AssertionError()
 
     def p_double_star_pattern(self, p):
         """

@@ -132,7 +132,8 @@ class Execer:
         try:
             code = compile(tree, filename, mode)
         except SyntaxError as e:
-            # Some syntax errors do not occur during parsing, but only later during compiling, such as a "'return' outside function", or some validations regarding the match statement.
+            # Some syntax errors do not occur during parsing, but only later during compiling,
+            # such as a "'return' outside function", or some validations regarding the match statement.
             # In such a case, the offending line of source code (e.text) is not attached to the exception.
             if e.text is None:
                 lines = input.splitlines()
