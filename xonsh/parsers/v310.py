@@ -1,3 +1,6 @@
+# type: ignore
+# TODO: remove line above once mypy understands the match statement
+
 """Handles changes since PY310
 
 handle
