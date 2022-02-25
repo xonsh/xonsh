@@ -3,10 +3,11 @@
 so that we can restart indivual workflow elements without having to restart
 them all. Rerun this script to regenerate.
 """
-from itertools import product
 import os
-import jinja2
+from itertools import product
 from pathlib import Path
+
+import jinja2
 
 CURR_DIR = Path(__file__).absolute().parent
 environment = jinja2.Environment(
@@ -39,7 +40,7 @@ class PY:
     _310 = "3.10"
 
 
-PY_MAIN_VERSION = PY._39
+PY_MAIN_VERSION = PY._310
 PYTHON_VERSIONS = [val for _, val in get_attrs(PY)]
 
 ALLOWED_FAILURES = []
