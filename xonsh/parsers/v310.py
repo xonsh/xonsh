@@ -6,7 +6,6 @@
 handle
 - import-alias requiring lineno
 - match statement
-- xonsh additions to pythons match statement
 """
 
 import ast
