@@ -114,6 +114,8 @@ __all__ = token.__all__ + [  # type:ignore
     "ATEQUAL",
     "DOLLARNAME",
     "IOREDIRECT",
+    "MATCH",
+    "CASE",
 ]
 HAS_ASYNC = PYTHON_VERSION_INFO < (3, 7, 0)
 if HAS_ASYNC:
@@ -151,6 +153,12 @@ N_TOKENS += 1
 ATEQUAL = N_TOKENS
 tok_name[N_TOKENS] = "ATEQUAL"
 N_TOKENS += 1
+MATCH = N_TOKENS
+tok_name[N_TOKENS] = "MATCH"
+N_TOKENS += 1
+CASE = N_TOKENS
+tok_name[N_TOKENS] = "CASE"
+N_TOKENS += 1
 _xonsh_tokens = {
     "?": "QUESTION",
     "@=": "ATEQUAL",
@@ -165,6 +173,8 @@ _xonsh_tokens = {
     "${": "DOLLARLBRACE",
     "??": "DOUBLEQUESTION",
     "@$(": "ATDOLLARLPAREN",
+    "match": "MATCH",
+    "case": "CASE",
 }
 
 additional_parenlevs = frozenset({"@(", "!(", "![", "$(", "$[", "${", "@$("})

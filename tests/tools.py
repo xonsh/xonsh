@@ -45,6 +45,10 @@ skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason="not Travis CI friendly
 
 skip_if_pre_3_8 = pytest.mark.skipif(VER_FULL < (3, 8), reason="Python >= 3.8 feature")
 
+skip_if_pre_3_10 = pytest.mark.skipif(
+    VER_FULL < (3, 10), reason="Python >= 3.10 feature"
+)
+
 
 def skip_if_not_has(exe: str):
     has_exe = shutil.which(exe)

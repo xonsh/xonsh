@@ -218,6 +218,7 @@ def raise_parse_error(
     code: tp.Optional[str] = None,
     lines: tp.Optional[tp.List[str]] = None,
 ):
+    err_line = None
     if loc is None or code is None or lines is None:
         err_line_pointer = ""
     else:
@@ -468,6 +469,8 @@ class BaseParser:
             "timesequal",
             "while",
             "xorequal",
+            "match",
+            "case",
         ]
         for rule in tok_rules:
             self._tok_rule(rule)
@@ -731,18 +734,39 @@ class BaseParser:
         p[0] = p[2]
 
     def p_attr_period_name(self, p):
-        """attr_period_name : PERIOD NAME"""
+        """attr_period_name : PERIOD name_str"""
         p[0] = [p[2]]
 
+    def p_name_str(self, p):
+        """
+        name_str : name
+        """
+        p[0] = p[1].value
+
+    def p_name(self, p):
+        """
+        name : name_tok
+             | match_tok
+             | case_tok
+        """
+        p[0] = p[1]
+
+    def p_attr_name(self, p):
+        """
+        attr_name : attr_name_alone
+                  | attr_name_with
+        """
+        p[0] = p[1]
+
     def p_attr_name_alone(self, p):
-        """attr_name : name_tok"""
+        """attr_name_alone : name"""
         p1 = p[1]
         p[0] = ast.Name(
             id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
         )
 
     def p_attr_name_with(self, p):
-        """attr_name : name_tok attr_period_name_list"""
+        """attr_name_with : name attr_period_name_list"""
         p1 = p[1]
         name = ast.Name(
             id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
@@ -818,7 +842,7 @@ class BaseParser:
         p[0] = p[2]
 
     def p_funcdef(self, p):
-        """funcdef : def_tok NAME parameters rarrow_test_opt COLON suite"""
+        """funcdef : def_tok name_str parameters rarrow_test_opt COLON suite"""
         f = ast.FunctionDef(
             name=p[2],
             args=p[3],
@@ -946,7 +970,7 @@ class BaseParser:
         p[0] = p[2]
 
     def p_tfpdef(self, p):
-        """tfpdef : name_tok colon_test_opt"""
+        """tfpdef : name colon_test_opt"""
         p1 = p[1]
         kwargs = {
             "arg": p1.value,
@@ -1092,7 +1116,7 @@ class BaseParser:
         p[0] = p0
 
     def p_vfpdef(self, p):
-        """vfpdef : name_tok"""
+        """vfpdef : name"""
         p1 = p[1]
         kwargs = {
             "arg": p1.value,
@@ -1448,11 +1472,11 @@ class BaseParser:
         p[0] = p[1]
 
     def p_as_name(self, p):
-        """as_name : AS NAME"""
+        """as_name : AS name_str"""
         p[0] = p[2]
 
     def p_import_as_name(self, p):
-        """import_as_name : NAME as_name_opt"""
+        """import_as_name : name_str as_name_opt"""
         p[0] = ast.alias(name=p[1], asname=p[2])
 
     def p_comma_import_as_name(self, p):
@@ -1489,22 +1513,22 @@ class BaseParser:
         p[0] = p0
 
     def p_period_name(self, p):
-        """period_name : PERIOD NAME"""
+        """period_name : PERIOD name_str"""
         p[0] = p[1] + p[2]
 
     def p_dotted_name(self, p):
         """
-        dotted_name : NAME
-                    | NAME period_name_list
+        dotted_name : name_str
+                    | name_str period_name_list
         """
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_comma_name(self, p):
-        """comma_name : COMMA NAME"""
+        """comma_name : COMMA name_str"""
         p[0] = [p[2]]
 
     def p_global_stmt(self, p):
-        """global_stmt : global_tok NAME comma_name_list_opt"""
+        """global_stmt : global_tok name_str comma_name_list_opt"""
         p1, p2, p3 = p[1], p[2], p[3]
         names = [p2]
         if p3 is not None:
@@ -1512,7 +1536,7 @@ class BaseParser:
         p[0] = ast.Global(names=names, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_nonlocal_stmt(self, p):
-        """nonlocal_stmt : nonlocal_tok NAME comma_name_list_opt"""
+        """nonlocal_stmt : nonlocal_tok name_str comma_name_list_opt"""
         p1, p2, p3 = p[1], p[2], p[3]
         names = [p2]
         if p3 is not None:
@@ -2361,7 +2385,7 @@ class BaseParser:
         p[0] = p[1]
 
     def p_atom_name(self, p):
-        """atom : name_tok"""
+        """atom : name"""
         p1 = p[1]
         p[0] = ast.Name(
             id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
@@ -2391,36 +2415,47 @@ class BaseParser:
         """atom : SEARCHPATH"""
         p[0] = xonsh_pathsearch(p[1], pymode=True, lineno=self.lineno, col=self.col)
 
+    # introduce seemingly superfluous symbol 'atom_dname' to enable reuse it in other places
+    def p_atom_dname_indirection(self, p):
+        """atom : atom_dname"""
+        p[0] = p[1]
+
     def p_atom_dname(self, p):
-        """atom : DOLLAR_NAME"""
+        """atom_dname : DOLLAR_NAME"""
         p[0] = self._envvar_by_name(p[1][1:], lineno=self.lineno, col=self.col)
+
+    def p_atom_dollar_rule_atom(self, p):
+        """
+        atom : dollar_rule_atom
+        """
+        p[0] = p[1]
 
     def p_atom_fistful_of_dollars(self, p):
         """
-        atom : dollar_lbrace_tok test RBRACE
-             | bang_lparen_tok subproc RPAREN
-             | dollar_lparen_tok subproc RPAREN
-             | bang_lbracket_tok subproc RBRACKET
-             | dollar_lbracket_tok subproc RBRACKET
+        dollar_rule_atom : dollar_lbrace_tok test RBRACE
+                         | bang_lparen_tok subproc RPAREN
+                         | dollar_lparen_tok subproc RPAREN
+                         | bang_lbracket_tok subproc RBRACKET
+                         | dollar_lbracket_tok subproc RBRACKET
         """
         p[0] = self._dollar_rules(p)
 
     def p_atom_bang_empty_fistful_of_dollars(self, p):
         """
-        atom : bang_lparen_tok subproc bang_tok RPAREN
-             | dollar_lparen_tok subproc bang_tok RPAREN
-             | bang_lbracket_tok subproc bang_tok RBRACKET
-             | dollar_lbracket_tok subproc bang_tok RBRACKET
+        dollar_rule_atom : bang_lparen_tok subproc bang_tok RPAREN
+                         | dollar_lparen_tok subproc bang_tok RPAREN
+                         | bang_lbracket_tok subproc bang_tok RBRACKET
+                         | dollar_lbracket_tok subproc bang_tok RBRACKET
         """
         self._append_subproc_bang_empty(p)
         p[0] = self._dollar_rules(p)
 
     def p_atom_bang_fistful_of_dollars(self, p):
         """
-        atom : bang_lparen_tok subproc bang_tok nocloser rparen_tok
-             | dollar_lparen_tok subproc bang_tok nocloser rparen_tok
-             | bang_lbracket_tok subproc bang_tok nocloser rbracket_tok
-             | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
+        dollar_rule_atom : bang_lparen_tok subproc bang_tok nocloser rparen_tok
+                         | dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+                         | bang_lbracket_tok subproc bang_tok nocloser rbracket_tok
+                         | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
         """
         self._append_subproc_bang(p)
         p[0] = self._dollar_rules(p)
@@ -2596,7 +2631,7 @@ class BaseParser:
     def p_trailer_p3(self, p):
         """
         trailer : LBRACKET subscriptlist RBRACKET
-                | PERIOD NAME
+                | PERIOD name_str
         """
         p[0] = [p[2]]
 
@@ -2893,7 +2928,7 @@ class BaseParser:
             )
 
     def p_classdef(self, p):
-        """classdef : class_tok NAME func_call_opt COLON suite"""
+        """classdef : class_tok name_str func_call_opt COLON suite"""
         p1, p3 = p[1], p[3]
         b, kw = ([], []) if p3 is None else (p3["args"], p3["keywords"])
         c = ast.ClassDef(

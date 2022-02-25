@@ -129,7 +129,20 @@ class Execer:
         tree = self.parse(input, ctx, mode=mode, filename=filename, transform=transform)
         if tree is None:
             return compile("pass", filename, mode)  # handles comment only input
-        code = compile(tree, filename, mode)
+        try:
+            code = compile(tree, filename, mode)
+        except SyntaxError as e:
+            # Some syntax errors do not occur during parsing, but only later during compiling,
+            # such as a "'return' outside function", or some validations regarding the match statement.
+            # In such a case, the offending line of source code (e.text) is not attached to the exception.
+            if e.text is None:
+                lines = input.splitlines()
+                i = max(
+                    0, min(e.lineno - 1, len(lines) - 1)
+                )  # clamp so no invalid access due to invalid lineno can occur
+                e.text = lines[i]
+            raise e
+
         return code
 
     def eval(

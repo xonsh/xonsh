@@ -13,6 +13,7 @@ from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.ply.ply.lex import LexToken
 from xonsh.tokenize import (
+    CASE,
     COMMENT,
     DEDENT,
     DOLLARNAME,
@@ -24,6 +25,7 @@ from xonsh.tokenize import (
     INDENT,
     IOREDIRECT,
     LESS,
+    MATCH,
     NAME,
     NEWLINE,
     NL,
@@ -113,6 +115,9 @@ def token_map():
         tm[AWAIT] = "AWAIT"
     if HAS_WALRUS:
         tm[(OP, ":=")] = "COLONEQUAL"
+    # python 3.10 (backwards and name token compatible) tokens
+    tm[MATCH] = "MATCH"
+    tm[CASE] = "CASE"
     return tm
 
 
@@ -136,7 +141,7 @@ def handle_name(state, token):
     if state["pymode"][-1][0]:
         if needs_whitespace and not has_whitespace:
             pass
-        elif token.string in kwmod.kwlist:
+        elif token.string in kwmod.kwlist + ["match", "case"]:
             typ = token.string.upper()
         yield _new_token(typ, token.string, token.start)
     else:
