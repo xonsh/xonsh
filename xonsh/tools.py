@@ -42,8 +42,10 @@ import warnings
 # dependencies
 from xonsh import __version__
 from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.lazyimps import pygments
 from xonsh.platform import (
     DEFAULT_ENCODING,
+    HAS_PYGMENTS,
     ON_LINUX,
     ON_WINDOWS,
     expanduser,
@@ -1032,7 +1034,28 @@ def print_exception(msg=None, exc_info=None):
                 "xonsh: To log full traceback to a file set: "
                 "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
             )
-        traceback.print_exception(*exc_info, limit=limit, chain=chain)
+
+        traceback_str = "".join(
+            traceback.format_exception(*exc_info, limit=limit, chain=chain)
+        )
+
+        # color the traceback if available
+        _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
+        _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
+        _, shell_type = _get_manual_env_var("SHELL_TYPE")
+        if (
+            interactive
+            and color_results
+            and shell_type == "prompt_toolkit"
+            and HAS_PYGMENTS
+        ):
+            lexer = pygments.lexers.python.PythonTracebackLexer()
+            tokens = list(pygments.lex(traceback_str, lexer=lexer))
+            # this goes to stdout, but since we are interactive it doesn't matter
+            print_color(tokens, end="")
+        else:
+            print(traceback_str, file=sys.stderr, end="")
+
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
     log_file = to_logfile_opt(log_file)
