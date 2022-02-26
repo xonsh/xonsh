@@ -1,6 +1,6 @@
 **Added:**
 
-* Tracebacks are now printed in color if available (promt_toolkit shell with pygments installed and $COLOR_RESULTS enabled)
+* Tracebacks are now printed in color if available (interactive session with shell that supports colors with pygments installed and $COLOR_RESULTS enabled)
 
 **Changed:**
 

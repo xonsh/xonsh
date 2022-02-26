@@ -42,7 +42,6 @@ import warnings
 # dependencies
 from xonsh import __version__
 from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
-from xonsh.lazyimps import pygments
 from xonsh.platform import (
     DEFAULT_ENCODING,
     HAS_PYGMENTS,
@@ -1042,13 +1041,9 @@ def print_exception(msg=None, exc_info=None):
         # color the traceback if available
         _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
         _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
-        _, shell_type = _get_manual_env_var("SHELL_TYPE")
-        if (
-            interactive
-            and color_results
-            and shell_type == "prompt_toolkit"
-            and HAS_PYGMENTS
-        ):
+        if interactive and color_results and HAS_PYGMENTS:
+            import pygments.lexers.python
+
             lexer = pygments.lexers.python.PythonTracebackLexer()
             tokens = list(pygments.lex(traceback_str, lexer=lexer))
             # this goes to stdout, but since we are interactive it doesn't matter
