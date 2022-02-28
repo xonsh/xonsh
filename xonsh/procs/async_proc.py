@@ -1,4 +1,8 @@
 import asyncio
+import os
+
+import xonsh.lazyimps as xli
+from xonsh.procs.utils import _safe_pipe_properties, safe_open
 
 
 class StreamReader(asyncio.Protocol):
@@ -55,3 +59,31 @@ class StreamReader(asyncio.Protocol):
 
     def wait(self):
         self.loop.run_until_complete(self.exited)
+
+
+class StreamHandler:
+    def __init__(self, capture=False, tee=False, use_tty=False) -> None:
+        self.capture = capture
+        self.tee = tee
+
+        if tee and use_tty:
+            # it is two-way
+            parent, child = xli.pty.openpty()
+            _safe_pipe_properties(child, use_tty=use_tty)
+            _safe_pipe_properties(parent, use_tty=use_tty)
+        else:
+            # one-way pipe
+            parent, child = os.pipe()
+
+        self.write_bin = safe_open(
+            child,
+            "wb",
+        )
+        read_bin = safe_open(parent, "rb")
+
+        # start async reading
+        self.reader = StreamReader()
+        self.reader.start(read_bin)
+
+    def close(self):
+        self.write_bin.close()

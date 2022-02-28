@@ -1,7 +1,6 @@
 """Subprocess specification and related utilities."""
 import contextlib
 import inspect
-import io
 import os
 import pathlib
 import re
@@ -15,11 +14,10 @@ import typing as tp
 import xonsh.environ as xenv
 import xonsh.jobs as xj
 import xonsh.lazyasd as xl
-import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.procs.async_proc import StreamReader
+from xonsh.procs.async_proc import StreamHandler
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
@@ -28,6 +26,7 @@ from xonsh.procs.pipelines import (
 )
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
+from xonsh.procs.utils import safe_close, safe_open
 
 if tp.TYPE_CHECKING:
     CapturedValue = tp.Literal[
@@ -182,31 +181,6 @@ def _O2E_MAP():
 
 def _is_redirect(x):
     return isinstance(x, str) and _REDIR_REGEX.match(x)
-
-
-def safe_open(fname, mode, buffering=-1):
-    """Safely attempts to open a file in for xonsh subprocs."""
-    # file descriptors
-    try:
-        return open(fname, mode, buffering=buffering)
-    except PermissionError as ex:
-        raise xt.XonshError(f"xonsh: {fname}: permission denied") from ex
-    except FileNotFoundError as ex:
-        raise xt.XonshError(f"xonsh: {fname}: no such file or directory") from ex
-    except Exception as ex:
-        raise xt.XonshError(f"xonsh: {fname}: unable to open file") from ex
-
-
-def safe_close(x):
-    """Safely attempts to close an object."""
-    if not isinstance(x, io.IOBase):
-        return
-    if x.closed:
-        return
-    try:
-        x.close()
-    except Exception:
-        pass
 
 
 def _parse_redirects(r, loc=None):
@@ -739,64 +713,6 @@ class SubprocSpec:
         assert stack[3][3] == "run_subproc", "xonsh stack has changed!"
         del stack[:5]
         self.stack = stack
-
-
-def _get_winsize(stream):
-    if stream.isatty():
-        return xli.fcntl.ioctl(stream.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-
-
-def _safe_pipe_properties(
-    fd, _type: "tp.Literal['in', 'out', 'err']" = "out", use_tty=False
-):
-    """Makes sure that a pipe file descriptor properties are reasonable."""
-    if not use_tty:
-        return
-    # due to some weird, long standing issue in Python, PTYs come out
-    # replacing newline \n with \r\n. This causes issues for raw unix
-    # protocols, like git and ssh, which expect unix line endings.
-    # see https://mail.python.org/pipermail/python-list/2013-June/650460.html
-    # for more details and the following solution.
-    props = xli.termios.tcgetattr(fd)
-    props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
-    xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
-    # newly created PTYs have a stardard size (24x80), set size to the same size
-    # than the current terminal
-    winsize = None
-
-    if _type == "in":
-        winsize = _get_winsize(sys.stdin)
-    elif _type == "err":
-        winsize = _get_winsize(sys.stderr)
-    elif _type == "out":
-        winsize = _get_winsize(sys.stdout)
-    if winsize is not None:
-        xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
-
-
-class StreamHandler:
-    def __init__(self, capture=False, tee=False, use_tty=False) -> None:
-        self.capture = capture
-        self.tee = tee
-
-        if tee and use_tty:
-            # it is two-way
-            parent, child = xli.pty.openpty()
-            _safe_pipe_properties(child, use_tty=use_tty)
-            _safe_pipe_properties(parent, use_tty=use_tty)
-        else:
-            # one-way pipe
-            parent, child = os.pipe()
-
-        self.write_bin = safe_open(child, "wb")
-        read_bin = safe_open(parent, "rb")
-
-        # start async reading
-        self.reader = StreamReader()
-        self.reader.start(read_bin)
-
-    def close(self):
-        self.write_bin.close()
 
 
 def _update_last_spec(last):
