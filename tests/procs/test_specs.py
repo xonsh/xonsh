@@ -168,20 +168,22 @@ samples = [
 @pytest.mark.parametrize(
     "captured",
     [
-        # "object",
-        # "hiddenobject",
+        "object",
+        "hiddenobject",
         "stdout",
-        # False,
+        False,
     ],
 )
 def test_run_subproc(captured, cmd, xession):
     # todo: parameterize backgrounding
     return_val = run_subproc(cmd.cmds, captured)
-    if isinstance(return_val, CommandPipeline):
-        assert return_val.output == cmd.out
-        assert return_val.errors == cmd.err
-    elif isinstance(return_val, HiddenCommandPipeline):
+    if isinstance(return_val, HiddenCommandPipeline):
         assert return_val.returncode == 0
+    elif isinstance(return_val, CommandPipeline):
+        if cmd.out:
+            assert return_val.out.strip() == cmd.out
+        if cmd.err:
+            assert return_val.err.strip() == cmd.err
         # todo: use capsys to see what sys.stdout got
     elif isinstance(return_val, str):
         assert return_val.strip() == cmd.out
