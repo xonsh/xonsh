@@ -1,32 +1,9 @@
-import contextlib
-import inspect
 import io
-import os
-import pathlib
-import re
-import shlex
-import signal
-import stat
-import subprocess
 import sys
 import typing as tp
 
-import xonsh.environ as xenv
-import xonsh.jobs as xj
-import xonsh.lazyasd as xl
 import xonsh.lazyimps as xli
-import xonsh.platform as xp
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
-from xonsh.procs.async_proc import StreamHandler
-from xonsh.procs.pipelines import (
-    STDOUT_CAPTURE_KINDS,
-    CommandPipeline,
-    HiddenCommandPipeline,
-    pause_call_resume,
-)
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread
-from xonsh.procs.readers import ConsoleParallelReader
 
 
 def safe_open(fname, mode, buffering=-1):

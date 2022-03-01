@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import xonsh.lazyimps as xli
+import xonsh.platform as xp
 from xonsh.procs.utils import _safe_pipe_properties, safe_open
 
 
@@ -71,6 +72,11 @@ class StreamHandler:
             parent, child = xli.pty.openpty()
             _safe_pipe_properties(child, use_tty=use_tty)
             _safe_pipe_properties(parent, use_tty=use_tty)
+        elif xp.ON_WINDOWS:
+            # windows proactorEventloop needs named pipe
+            from asyncio.windows_utils import pipe
+
+            parent, child = pipe()
         else:
             # one-way pipe
             parent, child = os.pipe()
