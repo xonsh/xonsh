@@ -174,21 +174,38 @@ samples = [
         False,
     ],
 )
-def test_run_subproc(captured, cmd, xession):
-    # todo: parameterize backgrounding
+def test_run_subproc(captured, cmd, xession, capfdbinary):
+    # todo:
+    #  1. parameterize backgrounding
+    #   2. make windows compatible version
+
     return_val = run_subproc(cmd.cmds, captured)
-    if isinstance(return_val, HiddenCommandPipeline):
-        assert return_val.returncode == 0
-    elif isinstance(return_val, CommandPipeline):
-        if cmd.out:
-            assert return_val.out.strip() == cmd.out
-        if cmd.err:
-            assert return_val.err.strip() == cmd.err
-        # todo: use capsys to see what sys.stdout got
-    elif isinstance(return_val, str):
-        assert return_val.strip() == cmd.out
-    else:
-        assert return_val is None
+    out, err = capfdbinary.readouterr()
+
+    def compare(lhs, rhs: str):
+        if rhs:
+            lhs = (
+                lhs.decode().splitlines()
+                if isinstance(lhs, bytes)
+                else lhs.splitlines()
+            )
+            assert [l.strip() for l in lhs] == rhs.splitlines()
+
+    with capfdbinary.disabled():
+        if isinstance(return_val, HiddenCommandPipeline):
+            assert return_val.returncode == 0
+            compare(out, cmd.out)
+            compare(err, cmd.err)
+        elif isinstance(return_val, CommandPipeline):
+            compare(return_val.out, cmd.out)
+            compare(return_val.err, cmd.err)
+        elif isinstance(return_val, str):
+            compare(return_val, cmd.out)
+            compare(err, cmd.err)
+        else:
+            compare(out, cmd.out)
+            compare(err, cmd.err)
+            assert return_val is None
 
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])
