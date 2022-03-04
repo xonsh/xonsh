@@ -20,6 +20,7 @@ from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.styles import Style, merge_styles
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
+from prompt_toolkit.cursor_shapes import ModalCursorShapeConfig
 
 from xonsh.base_shell import BaseShell
 from xonsh.built_ins import XSH
@@ -351,6 +352,8 @@ class PromptToolkitShell(BaseShell):
             for attr, val in self.get_lazy_ptk_kwargs():
                 prompt_args[attr] = val
 
+        if editing_mode == EditingMode.VI:
+            prompt_args['cursor'] = ModalCursorShapeConfig()
         events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()
