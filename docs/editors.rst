@@ -95,3 +95,14 @@ There is `xonsh syntax file for vim`_. To install run:
     git clone --depth 1 https://github.com/linkinpark342/xonsh-vim ~/.vim
 
 .. _xonsh syntax file for vim: https://github.com/linkinpark342/xonsh-vim
+
+In Vim, it is possible to read the ouput of an external command using
+``:read``, prefacing the shell command with ``!``. For example, running
+``:read !date`` inserts the current date into the text file being edited. You
+may find that this breaks once xonsh is set as the default shell. As a
+workaround, you may wish to add this line to your ``.vimrc`` configuration file
+to use Bash for this purpose instead:
+
+.. code-block::
+
+    set shell=bash
