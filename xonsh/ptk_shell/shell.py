@@ -353,7 +353,7 @@ class PromptToolkitShell(BaseShell):
                 prompt_args[attr] = val
 
         if editing_mode == EditingMode.VI:
-            prompt_args['cursor'] = ModalCursorShapeConfig()
+            prompt_args["cursor"] = ModalCursorShapeConfig()
         events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()
