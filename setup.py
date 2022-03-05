@@ -364,14 +364,14 @@ def main():
     }
     skw["cmdclass"]["develop"] = xdevelop
     skw["extras_require"] = {
-        "ptk": ["prompt-toolkit>=3.0", "pyperclip"],
+        "ptk": ["prompt-toolkit>=3.0.27", "pyperclip"],
         "pygments": ["pygments>=2.2"],
         "mac": ["gnureadline"],
         "linux": ["distro"],
         "proctitle": ["setproctitle"],
         "zipapp": ['importlib_resources; python_version < "3.7"'],
         "full": [
-            "prompt-toolkit>=3",
+            "prompt-toolkit>=3.0.27",
             "pyperclip",
             "pygments>=2.2",
             "distro; platform_system=='Linux'",  # PEP 508 platform specifiers
