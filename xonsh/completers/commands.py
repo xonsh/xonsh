@@ -110,29 +110,29 @@ class ModuleMatcher:
 
     extensions = (".py", ".xsh")
 
-    def __init__(self, base: str, extra_paths: "list[str]"):
+    def __init__(self, *names: "str"):
         """Helper class to search and load Python modules
 
         Parameters
         ----------
-        base
-            namespace package
-        extra_paths
-            extra search paths to use if finding module on namespace package fails
+        names
+            extra search paths/package-names to use if finding module on namespace package fails.
+            paths should have a path literal to indicate it is a path. Otherwise it is treated as a package name.
         """
-        # list of pre-defined patterns. More can be added using the public method ``.wrap``
-        self._patterns: tp.Dict[str, str] = {}
-        self._compiled: tp.Dict[str, tp.Pattern] = {}
+
         self.contextual = True
-        self.base = base
+
         # unique but maintain order
-        self._paths = OrderedDict([(pth, None) for pth in extra_paths])
+        self._pkgs = OrderedDict()
+        self._paths = OrderedDict()
+        for pk in names:
+            if os.sep in pk:
+                self._paths[pk] = None
+            else:
+                self._pkgs[pk] = None
+
         self._file_names_cache: "dict[str, str]" = {}
         self._path_st_mtimes: "dict[str, float]" = {}
-
-    def wrap(self, pattern: str, module: str):
-        """For any commands matching the pattern complete from the ``module``"""
-        self._patterns[pattern] = module
 
     def _get_new_paths(self):
         for path in self._paths:
@@ -168,8 +168,9 @@ class ModuleMatcher:
         return found
 
     @staticmethod
-    def import_module(path, pkg: str, name):
+    def import_module(path, name: str):
         """given the file location import as module"""
+        pkg = path.replace(os.sep, ".")
         spec = im_util.spec_from_file_location(f"{pkg}.{name}", path)
         if not spec:
             return
@@ -179,17 +180,28 @@ class ModuleMatcher:
         spec.loader.exec_module(module)  # type: ignore
         return module
 
-    @functools.lru_cache(maxsize=10)
+    @functools.lru_cache(maxsize=None)
     def get_module(self, module: str):
         for name in [
             module,
             f"_{module}",  # naming convention to not clash with actual python package
         ]:
-            with contextlib.suppress(ModuleNotFoundError):
-                return importlib.import_module(f"{self.base}.{name}")
+            for base in self._pkgs:
+                with contextlib.suppress(ModuleNotFoundError):
+                    return importlib.import_module(f"{base}.{name}")
         file = self._find_file_path(module)
         if file:
-            return self.import_module(file, self.base, module)
+            return self.import_module(file, module)
+
+
+class ModuleReMatcher(ModuleMatcher):
+    """supports regex based proxying"""
+
+    def __init__(self, *names: str):
+        # list of pre-defined patterns. More can be added using the public method ``.wrap``
+        self._patterns: tp.Dict[str, str] = {}
+        self._compiled: tp.Dict[str, tp.Pattern] = {}
+        super().__init__(*names)
 
     def search_completer(self, cmd: str, cleaned=False):
         if not cleaned:
@@ -202,6 +214,10 @@ class ModuleMatcher:
             regex = self._compiled[pattern]
             if regex.match(cmd):
                 return self.get_module(mod_name)
+
+    def wrap(self, pattern: str, module: str):
+        """For any commands matching the pattern complete from the ``module``"""
+        self._patterns[pattern] = module
 
 
 class CommandCompleter:
@@ -218,9 +234,9 @@ class CommandCompleter:
     @property
     def matcher(self):
         if self._matcher is None:
-            self._matcher = ModuleMatcher(
+            self._matcher = ModuleReMatcher(
                 "xompletions",
-                extra_paths=XSH.env.get("XONSH_COMPLETER_DIRS", []),
+                *XSH.env.get("XONSH_COMPLETER_DIRS", []),
             )
             self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
         return self._matcher
