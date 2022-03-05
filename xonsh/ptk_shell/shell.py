@@ -7,6 +7,7 @@ from types import MethodType
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.cursor_shapes import ModalCursorShapeConfig
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.history import ThreadedHistory
@@ -20,7 +21,6 @@ from prompt_toolkit.shortcuts import print_formatted_text as ptk_print
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.styles import Style, merge_styles
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
-from prompt_toolkit.cursor_shapes import ModalCursorShapeConfig
 
 from xonsh.base_shell import BaseShell
 from xonsh.built_ins import XSH
