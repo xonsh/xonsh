@@ -12,6 +12,7 @@ import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.completers.commands import ModuleMatcher
 
 if tp.TYPE_CHECKING:
     from xonsh.built_ins import XonshSession
@@ -144,46 +145,7 @@ class PromptFormatter:
 
 @xl.lazyobject
 def PROMPT_FIELDS():
-    from xonsh.prompt.cwd import (
-        _collapsed_pwd,
-        _replace_home_cwd,
-        _dynamically_collapsed_pwd,
-    )
-    from xonsh.prompt.job import _current_job
-    from xonsh.prompt.env import env_name, vte_new_tab_cwd
-    from xonsh.prompt.vc import current_branch, branch_color, branch_bg_color
-    from xonsh.prompt import gitstatus
-    from xonsh.prompt.times import _localtime
-
-    fields = dict(
-        user=xp.os_environ.get("USERNAME" if xp.ON_WINDOWS else "USER", "<user>"),
-        prompt_end="#" if xt.is_superuser() else "$",
-        hostname=socket.gethostname().split(".", 1)[0],
-        cwd=_dynamically_collapsed_pwd,
-        cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
-        cwd_base=lambda: os.path.basename(_replace_home_cwd()),
-        short_cwd=_collapsed_pwd,
-        curr_branch=current_branch,
-        branch_color=branch_color,
-        branch_bg_color=branch_bg_color,
-        current_job=_current_job,
-        env_name=env_name,
-        env_prefix="(",
-        env_postfix=") ",
-        vte_new_tab_cwd=vte_new_tab_cwd,
-        gitstatus=gitstatus.gitstatus_prompt,
-        time_format="%H:%M:%S",
-        localtime=_localtime,
-    )
-
-    # add gitstatus_* fields
-    for fld in gitstatus._DEFS:
-        if fld in {gitstatus._DEFS.HASH_INDICATOR, gitstatus._DEFS.SEPARATOR}:
-            continue
-        name = f"gitstatus_{fld.name.lower()}"
-        fields[name] = getattr(gitstatus, name)
-
-    return fields
+    return PromptFields()
 
 
 def default_prompt():
@@ -310,36 +272,100 @@ def _format_value(val, spec, conv) -> str:
 
 
 class PromptFields(cabc.MutableMapping):
+    def __init__(self):
+        self._items = {}
+
+        self._cache = {}
+        """for callbacks this will catch the value and should be cleared between prompts"""
+
+        self._matcher = ModuleMatcher(
+            "xonsh.prompt",
+            *XSH.env.get("XONSH_PROMPT_NS", []),
+        )
+
+    def __getitem__(self, item):
+        if item not in self._items:
+            self._matcher.get_module()
+        return self._items[item]
+
+    def load_initial(self):
+        # todo: use module matcher to load these on demand
+        from xonsh.prompt.cwd import (
+            _collapsed_pwd,
+            _replace_home_cwd,
+            _dynamically_collapsed_pwd,
+        )
+        from xonsh.prompt.job import _current_job
+        from xonsh.prompt.env import env_name, vte_new_tab_cwd
+        from xonsh.prompt.vc import current_branch, branch_color, branch_bg_color
+        from xonsh.prompt import gitstatus
+        from xonsh.prompt.times import _localtime
+
+        fields = PromptFields(
+            dict(
+                user=xp.os_environ.get(
+                    "USERNAME" if xp.ON_WINDOWS else "USER", "<user>"
+                ),
+                prompt_end="#" if xt.is_superuser() else "$",
+                hostname=socket.gethostname().split(".", 1)[0],
+                cwd=_dynamically_collapsed_pwd,
+                cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
+                cwd_base=lambda: os.path.basename(_replace_home_cwd()),
+                short_cwd=_collapsed_pwd,
+                curr_branch=current_branch,
+                branch_color=branch_color,
+                branch_bg_color=branch_bg_color,
+                current_job=_current_job,
+                env_name=env_name,
+                env_prefix="(",
+                env_postfix=") ",
+                vte_new_tab_cwd=vte_new_tab_cwd,
+                gitstatus=gitstatus.gitstatus_prompt,
+                time_format="%H:%M:%S",
+                localtime=_localtime,
+            )
+        )
+
+        # add gitstatus_* fields
+        for fld in gitstatus._DEFS:
+            if fld in {gitstatus._DEFS.HASH_INDICATOR, gitstatus._DEFS.SEPARATOR}:
+                continue
+            name = f"gitstatus_{fld.name.lower()}"
+            fields[name] = getattr(gitstatus, name)
+
+        return fields
+
     def get(self, key: "str|tp.Type[PromptField]") -> "str|PromptField":
         # todo: implement getting the instance i.e. the result if callable
         #   also cache values per prompt
         return
 
 
-class PromptField:
+class LazyField:
+    # these three fields will get updated by the caller
     prefix = ""
     suffix = ""
+    value = ""
+
+    updator = ""
+    """module path to the function to load value on-demand"""
 
     join = ""
     """in case this combines values from other prompt fields"""
 
-    fields: "tp.Tuple[str|tp.Type[PromptField], ...]" = ()
+    fields: "tp.Tuple[str|tp.Type[LazyField], ...]" = ()
     """in case of combining values from other fields, list them here"""
 
     def __init__(self, ctx: "tp.Dict[str, tp.Any]", xsh: "XonshSession"):
         self.ctx = ctx
         self.xsh = xsh
+        self.container = xsh.env["PROMPT_FIELDS"]
 
-        # todo: here $PROMPT_FIELDS should have a custom class
-        #  and have custom get() that returns the result
-        self.container = {}
-
-        self.value = self.get_value()
-
-    def get_value(self):
+    def update(self):
         if self.fields:
             return self.join.join(self.gets(*self.fields))
-        raise NotImplementedError
+
+        return self.value
 
     def __bool__(self):
         return bool(self.value)
@@ -348,7 +374,11 @@ class PromptField:
         return format(self)
 
     def __format__(self, format_spec: str):
-        return self.prefix + format(self.value, format_spec) + self.suffix
+        val = self.get_value()
+        if val is None:
+            # null value will return empty string
+            return ""
+        return self.prefix + format(val, format_spec) + self.suffix
 
     def get(self, fld, default=None):
         return self.container.get(fld, default=default)

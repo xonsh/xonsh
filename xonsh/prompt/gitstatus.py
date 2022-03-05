@@ -248,14 +248,33 @@ class GSLinesAdded(GSField):
     prefix = "{BLUE}+"
 
     def get_value(self):
-        return self.get(GSNumstat)[0]
+        return self.get(GSNumstat).value[0]
 
 
 class GSLinesRemoved(GSField):
     prefix = "{RED}-"
 
     def get_value(self):
-        return self.get(GSNumstat)[-1]
+        return self.get(GSNumstat).value[-1]
+
+
+class GSClean(GSField):
+    prefix = "{BOLD_GREEN}"
+    symbol = "✓"
+
+    def get_value(self):
+        for fld in (
+            GSStaged,
+            GSConflicts,
+            GSChanged,
+            GSDeleted,
+            GSUntracked,
+            GSStashed,
+        ):
+            changes = self.get(fld)
+            if changes:
+                return
+        return self.symbol
 
 
 class GSNumbers(GSField):
@@ -268,17 +287,8 @@ class GSNumbers(GSField):
         GSStashed,
         GSLinesAdded,
         GSLinesRemoved,
+        GSClean,
     )
-
-
-class GSClean(GSField):
-    prefix = "{BOLD_GREEN}"
-    symbol = "✓"
-
-    def get_value(self):
-        changes = self.get(GSNumbers)
-        if not changes:
-            return self.symbol
 
 
 class GSBranchPart(GSField):
@@ -289,4 +299,4 @@ class GSPrompt(GSField):
     """Return str `BRANCH|OPERATOR|numbers`"""
 
     join = "{RESET}|"
-    fields = (GSBranchPart, GSNumbers, GSClean)
+    fields = (GSBranchPart, GSNumbers)

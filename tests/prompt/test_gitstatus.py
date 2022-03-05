@@ -1,6 +1,12 @@
 import pytest
 
 from xonsh.prompt import gitstatus
+from xonsh.prompt import base
+
+
+@pytest.fixture(autouse=True)
+def git_no_stash(mocker):
+    return mocker.patch.object(gitstatus, "_get_stash", return_value=0)
 
 
 @pytest.fixture(autouse=True)
@@ -23,6 +29,7 @@ def git_no_stash(mocker):
 )
 def test_gitstatus(xession, hidden, exp, fake_process):
     xession.env["XONSH_GITSTATUS_FIELDS_HIDDEN"] = hidden
+    xession.env["PROMPT_FIELDS"] = base.PROMPT_FIELDS
     fake_process.register_subprocess(
         command="git status --porcelain --branch".split(),
         stdout=b"""\
@@ -44,10 +51,12 @@ AM tests/prompt/test_gitstatus.py
 22      26      tests/prompt/test_vc.py
 """,
     )
-    assert gitstatus.gitstatus_prompt() == exp
+    assert gitstatus.gitstatus_prompt({}, xession) == exp
 
 
 def test_gitstatus_clean(xession, fake_process):
+    xession.env["PROMPT_FIELDS"] = base.PROMPT_FIELDS
+
     fake_process.register_subprocess(
         command="git status --porcelain --branch".split(),
         stdout=b"""\
@@ -64,4 +73,4 @@ def test_gitstatus_clean(xession, fake_process):
 """,
     )
     exp = "{CYAN}gitstatus-opt↑·7↓·2{RESET}|{BOLD_GREEN}✓{RESET}"
-    assert gitstatus.gitstatus_prompt() == exp
+    assert gitstatus.gitstatus_prompt({}, xession) == exp
