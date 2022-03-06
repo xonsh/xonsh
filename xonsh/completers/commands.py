@@ -13,8 +13,8 @@ from xonsh.completers.tools import (
     get_filter_function,
     non_exclusive_completer,
 )
-from xonsh.parsers.completion_context import CommandContext, CompletionContext
 from xonsh.lib.modules import ModuleFinder
+from xonsh.parsers.completion_context import CommandContext, CompletionContext
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||

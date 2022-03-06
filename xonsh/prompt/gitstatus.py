@@ -7,7 +7,7 @@ import contextlib
 import os
 import subprocess
 
-from xonsh.prompt.base import PromptFld, PromptFields, MultiPromptFld
+from xonsh.prompt.base import MultiPromptFld, PromptFields, PromptFld
 
 
 def _check_output(xsh, *args: str, **kwargs) -> str:
@@ -52,7 +52,7 @@ def _check_output(xsh, *args: str, **kwargs) -> str:
 class _GSField(PromptFld):
     """wrap output from git command to value"""
 
-    _args = ()
+    _args: "tuple[str, ...]" = ()
 
     def update(self, ctx):
         self.value = _check_output(ctx.xsh, *self._args).strip()
@@ -223,16 +223,14 @@ def gs_lines_removed(fld: PromptFld, ctx):
 @PromptFld.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
 def gs_clean(fld, ctx):
     changes = sum(
-        (
-            ctx.pick(f).value
-            for f in (
-                gs_staged,
-                gs_conflicts,
-                gs_changed,
-                gs_deleted,
-                gs_untracked,
-                gs_stash_count,
-            )
+        ctx.pick(f).value
+        for f in (
+            gs_staged,
+            gs_conflicts,
+            gs_changed,
+            gs_deleted,
+            gs_untracked,
+            gs_stash_count,
         )
     )
     if not changes:

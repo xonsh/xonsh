@@ -262,16 +262,16 @@ def _format_value(val, spec, conv) -> str:
 
 class PromptFields(cabc.MutableMapping):
     def __init__(self, xsh: "XonshSession", init=True):
-        self._items = {}
+        self._items: "dict[str, str | tp.Callable[..., str]]" = {}
 
-        self._cache = {}
+        self._cache: "dict[str, str|BasePromptFld]" = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
         self.xsh = xsh
         if init:
             self.load_initial()
 
-    def __getitem__(self, item: "str|PromptFldType"):
+    def __getitem__(self, item: "str|BasePromptFld"):
         # todo: load on-demand from modules
         # self._matcher = ModuleFinder(
         #     "xonsh.prompts",
@@ -305,16 +305,16 @@ class PromptFields(cabc.MutableMapping):
                 yield attr, val
 
     def load_initial(self):
+        from xonsh.prompt import gitstatus
         from xonsh.prompt.cwd import (
             _collapsed_pwd,
-            _replace_home_cwd,
             _dynamically_collapsed_pwd,
+            _replace_home_cwd,
         )
-        from xonsh.prompt.job import _current_job
         from xonsh.prompt.env import env_name, vte_new_tab_cwd
-        from xonsh.prompt.vc import current_branch, branch_color, branch_bg_color
-        from xonsh.prompt import gitstatus
+        from xonsh.prompt.job import _current_job
         from xonsh.prompt.times import _localtime
+        from xonsh.prompt.vc import branch_bg_color, branch_color, current_branch
 
         self.update(
             dict(
@@ -342,7 +342,7 @@ class PromptFields(cabc.MutableMapping):
         for attr, val in self.get_fields(gitstatus):
             self[attr] = val
 
-    def pick(self, key: "str|PromptFldType") -> "str|PromptFldType":
+    def pick(self, key: "str|BasePromptFld") -> "tp.Any":
         """Get the value of the prompt-field
 
         Notes
@@ -376,17 +376,14 @@ class PromptFields(cabc.MutableMapping):
         self._cache.clear()
 
 
-PromptFldType = tp.TypeVar("PromptFldType")
-
-
-class BasePromptFld(tp.Generic[PromptFldType]):
+class BasePromptFld:
     value = ""
     _name: "str|None" = None
     """will be set during load"""
 
     def __init__(
         self,
-        updator: "tp.Callable[[PromptFldType, PromptFields], None]" = None,
+        updator: "tp.Callable[[BasePromptFld, PromptFields], None]" = None,
         **kwargs,
     ):
         """
@@ -456,7 +453,7 @@ class MultiPromptFld(BasePromptFld):
     """in case this combines values from other prompt fields"""
     fragments: "tuple[str, ...]" = ()
 
-    def __init__(self, *fragments: "str|PromptFldType", **kwargs):
+    def __init__(self, *fragments: "str", **kwargs):
         super().__init__(**kwargs)
         self.fragments = fragments or self.fragments
 

@@ -16,7 +16,6 @@ import warnings
 from collections import ChainMap
 
 import xonsh.prompt.base as prompt
-from xonsh.prompt.gitstatus import GitStatus
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -38,6 +37,7 @@ from xonsh.platform import (
     PATH_DEFAULT,
     os_environ,
 )
+from xonsh.prompt.gitstatus import GitStatus
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,

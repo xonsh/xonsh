@@ -24,8 +24,8 @@ class ModuleFinder:
         self.contextual = True
 
         # unique but maintain order
-        self._pkgs = OrderedDict()
-        self._paths = OrderedDict()
+        self._pkgs: "dict[str, None]" = OrderedDict()
+        self._paths: "dict[str, None]" = OrderedDict()
         for pk in names:
             if os.sep in pk:
                 self._paths[pk] = None

@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from xonsh.prompt import env as prompt_env
-from xonsh.prompt.base import PromptFormatter, PromptFields
+from xonsh.prompt.base import PromptFields, PromptFormatter
 
 
 @pytest.fixture
