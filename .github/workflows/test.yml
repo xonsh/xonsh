@@ -1,0 +1,37 @@
+name: pytest linux 3.8
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  ci:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        python-version: ["3.7", "3.8", "3.9","3.10" ]
+        fail-fast: false
+    name: Test Python ${{ matrix.python-version }} ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements/tests.txt'
+      - name: Install dependencies
+        run: |
+          python -m pip --version
+          python -m pip install -r requirements/tests.txt
+          python -m pip install . --no-deps
+      - name: Run QA Checks
+        run: python -m xonsh run-tests.xsh qa
+        if: ${{ matrix.os == 'ubuntu-latest' }} && ${{ matrix.python-version == '3.10' }}
+      - name: Run tests
+        run: python -m xonsh run-tests.xsh test -- --timeout=240
