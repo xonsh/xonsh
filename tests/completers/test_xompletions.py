@@ -57,10 +57,10 @@ def test_xontrib(args, prefix, exp, exp_part, xsh_with_aliases, check_completer)
 def test_module_matcher(tmp_path, xession):
     from xonsh.completers import commands
 
-    for idx, ext in enumerate(commands.ModuleMatcher.extensions):
+    for idx, ext in enumerate(commands.ModuleFinder.extensions):
         (tmp_path / f"a{idx}{ext}").write_text("def xonsh_complete(): pass")
 
-    matcher = commands.ModuleMatcher("xompletions", [str(tmp_path)])
+    matcher = commands.ModuleFinder("xompletions", [str(tmp_path)])
     assert matcher.get_module("pip").xonsh_complete
     assert matcher.get_module("a0").xonsh_complete
     # todo: fix *.xsh import

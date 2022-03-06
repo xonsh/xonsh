@@ -37,7 +37,6 @@ from xonsh.platform import (
     PATH_DEFAULT,
     os_environ,
 )
-from xonsh.prompt.gitstatus import _DEFS as GITSTATUS_FIELD_DEFS
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
@@ -1476,24 +1475,6 @@ class PromptSetting(Xettings):
         "str",
         "Path to the currently active Python environment.",
         is_configurable=False,
-    )
-    XONSH_GITSTATUS_ = Var.with_default(
-        None,
-        "Symbols for gitstatus prompt. Default values are: \n\n"
-        + "\n".join(
-            f"* ``XONSH_GITSTATUS_{fld.name}``: ``{fld.value}``"
-            for fld in GITSTATUS_FIELD_DEFS
-        ),
-        pattern="XONSH_GITSTATUS_*",
-    )
-    XONSH_GITSTATUS_FIELDS_HIDDEN = Var.with_default(
-        (),
-        "Fields to hide in {gitstatus} prompt (all fields below are shown by default.) \n\n"
-        + "\n".join(
-            f"* ``{fld.name}``\n"
-            for fld in GITSTATUS_FIELD_DEFS
-            if not fld.name.startswith("HASH")
-        ),
     )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,
