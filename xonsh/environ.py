@@ -688,6 +688,13 @@ def default_lscolors(env):
     return lsc
 
 
+@default_value
+def default_prompt_fields(env):
+    """``xonsh.prompt.PROMPT_FIELDS``"""
+    # todo: generate document for all default fields
+    return prompt.PromptFields(XSH)
+
+
 VarKeyType = tp.Union[str, tp.Pattern]
 
 
@@ -1357,16 +1364,15 @@ class PromptSetting(Xettings):
         "This value is never inherited from parent processes.",
         doc_default="``xonsh.environ.DEFAULT_PROMPT``",
     )
-    PROMPT_FIELDS = Var(
-        always_true,
-        None,
-        None,
-        prompt.PROMPT_FIELDS,
-        "Dictionary containing variables to be used when formatting $PROMPT "
+    PROMPT_FIELDS = Var.with_default(
+        default_prompt_fields,
+        validate=always_true,
+        convert=None,
+        detype=None,
+        doc="Dictionary containing variables to be used when formatting $PROMPT "
         "and $TITLE. See 'Customizing the Prompt' "
         "http://xon.sh/tutorial.html#customizing-the-prompt",
         is_configurable=False,
-        doc_default="``xonsh.prompt.PROMPT_FIELDS``",
     )
     PROMPT_REFRESH_INTERVAL = Var.with_default(
         0.0,  # keep as float
@@ -2479,7 +2485,7 @@ def default_env(env=None):
     # in order of increasing precedence
     ctx = {
         "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
-        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default),
+        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default(env)),
         "XONSH_VERSION": XONSH_VERSION,
     }
     ctx.update(os_environ)

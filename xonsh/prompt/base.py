@@ -8,11 +8,9 @@ import socket
 import sys
 import typing as tp
 
-import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.completers.commands import ModuleMatcher
 
 if tp.TYPE_CHECKING:
     from xonsh.built_ins import XonshSession
@@ -86,7 +84,7 @@ class PromptFormatter:
         self.cache.clear()
 
         if fields is None:
-            self.fields = XSH.env.get("PROMPT_FIELDS", PROMPT_FIELDS)  # type: ignore
+            self.fields = XSH.env["PROMPT_FIELDS"]  # type: ignore
         else:
             self.fields = fields
         try:
@@ -136,16 +134,11 @@ class PromptFormatter:
         try:
             value = field_value() if callable(field_value) else field_value
             self.cache[field_value] = value
-        except Exception:
+        except Exception:  # noqa
             print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
             value = f"{{BACKGROUND_RED}}{{ERROR:{field}}}{{RESET}}"
         return value
-
-
-@xl.lazyobject
-def PROMPT_FIELDS():
-    return PromptFields()
 
 
 def default_prompt():
@@ -272,24 +265,49 @@ def _format_value(val, spec, conv) -> str:
 
 
 class PromptFields(cabc.MutableMapping):
-    def __init__(self):
+    def __init__(self, xsh: "XonshSession"):
         self._items = {}
 
         self._cache = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
-        self._matcher = ModuleMatcher(
-            "xonsh.prompt",
-            *XSH.env.get("XONSH_PROMPT_NS", []),
-        )
+        self.xsh = xsh
+        self.load_initial()
 
-    def __getitem__(self, item):
-        if item not in self._items:
-            self._matcher.get_module()
+    def __getitem__(self, item: "str|PromptFldType"):
+        # todo: load on-demand from modules
+        # self._matcher = ModuleFinder(
+        #     "xonsh.prompts",
+        #     *XSH.env.get("XONSH_PROMPT_NS", []),
+        # )
+        # if item not in self._items:
+        #     self._matcher.get_module(item)
+        if isinstance(item, BasePromptFld):
+            item = item.name
         return self._items[item]
 
+    def __delitem__(self, key):
+        del self._items[key]
+
+    def __iter__(self):
+        yield from self._items
+
+    def __len__(self):
+        return len(self._items)
+
+    def __setitem__(self, key, value):
+        self._items[key] = value
+
+    def get_fields(self, module):
+        for attr, val in vars(module).items():
+            if attr.startswith("_"):
+                continue
+
+            if isinstance(val, BasePromptFld):
+                val.name = attr
+                yield attr, val
+
     def load_initial(self):
-        # todo: use module matcher to load these on demand
         from xonsh.prompt.cwd import (
             _collapsed_pwd,
             _replace_home_cwd,
@@ -301,7 +319,7 @@ class PromptFields(cabc.MutableMapping):
         from xonsh.prompt import gitstatus
         from xonsh.prompt.times import _localtime
 
-        fields = PromptFields(
+        self.update(
             dict(
                 user=xp.os_environ.get(
                     "USERNAME" if xp.ON_WINDOWS else "USER", "<user>"
@@ -320,71 +338,140 @@ class PromptFields(cabc.MutableMapping):
                 env_prefix="(",
                 env_postfix=") ",
                 vte_new_tab_cwd=vte_new_tab_cwd,
-                gitstatus=gitstatus.gitstatus_prompt,
                 time_format="%H:%M:%S",
                 localtime=_localtime,
             )
         )
+        for attr, val in self.get_fields(gitstatus):
+            self[attr] = val
 
-        # add gitstatus_* fields
-        for fld in gitstatus._DEFS:
-            if fld in {gitstatus._DEFS.HASH_INDICATOR, gitstatus._DEFS.SEPARATOR}:
-                continue
-            name = f"gitstatus_{fld.name.lower()}"
-            fields[name] = getattr(gitstatus, name)
+    def pick(self, key: "str|PromptFldType") -> "str|PromptFldType":
+        """Get the value of the prompt-field
 
-        return fields
+        Notes
+        -----
+            If it is callable, then the result of the callable is returned
+        """
+        name = key.name if isinstance(key, BasePromptFld) else key
+        if name not in self._items:
+            return
+        value = self._items[name]
+        if name not in self._cache:
+            if isinstance(value, BasePromptFld):
+                value.update(self)
+            elif callable(value):
+                value = value()
 
-    def get(self, key: "str|tp.Type[PromptField]") -> "str|PromptField":
-        # todo: implement getting the instance i.e. the result if callable
-        #   also cache values per prompt
-        return
+            # store in cache
+            self._cache[name] = value
+        return value
+
+    def reset(self):
+        """the results are cached and need to be reset between prompts"""
+        self._cache.clear()
 
 
-class LazyField:
-    # these three fields will get updated by the caller
-    prefix = ""
-    suffix = ""
+PromptFldType = tp.TypeVar("PromptFldType")
+
+
+class BasePromptFld(tp.Generic[PromptFldType]):
     value = ""
+    _name: "str|None" = None
+    """will be set during load"""
 
-    updator = ""
-    """module path to the function to load value on-demand"""
+    def __init__(
+        self,
+        updator: "tp.Callable[[PromptFldType, PromptFields], None]" = None,
+        **kwargs,
+    ):
+        """
 
-    join = ""
-    """in case this combines values from other prompt fields"""
+        Parameters
+        ----------
+        updator
+            this is a callable that needs to update the value or any of the attribute of the field
+        kwargs
+            attributes of the class will be set from this
+        """
+        self.updator = updator
+        if updator:
+            self._name = updator.__name__
+        for attr, val in kwargs.items():
+            setattr(self, attr, val)
 
-    fields: "tp.Tuple[str|tp.Type[LazyField], ...]" = ()
-    """in case of combining values from other fields, list them here"""
+    def update(self, ctx: PromptFields) -> None:
+        """will be called from PromptFields getter for each new prompt"""
+        if self.updator:
+            self.updator(self, ctx)
 
-    def __init__(self, ctx: "tp.Dict[str, tp.Any]", xsh: "XonshSession"):
-        self.ctx = ctx
-        self.xsh = xsh
-        self.container = xsh.env["PROMPT_FIELDS"]
-
-    def update(self):
-        if self.fields:
-            return self.join.join(self.gets(*self.fields))
-
-        return self.value
+    def __format__(self, format_spec: str):
+        return format(self.value, format_spec)
 
     def __bool__(self):
         return bool(self.value)
 
-    def __str__(self):
-        return format(self)
+    def __repr__(self):
+        return f"<Prompt: {self._name}>"
+
+    @classmethod
+    def wrap(cls, **kwargs):
+        """decorator to set the updator"""
+
+        def wrapped(func):
+            return cls(updator=func, **kwargs)
+
+        return wrapped
+
+    @property
+    def name(self) -> str:
+        if self._name is None:
+            raise NotImplementedError("PromptField name is not set")
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self._name = value
+
+
+class PromptFld(BasePromptFld):
+    # these three fields will get updated by the caller
+    prefix = ""
+    suffix = ""
 
     def __format__(self, format_spec: str):
-        val = self.get_value()
-        if val is None:
-            # null value will return empty string
-            return ""
-        return self.prefix + format(val, format_spec) + self.suffix
+        if self.value:
+            return self.prefix + format(self.value, format_spec) + self.suffix
+        return ""
 
-    def get(self, fld, default=None):
-        return self.container.get(fld, default=default)
 
-    def gets(self, *flds):
-        for fld in flds:
-            val = self.get(fld)
-            if val:
-                yield format(val)
+class MultiPromptFld(BasePromptFld):
+    """class to ease combining other PromptFld"""
+
+    separator = ""
+    """in case this combines values from other prompt fields"""
+
+    def __init__(self, *fragments: "str|PromptFldType", **kwargs):
+        super().__init__(**kwargs)
+        self.fragments = fragments
+
+    def _collect(self, ctx):
+        if self.fragments:
+            for frag in self.fragments:
+                if frag in ctx:
+                    yield format(ctx.pick(frag))
+                elif isinstance(frag, str):
+                    yield frag
+
+    def update(self, ctx: PromptFields):
+        if self.fragments:
+            self.value = self.separator.join(self._collect(ctx))
+
+    def remove(self, *names: str):
+        def _new():
+            # lazily call the name attribute
+            for frag in self.fragments:
+                name = frag if isinstance(frag, str) else frag.name
+                if name not in names:
+                    yield name
+
+        self.fragments = tuple(_new())

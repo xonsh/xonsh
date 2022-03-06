@@ -1,29 +1,16 @@
 """Informative git status prompt formatter.
 
 Each part of the status field is extendable and customizable.
-
-For example, if you do not want to lines_added or lines_removed in the final prompt
-subclass the status field, and remove these two from the fields attribute ::
-
-    import xonsh.prompt.gitstatus as gs
-    gs.GSNumbers.fields = (
-        GSStaged,
-        GSConflicts,
-        GSChanged,
-        GSDeleted,
-        GSUntracked,
-        GSStashed,
-    )
-
 """
 
+import contextlib
 import os
 import subprocess
 
-from xonsh.prompt.base import PromptField
+from xonsh.prompt.base import PromptFld, PromptFields, MultiPromptFld
 
 
-def _check_output(xsh, *args, **kwargs) -> str:
+def _check_output(xsh, *args: str, **kwargs) -> str:
     denv = xsh.env.detype()
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
 
@@ -37,7 +24,7 @@ def _check_output(xsh, *args, **kwargs) -> str:
     )
     timeout = xsh.env["VC_BRANCH_TIMEOUT"]
     # See https://docs.python.org/3/library/subprocess.html#subprocess.Popen.communicate
-    with subprocess.Popen(*args, **kwargs) as proc:
+    with subprocess.Popen(args, **kwargs) as proc:
         try:
             out, err = proc.communicate(timeout=timeout)
             if proc.returncode != 0:
@@ -62,31 +49,22 @@ def _check_output(xsh, *args, **kwargs) -> str:
             raise
 
 
-class GSField(PromptField):
-    """base class to ease implementing other GS* fields"""
+class _GSField(PromptFld):
+    """wrap output from git command to value"""
 
-    args = ()
-    info_field = None
+    _args = ()
 
-    def check_output(self, *args: str):
-        return _check_output(self.xsh, args).strip()
-
-    def get_value(self):
-        return self.check_output(*self.args)
+    def update(self, ctx):
+        self.value = _check_output(ctx.xsh, *self._args).strip()
 
 
-class GSHash(GSField):
-    prefix = ":"
-    args = ("git", "rev-parse", "--short", "HEAD")
+gs_hash = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
+gs_tag = _GSField(_args=("git", "describe", "--always"))
 
 
-class GSTag(GSField):
-    args = ("git", "describe", "--always")
-
-
-class GSTagOrHash(GSField):
-    def get_value(self):
-        return self.get(GSTag) or self.get(GSHash)
+@PromptFld.wrap()
+def gs_tag_or_hash(fld: PromptFld, ctx):
+    fld.value = ctx.pick(gs_tag) or ctx.pick(gs_hash)
 
 
 def _parse_int(val: str, default=0):
@@ -95,208 +73,172 @@ def _parse_int(val: str, default=0):
     return default
 
 
-class GSDir(GSField):
-    args = ("git", "rev-parse", "--git-dir")
+gs_dir = _GSField(_args=("git", "rev-parse", "--git-dir"))
 
 
-class GSStashed(GSField):
-    prefix = "⚑"
-
-    def get_value(self):
-        gitdir = self.get(GSDir)
-        try:
-            with open(os.path.join(gitdir, "logs/refs/stash")) as f:
-                return sum(1 for _ in f)
-        except OSError:
-            return 0
+def get_stash_count(gitdir: str):
+    with contextlib.suppress(OSError):
+        with open(os.path.join(gitdir, "logs/refs/stash")) as f:
+            return sum(1 for _ in f)
+    return 0
 
 
-class GSOperation(GSField):
-    prefix = "{CYAN}"
-    separator = "|"
-
-    def get_value(self):
-        gitdir = self.get(GSDir)
-
-        files = (
-            ("rebase-merge", "REBASE"),
-            ("rebase-apply", "AM/REBASE"),
-            ("MERGE_HEAD", "MERGING"),
-            ("CHERRY_PICK_HEAD", "CHERRY-PICKING"),
-            ("REVERT_HEAD", "REVERTING"),
-            ("BISECT_LOG", "BISECTING"),
-        )
-        operations = [f[1] for f in files if os.path.exists(os.path.join(gitdir, f[0]))]
-        if operations:
-            return self.separator + self.separator.join(operations)
+@PromptFld.wrap(prefix="⚑")
+def gs_stash_count(fld: PromptFld, ctx: PromptFields):
+    gitdir = ctx.pick(gs_dir).value
+    fld.value = get_stash_count(gitdir)
 
 
-class GSNumstat(GSField):
-    def get_value(self):
-        changed = self.check_output("git", "diff", "--numstat")
-
-        insert = 0
-        delete = 0
-
-        if changed:
-            for line in changed.splitlines():
-                x = line.split(maxsplit=2)
-                if len(x) > 1:
-                    insert += _parse_int(x[0])
-                    delete += _parse_int(x[1])
-
-        return insert, delete
+def get_operations(gitdir: str):
+    for file, name in (
+        ("rebase-merge", "REBASE"),
+        ("rebase-apply", "AM/REBASE"),
+        ("MERGE_HEAD", "MERGING"),
+        ("CHERRY_PICK_HEAD", "CHERRY-PICKING"),
+        ("REVERT_HEAD", "REVERTING"),
+        ("BISECT_LOG", "BISECTING"),
+    ):
+        if os.path.exists(os.path.join(gitdir, file)):
+            yield name
 
 
-class GSPorcelain(GSField):
-    args = ("git", "status", "--porcelain", "--branch")
+@PromptFld.wrap(prefix="{CYAN}", separator="|")
+def gs_operations(fld, ctx: PromptFields) -> None:
+    gitdir = ctx.pick(gs_dir).value
+    op = fld.separator.join(get_operations(gitdir))
+    if op:
+        fld.value = fld.separator + op
 
 
-class GSInfo(GSField):
+@PromptFld.wrap()
+def gs_porcelain(fld, ctx: PromptFields) -> None:
+    status = _check_output(ctx.xsh, "git", "status", "--porcelain", "--branch")
+    branch = ""
+    ahead, behind = 0, 0
+    untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
+    for line in status.splitlines():
+        if line.startswith("##"):
+            line = line[2:].strip()
+            if "Initial commit on" in line:
+                branch = line.split()[-1]
+            elif "no branch" in line:
+                branch = ctx.pick(gs_tag_or_hash)
+            elif "..." not in line:
+                branch = line
+            else:
+                branch, rest = line.split("...")
+                if " " in rest:
+                    divergence = rest.split(" ", 1)[-1]
+                    divergence = divergence.strip("[]")
+                    for div in divergence.split(", "):
+                        if "ahead" in div:
+                            ahead = int(div[len("ahead ") :].strip())
+                        elif "behind" in div:
+                            behind = int(div[len("behind ") :].strip())
+        elif line.startswith("??"):
+            untracked += 1
+        else:
+            if len(line) > 1:
+                if line[1] == "M":
+                    changed += 1
+                elif line[1] == "D":
+                    deleted += 1
+            if len(line) > 0 and line[0] == "U":
+                conflicts += 1
+            elif len(line) > 0 and line[0] != " ":
+                staged += 1
+
+    fld.value = {
+        "branch": branch,
+        "ahead": ahead,
+        "behind": behind,
+        "untracked": untracked,
+        "changed": changed,
+        "deleted": deleted,
+        "conflicts": conflicts,
+        "staged": staged,
+    }
+
+
+class _GSInfo(PromptFld):
     """Return parsed values from ``git status``"""
 
-    def get_value(self):
-        status = self.get(GSPorcelain)
-        branch = ""
-        ahead, behind = 0, 0
-        untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
-        for line in status.splitlines():
-            if line.startswith("##"):
-                line = line[2:].strip()
-                if "Initial commit on" in line:
-                    branch = line.split()[-1]
-                elif "no branch" in line:
-                    branch = self.get(GSTagOrHash)
-                elif "..." not in line:
-                    branch = line
-                else:
-                    branch, rest = line.split("...")
-                    if " " in rest:
-                        divergence = rest.split(" ", 1)[-1]
-                        divergence = divergence.strip("[]")
-                        for div in divergence.split(", "):
-                            if "ahead" in div:
-                                ahead = int(div[len("ahead ") :].strip())
-                            elif "behind" in div:
-                                behind = int(div[len("behind ") :].strip())
-            elif line.startswith("??"):
-                untracked += 1
-            else:
-                if len(line) > 1:
-                    if line[1] == "M":
-                        changed += 1
-                    elif line[1] == "D":
-                        deleted += 1
-                if len(line) > 0 and line[0] == "U":
-                    conflicts += 1
-                elif len(line) > 0 and line[0] != " ":
-                    staged += 1
+    info: str
 
-        return {
-            "branch": branch,
-            "ahead": ahead,
-            "behind": behind,
-            "untracked": untracked,
-            "changed": changed,
-            "deleted": deleted,
-            "conflicts": conflicts,
-            "staged": staged,
-        }
+    def update(self, ctx: PromptFields) -> None:
+        info = ctx.pick(gs_porcelain).value
+        self.value = info[self.info]
 
 
-class GSBranch(GSField):
-    prefix = "{CYAN}"
-    info_field = "branch"
+gs_branch = _GSInfo(prefix="{CYAN}", info="branch")
+gs_ahead = _GSInfo(prefix="↑·", info="ahead")
+gs_behind = _GSInfo(prefix="↓·", info="behind")
+gs_untracked = _GSInfo(prefix="…", info="untracked")
+gs_changed = _GSInfo(prefix="{BLUE}+", suffix="{RESET}", info="changed")
+gs_deleted = _GSInfo(prefix="{RED}-", suffix="{RESET}", info="deleted")
+gs_conflicts = _GSInfo(prefix="{RED}×", suffix="{RESET}", info="conflicts")
+gs_staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
 
 
-class GSAhead(GSField):
-    prefix = "↑·"
-    info_field = "ahead"
+@PromptFld.wrap()
+def gs_numstat(fld, ctx):
+    changed = _check_output(ctx.xsh, "git", "diff", "--numstat")
+
+    insert = 0
+    delete = 0
+
+    if changed:
+        for line in changed.splitlines():
+            x = line.split(maxsplit=2)
+            if len(x) > 1:
+                insert += _parse_int(x[0])
+                delete += _parse_int(x[1])
+    fld.value = (insert, delete)
 
 
-class GSBehind(GSField):
-    prefix = "↓·"
-    info_field = "behind"
+@PromptFld.wrap(prefix="{BLUE}+", suffix="{RESET}")
+def gs_lines_added(fld: PromptFld, ctx: PromptFields):
+    fld.value = ctx.pick(gs_numstat).value[0]
 
 
-class GSUntracked(GSField):
-    prefix = "…"
-    info_field = "untracked"
+@PromptFld.wrap(prefix="{RED}-", suffix="{RESET}")
+def gs_lines_removed(fld: PromptFld, ctx):
+    fld.value = ctx.pick(gs_numstat).value[-1]
 
 
-class GSChanged(GSField):
-    prefix = "{BLUE}+"
-    info_field = "changed"
-
-
-class GSDeleted(GSField):
-    prefix = "{RED}-"
-    info_field = "deleted"
-
-
-class GSConflicts(GSField):
-    prefix = "{RED}×"
-    info_field = "conflicts"
-
-
-class GSStaged(GSField):
-    info_field = "staged"
-    prefix = "{RED}●"
-
-
-class GSLinesAdded(GSField):
-    prefix = "{BLUE}+"
-
-    def get_value(self):
-        return self.get(GSNumstat).value[0]
-
-
-class GSLinesRemoved(GSField):
-    prefix = "{RED}-"
-
-    def get_value(self):
-        return self.get(GSNumstat).value[-1]
-
-
-class GSClean(GSField):
-    prefix = "{BOLD_GREEN}"
-    symbol = "✓"
-
-    def get_value(self):
-        for fld in (
-            GSStaged,
-            GSConflicts,
-            GSChanged,
-            GSDeleted,
-            GSUntracked,
-            GSStashed,
-        ):
-            changes = self.get(fld)
-            if changes:
-                return
-        return self.symbol
-
-
-class GSNumbers(GSField):
-    fields = (
-        GSStaged,
-        GSConflicts,
-        GSChanged,
-        GSDeleted,
-        GSUntracked,
-        GSStashed,
-        GSLinesAdded,
-        GSLinesRemoved,
-        GSClean,
+@PromptFld.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
+def gs_clean(fld, ctx):
+    changes = sum(
+        (
+            ctx.pick(f).value
+            for f in (
+                gs_staged,
+                gs_conflicts,
+                gs_changed,
+                gs_deleted,
+                gs_untracked,
+                gs_stash_count,
+            )
+        )
     )
+    if not changes:
+        fld.value = fld.symbol
 
 
-class GSBranchPart(GSField):
-    fields = (GSBranch, GSAhead, GSBehind, GSOperation)
-
-
-class GSPrompt(GSField):
-    """Return str `BRANCH|OPERATOR|numbers`"""
-
-    join = "{RESET}|"
-    fields = (GSBranchPart, GSNumbers)
+gitstatus = MultiPromptFld(
+    gs_branch,
+    gs_ahead,
+    gs_behind,
+    gs_operations,
+    "{RESET}|",
+    gs_staged,
+    gs_conflicts,
+    gs_changed,
+    gs_deleted,
+    gs_untracked,
+    gs_stash_count,
+    gs_lines_added,
+    gs_lines_removed,
+    gs_clean,
+)
+"""Return str `BRANCH|OPERATOR|numbers`"""
