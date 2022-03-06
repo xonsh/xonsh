@@ -38,9 +38,8 @@ def fake_proc(fake_process):
         ),
     ],
 )
-def test_gitstatus_dirty(prompts, fake_proc, hidden, exp):
-    if hidden:
-        prompts["gitstatus"].remove(*hidden)
+def test_gitstatus_dirty(prompts, fake_proc, hidden, exp, xession):
+    xession.env["XONSH_GITSTATUS_FIELDS_HIDDEN"] = hidden
     dirty = {
         "git status --porcelain --branch": b"""\
 ## gitstatus-opt...origin/gitstatus-opt [ahead 7, behind 2]

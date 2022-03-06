@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from xonsh.prompt import env as prompt_env
-from xonsh.prompt.base import PROMPT_FIELDS, PromptFormatter
+from xonsh.prompt.base import PromptFormatter, PromptFields
 
 
 @pytest.fixture
@@ -13,8 +13,8 @@ def formatter(xession):
 
 
 @pytest.fixture
-def live_fields():
-    return PROMPT_FIELDS
+def live_fields(xession):
+    return PromptFields(xession)
 
 
 @pytest.mark.parametrize(
@@ -28,7 +28,7 @@ def live_fields():
         ("{f} jawaka", "wakka jawaka"),
     ],
 )
-def test_format_prompt(inp, exp, fields, formatter):
+def test_format_prompt(inp, exp, fields, formatter, xession):
     obs = formatter(template=inp, fields=fields)
     assert exp == obs
 
@@ -181,16 +181,20 @@ class TestEnvNamePrompt:
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
         assert fmt() == first
 
+        live_fields.reset()
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
         assert fmt() == ""
 
+        live_fields.reset()
         del xession.env["VIRTUAL_ENV_PROMPT"]
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
         assert fmt() == f"({second}) "
 
+        live_fields.reset()
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
         assert fmt() == ""
 
+        live_fields.reset()
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
         pyvenv_cfg.unlink()
         # In the interest of speed the calls are cached, but if the user
@@ -198,16 +202,20 @@ class TestEnvNamePrompt:
         prompt_env._determine_env_name.cache_clear()
         assert fmt() == f"({third}) "
 
+        live_fields.reset()
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
         assert fmt() == ""
 
+        live_fields.reset()
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
         del xession.env["VIRTUAL_ENV"]
         assert fmt() == f"({fourth}) "
 
+        live_fields.reset()
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 1
         assert fmt() == ""
 
+        live_fields.reset()
         xession.env["VIRTUAL_ENV_DISABLE_PROMPT"] = 0
         del xession.env["CONDA_DEFAULT_ENV"]
         assert fmt() == ""

@@ -82,6 +82,12 @@ class PromptFormatter:
         else:
             self.fields = fields
 
+        # some quick tests
+        if isinstance(fields, dict):
+            pflds = PromptFields(XSH, init=False)
+            pflds.update(fields)
+            self.fields = pflds
+
         try:
             toks = self._format_prompt(template=template, **kwargs)
             prompt = toks.process()
@@ -255,14 +261,15 @@ def _format_value(val, spec, conv) -> str:
 
 
 class PromptFields(cabc.MutableMapping):
-    def __init__(self, xsh: "XonshSession"):
+    def __init__(self, xsh: "XonshSession", init=True):
         self._items = {}
 
         self._cache = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
         self.xsh = xsh
-        self.load_initial()
+        if init:
+            self.load_initial()
 
     def __getitem__(self, item: "str|PromptFldType"):
         # todo: load on-demand from modules

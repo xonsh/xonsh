@@ -60,7 +60,7 @@ def test_module_matcher(tmp_path, xession):
     for idx, ext in enumerate(commands.ModuleFinder.extensions):
         (tmp_path / f"a{idx}{ext}").write_text("def xonsh_complete(): pass")
 
-    matcher = commands.ModuleFinder("xompletions", [str(tmp_path)])
+    matcher = commands.ModuleFinder("xompletions", str(tmp_path))
     assert matcher.get_module("pip").xonsh_complete
     assert matcher.get_module("a0").xonsh_complete
     # todo: fix *.xsh import
