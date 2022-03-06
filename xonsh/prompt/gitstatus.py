@@ -73,7 +73,21 @@ def _parse_int(val: str, default=0):
     return default
 
 
-gs_dir = _GSField(_args=("git", "rev-parse", "--git-dir"))
+class _GitDir(_GSField):
+    _args = ("git", "rev-parse", "--git-dir")
+    _cwd = ""
+
+    def update(self, ctx):
+        # call the subprocess only if cwd changed
+        from xonsh.dirstack import _get_cwd
+
+        cwd = _get_cwd()
+        if cwd != self._cwd:
+            self._cwd = cwd
+            super().update(ctx)
+
+
+gs_dir = _GitDir()
 
 
 def get_stash_count(gitdir: str):
