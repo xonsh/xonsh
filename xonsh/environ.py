@@ -16,6 +16,7 @@ import warnings
 from collections import ChainMap
 
 import xonsh.prompt.base as prompt
+from xonsh.prompt.gitstatus import GitStatus
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -1482,6 +1483,13 @@ class PromptSetting(Xettings):
         "Path to the currently active Python environment.",
         is_configurable=False,
     )
+    XONSH_GITSTATUS_FIELDS_HIDDEN = Var.with_default(
+        ("gs_lines_added", "gs_lines_removed"),
+        "Fields to hide in {gitstatus} prompt.\n\n"
+        + "\n".join(
+            f"* ``{fld}``\n" for fld in GitStatus.fragments if fld.startswith("gs_")
+        ),
+    )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,
         "When searching history from a partial string (by pressing up arrow), "
@@ -2485,7 +2493,7 @@ def default_env(env=None):
     # in order of increasing precedence
     ctx = {
         "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
-        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default(env)),
+        "PROMPT_FIELDS": DEFAULT_VARS["PROMPT_FIELDS"].default(env),
         "XONSH_VERSION": XONSH_VERSION,
     }
     ctx.update(os_environ)

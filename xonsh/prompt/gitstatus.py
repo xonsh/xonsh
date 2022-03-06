@@ -239,20 +239,32 @@ def gs_clean(fld, ctx):
         fld.value = fld.symbol
 
 
-gitstatus = MultiPromptFld(
-    gs_branch,
-    gs_ahead,
-    gs_behind,
-    gs_operations,
-    "{RESET}|",
-    gs_staged,
-    gs_conflicts,
-    gs_changed,
-    gs_deleted,
-    gs_untracked,
-    gs_stash_count,
-    gs_lines_added,
-    gs_lines_removed,
-    gs_clean,
-)
-"""Return str `BRANCH|OPERATOR|numbers`"""
+class GitStatus(MultiPromptFld):
+    """Return str `BRANCH|OPERATOR|numbers`"""
+
+    fragments = (
+        "gs_branch",
+        "gs_ahead",
+        "gs_behind",
+        "gs_operations",
+        "{RESET}|",
+        "gs_staged",
+        "gs_conflicts",
+        "gs_changed",
+        "gs_deleted",
+        "gs_untracked",
+        "gs_stash_count",
+        "gs_lines_added",
+        "gs_lines_removed",
+        "gs_clean",
+    )
+
+    def get_frags(self, env):
+        hidden = env.get("XONSH_GITSTATUS_FIELDS_HIDDEN", [])
+        for frag in self.fragments:
+            if frag in hidden:
+                continue
+            yield frag
+
+
+gitstatus = GitStatus()

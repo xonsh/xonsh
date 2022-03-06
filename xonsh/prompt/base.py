@@ -449,29 +449,21 @@ class MultiPromptFld(BasePromptFld):
 
     separator = ""
     """in case this combines values from other prompt fields"""
+    fragments: "tuple[str, ...]" = ()
 
     def __init__(self, *fragments: "str|PromptFldType", **kwargs):
         super().__init__(**kwargs)
-        self.fragments = fragments
+        self.fragments = fragments or self.fragments
+
+    def get_frags(self, env):
+        yield from self.fragments
 
     def _collect(self, ctx):
-        if self.fragments:
-            for frag in self.fragments:
-                if frag in ctx:
-                    yield format(ctx.pick(frag))
-                elif isinstance(frag, str):
-                    yield frag
+        for frag in self.get_frags(ctx.xsh.env):
+            if frag in ctx:
+                yield format(ctx.pick(frag))
+            elif isinstance(frag, str):
+                yield frag
 
     def update(self, ctx: PromptFields):
-        if self.fragments:
-            self.value = self.separator.join(self._collect(ctx))
-
-    def remove(self, *names: str):
-        def _new():
-            # lazily call the name attribute
-            for frag in self.fragments:
-                name = frag if isinstance(frag, str) else frag.name
-                if name not in names:
-                    yield name
-
-        self.fragments = tuple(_new())
+        self.value = self.separator.join(self._collect(ctx))
