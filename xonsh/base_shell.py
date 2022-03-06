@@ -565,6 +565,10 @@ class BaseShell:
     @property
     def prompt(self):
         """Obtains the current prompt string."""
+
+        # clear prompt level cache
+        XSH.env["PROMPT_FIELDS"].reset()
+
         if self.need_more_lines:
             if self.mlprompt is None:
                 try:

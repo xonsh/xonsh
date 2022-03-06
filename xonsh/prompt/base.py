@@ -74,27 +74,24 @@ class PromptFormatter:
     uses the ``PROMPT_FIELDS`` envvar (no color formatting).
     """
 
-    def __init__(self):
-        self.cache = {}
-
     def __call__(self, template=DEFAULT_PROMPT, fields=None, **kwargs) -> str:
         """Formats a xonsh prompt template string."""
-
-        # keep cache only during building prompt
-        self.cache.clear()
 
         if fields is None:
             self.fields = XSH.env["PROMPT_FIELDS"]  # type: ignore
         else:
             self.fields = fields
+
         try:
             toks = self._format_prompt(template=template, **kwargs)
             prompt = toks.process()
         except Exception as ex:
             # make it obvious why it has failed
-            print(
-                f"Failed to format prompt `{template}`-> {type(ex)}:{ex}",
-                file=sys.stderr,
+            import logging
+
+            logging.error(str(ex), exc_info=True)
+            xt.print_exception(
+                f"Failed to format prompt `{template}`-> {type(ex)}:{ex}"
             )
             return _failover_template_format(template)
         return prompt
@@ -124,16 +121,9 @@ class PromptFormatter:
             # color or unknown field, return as is
             return "{" + field + "}"
 
-    def _get_field_value(self, field, **kwargs):
-        field_value = self.fields[field]
-        if field_value in self.cache:
-            return self.cache[field_value]
-        return self._no_cache_field_value(field, field_value, **kwargs)
-
-    def _no_cache_field_value(self, field, field_value, **_):
+    def _get_field_value(self, field, **_):
         try:
-            value = field_value() if callable(field_value) else field_value
-            self.cache[field_value] = value
+            return self.fields.pick(field)
         except Exception:  # noqa
             print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
@@ -364,7 +354,15 @@ class PromptFields(cabc.MutableMapping):
 
             # store in cache
             self._cache[name] = value
-        return value
+        return self._cache[name]
+
+    def needs_calling(self, name) -> bool:
+        """check if we can offload the work"""
+        if name in self._cache or (name not in self._items):
+            return False
+
+        value = self[name]
+        return isinstance(value, BasePromptFld) or callable(value)
 
     def reset(self):
         """the results are cached and need to be reset between prompts"""
