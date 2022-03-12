@@ -10,7 +10,7 @@ import subprocess
 from xonsh.prompt.base import MultiPromptFld, PromptFields, PromptFld
 
 
-def _check_output(xsh, *args: str, **kwargs) -> str:
+def _get_sp_output(xsh, *args: str, **kwargs) -> str:
     denv = xsh.env.detype()
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
 
@@ -19,19 +19,15 @@ def _check_output(xsh, *args: str, **kwargs) -> str:
             env=denv,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
-            universal_newlines=True,
+            text=True,
         )
     )
     timeout = xsh.env["VC_BRANCH_TIMEOUT"]
+    out = ""
     # See https://docs.python.org/3/library/subprocess.html#subprocess.Popen.communicate
     with subprocess.Popen(args, **kwargs) as proc:
         try:
-            out, err = proc.communicate(timeout=timeout)
-            if proc.returncode != 0:
-                raise subprocess.CalledProcessError(
-                    proc.returncode, proc.args, output=out, stderr=err
-                )  # note err will always be empty as we redirect stderr to DEVNULL abvoe
-            return out
+            out, _ = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             # We use `.terminate()` (SIGTERM) instead of `.kill()` (SIGKILL) here
             # because otherwise we guarantee that a `.git/index.lock` file will be
@@ -46,7 +42,7 @@ def _check_output(xsh, *args: str, **kwargs) -> str:
             # `with subprocess.Popen()` context manager above would do that
             # for us, but we do it to be explicit that waiting is being done.
             proc.wait()  # we ignore what git says after we sent it SIGTERM
-            raise
+    return out
 
 
 class _GSField(PromptFld):
@@ -55,7 +51,7 @@ class _GSField(PromptFld):
     _args: "tuple[str, ...]" = ()
 
     def update(self, ctx):
-        self.value = _check_output(ctx.xsh, *self._args).strip()
+        self.value = _get_sp_output(ctx.xsh, *self._args).strip()
 
 
 gs_hash = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
@@ -122,11 +118,13 @@ def gs_operations(fld, ctx: PromptFields) -> None:
     op = fld.separator.join(get_operations(gitdir))
     if op:
         fld.value = fld.separator + op
+    else:
+        fld.value = ""
 
 
 @PromptFld.wrap()
-def gs_porcelain(fld, ctx: PromptFields) -> None:
-    status = _check_output(ctx.xsh, "git", "status", "--porcelain", "--branch")
+def gs_porcelain(fld, ctx: PromptFields):
+    status = _get_sp_output(ctx.xsh, "git", "status", "--porcelain", "--branch")
     branch = ""
     ahead, behind = 0, 0
     untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
@@ -196,7 +194,7 @@ gs_staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
 
 @PromptFld.wrap()
 def gs_numstat(fld, ctx):
-    changed = _check_output(ctx.xsh, "git", "diff", "--numstat")
+    changed = _get_sp_output(ctx.xsh, "git", "diff", "--numstat")
 
     insert = 0
     delete = 0
@@ -233,8 +231,7 @@ def gs_clean(fld, ctx):
             gs_stash_count,
         )
     )
-    if not changes:
-        fld.value = fld.symbol
+    fld.value = "" if changes else fld.symbol
 
 
 class GitStatus(MultiPromptFld):
