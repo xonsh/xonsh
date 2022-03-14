@@ -20,7 +20,7 @@ from ast import AST
 
 from xonsh.inspectors import Inspector
 from xonsh.lazyasd import lazyobject
-from xonsh.platform import ON_POSIX, ON_WINDOWS
+from xonsh.platform import ON_POSIX
 from xonsh.tools import (
     XonshCalledProcessError,
     XonshError,
@@ -92,12 +92,7 @@ def reglob(path, parts=None, i=None):
             base = ""
         elif len(parts) > 1:
             i += 1
-    regex = os.path.join(base, parts[i])
-    if ON_WINDOWS:
-        # currently unable to access regex backslash sequences
-        # on Windows due to paths using \.
-        regex = regex.replace("\\", "\\\\")
-    regex = re.compile(regex)
+    regex = re.compile(parts[i])
     files = os.listdir(subdir)
     files.sort()
     paths = []
@@ -105,12 +100,12 @@ def reglob(path, parts=None, i=None):
     if i1 == len(parts):
         for f in files:
             p = os.path.join(base, f)
-            if regex.fullmatch(p) is not None:
+            if regex.fullmatch(f) is not None:
                 paths.append(p)
     else:
         for f in files:
             p = os.path.join(base, f)
-            if regex.fullmatch(p) is None or not os.path.isdir(p):
+            if regex.fullmatch(f) is None or not os.path.isdir(p):
                 continue
             paths += reglob(p, parts=parts, i=i1)
     return paths

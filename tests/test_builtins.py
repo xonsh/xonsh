@@ -1,8 +1,10 @@
 """Tests the xonsh builtins."""
 import os
 import re
+import shutil
 import types
 from ast import AST, Expression, Interactive, Module
+from pathlib import Path
 
 import pytest
 
@@ -83,6 +85,26 @@ def test_repath_HOME_PATH_var_brace(home_env):
     obs = pathsearch(regexsearch, '${"HOME"}')
     assert 1 == len(obs)
     assert exp == obs[0]
+
+
+@pytest.mark.parametrize(
+    "path, pattern",
+    [
+        ("test/model", ".*/model"),
+        ("test+a/model", ".*/model"),
+        ("test*1/model", ".*/model"),
+        ("hello/test*1/model", "hello/.*/model"),
+    ],
+)
+def test_repath_containing_regex_chars(path, pattern):
+    base_testdir = Path("re_testdir")
+    testdir = base_testdir / path
+    testdir.mkdir(parents=True)
+    try:
+        obs = regexsearch(str(base_testdir / pattern))
+        assert [str(testdir)] == obs
+    finally:
+        shutil.rmtree(base_testdir)
 
 
 def test_helper_int(home_env):
