@@ -1356,7 +1356,7 @@ def to_logfile_opt(x):
     if isinstance(x, os.PathLike):  # type: ignore
         x = str(x)
     if is_logfile_opt(x):
-        return x
+        return expand_path(x) if x else x
     else:
         # if option is not valid, return a proper
         # option and inform the user on stderr

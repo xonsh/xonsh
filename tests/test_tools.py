@@ -1417,6 +1417,7 @@ def test_is_logfile_opt(inp, exp):
             else None,
             marks=skip_if_on_windows,
         ),
+        ("~/log", os.path.expanduser("~/log")),
     ],
 )
 def test_to_logfile_opt(inp, exp):
