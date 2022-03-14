@@ -1549,7 +1549,8 @@ By default, the following variables are available for use:
     may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
   * ``localtime``: The current, local time as given by ``time.localtime()``.
     This is formatted with the time format string found in ``time_format``.
-  * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
+  * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``. See section
+    on ``PROMPT_FIELDS`` for more information on how to change.
 
 xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
 `as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
@@ -1645,10 +1646,11 @@ keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown bel
   can use!
 
 You can make use of additional variables beyond these by adding them to the
-``PROMPT_FIELDS`` environment variable.  The values in this dictionary
-should be strings (which will be inserted into the prompt verbatim), or
-functions of no arguments (which will be called each time the prompt is
-generated, and the results of those calls will be inserted into the prompt).
+``PROMPT_FIELDS`` environment variable. This is also how you set the ``time_format``
+variable. The values in this dictionary should be strings (which will be inserted
+into the prompt verbatim), or functions of no arguments (which will be called each
+time the prompt is generated, and the results of those calls will be inserted
+into the prompt).
 For example:
 
 .. code-block:: console
