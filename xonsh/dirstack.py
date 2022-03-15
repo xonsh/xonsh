@@ -20,6 +20,7 @@ _unc_tempDrives: tp.Dict[str, str] = {}
 """ drive: sharePath for temp drive letters we create for UNC mapping"""
 
 
+@tp.no_type_check
 def _unc_check_enabled() -> bool:
     r"""Check whether CMD.EXE is enforcing no-UNC-as-working-directory check.
 
