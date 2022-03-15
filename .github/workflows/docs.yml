@@ -39,7 +39,7 @@ jobs:
         if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/v')
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ steps.generate-token.outputs.token }}
+          personal_token: ${{ steps.generate-token.outputs.token }}
           external_repository: xonsh/xonsh-docs
           publish_dir: ./docs/_build/html
           destination_dir: dev # latest as in main branch
@@ -47,7 +47,7 @@ jobs:
         if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ steps.generate-token.outputs.token }}
+          personal_token: ${{ steps.generate-token.outputs.token }}
           external_repository: xonsh/xonsh-docs
           publish_dir: ./docs/_build/html
 #          # todo: implement versioned docs
