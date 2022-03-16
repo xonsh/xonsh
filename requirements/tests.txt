@@ -18,9 +18,7 @@ pre-commit
 pyte>=0.8.0
 
 # types related
-# mypy==0.931
-git+git://github.com/python/mypy.git@9b3147701f054bf8ef42bd96e33153b05976a5e1
-# TODO: replace above with mypy==0.940 once its released
+mypy==0.940
 types-ujson
 
 # ensure tests run with the amalgamated (==production) xonsh
