@@ -271,6 +271,18 @@ class PromptFields(cabc.MutableMapping):
         if init:
             self.load_initial()
 
+    def __repr__(self):
+        return f"{self.__class__.__module__}.{self.__class__.__name__}(...)"
+
+    def _repr_pretty_(self, p, cycle):
+        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        with p.group(1, name + "(", ")"):
+            if cycle:
+                p.text("...")
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
+
     def __getitem__(self, item: "str|BasePromptField"):
         # todo: load on-demand from modules
         if isinstance(item, BasePromptField):
