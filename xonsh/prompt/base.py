@@ -441,11 +441,13 @@ class PromptFld(BasePromptField):
 
 
 class MultiPromptFld(BasePromptField):
-    """class to ease combining other PromptFld"""
+    """Class to facilitate combining other PromptFld"""
 
     separator = ""
     """in case this combines values from other prompt fields"""
+
     fragments: "tuple[str, ...]" = ()
+    """name of the fields or the literals to combine"""
 
     def __init__(self, *fragments: "str", **kwargs):
         super().__init__(**kwargs)
