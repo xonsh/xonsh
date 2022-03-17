@@ -273,12 +273,6 @@ class PromptFields(cabc.MutableMapping):
 
     def __getitem__(self, item: "str|BasePromptField"):
         # todo: load on-demand from modules
-        # self._matcher = ModuleFinder(
-        #     "xonsh.prompts",
-        #     *XSH.env.get("XONSH_PROMPT_NS", []),
-        # )
-        # if item not in self._items:
-        #     self._matcher.get_module(item)
         if isinstance(item, BasePromptField):
             item = item.name
         return self._items[item]
