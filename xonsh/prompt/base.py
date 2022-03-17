@@ -264,14 +264,14 @@ class PromptFields(cabc.MutableMapping):
     def __init__(self, xsh: "XonshSession", init=True):
         self._items: "dict[str, str | tp.Callable[..., str]]" = {}
 
-        self._cache: "dict[str, str|BasePromptFld]" = {}
+        self._cache: "dict[str, str|BasePromptField]" = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
         self.xsh = xsh
         if init:
             self.load_initial()
 
-    def __getitem__(self, item: "str|BasePromptFld"):
+    def __getitem__(self, item: "str|BasePromptField"):
         # todo: load on-demand from modules
         # self._matcher = ModuleFinder(
         #     "xonsh.prompts",
@@ -279,7 +279,7 @@ class PromptFields(cabc.MutableMapping):
         # )
         # if item not in self._items:
         #     self._matcher.get_module(item)
-        if isinstance(item, BasePromptFld):
+        if isinstance(item, BasePromptField):
             item = item.name
         return self._items[item]
 
@@ -300,7 +300,7 @@ class PromptFields(cabc.MutableMapping):
             if attr.startswith("_"):
                 continue
 
-            if isinstance(val, BasePromptFld):
+            if isinstance(val, BasePromptField):
                 val.name = attr
                 yield attr, val
 
@@ -342,19 +342,19 @@ class PromptFields(cabc.MutableMapping):
         for attr, val in self.get_fields(gitstatus):
             self[attr] = val
 
-    def pick(self, key: "str|BasePromptFld") -> "tp.Any":
+    def pick(self, key: "str|BasePromptField") -> "tp.Any":
         """Get the value of the prompt-field
 
         Notes
         -----
             If it is callable, then the result of the callable is returned
         """
-        name = key.name if isinstance(key, BasePromptFld) else key
+        name = key.name if isinstance(key, BasePromptField) else key
         if name not in self._items:
             return
         value = self._items[name]
         if name not in self._cache:
-            if isinstance(value, BasePromptFld):
+            if isinstance(value, BasePromptField):
                 value.update(self)
             elif callable(value):
                 value = value()
@@ -369,21 +369,21 @@ class PromptFields(cabc.MutableMapping):
             return False
 
         value = self[name]
-        return isinstance(value, BasePromptFld) or callable(value)
+        return isinstance(value, BasePromptField) or callable(value)
 
     def reset(self):
         """the results are cached and need to be reset between prompts"""
         self._cache.clear()
 
 
-class BasePromptFld:
+class BasePromptField:
     value = ""
     _name: "str|None" = None
     """will be set during load"""
 
     def __init__(
         self,
-        updator: "tp.Callable[[BasePromptFld, PromptFields], None]" = None,
+        updator: "tp.Callable[[BasePromptField, PromptFields], None]" = None,
         **kwargs,
     ):
         """
@@ -435,7 +435,7 @@ class BasePromptFld:
         self._name = value
 
 
-class PromptFld(BasePromptFld):
+class PromptFld(BasePromptField):
     # these three fields will get updated by the caller
     prefix = ""
     suffix = ""
@@ -446,7 +446,7 @@ class PromptFld(BasePromptFld):
         return ""
 
 
-class MultiPromptFld(BasePromptFld):
+class MultiPromptFld(BasePromptField):
     """class to ease combining other PromptFld"""
 
     separator = ""
