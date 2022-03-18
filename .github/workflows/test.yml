@@ -28,6 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip --version
+          python -m pip install wheel
           python -m pip install -r requirements/tests.txt
       - name: Run QA Checks
         if: ${{ startsWith(matrix.os, 'ubuntu') && startsWith(matrix.python-version, '3.10') }}
