@@ -1,4 +1,4 @@
-name: pytest linux 3.8
+name: CI Tests
 
 on:
   push:
@@ -12,10 +12,10 @@ jobs:
   ci:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: ["3.7", "3.8", "3.9","3.10" ]
-        fail-fast: false
     name: Test Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -29,9 +29,16 @@ jobs:
         run: |
           python -m pip --version
           python -m pip install -r requirements/tests.txt
-          python -m pip install . --no-deps
       - name: Run QA Checks
+        if: ${{ startsWith(matrix.os, 'ubuntu') && startsWith(matrix.python-version, '3.10') }}
         run: python -m xonsh run-tests.xsh qa
-        if: ${{ matrix.os == 'ubuntu-latest' }} && ${{ matrix.python-version == '3.10' }}
       - name: Run tests
-        run: python -m xonsh run-tests.xsh test -- --timeout=240
+        if: ${{ !startsWith(matrix.python-version, '3.10') }}
+        run: |
+          python -m pip install . --no-deps
+          python -m xonsh run-tests.xsh test -- --timeout=240
+      - name: Run tests with coverage
+        if: ${{ startsWith(matrix.python-version, '3.10') }}
+        run: |
+          python -m pip install -e . --no-deps
+          python -m xonsh run-tests.xsh test --report-coverage --no-amalgam -- --timeout=240

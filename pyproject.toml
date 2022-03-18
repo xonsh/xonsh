@@ -40,6 +40,6 @@ force_exclude = '''.*/__amalgam__.py'''
 
 [tool.isort]
 profile = "black"
-extend_skip_glob = ["xonsh/*_table.py", "xonsh/ply/**.py"]
+extend_skip_glob = ["xonsh/*_table.py", "xonsh/ply/**.py", "*/__amalgam__.py", "**/__amalgam__.py"]
 src_paths = ["xonsh", "xontrib", "xompletions", "tests"]
 known_third_party = ["ply"]
