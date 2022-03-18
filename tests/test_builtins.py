@@ -87,16 +87,8 @@ def test_repath_HOME_PATH_var_brace(home_env):
     assert exp == obs[0]
 
 
-@pytest.mark.parametrize(
-    "path, pattern",
-    [
-        ("test/model", ".*/model"),
-        ("test+a/model", ".*/model"),
-        ("test*1/model", ".*/model"),
-        ("hello/test*1/model", "hello/.*/model"),
-    ],
-)
-def test_repath_containing_regex_chars(path, pattern):
+# helper
+def check_repath(path, pattern):
     base_testdir = Path("re_testdir")
     testdir = base_testdir / path
     testdir.mkdir(parents=True)
@@ -105,6 +97,29 @@ def test_repath_containing_regex_chars(path, pattern):
         assert [str(testdir)] == obs
     finally:
         shutil.rmtree(base_testdir)
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "path, pattern",
+    [
+        ("test*1/model", ".*/model"),
+        ("hello/test*1/model", "hello/.*/model"),
+    ],
+)
+def test_repath_containing_asterisk(path, pattern):
+    check_repath(path, pattern)
+
+
+@pytest.mark.parametrize(
+    "path, pattern",
+    [
+        ("test+a/model", ".*/model"),
+        ("hello/test+1/model", "hello/.*/model"),
+    ],
+)
+def test_repath_containing_plus_sign(path, pattern):
+    check_repath(path, pattern)
 
 
 def test_helper_int(home_env):
