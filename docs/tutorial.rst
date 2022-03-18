@@ -1514,7 +1514,11 @@ which will be replaced automatically:
     snail@home:~ > $PROMPT = lambda: '{user}@{hostname}:{cwd} >> '
     snail@home:~ >> # so does that!
 
+-- todo: convert this to jinja template and generate these contents dynamically and mention about $PROMPT_FIELDS
+
 By default, the following variables are available for use:
+
+  -- remove these extra variables and set the attribute on the field itself
 
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer

@@ -1,6 +1,13 @@
 """Informative git status prompt formatter.
 
 Each part of the status field is extendable and customizable.
+
+Examples
+--------
+
+Here are some instances where you want to customize the prompt-output from these fields
+
+
 """
 
 import contextlib
