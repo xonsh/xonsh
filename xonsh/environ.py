@@ -37,7 +37,6 @@ from xonsh.platform import (
     PATH_DEFAULT,
     os_environ,
 )
-from xonsh.prompt.gitstatus import GitStatus
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,

@@ -184,7 +184,7 @@ def porcelain(fld, ctx: PromptFields):
             if "Initial commit on" in line:
                 branch = line.split()[-1]
             elif "no branch" in line:
-                branch = ctx.pick(_tag_or_hash)
+                branch = ctx.pick(tag_or_hash)
             elif "..." not in line:
                 branch = line
             else:
