@@ -83,7 +83,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
     returncode of the command is nonzero.
 
     Example:
-    -------
+    --------
         try:
             for line in !(ls):
                 print(line)

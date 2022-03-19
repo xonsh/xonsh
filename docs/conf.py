@@ -452,3 +452,10 @@ def setup(app):
 
     app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")
+
+
+if __name__ == "__main__":
+    # use this to debug the process from IDEs
+    from sphinx.cmd import build
+
+    build.main(["-b", "html", ".", "_build/html"])

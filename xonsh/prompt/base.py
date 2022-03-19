@@ -263,6 +263,8 @@ def _format_value(val, spec, conv) -> str:
 
 
 class PromptFields(cabc.MutableMapping):
+    """Mapping of functions available for prompt-display."""
+
     def __init__(self, xsh: "XonshSession", init=True):
         self._items: "dict[str, str | tp.Callable[..., str]]" = {}
 

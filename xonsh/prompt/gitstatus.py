@@ -2,7 +2,29 @@
 
 Each part of the status field is extendable and customizable.
 
-All of the fields have prefix and suffix attribute that can be set in the configuration as shown below.
+Following fields are available other than ``gitstatus``
+
+* gitstatus.ahead
+* gitstatus.behind
+* gitstatus.branch
+* gitstatus.changed
+* gitstatus.clean
+* gitstatus.conflicts
+* gitstatus.deleted
+* gitstatus.lines_added
+* gitstatus.lines_removed
+* gitstatus.numstat
+* gitstatus.operations
+* gitstatus.porcelain
+* gitstatus.repo_path
+* gitstatus.short_head
+* gitstatus.staged
+* gitstatus.stash_count
+* gitstatus.tag
+* gitstatus.tag_or_hash
+* gitstatus.untracked
+
+All the fields have prefix and suffix attribute that can be set in the configuration as shown below.
 Other attributes can also be changed.
 
 See some examples below,

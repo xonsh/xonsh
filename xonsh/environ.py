@@ -583,6 +583,7 @@ def xdg_data_dirs(env):
     r"""
     On Windows: ``[%ProgramData%]`` (normally C:\ProgramData)
         - More Info: https://docs.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-folderlocations-programdata
+
     On Linux and Unix based systemd it is the same as in open-desktop standard: ``['/usr/share', '/usr/local/share']``
     """
     if ON_WINDOWS:
