@@ -15,6 +15,8 @@ from xonsh.built_ins import XSH
 if tp.TYPE_CHECKING:
     from xonsh.built_ins import XonshSession
 
+    FieldType = tp.TypeVar("FieldType", bound="BasePromptField")
+
 
 @xt.lazyobject
 def DEFAULT_PROMPT():
@@ -303,12 +305,17 @@ class PromptFields(cabc.MutableMapping):
 
     def get_fields(self, module):
         for attr, val in vars(module).items():
-            if attr.startswith("_"):
-                continue
-
             if isinstance(val, BasePromptField):
-                val.name = attr
-                yield attr, val
+                if attr.startswith("_"):
+                    parent = module.__name__.replace(module.__package__, "", 1).replace(
+                        ".", "", 1
+                    )
+                    fragment = attr.lstrip("_")
+                    name = f"{parent}.{fragment}"
+                else:
+                    name = attr
+                val.name = name
+                yield val
 
     def load_initial(self):
         from xonsh.prompt import gitstatus
@@ -345,15 +352,16 @@ class PromptFields(cabc.MutableMapping):
                 localtime=_localtime,
             )
         )
-        for attr, val in self.get_fields(gitstatus):
-            self[attr] = val
+        for val in self.get_fields(gitstatus):
+            self[val.name] = val
 
-    def pick(self, key: "str|BasePromptField") -> "tp.Any":
+    def pick(self, key: "str|FieldType") -> "str | FieldType | None":
         """Get the value of the prompt-field
 
         Notes
         -----
-            If it is callable, then the result of the callable is returned
+            If it is callable, then the result of the callable is returned.
+            If it is a PromptField then it is updated
         """
         name = key.name if isinstance(key, BasePromptField) else key
         if name not in self._items:
@@ -368,6 +376,11 @@ class PromptFields(cabc.MutableMapping):
             # store in cache
             self._cache[name] = value
         return self._cache[name]
+
+    def pick_val(self, key):
+        """wrap .pick() method to get .value attribute in case of PromptField"""
+        val = self.pick(key)
+        return val.value if isinstance(val, BasePromptField) else val
 
     def needs_calling(self, name) -> bool:
         """check if we can offload the work"""
@@ -384,26 +397,24 @@ class PromptFields(cabc.MutableMapping):
 
 class BasePromptField:
     value = ""
+    """This field should hold the bare value of the field without any color/format strings"""
+
     _name: "str|None" = None
-    """will be set during load"""
+    updator: "tp.Callable[[FieldType, PromptFields], None] | None" = None
+    """this is a callable that needs to update the value or any of the attribute of the field"""
 
     def __init__(
         self,
-        updator: "tp.Callable[[BasePromptField, PromptFields], None]" = None,
         **kwargs,
     ):
         """
 
         Parameters
         ----------
-        updator
-            this is a callable that needs to update the value or any of the attribute of the field
         kwargs
             attributes of the class will be set from this
         """
-        self.updator = updator
-        if updator:
-            self._name = updator.__name__
+
         for attr, val in kwargs.items():
             setattr(self, attr, val)
 
@@ -422,7 +433,7 @@ class BasePromptField:
         return f"<Prompt: {self._name}>"
 
     @classmethod
-    def wrap(cls, **kwargs):
+    def wrap(cls, **kwargs) -> "tp.Callable[..., FieldType]":
         """decorator to set the updator"""
 
         def wrapped(func):
@@ -432,6 +443,14 @@ class BasePromptField:
 
     @property
     def name(self) -> str:
+        """will be set during load.
+
+        Notes
+        -----
+            fields with names such as ``gitstatus.branch`` mean they are defined in a module named ``gitstatus`` and
+            are most likely a subfield used by ``gitstatus``
+        """
+
         if self._name is None:
             raise NotImplementedError("PromptField name is not set")
         return self._name
@@ -441,7 +460,9 @@ class BasePromptField:
         self._name = value
 
 
-class PromptFld(BasePromptField):
+class PromptField(BasePromptField):
+    """Any new non-private attributes set by the sub-classes are considered a way to configure the format"""
+
     # these three fields will get updated by the caller
     prefix = ""
     suffix = ""
@@ -452,14 +473,15 @@ class PromptFld(BasePromptField):
         return ""
 
 
-class MultiPromptFld(BasePromptField):
-    """Class to facilitate combining other PromptFld"""
+class MultiPromptField(BasePromptField):
+    """Facilitate combining other PromptFields"""
 
     separator = ""
     """in case this combines values from other prompt fields"""
 
     fragments: "tuple[str, ...]" = ()
-    """name of the fields or the literals to combine"""
+    """name of the fields or the literals to combine.
+    If the framgment name startswith ``.`` then they are resolved to include the name of this field."""
 
     def __init__(self, *fragments: "str", **kwargs):
         super().__init__(**kwargs)
@@ -470,6 +492,11 @@ class MultiPromptFld(BasePromptField):
 
     def _collect(self, ctx):
         for frag in self.get_frags(ctx.xsh.env):
+            if frag.startswith("."):
+                field_name = f"{self.name}{frag}"
+                if field_name in ctx:
+                    frag = field_name
+
             if frag in ctx:
                 yield format(ctx.pick(frag))
             elif isinstance(frag, str):

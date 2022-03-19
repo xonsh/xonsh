@@ -33,13 +33,13 @@ def fake_proc(fake_process):
             "{CYAN}gitstatus-opt↑·7↓·2{RESET}|{RED}●1{RESET}{BLUE}+3{RESET}{BLUE}+49{RESET}{RED}-26{RESET}",
         ),
         (
-            ("gs_lines_added", "gs_lines_removed"),
+            (".lines_added", ".lines_removed"),
             "{CYAN}gitstatus-opt↑·7↓·2{RESET}|{RED}●1{RESET}{BLUE}+3{RESET}",
         ),
     ],
 )
 def test_gitstatus_dirty(prompts, fake_proc, hidden, exp, xession):
-    xession.env["XONSH_GITSTATUS_FIELDS_HIDDEN"] = hidden
+    prompts["gitstatus"].hidden = hidden
     dirty = {
         "git status --porcelain --branch": b"""\
 ## gitstatus-opt...origin/gitstatus-opt [ahead 7, behind 2]

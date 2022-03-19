@@ -1483,13 +1483,6 @@ class PromptSetting(Xettings):
         "Path to the currently active Python environment.",
         is_configurable=False,
     )
-    XONSH_GITSTATUS_FIELDS_HIDDEN = Var.with_default(
-        ("gs_lines_added", "gs_lines_removed"),
-        "Fields to hide in {gitstatus} prompt.\n\n"
-        + "\n".join(
-            f"* ``{fld}``\n" for fld in GitStatus.fragments if fld.startswith("gs_")
-        ),
-    )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,
         "When searching history from a partial string (by pressing up arrow), "

@@ -14,7 +14,7 @@ import contextlib
 import os
 import subprocess
 
-from xonsh.prompt.base import MultiPromptFld, PromptFields, PromptFld
+from xonsh.prompt.base import MultiPromptField, PromptFields, PromptField
 
 
 def _get_sp_output(xsh, *args: str, **kwargs) -> str:
@@ -52,7 +52,7 @@ def _get_sp_output(xsh, *args: str, **kwargs) -> str:
     return out
 
 
-class _GSField(PromptFld):
+class _GSField(PromptField):
     """wrap output from git command to value"""
 
     _args: "tuple[str, ...]" = ()
@@ -61,13 +61,13 @@ class _GSField(PromptFld):
         self.value = _get_sp_output(ctx.xsh, *self._args).strip()
 
 
-gs_hash = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
-gs_tag = _GSField(_args=("git", "describe", "--always"))
+_hash = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
+_tag = _GSField(_args=("git", "describe", "--always"))
 
 
-@PromptFld.wrap()
-def gs_tag_or_hash(fld: PromptFld, ctx):
-    fld.value = ctx.pick(gs_tag) or ctx.pick(gs_hash)
+@PromptField.wrap()
+def _tag_or_hash(fld: PromptField, ctx):
+    fld.value = ctx.pick(_tag) or ctx.pick(_hash)
 
 
 def _parse_int(val: str, default=0):
@@ -90,7 +90,7 @@ class _GitDir(_GSField):
             super().update(ctx)
 
 
-gs_dir = _GitDir()
+_dir = _GitDir()
 
 
 def get_stash_count(gitdir: str):
@@ -100,10 +100,9 @@ def get_stash_count(gitdir: str):
     return 0
 
 
-@PromptFld.wrap(prefix="⚑")
-def gs_stash_count(fld: PromptFld, ctx: PromptFields):
-    gitdir = ctx.pick(gs_dir).value
-    fld.value = get_stash_count(gitdir)
+@PromptField.wrap(prefix="⚑")
+def _stash_count(fld: PromptField, ctx: PromptFields):
+    fld.value = get_stash_count(ctx.pick_val(_dir))
 
 
 def get_operations(gitdir: str):
@@ -119,9 +118,9 @@ def get_operations(gitdir: str):
             yield name
 
 
-@PromptFld.wrap(prefix="{CYAN}", separator="|")
-def gs_operations(fld, ctx: PromptFields) -> None:
-    gitdir = ctx.pick(gs_dir).value
+@PromptField.wrap(prefix="{CYAN}", separator="|")
+def _operations(fld, ctx: PromptFields) -> None:
+    gitdir = ctx.pick_val(_dir)
     op = fld.separator.join(get_operations(gitdir))
     if op:
         fld.value = fld.separator + op
@@ -129,8 +128,10 @@ def gs_operations(fld, ctx: PromptFields) -> None:
         fld.value = ""
 
 
-@PromptFld.wrap()
-def gs_porcelain(fld, ctx: PromptFields):
+@PromptField.wrap()
+def _porcelain(fld, ctx: PromptFields):
+    """Return parsed values from ``git status --porcelain``"""
+
     status = _get_sp_output(ctx.xsh, "git", "status", "--porcelain", "--branch")
     branch = ""
     ahead, behind = 0, 0
@@ -141,7 +142,7 @@ def gs_porcelain(fld, ctx: PromptFields):
             if "Initial commit on" in line:
                 branch = line.split()[-1]
             elif "no branch" in line:
-                branch = ctx.pick(gs_tag_or_hash)
+                branch = ctx.pick(_tag_or_hash)
             elif "..." not in line:
                 branch = line
             else:
@@ -179,28 +180,31 @@ def gs_porcelain(fld, ctx: PromptFields):
     }
 
 
-class _GSInfo(PromptFld):
-    """Return parsed values from ``git status``"""
+def get_gitstatus_info(fld: "_GSInfo", ctx: PromptFields) -> None:
+    info = ctx.pick_val(_porcelain)
+    fld.value = info[fld.info]
 
+
+class _GSInfo(PromptField):
     info: str
 
-    def update(self, ctx: PromptFields) -> None:
-        info = ctx.pick(gs_porcelain).value
-        self.value = info[self.info]
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.updator = get_gitstatus_info
 
 
-gs_branch = _GSInfo(prefix="{CYAN}", info="branch")
-gs_ahead = _GSInfo(prefix="↑·", info="ahead")
-gs_behind = _GSInfo(prefix="↓·", info="behind")
-gs_untracked = _GSInfo(prefix="…", info="untracked")
-gs_changed = _GSInfo(prefix="{BLUE}+", suffix="{RESET}", info="changed")
-gs_deleted = _GSInfo(prefix="{RED}-", suffix="{RESET}", info="deleted")
-gs_conflicts = _GSInfo(prefix="{RED}×", suffix="{RESET}", info="conflicts")
-gs_staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
+_branch = _GSInfo(prefix="{CYAN}", info="branch")
+_ahead = _GSInfo(prefix="↑·", info="ahead")
+_behind = _GSInfo(prefix="↓·", info="behind")
+_untracked = _GSInfo(prefix="…", info="untracked")
+_changed = _GSInfo(prefix="{BLUE}+", suffix="{RESET}", info="changed")
+_deleted = _GSInfo(prefix="{RED}-", suffix="{RESET}", info="deleted")
+_conflicts = _GSInfo(prefix="{RED}×", suffix="{RESET}", info="conflicts")
+_staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
 
 
-@PromptFld.wrap()
-def gs_numstat(fld, ctx):
+@PromptField.wrap()
+def _numstat(fld, ctx):
     changed = _get_sp_output(ctx.xsh, "git", "diff", "--numstat")
 
     insert = 0
@@ -215,56 +219,59 @@ def gs_numstat(fld, ctx):
     fld.value = (insert, delete)
 
 
-@PromptFld.wrap(prefix="{BLUE}+", suffix="{RESET}")
-def gs_lines_added(fld: PromptFld, ctx: PromptFields):
-    fld.value = ctx.pick(gs_numstat).value[0]
+@PromptField.wrap(prefix="{BLUE}+", suffix="{RESET}")
+def _lines_added(fld: PromptField, ctx: PromptFields):
+    fld.value = ctx.pick_val(_numstat)[0]
 
 
-@PromptFld.wrap(prefix="{RED}-", suffix="{RESET}")
-def gs_lines_removed(fld: PromptFld, ctx):
-    fld.value = ctx.pick(gs_numstat).value[-1]
+@PromptField.wrap(prefix="{RED}-", suffix="{RESET}")
+def _lines_removed(fld: PromptField, ctx):
+    fld.value = ctx.pick_val(_numstat)[-1]
 
 
-@PromptFld.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
-def gs_clean(fld, ctx):
+@PromptField.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
+def _clean(fld, ctx):
     changes = sum(
-        ctx.pick(f).value
+        ctx.pick_val(f)
         for f in (
-            gs_staged,
-            gs_conflicts,
-            gs_changed,
-            gs_deleted,
-            gs_untracked,
-            gs_stash_count,
+            _staged,
+            _conflicts,
+            _changed,
+            _deleted,
+            _untracked,
+            _stash_count,
         )
     )
     fld.value = "" if changes else fld.symbol
 
 
-class GitStatus(MultiPromptFld):
+class GitStatus(MultiPromptField):
     """Return str `BRANCH|OPERATOR|numbers`"""
 
     fragments = (
-        "gs_branch",
-        "gs_ahead",
-        "gs_behind",
-        "gs_operations",
+        ".branch",
+        ".ahead",
+        ".behind",
+        ".operations",
         "{RESET}|",
-        "gs_staged",
-        "gs_conflicts",
-        "gs_changed",
-        "gs_deleted",
-        "gs_untracked",
-        "gs_stash_count",
-        "gs_lines_added",
-        "gs_lines_removed",
-        "gs_clean",
+        ".staged",
+        ".conflicts",
+        ".changed",
+        ".deleted",
+        ".untracked",
+        ".stash_count",
+        ".lines_added",
+        ".lines_removed",
+        ".clean",
+    )
+    hidden = (
+        ".lines_added",
+        ".lines_removed",
     )
 
     def get_frags(self, env):
-        hidden = env.get("XONSH_GITSTATUS_FIELDS_HIDDEN", [])
         for frag in self.fragments:
-            if frag in hidden:
+            if frag in self.hidden:
                 continue
             yield frag
 
