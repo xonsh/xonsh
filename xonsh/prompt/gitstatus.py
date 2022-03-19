@@ -2,11 +2,29 @@
 
 Each part of the status field is extendable and customizable.
 
-Examples
---------
+All of the fields have prefix and suffix attribute that can be set in the configuration as shown below.
+Other attributes can also be changed.
 
-Here are some instances where you want to customize the prompt-output from these fields
+See some examples below,
 
+.. code-block:: xonsh
+
+    from xonsh.prompt.base import PromptField, PromptFields
+
+    # 1. to change the color of the branch name
+    $PROMPT_FIELDS['gitstatus.branch'].prefix = "{RED}"
+
+    # 2. to change the symbol for conflicts from ``{RED}×``
+    $PROMPT_FIELDS['gitstatus.conflicts'].prefix = "{GREEN}*"
+
+    # 3. hide the branch name if it is main or dev
+    branch_field = $PROMPT_FIELDS['gitstatus.branch']
+    old_updator = branch_field.updator
+    def new_updator(fld: PromptField, ctx: PromptFields):
+        old_updator(fld, ctx)
+        if fld.value in {"main", "dev"}:
+            fld.value = ""
+    branch_field.updator = new_updator
 
 """
 
@@ -61,13 +79,13 @@ class _GSField(PromptField):
         self.value = _get_sp_output(ctx.xsh, *self._args).strip()
 
 
-_hash = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
-_tag = _GSField(_args=("git", "describe", "--always"))
+short_head = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
+tag = _GSField(_args=("git", "describe", "--always"))
 
 
 @PromptField.wrap()
-def _tag_or_hash(fld: PromptField, ctx):
-    fld.value = ctx.pick(_tag) or ctx.pick(_hash)
+def tag_or_hash(fld: PromptField, ctx):
+    fld.value = ctx.pick(tag) or ctx.pick(short_head)
 
 
 def _parse_int(val: str, default=0):
@@ -90,10 +108,11 @@ class _GitDir(_GSField):
             super().update(ctx)
 
 
-_dir = _GitDir()
+repo_path = _GitDir()
 
 
 def get_stash_count(gitdir: str):
+    """Get git-stash count"""
     with contextlib.suppress(OSError):
         with open(os.path.join(gitdir, "logs/refs/stash")) as f:
             return sum(1 for _ in f)
@@ -101,11 +120,12 @@ def get_stash_count(gitdir: str):
 
 
 @PromptField.wrap(prefix="⚑")
-def _stash_count(fld: PromptField, ctx: PromptFields):
-    fld.value = get_stash_count(ctx.pick_val(_dir))
+def stash_count(fld: PromptField, ctx: PromptFields):
+    fld.value = get_stash_count(ctx.pick_val(repo_path))
 
 
 def get_operations(gitdir: str):
+    """get the current git operation e.g. MERGE/REBASE..."""
     for file, name in (
         ("rebase-merge", "REBASE"),
         ("rebase-apply", "AM/REBASE"),
@@ -119,8 +139,8 @@ def get_operations(gitdir: str):
 
 
 @PromptField.wrap(prefix="{CYAN}", separator="|")
-def _operations(fld, ctx: PromptFields) -> None:
-    gitdir = ctx.pick_val(_dir)
+def operations(fld, ctx: PromptFields) -> None:
+    gitdir = ctx.pick_val(repo_path)
     op = fld.separator.join(get_operations(gitdir))
     if op:
         fld.value = fld.separator + op
@@ -129,7 +149,7 @@ def _operations(fld, ctx: PromptFields) -> None:
 
 
 @PromptField.wrap()
-def _porcelain(fld, ctx: PromptFields):
+def porcelain(fld, ctx: PromptFields):
     """Return parsed values from ``git status --porcelain``"""
 
     status = _get_sp_output(ctx.xsh, "git", "status", "--porcelain", "--branch")
@@ -181,7 +201,8 @@ def _porcelain(fld, ctx: PromptFields):
 
 
 def get_gitstatus_info(fld: "_GSInfo", ctx: PromptFields) -> None:
-    info = ctx.pick_val(_porcelain)
+    """Get individual fields from $PROMPT_FIELDS['gitstatus.porcelain']"""
+    info = ctx.pick_val(porcelain)
     fld.value = info[fld.info]
 
 
@@ -193,18 +214,18 @@ class _GSInfo(PromptField):
         self.updator = get_gitstatus_info
 
 
-_branch = _GSInfo(prefix="{CYAN}", info="branch")
-_ahead = _GSInfo(prefix="↑·", info="ahead")
-_behind = _GSInfo(prefix="↓·", info="behind")
-_untracked = _GSInfo(prefix="…", info="untracked")
-_changed = _GSInfo(prefix="{BLUE}+", suffix="{RESET}", info="changed")
-_deleted = _GSInfo(prefix="{RED}-", suffix="{RESET}", info="deleted")
-_conflicts = _GSInfo(prefix="{RED}×", suffix="{RESET}", info="conflicts")
-_staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
+branch = _GSInfo(prefix="{CYAN}", info="branch")
+ahead = _GSInfo(prefix="↑·", info="ahead")
+behind = _GSInfo(prefix="↓·", info="behind")
+untracked = _GSInfo(prefix="…", info="untracked")
+changed = _GSInfo(prefix="{BLUE}+", suffix="{RESET}", info="changed")
+deleted = _GSInfo(prefix="{RED}-", suffix="{RESET}", info="deleted")
+conflicts = _GSInfo(prefix="{RED}×", suffix="{RESET}", info="conflicts")
+staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
 
 
 @PromptField.wrap()
-def _numstat(fld, ctx):
+def numstat(fld, ctx):
     changed = _get_sp_output(ctx.xsh, "git", "diff", "--numstat")
 
     insert = 0
@@ -220,26 +241,26 @@ def _numstat(fld, ctx):
 
 
 @PromptField.wrap(prefix="{BLUE}+", suffix="{RESET}")
-def _lines_added(fld: PromptField, ctx: PromptFields):
-    fld.value = ctx.pick_val(_numstat)[0]
+def lines_added(fld: PromptField, ctx: PromptFields):
+    fld.value = ctx.pick_val(numstat)[0]
 
 
 @PromptField.wrap(prefix="{RED}-", suffix="{RESET}")
-def _lines_removed(fld: PromptField, ctx):
-    fld.value = ctx.pick_val(_numstat)[-1]
+def lines_removed(fld: PromptField, ctx):
+    fld.value = ctx.pick_val(numstat)[-1]
 
 
 @PromptField.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
-def _clean(fld, ctx):
+def clean(fld, ctx):
     changes = sum(
         ctx.pick_val(f)
         for f in (
-            _staged,
-            _conflicts,
-            _changed,
-            _deleted,
-            _untracked,
-            _stash_count,
+            staged,
+            conflicts,
+            changed,
+            deleted,
+            untracked,
+            stash_count,
         )
     )
     fld.value = "" if changes else fld.symbol
@@ -268,6 +289,7 @@ class GitStatus(MultiPromptField):
         ".lines_added",
         ".lines_removed",
     )
+    """These fields will not be processed for the result"""
 
     def get_frags(self, env):
         for frag in self.fragments:

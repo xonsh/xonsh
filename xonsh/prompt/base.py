@@ -304,16 +304,19 @@ class PromptFields(cabc.MutableMapping):
         self._items[key] = value
 
     def get_fields(self, module):
+        """Find and load all instances of PromptField from the given module.
+
+        Each module is expected to have a single prompt-field with the same name as the module
+        """
+        mod_name = module.__name__.replace(module.__package__, "", 1).replace(
+            ".", "", 1
+        )
         for attr, val in vars(module).items():
             if isinstance(val, BasePromptField):
-                if attr.startswith("_"):
-                    parent = module.__name__.replace(module.__package__, "", 1).replace(
-                        ".", "", 1
-                    )
-                    fragment = attr.lstrip("_")
-                    name = f"{parent}.{fragment}"
-                else:
+                if attr == mod_name:
                     name = attr
+                else:
+                    name = f"{mod_name}.{attr}"
                 val.name = name
                 yield val
 

@@ -129,6 +129,5 @@ push-root:
 	git push
 
 serve:
-	# run as `make serve`
-	# to not watch file changes, run as `make serve watch=no`
+	# disable file-watch with `make serve watch=no`
 	python serve_docs.py $(watch)
