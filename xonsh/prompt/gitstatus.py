@@ -54,7 +54,7 @@ import contextlib
 import os
 import subprocess
 
-from xonsh.prompt.base import MultiPromptField, PromptFields, PromptField
+from xonsh.prompt.base import MultiPromptField, PromptField, PromptFields
 
 
 def _get_sp_output(xsh, *args: str, **kwargs) -> str:
