@@ -449,35 +449,7 @@ make_xontribs()
 make_events()
 
 
-def handle_autodoc_process_docstring(
-    app, what: str, name: str, obj, options, lines: "list[str]"
-):
-    # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
-    if name.endswith("PromptFields") and what == "class":
-        from xonsh.prompt.base import PromptFields
-        from xonsh.built_ins import XSH
-
-        fields = PromptFields(XSH)
-        print(what)
-        # update the generated API doc.
-        # todo: . show all the fields of the prompt-fields
-        # show prefix, suffix of the fields
-        ctx = {"fields": fields}
-        import jinja2
-
-        environment = jinja2.Environment(
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-        src = "\n".join(lines)
-        rendered = environment.from_string(src).render(**ctx)
-
-
 def setup(app: Sphinx):
-    app.connect("autodoc-process-docstring", handle_autodoc_process_docstring)
-    # https://linuxtv.org/downloads/sphinx-1.2.3/extdev/tutorial.html
-    app.add_directive()
-
     from xonsh.pyghooks import XonshConsoleLexer
 
     app.add_lexer("xonshcon", XonshConsoleLexer)
