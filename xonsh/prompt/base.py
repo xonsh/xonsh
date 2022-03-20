@@ -1,6 +1,5 @@
 """Base prompt, provides PROMPT_FIELDS and prompt related functions"""
 
-import collections.abc as cabc
 import itertools
 import os
 import re
@@ -15,7 +14,7 @@ from xonsh.built_ins import XSH
 if tp.TYPE_CHECKING:
     from xonsh.built_ins import XonshSession
 
-    FieldType = tp.TypeVar("FieldType", bound="BasePromptField")
+    FieldType = tp.TypeVar("FieldType", bound="BasePromptField", covariant=True)
 
 
 @xt.lazyobject
@@ -86,7 +85,7 @@ class PromptFormatter:
 
         # some quick tests
         if isinstance(fields, dict):
-            pflds = PromptFields(XSH, init=False)
+            pflds: "PromptFields[PromptField]" = PromptFields(XSH, init=False)
             pflds.update(fields)
             self.fields = pflds
 
@@ -262,13 +261,13 @@ def _format_value(val, spec, conv) -> str:
     return val
 
 
-class PromptFields(cabc.MutableMapping):
+class PromptFields(tp.MutableMapping[str, "FieldType"]):
     """Mapping of functions available for prompt-display."""
 
     def __init__(self, xsh: "XonshSession", init=True):
         self._items: "dict[str, str | tp.Callable[..., str]]" = {}
 
-        self._cache: "dict[str, str|BasePromptField]" = {}
+        self._cache: "dict[str, str|FieldType]" = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
         self.xsh = xsh
@@ -368,9 +367,9 @@ class PromptFields(cabc.MutableMapping):
             If it is callable, then the result of the callable is returned.
             If it is a PromptField then it is updated
         """
-        name = key.name if isinstance(key, BasePromptField) else key
+        name = key if isinstance(key, str) else key.name
         if name not in self._items:
-            return
+            return None
         value = self._items[name]
         if name not in self._cache:
             if isinstance(value, BasePromptField):
