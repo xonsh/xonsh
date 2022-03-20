@@ -1286,7 +1286,7 @@ may have one of the following signatures:
 
         # Note: that you have access to the xonsh
         # built-ins if you 'import builtins'.  For example, if you need the
-        # environment, you could do to following:
+        # environment, you could do the following:
         import builtins
         env = builtins.__xonsh__.env
 
