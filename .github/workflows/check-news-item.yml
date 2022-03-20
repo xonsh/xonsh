@@ -1,9 +1,13 @@
 name: Check News Item
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
     - main
+
+permissions:
+  pull-requests: write
+  contents: read
 
 jobs:
   build:
@@ -14,14 +18,27 @@ jobs:
       - id: file_changes
         uses: trilom/file-changes-action@v1.2.4
         with:
-          output: ','
-      - shell: bash
+          output: ', '
+      - shell: python
+        id: check_news_item
         run: |
-          added_files='${{ steps.file_changes.outputs.files_added}}'
-          echo $added_files
-          if [[ $added_files == *"news/"*.rst* ]]; then
-            echo "Found news item for the PR"
-          else
-            echo "News item for the PR is not found. Please create one from 'news/TEMPLATE.rst'"
-            exit 1
-          fi
+          from fnmatch import fnmatch
+          added_files = "${{ steps.file_changes.outputs.files_added}}"
+          if fnmatch(added_files, "*news/*.rst, *"):
+              print("Found news item for the PR")
+          else:
+              print("News item for the PR is not found")
+              print("::set-output name=NEWS_FOUND::false")
+          # exit 1
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const news_found = ${{ steps.random-color-generator.outputs.SELECTED_COLOR }}"
+            if (news_found === 'false') {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `News item for this PR is not found. Please create one from 'news/TEMPLATE.rst' if this is an user facing change/feature`
+              })
+            }
