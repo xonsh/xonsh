@@ -20,6 +20,7 @@ clean:
 
 .PHONY: amalgamate
 amalgamate:
+	import sys
 	sys.path.insert(0, '.')
 	import setup
 	setup.amalgamate_source()
