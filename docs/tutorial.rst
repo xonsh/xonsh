@@ -1472,8 +1472,8 @@ Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
 
 .. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` environment variable is False
-             (the default) then foreign shell aliases that try to override
-             xonsh aliases will be ignored. Setting of this environment variable
+             (the default), then foreign shell aliases that try to override
+             xonsh aliases will be ignored. The setting of this environment variable
              must happen outside if xonsh, i.e. in the process that starts xonsh.
 
 
@@ -1556,8 +1556,8 @@ By default, the following variables are available for use:
 xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
 `as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
 #envvar-VIRTUAL_ENV_DISABLE_PROMPT>`__. If this variable is truthy, xonsh
-will *always* substitute an empty string for ``{env_name}``. Note that unlike
-with other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
+will *always* substitute an empty string for ``{env_name}``. Note that unlike 
+other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
 after being set---it is not necessary to re-activate the environment.
 
 xonsh also allows for an explicit override of the rendering of ``{env_name}``,
