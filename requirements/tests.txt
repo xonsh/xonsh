@@ -18,7 +18,7 @@ pre-commit
 pyte>=0.8.0
 
 # types related
-mypy==0.940
+mypy==0.941
 types-ujson
 
 # ensure tests run with the amalgamated (==production) xonsh
