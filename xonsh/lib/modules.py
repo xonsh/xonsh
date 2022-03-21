@@ -83,7 +83,7 @@ class ModuleFinder:
         spec.loader.exec_module(module)  # type: ignore
         return module
 
-    @functools.lru_cache(maxsize=None)
+    @functools.lru_cache(maxsize=None)  # noqa
     def get_module(self, module: str):
         for name in [
             module,

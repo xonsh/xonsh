@@ -1,12 +1,11 @@
 """Directory stack and associated utilities for the xonsh shell.
 https://www.gnu.org/software/bash/manual/html_node/Directory-Stack-Builtins.html
 """
-
+import contextlib
 import glob
 import os
 import subprocess
 import typing as tp
-from contextlib import contextmanager
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
@@ -18,6 +17,26 @@ DIRSTACK: tp.List[str] = []
 """A list containing the currently remembered directories."""
 _unc_tempDrives: tp.Dict[str, str] = {}
 """ drive: sharePath for temp drive letters we create for UNC mapping"""
+
+
+@contextlib.contextmanager
+def _win_reg_key(*paths, **kwargs):
+    import winreg
+
+    key = winreg.OpenKey(*paths, **kwargs)
+    yield key
+    winreg.CloseKey(key)
+
+
+def _query_win_reg_key(*paths):
+    import winreg
+
+    *paths, name = paths
+
+    with contextlib.suppress(OSError):
+        with _win_reg_key(*paths) as key:
+            wval, wtype = winreg.QueryValueEx(key, name)
+            return wval
 
 
 @tp.no_type_check
@@ -35,26 +54,18 @@ def _unc_check_enabled() -> bool:
 
     import winreg
 
-    wval = None
-
-    try:
-        key = winreg.OpenKey(
-            winreg.HKEY_CURRENT_USER, r"software\microsoft\command processor"
-        )
-        wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
-        winreg.CloseKey(key)
-    except OSError:
-        pass
+    wval = _query_win_reg_key(
+        winreg.HKEY_CURRENT_USER,
+        r"software\microsoft\command processor",
+        "DisableUNCCheck",
+    )
 
     if wval is None:
-        try:
-            key2 = winreg.OpenKey(
-                winreg.HKEY_LOCAL_MACHINE, r"software\microsoft\command processor"
-            )
-            wval, wtype = winreg.QueryValueEx(key2, "DisableUNCCheck")
-            winreg.CloseKey(key2)
-        except OSError as e:  # NOQA
-            pass
+        wval = _query_win_reg_key(
+            winreg.HKEY_LOCAL_MACHINE,
+            r"software\microsoft\command processor",
+            "DisableUNCCheck",
+        )
 
     return False if wval else True
 
@@ -549,7 +560,7 @@ def dirs_fn(
 dirs = ArgParserAlias(prog="dirs", func=dirs_fn, has_args=True)
 
 
-@contextmanager
+@contextlib.contextmanager
 def with_pushd(d):
     """Use pushd as a context manager"""
     pushd_fn(d)
