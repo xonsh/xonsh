@@ -1,6 +1,4 @@
 """Testing dirstack"""
-# from __future__ import unicode_literals, print_function
-
 import os
 import os.path
 import subprocess
@@ -216,69 +214,56 @@ def test_uncpushd_push_base_push_rempath(xession):
     pass
 
 
-# really?  Need to cut-and-paste 2 flavors of this? fixture requires yield in defined function body, not callee
+@pytest.fixture
+def toggle_unc_check():
+    old_wval = None
+
+    def _update_key(key_type, value: int):
+        import winreg
+
+        old_wval = 0
+        with dirstack._win_reg_key(
+            key_type,
+            r"software\microsoft\command processor",
+            access=winreg.KEY_WRITE,
+        ) as key:
+            try:
+                wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
+                old_wval = wval  # if values was defined at all
+            except OSError:
+                pass
+            winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, value)
+        return old_wval
+
+    def update(value: int):
+        import winreg
+
+        for key_type in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+            try:
+                return _update_key(key_type, value)
+            except OSError:
+                pass
+
+    def wrapper(value: int):
+        nonlocal old_wval
+        old_wval = update(value) or 0
+        return old_wval
+
+    yield wrapper
+
+    # revert back to old value
+    if old_wval is not None:
+        update(old_wval)
+
+
 @pytest.fixture()
-def with_unc_check_enabled():
-    if not ON_WINDOWS:
-        return
-
-    import winreg
-
-    old_wval = 0
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    try:
-        wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
-        old_wval = wval  # if values was defined at all
-    except OSError:
-        pass
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, 0)
-    winreg.CloseKey(key)
-
-    yield old_wval
-
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, old_wval)
-    winreg.CloseKey(key)
+def with_unc_check_enabled(toggle_unc_check):
+    return toggle_unc_check(1)
 
 
 @pytest.fixture()
-def with_unc_check_disabled():  # just like the above, but value is 1 to *disable* unc check
-    if not ON_WINDOWS:
-        return
-
-    import winreg
-
-    old_wval = 0
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    try:
-        wval, wtype = winreg.QueryValueEx(key, "DisableUNCCheck")
-        old_wval = wval  # if values was defined at all
-    except OSError:
-        pass
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, 1)
-    winreg.CloseKey(key)
-
-    yield old_wval
-
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"software\microsoft\command processor",
-        access=winreg.KEY_WRITE,
-    )
-    winreg.SetValueEx(key, "DisableUNCCheck", None, winreg.REG_DWORD, old_wval)
-    winreg.CloseKey(key)
+def with_unc_check_disabled(toggle_unc_check):
+    return toggle_unc_check(0)
 
 
 @pytest.fixture()
@@ -290,7 +275,6 @@ def xonsh_builtins_cd(xession):
 
 
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
-@xfail_py310
 def test_uncpushd_cd_unc_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
     xonsh_builtins_cd.env["AUTO_PUSHD"] = True
     so, se, rc = dirstack.cd([r"\\localhost\uncpushd_test_PARENT"])
@@ -302,7 +286,6 @@ def test_uncpushd_cd_unc_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
 
 
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
-@xfail_py310
 def test_uncpushd_cd_unc_nocheck(xonsh_builtins_cd, with_unc_check_disabled):
     if with_unc_check_disabled == 0:
         return
@@ -311,7 +294,6 @@ def test_uncpushd_cd_unc_nocheck(xonsh_builtins_cd, with_unc_check_disabled):
 
 
 @pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
-@xfail_py310
 def test_uncpushd_cd_unc_no_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
     if with_unc_check_enabled == 0:
         return

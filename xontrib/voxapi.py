@@ -274,10 +274,7 @@ class Vox(collections.abc.Mapping):
         cmd = [arg for arg in cmd if arg]  # remove empty args
         logging.debug(cmd)
 
-        return_code = sp.call(cmd)
-
-        if return_code != 0:
-            raise SystemExit(return_code)
+        sp.check_call(cmd)
 
     def _check_reserved(self, name):
         return (
@@ -328,10 +325,10 @@ class Vox(collections.abc.Mapping):
         else:
             return True
 
-    def get_binary_path(self, binary, *dirs):
+    def get_binary_path(self, binary: str, *dirs: str):
         bin_, _, _ = self.sub_dirs
         python_exec = binary
-        if ON_WINDOWS:
+        if ON_WINDOWS and not python_exec.endswith(".exe"):
             python_exec += ".exe"
         return os.path.join(*dirs, bin_, python_exec)
 
@@ -339,8 +336,6 @@ class Vox(collections.abc.Mapping):
         """List available virtual environments found in $VIRTUALENV_HOME."""
         for dirpath, dirnames, _ in os.walk(self.venvdir):
             python_exec = self.get_binary_path("python", dirpath)
-            if ON_WINDOWS:
-                python_exec += ".exe"
             if os.access(python_exec, os.X_OK):
                 yield dirpath[len(self.venvdir) + 1 :]  # +1 is to remove the separator
                 dirnames.clear()

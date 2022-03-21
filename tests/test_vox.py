@@ -262,7 +262,7 @@ def venvs(venv_home):
     paths = []
     for idx in range(2):
         env_path = venv_home / f"venv{idx}"
-        bin_path = env_path / "bin"
+        bin_path = env_path / ("Scripts" if ON_WINDOWS else "bin")
         paths.append(env_path)
 
         (bin_path / "python").write("", ensure=True)
@@ -295,7 +295,7 @@ def patched_cmd_cache(xession, vox, venvs, monkeypatch):
 
 _VENV_NAMES = {"venv1", "venv1/", "venv0/", "venv0"}
 if ON_WINDOWS:
-    _VENV_NAMES = {"venv1\\", "venv0\\"}
+    _VENV_NAMES = {"venv1\\", "venv0\\", "venv0", "venv1"}
 
 _HELP_OPTS = {
     "-h",
