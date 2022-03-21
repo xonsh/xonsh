@@ -1514,7 +1514,11 @@ which will be replaced automatically:
     snail@home:~ > $PROMPT = lambda: '{user}@{hostname}:{cwd} >> '
     snail@home:~ >> # so does that!
 
+-- todo: convert this to jinja template and generate these contents dynamically and mention about $PROMPT_FIELDS
+
 By default, the following variables are available for use:
+
+  -- remove these extra variables and set the attribute on the field itself
 
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
@@ -1546,7 +1550,7 @@ By default, the following variables are available for use:
   * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
     current working directory on some linux terminals. This is not usually needed.
   * ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
-    may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
+    may refer :py:mod:`xonsh.prompt.gitstatus` for customization options.
   * ``localtime``: The current, local time as given by ``time.localtime()``.
     This is formatted with the time format string found in ``time_format``.
   * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.

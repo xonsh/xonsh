@@ -1,14 +1,64 @@
-"""Informative git status prompt formatter"""
+"""Informative git status prompt formatter.
+
+Each part of the status field is extendable and customizable.
+
+Following fields are available other than ``gitstatus``
+
+* gitstatus.ahead
+* gitstatus.behind
+* gitstatus.branch
+* gitstatus.changed
+* gitstatus.clean
+* gitstatus.conflicts
+* gitstatus.deleted
+* gitstatus.lines_added
+* gitstatus.lines_removed
+* gitstatus.numstat
+* gitstatus.operations
+* gitstatus.porcelain
+* gitstatus.repo_path
+* gitstatus.short_head
+* gitstatus.staged
+* gitstatus.stash_count
+* gitstatus.tag
+* gitstatus.tag_or_hash
+* gitstatus.untracked
+
+All the fields have prefix and suffix attribute that can be set in the configuration as shown below.
+Other attributes can also be changed.
+
+See some examples below,
+
+.. code-block:: xonsh
+
+    from xonsh.prompt.base import PromptField, PromptFields
+
+    # 1. to change the color of the branch name
+    $PROMPT_FIELDS['gitstatus.branch'].prefix = "{RED}"
+
+    # 2. to change the symbol for conflicts from ``{RED}×``
+    $PROMPT_FIELDS['gitstatus.conflicts'].prefix = "{GREEN}*"
+
+    # 3. hide the branch name if it is main or dev
+    branch_field = $PROMPT_FIELDS['gitstatus.branch']
+    old_updator = branch_field.updator
+    def new_updator(fld: PromptField, ctx: PromptFields):
+        old_updator(fld, ctx)
+        if fld.value in {"main", "dev"}:
+            fld.value = ""
+    branch_field.updator = new_updator
+
+"""
+
+import contextlib
 import os
 import subprocess
 
-from xonsh.built_ins import XSH
-from xonsh.color_tools import COLORS
-from xonsh.tools import NamedConstantMeta, XAttr
+from xonsh.prompt.base import MultiPromptField, PromptField, PromptFields
 
 
-def _check_output(*args, **kwargs) -> str:
-    denv = XSH.env.detype()
+def _get_sp_output(xsh, *args: str, **kwargs) -> str:
+    denv = xsh.env.detype()
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
 
     kwargs.update(
@@ -16,19 +66,15 @@ def _check_output(*args, **kwargs) -> str:
             env=denv,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
-            universal_newlines=True,
+            text=True,
         )
     )
-    timeout = XSH.env["VC_BRANCH_TIMEOUT"]
+    timeout = xsh.env["VC_BRANCH_TIMEOUT"]
+    out = ""
     # See https://docs.python.org/3/library/subprocess.html#subprocess.Popen.communicate
-    with subprocess.Popen(*args, **kwargs) as proc:
+    with subprocess.Popen(args, **kwargs) as proc:
         try:
-            out, err = proc.communicate(timeout=timeout)
-            if proc.returncode != 0:
-                raise subprocess.CalledProcessError(
-                    proc.returncode, proc.args, output=out, stderr=err
-                )  # note err will always be empty as we redirect stderr to DEVNULL abvoe
-            return out
+            out, _ = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             # We use `.terminate()` (SIGTERM) instead of `.kill()` (SIGKILL) here
             # because otherwise we guarantee that a `.git/index.lock` file will be
@@ -43,43 +89,25 @@ def _check_output(*args, **kwargs) -> str:
             # `with subprocess.Popen()` context manager above would do that
             # for us, but we do it to be explicit that waiting is being done.
             proc.wait()  # we ignore what git says after we sent it SIGTERM
-            raise
+    return out
 
 
-class _DEFS(metaclass=NamedConstantMeta):
-    HASH_INDICATOR = XAttr(":")
-    BRANCH = XAttr("{CYAN}")
-    OPERATION = XAttr("{CYAN}")
-    STAGED = XAttr("{RED}●")
-    CONFLICTS = XAttr("{RED}×")
-    CHANGED = XAttr("{BLUE}+")
-    DELETED = XAttr("{RED}-")
-    UNTRACKED = XAttr("…")
-    STASHED = XAttr("⚑")
-    CLEAN = XAttr("{BOLD_GREEN}✓")
-    AHEAD = XAttr("↑·")
-    BEHIND = XAttr("↓·")
-    LINES_ADDED = XAttr("{BLUE}+")
-    LINES_REMOVED = XAttr("{RED}-")
-    SEPARATOR = XAttr("{RESET}|")
+class _GSField(PromptField):
+    """wrap output from git command to value"""
+
+    _args: "tuple[str, ...]" = ()
+
+    def update(self, ctx):
+        self.value = _get_sp_output(ctx.xsh, *self._args).strip()
 
 
-def _get_def(attr: XAttr) -> str:
-    key = attr.name.upper()
-    def_ = XSH.env.get("XONSH_GITSTATUS_" + key)
-    return def_ if def_ is not None else attr.value
+short_head = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
+tag = _GSField(_args=("git", "describe", "--always"))
 
 
-def _is_hidden(attr: XAttr) -> bool:
-    hidden = XSH.env.get("XONSH_GITSTATUS_FIELDS_HIDDEN") or set()
-    return attr.name.upper() in hidden or attr.name.lower() in hidden
-
-
-def _get_tag_or_hash() -> str:
-    tag_or_hash = _check_output(["git", "describe", "--always"]).strip()
-    hash_ = _check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
-    have_tag_name = tag_or_hash != hash_
-    return tag_or_hash if have_tag_name else _get_def(_DEFS.HASH_INDICATOR) + hash_
+@PromptField.wrap()
+def tag_or_hash(fld: PromptField, ctx):
+    fld.value = ctx.pick(tag) or ctx.pick(short_head)
 
 
 def _parse_int(val: str, default=0):
@@ -88,59 +116,65 @@ def _parse_int(val: str, default=0):
     return default
 
 
-def _get_files_changed():
-    try:
-        changed = _check_output(["git", "diff", "--numstat"])
-    except subprocess.CalledProcessError:
-        return {}
+class _GitDir(_GSField):
+    _args = ("git", "rev-parse", "--git-dir")
+    _cwd = ""
 
-    insert = 0
-    delete = 0
+    def update(self, ctx):
+        # call the subprocess only if cwd changed
+        from xonsh.dirstack import _get_cwd
 
-    if changed:
-        for line in changed.splitlines():
-            x = line.split(maxsplit=2)
-            if len(x) > 1:
-                insert += _parse_int(x[0])
-                delete += _parse_int(x[1])
-
-    return {_DEFS.LINES_ADDED: insert, _DEFS.LINES_REMOVED: delete}
+        cwd = _get_cwd()
+        if cwd != self._cwd:
+            self._cwd = cwd
+            super().update(ctx)
 
 
-def _get_stash(gitdir):
-    try:
+repo_path = _GitDir()
+
+
+def get_stash_count(gitdir: str):
+    """Get git-stash count"""
+    with contextlib.suppress(OSError):
         with open(os.path.join(gitdir, "logs/refs/stash")) as f:
             return sum(1 for _ in f)
-    except OSError:
-        return 0
+    return 0
 
 
-def _gitoperation(gitdir):
-    files = (
+@PromptField.wrap(prefix="⚑")
+def stash_count(fld: PromptField, ctx: PromptFields):
+    fld.value = get_stash_count(ctx.pick_val(repo_path))
+
+
+def get_operations(gitdir: str):
+    """get the current git operation e.g. MERGE/REBASE..."""
+    for file, name in (
         ("rebase-merge", "REBASE"),
         ("rebase-apply", "AM/REBASE"),
         ("MERGE_HEAD", "MERGING"),
         ("CHERRY_PICK_HEAD", "CHERRY-PICKING"),
         ("REVERT_HEAD", "REVERTING"),
         ("BISECT_LOG", "BISECTING"),
-    )
-    operations = [f[1] for f in files if os.path.exists(os.path.join(gitdir, f[0]))]
-    if operations:
-        return "|" + "|".join(operations)
-    return ""
+    ):
+        if os.path.exists(os.path.join(gitdir, file)):
+            yield name
 
 
-def _get_operation_stashed():
-    gitdir = _check_output(["git", "rev-parse", "--git-dir"]).strip()
-    stashed = _get_stash(gitdir)
-    operation = _gitoperation(gitdir)
-    return {_DEFS.OPERATION: operation, _DEFS.STASHED: stashed}
+@PromptField.wrap(prefix="{CYAN}", separator="|")
+def operations(fld, ctx: PromptFields) -> None:
+    gitdir = ctx.pick_val(repo_path)
+    op = fld.separator.join(get_operations(gitdir))
+    if op:
+        fld.value = fld.separator + op
+    else:
+        fld.value = ""
 
 
-def _get_status_fields():
-    """Return parsed values from ``git status``"""
+@PromptField.wrap()
+def porcelain(fld, ctx: PromptFields):
+    """Return parsed values from ``git status --porcelain``"""
 
-    status = _check_output(["git", "status", "--porcelain", "--branch"])
+    status = _get_sp_output(ctx.xsh, "git", "status", "--porcelain", "--branch")
     branch = ""
     ahead, behind = 0, 0
     untracked, changed, deleted, conflicts, staged = 0, 0, 0, 0, 0
@@ -150,7 +184,7 @@ def _get_status_fields():
             if "Initial commit on" in line:
                 branch = line.split()[-1]
             elif "no branch" in line:
-                branch = _get_tag_or_hash()
+                branch = ctx.pick(tag_or_hash) or ""
             elif "..." not in line:
                 branch = line
             else:
@@ -176,103 +210,114 @@ def _get_status_fields():
             elif len(line) > 0 and line[0] != " ":
                 staged += 1
 
-    return {
-        _DEFS.BRANCH: branch,
-        _DEFS.AHEAD: ahead,
-        _DEFS.BEHIND: behind,
-        _DEFS.UNTRACKED: untracked,
-        _DEFS.CHANGED: changed,
-        _DEFS.DELETED: deleted,
-        _DEFS.CONFLICTS: conflicts,
-        _DEFS.STAGED: staged,
+    fld.value = {
+        "branch": branch,
+        "ahead": ahead,
+        "behind": behind,
+        "untracked": untracked,
+        "changed": changed,
+        "deleted": deleted,
+        "conflicts": conflicts,
+        "staged": staged,
     }
 
 
-def get_gitstatus_fields():
-    """return all shown fields"""
-    fields = {}
-    for keys, provider in (
-        (
-            (
-                _DEFS.BRANCH,
-                _DEFS.AHEAD,
-                _DEFS.BEHIND,
-                _DEFS.UNTRACKED,
-                _DEFS.CHANGED,
-                _DEFS.DELETED,
-                _DEFS.CONFLICTS,
-                _DEFS.STAGED,
-            ),
-            _get_status_fields,
-        ),
-        (
-            (
-                _DEFS.OPERATION,
-                _DEFS.STASHED,
-            ),
-            _get_operation_stashed,
-        ),
-        (
-            (
-                _DEFS.LINES_ADDED,
-                _DEFS.LINES_REMOVED,
-            ),
-            _get_files_changed,
-        ),
-    ):
-        if any(map(lambda x: not _is_hidden(x), keys)):
-            try:
-                fields.update(provider())
-            except subprocess.SubprocessError:
-                return None
-    return fields
+def get_gitstatus_info(fld: "_GSInfo", ctx: PromptFields) -> None:
+    """Get individual fields from $PROMPT_FIELDS['gitstatus.porcelain']"""
+    info = ctx.pick_val(porcelain)
+    fld.value = info[fld.info]
 
 
-def gitstatus_prompt():
-    """Return str `BRANCH|OPERATOR|numbers`"""
-    fields = get_gitstatus_fields()
-    if fields is None:
-        return None
+class _GSInfo(PromptField):
+    info: str
 
-    ret = ""
-    for fld in (_DEFS.BRANCH, _DEFS.AHEAD, _DEFS.BEHIND, _DEFS.OPERATION):
-        if not _is_hidden(fld):
-            val = fields[fld]
-            if not val:
-                continue
-            ret += _get_def(fld) + str(val)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.updator = get_gitstatus_info
 
-    if ret:
-        ret += "|"
 
-    number_flds = (
-        _DEFS.STAGED,
-        _DEFS.CONFLICTS,
-        _DEFS.CHANGED,
-        _DEFS.DELETED,
-        _DEFS.UNTRACKED,
-        _DEFS.STASHED,
-        _DEFS.LINES_ADDED,
-        _DEFS.LINES_REMOVED,
+branch = _GSInfo(prefix="{CYAN}", info="branch")
+ahead = _GSInfo(prefix="↑·", info="ahead")
+behind = _GSInfo(prefix="↓·", info="behind")
+untracked = _GSInfo(prefix="…", info="untracked")
+changed = _GSInfo(prefix="{BLUE}+", suffix="{RESET}", info="changed")
+deleted = _GSInfo(prefix="{RED}-", suffix="{RESET}", info="deleted")
+conflicts = _GSInfo(prefix="{RED}×", suffix="{RESET}", info="conflicts")
+staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
+
+
+@PromptField.wrap()
+def numstat(fld, ctx):
+    changed = _get_sp_output(ctx.xsh, "git", "diff", "--numstat")
+
+    insert = 0
+    delete = 0
+
+    if changed:
+        for line in changed.splitlines():
+            x = line.split(maxsplit=2)
+            if len(x) > 1:
+                insert += _parse_int(x[0])
+                delete += _parse_int(x[1])
+    fld.value = (insert, delete)
+
+
+@PromptField.wrap(prefix="{BLUE}+", suffix="{RESET}")
+def lines_added(fld: PromptField, ctx: PromptFields):
+    fld.value = ctx.pick_val(numstat)[0]
+
+
+@PromptField.wrap(prefix="{RED}-", suffix="{RESET}")
+def lines_removed(fld: PromptField, ctx):
+    fld.value = ctx.pick_val(numstat)[-1]
+
+
+@PromptField.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
+def clean(fld, ctx):
+    changes = sum(
+        ctx.pick_val(f)
+        for f in (
+            staged,
+            conflicts,
+            changed,
+            deleted,
+            untracked,
+            stash_count,
+        )
     )
-    for fld in number_flds:
-        if _is_hidden(fld):
-            continue
-        symbol = _get_def(fld)
-        value = fields[fld]
-        if symbol and value > 0:
-            ret += symbol + str(value) + COLORS.RESET
-    if sum(fields.get(fld, 0) for fld in number_flds) == 0 and not _is_hidden(
-        _DEFS.CLEAN
-    ):
-        symbol = _get_def(_DEFS.CLEAN)
-        if symbol:
-            ret += symbol + COLORS.RESET
-    ret = ret.rstrip("|")
+    fld.value = "" if changes else fld.symbol
 
-    if not ret.endswith(COLORS.RESET):
-        ret += COLORS.RESET
 
-    ret = ret.replace("|", _get_def(_DEFS.SEPARATOR))
+class GitStatus(MultiPromptField):
+    """Return str `BRANCH|OPERATOR|numbers`"""
 
-    return ret
+    fragments = (
+        ".branch",
+        ".ahead",
+        ".behind",
+        ".operations",
+        "{RESET}|",
+        ".staged",
+        ".conflicts",
+        ".changed",
+        ".deleted",
+        ".untracked",
+        ".stash_count",
+        ".lines_added",
+        ".lines_removed",
+        ".clean",
+    )
+    hidden = (
+        ".lines_added",
+        ".lines_removed",
+    )
+    """These fields will not be processed for the result"""
+
+    def get_frags(self, env):
+        for frag in self.fragments:
+            if frag in self.hidden:
+                continue
+            yield frag
+
+
+gitstatus = GitStatus()

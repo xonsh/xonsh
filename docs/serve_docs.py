@@ -2,17 +2,24 @@ from livereload import Server, shell
 from pathlib import Path
 import sys
 
-cur_dir = Path(__file__).parent
+doc_dir = Path(__file__).parent
+root_dir = doc_dir.parent
 server = Server()
 
-if "no" not in sys.argv:
-    exts = ("rst", "py", "jinja2")
-    print(f"Watching file changes {exts}")
-    cmd = shell("make html", cwd=str(cur_dir))
-    for ext in exts:
-        # nested or
-        server.watch(str(cur_dir / f"**.{ext}"), cmd)
-        # top level
-        server.watch(str(cur_dir / f"**/*.{ext}"), cmd)
 
-server.serve(root=str(cur_dir / "_build" / "html"))
+def get_paths(*exts):
+    for tp in exts:
+        # top level
+        yield root_dir / f"**.{tp}"
+        # nested
+        yield root_dir / f"**/*.{tp}"
+
+
+if "no" not in sys.argv:
+    exts = ("rst", "py", "jinja2", "md")
+    print(f"Watching file changes in {root_dir} for {exts} extensions")
+    cmd = shell("make html", cwd=str(doc_dir))
+    for path in get_paths():
+        server.watch(str(path), cmd)
+
+server.serve(root=str(doc_dir / "_build" / "html"))

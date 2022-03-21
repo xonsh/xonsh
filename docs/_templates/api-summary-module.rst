@@ -1,6 +1,7 @@
 {{ fullname | escape | underline}}
 
-.. currentmodule:: xonsh.xoreutils.cat
+{# module level doc #}
+.. currentmodule:: {{ fullname }}
 
 .. automodule:: {{ fullname }}
     :members:

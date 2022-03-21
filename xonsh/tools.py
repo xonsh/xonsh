@@ -83,7 +83,7 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
     returncode of the command is nonzero.
 
     Example:
-    -------
+    --------
         try:
             for line in !(ls):
                 print(line)
@@ -289,9 +289,25 @@ class EnvPath(cabc.MutableSequence):
             self._l.insert(0 if front else len(self._l), data)
 
 
+class FlexibleFormatter(string.Formatter):
+    """Support nested fields inside conditional formatters
+
+    e.g. template ``{user:| {RED}{}{RESET}}`` will become ``| {RED}user{RESET}`` when user=user.
+    """
+
+    def get_value(self, key: "int|str", args, kwargs) -> str:
+        if isinstance(key, int):
+            return args[key]
+        else:
+            if key in kwargs:
+                return kwargs[key]
+            # in case of colors, this will work without nested braces
+            return "{" + key + "}"
+
+
 @lazyobject
 def FORMATTER():
-    return string.Formatter()
+    return FlexibleFormatter()
 
 
 class DefaultNotGivenType:
@@ -2736,30 +2752,3 @@ def to_repr_pretty_(inst, p, cycle):
         elif len(inst):
             p.break_()
             p.pretty(dict(inst))
-
-
-class XAttr:
-    """hold attribute and value"""
-
-    __slots__ = ("name", "value")
-
-    def __init__(self, val) -> None:
-        self.value = val
-
-    def __set_name__(self, owner, name) -> None:
-        self.name: str = name
-
-    def __get__(self, instance, owner) -> "XAttr":
-        return self
-
-    def __str__(self) -> str:
-        return f"<{self.name}={self.value}>"
-
-
-class NamedConstantMeta(type):
-    """utility class to hold list of values as class-attributes"""
-
-    def __iter__(cls) -> tp.Iterator[XAttr]:
-        for attr in vars(cls):
-            if not attr.startswith("__"):
-                yield getattr(cls, attr)
