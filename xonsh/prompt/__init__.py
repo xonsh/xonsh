@@ -9,6 +9,8 @@ else:
     try:
         from xonsh.prompt import __amalgam__
 
+        base = __amalgam__
+        _sys.modules["xonsh.prompt.base"] = __amalgam__
         cwd = __amalgam__
         _sys.modules["xonsh.prompt.cwd"] = __amalgam__
         env = __amalgam__
@@ -19,8 +21,6 @@ else:
         _sys.modules["xonsh.prompt.times"] = __amalgam__
         vc = __amalgam__
         _sys.modules["xonsh.prompt.vc"] = __amalgam__
-        base = __amalgam__
-        _sys.modules["xonsh.prompt.base"] = __amalgam__
         del __amalgam__
     except ImportError:
         pass

@@ -321,6 +321,7 @@ def main():
             "xonsh.completers",
             "xonsh.history",
             "xonsh.prompt",
+            "xonsh.pytest",
             "xonsh.lib",
             "xonsh.webconfig",
             "xompletions",

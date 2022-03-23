@@ -11,6 +11,8 @@ else:
 
         bash_completion = __amalgam__
         _sys.modules["xonsh.completers.bash_completion"] = __amalgam__
+        dirs = __amalgam__
+        _sys.modules["xonsh.completers.dirs"] = __amalgam__
         tools = __amalgam__
         _sys.modules["xonsh.completers.tools"] = __amalgam__
         commands = __amalgam__
@@ -19,12 +21,12 @@ else:
         _sys.modules["xonsh.completers.completer"] = __amalgam__
         environment = __amalgam__
         _sys.modules["xonsh.completers.environment"] = __amalgam__
+        imports = __amalgam__
+        _sys.modules["xonsh.completers.imports"] = __amalgam__
         man = __amalgam__
         _sys.modules["xonsh.completers.man"] = __amalgam__
         path = __amalgam__
         _sys.modules["xonsh.completers.path"] = __amalgam__
-        pip = __amalgam__
-        _sys.modules["xonsh.completers.pip"] = __amalgam__
         python = __amalgam__
         _sys.modules["xonsh.completers.python"] = __amalgam__
         _aliases = __amalgam__
@@ -33,8 +35,6 @@ else:
         _sys.modules["xonsh.completers.base"] = __amalgam__
         bash = __amalgam__
         _sys.modules["xonsh.completers.bash"] = __amalgam__
-        dirs = __amalgam__
-        _sys.modules["xonsh.completers.dirs"] = __amalgam__
         init = __amalgam__
         _sys.modules["xonsh.completers.init"] = __amalgam__
         del __amalgam__
