@@ -216,7 +216,7 @@ def env(tmpdir, session_env):
 
 
 @pytest.fixture
-def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch) -> XonshSession:
+def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch):
     """a fixture to use where XonshSession is fully loaded without any mocks"""
 
     XSH.load(
