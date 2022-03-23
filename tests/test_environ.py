@@ -10,7 +10,6 @@ from time import sleep
 
 import pytest
 
-from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.environ import (
     Env,
     InternalEnvironDict,
@@ -21,6 +20,7 @@ from xonsh.environ import (
     locate_binary,
     make_args_env,
 )
+from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
 
 

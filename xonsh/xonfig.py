@@ -12,12 +12,11 @@ import shutil
 import textwrap
 import typing as tp
 
-from xonsh.ply import ply
-
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias, add_args
+from xonsh.events import events
 from xonsh.foreign_shells import CANON_SHELL_NAMES
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import (
@@ -37,6 +36,7 @@ from xonsh.platform import (
     ptk_version,
     pygments_version,
 )
+from xonsh.ply import ply
 from xonsh.prompt.base import is_template_string
 from xonsh.tools import (
     color_style,
@@ -49,7 +49,6 @@ from xonsh.tools import (
 )
 from xonsh.xontribs import find_xontrib, xontribs_loaded
 from xonsh.xontribs_meta import Xontrib, get_xontribs
-from xonsh.events import events
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """

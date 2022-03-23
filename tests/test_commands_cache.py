@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.commands_cache import (
     SHELL_PREDICTOR_PARSER,
     CommandsCache,
@@ -13,6 +12,7 @@ from xonsh.commands_cache import (
     predict_shell,
     predict_true,
 )
+from xonsh.pytest.tools import skip_if_on_windows
 
 
 def test_commands_cache_lazy(xession):

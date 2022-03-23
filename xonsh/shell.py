@@ -14,7 +14,7 @@ from xonsh.platform import (
     minimum_required_ptk_version,
     ptk_above_min_supported,
 )
-from xonsh.tools import XonshError, print_exception, simple_random_choice, is_class
+from xonsh.tools import XonshError, is_class, print_exception, simple_random_choice
 
 events.doc(
     "on_transform_command",

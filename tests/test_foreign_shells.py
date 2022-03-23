@@ -4,8 +4,8 @@ import subprocess
 
 import pytest  # noqa F401
 
-from xonsh.pytest.tools import skip_if_on_unix, skip_if_on_windows
 from xonsh.foreign_shells import foreign_shell_data, parse_aliases, parse_env
+from xonsh.pytest.tools import skip_if_on_unix, skip_if_on_windows
 
 
 def test_parse_env():

@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from xonsh.pytest.tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
+from xonsh.pytest.tools import skip_if_on_conda, skip_if_on_msys
 from xontrib.voxapi import Vox
 
 if TYPE_CHECKING:

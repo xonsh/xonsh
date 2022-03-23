@@ -1,6 +1,5 @@
 import pytest
 
-from xonsh.pytest.tools import skip_if_on_darwin, skip_if_on_windows
 from xonsh.completers.bash import complete_from_bash
 from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import (
@@ -8,6 +7,7 @@ from xonsh.parsers.completion_context import (
     CommandContext,
     CompletionContext,
 )
+from xonsh.pytest.tools import skip_if_on_darwin, skip_if_on_windows
 
 
 @pytest.fixture(autouse=True)
