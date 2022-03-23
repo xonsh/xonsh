@@ -61,7 +61,7 @@ def sp(cmd):
 
 
 class DummyStyler:
-    styles = defaultdict(str)
+    styles: "dict[str, str]" = defaultdict(str)
 
     highlight_color = "#ffffff"
     background_color = "#000000"
@@ -76,7 +76,7 @@ class DummyShell:
     def settitle(self):
         pass
 
-    _shell = None
+    _shell: "DummyBaseShell | None" = None
 
     @property
     def shell(self):
