@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from tools import skip_if_on_conda, skip_if_on_msys
+from xonsh.pytest.tools import skip_if_on_conda, skip_if_on_msys
 from xonsh.platform import ON_WINDOWS
 from xontrib.voxapi import Vox
 

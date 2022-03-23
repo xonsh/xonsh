@@ -5,7 +5,7 @@ from xonsh.lib.os import indir, rmtree
 
 import pytest
 
-from tools import ON_WINDOWS
+from xonsh.pytest.tools import ON_WINDOWS
 
 
 def test_indir():

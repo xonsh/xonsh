@@ -3,7 +3,7 @@ from os import sep
 
 import pytest
 
-from tests.tools import ON_WINDOWS
+from xonsh.pytest.tools import ON_WINDOWS
 from xonsh.completers.tools import RichCompletion
 
 CUR_DIR = "." if ON_WINDOWS else "./"

@@ -1,6 +1,6 @@
 import pytest
 
-from tests.tools import skip_if_on_darwin, skip_if_on_windows
+from xonsh.pytest.tools import skip_if_on_darwin, skip_if_on_windows
 from xonsh.completers.bash import complete_from_bash
 from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import (

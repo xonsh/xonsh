@@ -1423,7 +1423,8 @@ class PromptSetting(Xettings):
         "To use the ``prompt_toolkit`` shell you need to have the "
         "`prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_"
         " library installed. To specify which shell should be used, do so in "
-        "the run control file.",
+        "the run control file. "
+        "It also accepts a class type that inherits from ``xonsh.base_shell.BaseShell``",
         doc_default="``best``",
     )
     SUGGEST_COMMANDS = Var.with_default(

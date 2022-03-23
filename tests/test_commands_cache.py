@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tools import skip_if_on_windows
+from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.commands_cache import (
     SHELL_PREDICTOR_PARSER,
     CommandsCache,

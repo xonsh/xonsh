@@ -14,7 +14,7 @@ from pygments.token import (
     Text,
 )
 
-from tools import DummyShell, skip_if_on_windows
+from xonsh.pytest.tools import DummyShell, skip_if_on_windows
 from xonsh.environ import LsColors
 from xonsh.events import EventManager, events
 from xonsh.pyghooks import Color, XonshLexer, XonshStyle, on_lscolors_change
