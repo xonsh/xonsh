@@ -6,7 +6,7 @@ import os
 import sys
 import subprocess
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
@@ -354,7 +354,7 @@ def main():
             "xonsh = xonsh.pyghooks:XonshLexer",
             "xonshcon = xonsh.pyghooks:XonshConsoleLexer",
         ],
-        "pytest11": ["xonsh = xonsh.pytest_plugin"],
+        "pytest11": ["xonsh = xonsh.pytest.plugin"],
         "console_scripts": [
             "xonsh = xonsh.main:main",
             "xonsh-cat = xonsh.xoreutils.cat:main",
