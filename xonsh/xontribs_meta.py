@@ -81,6 +81,19 @@ def define_xontribs():
         },
         url="http://xon.sh",
     )
+
+    def get_xontrib(name: str, desc: str):
+        return Xontrib(
+            url=f"https://github.com/xonsh/xontrib-{name}",
+            description=desc,
+            package=_XontribPkg(
+                name="xonsh-{name}",
+                license="BSD 2-clause",
+                install={"pifp": "xpip install xonsh-{name}"},
+                url=f"https://github.com/xonsh/xontrib-{name}",
+            ),
+        )
+
     return {
         "abbrevs": Xontrib(
             url="http://xon.sh",
@@ -414,10 +427,9 @@ def define_xontribs():
                 url="https://github.com/eugenesvk/xontrib-homebrew",
             ),
         ),
-        "jedi": Xontrib(
-            url="http://xon.sh",
-            description="Use Jedi as xonsh's python completer.",
-            package=core_pkg,
+        "jedi": get_xontrib(
+            "jedi",
+            "Use Jedi as xonsh's python completer.",
         ),
         "kitty": Xontrib(
             url="https://github.com/scopatz/xontrib-kitty",
@@ -442,11 +454,10 @@ def define_xontribs():
                 url="https://github.com/anki-code/xontrib-macro-lib",
             ),
         ),
-        "mpl": Xontrib(
-            url="http://xon.sh",
-            description="Matplotlib hooks for xonsh, including the new 'mpl' "
+        "mpl": get_xontrib(
+            "mpl",
+            "Matplotlib hooks for xonsh, including the new 'mpl' "
             "alias that displays the current figure on the screen.",
-            package=core_pkg,
         ),
         "onepath": Xontrib(
             url="https://github.com/anki-code/xontrib-onepath",
