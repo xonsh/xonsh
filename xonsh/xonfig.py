@@ -9,10 +9,10 @@ import pprint
 import random
 import re
 import shutil
-import sys
-import tempfile
 import textwrap
 import typing as tp
+
+from xonsh.ply import ply
 
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
@@ -37,7 +37,6 @@ from xonsh.platform import (
     ptk_version,
     pygments_version,
 )
-from xonsh.ply import ply
 from xonsh.prompt.base import is_template_string
 from xonsh.tools import (
     color_style,
@@ -50,6 +49,7 @@ from xonsh.tools import (
 )
 from xonsh.xontribs import find_xontrib, xontribs_loaded
 from xonsh.xontribs_meta import Xontrib, get_xontribs
+from xonsh.events import events
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """
@@ -144,7 +144,15 @@ _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND: tp.Dict[str, str] = collections.defaultdic
     lambda: "source-foreign", bash="source-bash", cmd="source-cmd", zsh="source-zsh"
 )
 
-XONSH_JUPYTER_KERNEL = "xonsh"
+
+events.doc(
+    "on_xonfig_info_requested",
+    """
+on_xonfig_info_requested() -> list[tuple[str, str]]
+
+Register a callable that will return extra info when ``xonfig info`` is called.
+""",
+)
 
 
 def _dump_xonfig_foreign_shell(path, value):
@@ -558,15 +566,9 @@ def _info(
             ("encoding errors", env.get("XONSH_ENCODING_ERRORS")),
         ]
     )
-    jup_ksm = jup_kernel = None
-    try:
-        from jupyter_client.kernelspec import KernelSpecManager
-
-        jup_ksm = KernelSpecManager()
-        jup_kernel = jup_ksm.find_kernel_specs().get(XONSH_JUPYTER_KERNEL)
-    except Exception:
-        pass
-    data.extend([("on jupyter", jup_ksm is not None), ("jupyter kernel", jup_kernel)])
+    for p in XSH.builtins.events.on_xonfig_info_requested.fire():
+        if p is not None:
+            data.extend(p)
 
     data.extend([("xontrib", xontribs_loaded())])
     data.extend([("RC file", XSH.rc_files)])
@@ -706,85 +708,15 @@ def _web(
     main.main(_args[1:])
 
 
-def _jupyter_kernel(
-    user=False,
-    prefix=None,
-    root=None,
-):
-    """Generate xonsh kernel for jupyter.
-
-    Parameters
-    ----------
-    user : -u, --user
-        Install kernel spec in user config directory.
-    prefix : -p, --prefix
-        Installation prefix for bin, lib, etc.
-    root : -r, --root
-        Install relative to this alternate root directory.
-    """
-    try:
-        from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
-    except ImportError as e:
-        raise ImportError("Jupyter not found in current Python environment") from e
-
-    ksm = KernelSpecManager()
-
-    prefix = prefix or sys.prefix
-    spec = {
-        "argv": [
-            sys.executable,
-            "-m",
-            "xonsh.jupyter_kernel",
-            "-f",
-            "{connection_file}",
-        ],
-        "display_name": "Xonsh",
-        "language": "xonsh",
-        "codemirror_mode": "shell",
-    }
-
-    if root and prefix:
-        # os.path.join isn't used since prefix is probably absolute
-        prefix = root + prefix
-
-    try:
-        old_jup_kernel = ksm.get_kernel_spec(XONSH_JUPYTER_KERNEL)
-        if not old_jup_kernel.resource_dir.startswith(prefix):
-            print(
-                "Removing existing Jupyter kernel found at {}".format(
-                    old_jup_kernel.resource_dir
-                )
-            )
-        ksm.remove_kernel_spec(XONSH_JUPYTER_KERNEL)
-    except NoSuchKernel:
-        pass
-
-    if sys.platform == "win32":
-        # Ensure that conda-build detects the hard coded prefix
-        spec["argv"][0] = spec["argv"][0].replace(os.sep, os.altsep)
-        prefix = prefix.replace(os.sep, os.altsep)
-
-    with tempfile.TemporaryDirectory() as d:
-        os.chmod(d, 0o755)  # Starts off as 700, not user readable
-        with open(os.path.join(d, "kernel.json"), "w") as f:
-            json.dump(spec, f, sort_keys=True)
-
-        print("Installing Jupyter kernel spec:")
-        print(f"  root: {root!r}")
-        if user:
-            print(f"  as user: {user}")
-        elif root and prefix:
-            print(f"  combined prefix {prefix!r}")
-        else:
-            print(f"  prefix: {prefix!r}")
-        ksm.install_kernel_spec(
-            d, XONSH_JUPYTER_KERNEL, user=user, prefix=(None if user else prefix)
-        )
-        return 0
-
-
 class XonfigAlias(ArgParserAlias):
     """Manage xonsh configuration."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.extra_commands = []
+
+    def add_command(self, fn):
+        self.extra_commands.append(fn)
 
     def build(self):
         parser = self.create_parser(prog="xonfig")
@@ -796,7 +728,8 @@ class XonfigAlias(ArgParserAlias):
         parser.add_command(_styles)
         parser.add_command(_colors)
         parser.add_command(_tutorial)
-        parser.add_command(_jupyter_kernel)
+        for fn in self.extra_commands:
+            parser.add_command(fn)
 
         return parser
 

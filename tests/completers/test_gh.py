@@ -1,6 +1,6 @@
 import pytest
 
-from tests.tools import skip_if_not_has
+from xonsh.pytest.tools import skip_if_not_has
 
 pytestmark = skip_if_not_has("gh")
 

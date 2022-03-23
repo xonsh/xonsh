@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from tests.tools import skip_if_on_unix, skip_if_on_windows
+from xonsh.pytest.tools import skip_if_on_unix, skip_if_on_windows
 from xonsh.platform import ON_WINDOWS
 from xonsh.procs.pipelines import CommandPipeline
 

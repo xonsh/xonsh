@@ -14,7 +14,7 @@ from xonsh.platform import (
     minimum_required_ptk_version,
     ptk_above_min_supported,
 )
-from xonsh.tools import XonshError, print_exception, simple_random_choice
+from xonsh.tools import XonshError, print_exception, simple_random_choice, is_class
 
 events.doc(
     "on_transform_command",
@@ -181,6 +181,24 @@ class Shell:
                 )
         return shell_type
 
+    @staticmethod
+    def construct_shell_cls(backend, **kwargs):
+        """Construct the history backend object."""
+        if is_class(backend):
+            cls = backend
+        else:
+            if backend == "none":
+                from xonsh.base_shell import BaseShell as cls
+            elif backend == "prompt_toolkit":
+                from xonsh.ptk_shell.shell import PromptToolkitShell as cls
+            elif backend == "readline":
+                from xonsh.readline_shell import ReadlineShell as cls
+            elif backend == "dumb":
+                from xonsh.dumb_shell import DumbShell as cls
+            else:
+                raise XonshError(f"{backend} is not recognized as a shell type")
+        return cls(**kwargs)
+
     def __init__(self, execer, ctx=None, shell_type=None, **kwargs):
         """
         Parameters
@@ -217,20 +235,9 @@ class Shell:
 
         self.shell_type = env["SHELL_TYPE"] = shell_type
 
-        # actually make the shell
-        if shell_type == "none":
-            from xonsh.base_shell import BaseShell as shell_class
-        elif shell_type == "prompt_toolkit":
-            from xonsh.ptk_shell.shell import PromptToolkitShell as shell_class
-        elif shell_type == "readline":
-            from xonsh.readline_shell import ReadlineShell as shell_class
-        elif shell_type == "jupyter":
-            from xonsh.jupyter_shell import JupyterShell as shell_class
-        elif shell_type == "dumb":
-            from xonsh.dumb_shell import DumbShell as shell_class
-        else:
-            raise XonshError(f"{shell_type} is not recognized as a shell type")
-        self.shell = shell_class(execer=self.execer, ctx=self.ctx, **kwargs)
+        self.shell = self.construct_shell_cls(
+            shell_type, execer=self.execer, ctx=self.ctx, **kwargs
+        )
         # allows history garbage collector to start running
         if hist.gc is not None:
             hist.gc.wait_for_shell = False

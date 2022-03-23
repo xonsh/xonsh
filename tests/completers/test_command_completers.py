@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from tests.tools import ON_WINDOWS, completions_from_result, skip_if_on_windows
+from xonsh.pytest.tools import ON_WINDOWS, completions_from_result, skip_if_on_windows
 from xonsh.completer import Completer
 from xonsh.completers.commands import complete_command, complete_skipper
 from xonsh.parsers.completion_context import (

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 import xonsh
-from tools import (
+from xonsh.pytest.tools import (
     ON_DARWIN,
     ON_TRAVIS,
     ON_WINDOWS,

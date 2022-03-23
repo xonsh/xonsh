@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tools import skip_if_on_windows
+from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.built_ins import (
     call_macro,
     convert_macro_arg,
