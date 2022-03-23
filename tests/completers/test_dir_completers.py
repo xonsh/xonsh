@@ -3,8 +3,8 @@ from os import sep
 
 import pytest
 
-from xonsh.pytest.tools import ON_WINDOWS
 from xonsh.completers.tools import RichCompletion
+from xonsh.pytest.tools import ON_WINDOWS
 
 CUR_DIR = "." if ON_WINDOWS else "./"
 PARENT_DIR = ".." if ON_WINDOWS else "../"

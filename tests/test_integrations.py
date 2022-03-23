@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 import xonsh
+from xonsh.dirstack import with_pushd
 from xonsh.pytest.tools import (
     ON_DARWIN,
     ON_TRAVIS,
@@ -19,7 +20,6 @@ from xonsh.pytest.tools import (
     skip_if_on_unix,
     skip_if_on_windows,
 )
-from xonsh.dirstack import with_pushd
 
 PATH = (
     os.path.join(os.path.abspath(os.path.dirname(__file__)), "bin")

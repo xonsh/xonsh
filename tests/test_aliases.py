@@ -5,8 +5,8 @@ import os
 
 import pytest
 
-from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.aliases import Aliases, ExecAlias
+from xonsh.pytest.tools import skip_if_on_windows
 
 
 def cd(args, stdin=None, **kwargs):

@@ -8,10 +8,10 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from xonsh.pytest.tools import skip_if_on_windows
 from xonsh import __version__
 from xonsh.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
+from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
     EnvPath,
     all_permutations,

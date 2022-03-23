@@ -1,9 +1,9 @@
 import pytest
 
-from xonsh.pytest.tools import skip_if_pre_3_8
 from xonsh.completers.imports import complete_import
 from xonsh.completers.python import complete_python, python_signature_complete
 from xonsh.parsers.completion_context import CompletionContext, PythonContext
+from xonsh.pytest.tools import skip_if_pre_3_8
 
 
 @pytest.fixture(autouse=True)

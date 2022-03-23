@@ -5,15 +5,15 @@ import textwrap
 
 import pytest
 
+from xonsh.ast import AST, Call, Pass, Str, With
+from xonsh.parser import Parser
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
     VER_MAJOR_MINOR,
     nodes_equal,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
 )
-from xonsh.ast import AST, Call, Pass, Str, With
-from xonsh.parser import Parser
-from xonsh.parsers.fstring_adaptor import FStringAdaptor
 
 
 @pytest.fixture
