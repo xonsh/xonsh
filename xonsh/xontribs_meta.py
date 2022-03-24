@@ -440,6 +440,17 @@ def define_xontribs():
             "Matplotlib hooks for xonsh, including the new 'mpl' "
             "alias that displays the current figure on the screen.",
         ),
+        "oh-my-xonsh": Xontrib(
+            url="https://github.com/AsafFisher/xontrib-oh-my-xonsh",
+            description="A shameless copy of oh-my-zsh."
+            "Provides you with many shortcuts and functionality, like oh-my-zsh.",
+            package=_XontribPkg(
+                name="oh-my-xonsh",
+                license="MIT",
+                install={"pip": "xpip install xontrib-oh-my-xonsh"},
+                url="https://github.com/AsafFisher/xontrib-oh-my-xonsh",
+            ),
+        ),
         "onepath": Xontrib(
             url="https://github.com/anki-code/xontrib-onepath",
             description="When you click to a file or folder in graphical "
