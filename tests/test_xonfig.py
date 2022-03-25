@@ -90,3 +90,24 @@ class TestXonfigWeb:
     def test_prompts_get(self, get_req):
         _, _, resp = get_req("/prompts")
         assert "Prompts" in resp
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ([]),
+        (
+            [
+                "info",
+            ]
+        ),
+    ],
+)
+def test_xonfig_info(args, xession):
+    """info works, and reports no jupyter if none in environment"""
+    capout = xonfig_main(args)
+    assert capout.startswith("+---")
+    assert capout.endswith("---+\n")
+    pat = re.compile(r".*history backend\s+\|\s+", re.MULTILINE | re.IGNORECASE)
+    m = pat.search(capout)
+    assert m
