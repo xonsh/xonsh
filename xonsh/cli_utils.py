@@ -582,6 +582,14 @@ class ArgParserAlias:
         For usage please check ``xonsh.completers.completer.py`` module.
     """
 
+    class Error(Exception):
+        """Special case, when raised, the traceback will not be shown.
+        Instead the process with exit with error code and message"""
+
+        def __init__(self, message: str, errno=1):
+            super().__init__(message)
+            self.errno = errno
+
     def __init__(self, threadable=True, **kwargs) -> None:
         if not threadable:
             from xonsh.tools import unthreadable
@@ -646,11 +654,11 @@ class ArgParserAlias:
 
     def err(self, *args, **kwargs):
         """Write text to error stream"""
-        return self.write_to("stderr", *args, **kwargs)
+        self.write_to("stderr", *args, **kwargs)
 
     def out(self, *args, **kwargs):
         """Write text to output stream"""
-        return self.write_to("stdout", *args, **kwargs)
+        self.write_to("stdout", *args, **kwargs)
 
     def __call__(
         self,
@@ -664,22 +672,26 @@ class ArgParserAlias:
     ):
         self.stdout = stdout
         self.stderr = stderr
-        result = dispatch(
-            self.parser,
-            args,
-            _parser=self.parser,
-            _args=args,
-            _stdin=stdin,
-            _stdout=stdout,
-            _stderr=stderr,
-            _spec=spec,
-            _stack=stack,
-            **kwargs,
-        )
-
-        # free the reference to input/output. Otherwise it will result in errors
-        self.stdout = None
-        self.stderr = None
+        try:
+            result = dispatch(
+                self.parser,
+                args,
+                _parser=self.parser,
+                _args=args,
+                _stdin=stdin,
+                _stdout=stdout,
+                _stderr=stderr,
+                _spec=spec,
+                _stack=stack,
+                **kwargs,
+            )
+        except self.Error as ex:
+            self.err(f"Error: {ex}")
+            sys.exit(getattr(ex, "errno", 1))
+        finally:
+            # free the reference to input/output. Otherwise it will result in errors
+            self.stdout = None
+            self.stderr = None
         return result
 
 

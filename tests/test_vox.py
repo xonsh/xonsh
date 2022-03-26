@@ -1,4 +1,5 @@
 """Vox tests"""
+import io
 import os
 import pathlib
 import stat
@@ -78,11 +79,37 @@ def test_vox_flow(xession, vox, record_events, tmpdir):
     assert "spam" in vox.vox
     assert "spam" in list(vox.vox)
 
-    # activate/deactivate
+    # activate
     vox(["activate", "spam"])
     assert xession.env["VIRTUAL_ENV"] == vox.vox["spam"].env
     assert record_events.last == ("vox_on_activate", "spam", str(ve.env))
-    vox.deactivate()
+
+    out = io.StringIO()
+    # info
+    vox(["info"], stdout=out)
+    assert "spam" in out.getvalue()
+    out.seek(0)
+
+    # runin
+    vox(["runin", "spam", "pip", "--version"], stdout=out)
+    print(out.getvalue())
+    assert "spam" in out.getvalue()
+    out.seek(0)
+
+    # list
+    vox(["list"], stdout=out)
+    print(out.getvalue())
+    assert "spam" in out.getvalue()
+    out.seek(0)
+
+    # wipe
+    vox(["wipe"], stdout=out)
+    print(out.getvalue())
+    assert "Nothing to remove" in out.getvalue()
+    out.seek(0)
+
+    # deactivate
+    vox(["deactivate"])
     assert "VIRTUAL_ENV" not in xession.env
     assert record_events.last == ("vox_on_deactivate", "spam", str(ve.env))
 

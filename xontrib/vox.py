@@ -1,7 +1,6 @@
 """Python virtual environment manager for xonsh."""
 import os.path
 import subprocess
-import sys
 import tempfile
 import typing as tp
 from pathlib import Path
@@ -11,6 +10,7 @@ import xontrib.voxapi as voxapi
 from xonsh.built_ins import XSH
 from xonsh.dirstack import pushd_fn
 from xonsh.platform import ON_WINDOWS
+from xonsh.tools import XonshError
 
 __all__ = ()
 
@@ -119,7 +119,7 @@ class VoxHandler(xcli.ArgParserAlias):
             Provides an alternative prompt prefix for this environment.
         """
 
-        print("Creating environment...")
+        self.out("Creating environment...")
 
         if temporary:
             path = tempfile.mkdtemp(prefix=f"vox-env-{name}")
@@ -150,9 +150,9 @@ class VoxHandler(xcli.ArgParserAlias):
 
         if activate:
             self.activate(name)
-            print(f"Environment {name!r} created and activated.\n")
+            self.out(f"Environment {name!r} created and activated.\n")
         else:
-            print(
+            self.out(
                 f'Environment {name!r} created. Activate it with "vox activate {name}".\n'
             )
 
@@ -179,12 +179,11 @@ class VoxHandler(xcli.ArgParserAlias):
         try:
             self.vox.activate(name)
         except KeyError:
-            self.parser.error(
-                f'This environment doesn\'t exist. Create it with "vox new {name}".\n',
+            raise self.Error(
+                f'This environment doesn\'t exist. Create it with "vox new {name}"',
             )
-            return None
 
-        print(f'Activated "{name}".\n')
+        self.out(f'Activated "{name}".\n')
         if not no_cd:
             project_dir = self._get_project_dir(name)
             if project_dir:
@@ -202,16 +201,16 @@ class VoxHandler(xcli.ArgParserAlias):
         """
 
         if self.vox.active() is None:
-            self.parser.error(
+            raise self.Error(
                 'No environment currently active. Activate one with "vox activate".\n',
             )
         env_name = self.vox.deactivate()
         if remove:
             self.vox.force_removals = force
             del self.vox[env_name]
-            print(f'Environment "{env_name}" deactivated and removed.\n')
+            self.out(f'Environment "{env_name}" deactivated and removed.\n')
         else:
-            print(f'Environment "{env_name}" deactivated.\n')
+            self.out(f'Environment "{env_name}" deactivated.\n')
 
     def list(self):
         """List available virtual environments."""
@@ -219,16 +218,15 @@ class VoxHandler(xcli.ArgParserAlias):
         try:
             envs = sorted(self.vox.keys())
         except PermissionError:
-            self.parser.error("No permissions on VIRTUALENV_HOME")
-            return None
+            raise self.Error("No permissions on VIRTUALENV_HOME")
 
         if not envs:
-            self.parser.error(
+            raise self.Error(
                 'No environments available. Create one with "vox new".\n',
             )
 
-        print("Available environments:")
-        print("\n".join(envs))
+        self.out("Available environments:")
+        self.out("\n".join(envs))
 
     def remove(
         self,
@@ -253,15 +251,15 @@ class VoxHandler(xcli.ArgParserAlias):
             try:
                 del self.vox[name]
             except voxapi.EnvironmentInUse:
-                self.parser.error(
+                raise self.Error(
                     f'The "{name}" environment is currently active. '
                     'In order to remove it, deactivate it first with "vox deactivate".\n',
                 )
             except KeyError:
-                self.parser.error(f'"{name}" environment doesn\'t exist.\n')
+                raise self.Error(f'"{name}" environment doesn\'t exist.\n')
             else:
-                print(f'Environment "{name}" removed.')
-        print()
+                self.out(f'Environment "{name}" removed.')
+        self.out()
 
     def _in_venv(self, env_dir: str, command: str, *args, **kwargs):
         env = XSH.env.detype()
@@ -284,7 +282,7 @@ class VoxHandler(xcli.ArgParserAlias):
             # won't inherit the PATH
         except OSError as e:
             if e.errno == 2:
-                self.parser.error(f"Unable to find {command}")
+                raise self.Error(f"Unable to find {command}")
             raise
 
     def runin(
@@ -310,7 +308,7 @@ class VoxHandler(xcli.ArgParserAlias):
         """
         env_dir = self._get_env_dir(venv)
         if not args:
-            self.parser.error("No command is passed")
+            raise self.Error("No command is passed")
         self._in_venv(env_dir, *args)
 
     def runin_all(
@@ -326,19 +324,18 @@ class VoxHandler(xcli.ArgParserAlias):
         """
         errors = False
         for env in self.vox:
-            print("\n%s:" % env)
+            self.out("\n%s:" % env)
             try:
                 self.runin(env, *args)
             except subprocess.CalledProcessError as e:
                 errors = True
-                print(e, file=sys.stderr)
-        sys.exit(errors)
+                self.err(e)
+        self.parser.exit(errors)
 
     def _sitepackages_dir(self, venv_path: str):
         env_python = self.vox.get_binary_path("python", venv_path)
         if not os.path.exists(env_python):
-            self.parser.error("ERROR: no virtualenv active")
-            return
+            raise self.Error("no virtualenv active")
 
         return Path(
             subprocess.check_output(
@@ -352,17 +349,18 @@ class VoxHandler(xcli.ArgParserAlias):
         )
 
     def _get_env_dir(self, venv=None):
-        venv = venv or "..."
+        venv = venv or ...
         try:
             env_dir = self.vox[venv].env
         except KeyError:
             # check whether the venv is a valid path to an environment
-            if os.path.exists(venv) and os.path.exists(
-                self.vox.get_binary_path("python", venv)
+            if (
+                isinstance(venv, str)
+                and os.path.exists(venv)
+                and os.path.exists(self.vox.get_binary_path("python", venv))
             ):
                 return venv
-            self.parser.error("No virtualenv is found")
-            return
+            raise XonshError("No virtualenv is found")
         return env_dir
 
     def toggle_ssp(self):
@@ -374,10 +372,10 @@ class VoxHandler(xcli.ArgParserAlias):
         ngsp_file = site.parent / "no-global-site-packages.txt"
         if ngsp_file.exists():
             ngsp_file.unlink()
-            print("Enabled global site-packages")
+            self.out("Enabled global site-packages")
         else:
             with ngsp_file.open("w"):
-                print("Disabled global site-packages")
+                self.out("Disabled global site-packages")
 
     def project_set(
         self,
@@ -397,9 +395,9 @@ class VoxHandler(xcli.ArgParserAlias):
 
         project = os.path.abspath(project_path or ".")
         if not os.path.exists(env_dir):
-            self.parser.error(f"Environment '{env_dir}' doesn't exist.")
+            raise self.Error(f"Environment '{env_dir}' doesn't exist.")
         if not os.path.isdir(project):
-            self.parser.error(f"{project} does not exist")
+            raise self.Error(f"{project} does not exist")
 
         project_file = self._get_project_file()
         project_file.write_text(project)
@@ -428,10 +426,10 @@ class VoxHandler(xcli.ArgParserAlias):
         """
         project_dir = self._get_project_dir(venv)
         if project_dir:
-            print(project_dir)
+            self.out(project_dir)
         else:
             project_file = self._get_project_file(venv)
-            self.parser.error(
+            raise self.Error(
                 f"Corrupted or outdated: {project_file}\nDirectory: {project_dir} doesn't exist."
             )
 
@@ -454,11 +452,11 @@ class VoxHandler(xcli.ArgParserAlias):
         ignored = sorted(all_pkgs - pkgs)
         to_remove = {p.split("==")[0] for p in pkgs}
         if to_remove:
-            print("Ignoring:\n %s" % "\n ".join(ignored))
-            print("Uninstalling packages:\n %s" % "\n ".join(to_remove))
+            self.out("Ignoring:\n %s" % "\n ".join(ignored))
+            self.out("Uninstalling packages:\n %s" % "\n ".join(to_remove))
             return subprocess.run([pip_bin, "uninstall", "-y", *to_remove])
         else:
-            print("Nothing to remove")
+            self.out("Nothing to remove")
 
     def info(self, venv: _venv_option = None):
         """Prints the path for the supplied env
@@ -468,7 +466,7 @@ class VoxHandler(xcli.ArgParserAlias):
         venv
             name of the venv
         """
-        print(self.vox[venv or ...])
+        self.out(self.vox[venv or ...])
 
     def upgrade(
         self,
@@ -498,7 +496,7 @@ class VoxHandler(xcli.ArgParserAlias):
         venv = self.vox.upgrade(
             name or ..., symlinks=symlinks, with_pip=with_pip, interpreter=interpreter
         )
-        print(venv)
+        self.out(venv)
 
 
 XSH.aliases["vox"] = VoxHandler()
