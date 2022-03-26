@@ -1,8 +1,8 @@
 import sys
 from pathlib import Path
-from subprocess import check_call, check_output
+from subprocess import check_output
 
-from tests.tools import ON_WINDOWS
+from xonsh.pytest.tools import ON_WINDOWS
 
 
 def test_xonsh_activator(tmp_path):

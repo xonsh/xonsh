@@ -1,5 +1,5 @@
-from virtualenv.util.path import Path
-from virtualenv.activation.via_template import ViaTemplateActivator
+from virtualenv.activation.via_template import ViaTemplateActivator  # type: ignore
+from virtualenv.util.path import Path  # type: ignore
 
 
 class XonshActivator(ViaTemplateActivator):
