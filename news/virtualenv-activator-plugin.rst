@@ -1,6 +1,6 @@
 **Added:**
 
-* Support for the virtualenv ``activate.xsh`` script is back! Ensure you create the virtualenv from the same python where xonsh is installed.
+* Support for the `virtualenv <https://virtualenv.pypa.io/en/20.0.1/extend.html#activation-scripts>`_ ``activate.xsh`` script is back! Ensure you create the virtualenv from the same python where xonsh is installed.
 
 **Changed:**
 
