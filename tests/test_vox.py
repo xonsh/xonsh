@@ -58,10 +58,13 @@ def record_events(xession):
 
 @skip_if_on_msys
 @skip_if_on_conda
-def test_vox_flow(xession, vox, record_events, tmpdir):
+def test_vox_flow(xession, vox, os_env, record_events, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
     """
+    # on windows it needs real env to start python interpreter
+    xession.env = os_env
+
     xession.env["VIRTUALENV_HOME"] = str(tmpdir)
 
     record_events(
@@ -90,12 +93,6 @@ def test_vox_flow(xession, vox, record_events, tmpdir):
     assert "spam" in out.getvalue()
     out.seek(0)
 
-    # runin
-    vox(["runin", "spam", "pip", "--version"], stdout=out)
-    print(out.getvalue())
-    assert "spam" in out.getvalue()
-    out.seek(0)
-
     # list
     vox(["list"], stdout=out)
     print(out.getvalue())
@@ -112,6 +109,12 @@ def test_vox_flow(xession, vox, record_events, tmpdir):
     vox(["deactivate"])
     assert "VIRTUAL_ENV" not in xession.env
     assert record_events.last == ("vox_on_deactivate", "spam", str(ve.env))
+
+    # runin
+    vox(["runin", "spam", "pip", "--version"], stdout=out)
+    print(out.getvalue())
+    assert "spam" in out.getvalue()
+    out.seek(0)
 
     # removal
     vox(["rm", "spam", "--force"])

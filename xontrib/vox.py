@@ -262,17 +262,13 @@ class VoxHandler(xcli.ArgParserAlias):
         self.out()
 
     def _in_venv(self, env_dir: str, command: str, *args, **kwargs):
-        env = XSH.env.detype()
-        env["VIRTUAL_ENV"] = env_dir
-        env["PATH"] = os.pathsep.join(
-            [
-                os.path.join(env_dir, self.vox.sub_dirs[0]),
-                env["PATH"],
-            ]
-        )
+        env = {**XSH.env.detype(), "VIRTUAL_ENV": env_dir}
+
+        bin_path = os.path.join(env_dir, self.vox.sub_dirs[0])
+        env["PATH"] = os.pathsep.join([bin_path, env["PATH"]])
+
         for key in ("PYTHONHOME", "__PYVENV_LAUNCHER__"):
-            if key in env:
-                del env[key]
+            env.pop(key, None)
 
         try:
             return subprocess.check_call(
