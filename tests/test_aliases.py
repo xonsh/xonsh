@@ -6,7 +6,6 @@ import os
 import pytest
 
 from xonsh.aliases import Aliases, ExecAlias
-from xonsh.pytest.tools import skip_if_on_windows
 
 
 def cd(args, stdin=None, **kwargs):
@@ -52,7 +51,6 @@ def test_eval_recursive(xession):
     assert ales.get("color_ls") == ["ls", "-  -", "--color=true"]
 
 
-@skip_if_on_windows
 def test_eval_recursive_callable_partial(xonsh_execer, xession):
     ales = make_aliases()
     xession.env["HOME"] = os.path.expanduser("~")
