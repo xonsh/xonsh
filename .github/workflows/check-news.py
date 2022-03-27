@@ -12,7 +12,6 @@ def get_added_files(pr: PullRequest.PullRequest):
     for file in pr.get_files():
         if file.status == "added":
             yield file.filename
-            print(file)
 
 
 def check_news_file(pr):
