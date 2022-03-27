@@ -48,15 +48,16 @@ def venv_proc(fake_process: "FakeProcess", venv_home):
             st = os.stat(str(file))
             os.chmod(str(file), st.st_mode | stat.S_IEXEC)
 
-        fake_process.register(
-            [str(bin_path / "pip"), "freeze", fake_process.any()], stdout=""
-        )
+        for pip_name in ["pip", "pip.exe"]:
+            fake_process.register(
+                [str(bin_path / pip_name), "freeze", fake_process.any()], stdout=""
+            )
 
-        # will be used by `vox runin`
-        fake_process.register(
-            ["pip", "--version"],
-            stdout=f"pip 22.0.4 from {env_path}/lib/python3.10/site-packages/pip (python 3.10)",
-        )
+            # will be used by `vox runin`
+            fake_process.register(
+                [pip_name, "--version"],
+                stdout=f"pip 22.0.4 from {env_path}/lib/python3.10/site-packages/pip (python 3.10)",
+            )
         fake_process.keep_last_process(True)
         return env_path
 
