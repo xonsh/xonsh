@@ -1691,7 +1691,7 @@ This is to reduce the noise in generated completions.""",
         "For both bash-completion v1.x and v2.x, paths of individual completion "
         "scripts (like ``.../completes/ssh``) do not need to be included here. "
         "The default values are platform "
-        "dependent, but sane. To specify an alternate list, do so in the run "
+        "dependent, but reasonable. To specify an alternate list, do so in the run "
         "control file.",
         default=BASH_COMPLETIONS_DEFAULT,
         doc_default=(
