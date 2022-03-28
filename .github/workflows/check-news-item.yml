@@ -24,3 +24,7 @@ jobs:
       - run: |
           pip install -r requirements/ci.txt
           python .github/workflows/check-news.py
+        env:
+          GITHUB_REF: "${{ env.GITHUB_REF }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_REPOSITORY: "${{ env.GITHUB_REPOSITORY }}"
