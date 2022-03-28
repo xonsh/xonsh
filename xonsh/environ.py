@@ -1699,7 +1699,8 @@ This is to reduce the noise in generated completions.""",
             "    ``('/usr/share/bash-completion/bash_completion', )``\n\n"
             "But, on Mac it is:\n\n"
             "    ``('/usr/local/share/bash-completion/bash_completion', "
-            "'/usr/local/etc/bash_completion')``\n\n"
+            "'/usr/local/etc/bash_completion', "
+            "'/opt/homebrew/share/bash-completion/bash_completion'),``\n\n"
             "Other OS-specific defaults may be added in the future."
         ),
         type_str="env_path",
