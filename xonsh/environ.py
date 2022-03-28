@@ -1691,7 +1691,7 @@ This is to reduce the noise in generated completions.""",
         "For both bash-completion v1.x and v2.x, paths of individual completion "
         "scripts (like ``.../completes/ssh``) do not need to be included here. "
         "The default values are platform "
-        "dependent, but sane. To specify an alternate list, do so in the run "
+        "dependent, but reasonable. To specify an alternate list, do so in the run "
         "control file.",
         default=BASH_COMPLETIONS_DEFAULT,
         doc_default=(
@@ -1699,7 +1699,8 @@ This is to reduce the noise in generated completions.""",
             "    ``('/usr/share/bash-completion/bash_completion', )``\n\n"
             "But, on Mac it is:\n\n"
             "    ``('/usr/local/share/bash-completion/bash_completion', "
-            "'/usr/local/etc/bash_completion')``\n\n"
+            "'/usr/local/etc/bash_completion', "
+            "'/opt/homebrew/share/bash-completion/bash_completion'),``\n\n"
             "Other OS-specific defaults may be added in the future."
         ),
         type_str="env_path",

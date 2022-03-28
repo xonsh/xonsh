@@ -705,7 +705,7 @@ class SubprocSpec:
 
 
 def _safe_pipe_properties(fd, use_tty=False):
-    """Makes sure that a pipe file descriptor properties are sane."""
+    """Makes sure that a pipe file descriptor properties are reasonable."""
     if not use_tty:
         return
     # due to some weird, long standing issue in Python, PTYs come out

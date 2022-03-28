@@ -90,7 +90,7 @@ In sh-langs, internal quote characters are removed. For instance:
     $ echo --key="value"
     --key=value
 
-Xonsh considers this behavior insane. Instead, xonsh treats these
+Xonsh considers this behavior suboptimal. Instead, xonsh treats these
 arguments as if they were surrounded in another, outer level of
 quotation (``'foo"bar"baz'``). Xonsh will keep the quotation marks
 when leading and trailing quotes are not matched.

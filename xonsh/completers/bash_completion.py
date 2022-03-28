@@ -316,7 +316,7 @@ def bash_completions(
         since it lazy-loads individual completion scripts. For both
         bash-completion v1.x and v2.x, paths of individual completion scripts
         (like ``.../completes/ssh``) do not need to be included here. The
-        default values are platform dependent, but sane.
+        default values are platform dependent, but reasonable.
     command : str or None, optional
         The /path/to/bash to use. If None, it will be selected based on the
         from the environment and platform.
