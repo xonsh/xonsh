@@ -3,8 +3,8 @@ import subprocess
 
 import pytest  # noqa F401
 
-from tools import skip_if_not_on_darwin, skip_if_on_windows
 from xonsh.completers.man import complete_from_man
+from xonsh.pytest.tools import skip_if_not_on_darwin, skip_if_on_windows
 
 
 @skip_if_on_windows

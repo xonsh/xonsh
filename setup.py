@@ -6,7 +6,7 @@ import os
 import sys
 import subprocess
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
@@ -321,8 +321,10 @@ def main():
             "xonsh.completers",
             "xonsh.history",
             "xonsh.prompt",
+            "xonsh.pytest",
             "xonsh.lib",
             "xonsh.webconfig",
+            "xonsh.virtualenv",
             "xompletions",
         ],
         package_dir={
@@ -336,6 +338,7 @@ def main():
             "xonsh": ["*.json", "*.githash"],
             "xontrib": ["*.xsh"],
             "xonsh.lib": ["*.xsh"],
+            "xonsh.virtualenv": ["*.xsh"],
             "xonsh.webconfig": [
                 "*.html",
                 "js/app.min.js",
@@ -354,7 +357,8 @@ def main():
             "xonsh = xonsh.pyghooks:XonshLexer",
             "xonshcon = xonsh.pyghooks:XonshConsoleLexer",
         ],
-        "pytest11": ["xonsh = xonsh.pytest_plugin"],
+        "pytest11": ["xonsh = xonsh.pytest.plugin"],
+        "virtualenv.activate": ["xonsh = xonsh.virtualenv:XonshActivator"],
         "console_scripts": [
             "xonsh = xonsh.main:main",
             "xonsh-cat = xonsh.xoreutils.cat:main",

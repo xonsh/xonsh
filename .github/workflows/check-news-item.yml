@@ -1,9 +1,13 @@
 name: Check News Item
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
     - main
+
+permissions:
+  pull-requests: write
+  contents: read
 
 jobs:
   build:
@@ -11,17 +15,15 @@ jobs:
     name: Check News item
     steps:
       - uses: actions/checkout@v2
-      - id: file_changes
-        uses: trilom/file-changes-action@v1.2.4
+      - name: Setup Python
+        uses: actions/setup-python@v2
         with:
-          output: ','
-      - shell: bash
-        run: |
-          added_files='${{ steps.file_changes.outputs.files_added}}'
-          echo $added_files
-          if [[ $added_files == *"news/"*.rst* ]]; then
-            echo "Found news item for the PR"
-          else
-            echo "News item for the PR is not found. Please create one from 'news/TEMPLATE.rst'"
-            exit 1
-          fi
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: 'requirements/ci.txt'
+      - run: pip install -r requirements/ci.txt
+      - run: python .github/workflows/check-news.py
+        env:
+          GITHUB_REF: "${{ env.GITHUB_REF }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_REPOSITORY: "${{ env.GITHUB_REPOSITORY }}"

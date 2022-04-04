@@ -7,20 +7,14 @@ import socket
 import sys
 import typing as tp
 
-import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.prompt.cwd import (
-    _collapsed_pwd,
-    _dynamically_collapsed_pwd,
-    _replace_home_cwd,
-)
-from xonsh.prompt.env import env_name, vte_new_tab_cwd
-from xonsh.prompt.gitstatus import gitstatus_prompt
-from xonsh.prompt.job import _current_job
-from xonsh.prompt.times import _localtime
-from xonsh.prompt.vc import branch_bg_color, branch_color, current_branch
+
+if tp.TYPE_CHECKING:
+    from xonsh.built_ins import XonshSession
+
+    FieldType = tp.TypeVar("FieldType", bound="BasePromptField", covariant=True)
 
 
 @xt.lazyobject
@@ -81,27 +75,30 @@ class PromptFormatter:
     uses the ``PROMPT_FIELDS`` envvar (no color formatting).
     """
 
-    def __init__(self):
-        self.cache = {}
-
     def __call__(self, template=DEFAULT_PROMPT, fields=None, **kwargs) -> str:
         """Formats a xonsh prompt template string."""
 
-        # keep cache only during building prompt
-        self.cache.clear()
-
         if fields is None:
-            self.fields = XSH.env.get("PROMPT_FIELDS", PROMPT_FIELDS)  # type: ignore
+            self.fields = XSH.env["PROMPT_FIELDS"]  # type: ignore
         else:
             self.fields = fields
+
+        # some quick tests
+        if isinstance(fields, dict):
+            pflds: "PromptFields[PromptField]" = PromptFields(XSH, init=False)
+            pflds.update(fields)
+            self.fields = pflds
+
         try:
             toks = self._format_prompt(template=template, **kwargs)
             prompt = toks.process()
         except Exception as ex:
             # make it obvious why it has failed
-            print(
-                f"Failed to format prompt `{template}`-> {type(ex)}:{ex}",
-                file=sys.stderr,
+            import logging
+
+            logging.error(str(ex), exc_info=True)
+            xt.print_exception(
+                f"Failed to format prompt `{template}`-> {type(ex)}:{ex}"
             )
             return _failover_template_format(template)
         return prompt
@@ -131,45 +128,14 @@ class PromptFormatter:
             # color or unknown field, return as is
             return "{" + field + "}"
 
-    def _get_field_value(self, field, **kwargs):
-        field_value = self.fields[field]
-        if field_value in self.cache:
-            return self.cache[field_value]
-        return self._no_cache_field_value(field, field_value, **kwargs)
-
-    def _no_cache_field_value(self, field, field_value, **_):
+    def _get_field_value(self, field, **_):
         try:
-            value = field_value() if callable(field_value) else field_value
-            self.cache[field_value] = value
-        except Exception:
+            return self.fields.pick(field)
+        except Exception:  # noqa
             print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
             value = f"{{BACKGROUND_RED}}{{ERROR:{field}}}{{RESET}}"
         return value
-
-
-@xl.lazyobject
-def PROMPT_FIELDS():
-    return dict(
-        user=xp.os_environ.get("USERNAME" if xp.ON_WINDOWS else "USER", "<user>"),
-        prompt_end="#" if xt.is_superuser() else "$",
-        hostname=socket.gethostname().split(".", 1)[0],
-        cwd=_dynamically_collapsed_pwd,
-        cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
-        cwd_base=lambda: os.path.basename(_replace_home_cwd()),
-        short_cwd=_collapsed_pwd,
-        curr_branch=current_branch,
-        branch_color=branch_color,
-        branch_bg_color=branch_bg_color,
-        current_job=_current_job,
-        env_name=env_name,
-        env_prefix="(",
-        env_postfix=") ",
-        vte_new_tab_cwd=vte_new_tab_cwd,
-        gitstatus=gitstatus_prompt,
-        time_format="%H:%M:%S",
-        localtime=_localtime,
-    )
 
 
 def default_prompt():
@@ -277,7 +243,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
     return included_names <= known_names
 
 
-def _format_value(val, spec, conv):
+def _format_value(val, spec, conv) -> str:
     """Formats a value from a template string {val!conv:spec}. The spec is
     applied as a format string itself, but if the value is None, the result
     will be empty. The purpose of this is to allow optional parts in a
@@ -293,3 +259,252 @@ def _format_value(val, spec, conv):
     if not isinstance(val, str):
         val = str(val)
     return val
+
+
+class PromptFields(tp.MutableMapping[str, "FieldType"]):
+    """Mapping of functions available for prompt-display."""
+
+    def __init__(self, xsh: "XonshSession", init=True):
+        self._items: "dict[str, str | tp.Callable[..., str]]" = {}
+
+        self._cache: "dict[str, str|FieldType]" = {}
+        """for callbacks this will catch the value and should be cleared between prompts"""
+
+        self.xsh = xsh
+        if init:
+            self.load_initial()
+
+    def __repr__(self):
+        return f"{self.__class__.__module__}.{self.__class__.__name__}(...)"
+
+    def _repr_pretty_(self, p, cycle):
+        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        with p.group(1, name + "(", ")"):
+            if cycle:
+                p.text("...")
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
+
+    def __getitem__(self, item: "str|BasePromptField"):
+        # todo: load on-demand from modules
+        if isinstance(item, BasePromptField):
+            item = item.name
+        return self._items[item]
+
+    def __delitem__(self, key):
+        del self._items[key]
+
+    def __iter__(self):
+        yield from self._items
+
+    def __len__(self):
+        return len(self._items)
+
+    def __setitem__(self, key, value):
+        self._items[key] = value
+
+    def get_fields(self, module):
+        """Find and load all instances of PromptField from the given module.
+
+        Each module is expected to have a single prompt-field with the same name as the module
+        """
+        mod_name = module.__name__.replace(module.__package__, "", 1).replace(
+            ".", "", 1
+        )
+        for attr, val in vars(module).items():
+            if isinstance(val, BasePromptField):
+                if attr == mod_name:
+                    name = attr
+                else:
+                    name = f"{mod_name}.{attr}"
+                val.name = name
+                yield val
+
+    def load_initial(self):
+        from xonsh.prompt import gitstatus
+        from xonsh.prompt.cwd import (
+            _collapsed_pwd,
+            _dynamically_collapsed_pwd,
+            _replace_home_cwd,
+        )
+        from xonsh.prompt.env import env_name, vte_new_tab_cwd
+        from xonsh.prompt.job import _current_job
+        from xonsh.prompt.times import _localtime
+        from xonsh.prompt.vc import branch_bg_color, branch_color, current_branch
+
+        self.update(
+            dict(
+                user=xp.os_environ.get(
+                    "USERNAME" if xp.ON_WINDOWS else "USER", "<user>"
+                ),
+                prompt_end="#" if xt.is_superuser() else "$",
+                hostname=socket.gethostname().split(".", 1)[0],
+                cwd=_dynamically_collapsed_pwd,
+                cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
+                cwd_base=lambda: os.path.basename(_replace_home_cwd()),
+                short_cwd=_collapsed_pwd,
+                curr_branch=current_branch,
+                branch_color=branch_color,
+                branch_bg_color=branch_bg_color,
+                current_job=_current_job,
+                env_name=env_name,
+                env_prefix="(",
+                env_postfix=") ",
+                vte_new_tab_cwd=vte_new_tab_cwd,
+                time_format="%H:%M:%S",
+                localtime=_localtime,
+            )
+        )
+        for val in self.get_fields(gitstatus):
+            self[val.name] = val
+
+    def pick(self, key: "str|FieldType") -> "str | FieldType | None":
+        """Get the value of the prompt-field
+
+        Notes
+        -----
+            If it is callable, then the result of the callable is returned.
+            If it is a PromptField then it is updated
+        """
+        name = key if isinstance(key, str) else key.name
+        if name not in self._items:
+            return None
+        value = self._items[name]
+        if name not in self._cache:
+            if isinstance(value, BasePromptField):
+                value.update(self)
+            elif callable(value):
+                value = value()
+
+            # store in cache
+            self._cache[name] = value
+        return self._cache[name]
+
+    def pick_val(self, key):
+        """wrap .pick() method to get .value attribute in case of PromptField"""
+        val = self.pick(key)
+        return val.value if isinstance(val, BasePromptField) else val
+
+    def needs_calling(self, name) -> bool:
+        """check if we can offload the work"""
+        if name in self._cache or (name not in self._items):
+            return False
+
+        value = self[name]
+        return isinstance(value, BasePromptField) or callable(value)
+
+    def reset(self):
+        """the results are cached and need to be reset between prompts"""
+        self._cache.clear()
+
+
+class BasePromptField:
+    value = ""
+    """This field should hold the bare value of the field without any color/format strings"""
+
+    _name: "str|None" = None
+    updator: "tp.Callable[[FieldType, PromptFields], None] | None" = None
+    """this is a callable that needs to update the value or any of the attribute of the field"""
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        """
+
+        Parameters
+        ----------
+        kwargs
+            attributes of the class will be set from this
+        """
+
+        for attr, val in kwargs.items():
+            setattr(self, attr, val)
+
+    def update(self, ctx: PromptFields) -> None:
+        """will be called from PromptFields getter for each new prompt"""
+        if self.updator:
+            self.updator(self, ctx)
+
+    def __format__(self, format_spec: str):
+        return format(self.value, format_spec)
+
+    def __bool__(self):
+        return bool(self.value)
+
+    def __repr__(self):
+        return f"<Prompt: {self._name}>"
+
+    @classmethod
+    def wrap(cls, **kwargs) -> "tp.Callable[..., FieldType]":
+        """decorator to set the updator"""
+
+        def wrapped(func):
+            return cls(updator=func, **kwargs)
+
+        return wrapped
+
+    @property
+    def name(self) -> str:
+        """will be set during load.
+
+        Notes
+        -----
+            fields with names such as ``gitstatus.branch`` mean they are defined in a module named ``gitstatus`` and
+            are most likely a subfield used by ``gitstatus``
+        """
+
+        if self._name is None:
+            raise NotImplementedError("PromptField name is not set")
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self._name = value
+
+
+class PromptField(BasePromptField):
+    """Any new non-private attributes set by the sub-classes are considered a way to configure the format"""
+
+    # these three fields will get updated by the caller
+    prefix = ""
+    suffix = ""
+
+    def __format__(self, format_spec: str):
+        if self.value:
+            return self.prefix + format(self.value, format_spec) + self.suffix
+        return ""
+
+
+class MultiPromptField(BasePromptField):
+    """Facilitate combining other PromptFields"""
+
+    separator = ""
+    """in case this combines values from other prompt fields"""
+
+    fragments: "tuple[str, ...]" = ()
+    """name of the fields or the literals to combine.
+    If the framgment name startswith ``.`` then they are resolved to include the name of this field."""
+
+    def __init__(self, *fragments: "str", **kwargs):
+        super().__init__(**kwargs)
+        self.fragments = fragments or self.fragments
+
+    def get_frags(self, env):
+        yield from self.fragments
+
+    def _collect(self, ctx):
+        for frag in self.get_frags(ctx.xsh.env):
+            if frag.startswith("."):
+                field_name = f"{self.name}{frag}"
+                if field_name in ctx:
+                    frag = field_name
+
+            if frag in ctx:
+                yield format(ctx.pick(frag))
+            elif isinstance(frag, str):
+                yield frag
+
+    def update(self, ctx: PromptFields):
+        self.value = self.separator.join(self._collect(ctx))

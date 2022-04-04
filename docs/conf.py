@@ -12,6 +12,8 @@ from collections import OrderedDict
 from pathlib import Path
 
 # make current docs directory modules importable
+from sphinx.application import Sphinx
+
 sys.path.append(str(Path(__file__).parent.resolve()))
 
 import inspect
@@ -447,8 +449,15 @@ make_xontribs()
 make_events()
 
 
-def setup(app):
+def setup(app: Sphinx):
     from xonsh.pyghooks import XonshConsoleLexer
 
     app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")
+
+
+if __name__ == "__main__":
+    # use this to debug the process from IDEs
+    from sphinx.cmd import build
+
+    build.main(["-b", "html", ".", "_build/html"])

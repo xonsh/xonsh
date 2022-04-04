@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from tools import ON_WINDOWS, skip_if_on_unix, skip_if_on_windows
+from xonsh.pytest.tools import ON_WINDOWS, skip_if_on_unix, skip_if_on_windows
 
 
 @pytest.fixture

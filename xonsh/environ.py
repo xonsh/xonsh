@@ -37,7 +37,6 @@ from xonsh.platform import (
     PATH_DEFAULT,
     os_environ,
 )
-from xonsh.prompt.gitstatus import _DEFS as GITSTATUS_FIELD_DEFS
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
@@ -583,6 +582,7 @@ def xdg_data_dirs(env):
     r"""
     On Windows: ``[%ProgramData%]`` (normally C:\ProgramData)
         - More Info: https://docs.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-folderlocations-programdata
+
     On Linux and Unix based systemd it is the same as in open-desktop standard: ``['/usr/share', '/usr/local/share']``
     """
     if ON_WINDOWS:
@@ -687,6 +687,13 @@ def default_lscolors(env):
     # have to place this in the env, so it is applied
     env["LS_COLORS"] = lsc
     return lsc
+
+
+@default_value
+def default_prompt_fields(env):
+    """``xonsh.prompt.PROMPT_FIELDS``"""
+    # todo: generate document for all default fields
+    return prompt.PromptFields(XSH)
 
 
 VarKeyType = tp.Union[str, tp.Pattern]
@@ -1358,16 +1365,15 @@ class PromptSetting(Xettings):
         "This value is never inherited from parent processes.",
         doc_default="``xonsh.environ.DEFAULT_PROMPT``",
     )
-    PROMPT_FIELDS = Var(
-        always_true,
-        None,
-        None,
-        prompt.PROMPT_FIELDS,
-        "Dictionary containing variables to be used when formatting $PROMPT "
+    PROMPT_FIELDS = Var.with_default(
+        default_prompt_fields,
+        validate=always_true,
+        convert=None,
+        detype=None,
+        doc="Dictionary containing variables to be used when formatting $PROMPT "
         "and $TITLE. See 'Customizing the Prompt' "
         "http://xon.sh/tutorial.html#customizing-the-prompt",
         is_configurable=False,
-        doc_default="``xonsh.prompt.PROMPT_FIELDS``",
     )
     PROMPT_REFRESH_INTERVAL = Var.with_default(
         0.0,  # keep as float
@@ -1417,7 +1423,8 @@ class PromptSetting(Xettings):
         "To use the ``prompt_toolkit`` shell you need to have the "
         "`prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_"
         " library installed. To specify which shell should be used, do so in "
-        "the run control file.",
+        "the run control file. "
+        "It also accepts a class type that inherits from ``xonsh.base_shell.BaseShell``",
         doc_default="``best``",
     )
     SUGGEST_COMMANDS = Var.with_default(
@@ -1476,24 +1483,6 @@ class PromptSetting(Xettings):
         "str",
         "Path to the currently active Python environment.",
         is_configurable=False,
-    )
-    XONSH_GITSTATUS_ = Var.with_default(
-        None,
-        "Symbols for gitstatus prompt. Default values are: \n\n"
-        + "\n".join(
-            f"* ``XONSH_GITSTATUS_{fld.name}``: ``{fld.value}``"
-            for fld in GITSTATUS_FIELD_DEFS
-        ),
-        pattern="XONSH_GITSTATUS_*",
-    )
-    XONSH_GITSTATUS_FIELDS_HIDDEN = Var.with_default(
-        (),
-        "Fields to hide in {gitstatus} prompt (all fields below are shown by default.) \n\n"
-        + "\n".join(
-            f"* ``{fld.name}``\n"
-            for fld in GITSTATUS_FIELD_DEFS
-            if not fld.name.startswith("HASH")
-        ),
     )
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,
@@ -1702,7 +1691,7 @@ This is to reduce the noise in generated completions.""",
         "For both bash-completion v1.x and v2.x, paths of individual completion "
         "scripts (like ``.../completes/ssh``) do not need to be included here. "
         "The default values are platform "
-        "dependent, but sane. To specify an alternate list, do so in the run "
+        "dependent, but reasonable. To specify an alternate list, do so in the run "
         "control file.",
         default=BASH_COMPLETIONS_DEFAULT,
         doc_default=(
@@ -1710,7 +1699,8 @@ This is to reduce the noise in generated completions.""",
             "    ``('/usr/share/bash-completion/bash_completion', )``\n\n"
             "But, on Mac it is:\n\n"
             "    ``('/usr/local/share/bash-completion/bash_completion', "
-            "'/usr/local/etc/bash_completion')``\n\n"
+            "'/usr/local/etc/bash_completion', "
+            "'/opt/homebrew/share/bash-completion/bash_completion'),``\n\n"
             "Other OS-specific defaults may be added in the future."
         ),
         type_str="env_path",
@@ -2498,7 +2488,7 @@ def default_env(env=None):
     # in order of increasing precedence
     ctx = {
         "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
-        "PROMPT_FIELDS": dict(DEFAULT_VARS["PROMPT_FIELDS"].default),
+        "PROMPT_FIELDS": DEFAULT_VARS["PROMPT_FIELDS"].default(env),
         "XONSH_VERSION": XONSH_VERSION,
     }
     ctx.update(os_environ)

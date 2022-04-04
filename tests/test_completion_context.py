@@ -5,13 +5,13 @@ from unittest import mock
 import pytest
 
 import xonsh.parsers.completion_context as ctx
-from tests.tools import ON_WINDOWS
 from xonsh.parsers.completion_context import (
     CommandArg,
     CommandContext,
     CompletionContextParser,
     PythonContext,
 )
+from xonsh.pytest.tools import ON_WINDOWS
 
 DEBUG = False
 MISSING = object()

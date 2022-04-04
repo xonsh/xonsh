@@ -20,7 +20,7 @@ class PTKPromptFormatter(PromptFormatter):
         fields=None,
         threaded=False,
         prompt_name: str = None,
-        **_
+        **_,
     ) -> str:
         """Formats a xonsh prompt template string."""
 
@@ -41,7 +41,7 @@ class PTKPromptFormatter(PromptFormatter):
         self,
         template=DEFAULT_PROMPT,
         async_prompt: tp.Optional[AsyncPrompt] = None,
-        **kwargs
+        **kwargs,
     ):
         toks = super()._format_prompt(
             template=template, async_prompt=async_prompt, **kwargs
@@ -51,16 +51,13 @@ class PTKPromptFormatter(PromptFormatter):
             async_prompt.tokens = toks
         return toks
 
-    def _no_cache_field_value(
-        self, field, field_value, async_prompt=None, idx=None, spec=None, conv=None, **_
+    def _get_field_value(
+        self, field, async_prompt=None, idx=None, spec=None, conv=None, **_
     ):
-        """This branch is created so that caching fields per prompt would still work."""
-        func = functools.partial(super()._no_cache_field_value, field, field_value)
-
-        if async_prompt is not None and callable(field_value):
+        func = functools.partial(super()._get_field_value, field)
+        if async_prompt is not None and self.fields.needs_calling(field):
             # create a thread and return an intermediate result
             return async_prompt.submit_section(func, field, idx, spec, conv)
-
         return func()
 
     def start_update(self):

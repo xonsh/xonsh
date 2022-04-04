@@ -81,6 +81,19 @@ def define_xontribs():
         },
         url="http://xon.sh",
     )
+
+    def get_xontrib(name: str, desc: str):
+        return Xontrib(
+            url=f"https://github.com/xonsh/xontrib-{name}",
+            description=desc,
+            package=_XontribPkg(
+                name="xonsh-{name}",
+                license="BSD 2-clause",
+                install={"pifp": "xpip install xonsh-{name}"},
+                url=f"https://github.com/xonsh/xontrib-{name}",
+            ),
+        )
+
     return {
         "abbrevs": Xontrib(
             url="http://xon.sh",
@@ -287,36 +300,17 @@ def define_xontribs():
                 url="https://github.com/74th/xonsh-direnv",
             ),
         ),
-        "distributed": Xontrib(
-            url="http://xon.sh",
-            description="The distributed parallel computing library "
-            "hooks for xonsh. Importantly this provides a "
-            "substitute 'dworker' command which enables "
-            "distributed workers to have access to xonsh "
-            "builtins.\n"
-            "\n"
-            "Furthermore, this xontrib adds a 'DSubmitter' "
-            "context manager for executing a block "
-            "remotely. Moreover, this also adds a "
-            "convenience function 'dsubmit()' for creating "
-            "DSubmitter and Executor instances at the same "
-            "time. Thus users may submit distributed jobs "
-            "with::\n"
-            "\n"
-            "    with dsubmit('127.0.0.1:8786', rtn='x') "
-            "as dsub:\n"
-            "        x = $(echo I am elsewhere)\n"
-            "\n"
-            "    res = dsub.future.result()\n"
-            "    print(res)\n"
-            "\n"
-            "This is useful for long running or "
-            "non-blocking jobs.",
-            package=core_pkg,
+        "distributed": get_xontrib(
+            "distributed",
+            "The distributed parallel computing library hooks for xonsh.",
+        ),
+        "jupyter": get_xontrib(
+            "jupyter-shell",
+            "Jupyter Notebook kernel for Xonsh",
         ),
         "docker_tabcomplete": Xontrib(
             url="https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
-            description="Adds tabcomplete functionality to " "docker inside of xonsh.",
+            description="Adds tabcomplete functionality to docker inside of xonsh.",
             package=_XontribPkg(
                 name="xonsh-docker-tabcomplete",
                 license="MIT",
@@ -414,10 +408,9 @@ def define_xontribs():
                 url="https://github.com/eugenesvk/xontrib-homebrew",
             ),
         ),
-        "jedi": Xontrib(
-            url="http://xon.sh",
-            description="Use Jedi as xonsh's python completer.",
-            package=core_pkg,
+        "jedi": get_xontrib(
+            "jedi",
+            "Use Jedi as xonsh's python completer.",
         ),
         "kitty": Xontrib(
             url="https://github.com/scopatz/xontrib-kitty",
@@ -442,11 +435,10 @@ def define_xontribs():
                 url="https://github.com/anki-code/xontrib-macro-lib",
             ),
         ),
-        "mpl": Xontrib(
-            url="http://xon.sh",
-            description="Matplotlib hooks for xonsh, including the new 'mpl' "
+        "mpl": get_xontrib(
+            "mpl",
+            "Matplotlib hooks for xonsh, including the new 'mpl' "
             "alias that displays the current figure on the screen.",
-            package=core_pkg,
         ),
         "onepath": Xontrib(
             url="https://github.com/anki-code/xontrib-onepath",

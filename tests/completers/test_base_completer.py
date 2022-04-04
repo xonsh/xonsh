@@ -1,8 +1,8 @@
 import pytest
 
-from tests.tools import ON_WINDOWS
 from xonsh.completers.base import complete_base
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
+from xonsh.pytest.tools import ON_WINDOWS
 
 CUR_DIR = (
     "." if ON_WINDOWS else "./"

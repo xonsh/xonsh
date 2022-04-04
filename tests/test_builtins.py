@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from tools import skip_if_on_windows
 from xonsh.built_ins import (
     call_macro,
     convert_macro_arg,
@@ -25,6 +24,7 @@ from xonsh.built_ins import (
     superhelper,
 )
 from xonsh.environ import Env
+from xonsh.pytest.tools import skip_if_on_windows
 
 HOME_PATH = os.path.expanduser("~")
 

@@ -9,8 +9,8 @@ from contextlib import contextmanager
 import pytest
 
 import xonsh.main
-from tools import ON_WINDOWS, TEST_DIR, skip_if_on_windows
 from xonsh.main import XonshMode
+from xonsh.pytest.tools import ON_WINDOWS, TEST_DIR, skip_if_on_windows
 
 
 def Shell(*args, **kwargs):
