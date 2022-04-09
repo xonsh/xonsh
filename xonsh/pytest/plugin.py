@@ -373,13 +373,12 @@ def ptk_shell(xonsh_execer):
 
     from xonsh.ptk_shell.shell import PromptToolkitShell
 
-    inp = create_pipe_input()
     out = DummyOutput()
-    shell = PromptToolkitShell(
-        execer=xonsh_execer, ctx={}, ptk_args={"input": inp, "output": out}
-    )
-    yield inp, out, shell
-    inp.close()
+    with create_pipe_input() as inp:
+        shell = PromptToolkitShell(
+            execer=xonsh_execer, ctx={}, ptk_args={"input": inp, "output": out}
+        )
+        yield inp, out, shell
 
 
 @pytest.fixture
