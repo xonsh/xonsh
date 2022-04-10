@@ -46,8 +46,8 @@ def main():
         print("Found an existing comment from bot")
         if has_news_added:
             print("Delete warning from bot, since news items is added.")
-
-    if (not has_news_added) and (not old_comment):
+            old_comment.delete()
+    elif not has_news_added:
         print("No news item found")
 
         pr.create_issue_comment(
