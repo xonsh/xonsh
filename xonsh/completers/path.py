@@ -185,7 +185,7 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         expanded = expand_path(s)
         if os.path.isdir(expanded) or (cdpath and _is_directory_in_cdpath(expanded)):
             _tail = slash
-        elif end == "":
+        elif end == "" and not s.endswith("="):
             _tail = space
         else:
             _tail = ""
