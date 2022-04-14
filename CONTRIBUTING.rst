@@ -392,22 +392,15 @@ created by unit testing by running::
 -----------------------
 Performing the Release
 -----------------------
-This is done through the ``release.xsh`` script. To get a list of the
+This is done through the `rever <https://github.com/regro/rever>`_. To get a list of the
 valid options use::
 
-    $ xonsh release.xsh --help
+    $ pip install re-ver
 
 You can perform a full release::
 
-    $ xonsh release.xsh
-
-Or only a specific one::
-
-    $ xonsh release.xsh --only-pip
-
-You can also exclude a release::
-
-    $ xonsh release.xsh --no-conda
+    $ rever check
+    $ rever <version-number>
 
 
 -----------------------

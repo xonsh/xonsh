@@ -24,7 +24,7 @@ $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
 $PYTEST_COMMAND = "./run-tests.xsh -- test"
 
 $TAG_REMOTE = 'git@github.com:xonsh/xonsh.git'
-$TAG_TARGET = 'master'
+$TAG_TARGET = 'main'
 
 $GHPAGES_REPO = 'git@github.com:xonsh/xonsh-docs.git'
 
