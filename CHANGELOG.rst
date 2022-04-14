@@ -4,6 +4,149 @@ Xonsh Change Log
 
 .. current developments
 
+v0.12.0
+====================
+
+**Added:**
+
+* Added interface to complete any alias that has ``xonsh_complete`` attribute. It is a function with ``fn(**kwargs) -> Iterator[RichCompletion | str]`` signature.
+* added ``$ALIAS_COMPLETIONS_OPTIONS_LONGEST`` to control showing options in completions
+* added ``$CMD_COMPLETIONS_SHOW_DESC`` environment variable to control showing command completions with a description part.
+* `completer complete` command is added to test current completions
+* completions from man page will now show the description for the options if available.
+* ``$XONSH_COMPLETER_DIRS`` to put command completers
+* ``Aliases.register`` to register an alias function.
+* Tracebacks are now printed in color if available (interactive session with shell that supports colors with pygments installed and $COLOR_RESULTS enabled)
+* Added python's match statement for python >=3.10.
+* Added support for the $SHLVL environment variable, typed as int, using bash's semantics.
+* Python files with command completions can be put inside ``xompletions`` namespace package,
+  they will get loaded lazily.
+* `xontrib.fish_completer` is available to complete using `fish` shell.
+* Support for pythons sys.last_type, sys.last_value, sys.last_traceback.
+* added ``xonsh-uname`` command to ``xoreutils``
+* auto-completion support for commands : ``source-foreign``, ``source-bash``, ``source-zsh``, ``source-cmd``
+* added ``history transfer`` command to transfer history entries between backends.
+* now ``$PROMPT_FIELDS`` is a custom class with method ``pick(field_name)`` to get the field value efficiently.
+  The results are cached within the same prompt call.
+* new class ``xonsh.prompt.base.PromptField`` to ease creating/extending prompt-fields
+* **Sublime Text 4** extension to the Editors page.
+* Support for the `virtualenv <https://virtualenv.pypa.io/en/20.0.1/extend.html#activation-scripts>`_ ``activate.xsh`` script is back! Ensure you create the virtualenv from the same python where xonsh is installed.
+* vox new/create accepts a new ``--prompt`` argument, which is passed through to ``python -m venv``
+* New set of commands and options to manage virtualenvs inspired from ``pew``
+
+    * runin
+    * runinall
+    * new
+
+        * ``--link`` : to associate venv with project directory
+        * ``--temp`` : to create temporary virtualenvs
+
+    * activate
+
+        * now will cd into project directory if the venv is associated
+
+    * toggle-ssp - toggle system site packages
+    * project - manage project path associations
+    * wipe - to quickly remove all user installed packages
+* ``prompt.env.env_name`` is now aware of the "prompt" key in ``pyvenv.cfg`` - search order from first to last is: ``$VIRTUAL_ENV_PROMPT``, ``pyvenv.cfg``, ``$VIRTUAL_ENV``, $``CONDA_DEFAULT_ENV``
+* new command ``vox upgrade``
+* ``xonfig web`` can now update ``abbrevs/aliases/env-variables``.
+* Added `xontrib-default-command <https://github.com/oh-my-xonsh/xontrib-default-command>` to xontrib list.
+* new `xontrib-django <https://github.com/jnoortheen/xontrib-django>`_ for django management completions
+* Added `xontrib-gruvbox <https://github.com/rpdelaney/xontrib-gruvbox>` to xontrib list.
+* Added `xontrib-up <https://github.com/oh-my-xonsh/xontrib-up>` to xontrib list.
+
+**Changed:**
+
+* Both ``*.xsh`` and ``*.py`` files inside ``$XONSHRC_DIR`` will get loaded now.
+* Environment-variables of no predefined type or path environment variables are now represented as strings via the empty string.
+* Made stacktraces behave like in python, i.e. when something in user-provided code fails (both interactively and non-interactively), only that part is shown, and the (static) part of the stacktrace showing the location where the user code was called in xonsh remains hidden. When an unexpected exception occurs inside xonsh, everything is shown like before.
+* run_compiled_code, run_script_with_cache, run_code_with_cache now return sys.exc_info() triples instead of throwing errors
+* SyntaxError tracebacks now by default hide the internal parser state (like in python); set XONSH_DEBUG >= 1 to enable it again.
+* XonshError tracebacks now by default hide xonshs internal state; set XONSH_DEBUG >= 1 to enable it again.
+* run_code_with_cache takes a new parameter display_filename to override the filename shown in exceptions (this is independent of caching)
+* Update uptime lib by the last one from Pypi
+* ``umask``, ``ulimit`` commands will not override the system's commands unless requested
+* Xontribs that require other third party packages are moved to its own packages.
+  The following xontribs are moved and can be loaded after install as usual
+
+  * mpl
+  * distributed
+  * jupyter-kernel
+  * jedi
+* Xonsh adopts `NEP-0029 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_ in supporting Python versions.
+* Privatise certain attributes of lexer/parser to minimise API surface
+* Make `XSH.load` calls explicit (not in Execer)
+* Make import hooks require Execer
+* Simplified foreign functions
+* Updated tutorial.rst to clarify use of time_format
+* ``vox new`` will use default python version of the system rather than the one vox is run with
+* ``xonfig web`` now shows latest xontribs available from ``xonsh.xontribs_meta``
+
+**Removed:**
+
+* ``$XONSH_GITSTATUS_*`` is removed
+  since the prompt fields can be customized easily now individually.
+* ``$XONSH_GITSTATUS_FIELDS_HIDDEN`` is removed.
+  Please set hidden fields in ``$PROMPT_FIELDS['gitstatus'].hidden = (...)``
+* Removed ``xonsh.ptk2`` module whcih was kept for some old packages sake. Now xonsh requires atleast ptk3 version.
+
+**Fixed:**
+
+* Some of the bash completions scripts can change path starting with '~/' to `/home/user/` during autocompletion.
+  xonsh `bash_completions` does not expect that, so it breaks autocompletion by producing paths like `~/f/home/user/foo`.
+  After the fix if bash returns changed paths then `/home/user` prefix will be replaced with `~/`.
+* ``pip`` completer now handles path completions correctly
+* SyntaxErrors thrown during compilation (i.e. not during parsing) now include the offending source line.
+* If a .xsh file is imported, the resulting module will now always have an absolute \_\_file\_\_ attribute to be consistent with pythons behavior since python 3.4.
+* ``$CONDA_DEFAULT_ENV`` is now respected when xonsh is run outside of conda.
+* Fixed unpacking of dictionaries inside a dictionary
+* Empty or comments only .xsh files can now be imported to align with pythons behavior.
+* Fixed regex globbing for file paths that contain special regex characters (e.g. "test*1/model")
+* Fixed list comprehension in return statement incorrectly being parsed as a subprocess command.
+* Fixed the expansion of $XONSH_TRACEBACK_LOGFILE user paths (e.g. "~/log")
+* Fixed DeprecationWarning when providing autocompletion for a non-callable type with ``(``
+* OSC codes in ``$PROMPT`` is no longer removed when using ptk shell.
+  These codes need to be escaped with ``\001..\002`` instead.
+* Attempt to show a modal cursor in vi_mode (ie. block in cmd, bar in ins)
+* Xonsh can now be used in VIM (e.g. by ":read !ls" if VIM is configured to use xonsh. This may be the case when xonsh is the default shell.)
+* Fixed OSError on Windows when GnuWin32 is installed in the PATH.
+* Do not show welcome message when any ``$XONSHRC_DIR`` directory entry exists.
+* SyntaxErrors now get initialized with all available fields so that the error message can be formatted properly.
+* Raising BaseException no longer causes Xonsh to crash (fix #4567)
+* Exceptions in user code when using xonsh non-interactively no longer simply crash xonsh, rather a proper stacktrace is printed and also postmain() is called.
+* Tracebacks will now show the correct filename (i.e. as in python) for interactive use "<stdin>", scripts read by stdin "<stdin>" and -c commands "<string>". (Instead of MD5 hashes as filenames or "<xonsh-code>")
+* Default ZSH FUNCSCMD was not working in ZSH 5.8 (and possibly other versions)
+* Passing multiple files to be sourced to source-foreign was broken
+* prompt field ``current_branch`` will now work empty git repository.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* Daniel Shimon
+* Peter Ye
+* Jason R. Coombs
+* dev2718
+* Evgeny
+* Angus Hollands
+* omjadas
+* Oliver Bestwalter
+* Samuel Dion-Girardeau
+* Ryan Delaney
+* E Pluribus Unum
+* ylmrx
+* Hierosme
+* Kyllingene
+* zzj
+* Daniel
+* Ganer
+* mattmc3
+* Evan Hubinger
+
+
+
 v0.11.0
 ====================
 
