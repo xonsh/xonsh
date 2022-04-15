@@ -4,6 +4,22 @@ Xonsh Change Log
 
 .. current developments
 
+v0.12.1
+====================
+
+**Fixed:**
+
+* fixed regression issue in loading `xontrib-abbrevs <https://github.com/xonsh/xonsh/pull/4757>`_
+* Allow xonsh to start gracefully even if modal cursors aren't in the available
+  prompt_toolkit version
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+
+
+
 v0.12.0
 ====================
 
