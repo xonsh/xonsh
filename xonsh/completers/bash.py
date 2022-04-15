@@ -3,8 +3,7 @@
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.completers.bash_completion import bash_completions
-from xonsh.completers.path import _quote_paths
+from xonsh.completers.bash_completion import _bash_quote_paths, bash_completions
 from xonsh.completers.tools import RichCompletion, contextual_command_completer
 from xonsh.parsers.completion_context import CommandContext
 
@@ -41,7 +40,7 @@ def complete_from_bash(context: CommandContext):
         env=env,
         paths=paths,
         command=command,
-        quote_paths=_quote_paths,
+        quote_paths=_bash_quote_paths,
         line_args=args,
         opening_quote=opening_quote,
         closing_quote=closing_quote,
