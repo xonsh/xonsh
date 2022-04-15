@@ -7,7 +7,6 @@ from types import MethodType
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.cursor_shapes import ModalCursorShapeConfig
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.history import ThreadedHistory
@@ -43,6 +42,13 @@ try:
     HAVE_SYS_CLIPBOARD = True
 except ImportError:
     HAVE_SYS_CLIPBOARD = False
+
+try:
+    from prompt_toolkit.cursor_shapes import ModalCursorShapeConfig
+
+    HAVE_CURSOR_SHAPE = True
+except ImportError:
+    HAVE_CURSOR_SHAPE = False
 
 CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
 Token = _TokenType()
@@ -356,7 +362,7 @@ class PromptToolkitShell(BaseShell):
             for attr, val in self.get_lazy_ptk_kwargs():
                 prompt_args[attr] = val
 
-        if editing_mode == EditingMode.VI:
+        if editing_mode == EditingMode.VI and HAVE_CURSOR_SHAPE:
             prompt_args["cursor"] = ModalCursorShapeConfig()
         events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
