@@ -63,6 +63,24 @@ def test_complete_path_when_prefix_is_raw_path_string(
         assert expected == out[0].pop()
 
 
+def test_complete_path_ending_with_equal_sign(xession, completion_context_parse):
+    xession.env = {
+        "CASE_SENSITIVE_COMPLETIONS": True,
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 1,
+        "CDPATH": set(),
+    }
+    with tempfile.NamedTemporaryFile(suffix="=") as tmp:
+        prefix_file_name = tmp.name.replace("=", "")
+        prefix = prefix_file_name
+        line = f"ls {prefix}"
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        expected = f"{tmp.name} "  # has trailing space
+        assert expected == out[0].pop()
+
+
 @pytest.mark.parametrize("prefix", ("", "r", "p", "pr", "rp"))
 def test_path_from_partial_string(prefix):
     string = "hello"

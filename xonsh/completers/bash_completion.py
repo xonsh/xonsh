@@ -186,7 +186,7 @@ def _bash_quote_paths(paths, start, end):
             start = end = _bash_quote_to_use(s)
         if os.path.isdir(_bash_expand_path(s)):
             _tail = slash
-        elif end == "":
+        elif end == "" and not s.endswith("="):
             _tail = space
         else:
             _tail = ""
