@@ -7,11 +7,11 @@ Authors are sorted by number of commits.
 * Morten Enemark Lund
 * Konstantinos Tsakiltzidis
 * Jamie Bliss
+* Noortheen Raja
 * a
 * Hugo Wang
 * David Strobach
 * Bob Hyman
-* Noortheen Raja
 * BlahGeek
 * anki-code
 * Daniel Shimon
@@ -47,26 +47,27 @@ Authors are sorted by number of commits.
 * Kurtis Rader
 * Brian Visel
 * cafehaine
+* Peter Ye
 * Andrew Hundt
 * Jonathan Slenders
+* Jason R. Coombs
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* Jason R. Coombs
 * Stephan Fitzpatrick
 * Will S
-* Peter Ye
+* dev2718
 * K.-Michael Aye
 * halloleo
 * Will Wykeham
 * Oleh Prypin
 * Brian Skinn
 * Wendell Turner
+* Evgeny
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
 * Alexander Sosedkin
-* Evgeny
 * Cody Scott
 * Jake Hedman
 * traverseda
@@ -77,6 +78,7 @@ Authors are sorted by number of commits.
 * mel
 * Jared Crawford
 * Mike Crowe
+* Angus Hollands
 * JuanPablo
 * Ollie Terrance
 * Marcel Bollmann
@@ -140,7 +142,9 @@ Authors are sorted by number of commits.
 * Jan Chren
 * Samuel Lotz
 * Jerzy Drozdz
+* omjadas
 * Jeremy Schlatter
+* Oliver Bestwalter
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -173,6 +177,7 @@ Authors are sorted by number of commits.
 * anki
 * Faris A Chugthai
 * Asaf Fisher
+* Samuel Dion-Girardeau
 * Gabriele N. Tornetta
 * Dan Allan
 * Ned Letcher
@@ -246,7 +251,6 @@ Authors are sorted by number of commits.
 * Wendell CTR Turner
 * Will Shanks
 * Dominic Ward
-* omjadas
 * Leandro Emmanuel Reina Kiperman
 * Henré Botha
 * Aneesh Durg
@@ -262,7 +266,6 @@ Authors are sorted by number of commits.
 * JackofSpades707
 * Luiz Antonio Lazoti
 * francium
-* Samuel Dion-Girardeau
 * FranzAtGithub
 * IJR222
 * Shanmukha Vishnu
@@ -272,5 +275,15 @@ Authors are sorted by number of commits.
 * cmidkiff87
 * Michael Ramsey
 * circuit10
+* Ryan Delaney
+* E Pluribus Unum
+* ylmrx
+* Hierosme
+* Kyllingene
+* zzj
+* Daniel
+* Ganer
+* mattmc3
+* Evan Hubinger
 * goodboy
 * Atsushi Morimoto

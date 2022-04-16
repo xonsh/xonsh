@@ -3,7 +3,6 @@ import io
 import os
 import sys
 import time
-from os.path import expanduser
 
 from xonsh.ansi_colors import ansi_partial_color_format
 from xonsh.built_ins import XSH
@@ -360,7 +359,7 @@ class BaseShell:
         try:
             self.precwd = os.getcwd()
         except FileNotFoundError:
-            self.precwd = expanduser("~")
+            self.precwd = os.path.expanduser("~")
         return line if self.need_more_lines else line.lstrip()
 
     def default(self, line, raw_line=None):

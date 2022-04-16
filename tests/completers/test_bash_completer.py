@@ -179,3 +179,33 @@ def test_bash_completer_empty_prefix():
     )
     bash_completions, bash_lprefix = complete_from_bash(context)
     assert {"clean", "show"}.issubset(bash_completions)
+
+
+@skip_if_on_darwin
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "command_context, completions, lprefix",
+    (
+        # dd sta  ->  dd status=
+        (
+            CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="sta"),
+            {"status="},
+            3,
+        ),
+        # date --da  ->  date --date=
+        (
+            CommandContext(args=(CommandArg("date"),), arg_index=1, prefix="--da"),
+            {"--date="},
+            4,
+        ),
+    ),
+)
+def test_equal_sign_arg(command_context, completions, lprefix):
+    bash_completions, bash_lprefix = complete_from_bash(
+        CompletionContext(command_context)
+    )
+    assert bash_completions == completions and bash_lprefix == lprefix
+    assert all(
+        isinstance(comp, RichCompletion) and not comp.append_space
+        for comp in bash_completions
+    )  # there should not be an appended space after the equal sign

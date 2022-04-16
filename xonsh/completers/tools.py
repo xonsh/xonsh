@@ -281,7 +281,7 @@ def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars:
             yield comp
 
 
-def comp_based_completer(ctx: CommandContext, **env: str):
+def comp_based_completer(ctx: CommandContext, start_index=0, **env: str):
     """Helper function to complete commands such as ``pip``,``django-admin``,... that use bash's ``complete``"""
     prefix = ctx.prefix
 
@@ -290,9 +290,9 @@ def comp_based_completer(ctx: CommandContext, **env: str):
         args.append(prefix)
 
     yield from complete_from_sub_proc(
-        args[0],
+        *args[: start_index + 1],
         sep=shlex.split,
-        COMP_WORDS=os.linesep.join(args) + os.linesep,
-        COMP_CWORD=str(ctx.arg_index),
+        COMP_WORDS=os.linesep.join(args[start_index:]) + os.linesep,
+        COMP_CWORD=str(ctx.arg_index - start_index),
         **env,
     )

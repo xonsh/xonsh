@@ -4,7 +4,6 @@ Put a warning comment if it doesn't.
 """
 import os
 from github import Github, PullRequest
-import re
 from fnmatch import fnmatch
 
 
@@ -21,14 +20,18 @@ def check_news_file(pr):
 
 
 def get_pr_number():
-    pattern = re.compile(r"pull/(\d+)/")
-    matches = pattern.findall(os.environ["GITHUB_REF"])
-    return int(matches[0])
+    number = os.environ["PR_NUMBER"]
+    if not number:
+        raise Exception(f"Pull request number is not found `PR_NUMBER={number}")
+    return int(number)
 
 
-def check_issue_comment(pr: PullRequest.PullRequest):
+def get_old_comment(pr: PullRequest.PullRequest):
     for comment in pr.get_issue_comments():
-        print(comment.user, comment.id)
+        if ("github-actions" in comment.user.login) and (
+            "No news item is found" in comment.body
+        ):
+            return comment
 
 
 def main():
@@ -37,14 +40,21 @@ def main():
     repo = gh.get_repo(os.environ["GITHUB_REPOSITORY"])
     pr = repo.get_pull(get_pr_number())
     has_news_added = check_news_file(pr)
-    check_issue_comment(pr)
+    old_comment = get_old_comment(pr)
 
-    if not has_news_added:
+    if old_comment:
+        print("Found an existing comment from bot")
+        if has_news_added:
+            print("Delete warning from bot, since news items is added.")
+            old_comment.delete()
+    elif not has_news_added:
         print("No news item found")
 
         pr.create_issue_comment(
-            "Warning! No news item is found. "
-            "If this is user facing change, please add a news item from `news/Template.rst`."
+            """\
+**Warning!** No news item is found for this PR.
+If this is an user facing change/feature/fix, please add a news item by copying the format from `news/TEMPLATE.rst`.
+"""
         )
 
 

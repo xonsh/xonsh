@@ -52,7 +52,7 @@ abbrevs: "dict[str, AbbrValType]" = dict()
 # XSH.builtins is a namespace and extendable
 XSH.builtins.abbrevs = abbrevs
 
-proxy = DynamicAccessProxy("abbrevs", "__xonsh__.abbrevs")
+proxy = DynamicAccessProxy("abbrevs", "__xonsh__.builtins.abbrevs")
 builtins.abbrevs = proxy  # type: ignore
 
 

@@ -304,6 +304,16 @@ def define_xontribs():
             "distributed",
             "The distributed parallel computing library hooks for xonsh.",
         ),
+        "django": Xontrib(
+            url="https://github.com/jnoortheen/xontrib-django",
+            description="Django management command completions for Xonsh shell",
+            package=_XontribPkg(
+                name="xontrib-django",
+                license="MIT",
+                install={"pip": "xpip install xontrib-django"},
+                url="https://github.com/jnoortheen/xontrib-django",
+            ),
+        ),
         "jupyter": get_xontrib(
             "jupyter-shell",
             "Jupyter Notebook kernel for Xonsh",
