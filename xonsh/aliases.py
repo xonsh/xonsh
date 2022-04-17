@@ -777,16 +777,21 @@ def trace(args, stdin=None, stdout=None, stderr=None, spec=None):
         pass
 
 
-async def run_sp_parallel(*commands: str, shell=False, order_out=True):
+async def run_sp_parallel(
+    *commands: str, shell=False, order_out=True, show_running=True
+):
+    import asyncio
     import asyncio.subprocess as asp
     import shlex
-    import asyncio
 
     async def run(cmd, capture=False):
         kwargs = dict(env=XSH.env.detype())
         if capture:
             kwargs["stdout"] = asp.PIPE
             kwargs["stderr"] = asp.PIPE
+        if show_running:
+            sys.stderr.buffer.write(f"  $ {cmd}\n".encode("utf-8"))
+            sys.stderr.flush()
         if shell:
             proc = await asp.create_subprocess_shell(cmd, **kwargs)
         else:
@@ -795,7 +800,9 @@ async def run_sp_parallel(*commands: str, shell=False, order_out=True):
         if capture:
             stdout, stderr = await proc.communicate()
             sys.stdout.buffer.write(stdout)
+            sys.stdout.flush()
             sys.stderr.buffer.write(stderr)
+            sys.stderr.flush()
             return proc.returncode
         else:
             return await proc.wait()
@@ -813,6 +820,7 @@ def parallex(
     args: Annotated["list[str]", Arg(nargs="+")],
     shell=False,
     order_out=True,
+    show_cmd=False,
 ):
     """
     Execute multiple subprocess in parallel
@@ -825,6 +833,8 @@ def parallex(
         each command should be run with system's commands
     order_out : -n, --no-order
         commands output are interleaved and not ordered
+    show_cmd: --show-running
+        print running command
 
     Examples
     --------
@@ -833,7 +843,14 @@ def parallex(
     """
     import asyncio
 
-    results = asyncio.run(run_sp_parallel(*args, shell=shell, order_out=order_out))
+    results = asyncio.run(
+        run_sp_parallel(
+            *args,
+            shell=shell,
+            order_out=order_out,
+            show_running=(order_out and show_cmd),
+        )
+    )
     if any(results):
         sys.exit(1)
 

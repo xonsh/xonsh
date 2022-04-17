@@ -1,6 +1,7 @@
 #!/usr/bin/env xonsh
 import sys
 import subprocess
+import shlex
 from typing import List
 
 import xonsh.cli_utils as xcli
@@ -15,7 +16,7 @@ $RAISE_SUBPROC_ERROR = True
 
 
 def colored_tracer(cmds, **_):
-    cmd = " ".join(itertools.chain.from_iterable(cmds))
+    cmd = " ".join([shlex.quote(c) for c in itertools.chain.from_iterable(cmds)])
     print_color(f"{{GREEN}}$ {{BLUE}}{cmd}{{RESET}}", file=sys.stderr)
 
 
@@ -66,14 +67,17 @@ def qa():
     $XONSH_TRACE_SUBPROC_FUNC = colored_tracer
     $XONSH_TRACE_SUBPROC = True
 
-    black --check xonsh xontrib tests xompletions
-    isort --check xonsh xontrib tests xompletions
+    # formatters
+    parallex \
+      "black --check xonsh xontrib tests xompletions" \
+      "isort --check xonsh xontrib tests xompletions"
 
-    python -m flake8
-
-    mypy xonsh
-    mypy xontrib --namespace-packages --explicit-package-bases
-    mypy xompletions --namespace-packages --explicit-package-bases
+    # linters
+    parallex \
+      "python -m flake8" \
+      "mypy xonsh" \
+      "mypy xontrib --namespace-packages --explicit-package-bases" \
+      "mypy xompletions --namespace-packages --explicit-package-bases"
 
     pytest -m news
 
