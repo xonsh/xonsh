@@ -189,6 +189,7 @@ def session_env():
         "XONSH_ENCODING": "utf-8",
         "XONSH_ENCODING_ERRORS": "strict",
         "COMMANDS_CACHE_SAVE_INTERMEDIATE": False,
+        "PATH": os.environ["PATH"],
     }
     env = Env(initial_vars)
     return env

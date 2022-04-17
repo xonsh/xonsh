@@ -777,14 +777,42 @@ def trace(args, stdin=None, stdout=None, stderr=None, spec=None):
         pass
 
 
-async def run_sp_parallel(*args: str):
+async def run_sp_parallel(*commands: str, shell=False, order_out=True):
     import asyncio.subprocess as asp
+    import shlex
+    import asyncio
 
-    return args
+    async def run(cmd, capture=False):
+        kwargs = dict(env=XSH.env.detype())
+        if capture:
+            kwargs["stdout"] = asp.PIPE
+            kwargs["stderr"] = asp.PIPE
+        if shell:
+            proc = await asp.create_subprocess_shell(cmd, **kwargs)
+        else:
+            program, *args = shlex.split(cmd)
+            proc = await asp.create_subprocess_exec(program, *args, **kwargs)
+        if capture:
+            stdout, stderr = await proc.communicate()
+            sys.stdout.buffer.write(stdout)
+            sys.stderr.buffer.write(stderr)
+            return proc.returncode
+        else:
+            return await proc.wait()
+
+    def prepare_cmds():
+        for idx, cmd in enumerate(commands):
+            # first command is not captured and will have tty
+            is_first = idx != 0
+            yield run(cmd, capture=is_first and order_out)
+
+    return await asyncio.gather(*tuple(prepare_cmds()))
 
 
 def parallex(
     args: Annotated["list[str]", Arg(nargs="+")],
+    shell=False,
+    order_out=True,
 ):
     """
     Execute multiple subprocess in parallel
@@ -793,6 +821,10 @@ def parallex(
     ----------
     args :
         individual commands need to be quoted and passed as separate arguments
+    shell : -s, --shell
+        each command should be run with system's commands
+    order_out : -n, --no-order
+        commands output are interleaved and not ordered
 
     Examples
     --------
@@ -801,9 +833,9 @@ def parallex(
     """
     import asyncio
 
-    exit_code = asyncio.run(run_sp_parallel(*args))
-    if exit_code:
-        sys.exit(exit_code)
+    results = asyncio.run(run_sp_parallel(*args, shell=shell, order_out=order_out))
+    if any(results):
+        sys.exit(1)
 
 
 def showcmd(args, stdin=None):
@@ -882,6 +914,9 @@ def make_default_aliases():
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
+        "parallex": ArgParserAlias(
+            func=parallex, threadable=False, prog="parallex", has_args=True
+        ),
         "trace": trace,
         "timeit": timeit_alias,
         "xonfig": xonfig,
