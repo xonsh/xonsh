@@ -784,14 +784,17 @@ async def run_sp_parallel(
     import asyncio.subprocess as asp
     import shlex
 
+    def print_cmd(cmd):
+        sys.stderr.buffer.write(f"  $ {cmd}\n".encode("utf-8"))
+        sys.stderr.flush()
+
     async def run(cmd, capture=False):
         kwargs = dict(env=XSH.env.detype())
         if capture:
             kwargs["stdout"] = asp.PIPE
             kwargs["stderr"] = asp.PIPE
-        if show_running:
-            sys.stderr.buffer.write(f"  $ {cmd}\n".encode("utf-8"))
-            sys.stderr.flush()
+        if show_running and not capture:
+            print_cmd(cmd)
         if shell:
             proc = await asp.create_subprocess_shell(cmd, **kwargs)
         else:
@@ -799,6 +802,8 @@ async def run_sp_parallel(
             proc = await asp.create_subprocess_exec(program, *args, **kwargs)
         if capture:
             stdout, stderr = await proc.communicate()
+            if show_running:
+                print_cmd(cmd)
             sys.stdout.buffer.write(stdout)
             sys.stdout.flush()
             sys.stderr.buffer.write(stderr)
@@ -820,7 +825,7 @@ def parallex(
     args: Annotated["list[str]", Arg(nargs="+")],
     shell=False,
     order_out=True,
-    show_cmd=False,
+    show_cmd=True,
 ):
     """
     Execute multiple subprocess in parallel
@@ -833,8 +838,8 @@ def parallex(
         each command should be run with system's commands
     order_out : -n, --no-order
         commands output are interleaved and not ordered
-    show_cmd: --show-running
-        print running command
+    show_cmd: --hide-running
+        do not print the running command
 
     Examples
     --------
