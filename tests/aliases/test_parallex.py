@@ -19,7 +19,7 @@ def test_exec(parallex, capfd):
 @skip_if_on_windows
 def test_shell_ordered(parallex, capfd):
     parallex(
-        ["echo 1; sleep 0.05; echo 2", "echo 3; sleep 0.05; echo 4", "--shell"],
+        ["echo 1; sleep 0.02; echo 2", "echo 3; sleep 0.05; echo 4", "--shell"],
     )
 
     out, _ = capfd.readouterr()
