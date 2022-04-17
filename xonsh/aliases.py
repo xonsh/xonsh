@@ -777,6 +777,35 @@ def trace(args, stdin=None, stdout=None, stderr=None, spec=None):
         pass
 
 
+async def run_sp_parallel(*args: str):
+    import asyncio.subprocess as asp
+
+    return args
+
+
+def parallex(
+    args: Annotated["list[str]", Arg(nargs="+")],
+):
+    """
+    Execute multiple subprocess in parallel
+
+    Parameters
+    ----------
+    args :
+        individual commands need to be quoted and passed as separate arguments
+
+    Examples
+    --------
+    running linters in parallel
+        $ parallex "flake8 ." "mypy xonsh"
+    """
+    import asyncio
+
+    exit_code = asyncio.run(run_sp_parallel(*args))
+    if exit_code:
+        sys.exit(exit_code)
+
+
 def showcmd(args, stdin=None):
     """usage: showcmd [-h|--help|cmd args]
 
