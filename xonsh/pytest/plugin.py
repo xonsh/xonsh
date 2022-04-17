@@ -409,7 +409,9 @@ def load_xontrib():
             if module not in sys.modules:
                 to_unload.append(module)
 
-            xontribs_load([name])
+            _, stderr, res = xontribs_load([name])
+            if stderr:
+                raise Exception(f"Failed to load xontrib: {stderr}")
         return
 
     yield wrapper
