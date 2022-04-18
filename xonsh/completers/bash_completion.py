@@ -427,15 +427,11 @@ def bash_completions(
     if "-o nospace" in complete_stmt:
         out = {x.rstrip() for x in out}
 
-    # For commands such as 'dd', the completion script only returns the part
-    # after '=' in the completion results. This is fixed by appending the part
-    # of the prefix up to '=' to the front of each completion result.
-    # For example, for the prefix 'status=pro', 'progress' is returned by bash,
-    # which gets transformed into 'status=progress'
+    # For arguments like 'status=progress', the completion script only returns
+    # the part after '=' in the completion results. This causes the strip_len
+    # to be incorrectly calculated, so it needs to be fixed here
     if "=" in prefix and "=" not in commprefix:
-        prefix_up_to_eq = prefix[: prefix.index("=") + 1]
-        out = {prefix_up_to_eq + x for x in out}
-        strip_len = 0
+        strip_len = prefix.index("=") + 1
 
     return out, max(len(prefix) - strip_len, 0)
 

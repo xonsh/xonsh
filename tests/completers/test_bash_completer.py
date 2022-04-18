@@ -203,22 +203,22 @@ def test_bash_completer_empty_prefix():
         # dd status=pr -> dd status=progress
         (
             CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="status=pr"),
-            {"status=progress"},
-            9,
+            {"progress"},
+            2,
             True,
         ),
         # dd if=/et -> dd if=/etc/
         (
             CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="if=/et"),
-            {"if=/etc/"},
-            6,
+            {"/etc/"},
+            3,
             False,
         ),
         # dd of=/dev/nul -> dd of=/dev/null
         (
             CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="of=/dev/nul"),
-            {"of=/dev/null"},
-            11,
+            {"/dev/null"},
+            8,
             True,
         ),
     ),
