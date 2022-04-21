@@ -427,6 +427,12 @@ def bash_completions(
     if "-o nospace" in complete_stmt:
         out = {x.rstrip() for x in out}
 
+    # For arguments like 'status=progress', the completion script only returns
+    # the part after '=' in the completion results. This causes the strip_len
+    # to be incorrectly calculated, so it needs to be fixed here
+    if "=" in prefix and "=" not in commprefix:
+        strip_len = prefix.index("=") + 1
+
     return out, max(len(prefix) - strip_len, 0)
 
 

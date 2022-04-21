@@ -184,28 +184,51 @@ def test_bash_completer_empty_prefix():
 @skip_if_on_darwin
 @skip_if_on_windows
 @pytest.mark.parametrize(
-    "command_context, completions, lprefix",
+    "command_context, completions, lprefix, exp_append_space",
     (
         # dd sta  ->  dd status=
         (
             CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="sta"),
             {"status="},
             3,
+            False,
         ),
         # date --da  ->  date --date=
         (
             CommandContext(args=(CommandArg("date"),), arg_index=1, prefix="--da"),
             {"--date="},
             4,
+            False,
+        ),
+        # dd status=pr -> dd status=progress
+        (
+            CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="status=pr"),
+            {"progress"},
+            2,
+            True,
+        ),
+        # dd if=/et -> dd if=/etc/
+        (
+            CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="if=/et"),
+            {"/etc/"},
+            3,
+            False,
+        ),
+        # dd of=/dev/nul -> dd of=/dev/null
+        (
+            CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="of=/dev/nul"),
+            {"/dev/null"},
+            8,
+            True,
         ),
     ),
 )
-def test_equal_sign_arg(command_context, completions, lprefix):
+def test_equal_sign_arg(command_context, completions, lprefix, exp_append_space):
     bash_completions, bash_lprefix = complete_from_bash(
         CompletionContext(command_context)
     )
     assert bash_completions == completions and bash_lprefix == lprefix
     assert all(
-        isinstance(comp, RichCompletion) and not comp.append_space
+        isinstance(comp, RichCompletion) and comp.append_space == exp_append_space
         for comp in bash_completions
-    )  # there should not be an appended space after the equal sign
+    )
