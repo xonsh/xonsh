@@ -130,7 +130,7 @@ class PromptFormatter:
 
     def _get_field_value(self, field, **_):
         try:
-            return self.fields.pick(field)
+            return self.fields.pick_val(field)
         except Exception:  # noqa
             print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
             xt.print_exception()
