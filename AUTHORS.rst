@@ -43,11 +43,11 @@ Authors are sorted by number of commits.
 * JohnLunzer
 * Paul Goelz
 * cryzed
+* Peter Ye
 * Frank Sachsenheim
 * Kurtis Rader
 * Brian Visel
 * cafehaine
-* Peter Ye
 * Andrew Hundt
 * Jonathan Slenders
 * Jason R. Coombs
