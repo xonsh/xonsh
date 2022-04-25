@@ -1,11 +1,12 @@
-""" This will release the lock on the current directory whenever the
-    prompt is shown. Enabling this will allow other programs or
-    Windows Explorer to delete or rename the current or parent
-    directories. Internally, it is accomplished by temporarily resetting
-    CWD to the root drive folder while waiting at the prompt. This only
-    works with the prompt_toolkit backend and can cause cause issues
-    if any extensions are enabled that hook the prompt and relies on
-    ``os.getcwd()``.
+"""Windows only xontrib, to release the lock on the current directory whenever the prompt is shown.
+
+Enabling this will allow other programs or
+Windows Explorer to delete or rename the current or parent
+directories. Internally, it is accomplished by temporarily resetting
+CWD to the root drive folder while waiting at the prompt. This only
+works with the prompt_toolkit backend and can cause cause issues
+if any extensions are enabled that hook the prompt and relies on
+``os.getcwd()``.
 """
 import functools
 import os

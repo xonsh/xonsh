@@ -1,3 +1,8 @@
+"""Show the return-code of the last command in the prompt.
+
+Adds {ret_code} prompt field.
+"""
+
 from xonsh.built_ins import XSH
 from xonsh.tools import ON_WINDOWS as _ON_WINDOWS
 

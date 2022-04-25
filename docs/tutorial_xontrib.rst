@@ -175,40 +175,10 @@ All of this let's users know that your xontrib is out there, ready to be used.
 Of course, you're under no obligation to register your xontrib.  Users will
 still be able to load your xontrib, as long as they have it installed.
 
-To register a xontrib, add an entry to
-`the xontribs_meta.py file <https://github.com/xonsh/xonsh/blob/main/xonsh/xontribs_meta.py>`_
-in the main xonsh repository.  A pull request is probably best, but if you
-are having trouble figuring it out please contact one of the xonsh devs
-with the relevant information.
-This is Python file holds classes and functions to register new Xontrib.
-
-The ``xontribs_meta.define_xontribs`` function returns a dictionary of all Xontribs.
-A sample ``Xontrib`` definition looks like this,
-
-.. code-block:: python
-
-    {
-        "awesome": Xontrib(
-            url="http://example.com/api/xontrib",
-            description="Description and short intro for your xontrib."
-            "It can span multi-lines. "
-            "Feel free to use a triple quotes if you want to have line-endings.",
-            package=_XontribPkg(
-                name="xontrib-awesome",
-                license="BSD",
-                install={
-                    "pip": "xpip install xontrib-awesome",
-                    "conda": "conda install xontrib-awesome",
-                },
-                url="https://example.com/",
-            ),
-        )
-    }
-
-.. note::  Note that you can have as many entries in the ``"install"`` dict as you
-    want. Also, the keys are arbitrary labels, so feel free to pick whatever
-    you want.
-
-.. seealso:: Checkout the API docs of the :doc:`api/xontribs_meta`
+To register a xontrib, create a ``PullRequest`` at
+`Awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_
+repository. Also, if you use Github to host your code,
+please add `xonsh <https://github.com/topics/xonsh>`_ and `xontrib <https://github.com/topics/xontrib>`_
+to the topics.
 
 Go forth!
