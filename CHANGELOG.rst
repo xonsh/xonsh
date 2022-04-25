@@ -4,6 +4,24 @@ Xonsh Change Log
 
 .. current developments
 
+v0.12.2
+====================
+
+**Fixed:**
+
+* Fixed completions for command argument paths after equal signs
+* A trailing space no longer gets appended when tab-completing command arguments that involve equals signs. For example `dd sta` gets completed to `dd status=`, without a space space after the equals sign.
+* regression on `gitstatus <https://github.com/xonsh/xonsh/pull/4771>`_ prompt is fixed now. It will display the value now instead of the name.
+* `fixed <https://github.com/xonsh/xonsh/pull/4763>`_ ``vox rm`` crashing when user input is required
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* Peter Ye
+
+
+
 v0.12.1
 ====================
 
