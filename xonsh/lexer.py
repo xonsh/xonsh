@@ -108,11 +108,6 @@ def token_map():
     tm[NEWLINE] = "NEWLINE"
     tm[INDENT] = "INDENT"
     tm[DEDENT] = "DEDENT"
-    if PYTHON_VERSION_INFO < (3, 7, 0):
-        from xonsh.tokenize import ASYNC, AWAIT
-
-        tm[ASYNC] = "ASYNC"
-        tm[AWAIT] = "AWAIT"
     if HAS_WALRUS:
         tm[(OP, ":=")] = "COLONEQUAL"
     # python 3.10 (backwards and name token compatible) tokens
