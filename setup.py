@@ -383,7 +383,7 @@ def main():
             "gnureadline; platform_system=='Darwin'",
         ],
     }
-    skw["python_requires"] = ">=3.7"
+    skw["python_requires"] = ">=3.8"
     setup(**skw)
 
 
