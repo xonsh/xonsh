@@ -37,7 +37,7 @@ def _get_git_branch(q):
         with contextlib.suppress(subprocess.CalledProcessError, OSError):
             branch = xt.decode_bytes(_run_git_cmd(cmds.split()))
             if branch:
-                q.put(os.path.basename(branch.splitlines()[0]))
+                q.put(branch.splitlines()[0])
                 return
     # all failed
     q.put(None)
