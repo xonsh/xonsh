@@ -495,4 +495,4 @@ class VoxHandler(xcli.ArgParserAlias):
         self.out(venv)
 
 
-XSH.aliases["vox"] = VoxHandler()
+XSH.aliases["vox"] = VoxHandler(threadable=False)

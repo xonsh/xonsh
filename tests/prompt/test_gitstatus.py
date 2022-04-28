@@ -1,6 +1,7 @@
 import pytest
 
 from xonsh.prompt import gitstatus
+from xonsh.prompt.base import _format_value
 
 
 @pytest.fixture(autouse=True)
@@ -68,3 +69,5 @@ def test_gitstatus_clean(prompts, fake_proc):
 
     exp = "{CYAN}gitstatus-opt↑·7↓·2{RESET}|{BOLD_GREEN}✓{RESET}"
     assert format(prompts.pick("gitstatus")) == exp
+    assert _format_value(prompts.pick("gitstatus"), None, None) == exp
+    assert _format_value(prompts.pick("gitstatus"), "{}", None) == exp

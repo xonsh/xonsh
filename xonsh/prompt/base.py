@@ -254,10 +254,11 @@ def _format_value(val, spec, conv) -> str:
     if val is None:
         return ""
     val = xt.FORMATTER.convert_field(val, conv)
+
     if spec:
         val = xt.FORMATTER.format(spec, val)
     if not isinstance(val, str):
-        val = str(val)
+        val = format(val)
     return val
 
 
