@@ -51,6 +51,11 @@ cases = [
         id="long-dict",
     ),
     (re.compile("1"), "re.compile(r'1', re.UNICODE)"),
+    pytest.param(
+        dict([(0, 0), (2, 1), (1, 2), (4, 3), (3, 4)]),
+        "{0: 0, 2: 1, 1: 2, 4: 3, 3: 4}",
+        id="dict-preserve-order",
+    ),
 ]
 
 
