@@ -213,4 +213,4 @@ The ``grep`` command is aliased to ``['grep', '--color=auto']``.
 
 ``xontrib``
 ==============
-Manages xonsh extensions.
+Manages xonsh extensions. More information is available at :doc:`tutorial_xontrib`

@@ -65,11 +65,18 @@ def get_module_docstring(module: str) -> str:
 @functools.lru_cache()
 def get_xontribs() -> tp.Dict[str, Xontrib]:
     """Return xontrib definitions lazily."""
-    return define_xontribs()
+    return dict(define_xontribs())
+
+
+def get_installed_xontribs(pkg_name="xontrib"):
+    import pkgutil
+
+    for _, name, _ in pkgutil.iter_modules([pkg_name]):
+        yield name
 
 
 def define_xontribs():
-    """Xontrib registry."""
+    """List all core packages + newly installed xontribs"""
     core_pkg = _XontribPkg(
         name="xonsh",
         license="BSD 3-clause",
@@ -82,92 +89,9 @@ def define_xontribs():
         url="http://xon.sh",
     )
 
-    return {
-        "abbrevs": Xontrib(
+    for _, name, _ in get_installed_xontribs():
+        yield name, Xontrib(
             url="http://xon.sh",
-            description=lazyobject(lambda: get_module_docstring("xontrib.abbrevs")),
+            description=lazyobject(lambda: get_module_docstring(f"xontrib.{name}")),
             package=core_pkg,
-        ),
-        "autovox": Xontrib(
-            url="http://xon.sh",
-            description="Manages automatic activation of virtual " "environments.",
-            package=core_pkg,
-        ),
-        "bashisms": Xontrib(
-            url="http://xon.sh",
-            description="Enables additional Bash-like syntax while at the "
-            "command prompt. For example, the ``!!`` syntax "
-            "for running the previous command is now usable. "
-            "Note that these features are implemented as "
-            "precommand events and these additions do not "
-            "affect the xonsh language when run as script. "
-            "That said, you might find them useful if you "
-            "have strong muscle memory.\n"
-            "\n"
-            "**Warning:** This xontrib may modify user "
-            "command line input to implement its behavior. To "
-            "see the modifications as they are applied (in "
-            "unified diffformat), please set ``$XONSH_DEBUG`` "
-            "to ``2`` or higher.\n"
-            "\n"
-            "The xontrib also adds commands: ``alias``, "
-            "``export``, ``unset``, ``set``, ``shopt``, "
-            "``complete``.",
-            package=core_pkg,
-        ),
-        "coreutils": Xontrib(
-            url="http://xon.sh",
-            description="Additional core utilities that are implemented "
-            "in xonsh. The current list includes:\n"
-            "\n"
-            "* cat\n"
-            "* echo\n"
-            "* pwd\n"
-            "* tee\n"
-            "* tty\n"
-            "* yes\n"
-            "\n"
-            "In many cases, these may have a lower "
-            "performance overhead than the posix command "
-            "line utility with the same name. This is "
-            "because these tools avoid the need for a full "
-            "subprocess call. Additionally, these tools are "
-            "cross-platform.",
-            package=core_pkg,
-        ),
-        "free_cwd": Xontrib(
-            url="http://xon.sh",
-            description="Windows only xontrib, to release the lock on the "
-            "current directory whenever the prompt is shown. "
-            "Enabling this will allow the other programs or "
-            "Windows Explorer to delete or rename the current "
-            "or parent directories. Internally, it is "
-            "accomplished by temporarily resetting CWD to the "
-            "root drive folder while waiting at the prompt. "
-            "This only works with the prompt_toolkit backend "
-            "and can cause cause issues if any extensions are "
-            "enabled that hook the prompt and relies on "
-            "``os.getcwd()``",
-            package=core_pkg,
-        ),
-        "pdb": Xontrib(
-            url="http://xon.sh",
-            description="Simple built-in debugger. Runs pdb on reception of "
-            "SIGUSR1 signal.",
-            package=core_pkg,
-        ),
-        "vox": Xontrib(
-            url="http://xon.sh",
-            description="Python virtual environment manager for xonsh.",
-            package=core_pkg,
-        ),
-        "whole_word_jumping": Xontrib(
-            url="http://xon.sh",
-            description="Jumping across whole words "
-            "(non-whitespace) with Ctrl+Left/Right. "
-            "Alt+Left/Right remains unmodified to "
-            "jump over smaller word segments. "
-            "Shift+Delete removes the whole word.",
-            package=core_pkg,
-        ),
-    }
+        )
