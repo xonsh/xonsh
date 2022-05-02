@@ -2,7 +2,6 @@
 This modules is the place where one would define the xontribs.
 """
 
-import functools
 import importlib.util
 import typing as tp
 from pathlib import Path
@@ -62,20 +61,12 @@ def get_module_docstring(module: str) -> str:
     return ""
 
 
-@functools.lru_cache()
 def get_xontribs() -> tp.Dict[str, Xontrib]:
     """Return xontrib definitions lazily."""
-    return dict(define_xontribs())
+    return dict(get_installed_xontribs())
 
 
 def get_installed_xontribs(pkg_name="xontrib"):
-    import pkgutil
-
-    for _, name, _ in pkgutil.iter_modules([pkg_name]):
-        yield name
-
-
-def define_xontribs():
     """List all core packages + newly installed xontribs"""
     core_pkg = _XontribPkg(
         name="xonsh",
@@ -88,8 +79,25 @@ def define_xontribs():
         },
         url="http://xon.sh",
     )
+    spec = importlib.util.find_spec(pkg_name)
 
-    for _, name, _ in get_installed_xontribs():
+    def iter_paths():
+        for loc in spec.submodule_search_locations:
+            path = Path(loc)
+            if path.exists():
+                yield from path.iterdir()
+
+    def iter_modules():
+        # pkgutil is not finding `*.xsh` files
+        for path in iter_paths():
+            if path.suffix in {".py", ".xsh"}:
+                yield path.stem
+
+            elif path.is_dir():
+                if (path / "__init__.py").exists():
+                    yield path.name
+
+    for name in iter_modules():
         yield name, Xontrib(
             url="http://xon.sh",
             description=lazyobject(lambda: get_module_docstring(f"xontrib.{name}")),

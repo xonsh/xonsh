@@ -78,7 +78,7 @@ def update_context(name, ctx=None):
 
 
 def xontrib_names_completer(**_):
-    for name, meta in get_xontribs():
+    for name, meta in get_xontribs().items():
         full_name = f"xontrib.{name}"
         if full_name not in sys.modules:
             yield RichCompletion(name, append_space=True, description=meta.description)
