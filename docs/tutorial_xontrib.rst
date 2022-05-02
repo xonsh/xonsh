@@ -6,8 +6,13 @@ Tutorial: Extensions (Xontribs)
 Take a deep breath and prepare for some serious Show & Tell; it's time to
 learn about xonsh extensions!
 
+Xonsh comes with some default set of extensions. These can be viewed :py:mod:`here <xontrib>`.
+
+Also checkout the list of `Awesome Contributions <https://xonsh.github.io/awesome-xontribs/>`_
+from the community.
+
 Overview
-================================
+========
 Xontributions, or ``xontribs``, are a set of tools and conventions for
 extending the functionality of xonsh beyond what is provided by default. This
 allows 3rd party developers and users to improve their xonsh experience without
@@ -66,8 +71,9 @@ create the layout for your xontrib package.
 
 Loading Xontribs
 ================
-Xontribs may be loaded in a few different ways: from the config file,
-dynamically at runtime with the ``xontrib`` command, or by importing the
+Xontribs may be loaded in a few different ways: from the config file
+(e.g. ``~/.config/xonsh/rc.xsh``), dynamically at runtime with
+the ``xontrib`` command, or by importing the
 module normally. Since these extensions are just Python modules, by
 default, they cannot be unloaded (easily).
 
@@ -102,23 +108,16 @@ Of course, you have to use the full module name to import a xontrib:
 Listing Known Xontribs
 ======================
 In addition to loading extensions, the ``xontrib`` command also allows you to
-list the known xontribs. This command will report whether known xontribs are
-installed and if they are loaded in the current session. To display this
+list the installed xontribs. This command will report if they are loaded
+in the current session. To display this
 information, pass the ``list`` action to the ``xontrib`` command:
 
 .. code-block:: xonshcon
 
     >>> xontrib list
-    mpl     installed      not-loaded
-    myext   not-installed  not-loaded
+    mpl     not-loaded
+    myext   not-loaded
 
-By default, this will display information for all known xontribs. However,
-you can restrict this to a set of names passed in on the command line.
-
-.. code-block:: xonshcon
-
-    >>> xontrib list mpl
-    mpl     installed      not-loaded
 
 For programmatic access, you may also have this command print a JSON formatted
 string:
@@ -164,21 +163,17 @@ that needs to distribute ``*.xsh`` files.
 
 Tell Us About Your Xontrib!
 ===========================
-We request that you register your xontrib with us.  We think that this is a
-good idea, in general, because then:
-
-* Your xontrib will show up as an extension the xonsh website,
-* It will appear in the ``xontrib list`` command, and
-* It will show up in ``xonfig wizard``.
-
-All of this let's users know that your xontrib is out there, ready to be used.
-Of course, you're under no obligation to register your xontrib.  Users will
-still be able to load your xontrib, as long as they have it installed.
+We request that you register your xontrib with us.
+We think that will make your contribution more discoverable.
 
 To register a xontrib, create a ``PullRequest`` at
 `Awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_
 repository. Also, if you use Github to host your code,
 please add `xonsh <https://github.com/topics/xonsh>`_ and `xontrib <https://github.com/topics/xontrib>`_
 to the topics.
+
+All of this let's users know that your xontrib is out there, ready to be used.
+Of course, you're under no obligation to register your xontrib.  Users will
+still be able to load your xontrib, as long as they have it installed.
 
 Go forth!
