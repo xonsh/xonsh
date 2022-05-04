@@ -1,4 +1,5 @@
 """Tools for helping manage xontributions."""
+import contextlib
 import importlib
 import importlib.util
 import json
@@ -21,10 +22,12 @@ class ExitCode(IntEnum):
 
 def find_xontrib(name):
     """Finds a xontribution from its name."""
+    spec = None
     if name.startswith("."):
         spec = importlib.util.find_spec(name, package="xontrib")
     else:
-        spec = importlib.util.find_spec("." + name, package="xontrib")
+        with contextlib.suppress(ValueError):
+            spec = importlib.util.find_spec("." + name, package="xontrib")
     return spec or importlib.util.find_spec(name)
 
 
