@@ -156,10 +156,6 @@ def _list(
         for name, d in data.items():
             lname = len(name)
             s += "{PURPLE}" + name + "{RESET}  " + " " * (nname - lname)
-            if d["installed"]:
-                s += "{GREEN}installed{RESET}      "
-            else:
-                s += "{RED}not-installed{RESET}  "
             if d["loaded"]:
                 s += "{GREEN}loaded{RESET}"
             else:
