@@ -10,6 +10,5 @@ Config Files and Settings
     customization
     envvars
     aliases
-    xontribs
     events
     platform-issues

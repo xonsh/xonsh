@@ -1,6 +1,7 @@
 """Jumping across whole words (non-whitespace) with Ctrl+Left/Right.
 
 Alt+Left/Right remains unmodified to jump over smaller word segments.
+Shift+Delete removes the whole word.
 """
 from prompt_toolkit.keys import Keys
 

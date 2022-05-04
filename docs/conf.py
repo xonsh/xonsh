@@ -31,7 +31,6 @@ if tp.TYPE_CHECKING:
 import xonsh.main as xmain
 
 xmain.setup()
-from xonsh.xontribs_meta import get_xontribs
 
 spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
@@ -340,82 +339,6 @@ jinja_contexts = {
 }
 
 
-def make_xontribs():
-    xons = get_xontribs()
-    names = sorted(xons)
-    s = ".. list-table::\n" "    :header-rows: 0\n\n"
-    table = []
-    ncol = 5
-    row = "    {0} - :ref:`{1} <{2}>`"
-    for i, name in enumerate(names):
-        star = "*" if i % ncol == 0 else " "
-        table.append(row.format(star, name, name.lower()))
-    table.extend(["      -"] * ((ncol - len(names) % ncol) % ncol))
-    s += "\n".join(table) + "\n\n"
-    s += "Information\n" "-----------\n\n"
-    sec = (
-        ".. _{low}:\n\n"
-        "{title}\n"
-        "{under}\n"
-        ":Website: {url}\n"
-        ":Package: {pkg}\n\n"
-        "{desc}\n\n"
-        "{inst}\n\n"
-        "{usage}"
-        "-------\n\n"
-    )
-    for name in names:
-        d = xons[name]
-        title = name
-        under = "." * len(title)
-        desc = d.description
-        if not isinstance(desc, str):
-            desc = "".join(desc)
-        if d.package is None:
-            pkg = "unknown"
-            inst = ""
-            usage = ""
-        else:
-            pkg = d.package.name
-            if d.package.url:
-                pkg = f"`{pkg} website <{d.package.url}>`_"
-            if d.package.license:
-                pkg = pkg + ", " + d.package.license
-            inst = ""
-            installd = d.package.install
-            if d.package.name == "xonsh":
-                inst = "This xontrib is preinstalled with xonsh.\n\n"
-            elif len(installd) > 0:
-                inst = "**Installation:**\n\n" ".. code-block:: xonsh\n\n"
-                for k, v in sorted(installd.items()):
-                    cmd = "\n    ".join(v.split("\n"))
-                    inst += ("    # install with {k}\n" "    {cmd}").format(
-                        k=k, cmd=cmd
-                    )
-            usage = (
-                "**Usage:**\n\n"
-                "Run the following command to enable (or add "
-                "it to your :doc:`.xonshrc </xonshrc>` file to enable "
-                "on startup.)\n\n"
-                ".. code-block:: xonsh\n\n"
-            )
-            usage += f"    xontrib load {name}\n\n"
-        s += sec.format(
-            low=name.lower(),
-            title=title,
-            under=under,
-            url=d.url or "unknown",
-            desc=desc,
-            pkg=pkg,
-            inst=inst,
-            usage=usage,
-        )
-    s = s[:-9]
-    fname = os.path.join(os.path.dirname(__file__), "xontribsbody")
-    with open(fname, "w") as f:
-        f.write(s)
-
-
 def make_events():
     names = sorted(vars(events).keys())
     s = ".. list-table::\n" "    :header-rows: 0\n\n"
@@ -445,7 +368,6 @@ def make_events():
         f.write(s)
 
 
-make_xontribs()
 make_events()
 
 

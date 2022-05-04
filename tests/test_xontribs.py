@@ -3,7 +3,12 @@ import sys
 
 import pytest
 
-from xonsh.xontribs import xontrib_context, xontribs_load, xontribs_loaded
+from xonsh.xontribs import (
+    xontrib_context,
+    xontribs_load,
+    xontribs_loaded,
+    xontribs_main,
+)
 
 
 @pytest.fixture
@@ -104,3 +109,9 @@ hello = 'world'
 
     xontribs_load(["scri-pt"])
     assert "scri-pt" in xontribs_loaded()
+
+
+def test_xontrib_list(xession, capsys):
+    xontribs_main(["list"])
+    out, err = capsys.readouterr()
+    assert "abbrevs" in out

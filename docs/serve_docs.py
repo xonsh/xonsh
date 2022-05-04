@@ -17,9 +17,9 @@ def get_paths(*exts):
 
 if "no" not in sys.argv:
     exts = ("rst", "py", "jinja2", "md")
-    print(f"Watching file changes in {root_dir} for {exts} extensions")
     cmd = shell("make html", cwd=str(doc_dir))
-    for path in get_paths():
+    for path in get_paths(*exts):
+        print(f"watching {path}")
         server.watch(str(path), cmd)
 
 server.serve(root=str(doc_dir / "_build" / "html"))

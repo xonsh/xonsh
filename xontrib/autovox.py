@@ -1,5 +1,5 @@
 """
-A framework for automatic vox.
+Manages automatic activation of virtual environments.
 
 This coordinates multiple automatic vox policies and deals with some of the
 mechanics of venv searching and chdir handling.

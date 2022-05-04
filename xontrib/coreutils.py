@@ -1,5 +1,6 @@
-"""Additional core utilities that are implemented in xonsh. The current list
-includes:
+"""Additional core utilities that are implemented in xonsh.
+
+The current list includes:
 
 * cat
 * echo

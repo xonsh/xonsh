@@ -1,12 +1,11 @@
 """Tools for helping manage xontributions."""
+import contextlib
 import importlib
 import importlib.util
 import json
-import pkgutil
 import sys
 import typing as tp
 from enum import IntEnum
-from pathlib import Path
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
@@ -23,10 +22,12 @@ class ExitCode(IntEnum):
 
 def find_xontrib(name):
     """Finds a xontribution from its name."""
+    spec = None
     if name.startswith("."):
         spec = importlib.util.find_spec(name, package="xontrib")
     else:
-        spec = importlib.util.find_spec("." + name, package="xontrib")
+        with contextlib.suppress(ValueError):
+            spec = importlib.util.find_spec("." + name, package="xontrib")
     return spec or importlib.util.find_spec(name)
 
 
@@ -80,16 +81,10 @@ def update_context(name, ctx=None):
 
 
 def xontrib_names_completer(**_):
-    meta = get_xontribs()
-    spec = importlib.util.find_spec("xontrib")
-    for module in pkgutil.walk_packages(spec.submodule_search_locations):
-        xont = meta.get(module.name)
-        full_name = f"xontrib.{module.name}"
-
-        if xont and full_name not in sys.modules:
-            yield RichCompletion(
-                module.name, append_space=True, description=xont.description
-            )
+    for name, meta in get_xontribs().items():
+        full_name = f"xontrib.{name}"
+        if full_name not in sys.modules:
+            yield RichCompletion(name, append_space=True, description=meta.description)
 
 
 def xontribs_load(
@@ -127,66 +122,34 @@ def xontribs_load(
     return stdout, stderr, res
 
 
-def xontrib_installed(names: tp.Set[str]):
-    """Returns list of installed xontribs."""
-    installed_xontribs = set()
-    spec = importlib.util.find_spec("xontrib")
-    if spec:
-        xontrib_locations = spec.submodule_search_locations
-        if xontrib_locations:
-            for xl in xontrib_locations:
-                for x in Path(xl).glob("*"):
-                    name = x.name.split(".")[0]
-                    if name[0] == "_" or (names and name not in names):
-                        continue
-                    installed_xontribs.add(name)
-    return installed_xontribs
-
-
-def xontrib_data(names=()):
-    """Collects and returns the data about xontribs."""
+def xontrib_data():
+    """Collects and returns the data about installed xontribs."""
     meta = get_xontribs()
     data = {}
-    names: tp.Set[str] = set(names or ())
     for xo_name in meta:
-        if xo_name not in names:
-            continue
         spec = find_xontrib(xo_name)
-        if spec is None:
-            installed = loaded = False
-        else:
-            installed = True
-            loaded = spec.name in sys.modules
-        data[xo_name] = {"name": xo_name, "installed": installed, "loaded": loaded}
-
-    installed_xontribs = xontrib_installed(names)
-    for name in installed_xontribs:
-        if name not in data:
-            loaded = f"xontrib.{name}" in sys.modules
-            data[name] = {"name": name, "installed": True, "loaded": loaded}
+        loaded = spec.name in sys.modules
+        data[xo_name] = {"name": xo_name, "loaded": loaded}
 
     return dict(sorted(data.items()))
 
 
-def xontribs_loaded(ns=None):
+def xontribs_loaded():
     """Returns list of loaded xontribs."""
-    return [k for k, v in xontrib_data(ns).items() if v["loaded"]]
+    return [k for k, v in xontrib_data().items() if v["loaded"]]
 
 
 def _list(
-    names: Annotated[tuple, Arg(nargs="*")] = (),
     to_json=False,
 ):
-    """List xontribs, whether they are installed, and loaded.
+    """List installed xontribs and show whether they are loaded or not
 
     Parameters
     ----------
     to_json : -j, --json
         reports results as json
-    names
-        names of xontribs
     """
-    data = xontrib_data(names)
+    data = xontrib_data()
     if to_json:
         s = json.dumps(data)
         print(s)
@@ -196,10 +159,6 @@ def _list(
         for name, d in data.items():
             lname = len(name)
             s += "{PURPLE}" + name + "{RESET}  " + " " * (nname - lname)
-            if d["installed"]:
-                s += "{GREEN}installed{RESET}      "
-            else:
-                s += "{RED}not-installed{RESET}  "
             if d["loaded"]:
                 s += "{GREEN}loaded{RESET}"
             else:
@@ -212,7 +171,7 @@ class XontribAlias(ArgParserAlias):
     """Manage xonsh extensions"""
 
     def build(self):
-        parser = self.create_parser()
+        parser = self.create_parser(prog="xontrib")
         parser.add_command(xontribs_load, prog="load")
         parser.add_command(_list)
         return parser
