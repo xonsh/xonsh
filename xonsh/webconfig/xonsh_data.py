@@ -95,7 +95,7 @@ def get_named_prompts():
         (
             "terlar",
             "{env_name}{BOLD_GREEN}{user}{RESET}@{hostname}:"
-            "{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\\n{BOLD_INTENSE_RED}➤{RESET} ",
+            "{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\n{BOLD_INTENSE_RED}➤{RESET} ",
         ),
         (
             "default with git status",
@@ -108,12 +108,12 @@ def get_named_prompts():
         (
             "simple pythonista",
             "{INTENSE_RED}{user}{RESET} at {INTENSE_PURPLE}{hostname}{RESET} "
-            "in {BOLD_GREEN}{cwd}{RESET}\\n↪ ",
+            "in {BOLD_GREEN}{cwd}{RESET}\n↪ ",
         ),
         (
             "informative",
             "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
-            "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\\n> ",
+            "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\n> ",
         ),
         (
             "informative Version Control",
@@ -137,7 +137,7 @@ def get_named_prompts():
             "nim",
             "{INTENSE_GREEN}┬─[{YELLOW}{user}{RESET}@{BLUE}{hostname}{RESET}:{cwd}"
             "{INTENSE_GREEN}]─[{localtime}]─[{RESET}G:{INTENSE_GREEN}{curr_branch}=]"
-            "\\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{RESET} ",
+            "\n{INTENSE_GREEN}╰─>{INTENSE_RED}{prompt_end}{RESET} ",
         ),
     ]
 
