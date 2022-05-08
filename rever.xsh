@@ -13,7 +13,7 @@ $ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
                'conda_forge',
                ]
 $PYPI_SIGN = False
-$PYPI_BUILD_COMMANDS = ("sdist", "bdist_wheel")
+$PYPI_BUILD_COMMANDS = ("sdist")
 
 $AUTHORS_FILENAME = "AUTHORS.rst"
 $VERSION_BUMP_PATTERNS = [
