@@ -42,8 +42,8 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
-* cryzed
 * Peter Ye
+* cryzed
 * Frank Sachsenheim
 * Kurtis Rader
 * Brian Visel
@@ -285,5 +285,7 @@ Authors are sorted by number of commits.
 * Ganer
 * mattmc3
 * Evan Hubinger
+* doronz88
+* Stefano Rivera
 * goodboy
 * Atsushi Morimoto
