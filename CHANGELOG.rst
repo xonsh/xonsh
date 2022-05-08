@@ -4,6 +4,33 @@ Xonsh Change Log
 
 .. current developments
 
+v0.12.3
+====================
+
+**Changed:**
+
+* fix: remove os.path.basename from _get_git_branch()
+* now 3rd party xontrib list is maintained at `Awesome Xontribs <https://github.com/xonsh/awesome-xontribs/>`_ page.
+  Going forward, new contributions will be updated here, making it not depending on `the xonsh release <https://github.com/xonsh/xonsh/issues/4679>`_.
+
+**Removed:**
+
+* Removed Python 3.7 support following `NEP0029 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_
+
+**Fixed:**
+
+* Dictionaries are now pretty-printed with their items in the correct order
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* Peter Ye
+* doronz88
+* Stefano Rivera
+
+
+
 v0.12.2
 ====================
 
