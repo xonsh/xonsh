@@ -132,6 +132,8 @@ dev = [
     "pre-commit",
     "sniffer",
     "pyinotify; sys_platform == \"linux\"",
+    "re-ver",
+    "tomli",
 ]
 doc = [
     "xonsh[bestshell]",
