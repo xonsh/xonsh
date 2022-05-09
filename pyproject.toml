@@ -1,5 +1,177 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+# PEP 518 https://www.python.org/dev/peps/pep-0518/
+# https://discuss.python.org/t/help-testing-experimental-features-in-setuptools/13821
+requires = ["setuptools>=61"]
+# PEP 517 https://peps.python.org/pep-0517/
+build-backend = "setuptools.build_meta"
+
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+name = "xonsh"
+dynamic = ["version", "readme"]
+description = "Python-powered, cross-platform, Unix-gazing shell"
+authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
+maintainers = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
+license = { file = "license" }
+requires-python = ">=3.8"
+
+[tool.setuptools.dynamic]
+version = {attr = "xonsh.__version__"}
+readme = {file = ["README.rst"]}
+
+[tool.setuptools]
+packages = [
+    "xonsh",
+    "xonsh.ply.ply",
+    "xonsh.ptk_shell",
+    "xonsh.procs",
+    "xonsh.parsers",
+    "xonsh.xoreutils",
+    "xontrib",
+    "xonsh.completers",
+    "xonsh.history",
+    "xonsh.prompt",
+    "xonsh.pytest",
+    "xonsh.lib",
+    "xonsh.webconfig",
+    "xonsh.virtualenv",
+    "xompletions",
+]
+platforms = ["Cross Platform"]
+include-package-data = false
+
+[tool.setuptools.package-dir]
+xonsh = "xonsh"
+xontrib = "xontrib"
+xompletions = "xompletions"
+"xonsh.lib" = "xonsh/lib"
+"xonsh.webconfig" = "xonsh/webconfig"
+
+[tool.setuptools.package-data]
+xonsh = [
+    "*.json",
+    "*.githash",
+]
+xontrib = ["*.xsh"]
+"xonsh.lib" = ["*.xsh"]
+"xonsh.virtualenv" = ["*.xsh"]
+"xonsh.webconfig" = [
+    "*.html",
+    "js/app.min.js",
+    "js/bootstrap.min.css",
+    "js/LICENSE-bootstrap",
+]
+
+[project.entry-points]
+pytest11 = { xonsh = "xonsh.pytest.plugin" }
+
+[project.entry-points."pygments.lexers"]
+xonsh = "xonsh.pyghooks:XonshLexer"
+xonshcon = "xonsh.pyghooks:XonshConsoleLexer"
+
+[project.entry-points."virtualenv.activate"]
+xonsh = "xonsh.virtualenv:XonshActivator"
+
+[project.urls]
+Homepage = "https://xon.sh"
+documentation = "https://xon.sh/contents.html"
+repository = "https://github.com/xonsh/xonsh"
+changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst"
+"Issue tracker" = "https://github.com/xonsh/xonsh/issues"
+
+[project.optional-dependencies]
+ptk = [
+    "prompt-toolkit>=3.0.27",
+    "pyperclip",
+]
+pygments = ["pygments>=2.2"]
+mac = ["gnureadline"]
+linux = ["distro"]
+proctitle = ["setproctitle"]
+zipapp = ['importlib_resources; python_version < "3.7"']
+full = [
+    "prompt-toolkit>=3.0.27",
+    "pyperclip",
+    "pygments>=2.2",
+    "distro; platform_system=='Linux'",
+    "setproctitle; platform_system=='Windows'",
+    "gnureadline; platform_system=='Darwin'",
+]
+test = [
+    "py",
+    "pytest>=6",
+    "flake8",
+    "flake8-docstrings",
+    "flake8-bugbear",
+    "restructuredtext_lint",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-timeout",
+    "pytest-subprocess",
+    "pytest-rerunfailures",
+    "prompt-toolkit>=3.0.27",
+    "pygments>=2.2",
+    "coverage>=5.3.1",
+    "black==22.3.0",
+    "isort>=5.10",
+    "pre-commit",
+    "pyte>=0.8.0",
+    "virtualenv>=20.7.2",
+    "mypy==0.941",
+    "types-ujson",
+    "amalgamate",
+]
+dev = [
+    "py",
+    "pytest>=6",
+    "flake8",
+    "flake8-docstrings",
+    "flake8-bugbear",
+    "restructuredtext_lint",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-timeout",
+    "pytest-subprocess",
+    "pytest-rerunfailures",
+    "prompt-toolkit>=3.0.27",
+    "pygments>=2.2",
+    "coverage>=5.3.1",
+    "black==22.3.0",
+    "isort>=5.10",
+    "pre-commit",
+    "pyte>=0.8.0",
+    "virtualenv>=20.7.2",
+    "mypy==0.941",
+    "types-ujson",
+    "amalgamate",
+    "sniffer",
+    "pyinotify; sys_platform == \"linux\"",
+    "jinja2>=2",
+]
+doc = [
+    "cloud_sptheme",
+    "numpydoc",
+    "sphinx>=3.1",
+    "prompt_toolkit>=3.0.27",
+    "pygments>=2.2",
+    "psutil",
+    "pyzmq",
+    "matplotlib",
+    "doctr",
+    "tornado",
+    "runthis-sphinxext",
+    "livereload",
+    "myst-parser",
+]
+
+
+[project.scripts]
+xonsh = "xonsh.main:main"
+xonsh-cat = "xonsh.xoreutils.cat:main"
+xonsh-uname = "xonsh.xoreutils.uname:main"
+xonsh-uptime = "xonsh.xoreutils.uptime:main"
+
 
 [tool.black]
 # better to keep default line-length than to match flake8
