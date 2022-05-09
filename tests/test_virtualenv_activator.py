@@ -23,13 +23,13 @@ def test_xonsh_activator(tmp_path):
 
     # Sanity
     original_python = check_output(
-        [sys.executable, "-m", "xonsh", "-c", "which python"]
+        [sys.executable, "-m", "xonsh", "-c", "which python3"]
     ).decode()
     assert Path(original_python).parent != bin_path
 
     # Activate
     venv_python = check_output(
-        [sys.executable, "-m", "xonsh", "-c", f"source {activate_path}; which python"]
+        [sys.executable, "-m", "xonsh", "-c", f"source {activate_path}; which python3"]
     ).decode()
     assert Path(venv_python).parent == bin_path
 
@@ -40,7 +40,7 @@ def test_xonsh_activator(tmp_path):
             "-m",
             "xonsh",
             "-c",
-            f"source {activate_path}; deactivate; which python",
+            f"source {activate_path}; deactivate; which python3",
         ]
     ).decode()
     assert deactivated_python == original_python
