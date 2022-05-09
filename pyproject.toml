@@ -90,18 +90,30 @@ mac = ["gnureadline"]
 linux = ["distro"]
 proctitle = ["setproctitle"]
 full = [
-    "xonsh[ptk]",
-    "pygments>=2.2",
+    "xonsh[ptk,pygments]",
     "distro; platform_system=='Linux'",
     "setproctitle; platform_system=='Windows'",
     "gnureadline; platform_system=='Darwin'",
 ]
-test = [
-    "py",
-    "pytest>=6",
+format = [
+    "black==22.3.0",
+    "isort>=5.10",
+]
+lint = [
+    "xonsh[format]",
     "flake8",
     "flake8-docstrings",
     "flake8-bugbear",
+    "mypy==0.941",
+    "types-ujson",
+]
+bestshell = [
+    "prompt_toolkit>=3.0.27",
+    "pygments>=2.2",
+]
+test = [
+    "xonsh[bestshell]",
+    "pytest>=7",
     "restructuredtext_lint",
     "pytest-cov",
     "pytest-mock",
@@ -111,48 +123,21 @@ test = [
     "prompt-toolkit>=3.0.27",
     "pygments>=2.2",
     "coverage>=5.3.1",
-    "black==22.3.0",
-    "isort>=5.10",
-    "pre-commit",
     "pyte>=0.8.0",
     "virtualenv>=20.7.2",
-    "mypy==0.941",
-    "types-ujson",
     "amalgamate",
 ]
 dev = [
-    "py",
-    "pytest>=6",
-    "flake8",
-    "flake8-docstrings",
-    "flake8-bugbear",
-    "restructuredtext_lint",
-    "pytest-cov",
-    "pytest-mock",
-    "pytest-timeout",
-    "pytest-subprocess",
-    "pytest-rerunfailures",
-    "prompt-toolkit>=3.0.27",
-    "pygments>=2.2",
-    "coverage>=5.3.1",
-    "black==22.3.0",
-    "isort>=5.10",
+    "xonsh[lint,test,doc]",
     "pre-commit",
-    "pyte>=0.8.0",
-    "virtualenv>=20.7.2",
-    "mypy==0.941",
-    "types-ujson",
-    "amalgamate",
     "sniffer",
     "pyinotify; sys_platform == \"linux\"",
-    "jinja2>=2",
 ]
 doc = [
+    "xonsh[bestshell]",
     "cloud_sptheme",
     "numpydoc",
     "sphinx>=3.1",
-    "prompt_toolkit>=3.0.27",
-    "pygments>=2.2",
     "psutil",
     "pyzmq",
     "matplotlib",
