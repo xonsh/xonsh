@@ -158,7 +158,7 @@ def default_prompt():
             "{env_name}"
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
-            "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}]}{RESET} "
+            "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}"
             "{BOLD_BLUE}{prompt_end}{RESET} "
         )
     return dp
@@ -357,7 +357,8 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                 time_format="%H:%M:%S",
                 localtime=_localtime,
                 last_return_code=lambda: XSH.env.get("LAST_RETURN_CODE", 0),
-                last_return_code_if_nonzero=lambda: XSH.env.get("LAST_RETURN_CODE", 0) or None
+                last_return_code_if_nonzero=lambda: XSH.env.get("LAST_RETURN_CODE", 0)
+                or None,
             )
         )
         for val in self.get_fields(gitstatus):

@@ -922,7 +922,7 @@ class GeneralSetting(Xettings):
     )
     LAST_RETURN_CODE = Var.with_default(
         0,
-        "Can be accessed (read-only) with shortcut '$?'. Is only updated during interactive use, i.e. not during execution of scripts.",
+        "Integer return code of the last command. Only updated during interactive use, i.e. not during execution of scripts.",
     )
 
     SHLVL = Var(
@@ -2077,18 +2077,11 @@ class Env(cabc.MutableMapping):
     def set_swapped_values(self, swapped_values):
         self._d.set_local_overrides(swapped_values)
 
-    def _expanded_keyname(self, key):
-        # map "?" to a proper identifier so that $? can be declared using $LAST_RETURN_CODE
-        if key == "?":
-            key = "LAST_RETURN_CODE"
-        return key
-
     #
     # Mutable mapping interface
     #
 
     def __getitem__(self, key):
-        key = self._expanded_keyname(key)
         if key is Ellipsis:
             return self
         elif key in self._d:

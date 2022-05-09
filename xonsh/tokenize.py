@@ -271,7 +271,7 @@ def maybe(*choices):
 Whitespace = r"[ \f\t]*"
 Comment = r"#[^\r\n]*"
 Ignore = Whitespace + tokany(r"\\\r?\n" + Whitespace) + maybe(Comment)
-Name_RE = r"\$?\w+|\$\?"
+Name_RE = r"\$?\w+"
 
 Hexnumber = r"0[xX](?:_?[0-9a-fA-F])+"
 Binnumber = r"0[bB](?:_?[01])+"
@@ -1062,9 +1062,7 @@ def _tokenize(readline, encoding, tolerant=False):
                         break
                     else:  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
-                elif token.startswith("$") and (
-                    token[1:].isidentifier() or token[1:] == "?"
-                ):
+                elif token.startswith("$") and token[1:].isidentifier():
                     yield TokenInfo(DOLLARNAME, token, spos, epos, line)
                 elif initial.isidentifier():  # ordinary name
                     if token in ("async", "await"):
