@@ -272,10 +272,8 @@ def main():
             print(logo)
     except UnicodeEncodeError:
         pass
-    scripts = ["scripts/xon.sh"]
     setup(
         cmdclass=cmdclass,
-        scripts=scripts,
     )
 
 

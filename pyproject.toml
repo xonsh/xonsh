@@ -89,10 +89,8 @@ pygments = ["pygments>=2.2"]
 mac = ["gnureadline"]
 linux = ["distro"]
 proctitle = ["setproctitle"]
-zipapp = ['importlib_resources; python_version < "3.7"']
 full = [
-    "prompt-toolkit>=3.0.27",
-    "pyperclip",
+    "xonsh[ptk]",
     "pygments>=2.2",
     "distro; platform_system=='Linux'",
     "setproctitle; platform_system=='Windows'",
