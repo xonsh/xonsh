@@ -1,0 +1,24 @@
+name: publish
+
+on:
+  workflow_dispatch:
+  release:
+    types:
+      - published
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup-python
+        uses: actions/setup-python@v3
+      - name: install pypa/build
+        run: pip install build
+      - name: build sdist(tarball) and bdist(wheel) to dist/
+        run: python -m build .
+      - name: publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
