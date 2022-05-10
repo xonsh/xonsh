@@ -11,6 +11,7 @@ from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 from setuptools.command.sdist import sdist
+from wheel.bdist_wheel import bdist_wheel
 
 TABLES = [
     "xonsh/lexer_table.py",
@@ -22,6 +23,11 @@ TABLES = [
     "xonsh/prompt/__amalgam__.py",
     "xonsh/procs/__amalgam__.py",
 ]
+
+
+def python_tag():
+    ver = sys.version_info
+    return f"py{ver.major}{ver.minor}"
 
 
 def clean_tables():
@@ -125,7 +131,7 @@ def replace_version(N):
     msg_assert = "__version__ must be the first line of the __init__.py"
     assert "__version__" in lines[0], msg_assert
     ORIGINAL_VERSION_LINE = lines[0]
-    lines[0] = lines[0].rstrip(' "') + f'.dev{N}"'
+    lines[0] = lines[0].rstrip(' "') + f'.dev{N}"' + "py38"
     upd = "\n".join(lines) + "\n"
     with open("xonsh/__init__.py", "w") as f:
         f.write(upd)
@@ -156,6 +162,13 @@ class xbuild_py(build_py):
         super().run()
         if dirty:
             restore_version()
+
+
+class xbdist(bdist_wheel):
+    def initialize_options(self):
+        super().initialize_options()
+        # becuase XonshParser will be build for each minor python version, we need separate builds
+        self.python_tag = python_tag()
 
 
 class xinstall(install):
@@ -255,6 +268,7 @@ cmdclass = {
     "sdist": xsdist,
     "build_py": xbuild_py,
     "develop": xdevelop,
+    "bdist_wheel": xbdist,
 }
 if os.name == "nt":
     cmdclass["install_scripts"] = install_scripts_quoted_shebang
