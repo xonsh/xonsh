@@ -23,7 +23,13 @@ def test_xonsh_activator(tmp_path):
 
     # Sanity
     original_python = check_output(
-        [sys.executable, "-m", "xonsh", "-c", "which python"]
+        [
+            sys.executable,
+            "-m",
+            "xonsh",
+            "-c",
+            "import shutil; shutil.which('python') or shutil.which('python3')",
+        ]
     ).decode()
     assert Path(original_python).parent != bin_path
 
@@ -40,7 +46,8 @@ def test_xonsh_activator(tmp_path):
             "-m",
             "xonsh",
             "-c",
-            f"source {activate_path}; deactivate; which python",
+            f"source {activate_path}; deactivate; "
+            "import shutil; shutil.which('python') or shutil.which('python3')",
         ]
     ).decode()
     assert deactivated_python == original_python
