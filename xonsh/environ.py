@@ -920,6 +920,11 @@ class GeneralSetting(Xettings):
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``.",
     )
+    LAST_RETURN_CODE = Var.with_default(
+        0,
+        "Integer return code of the last command. Only updated during interactive use, i.e. not during execution of scripts.",
+    )
+
     SHLVL = Var(
         is_valid_shlvl,
         to_shlvl,

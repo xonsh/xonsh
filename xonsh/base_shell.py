@@ -430,6 +430,7 @@ class BaseShell:
         """
         hist = XSH.history  # pylint: disable=no-member
         info["rtn"] = hist.last_cmd_rtn if hist is not None else None
+        XSH.env["LAST_RETURN_CODE"] = info["rtn"] or 0
         tee_out = tee_out or None
         last_out = hist.last_cmd_out if hist is not None else None
         if last_out is None and tee_out is None:
