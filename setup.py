@@ -131,7 +131,7 @@ def replace_version(N):
     msg_assert = "__version__ must be the first line of the __init__.py"
     assert "__version__" in lines[0], msg_assert
     ORIGINAL_VERSION_LINE = lines[0]
-    lines[0] = lines[0].rstrip(' "') + f'.dev{N}"' + "py38"
+    lines[0] = lines[0].rstrip(' "') + f'.dev{N}"'
     upd = "\n".join(lines) + "\n"
     with open("xonsh/__init__.py", "w") as f:
         f.write(upd)
