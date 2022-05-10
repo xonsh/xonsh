@@ -86,3 +86,10 @@ xonsh/webconfig/js/app.js
 
 # testmon pytest-plugin
 .testmondata
+
+# pdm
+.pdm.toml
+__pypackages__
+
+# one can use pip or pdm during development
+pdm.lock

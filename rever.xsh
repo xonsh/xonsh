@@ -9,7 +9,6 @@ $ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
                'ghrelease',
                'sphinx',
                'ghpages',
-               'pypi',
                'conda_forge',
                ]
 $PYPI_SIGN = False
@@ -32,12 +31,15 @@ $GHPAGES_REPO = 'git@github.com:xonsh/xonsh-docs.git'
 $DOCKER_APT_DEPS = ['man', 'bash-completion']
 
 
-def get_requirement_args(requirements_path):
-    with open(requirements_path) as f:
-        return [str(req) for req in parse_requirements(f.read())]
+def get_requirement_args(*extras:str):
+    from tomli import loads
+    with open("pyproject.toml") as f:
+        content = f.read()
+    deps = loads(content)['project']['optional-dependencies']
+    for ext in extras:
+        yield from deps[ext]
 
-pip_deps = get_requirement_args('requirements/tests.txt')
-pip_deps += get_requirement_args('requirements/docs.txt')
+pip_deps = list(get_requirement_args('test', 'doc'))
 conda_deps = {'prompt_toolkit', 'pip', 'psutil', 'numpy', 'matplotlib'}
 $DOCKER_PIP_DEPS = pip_deps
 $DOCKER_CONDA_DEPS = sorted(conda_deps)

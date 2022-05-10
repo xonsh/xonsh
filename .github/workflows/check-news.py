@@ -3,12 +3,15 @@
 Put a warning comment if it doesn't.
 """
 import os
-from github import Github, PullRequest
 from fnmatch import fnmatch
+
+from github import Github, PullRequest
 
 
 def get_added_files(pr: PullRequest.PullRequest):
+    print(pr, pr.number)
     for file in pr.get_files():
+        print(file)
         if file.status == "added":
             yield file.filename
 
