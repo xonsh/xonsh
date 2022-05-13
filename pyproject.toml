@@ -137,7 +137,7 @@ dev = [
 ]
 doc = [
     "xonsh[bestshell]",
-    "cloud_sptheme",
+    "furo",
     "numpydoc",
     "sphinx>=3.1",
     "psutil",

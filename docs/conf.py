@@ -156,28 +156,13 @@ modindex_common_prefix = ["xonsh."]
 # documentation.
 if not on_rtd:
 
-    html_theme = "cloud"
+    html_theme = "furo"
 
     html_theme_options = {
-        "max_width": "1250px",
-        "minimal_width": "700px",
-        "relbarbgcolor": "#000000",
-        "footerbgcolor": "#FFFFE7",
-        "sidebarwidth": "322px",
-        "sidebarbgcolor": "#e7e7ff",
-        #'googleanalytics_id': 'UA-41934829-1',
-        "inline_admonitions": True,
-        "stickysidebar": False,
-        "highlighttoc": False,
-        "externalrefs": False,
-        "collapsiblesidebar": True,
-        "default_layout_text_size": "100%",  # prevents division by zero error
-        "fontcssurl": "https://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono",
+        "source_repository": "https://github.com/xonsh/xonsh/",
+        "source_branch": "main",
+        "source_directory": "docs/",
     }
-
-    # Add any paths that contain custom themes here, relative to this directory.
-    html_theme_path = ["_theme"]
-    templates_path = ["_templates_overwrite", "_templates"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -199,7 +184,6 @@ html_favicon = "_static/magic_conch.ico"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-html_style = "numpy_friendly.css"
 
 html_extra_path = ["_static/robots.txt"]
 
