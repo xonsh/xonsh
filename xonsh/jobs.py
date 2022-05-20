@@ -383,7 +383,7 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     return None, None
 
 
-def resume_job(args, wording):
+def resume_job(args, wording: tp.Literal["fg", "bg"]):
     """
     used by fg and bg to resume a job either in the foreground or in the background.
     """
@@ -419,7 +419,9 @@ def resume_job(args, wording):
     if XSH.env.get("XONSH_INTERACTIVE"):
         print_one_job(tid)
     pipeline = job["pipeline"]
-    pipeline.resume(job)
+    pipeline.resume(
+        job, tee_output=(wording == "fg")
+    )  # do not tee output for background jobs
 
 
 @unthreadable
