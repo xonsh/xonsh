@@ -191,8 +191,10 @@ class _TeeStd(io.TextIOBase):
 
     def flush(self):
         """Flushes both the original stdout and the buffer."""
-        self.std.flush()
-        self.mem.flush()
+        # In certain cases, `std` or `mem` may already be `None` when we're
+        # cleaning up in which case we don't care whether `flush` does anything
+        getattr(getattr(self, "std", lambda: None), "flush", lambda: None)()
+        getattr(getattr(self, "mem", lambda: None), "flush", lambda: None)()
 
     def fileno(self):
         """Tunnel fileno() calls to the std stream."""
