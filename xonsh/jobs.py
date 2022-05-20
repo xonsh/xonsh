@@ -76,6 +76,8 @@ if ON_WINDOWS:
             stderr=subprocess.STDOUT,
         )
 
+    _hup = _kill  # there is no equivalent of SIGHUP on Windows
+
     def ignore_sigtstp():
         pass
 
@@ -113,6 +115,9 @@ else:
 
     def _kill(job):
         _send_signal(job, signal.SIGKILL)
+
+    def _hup(job):
+        _send_signal(job, signal.SIGHUP)
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
@@ -313,7 +318,7 @@ def add_job(info):
 def clean_jobs():
     """Clean up jobs for exiting shell
 
-    In non-interactive mode, kill all jobs.
+    In non-interactive mode, send SIGHUP to all jobs.
 
     In interactive mode, check for suspended or background jobs, print a
     warning if any exist, and return False. Otherwise, return True.
@@ -335,7 +340,7 @@ def clean_jobs():
                 # part of the last command and is now being called again
                 # immediately. Kill jobs and exit without reminder about
                 # unfinished jobs in this case.
-                kill_all_jobs()
+                hup_all_jobs()
             else:
                 if len(XSH.all_jobs) > 1:
                     msg = "there are unfinished jobs"
@@ -357,18 +362,18 @@ def clean_jobs():
                 jobs_clean = False
                 _last_exit_time = time.time()
     else:
-        kill_all_jobs()
+        hup_all_jobs()
 
     return jobs_clean
 
 
-def kill_all_jobs():
+def hup_all_jobs():
     """
-    Send SIGKILL to all child processes (called when exiting xonsh).
+    Send SIGHUP to all child processes (called when exiting xonsh).
     """
     _clear_dead_jobs()
     for job in XSH.all_jobs.values():
-        _kill(job)
+        _hup(job)
 
 
 def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
