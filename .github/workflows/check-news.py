@@ -11,14 +11,13 @@ from github import Github, PullRequest
 def get_added_files(pr: PullRequest.PullRequest):
     print(pr, pr.number)
     for file in pr.get_files():
-        print(file)
         if file.status == "added":
             yield file.filename
 
 
 def check_news_file(pr):
     return any(
-        map(lambda file_name: fnmatch(file_name, "*/news/*.rst"), get_added_files(pr))
+        map(lambda file_name: fnmatch(file_name, "news/*.rst"), get_added_files(pr))
     )
 
 
