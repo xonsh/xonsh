@@ -16,10 +16,13 @@ def fish_proc_completer(ctx: CommandContext):
         f"complete -C '{line}'",
     ]
 
-    yield from complete_from_sub_proc(
-        "fish",
-        "-c",
-        "; ".join(script_lines),
+    return (
+        complete_from_sub_proc(
+            "fish",
+            "-c",
+            "; ".join(script_lines),
+        ),
+        False,
     )
 
 
