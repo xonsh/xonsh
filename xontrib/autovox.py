@@ -13,26 +13,22 @@ import warnings
 from pathlib import Path
 
 import xontrib.voxapi as voxapi
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XonshSession
 
 __all__ = ()
 
 
-XSH.builtins.events.doc(
-    "autovox_policy",
+def autovox_policy(path: "Path") -> "str|Path|None":
     """
-autovox_policy(path: pathlib.Path) -> Union[str, pathlib.Path, None]
+    Register a policy with autovox.
 
-Register a policy with autovox.
+    A policy is a function that takes a Path and returns the venv associated with it,
+    if any.
 
-A policy is a function that takes a Path and returns the venv associated with it,
-if any.
-
-NOTE: The policy should only return a venv for this path exactly, not for
-parent paths. Parent walking is handled by autovox so that all policies can
-be queried at each level.
-""",
-)
+    NOTE: The policy should only return a venv for this path exactly, not for
+    parent paths. Parent walking is handled by autovox so that all policies can
+    be queried at each level.
+    """
 
 
 class MultipleVenvsWarning(RuntimeWarning):
@@ -80,7 +76,8 @@ def check_for_new_venv(curdir, olddir):
 
 
 # Core mechanism: Check for venv when the current directory changes
-@XSH.builtins.events.on_chdir
+
+
 def cd_handler(newdir, olddir, **_):
     check_for_new_venv(Path(newdir), Path(olddir))
 
@@ -88,12 +85,10 @@ def cd_handler(newdir, olddir, **_):
 # Recalculate when venvs are created or destroyed
 
 
-@XSH.builtins.events.vox_on_create
 def create_handler(**_):
     check_for_new_venv(Path.cwd(), ...)
 
 
-@XSH.builtins.events.vox_on_destroy
 def destroy_handler(**_):
     check_for_new_venv(Path.cwd(), ...)
 
@@ -101,6 +96,13 @@ def destroy_handler(**_):
 # Initial activation before first prompt
 
 
-@XSH.builtins.events.on_post_init
 def load_handler(**_):
     check_for_new_venv(Path.cwd(), None)
+
+
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.builtins.events.register(autovox_policy)
+    xsh.builtins.events.on_chdir(cd_handler)
+    xsh.builtins.events.vox_on_create(create_handler)
+    xsh.builtins.events.vox_on_destroy(destroy_handler)
+    xsh.builtins.events.on_post_init(load_handler)

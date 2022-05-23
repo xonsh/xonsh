@@ -6,9 +6,7 @@ import os
 import pathlib
 import tempfile
 
-from xonsh.built_ins import XSH
-
-__all__ = ()
+from xonsh.built_ins import XSH, XonshSession
 
 
 def _get_log_file_name():
@@ -65,5 +63,6 @@ def _xog(args, stdout=None, stderr=None):
     return 0 if rc else -1
 
 
-XSH.env["XONSH_TRACEBACK_LOGFILE"] = _get_log_file_name()
-XSH.aliases["xog"] = _xog
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.env["XONSH_TRACEBACK_LOGFILE"] = _get_log_file_name()
+    xsh.aliases["xog"] = _xog

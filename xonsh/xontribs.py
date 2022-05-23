@@ -36,12 +36,22 @@ def xontrib_context(name):
     spec = find_xontrib(name)
     if spec is None:
         return None
-    m = importlib.import_module(spec.name)
-    pubnames = getattr(m, "__all__", None)
-    if pubnames is not None:
-        ctx = {k: getattr(m, k) for k in pubnames}
+    module = importlib.import_module(spec.name)
+    ctx = {spec.name: module}
+
+    def _get__all__():
+        pubnames = getattr(module, "__all__", None)
+        if pubnames is not None:
+            for attr in pubnames:
+                yield attr, getattr(module, attr)
+
+    entrypoint = getattr(module, "_load_xontrib_", None)
+    if entrypoint is None:
+        ctx.update(dict(_get__all__()))
     else:
-        ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith("_")}
+        result = entrypoint(xsh=XSH)
+        if result is not None:
+            ctx.update(result)
     return ctx
 
 
@@ -70,14 +80,15 @@ def update_context(name, ctx=None):
     then __xonsh__.ctx is updated.
     """
     if ctx is None:
-        ctx = XSH.ctx
+        ctx = {}
     modctx = xontrib_context(name)
     if modctx is None:
         if not hasattr(update_context, "bad_imports"):
             update_context.bad_imports = []
         update_context.bad_imports.append(name)
-        return ctx
-    return ctx.update(modctx)
+    else:
+        ctx.update(modctx)
+    return ctx
 
 
 def xontrib_names_completer(**_):

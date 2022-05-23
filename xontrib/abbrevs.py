@@ -32,8 +32,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.filters import IsMultiline, completion_is_selected
 from prompt_toolkit.keys import Keys
 
-from xonsh.built_ins import XSH, DynamicAccessProxy
-from xonsh.events import events
+from xonsh.built_ins import DynamicAccessProxy, XonshSession
 from xonsh.tools import check_for_partial_string
 
 __all__ = ()
@@ -48,12 +47,6 @@ if tp.TYPE_CHECKING:
     AbbrValType = tp.Union[str, AbbrCallType]
 
 abbrevs: "dict[str, AbbrValType]" = dict()
-
-# XSH.builtins is a namespace and extendable
-XSH.builtins.abbrevs = abbrevs
-
-proxy = DynamicAccessProxy("abbrevs", "__xonsh__.builtins.abbrevs")
-builtins.abbrevs = proxy  # type: ignore
 
 
 class _LastExpanded(tp.NamedTuple):
@@ -121,7 +114,6 @@ def set_cursor_position(buffer, expanded: str) -> None:
     buffer.delete(len(EDIT_SYMBOL))
 
 
-@events.on_ptk_create
 def custom_keybindings(bindings, **kw):
 
     from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
@@ -156,3 +148,14 @@ def custom_keybindings(bindings, **kw):
         if not current_char or current_char.isspace():
             abbrev.expand(buffer)
         carriage_return(buffer, event.cli)
+
+
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.builtins.events.on_ptk_create(custom_keybindings)
+    xsh.abbrevs = abbrevs  # proxy access
+    # XSH.builtins is a namespace and extendable
+    xsh.builtins.abbrevs = abbrevs
+    proxy = DynamicAccessProxy("abbrevs", "__xonsh__.builtins.abbrevs")
+    builtins.abbrevs = proxy  # type: ignore
+
+    return {"abbrevs": abbrevs}

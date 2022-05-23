@@ -7,7 +7,7 @@ from pathlib import Path
 
 import xonsh.cli_utils as xcli
 import xontrib.voxapi as voxapi
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XSH, XonshSession
 from xonsh.dirstack import pushd_fn
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import XonshError
@@ -495,4 +495,5 @@ class VoxHandler(xcli.ArgParserAlias):
         self.out(venv)
 
 
-XSH.aliases["vox"] = VoxHandler(threadable=False)
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.aliases["vox"] = VoxHandler(threadable=False)

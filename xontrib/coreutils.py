@@ -14,7 +14,7 @@ posix command line utility with the same name. This is because these
 tools avoid the need for a full subprocess call. Additionally, these
 tools are cross-platform.
 """
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XonshSession
 from xonsh.platform import ON_POSIX
 from xonsh.xoreutils.cat import cat
 from xonsh.xoreutils.echo import echo
@@ -26,20 +26,18 @@ from xonsh.xoreutils.uname import uname
 from xonsh.xoreutils.uptime import uptime
 from xonsh.xoreutils.yes import yes
 
-__all__ = ()
 
-XSH.aliases["cat"] = cat
-XSH.aliases["echo"] = echo
-XSH.aliases["pwd"] = pwd
-XSH.aliases["tee"] = tee
-XSH.aliases["tty"] = tty
-XSH.aliases["uname"] = uname
-XSH.aliases["uptime"] = uptime
-XSH.aliases["yes"] = yes
-XSH.aliases["umask"] = umask
-XSH.aliases["uptime"] = uptime
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.aliases.register(cat)
+    xsh.aliases.register(echo)
+    xsh.aliases.register(pwd)
+    xsh.aliases.register(tee)
+    xsh.aliases.register(tty)
+    xsh.aliases.register(uname)
+    xsh.aliases.register(uptime)
+    xsh.aliases.register(umask)
+    xsh.aliases.register(yes)
+    if ON_POSIX:
+        from xonsh.xoreutils.ulimit import ulimit
 
-if ON_POSIX:
-    from xonsh.xoreutils.ulimit import ulimit
-
-    XSH.aliases["ulimit"] = ulimit
+        xsh.aliases["ulimit"] = ulimit

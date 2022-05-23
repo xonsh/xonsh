@@ -26,4 +26,5 @@ def fish_proc_completer(ctx: CommandContext):
     )
 
 
-completer.add_one_completer("fish", fish_proc_completer, "<bash")
+def _load_xontrib_(**_):
+    completer.add_one_completer("fish", fish_proc_completer, "<bash")

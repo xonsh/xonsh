@@ -43,7 +43,7 @@ Here is a template:
 .. code-block:: python
     from xonsh.built_ins import XonshSession
 
-    def _load_xontrib(xsh: XonshSession, **kwargs) -> dict:
+    def _load_xontrib_(xsh: XonshSession, **kwargs) -> dict:
         """
         this function will be called when loading/reloading the xontrib.
 
@@ -55,15 +55,15 @@ Here is a template:
             dict: this will get loaded into the current execution context
         """
 
-    def _unload_xontrib(xsh: XonshSession, **kwargs) -> dict:
+    def _unload_xontrib_(xsh: XonshSession, **kwargs) -> dict:
         """If you want your extension to be unloadable, put that logic here"""
 
-This _load_xontrib() function is called after your extension is imported,
+This _load_xontrib_() function is called after your extension is imported,
 and the currently active :py:class:`xonsh.built_ins.XonshSession` instance is passed as the argument.
 
 .. note::
 
-    Xontribs without ``_load_xontrib`` are still supported.
+    Xontribs without ``_load_xontrib_`` are still supported.
     But when such xontrib is loaded, variables listed
     in ``__all__`` are placed in the current
     execution context if defined.

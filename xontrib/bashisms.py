@@ -15,7 +15,7 @@ import re
 import shlex
 import sys
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XSH, XonshSession
 
 __all__ = ()
 
@@ -28,7 +28,6 @@ PRs are welcome - https://github.com/xonsh/xonsh/blob/main/xontrib/bashisms.py""
     )
 
 
-@XSH.builtins.events.on_transform_command
 def bash_preproc(cmd, **kw):
     bang_previous = {
         "!": lambda x: x,
@@ -82,10 +81,6 @@ def alias(args, stdin=None):
     return ret
 
 
-XSH.aliases["alias"] = alias
-XSH.env["THREAD_SUBPROCS"] = False
-
-
 def _unset(args):
     if not args:
         print("Usage: unset ENV_VARIABLE", file=sys.stderr)
@@ -95,9 +90,6 @@ def _unset(args):
             XSH.env.pop(v)
         except KeyError:
             print(f"{v} not found", file=sys.stderr)
-
-
-XSH.aliases["unset"] = _unset
 
 
 def _export(args):
@@ -112,9 +104,6 @@ def _export(args):
             print(f"{eq} equal sign not found", file=sys.stderr)
 
 
-XSH.aliases["export"] = _export
-
-
 def _set(args):
     arg = args[0]
     if arg == "-e":
@@ -127,9 +116,6 @@ def _set(args):
         XSH.env["XONSH_TRACE_SUBPROC"] = False
     else:
         _warn_not_supported(f"set {arg}")
-
-
-XSH.aliases["set"] = _set
 
 
 def _shopt(args):
@@ -157,7 +143,12 @@ def _shopt(args):
         _warn_not_supported(f"shopt {args}")
 
 
-XSH.aliases["shopt"] = _shopt
-
-
-XSH.aliases["complete"] = "completer list"
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.builtins.events.on_transform_command(bash_preproc)
+    xsh.aliases.register(_unset)
+    xsh.aliases.register(_export)
+    xsh.aliases.register(_shopt)
+    xsh.aliases.register(_set)
+    xsh.aliases["complete"] = "completer list".split()
+    xsh.aliases["alias"] = alias
+    xsh.env["THREAD_SUBPROCS"] = False
