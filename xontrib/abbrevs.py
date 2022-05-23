@@ -152,7 +152,6 @@ def custom_keybindings(bindings, **kw):
 
 def _load_xontrib_(xsh: XonshSession, **_):
     xsh.builtins.events.on_ptk_create(custom_keybindings)
-    xsh.abbrevs = abbrevs  # proxy access
     # XSH.builtins is a namespace and extendable
     xsh.builtins.abbrevs = abbrevs
     proxy = DynamicAccessProxy("abbrevs", "__xonsh__.builtins.abbrevs")

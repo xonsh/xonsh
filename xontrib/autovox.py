@@ -13,7 +13,7 @@ import warnings
 from pathlib import Path
 
 import xontrib.voxapi as voxapi
-from xonsh.built_ins import XonshSession
+from xonsh.built_ins import XSH, XonshSession
 
 __all__ = ()
 
