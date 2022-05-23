@@ -269,6 +269,21 @@ class EventManager:
     Each event is just an attribute. They're created dynamically on first use.
     """
 
+    def register(self, func):
+        """
+            wraps ``EventManager.doc``
+
+        Parameters
+        ----------
+        func
+            extract name and doc from the function
+        """
+
+        name = func.__name__
+        doc = inspect.getdoc(func)
+        sign = inspect.signature(func)
+        return self.doc(name, f"{name}{sign}\n\n{doc}")
+
     def doc(self, name, docstring):
         """
         Applies a docstring to an event.
