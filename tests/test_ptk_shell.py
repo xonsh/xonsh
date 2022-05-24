@@ -7,7 +7,6 @@ import pytest
 
 from xonsh.platform import minimum_required_ptk_version
 from xonsh.ptk_shell.shell import tokenize_ansi
-from xonsh.pytest.tools import ON_WINDOWS
 from xonsh.shell import Shell
 
 # verify error if ptk not installed or below min
@@ -107,10 +106,6 @@ def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
         [repr("hello"), None],
         ["2 * 3", "6"],
     ],
-)
-@pytest.mark.xfail(
-    ON_WINDOWS,
-    reason="Recent versions use Proactor event loop. This may need some handling",
 )
 def test_ptk_prompt(line, exp, ptk_shell, capsys):
     inp, out, shell = ptk_shell
