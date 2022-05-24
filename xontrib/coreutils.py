@@ -28,15 +28,15 @@ from xonsh.xoreutils.yes import yes
 
 
 def _load_xontrib_(xsh: XonshSession, **_):
-    xsh.aliases.register(cat)
-    xsh.aliases.register(echo)
-    xsh.aliases.register(pwd)
-    xsh.aliases.register(tee)
-    xsh.aliases.register(tty)
-    xsh.aliases.register(uname)
-    xsh.aliases.register(uptime)
-    xsh.aliases.register(umask)
-    xsh.aliases.register(yes)
+    xsh.aliases["cat"] = cat
+    xsh.aliases["echo"] = echo
+    xsh.aliases["pwd"] = pwd
+    xsh.aliases["tee"] = tee
+    xsh.aliases["tty"] = tty
+    xsh.aliases["uname"] = uname
+    xsh.aliases["uptime"] = uptime
+    xsh.aliases["umask"] = umask
+    xsh.aliases["yes"] = yes
     if ON_POSIX:
         from xonsh.xoreutils.ulimit import ulimit
 
