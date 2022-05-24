@@ -37,11 +37,15 @@ def xontrib_context(name):
     if spec is None:
         return None
     module = importlib.import_module(spec.name)
-    ctx = {spec.name: module}
+    ctx = {}
 
     def _get__all__():
         pubnames = getattr(module, "__all__", None)
-        if pubnames is not None:
+        if pubnames is None:
+            for k in dir(module):
+                if not k.startswith("_"):
+                    yield k, getattr(module, k)
+        else:
             for attr in pubnames:
                 yield attr, getattr(module, attr)
 
