@@ -511,7 +511,12 @@ class BaseShell:
             return src, None
         try:
             code = self.execer.compile(
-                src, mode="single", glbs=self.ctx, locs=None, filename="<stdin>"
+                src,
+                mode="single",
+                glbs=self.ctx,
+                locs=None,
+                filename="<stdin>",
+                compile_empty_tree=False,
             )
             if _cache:
                 update_cache(code, cachefname)

@@ -112,6 +112,7 @@ class Execer:
         stacklevel=2,
         filename=None,
         transform=True,
+        compile_empty_tree=True,
     ):
         """Compiles xonsh code into a Python code object, which may then
         be execed or evaled.
@@ -128,7 +129,9 @@ class Execer:
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
         tree = self.parse(input, ctx, mode=mode, filename=filename, transform=transform)
         if tree is None:
-            return compile("pass", filename, mode)  # handles comment only input
+            return (
+                compile("pass", filename, mode) if compile_empty_tree else None
+            )  # handles comment only input
         try:
             code = compile(tree, filename, mode)
         except SyntaxError as e:

@@ -381,7 +381,9 @@ class PromptToolkitShell(BaseShell):
         src = "".join(self.buffer)
         src = transform_command(src)
         try:
-            code = self.execer.compile(src, mode="single", glbs=self.ctx, locs=None)
+            code = self.execer.compile(
+                src, mode="single", glbs=self.ctx, locs=None, compile_empty_tree=False
+            )
             self.reset_buffer()
         except Exception:  # pylint: disable=broad-except
             self.reset_buffer()
