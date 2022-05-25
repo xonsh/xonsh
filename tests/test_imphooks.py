@@ -20,6 +20,10 @@ def test_import():
     assert "hello mom jawaka\n" == sample.x
 
 
+def test_import_empty():
+    from xpack import empty_xsh
+
+
 def test_absolute_import():
     from xpack import sample
 
