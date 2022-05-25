@@ -34,9 +34,7 @@ took inspiration from for xonsh:
 Structure
 ================
 Xontribs are modules with some special functions written
-in either xonsh (``*.xsh``) or Python (``*.py``)  that has a couple of special functions to load and unload it.
-
-It is inspired from
+in either xonsh (``*.xsh``) or Python (``*.py``).
 
 Here is a template:
 
