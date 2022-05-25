@@ -1,6 +1,8 @@
 """(A down payment on) Testing for ``xonsh.base_shell.BaseShell`` and associated classes"""
 import os
 
+import pytest
+
 from xonsh.base_shell import BaseShell
 from xonsh.shell import transform_command
 
@@ -36,3 +38,22 @@ def test_transform(xession):
     assert transform_command("spam") == "egg"
     assert transform_command("egg") == "egg"
     assert transform_command("foo") == "foo"
+
+
+@pytest.mark.parametrize(
+    "cmd,exp_append_history",
+    [
+        ("", False),
+        ("# a comment", False),
+        ("print('yes')", True),
+    ],
+)
+def test_default_append_history(cmd, exp_append_history, xonsh_session):
+    """Test that running an empty line or a comment does not append to history"""
+    old_history_size = len(xonsh_session.history)
+    xonsh_session.shell.default(cmd)
+    new_history_size = len(xonsh_session.history)
+    if exp_append_history:
+        assert new_history_size == old_history_size + 1
+    else:
+        assert new_history_size == old_history_size

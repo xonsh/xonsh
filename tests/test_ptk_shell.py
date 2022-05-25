@@ -121,3 +121,23 @@ def test_ptk_prompt(line, exp, ptk_shell, capsys):
     out = screen.display[0].strip()
 
     assert out.strip() == (exp or line)
+
+
+@pytest.mark.parametrize(
+    "cmd,exp_append_history",
+    [
+        ("", False),
+        ("# a comment", False),
+        ("print('yes')", True),
+    ],
+)
+def test_ptk_default_append_history(cmd, exp_append_history, xonsh_session, ptk_shell):
+    """Test that running an empty line or a comment does not append to history"""
+    inp, out, shell = ptk_shell
+    old_history_size = len(xonsh_session.history)
+    shell.default(cmd)
+    new_history_size = len(xonsh_session.history)
+    if exp_append_history:
+        assert new_history_size == old_history_size + 1
+    else:
+        assert new_history_size == old_history_size
