@@ -10,4 +10,3 @@ Xonsh can be installed and run with various package managers, by using appimage,
     packages
     appimage
     containers
-    jupyter
