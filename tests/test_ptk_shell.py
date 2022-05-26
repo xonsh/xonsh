@@ -131,13 +131,18 @@ def test_ptk_prompt(line, exp, ptk_shell, capsys):
         ("print('yes')", True),
     ],
 )
-def test_ptk_default_append_history(cmd, exp_append_history, xonsh_session, ptk_shell):
-    """Test that running an empty line or a comment does not append to history"""
+def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypatch):
+    """Test that running an empty line or a comment does not append to history.
+    This test is necessary because the prompt-toolkit shell uses a custom _push() method that is different from the base shell's push() method."""
     inp, out, shell = ptk_shell
-    old_history_size = len(xonsh_session.history)
+    append_history_calls = []
+
+    def mock_append_history(**info):
+        append_history_calls.append(info)
+
+    monkeypatch.setattr(shell, "_append_history", mock_append_history)
     shell.default(cmd)
-    new_history_size = len(xonsh_session.history)
     if exp_append_history:
-        assert new_history_size == old_history_size + 1
+        assert len(append_history_calls) == 1
     else:
-        assert new_history_size == old_history_size
+        assert len(append_history_calls) == 0

@@ -23,6 +23,8 @@ def test_import():
 def test_import_empty():
     from xpack import empty_xsh
 
+    assert empty_xsh
+
 
 def test_absolute_import():
     from xpack import sample
