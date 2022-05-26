@@ -121,3 +121,28 @@ def test_ptk_prompt(line, exp, ptk_shell, capsys):
     out = screen.display[0].strip()
 
     assert out.strip() == (exp or line)
+
+
+@pytest.mark.parametrize(
+    "cmd,exp_append_history",
+    [
+        ("", False),
+        ("# a comment", False),
+        ("print('yes')", True),
+    ],
+)
+def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypatch):
+    """Test that running an empty line or a comment does not append to history.
+    This test is necessary because the prompt-toolkit shell uses a custom _push() method that is different from the base shell's push() method."""
+    inp, out, shell = ptk_shell
+    append_history_calls = []
+
+    def mock_append_history(**info):
+        append_history_calls.append(info)
+
+    monkeypatch.setattr(shell, "_append_history", mock_append_history)
+    shell.default(cmd)
+    if exp_append_history:
+        assert len(append_history_calls) == 1
+    else:
+        assert len(append_history_calls) == 0

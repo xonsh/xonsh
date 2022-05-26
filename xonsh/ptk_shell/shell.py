@@ -188,6 +188,7 @@ class PromptToolkitShell(BaseShell):
             winutils.enable_virtual_terminal_processing()
         self._first_prompt = True
         self.history = ThreadedHistory(PromptToolkitHistory())
+        self.push = self._push
 
         ptk_args.setdefault("history", self.history)
         if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
@@ -380,7 +381,9 @@ class PromptToolkitShell(BaseShell):
         src = "".join(self.buffer)
         src = transform_command(src)
         try:
-            code = self.execer.compile(src, mode="single", glbs=self.ctx, locs=None)
+            code = self.execer.compile(
+                src, mode="single", glbs=self.ctx, locs=None, compile_empty_tree=False
+            )
             self.reset_buffer()
         except Exception:  # pylint: disable=broad-except
             self.reset_buffer()
@@ -393,7 +396,6 @@ class PromptToolkitShell(BaseShell):
         if intro:
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
-        self.push = self._push
         while not XSH.exit:
             try:
                 line = self.singleline(auto_suggest=auto_suggest)
