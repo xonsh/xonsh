@@ -138,7 +138,7 @@ def test_capture_always(
     [
         ("object", False),
         ("stdout", True),
-        ("hiddenobject", True),
+        ("hiddenobject", False),
         (False, True),
     ],
 )
