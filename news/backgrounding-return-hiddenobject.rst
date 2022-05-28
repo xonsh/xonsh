@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Using `fg` for commands started in the background (e.g. `![sleep 10 &]`) now works
 
 **Security:**
 

@@ -77,14 +77,14 @@ def safe_readable(handle):
     return status
 
 
-def update_fg_process_group(pipeline_group, background):
-    if background:
-        return False
+def update_process_group(pipeline_group, background):
     if not xp.ON_POSIX:
         return False
     env = XSH.env
     if not env.get("XONSH_INTERACTIVE"):
         return False
+    if background:
+        return True
     return xj.give_terminal_to(pipeline_group)
 
 
@@ -169,7 +169,7 @@ class CommandPipeline:
                 and self.captured != "object"
             ):
                 pipeline_group = proc.pid
-                if update_fg_process_group(pipeline_group, background):
+                if update_process_group(pipeline_group, background):
                     self.term_pgid = pipeline_group
             self.procs.append(proc)
         self.proc = self.procs[-1]
