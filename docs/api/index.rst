@@ -68,8 +68,6 @@ For those of you who want the gritty details.
     xonsh.main
     xonsh.color_tools
     xonsh.pyghooks
-    xonsh.jupyter_kernel
-    xonsh.jupyter_shell
     xonsh.dumb_shell
     xonsh.wizard
     xonsh.xonfig
