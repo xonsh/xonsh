@@ -8,6 +8,8 @@ from xonsh.xontribs import (
     xontribs_load,
     xontribs_loaded,
     xontribs_main,
+    xontribs_reload,
+    xontribs_unload,
 )
 
 
@@ -94,6 +96,51 @@ hello = 'world'
 
     xontribs_load(["script"])
     assert "script" in xontribs_loaded()
+
+
+def test_xontrib_unload(tmpmod, xession):
+    with tmpmod.mkdir("xontrib").join("script.py").open("w") as x:
+        x.write(
+            """
+hello = 'world'
+
+def _unload_xontrib_(xsh): del xsh.ctx['hello']
+"""
+        )
+
+    xontribs_load(["script"])
+    assert "script" in xontribs_loaded()
+    assert "hello" in xession.ctx
+    xontribs_unload(["script"])
+    assert "script" not in xontribs_loaded()
+    assert "hello" not in xession.ctx
+
+
+def test_xontrib_reload(tmpmod, xession):
+    with tmpmod.mkdir("xontrib").join("script.py").open("w") as x:
+        x.write(
+            """
+hello = 'world'
+
+def _unload_xontrib_(xsh): del xsh.ctx['hello']
+"""
+        )
+
+    xontribs_load(["script"])
+    assert "script" in xontribs_loaded()
+    assert xession.ctx["hello"] == "world"
+
+    with tmpmod.join("xontrib").join("script.py").open("w") as x:
+        x.write(
+            """
+hello = 'world1'
+
+def _unload_xontrib_(xsh): del xsh.ctx['hello']
+"""
+        )
+    xontribs_reload(["script"])
+    assert "script" in xontribs_loaded()
+    assert xession.ctx["hello"] == "world1"
 
 
 def test_xontrib_load_dashed(tmpmod):

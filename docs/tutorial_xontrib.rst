@@ -24,15 +24,48 @@ took inspiration from for xonsh:
 * `Sphinx <http://sphinx-doc.org/>`_: Extensions are just Python modules,
   bundles some extensions with the main package, interface is a list of
   string names.
+* `IPython <https://ipython.readthedocs.io/en/stable/config/extensions/index.html>`_: Extensions are just Python modules
+  with some special functions to load/unload.
 * `Oh My Zsh <http://ohmyz.sh/>`_: Centralized registry, autoloading, and
   for a shell.
 * `ESLint <http://eslint.org/>`_: Ability to use language package manager
   to install/remove extensions.
 
-
 Structure
-==========
-Xontribs are modules written in either xonsh (``*.xsh``) or Python (``*.py``).
+================
+Xontribs are modules with some special functions written
+in either xonsh (``*.xsh``) or Python (``*.py``).
+
+Here is a template:
+
+.. code-block:: python
+    from xonsh.built_ins import XonshSession
+
+    def _load_xontrib_(xsh: XonshSession, **kwargs) -> dict:
+        """
+        this function will be called when loading/reloading the xontrib.
+
+        Args:
+            xsh: the current xonsh session instance, serves as the interface to manipulate the session.
+                 This allows you to register new aliases, history backends, event listeners ...
+            **kwargs: it is empty as of now. Kept for future proofing.
+        Returns:
+            dict: this will get loaded into the current execution context
+        """
+
+    def _unload_xontrib_(xsh: XonshSession, **kwargs) -> dict:
+        """If you want your extension to be unloadable, put that logic here"""
+
+This _load_xontrib_() function is called after your extension is imported,
+and the currently active :py:class:`xonsh.built_ins.XonshSession` instance is passed as the argument.
+
+.. note::
+
+    Xontribs without ``_load_xontrib_`` are still supported.
+    But when such xontrib is loaded, variables listed
+    in ``__all__`` are placed in the current
+    execution context if defined.
+
 Normally, these are stored and found in an
 `implicit namespace package <https://www.python.org/dev/peps/pep-0420/>`_
 called ``xontrib``. However, xontribs may be placed in any package or directory
@@ -64,8 +97,7 @@ Here is a sample file system layout and what the xontrib names would be::
           |- done.py     # "mypkg.subpkg.done", full module name
 
 
-You can also use `cookiecutter <https://github.com/audreyr/cookiecutter>`_ with
-the `xontrib template <https://github.com/xonsh/xontrib-cookiecutter>`_ to easily
+You can also use the `xontrib template <https://github.com/xonsh/xontrib-cookiecutter>`_ to easily
 create the layout for your xontrib package.
 
 
@@ -73,36 +105,27 @@ Loading Xontribs
 ================
 Xontribs may be loaded in a few different ways: from the config file
 (e.g. ``~/.config/xonsh/rc.xsh``), dynamically at runtime with
-the ``xontrib`` command, or by importing the
-module normally. Since these extensions are just Python modules, by
-default, they cannot be unloaded (easily).
+the ``xontrib`` command, or its Python API.
 
-.. note::
-
-    When a xontrib is loaded its public variables are placed in the current
-    execution context unless ``__all__`` is defined, just like in regular Python
-    modules.
-
-Extensions are loaded via the ``xontrib`` command, which is a xonsh default
-alias. This command may be run from anywhere in a xonshrc file or at any point
-after xonsh has started up. Loading is the default action of the ``xontrib``
-command. Thus the following methods for loading via this command are equivalent:
+Extensions are loaded via the ``xontrib load`` command.
+This command may be run from anywhere in a xonshrc file or at any point
+after xonsh has started up.
 
 .. code-block:: xonsh
 
-    xontrib myext mpl mypkg.show
     xontrib load myext mpl mypkg.show
 
-Loading the same xontrib multiple times does not have any effect after the
-first. Xontribs are simply Python modules, and therefore follow the same
-caching rules. So by the same token, you can also import them normally.
-Of course, you have to use the full module name to import a xontrib:
+The same can be done in Python as well
 
 .. code-block:: python
 
-    import xontrib.mpl
-    from xontrib import myext
-    from mypkg.show import *
+    from xonsh.xontribs import xontribs_load
+    xontribs_load(['myext', 'mpl', 'mypkg.show'])
+
+A xontrib can be unloaded from the current session using ``xontrib unload``
+
+.. code-block:: xonsh
+    xontrib unload myext mpl mypkg.show
 
 
 Listing Known Xontribs
