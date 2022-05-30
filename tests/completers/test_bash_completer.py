@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 from xonsh.completers.bash import complete_from_bash
@@ -305,6 +306,6 @@ def test_git_delete_remote_branch():
     )
     assert bash_completions == {"main"} and bash_lprefix == 3
     assert all(
-        isinstance(comp, RichCompletion) and comp.append_space == False
+        isinstance(comp, RichCompletion) and comp.append_space is False
         for comp in bash_completions
     )
