@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from xonsh.completers.bash import complete_from_bash
@@ -230,5 +231,66 @@ def test_equal_sign_arg(command_context, completions, lprefix, exp_append_space)
     assert bash_completions == completions and bash_lprefix == lprefix
     assert all(
         isinstance(comp, RichCompletion) and comp.append_space == exp_append_space
+        for comp in bash_completions
+    )
+
+@skip_if_on_darwin
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "command_context, completions, lprefix, exp_append_space",
+    (
+        # date >/dev/nul<TAB>  ->  date >/dev/null
+        (
+            CommandContext(args=(CommandArg("date"),), arg_index=1, prefix=">/dev/nul"),
+            {"/dev/null"},
+            8,
+            True,
+        ),
+        # date 2>/dev/nul<TAB>  ->  date 2>/dev/null
+        (
+            CommandContext(args=(CommandArg("date"),), arg_index=1, prefix="2>/dev/nul"),
+            {"/dev/null"},
+            8,
+            True,
+        ),
+        # date >>/dev/nul<TAB>  ->  date >>/dev/null
+        (
+            CommandContext(args=(CommandArg("date"),), arg_index=1, prefix=">>/dev/nul"),
+            {"/dev/null"},
+            8,
+            True,
+        ),
+        # cat </dev/nul<TAB>  ->  cat </dev/null
+        (
+            CommandContext(args=(CommandArg("cat"),), arg_index=1, prefix="</dev/nul"),
+            {"/dev/null"},
+            8,
+            True,
+        ),
+    ),
+)
+def test_arg_prefix(command_context, completions, lprefix, exp_append_space):
+    bash_completions, bash_lprefix = complete_from_bash(
+        CompletionContext(command_context)
+    )
+    assert bash_completions == completions and bash_lprefix == lprefix
+    assert all(
+        isinstance(comp, RichCompletion) and comp.append_space == exp_append_space
+        for comp in bash_completions
+    )
+
+# git push origin :mai<TAB>  ->  git push origin :main
+def test_git_delete_remote_branch():
+    # cd to xonsh directory to have a git repo with a remote branch
+    test_file_dir = os.path.dirname(__file__)
+    os.chdir(test_file_dir)
+
+    command_context = CommandContext(args=(CommandArg("git"), CommandArg("push"), CommandArg("origin"),), arg_index=3, prefix=":mai")
+    bash_completions, bash_lprefix = complete_from_bash(
+        CompletionContext(command_context)
+    )
+    assert bash_completions == {"main"} and bash_lprefix == 3
+    assert all(
+        isinstance(comp, RichCompletion) and comp.append_space == False
         for comp in bash_completions
     )
