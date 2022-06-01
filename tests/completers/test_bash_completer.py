@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from xonsh.completers.bash import complete_from_bash
@@ -286,12 +284,22 @@ def test_arg_prefix(command_context, completions, lprefix, exp_append_space):
     )
 
 
-# git push origin :mai<TAB>  ->  git push origin :main
-def test_git_delete_remote_branch():
-    # cd to xonsh directory to have a git repo with a remote branch
-    test_file_dir = os.path.dirname(__file__)
-    os.chdir(test_file_dir)
+@pytest.fixture
+def bash_completer(fake_process):
+    fake_process.register_subprocess(
+        command=["bash", fake_process.any()],
+        # completion for "git push origin :dev-b"
+        stdout=b"""\
+complete -o bashdefault -o default -o nospace -F __git_wrap__git_main git
+dev-branch
+""",
+    )
 
+    return fake_process
+
+
+# git push origin :dev-b<TAB>  ->  git push origin :dev-branch
+def test_git_delete_remote_branch(bash_completer):
     command_context = CommandContext(
         args=(
             CommandArg("git"),
@@ -299,12 +307,12 @@ def test_git_delete_remote_branch():
             CommandArg("origin"),
         ),
         arg_index=3,
-        prefix=":mai",
+        prefix=":dev-b",
     )
     bash_completions, bash_lprefix = complete_from_bash(
         CompletionContext(command_context)
     )
-    assert bash_completions == {"main"} and bash_lprefix == 3
+    assert bash_completions == {"dev-branch"} and bash_lprefix == 5
     assert all(
         isinstance(comp, RichCompletion) and comp.append_space is False
         for comp in bash_completions
