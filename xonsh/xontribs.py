@@ -253,14 +253,14 @@ def _list(
 
 
 def _get_xontrib_entrypoints(blocked) -> "tp.Iterable[str]":
-    from importlib.metadata import entry_points
+    from importlib import metadata
 
-    for entry in entry_points(group="xonsh.xontribs"):
+    for entry in metadata.entry_points(group="xonsh.xontribs"):  # type: ignore
         if entry not in blocked:
-            yield entry.value
+            yield entry.value  # type: ignore
 
 
-def auto_load_xontribs_from_entrypoints(blocked: "tuple[str]" = ()):
+def auto_load_xontribs_from_entrypoints(blocked: "tp.Sequence[str]" = ()):
     """Load xontrib modules exposed via setuptools's entrypoints"""
     xontribs = list(_get_xontrib_entrypoints(blocked))
     return xontribs_load(xontribs, full_module=True)

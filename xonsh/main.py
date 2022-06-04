@@ -285,18 +285,18 @@ def _get_rc_files(shell_kwargs: dict, args, env):
     ):
         # if --no-rc was passed, or we're not in an interactive shell and
         # interactive mode was not forced, then disable loading RC files and dirs
-        rc = ()
-        rcd = ()
-    elif rc_cli:
+        return (), ()
+
+    if rc_cli:
         # if an explicit --rc was passed, then we should load only that RC
         # file, and nothing else (ignore both XONSHRC and XONSHRC_DIR)
-        rc = [r for r in rc_cli if os.path.isfile(r)]
-        rcd = [r for r in rc_cli if os.path.isdir(r)]
-    else:
-        # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
-        rc = env.get("XONSHRC")
-        rcd = env.get("XONSHRC_DIR")
+        rc = tuple(r for r in rc_cli if os.path.isfile(r))
+        rcd = tuple(r for r in rc_cli if os.path.isdir(r))
+        return rc, rcd
 
+    # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
+    rc = env.get("XONSHRC")
+    rcd = env.get("XONSHRC_DIR")
     return rc, rcd
 
 
