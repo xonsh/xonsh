@@ -1183,8 +1183,8 @@ The file should contain a function with the signature
 By default it just prints ``cmds`` like below.
 
 .. code-block:: python
-def tracer(cmds: list, captured: Union[bool, str]):
-    print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
+    def tracer(cmds: list, captured: Union[bool, str]):
+        print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
 """,
     )
     XONSH_TRACEBACK_LOGFILE = Var(
@@ -1196,6 +1196,17 @@ def tracer(cmds: list, captured: Union[bool, str]):
         "``XONSH_SHOW_TRACEBACK`` has been set. Its value must be a writable file "
         "or None / the empty string if traceback logging is not desired. "
         "Logging to a file is not enabled by default.",
+    )
+    XONTRIBS_AUTOLOAD_DISABLED = Var(
+        default=False,
+        doc="""\
+Controls auto-loading behaviour of xontrib packages at the startup.
+* Set this to ``True`` to disable autoloading completely.
+* Setting this to a list of xontrib names will block loading those specifically.
+""",
+        doc_default="""\
+Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.
+""",
     )
     STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
     STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))

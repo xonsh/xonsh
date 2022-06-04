@@ -35,9 +35,12 @@ def find_xontrib(name):
     return spec or importlib.util.find_spec(name)
 
 
-def xontrib_context(name):
+def xontrib_context(name, full_module=False):
     """Return a context dictionary for a xontrib of a given name."""
-    spec = find_xontrib(name)
+    if full_module:
+        spec = importlib.util.find_spec(name)
+    else:
+        spec = find_xontrib(name)
     if spec is None:
         return None
     module = importlib.import_module(spec.name)
@@ -83,9 +86,9 @@ def prompt_xontrib_install(names: tp.List[str]):
     )
 
 
-def update_context(name, ctx: dict):
+def update_context(name, ctx: dict, full_module=False):
     """Updates a context in place from a xontrib."""
-    modctx = xontrib_context(name)
+    modctx = xontrib_context(name, full_module)
     if modctx is None:
         raise XontribNotInstalled(f"Xontrib - {name} is not found.")
     else:
@@ -113,6 +116,7 @@ def xontribs_load(
         Arg(nargs="+", completer=xontrib_names_completer),
     ] = (),
     verbose=False,
+    full_module=False,
 ):
     """Load xontribs from a list of names
 
@@ -122,6 +126,8 @@ def xontribs_load(
         names of xontribs
     verbose : -v, --verbose
         verbose output
+    full_module : -f, --full
+        indicates that the names are fully qualified module paths and not inside ``xontrib`` package
     """
     ctx = {} if XSH.ctx is None else XSH.ctx
     res = ExitCode.OK
@@ -132,7 +138,7 @@ def xontribs_load(
         if verbose:
             print(f"loading xontrib {name!r}")
         try:
-            update_context(name, ctx=ctx)
+            update_context(name, ctx=ctx, full_module=full_module)
         except XontribNotInstalled:
             bad_imports.append(name)
         except Exception:
@@ -244,6 +250,20 @@ def _list(
                 s += "{RED}not-loaded{RESET}"
             s += "\n"
         print_color(s[:-1])
+
+
+def _get_xontrib_entrypoints(blocked) -> "tp.Iterable[str]":
+    from importlib.metadata import entry_points
+
+    for entry in entry_points(group="xonsh.xontribs"):
+        if entry not in blocked:
+            yield entry.value
+
+
+def auto_load_xontribs_from_entrypoints(blocked: "tuple[str]" = ()):
+    """Load xontrib modules exposed via setuptools's entrypoints"""
+    xontribs = list(_get_xontrib_entrypoints(blocked))
+    return xontribs_load(xontribs, full_module=True)
 
 
 class XontribAlias(ArgParserAlias):

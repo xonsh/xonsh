@@ -25,7 +25,7 @@ from xonsh.shell import Shell
 from xonsh.timings import setup_timings
 from xonsh.tools import display_error_message, print_color, to_bool_or_int
 from xonsh.xonfig import print_welcome_screen
-from xonsh.xontribs import xontribs_load
+from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
 
 events.transmogrify("on_post_init", "LoadEvent")
 events.doc(
@@ -71,6 +71,16 @@ on_post_cmdloop() -> None
 Fired just after the command loop finishes, if it is.
 
 NOTE: All the caveats of the ``atexit`` module also apply to this event.
+""",
+)
+
+events.transmogrify("on_xontribs_loaded", "LoadEvent")
+events.doc(
+    "on_xontribs_loaded",
+    """
+on_xontribs_loaded() -> None
+
+Fired after external xontribs with ``entrypoints defined`` are loaded.
 """,
 )
 
@@ -264,6 +274,54 @@ class XonshMode(enum.Enum):
     interactive = 3
 
 
+def _get_rc_files(shell_kwargs: dict, args, env):
+    # determine which RC files to load, including whether any RC directories
+    # should be scanned for such files
+    rc_cli = shell_kwargs.get("rc")
+    if shell_kwargs.get("norc") or (
+        args.mode != XonshMode.interactive
+        and not args.force_interactive
+        and not args.login
+    ):
+        # if --no-rc was passed, or we're not in an interactive shell and
+        # interactive mode was not forced, then disable loading RC files and dirs
+        rc = ()
+        rcd = ()
+    elif rc_cli:
+        # if an explicit --rc was passed, then we should load only that RC
+        # file, and nothing else (ignore both XONSHRC and XONSHRC_DIR)
+        rc = [r for r in rc_cli if os.path.isfile(r)]
+        rcd = [r for r in rc_cli if os.path.isdir(r)]
+    else:
+        # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
+        rc = env.get("XONSHRC")
+        rcd = env.get("XONSHRC_DIR")
+
+    return rc, rcd
+
+
+def _load_rc_files(shell_kwargs: dict, args, env, execer, ctx):
+    events.on_pre_rc.fire()
+    # load rc files
+    login = shell_kwargs.get("login", True)
+    rc, rcd = _get_rc_files(shell_kwargs, args, env)
+    XSH.rc_files = xonshrc_context(
+        rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
+    )
+    events.on_post_rc.fire()
+
+
+def _autoload_xontribs(env):
+    events.on_timingprobe.fire(name="pre_xontribs_autoload")
+    disabled = env.get("XONTRIBS_AUTOLOAD_DISABLED", False)
+    if disabled is True:
+        return
+    blocked_xontribs = disabled or ()
+    auto_load_xontribs_from_entrypoints(blocked_xontribs)
+    events.on_xontribs_loaded.fire()
+    events.on_timingprobe.fire(name="post_xontribs_autoload")
+
+
 def start_services(shell_kwargs, args, pre_env=None):
     """Starts up the essential services in the proper order.
     This returns the environment instance as a convenience.
@@ -285,39 +343,12 @@ def start_services(shell_kwargs, args, pre_env=None):
 
     install_import_hooks(execer)
 
-    # load rc files
-    login = shell_kwargs.get("login", True)
-    rc_cli = shell_kwargs.get("rc")
     env = XSH.env
     for k, v in pre_env.items():
         env[k] = v
 
-    # determine which RC files to load, including whether any RC directories
-    # should be scanned for such files
-    if shell_kwargs.get("norc") or (
-        args.mode != XonshMode.interactive
-        and not args.force_interactive
-        and not args.login
-    ):
-        # if --no-rc was passed, or we're not in an interactive shell and
-        # interactive mode was not forced, then disable loading RC files and dirs
-        rc = ()
-        rcd = ()
-    elif rc_cli:
-        # if an explicit --rc was passed, then we should load only that RC
-        # file, and nothing else (ignore both XONSHRC and XONSHRC_DIR)
-        rc = [r for r in rc_cli if os.path.isfile(r)]
-        rcd = [r for r in rc_cli if os.path.isdir(r)]
-    else:
-        # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
-        rc = env.get("XONSHRC")
-        rcd = env.get("XONSHRC_DIR")
-
-    events.on_pre_rc.fire()
-    XSH.rc_files = xonshrc_context(
-        rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
-    )
-    events.on_post_rc.fire()
+    _autoload_xontribs(env)
+    _load_rc_files(shell_kwargs, args, env, execer, ctx)
     # create shell
     XSH.shell = Shell(execer=execer, **shell_kwargs)
     ctx["__name__"] = "__main__"

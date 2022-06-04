@@ -127,6 +127,22 @@ A xontrib can be unloaded from the current session using ``xontrib unload``
 .. code-block:: xonsh
     xontrib unload myext mpl mypkg.show
 
+Xontribs can use `setuptools entrypoints <https://setuptools.pypa.io/en/latest/userguide/entry_point.html?highlight=entrypoints>`_
+to mark themselves available for autoloading using the below format.
+
+.. code-block:: ini
+    [options.entry_points]
+    xonsh.xontribs =
+        xontrib_name = path.to.the.module
+
+Here the module should contain ``_load_xontrib_`` function as described above.
+
+.. note::
+
+    Please make sure that importing the xontrib module and calling ``_load_xontrib_`` is fast enough.
+    Otherwise it will affect the shell's startup time.
+    Any other imports or heavy computations should be done in lazy manner whenever possible.
+
 
 Listing Known Xontribs
 ======================
