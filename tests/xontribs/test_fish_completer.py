@@ -24,4 +24,4 @@ checkout	Checkout and switch to a branch""",
 
 
 def test_fish_completer(fish_completer, check_completer):
-    assert check_completer("git", prefix="chec") == {"checkout", "cherry-pick"}
+    assert check_completer("git", prefix="chec") == {"checkout"}

@@ -1,12 +1,11 @@
 """Tools for helping manage xontributions."""
+import contextlib
 import importlib
 import importlib.util
 import json
-import pkgutil
 import sys
 import typing as tp
 from enum import IntEnum
-from pathlib import Path
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
@@ -21,12 +20,18 @@ class ExitCode(IntEnum):
     INIT_FAILED = 2
 
 
+class XontribNotInstalled(Exception):
+    """raised when the requested xontrib is not found"""
+
+
 def find_xontrib(name):
     """Finds a xontribution from its name."""
+    spec = None
     if name.startswith("."):
         spec = importlib.util.find_spec(name, package="xontrib")
     else:
-        spec = importlib.util.find_spec("." + name, package="xontrib")
+        with contextlib.suppress(ValueError):
+            spec = importlib.util.find_spec("." + name, package="xontrib")
     return spec or importlib.util.find_spec(name)
 
 
@@ -35,12 +40,26 @@ def xontrib_context(name):
     spec = find_xontrib(name)
     if spec is None:
         return None
-    m = importlib.import_module(spec.name)
-    pubnames = getattr(m, "__all__", None)
-    if pubnames is not None:
-        ctx = {k: getattr(m, k) for k in pubnames}
+    module = importlib.import_module(spec.name)
+    ctx = {}
+
+    def _get__all__():
+        pubnames = getattr(module, "__all__", None)
+        if pubnames is None:
+            for k in dir(module):
+                if not k.startswith("_"):
+                    yield k, getattr(module, k)
+        else:
+            for attr in pubnames:
+                yield attr, getattr(module, attr)
+
+    entrypoint = getattr(module, "_load_xontrib_", None)
+    if entrypoint is None:
+        ctx.update(dict(_get__all__()))
     else:
-        ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith("_")}
+        result = entrypoint(xsh=XSH)
+        if result is not None:
+            ctx.update(result)
     return ctx
 
 
@@ -64,32 +83,28 @@ def prompt_xontrib_install(names: tp.List[str]):
     )
 
 
-def update_context(name, ctx=None):
-    """Updates a context in place from a xontrib. If ctx is not provided,
-    then __xonsh__.ctx is updated.
-    """
-    if ctx is None:
-        ctx = XSH.ctx
+def update_context(name, ctx: dict):
+    """Updates a context in place from a xontrib."""
     modctx = xontrib_context(name)
     if modctx is None:
-        if not hasattr(update_context, "bad_imports"):
-            update_context.bad_imports = []
-        update_context.bad_imports.append(name)
-        return ctx
-    return ctx.update(modctx)
+        raise XontribNotInstalled(f"Xontrib - {name} is not found.")
+    else:
+        ctx.update(modctx)
+    return ctx
+
+
+def _xontrib_name_completions(loaded=False):
+    for name, meta, spec in _get_xontrib_specs():
+        if (spec.name in sys.modules) is loaded:
+            yield RichCompletion(name, append_space=True, description=meta.description)
 
 
 def xontrib_names_completer(**_):
-    meta = get_xontribs()
-    spec = importlib.util.find_spec("xontrib")
-    for module in pkgutil.walk_packages(spec.submodule_search_locations):
-        xont = meta.get(module.name)
-        full_name = f"xontrib.{module.name}"
+    yield from _xontrib_name_completions(loaded=False)
 
-        if xont and full_name not in sys.modules:
-            yield RichCompletion(
-                module.name, append_space=True, description=xont.description
-            )
+
+def xontrib_unload_completer(**_):
+    yield from _xontrib_name_completions(loaded=True)
 
 
 def xontribs_load(
@@ -108,85 +123,112 @@ def xontribs_load(
     verbose : -v, --verbose
         verbose output
     """
-    ctx = XSH.ctx
+    ctx = {} if XSH.ctx is None else XSH.ctx
     res = ExitCode.OK
     stdout = None
     stderr = None
+    bad_imports = []
     for name in names:
         if verbose:
             print(f"loading xontrib {name!r}")
         try:
             update_context(name, ctx=ctx)
+        except XontribNotInstalled:
+            bad_imports.append(name)
         except Exception:
             res = ExitCode.INIT_FAILED
             print_exception(f"Failed to load xontrib {name}.")
-    if hasattr(update_context, "bad_imports"):
+    if bad_imports:
         res = ExitCode.NOT_FOUND
-        stderr = prompt_xontrib_install(update_context.bad_imports)  # type: ignore
-        del update_context.bad_imports  # type: ignore
+        stderr = prompt_xontrib_install(bad_imports)
     return stdout, stderr, res
 
 
-def xontrib_installed(names: tp.Set[str]):
-    """Returns list of installed xontribs."""
-    installed_xontribs = set()
-    spec = importlib.util.find_spec("xontrib")
-    if spec:
-        xontrib_locations = spec.submodule_search_locations
-        if xontrib_locations:
-            for xl in xontrib_locations:
-                for x in Path(xl).glob("*"):
-                    name = x.name.split(".")[0]
-                    if name[0] == "_" or (names and name not in names):
-                        continue
-                    installed_xontribs.add(name)
-    return installed_xontribs
+def xontribs_unload(
+    names: Annotated[
+        tp.Sequence[str],
+        Arg(nargs="+", completer=xontrib_unload_completer),
+    ] = (),
+    verbose=False,
+):
+    """Unload the given xontribs
+
+    Parameters
+    ----------
+    names
+        name of xontribs to unload
+
+    Notes
+    -----
+    Proper cleanup can be implemented by the xontrib. The default is equivalent to ``del sys.modules[module]``.
+    """
+    for name in names:
+        if verbose:
+            print(f"unloading xontrib {name!r}")
+        spec = find_xontrib(name)
+        try:
+            if spec and spec.name in sys.modules:
+                module = sys.modules[spec.name]
+                unloader = getattr(module, "_unload_xontrib_", None)
+                if unloader is not None:
+                    unloader(XSH)
+                del sys.modules[spec.name]
+        except Exception as ex:
+            print_exception(f"Failed to unload xontrib {name} ({ex})")
 
 
-def xontrib_data(names=()):
-    """Collects and returns the data about xontribs."""
-    meta = get_xontribs()
+def xontribs_reload(
+    names: Annotated[
+        tp.Sequence[str],
+        Arg(nargs="+", completer=xontrib_unload_completer),
+    ] = (),
+    verbose=False,
+):
+    """Reload the given xontribs
+
+    Parameters
+    ----------
+    names
+        name of xontribs to reload
+    """
+    for name in names:
+        if verbose:
+            print(f"reloading xontrib {name!r}")
+        xontribs_unload([name])
+        xontribs_load([name])
+
+
+def _get_xontrib_specs():
+    for xo_name, meta in get_xontribs().items():
+        yield xo_name, meta, find_xontrib(xo_name)
+
+
+def xontrib_data():
+    """Collects and returns the data about installed xontribs."""
     data = {}
-    names: tp.Set[str] = set(names or ())
-    for xo_name in meta:
-        if xo_name not in names:
-            continue
-        spec = find_xontrib(xo_name)
-        if spec is None:
-            installed = loaded = False
-        else:
-            installed = True
-            loaded = spec.name in sys.modules
-        data[xo_name] = {"name": xo_name, "installed": installed, "loaded": loaded}
-
-    installed_xontribs = xontrib_installed(names)
-    for name in installed_xontribs:
-        if name not in data:
-            loaded = f"xontrib.{name}" in sys.modules
-            data[name] = {"name": name, "installed": True, "loaded": loaded}
+    for xo_name, _, spec in _get_xontrib_specs():
+        loaded = spec.name in sys.modules
+        data[xo_name] = {"name": xo_name, "loaded": loaded}
 
     return dict(sorted(data.items()))
 
 
-def xontribs_loaded(ns=None):
+def xontribs_loaded():
     """Returns list of loaded xontribs."""
-    return [k for k, v in xontrib_data(ns).items() if v["loaded"]]
+    return [k for k, v in xontrib_data().items() if v["loaded"]]
 
 
 def _list(
-    names: Annotated[tuple, Arg(nargs="*")] = (),
     to_json=False,
 ):
-    """List xontribs, whether they are installed, and loaded.
+    """List installed xontribs and show whether they are loaded or not
 
     Parameters
     ----------
     to_json : -j, --json
         reports results as json
-    names
-        names of xontribs
     """
-    data = xontrib_data(names)
+    data = xontrib_data()
     if to_json:
         s = json.dumps(data)
         print(s)
@@ -196,10 +238,6 @@ def _list(
         for name, d in data.items():
             lname = len(name)
             s += "{PURPLE}" + name + "{RESET}  " + " " * (nname - lname)
-            if d["installed"]:
-                s += "{GREEN}installed{RESET}      "
-            else:
-                s += "{RED}not-installed{RESET}  "
             if d["loaded"]:
                 s += "{GREEN}loaded{RESET}"
             else:
@@ -212,8 +250,10 @@ class XontribAlias(ArgParserAlias):
     """Manage xonsh extensions"""
 
     def build(self):
-        parser = self.create_parser()
+        parser = self.create_parser(prog="xontrib")
         parser.add_command(xontribs_load, prog="load")
+        parser.add_command(xontribs_unload, prog="unload")
+        parser.add_command(xontribs_reload, prog="reload")
         parser.add_command(_list)
         return parser
 

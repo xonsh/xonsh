@@ -1,17 +1,18 @@
-""" This will release the lock on the current directory whenever the
-    prompt is shown. Enabling this will allow other programs or
-    Windows Explorer to delete or rename the current or parent
-    directories. Internally, it is accomplished by temporarily resetting
-    CWD to the root drive folder while waiting at the prompt. This only
-    works with the prompt_toolkit backend and can cause cause issues
-    if any extensions are enabled that hook the prompt and relies on
-    ``os.getcwd()``.
+"""Windows only xontrib, to release the lock on the current directory whenever the prompt is shown.
+
+Enabling this will allow other programs or
+Windows Explorer to delete or rename the current or parent
+directories. Internally, it is accomplished by temporarily resetting
+CWD to the root drive folder while waiting at the prompt. This only
+works with the prompt_toolkit backend and can cause issues
+if any extensions are enabled that hook the prompt and relies on
+``os.getcwd()``.
 """
 import functools
 import os
 from pathlib import Path
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XSH, XonshSession
 from xonsh.platform import ON_CYGWIN, ON_MSYS, ON_WINDOWS
 from xonsh.tools import print_exception
 
@@ -91,7 +92,6 @@ def _cwd_restore_wrapper(func):
         return wrapper
 
 
-@XSH.builtins.events.on_ptk_create
 def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
     if ON_WINDOWS and not ON_CYGWIN and not ON_MSYS:
         prompter.prompt = _cwd_release_wrapper(prompter.prompt)
@@ -100,3 +100,7 @@ def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
             completer.completer.complete = _cwd_restore_wrapper(
                 completer.completer.complete
             )
+
+
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.builtins.events.on_ptk_create(_cwd_restore_wrapper)

@@ -195,7 +195,7 @@ Dependencies
 
 Prep your environment for running the tests::
 
-    $ pip install -r requirements/tests.txt
+    $ pip install -e '.[dev]'
 
 
 ----------------------------------
@@ -302,7 +302,7 @@ new module ``mymod``.  The following explains how to add hooks.
 Python Hooks
 ------------------------
 Python API documentation is generated for the entries in ``docs/api.rst``.
-`sphinx-autosummary<https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_
+`sphinx-autosummary <https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_
 is used to generate documentation for the modules.
 Mention your module ``mymod`` under appropriate header.
 This will discover all of the docstrings in ``mymod`` and create the

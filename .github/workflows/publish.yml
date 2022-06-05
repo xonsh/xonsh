@@ -1,0 +1,32 @@
+name: publish
+
+on:
+  workflow_dispatch:
+  release:
+    types:
+      - published
+
+jobs:
+  publish:
+    if: github.repository_owner == 'xonsh'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.8", "3.9","3.10" ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup-python
+        uses: actions/setup-python@v3
+      - name: install pypa/build
+        run: pip install build
+      - name: build sdist(tarball) to dist/
+        if: startsWith(matrix.python-version, '3.10') }}
+        run: python -m build . --sdist
+      - name: build bdist(wheel) to dist/
+        run: python -m build . --wheel
+      - name: publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

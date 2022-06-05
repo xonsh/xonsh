@@ -920,6 +920,11 @@ class GeneralSetting(Xettings):
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``.",
     )
+    LAST_RETURN_CODE = Var.with_default(
+        0,
+        "Integer return code of the last command. Only updated during interactive use, i.e. not during execution of scripts.",
+    )
+
     SHLVL = Var(
         is_valid_shlvl,
         to_shlvl,
@@ -1535,12 +1540,13 @@ class PromptHistorySetting(Xettings):
         set(),
         "A set of strings (comma-separated list in string form) of options "
         "that determine what commands are saved to the history list. By "
-        "default all commands are saved. The option ``ignoredups`` will not "
-        "save the command if it matches the previous command. The option "
-        "``ignoreerr`` will cause any commands that fail (i.e. return non-zero "
-        "exit status) to not be added to the history list. The option "
-        "``erasedups`` will remove all previous commands that matches and updates the frequency. "
-        "Note: ``erasedups`` is supported only in sqlite backend).",
+        "default all commands are saved. Options are as follows:\n\n"
+        "- ``ignoredups`` will not save the command if it matches the previous command\n"
+        "- ``ignoreerr`` will cause any commands that fail (i.e. return non-zero "
+        "exit status) to not be added to the history list\n"
+        "- ``ignorespace`` will not save the command if it begins with a space\n"
+        "- ``erasedups`` will remove all previous commands that matches and updates the frequency "
+        "(Note: only supported in sqlite backend)",
         can_store_as_str=True,
     )
     XONSH_HISTORY_SIZE = Var(

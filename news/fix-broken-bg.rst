@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* fix: remove os.path.basename from _get_git_branch()
+* <news item>
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* `bg` now properly resumes jobs in the background
 
 **Security:**
 

@@ -1,7 +1,7 @@
 """Simple built-in debugger. Runs pdb on reception of SIGUSR1 signal."""
 import signal
 
-__all__ = ()
+from xonsh.built_ins import XonshSession
 
 
 def handle_sigusr1(sig, frame):
@@ -11,4 +11,5 @@ def handle_sigusr1(sig, frame):
     pdb.Pdb().set_trace(frame)
 
 
-signal.signal(signal.SIGUSR1, handle_sigusr1)
+def _load_xontrib_(xsh: XonshSession, **_):
+    signal.signal(signal.SIGUSR1, handle_sigusr1)

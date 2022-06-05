@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* New docs theme ``furo``
 
 **Deprecated:**
 
@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* Removed Python 3.7 support following `NEP0029 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_
+* <news item>
 
 **Fixed:**
 

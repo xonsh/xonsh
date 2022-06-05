@@ -1,15 +1,13 @@
 """Jumping across whole words (non-whitespace) with Ctrl+Left/Right.
 
 Alt+Left/Right remains unmodified to jump over smaller word segments.
+Shift+Delete removes the whole word.
 """
 from prompt_toolkit.keys import Keys
 
-from xonsh.built_ins import XSH
-
-__all__ = ()
+from xonsh.built_ins import XonshSession
 
 
-@XSH.builtins.events.on_ptk_create
 def custom_keybindings(bindings, **kw):
 
     # Key bindings for jumping over whole words (everything that's not
@@ -41,3 +39,7 @@ def custom_keybindings(bindings, **kw):
         endpos = endpos + 1 if startpos == 0 else endpos
         buff.text = buff.text[:startpos] + buff.text[endpos:]
         buff.cursor_position = startpos
+
+
+def _load_xontrib_(xsh: XonshSession, **_):
+    xsh.builtins.events.on_ptk_create(custom_keybindings)

@@ -8,6 +8,7 @@ import os
 import sys
 import types
 import typing as tp
+from pathlib import Path
 from traceback import extract_tb, format_list
 from unittest.mock import MagicMock
 
@@ -56,15 +57,15 @@ def _limited_traceback(excinfo):
         return format_list(tb)
 
 
-def pytest_collect_file(parent, path):
-    if path.ext.lower() == ".xsh" and path.basename.startswith("test_"):
-        return XshFile.from_parent(parent, fspath=path)
+def pytest_collect_file(file_path: Path, path, parent):
+    if file_path.suffix.lower() == ".xsh" and file_path.name.startswith("test_"):
+        return XshFile.from_parent(parent, path=file_path)
 
 
 class XshFile(pytest.File):
     def collect(self):
-        sys.path.append(self.fspath.dirname)
-        mod = importlib.import_module(self.fspath.purebasename)
+        sys.path.append(str(self.path.parent))
+        mod = importlib.import_module(self.path.stem)
         sys.path.pop(0)
         tests = [t for t in dir(mod) if t.startswith("test_")]
         for test_name in tests:
@@ -92,7 +93,7 @@ class XshFunction(pytest.Item):
         return "".join(formatted_tb)
 
     def reportinfo(self):
-        return self.fspath, 0, f"xonsh test: {self.name}"
+        return self.path, 0, f"xonsh test: {self.name}"
 
 
 @pytest.fixture

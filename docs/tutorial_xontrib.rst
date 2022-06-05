@@ -6,8 +6,13 @@ Tutorial: Extensions (Xontribs)
 Take a deep breath and prepare for some serious Show & Tell; it's time to
 learn about xonsh extensions!
 
+Xonsh comes with some default set of extensions. These can be viewed :py:mod:`here <xontrib>`.
+
+Also checkout the list of `Awesome Contributions <https://xonsh.github.io/awesome-xontribs/>`_
+from the community.
+
 Overview
-================================
+========
 Xontributions, or ``xontribs``, are a set of tools and conventions for
 extending the functionality of xonsh beyond what is provided by default. This
 allows 3rd party developers and users to improve their xonsh experience without
@@ -19,15 +24,48 @@ took inspiration from for xonsh:
 * `Sphinx <http://sphinx-doc.org/>`_: Extensions are just Python modules,
   bundles some extensions with the main package, interface is a list of
   string names.
+* `IPython <https://ipython.readthedocs.io/en/stable/config/extensions/index.html>`_: Extensions are just Python modules
+  with some special functions to load/unload.
 * `Oh My Zsh <http://ohmyz.sh/>`_: Centralized registry, autoloading, and
   for a shell.
 * `ESLint <http://eslint.org/>`_: Ability to use language package manager
   to install/remove extensions.
 
-
 Structure
-==========
-Xontribs are modules written in either xonsh (``*.xsh``) or Python (``*.py``).
+================
+Xontribs are modules with some special functions written
+in either xonsh (``*.xsh``) or Python (``*.py``).
+
+Here is a template:
+
+.. code-block:: python
+    from xonsh.built_ins import XonshSession
+
+    def _load_xontrib_(xsh: XonshSession, **kwargs) -> dict:
+        """
+        this function will be called when loading/reloading the xontrib.
+
+        Args:
+            xsh: the current xonsh session instance, serves as the interface to manipulate the session.
+                 This allows you to register new aliases, history backends, event listeners ...
+            **kwargs: it is empty as of now. Kept for future proofing.
+        Returns:
+            dict: this will get loaded into the current execution context
+        """
+
+    def _unload_xontrib_(xsh: XonshSession, **kwargs) -> dict:
+        """If you want your extension to be unloadable, put that logic here"""
+
+This _load_xontrib_() function is called after your extension is imported,
+and the currently active :py:class:`xonsh.built_ins.XonshSession` instance is passed as the argument.
+
+.. note::
+
+    Xontribs without ``_load_xontrib_`` are still supported.
+    But when such xontrib is loaded, variables listed
+    in ``__all__`` are placed in the current
+    execution context if defined.
+
 Normally, these are stored and found in an
 `implicit namespace package <https://www.python.org/dev/peps/pep-0420/>`_
 called ``xontrib``. However, xontribs may be placed in any package or directory
@@ -59,66 +97,50 @@ Here is a sample file system layout and what the xontrib names would be::
           |- done.py     # "mypkg.subpkg.done", full module name
 
 
-You can also use `cookiecutter <https://github.com/audreyr/cookiecutter>`_ with
-the `xontrib template <https://github.com/xonsh/xontrib-cookiecutter>`_ to easily
+You can also use the `xontrib template <https://github.com/xonsh/xontrib-cookiecutter>`_ to easily
 create the layout for your xontrib package.
 
 
 Loading Xontribs
 ================
-Xontribs may be loaded in a few different ways: from the config file,
-dynamically at runtime with the ``xontrib`` command, or by importing the
-module normally. Since these extensions are just Python modules, by
-default, they cannot be unloaded (easily).
+Xontribs may be loaded in a few different ways: from the config file
+(e.g. ``~/.config/xonsh/rc.xsh``), dynamically at runtime with
+the ``xontrib`` command, or its Python API.
 
-.. note::
-
-    When a xontrib is loaded its public variables are placed in the current
-    execution context unless ``__all__`` is defined, just like in regular Python
-    modules.
-
-Extensions are loaded via the ``xontrib`` command, which is a xonsh default
-alias. This command may be run from anywhere in a xonshrc file or at any point
-after xonsh has started up. Loading is the default action of the ``xontrib``
-command. Thus the following methods for loading via this command are equivalent:
+Extensions are loaded via the ``xontrib load`` command.
+This command may be run from anywhere in a xonshrc file or at any point
+after xonsh has started up.
 
 .. code-block:: xonsh
 
-    xontrib myext mpl mypkg.show
     xontrib load myext mpl mypkg.show
 
-Loading the same xontrib multiple times does not have any effect after the
-first. Xontribs are simply Python modules, and therefore follow the same
-caching rules. So by the same token, you can also import them normally.
-Of course, you have to use the full module name to import a xontrib:
+The same can be done in Python as well
 
 .. code-block:: python
 
-    import xontrib.mpl
-    from xontrib import myext
-    from mypkg.show import *
+    from xonsh.xontribs import xontribs_load
+    xontribs_load(['myext', 'mpl', 'mypkg.show'])
+
+A xontrib can be unloaded from the current session using ``xontrib unload``
+
+.. code-block:: xonsh
+    xontrib unload myext mpl mypkg.show
 
 
 Listing Known Xontribs
 ======================
 In addition to loading extensions, the ``xontrib`` command also allows you to
-list the known xontribs. This command will report whether known xontribs are
-installed and if they are loaded in the current session. To display this
+list the installed xontribs. This command will report if they are loaded
+in the current session. To display this
 information, pass the ``list`` action to the ``xontrib`` command:
 
 .. code-block:: xonshcon
 
     >>> xontrib list
-    mpl     installed      not-loaded
-    myext   not-installed  not-loaded
+    mpl     not-loaded
+    myext   not-loaded
 
-By default, this will display information for all known xontribs. However,
-you can restrict this to a set of names passed in on the command line.
-
-.. code-block:: xonshcon
-
-    >>> xontrib list mpl
-    mpl     installed      not-loaded
 
 For programmatic access, you may also have this command print a JSON formatted
 string:
@@ -164,51 +186,17 @@ that needs to distribute ``*.xsh`` files.
 
 Tell Us About Your Xontrib!
 ===========================
-We request that you register your xontrib with us.  We think that this is a
-good idea, in general, because then:
+We request that you register your xontrib with us.
+We think that will make your contribution more discoverable.
 
-* Your xontrib will show up as an extension the xonsh website,
-* It will appear in the ``xontrib list`` command, and
-* It will show up in ``xonfig wizard``.
+To register a xontrib, create a ``PullRequest`` at
+`Awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_
+repository. Also, if you use Github to host your code,
+please add `xonsh <https://github.com/topics/xonsh>`_ and `xontrib <https://github.com/topics/xontrib>`_
+to the topics.
 
 All of this let's users know that your xontrib is out there, ready to be used.
 Of course, you're under no obligation to register your xontrib.  Users will
 still be able to load your xontrib, as long as they have it installed.
-
-To register a xontrib, add an entry to
-`the xontribs_meta.py file <https://github.com/xonsh/xonsh/blob/main/xonsh/xontribs_meta.py>`_
-in the main xonsh repository.  A pull request is probably best, but if you
-are having trouble figuring it out please contact one of the xonsh devs
-with the relevant information.
-This is Python file holds classes and functions to register new Xontrib.
-
-The ``xontribs_meta.define_xontribs`` function returns a dictionary of all Xontribs.
-A sample ``Xontrib`` definition looks like this,
-
-.. code-block:: python
-
-    {
-        "awesome": Xontrib(
-            url="http://example.com/api/xontrib",
-            description="Description and short intro for your xontrib."
-            "It can span multi-lines. "
-            "Feel free to use a triple quotes if you want to have line-endings.",
-            package=_XontribPkg(
-                name="xontrib-awesome",
-                license="BSD",
-                install={
-                    "pip": "xpip install xontrib-awesome",
-                    "conda": "conda install xontrib-awesome",
-                },
-                url="https://example.com/",
-            ),
-        )
-    }
-
-.. note::  Note that you can have as many entries in the ``"install"`` dict as you
-    want. Also, the keys are arbitrary labels, so feel free to pick whatever
-    you want.
-
-.. seealso:: Checkout the API docs of the :doc:`api/xontribs_meta`
 
 Go forth!

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""The xonsh installer."""
 # Note: Do not embed any non-ASCII characters in this file until pip has been
 # fixed. See https://github.com/xonsh/xonsh/issues/487.
 import os
-import sys
 import subprocess
+import sys
 
 from setuptools import setup
-from setuptools.command.sdist import sdist
-from setuptools.command.install import install
-from setuptools.command.develop import develop
 from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop
+from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
+from setuptools.command.sdist import sdist
+from wheel.bdist_wheel import bdist_wheel
 
 TABLES = [
     "xonsh/lexer_table.py",
@@ -25,6 +25,11 @@ TABLES = [
 ]
 
 
+def python_tag():
+    ver = sys.version_info
+    return f"py{ver.major}{ver.minor}"
+
+
 def clean_tables():
     """Remove the lexer/parser modules that are dynamically created."""
     for f in TABLES:
@@ -34,7 +39,6 @@ def clean_tables():
 
 
 os.environ["XONSH_DEBUG"] = "1"
-from xonsh import __version__ as XONSH_VERSION
 
 
 def amalgamate_source():
@@ -160,6 +164,13 @@ class xbuild_py(build_py):
             restore_version()
 
 
+class xbdist(bdist_wheel):
+    def initialize_options(self):
+        super().initialize_options()
+        # becuase XonshParser will be build for each minor python version, we need separate builds
+        self.python_tag = python_tag()
+
+
 class xinstall(install):
     """Xonsh specialization of setuptools install class.
     For production, let setuptools generate the
@@ -233,18 +244,6 @@ class install_scripts_rewrite(install_scripts):
                         f.write(processed)
 
 
-# The custom install needs to be used on Windows machines
-cmdclass = {
-    "install": xinstall,
-    "sdist": xsdist,
-    "build_py": xbuild_py,
-}
-if os.name == "nt":
-    cmdclass["install_scripts"] = install_scripts_quoted_shebang
-else:
-    cmdclass["install_scripts"] = install_scripts_rewrite
-
-
 class xdevelop(develop):
     """Xonsh specialization of setuptools develop class."""
 
@@ -263,6 +262,20 @@ class xdevelop(develop):
         super().install_script(dist, script_name, script_text, dev_path)
 
 
+# The custom install needs to be used on Windows machines
+cmdclass = {
+    "install": xinstall,
+    "sdist": xsdist,
+    "build_py": xbuild_py,
+    "develop": xdevelop,
+    "bdist_wheel": xbdist,
+}
+if os.name == "nt":
+    cmdclass["install_scripts"] = install_scripts_quoted_shebang
+else:
+    cmdclass["install_scripts"] = install_scripts_rewrite
+
+
 def main():
     """The main entry point."""
     try:
@@ -273,118 +286,9 @@ def main():
             print(logo)
     except UnicodeEncodeError:
         pass
-    with open(os.path.join(os.path.dirname(__file__), "README.rst")) as f:
-        readme = f.read()
-    scripts = ["scripts/xon.sh"]
-    skw = dict(
-        name="xonsh",
-        description="Python-powered, cross-platform, Unix-gazing shell",
-        long_description=readme,
-        license="BSD",
-        version=XONSH_VERSION,
-        author="Anthony Scopatz",
-        maintainer="Anthony Scopatz",
-        author_email="scopatz@gmail.com",
-        url="https://xon.sh",
-        platforms="Cross Platform",
-        project_urls={
-            "Changelog": "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst",
-            "Repository": "https://github.com/xonsh/xonsh",
-            "Documentation": "https://xon.sh/contents.html",
-            "Issue tracker": "https://github.com/xonsh/xonsh/issues",
-        },
-        classifiers=[
-            "Development Status :: 4 - Beta",
-            "Environment :: Console",
-            "Intended Audience :: Developers",
-            "License :: OSI Approved :: BSD License",
-            "Natural Language :: English",
-            "Operating System :: OS Independent",
-            "Programming Language :: Python :: 3 :: Only",
-            "Programming Language :: Python :: 3.7",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
-            "Programming Language :: Python :: 3.10",
-            "Programming Language :: Python :: 3",
-            "Topic :: System :: Shells",
-            "Topic :: System :: System Shells",
-        ],
-        keywords="python shell cli command-line prompt xonsh",
-        packages=[
-            "xonsh",
-            "xonsh.ply.ply",
-            "xonsh.ptk_shell",
-            "xonsh.procs",
-            "xonsh.parsers",
-            "xonsh.xoreutils",
-            "xontrib",
-            "xonsh.completers",
-            "xonsh.history",
-            "xonsh.prompt",
-            "xonsh.pytest",
-            "xonsh.lib",
-            "xonsh.webconfig",
-            "xonsh.virtualenv",
-            "xompletions",
-        ],
-        package_dir={
-            "xonsh": "xonsh",
-            "xontrib": "xontrib",
-            "xompletions": "xompletions",
-            "xonsh.lib": "xonsh/lib",
-            "xonsh.webconfig": "xonsh/webconfig",
-        },
-        package_data={
-            "xonsh": ["*.json", "*.githash"],
-            "xontrib": ["*.xsh"],
-            "xonsh.lib": ["*.xsh"],
-            "xonsh.virtualenv": ["*.xsh"],
-            "xonsh.webconfig": [
-                "*.html",
-                "js/app.min.js",
-                "js/bootstrap.min.css",
-                "js/LICENSE-bootstrap",
-            ],
-        },
+    setup(
         cmdclass=cmdclass,
-        scripts=scripts,
     )
-    # We used to avoid setuptools 'console_scripts' due to startup performance
-    # concerns which have since been resolved, so long as install is done
-    # via `pip install .` and not `python setup.py install`.
-    skw["entry_points"] = {
-        "pygments.lexers": [
-            "xonsh = xonsh.pyghooks:XonshLexer",
-            "xonshcon = xonsh.pyghooks:XonshConsoleLexer",
-        ],
-        "pytest11": ["xonsh = xonsh.pytest.plugin"],
-        "virtualenv.activate": ["xonsh = xonsh.virtualenv:XonshActivator"],
-        "console_scripts": [
-            "xonsh = xonsh.main:main",
-            "xonsh-cat = xonsh.xoreutils.cat:main",
-            "xonsh-uname = xonsh.xoreutils.uname:main",
-            "xonsh-uptime = xonsh.xoreutils.uptime:main",
-        ],
-    }
-    skw["cmdclass"]["develop"] = xdevelop
-    skw["extras_require"] = {
-        "ptk": ["prompt-toolkit>=3.0.27", "pyperclip"],
-        "pygments": ["pygments>=2.2"],
-        "mac": ["gnureadline"],
-        "linux": ["distro"],
-        "proctitle": ["setproctitle"],
-        "zipapp": ['importlib_resources; python_version < "3.7"'],
-        "full": [
-            "prompt-toolkit>=3.0.27",
-            "pyperclip",
-            "pygments>=2.2",
-            "distro; platform_system=='Linux'",  # PEP 508 platform specifiers
-            "setproctitle; platform_system=='Windows'",
-            "gnureadline; platform_system=='Darwin'",
-        ],
-    }
-    skw["python_requires"] = ">=3.8"
-    setup(**skw)
 
 
 if __name__ == "__main__":

@@ -191,8 +191,10 @@ class _TeeStd(io.TextIOBase):
 
     def flush(self):
         """Flushes both the original stdout and the buffer."""
-        self.std.flush()
-        self.mem.flush()
+        # In certain cases, `std` or `mem` may already be `None` when we're
+        # cleaning up in which case we don't care whether `flush` does anything
+        getattr(getattr(self, "std", lambda: None), "flush", lambda: None)()
+        getattr(getattr(self, "mem", lambda: None), "flush", lambda: None)()
 
     def fileno(self):
         """Tunnel fileno() calls to the std stream."""
@@ -430,6 +432,7 @@ class BaseShell:
         """
         hist = XSH.history  # pylint: disable=no-member
         info["rtn"] = hist.last_cmd_rtn if hist is not None else None
+        XSH.env["LAST_RETURN_CODE"] = info["rtn"] or 0
         tee_out = tee_out or None
         last_out = hist.last_cmd_out if hist is not None else None
         if last_out is None and tee_out is None:
@@ -508,7 +511,12 @@ class BaseShell:
             return src, None
         try:
             code = self.execer.compile(
-                src, mode="single", glbs=self.ctx, locs=None, filename="<stdin>"
+                src,
+                mode="single",
+                glbs=self.ctx,
+                locs=None,
+                filename="<stdin>",
+                compile_empty_tree=False,
             )
             if _cache:
                 update_cache(code, cachefname)

@@ -25,6 +25,8 @@ def complete_environment_vars(context: CompletionContext):
 
     key = prefix[dollar_location + 1 :]
     lprefix = len(key) + 1
+    if context.command is not None and context.command.is_after_closing_quote:
+        lprefix += 1
     filter_func = get_filter_function()
     env = XSH.env
 

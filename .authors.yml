@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 574
+  num_commits: 582
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1131,7 +1131,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 184
+  num_commits: 187
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1294,7 +1294,7 @@
   first_commit: 2021-04-26 22:41:54
 - name: Peter Ye
   email: 46109467+yaxollum@users.noreply.github.com
-  num_commits: 15
+  num_commits: 16
   first_commit: 2021-06-11 14:11:19
 - name: Walter A. Boring IV
   email: waboring@hemna.com
@@ -1422,3 +1422,11 @@
   email: goosey15@gmail.com
   num_commits: 6
   first_commit: 2021-11-18 18:42:29
+- name: doronz88
+  email: doron88@gmail.com
+  num_commits: 1
+  first_commit: 2022-04-27 12:41:13
+- name: Stefano Rivera
+  email: github@rivera.za.net
+  num_commits: 1
+  first_commit: 2022-05-08 00:26:57

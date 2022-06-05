@@ -14,6 +14,7 @@ def parser():
     (
         "ls $WO",
         "ls /home/$WO",
+        "ls '/home/$WO'",
         "ls @('hi ' + $WO",
     ),
 )
@@ -22,7 +23,11 @@ def test_simple(cmd, xession, monkeypatch, parser):
 
     context = parser.parse(cmd, len(cmd))
     comps, lprefix = complete_environment_vars(context)
-    assert lprefix == 3
+    # account for the ending quote
+    if cmd[-1] in "'":
+        assert lprefix == 4
+    else:
+        assert lprefix == 3
     assert set(comps) == {"$WOW"}
 
 
