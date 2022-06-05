@@ -188,6 +188,17 @@ def test_exec_alias_args(xession):
     assert stack[0][0].f_locals["myarg0"] == "arg0"
 
 
+@pytest.mark.parametrize(
+    "exp_rtn",
+    [0, 1, 2],
+)
+def test_exec_alias_return_value(exp_rtn, xonsh_session, monkeypatch):
+    monkeypatch.setitem(xonsh_session.env, "RAISE_SUBPROC_ERROR", False)
+    stack = inspect.stack()
+    rtn = ExecAlias(f"python -c 'exit({exp_rtn})'")([], stack=stack)
+    assert rtn == exp_rtn
+
+
 def test_register_decorator(xession):
     aliases = Aliases()
 
