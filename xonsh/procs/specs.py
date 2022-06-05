@@ -918,14 +918,15 @@ def run_subproc(cmds, captured=False, envs=None):
     # now figure out what we should return
     if captured == "object":
         return command  # object can be returned even if backgrounding
+    elif captured == "hiddenobject":
+        if not background:
+            command.end()
+        return command
     elif background:
         return
     elif captured == "stdout":
         command.end()
         return command.output
-    elif captured == "hiddenobject":
-        command.end()
-        return command
     else:
         command.end()
         return

@@ -112,3 +112,10 @@ def test_raw_substitution(xonsh_execer):
 )
 def test_casting(cmdline, result, xonsh_execer):
     assert xonsh_execer.eval(f"{cmdline}") == result
+
+
+@skip_if_on_windows
+def test_background_pgid(xonsh_session, monkeypatch):
+    monkeypatch.setitem(xonsh_session.env, "XONSH_INTERACTIVE", True)
+    pipeline = xonsh_session.execer.eval("![echo hi &]")
+    assert pipeline.term_pgid is not None
