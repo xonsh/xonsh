@@ -6,6 +6,9 @@ on:
     types:
       - published
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     if: github.repository_owner == 'xonsh'
