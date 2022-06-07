@@ -139,7 +139,7 @@ doc = [
     "xonsh[bestshell]",
     "furo",
     "numpydoc",
-    "sphinx>=3.1",
+    "sphinx<5,>=3.1",
     "psutil",
     "pyzmq",
     "matplotlib",
