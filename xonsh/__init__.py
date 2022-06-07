@@ -26,8 +26,6 @@ else:
         _sys.modules["xonsh.platform"] = __amalgam__
         pretty = __amalgam__
         _sys.modules["xonsh.pretty"] = __amalgam__
-        xontribs_meta = __amalgam__
-        _sys.modules["xonsh.xontribs_meta"] = __amalgam__
         codecache = __amalgam__
         _sys.modules["xonsh.codecache"] = __amalgam__
         lazyimps = __amalgam__

@@ -6,12 +6,13 @@ import json
 import sys
 import typing as tp
 from enum import IntEnum
+from pathlib import Path
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.tools import print_color, print_exception
-from xonsh.xontribs_meta import get_xontribs
 
 
 class ExitCode(IntEnum):
@@ -24,23 +25,128 @@ class XontribNotInstalled(Exception):
     """raised when the requested xontrib is not found"""
 
 
-def find_xontrib(name):
+class _XontribPkg(tp.NamedTuple):
+    """Class to define package information of a xontrib.
+
+    Attributes
+    ----------
+    install
+        a mapping of tools with respective install commands. e.g. {"pip": "pip install xontrib"}
+    license
+        license type of the xontrib package
+    name
+        full name of the package. e.g. "xontrib-argcomplete"
+    url
+        URL to the homepage of the xontrib package.
+    """
+
+    install: tp.Dict[str, str]
+    license: str = ""
+    name: str = ""
+    url: tp.Optional[str] = None
+
+
+class Xontrib(tp.NamedTuple):
+    """Meta class that is used to describe xontribs.
+
+    Attributes
+    ----------
+    url
+        url to the home page of the xontrib.
+    description
+        short description about the xontrib.
+    package
+        pkg information for installing the xontrib
+    tags
+        category.
+    """
+
+    url: str = ""
+    description: tp.Union[str, LazyObject] = ""
+    package: tp.Optional[_XontribPkg] = None
+    tags: tp.Tuple[str, ...] = ()
+
+
+def get_module_docstring(module: str) -> str:
+    """Find the module and return its docstring without actual import"""
+    import ast
+
+    spec = importlib.util.find_spec(module)
+    if spec and spec.has_location and spec.origin:
+        return ast.get_docstring(ast.parse(Path(spec.origin).read_text())) or ""
+    return ""
+
+
+def get_xontribs() -> tp.Dict[str, Xontrib]:
+    """Return xontrib definitions lazily."""
+    return dict(get_installed_xontribs())
+
+
+def get_installed_xontribs(pkg_name="xontrib"):
+    """List all core packages + newly installed xontribs"""
+    core_pkg = _XontribPkg(
+        name="xonsh",
+        license="BSD 3-clause",
+        install={
+            "conda": "conda install -c conda-forge xonsh",
+            "pip": "xpip install xonsh",
+            "aura": "sudo aura -A xonsh",
+            "yaourt": "yaourt -Sa xonsh",
+        },
+        url="http://xon.sh",
+    )
+    spec = importlib.util.find_spec(pkg_name)
+
+    def iter_paths():
+        for loc in spec.submodule_search_locations:
+            path = Path(loc)
+            if path.exists():
+                yield from path.iterdir()
+
+    def iter_modules():
+        # pkgutil is not finding `*.xsh` files
+        for path in iter_paths():
+            if path.suffix in {".py", ".xsh"}:
+                yield path.stem
+
+            elif path.is_dir():
+                if (path / "__init__.py").exists():
+                    yield path.name
+
+    for name in iter_modules():
+        yield name, Xontrib(
+            url="http://xon.sh",
+            description=lazyobject(lambda: get_module_docstring(f"xontrib.{name}")),
+            package=core_pkg,
+        )
+
+
+def find_xontrib(name, full_module=False):
     """Finds a xontribution from its name."""
-    spec = None
+
+    # here the order is important. We try to run the correct cases first and then later trial cases
+    # that will likely fail
+
     if name.startswith("."):
-        spec = importlib.util.find_spec(name, package="xontrib")
-    else:
-        with contextlib.suppress(ValueError):
-            spec = importlib.util.find_spec("." + name, package="xontrib")
-    return spec or importlib.util.find_spec(name)
+        return importlib.util.find_spec(name, package="xontrib")
+
+    if full_module:
+        return importlib.util.find_spec(name)
+
+    autoloaded = getattr(XSH.builtins, "autoloaded_xontribs", None) or {}
+    if name in autoloaded:
+        return importlib.util.find_spec(autoloaded[name])
+
+    with contextlib.suppress(ValueError):
+        return importlib.util.find_spec("." + name, package="xontrib")
+
+    return importlib.util.find_spec(name)
 
 
 def xontrib_context(name, full_module=False):
     """Return a context dictionary for a xontrib of a given name."""
-    if full_module:
-        spec = importlib.util.find_spec(name)
-    else:
-        spec = find_xontrib(name)
+
+    spec = find_xontrib(name, full_module)
     if spec is None:
         return None
     module = importlib.import_module(spec.name)
@@ -171,6 +277,7 @@ def xontribs_unload(
     for name in names:
         if verbose:
             print(f"unloading xontrib {name!r}")
+
         spec = find_xontrib(name)
         try:
             if spec and spec.name in sys.modules:
@@ -252,18 +359,27 @@ def _list(
         print_color(s[:-1])
 
 
-def _get_xontrib_entrypoints(blocked) -> "tp.Iterable[str]":
+def _get_xontrib_entrypoints() -> "tp.Iterable[tp.Tuple[str, str]]":
     from importlib import metadata
 
     for entry in metadata.entry_points(group="xonsh.xontribs"):  # type: ignore
-        if entry not in blocked:
-            yield entry.value  # type: ignore
+        yield entry.name, entry.value  # type: ignore
 
 
 def auto_load_xontribs_from_entrypoints(blocked: "tp.Sequence[str]" = ()):
     """Load xontrib modules exposed via setuptools's entrypoints"""
-    xontribs = list(_get_xontrib_entrypoints(blocked))
-    return xontribs_load(xontribs, full_module=True)
+
+    if not hasattr(XSH.builtins, "autoloaded_xontribs"):
+        XSH.builtins.autoloaded_xontribs = {}
+
+    def get_loadable():
+        for name, module in _get_xontrib_entrypoints():
+            if name not in blocked:
+                XSH.builtins.autoloaded_xontribs[name] = module
+                yield module
+
+    modules = list(get_loadable())
+    return xontribs_load(modules, full_module=True)
 
 
 class XontribAlias(ArgParserAlias):

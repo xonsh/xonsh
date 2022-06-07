@@ -47,8 +47,7 @@ from xonsh.tools import (
     print_exception,
     to_bool,
 )
-from xonsh.xontribs import find_xontrib, xontribs_loaded
-from xonsh.xontribs_meta import Xontrib, get_xontribs
+from xonsh.xontribs import Xontrib, find_xontrib, get_xontribs, xontribs_loaded
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """
