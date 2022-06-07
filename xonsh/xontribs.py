@@ -66,6 +66,11 @@ class Xontrib(tp.NamedTuple):
             return self.distribution.metadata.get("License", "")
         return ""
 
+    @property
+    def is_loaded(self):
+        spec = find_xontrib(self.module, full_module=True)
+        return spec and spec.name in sys.modules
+
 
 def get_module_docstring(module: str) -> str:
     """Find the module and return its docstring without actual import"""
@@ -181,9 +186,11 @@ def update_context(name, ctx: dict, full_module=False):
 
 
 def _xontrib_name_completions(loaded=False):
-    for name, meta, spec in _get_xontrib_specs():
-        if (spec.name in sys.modules) is loaded:
-            yield RichCompletion(name, append_space=True, description=meta.description)
+    for name, xontrib in get_xontribs().items():
+        if xontrib.is_loaded is loaded:
+            yield RichCompletion(
+                name, append_space=True, description=xontrib.get_description()
+            )
 
 
 def xontrib_names_completer(**_):
@@ -289,24 +296,18 @@ def xontribs_reload(
         xontribs_load([name])
 
 
-def _get_xontrib_specs():
-    for xo_name, meta in get_xontribs().items():
-        yield xo_name, meta, find_xontrib(xo_name)
-
-
 def xontrib_data():
     """Collects and returns the data about installed xontribs."""
     data = {}
-    for xo_name, _, spec in _get_xontrib_specs():
-        loaded = spec.name in sys.modules
-        data[xo_name] = {"name": xo_name, "loaded": loaded}
+    for xo_name, xontrib in get_xontribs().items():
+        data[xo_name] = {"name": xo_name, "loaded": xontrib.is_loaded}
 
     return dict(sorted(data.items()))
 
 
 def xontribs_loaded():
     """Returns list of loaded xontribs."""
-    return [k for k, v in xontrib_data().items() if v["loaded"]]
+    return [k for k, xontrib in get_xontribs().items() if xontrib.is_loaded]
 
 
 def _list(
