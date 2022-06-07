@@ -368,19 +368,16 @@ def make_xontrib(xon_item: tp.Tuple[str, Xontrib]):
     name, xontrib = xon_item
     name = name or "<unknown-xontrib-name>"
     msg = "\n{BOLD_CYAN}" + name + "{RESET}\n"
+
     if xontrib.url:
         msg += "{RED}url:{RESET} " + xontrib.url + "\n"
-    if xontrib.package:
-        pkg = xontrib.package
-        msg += "{RED}package:{RESET} " + pkg.name + "\n"
-        if pkg.url:
-            if xontrib.url and pkg.url != xontrib.url:
-                msg += "{RED}package-url:{RESET} " + pkg.url + "\n"
-        if pkg.license:
-            msg += "{RED}license:{RESET} " + pkg.license + "\n"
+    if xontrib.distribution:
+        msg += "{RED}package:{RESET} " + xontrib.distribution.name + "\n"
+        if xontrib.license:
+            msg += "{RED}license:{RESET} " + xontrib.license + "\n"
     msg += "{PURPLE}installed?{RESET} "
     msg += ("no" if find_xontrib(name) is None else "yes") + "\n"
-    msg += _wrap_paragraphs(xontrib.description, width=69)
+    msg += _wrap_paragraphs(xontrib.get_description(), width=69)
     if msg.endswith("\n"):
         msg = msg[:-1]
     mnode = wiz.Message(message=msg)

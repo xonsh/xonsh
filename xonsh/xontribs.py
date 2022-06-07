@@ -11,8 +11,10 @@ from pathlib import Path
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
-from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.tools import print_color, print_exception
+
+if tp.TYPE_CHECKING:
+    from importlib.metadata import Distribution, EntryPoint
 
 
 class ExitCode(IntEnum):
@@ -23,27 +25,6 @@ class ExitCode(IntEnum):
 
 class XontribNotInstalled(Exception):
     """raised when the requested xontrib is not found"""
-
-
-class _XontribPkg(tp.NamedTuple):
-    """Class to define package information of a xontrib.
-
-    Attributes
-    ----------
-    install
-        a mapping of tools with respective install commands. e.g. {"pip": "pip install xontrib"}
-    license
-        license type of the xontrib package
-    name
-        full name of the package. e.g. "xontrib-argcomplete"
-    url
-        URL to the homepage of the xontrib package.
-    """
-
-    install: tp.Dict[str, str]
-    license: str = ""
-    name: str = ""
-    url: tp.Optional[str] = None
 
 
 class Xontrib(tp.NamedTuple):
@@ -61,10 +42,29 @@ class Xontrib(tp.NamedTuple):
         category.
     """
 
-    url: str = ""
-    description: tp.Union[str, LazyObject] = ""
-    package: tp.Optional[_XontribPkg] = None
-    tags: tp.Tuple[str, ...] = ()
+    module: str
+    distribution: "tp.Optional[Distribution]" = None
+
+    def get_description(self):
+        if self.distribution:
+            print(self, file=sys.stderr)
+        if self.distribution and (
+            summary := self.distribution.metadata.get("Summary", "")
+        ):
+            return summary
+        return get_module_docstring(self.module)
+
+    @property
+    def url(self):
+        if self.distribution:
+            return self.distribution.metadata.get("Home-page", "")
+        return ""
+
+    @property
+    def license(self):
+        if self.distribution:
+            return self.distribution.metadata.get("License", "")
+        return ""
 
 
 def get_module_docstring(module: str) -> str:
@@ -79,22 +79,11 @@ def get_module_docstring(module: str) -> str:
 
 def get_xontribs() -> tp.Dict[str, Xontrib]:
     """Return xontrib definitions lazily."""
-    return dict(get_installed_xontribs())
+    return dict(_get_installed_xontribs())
 
 
-def get_installed_xontribs(pkg_name="xontrib"):
+def _get_installed_xontribs(pkg_name="xontrib"):
     """List all core packages + newly installed xontribs"""
-    core_pkg = _XontribPkg(
-        name="xonsh",
-        license="BSD 3-clause",
-        install={
-            "conda": "conda install -c conda-forge xonsh",
-            "pip": "xpip install xonsh",
-            "aura": "sudo aura -A xonsh",
-            "yaourt": "yaourt -Sa xonsh",
-        },
-        url="http://xon.sh",
-    )
     spec = importlib.util.find_spec(pkg_name)
 
     def iter_paths():
@@ -114,11 +103,11 @@ def get_installed_xontribs(pkg_name="xontrib"):
                     yield path.name
 
     for name in iter_modules():
-        yield name, Xontrib(
-            url="http://xon.sh",
-            description=lazyobject(lambda: get_module_docstring(f"xontrib.{name}")),
-            package=core_pkg,
-        )
+        module = f"xontrib.{name}"
+        yield name, Xontrib(module)
+
+    for entry in _get_xontrib_entrypoints():
+        yield entry.name, Xontrib(entry.value, distribution=entry.dist)
 
 
 def find_xontrib(name, full_module=False):
@@ -174,21 +163,10 @@ def xontrib_context(name, full_module=False):
 
 def prompt_xontrib_install(names: tp.List[str]):
     """Returns a formatted string with name of xontrib package to prompt user"""
-    xontribs = get_xontribs()
-    packages = []
-    for name in names:
-        if name in xontribs:
-            xontrib = xontribs[name]
-            if xontrib.package:
-                packages.append(xontrib.package.name)
-
     return (
         "The following xontribs are enabled but not installed: \n"
-        "   {xontribs}\n"
-        "To install them run \n"
-        "    xpip install {packages}".format(
-            xontribs=" ".join(names), packages=" ".join(packages)
-        )
+        f"   {names}\n"
+        "Please make sure that they are installed correctly by checking https://xonsh.github.io/awesome-xontribs/\n"
     )
 
 
@@ -359,27 +337,28 @@ def _list(
         print_color(s[:-1])
 
 
-def _get_xontrib_entrypoints() -> "tp.Iterable[tp.Tuple[str, str]]":
+def _get_xontrib_entrypoints() -> "tp.Iterable[EntryPoint]":
     from importlib import metadata
 
-    for entry in metadata.entry_points(group="xonsh.xontribs"):  # type: ignore
-        yield entry.name, entry.value  # type: ignore
+    yield from metadata.entry_points().select(group="xonsh.xontribs")  # type: ignore
 
 
-def auto_load_xontribs_from_entrypoints(blocked: "tp.Sequence[str]" = ()):
+def auto_load_xontribs_from_entrypoints(
+    blocked: "tp.Sequence[str]" = (), verbose=False
+):
     """Load xontrib modules exposed via setuptools's entrypoints"""
 
     if not hasattr(XSH.builtins, "autoloaded_xontribs"):
         XSH.builtins.autoloaded_xontribs = {}
 
     def get_loadable():
-        for name, module in _get_xontrib_entrypoints():
-            if name not in blocked:
-                XSH.builtins.autoloaded_xontribs[name] = module
-                yield module
+        for entry in _get_xontrib_entrypoints():
+            if entry.name not in blocked:
+                XSH.builtins.autoloaded_xontribs[entry.name] = entry.value
+                yield entry.value
 
     modules = list(get_loadable())
-    return xontribs_load(modules, full_module=True)
+    return xontribs_load(modules, verbose=verbose, full_module=True)
 
 
 class XontribAlias(ArgParserAlias):

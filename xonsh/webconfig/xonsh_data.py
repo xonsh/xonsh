@@ -203,8 +203,8 @@ def render_colors():
 def format_xontrib(xontrib: Xontrib):
     return {
         "url": xontrib.url,
-        "license": xontrib.package.license if xontrib.package else "",
-        "display": escape(rst_to_html(xontrib.description)),
+        "license": xontrib.license,
+        "display": escape(rst_to_html(xontrib.get_description())),
     }
 
 

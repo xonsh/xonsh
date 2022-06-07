@@ -317,7 +317,9 @@ def _autoload_xontribs(env):
     if disabled is True:
         return
     blocked_xontribs = disabled or ()
-    auto_load_xontribs_from_entrypoints(blocked_xontribs)
+    auto_load_xontribs_from_entrypoints(
+        blocked_xontribs, verbose=bool(env.get("XONSH_DEBUG", False))
+    )
     events.on_xontribs_loaded.fire()
     events.on_timingprobe.fire(name="post_xontribs_autoload")
 
