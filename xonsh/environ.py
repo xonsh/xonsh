@@ -482,7 +482,7 @@ class LsColors(cabc.MutableMapping):
         # run dircolors
         try:
             out = subprocess.check_output(
-                cmd, env=denv, universal_newlines=True, stderr=subprocess.DEVNULL
+                cmd, env=denv, text=True, stderr=subprocess.DEVNULL
             )
         except (subprocess.CalledProcessError, FileNotFoundError):
             return cls(cls.default_settings)
@@ -1183,6 +1183,7 @@ The file should contain a function with the signature
 By default it just prints ``cmds`` like below.
 
 .. code-block:: python
+
     def tracer(cmds: list, captured: Union[bool, str]):
         print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
 """,

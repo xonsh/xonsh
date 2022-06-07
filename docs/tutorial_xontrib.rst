@@ -39,6 +39,7 @@ in either xonsh (``*.xsh``) or Python (``*.py``).
 Here is a template:
 
 .. code-block:: python
+
     from xonsh.built_ins import XonshSession
 
     def _load_xontrib_(xsh: XonshSession, **kwargs) -> dict:
@@ -125,12 +126,14 @@ The same can be done in Python as well
 A xontrib can be unloaded from the current session using ``xontrib unload``
 
 .. code-block:: xonsh
+
     xontrib unload myext mpl mypkg.show
 
 Xontribs can use `setuptools entrypoints <https://setuptools.pypa.io/en/latest/userguide/entry_point.html?highlight=entrypoints>`_
 to mark themselves available for autoloading using the below format.
 
 .. code-block:: ini
+
     [options.entry_points]
     xonsh.xontribs =
         xontrib_name = path.to.the.module
