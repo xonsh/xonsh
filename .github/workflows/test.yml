@@ -63,7 +63,7 @@ jobs:
           python -m xonsh run-tests.xsh test --report-coverage --no-amalgam -- --timeout=240
       - name: Upload coverage to Codecov
         if: ${{ startsWith(matrix.python-version, '3.10') }}
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           verbose: true
           flags: ${{ matrix.os }}
