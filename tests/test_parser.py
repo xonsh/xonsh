@@ -2376,8 +2376,11 @@ def test_ls_regex(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls `[Ff]+i*LE` -l)", False)
 
 
-def test_backtick(check_xonsh_ast):
-    check_xonsh_ast({}, "print(`.*`)", False)
+@pytest.mark.parametrize("p", ["", "p"])
+@pytest.mark.parametrize("f", ["", "f"])
+@pytest.mark.parametrize("glob_type", ["", "r", "g"])
+def test_backtick(p, f, glob_type, check_xonsh_ast):
+    check_xonsh_ast({}, f"print({p}{f}{glob_type}`.*`)", False)
 
 
 def test_ls_regex_octothorpe(check_xonsh_ast):
@@ -2388,32 +2391,12 @@ def test_ls_explicitregex(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls r`[Ff]+i*LE` -l)", False)
 
 
-def test_rbacktick(check_xonsh_ast):
-    check_xonsh_ast({}, "print(r`.*`)", False)
-
-
 def test_ls_explicitregex_octothorpe(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls r`#[Ff]+i*LE` -l)", False)
 
 
 def test_ls_glob(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls g`[Ff]+i*LE` -l)", False)
-
-
-def test_gbacktick(check_xonsh_ast):
-    check_xonsh_ast({}, "print(g`.*`)", False)
-
-
-def test_pbacktrick(check_xonsh_ast):
-    check_xonsh_ast({}, "print(p`.*`)", False)
-
-
-def test_pgbacktick(check_xonsh_ast):
-    check_xonsh_ast({}, "print(pg`.*`)", False)
-
-
-def test_prbacktick(check_xonsh_ast):
-    check_xonsh_ast({}, "print(pr`.*`)", False)
 
 
 def test_ls_glob_octothorpe(check_xonsh_ast):

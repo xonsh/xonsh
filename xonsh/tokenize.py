@@ -305,7 +305,7 @@ String = group(
 )
 
 # Xonsh-specific Syntax
-SearchPath = r"((?:[rgp]+|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
+SearchPath = r"((?:[rgpf]+|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
