@@ -785,7 +785,7 @@ async def run_sp_parallel(
     import shlex
 
     def print_cmd(cmd):
-        sys.stderr.buffer.write(f"  $ {cmd}\n".encode("utf-8"))
+        sys.stderr.buffer.write(f"  $ {cmd}\n".encode())
         sys.stderr.flush()
 
     async def run(cmd, capture=False):
@@ -941,7 +941,7 @@ def make_default_aliases():
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
-        "parallex": parallex_alias,
+        "parallex": parallex,
         "trace": trace,
         "timeit": timeit_alias,
         "xonfig": xonfig,
