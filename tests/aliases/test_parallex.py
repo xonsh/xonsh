@@ -8,16 +8,12 @@ def parallex(xsh_with_aliases):
     return xsh_with_aliases.aliases["parallex"]
 
 
-@pytest.mark.xfail(
-    tools.ON_WINDOWS and tools.VER_MAJOR_MINOR < (3, 8),
-    reason="ProactorEventLoop is not default in these versions",
-)
 def test_exec(parallex, capfd):
-    parallex(["mypy --version", "flake8 --version"])
+    parallex(["python --version", "pip --version"])
 
     out, _ = capfd.readouterr()
-    assert "mypy" in out
-    assert "flake" in out
+    assert "Python" in out
+    assert "pip" in out
 
 
 @tools.skip_if_on_windows
