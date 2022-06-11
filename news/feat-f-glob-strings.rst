@@ -1,6 +1,6 @@
 **Added:**
 
-* Support for f-glob strings (e.g. ``fg`{prefix}*` ``)
+* Support for f-glob strings (e.g. ``fg`{prefix}*```)
 
 **Changed:**
 
