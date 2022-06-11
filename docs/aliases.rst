@@ -116,6 +116,13 @@ for more information all the history command and all of its sub-commands.
 .. command-help:: xonsh.history.main.history_main
 
 
+``parallex``
+============
+Simple alias to run multiple commands in parallel.
+
+.. command-help:: xonsh.aliases.parallex
+
+
 ``timeit``
 ===============
 Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.

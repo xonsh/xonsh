@@ -821,7 +821,7 @@ async def run_sp_parallel(
     return await asyncio.gather(*tuple(prepare_cmds()))
 
 
-def parallex(
+def parallex_fn(
     args: Annotated["list[str]", Arg(nargs="+")],
     shell=False,
     order_out=True,
@@ -858,6 +858,11 @@ def parallex(
     )
     if any(results):
         sys.exit(1)
+
+
+parallex = ArgParserAlias(
+    func=parallex_fn, threadable=False, prog="parallex", has_args=True
+)
 
 
 def showcmd(args, stdin=None):
@@ -936,9 +941,7 @@ def make_default_aliases():
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
-        "parallex": ArgParserAlias(
-            func=parallex, threadable=False, prog="parallex", has_args=True
-        ),
+        "parallex": parallex_alias,
         "trace": trace,
         "timeit": timeit_alias,
         "xonfig": xonfig,
