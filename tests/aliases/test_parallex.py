@@ -17,25 +17,23 @@ def test_exec(parallex, capfd):
 
 
 @tools.skip_if_on_windows
-def test_shell_ordered(parallex, capfd):
-    parallex(
-        ["echo 1; sleep 0.02; echo 2", "echo 3; sleep 0.05; echo 4", "--shell"],
-    )
-
-    out, _ = capfd.readouterr()
-    assert "".join(out.split()) == "1234"
-
-
-@tools.skip_if_on_windows
-def test_shell_interleaved(parallex, capfd):
+@pytest.mark.parametrize(
+    "expected, args",
+    [
+        pytest.param("1234", [], id="ordered"),
+        pytest.param("1324", ["--no-order"], id="interleaved"),
+    ],
+)
+def test_shell_ordered(expected, args, parallex, capfd):
     parallex(
         [
-            "echo 1; sleep 0.04; echo 2",
-            "echo 3; sleep 0.06; echo 4",
+            "python -uc 'import time; print(1); time.sleep(0.01); print(2)'",
+            # elapse some time, so that the order will not be messed up in environments like macos
+            "python -uc 'import time; time.sleep(0.0001); print(3); time.sleep(0.03); print(4)'",
             "--shell",
-            "--no-order",
+            *args,
         ],
     )
 
     out, _ = capfd.readouterr()
-    assert "".join(out.split()) == "1324"
+    assert "".join(out.split()) == expected
