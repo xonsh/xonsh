@@ -1054,6 +1054,23 @@ mode or subprocess mode) by using the ``g````:
     5
 
 
+Formatted Glob Literals
+-----------------------
+
+Using the ``f`` modifier with either regex or normal globbing makes
+the glob pattern behave like a formatted string literal. This can be used to
+substitute variables and other expressions into the glob pattern:
+
+.. code-block:: xonshcon
+
+    >>> touch a aa aaa aba abba aab aabb abcba
+    >>> mypattern = 'ab'
+    >>> print(f`{mypattern[0]}+`)
+    ['a', 'aa', 'aaa']
+    >>> print(gf`{mypattern}*`)
+    ['aba', 'abba', 'abcba']
+
+
 Custom Path Searches
 --------------------
 
