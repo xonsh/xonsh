@@ -18,13 +18,13 @@ def test_exec(parallex, capfd):
 
 @tools.skip_if_on_windows
 @pytest.mark.parametrize(
-    "expected, args",
+    "cmp_fn, args",
     [
-        pytest.param("1234", [], id="ordered"),
-        pytest.param("1324", ["--no-order"], id="interleaved"),
+        pytest.param(list, [], id="ordered"),
+        pytest.param(set, ["--no-order"], id="interleaved"),
     ],
 )
-def test_shell_ordered(expected, args, parallex, capfd):
+def test_shell_ordered(cmp_fn, args, parallex, capfd):
     parallex(
         [
             "python -uc 'import time; print(1); time.sleep(0.01); print(2)'",
@@ -36,4 +36,4 @@ def test_shell_ordered(expected, args, parallex, capfd):
     )
 
     out, _ = capfd.readouterr()
-    assert "".join(out.split()) == expected
+    assert cmp_fn(out.split()) == cmp_fn("1234")
