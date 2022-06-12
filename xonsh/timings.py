@@ -172,8 +172,8 @@ INNER_TEMPLATE = """
 def inner(_it, _timer):
     #setup
     _t0 = _timer()
-    for _i in _it:
-        {stmt}
+    for _i in range(1, {stmt}):
+        pass
     _t1 = _timer()
     return _t1 - _t0
 """
