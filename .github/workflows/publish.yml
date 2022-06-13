@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: setup-python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
       - name: install pypa/build
         run: pip install build
       - name: build sdist(tarball) to dist/
