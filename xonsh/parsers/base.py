@@ -2573,7 +2573,82 @@ class BaseParser:
                             | string_literal_list string_literal
         """
         if len(p) == 3:
-            p[1].s += p[2].s
+
+            def literal_type(node):
+                """
+                Determines if a node is a string literal, a bytes literal,
+                or a path literal.
+                """
+                if isinstance(node, ast.Constant):
+                    if isinstance(node.value, bytes):
+                        return "bytes"
+                    else:
+                        return "str"  # constant string literal
+                elif isinstance(node, ast.Call):
+                    return "path"
+                else:
+                    return "str"  # formatted string literal
+
+            def join_joinedstr_values(x, y):
+                """
+                Joins two lists that may contain a mix of ast.Constant and
+                ast.FormattedValue values (child nodes of ast.JoinedStr).
+
+                If the first list ends with an ast.Constant and the second list
+                starts with an ast.Constant, then the two ast.Constants are
+                merged into a single value.
+                """
+                if (
+                    len(x) > 0
+                    and len(y) > 0
+                    and isinstance(x[-1], ast.Constant)
+                    and isinstance(y[0], ast.Constant)
+                ):
+                    # merge the Constant at the head of y
+                    # with the Constant at the tail of x
+                    x[-1].value += y[0].value
+                    x += y[1:]
+                else:
+                    x += y
+                return x
+
+            def join_str_nodes(x, y):
+                """
+                Joins two str literal nodes into a single node. Each node can
+                either be an ast.Constant or an ast.JoinedStr.
+
+                If both nodes are ast.Constants, the resultant node is an
+                ast.Constant. Otherwise, the resultant node is an
+                ast.JoinedStr.
+                """
+                if isinstance(x, ast.Constant):
+                    if isinstance(y, ast.Constant):
+                        x.value += y.value
+                        return x
+                    else:
+                        y.values = join_joinedstr_values([x], y.values)
+                        return y
+                elif isinstance(y, ast.Constant):
+                    x.values = join_joinedstr_values(x.values, [y])
+                    return x
+                else:
+                    x.values = join_joinedstr_values(x.values, y.values)
+                    return x
+
+            p1_type = literal_type(p[1])
+            p2_type = literal_type(p[2])
+            if p1_type == p2_type:
+                if p1_type == "path":
+                    # the nodes are function calls to __xonsh__.path_literal()
+                    # so we need to join their first arguments
+                    p[1].args[0] = join_str_nodes(p[1].args[0], p[2].args[0])
+                else:
+                    p[1] = join_str_nodes(p[1], p[2])
+            else:
+                self._set_error(
+                    "cannot mix literals of different types",
+                    self.currloc(lineno=p[1].lineno, column=p[1].col_offset),
+                )
         p[0] = p[1]
 
     def p_number(self, p):
