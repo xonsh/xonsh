@@ -110,6 +110,8 @@ def nodes_equal(x, y):
         type(x),
         type(y),
     )
+    if isinstance(x, ast.Constant):
+        assert x.value == y.value
     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
         assert (
             x.lineno == y.lineno

@@ -144,6 +144,7 @@ def test_str_literal(check_ast):
 def test_bytes_literal(check_ast):
     check_ast('b"hello"')
     check_ast('B"hello"')
+    check_ast('b"hello" b"world"')
 
 
 def test_raw_literal(check_ast):
@@ -154,6 +155,16 @@ def test_raw_literal(check_ast):
 def test_f_literal(check_ast):
     check_ast('f"wakka{yo}yakka{42}"', run=False)
     check_ast('F"{yo}"', run=False)
+
+
+@pytest.mark.parametrize(
+    "first_prefix, second_prefix",
+    itertools.product(["", "f", "r", "fr"], repeat=2),
+)
+def test_string_literal_concat(first_prefix, second_prefix, check_ast):
+    check_ast(
+        first_prefix + r"'11{a}22\n'" + " " + second_prefix + r"'33{b}44\n'", run=False
+    )
 
 
 def test_f_env_var(check_xonsh_ast):
@@ -2202,6 +2213,16 @@ def test_path_fstring_literal(check_xonsh_ast):
     check_xonsh_ast({}, 'Fp"/foo{1+1}"', False)
 
 
+@pytest.mark.parametrize(
+    "first_prefix, second_prefix",
+    itertools.product(["p", "pf", "pr"], repeat=2),
+)
+def test_path_literal_concat(first_prefix, second_prefix, check_xonsh_ast):
+    check_xonsh_ast(
+        {}, first_prefix + r"'11{a}22\n'" + " " + second_prefix + r"'33{b}44\n'", False
+    )
+
+
 def test_dollar_name(check_xonsh_ast):
     check_xonsh_ast({"WAKKA": 42}, "$WAKKA")
 
@@ -3260,6 +3281,14 @@ def test_syntax_error_lambda_nondefault_follows_default(parser):
 def test_syntax_error_lambda_posonly_nondefault_follows_default(parser):
     with pytest.raises(SyntaxError):
         parser.parse("lambda x, y=1, /, z: x", mode="exec")
+
+
+@pytest.mark.parametrize(
+    "first_prefix, second_prefix", itertools.permutations(["", "p", "b"], 2)
+)
+def test_syntax_error_literal_concat_different(first_prefix, second_prefix, parser):
+    with pytest.raises(SyntaxError):
+        parser.parse(f"{first_prefix}'hello' {second_prefix}'world'")
 
 
 def test_get_repo_url(parser):
