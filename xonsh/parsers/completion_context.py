@@ -328,8 +328,14 @@ class CompletionContextParser:
         "OR",
     }
     used_tokens |= multi_tokens
+    redir_tokens = {
+        "GT",
+    }
+    used_tokens |= redir_tokens
     artificial_tokens = {"ANY"}
     ignored_tokens = {"INDENT", "DEDENT", "WS"}
+
+    redir_raw_strings = {">"}
 
     def __init__(
         self,
@@ -727,7 +733,10 @@ class CompletionContextParser:
         joined_raw = f"{last_arg.value.raw_value}{in_between}{new_arg.value.raw_value}"
         string_literal = self.try_parse_string_literal(joined_raw)
 
-        if string_literal is not None or not in_between:
+        is_redir = new_arg.value.raw_value in self.redir_raw_strings
+        is_redir |= last_arg.value.raw_value in self.redir_raw_strings
+
+        if string_literal is not None or (not in_between and not is_redir):
             if string_literal is not None:
                 # we're appending to a partial string, e.g. `"a b`
                 arg = string_literal
