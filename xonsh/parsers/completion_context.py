@@ -329,13 +329,15 @@ class CompletionContextParser:
     }
     used_tokens |= multi_tokens
     redir_tokens = {
+        "LT",
         "GT",
+        "RIGHTSHIFT",
     }
     used_tokens |= redir_tokens
     artificial_tokens = {"ANY"}
     ignored_tokens = {"INDENT", "DEDENT", "WS"}
 
-    redir_raw_strings = {">"}
+    redir_raw_strings = {"<", ">", ">>"}
 
     def __init__(
         self,

@@ -432,6 +432,10 @@ def bash_completions(
     # to be incorrectly calculated, so it needs to be fixed here
     if "=" in prefix and "=" not in commprefix:
         strip_len = prefix.index("=") + 1
+    # Fix case where remote git branch is being deleted
+    # (e.g. 'git push origin :dev-branch')
+    elif ":" in prefix and ":" not in commprefix:
+        strip_len = prefix.index(":") + 1
 
     return out, max(len(prefix) - strip_len, 0)
 
