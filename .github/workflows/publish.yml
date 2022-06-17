@@ -24,7 +24,7 @@ jobs:
       - name: install pypa/build
         run: pip install build
       - name: build sdist(tarball) to dist/
-        if: startsWith(matrix.python-version, '3.10') }}
+        if: ${{ startsWith(matrix.python-version, '3.10') }}
         run: python -m build . --sdist
       - name: build bdist(wheel) to dist/
         run: python -m build . --wheel
