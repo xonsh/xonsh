@@ -68,8 +68,7 @@ class Xontrib(tp.NamedTuple):
 
     @property
     def is_loaded(self):
-        spec = find_xontrib(self.module, full_module=True)
-        return spec and spec.name in sys.modules
+        return self.module and self.module in sys.modules
 
 
 def get_module_docstring(module: str) -> str:
@@ -310,9 +309,7 @@ def xontribs_loaded():
     return [k for k, xontrib in get_xontribs().items() if xontrib.is_loaded]
 
 
-def _list(
-    to_json=False,
-):
+def xontribs_list(to_json=False):
     """List installed xontribs and show whether they are loaded or not
 
     Parameters
@@ -374,7 +371,7 @@ class XontribAlias(ArgParserAlias):
         parser.add_command(xontribs_load, prog="load")
         parser.add_command(xontribs_unload, prog="unload")
         parser.add_command(xontribs_reload, prog="reload")
-        parser.add_command(_list)
+        parser.add_command(xontribs_list, prog="list")
         return parser
 
 
