@@ -1294,6 +1294,8 @@
   first_commit: 2021-04-26 22:41:54
 - name: Peter Ye
   email: 46109467+yaxollum@users.noreply.github.com
+  alternate_emails:
+    - yaxollum@gmail.com
   num_commits: 16
   first_commit: 2021-06-11 14:11:19
 - name: Walter A. Boring IV
@@ -1428,5 +1430,7 @@
   first_commit: 2022-04-27 12:41:13
 - name: Stefano Rivera
   email: github@rivera.za.net
+  alternate_emails:
+    - stefano@rivera.za.net
   num_commits: 1
   first_commit: 2022-05-08 00:26:57

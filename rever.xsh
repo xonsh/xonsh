@@ -8,7 +8,6 @@ $ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
                'tag', 'push_tag',
                'ghrelease',
                'sphinx',
-               'ghpages',
                'conda_forge',
                ]
 $PYPI_SIGN = False
