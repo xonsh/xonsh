@@ -28,22 +28,12 @@ class XontribNotInstalled(Exception):
 
 
 class Xontrib(tp.NamedTuple):
-    """Meta class that is used to describe xontribs.
-
-    Attributes
-    ----------
-    url
-        url to the home page of the xontrib.
-    description
-        short description about the xontrib.
-    package
-        pkg information for installing the xontrib
-    tags
-        category.
-    """
+    """Meta class that is used to describe a xontrib"""
 
     module: str
+    """path to the xontrib module"""
     distribution: "tp.Optional[Distribution]" = None
+    """short description about the xontrib."""
 
     def get_description(self):
         if self.distribution:
@@ -69,6 +59,11 @@ class Xontrib(tp.NamedTuple):
     @property
     def is_loaded(self):
         return self.module and self.module in sys.modules
+
+    @property
+    def is_auto_loaded(self):
+        loaded = getattr(XSH.builtins, "autoloaded_xontribs", None) or {}
+        return self.module in set(loaded.values())
 
 
 def get_module_docstring(module: str) -> str:
@@ -299,7 +294,11 @@ def xontrib_data():
     """Collects and returns the data about installed xontribs."""
     data = {}
     for xo_name, xontrib in get_xontribs().items():
-        data[xo_name] = {"name": xo_name, "loaded": xontrib.is_loaded}
+        data[xo_name] = {
+            "name": xo_name,
+            "loaded": xontrib.is_loaded,
+            "auto": xontrib.is_auto_loaded,
+        }
 
     return dict(sorted(data.items()))
 
@@ -325,10 +324,13 @@ def xontribs_list(to_json=False):
         nname = max([6] + [len(x) for x in data])
         s = ""
         for name, d in data.items():
-            lname = len(name)
-            s += "{PURPLE}" + name + "{RESET}  " + " " * (nname - lname)
+            s += "{PURPLE}" + name + "{RESET}  " + " " * (nname - len(name))
             if d["loaded"]:
-                s += "{GREEN}loaded{RESET}"
+                s += "{GREEN}loaded{RESET}" + " " * 4
+                if d["auto"]:
+                    s += "  {GREEN}auto{RESET}"
+                elif d["loaded"]:
+                    s += "  {CYAN}manual{RESET}"
             else:
                 s += "{RED}not-loaded{RESET}"
             s += "\n"
