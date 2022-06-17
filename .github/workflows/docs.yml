@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - '*.*.*'
+      - "*.*.*"
   pull_request:
     branches:
       - main
@@ -21,9 +21,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
       - run: pip install -e '.[doc]'
       - name: Build Docs
         run: cd docs && make html
@@ -50,5 +50,4 @@ jobs:
           external_repository: xonsh/xonsh-docs
           publish_dir: ./docs/_build/html
 #          # todo: implement versioned docs
-
 
