@@ -5,6 +5,7 @@ on:
   release:
     types:
       - published
+  pull_request:
 
 permissions:
   contents: read
@@ -16,11 +17,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.8", "3.9","3.10" ]
+        python-version:
+          - "3.8"
+          - "3.9"
+          - "3.10"
     steps:
       - uses: actions/checkout@v3
       - name: setup-python
         uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
       - name: install pypa/build
         run: pip install build
       - name: build sdist(tarball) to dist/
@@ -33,3 +41,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
