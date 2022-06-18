@@ -130,7 +130,15 @@ COMMAND_EXAMPLES = (
     (
         f"command >/dev/nul{X}",
         CommandContext(
-            args=(CommandArg("command"), CommandArg(">")),
+            args=(CommandArg("command"), CommandArg(">", is_io_redir=True)),
+            arg_index=2,
+            prefix="/dev/nul",
+        ),
+    ),
+    (
+        f"command 2>/dev/nul{X}",
+        CommandContext(
+            args=(CommandArg("command"), CommandArg("2>", is_io_redir=True)),
             arg_index=2,
             prefix="/dev/nul",
         ),
@@ -138,7 +146,7 @@ COMMAND_EXAMPLES = (
     (
         f"command >>/dev/nul{X}",
         CommandContext(
-            args=(CommandArg("command"), CommandArg(">>")),
+            args=(CommandArg("command"), CommandArg(">>", is_io_redir=True)),
             arg_index=2,
             prefix="/dev/nul",
         ),
@@ -146,7 +154,7 @@ COMMAND_EXAMPLES = (
     (
         f"command </dev/nul{X}",
         CommandContext(
-            args=(CommandArg("command"), CommandArg("<")),
+            args=(CommandArg("command"), CommandArg("<", is_io_redir=True)),
             arg_index=2,
             prefix="/dev/nul",
         ),
