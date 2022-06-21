@@ -33,8 +33,8 @@ Authors are sorted by number of commits.
 * Travis Shirk
 * Carmen Bianca Bakker
 * Danny Sepler
-* Joel Gerber
 * Peter Ye
+* Joel Gerber
 * vaaaaanquish
 * Bernardas Ališauskas
 * David Dotson
