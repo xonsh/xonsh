@@ -4,6 +4,22 @@ Xonsh Change Log
 
 .. current developments
 
+v0.12.6
+====================
+
+**Fixed:**
+
+* String literal concatenation now works with f-strings and path literals
+* A SyntaxError is raised when string literal concatenation is attempted with literals of different types (e.g. str and bytes)
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* Peter Ye
+
+
+
 v0.12.5
 ====================
 
