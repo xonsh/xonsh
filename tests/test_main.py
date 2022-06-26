@@ -498,3 +498,21 @@ def test_xonsh_no_file_returncode(shell, monkeypatch, monkeypatch_stderr):
     monkeypatch.setattr(sys, "argv", ["xonsh", "foobazbarzzznotafileatall.xsh"])
     with pytest.raises(SystemExit):
         xonsh.main.main()
+
+
+def test_auto_loading_xontribs(xession, shell, mocker):
+    from importlib.metadata import EntryPoint
+
+    group = "xonsh.xontribs"
+
+    mocker.patch(
+        "importlib.metadata.entry_points",
+        autospec=True,
+        return_value={
+            group: [EntryPoint(name="test", group=group, value="test.module")]
+        },
+    )
+    xontribs_load = mocker.patch("xonsh.xontribs.xontribs_load")
+    xonsh.main.premain([])
+    assert xession.builtins.autoloaded_xontribs == {"test": "test.module"}
+    xontribs_load.assert_called()

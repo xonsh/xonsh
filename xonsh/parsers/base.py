@@ -124,31 +124,6 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call("__xonsh__.superhelp", [x], lineno=lineno, col=col)
 
 
-def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh__.pathsearch() function.
-    The pymode argument indicate if it is called from subproc or python mode"""
-    pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
-    searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
-    pattern = ast.Str(s=pattern, lineno=lineno, col_offset=col)
-    pathobj = False
-    if searchfunc.startswith("@"):
-        func = searchfunc[1:]
-    elif "g" in searchfunc:
-        func = "__xonsh__.globsearch"
-        pathobj = "p" in searchfunc
-    else:
-        func = "__xonsh__.regexsearch"
-        pathobj = "p" in searchfunc
-    func = load_attribute_chain(func, lineno=lineno, col=col)
-    pathobj = ast.NameConstant(value=pathobj, lineno=lineno, col_offset=col)
-    return xonsh_call(
-        "__xonsh__.pathsearch",
-        args=[func, pattern, pymode, pathobj],
-        lineno=lineno,
-        col=col,
-    )
-
-
 def load_ctx(x):
     """Recursively sets ctx to ast.Load()"""
     if not hasattr(x, "ctx"):
@@ -657,6 +632,44 @@ class BaseParser:
 
     def _parse_error(self, msg, loc):
         raise_parse_error(msg, loc, self._source, self.lines)
+
+    def xonsh_pathsearch(self, pattern, pymode=False, lineno=None, col=None):
+        """Creates the AST node for calling the __xonsh__.pathsearch() function.
+        The pymode argument indicate if it is called from subproc or python mode"""
+        pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
+        searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
+        if not searchfunc.startswith("@") and "f" in searchfunc:
+            pattern_as_str = f"f'''{pattern}'''"
+            try:
+                pattern = pyparse(pattern_as_str).body[0].value
+            except SyntaxError:
+                pattern = None
+            if pattern is None:
+                try:
+                    pattern = FStringAdaptor(
+                        pattern_as_str, "f", filename=self.lexer.fname
+                    ).run()
+                except SyntaxError as e:
+                    self._set_error(str(e), self.currloc(lineno=lineno, column=col))
+        else:
+            pattern = ast.Str(s=pattern, lineno=lineno, col_offset=col)
+        pathobj = False
+        if searchfunc.startswith("@"):
+            func = searchfunc[1:]
+        elif "g" in searchfunc:
+            func = "__xonsh__.globsearch"
+            pathobj = "p" in searchfunc
+        else:
+            func = "__xonsh__.regexsearch"
+            pathobj = "p" in searchfunc
+        func = load_attribute_chain(func, lineno=lineno, col=col)
+        pathobj = ast.NameConstant(value=pathobj, lineno=lineno, col_offset=col)
+        return xonsh_call(
+            "__xonsh__.pathsearch",
+            args=[func, pattern, pymode, pathobj],
+            lineno=lineno,
+            col=col,
+        )
 
     #
     # Precedence of operators
@@ -2413,7 +2426,9 @@ class BaseParser:
 
     def p_atom_pathsearch(self, p):
         """atom : SEARCHPATH"""
-        p[0] = xonsh_pathsearch(p[1], pymode=True, lineno=self.lineno, col=self.col)
+        p[0] = self.xonsh_pathsearch(
+            p[1], pymode=True, lineno=self.lineno, col=self.col
+        )
 
     # introduce seemingly superfluous symbol 'atom_dname' to enable reuse it in other places
     def p_atom_dname_indirection(self, p):
@@ -2558,7 +2573,82 @@ class BaseParser:
                             | string_literal_list string_literal
         """
         if len(p) == 3:
-            p[1].s += p[2].s
+
+            def literal_type(node):
+                """
+                Determines if a node is a string literal, a bytes literal,
+                or a path literal.
+                """
+                if isinstance(node, ast.Constant):
+                    if isinstance(node.value, bytes):
+                        return "bytes"
+                    else:
+                        return "str"  # constant string literal
+                elif isinstance(node, ast.Call):
+                    return "path"
+                else:
+                    return "str"  # formatted string literal
+
+            def join_joinedstr_values(x, y):
+                """
+                Joins two lists that may contain a mix of ast.Constant and
+                ast.FormattedValue values (child nodes of ast.JoinedStr).
+
+                If the first list ends with an ast.Constant and the second list
+                starts with an ast.Constant, then the two ast.Constants are
+                merged into a single value.
+                """
+                if (
+                    len(x) > 0
+                    and len(y) > 0
+                    and isinstance(x[-1], ast.Constant)
+                    and isinstance(y[0], ast.Constant)
+                ):
+                    # merge the Constant at the head of y
+                    # with the Constant at the tail of x
+                    x[-1].value += y[0].value
+                    x += y[1:]
+                else:
+                    x += y
+                return x
+
+            def join_str_nodes(x, y):
+                """
+                Joins two str literal nodes into a single node. Each node can
+                either be an ast.Constant or an ast.JoinedStr.
+
+                If both nodes are ast.Constants, the resultant node is an
+                ast.Constant. Otherwise, the resultant node is an
+                ast.JoinedStr.
+                """
+                if isinstance(x, ast.Constant):
+                    if isinstance(y, ast.Constant):
+                        x.value += y.value
+                        return x
+                    else:
+                        y.values = join_joinedstr_values([x], y.values)
+                        return y
+                elif isinstance(y, ast.Constant):
+                    x.values = join_joinedstr_values(x.values, [y])
+                    return x
+                else:
+                    x.values = join_joinedstr_values(x.values, y.values)
+                    return x
+
+            p1_type = literal_type(p[1])
+            p2_type = literal_type(p[2])
+            if p1_type == p2_type:
+                if p1_type == "path":
+                    # the nodes are function calls to __xonsh__.path_literal()
+                    # so we need to join their first arguments
+                    p[1].args[0] = join_str_nodes(p[1].args[0], p[2].args[0])
+                else:
+                    p[1] = join_str_nodes(p[1], p[2])
+            else:
+                self._set_error(
+                    "cannot mix literals of different types",
+                    self.currloc(lineno=p[1].lineno, column=p[1].col_offset),
+                )
         p[0] = p[1]
 
     def p_number(self, p):
@@ -3352,7 +3442,7 @@ class BaseParser:
 
     def p_subproc_atom_re(self, p):
         """subproc_atom : SEARCHPATH"""
-        p0 = xonsh_pathsearch(p[1], pymode=False, lineno=self.lineno, col=self.col)
+        p0 = self.xonsh_pathsearch(p[1], pymode=False, lineno=self.lineno, col=self.col)
         p0._cliarg_action = "extend"
         p[0] = p0
 

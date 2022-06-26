@@ -4,6 +4,80 @@ Xonsh Change Log
 
 .. current developments
 
+v0.12.6
+====================
+
+**Fixed:**
+
+* String literal concatenation now works with f-strings and path literals
+* A SyntaxError is raised when string literal concatenation is attempted with literals of different types (e.g. str and bytes)
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* Peter Ye
+
+
+
+v0.12.5
+====================
+
+**Added:**
+
+* Support for f-glob strings (e.g. ``fg`{prefix}*```)
+* Now xontribs support `loading and unloading <https://github.com/xonsh/xonsh/issues/4541>`_
+  with functions ``_load_xontrib_(xsh: XonshSession, **kwargs) -> dict``,
+  ``_unload_xontrib_(xsh: XonshSession, **kwargs) -> None`` defined in their module.
+  `Updated doc <https://xon.sh/tutorial_xontrib.html>`_
+* Added a special '$LAST_RETURN_CODE' environment variable to access the return code of the last issued command. (Only set during interactive use).
+* New prompt-customization fields: 'last_return_code_if_nonzero', 'last_return_code'.
+* Documented the HISTCONTROL ignorespace option
+
+**Changed:**
+
+* ![] now returns a HiddenCommandPipeline when run with a background command (e.g. `![sleep 10 &]`)
+* Extended `whole_word_jumping` xontrib with matching bindings for
+  `delete` and `backspace`. The `XONSH_WHOLE_WORD_CTRL_BKSP` environment
+  variable can be set to `False` to avoid binding `control+backspace` in
+  incompatible terminals.
+* The default prompt (on unix-systems) now includes a red [<errorcode>] field in case a command failed.
+* New docs theme ``furo``
+* completions from fish are now filter based on the current prefix.
+
+**Removed:**
+
+* xontrib ``prompt_ret_code`` is now removed.
+  Now the default prompt already shows the last-return-code when the previous command fails.
+  Please use the new prompt fields ``last_return_code``, ``last_return_code_if_nonzero`` from
+  the `PR <https://github.com/xonsh/xonsh/pull/4798>`_
+
+**Fixed:**
+
+* Using `fg` for commands started in the background (e.g. `![sleep 10 &]`) now works
+* SIGHUP (instead of SIGKILL) is sent to unfinished jobs when exiting the shell. This allows the `nohup` command to work properly.
+* `bg` now properly resumes jobs in the background
+* ExecAlias now sets the returncode of a command correctly
+* Empty/comment-only commands no longer get added to the history
+* On prompt-toolkit, when there is a job like `sleep 500 &` running in the background, pressing Ctrl+D twice to force quit now works properly
+* Environment Variables are now completed correctly when in quotes
+* Silence spurious errors on exit due to out-of-order cleanup
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* Peter Ye
+* dev2718
+* dependabot[bot]
+* Stefano Rivera
+* Naveen
+* jbw3
+* Italo Cunha
+* Timmy Welch
+
+
+
 v0.12.4
 ====================
 

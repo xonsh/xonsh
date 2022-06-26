@@ -71,7 +71,7 @@ For those of you who want the gritty details.
     xonsh.dumb_shell
     xonsh.wizard
     xonsh.xonfig
-    xonsh.xontribs_meta
+    xonsh.xontribs
     xonsh.codecache
     xonsh.contexts
 

@@ -33,6 +33,7 @@ Authors are sorted by number of commits.
 * Travis Shirk
 * Carmen Bianca Bakker
 * Danny Sepler
+* Peter Ye
 * Joel Gerber
 * vaaaaanquish
 * Bernardas Ališauskas
@@ -42,7 +43,6 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
-* Peter Ye
 * cryzed
 * Frank Sachsenheim
 * Kurtis Rader
@@ -55,8 +55,8 @@ Authors are sorted by number of commits.
 * Raphael Das Gupta
 * Caleb Hattingh
 * Stephan Fitzpatrick
-* Will S
 * dev2718
+* Will S
 * K.-Michael Aye
 * halloleo
 * Will Wykeham
@@ -123,6 +123,7 @@ Authors are sorted by number of commits.
 * Marduk Bolaños
 * Marius van Niekerk
 * Vasilis Gerakaris
+* dependabot[bot]
 * Jan Schulz
 * Samuel Dion-Girardeau
 * Michael Droettboom
@@ -179,6 +180,8 @@ Authors are sorted by number of commits.
 * Asaf Fisher
 * Samuel Dion-Girardeau
 * Gabriele N. Tornetta
+* Stefano Rivera
+* Naveen
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -286,6 +289,8 @@ Authors are sorted by number of commits.
 * mattmc3
 * Evan Hubinger
 * doronz88
-* Stefano Rivera
+* jbw3
+* Italo Cunha
+* Timmy Welch
 * goodboy
 * Atsushi Morimoto

@@ -579,7 +579,7 @@ class ArgParserAlias:
 
     Examples
     ---------
-        For usage please check ``xonsh.completers.completer.py`` module.
+        For usage please check :py:mod:`xonsh.completers.completer`
     """
 
     class Error(Exception):

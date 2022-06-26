@@ -16,7 +16,7 @@ from xonsh.pyghooks import (
 )
 from xonsh.pygments_cache import get_all_styles
 from xonsh.style_tools import partial_color_tokenize
-from xonsh.xontribs_meta import Xontrib, get_xontribs
+from xonsh.xontribs import Xontrib, get_xontribs
 
 # $RAISE_SUBPROC_ERROR = True
 # $XONSH_SHOW_TRACEBACK = False
@@ -203,8 +203,8 @@ def render_colors():
 def format_xontrib(xontrib: Xontrib):
     return {
         "url": xontrib.url,
-        "license": xontrib.package.license if xontrib.package else "",
-        "display": escape(rst_to_html(xontrib.description)),
+        "license": xontrib.license,
+        "display": escape(rst_to_html(xontrib.get_description())),
     }
 
 

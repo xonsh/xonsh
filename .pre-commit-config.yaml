@@ -43,7 +43,9 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.32.0
+
+    rev: v2.32.1
+
     hooks:
     - id: pyupgrade
       args: [--py37-plus]
