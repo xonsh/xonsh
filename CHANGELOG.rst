@@ -11,7 +11,6 @@ v0.12.6
 
 * String literal concatenation now works with f-strings and path literals
 * A SyntaxError is raised when string literal concatenation is attempted with literals of different types (e.g. str and bytes)
-* Fixed `whole_word_jumping` xontrib failing on Linux, conditional import of ``ptk_win32`` → Windows only
 
 **Authors:**
 
