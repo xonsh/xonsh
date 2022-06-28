@@ -72,9 +72,9 @@ Style Guide
 xonsh is a pure Python project, and so we use PEP8 (with some additions) to
 ensure consistency throughout the code base.
 
-----------------------------------
+-----------------
 Rules to Write By
-----------------------------------
+-----------------
 It is important to refer to things and concepts by their most specific name.
 When writing xonsh code or documentation please use technical terms
 appropriately. The following rules help provide needed clarity.
@@ -95,23 +95,21 @@ Expectations
 * Have *extreme* empathy for your users.
 * Be selfish. Since you will be writing tests you will be your first user.
 
--------------------
+------------------
 Python Style Guide
--------------------
-xonsh uses `PEP8`_ for all Python code. The following rules apply where `PEP8`_
-is open to interpretation.
+------------------
+xonsh follows `PEP8`_ for all Python code.  The following rules apply where
+`PEP8`_ is open to interpretation.
 
 * Use absolute imports (``import xonsh.tools``) rather than explicit
   relative imports (``import .tools``). Implicit relative imports
   (``import tools``) are never allowed.
-* Use ``"double quotes"`` for string literals, and
-  ``"""triple double quotes"""`` for docstrings.
 * We use sphinx with the numpydoc extension to autogenerate API documentation. Follow
   the `numpydoc`_ standard for docstrings.
 * Simple functions should have simple docstrings.
 * Lines should be at most 80 characters long. The 72 and 79 character
   recommendations from PEP8 are not required here.
-* All Python code should be compliant with Python 3.5+.
+* All Python code should be compliant with Python 3.8+.
 * Tests should be written with `pytest <https://docs.pytest.org/>`_ using a procedural style. Do not use
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
@@ -136,9 +134,9 @@ To add this as a git pre-commit hook::
 
     $ pre-commit install
 
-**********
+*******
 Imports
-**********
+*******
 Xonsh source code may be amalgamated into a single file (``__amalgam__.py``)
 to speed up imports. The way the code amalgamater works is that other modules
 that are in the same package (and amalgamated) should be imported with::
@@ -163,11 +161,11 @@ So the simple rules to follow are that:
    or import-as statement.
 
 How to Test
-================
+===========
 
-----------------------------------
+------
 Docker
-----------------------------------
+------
 
 If you want to run your "work in progress version" without installing
 and in a fresh environment you can use Docker. If Docker is installed
@@ -189,18 +187,18 @@ Example::
 Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
 
-----------------------------------
+------------
 Dependencies
-----------------------------------
+------------
 
 Prep your environment for running the tests::
 
     $ pip install -e '.[dev]'
 
 
-----------------------------------
+-------------------------
 Running the Tests - Basic
-----------------------------------
+-------------------------
 
 Run all the tests using pytest::
 
@@ -208,9 +206,9 @@ Run all the tests using pytest::
 
 Use "-q" to keep pytest from outputting a bunch of info for every test.
 
-----------------------------------
+----------------------------
 Running the Tests - Advanced
-----------------------------------
+----------------------------
 
 To perform all unit tests::
 
@@ -225,9 +223,9 @@ Note that you can pass multiple test names in the above examples::
 
     $ pytest test_aliases.py test_environ.py
 
-----------------------------------
+----------------------------
 Writing the Tests - Advanced
-----------------------------------
+----------------------------
 
 (refer to pytest documentation)
 
@@ -266,7 +264,7 @@ Happy Testing!
 
 
 How to Document
-====================
+===============
 Documentation takes many forms. This will guide you through the steps of
 successful documentation.
 
@@ -298,9 +296,9 @@ module, you will have to supply the appropriate hooks. This should be done the
 first time that the module appears in a pull request.  From here, call the
 new module ``mymod``.  The following explains how to add hooks.
 
-------------------------
+------------
 Python Hooks
-------------------------
+------------
 Python API documentation is generated for the entries in ``docs/api.rst``.
 `sphinx-autosummary <https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_
 is used to generate documentation for the modules.
@@ -310,15 +308,21 @@ appropriate webpage.
 
 
 Building the Website
-===========================
+====================
 
 Building the website/documentation requires the following dependencies:
 
 #. `Sphinx <http://sphinx-doc.org/>`_
-#. `Cloud Sphinx Theme <https://cloud-sptheme.readthedocs.io/>`_
-#. `numpydoc <https://numpydoc.readthedocs.io/>`__
+#. `Furo Theme <https://pradyunsg.me/furo/>`_
+#. `numpydoc <https://numpydoc.readthedocs.io/>`_
+#. `MyST Parser <https://myst-parser.readthedocs.io>`_
 
 Note that xonsh itself needs to be installed too.
+
+If you have cloned the git repository, you can install all of the doc-related
+dependencies by running::
+
+    $ pip install -e ".[doc]"
 
 
 -----------------------------------
@@ -331,57 +335,34 @@ by executing the command::
     $ make html
 
 This will generate html files for the website in the ``_build/html/`` folder.
+
+There is also a helper utility in the ``docs/`` folder that will watch for changes and automatically rebuild the documentation.  You can use this instead of running ``make html`` manually:: 
+
+    $ python docs/serve_docs.py
+
 The developer may view the local changes by opening these files with their
 favorite browser, e.g.::
 
-    $ google-chrome _build/html/index.html
+    $ firefox _build/html/index.html
 
 Once the developer is satisfied with the changes, the changes should be
-committed and pull-requested per usual. Once the pull request is accepted, the
-developer can push their local changes directly to the website by::
+committed and pull-requested per usual. The docs are built and deployed using
+GitHub Actions.  
 
-    $ make push-root
+Docs associated with the latest release are hosted at
+https://xon.sh while docs for the current ``main`` branch are available at
+https://xon.sh/dev
 
 Branches and Releases
-=============================
+=====================
+
 Mainline xonsh development occurs on the ``main`` branch. Other branches
 may be used for feature development (topical branches) or to represent
 past and upcoming releases.
 
-All releases should have a release candidate ('-rc1') that comes out 2 - 5 days
-prior to the scheduled release.  During this time, no changes should occur to
-a special release branch ('vX.X.X-release').
-
-The release branch is there so that development can continue on the
-develop branch while the release candidates (rc) are out and under review.
-This is because otherwise any new developments would have to wait until
-post-release to be merged into develop to prevent them from accidentally
-getting released early.
-
-As such, the 'vX.X.X-release' branch should only exist while there are
-release candidates out.  They are akin to a temporary second level of staging,
-and so everything that is in this branch should also be part of main.
-
-Every time a new release candidate comes out the vX.X.X-release should be
-tagged with the name 'X.X.X-rcX'.  There should be a 2 - 5 day period of time
-in between release candidates.  When the full and final release happens, the
-'vX.X.X-release' branch is merged into main and then deleted.
-
-If you have a new fix that needs to be in the next release candidate, you
-should make a topical branch and then pull request it into the release branch.
-After this has been accepted, the topical branch should be merged with
-main as well.
-
-The release branch must be quiet and untouched for 2 - 5 days prior to the
-full release.
-
-The release candidate procedure here only applies to major and minor releases.
-Micro releases may be pushed and released directly without having a release
-candidate.
-
---------------------
+-----------------
 Maintenance Tasks
---------------------
+-----------------
 You can cleanup your local repository of transient files such as \*.pyc files
 created by unit testing by running::
 
@@ -389,9 +370,9 @@ created by unit testing by running::
     $ rm -f xonsh/*.pyc tests/*.pyc
     $ rm -fr build
 
------------------------
+----------------------
 Performing the Release
------------------------
+----------------------
 This is done through the `rever <https://github.com/regro/rever>`_. To get a list of the
 valid options use::
 
@@ -403,9 +384,9 @@ You can perform a full release::
     $ rever <version-number>
 
 
------------------------
+----------------------
 Cross-platform testing
------------------------
+----------------------
 Most of the time, an actual VM machine is needed to test the nuances of cross platform testing.
 But alas here are some other ways to test things
 
@@ -430,9 +411,10 @@ but they should not in any way violate the Github Action policies.
 
 
 Document History
-===================
+================
 Portions of this page have been forked from the PyNE documentation,
 Copyright 2011-2015, the PyNE Development Team. All rights reserved.
 
 .. _PEP8: https://www.python.org/dev/peps/pep-0008/
 .. _numpydoc: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
+.. _black: https://black.readthedocs.io/en/stable/
