@@ -17,7 +17,6 @@ configuration of the Control+Backspace key binding.
 """
 
 import prompt_toolkit.input.ansi_escape_sequences as ansiseq
-import prompt_toolkit.input.win32 as ptk_win32
 from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 from prompt_toolkit.keys import Keys
@@ -80,6 +79,9 @@ def custom_keybindings(bindings, **kw):
     if XSH.env.get("XONSH_WHOLE_WORD_CTRL_BKSP", True):
         CONTROL_BKSP = "\x08"
         if ON_WINDOWS:
+            # issue #4845: Windows only (isort competes with black :-()
+            from prompt_toolkit.input import win32 as ptk_win32  # black:skip
+
             # On windows BKSP is "\x08" and CTRL-BKSP is "\x7f"
             CONTROL_BKSP = "\x7f"
             ptk_win32.ConsoleInputReader.mappings[b"\x7f"] = CONTROL_BKSP
