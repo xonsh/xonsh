@@ -4,7 +4,6 @@
 *.egg
 .eggs/
 .pytest_cache/
-__amalgam__.py
 lexer_table.py
 parser_table.py
 parser_test_table.py

@@ -5,7 +5,6 @@ source =
   xontrib/
 omit =
   .venv/*
-  */__amalgam__.py
   xonsh/lazyasd.py
   xonsh/parser_table.py
   xonsh/completion_parser_table.py
@@ -24,7 +23,6 @@ precision = 2
 exclude_lines =
     pragma: no cover
     raise NotImplementedError
-    = __amalgam__
 skip_covered = true
 skip_empty = true
 show_missing = true

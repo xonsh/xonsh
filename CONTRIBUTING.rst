@@ -33,17 +33,6 @@ Finally, run the following commands. You should see the effects of your change
         $ $XONSH_DEBUG=1
         $ xonsh
 
-The xonsh build process collapses all Python source files into a single
-``__amalgam__.py`` file. When xonsh is started with a falsy value for
-`$XONSH_DEBUG <envvars.html>`_, it imports Python modules straight from
-``__amalgam__.py``, which decreases startup times by eliminating the cost of
-runtime imports. But setting ``$ $XONSH_DEBUG=1`` will suppress amalgamated
-imports. Reloading the xonsh shell (``$ xonsh``) won't simply import the stale
-``__amalgam__.py`` file that doesn't contain your new change, but will instead
-import the unamalgamated source code which does contain your change. You can now
-load every subsequent change by reloading xonsh, and if your code changes don't
-seem to have any effect, make sure you check ``$XONSH_DEBUG`` first!
-
 
 Changelog
 =========
@@ -137,28 +126,10 @@ To add this as a git pre-commit hook::
 *******
 Imports
 *******
-Xonsh source code may be amalgamated into a single file (``__amalgam__.py``)
-to speed up imports. The way the code amalgamater works is that other modules
-that are in the same package (and amalgamated) should be imported with::
 
-    from pkg.x import a, c, d
-
-This is because the amalgamater puts all such modules in the same globals(),
-which is effectively what the from-imports do. For example, ``xonsh.ast`` and
-``xonsh.execer`` are both in the same package (``xonsh``). Thus they should use
-the above from from-import syntax.
-
-Alternatively, for modules outside of the current package (or modules that are
-not amalgamated) the import statement should be either ``import pkg.x`` or
-``import pkg.x as name``. This is because these are the only cases where the
-amalgamater is able to automatically insert lazy imports in way that is guaranteed
-to be safe. This is due to the ambiguity that ``from pkg.x import name`` may
-import a variable that cannot be lazily constructed or may import a module.
-So the simple rules to follow are that:
-
-1. Import objects from modules in the same package directly in using from-import,
-2. Import objects from modules outside of the package via a direct import
-   or import-as statement.
+``xonsh`` imports should be sorted alphabetically, and by module location.  You
+can (and should) use ``isort`` either from the command line or use the
+``pre-commit`` hook.
 
 How to Test
 ===========
@@ -336,7 +307,7 @@ by executing the command::
 
 This will generate html files for the website in the ``_build/html/`` folder.
 
-There is also a helper utility in the ``docs/`` folder that will watch for changes and automatically rebuild the documentation.  You can use this instead of running ``make html`` manually:: 
+There is also a helper utility in the ``docs/`` folder that will watch for changes and automatically rebuild the documentation.  You can use this instead of running ``make html`` manually::
 
     $ python docs/serve_docs.py
 
@@ -347,7 +318,7 @@ favorite browser, e.g.::
 
 Once the developer is satisfied with the changes, the changes should be
 committed and pull-requested per usual. The docs are built and deployed using
-GitHub Actions.  
+GitHub Actions.
 
 Docs associated with the latest release are hosted at
 https://xon.sh while docs for the current ``main`` branch are available at

@@ -39,8 +39,7 @@ from ctypes.wintypes import (
     WORD,
 )
 
-from xonsh import lazyimps  # we aren't amalgamated in this module.
-from xonsh import platform
+from xonsh import lazyimps, platform
 from xonsh.lazyasd import lazyobject
 
 __all__ = ("sudo",)

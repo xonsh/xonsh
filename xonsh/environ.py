@@ -1093,11 +1093,6 @@ The file should contain a function with the signature
         "presented, like PLY parsing messages.",
         is_configurable=False,
     )
-    XONSH_NO_AMALGAMATE = Var.with_default(
-        False,
-        "Setting this variable prior to starting xonsh to a truthy value will suppress amalgamated imports.",
-        is_configurable=False,
-    )
     XONSH_DATA_DIR = Var.with_default(
         xonsh_data_dir,
         "This is the location where xonsh data files are stored, such as history, generated completers ...",

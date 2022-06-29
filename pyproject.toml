@@ -125,7 +125,6 @@ test = [
     "coverage>=5.3.1",
     "pyte>=0.8.0",
     "virtualenv>=20.7.2",
-    "amalgamate",
 ]
 dev = [
     "xonsh[lint,test,doc]",
@@ -193,11 +192,10 @@ extend_exclude = '''
 ((xonsh/parser_table.py)|(xonsh/completion_parser_table.py))
 '''
 
-force_exclude = '''.*/__amalgam__.py'''
 
 [tool.isort]
 profile = "black"
-extend_skip_glob = ["xonsh/*_table.py", "xonsh/ply/**.py", "*/__amalgam__.py", "**/__amalgam__.py"]
+extend_skip_glob = ["xonsh/*_table.py", "xonsh/ply/**.py"]
 src_paths = ["xonsh", "xontrib", "xompletions", "tests"]
 known_first_party = ["xonsh", "xontrib", "xompletions", "tests"]
 known_third_party = ["ply", "pytest"]
