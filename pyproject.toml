@@ -13,7 +13,7 @@ dynamic = ["version", "readme"]
 description = "Python-powered, cross-platform, Unix-gazing shell"
 authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
 maintainers = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
-license = { file = "license" }
+license = { text = "BSD 2-Clause License" }
 requires-python = ">=3.8"
 
 [tool.setuptools.dynamic]
