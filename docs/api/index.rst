@@ -41,7 +41,6 @@ For those of you who want the gritty details.
     xonsh.shell
     xonsh.base_shell
     xonsh.readline_shell
-    xonsh.ptk_shell
     xonsh.pretty
     xonsh.diff_history
     xonsh.xoreutils

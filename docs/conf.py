@@ -17,7 +17,6 @@ from sphinx.application import Sphinx
 sys.path.append(str(Path(__file__).parent.resolve()))
 
 import inspect
-import importlib
 import typing as tp
 
 os.environ["XONSH_DEBUG"] = "1"
@@ -32,12 +31,7 @@ import xonsh.main as xmain
 
 xmain.setup()
 
-spec = importlib.util.find_spec("prompt_toolkit")
-if spec is not None:
-    # hacky runaround to import PTK-specific events
-    from xonsh.ptk_shell.shell import events
-else:
-    from xonsh.events import events
+from xonsh.events import events
 
 sys.path.insert(0, os.path.dirname(__file__))
 
