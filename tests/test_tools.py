@@ -46,8 +46,6 @@ from xonsh.tools import (
     is_bool_or_int,
     is_bool_or_none,
     is_callable,
-    is_completion_mode,
-    is_completions_display_value,
     is_dynamic_cwd_width,
     is_env_path,
     is_float,
@@ -71,7 +69,6 @@ from xonsh.tools import (
     seq_to_pathsep,
     seq_to_upper_pathsep,
     set_to_pathsep,
-    simple_random_choice,
     str_to_env_path,
     str_to_path,
     subexpr_before_unbalanced,
@@ -81,8 +78,6 @@ from xonsh.tools import (
     to_bool,
     to_bool_or_int,
     to_bool_or_none,
-    to_completion_mode,
-    to_completions_display_value,
     to_dynamic_cwd_tuple,
     to_int_or_none,
     to_logfile_opt,
@@ -96,15 +91,6 @@ INDENT = "    "
 TOOLS_ENV = {"EXPAND_ENV_VARS": True, "XONSH_ENCODING_ERRORS": "strict"}
 ENCODE_ENV_ONLY = {"XONSH_ENCODING_ERRORS": "strict"}
 PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
-
-
-def test_random_choice():
-    lst = [1, 2, 3]
-    r = simple_random_choice(lst)
-    assert r in lst
-
-    with pytest.raises(ValueError):
-        simple_random_choice(range(1010101))
 
 
 def test_subproc_toks_x():
@@ -1907,87 +1893,3 @@ def test_register_custom_style(name, styles, refrules):
         for rule, color in style.styles.items():
             if str(rule) in refrules:
                 assert refrules[str(rule)] == color
-
-
-@pytest.mark.parametrize(
-    "val, exp",
-    [
-        ("default", True),
-        ("menu-complete", True),
-        ("def", False),
-        ("xonsh", False),
-        ("men", False),
-    ],
-)
-def test_is_completion_mode(val, exp):
-    assert is_completion_mode(val) is exp
-
-
-@pytest.mark.parametrize(
-    "val, exp",
-    [
-        ("", "default"),
-        (None, "default"),
-        ("default", "default"),
-        ("DEfaULT", "default"),
-        ("m", "menu-complete"),
-        ("mEnu_COMPlete", "menu-complete"),
-        ("menu-complete", "menu-complete"),
-    ],
-)
-def test_to_completion_mode(val, exp):
-    assert to_completion_mode(val) == exp
-
-
-@pytest.mark.parametrize(
-    "val",
-    [
-        "de",
-        "defa_ult",
-        "men_",
-        "menu_",
-    ],
-)
-def test_to_completion_mode_fail(val):
-    with pytest.warns(RuntimeWarning):
-        obs = to_completion_mode(val)
-        assert obs == "default"
-
-
-@pytest.mark.parametrize(
-    "val, exp",
-    [
-        ("none", True),
-        ("single", True),
-        ("multi", True),
-        ("", False),
-        (None, False),
-        ("argle", False),
-    ],
-)
-def test_is_completions_display_value(val, exp):
-    assert is_completions_display_value(val) == exp
-
-
-@pytest.mark.parametrize(
-    "val, exp",
-    [
-        ("none", "none"),
-        (False, "none"),
-        ("false", "none"),
-        ("single", "single"),
-        ("readline", "readline"),  # todo: check this
-        ("multi", "multi"),
-        (True, "multi"),
-        ("TRUE", "multi"),
-    ],
-)
-def test_to_completions_display_value(val, exp):
-    assert to_completions_display_value(val) == exp
-
-
-@pytest.mark.parametrize("val", [1, "", "argle"])
-def test_to_completions_display_value_fail(val):
-    with pytest.warns(RuntimeWarning):
-        obs = to_completions_display_value(val)
-        assert obs == "multi"

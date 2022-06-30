@@ -9,7 +9,7 @@ from xonsh.built_ins import XSH, get_default_shells
 from xonsh.events import events
 from xonsh.history.dummy import DummyHistory
 from xonsh.platform import best_shell_type
-from xonsh.tools import XonshError, is_class, print_exception, simple_random_choice
+from xonsh.tools import XonshError, is_class, print_exception
 
 events.doc(
     "on_transform_command",
