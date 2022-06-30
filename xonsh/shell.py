@@ -2,18 +2,12 @@
 import difflib
 import sys
 import time
-import warnings
 
 import xonsh.history.main as xhm
 from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.history.dummy import DummyHistory
-from xonsh.platform import (
-    best_shell_type,
-    has_prompt_toolkit,
-    minimum_required_ptk_version,
-    ptk_above_min_supported,
-)
+from xonsh.platform import best_shell_type
 from xonsh.tools import XonshError, is_class, print_exception, simple_random_choice
 
 events.doc(
@@ -132,8 +126,6 @@ class Shell:
         "ptk": "prompt_toolkit",  # there's only 1 prompt_toolkit shell (now)
         "prompt-toolkit": "prompt_toolkit",
         "prompt_toolkit": "prompt_toolkit",
-        "rand": "random",
-        "random": "random",
         "rl": "readline",
         "readline": "readline",
     }
@@ -159,26 +151,6 @@ class Shell:
             shell_type = "dumb"
         elif shell_type == "random":
             shell_type = simple_random_choice(("readline", "prompt_toolkit"))
-        if shell_type == "prompt_toolkit":
-            if not has_prompt_toolkit():
-                warnings.warn(
-                    "'prompt-toolkit' python package is not installed. Falling back to readline."
-                )
-                shell_type = "readline"
-            elif not ptk_above_min_supported():
-                warnings.warn(
-                    "Installed prompt-toolkit version < v{}.{}.{} is not ".format(
-                        *minimum_required_ptk_version
-                    )
-                    + "supported. Falling back to readline."
-                )
-                shell_type = "readline"
-            if init_shell_type in ("ptk1", "prompt_toolkit1"):
-                warnings.warn(
-                    "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(
-                        init_shell_type
-                    )
-                )
         return shell_type
 
     @staticmethod

@@ -183,15 +183,6 @@ def ptk_version_info():
         return None
 
 
-minimum_required_ptk_version = (2, 0, 0)
-"""Minimum version of prompt-toolkit supported by Xonsh"""
-
-
-@functools.lru_cache(1)
-def ptk_above_min_supported():
-    return ptk_version_info() and ptk_version_info() >= minimum_required_ptk_version
-
-
 @functools.lru_cache(1)
 def win_ansi_support():
     if ON_WINDOWS:
@@ -202,12 +193,6 @@ def win_ansi_support():
         return is_conemu_ansi() or is_windows_vt100_supported()
     else:
         return False
-
-
-@functools.lru_cache(1)
-def ptk_below_max_supported():
-    ptk_max_version_cutoff = (99999, 0)  # currently, no limit.
-    return ptk_version_info()[:2] < ptk_max_version_cutoff
 
 
 @functools.lru_cache(1)
