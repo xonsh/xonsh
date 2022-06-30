@@ -1,10 +1,11 @@
 """The xonsh shell"""
 import difflib
+import pkgutil
 import sys
 import time
 
 import xonsh.history.main as xhm
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XSH, get_default_shells
 from xonsh.events import events
 from xonsh.history.dummy import DummyHistory
 from xonsh.platform import best_shell_type
@@ -118,18 +119,6 @@ class Shell:
     readline version of shell should be used.
     """
 
-    shell_type_aliases = {
-        "b": "best",
-        "best": "best",
-        "d": "dumb",
-        "dumb": "dumb",
-        "ptk": "prompt_toolkit",  # there's only 1 prompt_toolkit shell (now)
-        "prompt-toolkit": "prompt_toolkit",
-        "prompt_toolkit": "prompt_toolkit",
-        "rl": "readline",
-        "readline": "readline",
-    }
-
     @staticmethod
     def choose_shell_type(init_shell_type=None, env=None):
         # pick a valid shell -- if no shell is specified by the user,
@@ -149,26 +138,27 @@ class Shell:
             shell_type = best_shell_type()
         elif env and env.get("TERM", "") == "dumb":
             shell_type = "dumb"
-        elif shell_type == "random":
-            shell_type = simple_random_choice(("readline", "prompt_toolkit"))
         return shell_type
 
     @staticmethod
     def construct_shell_cls(backend, **kwargs):
         """Construct the history backend object."""
+        cls = None
         if is_class(backend):
             cls = backend
         else:
-            if backend == "none":
-                from xonsh.base_shell import BaseShell as cls
-            elif backend == "prompt_toolkit":
-                from xonsh.ptk_shell.shell import PromptToolkitShell as cls
-            elif backend == "readline":
-                from xonsh.readline_shell import ReadlineShell as cls
-            elif backend == "dumb":
-                from xonsh.dumb_shell import DumbShell as cls
-            else:
-                raise XonshError(f"{backend} is not recognized as a shell type")
+            definitions = XSH.shells or get_default_shells()
+            aliases = set()
+            for shell in definitions:
+                aliases.update(shell.aliases)
+                if backend in shell.aliases:
+                    cls = pkgutil.resolve_name(shell.cls)
+
+            if not cls:
+                raise XonshError(
+                    f"{backend} is not recognized as a shell type. Available {','.join(aliases)}"
+                )
+
         return cls(**kwargs)
 
     def __init__(self, execer, ctx=None, shell_type=None, **kwargs):

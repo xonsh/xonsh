@@ -15,6 +15,7 @@ import re
 import signal
 import sys
 import types
+import typing as tp
 import warnings
 from ast import AST
 
@@ -505,6 +506,17 @@ def xonsh_builtins(execer=None):
     XSH.unload()
 
 
+class ShellDefinition(tp.NamedTuple):
+    aliases: "tuple[str, ...]"
+    """A number indicating the features available with the shell. higher number"""
+
+    cls: str
+    """Path to the class"""
+
+    featureful = False
+    """Mention if this is feature rich than default readline backend"""
+
+
 class XonshSession:
     """All components defining a xonsh session."""
 
@@ -552,6 +564,9 @@ class XonshSession:
         self.builtins = None
         self._initial_builtin_names = None
         self.aliases = None
+
+        # registered shell classes
+        self.shells: "list[ShellDefinition] | None" = None
 
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
@@ -610,6 +625,8 @@ class XonshSession:
         self.builtins = get_default_builtins(execer)
         self._initial_builtin_names = frozenset(vars(self.builtins))
 
+        self.shells = get_default_shells()
+
         aliases_given = kwargs.pop("aliases", None)
         for attr, value in kwargs.items():
             if hasattr(self, attr):
@@ -663,6 +680,19 @@ class XonshSession:
         self.unlink_builtins()
         delattr(builtins, "__xonsh__")
         self.builtins_loaded = False
+
+
+def get_default_shells():
+    return [
+        ShellDefinition(
+            aliases=("rl", "readline"),
+            cls="xonsh.readline_shell:ReadlineShell",
+        ),
+        ShellDefinition(
+            aliases=("dumb", "d"),
+            cls="xonsh.dumb_shell:DumbShell",
+        ),
+    ]
 
 
 def get_default_builtins(execer=None):

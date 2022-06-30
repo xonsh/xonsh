@@ -201,8 +201,10 @@ def best_shell_type():
 
     if XSH.env.get("TERM", "") == "dumb":
         return "dumb"
-    if has_prompt_toolkit():
-        return "prompt_toolkit"
+
+    for cls in XSH.shells:
+        if cls.featureful and cls.aliases:
+            return cls.aliases[0]
     return "readline"
 
 
