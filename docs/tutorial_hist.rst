@@ -407,7 +407,7 @@ Xonsh has a second built-in history backend powered by sqlite (other than
 the JSON version mentioned all above in this tutorial). It shares the same
 functionality as the JSON version in most ways, except it currently doesn't
 support the ``history diff`` action and does not store the output of commands,
-as the json-backend does. E.g. 
+as the json-backend does. E.g.
 `__xonsh__.history[-1].out` will always be `None`.
 
 The Sqlite history backend can provide a speed advantage in loading history

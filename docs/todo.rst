@@ -20,7 +20,7 @@ Tab completion from man pages
 ---------------------------------
 One of the more genius ideas I first encountered from ``fish`` is the idea
 that man pages can be used to supply matches to tab-completion.  In principle
-this is not that hard. First, we just need to use ``man2html`` and then 
+this is not that hard. First, we just need to use ``man2html`` and then
 parse the html.
 
 

@@ -1,49 +1,80 @@
-repos:
-  - repo: local
-    hooks:
-      - id: black
-        name: black
-        # this gets run within development environment.
-        # Otherwise will raise command not found or use system level binary
-        entry: black xonsh/ xontrib/ tests/
-        language: system
-        stages: [ commit ]
-        types:
-          - python
-      - id: isort
-        name: isort
-        # this gets run within development environment.
-        # Otherwise will raise command not found or use system level binary
-        entry: isort xonsh/ xontrib/ tests/
-        language: system
-        stages: [ commit ]
-        types:
-          - python
-      - id: qa
-        name: qa
-        entry: xonsh run-tests.xsh qa
-        language: system
-        stages: [ push ]
-        pass_filenames: false
-        types:
-          - python
+default_language_version:
+    # force all unspecified python hooks to run python3
+    python: python3.10
 
+ci:
+  autofix_prs: false
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 22.6.0
+    hooks:
+    - id: black
+      entry: black xonsh xontrib tests xompletions
+      pass_filenames: false
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        entry: isort xonsh xontrib tests xompletions
+        pass_filenames: false
+        name: isort (python)
+  - repo: https://github.com/pycqa/flake8
+    rev: '4.0.1'  # pick a git hash / tag to point to
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-docstrings
+          - flake8-bugbear
+          # Check for debugger imports and py37+ breakpoint() calls in python source.
+          - flake8-debugger
+        exclude: |
+          (?x)^(
+              xonsh/ply/.+|
+              docs/.+
+          )$
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v0.961'  # Use the sha / tag you want to point at
+    hooks:
+      - id: mypy
+        name: mypy xonsh
+        pass_filenames: false
+        entry: mypy xonsh
+        additional_dependencies:
+          - types-ujson
+      - id: mypy
+        name: mypy xontrib
+        pass_filenames: false
+        entry: mypy xontrib --namespace-packages --explicit-package-bases
+        additional_dependencies:
+          - types-ujson
+      - id: mypy
+        name: mypy xompletions
+        pass_filenames: false
+        entry: mypy xompletions --namespace-packages --explicit-package-bases
+        additional_dependencies:
+          - types-ujson
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v4.3.0
     hooks:
       - id: trailing-whitespace
+        exclude: |
+          (?x)^(
+              docs/_static/.+
+          )$
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-yaml
       - id: check-toml
-
-      # Check for debugger imports and py37+ breakpoint() calls in python source.
-      - id: debug-statements
-
       - id: check-added-large-files
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.32.1
+    rev: v2.34.0
     hooks:
     - id: pyupgrade
-      args: [--py37-plus]
+      args: [--py38-plus]
+      exclude: |
+        (?x)^(
+            xonsh/ply/.+|
+            tests/bin/.+
+        )$

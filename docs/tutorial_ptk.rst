@@ -48,10 +48,10 @@ functionality (in less you take the time to rebind them elsewhere).
       - ``<Tab>``
       - Indent, autocomplete
     * - ``Control R``
-      - 
+      -
       - Backwards history search
     * - ``Control Z``
-      - 
+      -
       - SIGSTOP current job
     * - ``Control C``
       -
@@ -72,13 +72,13 @@ Custom keyload function
 
 We need our additional keybindings to load after the shell is initialized, so we
 define a function that contains all of the custom keybindings and decorate it
-with the appropriate event, in this case ``on_ptk_create``. 
+with the appropriate event, in this case ``on_ptk_create``.
 
 We'll start with a toy example that just inserts the text "hi" into the current line of the prompt::
 
     @events.on_ptk_create
     def custom_keybindings(bindings, **kw):
-        
+
         @bindings.add(Keys.ControlW)
         def say_hi(event):
             event.current_buffer.insert_text('hi')

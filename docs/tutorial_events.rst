@@ -7,7 +7,7 @@ What's the best way to keep informed in xonsh? Subscribe to an event!
 
 Overview
 ========
-Simply, events are a way for various pieces of xonsh to tell each other what's going on. They're 
+Simply, events are a way for various pieces of xonsh to tell each other what's going on. They're
 fired when something of note happens, eg the current directory changes or just before a command is
 executed.
 
@@ -26,7 +26,7 @@ or several other commands)::
         with open(g`~/.dirhist`[0], 'a') as dh:
             print(newdir, file=dh)
 
-The exact arguments passed and returns expected vary from event to event; see the 
+The exact arguments passed and returns expected vary from event to event; see the
 `event list <events.html>`_ for the details.
 
 Note that the event system is keyword only. Event handlers must match argument names and must have a
@@ -50,5 +50,5 @@ Further Reading
 
 For a complete list of available events, see `the events reference <events.html>`_.
 
-If you want to know more about the gory details of what makes events tick, see 
+If you want to know more about the gory details of what makes events tick, see
 `Advanced Events <advanced_events.html>`_.
