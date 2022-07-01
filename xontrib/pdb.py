@@ -6,9 +6,9 @@ from xonsh.built_ins import XonshSession
 
 def handle_sigusr1(sig, frame):
     print("\nSIGUSR1 signal received. Starting interactive debugger...", flush=True)
-    import pdb
+    import pdb  # noqa
 
-    pdb.Pdb().set_trace(frame)
+    pdb.Pdb().set_trace(frame)  # noqa
 
 
 def _load_xontrib_(xsh: XonshSession, **_):
