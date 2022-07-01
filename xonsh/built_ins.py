@@ -689,8 +689,12 @@ def get_default_shells():
             cls="xonsh.readline_shell:ReadlineShell",
         ),
         ShellDefinition(
-            aliases=("dumb", "d"),
+            aliases=("dumb",),
             cls="xonsh.dumb_shell:DumbShell",
+        ),
+        ShellDefinition(
+            aliases=("none",),
+            cls="xonsh.base_shell:BaseShell",
         ),
     ]
 

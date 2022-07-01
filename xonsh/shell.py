@@ -133,7 +133,6 @@ class Shell:
                 # odd logic.  We don't override if shell.__init__( shell_type="none"),
                 # only if it come from environment?
                 shell_type = "best"
-        shell_type = Shell.shell_type_aliases.get(shell_type, shell_type)
         if shell_type == "best" or shell_type is None:
             shell_type = best_shell_type()
         elif env and env.get("TERM", "") == "dumb":

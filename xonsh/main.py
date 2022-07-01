@@ -3,6 +3,7 @@ import argparse
 import builtins
 import contextlib
 import enum
+import itertools
 import os
 import signal
 import sys
@@ -10,7 +11,7 @@ import traceback
 
 import xonsh.procs.pipelines as xpp
 from xonsh import __version__
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XSH, get_default_shells
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
 from xonsh.environ import make_args_env, xonshrc_context
 from xonsh.events import events
@@ -207,11 +208,12 @@ def parser():
         action="append",
         default=None,
     )
+    shells = [sh.aliases for sh in get_default_shells()]
     p.add_argument(
         "--shell-type",
         help="What kind of shell should be used. "
         "Possible options: "
-        + ", ".join(Shell.shell_type_aliases.keys())
+        + ", ".join(itertools.chain(shells))
         + ". Warning! If set this overrides $SHELL_TYPE variable.",
         metavar="SHELL_TYPE",
         dest="shell_type",
