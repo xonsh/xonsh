@@ -109,9 +109,7 @@ def _unc_map_temp_drive(unc_path) -> str:
         for dord in range(ord("z"), ord("a"), -1):
             d = chr(dord) + ":"
             if not os.path.isdir(d):  # find unused drive letter starting from z:
-                subprocess.check_output(
-                    ["NET", "USE", d, unc_share], universal_newlines=True
-                )
+                subprocess.check_output(["NET", "USE", d, unc_share], text=True)
                 _unc_tempDrives[d] = unc_share
                 return os.path.join(d, rem_path)
 
@@ -136,9 +134,7 @@ def _unc_unmap_temp_drive(left_drive, cwd):
             return
 
     _unc_tempDrives.pop(left_drive)
-    subprocess.check_output(
-        ["NET", "USE", left_drive, "/delete"], universal_newlines=True
-    )
+    subprocess.check_output(["NET", "USE", left_drive, "/delete"], text=True)
 
 
 events.doc(

@@ -99,7 +99,7 @@ def DEFAULT_SETERRPOSTCMD():
     return {"bash": "", "zsh": "", "cmd": "if errorlevel 1 exit 1"}
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def foreign_shell_data(
     shell,
     interactive=True,
@@ -246,7 +246,7 @@ def foreign_shell_data(
             # start new session to avoid hangs
             # (doesn't work on Cygwin though)
             start_new_session=((not ON_CYGWIN) and (not ON_MSYS)),
-            universal_newlines=True,
+            text=True,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:

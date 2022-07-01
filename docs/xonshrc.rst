@@ -1,6 +1,6 @@
 Run Control File
 =========================
-Xonsh allows you to customize your shell behavior with run control files, called "xonshrc" files.  
+Xonsh allows you to customize your shell behavior with run control files, called "xonshrc" files.
 These files are written either in the Xonsh language (a superset of Python) or in Python and are executed
 exactly once at startup.
 
@@ -11,7 +11,7 @@ The control file usually contains:
 * Xonsh function definitions
 * `Alias definitions <aliases.html>`_, many of which invoke the above functions with specified arguments.
 
-The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.  
+The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.
 You can create this file in ``/etc/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
 
 Xonsh also allows a per-user run control file in your home directory, either
@@ -29,11 +29,11 @@ steps you through all the available options.
 xonfig web
 -----------
 
-This helps you choose a color theme, customized prompt and add-in packages ("xontribs").  It 
+This helps you choose a color theme, customized prompt and add-in packages ("xontribs").  It
 initializes your personal run control file (usually at ``~/.xonshrc``).  To invoke it (from a xonsh prompt):
 
 .. code-block:: xonshcon
-  
+
   >>> xonfig web
   Web config started at 'http://localhost:8421'. Hit Crtl+C to stop.
   127.0.0.1 - - [23/Aug/2020 15:04:39] "GET / HTTP/1.1" 200 -
@@ -41,24 +41,24 @@ initializes your personal run control file (usually at ``~/.xonshrc``).  To invo
 This will open your default browser on a page served from a local server.  You can exit the server by typing ``Ctrl+c`` at any time.
 
 The page has:
- 
-:Colors: shows the  color themes built into Xonsh.  
-  Simply click on a sample to select it.  Although color names are standardized across various terminal applications, 
-  their actual appearance is not and do vary widely.  Seeing is believing! 
-:Prompts: shows various sample prompts.  It is recommended to select one but to then edit 
+
+:Colors: shows the  color themes built into Xonsh.
+  Simply click on a sample to select it.  Although color names are standardized across various terminal applications,
+  their actual appearance is not and do vary widely.  Seeing is believing!
+:Prompts: shows various sample prompts.  It is recommended to select one but to then edit
   the ``xonshrc`` file to further refine your prompt.
-:Xontribs: are community-contributed add-ins often used to enhance command completion and line editing, 
-  but can affect any aspect of Xonsh behavior.  
+:Xontribs: are community-contributed add-ins often used to enhance command completion and line editing,
+  but can affect any aspect of Xonsh behavior.
   Choose one or more to suit your needs but note that they will require installation of additional
   packages.  You can extend Xonsh by `writing your own xontrib <tutorial_xontrib.html>`_, and are invited/urged to do so!
-:Save: Click to write the configuration choices to your ``~/.xonshrc``. This will add a few tagged lines to your run control file, but will not 
+:Save: Click to write the configuration choices to your ``~/.xonshrc``. This will add a few tagged lines to your run control file, but will not
   overwrite it completely, so you can run `xonfig web` at any time.
 
 xonfig wizard
 --------------
 
-This imports settings and tools you have defined in your existing (ordinary) shell such as ``bash``.  
-It also walks you through setting all known environment variables and xontribs 
+This imports settings and tools you have defined in your existing (ordinary) shell such as ``bash``.
+It also walks you through setting all known environment variables and xontribs
 in a question-and-answer format:
 
 .. code-block:: xonshcon
@@ -214,19 +214,19 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
 .. code-block:: xonshcon
 
     >>> $LS_COLORS='rs=0:di=01;36:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:'
-    
+
 Make JSON data directly pastable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``. 
+With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``.
 Note that, though practical, this is rather hacky and might break other functionality. Use at your own risk.
 
 .. code-block:: xonshcon
 
-    >>> import builtins 
+    >>> import builtins
     >>> builtins.true = True
     >>> builtins.false = False
     >>> builtins.null = None
-    
+
 Display different date information every 10th time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For a compact shell prompts, some people prefer a very condensed time format. But when you have a lengthy shell session you might want the date to show up in your logs every now and then...
@@ -235,15 +235,15 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
 
     >>> import time
     >>> def get_shelldate():
-    >>>     get_shelldate.fulldate %= 10 
+    >>>     get_shelldate.fulldate %= 10
     >>>     get_shelldate.fulldate += 1
     >>>     if get_shelldate.fulldate == 1:
     >>>         return time.strftime('%d%m%Y')
     >>>     return time.strftime('%H:%M')
     >>> get_shelldate.fulldate = 0
-    >>> 
+    >>>
     >>> $PROMPT_FIELDS['shelldate'] = get_shelldate
-    
+
 Use the Nix Package manager with Xonsh
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines might be life-savers:
@@ -259,16 +259,16 @@ To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines 
     >>>     $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
     >>>     $PATH += [f"{$HOME}/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
 
-Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is: 
+Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is:
 
 .. code-block:: xonshcon
 
     >>> for p in map(lambda s: str(s.resolve()), p"~/.local/lib/".glob("python*/site-packages")):
     >>>     if p not in sys.path:
     >>>         sys.path.append(p)
-    >>> 
+    >>>
     >>> $PYTHONPATH = "$USER/.local/lib/python3.7/site-packages"
-    >>>     
+    >>>
     >>> python -m ensurepip --user
     >>> xonsh
     >>> python -m pip install --user -U pip xontrib-z xonsh-direnv

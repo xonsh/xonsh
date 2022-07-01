@@ -60,28 +60,17 @@ def test(
         ![pytest @(_replace_args(pytest_args, 0)) --durations=5]
 
 
-def qa():
-    """QA checks"""
-    $XONSH_NO_AMALGAMATE = True
-    $XONSH_TRACE_SUBPROC_FUNC = colored_tracer
-    $XONSH_TRACE_SUBPROC = True
 
-    black --check xonsh xontrib tests xompletions
-    isort --check xonsh xontrib tests xompletions
-
-    python -m flake8
-
-    mypy xonsh
-    mypy xontrib --namespace-packages --explicit-package-bases
-    mypy xompletions --namespace-packages --explicit-package-bases
-
-    pytest -m news
+def validate_news_items(
+        pytest_args: xcli.Arg(nargs='*') = (),
+):
+    ![pytest -m news @(pytest_args)]
 
 
 if __name__ == '__main__':
     parser = xcli.make_parser("test commands")
     parser.add_command(test)
-    parser.add_command(qa)
+    parser.add_command(validate_news_items)
 
     try:
         xcli.dispatch(parser)

@@ -23,7 +23,7 @@ semantics are not encouraged by the built-in methods.
 
 So how do I handle results?
 ===========================
-``Event.fire()`` returns a list of the returns from the handlers. You should merge this list in an 
+``Event.fire()`` returns a list of the returns from the handlers. You should merge this list in an
 appropriate way.
 
 What are Species?
@@ -34,7 +34,7 @@ behave differently.
 This was done because load hooks look like events and quack like events, but they have different
 semantics. See `LoadEvents <api/events.html#xonsh.events.LoadEvent>`_ for details.
 
-In order to turn an event from the default ``Event``, you must transmogrify it, using 
+In order to turn an event from the default ``Event``, you must transmogrify it, using
 ``events.transmogrify()``. The class the event is turned in to must be a subclass of ``AbstractEvent``.
 
 (Under the hood, transmogrify creates a new instance and copies the handlers and docstring from the

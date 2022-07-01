@@ -95,18 +95,6 @@ full = [
     "setproctitle; platform_system=='Windows'",
     "gnureadline; platform_system=='Darwin'",
 ]
-format = [
-    "black==22.3.0",
-    "isort>=5.10",
-]
-lint = [
-    "xonsh[format]",
-    "flake8",
-    "flake8-docstrings",
-    "flake8-bugbear",
-    "mypy==0.941",
-    "types-ujson",
-]
 bestshell = [
     "prompt_toolkit>=3.0.29",
     "pygments>=2.2",
@@ -128,10 +116,8 @@ test = [
     "amalgamate",
 ]
 dev = [
-    "xonsh[lint,test,doc]",
+    "xonsh[test,doc]",
     "pre-commit",
-    "sniffer",
-    "pyinotify; sys_platform == \"linux\"",
     "re-ver",
     "tomli",
 ]

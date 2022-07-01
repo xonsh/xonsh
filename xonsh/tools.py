@@ -867,7 +867,7 @@ def debian_command_not_found(cmd):
     c = "{0} {1}; exit 0"
     s = subprocess.check_output(
         c.format(cnf, shlex.quote(cmd)),
-        universal_newlines=True,
+        text=True,
         stderr=subprocess.STDOUT,
         shell=True,
     )
@@ -902,7 +902,7 @@ def command_not_found(cmd, env):
     return rtn
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def suggest_commands(cmd, env):
     """Suggests alternative commands given an environment and aliases."""
     if not env.get("SUGGEST_COMMANDS"):

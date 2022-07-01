@@ -10,7 +10,7 @@ from xonsh.built_ins import XSH
 from xonsh.xoreutils import _which
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def _which_create_parser():
     desc = "Parses arguments to which wrapper"
     parser = argparse.ArgumentParser("which", description=desc)

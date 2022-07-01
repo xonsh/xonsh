@@ -1513,7 +1513,7 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================
-Customizing the prompt by modifying ``$PROMPT``, ``$RIGHT_PROMPT`` or ``$BOTTOM_TOOLBAR`` 
+Customizing the prompt by modifying ``$PROMPT``, ``$RIGHT_PROMPT`` or ``$BOTTOM_TOOLBAR``
 is probably the most common reason for altering an environment variable.
 
 .. note:: Note that the ``$PROMPT`` variable will never be inherited from a
@@ -1571,7 +1571,7 @@ By default, the following variables are available for use:
   * ``localtime``: The current, local time as given by ``time.localtime()``.
     This is formatted with the time format string found in ``time_format``.
   * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
-  * ``last_return_code``: The return code of the last issued command. 
+  * ``last_return_code``: The return code of the last issued command.
   * ``last_return_code_if_nonzero``: The return code of the last issued command if it is non-zero, otherwise ``None``. This is useful for only printing the code in case of errors.
 
 .. note:: See the section below on ``PROMPT_FIELDS`` for more information on changing.
@@ -1579,7 +1579,7 @@ By default, the following variables are available for use:
 xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
 `as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
 #envvar-VIRTUAL_ENV_DISABLE_PROMPT>`__. If this variable is truthy, xonsh
-will *always* substitute an empty string for ``{env_name}``. Note that unlike 
+will *always* substitute an empty string for ``{env_name}``. Note that unlike
 other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
 after being set---it is not necessary to re-activate the environment.
 

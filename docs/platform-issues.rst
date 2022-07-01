@@ -37,8 +37,8 @@ MacOS, OSX
 readline
 ^^^^^^^^
 
-[ed note: This recommendation seems to be `out of date <https://pypi.org/project/gnureadline/>`_. 
-It's retained in the current docs in case you have an older version of Python or macOS.  But if 
+[ed note: This recommendation seems to be `out of date <https://pypi.org/project/gnureadline/>`_.
+It's retained in the current docs in case you have an older version of Python or macOS.  But if
 you have Mac platform experience and can clarify, please open an issue or even a PR to correct the documentation.]
 
 On macOS, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
@@ -72,8 +72,8 @@ To incorporate the whole functionality of ``/etc/profile``:
 
 Tab completion
 ^^^^^^^^^^^^^^
-Xonsh has support for using bash completion files on the shell, to use it you need to install 
-the bash-completion package. 
+Xonsh has support for using bash completion files on the shell, to use it you need to install
+the bash-completion package.
 The regular bash-completion package uses v1 which mostly works, but `occasionally has rough edges <https://github.com/xonsh/xonsh/issues/2111>`_ so we recommend using bash-completion v2.
 
 Bash completion comes from <https://github.com/scop/bash-completion> which suggests you use a package manager to install it, this manager will also install a new version of bash without affecting  /bin/bash. Xonsh also needs to be told where the bash shell file that builds the completions is, this has to be added to $BASH_COMPLETIONS. The package includes completions for many Unix commands.
@@ -85,7 +85,7 @@ Common packaging systems for macOS include
     .. code-block:: console
 
        $ brew install bash-completion2
-       
+
     This will install the bash_completion file in `/usr/local/share/bash-completion/bash_completion` which is in the current xonsh code and so should just work.
 
  - `MacPorts <https://trac.macports.org/wiki/howto/bash-completion>`_ where the bash-completion port needs to be installed.
@@ -93,7 +93,7 @@ Common packaging systems for macOS include
    .. code-block:: console
 
     $ sudo port install bash-completion
-     
+
 
 
    This includes a bash_completion file that needs to be added to the environment.
@@ -111,12 +111,12 @@ Windows
 Windows Terminal
 ^^^^^^^^^^^^^^^^
 
-If you are running a supported version of Windows (which is now Windows 10, version 2004 or later), 
+If you are running a supported version of Windows (which is now Windows 10, version 2004 or later),
 we recommend the Windows Terminal (``wt.exe``) rather than the time-honored ``cmd.exe``.  This provides
-unicode rendering, better ansi terminal compatibility and all the conveniences you expect 
+unicode rendering, better ansi terminal compatibility and all the conveniences you expect
 from the terminal application in other platforms.
 
-You can install it from the `Microsoft Store <https://www.microsoft.com/en-us/p/windows-terminal/9n0dx20hk701>`_ 
+You can install it from the `Microsoft Store <https://www.microsoft.com/en-us/p/windows-terminal/9n0dx20hk701>`_
 or from `Github <https://github.com/microsoft/terminal>`_.
 
 By default Windows Terminal runs Powershell, but you can add a profile tab to run Xonsh and even configure it
@@ -128,7 +128,7 @@ to open automatically in xonsh. Here is a sample settings.json:
         "$schema": "https://aka.ms/terminal-profiles-schema",
 
         "defaultProfile": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
-        
+
         // To learn more about global settings, visit https://aka.ms/terminal-global-settings
         // To learn more about profiles, visit https://aka.ms/terminal-profile-settings
         "profiles":
@@ -171,10 +171,10 @@ The dark red and blue colors are completely unreadable in `cmd.exe`.
 
 Xonsh has some tricks to fix colors. This is controlled by the
 :ref:`$INTENSIFY_COLORS_ON_WIN <intensify_colors_on_win>`
-environment variable which is ``True`` by default. 
+environment variable which is ``True`` by default.
 
 
-:ref:`$INTENSIFY_COLORS_ON_WIN <intensify_colors_on_win>` has the following effect:b 
+:ref:`$INTENSIFY_COLORS_ON_WIN <intensify_colors_on_win>` has the following effect:b
 
 On Windows 10:
     Windows 10 supports true color in the terminal, so on Windows 10 Xonsh will use
@@ -190,14 +190,14 @@ Avoid locking the working directory
 
 Python (like other processes on Windows) locks the current working directory so
 it can't be deleted or renamed. ``cmd.exe`` has this behaviour as well, but it
-is quite annoying for a shell. 
+is quite annoying for a shell.
 
 The :ref:`free_cwd <free_cwd>` xontrib (add-on) for xonsh solves some of this problem. It
 works by hooking the prompt to reset the current working directory to the root
 drive folder whenever the shell is idle. It only works with the prompt-toolkit
-back-end. To enable that behaviour run the following: 
+back-end. To enable that behaviour run the following:
 
-Add this line to your ``~/.xonshrc`` file to have it always enabled. 
+Add this line to your ``~/.xonshrc`` file to have it always enabled.
 
 .. code-block:: xonshcon
 

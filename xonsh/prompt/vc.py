@@ -222,7 +222,7 @@ def hg_dirty_working_directory():
             stderr=subprocess.PIPE,
             cwd=cwd,
             timeout=vcbt,
-            universal_newlines=True,
+            text=True,
             env=denv,
         )
         return s.strip(os.linesep).endswith("+")
