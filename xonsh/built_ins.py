@@ -513,7 +513,7 @@ class ShellDefinition(tp.NamedTuple):
     cls: str
     """Path to the class"""
 
-    featureful = False
+    featureful: bool = False
     """Mention if this is feature rich than default readline backend"""
 
 

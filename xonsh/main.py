@@ -213,7 +213,7 @@ def parser():
         "--shell-type",
         help="What kind of shell should be used. "
         "Possible options: "
-        + ", ".join(itertools.chain(shells))
+        + ", ".join(itertools.chain(*shells))
         + ". Warning! If set this overrides $SHELL_TYPE variable.",
         metavar="SHELL_TYPE",
         dest="shell_type",
