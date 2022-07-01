@@ -118,8 +118,6 @@ test = [
 dev = [
     "xonsh[test,doc]",
     "pre-commit",
-    "sniffer",
-    "pyinotify; sys_platform == \"linux\"",
     "re-ver",
     "tomli",
 ]
