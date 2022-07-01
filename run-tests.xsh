@@ -59,12 +59,18 @@ def test(
         # during CI run, some tests take longer to complete on windows
         ![pytest @(_replace_args(pytest_args, 0)) --durations=5]
 
-    ![pytest -m news]
+
+
+def validate_news_items(
+        pytest_args: xcli.Arg(nargs='*') = (),
+):
+    ![pytest -m news @(pytest_args)]
 
 
 if __name__ == '__main__':
     parser = xcli.make_parser("test commands")
     parser.add_command(test)
+    parser.add_command(validate_news_items)
 
     try:
         xcli.dispatch(parser)
