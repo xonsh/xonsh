@@ -14,22 +14,22 @@ line is ``#!/usr/bin/env xonsh``.
     * - Bash
       - Xonsh
       - Notes
-    * - ``echo --arg="val"`` 
-    
+    * - ``echo --arg="val"``
+
         ``echo {}``
-         
+
         ``echo \;``
-         
+
       - ``echo --arg "val"``
-      
+
         ``echo "{}"``
-        
+
         ``echo ";"``
-        
-      - Read `Subprocess Strings <https://xon.sh/tutorial_subproc_strings.html>`_ tutorial 
-        to understand how strings become arguments in xonsh.     
+
+      - Read `Subprocess Strings <https://xon.sh/tutorial_subproc_strings.html>`_ tutorial
+        to understand how strings become arguments in xonsh.
         There is no notion of an escaping character in xonsh like the backslash (``\``) in bash.
-        Single or double quotes can be used to remove the special meaning of certain 
+        Single or double quotes can be used to remove the special meaning of certain
         characters, words or brackets.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
@@ -39,7 +39,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Setting an environment variable. See also :ref:`$UPDATE_OS_ENVIRON <update_os_environ>`.
     * - ``unset NAME``
       - ``del $NAME``
-      - Unsetting/deleting an environment variable. 
+      - Unsetting/deleting an environment variable.
     * - ``echo "$HOME/hello"``
       - ``echo "$HOME/hello"``
       - Construct an argument using an environment variable.
@@ -55,7 +55,7 @@ line is ``#!/usr/bin/env xonsh``.
         this may be any valid expression.
     * - ``ENV1=VAL1 command``
       - ``$ENV1=VAL1 command``
-      
+
         or ``with ${...}.swap(ENV1=VAL1): command``
       - Set temporary environment variable(s) and execute the command.
         Use the second notation with an indented block to execute many commands in the same context.
@@ -76,11 +76,11 @@ line is ``#!/usr/bin/env xonsh``.
       - Print colored text as easy as possible.
     * - ``shopt -s dotglob``
       - ``$DOTGLOB = True``
-      - Globbing files with ``*`` or ``**`` will also match dotfiles, or those ‘hidden’ files whose names 
+      - Globbing files with ``*`` or ``**`` will also match dotfiles, or those ‘hidden’ files whose names
         begin with a literal `.`. Such files are filtered out by default like in bash.
     * - ``if [ -f "$FILE" ];``
       - ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()``
-      - Path objects can be instantiated and checked directly using p-string syntax.        
+      - Path objects can be instantiated and checked directly using p-string syntax.
     * - ``set -e``
       - ``$RAISE_SUBPROC_ERROR = True``
       - Cause a failure after a non-zero return code. Xonsh will raise a
@@ -99,39 +99,39 @@ line is ``#!/usr/bin/env xonsh``.
       - Get PID of the current shell.
     * - ``$?``
       - ``_.rtn``
-      - Returns the exit code, or status, of the previous command. The underscore ``_`` is working 
-        in the prompt mode. To get the exit code of the command in xonsh script 
+      - Returns the exit code, or status, of the previous command. The underscore ``_`` is working
+        in the prompt mode. To get the exit code of the command in xonsh script
         use captured subprocess ``!().rtn``.
     * - ``!$``
       - ``__xonsh__.history[-1, -1]``
       - Get the last argument of the last command
     * - ``$<n>``
       - ``$ARG<n>``
-      - Command line argument at index ``n``, 
+      - Command line argument at index ``n``,
         so ``$ARG1`` is the equivalent of ``$1``.
     * - ``$@``
       - ``$ARGS``
       - List of all command line argument and parameter strings.
     * - ``while getopts``
       - ``import argparse``
-      - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe 
-        the command line arguments in your script. Next try 
-        `xontrib-argcomplete <https://github.com/anki-code/xontrib-argcomplete>`_ to activate 
+      - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe
+        the command line arguments in your script. Next try
+        `xontrib-argcomplete <https://github.com/anki-code/xontrib-argcomplete>`_ to activate
         tab completion for your script.
     * - ``complete``
       - ``completer list``
-      - As with many other shells, xonsh ships with the ability to complete partially-specified arguments 
+      - As with many other shells, xonsh ships with the ability to complete partially-specified arguments
         upon hitting the “tab” key.
     * - OhMyBash or BashIt
       - `Xontribs <https://xon.sh/xontribs.html>`_
-      - Xontributions, or ``xontribs``, are a set of tools and conventions for extending the functionality 
+      - Xontributions, or ``xontribs``, are a set of tools and conventions for extending the functionality
         of xonsh beyond what is provided by default.
     * - Display completions as list
       - ``$COMPLETIONS_DISPLAY = 'readline'``
       - Display completions will emulate the behavior of readline.
     * - ``docker run -it bash``
       - ``docker run -it xonsh/xonsh:slim``
-      - Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. 
+      - Xonsh publishes a handful of containers, primarily targeting CI and automation use cases.
         All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`_.
     * - ``exit 1``
       - ``exit(1)``
@@ -147,6 +147,6 @@ to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
     TRACE SUBPROC: (['echo', 'hello'],)
     TRACE SUBPROC: (['echo', 'hello\n', 'world'], '|', ['grep', 'hello'])
 
-If after time you still try to type ``export``, ``unset`` or ``!!`` commands 
+If after time you still try to type ``export``, ``unset`` or ``!!`` commands
 there are the `bashisms <https://xon.sh/xontribs.html#bashisms>`_
 and `sh <https://xon.sh/xontribs.html#sh>`_ xontribs.
