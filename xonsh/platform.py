@@ -381,7 +381,7 @@ def windows_bash_command():
             out = subprocess.check_output(
                 [bash_on_path, "--version"],
                 stderr=subprocess.PIPE,
-                universal_newlines=True,
+                text=True,
             )
         except subprocess.CalledProcessError:
             bash_works = False

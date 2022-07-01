@@ -43,7 +43,7 @@ def _windows_bash_command(env=None):
             out = subprocess.check_output(
                 [bash_on_path, "--version"],
                 stderr=subprocess.PIPE,
-                universal_newlines=True,
+                text=True,
             )
         except subprocess.CalledProcessError:
             bash_works = False
@@ -387,7 +387,7 @@ def bash_completions(
     try:
         out = subprocess.check_output(
             [command, "-c", script],
-            universal_newlines=True,
+            text=True,
             stderr=subprocess.PIPE,
             env=env,
         )

@@ -57,7 +57,7 @@ def skip_if_not_has(exe: str):
 
 
 def sp(cmd):
-    return subprocess.check_output(cmd, universal_newlines=True)
+    return subprocess.check_output(cmd, text=True)
 
 
 class DummyStyler:
