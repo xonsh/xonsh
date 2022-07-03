@@ -209,15 +209,16 @@ def parser():
         default=None,
     )
     shells = [sh.aliases for sh in get_default_shells()]
+    shell_names = list(itertools.chain(*shells))
     p.add_argument(
         "--shell-type",
         help="What kind of shell should be used. "
         "Possible options: "
-        + ", ".join(itertools.chain(*shells))
+        + ", ".join(shell_names)
         + ". Warning! If set this overrides $SHELL_TYPE variable.",
         metavar="SHELL_TYPE",
         dest="shell_type",
-        choices=tuple(Shell.shell_type_aliases.keys()),
+        choices=shell_names,
         default=None,
     )
     p.add_argument(
