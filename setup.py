@@ -17,11 +17,6 @@ TABLES = [
     "xonsh/lexer_table.py",
     "xonsh/parser_table.py",
     "xonsh/completion_parser_table.py",
-    "xonsh/__amalgam__.py",
-    "xonsh/completers/__amalgam__.py",
-    "xonsh/history/__amalgam__.py",
-    "xonsh/prompt/__amalgam__.py",
-    "xonsh/procs/__amalgam__.py",
 ]
 
 
@@ -39,28 +34,6 @@ def clean_tables():
 
 
 os.environ["XONSH_DEBUG"] = "1"
-
-
-def amalgamate_source():
-    """Amalgamates source files."""
-    sys.path.insert(0, os.path.dirname(__file__))
-    try:
-        import amalgamate
-    except ImportError:
-        print("Could not import amalgamate, skipping.", file=sys.stderr)
-        return
-    amalgamate.main(
-        [
-            "amalgamate",
-            "--debug=XONSH_NO_AMALGAMATE",
-            "xonsh",
-            "xonsh.completers",
-            "xonsh.history",
-            "xonsh.prompt",
-            "xonsh.procs",
-        ]
-    )
-    sys.path.pop(0)
 
 
 def build_tables():
@@ -156,7 +129,6 @@ class xbuild_py(build_py):
     def run(self):
         clean_tables()
         build_tables()
-        amalgamate_source()
         # add dirty version number
         dirty = dirty_version()
         super().run()
@@ -180,7 +152,6 @@ class xinstall(install):
     def run(self):
         clean_tables()
         build_tables()
-        amalgamate_source()
         # add dirty version number
         dirty = dirty_version()
 
@@ -195,7 +166,6 @@ class xsdist(sdist):
     def make_release_tree(self, basedir, files):
         clean_tables()
         build_tables()
-        amalgamate_source()
         dirty = dirty_version()
         files.extend(TABLES)
         super().make_release_tree(basedir, files)

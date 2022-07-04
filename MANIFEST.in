@@ -7,4 +7,3 @@ include run-tests.xsh
 recursive-include tests *
 exclude tests/test_news.py
 global-exclude *.pyc
-include amalgamate.py
