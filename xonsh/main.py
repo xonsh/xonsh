@@ -208,17 +208,21 @@ def parser():
         action="append",
         default=None,
     )
+    # todo: find a way to know available shells by installation
+    #   possibly another entrypoint?
     shells = [sh.aliases for sh in get_default_shells()]
-    shell_names = list(itertools.chain(*shells))
+    shell_names = list(itertools.chain(*shells)) + ["best"]
     p.add_argument(
         "--shell-type",
         help="What kind of shell should be used. "
-        "Possible options: "
+        "Shells available by default are: "
         + ", ".join(shell_names)
-        + ". Warning! If set this overrides $SHELL_TYPE variable.",
+        + ". Others maybe available as xontribs. "
+        + "Warning! If set this overrides $SHELL_TYPE variable.",
         metavar="SHELL_TYPE",
         dest="shell_type",
-        choices=shell_names,
+        # not setting choices, since more options can be provided by xontribs
+        # default is None, since we prefer env variable and it has a default
         default=None,
     )
     p.add_argument(
