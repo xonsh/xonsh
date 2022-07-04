@@ -1,6 +1,5 @@
 """The xonsh shell"""
 import difflib
-import pkgutil
 import sys
 import time
 
@@ -151,7 +150,7 @@ class Shell:
             for shell in definitions:
                 aliases.update(shell.aliases)
                 if backend in shell.aliases:
-                    cls = pkgutil.resolve_name(shell.cls)
+                    cls = shell.parse_cls()
 
             if not cls:
                 raise XonshError(

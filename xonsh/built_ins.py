@@ -11,6 +11,7 @@ import inspect
 import itertools
 import os
 import pathlib
+import pkgutil
 import re
 import signal
 import sys
@@ -515,6 +516,16 @@ class ShellDefinition(tp.NamedTuple):
 
     featureful: bool = False
     """Mention if this is feature rich than default readline backend"""
+
+    def parse_cls(self):
+        if hasattr(pkgutil, "resolve_name"):
+            # PY3.9+
+            return pkgutil.resolve_name(self.cls)
+        # PT3.8 only
+        from importlib import metadata
+
+        ep = metadata.EntryPoint(name=None, group=None, value=self.cls)
+        return ep.load()
 
 
 class XonshSession:
