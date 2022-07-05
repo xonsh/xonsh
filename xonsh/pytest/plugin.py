@@ -387,20 +387,16 @@ def readline_shell(xonsh_execer, tmpdir, mocker):
 def load_xontrib():
     to_unload = []
 
-    def wrapper(*names: str):
+    def wrapper(*names: str, **kwargs):
         from xonsh.xontribs import xontribs_load
 
-        for name in names:
-            module = f"xontrib.{name}"
-            if module not in sys.modules:
-                to_unload.append(module)
-
-            _, stderr, res = xontribs_load([name])
-            if stderr:
-                raise Exception(f"Failed to load xontrib: {stderr}")
-        return
+        _, stderr, res = xontribs_load(names, **kwargs)
+        if stderr:
+            raise Exception(f"Failed to load xontrib: {stderr}")
+        to_unload.extend(names)
 
     yield wrapper
 
-    for mod in to_unload:
-        del sys.modules[mod]
+    from xonsh.xontribs import xontribs_unload
+
+    xontribs_unload(to_unload)
