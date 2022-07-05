@@ -46,15 +46,15 @@ Visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
-- `Xontribs <https://xon.sh/xontribs.html>`_ or `Github Xontribs <https://github.com/topics/xontrib>`_ - list of awesome xonsh extensions.
+- Xontribs: `github xontribs <https://github.com/topics/xontrib>`_, `awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_, `old xontribs list <https://xon.sh/xontribs.html>`_.
 
 Projects that use xonsh
 ***********************
 
 - `gitsome <https://github.com/donnemartin/gitsome>`_: A supercharged Git/shell autocompleter with GitHub integration.
+- `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the ssh.
 - `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
 - `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
-- `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the ssh.
 
 
 The xonsh shell community
