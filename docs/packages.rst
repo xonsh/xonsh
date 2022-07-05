@@ -30,13 +30,19 @@ correct Python interpreter and ``pip`` module.
 
     $ pip install 'xonsh[full]'
 
-This uses the pip 'extras' syntax, and is equivalent to:
+This uses the pip 'extras' syntax to install all required libraries for best shell experience.
+
+The above ``pip`` commands may have to be spelled ``pip3`` or ``sudo pip3`` if you are not installing in a virtual environment.
+
+**pipx** - `<https://github.com/pypa/pipx>`_: This is a recommended method than using system's package managers
+since this will setup an isolated virtual environment automatically and installing external xontribs is easier.
 
 .. code-block:: console
 
-    $ pip install pygments prompt-toolkit setproctitle xonsh
+    $ pipx install 'xonsh[full]'
+    # then xontribs can be installed with
+    $ pipx inject xonsh xontrib-jupyter-shell
 
-The above ``pip`` commands may have to be spelled ``pip3`` or ``sudo pip3`` if you are not installing in a virtual environment.
 
 **source:** Pip can also install the most recent xonsh source code from the
 `xonsh project repository <https://github.com/xonsh/xonsh>`_.

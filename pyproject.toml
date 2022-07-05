@@ -81,22 +81,16 @@ changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst"
 
 [project.optional-dependencies]
 ptk = [
-    "prompt-toolkit>=3.0.29",
+    "xontrib-ptk-shell",
     "pyperclip",
 ]
+# for coloring support
 pygments = ["pygments>=2.2"]
-mac = ["gnureadline"]
-linux = ["distro"]
-proctitle = ["setproctitle"]
 full = [
     "xonsh[ptk,pygments]",
     "distro; platform_system=='Linux'",
     "setproctitle; platform_system=='Windows'",
     "gnureadline; platform_system=='Darwin'",
-]
-bestshell = [
-    "prompt_toolkit>=3.0.29",
-    "pygments>=2.2",
 ]
 test = [
     "xonsh[bestshell]",
