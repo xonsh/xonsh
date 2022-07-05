@@ -103,4 +103,4 @@ def setup_release_cwd_hook(prompter, history, completer, bindings, **kw):
 
 
 def _load_xontrib_(xsh: XonshSession, **_):
-    xsh.builtins.events.on_ptk_create(_cwd_restore_wrapper)
+    xsh.builtins.events.on_ptk_create(setup_release_cwd_hook)
