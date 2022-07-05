@@ -195,7 +195,6 @@ def win_ansi_support():
         return False
 
 
-@functools.lru_cache(1)
 def best_shell_type():
     from xonsh.built_ins import XSH
 
