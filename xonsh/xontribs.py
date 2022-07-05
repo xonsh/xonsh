@@ -241,6 +241,7 @@ def xontribs_unload(
         Arg(nargs="+", completer=xontrib_unload_completer),
     ] = (),
     verbose=False,
+    full_module=False,
 ):
     """Unload the given xontribs
 
@@ -248,6 +249,10 @@ def xontribs_unload(
     ----------
     names
         name of xontribs to unload
+    verbose : -v, --verbose
+        verbose output
+    full_module : -f, --full
+        indicates that the names are fully qualified module paths and not inside ``xontrib`` package
 
     Notes
     -----
@@ -257,7 +262,7 @@ def xontribs_unload(
         if verbose:
             print(f"unloading xontrib {name!r}")
 
-        spec = find_xontrib(name)
+        spec = find_xontrib(name, full_module)
         try:
             if spec and spec.name in sys.modules:
                 module = sys.modules[spec.name]
