@@ -1012,6 +1012,8 @@
   github: cclauss
 - name: Eddie Peters
   email: edward.paul.peters@gmail.com
+  alternate_emails:
+    - eddie@dinogalactic.com
   num_commits: 2
   first_commit: 2019-05-10 06:18:40
   github: eppeters
