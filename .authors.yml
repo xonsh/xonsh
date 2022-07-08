@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 592
+  num_commits: 598
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1013,8 +1013,8 @@
 - name: Eddie Peters
   email: edward.paul.peters@gmail.com
   alternate_emails:
-    - eddie@dinogalactic.com
-  num_commits: 2
+  - eddie@dinogalactic.com
+  num_commits: 3
   first_commit: 2019-05-10 06:18:40
   github: eppeters
 - name: shadow-light
@@ -1133,7 +1133,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 195
+  num_commits: 197
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1364,7 +1364,7 @@
   first_commit: 2021-10-07 11:22:51
 - name: cmidkiff87
   email: 39914727+cmidkiff87@users.noreply.github.com
-  num_commits: 1
+  num_commits: 2
   first_commit: 2021-08-21 09:18:13
 - name: Michael Ramsey
   email: mike@hackerdise.me
@@ -1456,3 +1456,7 @@
   email: 172697+naveensrinivasan@users.noreply.github.com
   num_commits: 2
   first_commit: 2022-06-06 01:11:33
+- name: Hannes Römer
+  email: 16097755+hroemer@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2022-06-27 22:21:34

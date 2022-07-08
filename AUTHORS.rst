@@ -139,6 +139,7 @@ Authors are sorted by number of commits.
 * Danmou
 * Niklas Hambüchen
 * Sébastien Pierre
+* Eddie Peters
 * shadow-light
 * Jan Chren
 * Samuel Lotz
@@ -167,7 +168,6 @@ Authors are sorted by number of commits.
 * Owen Campbell
 * Steven Kryskalla
 * cclauss
-* Eddie Peters
 * Ke Zhang
 * László Vaskó
 * Allan Crooks
@@ -180,6 +180,7 @@ Authors are sorted by number of commits.
 * Asaf Fisher
 * Samuel Dion-Girardeau
 * Gabriele N. Tornetta
+* cmidkiff87
 * Stefano Rivera
 * Naveen
 * Dan Allan
@@ -275,7 +276,6 @@ Authors are sorted by number of commits.
 * Ali Uneri
 * Eleni E
 * Kaarel Pärtel
-* cmidkiff87
 * Michael Ramsey
 * circuit10
 * Ryan Delaney
@@ -292,5 +292,6 @@ Authors are sorted by number of commits.
 * jbw3
 * Italo Cunha
 * Timmy Welch
+* Hannes Römer
 * goodboy
 * Atsushi Morimoto
