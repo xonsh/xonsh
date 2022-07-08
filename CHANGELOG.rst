@@ -4,6 +4,32 @@ Xonsh Change Log
 
 .. current developments
 
+v0.13.0
+====================
+
+**Removed:**
+
+* The ``xonsh`` code-base is no longer amalgamated, so tracebacks should be
+  human-readable without intervention.  This may have (minor) impacts on startup
+  speed.
+
+**Fixed:**
+
+* Fix xontrib loading for `free_cwd`
+* Fixed `whole_word_jumping` xontrib failing on Linux, conditional import of ``ptk_win32`` → Windows only
+* Fixed error caused by unintialized Xonsh session env when using Xonsh as a library just for its Pygments lexer plugin.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* Eddie Peters
+* cmidkiff87
+* Hannes Römer
+
+
+
 v0.12.6
 ====================
 
