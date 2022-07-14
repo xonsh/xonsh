@@ -46,7 +46,12 @@ Visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
-- Xontribs: `github xontribs <https://github.com/topics/xontrib>`_, `awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_, `old xontribs list <https://xon.sh/xontribs.html>`_.
+
+Extensions
+**********
+- `Core extensions (xontribs) <https://xon.sh/api/_autosummary/xontribs/xontrib.html>`_
+- `External extensions on Github <https://github.com/topics/xontrib>`_
+- `List of awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
 
 Projects that use xonsh
 ***********************
