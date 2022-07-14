@@ -49,7 +49,8 @@ Visit https://xon.sh for more information:
 
 Extensions
 **********
-- `Xonsh extensions (xontribs) on Github <https://github.com/topics/xontrib>`_
+- `Core extensions (xontribs) <https://xon.sh/api/_autosummary/xontribs/xontrib.html>`_
+- `External extensions on Github <https://github.com/topics/xontrib>`_
 - `List of awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
 
 Projects that use xonsh
