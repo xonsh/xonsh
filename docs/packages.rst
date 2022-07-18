@@ -95,4 +95,4 @@ Windows
 
 On Windows 10, the separately-installable `Windows Terminal app`_ is recommended.
 
-.. _`Windows Terminal app`: https://github.com/microsoft/terminal/releases
+.. _`Windows Terminal app`: platform-issues.rst#windows-terminal
