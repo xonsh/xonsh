@@ -139,7 +139,7 @@ class xbuild_py(build_py):
 class xbdist(bdist_wheel):
     def initialize_options(self):
         super().initialize_options()
-        # becuase XonshParser will be build for each minor python version, we need separate builds
+        # because XonshParser will be build for each minor python version, we need separate builds
         self.python_tag = python_tag()
 
 

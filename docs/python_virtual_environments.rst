@@ -31,7 +31,7 @@ You may also set the interpreter used to create the virtual environment by passi
 
 Under the hood, vox uses Python 3's ``venv`` module to create Python 3 virtualenvs. [this is the default]
 
-If a Python 2 intrepreter is chosen, it will use the Python 2 interpreter's ``virtualenv`` module.
+If a Python 2 interpreter is chosen, it will use the Python 2 interpreter's ``virtualenv`` module.
 
 By default, environments are stored in ``~/.virtualenvs``, but you can override it by setting the ``$VIRTUALENV_HOME`` environment variable.
 

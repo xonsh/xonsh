@@ -301,7 +301,7 @@ class SubprocSpec:
         universal_newlines : bool
             Whether or not to use universal newlines.
         close_fds : bool
-            Whether or not to close the file descriptiors when the
+            Whether or not to close the file descriptors when the
             process exits.
         captured : bool or str, optional
             The flag for if the subprocess is captured, may be one of:
