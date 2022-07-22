@@ -1,7 +1,7 @@
 """
 Command abbreviations.
 
-This expands input words from `abbrevs` disctionary as you type.
+This expands input words from `abbrevs` dictionary as you type.
 Adds ``abbrevs`` dictionary to hold user-defined "command abbreviations.
 The dictionary is searched as you type the matching words are replaced
 at the command line by the corresponding dictionary contents once you hit
