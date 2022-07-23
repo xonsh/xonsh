@@ -40,7 +40,7 @@ def test_pip_list_re1(line):
 
 
 def pip_installed():
-    out = subprocess.check_output(["pip", "list", "--format=json"]).decode()
+    out = subprocess.check_output(["pip", "list", "--format=json", "--disable-pip-version-check"]).decode()
     pkgs = json.loads(out)
     return {p["name"] for p in pkgs}
 
