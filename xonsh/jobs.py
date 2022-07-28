@@ -14,7 +14,7 @@ from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
-from xonsh.tools import unthreadable
+from xonsh.tools import on_main_thread, unthreadable
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
@@ -27,6 +27,12 @@ _jobs_thread_local = threading.local()
 # get their own separate queues.
 _jobs_thread_local.tasks: tp.Deque[int]
 
+# Dictionary used to keep track of the jobs.
+# It is thread local. On the main thread, it is set to XSH.all_jobs,
+# whereas in a threadable callable alias (ProcProxyThread), it is a
+# separate dictionary.
+_jobs_thread_local.jobs: tp.Dict[int, tp.Dict]
+
 
 def get_tasks() -> tp.Deque[int]:
     try:
@@ -34,6 +40,17 @@ def get_tasks() -> tp.Deque[int]:
     except AttributeError:
         _jobs_thread_local.tasks = collections.deque()
         return _jobs_thread_local.tasks
+
+
+def get_jobs() -> tp.Dict[int, tp.Dict]:
+    try:
+        return _jobs_thread_local.jobs
+    except AttributeError:
+        if on_main_thread():
+            _jobs_thread_local.jobs = XSH.all_jobs
+        else:
+            _jobs_thread_local.jobs = {}
+        return _jobs_thread_local.jobs
 
 
 if ON_DARWIN:
@@ -276,7 +293,7 @@ def get_next_task():
 
 
 def get_task(tid):
-    return XSH.all_jobs[tid]
+    return get_jobs()[tid]
 
 
 def _clear_dead_jobs():
@@ -288,12 +305,12 @@ def _clear_dead_jobs():
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
-        del XSH.all_jobs[job]
+        del get_jobs()[job]
 
 
 def format_job_string(num: int) -> str:
     try:
-        job = XSH.all_jobs[num]
+        job = get_jobs()[num]
     except KeyError:
         return ""
     tasks = get_tasks()
@@ -316,7 +333,7 @@ def get_next_job_number():
     """Get the lowest available unique job number (for the next job created)."""
     _clear_dead_jobs()
     i = 1
-    while i in XSH.all_jobs:
+    while i in get_jobs():
         i += 1
     return i
 
@@ -327,7 +344,7 @@ def add_job(info):
     info["started"] = time.time()
     info["status"] = "running"
     get_tasks().appendleft(num)
-    XSH.all_jobs[num] = info
+    get_jobs()[num] = info
     if info["bg"] and XSH.env.get("XONSH_INTERACTIVE"):
         print_one_job(num)
 
@@ -344,7 +361,7 @@ def clean_jobs():
     if XSH.env["XONSH_INTERACTIVE"]:
         _clear_dead_jobs()
 
-        if XSH.all_jobs:
+        if get_jobs():
             global _last_exit_time
             hist = XSH.history
             if hist is not None and len(hist.tss) > 0:
@@ -359,7 +376,7 @@ def clean_jobs():
                 # unfinished jobs in this case.
                 hup_all_jobs()
             else:
-                if len(XSH.all_jobs) > 1:
+                if len(get_jobs()) > 1:
                     msg = "there are unfinished jobs"
                 else:
                     msg = "there is an unfinished job"
@@ -389,7 +406,7 @@ def hup_all_jobs():
     Send SIGHUP to all child processes (called when exiting xonsh).
     """
     _clear_dead_jobs()
-    for job in XSH.all_jobs.values():
+    for job in get_jobs().values():
         _hup(job)
 
 
@@ -427,7 +444,7 @@ def resume_job(args, wording: tp.Literal["fg", "bg"]):
         except (ValueError, IndexError):
             return "", f"Invalid job: {args[0]}\n"
 
-        if tid not in XSH.all_jobs:
+        if tid not in get_jobs():
             return "", f"Invalid job: {args[0]}\n"
     else:
         return "", f"{wording} expects 0 or 1 arguments, not {len(args)}\n"
@@ -476,7 +493,7 @@ def bg(args, stdin=None):
 
 def job_id_completer(xsh, **_):
     """Return currently running jobs ids"""
-    for job_id in xsh.all_jobs:
+    for job_id in get_jobs():
         yield RichCompletion(str(job_id), description=format_job_string(job_id))
 
 
@@ -526,7 +543,7 @@ def disown_fn(
 
         # Stop tracking this task
         tasks.remove(tid)
-        del XSH.all_jobs[tid]
+        del get_jobs()[tid]
         messages.append(f"Removed job {tid} ({current_task['status']})")
 
     if messages:
