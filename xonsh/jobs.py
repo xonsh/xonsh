@@ -1,5 +1,6 @@
 """Job control for the xonsh shell."""
 import collections
+import contextlib
 import ctypes
 import os
 import signal
@@ -33,12 +34,39 @@ _jobs_thread_local.tasks: tp.Deque[int]
 # separate dictionary.
 _jobs_thread_local.jobs: tp.Dict[int, tp.Dict]
 
+# Task queue for the main thread
+# The use_main_jobs context manager uses this variable to access the tasks on
+# the main thread.
+_tasks_main: tp.Deque[int] = collections.deque()
+
+
+@contextlib.contextmanager
+def use_main_jobs():
+    """Context manager that replaces a thread's task queue and job dictionary
+    with those of the main thread
+
+    This allows another thread (e.g. the commands jobs, disown, and bg) to
+    handle the main thread's job control.
+    """
+    old_tasks = get_tasks()
+    old_jobs = get_jobs()
+    try:
+        _jobs_thread_local.tasks = _tasks_main
+        _jobs_thread_local.jobs = XSH.all_jobs
+        yield
+    finally:
+        _jobs_thread_local.tasks = old_tasks
+        _jobs_thread_local.jobs = old_jobs
+
 
 def get_tasks() -> tp.Deque[int]:
     try:
         return _jobs_thread_local.tasks
     except AttributeError:
-        _jobs_thread_local.tasks = collections.deque()
+        if on_main_thread():
+            _jobs_thread_local.tasks = _tasks_main
+        else:
+            _jobs_thread_local.tasks = collections.deque()
         return _jobs_thread_local.tasks
 
 
@@ -410,6 +438,7 @@ def hup_all_jobs():
         _hup(job)
 
 
+@use_main_jobs()
 def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     """
     xonsh command: jobs
@@ -476,6 +505,7 @@ def fg(args, stdin=None):
     return resume_job(args, wording="fg")
 
 
+@use_main_jobs()
 def bg(args, stdin=None):
     """xonsh command: bg
 
@@ -497,6 +527,7 @@ def job_id_completer(xsh, **_):
         yield RichCompletion(str(job_id), description=format_job_string(job_id))
 
 
+@use_main_jobs()
 def disown_fn(
     job_ids: Annotated[
         tp.Sequence[int], Arg(type=int, nargs="*", completer=job_id_completer)
