@@ -42,7 +42,13 @@ xonsh
 First steps
 ***********
 
-Visit https://xon.sh for more information:
+Install xonsh from pip:
+
+.. code-block:: xonshcon
+
+    python -m pip install 'xonsh[full]'
+
+And visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
