@@ -393,7 +393,8 @@ chmod +x xonsh-x86_64.AppImage
                                     <p>
                                     Run the xonsh shell in a small size docker container:
                                     </p>
-                                    <pre class="code">docker run -it --rm xonsh/xonsh:slim</pre>
+                                    <pre class="code">docker run --rm -it python:3.9-slim /bin/bash \<br>
+ -c "pip install 'xonsh[full]' && xonsh"</pre>
                                 </div>
                             </div>
                         </div>
