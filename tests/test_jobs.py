@@ -31,6 +31,6 @@ def test_disown_completion(
     }
     all_jobs = {1: job, 2: job}
 
-    monkeypatch.setattr(xsh_with_aliases, "all_jobs", all_jobs)
-    monkeypatch.setattr(jobs, "tasks", [2, 1])
+    monkeypatch.setattr(jobs._jobs_thread_local, "jobs", all_jobs, raising=False)
+    monkeypatch.setattr(jobs._jobs_thread_local, "tasks", [2, 1], raising=False)
     assert check_completer(args, prefix=prefix) == exp

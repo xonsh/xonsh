@@ -13,9 +13,9 @@ from xonsh.pytest.tools import skip_if_on_unix, skip_if_on_windows
 
 @pytest.fixture(autouse=True)
 def patched_events(monkeypatch, xonsh_events, xonsh_session):
-    from xonsh.jobs import tasks
+    from xonsh.jobs import get_tasks
 
-    tasks.clear()
+    get_tasks().clear()
     # needed for ci tests
     monkeypatch.setitem(
         xonsh_session.env, "RAISE_SUBPROC_ERROR", False

@@ -20,7 +20,7 @@ from xonsh.built_ins import XSH, XonshSession
 from xonsh.completer import Completer
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.jobs import tasks
+from xonsh.jobs import get_tasks
 from xonsh.main import setup
 from xonsh.parsers.completion_context import CompletionContextParser
 
@@ -228,7 +228,7 @@ def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch):
     )
     yield XSH
     XSH.unload()
-    tasks.clear()  # must to this to enable resetting all_jobs
+    get_tasks().clear()  # must do this to enable resetting all_jobs
 
 
 @pytest.fixture
