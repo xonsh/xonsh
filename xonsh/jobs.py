@@ -21,18 +21,16 @@ from xonsh.tools import on_main_thread, unthreadable
 # exit can kill all jobs and exit.
 _last_exit_time: tp.Optional[float] = None
 
+# Thread-local data for job control. Allows threadable callable aliases
+# (ProcProxyThread) to maintain job control information separate from the main
+# thread.
+#
+# _jobs_thread_local.tasks is a queue used to keep track of the tasks. On
+# the main thread, it is set to _tasks_main.
+#
+# _jobs_thread_local.jobs is a dictionary used to keep track of the jobs.
+# On the main thread, it is set to XSH.all_jobs.
 _jobs_thread_local = threading.local()
-
-# Queue used to keep track of the tasks.
-# This is thread local, so threadable callable aliases (ProcProxyThread) each
-# get their own separate queues.
-_jobs_thread_local.tasks: tp.Deque[int]
-
-# Dictionary used to keep track of the jobs.
-# It is thread local. On the main thread, it is set to XSH.all_jobs,
-# whereas in a threadable callable alias (ProcProxyThread), it is a
-# separate dictionary.
-_jobs_thread_local.jobs: tp.Dict[int, tp.Dict]
 
 # Task queue for the main thread
 # The use_main_jobs context manager uses this variable to access the tasks on
