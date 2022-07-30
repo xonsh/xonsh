@@ -152,6 +152,13 @@ class CommandPipeline:
 
         background = self.spec.background
         pipeline_group = None
+        if xp.ON_POSIX and not xt.on_main_thread():
+            # If we are inside a ProcProxyThread, then run commands in the same
+            # process group as xonsh. This fixes case 2 of issue #4277, where
+            # the terminal is given to a command inside the ProcProxyThread,
+            # taking the terminal away from the `less` command, causing `less`
+            # to stop.
+            pipeline_group = os.getpgid(0)
         for spec in specs:
             if self.starttime is None:
                 self.starttime = time.time()
