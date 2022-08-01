@@ -20,7 +20,7 @@ repos:
         pass_filenames: false
         name: isort (python)
   - repo: https://github.com/pycqa/flake8
-    rev: '4.0.1'  # pick a git hash / tag to point to
+    rev: '5.0.2'  # pick a git hash / tag to point to
     hooks:
       - id: flake8
         additional_dependencies:
@@ -69,7 +69,7 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.2
+    rev: v2.37.3
     hooks:
     - id: pyupgrade
       args: [--py38-plus]
