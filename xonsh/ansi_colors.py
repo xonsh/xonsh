@@ -1149,7 +1149,8 @@ def ansi_style_by_name(name):
     if name in ANSI_STYLES:
         return ANSI_STYLES[name]
     elif not HAS_PYGMENTS:
-        raise KeyError(f"could not find style {name!r}")
+        print(f"could not find style {name!r}, using 'default'")
+        return ANSI_STYLES["default"]
     from pygments.util import ClassNotFound
 
     from xonsh.pygments_cache import get_style_by_name
