@@ -71,3 +71,22 @@ def test_gitstatus_clean(prompts, fake_proc):
     assert format(prompts.pick("gitstatus")) == exp
     assert _format_value(prompts.pick("gitstatus"), None, None) == exp
     assert _format_value(prompts.pick("gitstatus"), "{}", None) == exp
+
+
+def test_no_git(prompts, fake_process):
+    err = b"fatal: not a git repository (or any of the parent directories): .git"
+    for cmd in (
+        "git status --porcelain --branch",
+        "git rev-parse --git-dir",
+        "git diff --numstat",
+    ):
+        fake_process.register_subprocess(
+            command=cmd,
+            stderr=err,
+            returncode=128,
+        )
+
+    exp = ""
+    assert format(prompts.pick("gitstatus")) == exp
+    assert _format_value(prompts.pick("gitstatus"), None, None) == exp
+    assert _format_value(prompts.pick("gitstatus"), "{}", None) == exp
