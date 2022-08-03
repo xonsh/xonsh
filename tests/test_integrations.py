@@ -588,6 +588,58 @@ xexec python3 -c 'import os; print(os.environ["SHLVL"])' # == 4
 """,
         0,
     ),
+    # test $() inside piped callable alias
+    (
+        r"""
+def _callme(args):
+    result = $(python -c 'print("tree");print("car")')
+    print(result[::-1])
+    print('one\ntwo\nthree')
+
+aliases['callme'] = _callme
+callme | grep t
+""",
+        """eert
+two
+three
+""",
+        0,
+    ),
+    # test ![] inside piped callable alias
+    (
+        r"""
+def _callme(args):
+    python -c 'print("tree");print("car")'
+    print('one\ntwo\nthree')
+
+aliases['callme'] = _callme
+callme | grep t
+""",
+        """tree
+two
+three
+""",
+        0,
+    ),
+    # test $[] inside piped callable alias
+    pytest.param(
+        (
+            r"""
+def _callme(args):
+    $[python -c 'print("tree");print("car")']
+    print('one\ntwo\nthree')
+
+aliases['callme'] = _callme
+callme | grep t
+""",
+            """tree
+two
+three
+""",
+            0,
+        ),
+        marks=pytest.mark.xfail(reason="$[] does not send stdout through the pipe"),
+    ),
 ]
 
 if not ON_WINDOWS:

@@ -1,10 +1,12 @@
 """Job control for the xonsh shell."""
 import collections
+import contextlib
 import ctypes
 import os
 import signal
 import subprocess
 import sys
+import threading
 import time
 import typing as tp
 
@@ -13,13 +15,68 @@ from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
-from xonsh.tools import unthreadable
+from xonsh.tools import on_main_thread, unthreadable
 
-# there is not much cost initing deque
-tasks: tp.Deque[int] = collections.deque()
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
 _last_exit_time: tp.Optional[float] = None
+
+# Thread-local data for job control. Allows threadable callable aliases
+# (ProcProxyThread) to maintain job control information separate from the main
+# thread.
+#
+# _jobs_thread_local.tasks is a queue used to keep track of the tasks. On
+# the main thread, it is set to _tasks_main.
+#
+# _jobs_thread_local.jobs is a dictionary used to keep track of the jobs.
+# On the main thread, it is set to XSH.all_jobs.
+_jobs_thread_local = threading.local()
+
+# Task queue for the main thread
+# The use_main_jobs context manager uses this variable to access the tasks on
+# the main thread.
+_tasks_main: tp.Deque[int] = collections.deque()
+
+
+@contextlib.contextmanager
+def use_main_jobs():
+    """Context manager that replaces a thread's task queue and job dictionary
+    with those of the main thread
+
+    This allows another thread (e.g. the commands jobs, disown, and bg) to
+    handle the main thread's job control.
+    """
+    old_tasks = get_tasks()
+    old_jobs = get_jobs()
+    try:
+        _jobs_thread_local.tasks = _tasks_main
+        _jobs_thread_local.jobs = XSH.all_jobs
+        yield
+    finally:
+        _jobs_thread_local.tasks = old_tasks
+        _jobs_thread_local.jobs = old_jobs
+
+
+def get_tasks() -> tp.Deque[int]:
+    try:
+        return _jobs_thread_local.tasks
+    except AttributeError:
+        if on_main_thread():
+            _jobs_thread_local.tasks = _tasks_main
+        else:
+            _jobs_thread_local.tasks = collections.deque()
+        return _jobs_thread_local.tasks
+
+
+def get_jobs() -> tp.Dict[int, tp.Dict]:
+    try:
+        return _jobs_thread_local.jobs
+    except AttributeError:
+        if on_main_thread():
+            _jobs_thread_local.jobs = XSH.all_jobs
+        else:
+            _jobs_thread_local.jobs = {}
+        return _jobs_thread_local.jobs
 
 
 if ON_DARWIN:
@@ -246,6 +303,7 @@ def _safe_wait_for_active_job(last_task=None, backgrounded=False):
 
 def get_next_task():
     """Get the next active task and put it on top of the queue"""
+    tasks = get_tasks()
     _clear_dead_jobs()
     selected_task = None
     for tid in tasks:
@@ -261,25 +319,27 @@ def get_next_task():
 
 
 def get_task(tid):
-    return XSH.all_jobs[tid]
+    return get_jobs()[tid]
 
 
 def _clear_dead_jobs():
     to_remove = set()
+    tasks = get_tasks()
     for tid in tasks:
         obj = get_task(tid)["obj"]
         if obj is None or obj.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
-        del XSH.all_jobs[job]
+        del get_jobs()[job]
 
 
 def format_job_string(num: int) -> str:
     try:
-        job = XSH.all_jobs[num]
+        job = get_jobs()[num]
     except KeyError:
         return ""
+    tasks = get_tasks()
     pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
     status = job["status"]
     cmd = " ".join([" ".join(i) if isinstance(i, list) else i for i in job["cmds"]])
@@ -299,7 +359,7 @@ def get_next_job_number():
     """Get the lowest available unique job number (for the next job created)."""
     _clear_dead_jobs()
     i = 1
-    while i in XSH.all_jobs:
+    while i in get_jobs():
         i += 1
     return i
 
@@ -309,8 +369,8 @@ def add_job(info):
     num = get_next_job_number()
     info["started"] = time.time()
     info["status"] = "running"
-    tasks.appendleft(num)
-    XSH.all_jobs[num] = info
+    get_tasks().appendleft(num)
+    get_jobs()[num] = info
     if info["bg"] and XSH.env.get("XONSH_INTERACTIVE"):
         print_one_job(num)
 
@@ -327,7 +387,7 @@ def clean_jobs():
     if XSH.env["XONSH_INTERACTIVE"]:
         _clear_dead_jobs()
 
-        if XSH.all_jobs:
+        if get_jobs():
             global _last_exit_time
             hist = XSH.history
             if hist is not None and len(hist.tss) > 0:
@@ -342,7 +402,7 @@ def clean_jobs():
                 # unfinished jobs in this case.
                 hup_all_jobs()
             else:
-                if len(XSH.all_jobs) > 1:
+                if len(get_jobs()) > 1:
                     msg = "there are unfinished jobs"
                 else:
                     msg = "there is an unfinished job"
@@ -372,10 +432,11 @@ def hup_all_jobs():
     Send SIGHUP to all child processes (called when exiting xonsh).
     """
     _clear_dead_jobs()
-    for job in XSH.all_jobs.values():
+    for job in get_jobs().values():
         _hup(job)
 
 
+@use_main_jobs()
 def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     """
     xonsh command: jobs
@@ -383,7 +444,7 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     Display a list of all current jobs.
     """
     _clear_dead_jobs()
-    for j in tasks:
+    for j in get_tasks():
         print_one_job(j, outfile=stdout)
     return None, None
 
@@ -393,6 +454,7 @@ def resume_job(args, wording: tp.Literal["fg", "bg"]):
     used by fg and bg to resume a job either in the foreground or in the background.
     """
     _clear_dead_jobs()
+    tasks = get_tasks()
     if len(tasks) == 0:
         return "", "There are currently no suspended jobs"
 
@@ -409,7 +471,7 @@ def resume_job(args, wording: tp.Literal["fg", "bg"]):
         except (ValueError, IndexError):
             return "", f"Invalid job: {args[0]}\n"
 
-        if tid not in XSH.all_jobs:
+        if tid not in get_jobs():
             return "", f"Invalid job: {args[0]}\n"
     else:
         return "", f"{wording} expects 0 or 1 arguments, not {len(args)}\n"
@@ -441,6 +503,7 @@ def fg(args, stdin=None):
     return resume_job(args, wording="fg")
 
 
+@use_main_jobs()
 def bg(args, stdin=None):
     """xonsh command: bg
 
@@ -449,7 +512,7 @@ def bg(args, stdin=None):
     """
     res = resume_job(args, wording="bg")
     if res is None:
-        curtask = get_task(tasks[0])
+        curtask = get_task(get_tasks()[0])
         curtask["bg"] = True
         _continue(curtask)
     else:
@@ -458,10 +521,11 @@ def bg(args, stdin=None):
 
 def job_id_completer(xsh, **_):
     """Return currently running jobs ids"""
-    for job_id in xsh.all_jobs:
+    for job_id in get_jobs():
         yield RichCompletion(str(job_id), description=format_job_string(job_id))
 
 
+@use_main_jobs()
 def disown_fn(
     job_ids: Annotated[
         tp.Sequence[int], Arg(type=int, nargs="*", completer=job_id_completer)
@@ -484,6 +548,7 @@ def disown_fn(
         Automatically continue stopped jobs when they are disowned, equivalent to setting $AUTO_CONTINUE=True
     """
 
+    tasks = get_tasks()
     if len(tasks) == 0:
         return "", "There are no active jobs"
 
@@ -507,7 +572,7 @@ def disown_fn(
 
         # Stop tracking this task
         tasks.remove(tid)
-        del XSH.all_jobs[tid]
+        del get_jobs()[tid]
         messages.append(f"Removed job {tid} ({current_task['status']})")
 
     if messages:
