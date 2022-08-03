@@ -319,5 +319,11 @@ class GitStatus(MultiPromptField):
                 continue
             yield frag
 
+    def _collect(self, ctx):
+        if not ctx.pick_val(repo_path):
+            # no need to display any other fragments
+            return
+        yield from super()._collect(ctx)
+
 
 gitstatus = GitStatus()
