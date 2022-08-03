@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from xonsh.prompt import gitstatus
@@ -14,6 +16,7 @@ def prompts(xession):
     fields = xession.env["PROMPT_FIELDS"]
     yield fields
     fields.clear()
+    fields.reset()
 
 
 @pytest.fixture
@@ -73,7 +76,8 @@ def test_gitstatus_clean(prompts, fake_proc):
     assert _format_value(prompts.pick("gitstatus"), "{}", None) == exp
 
 
-def test_no_git(prompts, fake_process):
+def test_no_git(prompts, fake_process, tmp_path):
+    os.chdir(tmp_path)
     err = b"fatal: not a git repository (or any of the parent directories): .git"
     for cmd in (
         "git status --porcelain --branch",
@@ -87,6 +91,7 @@ def test_no_git(prompts, fake_process):
         )
 
     exp = ""
+    assert prompts.pick_val("gitstatus.repo_path") == ""
     assert format(prompts.pick("gitstatus")) == exp
     assert _format_value(prompts.pick("gitstatus"), None, None) == exp
     assert _format_value(prompts.pick("gitstatus"), "{}", None) == exp
