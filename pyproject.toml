@@ -94,6 +94,7 @@ full = [
     "distro; platform_system=='Linux'",
     "setproctitle; platform_system=='Windows'",
     "gnureadline; platform_system=='Darwin'",
+    "ujson",
 ]
 bestshell = [
     "prompt_toolkit>=3.0.29",
