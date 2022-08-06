@@ -232,3 +232,38 @@ def test_equal_sign_arg(command_context, completions, lprefix, exp_append_space)
         isinstance(comp, RichCompletion) and comp.append_space == exp_append_space
         for comp in bash_completions
     )
+
+
+@pytest.fixture
+def bash_completer(fake_process):
+    fake_process.register_subprocess(
+        command=["bash", fake_process.any()],
+        # completion for "git push origin :dev-b"
+        stdout=b"""\
+complete -o bashdefault -o default -o nospace -F __git_wrap__git_main git
+dev-branch
+""",
+    )
+
+    return fake_process
+
+
+# git push origin :dev-b<TAB>  ->  git push origin :dev-branch
+def test_git_delete_remote_branch(bash_completer):
+    command_context = CommandContext(
+        args=(
+            CommandArg("git"),
+            CommandArg("push"),
+            CommandArg("origin"),
+        ),
+        arg_index=3,
+        prefix=":dev-b",
+    )
+    bash_completions, bash_lprefix = complete_from_bash(
+        CompletionContext(command_context)
+    )
+    assert bash_completions == {"dev-branch"} and bash_lprefix == 5
+    assert all(
+        isinstance(comp, RichCompletion) and comp.append_space is False
+        for comp in bash_completions
+    )

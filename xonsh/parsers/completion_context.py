@@ -35,6 +35,8 @@ class CommandArg(NamedTuple):
     """The arg's opening quote (if it exists)"""
     closing_quote: str = ""
     """The arg's closing quote (if it exists)"""
+    is_io_redir: bool = False
+    """Whether the arg is IO redirection"""
 
     @property
     def raw_value(self):
@@ -328,6 +330,13 @@ class CompletionContextParser:
         "OR",
     }
     used_tokens |= multi_tokens
+    io_redir_tokens = {
+        "LT",
+        "GT",
+        "RSHIFT",
+        "IOREDIRECT",
+    }
+    used_tokens |= io_redir_tokens
     artificial_tokens = {"ANY"}
     ignored_tokens = {"INDENT", "DEDENT", "WS"}
 
@@ -701,7 +710,8 @@ class CompletionContextParser:
 
         arg = CompletionContextParser.try_parse_string_literal(raw_arg)
         if arg is None:
-            arg = CommandArg(raw_arg)
+            is_io_redir = p.slice[1].type in self.io_redir_tokens
+            arg = CommandArg(raw_arg, is_io_redir=is_io_redir)
 
         p[0] = Spanned(arg, span, cursor_context=relative_cursor)
 
@@ -727,7 +737,9 @@ class CompletionContextParser:
         joined_raw = f"{last_arg.value.raw_value}{in_between}{new_arg.value.raw_value}"
         string_literal = self.try_parse_string_literal(joined_raw)
 
-        if string_literal is not None or not in_between:
+        is_redir = new_arg.value.is_io_redir or last_arg.value.is_io_redir
+
+        if string_literal is not None or (not in_between and not is_redir):
             if string_literal is not None:
                 # we're appending to a partial string, e.g. `"a b`
                 arg = string_literal
