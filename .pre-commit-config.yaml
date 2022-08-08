@@ -20,7 +20,7 @@ repos:
         pass_filenames: false
         name: isort (python)
   - repo: https://github.com/pycqa/flake8
-    rev: '5.0.2'  # pick a git hash / tag to point to
+    rev: '5.0.4'  # pick a git hash / tag to point to
     hooks:
       - id: flake8
         additional_dependencies:
