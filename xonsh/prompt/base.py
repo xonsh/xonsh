@@ -403,6 +403,10 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
         """the results are cached and need to be reset between prompts"""
         self._cache.clear()
 
+    def reset_key(self, key):
+        """remove a single key from the cache (if it exists)"""
+        self._cache.pop(key, None)
+
 
 class BasePromptField:
     value = ""
