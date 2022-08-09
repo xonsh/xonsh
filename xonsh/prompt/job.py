@@ -1,8 +1,9 @@
 """Prompt formatter for current jobs"""
 
 import contextlib
+import typing as tp
 
-_current_cmds = None
+_current_cmds: tp.Optional[list] = None
 
 
 @contextlib.contextmanager
