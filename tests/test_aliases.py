@@ -2,6 +2,7 @@
 
 import inspect
 import os
+import sys
 
 import pytest
 
@@ -195,7 +196,7 @@ def test_exec_alias_args(xession):
 def test_exec_alias_return_value(exp_rtn, xonsh_session, monkeypatch):
     monkeypatch.setitem(xonsh_session.env, "RAISE_SUBPROC_ERROR", False)
     stack = inspect.stack()
-    rtn = ExecAlias(f"python -c 'exit({exp_rtn})'")([], stack=stack)
+    rtn = ExecAlias(f"{sys.executable} -c 'exit({exp_rtn})'")([], stack=stack)
     assert rtn == exp_rtn
 
 
