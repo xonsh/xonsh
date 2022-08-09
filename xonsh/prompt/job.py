@@ -1,14 +1,26 @@
 """Prompt formatter for current jobs"""
 
-import xonsh.jobs as xj
+import contextlib
+
+_current_cmds = None
+
+
+@contextlib.contextmanager
+def update_current_cmds(cmds):
+    """Context manager that updates the information used by _current_job()"""
+    global _current_cmds
+    old_cmds = _current_cmds
+    try:
+        _current_cmds = cmds
+        yield
+    finally:
+        _current_cmds = old_cmds
 
 
 def _current_job():
-    j = xj.get_next_task()
-    if j is not None:
-        if not j["bg"]:
-            cmd = j["cmds"][-1]
-            s = cmd[0]
-            if s == "sudo" and len(cmd) > 1:
-                s = cmd[1]
-            return s
+    if _current_cmds is not None:
+        cmd = _current_cmds[-1]
+        s = cmd[0]
+        if s == "sudo" and len(cmd) > 1:
+            s = cmd[1]
+        return s

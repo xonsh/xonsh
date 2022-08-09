@@ -16,13 +16,14 @@ import xonsh.jobs as xj
 import xonsh.lazyasd as xl
 import xonsh.lazyimps as xli
 import xonsh.platform as xp
+import xonsh.prompt.job as xpj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
     HiddenCommandPipeline,
-    pause_call_resume,
+    resume_process,
 )
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
@@ -857,14 +858,8 @@ def cmds_to_specs(cmds, captured=False, envs=None):
     return specs
 
 
-def _should_set_title(captured=False):
-    env = XSH.env
-    return (
-        env.get("XONSH_INTERACTIVE")
-        and not env.get("XONSH_STORE_STDOUT")
-        and captured not in STDOUT_CAPTURE_KINDS
-        and XSH.shell is not None
-    )
+def _should_set_title():
+    return XSH.env.get("XONSH_INTERACTIVE") and XSH.shell is not None
 
 
 def run_subproc(cmds, captured=False, envs=None):
@@ -888,6 +883,23 @@ def run_subproc(cmds, captured=False, envs=None):
             print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
+    if _should_set_title():
+        # context manager updates the command information that gets
+        # accessed by _current_job() when setting the terminal's title
+        with xpj.update_current_cmds(cmds):
+            # clear prompt level cache
+            XSH.env["PROMPT_FIELDS"].reset()
+            # The terminal's title needs to be set before starting the
+            # subprocess to avoid accidentally answering interactive questions
+            # from commands such as `rm -i` (see #1436)
+            XSH.shell.settitle()
+            # run the subprocess
+            return _run_specs(specs, cmds)
+    else:
+        return _run_specs(specs, cmds)
+
+
+def _run_specs(specs, cmds):
     captured = specs[-1].captured
     if captured == "hiddenobject":
         command = HiddenCommandPipeline(specs)
@@ -906,15 +918,12 @@ def run_subproc(cmds, captured=False, envs=None):
                 "pgrp": command.term_pgid,
             }
         )
-    if _should_set_title(captured=captured):
-        # set title here to get currently executing command
-        pause_call_resume(proc, XSH.shell.settitle)
-    else:
-        # for some reason, some programs are in a stopped state when the flow
-        # reaches this point, hence a SIGCONT should be sent to `proc` to make
-        # sure that the shell doesn't hang. This `pause_call_resume` invocation
-        # does this
-        pause_call_resume(proc, int)
+    # For some reason, some programs are in a stopped state when the flow
+    # reaches this point, hence a SIGCONT should be sent to `proc` to make
+    # sure that the shell doesn't hang.
+    # See issue #2999 and the fix in PR #3000
+    resume_process(proc)
+
     # now figure out what we should return
     if captured == "object":
         return command  # object can be returned even if backgrounding

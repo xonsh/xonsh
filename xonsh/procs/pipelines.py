@@ -757,17 +757,8 @@ class HiddenCommandPipeline(CommandPipeline):
         return ""
 
 
-def pause_call_resume(p, f, *args, **kwargs):
-    """For a process p, this will call a function f with the remaining args and
-    and kwargs. If the process cannot accept signals, the function will be called.
-
-    Parameters
-    ----------
-    p : Popen object or similar
-    f : callable
-    args : remaining arguments
-    kwargs : keyword arguments
-    """
+def resume_process(p):
+    """Sends SIGCONT to a process if possible."""
     can_send_signal = (
         hasattr(p, "send_signal")
         and xp.ON_POSIX
@@ -776,15 +767,9 @@ def pause_call_resume(p, f, *args, **kwargs):
     )
     if can_send_signal:
         try:
-            p.send_signal(signal.SIGSTOP)
+            p.send_signal(signal.SIGCONT)
         except PermissionError:
             pass
-    try:
-        f(*args, **kwargs)
-    except Exception:
-        pass
-    if can_send_signal:
-        p.send_signal(signal.SIGCONT)
 
 
 class PrevProcCloser(threading.Thread):
