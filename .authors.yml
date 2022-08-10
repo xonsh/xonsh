@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 598
+  num_commits: 603
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1133,7 +1133,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 197
+  num_commits: 199
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1298,7 +1298,7 @@
   email: 46109467+yaxollum@users.noreply.github.com
   alternate_emails:
   - yaxollum@gmail.com
-  num_commits: 24
+  num_commits: 27
   first_commit: 2021-06-11 14:11:19
 - name: Walter A. Boring IV
   email: waboring@hemna.com
@@ -1434,7 +1434,7 @@
   email: github@rivera.za.net
   alternate_emails:
   - stefano@rivera.za.net
-  num_commits: 2
+  num_commits: 3
   first_commit: 2022-05-08 00:26:57
 - name: dependabot[bot]
   email: 49699333+dependabot[bot]@users.noreply.github.com
@@ -1442,7 +1442,7 @@
   first_commit: 2022-06-08 09:43:32
 - name: jbw3
   email: jbw3@users.noreply.github.com
-  num_commits: 1
+  num_commits: 2
   first_commit: 2022-05-28 11:52:27
 - name: Italo Cunha
   email: cunha@users.noreply.github.com
@@ -1460,3 +1460,19 @@
   email: 16097755+hroemer@users.noreply.github.com
   num_commits: 1
   first_commit: 2022-06-27 22:21:34
+- name: pre-commit-ci[bot]
+  email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
+  num_commits: 4
+  first_commit: 2022-07-11 14:26:34
+- name: jgart
+  email: 47760695+jgarte@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2022-07-25 06:05:00
+- name: Michael Panitz (at Cascadia College)
+  email: mike.panitz@gmail.com
+  num_commits: 1
+  first_commit: 2022-08-04 07:21:43
+- name: Tim Gates
+  email: tim.gates@iress.com
+  num_commits: 1
+  first_commit: 2022-07-22 19:12:46
