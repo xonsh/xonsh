@@ -252,7 +252,7 @@ def _format_value(val, spec, conv) -> str:
     and 'current_job' returns 'sleep', the result is 'sleep | ', and if
     'current_job' returns None, the result is ''.
     """
-    if val is None:
+    if val is None or (isinstance(val, BasePromptField) and val.value is None):
         return ""
     val = xt.FORMATTER.convert_field(val, conv)
 
