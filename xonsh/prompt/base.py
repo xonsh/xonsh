@@ -331,7 +331,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
             _replace_home_cwd,
         )
         from xonsh.prompt.env import env_name, vte_new_tab_cwd
-        from xonsh.prompt.job import _current_job
+        from xonsh.prompt.job import CurrentJobField
         from xonsh.prompt.times import _localtime
         from xonsh.prompt.vc import branch_bg_color, branch_color, current_branch
 
@@ -349,7 +349,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                 curr_branch=current_branch,
                 branch_color=branch_color,
                 branch_bg_color=branch_bg_color,
-                current_job=_current_job,
+                current_job=CurrentJobField(name="current_job"),
                 env_name=env_name,
                 env_prefix="(",
                 env_postfix=") ",

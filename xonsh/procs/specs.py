@@ -16,7 +16,6 @@ import xonsh.jobs as xj
 import xonsh.lazyasd as xl
 import xonsh.lazyimps as xli
 import xonsh.platform as xp
-import xonsh.prompt.job as xpj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.procs.pipelines import (
@@ -885,8 +884,8 @@ def run_subproc(cmds, captured=False, envs=None):
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
     if _should_set_title():
         # context manager updates the command information that gets
-        # accessed by _current_job() when setting the terminal's title
-        with xpj.update_current_cmds(cmds):
+        # accessed by CurrentJobField when setting the terminal's title
+        with XSH.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
             # remove current_job from prompt level cache
             XSH.env["PROMPT_FIELDS"].reset_key("current_job")
             # The terminal's title needs to be set before starting the
