@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from xonsh.prompt import env as prompt_env
-from xonsh.prompt.base import PromptFields, PromptFormatter
+from xonsh.prompt.base import PromptField, PromptFields, PromptFormatter
 
 
 @pytest.fixture
@@ -40,8 +40,10 @@ def test_format_prompt(inp, exp, fields, formatter, xession):
             "a_string": "cats",
             "a_number": 7,
             "empty": "",
-            "current_job": (lambda: "sleep"),
+            "a_function": (lambda: "hello"),
+            "current_job": PromptField(value="sleep"),
             "none": (lambda: None),
+            "none_pf": PromptField(value=None),
         }
     ],
 )
@@ -49,7 +51,9 @@ def test_format_prompt(inp, exp, fields, formatter, xession):
     "inp, exp",
     [
         ("{a_number:{0:^3}}cats", " 7 cats"),
+        ("{a_function:{} | }xonsh", "hello | xonsh"),
         ("{current_job:{} | }xonsh", "sleep | xonsh"),
+        ("{none_pf:{} | }xonsh", "xonsh"),
         ("{none:{} | }{a_string}{empty:!}", "cats!"),
         ("{none:{}}", ""),
         ("{{{a_string:{{{}}}}}}", "{{cats}}"),
