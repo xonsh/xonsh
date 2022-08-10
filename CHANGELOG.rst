@@ -4,6 +4,48 @@ Xonsh Change Log
 
 .. current developments
 
+v0.13.1
+====================
+
+**Added:**
+
+* The ujson (faster version of json) added to xonsh[full] package.
+
+**Changed:**
+
+* Bumped Python version in `xonsh.AppImage` to 3.10
+* The terminal's title is updated with the current command's name even if the command is a captured command or a callable alias
+
+**Fixed:**
+
+* Warn and continue if a user without ``pygments`` tries to load an unknown style
+* Fixed a bash completion bug when prefixing a file path with '<' or '>' (for redirecting stdin/stdout/stderr)
+* Fixed a bash completion bug when completing a git branch name when deleting a remote branch (e.g. `git push origin :dev-branch`)
+* A callable alias containing subprocess commands no longer freezes when piped to another command
+* ``less`` no longer stops when a callable alias containing subprocess commands is piped into it
+* ``gitstatus`` Prompt-field would be empty on paths without git setup.
+* When using the sway window manager, ``swaymsg -t get_inputs`` no longer fails with the error "Unable to receive IPC response"
+* The ``current_job`` variable now works as expected when used in ``$TITLE``
+
+**Security:**
+
+* ``xpip`` will never add ``sudo`` under any circumstances and will instead append ``--user`` as needed
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* Peter Ye
+* pre-commit-ci[bot]
+* Stefano Rivera
+* jbw3
+* jgart
+* Michael Panitz (at Cascadia College)
+* Tim Gates
+
+
+
 v0.13.0
 ====================
 
