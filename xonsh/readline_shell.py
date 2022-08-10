@@ -635,6 +635,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             return self.mlprompt
         env = XSH.env  # pylint: disable=no-member
         p = env.get("PROMPT")
+        # clear prompt level cache
+        env["PROMPT_FIELDS"].reset()
         try:
             p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
