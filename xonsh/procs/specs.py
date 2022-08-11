@@ -737,7 +737,9 @@ def _update_last_spec(last):
         return
     callable_alias = callable(last.alias)
     if callable_alias:
-        pass
+        if last.cls is ProcProxy and captured == "hiddenobject":
+            # a ProcProxy run using ![] should not be captured
+            return
     else:
         cmds_cache = XSH.commands_cache
         thable = (

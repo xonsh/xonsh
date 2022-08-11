@@ -166,3 +166,18 @@ def test_callable_alias_cls(thread_subprocs, xession):
     spec = cmds_to_specs(cmds, captured="stdout")[0]
     proc = spec.run()
     assert proc.f == obj
+
+
+@pytest.mark.parametrize("captured", ["hiddenobject", False])
+def test_procproxy_not_captured(xession, captured):
+    xession.aliases["tst"] = lambda: 0
+    cmds = (["tst", "/root"],)
+
+    xession.env["THREAD_SUBPROCS"] = False
+    specs = cmds_to_specs(cmds, captured)
+
+    assert specs[0].cls is ProcProxy
+
+    # neither stdout nor stderr should be captured
+    assert specs[0].stdout is None
+    assert specs[0].stderr is None
