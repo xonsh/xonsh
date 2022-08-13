@@ -79,19 +79,14 @@ def test_gitstatus_clean(prompts, fake_proc):
 def test_no_git(prompts, fake_process, tmp_path):
     os.chdir(tmp_path)
     err = b"fatal: not a git repository (or any of the parent directories): .git"
-    for cmd in (
-        "git status --porcelain --branch",
-        "git rev-parse --git-dir",
-        "git diff --numstat",
-    ):
-        fake_process.register_subprocess(
-            command=cmd,
-            stderr=err,
-            returncode=128,
-        )
+    fake_process.register_subprocess(
+        command="git rev-parse --git-dir", stderr=err, returncode=128
+    )
 
-    exp = ""
-    assert prompts.pick_val("gitstatus.repo_path") == ""
-    assert format(prompts.pick("gitstatus")) == exp
-    assert _format_value(prompts.pick("gitstatus"), None, None) == exp
-    assert _format_value(prompts.pick("gitstatus"), "{}", None) == exp
+    # test that all gitstatus fields (gitstatus, gitstatus.branch,
+    # gitstatus.porceclain, etc) are None and are formatted correctly in a
+    # format string like {gitstatus: hello {}}
+    for field in prompts.get_fields(gitstatus):
+        assert prompts.pick_val(field) is None
+        assert _format_value(prompts.pick(field), None, None) == ""
+        assert _format_value(prompts.pick(field), "hello {}", None) == ""
