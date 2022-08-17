@@ -92,12 +92,48 @@ def _get_sp_output(xsh, *args: str, **kwargs) -> str:
     return out
 
 
-class _GSField(PromptField):
+class _GitDir(PromptField):
+    _cwd = ""
+
+    def update(self, ctx):
+        # call the subprocess only if cwd changed
+        # or if value is None (in case `git init` was run)
+        from xonsh.dirstack import _get_cwd
+
+        cwd = _get_cwd()
+        if cwd != self._cwd or self.value is None:
+            self._cwd = cwd
+            self.value = _get_sp_output(
+                ctx.xsh, "git", "rev-parse", "--git-dir"
+            ).strip()
+            if self.value == "":
+                self.value = None
+
+
+repo_path = _GitDir()
+
+
+def inside_repo(ctx):
+    return ctx.pick_val(repo_path) is not None
+
+
+class GitStatusPromptField(PromptField):
+    """Only calls the updator if we are inside a git repository"""
+
+    def update(self, ctx):
+        if inside_repo(ctx):
+            if self.updator:
+                self.updator(self, ctx)
+        else:
+            self.value = None
+
+
+class _GSField(GitStatusPromptField):
     """wrap output from git command to value"""
 
     _args: "tuple[str, ...]" = ()
 
-    def update(self, ctx):
+    def updator(self, ctx):
         self.value = _get_sp_output(ctx.xsh, *self._args).strip()
 
 
@@ -105,7 +141,7 @@ short_head = _GSField(prefix=":", _args=("git", "rev-parse", "--short", "HEAD"))
 tag = _GSField(_args=("git", "describe", "--always"))
 
 
-@PromptField.wrap()
+@GitStatusPromptField.wrap()
 def tag_or_hash(fld: PromptField, ctx):
     fld.value = ctx.pick(tag) or ctx.pick(short_head)
 
@@ -116,23 +152,6 @@ def _parse_int(val: str, default=0):
     return default
 
 
-class _GitDir(_GSField):
-    _args = ("git", "rev-parse", "--git-dir")
-    _cwd = ""
-
-    def update(self, ctx):
-        # call the subprocess only if cwd changed
-        from xonsh.dirstack import _get_cwd
-
-        cwd = _get_cwd()
-        if cwd != self._cwd:
-            self._cwd = cwd
-            super().update(ctx)
-
-
-repo_path = _GitDir()
-
-
 def get_stash_count(gitdir: str):
     """Get git-stash count"""
     with contextlib.suppress(OSError):
@@ -141,7 +160,7 @@ def get_stash_count(gitdir: str):
     return 0
 
 
-@PromptField.wrap(prefix="⚑")
+@GitStatusPromptField.wrap(prefix="⚑")
 def stash_count(fld: PromptField, ctx: PromptFields):
     fld.value = get_stash_count(ctx.pick_val(repo_path))
 
@@ -160,7 +179,7 @@ def get_operations(gitdir: str):
             yield name
 
 
-@PromptField.wrap(prefix="{CYAN}", separator="|")
+@GitStatusPromptField.wrap(prefix="{CYAN}", separator="|")
 def operations(fld, ctx: PromptFields) -> None:
     gitdir = ctx.pick_val(repo_path)
     op = fld.separator.join(get_operations(gitdir))
@@ -170,7 +189,7 @@ def operations(fld, ctx: PromptFields) -> None:
         fld.value = ""
 
 
-@PromptField.wrap()
+@GitStatusPromptField.wrap()
 def porcelain(fld, ctx: PromptFields):
     """Return parsed values from ``git status --porcelain``"""
 
@@ -228,7 +247,7 @@ def get_gitstatus_info(fld: "_GSInfo", ctx: PromptFields) -> None:
     fld.value = info[fld.info]
 
 
-class _GSInfo(PromptField):
+class _GSInfo(GitStatusPromptField):
     info: str
 
     def __init__(self, **kwargs):
@@ -246,7 +265,7 @@ conflicts = _GSInfo(prefix="{RED}×", suffix="{RESET}", info="conflicts")
 staged = _GSInfo(prefix="{RED}●", suffix="{RESET}", info="staged")
 
 
-@PromptField.wrap()
+@GitStatusPromptField.wrap()
 def numstat(fld, ctx):
     changed = _get_sp_output(ctx.xsh, "git", "diff", "--numstat")
 
@@ -262,17 +281,17 @@ def numstat(fld, ctx):
     fld.value = (insert, delete)
 
 
-@PromptField.wrap(prefix="{BLUE}+", suffix="{RESET}")
+@GitStatusPromptField.wrap(prefix="{BLUE}+", suffix="{RESET}")
 def lines_added(fld: PromptField, ctx: PromptFields):
     fld.value = ctx.pick_val(numstat)[0]
 
 
-@PromptField.wrap(prefix="{RED}-", suffix="{RESET}")
+@GitStatusPromptField.wrap(prefix="{RED}-", suffix="{RESET}")
 def lines_removed(fld: PromptField, ctx):
     fld.value = ctx.pick_val(numstat)[-1]
 
 
-@PromptField.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
+@GitStatusPromptField.wrap(prefix="{BOLD_GREEN}", suffix="{RESET}", symbol="✓")
 def clean(fld, ctx):
     changes = sum(
         ctx.pick_val(f)
@@ -319,11 +338,11 @@ class GitStatus(MultiPromptField):
                 continue
             yield frag
 
-    def _collect(self, ctx):
-        if not ctx.pick_val(repo_path):
-            # no need to display any other fragments
-            return
-        yield from super()._collect(ctx)
+    def update(self, ctx):
+        if inside_repo(ctx):
+            super().update(ctx)
+        else:
+            self.value = None
 
 
 gitstatus = GitStatus()
