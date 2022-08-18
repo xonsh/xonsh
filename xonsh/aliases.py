@@ -815,7 +815,7 @@ def detect_xpip_alias():
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
-            return basecmd.extend(["--user"])
+            return basecmd + ["--user"]
         else:
             return basecmd
     except Exception:
