@@ -815,7 +815,7 @@ def detect_xpip_alias():
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
-            return basecmd + ["--user"]
+            return "@(sys.executable) -m pip @(['install', '--user'] + $args[1:] if $args and $args[0] == 'install' else $args)"
         else:
             return basecmd
     except Exception:
