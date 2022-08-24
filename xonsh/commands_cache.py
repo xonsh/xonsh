@@ -197,7 +197,8 @@ class CommandsCache(cabc.Mapping):
 
         for cmd, path in self._get_all_cmds(paths).items():
             key = cmd.upper() if ON_WINDOWS else cmd
-            allcmds[key] = (path, aliases.get(key, None))
+            if key not in allcmds:
+                allcmds[key] = (path, aliases.get(key, None))
 
         warn_cnt = env.get("COMMANDS_CACHE_SIZE_WARNING")
         if warn_cnt and len(allcmds) > warn_cnt:
