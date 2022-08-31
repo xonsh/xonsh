@@ -1,4 +1,4 @@
-*Added:**
+**Added:**
 
 * <news item>
 
