@@ -172,8 +172,8 @@ INNER_TEMPLATE = """
 def inner(_it, _timer):
     #setup
     _t0 = _timer()
-    for _i in range(1, {stmt}):
-        pass
+    for _i in _it:
+        {stmt}
     _t1 = _timer()
     return _t1 - _t0
 """
@@ -181,6 +181,9 @@ def inner(_it, _timer):
 
 def timeit_alias(args, stdin=None):
     """Runs timing study on arguments."""
+    if not args:
+        print("Usage: timeit! <expression>")
+        return -1
     # some real args
     number = 0
     quiet = False
