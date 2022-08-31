@@ -181,6 +181,9 @@ def inner(_it, _timer):
 
 def timeit_alias(args, stdin=None):
     """Runs timing study on arguments."""
+    if not args:
+        print("Usage: timeit! <expression>")
+        return -1
     # some real args
     number = 0
     quiet = False
