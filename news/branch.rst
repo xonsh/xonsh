@@ -1,7 +1,6 @@
 *Added:**
 
-* <for _i in range(1, {stmt}):
-        pass>
+* <news item>
 
 **Changed:**
 
@@ -13,12 +12,11 @@
 
 **Removed:**
 
-* <for _i in _it:
-        {stmt}>
+* <news item>
 
 **Fixed:**
 
-* <news item>
+* Fixed timeit syntax error
 
 **Security:**
 
