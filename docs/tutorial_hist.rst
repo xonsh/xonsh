@@ -337,7 +337,6 @@ filtering can be achieved,
 for the command part:
     - an int returns the command in that position.
     - a slice returns a list of commands.
-    - a string returns the most recent command containing the string.
 
 for the argument part:
     - an int returns the argument of the command in that position.
@@ -360,8 +359,6 @@ examples:
     mkdir with/a/huge/name
     >>> __xonsh__.history[-1, -1]
     'with/a/huge/name/'
-    >>> __xonsh__.history['mkdir']
-    'echo mkdir with/a/huge/name'
     >>> __xonsh__.history[0, 1:]
     'mkdir with/a/huge/name'
 
