@@ -7,7 +7,7 @@ ci:
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
     - id: black
       entry: black xonsh xontrib tests xompletions
