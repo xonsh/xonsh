@@ -857,7 +857,7 @@ class GeneralSetting(Xettings):
     )
     COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
         False,
-        "If enabled, the CommandsCache saved between runs and can reduce the startup time.",
+        "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
     )
 
     HOSTNAME = Var.with_default(
@@ -1241,7 +1241,7 @@ class ChangeDirSetting(Xettings):
     COMPLETE_DOTS = Var.with_default(
         "matching",
         doc="Flag to specify how current and previous directories should be "
-        "tab completed  ('./', '../'):"
+        "tab completed  ('./', '../'):\n"
         "    - ``always`` Always complete paths with ./ and ../\n"
         "    - ``never`` Never complete paths with ./ and ../\n"
         "    - ``matching`` Complete if path starts with . or ..",
@@ -1661,7 +1661,7 @@ class AsyncPromptSetting(PTKSetting):
         to_int_or_none,
         str,
         None,
-        "Define the number of workers used by the ASYC_PROPMT's pool. "
+        "Define the number of workers used by the ASYNC_PROMPT's pool. "
         "By default it is the same as defined by Python's concurrent.futures.ThreadPoolExecutor class.",
     )
     ENABLE_ASYNC_PROMPT = Var.with_default(
