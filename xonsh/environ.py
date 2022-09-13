@@ -1661,7 +1661,7 @@ class AsyncPromptSetting(PTKSetting):
         to_int_or_none,
         str,
         None,
-        "Define the number of workers used by the ASYC_PROPMT's pool. "
+        "Define the number of workers used by the ASYNC_PROMPT's pool. "
         "By default it is the same as defined by Python's concurrent.futures.ThreadPoolExecutor class.",
     )
     ENABLE_ASYNC_PROMPT = Var.with_default(
