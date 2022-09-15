@@ -4,6 +4,20 @@ Xonsh Change Log
 
 .. current developments
 
+v0.13.3
+====================
+
+**Fixed:**
+
+* ``pygments`` startup crash when incorrect prepending ``bg:`` to ``noinherit``
+  style directives
+
+**Authors:**
+
+* Gil Forsyth
+
+
+
 v0.13.2
 ====================
 
