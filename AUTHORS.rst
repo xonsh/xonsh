@@ -28,8 +28,8 @@ Authors are sorted by number of commits.
 * Sagar Tewari
 * Gordon Ball
 * Eadaen1
-* Konstantin Molchanov
 * Peter Ye
+* Konstantin Molchanov
 * Guillaume Leclerc
 * Travis Shirk
 * Carmen Bianca Bakker
@@ -92,6 +92,7 @@ Authors are sorted by number of commits.
 * Jay Tuckey
 * Alexander Steffen
 * Achim Herwig
+* pre-commit-ci[bot]
 * Randy Syring
 * Lucas Inojosa
 * adam j hartz
@@ -124,7 +125,6 @@ Authors are sorted by number of commits.
 * Marius van Niekerk
 * Vasilis Gerakaris
 * dependabot[bot]
-* pre-commit-ci[bot]
 * Jan Schulz
 * Samuel Dion-Girardeau
 * Michael Droettboom
@@ -149,6 +149,7 @@ Authors are sorted by number of commits.
 * Jeremy Schlatter
 * Oliver Bestwalter
 * Stefano Rivera
+* Lie Ryan
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -297,5 +298,7 @@ Authors are sorted by number of commits.
 * jgart
 * Michael Panitz (at Cascadia College)
 * Tim Gates
+* amukher3
+* Ashish Kurmi
 * goodboy
 * Atsushi Morimoto
