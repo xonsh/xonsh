@@ -4,6 +4,32 @@ Xonsh Change Log
 
 .. current developments
 
+v0.13.2
+====================
+
+**Changed:**
+
+* When there is no git repository, the values of all ``gitstatus`` prompt fields are now ``None``.
+* With ``$THREAD_SUBPROCS=False``: When a callable alias is executed with ``![]``, its standard output and standard error are no longer captured. This is because a separate thread is required in order to both capture the output and stream it to the terminal while the alias is running.
+
+**Fixed:**
+
+* Fixed timeit syntax error
+* When there is no git repository, ``$PROMPT`` format strings like ``{gitstatus: hello {}}`` now work as expected.
+* With ``$THREAD_SUBPROCS=False``: When ``cd`` is used with an invalid directory, the error message is now correctly displayed.
+* Fixed case when xpip returns None instead of command.
+
+**Authors:**
+
+* anki-code
+* Peter Ye
+* pre-commit-ci[bot]
+* Lie Ryan
+* amukher3
+* Ashish Kurmi
+
+
+
 v0.13.1
 ====================
 
