@@ -177,7 +177,10 @@ def color_name_to_pygments_code(name, styles):
             fgcolor = color
         else:
             fgcolor = styles[getattr(Color, color)]
-        res = "bg:" + fgcolor
+        if fgcolor == "noinherit":
+            res = "noinherit"
+        else:
+            res = f"bg:{fgcolor}"
     else:
         # have regular, non-background color
         mods = parts["modifiers"]
