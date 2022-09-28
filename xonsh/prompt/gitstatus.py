@@ -133,7 +133,7 @@ class _GSField(GitStatusPromptField):
 
     _args: "tuple[str, ...]" = ()
 
-    def updator(self, ctx):
+    def updator(self, fld, ctx):
         self.value = _get_sp_output(ctx.xsh, *self._args).strip()
 
 
