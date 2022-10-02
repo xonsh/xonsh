@@ -1012,6 +1012,12 @@ class GeneralSetting(Xettings):
         doc_default="``~/.local/share``",
         type_str="str",
     )
+    XDG_CACHE_HOME = Var.with_default(
+        os.path.expanduser(os.path.join("~", ".cache")),
+        "The base directory relative to which user-specific non-essential data files should be stored.",
+        doc_default="``~/.cache``",
+        type_str="str",
+    )
     XDG_DATA_DIRS = Var.with_default(
         xdg_data_dirs,
         "A list of directories where system level data files are stored.",
@@ -1098,6 +1104,12 @@ The file should contain a function with the signature
         xonsh_data_dir,
         "This is the location where xonsh data files are stored, such as history, generated completers ...",
         doc_default="``$XDG_DATA_HOME/xonsh``",
+        type_str="str",
+    )
+    XONSH_CACHE_DIR = Var.with_default(
+        xonsh_data_dir,
+        "This is the location where cache files used by xonsh are stored, such as commands-cache...",
+        doc_default="``$XDG_CACHE_HOME/xonsh``",
         type_str="str",
     )
     XONSH_ENCODING = Var.with_default(
