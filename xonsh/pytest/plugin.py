@@ -238,12 +238,12 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
     # make sure that all other fixtures call this mock only one time
     session = []
 
-    def factory(*attrs: str):
+    def factory(*attrs_to_skip: str):
         """
 
         Parameters
         ----------
-        attrs
+        attrs_to_skip
             do not mock the given attributes
 
         Returns
@@ -254,16 +254,17 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
         if session:
             raise RuntimeError("The factory should be called only once per test")
 
+        aliases = Aliases()
         for attr, val in [
             ("env", env),
             ("shell", DummyShell()),
             ("help", lambda x: x),
-            ("aliases", Aliases()),
+            ("aliases", aliases),
             ("exit", False),
             ("history", DummyHistory()),
             (
                 "commands_cache",
-                commands_cache.CommandsCache(),
+                commands_cache.CommandsCache(env=env, aliases=aliases),
             ),  # since env,aliases change , patch cmds-cache
             # ("subproc_captured", sp),
             ("subproc_uncaptured", sp),
@@ -272,7 +273,7 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             ("subproc_captured_object", sp),
             ("subproc_captured_hiddenobject", sp),
         ]:
-            if attr in attrs:
+            if attr in attrs_to_skip:
                 continue
             monkeypatch.setattr(xonsh_session, attr, val)
 

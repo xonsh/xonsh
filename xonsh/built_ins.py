@@ -600,8 +600,6 @@ class XonshSession:
         self.modules_cache = {}
         self.all_jobs = {}
 
-        self.completers = default_completers(self.commands_cache)
-
         self.builtins = get_default_builtins(execer)
         self._initial_builtin_names = frozenset(vars(self.builtins))
 
@@ -610,12 +608,13 @@ class XonshSession:
             if hasattr(self, attr):
                 setattr(self, attr, value)
         self.link_builtins(aliases_given)
+        self.builtins_loaded = True
         self.commands_cache = (
             kwargs.pop("commands_cache")
             if "commands_cache" in kwargs
             else CommandsCache(self.env, self.aliases)
         )
-        self.builtins_loaded = True
+        self.completers = default_completers(self.commands_cache)
 
         def flush_on_exit(s=None, f=None):
             if self.history is not None:
