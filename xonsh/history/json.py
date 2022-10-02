@@ -2,6 +2,7 @@
 import collections
 import collections.abc as cabc
 import os
+import re
 import sys
 import threading
 import time
@@ -445,6 +446,12 @@ class JsonHistory(History):
             if save_cwd is not None
             else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
+        ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
+        self.should_append = (
+            lambda cmd: not re.match(ignore_regex, cmd["inp"])
+            if ignore_regex
+            else self.should_append
+        )
 
     def __len__(self):
         return self._len - self._skipped
@@ -467,7 +474,7 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
-        if not self.remember_history:
+        if not self.remember_history or not self.should_append(cmd):
             return
 
         opts = XSH.env.get("HISTCONTROL", "")

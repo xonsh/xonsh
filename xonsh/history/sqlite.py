@@ -2,6 +2,7 @@
 import collections
 import json
 import os
+import re
 import sqlite3
 import sys
 import threading
@@ -268,6 +269,12 @@ class SqliteHistory(History):
             if save_cwd is not None
             else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
+        ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
+        self.should_append = (
+            lambda cmd: not re.match(ignore_regex, cmd["inp"])
+            if ignore_regex
+            else self.should_append
+        )
 
         if not os.path.exists(self.filename):
             with _xh_sqlite_get_conn(filename=self.filename) as conn:
@@ -282,7 +289,7 @@ class SqliteHistory(History):
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
 
     def append(self, cmd):
-        if not self.remember_history:
+        if not self.remember_history or not self.should_append(cmd):
             return
         envs = XSH.env
         inp = cmd["inp"].rstrip()
