@@ -51,7 +51,7 @@ class CommandsCache(cabc.Mapping):
         env = self.env
         # Path to the cache-file where all commands/aliases are cached for pre-loading
         if self._cache_file is None:
-            if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE"):
+            if "XONSH_CACHE_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE"):
                 self._cache_file = (
                     Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve()
                 )
