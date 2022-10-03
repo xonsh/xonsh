@@ -4,6 +4,7 @@ import types
 import uuid
 
 from xonsh.built_ins import XSH
+from xonsh.tools import print_warning
 
 
 class HistoryEntry(types.SimpleNamespace):
@@ -77,6 +78,7 @@ class History:
         self.hist_units = None
         self.remember_history = True
         self.history_ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
+        self.validate_ignore_regex()
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -167,6 +169,18 @@ class History:
         memory.
         """
         pass
+
+    def validate_ignore_regex(self):
+        """Validates self.history_ignore_regex to make sure it's a valid
+        regex. If invalid, sets it to None and outputs a warning."""
+        if self.history_ignore_regex is not None:
+            try:
+                re.compile(self.history_ignore_regex)
+            except re.error:
+                print_warning(
+                    "XONSH_HISTORY_IGNORE_REGEX is not a valid regular expression and will be ignored"
+                )
+                self.history_ignore_regex = None
 
     def is_ignored(self, cmd):
         """Determines if a history item should be added to the event history.
