@@ -5,6 +5,7 @@ import uuid
 
 from xonsh.built_ins import XSH
 
+
 class HistoryEntry(types.SimpleNamespace):
     """Represent a command in history.
 
