@@ -73,7 +73,7 @@ class History:
         self.hist_size = None
         self.hist_units = None
         self.remember_history = True
-        self.should_append = lambda cmd: True
+        self.is_ignored = lambda cmd: False
 
     def __len__(self):
         """Return the number of items in current session."""

@@ -270,10 +270,10 @@ class SqliteHistory(History):
             else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
         ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
-        self.should_append = (
-            lambda cmd: not re.match(ignore_regex, cmd["inp"])
-            if ignore_regex
-            else self.should_append
+        self.is_ignored = (
+            (lambda cmd: re.match(ignore_regex, cmd["inp"]) is not None)
+            if ignore_regex is not None
+            else self.is_ignored
         )
 
         if not os.path.exists(self.filename):
@@ -289,7 +289,7 @@ class SqliteHistory(History):
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
 
     def append(self, cmd):
-        if not self.remember_history or not self.should_append(cmd):
+        if not self.remember_history or self.is_ignored(cmd):
             return
         envs = XSH.env
         inp = cmd["inp"].rstrip()

@@ -447,10 +447,10 @@ class JsonHistory(History):
             else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
         ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
-        self.should_append = (
-            lambda cmd: not re.match(ignore_regex, cmd["inp"])
-            if ignore_regex
-            else self.should_append
+        self.is_ignored = (
+            (lambda cmd: re.match(ignore_regex, cmd["inp"]) is not None)
+            if ignore_regex is not None
+            else self.is_ignored
         )
 
     def __len__(self):
@@ -474,7 +474,7 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
-        if not self.remember_history or not self.should_append(cmd):
+        if not self.remember_history or self.is_ignored(cmd):
             return
 
         opts = XSH.env.get("HISTCONTROL", "")
