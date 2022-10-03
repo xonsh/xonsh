@@ -282,7 +282,7 @@ class SqliteHistory(History):
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False)
 
     def append(self, cmd):
-        if not self.remember_history or self.is_ignored(cmd):
+        if (not self.remember_history) or self.is_ignored(cmd):
             return
         envs = XSH.env
         inp = cmd["inp"].rstrip()

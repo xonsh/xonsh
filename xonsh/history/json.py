@@ -467,7 +467,7 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
-        if not self.remember_history or self.is_ignored(cmd):
+        if (not self.remember_history) or self.is_ignored(cmd):
             return
 
         opts = XSH.env.get("HISTCONTROL", "")
