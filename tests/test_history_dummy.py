@@ -12,11 +12,16 @@ def test_construct_history_str(xession, backend):
     assert isinstance(construct_history(), DummyHistory)
 
 
-def test_ignore_regex_invalid(xession):
+def test_ignore_regex_invalid(xession, capsys):
     xession.env["XONSH_HISTORY_BACKEND"] = "dummy"
     xession.env["XONSH_HISTORY_IGNORE_REGEX"] = "**"
     history = construct_history()
     assert history.history_ignore_regex is None
+    captured = capsys.readouterr()
+    assert (
+        "XONSH_HISTORY_IGNORE_REGEX is not a valid regular expression and will be ignored"
+        in captured.err
+    )
 
 
 def test_ignore_regex_valid(xession):
