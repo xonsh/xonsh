@@ -2,7 +2,6 @@
 import collections
 import collections.abc as cabc
 import os
-import re
 import sys
 import threading
 import time
