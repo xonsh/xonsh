@@ -172,13 +172,19 @@ class History:
 
         Parameters
         ----------
-        cmd: The prospective item to append.
+        cmd: dict
+            The prospective item to append (structure is the same as the append method).
 
         Returns
         -------
-        True if the item should be appended, False if not.
+        bool
+            True if the item should be appended, False if not.
         """
         # !!! if history_ignore_regex is a jerk, it hurts real bad, fix it.
         #     Probably catch the exception, emit a warning, then disable the
         #     pattern.
-        return (re.match(self.history_ignore_regex, cmd["inp"]) is not None) if self.history_ignore_regex is not None else False
+        return (
+            (re.match(self.history_ignore_regex, cmd["inp"]) is not None)
+            if self.history_ignore_regex is not None
+            else False
+        )
