@@ -1,4 +1,5 @@
 """Base class of Xonsh History backends."""
+import re
 import types
 import uuid
 
@@ -73,7 +74,7 @@ class History:
         self.hist_size = None
         self.hist_units = None
         self.remember_history = True
-        self.is_ignored = lambda cmd: False
+        self.history_ignore_regex = None
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -164,3 +165,20 @@ class History:
         memory.
         """
         pass
+
+    def is_ignored(self, cmd):
+        """Determines if a history item should be added to the event history.
+        Call this in your append method.
+
+        Parameters
+        ----------
+        cmd: The prospective item to append.
+
+        Returns
+        -------
+        True if the item should be appended, False if not.
+        """
+        # !!! if history_ignore_regex is a jerk, it hurts real bad, fix it.
+        #     Probably catch the exception, emit a warning, then disable the
+        #     pattern.
+        return (re.match(self.history_ignore_regex, cmd["inp"]) is not None) if self.history_ignore_regex is not None else False

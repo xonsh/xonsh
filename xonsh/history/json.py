@@ -446,12 +446,7 @@ class JsonHistory(History):
             if save_cwd is not None
             else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
-        ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
-        self.is_ignored = (
-            (lambda cmd: re.match(ignore_regex, cmd["inp"]) is not None)
-            if ignore_regex is not None
-            else self.is_ignored
-        )
+        self.history_ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
 
     def __len__(self):
         return self._len - self._skipped
