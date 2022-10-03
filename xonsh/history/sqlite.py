@@ -268,7 +268,6 @@ class SqliteHistory(History):
             if save_cwd is not None
             else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
-        self.history_ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
 
         if not os.path.exists(self.filename):
             with _xh_sqlite_get_conn(filename=self.filename) as conn:

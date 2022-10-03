@@ -445,7 +445,6 @@ class JsonHistory(History):
             if save_cwd is not None
             else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
-        self.history_ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
 
     def __len__(self):
         return self._len - self._skipped

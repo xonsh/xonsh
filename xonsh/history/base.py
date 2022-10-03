@@ -3,6 +3,7 @@ import re
 import types
 import uuid
 
+from xonsh.built_ins import XSH
 
 class HistoryEntry(types.SimpleNamespace):
     """Represent a command in history.
@@ -74,7 +75,7 @@ class History:
         self.hist_size = None
         self.hist_units = None
         self.remember_history = True
-        self.history_ignore_regex = None
+        self.history_ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
 
     def __len__(self):
         """Return the number of items in current session."""
