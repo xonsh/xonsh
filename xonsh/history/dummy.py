@@ -7,6 +7,9 @@ from xonsh.history.base import History
 class DummyHistory(History):
     """A dummy implement of history backend."""
 
+    def __init__(self, **meta):
+        super().__init__(meta)
+
     def append(self, cmd):
         pass
 
