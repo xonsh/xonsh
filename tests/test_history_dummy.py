@@ -14,15 +14,13 @@ def test_construct_history_str(xession, backend):
 
 def test_ignore_regex_invalid(xession):
     xession.env["XONSH_HISTORY_BACKEND"] = "dummy"
-    xession.env["XONSH_IGNORE_REGEX"] = "**"
+    xession.env["XONSH_HISTORY_IGNORE_REGEX"] = "**"
     history = construct_history()
-    assert isinstance(history, DummyHistory)
     assert history.history_ignore_regex is None
 
 
 def test_ignore_regex_valid(xession):
     xession.env["XONSH_HISTORY_BACKEND"] = "dummy"
-    xession.env["XONSH_IGNORE_REGEX"] = "ls"
+    xession.env["XONSH_HISTORY_IGNORE_REGEX"] = "ls"
     history = construct_history()
-    assert isinstance(history, DummyHistory)
     assert history.history_ignore_regex is not None
