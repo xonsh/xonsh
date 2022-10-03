@@ -11,6 +11,7 @@ from xonsh.history.sqlite import SqliteHistory
 
 @pytest.fixture
 def hist():
+    # !!! XONSH_HISTORY_IGNORE_REGEX may need to get injected here to test
     h = SqliteHistory(
         filename="xonsh-HISTORY-TEST.sqlite", sessionid="SESSIONID", gc=False
     )

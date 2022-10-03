@@ -1580,6 +1580,7 @@ class PromptHistorySetting(Xettings):
         "Save current working directory to the history.",
         doc_default="True",
     )
+    # !!! XONSH_HISTORY_IGNORE_REGEX goes here?
 
 
 class PTKSetting(PromptSetting):  # sub-classing -> sub-group

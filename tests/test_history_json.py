@@ -22,6 +22,7 @@ IGNORE_OPTS = ",".join(["ignoredups", "ignoreerr", "ignorespace"])
 @pytest.fixture
 def hist(tmpdir, xession, monkeypatch):
     file = tmpdir / "xonsh-HISTORY-TEST.json"
+    # !!! XONSH_HISTORY_IGNORE_REGEX may need to get injected here to test
     h = JsonHistory(filename=str(file), here="yup", sessionid="SESSIONID", gc=False)
     monkeypatch.setattr(xession, "history", h)
     yield h
