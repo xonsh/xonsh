@@ -4,7 +4,7 @@ import types
 import uuid
 
 from xonsh.built_ins import XSH
-from xonsh.tools import print_warning
+from xonsh.tools import is_regex, print_warning
 
 
 class HistoryEntry(types.SimpleNamespace):
@@ -174,9 +174,7 @@ class History:
         """Validates self.history_ignore_regex to make sure it's a valid
         regex. If invalid, sets it to None and outputs a warning."""
         if self.history_ignore_regex is not None:
-            try:
-                re.compile(self.history_ignore_regex)
-            except re.error:
+            if not is_regex(self.history_ignore_regex):
                 print_warning(
                     "XONSH_HISTORY_IGNORE_REGEX is not a valid regular expression and will be ignored"
                 )
