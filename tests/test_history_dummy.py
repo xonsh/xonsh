@@ -16,19 +16,12 @@ def test_ignore_regex_invalid(xession, capsys):
     xession.env["XONSH_HISTORY_BACKEND"] = "dummy"
     xession.env["XONSH_HISTORY_IGNORE_REGEX"] = "**"
     history = construct_history()
-    assert history.history_ignore_regex is None
     captured = capsys.readouterr()
     assert (
         "XONSH_HISTORY_IGNORE_REGEX is not a valid regular expression and will be ignored"
         in captured.err
     )
-
-
-def test_ignore_regex_valid(xession):
-    xession.env["XONSH_HISTORY_BACKEND"] = "dummy"
-    xession.env["XONSH_HISTORY_IGNORE_REGEX"] = "ls"
-    history = construct_history()
-    assert history.history_ignore_regex is not None
+    assert not history.is_ignored({"inp": "history"})
 
 
 def test_is_ignore(xession):
@@ -38,3 +31,11 @@ def test_is_ignore(xession):
     assert history.is_ignored({"inp": "cat foo.txt"})
     assert not history.is_ignored({"inp": "history"})
     assert history.is_ignored({"inp": "ls bar"})
+
+
+def test_is_ignore_no_regex(xession):
+    xession.env["XONSH_HISTORY_BACKEND"] = "dummy"
+    history = construct_history()
+    assert not history.is_ignored({"inp": "cat foo.txt"})
+    assert not history.is_ignored({"inp": "history"})
+    assert not history.is_ignored({"inp": "ls bar"})

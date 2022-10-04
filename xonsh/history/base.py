@@ -1,10 +1,11 @@
 """Base class of Xonsh History backends."""
+import functools
 import re
 import types
 import uuid
 
 from xonsh.built_ins import XSH
-from xonsh.tools import is_regex, print_warning
+from xonsh.tools import print_warning
 
 
 class HistoryEntry(types.SimpleNamespace):
@@ -77,8 +78,7 @@ class History:
         self.hist_size = None
         self.hist_units = None
         self.remember_history = True
-        self.history_ignore_regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
-        self.validate_ignore_regex()
+        self.ignore_regex  # Tap the ignore regex to validate it
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -170,15 +170,18 @@ class History:
         """
         pass
 
-    def validate_ignore_regex(self):
-        """Validates self.history_ignore_regex to make sure it's a valid
-        regex. If invalid, sets it to None and outputs a warning."""
-        if self.history_ignore_regex is not None:
-            if not is_regex(self.history_ignore_regex):
+    @functools.cached_property
+    def ignore_regex(self):
+        self.history_ignore_regex = None
+        regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
+        if regex:
+            try:
+                self.history_ignore_regex = re.compile(regex)
+            except re.error:
                 print_warning(
                     "XONSH_HISTORY_IGNORE_REGEX is not a valid regular expression and will be ignored"
                 )
-                self.history_ignore_regex = None
+        return self.history_ignore_regex
 
     def is_ignored(self, cmd):
         """Determines if a history item should be added to the event history.
@@ -195,7 +198,7 @@ class History:
             True if the item should be appended, False if not.
         """
         return (
-            (re.match(self.history_ignore_regex, cmd["inp"]) is not None)
-            if self.history_ignore_regex is not None
+            (self.ignore_regex.match(cmd["inp"]) is not None)
+            if self.ignore_regex is not None
             else False
         )
