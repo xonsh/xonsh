@@ -34,6 +34,17 @@ def RE_SHEBANG():
     return re.compile(r"#![ \t]*(.+?)$")
 
 
+XSH.builtins.events.transmogrify("on_command_not_found", "LoadEvent")
+XSH.builtins.events.doc(
+    "on_command_not_found",
+    """
+on_command_not_found(command: list[str]) -> None
+
+Fired if a command is not found
+""",
+)
+
+
 def is_app_execution_alias(fname):
     """App execution aliases behave strangly on Windows and Python.
     Here we try to detect if a file is an app execution alias.
@@ -486,6 +497,8 @@ class SubprocSpec:
             sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:
                 e += "\n" + xt.suggest_commands(cmd0, env)
+            events = XSH.builtins.events
+            events.on_command_not_found.fire(command=self.cmd)
             raise xt.XonshError(e)
         return p
 
