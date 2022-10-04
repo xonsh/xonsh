@@ -29,3 +29,12 @@ def test_ignore_regex_valid(xession):
     xession.env["XONSH_HISTORY_IGNORE_REGEX"] = "ls"
     history = construct_history()
     assert history.history_ignore_regex is not None
+
+
+def test_is_ignore(xession):
+    xession.env["XONSH_HISTORY_BACKEND"] = "dummy"
+    xession.env["XONSH_HISTORY_IGNORE_REGEX"] = "(ls|cat)"
+    history = construct_history()
+    assert history.is_ignored({"inp": "cat foo.txt"})
+    assert not history.is_ignored({"inp": "history"})
+    assert history.is_ignored({"inp": "ls bar"})
