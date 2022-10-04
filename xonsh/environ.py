@@ -68,6 +68,7 @@ from xonsh.tools import (
     is_logfile_opt,
     is_nonstring_seq_of_strings,
     is_path,
+    is_regex,
     is_str_str_dict,
     is_string,
     is_string_or_callable,
@@ -1579,6 +1580,14 @@ class PromptHistorySetting(Xettings):
         True,
         "Save current working directory to the history.",
         doc_default="True",
+    )
+    XONSH_HISTORY_IGNORE_REGEX = Var(
+        is_regex,
+        to_itself,
+        ensure_string,
+        None,
+        "Set a filter criteria for history items using a regular expression. "
+        "Any matching items will not be retained in the history.",
     )
 
 

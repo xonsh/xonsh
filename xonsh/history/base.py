@@ -1,6 +1,11 @@
 """Base class of Xonsh History backends."""
+import functools
+import re
 import types
 import uuid
+
+from xonsh.built_ins import XSH
+from xonsh.tools import print_warning
 
 
 class HistoryEntry(types.SimpleNamespace):
@@ -73,6 +78,7 @@ class History:
         self.hist_size = None
         self.hist_units = None
         self.remember_history = True
+        self.ignore_regex  # Tap the ignore regex to validate it
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -163,3 +169,36 @@ class History:
         memory.
         """
         pass
+
+    @functools.cached_property
+    def ignore_regex(self):
+        compiled_regex = None
+        regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
+        if regex:
+            try:
+                compiled_regex = re.compile(regex)
+            except re.error:
+                print_warning(
+                    "XONSH_HISTORY_IGNORE_REGEX is not a valid regular expression and will be ignored"
+                )
+        return compiled_regex
+
+    def is_ignored(self, cmd):
+        """Determines if a history item should be added to the event history.
+        Call this in your append method.
+
+        Parameters
+        ----------
+        cmd: dict
+            The prospective item to append (structure is the same as the append method).
+
+        Returns
+        -------
+        bool
+            True if the item should be appended, False if not.
+        """
+        return (
+            (self.ignore_regex.match(cmd["inp"]) is not None)
+            if self.ignore_regex is not None
+            else False
+        )

@@ -56,6 +56,7 @@ from xonsh.tools import (
     is_logfile_opt,
     is_nonstring_seq_of_strings,
     is_path,
+    is_regex,
     is_slice_as_str,
     is_string,
     is_string_or_callable,
@@ -1991,3 +1992,11 @@ def test_to_completions_display_value_fail(val):
     with pytest.warns(RuntimeWarning):
         obs = to_completions_display_value(val)
         assert obs == "multi"
+
+
+def test_is_regex_true():
+    assert is_regex("cat")
+
+
+def test_is_regex_false():
+    assert not is_regex("**")
