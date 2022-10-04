@@ -172,16 +172,16 @@ class History:
 
     @functools.cached_property
     def ignore_regex(self):
-        self.history_ignore_regex = None
+        compiled_regex = None
         regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
         if regex:
             try:
-                self.history_ignore_regex = re.compile(regex)
+                compiled_regex = re.compile(regex)
             except re.error:
                 print_warning(
                     "XONSH_HISTORY_IGNORE_REGEX is not a valid regular expression and will be ignored"
                 )
-        return self.history_ignore_regex
+        return compiled_regex
 
     def is_ignored(self, cmd):
         """Determines if a history item should be added to the event history.
