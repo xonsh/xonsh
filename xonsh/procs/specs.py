@@ -34,7 +34,6 @@ def RE_SHEBANG():
     return re.compile(r"#![ \t]*(.+?)$")
 
 
-XSH.builtins.events.transmogrify("on_command_not_found", "LoadEvent")
 XSH.builtins.events.doc(
     "on_command_not_found",
     """
