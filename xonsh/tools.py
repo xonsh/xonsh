@@ -1892,6 +1892,16 @@ def is_history_tuple(x):
     return False
 
 
+def is_regex(x):
+    """Tests if something is a valid regular expression."""
+    try:
+        re.compile(x)
+        return True
+    except re.error:
+        pass
+    return False
+
+
 def is_history_backend(x):
     """Tests if something is a valid history backend."""
     return is_string(x) or is_class(x) or isinstance(x, object)
