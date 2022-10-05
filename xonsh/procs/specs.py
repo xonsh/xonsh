@@ -488,7 +488,7 @@ class SubprocSpec:
                 e += "\n" + xt.suggest_commands(cmd0, env)
             if XSH.env.get("XONSH_INTERACTIVE"):
                 events = XSH.builtins.events
-                events.on_command_not_found.fire(command=self.cmd)
+                events.on_command_not_found.fire(cmd=self.cmd)
             raise xt.XonshError(e)
         return p
 
