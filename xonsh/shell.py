@@ -56,6 +56,19 @@ Parameters:
 )
 
 events.doc(
+    "on_command_not_found",
+    """
+on_command_not_found(cmd: list[str]) -> None
+
+Fires if a command is not found (only in interactive sessions).
+
+Parameters:
+
+* ``cmd``: The command that was attempted
+""",
+)
+
+events.doc(
     "on_pre_prompt_format",
     """
 on_pre_prompt_format() -> None

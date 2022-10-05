@@ -34,16 +34,6 @@ def RE_SHEBANG():
     return re.compile(r"#![ \t]*(.+?)$")
 
 
-XSH.builtins.events.doc(
-    "on_command_not_found",
-    """
-on_command_not_found(command: list[str]) -> None
-
-Fired if a command is not found
-""",
-)
-
-
 def is_app_execution_alias(fname):
     """App execution aliases behave strangly on Windows and Python.
     Here we try to detect if a file is an app execution alias.
