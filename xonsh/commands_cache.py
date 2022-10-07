@@ -127,6 +127,7 @@ class CommandsCache(cabc.Mapping):
 
     @property
     def all_commands(self):
+        # todo: remove usage of this
         self.update_cache()
         return self._cmds_cache
 
