@@ -7,8 +7,9 @@ import pytest
 
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
-from xonsh.procs.specs import cmds_to_specs, run_subproc
+from xonsh.procs.specs import cmds_to_specs, run_subproc, SubprocSpec
 from xonsh.pytest.tools import skip_if_on_windows
+from xonsh.tools import XonshError
 
 
 @skip_if_on_windows
@@ -181,3 +182,47 @@ def test_procproxy_not_captured(xession, captured):
     # neither stdout nor stderr should be captured
     assert specs[0].stdout is None
     assert specs[0].stderr is None
+
+
+def test_on_command_not_found_fires(xession):
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    fired = False
+
+    def my_handler(cmd, **kwargs):
+        nonlocal fired
+        assert cmd[0] == "xonshcommandnotfound"
+        fired = True
+
+    xession.builtins.events.on_command_not_found(my_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    assert "command not found: xonshcommandnotfound" in str(expected.value)
+    assert fired
+
+
+def test_on_command_not_found_doesnt_fire_in_non_interactive_mode(xession):
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=False,
+        )
+    )
+
+    fired = False
+
+    def my_handler(cmd, **kwargs):
+        nonlocal fired
+        assert cmd[0] == "xonshcommandnotfound"
+        fired = True
+
+    xession.builtins.events.on_command_not_found(my_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    assert "command not found: xonshcommandnotfound" in str(expected.value)
+    assert not fired
