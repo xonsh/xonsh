@@ -254,17 +254,15 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
         if session:
             raise RuntimeError("The factory should be called only once per test")
 
-        aliases = Aliases()
         for attr, val in [
             ("env", env),
             ("shell", DummyShell()),
             ("help", lambda x: x),
-            ("aliases", aliases),
             ("exit", False),
             ("history", DummyHistory()),
             (
                 "commands_cache",
-                commands_cache.CommandsCache(env=env, aliases=aliases),
+                commands_cache.CommandsCache(env=env, aliases=Aliases()),
             ),  # since env,aliases change , patch cmds-cache
             # ("subproc_captured", sp),
             ("subproc_uncaptured", sp),

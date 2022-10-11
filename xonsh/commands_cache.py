@@ -33,15 +33,15 @@ class CommandsCache(cabc.Mapping):
 
     CACHE_FILE = "path-commands-cache.pickle"
 
-    def __init__(self, env=None, aliases=None):
+    def __init__(self, env=None, aliases=None) -> None:
         # cache commands in path by mtime
         self._paths_cache: "dict[str, _Commands]" = {}
 
         # wrap aliases and commands in one place
-        self._cmds_cache = {}
+        self._cmds_cache: "dict[str, tuple[str, bool|None]]" = {}
 
-        self._path_checksum = None
-        self._alias_checksum = None
+        self._path_checksum: "int|None" = None
+        self._alias_checksum: "int|None" = None
         self.threadable_predictors = default_threadable_predictors()
 
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
@@ -138,6 +138,7 @@ class CommandsCache(cabc.Mapping):
             all_cmds = {}
             for cmd, path in self._get_or_set_cmds(paths):
                 key = cmd.upper() if ON_WINDOWS else cmd
+                # None     -> not in aliases
                 all_cmds[key] = (path, None)
 
             warn_cnt = self.env.get("COMMANDS_CACHE_SIZE_WARNING")
@@ -146,11 +147,13 @@ class CommandsCache(cabc.Mapping):
                     f"Found {len(all_cmds):,} executable files in the PATH directories!"
                 )
             # aliases override cmds
-            for cmd, alias in self.aliases.items():
+            for cmd in self.aliases:
                 key = cmd.upper() if ON_WINDOWS else cmd
                 if key in all_cmds:
-                    all_cmds[key] = (all_cmds[key][0], alias)
+                    # (path, False) -> has same named alias
+                    all_cmds[key] = (all_cmds[key][0], False)
                 else:
+                    # True -> pure alias
                     all_cmds[key] = (cmd, True)
             self._cmds_cache = all_cmds
         return self._cmds_cache

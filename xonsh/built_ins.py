@@ -551,7 +551,12 @@ class XonshSession:
         self.completers = None
         self.builtins = None
         self._initial_builtin_names = None
-        self.aliases = None
+
+    @property
+    def aliases(self):
+        if self.commands_cache is None:
+            return
+        return self.commands_cache.aliases
 
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
@@ -607,12 +612,12 @@ class XonshSession:
         for attr, value in kwargs.items():
             if hasattr(self, attr):
                 setattr(self, attr, value)
-        self.link_builtins(aliases_given)
+        aliases = self.link_builtins(aliases_given)
         self.builtins_loaded = True
         self.commands_cache = (
             kwargs.pop("commands_cache")
             if "commands_cache" in kwargs
-            else CommandsCache(self.env, self.aliases)
+            else CommandsCache(self.env, aliases)
         )
         self.completers = default_completers(self.commands_cache)
 
@@ -640,7 +645,8 @@ class XonshSession:
         # relies on __xonsh__.env in default aliases
         if aliases is None:
             aliases = Aliases(make_default_aliases())
-        self.aliases = builtins.default_aliases = builtins.aliases = aliases
+        builtins.default_aliases = builtins.aliases = aliases
+        return aliases
 
     def unlink_builtins(self):
         for name in self._initial_builtin_names:
