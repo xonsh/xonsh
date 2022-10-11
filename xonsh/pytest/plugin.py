@@ -223,7 +223,6 @@ def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch):
     XSH.load(
         ctx={},
         execer=session_execer,
-        commands_cache=commands_cache.CommandsCache(),
         env=os_env,
     )
     yield XSH
