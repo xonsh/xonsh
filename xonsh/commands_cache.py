@@ -7,18 +7,20 @@ True) or must be run the foreground (returns False).
 """
 import argparse
 import collections.abc as cabc
-import functools
 import os
 import pickle
-import sys
-import threading
 import time
 import typing as tp
 from pathlib import Path
 
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
-from xonsh.tools import executables_in
+from xonsh.tools import executables_in, print_warning
+
+
+class _Commands(tp.NamedTuple):
+    mtime: float
+    cmds: tuple[str, ...]
 
 
 class CommandsCache(cabc.Mapping):
@@ -29,15 +31,18 @@ class CommandsCache(cabc.Mapping):
     the command has an alias.
     """
 
-    CACHE_FILE = "commands-cache.pickle"
+    CACHE_FILE = "path-commands-cache.pickle"
 
     def __init__(self, env=None, aliases=None):
+        # cache commands in path by mtime
+        self._paths_cache: "dict[str, _Commands]" = {}
+
+        # wrap aliases and commands in one place
         self._cmds_cache = {}
+
         self._path_checksum = None
         self._alias_checksum = None
-        self._path_mtime = -1
         self.threadable_predictors = default_threadable_predictors()
-        self._loaded_pickled = False
 
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
         self.env = {} if env is None else env
@@ -109,128 +114,79 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isdir(p):
                     yield p
 
-    def _check_changes(self, paths: tp.Tuple[str, ...], aliases):
+    def _check_changes(self, paths: tp.Tuple[str, ...]):
         # did PATH change?
         path_hash = hash(paths)
-        yield path_hash == self._path_checksum
+        yield path_hash != self._path_checksum
         self._path_checksum = path_hash
 
         # did aliases change?
-        al_hash = hash(frozenset(aliases))
-        yield al_hash == self._alias_checksum
+        al_hash = hash(frozenset(self.aliases))
+        yield al_hash != self._alias_checksum
         self._alias_checksum = al_hash
-
-        # did the contents of any directory in PATH change?
-        max_mtime = max(map(lambda path: os.stat(path).st_mtime, paths), default=0)
-        yield max_mtime <= self._path_mtime
-        self._path_mtime = max_mtime
 
     @property
     def all_commands(self):
-        # todo: remove usage of this
         self.update_cache()
         return self._cmds_cache
 
     def update_cache(self):
-        # todo: remove use and use shutil.which and aliases instance to check whether it is a command
-        #   this will sped up a little and will work on systems with large number of binaries in their $PATH
-        #   1. cache per PATH and on-demand
-        #   2. remove usage of XSH
         env = self.env
         paths = tuple(CommandsCache.remove_dups(env.get("PATH") or []))
 
-        (
-            no_new_paths,
-            no_new_alias,
-            no_new_bins,
-        ) = tuple(self._check_changes(paths, self.aliases))
+        if any(self._check_changes(paths)):
+            all_cmds = {}
+            for cmd, path in self._get_or_set_cmds(paths):
+                key = cmd.upper() if ON_WINDOWS else cmd
+                all_cmds[key] = (path, None)
 
-        if no_new_paths and no_new_bins:
-            if not no_new_alias:  # only aliases have changed
-                for cmd, alias in self.aliases.items():
-                    key = cmd.upper() if ON_WINDOWS else cmd
-                    if key in self._cmds_cache:
-                        self._cmds_cache[key] = (self._cmds_cache[key][0], alias)
-                    else:
-                        self._cmds_cache[key] = (cmd, True)
-                # save the changes to cache as well
-                self.set_cmds_cache(self._cmds_cache)
-            return self._cmds_cache
-
-        if self.cache_file and self.cache_file.exists():
-            # pickle the result only if XONSH_DATA_DIR is set
-            if not self._loaded_pickled:
-                # first time load the commands from cache-file
-                self._cmds_cache = self.get_cached_commands()
-                self._loaded_pickled = True
-            # also start a thread that updates the cache in the bg
-            worker = threading.Thread(
-                target=self._update_cmds_cache,
-                args=[paths, self.aliases],
-                daemon=True,
-            )
-            worker.start()
-        else:
-            self._update_cmds_cache(paths, self.aliases)
+            warn_cnt = self.env.get("COMMANDS_CACHE_SIZE_WARNING")
+            if warn_cnt and len(all_cmds) > warn_cnt:
+                print_warning(
+                    f"Found {len(all_cmds):,} executable files in the PATH directories!"
+                )
+            # aliases override cmds
+            for cmd, alias in self.aliases.items():
+                key = cmd.upper() if ON_WINDOWS else cmd
+                if key in all_cmds:
+                    all_cmds[key] = (all_cmds[key][0], alias)
+                else:
+                    all_cmds[key] = (cmd, True)
+            self._cmds_cache = all_cmds
         return self._cmds_cache
 
-    @staticmethod
-    @functools.lru_cache(maxsize=10)
-    def _get_all_cmds(paths: tp.Sequence[str]):
-        """Cache results when possible
-
-        This will be helpful especially during tests where the PATH will be the same mostly.
-        """
-
-        def _getter():
-            for path in reversed(paths):
-                # iterate backwards so that entries at the front of PATH overwrite
-                # entries at the back.
-                for cmd in executables_in(path):
-                    yield cmd, os.path.join(path, cmd)
-
-        return dict(_getter())
-
-    def _update_cmds_cache(
-        self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
-    ) -> tp.Dict[str, tp.Any]:
-        """Update the cmds_cache variable in background without slowing down parseLexer"""
-
-        allcmds = {}
-
-        for cmd, path in self._get_all_cmds(paths).items():
-            key = cmd.upper() if ON_WINDOWS else cmd
-            allcmds[key] = (path, aliases.get(key, None))
-
-        warn_cnt = self.env.get("COMMANDS_CACHE_SIZE_WARNING")
-        if warn_cnt and len(allcmds) > warn_cnt:
-            print(
-                f"Warning! Found {len(allcmds):,} executable files in the PATH directories!",
-                file=sys.stderr,
-            )
-
-        for cmd in aliases:
-            if cmd not in allcmds:
-                key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (cmd, True)  # type: ignore
-
-        return self.set_cmds_cache(allcmds)
-
-    def get_cached_commands(self) -> tp.Dict[str, str]:
-        if self.cache_file and self.cache_file.exists():
+    def _get_or_set_cmds(self, paths: tp.Sequence[str]):
+        """load cached results or update cache"""
+        if (
+            self.cache_file
+            and self.cache_file.exists()
+            and (not self._paths_cache)
+            and paths
+        ):
+            # first time load the commands from cache-file if configured
             try:
-                return pickle.loads(self.cache_file.read_bytes()) or {}
+                self._paths_cache = pickle.loads(self.cache_file.read_bytes()) or {}
             except Exception:
                 # the file is corrupt
                 self.cache_file.unlink(missing_ok=True)
-        return {}
 
-    def set_cmds_cache(self, allcmds: tp.Dict[str, tp.Any]) -> tp.Dict[str, tp.Any]:
-        """write cmds to cache-file and instance-attribute"""
-        if self.cache_file:
-            self.cache_file.write_bytes(pickle.dumps(allcmds))
-        self._cmds_cache = allcmds
-        return allcmds
+        need_save = False
+        for path in reversed(paths):
+            # iterate backwards so that entries at the front of PATH overwrite
+            # entries at the back.
+            modified_time = os.stat(path).st_mtime
+            if (path not in self._paths_cache) or (
+                self._paths_cache[path].mtime != modified_time
+            ):
+                need_save = True
+                self._paths_cache[path] = _Commands(
+                    modified_time, tuple(executables_in(path))
+                )
+
+            for cmd in self._paths_cache[path].cmds:
+                yield cmd, os.path.join(path, cmd)
+        if need_save and self.cache_file:
+            self.cache_file.write_bytes(pickle.dumps(self._paths_cache))
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it exists."""
