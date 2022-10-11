@@ -20,7 +20,7 @@ from xonsh.tools import executables_in, print_warning
 
 class _Commands(tp.NamedTuple):
     mtime: float
-    cmds: tuple[str, ...]
+    cmds: "tuple[str, ...]"
 
 
 class CommandsCache(cabc.Mapping):
@@ -47,7 +47,6 @@ class CommandsCache(cabc.Mapping):
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
         self.env = {} if env is None else env
         self.aliases = {} if aliases is None else aliases or {}
-        # force it to load from env by setting it to None
         self._cache_file = None
 
     @property
