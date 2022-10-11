@@ -33,7 +33,7 @@ class CommandsCache(cabc.Mapping):
 
     CACHE_FILE = "path-commands-cache.pickle"
 
-    def __init__(self, env=None, aliases=None) -> None:
+    def __init__(self, env, aliases=None) -> None:
         # cache commands in path by mtime
         self._paths_cache: "dict[str, _Commands]" = {}
 
@@ -45,8 +45,13 @@ class CommandsCache(cabc.Mapping):
         self.threadable_predictors = default_threadable_predictors()
 
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
-        self.env = {} if env is None else env
-        self.aliases = {} if aliases is None else aliases or {}
+        self.env = env
+        if aliases is None:
+            from xonsh.aliases import Aliases, make_default_aliases
+
+            self.aliases = Aliases(make_default_aliases())
+        else:
+            self.aliases = aliases
         self._cache_file = None
 
     @property
