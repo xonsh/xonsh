@@ -60,7 +60,7 @@ def test_commands_cached_between_runs(commands_cache_tmp, tmp_path, tmpdir):
 def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path, monkeypatch):
     cc = commands_cache_tmp
     update_cmds_cache = MagicMock()
-    monkeypatch.setattr(cc, "_update_cmds_cache", update_cmds_cache)
+    monkeypatch.setattr(cc, "update_cache", update_cmds_cache)
     file = tmp_path / CommandsCache.CACHE_FILE
     bins = {
         "bin1": (
@@ -174,25 +174,25 @@ def test_commands_cache_predictor_default(args, xession, tmp_path):
     assert result == expected
 
 
-@skip_if_on_windows
-def test_cd_is_only_functional_alias(xession):
-    xession.aliases["cd"] = lambda args: os.chdir(args[0])
-    xession.env["PATH"] = []
-    assert xession.commands_cache.is_only_functional_alias("cd")
+class Test_is_only_functional_alias:
+    def test_cd(self, xession):
+        xession.aliases["cd"] = lambda args: os.chdir(args[0])
+        xession.env["PATH"] = []
+        assert xession.commands_cache.is_only_functional_alias("cd")
 
+    def test_non_exist(self, xession):
+        assert (
+            xession.commands_cache.is_only_functional_alias(
+                "<not really a command name>"
+            )
+            is None
+        )
 
-def test_non_exist_is_only_functional_alias(xession):
-    assert not xession.commands_cache.is_only_functional_alias(
-        "<not really a command name>"
-    )
+    @skip_if_on_windows
+    def test_bash(self, xession):
+        assert xession.commands_cache.is_only_functional_alias("bash") is None
 
-
-@skip_if_on_windows
-def test_bash_is_only_functional_alias(xession):
-    assert not xession.commands_cache.is_only_functional_alias("bash")
-
-
-@skip_if_on_windows
-def test_bash_and_is_alias_is_only_functional_alias(xession):
-    xession.aliases["bash"] = lambda args: os.chdir(args[0])
-    assert not xession.commands_cache.is_only_functional_alias("bash")
+    @skip_if_on_windows
+    def test_bash_and_is_alias_is_only_functional_alias(self, xession):
+        xession.aliases["bash"] = lambda args: os.chdir(args[0])
+        assert xession.commands_cache.is_only_functional_alias("bash") is False
