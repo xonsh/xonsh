@@ -3,6 +3,8 @@ import inspect
 import sys
 from typing import TYPE_CHECKING
 
+import re
+
 from xonsh.environ import Env
 
 from ..built_ins import XonshSession
@@ -239,9 +241,12 @@ class PromptsPage(Routes):
 
     def post(self, data: "cgi.FieldStorage"):
         if data:
-            prompt = data.getvalue(self.var_name)
+            prompt = data.getvalue(self.var_name).replace("\r","")
             self.env[self.var_name] = prompt
             self.update_rc(prompt=prompt)
+
+    def ee(self, str):
+        return re.sub(r"\\r", "", str)
 
 
 class XontribsPage(Routes):
