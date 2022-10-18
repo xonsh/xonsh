@@ -72,6 +72,7 @@ class PromptToolkitCompleter(Completer):
             if sug_comp is None:
                 pass
             elif len(completions) == 0:
+                plen = len(prefix)
                 completions = (sug_comp,)
             else:
                 completions = set(completions)
