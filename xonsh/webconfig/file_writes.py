@@ -1,7 +1,7 @@
 """functions to update rc files"""
 import os
-import typing as tp
 import re
+import typing as tp
 
 RENDERERS: tp.List[tp.Callable] = []
 
