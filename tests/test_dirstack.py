@@ -7,6 +7,9 @@ import pytest  # noqa F401
 from xonsh import dirstack
 from xonsh.tools import chdir
 
+from xonsh import environ
+from xonsh.environ import Var
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
 
@@ -101,3 +104,23 @@ def test_cd_autopush(xession, tmpdir):
             dirstack.popd([])
 
     assert old_dir == os.getcwd()
+
+
+
+def test_popd_fn(xession):
+    PUSHD_MINUS = Var.with_default(
+        True,
+    )
+    xession.env.update(dict(CDPATH=PARENT, PWD=PARENT))
+    old_dir = os.getcwd()
+    sub_tests = os.path.join(HERE, "tests")
+    if not os.path.exists(sub_tests):
+        os.mkdir(sub_tests)
+    with chdir(PARENT):
+        assert os.getcwd() != HERE
+        dirstack.cd(["tests"])
+        dirstack.pushd(["sub_tests"])
+        assert os.getcwd() == HERE
+        dirstack.popd(["sub_tests"])
+        assert old_dir == os.getcwd()
+

@@ -408,8 +408,8 @@ def popd_fn(
         BACKWARD = "-"
         FORWARD = "+"
     else:
-        BACKWARD = "-"
-        FORWARD = "+"
+        BACKWARD = "+"
+        FORWARD = "-"
 
     new_pwd: tp.Optional[str] = None
     if nth is None:
@@ -478,7 +478,7 @@ def dirs_fn(
     Parameters
     ----------
     nth
-        Displays the Nth directory (counting from the left/right according to +/x prefix respectively),
+        Displays the Nth directory (counting from the left/right according to +/- prefix respectively),
         starting with zero
     clear : -c
         Clears the directory stack by deleting all of the entries.
@@ -500,8 +500,8 @@ def dirs_fn(
         BACKWARD = "-"
         FORWARD = "+"
     else:
-        BACKWARD = "-"
-        FORWARD = "+"
+        BACKWARD = "+"
+        FORWARD = "-"
 
     if clear:
         DIRSTACK = []
