@@ -69,10 +69,10 @@ from xonsh.tools import (
     is_nonstring_seq_of_strings,
     is_path,
     is_regex,
-    is_str_str_dict,
     is_string,
     is_string_or_callable,
     is_string_set,
+    is_tok_color_dict,
     is_valid_shlvl,
     logfile_opt_to_str,
     path_to_str,
@@ -97,7 +97,7 @@ from xonsh.tools import (
     to_logfile_opt,
     to_repr_pretty_,
     to_shlvl,
-    to_str_str_dict,
+    to_tok_color_dict,
 )
 
 events.doc(
@@ -1151,8 +1151,8 @@ The file should contain a function with the signature
         "``!()`` and ``![]`` operators.",
     )
     XONSH_STYLE_OVERRIDES = Var(
-        is_str_str_dict,
-        to_str_str_dict,
+        is_tok_color_dict,
+        to_tok_color_dict,
         dict_to_str,
         {},
         "A dictionary containing custom prompt_toolkit/pygments style definitions.\n"
@@ -1625,8 +1625,8 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         "colors. Default is an empty string which means that prompt toolkit decide.",
     )
     PTK_STYLE_OVERRIDES = Var(
-        is_str_str_dict,
-        to_str_str_dict,
+        is_tok_color_dict,
+        to_tok_color_dict,
         dict_to_str,
         {},
         "A dictionary containing custom prompt_toolkit style definitions. (deprecated)",

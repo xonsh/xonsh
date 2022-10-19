@@ -455,7 +455,7 @@ def xonsh_style_proxy(styler):
 
     class XonshStyleProxy(Style):
         """Simple proxy class to fool prompt toolkit."""
-
+        
         target = styler
         styles = styler.styles
         highlight_color = styler.highlight_color
@@ -463,7 +463,6 @@ def xonsh_style_proxy(styler):
 
         def __new__(cls, *args, **kwargs):
             return cls.target
-
     return XonshStyleProxy
 
 
