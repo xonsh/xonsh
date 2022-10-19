@@ -463,6 +463,7 @@ def xonsh_style_proxy(styler):
 
         def __new__(cls, *args, **kwargs):
             return cls.target
+
     return XonshStyleProxy
 
 
