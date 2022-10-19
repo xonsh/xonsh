@@ -54,6 +54,35 @@ def test_rich_completion(completion, lprefix, ptk_completion, monkeypatch, xessi
         assert completions == [ptk_completion]
 
 
+@pytest.mark.parametrize(
+    "completions, document_text, ptk_completion",
+    [
+        (set(), "", "test_completion"),
+        (set(), "test_", "test_completion"),
+        ({RichCompletion("test", 4, "test()", "func")}, "test", "test_completion"),
+    ],
+)
+def test_auto_suggest_completion(completions, document_text, ptk_completion, xession):
+    lprefix = len(document_text)
+
+    xonsh_completer_mock = MagicMock()
+    xonsh_completer_mock.complete.return_value = completions, lprefix
+
+    xession.env["AUTO_SUGGEST_IN_COMPLETIONS"] = True
+
+    ptk_completer = PromptToolkitCompleter(xonsh_completer_mock, None, None)
+    ptk_completer.reserve_space = lambda: None
+    ptk_completer.suggestion_completion = lambda _, __: ptk_completion
+
+    document_mock = MagicMock()
+    document_mock.text = document_text
+    document_mock.current_line = document_text
+    document_mock.cursor_position_col = lprefix
+
+    auto_suggested = list(ptk_completer.get_completions(document_mock, MagicMock()))
+    assert PTKCompletion(ptk_completion, -lprefix) in auto_suggested
+
+
 EXPANSION_CASES = (
     (
         "sanity",
