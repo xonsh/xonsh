@@ -119,7 +119,7 @@ def _style_from_pygments_dict(pygments_dict):
             key = CAPITAL_PATTERN.sub(r"\1-\2", str(token)[10:]).lower()
             pygments_style.append((key, style))
         pygments_style.append((_pygments_token_to_classname(token), style))
-    
+
     return Style(pygments_style)
 
 
