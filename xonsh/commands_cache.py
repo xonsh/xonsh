@@ -40,7 +40,6 @@ class CommandsCache(cabc.Mapping):
         # wrap aliases and commands in one place
         self._cmds_cache: "dict[str, tuple[str, bool|None]]" = {}
 
-        self._path_checksum: "int|None" = None
         self._alias_checksum: "int|None" = None
         self.threadable_predictors = default_threadable_predictors()
 
@@ -62,7 +61,7 @@ class CommandsCache(cabc.Mapping):
         if self._cache_file is None:
             if "XONSH_CACHE_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE"):
                 self._cache_file = (
-                    Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve()
+                    Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE).resolve()
                 )
             else:
                 # set a falsy value other than None
@@ -120,9 +119,7 @@ class CommandsCache(cabc.Mapping):
 
     def _check_changes(self, paths: tp.Tuple[str, ...]):
         # did PATH change?
-        path_hash = hash(paths)
-        yield path_hash != self._path_checksum
-        self._path_checksum = path_hash
+        yield self._update_paths_cache(paths)
 
         # did aliases change?
         al_hash = hash(frozenset(self.aliases))
@@ -136,11 +133,12 @@ class CommandsCache(cabc.Mapping):
 
     def update_cache(self):
         env = self.env
-        paths = tuple(CommandsCache.remove_dups(env.get("PATH") or []))
-
+        # iterate backwards so that entries at the front of PATH overwrite
+        # entries at the back.
+        paths = tuple(reversed(tuple(self.remove_dups(env.get("PATH") or []))))
         if any(self._check_changes(paths)):
             all_cmds = {}
-            for cmd, path in self._get_or_set_cmds(paths):
+            for cmd, path in self._iter_binaries(paths):
                 key = cmd.upper() if ON_WINDOWS else cmd
                 # None     -> not in aliases
                 all_cmds[key] = (path, None)
@@ -162,14 +160,9 @@ class CommandsCache(cabc.Mapping):
             self._cmds_cache = all_cmds
         return self._cmds_cache
 
-    def _get_or_set_cmds(self, paths: tp.Sequence[str]):
+    def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
-        if (
-            self.cache_file
-            and self.cache_file.exists()
-            and (not self._paths_cache)
-            and paths
-        ):
+        if (not self._paths_cache) and self.cache_file and self.cache_file.exists():
             # first time load the commands from cache-file if configured
             try:
                 self._paths_cache = pickle.loads(self.cache_file.read_bytes()) or {}
@@ -177,23 +170,25 @@ class CommandsCache(cabc.Mapping):
                 # the file is corrupt
                 self.cache_file.unlink(missing_ok=True)
 
-        need_save = False
-        for path in reversed(paths):
-            # iterate backwards so that entries at the front of PATH overwrite
-            # entries at the back.
+        updated = False
+        for path in paths:
             modified_time = os.stat(path).st_mtime
             if (path not in self._paths_cache) or (
                 self._paths_cache[path].mtime != modified_time
             ):
-                need_save = True
+                updated = True
                 self._paths_cache[path] = _Commands(
                     modified_time, tuple(executables_in(path))
                 )
 
+        if updated and self.cache_file:
+            self.cache_file.write_bytes(pickle.dumps(self._paths_cache))
+        return updated
+
+    def _iter_binaries(self, paths):
+        for path in paths:
             for cmd in self._paths_cache[path].cmds:
                 yield cmd, os.path.join(path, cmd)
-        if need_save and self.cache_file:
-            self.cache_file.write_bytes(pickle.dumps(self._paths_cache))
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it exists."""
@@ -283,7 +278,7 @@ class CommandsCache(cabc.Mapping):
         self.update_cache()
         return self.lazy_is_only_functional_alias(name)
 
-    def lazy_is_only_functional_alias(self, name):
+    def lazy_is_only_functional_alias(self, name) -> bool:
         """Returns whether or not a command is only a functional alias, and has
         no underlying executable. For example, the "cd" command is only available
         as a functional alias. This search is performed lazily.

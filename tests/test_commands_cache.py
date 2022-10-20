@@ -1,13 +1,12 @@
 import os
 import pickle
-import time
-from unittest.mock import MagicMock
 
 import pytest
 
 from xonsh.commands_cache import (
     SHELL_PREDICTOR_PARSER,
     CommandsCache,
+    _Commands,
     predict_false,
     predict_shell,
     predict_true,
@@ -27,56 +26,38 @@ def test_predict_threadable_unknown_command(xession):
     assert isinstance(result, bool)
 
 
-@pytest.fixture
-def commands_cache_tmp(xession, tmp_path, monkeypatch, patch_commands_cache_bins):
-    xession.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = True
-    return patch_commands_cache_bins(["bin1", "bin2"])
+class TestCommandsCacheSaveIntermediate:
+    """test behavior when $COMMANDS_CACHE_SAVE_INTERMEDIATE=True"""
 
+    @pytest.fixture
+    def exin_mock(self, xession, mock_executables_in):
+        xession.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = True
+        return mock_executables_in(["bin1", "bin2"])
 
-def test_commands_cached_between_runs(commands_cache_tmp, tmp_path, tmpdir):
-    # 1. no pickle file
-    # 2. return empty result first and create a thread to populate result
-    # 3. once the result is available then next call to cc.all_commands returns
+    def test_caching_to_file(self, exin_mock, xession, tmp_path):
+        assert [b.lower() for b in xession.commands_cache.all_commands.keys()] == [
+            "bin1",
+            "bin2",
+        ]
 
-    cc = commands_cache_tmp
+        files = tmp_path.glob("*.pickle")
+        assert len(list(files)) == 1
+        exin_mock.assert_called_once()
 
-    # wait for thread to end
-    cnt = 0  # timeout waiting for thread
-    while True:
-        if cc.all_commands or cnt > 10:
-            break
-        cnt += 1
-        time.sleep(0.1)
-    assert [b.lower() for b in cc.all_commands.keys()] == ["bin1", "bin2"]
+    def test_loading_cache(self, exin_mock, tmp_path, xession):
+        cc = xession.commands_cache
+        file = tmp_path / CommandsCache.CACHE_FILE
+        file.touch()
+        cached = {
+            str(tmp_path): _Commands(
+                mtime=tmp_path.stat().st_mtime, cmds=("bin1", "bin2")
+            )
+        }
 
-    files = tmp_path.glob("*.pickle")
-    assert len(list(files)) == 1
-
-    # cleanup dir
-    for file in files:
-        os.remove(file)
-
-
-def test_commands_cache_uses_pickle_file(commands_cache_tmp, tmp_path, monkeypatch):
-    cc = commands_cache_tmp
-    update_cmds_cache = MagicMock()
-    monkeypatch.setattr(cc, "update_cache", update_cmds_cache)
-    file = tmp_path / CommandsCache.CACHE_FILE
-    bins = {
-        "bin1": (
-            "/some-path/bin1",
-            None,
-        ),
-        "bin2": (
-            "/some-path/bin2",
-            None,
-        ),
-    }
-
-    file.write_bytes(pickle.dumps(bins))
-    assert str(cc.cache_file) == str(file)
-    assert cc.all_commands == bins
-    assert cc._loaded_pickled
+        file.write_bytes(pickle.dumps(cached))
+        assert str(cc.cache_file) == str(file)
+        assert [b.lower() for b in cc.all_commands.keys()] == ["bin1", "bin2"]
+        exin_mock.assert_not_called()
 
 
 TRUE_SHELL_ARGS = [
@@ -185,14 +166,9 @@ class Test_is_only_functional_alias:
             xession.commands_cache.is_only_functional_alias(
                 "<not really a command name>"
             )
-            is None
+            is False
         )
 
-    @skip_if_on_windows
-    def test_bash(self, xession):
-        assert xession.commands_cache.is_only_functional_alias("bash") is None
-
-    @skip_if_on_windows
     def test_bash_and_is_alias_is_only_functional_alias(self, xession):
-        xession.aliases["bash"] = lambda args: os.chdir(args[0])
-        assert xession.commands_cache.is_only_functional_alias("bash") is False
+        xession.aliases["git"] = lambda args: os.chdir(args[0])
+        assert xession.commands_cache.is_only_functional_alias("git") is False

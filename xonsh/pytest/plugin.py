@@ -128,12 +128,12 @@ def xonsh_execer_parse(xonsh_execer):
 
 
 @pytest.fixture
-def patch_commands_cache_bins(xession, tmp_path, monkeypatch):
+def mock_executables_in(xession, tmp_path, monkeypatch):
     def _factory(binaries: tp.List[str]):
         xession.env["PATH"] = [tmp_path]
         exec_mock = MagicMock(return_value=binaries)
         monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
-        return xession.commands_cache
+        return exec_mock
 
     return _factory
 
@@ -207,10 +207,10 @@ def os_env(session_os_env):
 
 
 @pytest.fixture
-def env(tmpdir, session_env):
+def env(tmp_path, session_env):
     """a mutable copy of session_env"""
     env_copy = copy_env(session_env)
-    initial_vars = {"XONSH_DATA_DIR": str(tmpdir)}
+    initial_vars = {"XONSH_DATA_DIR": str(tmp_path), "XONSH_CACHE_DIR": str(tmp_path)}
 
     env_copy.update(initial_vars)
     return env_copy
@@ -253,6 +253,7 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
         if session:
             raise RuntimeError("The factory should be called only once per test")
 
+        aliases = None if "aliases" in attrs_to_skip else Aliases()
         for attr, val in [
             ("env", env),
             ("shell", DummyShell()),
@@ -261,7 +262,7 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             ("history", DummyHistory()),
             (
                 "commands_cache",
-                commands_cache.CommandsCache(env=env, aliases=Aliases()),
+                commands_cache.CommandsCache(env, aliases),
             ),  # since env,aliases change , patch cmds-cache
             # ("subproc_captured", sp),
             ("subproc_uncaptured", sp),

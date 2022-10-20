@@ -571,6 +571,14 @@ def xonsh_data_dir(env):
 
 
 @default_value
+def xonsh_cache_dir(env):
+    """Ensures and returns the $XONSH_CACHE_DIR"""
+    xdd = os.path.expanduser(os.path.join(env.get("XDG_CACHE_HOME"), "xonsh"))
+    os.makedirs(xdd, exist_ok=True)
+    return xdd
+
+
+@default_value
 def xonsh_config_dir(env):
     """``$XDG_CONFIG_HOME/xonsh``"""
     xcd = os.path.expanduser(os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh"))
@@ -1107,7 +1115,7 @@ The file should contain a function with the signature
         type_str="str",
     )
     XONSH_CACHE_DIR = Var.with_default(
-        xonsh_data_dir,
+        xonsh_cache_dir,
         "This is the location where cache files used by xonsh are stored, such as commands-cache...",
         doc_default="``$XDG_CACHE_HOME/xonsh``",
         type_str="str",
