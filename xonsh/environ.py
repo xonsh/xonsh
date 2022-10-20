@@ -1917,7 +1917,12 @@ class Env(cabc.MutableMapping):
             self._d["PATH"] = list(PATH_DEFAULT)
         self._detyped = None
 
+    def get_detyped(self, key: str):
+        detyped = self.detype()
+        return detyped.get(key)
+
     def detype(self):
+        """return a dict that can be used as ``os.environ``"""
         if self._detyped is not None:
             return self._detyped
         ctx = {}
