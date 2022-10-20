@@ -7,6 +7,7 @@ import subprocess as sp
 import sys
 import types
 from typing import TYPE_CHECKING
+from unittest.mock import ANY, MagicMock
 
 import pytest
 from py.path import local
@@ -168,6 +169,31 @@ def test_vox_flow(xession, vox, record_events, venv_home):
     vox(["rm", "spam", "--force"])
     assert not venv_home.join("spam").check()
     assert record_events.last == ("vox_on_delete", "spam")
+
+
+@pytest.mark.parametrize(
+    "env_venv_home",
+    [
+        pathlib.Path("~", ".custom_home_dir/"),
+        pathlib.Path("~root", "venv"),
+        pathlib.Path(".rel_venv"),
+        pathlib.Path("/tmp", "abs_venv"),
+        None,
+    ],
+)
+def test_venvdir_expand(xession, env_venv_home):
+    venv_name = "test_xonsh_venv"
+
+    if env_venv_home:
+        xession.env["VIRTUALENV_HOME"] = str(env_venv_home)
+        expected_dir = str((env_venv_home / venv_name).expanduser())
+    else:
+        expected_dir = str(pathlib.Path("~", ".virtualenvs", venv_name).expanduser())
+    vox = Vox()
+    vox._create = MagicMock()
+    vox.create(venv_name)
+
+    vox._create.assert_called_with(expected_dir, ANY, False, False, True, prompt=None)
 
 
 def test_activate_non_vox_venv(xession, vox, record_events, venv_proc, venv_home):

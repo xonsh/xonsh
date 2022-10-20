@@ -22,6 +22,7 @@ from xonsh.built_ins import XSH
 # FIXME: Is there a better way?
 from xonsh.events import events
 from xonsh.platform import ON_POSIX, ON_WINDOWS
+from xonsh.tools import expand_path
 
 events.doc(
     "vox_on_create",
@@ -128,7 +129,7 @@ class Vox(collections.abc.Mapping):
             self.venvdir = os.path.join(home_path, ".virtualenvs")
             XSH.env["VIRTUALENV_HOME"] = self.venvdir
         else:
-            self.venvdir = XSH.env["VIRTUALENV_HOME"]
+            self.venvdir = expand_path(XSH.env["VIRTUALENV_HOME"])
         self.force_removals = force_removals
         self.sub_dirs = _subdir_names()
 
