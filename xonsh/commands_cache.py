@@ -15,7 +15,7 @@ from pathlib import Path
 
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
-from xonsh.tools import executables_in, print_warning
+from xonsh.tools import executables_in
 
 
 class _Commands(tp.NamedTuple):
@@ -143,11 +143,6 @@ class CommandsCache(cabc.Mapping):
                 # None     -> not in aliases
                 all_cmds[key] = (path, None)
 
-            warn_cnt = self.env.get("COMMANDS_CACHE_SIZE_WARNING")
-            if warn_cnt and len(all_cmds) > warn_cnt:
-                print_warning(
-                    f"Found {len(all_cmds):,} executable files in the PATH directories!"
-                )
             # aliases override cmds
             for cmd in self.aliases:
                 key = cmd.upper() if ON_WINDOWS else cmd

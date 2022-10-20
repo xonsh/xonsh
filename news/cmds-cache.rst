@@ -13,7 +13,8 @@
 
 **Removed:**
 
-* <news item>
+* ``$COMMANDS_CACHE_SIZE_WARNING`` is removed. When ``$COMMANDS_CACHE_SAVE_INTERMEDIATE`` is enabled,
+  the cache file size is optimized.
 
 **Fixed:**
 

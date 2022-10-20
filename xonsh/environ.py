@@ -860,10 +860,6 @@ class GeneralSetting(Xettings):
         "will print information about how to continue the stopped process.",
     )
 
-    COMMANDS_CACHE_SIZE_WARNING = Var.with_default(
-        6000,
-        "Number of files on the PATH above which a warning is shown.",
-    )
     COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
         False,
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
