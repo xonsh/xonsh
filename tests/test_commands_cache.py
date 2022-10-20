@@ -156,6 +156,7 @@ def test_commands_cache_predictor_default(args, xession, tmp_path):
 
 
 class Test_is_only_functional_alias:
+    @skip_if_on_windows
     def test_cd(self, xession):
         xession.aliases["cd"] = lambda args: os.chdir(args[0])
         xession.env["PATH"] = []
