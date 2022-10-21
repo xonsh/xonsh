@@ -1766,27 +1766,30 @@ def to_completion_mode(x):
         y = "default"
     return y
 
+
 def is_tok_color_dict(x):
+    from pygments.token import _TokenType, string_to_tokentype
+
     from xonsh.ptk_shell.shell import _style_from_pygments_dict
-    from pygments.token import _TokenType,string_to_tokentype
+
     """Tests if something is a Token:Color dictionary"""
-    if(not isinstance(x, dict)):
+    if not isinstance(x, dict):
         return False
     """Check if is a Token:str dict"""
     for k, v in x.items():
-        if(not isinstance(v,str)):
+        if not isinstance(v, str):
             return False
         try:
-           k = _TokenType(k)
-           string_to_tokentype(k)
-        except (TypeError,AttributeError):
+            k = _TokenType(k)
+            string_to_tokentype(k)
+        except (TypeError, AttributeError):
             msg = f'"{k}" is not a valid Token.'
             warnings.warn(msg, RuntimeWarning)
             return False
     """Check str is a valid color"""
     try:
         _style_from_pygments_dict(x)
-    except(AssertionError,AttributeError, TypeError, ValueError):
+    except (AssertionError, AttributeError, TypeError, ValueError):
         msg = f'"{x}" contains an invalid style.'
         warnings.warn(msg, RuntimeWarning)
         return False

@@ -2002,23 +2002,28 @@ def test_is_regex_true():
 def test_is_regex_false():
     assert not is_regex("**")
 
+
 from xonsh.style_tools import Token
+
 
 @pytest.mark.parametrize(
     "val, exp",
     [
         (
-            {Token.Literal.String:"bold ansigreen","Token.Name.Tag":"underline ansiblue"},
+            {
+                Token.Literal.String: "bold ansigreen",
+                "Token.Name.Tag": "underline ansiblue",
+            },
             True,
         ),
         (
-            {1:"bold ansigreen","123":"bold ansiblue"},
+            {1: "bold ansigreen", "123": "bold ansiblue"},
             False,
         ),
         (
-            {Token.Literal.String:"123","Token.Name.Tag":"123"},
+            {Token.Literal.String: "123", "Token.Name.Tag": "123"},
             False,
-        )
+        ),
     ],
 )
 def test_is_tok_color_dict(val, exp):
