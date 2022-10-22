@@ -1731,6 +1731,9 @@ Executing Commands and Scripts
 When started with the ``-c`` flag and a command, xonsh will execute that command
 and exit, instead of entering the command loop.
 
+.. note::
+    When executing commands this way :doc:`the run control ("xonshrc") files </xonshrc>` are not applied.
+
 .. code-block:: console
 
     $ xonsh -c "echo @(7+3)"
