@@ -1772,7 +1772,7 @@ def is_tok_color_dict(x):
 
     from xonsh.ptk_shell.shell import _style_from_pygments_dict
 
-    """Tests if something is a Token:Color dictionary"""
+    """Tests if something is a Token:Style dictionary"""
     if not isinstance(x, dict):
         return False
     """Check if is a Token:str dict"""
@@ -1786,10 +1786,10 @@ def is_tok_color_dict(x):
             msg = f'"{k}" is not a valid Token.'
             warnings.warn(msg, RuntimeWarning)
             return False
-    """Check str is a valid color"""
+    """Check each str is a valid style"""
     try:
         _style_from_pygments_dict(x)
-    except (AssertionError, AttributeError, TypeError, ValueError):
+    except (AssertionError, ValueError):
         msg = f'"{x}" contains an invalid style.'
         warnings.warn(msg, RuntimeWarning)
         return False
