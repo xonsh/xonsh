@@ -244,10 +244,6 @@ class PromptsPage(Routes):
             self.env[self.var_name] = prompt
             self.update_rc(prompt=prompt)
 
-    def ee(self, str):
-        return re.sub(r"\\r", "", str)
-
-
 class XontribsPage(Routes):
     path = "/xontribs"
     nav_title = "Xontribs"
