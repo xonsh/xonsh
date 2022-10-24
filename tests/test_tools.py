@@ -2018,13 +2018,20 @@ from xonsh.style_tools import Token
         ),
         (
             {
-                Token.Literal.String: "bold ansigreen",1: "bold ansigreen",
+                Token.Literal.String: "bold ansigreen",
+                1: "bold ansigreen",
             },
-            False
+            False,
         ),
-        ({1: "bold ansigreen"},False),
-        ({Token.Literal.String: "123"},False,),
-        ({"Token.Name.Tag": 123},False,),
+        ({1: "bold ansigreen"}, False),
+        (
+            {Token.Literal.String: "123"},
+            False,
+        ),
+        (
+            {"Token.Name.Tag": 123},
+            False,
+        ),
     ],
 )
 def test_is_tok_color_dict(val, exp):
