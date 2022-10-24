@@ -1810,12 +1810,12 @@ def to_dict(x):
 
 
 def to_tok_color_dict(x):
-    """Converts a string to str:str dictionary"""
+    """Converts a string to Token:str dictionary"""
     if is_tok_color_dict(x):
         return x
     x = to_dict(x)
     if not is_tok_color_dict(x):
-        msg = f'"{x}" can not be converted to str:str dictionary.'
+        msg = f'"{x}" can not be converted to Token:str dictionary.'
         warnings.warn(msg, RuntimeWarning)
         x = dict()
     return x
