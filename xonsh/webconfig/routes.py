@@ -244,6 +244,7 @@ class PromptsPage(Routes):
             self.env[self.var_name] = prompt
             self.update_rc(prompt=prompt)
 
+
 class XontribsPage(Routes):
     path = "/xontribs"
     nav_title = "Xontribs"
