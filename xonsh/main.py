@@ -410,7 +410,7 @@ def premain(argv=None):
         or (args.mode == XonshMode.interactive),
     }
     env = start_services(shell_kwargs, args, pre_env=pre_env)
-    elif args.defines is not None:
+    if args.defines is not None:
         env.update([x.split("=", 1) for x in args.defines])
     return args
 
