@@ -1767,11 +1767,33 @@ def to_completion_mode(x):
     return y
 
 
-def is_str_str_dict(x):
-    """Tests if something is a str:str dictionary"""
-    return isinstance(x, dict) and all(
-        isinstance(k, str) and isinstance(v, str) for k, v in x.items()
-    )
+def is_tok_color_dict(x):
+    from pygments.token import _TokenType, string_to_tokentype
+
+    from xonsh.ptk_shell.shell import _style_from_pygments_dict
+
+    """Tests if something is a Token:Style dictionary"""
+    if not isinstance(x, dict):
+        return False
+    """Check if is a Token:str dict"""
+    for k, v in x.items():
+        if not isinstance(v, str):
+            return False
+        try:
+            k = _TokenType(k)
+            string_to_tokentype(k)
+        except (TypeError, AttributeError):
+            msg = f'"{k}" is not a valid Token.'
+            warnings.warn(msg, RuntimeWarning)
+            return False
+    """Check each str is a valid style"""
+    try:
+        _style_from_pygments_dict(x)
+    except (AssertionError, ValueError):
+        msg = f'"{x}" contains an invalid style.'
+        warnings.warn(msg, RuntimeWarning)
+        return False
+    return True
 
 
 def to_dict(x):
@@ -1787,13 +1809,13 @@ def to_dict(x):
     return x
 
 
-def to_str_str_dict(x):
-    """Converts a string to str:str dictionary"""
-    if is_str_str_dict(x):
+def to_tok_color_dict(x):
+    """Converts a string to Token:str dictionary"""
+    if is_tok_color_dict(x):
         return x
     x = to_dict(x)
-    if not is_str_str_dict(x):
-        msg = f'"{x}" can not be converted to str:str dictionary.'
+    if not is_tok_color_dict(x):
+        msg = f'"{x}" can not be converted to Token:str dictionary.'
         warnings.warn(msg, RuntimeWarning)
         x = dict()
     return x

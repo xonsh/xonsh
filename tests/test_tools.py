@@ -61,6 +61,7 @@ from xonsh.tools import (
     is_string,
     is_string_or_callable,
     is_string_seq,
+    is_tok_color_dict,
     is_writable_file,
     logfile_opt_to_str,
     path_to_str,
@@ -2000,3 +2001,38 @@ def test_is_regex_true():
 
 def test_is_regex_false():
     assert not is_regex("**")
+
+
+from xonsh.style_tools import Token
+
+
+@pytest.mark.parametrize(
+    "val, exp",
+    [
+        (
+            {
+                Token.Literal.String: "bold ansigreen",
+                "Token.Name.Tag": "underline ansiblue",
+            },
+            True,
+        ),
+        (
+            {
+                Token.Literal.String: "bold ansigreen",
+                1: "bold ansigreen",
+            },
+            False,
+        ),
+        ({1: "bold ansigreen"}, False),
+        (
+            {Token.Literal.String: "123"},
+            False,
+        ),
+        (
+            {"Token.Name.Tag": 123},
+            False,
+        ),
+    ],
+)
+def test_is_tok_color_dict(val, exp):
+    assert is_tok_color_dict(val) == exp
