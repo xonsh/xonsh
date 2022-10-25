@@ -1,5 +1,6 @@
 """functions to update rc files"""
 import os
+import re
 import typing as tp
 
 RENDERERS: tp.List[tp.Callable] = []
@@ -39,7 +40,7 @@ def config_to_xonsh(
     for func in RENDERERS:
         lines.extend(func(config))
     lines.append(suffix)
-    return "\n".join(lines)
+    return re.sub(r"\\r", "", "\n".join(lines))
 
 
 def insert_into_xonshrc(

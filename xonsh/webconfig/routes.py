@@ -239,7 +239,7 @@ class PromptsPage(Routes):
 
     def post(self, data: "cgi.FieldStorage"):
         if data:
-            prompt = data.getvalue(self.var_name)
+            prompt = data.getvalue(self.var_name).replace("\r", "")
             self.env[self.var_name] = prompt
             self.update_rc(prompt=prompt)
 
