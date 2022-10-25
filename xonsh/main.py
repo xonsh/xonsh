@@ -211,15 +211,7 @@ def parser():
         metavar="ITEM",
         action="append",
         default=None,
-    )   
-    p.add_argument(
-        "--no-env",
-        help="run xonsh with default environment only",
-        dest="noenv",
-        action="store_false",
-        default=True,
-    )  
-                                                  
+    )                                      
     p.add_argument(
         "--shell-type",
         help="What kind of shell should be used. "
@@ -395,8 +387,6 @@ def premain(argv=None):
         shell_kwargs["login"] = True
     if args.norc:
         shell_kwargs["norc"] = True
-    elif args.noenv:
-        shell_kwargs["noenv"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
     sys.displayhook = _pprint_displayhook
@@ -420,8 +410,6 @@ def premain(argv=None):
         or (args.mode == XonshMode.interactive),
     }
     env = start_services(shell_kwargs, args, pre_env=pre_env)
-    if args.noenv:
-        env = default_env()
     elif args.defines is not None:
         env.update([x.split("=", 1) for x in args.defines])
     return args
