@@ -97,28 +97,28 @@ def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys, xession):
     assert tmpdir.strpath not in sys.path
 
 
-# def test_python_rc(shell, tmpdir, monkeypatch, capsys, xession, mocker):
-#     """Test that python based control files are executed using Python's parser"""
+def test_python_rc(shell, tmpdir, monkeypatch, capsys, xession, mocker):
+    """Test that python based control files are executed using Python's parser"""
 
-#     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-#     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
 
-#     # spy on xonsh's compile method
-#     spy = mocker.spy(xession.execer, "compile")
+    # spy on xonsh's compile method
+    spy = mocker.spy(xession.execer, "compile")
 
-#     rc = tmpdir.join("rc.py")
-#     rc.write("print('Hello World!')")
-#     xonsh.main.premain(["--rc", rc.strpath])
+    rc = tmpdir.join("rc.py")
+    rc.write("print('Hello World!')")
+    xonsh.main.premain(["--rc", rc.strpath])
 
-#     assert rc.strpath in xession.rc_files
+    assert rc.strpath in xession.rc_files
 
-#     stdout, stderr = capsys.readouterr()
-#     assert "Hello World!" in stdout
-#     assert len(stderr) == 0
+    stdout, stderr = capsys.readouterr()
+    assert "Hello World!" in stdout
+    assert len(stderr) == 0
 
-#     # Check that the temporary rc's folder is not left behind on the path
-#     assert tmpdir.strpath not in sys.path
-#     assert not spy.called
+    # Check that the temporary rc's folder is not left behind on the path
+    assert tmpdir.strpath not in sys.path
+    assert not spy.called
 
 
 def test_rcdir(shell, tmpdir, monkeypatch, capsys):
@@ -347,26 +347,26 @@ def test_force_interactive_rc_with_script(shell, tmpdir, xession):
     assert xession.env.get("XONSH_INTERACTIVE")
 
 
-# def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch, xession):
-#     """Calling a custom RC file on a script-call with the interactive flag
-#     should run interactively
-#     """
-#     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
-#     f = tmpdir.join("wakkawakka")
-#     f.write("print('hi')")
-#     args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
-#     assert args.mode == XonshMode.interactive
-#     assert f.strpath in xession.rc_files
+def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch, xession):
+    """Calling a custom RC file on a script-call with the interactive flag
+    should run interactively
+    """
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+    f = tmpdir.join("wakkawakka")
+    f.write("print('hi')")
+    args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
+    assert args.mode == XonshMode.interactive
+    assert f.strpath in xession.rc_files
 
 
-# def test_custom_rc_with_script(shell, tmpdir):
-#     """Calling a custom RC file on a script-call without the interactive flag
-#     should not run interactively
-#     """
-#     f = tmpdir.join("wakkawakka")
-#     f.write("print('hi')")
-#     args = xonsh.main.premain(["--rc", f.strpath, "tests/sample.xsh"])
-#     assert not (args.mode == XonshMode.interactive)
+def test_custom_rc_with_script(shell, tmpdir):
+    """Calling a custom RC file on a script-call without the interactive flag
+    should not run interactively
+    """
+    f = tmpdir.join("wakkawakka")
+    f.write("print('hi')")
+    args = xonsh.main.premain(["--rc", f.strpath, "tests/sample.xsh"])
+    assert not (args.mode == XonshMode.interactive)
 
 
 def test_premain_no_rc(shell, tmpdir, xession):
