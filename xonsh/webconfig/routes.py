@@ -1,6 +1,5 @@
 import cgi
 import inspect
-import re
 import sys
 from typing import TYPE_CHECKING
 
