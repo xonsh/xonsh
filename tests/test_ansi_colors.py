@@ -132,7 +132,7 @@ def test_ansi_color_escape_code_to_name(inp, exp):
     "color, style",
     [
         (color, style)
-        for color in DEFAULT_CMAP.keys()
+        for color in DEFAULT_CMAP
         for style in ansi_color_style_names()
     ],
 )

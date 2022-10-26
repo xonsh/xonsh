@@ -17,7 +17,7 @@ def check_news_file(fname):
     import restructuredtext_lint
 
     name = fname.name
-    with open(fname.path) as f:
+    with open(fname.path, encoding="utf-8") as f:
         content = f.read()
     errors = restructuredtext_lint.lint(content)
 

@@ -84,7 +84,7 @@ class TestCat:
         ],
     )
     def test_cat_single_file_work_exist_content(self, cat_env_fixture, content):
-        with open(self.tempfile, "w") as f:
+        with open(self.tempfile, "w", encoding="utf-8") as f:
             f.write(content)
         expected_content = content.replace("\n", os.linesep)
 

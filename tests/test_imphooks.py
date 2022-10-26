@@ -66,5 +66,5 @@ def test_get_source():
     mod = import_module("sample")
     loader = mod.__loader__
     source = loader.get_source("sample")
-    with open(os.path.join(TEST_DIR, "sample.xsh")) as srcfile:
+    with open(os.path.join(TEST_DIR, "sample.xsh"), encoding="utf-8") as srcfile:
         assert source == srcfile.read()

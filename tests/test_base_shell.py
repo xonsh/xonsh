@@ -32,8 +32,7 @@ def test_transform(xession):
     def spam2egg(cmd, **_):
         if cmd == "spam":
             return "egg"
-        else:
-            return cmd
+        return cmd
 
     assert transform_command("spam") == "egg"
     assert transform_command("egg") == "egg"

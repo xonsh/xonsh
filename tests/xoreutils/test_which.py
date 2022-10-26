@@ -83,5 +83,4 @@ class TestWhich:
             path1 = os.path.splitext(path1)[0]
             path2 = os.path.splitext(path2)[0]
             return path1 == path2
-        else:
-            return os.path.samefile(path1, path2)
+        return os.path.samefile(path1, path2)

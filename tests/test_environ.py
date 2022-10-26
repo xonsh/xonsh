@@ -195,7 +195,7 @@ def test_locate_binary_on_windows(xession):
         tmpdir = os.path.realpath(tmpdir)
         for fname in files:
             fpath = os.path.join(tmpdir, fname)
-            with open(fpath, "w") as f:
+            with open(fpath, "w", encoding="utf-8") as f:
                 f.write(fpath)
         xession.env.update({"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]})
         assert locate_binary("file1") == os.path.join(tmpdir, "file1.exe")
@@ -262,7 +262,7 @@ def test_event_on_envvar_change_no_fire_when_value_is_same(val, xession, env):
     # trigger
     env["TEST"] = val
 
-    assert share == []
+    assert not share
 
 
 def test_events_on_envvar_called_in_right_order(xession, env):
@@ -336,7 +336,7 @@ def test_lscolors_target(xession):
     assert lsc["ln"] == ("RESET",)
     assert lsc.is_target("ln")
     assert lsc.detype() == "ln=target"
-    assert not (lsc.is_target("mi"))
+    assert not lsc.is_target("mi")
 
 
 @pytest.mark.parametrize(
@@ -541,7 +541,7 @@ def test_env_iterate_rawkeys():
     for key in env.rawkeys():
         if isinstance(key, str):
             continue
-        elif isinstance(key, type(r)) and key.pattern == "re":
+        if isinstance(key, type(r)) and key.pattern == "re":
             saw_regex = True
     assert saw_regex
 

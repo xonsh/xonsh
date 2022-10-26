@@ -171,7 +171,7 @@ def test_annotated_assign(xonsh_execer_exec):
 
 
 def test_exec_eol(xonsh_execer_exec):
-    locs = dict()
+    locs = {}
     assert xonsh_execer_exec("a=0", locs=locs) and xonsh_execer_exec("a=0\n", locs=locs)
 
 

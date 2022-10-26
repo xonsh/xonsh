@@ -72,8 +72,7 @@ def test_capture_always(
     if not thread_subprocs and alias_type in ["func", "exec"]:
         if pipe:
             return pytest.skip("https://github.com/xonsh/xonsh/issues/4443")
-        else:
-            return pytest.skip("https://github.com/xonsh/xonsh/issues/4444")
+        return pytest.skip("https://github.com/xonsh/xonsh/issues/4444")
 
     env = xonsh_session.env
     exp = "HELLO\nBYE\n"

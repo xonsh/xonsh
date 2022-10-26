@@ -53,10 +53,9 @@ def request_factory():
         def makefile(self, *args, **kwargs):
             if args[0] == "rb":
                 return io.BytesIO(f"{self.method} {self._path} HTTP/1.0".encode())
-            elif args[0] == "wb":
+            if args[0] == "wb":
                 return io.BytesIO(b"")
-            else:
-                raise ValueError("Unknown file type to make", args, kwargs)
+            raise ValueError("Unknown file type to make", args, kwargs)
 
         def sendall(self, data):
             self.data = data

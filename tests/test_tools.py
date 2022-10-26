@@ -1578,13 +1578,13 @@ def test_executables_in(xession):
                     ext = ""
                 path = os.path.join(test_path, fname + ext)
                 if _type == "file":
-                    with open(path, "w") as f:
+                    with open(path, "w", encoding="utf-8") as f:
                         f.write(fname)
                 elif _type == "directory":
                     os.mkdir(path)
                 elif _type == "brokensymlink":
                     tmp_path = os.path.join(test_path, "i_wont_exist")
-                    with open(tmp_path, "w") as f:
+                    with open(tmp_path, "w", encoding="utf-8") as f:
                         f.write("deleteme")
                         os.symlink(tmp_path, path)
                     os.remove(tmp_path)

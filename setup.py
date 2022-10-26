@@ -98,7 +98,7 @@ ORIGINAL_VERSION_LINE = None
 def replace_version(N):
     """Replace version in `__init__.py` with devN suffix"""
     global ORIGINAL_VERSION_LINE
-    with open("xonsh/__init__.py") as f:
+    with open("xonsh/__init__.py", encoding="utf-8") as f:
         raw = f.read()
     lines = raw.splitlines()
     msg_assert = "__version__ must be the first line of the __init__.py"
@@ -106,7 +106,7 @@ def replace_version(N):
     ORIGINAL_VERSION_LINE = lines[0]
     lines[0] = lines[0].rstrip(' "') + f'.dev{N}"'
     upd = "\n".join(lines) + "\n"
-    with open("xonsh/__init__.py", "w") as f:
+    with open("xonsh/__init__.py", "w", encoding="utf-8") as f:
         f.write(upd)
 
 
@@ -119,7 +119,7 @@ def restore_version():
     lines = raw.splitlines()
     lines[0] = ORIGINAL_VERSION_LINE
     upd = "\n".join(lines) + "\n"
-    with open("xonsh/__init__.py", "w") as f:
+    with open("xonsh/__init__.py", "w", encoding="utf-8") as f:
         f.write(upd)
 
 
@@ -205,12 +205,12 @@ class install_scripts_rewrite(install_scripts):
                     bs_cmd = self.get_finalized_command("build_scripts")
                     exec_param = getattr(bs_cmd, "executable", None)
 
-                    with open(file) as f:
+                    with open(file, encoding="utf-8") as f:
                         content = f.read()
 
                     processed = content.replace(" python3 ", f' "{exec_param}" ')
 
-                    with open(file, "w") as f:
+                    with open(file, "w", encoding="utf-8") as f:
                         f.write(processed)
 
 

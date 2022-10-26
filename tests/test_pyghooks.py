@@ -162,7 +162,7 @@ def test_XonshStyle_init_file_color_tokens(xs_LS_COLORS, monkeypatch):
         monkeypatch.delitem(file_color_tokens, n)
     xs = XonshStyle()
     assert xs.styles
-    assert type(file_color_tokens) is dict
+    assert isinstance(file_color_tokens, dict)
     assert set(file_color_tokens.keys()) == set(xs_LS_COLORS.env["LS_COLORS"].keys())
 
 
@@ -244,7 +244,7 @@ def colorizable_files():
                 if file_path.endswith("_dir"):
                     os.mkdir(file_path)
                 else:
-                    open(file_path, "a").close()
+                    open(file_path, "a", encoding="utf-8").close()
                 if k in ("di", "fi"):
                     pass
                 elif k == "ex":
@@ -339,7 +339,7 @@ def test_colorize_file_ca(xs_LS_COLORS, monkeypatch):
 
     with TemporaryDirectory() as tmpdir:
         file_path = tmpdir + "/cap_file"
-        open(file_path, "a").close()
+        open(file_path, "a", encoding="utf-8").close()
         os.chmod(
             file_path, stat.S_IRWXU
         )  # ca overrides ex, leave file deletable on Windows

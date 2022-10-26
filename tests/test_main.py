@@ -337,7 +337,7 @@ def test_rc_with_failing_module(shell, tmpdir, monkeypatch, capsys, xession):
 
 def test_no_rc_with_script(shell, tmpdir):
     args = xonsh.main.premain(["tests/sample.xsh"])
-    assert not (args.mode == XonshMode.interactive)
+    assert not args.mode == XonshMode.interactive
 
 
 def test_force_interactive_rc_with_script(shell, tmpdir, xession):
@@ -364,7 +364,7 @@ def test_custom_rc_with_script(shell, tmpdir):
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
     args = xonsh.main.premain(["--rc", f.strpath, "tests/sample.xsh"])
-    assert not (args.mode == XonshMode.interactive)
+    assert not args.mode == XonshMode.interactive
 
 
 def test_premain_no_rc(shell, tmpdir, xession):
@@ -377,7 +377,7 @@ def test_premain_no_rc(shell, tmpdir, xession):
 )
 def test_premain_with_file_argument(arg, shell, xession):
     xonsh.main.premain(["tests/sample.xsh", arg])
-    assert not (xession.env.get("XONSH_INTERACTIVE"))
+    assert not xession.env.get("XONSH_INTERACTIVE")
 
 
 def test_premain_interactive__with_file_argument(shell, xession):
@@ -455,7 +455,7 @@ def test_xonsh_failback(
         assert failback_checker[0] == exp_shell
         assert failback_checker[1] == failback_checker[0]
     except Exception as e:
-        if len(e.args) and "A fake failure" in str(
+        if len(e.args) > 0 and "A fake failure" in str(
             e.args[0]
         ):  # if it did raise expected exception
             assert len(failback_checker) == 0  # then it didn't invoke a shell
