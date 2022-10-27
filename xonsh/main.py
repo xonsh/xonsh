@@ -12,7 +12,7 @@ import xonsh.procs.pipelines as xpp
 from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
-from xonsh.environ import default_env, make_args_env, xonshrc_context
+from xonsh.environ import make_args_env, xonshrc_context
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
