@@ -108,9 +108,6 @@ def test_cd_autopush(xession, tmpdir):
 
 
 def test_popd_fn(xession):
-    PUSHD_MINUS = Var.with_default(
-        True,
-    )
     xession.env.update(dict(CDPATH=PARENT, PWD=PARENT))
     old_dir = os.getcwd()
     sub_tests = os.path.join(HERE, "tests")
