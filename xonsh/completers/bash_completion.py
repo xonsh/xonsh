@@ -386,7 +386,7 @@ def bash_completions(
         command = _bash_command(env=env)
     try:
         out = subprocess.check_output(
-            [command, "-c", script],
+            [command, "-i", "-c", script],
             text=True,
             stderr=subprocess.PIPE,
             env=env,
