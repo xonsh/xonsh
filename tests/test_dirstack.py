@@ -7,9 +7,6 @@ import pytest  # noqa F401
 from xonsh import dirstack
 from xonsh.tools import chdir
 
-from xonsh import environ
-from xonsh.environ import Var
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
 
