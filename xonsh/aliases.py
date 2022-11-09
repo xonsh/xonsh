@@ -543,7 +543,7 @@ def source_foreign_fn(
             msg = (
                 "Skipping application of {0!r} alias from {1!r} "
                 "since it shares a name with an existing xonsh alias. "
-                'Use "--overwrite-alias" option to apply it anyway.'
+                'Use "--overwrite-alias" option to apply it anyway. '
                 'You may prevent this message with "--suppress-skip-message" or '
                 '"$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = True".'
             )
