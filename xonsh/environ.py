@@ -111,7 +111,6 @@ cause a recursion until the limit.
 """,
 )
 
-
 events.doc(
     "on_envvar_change",
     """
@@ -123,7 +122,6 @@ cause a recursion until the limit.
 """,
 )
 
-
 events.doc(
     "on_pre_spec_run_ls",
     """
@@ -133,7 +131,6 @@ Fires right before a SubprocSpec.run() is called for the ls
 command.
 """,
 )
-
 
 events.doc(
     "on_lscolors_change",
@@ -863,6 +860,16 @@ class GeneralSetting(Xettings):
     COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
         False,
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
+    )
+
+    ENABLE_COMMANDS_CACHE = Var(
+        default=True,
+        doc="command names in a directory are cached when enabled.",
+        doc_default="It makes use of directory's modified time. "
+        "On some platforms it may not be accurate enough"
+        "(e.g. Windows, Linux save mtime in seconds). "
+        "setting it to False would disable the caching mechanism "
+        "and may slow down the shell",
     )
 
     HOSTNAME = Var.with_default(

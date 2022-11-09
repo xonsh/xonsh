@@ -1,5 +1,6 @@
 import os
 import pickle
+import time
 
 import pytest
 
@@ -173,3 +174,31 @@ class Test_is_only_functional_alias:
     def test_bash_and_is_alias_is_only_functional_alias(self, xession):
         xession.aliases["git"] = lambda args: os.chdir(args[0])
         assert xession.commands_cache.is_only_functional_alias("git") is False
+
+
+def test_update_cache(xession, tmp_path):
+    xession.env["ENABLE_COMMANDS_CACHE"] = False
+    basename = "PITA.EXE"
+    subdir1 = tmp_path / "subdir1"
+    subdir2 = tmp_path / "subdir2"
+    subdir1.mkdir()
+    subdir2.mkdir()
+    file1 = subdir1 / basename
+    file2 = subdir2 / basename
+    file1.touch()
+    file1.chmod(0o755)
+
+    cache = CommandsCache({"PATH": [subdir2, subdir1]})
+    cached = cache.update_cache()
+
+    assert file1.samefile(cached[basename][0])
+
+    # give the os enough time to update the mtime field of the parent directory
+    # (represented in seconds on Linux and Windows systems)
+    time.sleep(2)
+    file2.touch()
+    file2.chmod(0o755)
+
+    cached = cache.update_cache()
+
+    assert file2.samefile(cached[basename][0])
