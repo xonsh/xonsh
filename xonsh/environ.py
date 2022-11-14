@@ -571,6 +571,14 @@ def xonsh_data_dir(env):
 
 
 @default_value
+def xonsh_cache_dir(env):
+    """Ensures and returns the $XONSH_CACHE_DIR"""
+    xdd = os.path.expanduser(os.path.join(env.get("XDG_CACHE_HOME"), "xonsh"))
+    os.makedirs(xdd, exist_ok=True)
+    return xdd
+
+
+@default_value
 def xonsh_config_dir(env):
     """``$XDG_CONFIG_HOME/xonsh``"""
     xcd = os.path.expanduser(os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh"))
@@ -852,10 +860,6 @@ class GeneralSetting(Xettings):
         "will print information about how to continue the stopped process.",
     )
 
-    COMMANDS_CACHE_SIZE_WARNING = Var.with_default(
-        6000,
-        "Number of files on the PATH above which a warning is shown.",
-    )
     COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
         False,
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
@@ -1012,6 +1016,12 @@ class GeneralSetting(Xettings):
         doc_default="``~/.local/share``",
         type_str="str",
     )
+    XDG_CACHE_HOME = Var.with_default(
+        os.path.expanduser(os.path.join("~", ".cache")),
+        "The base directory relative to which user-specific non-essential data files should be stored.",
+        doc_default="``~/.cache``",
+        type_str="str",
+    )
     XDG_DATA_DIRS = Var.with_default(
         xdg_data_dirs,
         "A list of directories where system level data files are stored.",
@@ -1098,6 +1108,12 @@ The file should contain a function with the signature
         xonsh_data_dir,
         "This is the location where xonsh data files are stored, such as history, generated completers ...",
         doc_default="``$XDG_DATA_HOME/xonsh``",
+        type_str="str",
+    )
+    XONSH_CACHE_DIR = Var.with_default(
+        xonsh_cache_dir,
+        "This is the location where cache files used by xonsh are stored, such as commands-cache...",
+        doc_default="``$XDG_CACHE_HOME/xonsh``",
         type_str="str",
     )
     XONSH_ENCODING = Var.with_default(
@@ -1901,7 +1917,12 @@ class Env(cabc.MutableMapping):
             self._d["PATH"] = list(PATH_DEFAULT)
         self._detyped = None
 
+    def get_detyped(self, key: str):
+        detyped = self.detype()
+        return detyped.get(key)
+
     def detype(self):
+        """return a dict that can be used as ``os.environ``"""
         if self._detyped is not None:
             return self._detyped
         ctx = {}

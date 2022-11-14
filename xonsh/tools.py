@@ -838,7 +838,7 @@ def _executables_in_windows(path):
         return
 
 
-def executables_in(path):
+def executables_in(path) -> tp.Iterable[str]:
     """Returns a generator of files in path that the user could execute."""
     if ON_WINDOWS:
         func = _executables_in_windows

@@ -38,7 +38,7 @@ def test_rich_completion(completion, lprefix, ptk_completion, monkeypatch, xessi
     document_mock.current_line = ""
     document_mock.cursor_position_col = 0
 
-    monkeypatch.setattr(xession, "aliases", Aliases())
+    monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
 
     completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
     if isinstance(completion, RichCompletion) and not ptk_completion:
@@ -216,7 +216,7 @@ def test_alias_expansion(code, index, expected_args, monkeypatch, xession):
     ptk_completer.reserve_space = lambda: None
     ptk_completer.suggestion_completion = lambda _, __: None
 
-    monkeypatch.setattr(xession, "aliases", Aliases(gb=["git branch"]))
+    monkeypatch.setattr(xession.commands_cache, "aliases", Aliases(gb=["git branch"]))
 
     list(ptk_completer.get_completions(Document(code, index), MagicMock()))
     mock_call = xonsh_completer_mock.complete.call_args

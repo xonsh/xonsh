@@ -25,7 +25,7 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
     )  # capture output of ![]
     if ON_WINDOWS:
         monkeypatch.setattr(
-            xonsh_session,
+            xonsh_session.commands_cache,
             "aliases",
             {
                 "echo": "cmd /c echo".split(),

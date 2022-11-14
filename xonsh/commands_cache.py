@@ -7,19 +7,20 @@ True) or must be run the foreground (returns False).
 """
 import argparse
 import collections.abc as cabc
-import functools
 import os
 import pickle
-import sys
-import threading
 import time
 import typing as tp
 from pathlib import Path
 
-from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
 from xonsh.tools import executables_in
+
+
+class _Commands(tp.NamedTuple):
+    mtime: float
+    cmds: "tuple[str, ...]"
 
 
 class CommandsCache(cabc.Mapping):
@@ -30,28 +31,37 @@ class CommandsCache(cabc.Mapping):
     the command has an alias.
     """
 
-    CACHE_FILE = "commands-cache.pickle"
+    CACHE_FILE = "path-commands-cache.pickle"
 
-    def __init__(self):
-        self._cmds_cache = {}
-        self._path_checksum = None
-        self._alias_checksum = None
-        self._path_mtime = -1
+    def __init__(self, env, aliases=None) -> None:
+        # cache commands in path by mtime
+        self._paths_cache: "dict[str, _Commands]" = {}
+
+        # wrap aliases and commands in one place
+        self._cmds_cache: "dict[str, tuple[str, bool|None]]" = {}
+
+        self._alias_checksum: "int|None" = None
         self.threadable_predictors = default_threadable_predictors()
-        self._loaded_pickled = False
 
-        # force it to load from env by setting it to None
+        # Path to the cache-file where all commands/aliases are cached for pre-loading"""
+        self.env = env
+        if aliases is None:
+            from xonsh.aliases import Aliases, make_default_aliases
+
+            self.aliases = Aliases(make_default_aliases())
+        else:
+            self.aliases = aliases
         self._cache_file = None
 
     @property
     def cache_file(self):
         """Keeping a property that lies on instance-attribute"""
-        env = XSH.env or {}
+        env = self.env
         # Path to the cache-file where all commands/aliases are cached for pre-loading
         if self._cache_file is None:
-            if "XONSH_DATA_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE"):
+            if "XONSH_CACHE_DIR" in env and env.get("COMMANDS_CACHE_SAVE_INTERMEDIATE"):
                 self._cache_file = (
-                    Path(env["XONSH_DATA_DIR"]).joinpath(self.CACHE_FILE).resolve()
+                    Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE).resolve()
                 )
             else:
                 # set a falsy value other than None
@@ -87,13 +97,12 @@ class CommandsCache(cabc.Mapping):
         """Returns whether the cache is populated or not."""
         return len(self._cmds_cache) == 0
 
-    @staticmethod
-    def get_possible_names(name):
+    def get_possible_names(self, name):
         """Generates the possible `PATHEXT` extension variants of a given executable
         name on Windows as a list, conserving the ordering in `PATHEXT`.
         Returns a list as `name` being the only item in it on other platforms."""
         if ON_WINDOWS:
-            pathext = XSH.env.get("PATHEXT", [])
+            pathext = self.env.get("PATHEXT", [])
             name = name.upper()
             return [name + ext for ext in ([""] + pathext)]
         else:
@@ -108,21 +117,14 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isdir(p):
                     yield p
 
-    def _check_changes(self, paths: tp.Tuple[str, ...], aliases):
+    def _check_changes(self, paths: tp.Tuple[str, ...]):
         # did PATH change?
-        path_hash = hash(paths)
-        yield path_hash == self._path_checksum
-        self._path_checksum = path_hash
+        yield self._update_paths_cache(paths)
 
         # did aliases change?
-        al_hash = hash(frozenset(aliases))
-        yield al_hash == self._alias_checksum
+        al_hash = hash(frozenset(self.aliases))
+        yield al_hash != self._alias_checksum
         self._alias_checksum = al_hash
-
-        # did the contents of any directory in PATH change?
-        max_mtime = max(map(lambda path: os.stat(path).st_mtime, paths), default=0)
-        yield max_mtime <= self._path_mtime
-        self._path_mtime = max_mtime
 
     @property
     def all_commands(self):
@@ -130,104 +132,58 @@ class CommandsCache(cabc.Mapping):
         return self._cmds_cache
 
     def update_cache(self):
-        env = XSH.env or {}
-        paths = tuple(CommandsCache.remove_dups(env.get("PATH") or []))
+        env = self.env
+        # iterate backwards so that entries at the front of PATH overwrite
+        # entries at the back.
+        paths = tuple(reversed(tuple(self.remove_dups(env.get("PATH") or []))))
+        if any(self._check_changes(paths)):
+            all_cmds = {}
+            for cmd, path in self._iter_binaries(paths):
+                key = cmd.upper() if ON_WINDOWS else cmd
+                # None     -> not in aliases
+                all_cmds[key] = (path, None)
 
-        # in case it is empty or unset
-        alss = {} if XSH.aliases is None else XSH.aliases
-
-        (
-            no_new_paths,
-            no_new_alias,
-            no_new_bins,
-        ) = tuple(self._check_changes(paths, alss))
-
-        if no_new_paths and no_new_bins:
-            if not no_new_alias:  # only aliases have changed
-                for cmd, alias in alss.items():
-                    key = cmd.upper() if ON_WINDOWS else cmd
-                    if key in self._cmds_cache:
-                        self._cmds_cache[key] = (self._cmds_cache[key][0], alias)
-                    else:
-                        self._cmds_cache[key] = (cmd, True)
-                # save the changes to cache as well
-                self.set_cmds_cache(self._cmds_cache)
-            return self._cmds_cache
-
-        if self.cache_file and self.cache_file.exists():
-            # pickle the result only if XONSH_DATA_DIR is set
-            if not self._loaded_pickled:
-                # first time load the commands from cache-file
-                self._cmds_cache = self.get_cached_commands()
-                self._loaded_pickled = True
-            # also start a thread that updates the cache in the bg
-            worker = threading.Thread(
-                target=self._update_cmds_cache,
-                args=[paths, alss],
-                daemon=True,
-            )
-            worker.start()
-        else:
-            self._update_cmds_cache(paths, alss)
+            # aliases override cmds
+            for cmd in self.aliases:
+                key = cmd.upper() if ON_WINDOWS else cmd
+                if key in all_cmds:
+                    # (path, False) -> has same named alias
+                    all_cmds[key] = (all_cmds[key][0], False)
+                else:
+                    # True -> pure alias
+                    all_cmds[key] = (cmd, True)
+            self._cmds_cache = all_cmds
         return self._cmds_cache
 
-    @staticmethod
-    @functools.lru_cache(maxsize=10)
-    def _get_all_cmds(paths: tp.Sequence[str]):
-        """Cache results when possible
-
-        This will be helpful especially during tests where the PATH will be the same mostly.
-        """
-
-        def _getter():
-            for path in reversed(paths):
-                # iterate backwards so that entries at the front of PATH overwrite
-                # entries at the back.
-                for cmd in executables_in(path):
-                    yield cmd, os.path.join(path, cmd)
-
-        return dict(_getter())
-
-    def _update_cmds_cache(
-        self, paths: tp.Sequence[str], aliases: tp.Dict[str, str]
-    ) -> tp.Dict[str, tp.Any]:
-        """Update the cmds_cache variable in background without slowing down parseLexer"""
-        env = XSH.env or {}  # type: ignore
-        allcmds = {}
-
-        for cmd, path in self._get_all_cmds(paths).items():
-            key = cmd.upper() if ON_WINDOWS else cmd
-            allcmds[key] = (path, aliases.get(key, None))
-
-        warn_cnt = env.get("COMMANDS_CACHE_SIZE_WARNING")
-        if warn_cnt and len(allcmds) > warn_cnt:
-            print(
-                f"Warning! Found {len(allcmds):,} executable files in the PATH directories!",
-                file=sys.stderr,
-            )
-
-        for cmd in aliases:
-            if cmd not in allcmds:
-                key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (cmd, True)  # type: ignore
-
-        return self.set_cmds_cache(allcmds)
-
-    def get_cached_commands(self) -> tp.Dict[str, str]:
-        if self.cache_file and self.cache_file.exists():
+    def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
+        """load cached results or update cache"""
+        if (not self._paths_cache) and self.cache_file and self.cache_file.exists():
+            # first time load the commands from cache-file if configured
             try:
-                return pickle.loads(self.cache_file.read_bytes()) or {}
+                self._paths_cache = pickle.loads(self.cache_file.read_bytes()) or {}
             except Exception:
                 # the file is corrupt
                 self.cache_file.unlink(missing_ok=True)
-        return {}
 
-    def set_cmds_cache(self, allcmds: tp.Dict[str, tp.Any]) -> tp.Dict[str, tp.Any]:
-        """write cmds to cache-file and instance-attribute"""
-        if self.cache_file:
-            self.cache_file.write_bytes(pickle.dumps(allcmds))
-        self._cmds_cache = allcmds
-        return allcmds
+        updated = False
+        for path in paths:
+            modified_time = os.stat(path).st_mtime
+            if (path not in self._paths_cache) or (
+                self._paths_cache[path].mtime != modified_time
+            ):
+                updated = True
+                self._paths_cache[path] = _Commands(
+                    modified_time, tuple(executables_in(path))
+                )
+
+        if updated and self.cache_file:
+            self.cache_file.write_bytes(pickle.dumps(self._paths_cache))
+        return updated
+
+    def _iter_binaries(self, paths):
+        for path in paths:
+            for cmd in self._paths_cache[path].cmds:
+                yield cmd, os.path.join(path, cmd)
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it exists."""
@@ -317,7 +273,7 @@ class CommandsCache(cabc.Mapping):
         self.update_cache()
         return self.lazy_is_only_functional_alias(name)
 
-    def lazy_is_only_functional_alias(self, name):
+    def lazy_is_only_functional_alias(self, name) -> bool:
         """Returns whether or not a command is only a functional alias, and has
         no underlying executable. For example, the "cd" command is only available
         as a functional alias. This search is performed lazily.
@@ -334,7 +290,7 @@ class CommandsCache(cabc.Mapping):
         thread, rather than the main thread.
         """
         predictor = self.get_predictor_threadable(cmd[0])
-        return predictor(cmd[1:])
+        return predictor(cmd[1:], self)
 
     def get_predictor_threadable(self, cmd0):
         """Return the predictor whether a command list is able to be run on a
@@ -370,8 +326,7 @@ class CommandsCache(cabc.Mapping):
         """
         # alias stuff
         if not os.path.isabs(cmd0) and os.sep not in cmd0:
-            alss = getattr(XSH, "aliases", dict())
-            if cmd0 in alss:
+            if cmd0 in self.aliases:
                 return self.default_predictor_alias(cmd0)
 
         # other default stuff
@@ -387,9 +342,8 @@ class CommandsCache(cabc.Mapping):
             10  # this limit is se to handle infinite loops in aliases definition
         )
         first_args = []  # contains in reverse order args passed to the aliased command
-        alss = getattr(XSH, "aliases", dict())
-        while cmd0 in alss:
-            alias_name = alss[cmd0]
+        while cmd0 in self.aliases:
+            alias_name = self.aliases
             if isinstance(alias_name, (str, bytes)) or not isinstance(
                 alias_name, cabc.Sequence
             ):
@@ -404,7 +358,7 @@ class CommandsCache(cabc.Mapping):
             if alias_recursion_limit == 0:
                 return predict_true
         predictor_cmd0 = self.get_predictor_threadable(cmd0)
-        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1)
+        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1, self)
 
     def default_predictor_readbin(self, name, cmd0, timeout, failure):
         """Make a default predictor by
@@ -463,12 +417,12 @@ class CommandsCache(cabc.Mapping):
 #
 
 
-def predict_true(args):
+def predict_true(_, __):
     """Always say the process is threadable."""
     return True
 
 
-def predict_false(args):
+def predict_false(_, __):
     """Never say the process is threadable."""
     return False
 
@@ -481,7 +435,7 @@ def SHELL_PREDICTOR_PARSER():
     return p
 
 
-def predict_shell(args):
+def predict_shell(args, _):
     """Predict the backgroundability of the normal shell interface, which
     comes down to whether it is being run in subproc mode.
     """
@@ -503,7 +457,7 @@ def HELP_VER_PREDICTOR_PARSER():
     return p
 
 
-def predict_help_ver(args):
+def predict_help_ver(args, _):
     """Predict the backgroundability of commands that have help & version
     switches: -h, --help, -v, -V, --version. If either of these options is
     present, the command is assumed to print to stdout normally and is therefore
@@ -526,7 +480,7 @@ def HG_PREDICTOR_PARSER():
     return p
 
 
-def predict_hg(args):
+def predict_hg(args, _):
     """Predict if mercurial is about to be run in interactive mode.
     If it is interactive, predict False. If it isn't, predict True.
     Also predict False for certain commands, such as split.
@@ -538,7 +492,7 @@ def predict_hg(args):
         return not ns.interactive
 
 
-def predict_env(args):
+def predict_env(args, cmd_cache: CommandsCache):
     """Predict if env is launching a threadable command or not.
     The launched command is extracted from env args, and the predictor of
     lauched command is used."""
@@ -547,7 +501,7 @@ def predict_env(args):
         if args[i] and args[i][0] != "-" and "=" not in args[i]:
             # args[i] is the command and the following is its arguments
             # so args[i:] is used to predict if the command is threadable
-            return XSH.commands_cache.predict_threadable(args[i:])
+            return cmd_cache.predict_threadable(args[i:])
     return True
 
 

@@ -347,12 +347,11 @@ def patched_cmd_cache(xession, vox, monkeypatch):
     cc = xession.commands_cache
 
     def no_change(self, *_):
-        return False, False, False
+        return False, False
 
     monkeypatch.setattr(cc, "_check_changes", types.MethodType(no_change, cc))
-    monkeypatch.setattr(cc, "_update_cmds_cache", types.MethodType(no_change, cc))
     bins = {path: (path, False) for path in _PY_BINS}
-    cc._cmds_cache = bins
+    monkeypatch.setattr(cc, "_cmds_cache", bins)
     yield cc
 
 

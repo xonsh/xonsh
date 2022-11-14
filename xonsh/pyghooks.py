@@ -1653,7 +1653,7 @@ class XonshLexer(Python3Lexer):
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
                 XSH.env["PATHEXT"] = pathext.split(os.pathsep)
         if getattr(XSH, "commands_cache", None) is None:
-            XSH.commands_cache = CommandsCache()
+            XSH.commands_cache = CommandsCache(XSH.env)
         _ = XSH.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)
 

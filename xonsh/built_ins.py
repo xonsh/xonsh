@@ -551,7 +551,12 @@ class XonshSession:
         self.completers = None
         self.builtins = None
         self._initial_builtin_names = None
-        self.aliases = None
+
+    @property
+    def aliases(self):
+        if self.commands_cache is None:
+            return
+        return self.commands_cache.aliases
 
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
@@ -597,15 +602,8 @@ class XonshSession:
         self._disable_python_exit()
 
         self.execer = execer
-        self.commands_cache = (
-            kwargs.pop("commands_cache")
-            if "commands_cache" in kwargs
-            else CommandsCache()
-        )
         self.modules_cache = {}
         self.all_jobs = {}
-
-        self.completers = default_completers(self.commands_cache)
 
         self.builtins = get_default_builtins(execer)
         self._initial_builtin_names = frozenset(vars(self.builtins))
@@ -614,8 +612,14 @@ class XonshSession:
         for attr, value in kwargs.items():
             if hasattr(self, attr):
                 setattr(self, attr, value)
-        self.link_builtins(aliases_given)
+        self.commands_cache = (
+            kwargs.pop("commands_cache")
+            if "commands_cache" in kwargs
+            else CommandsCache(self.env, aliases_given)
+        )
+        self.link_builtins()
         self.builtins_loaded = True
+        self.completers = default_completers(self.commands_cache)
 
         def flush_on_exit(s=None, f=None):
             if self.history is not None:
@@ -627,9 +631,7 @@ class XonshSession:
         for sig in AT_EXIT_SIGNALS:
             resetting_signal_handle(sig, flush_on_exit)
 
-    def link_builtins(self, aliases=None):
-        from xonsh.aliases import Aliases, make_default_aliases
-
+    def link_builtins(self):
         # public built-ins
         for refname in self._initial_builtin_names:
             objname = f"__xonsh__.builtins.{refname}"
@@ -639,9 +641,7 @@ class XonshSession:
         # sneak the path search functions into the aliases
         # Need this inline/lazy import here since we use locate_binary that
         # relies on __xonsh__.env in default aliases
-        if aliases is None:
-            aliases = Aliases(make_default_aliases())
-        self.aliases = builtins.default_aliases = builtins.aliases = aliases
+        builtins.default_aliases = builtins.aliases = self.aliases
 
     def unlink_builtins(self):
         for name in self._initial_builtin_names:

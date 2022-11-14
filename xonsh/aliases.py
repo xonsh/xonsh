@@ -5,6 +5,7 @@ import functools
 import inspect
 import os
 import re
+import shutil
 import sys
 import types
 import typing as tp
@@ -898,7 +899,8 @@ def make_default_aliases():
             # Add aliases specific to the Anaconda python distribution.
             default_aliases["activate"] = ["source-cmd", "activate.bat"]
             default_aliases["deactivate"] = ["source-cmd", "deactivate.bat"]
-        if not locate_binary("sudo"):
+        if shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
+            # XSH.commands_cache is not available during setup
             import xonsh.winutils as winutils
 
             def sudo(args):
