@@ -145,11 +145,15 @@ class CommandsCache(cabc.Mapping):
 
             # aliases override cmds
             for cmd in self.aliases:
-                key = cmd.upper() if ON_WINDOWS else cmd
-                if key in all_cmds:
+                # Get the possible names the alias could be overriding,
+                # and check if any are in all_cmds.
+                possibilities = self.get_possible_names(cmd)
+                override_key = next((possible for possible in possibilities if possible in all_cmds), None)
+                if override_key:
                     # (path, False) -> has same named alias
-                    all_cmds[key] = (all_cmds[key][0], False)
+                    all_cmds[override_key] = (all_cmds[override_key][0], False)
                 else:
+                    key = cmd.upper() if ON_WINDOWS else cmd
                     # True -> pure alias
                     all_cmds[key] = (cmd, True)
             self._cmds_cache = all_cmds
