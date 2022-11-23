@@ -148,7 +148,10 @@ class CommandsCache(cabc.Mapping):
                 # Get the possible names the alias could be overriding,
                 # and check if any are in all_cmds.
                 possibilities = self.get_possible_names(cmd)
-                override_key = next((possible for possible in possibilities if possible in all_cmds), None)
+                override_key = next(
+                    (possible for possible in possibilities if possible in all_cmds),
+                    None,
+                )
                 if override_key:
                     # (path, False) -> has same named alias
                     all_cmds[override_key] = (all_cmds[override_key][0], False)
