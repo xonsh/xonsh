@@ -57,8 +57,6 @@ def test_premain_D(shell, xession):
     xonsh.main.premain(["-DTEST1=1616", "-DTEST2=LOL"])
     assert xession.env.get("TEST1") == "1616"
     assert xession.env.get("TEST2") == "LOL"
-  
-    
 
 
 def test_premain_custom_rc(shell, tmpdir, monkeypatch, xession):

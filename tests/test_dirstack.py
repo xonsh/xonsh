@@ -103,7 +103,6 @@ def test_cd_autopush(xession, tmpdir):
     assert old_dir == os.getcwd()
 
 
-
 def test_popd_fn(xession):
     xession.env.update(dict(CDPATH=PARENT, PWD=PARENT))
     old_dir = os.getcwd()
@@ -117,4 +116,3 @@ def test_popd_fn(xession):
         assert os.getcwd() == HERE
         dirstack.popd(["sub_tests"])
         assert old_dir == os.getcwd()
-

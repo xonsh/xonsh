@@ -211,7 +211,7 @@ def parser():
         metavar="ITEM",
         action="append",
         default=None,
-    )                                      
+    )
     p.add_argument(
         "--shell-type",
         help="What kind of shell should be used. "
