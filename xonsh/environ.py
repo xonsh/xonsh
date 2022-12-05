@@ -865,7 +865,7 @@ class GeneralSetting(Xettings):
     ENABLE_COMMANDS_CACHE = Var(
         default=True,
         doc="command names in a directory are cached when enabled.",
-        doc_default="It makes use of directory's modified time. "
+        doc_default="True"
         "On some platforms it may not be accurate enough"
         "(e.g. Windows, Linux save mtime in seconds). "
         "setting it to False would disable the caching mechanism "
