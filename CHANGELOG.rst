@@ -4,6 +4,51 @@ Xonsh Change Log
 
 .. current developments
 
+v0.13.4
+====================
+
+**Added:**
+
+* tests for methods changed in tools.py (is_tok_color_dict)
+* ``$XDG_CACHE_HOME``, ``$XONSH_CACHE_DIR`` are now available inside ``Xonsh``
+* #2455 Add `on_command_not_found` event, fired when a command is not found.
+
+**Changed:**
+
+* is_str_str_dict changed to check for Token:style dict
+
+**Removed:**
+
+* ``$COMMANDS_CACHE_SIZE_WARNING`` is removed. When ``$COMMANDS_CACHE_SAVE_INTERMEDIATE`` is enabled,
+  the cache file size is optimized.
+
+**Fixed:**
+
+* #4668 Fix ptk completion stacking when auto-suggest is on and no normal completions are generated.
+* $XONSH_STYLE_OVERRIDES cannot be assigned dict of {Token: str} #4375
+* commands_cache: add a configurable value to disable cache. useful for running scripts
+* fixed stale results when ``$COMMANDS_CACHE_SAVE_INTERMEDIATE`` is enabled.
+*  #4951 Fix gitstatus prompt when rebasing
+* fixed using aliases to override commands without the file extension on Windows
+* #3279 Add `XONSH_HISTORY_IGNORE_REGEX` support. You can specify a regular
+  expression in the environment variable `XONSH_HISTORY_IGNORE_REGEX` and any
+  command that matches the expression will not be added to the history.
+
+**Authors:**
+
+* Noortheen Raja
+* pre-commit-ci[bot]
+* Vasilis Gerakaris
+* Lie Ryan
+* Blake Ramsdell
+* Justin
+* yotamolenik
+* austin-yang
+* Marco Rubin
+* Qyriad
+
+
+
 v0.13.3
 ====================
 
