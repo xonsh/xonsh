@@ -54,6 +54,7 @@ Authors are sorted by number of commits.
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
+* pre-commit-ci[bot]
 * Stephan Fitzpatrick
 * dev2718
 * Will S
@@ -78,6 +79,7 @@ Authors are sorted by number of commits.
 * mel
 * Jared Crawford
 * Mike Crowe
+* Vasilis Gerakaris
 * Angus Hollands
 * JuanPablo
 * Ollie Terrance
@@ -92,7 +94,6 @@ Authors are sorted by number of commits.
 * Jay Tuckey
 * Alexander Steffen
 * Achim Herwig
-* pre-commit-ci[bot]
 * Randy Syring
 * Lucas Inojosa
 * adam j hartz
@@ -123,8 +124,8 @@ Authors are sorted by number of commits.
 * Sean Farley
 * Marduk Bolaños
 * Marius van Niekerk
-* Vasilis Gerakaris
 * dependabot[bot]
+* Lie Ryan
 * Jan Schulz
 * Samuel Dion-Girardeau
 * Michael Droettboom
@@ -149,7 +150,6 @@ Authors are sorted by number of commits.
 * Jeremy Schlatter
 * Oliver Bestwalter
 * Stefano Rivera
-* Lie Ryan
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -186,6 +186,7 @@ Authors are sorted by number of commits.
 * cmidkiff87
 * jbw3
 * Naveen
+* Blake Ramsdell
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -300,5 +301,10 @@ Authors are sorted by number of commits.
 * Tim Gates
 * amukher3
 * Ashish Kurmi
+* Justin
+* yotamolenik
+* austin-yang
+* Marco Rubin
+* Qyriad
 * goodboy
 * Atsushi Morimoto

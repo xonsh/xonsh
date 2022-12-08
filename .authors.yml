@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 610
+  num_commits: 613
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1133,7 +1133,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 199
+  num_commits: 201
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1328,7 +1328,7 @@
   email: vasilis.gerakaris@navarino.gr
   alternate_emails:
   - vgerak@gmail.com
-  num_commits: 4
+  num_commits: 6
   first_commit: 2021-10-14 17:00:39
 - name: Samuel Dion-Girardeau
   email: samueldg@users.noreply.github.com
@@ -1462,7 +1462,7 @@
   first_commit: 2022-06-27 22:21:34
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
-  num_commits: 5
+  num_commits: 11
   first_commit: 2022-07-11 14:26:34
 - name: jgart
   email: 47760695+jgarte@users.noreply.github.com
@@ -1487,6 +1487,30 @@
   first_commit: 2022-09-12 10:56:08
 - name: Lie Ryan
   email: lie.1296@gmail.com
-  num_commits: 3
+  num_commits: 4
   first_commit: 2022-09-12 21:02:08
   github: lieryan
+- name: Justin
+  email: rinkaandchan@outlook.com
+  num_commits: 1
+  first_commit: 2022-10-25 10:07:20
+- name: yotamolenik
+  email: 39271599+yotamolenik@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2022-12-05 10:34:20
+- name: Blake Ramsdell
+  email: blaker@gmail.com
+  num_commits: 2
+  first_commit: 2022-10-04 14:46:42
+- name: austin-yang
+  email: 110882105+IAustin-YangI@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2022-10-24 10:46:52
+- name: Marco Rubin
+  email: 20150305+Rubo3@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2022-11-09 05:40:34
+- name: Qyriad
+  email: qyriad@gmail.com
+  num_commits: 1
+  first_commit: 2022-11-23 12:45:19
