@@ -12,7 +12,7 @@ The control file usually contains:
 * `Alias definitions <aliases.html>`_, many of which invoke the above functions with specified arguments.
 
 The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.
-You can create this file in ``/etc/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
+You can create this file in ``/etc/xonsh/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
 
 Xonsh also allows a per-user run control file in your home directory, either
 directly in the home directory at ``~/.xonshrc`` or, for XDG compliance, at ``~/.config/xonsh/rc.xsh``.

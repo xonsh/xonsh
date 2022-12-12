@@ -56,7 +56,7 @@ which by default configures paths in bash and other POSIX or C  shells. Without
 including these paths, common tools including those installed by Homebrew
 may be unavailable. See ``/etc/profile`` for details on how it is done.
 To ensure the path helper is invoked on xonsh (for all users), add the
-following to ``/etc/xonshrc``:
+following to ``/etc/xonsh/xonshrc``:
 
 .. code-block:: xonshcon
 
