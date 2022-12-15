@@ -374,7 +374,7 @@ def handle_token(state, token):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def get_tokens(s, tolerant, tokenize_ioredirects=True):
+def get_tokens(s, tolerant, pymode=True, tokenize_ioredirects=True):
     """
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
@@ -382,7 +382,7 @@ def get_tokens(s, tolerant, tokenize_ioredirects=True):
     state = {
         "indents": [0],
         "last": None,
-        "pymode": [(True, "", "", (0, 0))],
+        "pymode": [(pymode, "", "", (0, 0))],
         "stream": tokenize(
             io.BytesIO(s.encode("utf-8")).readline, tolerant, tokenize_ioredirects
         ),
@@ -424,7 +424,7 @@ class Lexer:
 
     _tokens: tp.Optional[tuple[str, ...]] = None
 
-    def __init__(self, tolerant=False):
+    def __init__(self, tolerant=False, pymode=True):
         """
         Attributes
         ----------
@@ -437,12 +437,15 @@ class Lexer:
         tolerant : bool
             Tokenize without extra checks (e.g. paren matching).
             When True, ERRORTOKEN contains the erroneous string instead of an error msg.
+        pymode : bool
+            Start the lexer in Python mode.
 
         """
         self.fname = ""
         self.last = None
         self.beforelast = None
         self._tolerant = tolerant
+        self._pymode = pymode
         self._token_stream = iter(())
 
     @property
@@ -460,7 +463,7 @@ class Lexer:
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self._token_stream = get_tokens(s, self._tolerant)
+        self._token_stream = get_tokens(s, self._tolerant, self._pymode)
 
     def token(self):
         """Retrieves the next token."""
