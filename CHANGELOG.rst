@@ -355,6 +355,7 @@ v0.12.0
 
 **Changed:**
 
+* BREAKING CHANGE: ``/etc/xonshrc`` location for run control file has been deprecated in favor of ``/etc/xonsh/xonshrc``.
 * Both ``*.xsh`` and ``*.py`` files inside ``$XONSHRC_DIR`` will get loaded now.
 * Environment-variables of no predefined type or path environment variables are now represented as strings via the empty string.
 * Made stacktraces behave like in python, i.e. when something in user-provided code fails (both interactively and non-interactively), only that part is shown, and the (static) part of the stacktrace showing the location where the user code was called in xonsh remains hidden. When an unexpected exception occurs inside xonsh, everything is shown like before.
