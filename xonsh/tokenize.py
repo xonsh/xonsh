@@ -380,6 +380,7 @@ ContStr = group(
     StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' + group('"', r"\\\r?\n"),
 )
 PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
+PseudoTokenWithoutIO = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
 PseudoToken = Whitespace + group(
     PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE
 )
@@ -867,7 +868,7 @@ def tokopen(filename):
         raise
 
 
-def _tokenize(readline, encoding, tolerant=False):
+def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
     lnum = parenlev = continued = 0
     numchars = "0123456789"
     contstr, needcont = "", 0
@@ -1001,7 +1002,9 @@ def _tokenize(readline, encoding, tolerant=False):
             continued = 0
 
         while pos < max:
-            pseudomatch = _compile(PseudoToken).match(line, pos)
+            pseudomatch = _compile(
+                PseudoToken if tokenize_ioredirects else PseudoTokenWithoutIO
+            ).match(line, pos)
             if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
                 spos, epos, pos = (lnum, start), (lnum, end), end
@@ -1139,7 +1142,7 @@ def _tokenize(readline, encoding, tolerant=False):
     yield TokenInfo(ENDMARKER, "", (lnum, 0), (lnum, 0), "")
 
 
-def tokenize(readline, tolerant=False):
+def tokenize(readline, tolerant=False, tokenize_ioredirects=True):
     """
     The tokenize() generator requires one argument, readline, which
     must be a callable object which provides the same interface as the
@@ -1160,12 +1163,19 @@ def tokenize(readline, tolerant=False):
 
     If ``tolerant`` is True, yield ERRORTOKEN with the erroneous string instead of
     throwing an exception when encountering an error.
+
+    If ``tokenize_ioredirects`` is True, produce IOREDIRECT tokens for special
+    io-redirection operators like ``2>``. Otherwise, treat code like ``2>`` as
+    regular Python code.
     """
     encoding, consumed = detect_encoding(readline)
     rl_gen = iter(readline, b"")
     empty = itertools.repeat(b"")
     return _tokenize(
-        itertools.chain(consumed, rl_gen, empty).__next__, encoding, tolerant
+        itertools.chain(consumed, rl_gen, empty).__next__,
+        encoding,
+        tolerant,
+        tokenize_ioredirects,
     )
 
 
