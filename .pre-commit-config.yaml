@@ -7,20 +7,20 @@ ci:
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 22.12.0
     hooks:
     - id: black
       entry: black xonsh xontrib tests xompletions
       pass_filenames: false
   - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+    rev: v5.11.3
     hooks:
       - id: isort
         entry: isort xonsh xontrib tests xompletions
         pass_filenames: false
         name: isort (python)
   - repo: https://github.com/pycqa/flake8
-    rev: '5.0.4'  # pick a git hash / tag to point to
+    rev: '6.0.0'  # pick a git hash / tag to point to
     hooks:
       - id: flake8
         additional_dependencies:
@@ -34,7 +34,7 @@ repos:
               docs/.+
           )$
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v0.982'  # Use the sha / tag you want to point at
+    rev: 'v0.991'  # Use the sha / tag you want to point at
     hooks:
       - id: mypy
         name: mypy xonsh
@@ -55,7 +55,7 @@ repos:
         additional_dependencies:
           - types-ujson
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
         exclude: |
@@ -69,7 +69,7 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.2.0
+    rev: v3.3.1
     hooks:
     - id: pyupgrade
       args: [--py38-plus]
