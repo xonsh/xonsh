@@ -14,7 +14,7 @@ from xonsh.built_ins import XSH
 if tp.TYPE_CHECKING:
     from xonsh.built_ins import XonshSession
 
-    FieldType = tp.TypeVar("FieldType", bound="BasePromptField", covariant=True)
+    FieldType = tp.TypeVar("FieldType", bound="BasePromptField")
 
 
 @xt.lazyobject
