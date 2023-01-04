@@ -1,0 +1,3 @@
+**Changed:**
+
+* Altered documentation for xonshrc to remove Python REPL prompts so that you can copy the code without having to edit it.
