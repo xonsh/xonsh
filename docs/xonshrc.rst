@@ -198,8 +198,8 @@ The following snippet reimplements the formatter also to include untracked files
 
 .. code-block:: xonshcon
 
-    >>> from xonsh.prompt.vc import git_dirty_working_directory
-    >>> $PROMPT_FIELDS['branch_color'] = lambda: ('{BOLD_INTENSE_RED}'
+    from xonsh.prompt.vc import git_dirty_working_directory
+    $PROMPT_FIELDS['branch_color'] = lambda: ('{BOLD_INTENSE_RED}'
                                                    if git_dirty_working_directory(include_untracked=True)
                                                    else '{BOLD_INTENSE_GREEN}')
 
@@ -213,7 +213,7 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
 
 .. code-block:: xonshcon
 
-    >>> $LS_COLORS='rs=0:di=01;36:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:'
+    $LS_COLORS='rs=0:di=01;36:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:'
 
 Make JSON data directly pastable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -222,10 +222,10 @@ Note that, though practical, this is rather hacky and might break other function
 
 .. code-block:: xonshcon
 
-    >>> import builtins
-    >>> builtins.true = True
-    >>> builtins.false = False
-    >>> builtins.null = None
+    import builtins
+    builtins.true = True
+    builtins.false = False
+    builtins.null = None
 
 Display different date information every 10th time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -233,16 +233,16 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
 
 .. code-block:: xonshcon
 
-    >>> import time
-    >>> def get_shelldate():
-    >>>     get_shelldate.fulldate %= 10
-    >>>     get_shelldate.fulldate += 1
-    >>>     if get_shelldate.fulldate == 1:
-    >>>         return time.strftime('%d%m%Y')
-    >>>     return time.strftime('%H:%M')
-    >>> get_shelldate.fulldate = 0
-    >>>
-    >>> $PROMPT_FIELDS['shelldate'] = get_shelldate
+    import time
+    def get_shelldate():
+        get_shelldate.fulldate %= 10
+        get_shelldate.fulldate += 1
+        if get_shelldate.fulldate == 1:
+            return time.strftime('%d%m%Y')
+        return time.strftime('%H:%M')
+    get_shelldate.fulldate = 0
+
+    $PROMPT_FIELDS['shelldate'] = get_shelldate
 
 Use the Nix Package manager with Xonsh
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -250,27 +250,27 @@ To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines 
 
 .. code-block:: xonshcon
 
-    >>> import os.path
-    >>> if os.path.exists(f"{$HOME}/.nix-profile") and not __xonsh__.env.get("NIX_PATH"):
-    >>>     $NIX_REMOTE="daemon"
-    >>>     $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
-    >>>     $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
-    >>>     $NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
-    >>>     $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
-    >>>     $PATH += [f"{$HOME}/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
+    import os.path
+    if os.path.exists(f"{$HOME}/.nix-profile") and not __xonsh__.env.get("NIX_PATH"):
+        $NIX_REMOTE="daemon"
+        $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
+        $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
+        $NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+        $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
+        $PATH += [f"{$HOME}/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
 
 Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is:
 
 .. code-block:: xonshcon
 
-    >>> for p in map(lambda s: str(s.resolve()), p"~/.local/lib/".glob("python*/site-packages")):
-    >>>     if p not in sys.path:
-    >>>         sys.path.append(p)
-    >>>
-    >>> $PYTHONPATH = "$USER/.local/lib/python3.7/site-packages"
-    >>>
-    >>> python -m ensurepip --user
-    >>> xonsh
-    >>> python -m pip install --user -U pip xontrib-z xonsh-direnv
+    for p in map(lambda s: str(s.resolve()), p"~/.local/lib/".glob("python*/site-packages")):
+        if p not in sys.path:
+            sys.path.append(p)
+
+    $PYTHONPATH = "$USER/.local/lib/python3.7/site-packages"
+
+    python -m ensurepip --user
+    xonsh
+    python -m pip install --user -U pip xontrib-z xonsh-direnv
 
 Just run the last three lines, do not put them in your `xonshrc`!
