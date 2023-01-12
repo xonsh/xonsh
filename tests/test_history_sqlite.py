@@ -1,23 +1,43 @@
 """Tests the xonsh history."""
 # pylint: disable=protected-access
+import itertools
 import os
 import shlex
+import sys
 
 import pytest
 
 from xonsh.history.main import history_main
-from xonsh.history.sqlite import SqliteHistory
+from xonsh.history.sqlite import SqliteHistory, _xh_sqlite_get_conn
+from xonsh.platform import ON_WINDOWS
+
+hist_file_count = itertools.count(0)
+
+skipwin311 = pytest.mark.skipif(
+    ON_WINDOWS and sys.version_info > (3, 10),
+    reason="obnoxious regression in sqlite file closing behavior",
+)
 
 
 @pytest.fixture
-def hist():
+def hist(tmpdir):
     h = SqliteHistory(
-        filename="xonsh-HISTORY-TEST.sqlite", sessionid="SESSIONID", gc=False
+        filename=tmpdir / f"xonsh-HISTORY-TEST{next(hist_file_count)}.sqlite",
+        sessionid=str(tmpdir / "SESSIONID"),
+        gc=False,
     )
     yield h
-    os.remove(h.filename)
 
 
+def _clean_up(h):
+    conn = _xh_sqlite_get_conn(h.filename)
+    conn.close()
+    filename = h.filename
+    del h
+    os.remove(filename)
+
+
+@skipwin311
 def test_hist_append(hist, xession):
     """Verify appending to the history works."""
     xession.env["HISTCONTROL"] = set()
@@ -33,8 +53,10 @@ def test_hist_append(hist, xession):
     assert "still alive" == items[1]["inp"]
     assert 0 == items[1]["rtn"]
     assert list(hist.all_items()) == items
+    _clean_up(hist)
 
 
+@skipwin311
 def test_hist_attrs(hist, xession):
     xession.env["HISTCONTROL"] = set()
     hf = hist.append({"inp": "ls foo", "rtn": 1})
@@ -55,10 +77,13 @@ def test_hist_attrs(hist, xession):
     assert len(hist.tss) == 2
     assert len(hist.tss[0]) == 2
 
+    _clean_up(hist)
+
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
 
 
+@skipwin311
 @pytest.mark.parametrize(
     "inp, commands, offset",
     [
@@ -87,7 +112,10 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xession, capsys):
     out, err = capsys.readouterr()
     assert out.rstrip() == exp
 
+    _clean_up(hist)
 
+
+@skipwin311
 def test_histcontrol(hist, xession):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
 
@@ -181,7 +209,10 @@ def test_histcontrol(hist, xession):
     assert 0 == items[-1]["rtn"]
     assert 0 == hist.rtns[-1]
 
+    _clean_up(hist)
 
+
+@skipwin311
 def test_histcontrol_erase_dup(hist, xession):
     """Test HISTCONTROL=erasedups"""
 
@@ -202,7 +233,10 @@ def test_histcontrol_erase_dup(hist, xession):
     assert items[-2]["frequency"] == 2
     assert items[-1]["frequency"] == 3
 
+    _clean_up(hist)
 
+
+@skipwin311
 @pytest.mark.parametrize(
     "index, exp",
     [
@@ -229,7 +263,10 @@ def test_history_getitem(index, exp, hist, xession):
     else:
         assert (entry.cmd, entry.out, entry.rtn, entry.ts) == exp
 
+    _clean_up(hist)
 
+
+@skipwin311
 def test_hist_clear_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history clear command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
@@ -246,7 +283,10 @@ def test_hist_clear_cmd(hist, xession, capsys, tmpdir):
     assert err.rstrip() == "History cleared"
     assert len(xession.history) == 0
 
+    _clean_up(hist)
 
+
+@skipwin311
 def test_hist_off_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history off command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
@@ -268,7 +308,10 @@ def test_hist_off_cmd(hist, xession, capsys, tmpdir):
 
     assert len(xession.history) == 0
 
+    _clean_up(hist)
 
+
+@skipwin311
 def test_hist_on_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history on command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
@@ -291,7 +334,10 @@ def test_hist_on_cmd(hist, xession, capsys, tmpdir):
 
     assert len(xession.history) == 6
 
+    _clean_up(hist)
 
+
+@skipwin311
 def test_hist_store_cwd(hist, xession):
     hist.save_cwd = True
     hist.append({"inp": "# saving with cwd", "rtn": 0, "out": "yes", "cwd": "/tmp"})
@@ -301,3 +347,5 @@ def test_hist_store_cwd(hist, xession):
     cmds = [i for i in hist.all_items()]
     assert cmds[0]["cwd"] == "/tmp"
     assert cmds[1]["cwd"] is None
+
+    _clean_up(hist)
