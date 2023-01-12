@@ -812,9 +812,12 @@ def detect_xpip_alias():
 
     basecmd = [sys.executable, "-m", "pip"]
     try:
-        if ON_WINDOWS or IN_APPIMAGE:
+        if ON_WINDOWS:
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
+        elif IN_APPIMAGE:
+            # In AppImage `sys.executable` is equal to path to xonsh.AppImage file and the real python executable is in $_
+            return [XSH.env.get("_", "APPIMAGE_PYTHON_EXECUTABLE_NOT_FOUND"), "-m", "pip"]
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
             return (
                 sys.executable
