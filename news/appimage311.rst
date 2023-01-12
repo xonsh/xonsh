@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed xpip alias for AppImage.
 
 **Security:**
 
