@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed xpip alias for AppImage.
+* Fixed xpip alias for xonsh AppImage.
 
 **Security:**
 
