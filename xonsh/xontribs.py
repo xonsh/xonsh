@@ -202,6 +202,7 @@ def xontribs_load(
     ] = (),
     verbose=False,
     full_module=False,
+    skip_missing=False,
 ):
     """Load xontribs from a list of names
 
@@ -213,6 +214,8 @@ def xontribs_load(
         verbose output
     full_module : -f, --full
         indicates that the names are fully qualified module paths and not inside ``xontrib`` package
+    skip_missing : -s, --skip-missing
+        skip missing xontribs        
     """
     ctx = {} if XSH.ctx is None else XSH.ctx
     res = ExitCode.OK
@@ -225,7 +228,8 @@ def xontribs_load(
         try:
             update_context(name, ctx=ctx, full_module=full_module)
         except XontribNotInstalled:
-            bad_imports.append(name)
+            if not skip_missing:
+                bad_imports.append(name)
         except Exception:
             res = ExitCode.INIT_FAILED
             print_exception(f"Failed to load xontrib {name}.")
