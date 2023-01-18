@@ -215,7 +215,7 @@ def xontribs_load(
     full_module : -f, --full
         indicates that the names are fully qualified module paths and not inside ``xontrib`` package
     skip_missing : -s, --skip-missing
-        skip missing xontribs        
+        skip missing xontribs
     """
     ctx = {} if XSH.ctx is None else XSH.ctx
     res = ExitCode.OK
