@@ -1,6 +1,6 @@
 **Added:**
 
-* xontrib load: added option ``-s`` to skip not installed xontribs.
+* xontrib load: added option ``-s`` to skip warning about not installed xontribs.
 
 **Changed:**
 
