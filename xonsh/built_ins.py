@@ -96,10 +96,12 @@ def reglob(path, parts=None, i=None):
         regex = re.compile(parts[i])
     except Exception as e:
         if isinstance(e, re.error) and str(e) == "nothing to repeat at position 0":
-            raise XonshError("Consider adding a leading '.' to your glob regex pattern.")
+            raise XonshError(
+                "Consider adding a leading '.' to your glob regex pattern."
+            )
         else:
             raise e
-        
+
     files = os.listdir(subdir)
     files.sort()
     paths = []
