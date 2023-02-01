@@ -3,9 +3,6 @@
 Editor and IDE Support
 ======================
 
-.. contents::
-   :local:
-
 Sublime Text
 ============
 There is a `xonsh package`_ for **Sublime Text 4** (build > 4075). To install:
