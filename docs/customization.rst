@@ -2,9 +2,6 @@
 Updating and customizing xonsh
 ==============================
 
-.. contents::
-   :local:
-
 Updating xonsh
 ==============
 
