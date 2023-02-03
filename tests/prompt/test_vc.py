@@ -1,5 +1,7 @@
 import os
 import subprocess as sp
+import textwrap
+from typing import Dict, List
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -8,7 +10,19 @@ import pytest
 from xonsh.prompt import vc
 
 # Xonsh interaction with version control systems.
-VC_BRANCH = {"git": {"master", "main"}, "hg": {"default"}}
+VC_BRANCH = {
+    "git": {"master", "main"},
+    "hg": {"default"},
+    "fossil": {"trunk"},
+}
+VC_INIT: Dict[str, List[List[str]]] = {
+    # A sequence of commands required to initialize a repository
+    "git": [["init"]],
+    "hg": [["init"]],
+    # Fossil "init" creates a central repository file with the given name,
+    # "open" creates the working directory at another, arbitrary location.
+    "fossil": [["init", "test.fossil"], ["open", "test.fossil"]]
+}
 
 
 @pytest.fixture(params=VC_BRANCH.keys())
@@ -20,26 +34,30 @@ def repo(request, tmpdir_factory):
     temp_dir = Path(tmpdir_factory.mktemp("dir"))
     os.chdir(temp_dir)
     try:
-        sp.call([vc, "init"])
+        for init_command in VC_INIT[vc]:
+            sp.call([vc] + init_command)
     except FileNotFoundError:
         pytest.skip(f"cannot find {vc} executable")
     if vc == "git":
-        git_config = temp_dir / ".git/config"
-        git_config.write_text(
-            """
-[user]
-name = me
-email = my@email.address
-[init]
-defaultBranch = main
-"""
-        )
-
-        # git needs at least one commit
-        Path("test-file").touch()
-        sp.call(["git", "add", "test-file"])
-        sp.call(["git", "commit", "-m", "test commit"])
+        _init_git_repository(temp_dir)
     return {"vc": vc, "dir": temp_dir}
+
+
+def _init_git_repository(temp_dir):
+    git_config = temp_dir / ".git/config"
+    git_config.write_text(textwrap.dedent(
+        """\
+        [user]
+        name = me
+        email = my@email.address
+        [init]
+        defaultBranch = main
+        """
+    ))
+    # git needs at least one commit
+    Path("test-file").touch()
+    sp.call(["git", "add", "test-file"])
+    sp.call(["git", "commit", "-m", "test commit"])
 
 
 @pytest.fixture
@@ -52,8 +70,15 @@ def set_xenv(xession, monkeypatch):
 
 
 def test_test_repo(repo):
-    test_vc_dir = repo["dir"] / ".{}".format(repo["vc"])
-    assert test_vc_dir.is_dir()
+    if repo["vc"] == "fossil":
+        # Fossil stores the check-out meta-data in a special file within the open check-out.
+        # At least one of these below must exist
+        metadata_file_names = {".fslckout", "_FOSSIL_"}  # .fslckout on Unix, _FOSSIL_ on Windows
+        existing_files = set(file.name for file in repo["dir"].iterdir())
+        assert existing_files.intersection(metadata_file_names)
+    else:
+        test_vc_dir = repo["dir"] / ".{}".format(repo["vc"])
+        assert test_vc_dir.is_dir()
     if repo["vc"] == "git":
         test_file = repo["dir"] / "test-file"
         assert test_file.exists()
