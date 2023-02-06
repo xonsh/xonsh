@@ -357,7 +357,7 @@ class SqliteHistory(History):
 
     def pull(self, show_commands=False):
         if not hasattr(XSH.shell.shell, "prompter"):
-            print(f"Prompt {XSH.shell.shell} is not supported.")
+            print(f"Shell type {XSH.shell.shell} is not supported.")
             return 0
 
         cnt = 0
