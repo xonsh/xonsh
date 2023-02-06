@@ -204,6 +204,15 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
         return _xh_sqlite_delete_records(c, size_to_keep)
 
 
+def xh_sqlite_pull(filename, last_pull_time, current_sessionid):
+    sql = f"SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid != ? ORDER BY tsb"
+    params = [last_pull_time, current_sessionid]
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        c.execute(sql, tuple(params))
+        return c.fetchall()
+
+
 def xh_sqlite_wipe_session(sessionid=None, filename=None):
     """Wipe the current session's entries from the database."""
     sql = "DELETE FROM xonsh_history WHERE sessionid = ?"
@@ -256,6 +265,7 @@ class SqliteHistory(History):
         if filename is None:
             filename = _xh_sqlite_get_file_name()
         self.filename = filename
+        self.last_pull_time = time.time()
         self.gc = SqliteHistoryGC() if gc else None
         self._last_hist_inp = None
         self.inps = []
@@ -344,6 +354,18 @@ class SqliteHistory(History):
         envs = XSH.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         return data
+
+    def pull(self, show_commands=False):
+        cnt = 0
+        for r in xh_sqlite_pull(
+            self.filename, self.last_pull_time, str(self.sessionid)
+        ):
+            if show_commands:
+                print(r[0])
+            XSH.shell.shell.prompter.history.append_string(r[0])
+            cnt += 1
+        self.last_pull_time = time.time()
+        return cnt
 
     def run_gc(self, size=None, blocking=True):
         self.gc = SqliteHistoryGC(wait_for_shell=False, size=size)

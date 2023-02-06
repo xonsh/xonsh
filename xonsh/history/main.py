@@ -282,6 +282,31 @@ class HistoryAlias(xcli.ArgParserAlias):
         print(str(hist.sessionid), file=_stdout)
 
     @staticmethod
+    def pull(show_commands=False, _stdout=None):
+        """Pull history from other parallel sessions.
+
+        Parameters
+        ----------
+        show_commands: -c, --show-commands
+            show pulled commands
+        """
+
+        hist = XSH.history
+
+        if hist.pull.__module__ == "xonsh.history.base":
+            backend = XSH.env.get("XONSH_HISTORY_BACKEND", "unknown")
+            print(
+                f"Pull method is not supported in {backend} history backend.",
+                file=_stdout,
+            )
+
+        lines_added = hist.pull(show_commands)
+        if lines_added:
+            print(f"Added {lines_added} records!", file=_stdout)
+        else:
+            print(f"No records found!", file=_stdout)
+
+    @staticmethod
     def flush(_stdout):
         """Flush the current history to disk"""
 
@@ -428,7 +453,7 @@ class HistoryAlias(xcli.ArgParserAlias):
 
         dest.flush()
 
-        self.out("done.")
+        self.out("Done")
 
     def build(self):
         parser = self.create_parser(prog="history")
@@ -436,6 +461,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         parser.add_command(self.id_cmd, prog="id")
         parser.add_command(self.file)
         parser.add_command(self.info)
+        parser.add_command(self.pull)
         parser.add_command(self.flush)
         parser.add_command(self.off)
         parser.add_command(self.on)
