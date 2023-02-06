@@ -304,7 +304,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         if lines_added:
             print(f"Added {lines_added} records!", file=_stdout)
         else:
-            print(f"No records found!", file=_stdout)
+            print("No records found!", file=_stdout)
 
     @staticmethod
     def flush(_stdout):

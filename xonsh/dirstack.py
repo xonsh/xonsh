@@ -516,7 +516,7 @@ def dirs_fn(
     if verbose:
         out = ""
         pad = len(str(len(o) - 1))
-        for (ix, e) in enumerate(o):
+        for ix, e in enumerate(o):
             blanks = " " * (pad - len(str(ix)))
             out += f"\n{blanks}{ix} {e}"
         out = out[1:]

@@ -205,7 +205,7 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
 
 
 def xh_sqlite_pull(filename, last_pull_time, current_sessionid):
-    sql = f"SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid != ? ORDER BY tsb"
+    sql = "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid != ? ORDER BY tsb"
     params = [last_pull_time, current_sessionid]
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()

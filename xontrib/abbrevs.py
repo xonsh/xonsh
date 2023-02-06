@@ -115,7 +115,6 @@ def set_cursor_position(buffer, expanded: str) -> None:
 
 
 def custom_keybindings(bindings, **kw):
-
     from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
 
     from xonsh.ptk_shell.key_bindings import carriage_return
