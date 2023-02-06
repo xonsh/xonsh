@@ -316,7 +316,7 @@ def test_delitem():
     env = Env(VAR="a value")
     assert env["VAR"] == "a value"
     del env["VAR"]
-    with pytest.raises(Exception):
+    with pytest.raises(KeyError):
         env["VAR"]
 
 

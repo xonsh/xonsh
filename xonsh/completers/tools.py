@@ -158,7 +158,8 @@ def is_contextual_completer(func):
 
 def contextual_command_completer(func: tp.Callable[[CommandContext], CompleterResult]):
     """like ``contextual_completer``,
-    but will only run when completing a command and will directly receive the ``CommandContext`` object"""
+    but will only run when completing a command and will directly receive the ``CommandContext`` object
+    """
 
     @contextual_completer
     @wraps(func)

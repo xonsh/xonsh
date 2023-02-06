@@ -231,7 +231,6 @@ def colorizable_files():
 
     with TemporaryDirectory() as tempdir:
         for k, v in _cf.items():
-
             if v is None:
                 continue
             if v.startswith("/"):

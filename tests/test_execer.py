@@ -9,7 +9,6 @@ from xonsh.pytest.tools import ON_WINDOWS, skip_if_on_unix, skip_if_on_windows
 @pytest.fixture
 def check_eval(xonsh_execer, xonsh_session, monkeypatch):
     def factory(input):
-
         env = {
             "AUTO_CD": False,
             "XONSH_ENCODING": "utf-8",

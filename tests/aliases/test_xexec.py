@@ -26,7 +26,6 @@ def test_missing_command(mockexecvpe):
 
 
 def test_command_not_found(monkeypatch):
-
     dummy_error_msg = (
         "This is dummy error message, file not found or something like that"
     )

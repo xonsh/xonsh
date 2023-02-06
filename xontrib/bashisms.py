@@ -119,7 +119,6 @@ def _set(args):
 
 
 def _shopt(args):
-
     supported_shopt = ["DOTGLOB"]
 
     args_len = len(args)
