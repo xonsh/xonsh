@@ -356,6 +356,10 @@ class SqliteHistory(History):
         return data
 
     def pull(self, show_commands=False):
+        if not hasattr(XSH.shell.shell, "prompter"):
+            print(f"Prompt {XSH.shell.shell} is not supported.")
+            return 0
+
         cnt = 0
         for r in xh_sqlite_pull(
             self.filename, self.last_pull_time, str(self.sessionid)
