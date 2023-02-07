@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``history pull`` command to SQLite history backend to pull the history from parallel sessions into the current sessions.
+* Added ``history pull`` command to SQLite history backend to pull the history from parallel sessions and add to the current session.
 
 **Changed:**
 
