@@ -130,6 +130,10 @@ class History:
         """
         pass
 
+    def pull(self, **kwargs):
+        """Pull history from other parallel sessions."""
+        raise NotImplementedError
+
     def flush(self, **kwargs):
         """Flush the history items to disk from a buffer."""
         pass
