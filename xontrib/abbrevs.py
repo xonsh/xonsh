@@ -29,8 +29,7 @@ import builtins
 import typing as tp
 
 from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.filters import IsMultiline, completion_is_selected
-from prompt_toolkit.keys import Keys
+from prompt_toolkit.filters import IsMultiline
 
 from xonsh.built_ins import DynamicAccessProxy, XonshSession
 from xonsh.tools import check_for_partial_string
@@ -114,43 +113,27 @@ def set_cursor_position(buffer, expanded: str) -> None:
     buffer.delete(len(EDIT_SYMBOL))
 
 
-def custom_keybindings(bindings, **kw):
-    from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
-
-    from xonsh.ptk_shell.key_bindings import carriage_return
-
-    handler = bindings.add
-    insert_mode = ViInsertMode() | EmacsInsertMode()
-    abbrev = Abbreviation()
-
-    @handler(" ", filter=IsMultiline() & insert_mode)
-    def handle_space(event):
-        buffer = event.app.current_buffer
-
-        add_space = True
-        if not abbrev.revert(buffer):
-            position_changed = abbrev.expand(buffer)
-            if position_changed:
-                add_space = False
-        if add_space:
-            buffer.insert_text(" ")
-
-    @handler(
-        Keys.ControlJ, filter=IsMultiline() & insert_mode & ~completion_is_selected
-    )
-    @handler(
-        Keys.ControlM, filter=IsMultiline() & insert_mode & ~completion_is_selected
-    )
-    def multiline_carriage_return(event):
-        buffer = event.app.current_buffer
-        current_char = buffer.document.current_char
-        if not current_char or current_char.isspace():
-            abbrev.expand(buffer)
-        carriage_return(buffer, event.cli)
-
-
 def _load_xontrib_(xsh: XonshSession, **_):
-    xsh.builtins.events.on_ptk_create(custom_keybindings)
+    @xsh.builtins.events.on_ptk_create  # type:ignore
+    def custom_keybindings(bindings, **kw):
+        from prompt_toolkit.filters import EmacsInsertMode, ViInsertMode
+
+        handler = bindings.add
+        insert_mode = ViInsertMode() | EmacsInsertMode()
+        abbrev = Abbreviation()
+
+        @handler(" ", filter=IsMultiline() & insert_mode)
+        def handle_space(event):
+            buffer = event.app.current_buffer
+
+            add_space = True
+            if not abbrev.revert(buffer):
+                position_changed = abbrev.expand(buffer)
+                if position_changed:
+                    add_space = False
+            if add_space:
+                buffer.insert_text(" ")
+
     # XSH.builtins is a namespace and extendable
     xsh.builtins.abbrevs = abbrevs
     proxy = DynamicAccessProxy("abbrevs", "__xonsh__.builtins.abbrevs")
