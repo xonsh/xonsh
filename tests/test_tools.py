@@ -1,4 +1,5 @@
 """Tests xonsh tools."""
+import copy
 import datetime as dt
 import os
 import pathlib
@@ -7,7 +8,6 @@ import warnings
 from tempfile import TemporaryDirectory
 
 import pytest
-
 from xonsh import __version__
 from xonsh.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
@@ -2048,3 +2048,19 @@ from xonsh.style_tools import Token
 )
 def test_is_tok_color_dict(val, exp):
     assert is_tok_color_dict(val) == exp
+
+
+def test_path_updates_propagate_to_os_environ(xession):
+    with xession.env.swap(
+        {"PATH": EnvPath(copy.deepcopy(xession.env["PATH"])), "UPDATE_OS_ENVIRON": True}
+    ):
+        fakepath = "not/a/real/path/at/all"
+        xession.env["PATH"].insert(0, fakepath)
+        assert fakepath in os.environ["PATH"]
+
+        xession.env["PATH"].pop(0)
+        assert fakepath not in os.environ["PATH"]
+
+        xession.env["UPDATE_OS_ENVIRON"] = False
+        xession.env["PATH"].insert(0, fakepath)
+        assert fakepath not in os.environ["PATH"]

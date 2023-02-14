@@ -2345,7 +2345,7 @@ class Env(cabc.MutableMapping):
         )
 
     def deregister(self, name):
-        """Deregister an enviornment variable and all its type handling,
+        """Deregister an environment variable and all its type handling,
         default value, doc.
 
         Parameters

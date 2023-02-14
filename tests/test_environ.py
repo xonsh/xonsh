@@ -488,7 +488,7 @@ def test_register_custom_var_env_path():
 
 
 def test_deregister_custom_var():
-    env = Env()
+    env = Env({"UPDATE_OS_ENVIRON": True})
 
     env.register("MY_SPECIAL_VAR", type="env_path")
     env.deregister("MY_SPECIAL_VAR")

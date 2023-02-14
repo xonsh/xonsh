@@ -174,6 +174,13 @@ def findfirst(s, substrs):
     return i, result
 
 
+@lazyobject
+def path_events():
+    from xonsh.events import events
+
+    return events
+
+
 class EnvPath(cabc.MutableSequence):
     """A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
@@ -219,16 +226,30 @@ class EnvPath(cabc.MutableSequence):
             return _expandpath(self._l[item])
 
     def __setitem__(self, index, item):
+        old_value = repr(self)
         self._l.__setitem__(index, item)
+        self._update_env(old_value=old_value)
 
     def __len__(self):
         return len(self._l)
 
     def __delitem__(self, key):
+        old_value = repr(self)
         self._l.__delitem__(key)
+        self._update_env(old_value=old_value)
 
     def insert(self, index, value):
+        old_value = repr(self)
         self._l.insert(index, value)
+        self._update_env(old_value=old_value)
+
+    def _update_env(self, old_value=None):
+        new_value = repr(self)
+        if xsh.env.get("UPDATE_OS_ENVIRON"):
+            xsh.env["PATH"] = self
+        path_events.on_envvar_change.fire(
+            name="PATH", oldvalue=old_value, newvalue=new_value
+        )
 
     @property
     def paths(self):
