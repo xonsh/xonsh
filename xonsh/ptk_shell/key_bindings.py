@@ -429,4 +429,8 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     # Complete a single auto-suggestion word
     create_alias([Keys.ControlRight], ["escape", "f"])
 
+    # since macOS uses Control as reserved, then we use the alt/option key instead
+    # which is mapped as the "escape" key
+    create_alias(["escape", "right"], ["escape", "f"])
+
     return key_bindings
