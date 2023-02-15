@@ -148,5 +148,5 @@ to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
     TRACE SUBPROC: (['echo', 'hello\n', 'world'], '|', ['grep', 'hello'])
 
 If after time you still try to type ``export``, ``unset`` or ``!!`` commands
-there are the `bashisms <https://xon.sh/xontribs.html#bashisms>`_
-and `sh <https://xon.sh/xontribs.html#sh>`_ xontribs.
+there are the `bashisms <https://github.com/xonsh/xontrib-bashisms>`_
+and `sh <https://github.com/anki-code/xontrib-sh>`_ xontribs.
