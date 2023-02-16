@@ -344,7 +344,6 @@ class RepresentationPrinter(PrettyPrinter):
         deferred_pprinters=None,
         max_seq_length=MAX_SEQ_LENGTH,
     ):
-
         PrettyPrinter.__init__(
             self, output, max_width, newline, max_seq_length=max_seq_length
         )

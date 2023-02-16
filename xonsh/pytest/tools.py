@@ -86,7 +86,6 @@ class DummyShell:
 
 
 class DummyHistory:
-
     last_cmd_rtn = 0
     last_cmd_out = ""
 

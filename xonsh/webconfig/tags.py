@@ -129,9 +129,7 @@ def to_str(elems: "Iterable[Elem]|Elem", debug=False) -> str:
 
 
 if __name__ == "__main__":
-    nav = nav_item()[
-        nav_link(href="/")["Colors"],
-    ]
+    nav = nav_item()[nav_link(href="/")["Colors"],]
     gen = to_str(nav, debug=True)
     print(gen)
     assert gen.splitlines() == [

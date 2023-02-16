@@ -35,7 +35,6 @@ def test_prompt_toolkit_version_checks(
     monkeypatch,
     xession,
 ):
-
     mocked_warn = ""
 
     def mock_warning(msg):
@@ -133,7 +132,8 @@ def test_ptk_prompt(line, exp, ptk_shell, capsys):
 )
 def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypatch):
     """Test that running an empty line or a comment does not append to history.
-    This test is necessary because the prompt-toolkit shell uses a custom _push() method that is different from the base shell's push() method."""
+    This test is necessary because the prompt-toolkit shell uses a custom _push() method that is different from the base shell's push() method.
+    """
     inp, out, shell = ptk_shell
     append_history_calls = []
 

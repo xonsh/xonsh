@@ -98,7 +98,7 @@ def token_map():
         "@$": "ATDOLLAR",
         "&": "AMPERSAND",
     }
-    for (op, typ) in _op_map.items():
+    for op, typ in _op_map.items():
         tm[(OP, op)] = typ
     tm[IOREDIRECT] = "IOREDIRECT"
     tm[STRING] = "STRING"

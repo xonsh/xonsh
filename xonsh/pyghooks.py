@@ -1343,7 +1343,6 @@ def _monkey_patch_pygments_codes():
 
 @lazyobject
 def XonshTerminal256Formatter():
-
     if (
         ptk_version_info()
         and ptk_version_info() > (2, 0)
@@ -1595,7 +1594,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tp.Tuple[_TokenType
 def _command_is_valid(cmd):
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (OSError):
+    except OSError:
         return False
     return (cmd in XSH.commands_cache and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
@@ -1607,7 +1606,7 @@ def _command_is_autocd(cmd):
         return False
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (OSError):
+    except OSError:
         return False
     return os.path.isdir(cmd_abspath)
 
@@ -1628,7 +1627,7 @@ def subproc_arg_callback(_, match):
         path = os.path.expanduser(text)
         path_stat = os.lstat(path)  # lstat() will raise FNF if not a real file
         yieldVal, _ = color_file(path, path_stat)
-    except (OSError):
+    except OSError:
         pass
 
     yield (match.start(), yieldVal, text)

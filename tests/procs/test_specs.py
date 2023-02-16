@@ -144,7 +144,6 @@ def test_capture_always(
     ],
 )
 def test_run_subproc_background(captured, exp_is_none):
-
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
