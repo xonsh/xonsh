@@ -9,6 +9,7 @@
 * ``free_cwd`` xontrib transferred to ``xonsh/xontrib-free_cwd``.
 * ``whole_word_jumping`` xontrib transferred to ``xonsh/xontrib-whole-word-jumping``.
 * ``fish_completer`` xontrib transferred to ``xonsh/xontrib-fish-completer``.
+* ``vox``, ``autovox``, ``voxapi`` xontribs transferred to ``xonsh/xontrib-vox``.
 
 **Deprecated:**
 
