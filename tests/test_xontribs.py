@@ -161,4 +161,4 @@ hello = 'world'
 def test_xontrib_list(xession, capsys):
     xontribs_main(["list"])
     out, err = capsys.readouterr()
-    assert "hello_world" in out
+    assert "coreutils" in out

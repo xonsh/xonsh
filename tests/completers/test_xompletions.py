@@ -38,7 +38,7 @@ def test_xonfig(args, prefix, exp, xsh_with_aliases, monkeypatch, check_complete
             None,
             {
                 # the list may vary wrt the env. so testing only part of the coreutils.
-                "hello_world",
+                "coreutils",
             },
         ),
     ],
