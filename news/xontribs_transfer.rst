@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``hello_world`` xontrib.
+* <news item>
 
 **Changed:**
 
