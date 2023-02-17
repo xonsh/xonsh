@@ -55,9 +55,8 @@ And visit https://xon.sh for more information:
 
 Extensions
 **********
-- `Core extensions (xontribs) <https://xon.sh/api/_autosummary/xontribs/xontrib.html>`_
-- `External extensions on Github <https://github.com/topics/xontrib>`_
-- `List of awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
+- `Extensions on Github <https://github.com/topics/xontrib>`_
+- `Awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
 - `Create a xontrib step by step from template <https://github.com/xonsh/xontrib-template>`_
 
 Projects that use xonsh
