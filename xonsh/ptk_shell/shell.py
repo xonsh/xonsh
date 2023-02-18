@@ -471,7 +471,8 @@ class PromptToolkitShell(BaseShell):
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            return [(Token, " " * (width + 1))]
+            toks = [(Token, " " * (width + 1))]
+            return PygmentsTokens(toks)
         toks = basetoks * (width // baselen)
         n = width % baselen
         count = 0
