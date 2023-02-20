@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Add and extra condition for print traceback from subprocess
+* Suppress subprocess traceback on exception in case ``$XONSH_SHOW_TRACEBACK=False`` with ``$RAISE_SUBPROC_ERROR=True``.
 
 **Security:**
 
