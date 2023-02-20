@@ -468,11 +468,27 @@ class PromptToolkitShell(BaseShell):
         dots = dots() if callable(dots) else dots
         if not dots:
             return ""
+        prefix = XSH.env.get(
+            "MULTILINE_PROMPT_PRE", ""
+        )  # e.g.: '\x01\x1b]133;P;k=c\x07\x02'
+        suffix = XSH.env.get(
+            "MULTILINE_PROMPT_POS", ""
+        )  # e.g.: '\x01\x1b]133;B\x07\x02'
+        is_affix = any(x for x in [prefix, suffix])
+        if is_affix:
+            prefixtoks = tokenize_ansi(PygmentsTokens(self.format_color(prefix)))
+            suffixtoks = tokenize_ansi(PygmentsTokens(self.format_color(suffix)))
+            # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;P;k=c\x07')]
+            # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;B\x07')]
+
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
             toks = [(Token, " " * (width + 1))]
-            return PygmentsTokens(toks)
+            if is_affix:  # to convert ↓ classes to str to allow +
+                return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+            else:
+                return PygmentsTokens(toks)
         toks = basetoks * (width // baselen)
         n = width % baselen
         count = 0
@@ -489,7 +505,10 @@ class PromptToolkitShell(BaseShell):
             if n <= count:
                 break
         toks.append((Token, " "))  # final space
-        return PygmentsTokens(toks)
+        if is_affix:
+            return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+        else:
+            return PygmentsTokens(toks)
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
