@@ -594,7 +594,12 @@ class CommandPipeline:
         """Raises a subprocess error, if we are supposed to."""
         spec = self.spec
         rtn = self.returncode
-        if rtn is not None and rtn != 0 and XSH.env.get("RAISE_SUBPROC_ERROR"):
+        if (
+            rtn is not None and
+            rtn != 0 and
+            XSH.env.get("RAISE_SUBPROC_ERROR") and
+            XSH.env.get("XONSH_SHOW_TRACEBACK")
+        ):
             try:
                 raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
             finally:
