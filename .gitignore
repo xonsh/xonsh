@@ -41,6 +41,8 @@ include/
 venv/
 .venv*/
 
+# Python project version files
+.python-version
 
 # Mac
 .DS_Store

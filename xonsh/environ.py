@@ -1386,6 +1386,30 @@ class PromptSetting(Xettings):
         "Prompt text for 2nd+ lines of input, may be str or function which "
         "returns a str.",
     )
+    MULTILINE_PROMPT_PRE = Var(
+        is_string_or_callable,
+        ensure_string,
+        ensure_string,
+        "",
+        "Indicator inserted before the line continuation marks set "
+        "in ``$MULTILINE_PROMPT``. Can be used to mark the start of "
+        "a semantic continuation prompt "
+        "(see `Semantic Prompts <https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md>`_ "
+        "or `WezTerm <https://wezfurlong.org/wezterm/shell-integration.html>`_ "
+        "for more details). May be str or function which returns a str.",
+    )
+    MULTILINE_PROMPT_POS = Var(
+        is_string_or_callable,
+        ensure_string,
+        ensure_string,
+        "",
+        "Indicator inserted after the line continuation marks set "
+        "in ``$MULTILINE_PROMPT``. Can be used to mark the end of "
+        "a semantic continuation prompt and the beginning of user input "
+        "(see `Semantic Prompts <https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md>`_ "
+        "or `WezTerm <https://wezfurlong.org/wezterm/shell-integration.html>`_ "
+        "for more details). May be str or function which returns a str.",
+    )
     PRETTY_PRINT_RESULTS = Var.with_default(
         True,
         'Flag for "pretty printing" return values.',
