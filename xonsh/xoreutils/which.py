@@ -28,7 +28,7 @@ def _which_create_parser():
         "-s",
         "--skip-alias",
         action="store_true",
-        help="Do not search inxonsh.aliases",
+        help="Do not search in xonsh.aliases",
         dest="skip",
     )
     parser.add_argument(
