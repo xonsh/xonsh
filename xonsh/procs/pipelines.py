@@ -598,9 +598,6 @@ class CommandPipeline:
         if rtn is None or rtn == 0 or not XSH.env.get("RAISE_SUBPROC_ERROR"):
             return
 
-        if not XSH.env.get("XONSH_SHOW_TRACEBACK"):
-            sys.exit(rtn)
-
         try:
             raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
         finally:
