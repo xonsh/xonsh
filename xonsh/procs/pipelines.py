@@ -594,12 +594,15 @@ class CommandPipeline:
         """Raises a subprocess error, if we are supposed to."""
         spec = self.spec
         rtn = self.returncode
-        if rtn is not None and rtn != 0 and XSH.env.get("RAISE_SUBPROC_ERROR"):
-            try:
-                raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
-            finally:
-                # this is need to get a working terminal in interactive mode
-                self._return_terminal()
+
+        if rtn is None or rtn == 0 or not XSH.env.get("RAISE_SUBPROC_ERROR"):
+            return
+
+        try:
+            raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
+        finally:
+            # this is need to get a working terminal in interactive mode
+            self._return_terminal()
 
     #
     # Properties

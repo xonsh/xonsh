@@ -558,7 +558,8 @@ def main_xonsh(args):
             if err_type is SystemExit:
                 raise err
             else:
-                traceback.print_exception(*exc_info)
+                if XSH.env.get("XONSH_SHOW_TRACEBACK"):
+                    traceback.print_exception(*exc_info)
                 exit_code = 1
         events.on_exit.fire()
         postmain(args)

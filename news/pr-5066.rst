@@ -1,0 +1,23 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* <news item>
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* Suppress subprocess traceback on exception in case ``$XONSH_SHOW_TRACEBACK=False`` with ``$RAISE_SUBPROC_ERROR=True``.
+
+**Security:**
+
+* <news item>
