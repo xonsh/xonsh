@@ -1098,8 +1098,16 @@ def display_error_message(exc_info, strip_xonsh_error_types=True):
     """
     Prints the error message of the given sys.exc_info() triple on stderr.
     """
+    if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get("RAISE_SUBPROC_ERROR"):
+        content = traceback.format_exception(*exc_info, limit=1)
+        msg = "".join([v.strip() for v in content[1:-1]])
+        msg += "" if msg.endswith("\n") else "\n"
+        sys.stderr.write(msg)
+        return
+
     exc_type, exc_value, exc_traceback = exc_info
     exception_only = traceback.format_exception_only(exc_type, exc_value)
+
     if exc_type is XonshError and strip_xonsh_error_types:
         exception_only[0] = exception_only[0].partition(": ")[-1]
     sys.stderr.write("".join(exception_only))
