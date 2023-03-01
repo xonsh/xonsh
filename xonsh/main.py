@@ -562,9 +562,8 @@ def main_xonsh(args):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
                 raise err
-            else:
-                print_exception(None, exc_info)
-                exit_code = 1
+            print_exception(None, exc_info)
+            exit_code = 1
         events.on_exit.fire()
         postmain(args)
     return exit_code
