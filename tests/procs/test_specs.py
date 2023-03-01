@@ -201,7 +201,7 @@ def test_on_command_not_found_fires(xession):
     subproc = SubprocSpec.build(["xonshcommandnotfound"])
     with pytest.raises(XonshError) as expected:
         subproc.run()
-    assert "command not found: xonshcommandnotfound" in str(expected.value)
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
     assert fired
 
 
@@ -223,5 +223,5 @@ def test_on_command_not_found_doesnt_fire_in_non_interactive_mode(xession):
     subproc = SubprocSpec.build(["xonshcommandnotfound"])
     with pytest.raises(XonshError) as expected:
         subproc.run()
-    assert "command not found: xonshcommandnotfound" in str(expected.value)
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
     assert not fired
