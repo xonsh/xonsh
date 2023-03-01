@@ -481,7 +481,7 @@ class SubprocSpec:
                     return self.cls(
                         ["man", cmd0.rstrip("?")], bufsize=bufsize, **kwargs
                     )
-            e = f"xonsh: subprocess mode: command not found: {cmd0}"
+            e = f"xonsh: subprocess mode: command not found: {repr(cmd0)}"
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:
