@@ -55,8 +55,12 @@ And visit https://xon.sh for more information:
 
 Extensions
 **********
-- `Extensions on Github <https://github.com/topics/xontrib>`_
+
+Xonsh has the certain term for extensions and additional materials - xontrib - the short version of "contribution" word.
+
+- `Xontribs on Github <https://github.com/topics/xontrib>`_
 - `Awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
+- `Core xontribs <https://xon.sh/api/_autosummary/xontribs/xontrib.html>`_
 - `Create a xontrib step by step from template <https://github.com/xonsh/xontrib-template>`_
 
 Projects that use xonsh
