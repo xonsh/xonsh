@@ -11,9 +11,6 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
 
 
-
-
-
 def test_simple(xession):
     xession.env.update(dict(CDPATH=PARENT, PWD=PARENT))
     with chdir(PARENT):

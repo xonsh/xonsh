@@ -37,7 +37,7 @@ import threading
 import traceback
 import typing as tp
 import warnings
-
+from contextlib import contextmanager
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -52,8 +52,6 @@ from xonsh.platform import (
     os_environ,
     pygments_version_info,
 )
-
-from contextlib import contextmanager
 
 
 @contextmanager
