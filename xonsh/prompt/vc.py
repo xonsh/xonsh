@@ -124,6 +124,27 @@ def get_hg_branch(root=None):
     return branch
 
 
+def _run_fossil_cmd(cmd):
+    timeout = XSH.env.get("VC_BRANCH_TIMEOUT")
+    result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=timeout)
+    return result
+
+
+def get_fossil_branch():
+    """Attempts to find the current fossil branch. If this could not
+    be determined (timeout, not in a fossil checkout, etc.) then this returns None.
+    """
+    # from fossil branch --help: "fossil branch current: Print the name of the branch for the current check-out"
+    cmd = "fossil branch current".split()
+    try:
+        branch = xt.decode_bytes(_run_fossil_cmd(cmd))
+    except (subprocess.CalledProcessError, OSError):
+        branch = None
+    else:
+        branch = RE_REMOVE_ANSI.sub("", branch.splitlines()[0])
+    return branch
+
+
 _FIRST_BRANCH_TIMEOUT = True
 
 
@@ -156,7 +177,7 @@ def _vc_has(binary):
 
 def current_branch():
     """Gets the branch for a current working directory. Returns an empty string
-    if the cwd is not a repository.  This currently only works for git and hg
+    if the cwd is not a repository.  This currently only works for git, hg, and fossil
     and should be extended in the future.  If a timeout occurred, the string
     '<branch-timeout>' is returned.
     """
@@ -165,6 +186,8 @@ def current_branch():
         branch = get_git_branch()
     if not branch and _vc_has("hg"):
         branch = get_hg_branch()
+    if not branch and _vc_has("fossil"):
+        branch = get_fossil_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = "<branch-timeout>"
         _first_branch_timeout_message()
@@ -234,6 +257,20 @@ def hg_dirty_working_directory():
         return None
 
 
+def fossil_dirty_working_directory():
+    """Returns whether the fossil checkout is dirty. If this could not
+    be determined (timeout, file not found, etc.) then this returns None.
+    """
+    cmd = ["fossil", "changes"]
+    try:
+        status = _run_fossil_cmd(cmd)
+    except (subprocess.CalledProcessError, OSError):
+        status = None
+    else:
+        status = bool(status)
+    return status
+
+
 def dirty_working_directory():
     """Returns a boolean as to whether there are uncommitted files in version
     control repository we are inside. If this cannot be determined, returns
@@ -244,6 +281,8 @@ def dirty_working_directory():
         dwd = git_dirty_working_directory()
     if dwd is None and _vc_has("hg"):
         dwd = hg_dirty_working_directory()
+    if dwd is None and _vc_has("fossil"):
+        dwd = fossil_dirty_working_directory()
     return dwd
 
 
