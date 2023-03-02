@@ -61,6 +61,7 @@ xontrib = ["*.xsh"]
     "js/app.min.js",
     "js/bootstrap.min.css",
     "js/LICENSE-bootstrap",
+    "js/xonsh_sticker.svg",
 ]
 
 [project.entry-points]
