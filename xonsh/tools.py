@@ -1100,9 +1100,22 @@ def display_error_message(exc_info, strip_xonsh_error_types=True):
     """
     if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get("RAISE_SUBPROC_ERROR"):
         content = traceback.format_exception(*exc_info, limit=1)
-        msg = "".join([v.strip() for v in content[1:-1]])
-        msg += "" if msg.endswith("\n") else "\n"
-        sys.stderr.write(msg)
+        traceback_str = "".join([v for v in content[:-1]])
+        traceback_str += "" if traceback_str.endswith("\n") else "\n"
+
+        # color the traceback if available
+        _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
+        _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
+        if not interactive and not color_results and not HAS_PYGMENTS:
+            sys.stderr.write(traceback_str)
+            return
+
+        import pygments.lexers.python
+
+        lexer = pygments.lexers.python.PythonTracebackLexer()
+        tokens = list(pygments.lex(traceback_str, lexer=lexer))
+        # this goes to stdout, but since we are interactive it doesn't matter
+        print_color(tokens, end="\n", file=sys.stderr)
         return
 
     exc_type, exc_value, exc_traceback = exc_info
