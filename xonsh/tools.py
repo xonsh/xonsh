@@ -37,6 +37,7 @@ import threading
 import traceback
 import typing as tp
 import warnings
+from contextlib import contextmanager
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -51,6 +52,14 @@ from xonsh.platform import (
     os_environ,
     pygments_version_info,
 )
+
+
+@contextmanager
+def chdir(adir):
+    old_dir = os.getcwd()
+    os.chdir(adir)
+    yield
+    os.chdir(old_dir)
 
 
 @functools.lru_cache(1)

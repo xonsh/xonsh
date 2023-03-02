@@ -1,22 +1,14 @@
 """Testing dirstack"""
 
 import os
-from contextlib import contextmanager
 
 import pytest  # noqa F401
 
 from xonsh import dirstack
+from xonsh.tools import chdir
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
-
-
-@contextmanager
-def chdir(adir):
-    old_dir = os.getcwd()
-    os.chdir(adir)
-    yield
-    os.chdir(old_dir)
 
 
 def test_simple(xession):
