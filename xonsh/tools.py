@@ -1085,14 +1085,20 @@ def print_exception(msg=None, exc_info=None):
 
 
 def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=None):
-    content_end = None
     no_trace_and_raise_subproc_error = not xsh.env.get(
         "XONSH_SHOW_TRACEBACK"
     ) and xsh.env.get("RAISE_SUBPROC_ERROR")
+
     if no_trace_and_raise_subproc_error:
         limit = 1
-        content_end = -1
-    content = traceback.format_exception(*exc_info, limit=limit)[:content_end]
+
+    content = traceback.format_exception(*exc_info, limit=limit)
+
+    if (
+        no_trace_and_raise_subproc_error
+        and "subprocess.CalledProcessError:" in content[-1]
+    ):
+        content = content[:-1]
 
     traceback_str = "".join([v for v in content])
     traceback_str += "" if traceback_str.endswith("\n") else "\n"
