@@ -1059,22 +1059,7 @@ def print_exception(msg=None, exc_info=None):
                 "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
             )
 
-        traceback_str = "".join(
-            traceback.format_exception(*exc_info, limit=limit, chain=chain)
-        )
-
-        # color the traceback if available
-        _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
-        _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
-        if interactive and color_results and HAS_PYGMENTS:
-            import pygments.lexers.python
-
-            lexer = pygments.lexers.python.PythonTracebackLexer()
-            tokens = list(pygments.lex(traceback_str, lexer=lexer))
-            # this goes to stdout, but since we are interactive it doesn't matter
-            print_color(tokens, end="")
-        else:
-            print(traceback_str, file=sys.stderr, end="")
+        display_colored_error_message(exc_info)
 
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
@@ -1088,39 +1073,52 @@ def print_exception(msg=None, exc_info=None):
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
+        if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get(
+            "RAISE_SUBPROC_ERROR"
+        ):
+            display_colored_error_message(exc_info, limit=1)
+            return
         display_error_message(exc_info)
     if msg:
         msg = msg if msg.endswith("\n") else msg + "\n"
         sys.stderr.write(msg)
 
 
+def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=None):
+    content_end = None
+    no_trace_and_raise_subproc_error = not xsh.env.get(
+        "XONSH_SHOW_TRACEBACK"
+    ) and xsh.env.get("RAISE_SUBPROC_ERROR")
+    if no_trace_and_raise_subproc_error:
+        limit = 1
+        content_end = -1
+    content = traceback.format_exception(*exc_info, limit=limit)[:content_end]
+
+    traceback_str = "".join([v for v in content])
+    traceback_str += "" if traceback_str.endswith("\n") else "\n"
+
+    # color the traceback if available
+    _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
+    _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
+    if not interactive and not color_results and not HAS_PYGMENTS:
+        sys.stderr.write(traceback_str)
+        return
+
+    import pygments.lexers.python
+
+    lexer = pygments.lexers.python.PythonTracebackLexer()
+    tokens = list(pygments.lex(traceback_str, lexer=lexer))
+    # this goes to stdout, but since we are interactive it doesn't matter
+    print_color(tokens, end="\n", file=sys.stderr)
+    return
+
+
 def display_error_message(exc_info, strip_xonsh_error_types=True):
     """
     Prints the error message of the given sys.exc_info() triple on stderr.
     """
-    if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get("RAISE_SUBPROC_ERROR"):
-        content = traceback.format_exception(*exc_info, limit=1)
-        traceback_str = "".join([v for v in content[:-1]])
-        traceback_str += "" if traceback_str.endswith("\n") else "\n"
-
-        # color the traceback if available
-        _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
-        _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
-        if not interactive and not color_results and not HAS_PYGMENTS:
-            sys.stderr.write(traceback_str)
-            return
-
-        import pygments.lexers.python
-
-        lexer = pygments.lexers.python.PythonTracebackLexer()
-        tokens = list(pygments.lex(traceback_str, lexer=lexer))
-        # this goes to stdout, but since we are interactive it doesn't matter
-        print_color(tokens, end="\n", file=sys.stderr)
-        return
-
     exc_type, exc_value, exc_traceback = exc_info
     exception_only = traceback.format_exception_only(exc_type, exc_value)
-
     if exc_type is XonshError and strip_xonsh_error_types:
         exception_only[0] = exception_only[0].partition(": ")[-1]
     sys.stderr.write("".join(exception_only))
