@@ -1,8 +1,8 @@
 import os
 import subprocess as sp
 import textwrap
-from typing import Dict, List
 from pathlib import Path
+from typing import Dict, List
 from unittest.mock import Mock
 
 import pytest
@@ -21,7 +21,7 @@ VC_INIT: Dict[str, List[List[str]]] = {
     "hg": [["init"]],
     # Fossil "init" creates a central repository file with the given name,
     # "open" creates the working directory at another, arbitrary location.
-    "fossil": [["init", "test.fossil"], ["open", "test.fossil"]]
+    "fossil": [["init", "test.fossil"], ["open", "test.fossil"]],
 }
 
 
@@ -45,15 +45,17 @@ def repo(request, tmpdir_factory):
 
 def _init_git_repository(temp_dir):
     git_config = temp_dir / ".git/config"
-    git_config.write_text(textwrap.dedent(
-        """\
+    git_config.write_text(
+        textwrap.dedent(
+            """\
         [user]
         name = me
         email = my@email.address
         [init]
         defaultBranch = main
         """
-    ))
+        )
+    )
     # git needs at least one commit
     Path("test-file").touch()
     sp.call(["git", "add", "test-file"])
@@ -73,8 +75,11 @@ def test_test_repo(repo):
     if repo["vc"] == "fossil":
         # Fossil stores the check-out meta-data in a special file within the open check-out.
         # At least one of these below must exist
-        metadata_file_names = {".fslckout", "_FOSSIL_"}  # .fslckout on Unix, _FOSSIL_ on Windows
-        existing_files = set(file.name for file in repo["dir"].iterdir())
+        metadata_file_names = {
+            ".fslckout",
+            "_FOSSIL_",
+        }  # .fslckout on Unix, _FOSSIL_ on Windows
+        existing_files = {file.name for file in repo["dir"].iterdir()}
         assert existing_files.intersection(metadata_file_names)
     else:
         test_vc_dir = repo["dir"] / ".{}".format(repo["vc"])
