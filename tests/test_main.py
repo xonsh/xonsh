@@ -329,7 +329,7 @@ def test_rc_with_failing_module(shell, tmpdir, monkeypatch, capsys, xession):
 
     stdout, stderr = capsys.readouterr()
     assert len(stdout) == 0
-    assert "RuntimeError: Unexpected error" in stderr
+    assert "Unexpected error" in stderr
 
     # Check that the temporary rc's folder is not left behind on the path
     assert tmpdir.strpath not in sys.path

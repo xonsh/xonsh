@@ -23,7 +23,12 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.pretty import pretty
 from xonsh.shell import Shell
 from xonsh.timings import setup_timings
-from xonsh.tools import display_error_message, print_color, to_bool_or_int
+from xonsh.tools import (
+    display_error_message,
+    print_color,
+    print_exception,
+    to_bool_or_int,
+)
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
 
@@ -557,10 +562,8 @@ def main_xonsh(args):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
                 raise err
-            else:
-                if XSH.env.get("XONSH_SHOW_TRACEBACK"):
-                    traceback.print_exception(*exc_info)
-                exit_code = 1
+            print_exception(None, exc_info)
+            exit_code = 1
         events.on_exit.fire()
         postmain(args)
     return exit_code
