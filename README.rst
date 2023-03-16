@@ -38,7 +38,10 @@ xonsh
     .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graphs/badge.svg?branch=main
             :target: https://codecov.io/github/xonsh/xonsh?branch=main
             :alt: codecov.io
-
+    .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
+            :target: https://repology.org/project/xonsh/versions
+            :alt: repology.org
+            
 First steps
 ***********
 
