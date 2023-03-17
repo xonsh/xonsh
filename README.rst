@@ -41,7 +41,7 @@ xonsh
     .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
             :target: https://repology.org/project/xonsh/versions
             :alt: repology.org
-            
+
 First steps
 ***********
 
@@ -82,7 +82,7 @@ Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xon
 The xonsh shell community
 *************************
 
-The xonsh shell is developed by a community of volunteers and has no organization that can get grants, donations or additional support. There are few ways to help the xonsh shell: 
+The xonsh shell is developed by a community of volunteers and has no organization that can get grants, donations or additional support. There are few ways to help the xonsh shell:
 
 - `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
 - Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_.
