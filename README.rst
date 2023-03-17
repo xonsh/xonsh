@@ -63,14 +63,18 @@ Extensions
 - `List of awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
 - `Create a xontrib step by step from template <https://github.com/xonsh/xontrib-template>`_
 
-Projects that use xonsh
-***********************
+Projects that use xonsh or compatible
+*************************************
 
-- `gitsome <https://github.com/donnemartin/gitsome>`_: A supercharged Git/shell autocompleter with GitHub integration.
-- `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the ssh.
+- `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
+- `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the SSH.
 - `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
 - `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
 
+Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
+
+- `jupyter and jupyterlab <https://jupyter.org/>`_: Interactive notebook platform.
+- `euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
 
 The xonsh shell community
 *************************
