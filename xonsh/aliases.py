@@ -99,6 +99,17 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
+    def add(self, func):
+        """Decorator to add function as an alias. Add `@aliases.add` before the `__my` function to register the `my` alias."""
+        if func.__name__.startswith("__"):
+            self[func.__name__[2:]] = func
+            return None
+        else:
+            print(
+                f'aliases.add: Function name must start from "__" instead of "{func.__name__}".'
+            )
+            return func
+    
     def get(self, key, default=None):
         """Returns the (possibly modified) value. If the key is not present,
         then `default` is returned.
