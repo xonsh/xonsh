@@ -197,6 +197,10 @@ works by hooking the prompt to reset the current working directory to the root
 drive folder whenever the shell is idle. It only works with the prompt-toolkit
 back-end. To enable that behaviour run the following:
 
+.. code-block:: xonshcon
+
+   >>> xpip install xontrib-free-cwd
+
 Add this line to your ``~/.xonshrc`` file to have it always enabled.
 
 .. code-block:: xonshcon
