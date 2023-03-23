@@ -20,10 +20,6 @@ xonsh
             :target: https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
             :alt: Join the chat at https://gitter.im/xonsh/xonsh
 
-    .. image:: https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green
-            :target: https://matrix.to/#/#xonsh:feneas.org
-            :alt: Matrix room: #xonsh:feneas.org
-
     .. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=main
             :target: https://travis-ci.org/xonsh/xonsh
             :alt: Travis
