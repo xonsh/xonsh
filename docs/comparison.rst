@@ -12,6 +12,7 @@ table lists built in features and capabilities that various tools may or may not
       - Bash
       - zsh
       - plumbum
+      - eshell
       - fish
       - IPython
       - xonsh
@@ -22,7 +23,9 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       - ✓
       - ✓
+      - ✓
     * - Easily scriptable
+      - ✓
       - ✓
       - ✓
       - ✓
@@ -36,10 +39,12 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       - ✓
       - ✓
+      - ✓
     * - Meant as a shell
       - ✓
       - ✓
       -
+      - ✓
       - ✓
       -
       - ✓
@@ -50,10 +55,12 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       - ✓
       - ✓
+      - ✓
     * - Completion from man-page parsing
       -
       -
       -
+      - ✓
       - ✓
       -
       - ✓
@@ -61,6 +68,7 @@ table lists built in features and capabilities that various tools may or may not
       -
       - ✓
       -
+      - ✓
       -
       - ✓
       - ✓
@@ -68,6 +76,7 @@ table lists built in features and capabilities that various tools may or may not
       -
       -
       - ✓
+      -
       - ✓
       - ✓
       - ✓
@@ -75,6 +84,8 @@ table lists built in features and capabilities that various tools may or may not
       -
       -
       -
+      - w/ eshell-syntax-highlighting 
+      - package
       - ✓
       - in notebook
       - w/ prompt-toolkit
@@ -89,6 +100,7 @@ table lists built in features and capabilities that various tools may or may not
       -
       -
       -
+      - ✓
       -
       -
       - ✓
