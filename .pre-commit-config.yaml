@@ -12,13 +12,11 @@ repos:
     - id: black
       entry: black xonsh xontrib tests xompletions
       pass_filenames: false
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    # Ruff version.
+    rev: 'v0.0.261'
     hooks:
-      - id: isort
-        entry: isort xonsh xontrib tests xompletions
-        pass_filenames: false
-        name: isort (python)
+      - id: ruff
   - repo: https://github.com/pycqa/flake8
     rev: '6.0.0'  # pick a git hash / tag to point to
     hooks:

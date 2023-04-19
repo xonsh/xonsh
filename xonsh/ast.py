@@ -36,9 +36,6 @@ from ast import (
     Dict,
     DictComp,
     Div,
-)
-from ast import Ellipsis as EllipsisNode
-from ast import (
     Eq,
     ExceptHandler,
     Expr,
@@ -116,6 +113,7 @@ from ast import (
     walk,
     withitem,
 )
+from ast import Ellipsis as EllipsisNode
 
 from xonsh.built_ins import XSH
 from xonsh.platform import PYTHON_VERSION_INFO
