@@ -181,14 +181,14 @@ extend_exclude = '''
 '''
 
 
-[tool.isort]
-profile = "black"
-extend_skip_glob = ["xonsh/*_table.py", "xonsh/ply/**.py"]
-src_paths = ["xonsh", "xontrib", "xompletions", "tests"]
-known_first_party = ["xonsh", "xontrib", "xompletions", "tests"]
-known_third_party = ["ply", "pytest"]
+[tool.ruff.isort]
+known-first-party = ["xonsh", "xontrib", "xompletions", "tests"]
+known-third-party = ["ply", "pytest"]
 
 [tool.ruff]
+src = [
+    "xonsh", "xontrib", "xompletions", "tests"
+]
 exclude = [
     "docs/",
     "*/ply/",
@@ -204,39 +204,42 @@ exclude = [
     ".local.out*/",
 ]
 ignore = [
-    "D100",
-    "D101",
-    "D102",
-    "D103",
-    "D104",
-    "D105",
-    "D200",
-    "D202",
-    "D205",
-    "D207",
-    "D208",
-    "D209",
-    "D210",
-    "D301",
-    "D400",
-    "D401",
-    "D403",
-    "D404",
-    "D406",
-    "D407",
-    "D409",
-    "D411",
-    "E402",
-    "E731",
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D200", # One-line docstring should fit on one line with quotes
+    "D202", # No blank lines allowed after function docstring
+    "D205", # 1 blank line required between summary line and description
+    "D207", # Docstring is under-indented
+    "D208", # Docstring is over-indented
+    "D209", # Multi-line docstring closing quotes should be on a separate line
+    "D210", # No whitespaces allowed surrounding docstring text
+    "D301", # Use r""" if any backslashes in a docstring
+    "D400", # First line should end with a period
+    "D401", # First line should be in imperative mood
+    "D403", # First word of the first line should be properly capitalized
+    "D404", # First word of the docstring should not be This
+    "D406", # Section name should end with a newline
+    "D407", # Missing dashed underline after section
+    "D409", # Section underline should be in the line following the section’s name
+    "D411", # Missing blank line before section
+    "E402", # Module level import not at top of file
+    "E731", # Do not assign a lambda expression, use a def
 ]
 line-length = 180
 select = [
-    "B",
-    "D",
-    "E",
-    "F",
-    "T1",
-    "W",
+    "B", # https://beta.ruff.rs/docs/rules/#flake8-bugbear-b
+    "D", # https://beta.ruff.rs/docs/rules/#pydocstyle-d
+    "E", # https://beta.ruff.rs/docs/rules/#pycodestyle-e-w
+    "F", # https://beta.ruff.rs/docs/rules/#pyflakes-f
+    "I", # https://beta.ruff.rs/docs/rules/#isort-i
+    "T10", # https://beta.ruff.rs/docs/rules/#flake8-debugger-t10
+    "YTT", # https://beta.ruff.rs/docs/rules/#flake8-2020-ytt
+    "W", # https://beta.ruff.rs/docs/rules/#pycodestyle-e-w
+    "UP", # https://beta.ruff.rs/docs/rules/#pyupgrade-up
 ]
 
 [tool.ruff.pydocstyle]
