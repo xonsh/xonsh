@@ -1569,19 +1569,19 @@ def ensure_slice(x):
             s = slice(x, x + 1)
         else:
             s = slice(-1, None, None)
-    except ValueError:
+    except ValueError as ex:
         x = x.strip("[]()")
         m = SLICE_REG.fullmatch(x)
         if m:
             groups = (int(i) if i else None for i in m.groups())
             s = slice(*groups)
         else:
-            raise ValueError(f"cannot convert {x!r} to slice")
+            raise ValueError(f"cannot convert {x!r} to slice") from ex
     except TypeError:
         try:
             s = slice(*(int(i) for i in x))
-        except (TypeError, ValueError):
-            raise ValueError(f"cannot convert {x!r} to slice")
+        except (TypeError, ValueError) as ex:
+            raise ValueError(f"cannot convert {x!r} to slice") from ex
     return s
 
 
@@ -1745,7 +1745,7 @@ def ptk2_color_depth_setter(x):
         x = ""
     else:
         msg = f'"{x}" is not a valid value for $PROMPT_TOOLKIT_COLOR_DEPTH. '
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = ""
     if x == "" and "PROMPT_TOOLKIT_COLOR_DEPTH" in os_environ:
         del os_environ["PROMPT_TOOLKIT_COLOR_DEPTH"]
@@ -1771,7 +1771,7 @@ def to_completions_display_value(x):
     else:
         msg = f'"{x}" is not a valid value for $COMPLETIONS_DISPLAY. '
         msg += 'Using "multi".'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = "multi"
     return x
 
@@ -1798,6 +1798,7 @@ def to_completion_mode(x):
         warnings.warn(
             f"'{x}' is not valid for $COMPLETION_MODE, must be one of {CANONIC_COMPLETION_MODES}.  Using 'default'.",
             RuntimeWarning,
+            stacklevel=2,
         )
         y = "default"
     return y
@@ -1820,14 +1821,14 @@ def is_tok_color_dict(x):
             string_to_tokentype(k)
         except (TypeError, AttributeError):
             msg = f'"{k}" is not a valid Token.'
-            warnings.warn(msg, RuntimeWarning)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
             return False
     """Check each str is a valid style"""
     try:
         _style_from_pygments_dict(x)
     except (AssertionError, ValueError):
         msg = f'"{x}" contains an invalid style.'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return False
     return True
 
@@ -1840,7 +1841,7 @@ def to_dict(x):
         x = ast.literal_eval(x)
     except (ValueError, SyntaxError):
         msg = f'"{x}" can not be converted to Python dictionary.'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = dict()
     return x
 
@@ -1852,7 +1853,7 @@ def to_tok_color_dict(x):
     x = to_dict(x)
     if not is_tok_color_dict(x):
         msg = f'"{x}" can not be converted to Token:str dictionary.'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = dict()
     return x
 
@@ -2775,7 +2776,7 @@ def deprecated(deprecated_in=None, removed_in=None):
         def wrapped(*args, **kwargs):
             _deprecated_error_on_expiration(func.__name__, removed_in)
             func(*args, **kwargs)
-            warnings.warn(warning_message, DeprecationWarning)
+            warnings.warn(warning_message, DeprecationWarning, stacklevel=2)
 
         wrapped.__doc__ = (
             f"{wrapped.__doc__}\n\n{warning_message}"

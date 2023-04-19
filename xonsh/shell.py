@@ -175,7 +175,8 @@ class Shell:
         if shell_type == "prompt_toolkit":
             if not has_prompt_toolkit():
                 warnings.warn(
-                    "'prompt-toolkit' python package is not installed. Falling back to readline."
+                    "'prompt-toolkit' python package is not installed. Falling back to readline.",
+                    stacklevel=2,
                 )
                 shell_type = "readline"
             elif not ptk_above_min_supported():
@@ -183,14 +184,16 @@ class Shell:
                     "Installed prompt-toolkit version < v{}.{}.{} is not ".format(
                         *minimum_required_ptk_version
                     )
-                    + "supported. Falling back to readline."
+                    + "supported. Falling back to readline.",
+                    stacklevel=2,
                 )
                 shell_type = "readline"
             if init_shell_type in ("ptk1", "prompt_toolkit1"):
                 warnings.warn(
                     "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(
                         init_shell_type
-                    )
+                    ),
+                    stacklevel=2,
                 )
         return shell_type
 

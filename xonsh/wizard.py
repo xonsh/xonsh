@@ -830,7 +830,7 @@ class PromptVisitor(StateVisitor):
             print_color(f"{{GREEN}}{fname!r} loaded.{{RESET}}")
         else:
             print_color(
-                ("{{RED}}{0!r} could not be found, " "continuing.{{RESET}}").format(
+                ("{{RED}}{!r} could not be found, " "continuing.{{RESET}}").format(
                     fname
                 )
             )
