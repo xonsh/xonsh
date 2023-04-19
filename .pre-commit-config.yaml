@@ -17,20 +17,8 @@ repos:
     rev: 'v0.0.261'
     hooks:
       - id: ruff
-  - repo: https://github.com/pycqa/flake8
-    rev: '6.0.0'  # pick a git hash / tag to point to
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - flake8-docstrings
-          - flake8-bugbear
-          # Check for debugger imports and py37+ breakpoint() calls in python source.
-          - flake8-debugger
-        exclude: |
-          (?x)^(
-              xonsh/ply/.+|
-              docs/.+
-          )$
+        args: [., --fix, --exit-non-zero-on-fix]
+        pass_filenames: false
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.2.0'  # Use the sha / tag you want to point at
     hooks:

@@ -226,6 +226,7 @@ ignore = [
     "D407", # Missing dashed underline after section
     "D409", # Section underline should be in the line following the section’s name
     "D411", # Missing blank line before section
+    "D418", # Function decorated with `@overload` shouldn't contain a docstring
     "E402", # Module level import not at top of file
     "E731", # Do not assign a lambda expression, use a def
 ]
@@ -253,6 +254,7 @@ convention = "numpy"
 "xonsh/tokenize.py" = [
     "F821",
     "F841",
+    "B904" # Within an `except` clause, raise exceptions with `raise ... from err`
 ]
 "xonsh/pyghooks.py" = ["F821"]
 "tests/test_builtins.py" = [
@@ -272,9 +274,16 @@ convention = "numpy"
 "xonsh/readline_shell.py" = ["F401"]
 "xonsh/commands_cache.py" = ["F841"]
 "xonsh/ptk/key_bindings.py" = ["F841"]
-"xonsh/tools.py" = ["E731"]
+"xonsh/tools.py" = [
+    "E731",
+]
 "xonsh/xonfig.py" = ["E731"]
 "xontrib/vox.py" = ["F821"]
 "xonsh/inspectors.py" = ["E722"]
 "xonsh/platform.py" = ["F401"]
-"xonsh/parsers/base.py" = ["E741"]
+"xonsh/parsers/*.py" = [
+    "E741", #  E741 Ambiguous variable name
+]
+"tests/test*.py" = [
+    "E741", #  E741 Ambiguous variable name
+]

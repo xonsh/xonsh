@@ -344,6 +344,7 @@ def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
             warnings.warn(
                 f'could not parse alias "{key}": {exc!r}',
                 RuntimeWarning,
+                stacklevel=2,
             )
             continue
         aliases[key] = value

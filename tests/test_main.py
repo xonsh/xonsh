@@ -70,7 +70,7 @@ def test_premain_custom_rc(shell, tmpdir, monkeypatch, xession):
 
 
 @pytest.mark.skipif(
-    ON_WINDOWS and sys.version[:3] == "3.8",
+    ON_WINDOWS and sys.version_info[:3] == "3.8",
     reason="weird failure on py38+windows",
 )
 def test_rc_with_modules(shell, tmpdir, monkeypatch, capsys, xession):

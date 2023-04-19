@@ -180,7 +180,7 @@ def locale_convert(key):
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
             msg = f"Failed to set locale {key!r} to {val!r}"
-            warnings.warn(msg, RuntimeWarning)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return val
 
     return lc_converter
