@@ -187,3 +187,91 @@ extend_skip_glob = ["xonsh/*_table.py", "xonsh/ply/**.py"]
 src_paths = ["xonsh", "xontrib", "xompletions", "tests"]
 known_first_party = ["xonsh", "xontrib", "xompletions", "tests"]
 known_third_party = ["ply", "pytest"]
+
+[tool.ruff]
+exclude = [
+    "docs/",
+    "*/ply/",
+    "parser*_table.py",
+    "completion_parser_table.py",
+    "build/",
+    "dist/",
+    "setup.py",
+    ".vscode/",
+    "feedstock",
+    "rever",
+    ".venv*/",
+    ".local.out*/",
+]
+ignore = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D200",
+    "D202",
+    "D205",
+    "D207",
+    "D208",
+    "D209",
+    "D210",
+    "D301",
+    "D400",
+    "D401",
+    "D403",
+    "D404",
+    "D406",
+    "D407",
+    "D409",
+    "D411",
+    "E402",
+    "E731",
+]
+line-length = 180
+select = [
+    "B",
+    "D",
+    "E",
+    "F",
+    "T1",
+    "W",
+]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.per-file-ignores]
+"xonsh/timings.py" = ["F401"]
+"xonsh/history.py" = ["F821"]
+"xonsh/lexer.py" = ["E741"]
+"xonsh/parsers/completion_context.py" = ["B018"]
+"xonsh/tokenize.py" = [
+    "F821",
+    "F841",
+]
+"xonsh/pyghooks.py" = ["F821"]
+"tests/test_builtins.py" = [
+    "F821",
+    "B011",
+]
+"xonsh/built_ins.py" = [
+    "F821",
+    "E721",
+    "E721",
+]
+"xonsh/style_tools.py" = ["F821"]
+"xonsh/xoreutils/*.py" = ["E722"]
+"xonsh/completers/python.py" = ["E722"]
+"xonsh/ptk/shell.py" = ["E731"]
+"xonsh/ast.py" = ["F401"]
+"xonsh/readline_shell.py" = ["F401"]
+"xonsh/commands_cache.py" = ["F841"]
+"xonsh/ptk/key_bindings.py" = ["F841"]
+"xonsh/tools.py" = ["E731"]
+"xonsh/xonfig.py" = ["E731"]
+"xontrib/vox.py" = ["F821"]
+"xonsh/inspectors.py" = ["E722"]
+"xonsh/platform.py" = ["F401"]
+"xonsh/parsers/base.py" = ["E741"]
