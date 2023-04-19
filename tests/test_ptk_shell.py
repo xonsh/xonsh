@@ -38,7 +38,7 @@ def test_prompt_toolkit_version_checks(
 ):
     mocked_warn = ""
 
-    def mock_warning(msg):
+    def mock_warning(msg, **_):
         nonlocal mocked_warn
         mocked_warn = msg
         return
