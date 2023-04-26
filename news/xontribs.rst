@@ -1,6 +1,6 @@
 **Added:**
 
-* New xontrib-jump-to-dir is lightweight zero-dependency implementation of autojump or zoxide projects functionality in xonsh shell. 
+* New xontrib-jump-to-dir is lightweight zero-dependency implementation of autojump or zoxide projects functionality in xonsh shell.
 
 **Changed:**
 
