@@ -242,7 +242,9 @@ class TokenInfo(collections.namedtuple("TokenInfo", "type string start end line"
     def __repr__(self):
         annotated_type = "%d (%s)" % (self.type, tok_name[self.type])
         return (
-            "TokenInfo(type={}, string={!r}, start={!r}, end={!r}, line={!r})".format(*self._replace(type=annotated_type))
+            "TokenInfo(type={}, string={!r}, start={!r}, end={!r}, line={!r})".format(
+                *self._replace(type=annotated_type)
+            )
         )
 
     @property
