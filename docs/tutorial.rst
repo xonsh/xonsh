@@ -31,7 +31,7 @@ you are in a lesser terminal:
 .. code-block:: console
 
     $ xonsh
-    snail@home ~ $
+    snail@home ~ @
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
 hostname happens to be ``home``, and we are in our home directory (``~``).
@@ -1571,7 +1571,7 @@ By default, the following variables are available for use:
     determined.
   * ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
     instead.
-  * ``prompt_end``: ``#`` if the user has root/admin permissions ``$`` otherwise
+  * ``prompt_end``: ``#`` if the user has root/admin permissions ``@`` otherwise
   * ``current_job``: The name of the command currently running in the
     foreground, if any.
   * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
@@ -1687,22 +1687,22 @@ of those calls will be inserted into the prompt). For example:
 
 .. code-block:: console
 
-    snail@home ~ $ $PROMPT_FIELDS['test'] = "hey"
-    snail@home ~ $ $PROMPT = "{test} {cwd} $ "
-    hey ~ $
-    hey ~ $ import random
-    hey ~ $ $PROMPT_FIELDS['test'] = lambda: random.randint(1,9)
-    3 ~ $
-    5 ~ $
-    2 ~ $
-    8 ~ $
+    snail@home ~ @ $PROMPT_FIELDS['test'] = "hey"
+    snail@home ~ @ $PROMPT = "{test} {cwd} @ "
+    hey ~ @
+    hey ~ @ import random
+    hey ~ @ $PROMPT_FIELDS['test'] = lambda: random.randint(1,9)
+    3 ~ @
+    5 ~ @
+    2 ~ @
+    8 ~ @
 
 Environment variables and functions are also available with the ``$``
 prefix.  For example:
 
 .. code-block:: console
 
-    snail@home ~ $ $PROMPT = "{$LANG} >"
+    snail@home ~ @ $PROMPT = "{$LANG} >"
     en_US.utf8 >
 
 Note that some entries of the ``$PROMPT_FIELDS`` are not always applicable, for
@@ -1713,9 +1713,9 @@ But let's consider a problem:
 
 .. code-block:: console
 
-    snail@home ~/xonsh $ $PROMPT = "{cwd_base} [{curr_branch}] $ "
-    xonsh [main] $ cd ..
-    ~ [] $
+    snail@home ~/xonsh @ $PROMPT = "{cwd_base} [{curr_branch}] @ "
+    xonsh [main] @ cd ..
+    ~ [] @
 
 We want the branch to be displayed in square brackets, but we also don't want
 the brackets (and the extra space) to be displayed when there is no branch. The
@@ -1724,9 +1724,9 @@ invoked only if the value is not ``None``:
 
 .. code-block:: console
 
-    snail@home ~/xonsh $ $PROMPT = "{cwd_base}{curr_branch: [{}]} $ "
-    xonsh [main] $ cd ..
-    ~ $
+    snail@home ~/xonsh @ $PROMPT = "{cwd_base}{curr_branch: [{}]} @ "
+    xonsh [main] @ cd ..
+    ~ @
 
 The curly brackets act as a placeholder, because the additional part is an
 ordinary format string. What we're doing here is equivalent to this expression:
@@ -1746,7 +1746,7 @@ and exit, instead of entering the command loop.
 
 .. code-block:: console
 
-    $ xonsh -c "echo @(7+3)"
+    @ xonsh -c "echo @(7+3)"
     10
 
 Longer scripts can be run either by specifying a filename containing the script,
@@ -1776,7 +1776,7 @@ This script could be run by piping its contents to xonsh:
 
 .. code-block:: console
 
-    $ cat test.xsh | xonsh
+    @ cat test.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -1787,7 +1787,7 @@ or by invoking xonsh with its filename as an argument:
 
 .. code-block:: console
 
-    $ xonsh test.xsh
+    @ xonsh test.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -1829,7 +1829,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
 .. code-block:: console
 
-    $ xonsh test2.xsh snails
+    @ xonsh test2.xsh snails
     ['test_script.sh', 'snails']
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  test_script.sh
     removing files
@@ -1837,7 +1837,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     adding files
     file0.txt file1.txt file2.txt file3.txt file4.txt file5.txt test_script.sh
 
-    $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
+    @ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
 Additionally, if the script should exit if a command fails, set the

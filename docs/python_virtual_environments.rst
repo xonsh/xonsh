@@ -17,11 +17,11 @@ Vox
 
 First, load the vox xontrib::
 
-    $ xontrib load vox
+    @ xontrib load vox
 
 To create a new environment with vox, run ``vox new <envname>``::
 
-    $ vox new myenv
+    @ vox new myenv
     Creating environment...
     Environment "myenv" created. Activate it with "vox activate myenv".
 
@@ -29,7 +29,7 @@ The interpreter ``vox`` uses to create a virtualenv is configured via the ``$VOX
 
 You may also set the interpreter used to create the virtual environment by passing it explicitly to ``vox new`` i.e.::
 
-    $ vox new python2-env -p /usr/local/bin/python2
+    @ vox new python2-env -p /usr/local/bin/python2
 
 Under the hood, vox uses Python 3's ``venv`` module to create Python 3 virtualenvs. [this is the default]
 
@@ -39,7 +39,7 @@ By default, environments are stored in ``~/.virtualenvs``, but you can override 
 
 To see all existing environments, run ``vox list``::
 
-    $ vox list
+    @ vox list
     Available environments:
         eggs
         myenv
@@ -47,24 +47,24 @@ To see all existing environments, run ``vox list``::
 
 To activate an environment, run ``vox activate <envname>``::
 
-    $ vox activate myenv
+    @ vox activate myenv
     Activated "myenv".
 
 Instead of ``activate``, you can call ``workon`` or ``enter``.
 
 If you want to activate an environment which is stored somewhere else (maybe because it was created by another tool) you can pass to ``vox activate`` a path to a virtual environment::
 
-    $ vox activate /home/user/myenv
+    @ vox activate /home/user/myenv
     Activated "/home/user/myenv".
 
 To exit the currently active environment, run ``vox deactivate`` or ``vox exit``::
 
-    $ vox deactivate
+    @ vox deactivate
     Deactivated "myenv".
 
 To remove an environment, run ``vox remove <envname>``::
 
-    $ vox remove myenv
+    @ vox remove myenv
     Environment "myenv" removed.
 
 Instead of ``remove``, you can call ``rm``, ``delete``, or ``del``.
