@@ -36,6 +36,7 @@ Authors are sorted by number of commits.
 * Danny Sepler
 * Joel Gerber
 * vaaaaanquish
+* pre-commit-ci[bot]
 * Bernardas Ališauskas
 * David Dotson
 * Derek Thomas
@@ -54,8 +55,8 @@ Authors are sorted by number of commits.
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* pre-commit-ci[bot]
 * Stephan Fitzpatrick
+* Evgeny
 * dev2718
 * Will S
 * K.-Michael Aye
@@ -64,7 +65,6 @@ Authors are sorted by number of commits.
 * Oleh Prypin
 * Brian Skinn
 * Wendell Turner
-* Evgeny
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -137,6 +137,7 @@ Authors are sorted by number of commits.
 * yuqing
 * Rahiel Kasim
 * SanketDG
+* Mark Bestley
 * David
 * Danmou
 * Niklas Hambüchen
@@ -148,6 +149,7 @@ Authors are sorted by number of commits.
 * Jerzy Drozdz
 * omjadas
 * Jeremy Schlatter
+* Samuel Dion-Girardeau
 * Oliver Bestwalter
 * Stefano Rivera
 * Mark Wiebe
@@ -164,7 +166,6 @@ Authors are sorted by number of commits.
 * Nicolas Avrutin
 * Kevin Yokley
 * Ollie Ford
-* Mark Bestley
 * Michał Zając
 * Emre Ates
 * Romain Bignon
@@ -181,12 +182,13 @@ Authors are sorted by number of commits.
 * anki
 * Faris A Chugthai
 * Asaf Fisher
-* Samuel Dion-Girardeau
 * Gabriele N. Tornetta
 * cmidkiff87
+* doronz88
 * jbw3
 * Naveen
 * Blake Ramsdell
+* Ivan Ogasawara
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -292,7 +294,6 @@ Authors are sorted by number of commits.
 * Ganer
 * mattmc3
 * Evan Hubinger
-* doronz88
 * Italo Cunha
 * Timmy Welch
 * Hannes Römer
@@ -306,5 +307,9 @@ Authors are sorted by number of commits.
 * austin-yang
 * Marco Rubin
 * Qyriad
+* Tobias Becker
+* AkshayWarrier
+* Thomas Hess
+* kouhe3
 * goodboy
 * Atsushi Morimoto
