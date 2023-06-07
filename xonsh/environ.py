@@ -1634,7 +1634,9 @@ class PromptHistorySetting(Xettings):
         ensure_string,
         None,
         "Set a filter criteria for history items using a regular expression. "
-        "Any matching items will not be retained in the history.",
+        "Any matching items will not be retained in the history. "
+        "Example: ``$XONSH_HISTORY_IGNORE_REGEX = '(^echo|^.*\\#\\#\\#\\s*|.*\\#\\#\\#\\s*$)'``"
+        " - skip commands that start from ``echo`` or ``###``, or end from ``###``.",
     )
 
 
