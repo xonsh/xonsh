@@ -30,6 +30,7 @@ from token import (
     CIRCUMFLEX,
     CIRCUMFLEXEQUAL,
     COLON,
+    COLONEQUAL,
     COMMA,
     DEDENT,
     DOT,
@@ -83,9 +84,7 @@ from token import (
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 
-HAS_WALRUS = PYTHON_VERSION_INFO > (3, 8)
-if HAS_WALRUS:
-    from token import COLONEQUAL  # type:ignore
+HAS_WALRUS = True
 
 cookie_re = LazyObject(
     lambda: re.compile(r"^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)", re.ASCII),
