@@ -30,7 +30,7 @@ class _ParsedToken(tp.NamedTuple):
 
 
 class ParsedTokens(tp.NamedTuple):
-    tokens: tp.List[_ParsedToken]
+    tokens: list[_ParsedToken]
     template: tp.Union[str, tp.Callable]
 
     def process(self) -> str:

@@ -13,9 +13,9 @@ from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import get_sep
 
-DIRSTACK: tp.List[str] = []
+DIRSTACK: list[str] = []
 """A list containing the currently remembered directories."""
-_unc_tempDrives: tp.Dict[str, str] = {}
+_unc_tempDrives: dict[str, str] = {}
 """ drive: sharePath for temp drive letters we create for UNC mapping"""
 
 

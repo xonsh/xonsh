@@ -21,7 +21,7 @@ from xonsh.tools import backup_file, print_color, to_bool, to_bool_or_break
 class Node:
     """Base type of all nodes."""
 
-    attrs: tp.Union[tp.Tuple[str, ...], str] = ()
+    attrs: tp.Union[tuple[str, ...], str] = ()
 
     def __str__(self):
         return PrettyFormatter(self).visit()
@@ -81,7 +81,7 @@ class Question(Node):
 class Input(Node):
     """Gets input from the user."""
 
-    attrs: tp.Tuple[str, ...] = (
+    attrs: tuple[str, ...] = (
         "prompt",
         "converter",
         "show_conversion",
@@ -257,7 +257,7 @@ class StateFile(Input):
     given file name. This node type is likely not useful on its own.
     """
 
-    attrs: tp.Tuple[str, ...] = ("default_file", "check", "ask_filename")
+    attrs: tuple[str, ...] = ("default_file", "check", "ask_filename")
 
     def __init__(self, default_file=None, check=True, ask_filename=True):
         """

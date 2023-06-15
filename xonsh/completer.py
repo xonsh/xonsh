@@ -130,7 +130,7 @@ class Completer:
         completing_contextual_command: bool,
         lprefix: int,
         custom_lprefix: bool,
-    ) -> tp.Tuple[Completion, int]:
+    ) -> tuple[Completion, int]:
         if (
             completing_contextual_command
             and completion_context.command.is_after_closing_quote
@@ -171,7 +171,7 @@ class Completer:
     @staticmethod
     def generate_completions(
         completion_context, old_completer_args, trace: bool
-    ) -> tp.Iterator[tp.Tuple[Completion, int]]:
+    ) -> tp.Iterator[tuple[Completion, int]]:
         filter_func = get_filter_function()
 
         for name, func in XSH.completers.items():

@@ -188,10 +188,10 @@ def hasglobstar(x):
 
 
 def raise_parse_error(
-    msg: tp.Union[str, tp.Tuple[str]],
+    msg: tp.Union[str, tuple[str]],
     loc: tp.Optional[Location] = None,
     code: tp.Optional[str] = None,
-    lines: tp.Optional[tp.List[str]] = None,
+    lines: tp.Optional[list[str]] = None,
 ):
     err_line = None
     if loc is None or code is None or lines is None:

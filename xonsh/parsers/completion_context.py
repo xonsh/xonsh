@@ -7,12 +7,9 @@ import re
 from collections import defaultdict
 from typing import (
     Any,
-    Dict,
     Generic,
-    List,
     NamedTuple,
     Optional,
-    Tuple,
     TypeVar,
     Union,
     cast,
@@ -49,7 +46,7 @@ class CommandContext(NamedTuple):
     The object containing the current command's completion context.
     """
 
-    args: Tuple[CommandArg, ...]
+    args: tuple[CommandArg, ...]
     """The arguments in the command"""
     arg_index: int  # ``-1`` if the cursor isn't in the command.
     """The current argument's index"""
@@ -116,7 +113,7 @@ class PythonContext(NamedTuple):
     """The cursor's index in the multiline code"""
     is_sub_expression: bool = False
     """Whether this is a sub expression (``@(...)``)"""
-    ctx: Optional[Dict[str, Any]] = None
+    ctx: Optional[dict[str, Any]] = None
     """Objects in the current execution context"""
 
     def __repr__(self):
@@ -145,7 +142,7 @@ class CompletionContext(NamedTuple):
     This will be ``None`` when we can't be completing python, e.g. ``echo $(<TAB>``.
     """
 
-    def with_ctx(self, ctx: Dict[str, Any]) -> "CompletionContext":
+    def with_ctx(self, ctx: dict[str, Any]) -> "CompletionContext":
         if self.python is not None:
             return self._replace(python=self.python._replace(ctx=ctx))
         return self
@@ -256,7 +253,7 @@ class Spanned(Generic[T]):
         )
 
 
-Commands = Spanned[List[Spanned[CommandContext]]]
+Commands = Spanned[list[Spanned[CommandContext]]]
 ArgContext = Union[Spanned[CommandContext], Commands, Spanned[PythonContext]]
 
 ExpandableObject = Union[Spanned[CommandArg], ArgContext]
@@ -376,7 +373,7 @@ class CompletionContextParser:
         self,
         multiline_text: str,
         cursor_index: int,
-        ctx: Optional[Dict[str, Any]] = None,
+        ctx: Optional[dict[str, Any]] = None,
     ) -> Optional[CompletionContext]:
         """Returns a CompletionContext from a command line.
 
@@ -535,7 +532,7 @@ class CompletionContextParser:
         |
         """
         if len(p) == 2:
-            spanned_args: List[Spanned[CommandArg]] = p[1]
+            spanned_args: list[Spanned[CommandArg]] = p[1]
             span = slice(spanned_args[0].span.start, spanned_args[-1].span.stop)
         else:
             # empty command
@@ -722,7 +719,7 @@ class CompletionContextParser:
 
     def p_args_many(self, p):
         """args : args arg"""
-        args: List[Spanned[CommandArg]] = p[1]
+        args: list[Spanned[CommandArg]] = p[1]
         new_arg: Spanned[CommandArg] = p[2]
         last_arg: Spanned[CommandArg] = args[-1]
 
@@ -990,7 +987,7 @@ class CompletionContextParser:
 
     def handle_command_arg(
         self, arg: Spanned[CommandArg]
-    ) -> Tuple[CommandContext, Optional[Union[CommandContext, PythonContext]]]:
+    ) -> tuple[CommandContext, Optional[Union[CommandContext, PythonContext]]]:
         """Create a command context from an arg which contains the cursor.
         Also return the internal cursor context if it exists.
         `args`, `arg_index`, and `subcmd_opening` aren't set by this function
@@ -1105,7 +1102,7 @@ class CompletionContextParser:
 
     def process_string_segment(
         self, string: str, span: slice
-    ) -> Tuple[str, Optional[int]]:
+    ) -> tuple[str, Optional[int]]:
         """Process a string segment:
         1. Return a relative_cursor if it's inside the span (for ``Spanned.cursor_context``).
         2. Handle line continuations in the string.

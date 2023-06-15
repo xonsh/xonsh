@@ -117,7 +117,7 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isdir(p):
                     yield p
 
-    def _check_changes(self, paths: tp.Tuple[str, ...]):
+    def _check_changes(self, paths: tuple[str, ...]):
         # did PATH change?
         yield self._update_paths_cache(paths)
 

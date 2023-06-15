@@ -409,7 +409,7 @@ def _new_token(type, value, pos):
 class Lexer:
     """Implements a lexer for the xonsh language."""
 
-    _tokens: tp.Optional[tp.Tuple[str, ...]] = None
+    _tokens: tp.Optional[tuple[str, ...]] = None
 
     def __init__(self, tolerant=False):
         """

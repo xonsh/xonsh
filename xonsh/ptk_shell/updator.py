@@ -70,9 +70,9 @@ class AsyncPrompt:
         self.executor = executor
 
         # (Key: the future object) that is created for the (value: index/field_name) in the tokens list
-        self.futures: tp.Dict[
+        self.futures: dict[
             concurrent.futures.Future,
-            tp.Tuple[str, tp.Optional[int], tp.Optional[str], tp.Optional[str]],
+            tuple[str, tp.Optional[int], tp.Optional[str], tp.Optional[str]],
         ] = {}
 
     def start_update(self, on_complete):
@@ -160,7 +160,7 @@ class PromptUpdator:
     def __init__(self, shell):
         from xonsh.ptk_shell.shell import PromptToolkitShell
 
-        self.prompts: tp.Dict[str, AsyncPrompt] = {}
+        self.prompts: dict[str, AsyncPrompt] = {}
         self.shell: PromptToolkitShell = shell
         self.executor = Executor()
         self.futures = {}

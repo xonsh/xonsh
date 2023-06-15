@@ -2,7 +2,6 @@ import os
 import subprocess as sp
 import textwrap
 from pathlib import Path
-from typing import Dict, List
 from unittest.mock import Mock
 
 import pytest
@@ -15,7 +14,7 @@ VC_BRANCH = {
     "hg": {"default"},
     "fossil": {"trunk"},
 }
-VC_INIT: Dict[str, List[List[str]]] = {
+VC_INIT: dict[str, list[list[str]]] = {
     # A sequence of commands required to initialize a repository
     "git": [["init"]],
     "hg": [["init"]],

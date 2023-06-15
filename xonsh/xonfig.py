@@ -138,7 +138,7 @@ WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
 
 
-_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND: tp.Dict[str, str] = collections.defaultdict(
+_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND: dict[str, str] = collections.defaultdict(
     lambda: "source-foreign", bash="source-bash", cmd="source-cmd", zsh="source-zsh"
 )
 
@@ -363,7 +363,7 @@ def _xontrib_path(visitor=None, node=None, val=None):
     return ("xontribs", len(visitor.state.get("xontribs", ())))
 
 
-def make_xontrib(xon_item: tp.Tuple[str, Xontrib]):
+def make_xontrib(xon_item: tuple[str, Xontrib]):
     """Makes a message and StoreNonEmpty node for a xontrib."""
     name, xontrib = xon_item
     name = name or "<unknown-xontrib-name>"
@@ -526,7 +526,7 @@ def _info(
         reports results as json
     """
     env = XSH.env
-    data: tp.List[tp.Any] = [("xonsh", XONSH_VERSION)]
+    data: list[tp.Any] = [("xonsh", XONSH_VERSION)]
     hash_, date_ = githash()
     if hash_:
         data.append(("Git SHA", hash_))

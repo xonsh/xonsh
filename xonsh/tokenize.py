@@ -186,7 +186,7 @@ for v in _xonsh_tokens.values():
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES: tp.Dict[str, tp.Union[str, int]] = {
+EXACT_TOKEN_TYPES: dict[str, tp.Union[str, int]] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,
