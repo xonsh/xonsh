@@ -71,14 +71,12 @@ from ast import (
     Module,
     Mult,
     Name,
-    NameConstant,
     NamedExpr,
     NodeTransformer,
     Nonlocal,
     Not,
     NotEq,
     NotIn,
-    Num,
     Or,
     Pass,
     Pow,
@@ -112,7 +110,6 @@ from ast import (
     walk,
     withitem,
 )
-from ast import Ellipsis as EllipsisNode
 
 from xonsh.built_ins import XSH
 from xonsh.tools import find_next_break, get_logical_line, subproc_toks
@@ -157,6 +154,22 @@ def const_bytes(s: str, **kwargs):
 
 def is_const_bytes(node):
     return isinstance(node, Constant) and node.kind == "bytes"
+
+
+def const_num(n, **kwargs):
+    return Constant(value=n, kind="num", **kwargs)
+
+
+def is_const_num(node):
+    return isinstance(node, Constant) and node.kind == "num"
+
+
+def const_name(value, **kwargs):
+    return Constant(value=value, kind="name", **kwargs)
+
+
+def is_const_name(node):
+    return isinstance(node, Constant) and node.kind == "name"
 
 
 def leftmostname(node):
@@ -682,7 +695,7 @@ def _getblockattr(name, lineno, col):
         args=[
             Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
             const_str(s="__xonsh_block__", lineno=lineno, col_offset=col),
-            NameConstant(value=False, lineno=lineno, col_offset=col),
+            const_name(value=False, lineno=lineno, col_offset=col),
         ],
         lineno=lineno,
         col=col,

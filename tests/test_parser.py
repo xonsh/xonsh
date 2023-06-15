@@ -2955,7 +2955,7 @@ def test_withbang_single_suite(body, check_xonsh_ast):
     assert isinstance(wither.body[0], Pass)
     assert len(wither.items) == 1
     item = wither.items[0]
-    s = item.context_expr.args[1].s
+    s = item.context_expr.args[1].value
     assert s == body
 
 
@@ -2971,7 +2971,7 @@ def test_withbang_as_single_suite(body, check_xonsh_ast):
     assert len(wither.items) == 1
     item = wither.items[0]
     assert item.optional_vars.id == "y"
-    s = item.context_expr.args[1].s
+    s = item.context_expr.args[1].value
     assert s == body
 
 
@@ -2993,7 +2993,7 @@ def test_withbang_single_suite_trailing(body, check_xonsh_ast):
     assert isinstance(wither.body[0], Pass)
     assert len(wither.items) == 1
     item = wither.items[0]
-    s = item.context_expr.args[1].s
+    s = item.context_expr.args[1].value
     assert s == body + "\n"
 
 
@@ -3016,7 +3016,7 @@ def test_withbang_single_simple(body, check_xonsh_ast):
     assert isinstance(wither.body[0], Pass)
     assert len(wither.items) == 1
     item = wither.items[0]
-    s = item.context_expr.args[1].s
+    s = item.context_expr.args[1].value
     assert s == body
 
 
@@ -3032,7 +3032,7 @@ def test_withbang_single_simple_opt(body, check_xonsh_ast):
     assert len(wither.items) == 1
     item = wither.items[0]
     assert item.optional_vars.id == "y"
-    s = item.context_expr.args[1].s
+    s = item.context_expr.args[1].value
     assert s == body
 
 
@@ -3050,7 +3050,7 @@ def test_withbang_as_many_suite(body, check_xonsh_ast):
     for i, targ in enumerate("abc"):
         item = wither.items[i]
         assert item.optional_vars.id == targ
-        s = item.context_expr.args[1].s
+        s = item.context_expr.args[1].value
         assert s == body
 
 

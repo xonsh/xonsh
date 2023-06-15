@@ -636,7 +636,7 @@ class BaseParser:
     def xonsh_pathsearch(self, pattern, pymode=False, lineno=None, col=None):
         """Creates the AST node for calling the __xonsh__.pathsearch() function.
         The pymode argument indicate if it is called from subproc or python mode"""
-        pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
+        pymode = ast.const_name(value=pymode, lineno=lineno, col_offset=col)
         searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
         if not searchfunc.startswith("@") and "f" in searchfunc:
             pattern_as_str = f"f'''{pattern}'''"
@@ -663,7 +663,7 @@ class BaseParser:
             func = "__xonsh__.regexsearch"
             pathobj = "p" in searchfunc
         func = load_attribute_chain(func, lineno=lineno, col=col)
-        pathobj = ast.NameConstant(value=pathobj, lineno=lineno, col_offset=col)
+        pathobj = ast.const_name(value=pathobj, lineno=lineno, col_offset=col)
         return xonsh_call(
             "__xonsh__.pathsearch",
             args=[func, pattern, pymode, pathobj],
@@ -2407,22 +2407,22 @@ class BaseParser:
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""
         p1 = p[1]
-        p[0] = ast.EllipsisNode(lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.Constant(value=..., lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_none(self, p):
         """atom : none_tok"""
         p1 = p[1]
-        p[0] = ast.NameConstant(value=None, lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.const_name(value=None, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_true(self, p):
         """atom : true_tok"""
         p1 = p[1]
-        p[0] = ast.NameConstant(value=True, lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.const_name(value=True, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_false(self, p):
         """atom : false_tok"""
         p1 = p[1]
-        p[0] = ast.NameConstant(value=False, lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.const_name(value=False, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_pathsearch(self, p):
         """atom : SEARCHPATH"""
@@ -2654,7 +2654,7 @@ class BaseParser:
     def p_number(self, p):
         """number : number_tok"""
         p1 = p[1]
-        p[0] = ast.Num(
+        p[0] = ast.const_num(
             n=ast.literal_eval(p1.value.replace("_", "")),
             lineno=p1.lineno,
             col_offset=p1.lexpos,
@@ -3254,7 +3254,7 @@ class BaseParser:
                 | subproc pipe subproc_atoms WS
         """
         p1 = p[1]
-        if len(p1) > 1 and hasattr(p1[-2], "s") and p1[-2].s != "|":
+        if len(p1) > 1 and hasattr(p1[-2], "value") and p1[-2].value != "|":
             self._set_error("additional redirect following non-pipe redirect")
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
         p[0] = p1 + [p[2], cliargs]
@@ -3493,7 +3493,9 @@ class BaseParser:
         p1 = p[1]
         p2 = p[2]
         if ast.is_const_str(p1) and ast.is_const_str(p2):
-            p0 = ast.const_str(p1.s + p2.s, lineno=p1.lineno, col_offset=p1.col_offset)
+            p0 = ast.const_str(
+                p1.value + p2.value, lineno=p1.lineno, col_offset=p1.col_offset
+            )
         elif isinstance(p1, list):
             if isinstance(p2, list):
                 p1.extend(p2)

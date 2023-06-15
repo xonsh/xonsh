@@ -163,8 +163,8 @@ class FStringAdaptor:
                         col_offset=col_offset,
                     )
                     node.args[0] = field_node
-            elif isinstance(node.args[0], ast.Num):
-                field = self.fields.pop(node.args[0].n, None)
+            elif ast.is_const_num(node.args[0]):
+                field = self.fields.pop(node.args[0].value, None)
                 if field is None:
                     continue
                 lineno = node.args[0].lineno
@@ -176,9 +176,7 @@ class FStringAdaptor:
                     )
                 else:
                     elts.append(
-                        ast.NameConstant(
-                            value=None, lineno=lineno, col_offset=col_offset
-                        )
+                        ast.const_name(value=None, lineno=lineno, col_offset=col_offset)
                     )
                 field_node = ast.Tuple(
                     elts=elts, ctx=ast.Load(), lineno=lineno, col_offset=col_offset
