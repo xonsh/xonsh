@@ -5,7 +5,7 @@ import textwrap
 
 import pytest
 
-from xonsh.ast import AST, Call, Pass, Str, With
+from xonsh.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parser import Parser
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
@@ -2795,7 +2795,7 @@ def test_macro_call_one_arg(check_xonsh_ast, s):
     assert isinstance(tree, AST)
     args = tree.body.args[1].elts
     assert len(args) == 1
-    assert args[0].s == s.strip()
+    assert args[0].value == s.strip()
 
 
 @pytest.mark.parametrize("s,t", itertools.product(MACRO_ARGS[::2], MACRO_ARGS[1::2]))
@@ -2805,8 +2805,8 @@ def test_macro_call_two_args(check_xonsh_ast, s, t):
     assert isinstance(tree, AST)
     args = tree.body.args[1].elts
     assert len(args) == 2
-    assert args[0].s == s.strip()
-    assert args[1].s == t.strip()
+    assert args[0].value == s.strip()
+    assert args[1].value == t.strip()
 
 
 @pytest.mark.parametrize(
@@ -2818,9 +2818,9 @@ def test_macro_call_three_args(check_xonsh_ast, s, t, u):
     assert isinstance(tree, AST)
     args = tree.body.args[1].elts
     assert len(args) == 3
-    assert args[0].s == s.strip()
-    assert args[1].s == t.strip()
-    assert args[2].s == u.strip()
+    assert args[0].value == s.strip()
+    assert args[1].value == t.strip()
+    assert args[2].value == u.strip()
 
 
 @pytest.mark.parametrize("s", MACRO_ARGS)
@@ -2830,7 +2830,7 @@ def test_macro_call_one_trailing(check_xonsh_ast, s):
     assert isinstance(tree, AST)
     args = tree.body.args[1].elts
     assert len(args) == 1
-    assert args[0].s == s.strip()
+    assert args[0].value == s.strip()
 
 
 @pytest.mark.parametrize("s", MACRO_ARGS)
@@ -2840,7 +2840,7 @@ def test_macro_call_one_trailing_space(check_xonsh_ast, s):
     assert isinstance(tree, AST)
     args = tree.body.args[1].elts
     assert len(args) == 1
-    assert args[0].s == s.strip()
+    assert args[0].value == s.strip()
 
 
 SUBPROC_MACRO_OC = [("!(", ")"), ("$(", ")"), ("![", "]"), ("$[", "]")]
@@ -2853,7 +2853,7 @@ def test_empty_subprocbang(opener, closer, body, check_xonsh_ast):
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts
     assert len(cmd) == 2
-    assert cmd[1].s == ""
+    assert cmd[1].value == ""
 
 
 @pytest.mark.parametrize("opener, closer", SUBPROC_MACRO_OC)
@@ -2863,7 +2863,7 @@ def test_single_subprocbang(opener, closer, body, check_xonsh_ast):
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts
     assert len(cmd) == 2
-    assert cmd[1].s == "x"
+    assert cmd[1].value == "x"
 
 
 @pytest.mark.parametrize("opener, closer", SUBPROC_MACRO_OC)
@@ -2875,7 +2875,7 @@ def test_arg_single_subprocbang(opener, closer, body, check_xonsh_ast):
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts
     assert len(cmd) == 3
-    assert cmd[2].s == "x"
+    assert cmd[2].value == "x"
 
 
 @pytest.mark.parametrize("opener, closer", SUBPROC_MACRO_OC)
@@ -2890,7 +2890,7 @@ def test_arg_single_subprocbang_nested(
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts
     assert len(cmd) == 3
-    assert cmd[2].s == "x"
+    assert cmd[2].value == "x"
 
 
 @pytest.mark.parametrize("opener, closer", SUBPROC_MACRO_OC)
@@ -2921,7 +2921,7 @@ def test_many_subprocbang(opener, closer, body, check_xonsh_ast):
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts
     assert len(cmd) == 2
-    assert cmd[1].s == body.partition("!")[-1].strip()
+    assert cmd[1].value == body.partition("!")[-1].strip()
 
 
 WITH_BANG_RAWSUITES = [
@@ -3064,8 +3064,8 @@ def test_subproc_raw_str_literal(check_xonsh_ast):
     tree = check_xonsh_ast({}, "!(echo r'$foo')", run=False, return_obs=True)
     assert isinstance(tree, AST)
     subproc = tree.body
-    assert isinstance(subproc.args[0].elts[1], Str)
-    assert subproc.args[0].elts[1].s == "$foo"
+    assert is_const_str(subproc.args[0].elts[1])
+    assert subproc.args[0].elts[1].value == "$foo"
 
 
 # test invalid expressions

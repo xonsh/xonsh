@@ -87,8 +87,8 @@ class FStringAdaptor:
         for node in ast.walk(self.res):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 value = node.value
-            elif isinstance(node, ast.Str):
-                value = node.s
+            elif ast.is_const_str(node):
+                value = node.value
             else:
                 continue
 
@@ -110,8 +110,8 @@ class FStringAdaptor:
         for node in ast.walk(self.res):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 value = node.value
-            elif isinstance(node, ast.Str):
-                value = node.s
+            elif ast.is_const_str(node):
+                value = node.value
             else:
                 continue
 
@@ -122,8 +122,9 @@ class FStringAdaptor:
             if field is None:
                 continue
             value = value.replace(match.group(1), field[0], 1)
-            if isinstance(node, ast.Str):
-                node.s = value
+
+            if ast.is_const_str(node):
+                node.value = value
             else:
                 node.value = value
 
@@ -168,10 +169,10 @@ class FStringAdaptor:
                     continue
                 lineno = node.args[0].lineno
                 col_offset = node.args[0].col_offset
-                elts = [ast.Str(s=field[0], lineno=lineno, col_offset=col_offset)]
+                elts = [ast.const_str(s=field[0], lineno=lineno, col_offset=col_offset)]
                 if field[1] is not None:
                     elts.append(
-                        ast.Str(s=field[1], lineno=lineno, col_offset=col_offset)
+                        ast.const_str(s=field[1], lineno=lineno, col_offset=col_offset)
                     )
                 else:
                     elts.append(
