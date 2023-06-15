@@ -168,6 +168,8 @@ def test_string_literal_concat(first_prefix, second_prefix, check_ast):
 
 
 def test_f_env_var(check_xonsh_ast):
+    if VER_MAJOR_MINOR > (3, 11):
+        pytest.xfail("f-string with special syntax are not supported yet")
     check_xonsh_ast({}, 'f"{$HOME}"', run=False)
     check_xonsh_ast({}, "f'{$XONSH_DEBUG}'", run=False)
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
@@ -201,13 +203,14 @@ bar"""''',
 bar"""''',
         "foo\n_/foo/bar_\nbar",
     ),
+    ("f'{$HOME=}'", "$HOME='/foo/bar'"),
 ]
-if VER_MAJOR_MINOR >= (3, 8):
-    fstring_adaptor_parameters.append(("f'{$HOME=}'", "$HOME='/foo/bar'"))
 
 
 @pytest.mark.parametrize("inp, exp", fstring_adaptor_parameters)
 def test_fstring_adaptor(inp, exp, xsh, monkeypatch):
+    if VER_MAJOR_MINOR > (3, 11):
+        pytest.xfail("f-string with special syntax are not supported yet")
     joined_str_node = FStringAdaptor(inp, "f").run()
     assert isinstance(joined_str_node, ast.JoinedStr)
     node = ast.Expression(body=joined_str_node)

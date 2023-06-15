@@ -9,17 +9,12 @@ from xonsh.platform import PYTHON_VERSION_INFO
 
 @lazyobject
 def RE_FSTR_FIELD_WRAPPER():
-    if PYTHON_VERSION_INFO > (3, 8):
-        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))\s*[^=]")
-    else:
-        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))")
+    return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))\s*[^=]")
 
 
-if PYTHON_VERSION_INFO > (3, 8):
-
-    @lazyobject
-    def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
-        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\)\s*)=")
+@lazyobject
+def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
+    return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\)\s*)=")
 
 
 class FStringAdaptor:
@@ -64,12 +59,19 @@ class FStringAdaptor:
             except SyntaxError as e:
                 # The e.text attribute is expected to contain the failing
                 # expression, e.g. "($HOME)" for f"{$HOME}" string.
-                if e.text is None or e.text[0] != "(":
-                    raise
-                error_expr = e.text.strip()[1:-1]
-                epos = template.find(error_expr)
-                if epos < 0:
-                    raise
+                if PYTHON_VERSION_INFO < (3, 12):
+                    if (e.text is None) or (e.text[0] != "("):
+                        raise
+
+                    error_expr = e.text.strip()[1:-1]
+                    epos = template.find(error_expr)
+                    if epos < 0:
+                        raise
+                else:
+                    # Python 3.12+ reports the error differently.
+                    # todo: implement a better way to get the error expression
+                    raise RuntimeError("Unsupported fstring syntax") from e
+
             # We can olny get here in the case of handled SyntaxError.
             # Patch the last error and start over.
             xonsh_field = (error_expr, self.filename if self.filename else None)
