@@ -12,35 +12,10 @@ import os
 import sys
 import typing as tp
 from collections import defaultdict
+from typing import Annotated
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
-
-TYPING_ANNOTATED_AVAILABLE = False
-"""One can import ``Annotated`` from this module
-which adds a stub when it is not available in ``typing``/``typing_extensions`` modules."""
-
-try:
-    from typing import Annotated  # noqa
-
-    TYPING_ANNOTATED_AVAILABLE = True
-except ImportError:
-    try:
-        from typing import Annotated  # type: ignore
-
-        TYPING_ANNOTATED_AVAILABLE = True
-    except ImportError:
-        T = tp.TypeVar("T")  # Declare type variable
-
-        class _AnnotatedMeta(type):
-            def __getitem__(self, item: tuple[T, tp.Any]) -> T:
-                if tp.TYPE_CHECKING:
-                    return item[0]
-
-                return item[1]
-
-        class Annotated(metaclass=_AnnotatedMeta):  # type: ignore
-            pass
 
 
 class ArgCompleter:
