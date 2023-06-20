@@ -634,5 +634,6 @@ def setup(
     XSH.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
-    tp = XSH.commands_cache.threadable_predictors
-    tp.update(threadable_predictors)
+
+    if threadable_predictors:
+        XSH.commands_cache.threadable_predictors.update(threadable_predictors)
