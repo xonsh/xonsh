@@ -3,7 +3,7 @@
 {
 	"name": "Python 3",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/python:0-3.11",
+	"image": "mcr.microsoft.com/devcontainers/python:0-3.10",
 	// "features": {
 	// 	"ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
 	// },
@@ -19,10 +19,13 @@
 			"settings": {
 				"python.defaultInterpreterPath": "/usr/local/bin/python",
 				"editor.inlineSuggest.enabled": true,
-				"python.formatting.provider": "black",
 				"python.linting.mypyEnabled": true,
 				"python.testing.pytestEnabled": true,
-				"editor.formatOnSave": true
+				"editor.formatOnSave": true,
+				"[python]": {
+					"editor.defaultFormatter": "ms-python.black-formatter"
+				},
+				"python.formatting.provider": "none"
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
