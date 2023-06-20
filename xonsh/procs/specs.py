@@ -180,12 +180,12 @@ def safe_open(fname, mode, buffering=-1):
     # file descriptors
     try:
         return open(fname, mode, buffering=buffering)
-    except PermissionError:
-        raise xt.XonshError(f"xonsh: {fname}: permission denied")
-    except FileNotFoundError:
-        raise xt.XonshError(f"xonsh: {fname}: no such file or directory")
-    except Exception:
-        raise xt.XonshError(f"xonsh: {fname}: unable to open file")
+    except PermissionError as ex:
+        raise xt.XonshError(f"xonsh: {fname}: permission denied") from ex
+    except FileNotFoundError as ex:
+        raise xt.XonshError(f"xonsh: {fname}: no such file or directory") from ex
+    except Exception as ex:
+        raise xt.XonshError(f"xonsh: {fname}: unable to open file") from ex
 
 
 def safe_close(x):
@@ -471,10 +471,10 @@ class SubprocSpec:
             else:
                 cmd = self.cmd
             p = self.cls(cmd, bufsize=bufsize, **kwargs)
-        except PermissionError:
+        except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
-            raise xt.XonshError(e.format(self.cmd[0]))
-        except FileNotFoundError:
+            raise xt.XonshError(e.format(self.cmd[0])) from ex
+        except FileNotFoundError as ex:
             cmd0 = self.cmd[0]
             if len(self.cmd) == 1 and cmd0.endswith("?"):
                 with contextlib.suppress(OSError):
@@ -489,7 +489,7 @@ class SubprocSpec:
             if XSH.env.get("XONSH_INTERACTIVE"):
                 events = XSH.builtins.events
                 events.on_command_not_found.fire(cmd=self.cmd)
-            raise xt.XonshError(e)
+            raise xt.XonshError(e) from ex
         return p
 
     def prep_env_subproc(self, kwargs):
@@ -668,9 +668,9 @@ class SubprocSpec:
             scriptcmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
             if scriptcmd is not None:
                 self.cmd = scriptcmd
-        except PermissionError:
+        except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
-            raise xt.XonshError(e.format(self.cmd[0]))
+            raise xt.XonshError(e.format(self.cmd[0])) from ex
 
     def resolve_alias_cls(self):
         """Determine which proxy class to run an alias with."""

@@ -45,7 +45,7 @@ On macOS, it is *strongly* recommended to install the ``gnureadline`` library if
 
 .. code-block:: console
 
-    $ pip3 install gnureadline
+    @ pip3 install gnureadline
 
 Path Helper
 ^^^^^^^^^^^
@@ -84,7 +84,7 @@ Common packaging systems for macOS include
 
     .. code-block:: console
 
-       $ brew install bash-completion2
+       @ brew install bash-completion2
 
     This will install the bash_completion file in `/usr/local/share/bash-completion/bash_completion` which is in the current xonsh code and so should just work.
 
@@ -92,7 +92,7 @@ Common packaging systems for macOS include
 
    .. code-block:: console
 
-    $ sudo port install bash-completion
+    @ sudo port install bash-completion
 
 
 
@@ -100,7 +100,7 @@ Common packaging systems for macOS include
 
    .. code-block:: console
 
-    $ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
+    @ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
 
 Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script to be called as in .../profile.d/bash_completion.sh which will the call the script mentioned above and one in $XDG_CONFIG_HOME . Currently xonsh seems only to be able to read the first script directly.
 
@@ -196,6 +196,10 @@ The :ref:`free_cwd <free_cwd>` xontrib (add-on) for xonsh solves some of this pr
 works by hooking the prompt to reset the current working directory to the root
 drive folder whenever the shell is idle. It only works with the prompt-toolkit
 back-end. To enable that behaviour run the following:
+
+.. code-block:: xonshcon
+
+   >>> xpip install xontrib-free-cwd
 
 Add this line to your ``~/.xonshrc`` file to have it always enabled.
 

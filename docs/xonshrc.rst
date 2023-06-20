@@ -63,7 +63,7 @@ in a question-and-answer format:
 
 .. code-block:: xonshcon
 
-    $ xonfig wizard
+    @ xonfig wizard
 
               Welcome to the xonsh configuration wizard!
               ------------------------------------------
@@ -72,7 +72,7 @@ in a question-and-answer format:
     wizard if the configuration file does not exist. However, you can
     always rerun this wizard with the xonfig command:
 
-        $ xonfig wizard
+        @ xonfig wizard
 
     This wizard will load an existing configuration, if it is available.
     Also never fear when this wizard saves its results! It will create

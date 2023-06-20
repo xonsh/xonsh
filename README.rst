@@ -8,7 +8,7 @@ xonsh
     The language is a superset of Python 3.6+ with additional shell primitives.
     xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
 
-    .. image:: https://raw.githubusercontent.com/xonsh/xonsh/main/docs/_static/xonsh5.png
+    .. image:: https://raw.githubusercontent.com/xonsh/xonsh/main/docs/_static/what_is_xonsh.png
             :alt: What is xonsh?
             :align: center
 
@@ -19,10 +19,6 @@ xonsh
     .. image:: https://badges.gitter.im/xonsh/xonsh.svg
             :target: https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
             :alt: Join the chat at https://gitter.im/xonsh/xonsh
-
-    .. image:: https://img.shields.io/badge/%23xonsh%3Afeneas.org-Matrix-green
-            :target: https://matrix.to/#/#xonsh:feneas.org
-            :alt: Matrix room: #xonsh:feneas.org
 
     .. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=main
             :target: https://travis-ci.org/xonsh/xonsh
@@ -38,6 +34,9 @@ xonsh
     .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graphs/badge.svg?branch=main
             :target: https://codecov.io/github/xonsh/xonsh?branch=main
             :alt: codecov.io
+    .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
+            :target: https://repology.org/project/xonsh/versions
+            :alt: repology.org
 
 First steps
 ***********
@@ -55,23 +54,38 @@ And visit https://xon.sh for more information:
 
 Extensions
 **********
-- `Core extensions (xontribs) <https://xon.sh/api/_autosummary/xontribs/xontrib.html>`_
-- `External extensions on Github <https://github.com/topics/xontrib>`_
-- `List of awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
+
+Xonsh has the certain term for extensions and additional materials - xontrib - the short version of "contribution" word.
+
+- `Xontribs on Github <https://github.com/topics/xontrib>`_
+- `Awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
+- `Core xontribs <https://xon.sh/api/_autosummary/xontribs/xontrib.html>`_
 - `Create a xontrib step by step from template <https://github.com/xonsh/xontrib-template>`_
 
-Projects that use xonsh
-***********************
+Projects that use xonsh or compatible
+*************************************
 
-- `gitsome <https://github.com/donnemartin/gitsome>`_: A supercharged Git/shell autocompleter with GitHub integration.
-- `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the ssh.
+- `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
+- `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the SSH.
 - `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
 - `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
 
+Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
+
+- `jupyter and jupyterlab <https://jupyter.org/>`_: Interactive notebook platform.
+- `euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
 
 The xonsh shell community
 *************************
 
-The xonsh shell is developed by a community of volunteers and has no organization that can get grants, donations or additional support. There are two major ways to help the xonsh shell: to spread the good word about xonsh in the world (`write a tweet`_) and to help improve the xonsh shell (`solve a popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_ or a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_). We welcome new contributors!
+The xonsh shell is developed by a community of volunteers and has no organization that can get grants, donations or additional support. There are few ways to help the xonsh shell:
+
+- `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
+- Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_.
+- Solve a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_.
+- Get the `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
+- Become xonsh core by deep diving into xonsh and improve the threading and subprocess logic.
+
+We welcome new contributors!
 
 .. _write a tweet: https://twitter.com/intent/tweet?text=xonsh%20is%20a%20Python-powered,%20cross-platform,%20Unix-gazing%20shell%20language%20and%20command%20prompt.&url=https://github.com/xonsh/xonsh

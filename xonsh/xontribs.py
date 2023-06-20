@@ -302,6 +302,7 @@ def xontrib_data():
             "name": xo_name,
             "loaded": xontrib.is_loaded,
             "auto": xontrib.is_auto_loaded,
+            "module": xontrib.module,
         }
 
     return dict(sorted(data.items()))

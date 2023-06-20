@@ -78,7 +78,7 @@ class History:
         self.hist_size = None
         self.hist_units = None
         self.remember_history = True
-        self.ignore_regex  # Tap the ignore regex to validate it
+        self.ignore_regex  # Tap the ignore regex to validate it # noqa
 
     def __len__(self):
         """Return the number of items in current session."""

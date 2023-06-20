@@ -205,7 +205,7 @@ def ansi_color_style(style="default"):
         cmap = ANSI_STYLES[style]
     else:
         msg = f"Could not find color style {style!r}, using default."
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         cmap = ANSI_STYLES["default"]
     return cmap
 
@@ -297,7 +297,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
         msg = 'Invalid ANSI color sequence "{}", using "RESET" instead.'.format(
             escape_code
         )
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return ("RESET",)
     ec = match.group(2)
     names = []

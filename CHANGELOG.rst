@@ -4,6 +4,62 @@ Xonsh Change Log
 
 .. current developments
 
+v0.14.0
+====================
+
+**Added:**
+
+* key_bindings: map `escape-f` as another word completer for macOS
+* Added ``history pull`` command to SQLite history backend to pull the history from parallel sessions and add to the current session.
+* Add support for `Semantic Prompt <https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md>`_ for line continuations in multiline prompts via two environment variables: ``$MULTILINE_PROMPT_PRE`` (e.g., ``\x01\x1b]133;P;k=c\x07\x02``), and ``$MULTILINE_PROMPT_POS`` (e.g., ``\x01\x1b]133;B\x07\x02``) that are inserted before/after each continuation line 'dots' block to mark input
+* Wheels for Python 3.11 are part of the automated release action
+* Added ``chdir`` to ``xonsh.tools``. This allows to use ``with chdir("dir"):`` to run commands block in the certain directory without manually cd-ing.
+* Display the current branch of Fossil VCS checkouts in the prompt,
+  similar to git and hg.
+* Added link to xonsh on Mastodon - https://mastodon.online/@xonsh
+* xontrib load: added option ``-s`` to skip warning about not installed xontribs.
+
+**Changed:**
+
+* Altered documentation for xonshrc to remove Python REPL prompts so that you can copy the code without having to edit it.
+* xonsh AppImage - bumped python to 3.11
+* The prompt end character switched to ``@``.
+* The `command not found` error will show the ``repr(cmd)`` to uncover the cases when the command name has ``\n``, ``\t`` or not visible color codes and raises the error.
+* ``abbrevs`` xontrib transferred to `xontrib-abbrevs <https://github.com/xonsh/xontrib-abbrevs>`_.
+* ``bashisms`` xontrib transferred to `xontrib-bashisms <https://github.com/xonsh/xontrib-bashisms>`_.
+* ``free_cwd`` xontrib transferred to `xontrib-free-cwd <https://github.com/xonsh/xontrib-free-cwd>`_.
+* ``whole_word_jumping`` xontrib transferred to `xontrib-whole-word-jumping <https://github.com/xonsh/xontrib-whole-word-jumping>`_.
+* ``fish_completer`` xontrib transferred to `xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_.
+* ``vox``, ``autovox``, ``voxapi`` xontribs transferred to `xontrib-vox <https://github.com/xonsh/xontrib-vox>`_.
+* ``pdb``, ``xog`` xontribs transferred to `xontrib-debug-tools <https://github.com/xonsh/xontrib-debug-tools>`_.
+
+**Fixed:**
+
+* Fixed xpip alias for xonsh AppImage.
+* Fixed missing ``webconfig/js/xonsh_sticker.svg`` in ``xonfig web``.
+* update load_xontrib pytest fixture to handle auto-loaded xontribs
+* Suppress subprocess traceback on exception in case ``$XONSH_SHOW_TRACEBACK=False`` with ``$RAISE_SUBPROC_ERROR=True``.
+* Improve the error message when ``$RAISE_SUBPROC_ERROR`` is set to True.
+* Fixed xontrib-jupyter to work in JupyterLab and terminal-based `Euporie <https://github.com/joouha/euporie>`_ environment.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Evgeny
+* Mark Bestley
+* Samuel Dion-Girardeau
+* doronz88
+* Ivan Ogasawara
+* Tobias Becker
+* AkshayWarrier
+* Thomas Hess
+* kouhe3
+
+
+
 v0.13.4
 ====================
 

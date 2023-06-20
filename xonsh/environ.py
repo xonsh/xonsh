@@ -180,7 +180,7 @@ def locale_convert(key):
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
             msg = f"Failed to set locale {key!r} to {val!r}"
-            warnings.warn(msg, RuntimeWarning)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return val
 
     return lc_converter
@@ -1634,7 +1634,9 @@ class PromptHistorySetting(Xettings):
         ensure_string,
         None,
         "Set a filter criteria for history items using a regular expression. "
-        "Any matching items will not be retained in the history.",
+        "Any matching items will not be retained in the history. "
+        "Example: ``$XONSH_HISTORY_IGNORE_REGEX = '(^echo|^.*\\#\\#\\#\\s*|.*\\#\\#\\#\\s*$)'``"
+        " - skip commands that start from ``echo`` or ``###``, or end from ``###``.",
     )
 
 

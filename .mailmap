@@ -28,7 +28,11 @@ David Strobach <lalochcz@gmail.com> laloch <lalochcz@gmail.com>
 Bob Hyman <bob.hyman@bobssoftwareworks.com> Bob Hyman <bob.hyman@gmail.com>
 BlahGeek <i@BlahGeek.com>
 anki-code <anki-code@users.noreply.github.com> Andy Kipp <anki-code>
+anki-code <anki-code@users.noreply.github.com> Andy Kipp <aaa@aaa.aaa>
 anki-code <anki-code@users.noreply.github.com> Andy Kirby <anki-code>
+anki-code <anki-code@users.noreply.github.com> Andy Kirby <aaa@aaa.aaa>
+anki-code <anki-code@users.noreply.github.com> a <anki-code>
+anki-code <anki-code@users.noreply.github.com> a <aaa@aaa.aaa>
 Daniel Shimon <daniel.shimon22@gmail.com>
 Gyuri Horak <dyuri@horak.hu>
 Jean-Benoist Leger <jb@leger.tf> Jean-Benoist Leger <jbleger@gertrude>
@@ -54,6 +58,7 @@ Joel Gerber <joel@grrbrr.ca>
 vaaaaanquish <6syun9@gmail.com> @vaaaaanquish <6syun9@gmail.com>
 vaaaaanquish <6syun9@gmail.com> vaaaaanquish <6syun9@gmail.com>
 vaaaaanquish <6syun9@gmail.com> 6syun9 <6syun9@gmail.com>
+pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
 Bernardas Ališauskas <bernardas.alisauskas@gmail.com> Bernardas <bernardas.alisauskas@gmail.com>
 David Dotson <dotsdl@gmail.com>
 Derek Thomas <derekathomas@gmail.com>
@@ -72,8 +77,8 @@ Jason R. Coombs <jaraco@jaraco.com>
 Justin Moen <jamoen7@gmail.com>
 Raphael Das Gupta <raphael.das.gupta@hsr.ch> Raphael Borun Das Gupta <git@raphael.dasgupta.ch>
 Caleb Hattingh <caleb.hattingh@gmail.com>
-pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
 Stephan Fitzpatrick <knowsuchagency@gmail.com>
+Evgeny <eugenesvk@users.noreply.github.com>
 dev2718 <alexanderfirbas@gmail.com>
 Will S <wsha.code@gmail.com>
 K.-Michael Aye <kmichael.aye@gmail.com> K.-Michael Aye <michaelaye@users.noreply.github.com>
@@ -82,7 +87,6 @@ Will Wykeham <will@wykeham.net>
 Oleh Prypin <oleh@pryp.in>
 Brian Skinn <brian.skinn@gmail.com>
 Wendell Turner <skyking@ilikecarrots.com>
-Evgeny <eugenesvk@users.noreply.github.com>
 Alessio Bogon <youtux@gmail.com> Alessio Bogon <youtux@users.noreply.github.com>
 Yohei Tamura <tamuhey@gmail.com>
 Maximilian Köhl <mail@koehlma.de>
@@ -155,6 +159,7 @@ Sebastian Wagner <sebix@sebix.at>
 yuqing <waywardson@126.com> yuqing <yuqing@cmcm.com>
 Rahiel Kasim <rahielkasim@gmail.com>
 SanketDG <sanketdasgupta@gmail.com>
+Mark Bestley <37385+bestlem@users.noreply.github.com>
 David <auscompgeek@users.noreply.github.com>
 Danmou <dmrtzn@gmail.com>
 Niklas Hambüchen <mail@nh2.me>
@@ -166,6 +171,7 @@ Samuel Lotz <samuel.lotz@salotz.info>
 Jerzy Drozdz <jerzy.drozdz@gmail.com>
 omjadas <omja.das@gmail.com>
 Jeremy Schlatter <jeremy@jeremyschlatter.com>
+Samuel Dion-Girardeau <samueldg@users.noreply.github.com>
 Oliver Bestwalter <oliver@bestwalter.de>
 Stefano Rivera <github@rivera.za.net> Stefano Rivera <stefano@rivera.za.net>
 Mark Wiebe <mwwiebe@gmail.com>
@@ -182,7 +188,6 @@ Min RK <benjaminrk@gmail.com>
 Nicolas Avrutin <rasputin@google.com>
 Kevin Yokley <kyokley2@gmail.com>
 Ollie Ford <me@ojford.com>
-Mark Bestley <37385+bestlem@users.noreply.github.com>
 Michał Zając <emzajac@gmail.com> zajaczajac <michal.zajac@swmansion.com>
 Emre Ates <ates@bu.edu>
 Romain Bignon <romain@symlink.me>
@@ -199,12 +204,13 @@ Gabriel Vogel <gabriel.vogel@online.de>
 anki <anki@code.email>
 Faris A Chugthai <20028782+farisachugthai@users.noreply.github.com>
 Asaf Fisher <asaffisher@icloud.com>
-Samuel Dion-Girardeau <samueldg@users.noreply.github.com>
 Gabriele N. Tornetta <P403n1x87@users.noreply.github.com>
 cmidkiff87 <39914727+cmidkiff87@users.noreply.github.com>
+doronz88 <doron88@gmail.com>
 jbw3 <jbw3@users.noreply.github.com>
 Naveen <172697+naveensrinivasan@users.noreply.github.com>
 Blake Ramsdell <blaker@gmail.com>
+Ivan Ogasawara <ivan.ogasawara@gmail.com>
 Dan Allan <dallan@bnl.gov>
 Ned Letcher <nletcher@gmail.com>
 Zach Crownover <zachary.crownover@gmail.com>
@@ -310,7 +316,6 @@ Daniel <291111@uwr.edu.pl>
 Ganer <34655998+GanerCodes@users.noreply.github.com>
 mattmc3 <mattmc3@gmail.com>
 Evan Hubinger <evanjhub@gmail.com>
-doronz88 <doron88@gmail.com>
 Italo Cunha <cunha@users.noreply.github.com>
 Timmy Welch <timmy@narnian.us>
 Hannes Römer <16097755+hroemer@users.noreply.github.com>
@@ -324,5 +329,9 @@ yotamolenik <39271599+yotamolenik@users.noreply.github.com>
 austin-yang <110882105+IAustin-YangI@users.noreply.github.com>
 Marco Rubin <20150305+Rubo3@users.noreply.github.com>
 Qyriad <qyriad@gmail.com>
+Tobias Becker <nullpointeracception@gmail.com>
+AkshayWarrier <58233418+AkshayWarrier@users.noreply.github.com>
+Thomas Hess <tux12345@justmail.de>
+kouhe3 <25522053+kouhe3@users.noreply.github.com>
 goodboy <tgoodlet@users.noreply.github.com>
 Atsushi Morimoto <atsushi.morimoto@dena.com>

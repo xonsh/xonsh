@@ -15,7 +15,7 @@ command:
 
 .. code-block:: console
 
-   $ xpip install --upgrade xonsh
+   @ xpip install --upgrade xonsh
 
 ``xpip`` (note the "x" at the  beginning of ``xpip``) is a predefined alias pointing to the ``pip`` command associated with the Python executable running this xonsh.
 
@@ -39,19 +39,19 @@ You can view the available styles by typing
 
 .. code-block:: console
 
-   $ xonfig styles
+   @ xonfig styles
 
 For a quick peek at the theme's colors you can do
 
 .. code-block:: console
 
-   $ xonfig colors <theme name>
+   @ xonfig colors <theme name>
 
 To set a new theme, do
 
 .. code-block:: console
 
-   $ $XONSH_COLOR_STYLE='<theme name>'
+   @ $XONSH_COLOR_STYLE='<theme name>'
 
 Registering custom styles
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,8 +85,8 @@ first element of your ``sys.path``
 
 .. code-block:: console
 
-   $ import sys
-   $ sys.path.insert(0, '')
+   @ import sys
+   @ sys.path.insert(0, '')
 
 .. _default_shell:
 
@@ -192,7 +192,7 @@ If you are unable to use utf-8 (ie. non-ascii) characters in xonsh. For example 
 
 .. code-block:: console
 
-    $ echo "ßðđ"
+    @ echo "ßðđ"
     xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
     UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-2: ordinal not in range(128)
 
