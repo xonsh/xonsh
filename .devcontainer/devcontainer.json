@@ -7,27 +7,29 @@
 	// "features": {
 	// 	"ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
 	// },
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install -e ".[full,test,dev,doc]",
-
+	"postCreateCommand": "pip install --user -e '.[full,test,dev,doc]'; pre-commit install",
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
 		"vscode": {
 			// Set *default* container specific settings.json values on container create.
 			"settings": {
-				"python.defaultInterpreterPath": "/usr/local/bin/python"
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"editor.inlineSuggest.enabled": true,
+				"python.formatting.provider": "black",
+				"python.linting.mypyEnabled": true,
+				"python.testing.pytestEnabled": true,
+				"editor.formatOnSave": true
 			},
-
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-python.python",
 				"ms-python.vscode-pylance",
-        		"GitHub.copilot"
+				"ms-python.black-formatter",
+				"GitHub.copilot"
 			]
 		}
 	}
