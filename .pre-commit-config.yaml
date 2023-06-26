@@ -14,13 +14,13 @@ repos:
       pass_filenames: false
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     # Ruff version.
-    rev: 'v0.0.272'
+    rev: 'v0.0.275'
     hooks:
       - id: ruff
         args: [., --fix, --exit-non-zero-on-fix]
         pass_filenames: false
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.3.0'  # Use the sha / tag you want to point at
+    rev: 'v1.4.1'  # Use the sha / tag you want to point at
     hooks:
       - id: mypy
         name: mypy xonsh
