@@ -1390,7 +1390,7 @@ class PromptSetting(Xettings):
         is_string_or_callable,
         ensure_string,
         ensure_string,
-        "",
+        DefaultNotGiven,
         "Indicator inserted before the line continuation marks set "
         "in ``$MULTILINE_PROMPT``. Can be used to mark the start of "
         "a semantic continuation prompt "
@@ -1402,7 +1402,7 @@ class PromptSetting(Xettings):
         is_string_or_callable,
         ensure_string,
         ensure_string,
-        "",
+        DefaultNotGiven,
         "Indicator inserted after the line continuation marks set "
         "in ``$MULTILINE_PROMPT``. Can be used to mark the end of "
         "a semantic continuation prompt and the beginning of user input "
