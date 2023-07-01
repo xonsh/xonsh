@@ -78,8 +78,9 @@ Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xon
 The xonsh shell community
 *************************
 
-The xonsh shell is developed by a community of volunteers and has no organization that can get grants, donations or additional support. There are few ways to help the xonsh shell:
+The xonsh shell is developed by a community of volunteers. There are few ways to help the xonsh shell:
 
+- `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 - `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
 - Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_.
 - Solve a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_.
