@@ -76,7 +76,7 @@ def get_module_docstring(module: str) -> str:
     return ""
 
 
-def get_xontribs() -> tp.Dict[str, Xontrib]:
+def get_xontribs() -> dict[str, Xontrib]:
     """Return xontrib definitions lazily."""
     return dict(_get_installed_xontribs())
 
@@ -160,7 +160,7 @@ def xontrib_context(name, full_module=False):
     return ctx
 
 
-def prompt_xontrib_install(names: tp.List[str]):
+def prompt_xontrib_install(names: list[str]):
     """Returns a formatted string with name of xontrib package to prompt user"""
     return (
         "The following xontribs are enabled but not installed: \n"

@@ -8,7 +8,7 @@ from ..built_ins import XonshSession
 from .file_writes import insert_into_xonshrc
 
 if TYPE_CHECKING:
-    from typing import Type
+    pass
 
 import logging
 from urllib import parse
@@ -19,7 +19,7 @@ from . import xonsh_data
 
 class Routes:
     path: str
-    registry: "dict[str, Type[Routes]]" = {}
+    registry: "dict[str, type[Routes]]" = {}
     navbar = False
     nav_title: "str|None" = None
     err_msgs: "list" = []

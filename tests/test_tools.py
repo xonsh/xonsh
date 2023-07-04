@@ -10,7 +10,7 @@ import pytest
 
 from xonsh import __version__
 from xonsh.lexer import Lexer
-from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
     EnvPath,
@@ -899,7 +899,19 @@ def test_str_to_env_path(inp, exp):
     assert exp == obs.paths
 
 
-@pytest.mark.parametrize("inp, exp", [(pathlib.Path("///tmp"), "/tmp")])
+@pytest.mark.parametrize(
+    "inp, exp",
+    [
+        pytest.param(
+            pathlib.Path("///tmp"),
+            "/tmp",
+            marks=pytest.mark.skipif(
+                ON_WINDOWS and PYTHON_VERSION_INFO > (3, 11),
+                reason="Python 3.12 on windows changed its behavior of resolving additional slashes in paths",
+            ),
+        ),
+    ],
+)
 def test_path_to_str(inp, exp):
     obs = path_to_str(inp)
     if ON_WINDOWS:

@@ -557,7 +557,7 @@ class XonshSession:
         self.commands_cache = None
         self.modules_cache = None
         self.all_jobs = None
-        self.completers = None
+        self._completers = None
         self.builtins = None
         self._initial_builtin_names = None
 
@@ -566,6 +566,15 @@ class XonshSession:
         if self.commands_cache is None:
             return
         return self.commands_cache.aliases
+
+    @property
+    def completers(self):
+        """Returns a list of all available completers. Init when first accessing the attribute"""
+        if self._completers is None:
+            from xonsh.completers.init import default_completers
+
+            self._completers = default_completers(self.commands_cache)
+        return self._completers
 
     def _disable_python_exit(self):
         # Disable Python interactive quit/exit
@@ -594,7 +603,6 @@ class XonshSession:
             Context to start xonsh session with.
         """
         from xonsh.commands_cache import CommandsCache
-        from xonsh.completers.init import default_completers
         from xonsh.environ import Env, default_env
 
         if not hasattr(builtins, "__xonsh__"):
@@ -628,7 +636,6 @@ class XonshSession:
         )
         self.link_builtins()
         self.builtins_loaded = True
-        self.completers = default_completers(self.commands_cache)
 
         def flush_on_exit(s=None, f=None):
             if self.history is not None:
@@ -672,6 +679,7 @@ class XonshSession:
         self.unlink_builtins()
         delattr(builtins, "__xonsh__")
         self.builtins_loaded = False
+        self._completers = None
 
 
 def get_default_builtins(execer=None):

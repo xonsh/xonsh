@@ -102,9 +102,9 @@ class CommandsCache(cabc.Mapping):
         name on Windows as a list, conserving the ordering in `PATHEXT`.
         Returns a list as `name` being the only item in it on other platforms."""
         if ON_WINDOWS:
-            pathext = self.env.get("PATHEXT", [])
+            pathext = [""] + self.env.get("PATHEXT", [])
             name = name.upper()
-            return [name + ext for ext in ([""] + pathext)]
+            return [name + ext for ext in pathext]
         else:
             return [name]
 
@@ -117,7 +117,7 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isdir(p):
                     yield p
 
-    def _check_changes(self, paths: tp.Tuple[str, ...]):
+    def _check_changes(self, paths: tuple[str, ...]):
         # did PATH change?
         yield self._update_paths_cache(paths)
 
@@ -174,7 +174,7 @@ class CommandsCache(cabc.Mapping):
 
         updated = False
         for path in paths:
-            modified_time = os.stat(path).st_mtime
+            modified_time = os.path.getmtime(path)
             if (
                 (not self.env.get("ENABLE_COMMANDS_CACHE", True))
                 or (path not in self._paths_cache)
@@ -198,7 +198,7 @@ class CommandsCache(cabc.Mapping):
         """Returns the name that would appear in the cache, if it exists."""
         if name is None:
             return None
-        cached = pathbasename(name)
+        cached = pathbasename(name) if os.pathsep in name else name
         if ON_WINDOWS:
             keys = self.get_possible_names(cached)
             cached = next((k for k in keys if k in self._cmds_cache), None)

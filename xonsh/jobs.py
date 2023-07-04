@@ -35,7 +35,7 @@ _jobs_thread_local = threading.local()
 # Task queue for the main thread
 # The use_main_jobs context manager uses this variable to access the tasks on
 # the main thread.
-_tasks_main: tp.Deque[int] = collections.deque()
+_tasks_main: collections.deque[int] = collections.deque()
 
 
 @contextlib.contextmanager
@@ -57,7 +57,7 @@ def use_main_jobs():
         _jobs_thread_local.jobs = old_jobs
 
 
-def get_tasks() -> tp.Deque[int]:
+def get_tasks() -> collections.deque[int]:
     try:
         return _jobs_thread_local.tasks
     except AttributeError:
@@ -68,7 +68,7 @@ def get_tasks() -> tp.Deque[int]:
         return _jobs_thread_local.tasks
 
 
-def get_jobs() -> tp.Dict[int, tp.Dict]:
+def get_jobs() -> dict[int, dict]:
     try:
         return _jobs_thread_local.jobs
     except AttributeError:

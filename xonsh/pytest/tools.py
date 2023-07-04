@@ -129,12 +129,14 @@ def nodes_equal(x, y):
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x), ast.iter_fields(y)):
         assert (
             xname == yname
-        ), "Ast nodes fields differ : {} (of type {}) != {} (of type {})".format(
+        ), "Ast nodes field names differ : {} (of type {}) != {} (of type {})".format(
             xname,
             type(xval),
             yname,
             type(yval),
         )
+        if isinstance(x, ast.Constant) and xname == "kind":
+            continue
         assert type(xval) == type(
             yval
         ), "Ast nodes fields differ : {} (of type {}) != {} (of type {})".format(

@@ -9,17 +9,12 @@ from xonsh.platform import PYTHON_VERSION_INFO
 
 @lazyobject
 def RE_FSTR_FIELD_WRAPPER():
-    if PYTHON_VERSION_INFO > (3, 8):
-        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))\s*[^=]")
-    else:
-        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))")
+    return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\))\s*[^=]")
 
 
-if PYTHON_VERSION_INFO > (3, 8):
-
-    @lazyobject
-    def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
-        return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\)\s*)=")
+@lazyobject
+def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
+    return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\)\s*)=")
 
 
 class FStringAdaptor:
@@ -64,12 +59,19 @@ class FStringAdaptor:
             except SyntaxError as e:
                 # The e.text attribute is expected to contain the failing
                 # expression, e.g. "($HOME)" for f"{$HOME}" string.
-                if e.text is None or e.text[0] != "(":
-                    raise
-                error_expr = e.text.strip()[1:-1]
-                epos = template.find(error_expr)
-                if epos < 0:
-                    raise
+                if PYTHON_VERSION_INFO < (3, 12):
+                    if (e.text is None) or (e.text[0] != "("):
+                        raise
+
+                    error_expr = e.text.strip()[1:-1]
+                    epos = template.find(error_expr)
+                    if epos < 0:
+                        raise
+                else:
+                    # Python 3.12+ reports the error differently.
+                    # todo: implement a better way to get the error expression
+                    raise RuntimeError("Unsupported fstring syntax") from e
+
             # We can olny get here in the case of handled SyntaxError.
             # Patch the last error and start over.
             xonsh_field = (error_expr, self.filename if self.filename else None)
@@ -87,8 +89,8 @@ class FStringAdaptor:
         for node in ast.walk(self.res):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 value = node.value
-            elif isinstance(node, ast.Str):
-                value = node.s
+            elif ast.is_const_str(node):
+                value = node.value
             else:
                 continue
 
@@ -110,8 +112,8 @@ class FStringAdaptor:
         for node in ast.walk(self.res):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 value = node.value
-            elif isinstance(node, ast.Str):
-                value = node.s
+            elif ast.is_const_str(node):
+                value = node.value
             else:
                 continue
 
@@ -122,8 +124,9 @@ class FStringAdaptor:
             if field is None:
                 continue
             value = value.replace(match.group(1), field[0], 1)
-            if isinstance(node, ast.Str):
-                node.s = value
+
+            if ast.is_const_str(node):
+                node.value = value
             else:
                 node.value = value
 
@@ -162,22 +165,20 @@ class FStringAdaptor:
                         col_offset=col_offset,
                     )
                     node.args[0] = field_node
-            elif isinstance(node.args[0], ast.Num):
-                field = self.fields.pop(node.args[0].n, None)
+            elif ast.is_const_num(node.args[0]):
+                field = self.fields.pop(node.args[0].value, None)
                 if field is None:
                     continue
                 lineno = node.args[0].lineno
                 col_offset = node.args[0].col_offset
-                elts = [ast.Str(s=field[0], lineno=lineno, col_offset=col_offset)]
+                elts = [ast.const_str(s=field[0], lineno=lineno, col_offset=col_offset)]
                 if field[1] is not None:
                     elts.append(
-                        ast.Str(s=field[1], lineno=lineno, col_offset=col_offset)
+                        ast.const_str(s=field[1], lineno=lineno, col_offset=col_offset)
                     )
                 else:
                     elts.append(
-                        ast.NameConstant(
-                            value=None, lineno=lineno, col_offset=col_offset
-                        )
+                        ast.const_name(value=None, lineno=lineno, col_offset=col_offset)
                     )
                 field_node = ast.Tuple(
                     elts=elts, ctx=ast.Load(), lineno=lineno, col_offset=col_offset

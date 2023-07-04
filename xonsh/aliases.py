@@ -409,7 +409,7 @@ def xonsh_reset(args, stdin=None):
 
 def source_foreign_fn(
     shell: str,
-    files_or_code: Annotated[tp.List[str], Arg(nargs="+")],
+    files_or_code: Annotated[list[str], Arg(nargs="+")],
     interactive=True,
     login=False,
     envcmd=None,
@@ -481,7 +481,7 @@ def source_foreign_fn(
         if not suppress_skip_message
         else suppress_skip_message
     )
-    files: tp.Tuple[str, ...] = ()
+    files: tuple[str, ...] = ()
     if prevcmd:
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(files_or_code[0]):
@@ -607,7 +607,7 @@ def source_alias(args, stdin=None):
 
 
 def source_cmd_fn(
-    files: Annotated[tp.List[str], Arg(nargs="+")],
+    files: Annotated[list[str], Arg(nargs="+")],
     login=False,
     aliascmd=None,
     extra_args="",
@@ -690,7 +690,7 @@ source_cmd = ArgParserAlias(func=source_cmd_fn, has_args=True, prog="source-cmd"
 
 
 def xexec_fn(
-    command: Annotated[tp.List[str], Arg(nargs=argparse.REMAINDER)],
+    command: Annotated[list[str], Arg(nargs=argparse.REMAINDER)],
     login=False,
     clean=False,
     name="",

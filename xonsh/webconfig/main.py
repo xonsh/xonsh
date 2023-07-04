@@ -18,7 +18,7 @@ from xonsh.webconfig import tags as t
 from xonsh.webconfig.file_writes import insert_into_xonshrc
 from xonsh.webconfig.routes import Routes
 
-RENDERERS: tp.List[tp.Callable] = []
+RENDERERS: list[tp.Callable] = []
 
 
 class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):

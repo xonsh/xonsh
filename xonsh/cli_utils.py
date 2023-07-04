@@ -12,35 +12,10 @@ import os
 import sys
 import typing as tp
 from collections import defaultdict
+from typing import Annotated
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
-
-TYPING_ANNOTATED_AVAILABLE = False
-"""One can import ``Annotated`` from this module
-which adds a stub when it is not available in ``typing``/``typing_extensions`` modules."""
-
-try:
-    from typing import Annotated  # noqa
-
-    TYPING_ANNOTATED_AVAILABLE = True
-except ImportError:
-    try:
-        from typing_extensions import Annotated  # type: ignore
-
-        TYPING_ANNOTATED_AVAILABLE = True
-    except ImportError:
-        T = tp.TypeVar("T")  # Declare type variable
-
-        class _AnnotatedMeta(type):
-            def __getitem__(self, item: tp.Tuple[T, tp.Any]) -> T:
-                if tp.TYPE_CHECKING:
-                    return item[0]
-
-                return item[1]
-
-        class Annotated(metaclass=_AnnotatedMeta):  # type: ignore
-            pass
 
 
 class ArgCompleter:
@@ -114,8 +89,8 @@ class NumpyDoc:
         return NumpyDoc.join(desc), lines[idx + 2 :]
 
     @staticmethod
-    def get_param_doc(lines: tp.List[str]):
-        docs: tp.Dict[str, tp.List[str]] = defaultdict(list)
+    def get_param_doc(lines: list[str]):
+        docs: dict[str, list[str]] = defaultdict(list)
         name = None
 
         while lines:
@@ -139,11 +114,11 @@ class NumpyDoc:
 _FUNC_NAME = "_func_"
 
 
-def _get_args_kwargs(annot: tp.Any) -> tp.Tuple[tp.Sequence[str], tp.Dict[str, tp.Any]]:
+def _get_args_kwargs(annot: tp.Any) -> tuple[tp.Sequence[str], dict[str, tp.Any]]:
     args, kwargs = [], {}
     if isinstance(annot, tuple):
         args, kwargs = annot
-    elif TYPING_ANNOTATED_AVAILABLE and "Annotated[" in str(annot):
+    elif "Annotated[" in str(annot):
         if hasattr(annot, "__metadata__"):
             args, kwargs = annot.__metadata__[0]
         else:
@@ -383,7 +358,7 @@ class ArgParser(ap.ArgumentParser):
         return parser
 
 
-def _dispatch_func(func: tp.Callable, ns: tp.Dict[str, tp.Any]):
+def _dispatch_func(func: tp.Callable, ns: dict[str, tp.Any]):
     """Final dispatch to the function based on signature."""
     sign = inspect.signature(func)
     kwargs = {}
@@ -440,7 +415,7 @@ class ArgparseCompleter:
         self.kwargs = kwargs
 
     @staticmethod
-    def get_parser(parser, args) -> tp.Tuple[ap.ArgumentParser, tp.Tuple[str, ...]]:
+    def get_parser(parser, args) -> tuple[ap.ArgumentParser, tuple[str, ...]]:
         """Check for sub-parsers"""
         sub_parsers = {}
         for act in parser._get_positional_actions():

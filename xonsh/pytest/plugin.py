@@ -7,7 +7,6 @@ import importlib
 import os
 import sys
 import types
-import typing as tp
 from pathlib import Path
 from traceback import extract_tb, format_list
 from unittest.mock import MagicMock
@@ -129,7 +128,7 @@ def xonsh_execer_parse(xonsh_execer):
 
 @pytest.fixture
 def mock_executables_in(xession, tmp_path, monkeypatch):
-    def _factory(binaries: tp.List[str]):
+    def _factory(binaries: list[str]):
         xession.env["PATH"] = [tmp_path]
         exec_mock = MagicMock(return_value=binaries)
         monkeypatch.setattr(commands_cache, "executables_in", exec_mock)

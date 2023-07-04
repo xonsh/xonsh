@@ -191,7 +191,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     def show(
         self,
         session: xcli.Annotated[str, xcli.Arg(nargs="?")] = "session",
-        slices: xcli.Annotated[tp.List[int], xcli.Arg(nargs="*")] = None,
+        slices: xcli.Annotated[list[int], xcli.Arg(nargs="*")] = None,
         datetime_format: tp.Optional[str] = None,
         start_time: tp.Optional[str] = None,
         end_time: tp.Optional[str] = None,
@@ -371,7 +371,7 @@ class HistoryAlias(xcli.ArgParserAlias):
 
     @staticmethod
     def gc(
-        size: xcli.Annotated[tp.Tuple[int, str], xcli.Arg(nargs=2)] = None,
+        size: xcli.Annotated[tuple[int, str], xcli.Arg(nargs=2)] = None,
         force=False,
         blocking=True,
     ):
