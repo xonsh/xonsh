@@ -340,6 +340,19 @@ class HistoryAlias(xcli.ArgParserAlias):
         print("History cleared", file=sys.stderr)
 
     @staticmethod
+    def delete(pattern):
+        """Delete all commands matching a pattern
+
+        Parameters
+        ----------
+        pattern:
+            regex pattern to match against command history
+        """
+        hist = XSH.history
+        deleted = hist.delete(pattern)
+        print(f"Deleted {deleted} entries from history")
+
+    @staticmethod
     def file(_stdout):
         """Display the current history filename"""
         hist = XSH.history
@@ -466,6 +479,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         parser.add_command(self.off)
         parser.add_command(self.on)
         parser.add_command(self.clear)
+        parser.add_command(self.delete)
         parser.add_command(self.gc)
         parser.add_command(self.transfer)
 

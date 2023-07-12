@@ -387,3 +387,6 @@ class SqliteHistory(History):
         self.cwds = []
 
         xh_sqlite_wipe_session(sessionid=self.sessionid, filename=self.filename)
+
+    def delete(self, pattern):
+        print('You called delete!')
