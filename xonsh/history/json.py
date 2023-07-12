@@ -11,10 +11,10 @@ from xonsh.built_ins import XSH
 
 try:
     import ujson as json
-    from ujson import JSONDecodeError
+    JSONDecodeError = json.JSONDecodeError
 except ImportError:
     import json  # type: ignore
-    from json.decoder import JSONDecodeError
+    JSONDecodeError = json.decoder.JSONDecodeError
 
 import xonsh.lazyjson as xlj
 import xonsh.tools as xt
