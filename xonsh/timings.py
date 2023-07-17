@@ -238,9 +238,7 @@ def timeit_alias(args, stdin=None):
                 ).format(worst / best)
             )
         print(
-            "{} loops, best of {}: {} per loop".format(
-                number, repeat, format_time(best, precision)
-            )
+            f"{number} loops, best of {repeat}: {format_time(best, precision)} per loop"
         )
         if tc > tc_min:
             print(f"Compiler time: {tc:.2f} s")

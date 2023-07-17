@@ -36,15 +36,11 @@ def bold_str_diff(a, b, sm=None):
 
 
 def redline(line):
-    return "{red}- {line}{reset}\n".format(
-        red=COLORS.RED, line=line, reset=COLORS.RESET
-    )
+    return f"{COLORS.RED}- {line}{COLORS.RESET}\n"
 
 
 def greenline(line):
-    return "{green}+ {line}{reset}\n".format(
-        green=COLORS.GREEN, line=line, reset=COLORS.RESET
-    )
+    return f"{COLORS.GREEN}+ {line}{COLORS.RESET}\n"
 
 
 def highlighted_ndiff(a, b):
@@ -203,14 +199,10 @@ class HistoryDiffer:
             pass
         elif bout is None:
             aid = self.a["sessionid"]
-            s += "Note: only {red}{aid}{reset} output stored\n".format(
-                red=COLORS.RED, aid=aid, reset=COLORS.RESET
-            )
+            s += f"Note: only {COLORS.RED}{aid}{COLORS.RESET} output stored\n"
         elif aout is None:
             bid = self.b["sessionid"]
-            s += "Note: only {green}{bid}{reset} output stored\n".format(
-                green=COLORS.GREEN, bid=bid, reset=COLORS.RESET
-            )
+            s += f"Note: only {COLORS.GREEN}{bid}{COLORS.RESET} output stored\n"
         elif aout != bout:
             s += "Outputs differ\n"
             s += highlighted_ndiff(aout.splitlines(), bout.splitlines())
