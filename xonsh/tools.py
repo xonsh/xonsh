@@ -2118,8 +2118,8 @@ def _token_attr_from_stylemap(stylemap):
     else:
         style = ptk.styles.style_from_pygments_dict(stylemap)
         for token in stylemap:
-            style_str = "class:{}".format(
-                ptk.styles.pygments.pygments_token_to_classname(token)
+            style_str = (
+                f"class:{ptk.styles.pygments.pygments_token_to_classname(token)}"
             )
             yield (token, style.get_attrs_for_style_str(style_str))
 
@@ -2791,8 +2791,8 @@ def deprecated(deprecated_in=None, removed_in=None):
 
 def _deprecated_message_suffix(deprecated_in, removed_in):
     if deprecated_in and removed_in:
-        message_suffix = " in version {} and will be removed in version {}".format(
-            deprecated_in, removed_in
+        message_suffix = (
+            f" in version {deprecated_in} and will be removed in version {removed_in}"
         )
     elif deprecated_in and not removed_in:
         message_suffix = f" in version {deprecated_in}"
