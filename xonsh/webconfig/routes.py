@@ -33,7 +33,7 @@ class Routes:
     ):
         self.url = url
         self.params = params
-        self.env: "Env" = xsh.env
+        self.env: Env = xsh.env
         self.xsh = xsh
 
     def __init_subclass__(cls, **kwargs):
