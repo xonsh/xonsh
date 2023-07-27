@@ -269,7 +269,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
     def __init__(self, xsh: "XonshSession", init=True):
         self._items: dict[str, str | tp.Callable[..., str]] = {}
 
-        self._cache: dict[str, str|FieldType] = {}
+        self._cache: dict[str, str | FieldType] = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
         self.xsh = xsh

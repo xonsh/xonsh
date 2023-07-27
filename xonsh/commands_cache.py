@@ -38,9 +38,9 @@ class CommandsCache(cabc.Mapping):
         self._paths_cache: dict[str, _Commands] = {}
 
         # wrap aliases and commands in one place
-        self._cmds_cache: dict[str, tuple[str, bool|None]] = {}
+        self._cmds_cache: dict[str, tuple[str, bool | None]] = {}
 
-        self._alias_checksum: int|None = None
+        self._alias_checksum: int | None = None
         self.threadable_predictors = default_threadable_predictors()
 
         # Path to the cache-file where all commands/aliases are cached for pre-loading"""
