@@ -24,16 +24,16 @@ class ModuleFinder:
         self.contextual = True
 
         # unique but maintain order
-        self._pkgs: "dict[str, None]" = OrderedDict()
-        self._paths: "dict[str, None]" = OrderedDict()
+        self._pkgs: dict[str, None] = OrderedDict()
+        self._paths: dict[str, None] = OrderedDict()
         for pk in names:
             if os.sep in pk:
                 self._paths[pk] = None
             else:
                 self._pkgs[pk] = None
 
-        self._file_names_cache: "dict[str, str]" = {}
-        self._path_st_mtimes: "dict[str, float]" = {}
+        self._file_names_cache: dict[str, str] = {}
+        self._path_st_mtimes: dict[str, float] = {}
 
     def _get_new_paths(self):
         for path in self._paths:

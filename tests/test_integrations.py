@@ -874,15 +874,13 @@ def test_negative_exit_codes_fail():
     ],
 )
 def test_ampersand_argument(cmd, exp):
-    script = """
+    script = f"""
 #!/usr/bin/env xonsh
 def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
-{}
-""".format(
-        cmd
-    )
+{cmd}
+"""
     out, _, _ = run_xonsh(script)
     assert out == exp
 
