@@ -242,7 +242,7 @@ class Execer:
                     if original_error is None:
                         raise e
                     else:
-                        raise original_error
+                        raise original_error from None
                 except SyntaxError as e:
                     if original_error is None:
                         original_error = e
@@ -286,7 +286,7 @@ class Execer:
                         prev_indent = len(lines[idx - 1]) - len(lines[idx - 1].lstrip())
                         curr_indent = len(lines[idx]) - len(lines[idx].lstrip())
                         if prev_indent == curr_indent:
-                            raise original_error
+                            raise original_error from None
                     lexer = self.parser.lexer
                     maxcol = (
                         None
@@ -316,7 +316,7 @@ class Execer:
                             continue
                         else:
                             # or for some other syntax error
-                            raise original_error
+                            raise original_error from None
                     elif sbpline[last_error_col:].startswith(
                         "![!["
                     ) or sbpline.lstrip().startswith("![!["):
@@ -327,7 +327,7 @@ class Execer:
                             greedy = True
                             continue
                         else:
-                            raise original_error
+                            raise original_error from None
                     # replace the line
                     self._print_debug_wrapping(
                         line, sbpline, last_error_line, last_error_col, maxcol=maxcol
