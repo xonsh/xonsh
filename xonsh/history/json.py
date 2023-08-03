@@ -11,10 +11,10 @@ from xonsh.built_ins import XSH
 
 try:
     import ujson as json
-    JSONDecodeError = json.JSONDecodeError
+    JSONDecodeError = json.JSONDecodeError  # type: ignore
 except ImportError:
     import json  # type: ignore
-    JSONDecodeError = json.decoder.JSONDecodeError
+    JSONDecodeError = json.decoder.JSONDecodeError  # type: ignore
 
 import xonsh.lazyjson as xlj
 import xonsh.tools as xt
@@ -601,7 +601,7 @@ class JsonHistory(History):
         self.flush()
 
     def delete(self, pattern):
-        """"""
+        """Deletes all entries in history which matches a pattern."""
         pattern = re.compile(pattern)
 
         deleted = 0

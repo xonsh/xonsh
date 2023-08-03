@@ -2,6 +2,7 @@
 import collections
 import json
 import os
+import re
 import sqlite3
 import sys
 import threading
@@ -222,6 +223,15 @@ def xh_sqlite_wipe_session(sessionid=None, filename=None):
         c.execute(sql, (str(sessionid),))
 
 
+def xh_sqlite_delete_input_matching(pattern, filename=None):
+    """Deletes entries from the database where the input matches a pattern."""
+    sql = f"DELETE FROM xonsh_history WHERE inp LIKE '{pattern}' ESCAPE '\\';"
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        _xh_sqlite_create_history_table(c)
+        c.execute(sql)
+
+
 class SqliteHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
@@ -389,4 +399,7 @@ class SqliteHistory(History):
         xh_sqlite_wipe_session(sessionid=self.sessionid, filename=self.filename)
 
     def delete(self, pattern):
-        print('You called delete!')
+        """Deletes all entries in the database where the input matches a pattern."""
+        xh_sqlite_delete_input_matching(pattern=re.escape(pattern), filename=self.filename)
+
+
