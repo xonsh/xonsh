@@ -11,9 +11,11 @@ from xonsh.built_ins import XSH
 
 try:
     import ujson as json
+
     JSONDecodeError = json.JSONDecodeError  # type: ignore
 except ImportError:
     import json  # type: ignore
+
     JSONDecodeError = json.decoder.JSONDecodeError  # type: ignore
 
 import xonsh.lazyjson as xlj
@@ -629,7 +631,7 @@ class JsonHistory(History):
                         deleted += 1
 
                 file_content["cmds"] = commands
-                with open(f, 'w') as fp:
+                with open(f, "w") as fp:
                     xlj.ljdump(file_content, fp)
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow

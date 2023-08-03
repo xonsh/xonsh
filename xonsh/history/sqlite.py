@@ -398,6 +398,6 @@ class SqliteHistory(History):
 
     def delete(self, pattern):
         """Deletes all entries in the database where the input matches a pattern."""
-        xh_sqlite_delete_input_matching(pattern=re.escape(pattern), filename=self.filename)
-
-
+        xh_sqlite_delete_input_matching(
+            pattern=re.escape(pattern), filename=self.filename
+        )
