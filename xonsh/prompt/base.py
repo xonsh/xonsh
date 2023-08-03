@@ -85,7 +85,7 @@ class PromptFormatter:
 
         # some quick tests
         if isinstance(fields, dict):
-            pflds: "PromptFields[PromptField]" = PromptFields(XSH, init=False)
+            pflds: PromptFields[PromptField] = PromptFields(XSH, init=False)
             pflds.update(fields)
             self.fields = pflds
 
@@ -267,9 +267,9 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
     """Mapping of functions available for prompt-display."""
 
     def __init__(self, xsh: "XonshSession", init=True):
-        self._items: "dict[str, str | tp.Callable[..., str]]" = {}
+        self._items: dict[str, str | tp.Callable[..., str]] = {}
 
-        self._cache: "dict[str, str|FieldType]" = {}
+        self._cache: dict[str, str | FieldType] = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
         self.xsh = xsh

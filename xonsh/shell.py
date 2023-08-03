@@ -190,9 +190,7 @@ class Shell:
                 shell_type = "readline"
             if init_shell_type in ("ptk1", "prompt_toolkit1"):
                 warnings.warn(
-                    "$SHELL_TYPE='{}' now deprecated, please update your run control file'".format(
-                        init_shell_type
-                    ),
+                    f"$SHELL_TYPE='{init_shell_type}' now deprecated, please update your run control file'",
                     stacklevel=2,
                 )
         return shell_type

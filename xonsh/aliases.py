@@ -219,9 +219,7 @@ class Aliases(cabc.MutableMapping):
         return str(self._raw)
 
     def __repr__(self):
-        return "{}.{}({})".format(
-            self.__class__.__module__, self.__class__.__name__, self._raw
-        )
+        return f"{self.__class__.__module__}.{self.__class__.__name__}({self._raw})"
 
     _repr_pretty_ = to_repr_pretty_
 
@@ -287,9 +285,7 @@ class PartialEvalAliasBase:
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
     def __repr__(self):
-        return "{name}({f!r}, acc_args={acc_args!r})".format(
-            name=self.__class__.__name__, f=self.f, acc_args=self.acc_args
-        )
+        return f"{self.__class__.__name__}({self.f!r}, acc_args={self.acc_args!r})"
 
 
 class PartialEvalAlias0(PartialEvalAliasBase):

@@ -42,8 +42,8 @@ def _xh_sqlite_create_history_table(cursor):
     """
     if not getattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False):
         cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS {}
+            f"""
+            CREATE TABLE IF NOT EXISTS {XH_SQLITE_TABLE_NAME}
                  (inp TEXT,
                   rtn INTEGER,
                   tsb REAL,
@@ -54,9 +54,7 @@ def _xh_sqlite_create_history_table(cursor):
                   frequency INTEGER default 1,
                   cwd TEXT
                  )
-        """.format(
-                XH_SQLITE_TABLE_NAME
-            )
+        """
         )
 
         # add frequency column if not exists for backward compatibility

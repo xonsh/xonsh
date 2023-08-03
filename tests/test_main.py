@@ -357,7 +357,18 @@ def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch, xes
     assert f.strpath in xession.rc_files
 
 
-def test_custom_rc_with_script(shell, tmpdir):
+def test_force_interactive_custom_rc_with_script_and_no_rc(
+    shell, tmpdir, monkeypatch, xession
+):
+    monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
+    f = tmpdir.join("wakkawakka")
+    f.write("print('hi')")
+    args = xonsh.main.premain(["-i", "--no-rc", "--rc", f.strpath, "tests/sample.xsh"])
+    assert args.mode == XonshMode.interactive
+    assert len(xession.rc_files) == 0
+
+
+def test_custom_rc_with_script(shell, tmpdir, xession):
     """Calling a custom RC file on a script-call without the interactive flag
     should not run interactively
     """
@@ -365,9 +376,26 @@ def test_custom_rc_with_script(shell, tmpdir):
     f.write("print('hi')")
     args = xonsh.main.premain(["--rc", f.strpath, "tests/sample.xsh"])
     assert not (args.mode == XonshMode.interactive)
+    assert f.strpath in xession.rc_files
+
+
+def test_custom_rc_with_script_and_no_rc(shell, tmpdir, xession):
+    """Calling a custom RC file on a script-call without the interactive flag and no-rc
+    should not run interactively and should not have any rc_files
+    """
+    f = tmpdir.join("wakkawakka")
+    f.write("print('hi')")
+    args = xonsh.main.premain(["--no-rc", "--rc", f.strpath, "tests/sample.xsh"])
+    assert not (args.mode == XonshMode.interactive)
+    assert len(xession.rc_files) == 0
 
 
 def test_premain_no_rc(shell, tmpdir, xession):
+    xonsh.main.premain(["--no-rc"])
+    assert len(xession.rc_files) == 0
+
+
+def test_premain_no_rc_interactive(shell, tmpdir, xession):
     xonsh.main.premain(["--no-rc", "-i"])
     assert len(xession.rc_files) == 0
 

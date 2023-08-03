@@ -294,9 +294,7 @@ def ansi_color_escape_code_to_name(escape_code, style, reversed_style=None):
     # strip some actual escape codes, if needed.
     match = ANSI_ESCAPE_CODE_RE.match(escape_code)
     if not match:
-        msg = 'Invalid ANSI color sequence "{}", using "RESET" instead.'.format(
-            escape_code
-        )
+        msg = f'Invalid ANSI color sequence "{escape_code}", using "RESET" instead.'
         warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return ("RESET",)
     ec = match.group(2)
