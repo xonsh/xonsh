@@ -223,7 +223,7 @@ def xh_sqlite_wipe_session(sessionid=None, filename=None):
 
 def xh_sqlite_delete_input_matching(pattern, filename=None):
     """Deletes entries from the database where the input matches a pattern."""
-    sql = f"DELETE FROM xonsh_history WHERE inp LIKE '{pattern}' ESCAPE '\\';"
+    sql = f"DELETE FROM xonsh_history WHERE inp REGEXP '{pattern}' ESCAPE '\\';"
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
