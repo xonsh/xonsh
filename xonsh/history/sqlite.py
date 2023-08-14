@@ -2,6 +2,7 @@
 import collections
 import json
 import os
+import re
 import sqlite3
 import sys
 import threading
@@ -220,6 +221,17 @@ def xh_sqlite_wipe_session(sessionid=None, filename=None):
         c.execute(sql, (str(sessionid),))
 
 
+def xh_sqlite_delete_input_matching(pattern, filename=None):
+    """Deletes entries from the database where the input matches a pattern."""
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        _xh_sqlite_create_history_table(c)
+        for inp, *_ in _xh_sqlite_get_records(c):
+            if pattern.match(inp):
+                sql = f"DELETE FROM xonsh_history WHERE inp = '{inp}'"
+                c.execute(sql)
+
+
 class SqliteHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
@@ -385,3 +397,9 @@ class SqliteHistory(History):
         self.cwds = []
 
         xh_sqlite_wipe_session(sessionid=self.sessionid, filename=self.filename)
+
+    def delete(self, pattern):
+        """Deletes all entries in the database where the input matches a pattern."""
+        xh_sqlite_delete_input_matching(
+            pattern=re.compile(pattern), filename=self.filename
+        )

@@ -174,6 +174,22 @@ class History:
         """
         pass
 
+    def delete(self, pattern):
+        """Deletes the history of the current session for commands that match
+        a user-provided pattern.
+
+        Parameters
+        ----------
+        pattern: str
+            The regex pattern to match commands against.
+
+        Returns
+        -------
+        int
+            The number of commands deleted from history.
+        """
+        pass
+
     @functools.cached_property
     def ignore_regex(self):
         compiled_regex = None
