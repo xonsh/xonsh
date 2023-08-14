@@ -228,7 +228,7 @@ def xh_sqlite_delete_input_matching(pattern, filename=None):
         _xh_sqlite_create_history_table(c)
         for inp, *_ in _xh_sqlite_get_records(c):
             if pattern.match(inp):
-                sql = f"DELETE FROM xonsh_history WHERE inp LIKE '{inp}'"
+                sql = f"DELETE FROM xonsh_history WHERE inp = '{inp}'"
                 c.execute(sql)
 
 
