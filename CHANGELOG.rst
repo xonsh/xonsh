@@ -4,6 +4,40 @@ Xonsh Change Log
 
 .. current developments
 
+v0.14.1
+====================
+
+**Added:**
+
+* Added ``history delete`` command to both the JSON and SQLite history backends allowing users to delete commands from history that matches a pattern.
+* Now you can become a sponsor to xonsh - https://github.com/sponsors/xonsh
+* Added preliminary support for Python v3.12
+
+**Changed:**
+
+* Always load rc files except that --norc is passed.
+* Unset the default line continuation environment variables (``$MULTILINE_PROMPT_PRE`` and ``$MULTILINE_PROMPT_POS``) to allow differentiating between user setting an empty value and not setting anything
+* Dropped support for Python v3.8
+
+**Fixed:**
+
+* This change fixes issue #4855, that is, rc files will be loaded in non-interactive mode.
+* platform: fix `BASH_COMPLETIONS_DEFAULT` on M1
+* Fix wrong verification for the simple output, introduced by PR5072
+
+**Authors:**
+
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Evgeny
+* doronz88
+* Ivan Ogasawara
+* HackTheOxidation
+* Cosine Chen
+
+
+
 v0.14.0
 ====================
 
