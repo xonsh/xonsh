@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 624
+  num_commits: 627
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1135,7 +1135,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 205
+  num_commits: 207
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1282,7 +1282,7 @@
   first_commit: 2021-02-08 10:50:51
 - name: Evgeny
   email: eugenesvk@users.noreply.github.com
-  num_commits: 10
+  num_commits: 11
   first_commit: 2021-02-22 09:32:34
 - name: Adam Schwalm
   email: adamschwalm@gmail.com
@@ -1430,7 +1430,7 @@
   first_commit: 2021-11-18 18:42:29
 - name: doronz88
   email: doron88@gmail.com
-  num_commits: 2
+  num_commits: 3
   first_commit: 2022-04-27 12:41:13
 - name: Stefano Rivera
   email: github@rivera.za.net
@@ -1464,7 +1464,7 @@
   first_commit: 2022-06-27 22:21:34
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
-  num_commits: 21
+  num_commits: 30
   first_commit: 2022-07-11 14:26:34
 - name: jgart
   email: 47760695+jgarte@users.noreply.github.com
@@ -1530,9 +1530,17 @@
   first_commit: 2023-03-02 02:05:22
 - name: Ivan Ogasawara
   email: ivan.ogasawara@gmail.com
-  num_commits: 2
+  num_commits: 3
   first_commit: 2023-02-27 14:07:45
 - name: kouhe3
   email: 25522053+kouhe3@users.noreply.github.com
   num_commits: 1
   first_commit: 2023-03-23 09:25:07
+- name: HackTheOxidation
+  email: 86469309+HackTheOxidation@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2023-08-14 13:12:26
+- name: Cosine Chen
+  email: cosine_chen@163.com
+  num_commits: 1
+  first_commit: 2023-07-26 18:44:55

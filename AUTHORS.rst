@@ -27,6 +27,7 @@ Authors are sorted by number of commits.
 * virus
 * Sagar Tewari
 * Gordon Ball
+* pre-commit-ci[bot]
 * Eadaen1
 * Peter Ye
 * Konstantin Molchanov
@@ -36,7 +37,6 @@ Authors are sorted by number of commits.
 * Danny Sepler
 * Joel Gerber
 * vaaaaanquish
-* pre-commit-ci[bot]
 * Bernardas Ališauskas
 * David Dotson
 * Derek Thomas
@@ -55,8 +55,8 @@ Authors are sorted by number of commits.
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* Stephan Fitzpatrick
 * Evgeny
+* Stephan Fitzpatrick
 * dev2718
 * Will S
 * K.-Michael Aye
@@ -151,7 +151,9 @@ Authors are sorted by number of commits.
 * Jeremy Schlatter
 * Samuel Dion-Girardeau
 * Oliver Bestwalter
+* doronz88
 * Stefano Rivera
+* Ivan Ogasawara
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -184,11 +186,9 @@ Authors are sorted by number of commits.
 * Asaf Fisher
 * Gabriele N. Tornetta
 * cmidkiff87
-* doronz88
 * jbw3
 * Naveen
 * Blake Ramsdell
-* Ivan Ogasawara
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -311,5 +311,7 @@ Authors are sorted by number of commits.
 * AkshayWarrier
 * Thomas Hess
 * kouhe3
+* HackTheOxidation
+* Cosine Chen
 * goodboy
 * Atsushi Morimoto
