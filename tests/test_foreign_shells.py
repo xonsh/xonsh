@@ -53,12 +53,17 @@ def test_parse_env_equals():
 
 
 def test_parse_aliases():
-    exp = {"x": ["yes", "-1"], "y": ["echo", "no"]}
+    exp = {
+        "x": ["yes", "-1"],
+        "y": ["echo", "no"],
+        "z": ["echo", "True", "&&", "echo", "Next", "||", "echo", "False"],
+    }
     s = (
         "some garbage\n"
         "__XONSH_ALIAS_BEG__\n"
         "alias x='yes -1'\n"
         "alias y='echo    no'\n"
+        "alias z='echo True && \\\n echo Next || \\\n echo False'\n"  # noqa: E261,W605
         "__XONSH_ALIAS_END__\n"
         "more filth"
     )
