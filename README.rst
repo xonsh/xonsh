@@ -86,6 +86,7 @@ The xonsh shell is developed by a community of volunteers. There are few ways to
 - Solve a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_.
 - Get the `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
 - Become xonsh core by deep diving into xonsh and improve the threading and subprocess logic.
+- Give a star to xonsh repository and to `xontribs<https://github.com/topics/xontrib>`_ you like.
 
 We welcome new contributors!
 
