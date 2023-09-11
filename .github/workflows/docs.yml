@@ -30,7 +30,7 @@ jobs:
       - run: pip install -e '.[doc]'
       - name: Build Docs
         run: cd docs && make html
-      - uses: tibdex/github-app-token@v1
+      - uses: tibdex/github-app-token@v2
         if: ${{ github.event_name != 'pull_request' }}
         id: generate-token
         with:
