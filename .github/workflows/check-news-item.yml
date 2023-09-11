@@ -16,7 +16,7 @@ jobs:
     steps:
 
       # note: the checkout will pull code from the base branch. This step should not pull code from the merge commit
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
