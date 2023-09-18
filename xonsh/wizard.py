@@ -829,9 +829,7 @@ class PromptVisitor(StateVisitor):
                 self.state = json.load(f)
             print_color(f"{{GREEN}}{fname!r} loaded.{{RESET}}")
         else:
-            print_color(
-                f"{{RED}}{fname!r} could not be found, " "continuing.{{RESET}}"
-            )
+            print_color(f"{{RED}}{fname!r} could not be found, " "continuing.{{RESET}}")
         return fname
 
     def visit_fileinserter(self, node):

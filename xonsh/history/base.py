@@ -108,8 +108,7 @@ class History:
             ]
         else:
             raise TypeError(
-                "history indices must be integers "
-                f"or slices, not {type(item)}"
+                "history indices must be integers " f"or slices, not {type(item)}"
             )
 
     def __setitem__(self, *args):

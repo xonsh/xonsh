@@ -211,9 +211,7 @@ class HistoryDiffer:
         artn = self.a["cmds"][i]["rtn"]
         brtn = self.b["cmds"][j]["rtn"]
         if artn != brtn:
-            s += (
-                f"Return vals {COLORS.RED}{artn}{COLORS.RESET} & {COLORS.GREEN}{brtn}{COLORS.RESET} differ\n"
-            )
+            s += f"Return vals {COLORS.RED}{artn}{COLORS.RESET} & {COLORS.GREEN}{brtn}{COLORS.RESET} differ\n"
         return s
 
     def _cmd_replace_diff(self, i, ainp, aid, j, binp, bid):
