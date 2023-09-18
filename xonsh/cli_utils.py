@@ -177,7 +177,7 @@ def add_args(
             # for booleans set action automatically
             if (
                 flags
-                and (type(param.default) == bool)
+                and isinstance(param.default, bool)
                 and ("action" not in kwargs)
                 and ("type" not in kwargs)
             ):
