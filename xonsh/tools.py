@@ -2708,7 +2708,7 @@ def columnize(elems, width=80, newline="\n"):
     data = [elems[i * nrows : (i + 1) * nrows] for i in range(ncols)]
     colwidths = [max(map(len, d)) + pad for d in data]
     colwidths[-1] -= pad
-    row_t = "".join(["{{row[{i}]: <{{w[{i}]}}}}".format(i=i) for i in range(ncols)])
+    row_t = "".join([f"{{row[{i}]: <{{w[{i}]}}}}" for i in range(ncols)])
     row_t += newline
     lines = [
         row_t.format(row=row, w=colwidths)

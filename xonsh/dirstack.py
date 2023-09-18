@@ -244,9 +244,9 @@ def cd(args, stdin=None):
         return (
             "",
             (
-                "cd takes 0 or 1 arguments, not {}. An additional `-P` "
+                f"cd takes 0 or 1 arguments, not {len(args)}. An additional `-P` "
                 "flag can be passed in first position to follow symlinks."
-                "\n".format(len(args))
+                "\n"
             ),
             1,
         )

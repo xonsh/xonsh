@@ -508,7 +508,7 @@ class PrettyFormatter(Visitor):
         if node.path is None:
             s += "\n])"
         else:
-            s += "{0}],\n{0}path={1!r}\n)".format(self.indent, node.path)
+            s += f"{self.indent}],\n{self.indent}path={node.path!r}\n)"
         return s
 
     def visit_message(self, node):
@@ -830,9 +830,7 @@ class PromptVisitor(StateVisitor):
             print_color(f"{{GREEN}}{fname!r} loaded.{{RESET}}")
         else:
             print_color(
-                ("{{RED}}{!r} could not be found, " "continuing.{{RESET}}").format(
-                    fname
-                )
+                f"{{RED}}{fname!r} could not be found, " "continuing.{{RESET}}"
             )
         return fname
 

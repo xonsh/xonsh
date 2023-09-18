@@ -747,7 +747,7 @@ def xexec_fn(
     except FileNotFoundError as e:
         return (
             None,
-            "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], command[0]),
+            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}" "\n",
             1,
         )
 

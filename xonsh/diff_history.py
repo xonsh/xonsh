@@ -212,13 +212,7 @@ class HistoryDiffer:
         brtn = self.b["cmds"][j]["rtn"]
         if artn != brtn:
             s += (
-                "Return vals {red}{artn}{reset} & {green}{brtn}{reset} differ\n"
-            ).format(
-                red=COLORS.RED,
-                green=COLORS.GREEN,
-                reset=COLORS.RESET,
-                artn=artn,
-                brtn=brtn,
+                f"Return vals {COLORS.RED}{artn}{COLORS.RESET} & {COLORS.GREEN}{brtn}{COLORS.RESET} differ\n"
             )
         return s
 
