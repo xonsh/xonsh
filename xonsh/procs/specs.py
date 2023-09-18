@@ -133,7 +133,7 @@ def get_script_subproc_command(fname, args):
 @xl.lazyobject
 def _REDIR_REGEX():
     name = r"(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
-    return re.compile("{r}(>?>|<){r}$".format(r=name))
+    return re.compile(f"{name}(>?>|<){name}$")
 
 
 @xl.lazyobject
