@@ -532,7 +532,7 @@ class BaseParser:
         def optfunc(self, p):
             p[0] = p[1]
 
-        optfunc.__doc__ = (f"{rulename}_opt : empty\n" f"        | {rulename}")
+        optfunc.__doc__ = f"{rulename}_opt : empty\n" f"        | {rulename}"
         optfunc.__name__ = "p_" + rulename + "_opt"
         setattr(self.__class__, optfunc.__name__, optfunc)
 
@@ -544,7 +544,9 @@ class BaseParser:
         def listfunc(self, p):
             p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
-        listfunc.__doc__ = (f"{rulename}_list : {rulename}\n" f"         | {rulename}_list {rulename}")
+        listfunc.__doc__ = (
+            f"{rulename}_list : {rulename}\n" f"         | {rulename}_list {rulename}"
+        )
         listfunc.__name__ = "p_" + rulename + "_list"
         setattr(self.__class__, listfunc.__name__, listfunc)
 

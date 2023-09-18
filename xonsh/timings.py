@@ -231,11 +231,9 @@ def timeit_alias(args, stdin=None):
         # timing is 4 times faster than the slowest timing or not.
         if worst > 4 * best and best > 0 and worst > 1e-5:
             print(
-
-                    f"The slowest run took {worst / best:0.2f} times longer than the "
-                    "fastest. This could mean that an intermediate result "
-                    "is being cached."
-
+                f"The slowest run took {worst / best:0.2f} times longer than the "
+                "fastest. This could mean that an intermediate result "
+                "is being cached."
             )
         print(
             f"{number} loops, best of {repeat}: {format_time(best, precision)} per loop"
