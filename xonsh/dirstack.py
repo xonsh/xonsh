@@ -215,7 +215,7 @@ def cd(args, stdin=None):
         del args[0]
 
     if len(args) == 0:
-        d = os.path.expanduser("~")
+        d = env.get("HOME", os.path.expanduser("~"))
     elif len(args) == 1:
         d = os.path.expanduser(args[0])
         if not os.path.isdir(d):

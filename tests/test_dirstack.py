@@ -101,3 +101,16 @@ def test_cd_autopush(xession, tmpdir):
             dirstack.popd([])
 
     assert old_dir == os.getcwd()
+
+
+def test_cd_home(xession, tmpdir):
+    target = str(tmpdir)
+
+    old_home = xession.env.get("HOME")
+
+    xession.env.update(dict(HOME=target, PWD=os.getcwd(), AUTO_PUSHD=True))
+    dirstack.cd([])
+    assert target == os.getcwd()
+    dirstack.popd([])
+
+    xession.env.update(dict(HOME=old_home))
