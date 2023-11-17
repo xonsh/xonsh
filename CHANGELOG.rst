@@ -4,6 +4,30 @@ Xonsh Change Log
 
 .. current developments
 
+v0.14.2
+====================
+
+**Fixed:**
+
+* history: fix json file permissions upon `sudo` (#5220)
+* ``cd`` with no arguments will always return to ``$HOME``
+* Correctly parse multi line foreign aliases
+* Upgrade Python version at the introduction (https://github.com/xonsh/xonsh/pull/5193)
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* dependabot[bot]
+* doronz88
+* mgunyho
+* ShalokShalom
+* Wilfried Pollan
+
+
+
 v0.14.1
 ====================
 
