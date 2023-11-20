@@ -548,6 +548,9 @@ class SubprocSpec:
         if events.exists(event_name):
             event = getattr(events, event_name)
             event.fire(spec=self)
+        if events.exists("on_pre_spec_run"):
+            event = events.on_pre_spec_run
+            event.fire(spec=self)
 
     def _post_run_event_fire(self, name, proc):
         events = XSH.builtins.events
@@ -555,7 +558,9 @@ class SubprocSpec:
         if events.exists(event_name):
             event = getattr(events, event_name)
             event.fire(spec=self, proc=proc)
-
+        if events.exists("on_post_spec_run"):
+            event = events.on_post_spec_run
+            event.fire(spec=self)
     #
     # Building methods
     #
