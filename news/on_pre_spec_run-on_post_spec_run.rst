@@ -1,7 +1,7 @@
 **Added:**
 
-* on_pre_spec_run event
-* on_post_spec_run event
+* Added ``on_pre_spec_run`` event.
+* Added ``on_post_spec_run`` event.
 
 **Changed:**
 
