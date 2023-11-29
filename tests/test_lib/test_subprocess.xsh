@@ -2,6 +2,7 @@
 import tempfile
 from subprocess import CalledProcessError
 
+from xonsh.built_ins import XSH
 from xonsh.lib.os import indir
 from xonsh.lib.subprocess import run, check_call, check_output
 
@@ -59,3 +60,12 @@ def test_check_output():
             p = check_output(['touch', 'hello.txt'], cwd='tst_dir')
             assert p.decode('utf-8') == ''
             assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
+
+def test_pipefail():
+    with XSH.env.swap(XONSH_PIPEFAIL=True):
+        try:
+            $[false | true]
+            got_raise = False
+        except CalledProcessError:
+            got_raise = True
+        assert got_raise

@@ -930,6 +930,16 @@ class GeneralSetting(Xettings):
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``.",
     )
+    XONSH_PIPEFAIL = Var.with_default(
+        False,
+        "Whether or not to raise an error if a piped subprocess returns a "
+        "non-zero exist status, which indicates failure. This is mostly "
+        "useful in xonsh scripts or modules where pipeline failures should "
+        "cause an end to execution. This is less useful at a terminal. "
+        "This error is raised regardless of the value of "
+        "``$RAISE_SUBPROC_ERROR``. The error that is raised is a "
+        "``subprocess.CalledProcessError``.",
+    )
     LAST_RETURN_CODE = Var.with_default(
         0,
         "Integer return code of the last command. Only updated during interactive use, i.e. not during execution of scripts.",
