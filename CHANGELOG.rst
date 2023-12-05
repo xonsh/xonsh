@@ -4,6 +4,28 @@ Xonsh Change Log
 
 .. current developments
 
+v0.14.3
+====================
+
+**Added:**
+
+* Added ``on_pre_spec_run`` event.
+* Added ``on_post_spec_run`` event.
+
+**Fixed:**
+
+* ``xonsh`` now adds the user site packages directory to ``sys.path`` where
+  required for proper ``xontrib`` discovery
+
+**Authors:**
+
+* Gil Forsyth
+* pre-commit-ci[bot]
+* Jacqueline Leykam
+* Joshix-1
+
+
+
 v0.14.2
 ====================
 
