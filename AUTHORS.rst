@@ -23,9 +23,9 @@ Authors are sorted by number of commits.
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
+* pre-commit-ci[bot]
 * Rob Brewer
 * virus
-* pre-commit-ci[bot]
 * Sagar Tewari
 * Gordon Ball
 * Eadaen1
@@ -316,5 +316,7 @@ Authors are sorted by number of commits.
 * mgunyho
 * ShalokShalom
 * Wilfried Pollan
+* Jacqueline Leykam
+* Joshix-1
 * goodboy
 * Atsushi Morimoto

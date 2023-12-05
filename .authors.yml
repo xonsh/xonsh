@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 631
+  num_commits: 635
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1464,7 +1464,7 @@
   first_commit: 2022-06-27 22:21:34
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
-  num_commits: 35
+  num_commits: 36
   first_commit: 2022-07-11 14:26:34
 - name: jgart
   email: 47760695+jgarte@users.noreply.github.com
@@ -1556,3 +1556,11 @@
   email: gitwipo@users.noreply.github.com
   num_commits: 1
   first_commit: 2023-08-22 14:47:47
+- name: Jacqueline Leykam
+  email: me@jacqueline.id.au
+  num_commits: 1
+  first_commit: 2023-11-27 05:12:28
+- name: Joshix-1
+  email: 57299889+Joshix-1@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2023-11-23 06:19:34
