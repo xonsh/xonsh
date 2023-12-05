@@ -3,6 +3,7 @@ import contextlib
 import importlib
 import importlib.util
 import json
+import os
 import sys
 import typing as tp
 from enum import IntEnum
@@ -81,8 +82,22 @@ def get_xontribs() -> dict[str, Xontrib]:
     return dict(_get_installed_xontribs())
 
 
+def _patch_in_userdir():
+    """
+    Patch in user site packages directory.
+
+    If xonsh is installed in non-writeable location, then xontribs will end up
+    there, so we make them accessible."""
+    if not os.access(os.path.dirname(sys.executable), os.W_OK):
+        from site import getusersitepackages
+
+        if (user_site_packages := getusersitepackages()) not in set(sys.path):
+            sys.path.append(user_site_packages)
+
+
 def _get_installed_xontribs(pkg_name="xontrib"):
     """List all core packages + newly installed xontribs"""
+    _patch_in_userdir()
     spec = importlib.util.find_spec(pkg_name)
 
     def iter_paths():
@@ -111,6 +126,7 @@ def _get_installed_xontribs(pkg_name="xontrib"):
 
 def find_xontrib(name, full_module=False):
     """Finds a xontribution from its name."""
+    _patch_in_userdir()
 
     # here the order is important. We try to run the correct cases first and then later trial cases
     # that will likely fail
