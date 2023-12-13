@@ -62,9 +62,16 @@ def test_check_output():
             assert 'tst_dir/hello.txt' in g`tst_dir/*.txt`
 
 def test_pipefail():
+    falsecmd = "false"
+    truecmd = "true"
+    if ON_WINDOWS:
+        # `true` and `false` are part of coreutils, and thus not on Windows.
+        falsecmd = "cmd /C exit 1".split()
+        truecmd = "cmd /C exit 0".split()
+
     with XSH.env.swap(XONSH_PIPEFAIL=True):
         try:
-            $[false | true]
+            $[@(falsecmd) | @(truecmd)]
             got_raise = False
         except CalledProcessError:
             got_raise = True
