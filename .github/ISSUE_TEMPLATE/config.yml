@@ -2,5 +2,5 @@ blank_issues_enabled: true
 contact_links:
   - name: Just ask the community a question
     url: https://github.com/xonsh/xonsh/discussions/categories/q-a
-    about: Community help about usage and tricks.
+    about: Community help about usage the xonsh shell.
 
