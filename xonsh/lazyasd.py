@@ -117,6 +117,9 @@ class LazyObject:
     def __repr__(self):
         return repr(self._lazy_obj())
 
+    def __len__(self):
+        return len(self._lazy_obj())
+
 
 RT = tp.TypeVar("RT")
 
