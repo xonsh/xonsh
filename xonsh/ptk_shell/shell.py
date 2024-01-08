@@ -7,6 +7,7 @@ from types import MethodType
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.clipboard import InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.history import ThreadedHistory
@@ -193,8 +194,11 @@ class PromptToolkitShell(BaseShell):
         ptk_args.setdefault("history", self.history)
         if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
             disable_copy_on_deletion()
-        if HAVE_SYS_CLIPBOARD:
-            ptk_args.setdefault("clipboard", PyperclipClipboard())
+        if HAVE_SYS_CLIPBOARD and (XSH.env.get("XONSH_USE_SYSTEM_CLIPBOARD", True)):
+            default_clipboard = PyperclipClipboard()
+        else:
+            default_clipboard = InMemoryClipboard()
+        ptk_args.setdefault("clipboard", default_clipboard)
         self.prompter: PromptSession = PromptSession(**ptk_args)
 
         self.prompt_formatter = PTKPromptFormatter(self)
