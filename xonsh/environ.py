@@ -1689,7 +1689,14 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     )
     XONSH_COPY_ON_DELETE = Var.with_default(
         False,
-        "Whether to copy words/lines to clipboard on deletion (must be set in .xonshrc file)."
+        "Whether to copy words/lines to clipboard on deletion (must be set in the run control file)."
+        "Does not have any effect in ``vi_mode``."
+        "Only available under the prompt-toolkit shell.",
+    )
+    XONSH_USE_SYSTEM_CLIPBOARD = Var.with_default(
+        True,
+        "Whether to let the shell use the system clipboard (must be set in the run control file)."
+        "The main use-case is to fully disable clipboard integration in ``vi_mode``."
         "Only available under the prompt-toolkit shell.",
     )
     XONSH_CTRL_BKSP_DELETION = Var.with_default(
