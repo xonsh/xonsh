@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 635
+  num_commits: 638
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1436,11 +1436,11 @@
   email: github@rivera.za.net
   alternate_emails:
   - stefano@rivera.za.net
-  num_commits: 3
+  num_commits: 4
   first_commit: 2022-05-08 00:26:57
 - name: dependabot[bot]
   email: 49699333+dependabot[bot]@users.noreply.github.com
-  num_commits: 6
+  num_commits: 7
   first_commit: 2022-06-08 09:43:32
 - name: jbw3
   email: jbw3@users.noreply.github.com
@@ -1464,7 +1464,7 @@
   first_commit: 2022-06-27 22:21:34
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
-  num_commits: 36
+  num_commits: 39
   first_commit: 2022-07-11 14:26:34
 - name: jgart
   email: 47760695+jgarte@users.noreply.github.com
@@ -1564,3 +1564,15 @@
   email: 57299889+Joshix-1@users.noreply.github.com
   num_commits: 1
   first_commit: 2023-11-23 06:19:34
+- name: Nathan Monfils
+  email: nathanmonfils@gmail.com
+  num_commits: 1
+  first_commit: 2024-01-15 05:25:23
+- name: JamesParrott
+  email: 80779630+JamesParrott@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2024-01-16 08:56:07
+- name: Airat Makhmutov
+  email: 108220148+rautyrauty@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2023-12-31 10:08:28
