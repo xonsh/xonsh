@@ -894,7 +894,7 @@ def make_default_aliases():
             "vol",
         }
         for alias in windows_cmd_aliases:
-            default_aliases[alias] = ["cmd", "/c", alias]
+            default_aliases[alias] = [os.getenv("COMSPEC"), "/c", alias]
         default_aliases["call"] = ["source-cmd"]
         default_aliases["source-bat"] = ["source-cmd"]
         default_aliases["clear"] = "cls"
