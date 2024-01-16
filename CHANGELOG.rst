@@ -4,6 +4,25 @@ Xonsh Change Log
 
 .. current developments
 
+v0.14.4
+====================
+
+**Added:**
+
+* System clipboard can be fully disabled using ``$XONSH_USE_SYSTEM_CLIPBOARD``.
+
+**Authors:**
+
+* anki-code
+* pre-commit-ci[bot]
+* dependabot[bot]
+* Stefano Rivera
+* Nathan Monfils
+* JamesParrott
+* Airat Makhmutov
+
+
+
 v0.14.3
 ====================
 
