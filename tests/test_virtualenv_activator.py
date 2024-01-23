@@ -27,6 +27,7 @@ def test_xonsh_activator(tmp_path):
             sys.executable,
             "-m",
             "xonsh",
+            "--no-rc",
             "-c",
             "import shutil; shutil.which('python') or shutil.which('python3')",
         ]
@@ -35,7 +36,14 @@ def test_xonsh_activator(tmp_path):
 
     # Activate
     venv_python = check_output(
-        [sys.executable, "-m", "xonsh", "-c", f"source {activate_path}; which python"]
+        [
+            sys.executable,
+            "-m",
+            "xonsh",
+            "--no-rc",
+            "-c",
+            f"source {activate_path}; which python",
+        ]
     ).decode()
     assert Path(venv_python).parent == bin_path
 
@@ -45,6 +53,7 @@ def test_xonsh_activator(tmp_path):
             sys.executable,
             "-m",
             "xonsh",
+            "--no-rc",
             "-c",
             f"source {activate_path}; deactivate; "
             "import shutil; shutil.which('python') or shutil.which('python3')",
