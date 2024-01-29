@@ -20,16 +20,20 @@ There is a `xonsh package`_ for **Sublime Text 4** (build > 4075). To install:
 .. _Sublime Text packages: https://www.sublimetext.com/docs/packages.html
 
 
-Visual Studio Code (VSCode)
-===========================
-There is `xonsh extension for VSCode`_. To install search "xonsh" using extensions
+Visual Studio Code (VS Code)
+============================
+There is `xonsh extension for VS Code`_. To install search "xonsh" using extensions
 menu or just press ``F1`` and run without `>` preceding:
 
 .. code-block::
 
     ext install jnoortheen.xonsh
 
-.. _xonsh extension for VSCode: https://marketplace.visualstudio.com/items?itemName=jnoortheen.xonsh
+.. https://github.com/microsoft/vscode/issues/200374
+
+Since version 1.86 of VS Code, the editor also supports loading the environment for users with xonsh as their default shell.
+
+.. _xonsh extension for VS Code: https://marketplace.visualstudio.com/items?itemName=jnoortheen.xonsh
 
 
 Emacs
