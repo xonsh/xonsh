@@ -1,4 +1,5 @@
 """Base class of Xonsh History backends."""
+
 import functools
 import re
 import types

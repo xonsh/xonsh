@@ -1,6 +1,7 @@
 """Tests involving running Xonsh in subproc.
 This requires Xonsh installed in venv or otherwise available on PATH
 """
+
 import os
 import shutil
 import subprocess as sp

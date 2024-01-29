@@ -1,4 +1,5 @@
 """Job control for the xonsh shell."""
+
 import collections
 import contextlib
 import ctypes

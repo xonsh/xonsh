@@ -1,4 +1,5 @@
 """Tests the xonsh lexer."""
+
 import ast
 import copy
 import os

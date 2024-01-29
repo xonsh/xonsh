@@ -1,4 +1,5 @@
 """A (tab-)completer for xonsh."""
+
 import collections.abc as cabc
 import sys
 import typing as tp

@@ -1,4 +1,5 @@
 """Tests the json history backend."""
+
 # pylint: disable=protected-access
 
 import shlex

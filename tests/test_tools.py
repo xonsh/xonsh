@@ -1,4 +1,5 @@
 """Tests xonsh tools."""
+
 import datetime as dt
 import os
 import pathlib
@@ -1426,9 +1427,11 @@ def test_is_logfile_opt(inp, exp):
         pytest.param("/dev/null", "/dev/null", marks=skip_if_on_windows),
         pytest.param(
             "/dev/nonexistent_dev",
-            "/dev/nonexistent_dev"
-            if is_writable_file("/dev/nonexistent_dev")
-            else None,
+            (
+                "/dev/nonexistent_dev"
+                if is_writable_file("/dev/nonexistent_dev")
+                else None
+            ),
             marks=skip_if_on_windows,
         ),
         ("~/log", os.path.expanduser("~/log")),

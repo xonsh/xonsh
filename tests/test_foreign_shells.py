@@ -1,4 +1,5 @@
 """Tests foreign shells."""
+
 import os
 import subprocess
 

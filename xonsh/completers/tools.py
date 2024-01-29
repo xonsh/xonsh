@@ -1,4 +1,5 @@
 """Xonsh completer tools."""
+
 import inspect
 import os
 import shlex

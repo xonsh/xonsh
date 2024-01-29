@@ -1,4 +1,5 @@
 """Implements helper class for parsing Xonsh syntax within f-strings."""
+
 import re
 from ast import parse as pyparse
 

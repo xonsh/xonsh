@@ -1,4 +1,5 @@
 """Tools to help interface with foreign shells, such as Bash."""
+
 import collections.abc as cabc
 import functools
 import os

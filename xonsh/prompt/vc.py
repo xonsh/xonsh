@@ -1,4 +1,5 @@
 """Prompt formatter for simple version control branches"""
+
 # pylint:disable=no-member, invalid-name
 import contextlib
 import os

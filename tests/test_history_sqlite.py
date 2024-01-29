@@ -1,4 +1,5 @@
 """Tests the xonsh history."""
+
 # pylint: disable=protected-access
 import itertools
 import os

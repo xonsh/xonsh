@@ -77,6 +77,7 @@ without open / close parameters.  You can also use this code::
             Portions (c) 2009 by Robert Kern.
 :license: BSD License.
 """
+
 import collections
 import contextlib
 import datetime

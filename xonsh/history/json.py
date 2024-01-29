@@ -1,4 +1,5 @@
 """Implements JSON version of xonsh history backend."""
+
 import collections
 import collections.abc as cabc
 import os

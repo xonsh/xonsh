@@ -1,4 +1,5 @@
 """Testing xonsh import hooks"""
+
 import os
 from importlib import import_module
 

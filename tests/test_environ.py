@@ -1,4 +1,5 @@
 """Tests the xonsh environment."""
+
 import datetime
 import os
 import pathlib

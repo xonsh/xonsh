@@ -1,4 +1,5 @@
 """Testing that news entries are well formed."""
+
 import os
 import re
 

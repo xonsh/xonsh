@@ -6,6 +6,7 @@ The following time_it alias and Timer was forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
+
 import gc
 import itertools
 import math

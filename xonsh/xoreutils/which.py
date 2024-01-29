@@ -1,4 +1,5 @@
 """Implements the which xoreutil."""
+
 import argparse
 import functools
 import os

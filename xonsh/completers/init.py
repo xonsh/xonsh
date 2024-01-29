@@ -1,4 +1,5 @@
 """Constructor for xonsh completer objects."""
+
 import collections
 
 from xonsh.completers._aliases import complete_aliases

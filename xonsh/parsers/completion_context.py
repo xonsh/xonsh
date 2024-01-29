@@ -1,6 +1,7 @@
 """Implements the xonsh (tab-)completion context parser.
 This parser is meant to parse a (possibly incomplete) command line.
 """
+
 import enum
 import os
 import re
@@ -208,8 +209,7 @@ class Spanned(Generic[T]):
         expansion_obj: Union[
             "ExpandableObject", ExpansionOperation, Missing
         ] = Missing.MISSING,
-    ) -> "Spanned[T]":
-        ...
+    ) -> "Spanned[T]": ...
 
     @overload
     def replace(
@@ -222,8 +222,7 @@ class Spanned(Generic[T]):
         expansion_obj: Union[
             "ExpandableObject", ExpansionOperation, Missing
         ] = Missing.MISSING,
-    ) -> "Spanned[T2]":
-        ...
+    ) -> "Spanned[T2]": ...
 
     def replace(
         self,
