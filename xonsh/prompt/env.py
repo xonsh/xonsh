@@ -1,4 +1,5 @@
 """Prompt formatter for virtualenv and others"""
+
 import functools
 import re
 from pathlib import Path

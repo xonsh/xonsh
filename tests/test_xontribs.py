@@ -1,4 +1,5 @@
 """xontrib tests, such as they are"""
+
 import sys
 
 import pytest

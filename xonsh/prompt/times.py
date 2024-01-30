@@ -1,4 +1,5 @@
 """date & time related prompt formatter"""
+
 import time
 
 from xonsh.built_ins import XSH

@@ -1,6 +1,7 @@
 """This module provides the implementation for the retrieving completion results
 from bash.
 """
+
 import functools
 
 # developer note: this file should not perform any action on import.

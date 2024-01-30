@@ -16,6 +16,7 @@ Implementations:
 * indent()
 
 """
+
 import ast
 import collections
 import collections.abc as cabc
@@ -1790,9 +1791,7 @@ def to_completion_mode(x):
     y = (
         "default"
         if y in ("", "d", "xonsh", "none", "def")
-        else "menu-complete"
-        if y in ("m", "menu", "menu-completion")
-        else y
+        else "menu-complete" if y in ("m", "menu", "menu-completion") else y
     )
     if y not in CANONIC_COMPLETION_MODES:
         warnings.warn(

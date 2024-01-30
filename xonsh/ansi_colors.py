@@ -1,4 +1,5 @@
 """Tools for helping with ANSI color codes."""
+
 import re
 import sys
 import warnings

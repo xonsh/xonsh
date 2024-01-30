@@ -1,4 +1,5 @@
 """Testing dirstack"""
+
 import os
 import os.path
 import subprocess

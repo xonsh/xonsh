@@ -1,4 +1,5 @@
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
+
 import datetime
 import difflib
 import itertools

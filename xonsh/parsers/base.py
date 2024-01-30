@@ -1,4 +1,5 @@
 """Implements the base xonsh parser."""
+
 import os
 import re
 import textwrap

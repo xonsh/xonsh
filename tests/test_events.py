@@ -1,4 +1,5 @@
 """Event tests"""
+
 import inspect
 
 import pytest

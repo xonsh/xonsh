@@ -1,4 +1,5 @@
 """Tests ANSI color tools."""
+
 import pytest
 
 from xonsh.ansi_colors import (

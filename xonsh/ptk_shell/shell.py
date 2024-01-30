@@ -1,4 +1,5 @@
 """The prompt_toolkit based xonsh shell."""
+
 import os
 import re
 import sys

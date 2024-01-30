@@ -1,4 +1,5 @@
 """Tests lazy and self destruictive objects."""
+
 from xonsh.lazyasd import LazyObject
 
 #

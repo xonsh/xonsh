@@ -1,6 +1,7 @@
 """Directory stack and associated utilities for the xonsh shell.
 https://www.gnu.org/software/bash/manual/html_node/Directory-Stack-Builtins.html
 """
+
 import contextlib
 import glob
 import os

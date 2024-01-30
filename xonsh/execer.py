@@ -1,4 +1,5 @@
 """Implements the xonsh executer."""
+
 import builtins
 import collections.abc as cabc
 import inspect

@@ -1,4 +1,5 @@
 """Hooks for pygments syntax highlighting."""
+
 import os
 import re
 import stat
@@ -555,12 +556,16 @@ def register_custom_pygments_style(
         (Style,),
         {
             "styles": custom_styles,
-            "highlight_color": highlight_color
-            if highlight_color is not None
-            else base_style.highlight_color,
-            "background_color": background_color
-            if background_color is not None
-            else base_style.background_color,
+            "highlight_color": (
+                highlight_color
+                if highlight_color is not None
+                else base_style.highlight_color
+            ),
+            "background_color": (
+                background_color
+                if background_color is not None
+                else base_style.background_color
+            ),
         },
     )
 

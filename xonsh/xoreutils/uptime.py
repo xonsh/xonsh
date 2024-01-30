@@ -10,6 +10,7 @@ to standard output.
 This file was forked from the uptime project: https://github.com/Cairnarvon/uptime
 Copyright (c) 2012, Koen Crolla, All rights reserved.
 """
+
 import contextlib
 import ctypes
 import functools

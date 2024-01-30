@@ -1,4 +1,5 @@
 """Environment for the xonsh shell."""
+
 import collections.abc as cabc
 import contextlib
 import inspect
@@ -407,9 +408,11 @@ class LsColors(cabc.MutableMapping):
                     + "="
                     + ";".join(
                         [
-                            LsColors.target_value
-                            if key in self._targets
-                            else ansi_color_name_to_escape_code(v, cmap=style)
+                            (
+                                LsColors.target_value
+                                if key in self._targets
+                                else ansi_color_name_to_escape_code(v, cmap=style)
+                            )
                             for v in val
                         ]
                     )

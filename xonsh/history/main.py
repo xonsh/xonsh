@@ -1,4 +1,5 @@
 """Main entry points of the xonsh history."""
+
 import datetime
 import json
 import os

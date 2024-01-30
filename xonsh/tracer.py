@@ -1,4 +1,5 @@
 """Implements a xonsh tracer."""
+
 import importlib
 import inspect
 import linecache

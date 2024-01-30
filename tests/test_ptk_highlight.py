@@ -1,6 +1,5 @@
 """Test XonshLexer for pygments"""
 
-
 import pytest
 from pygments.token import (
     Error,

@@ -1,4 +1,5 @@
 """Tests pygments hooks."""
+
 import os
 import pathlib
 import stat

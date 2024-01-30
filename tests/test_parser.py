@@ -1,4 +1,5 @@
 """Tests the xonsh parser."""
+
 import ast
 import itertools
 import textwrap

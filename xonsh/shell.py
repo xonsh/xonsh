@@ -1,4 +1,5 @@
 """The xonsh shell"""
+
 import difflib
 import sys
 import time

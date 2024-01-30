@@ -1,6 +1,7 @@
 """Custom tools for managing JSON serialization / deserialization of xonsh
 objects.
 """
+
 import functools
 
 from xonsh.tools import EnvPath

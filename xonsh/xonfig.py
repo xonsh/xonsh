@@ -1,4 +1,5 @@
 """The xonsh configuration (xonfig) utility."""
+
 import ast
 import collections
 import contextlib

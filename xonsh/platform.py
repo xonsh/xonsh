@@ -2,6 +2,7 @@
 compatibility layers to make use of the 'best' implementation available
 on a platform.
 """
+
 import collections.abc as cabc
 import ctypes  # noqa
 import functools

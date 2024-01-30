@@ -738,9 +738,11 @@ MULTIPLE_COMMAND_BORDER_EXAMPLES = tuple(
                 (
                     (
                         f"ls{ws1}{X}{kwd}{ws2}echo",
-                        CommandContext((CommandArg("ls"),), 1)
-                        if ws1
-                        else CommandContext((), 0, prefix="ls"),
+                        (
+                            CommandContext((CommandArg("ls"),), 1)
+                            if ws1
+                            else CommandContext((), 0, prefix="ls")
+                        ),
                     ),
                 )
                 for ws1, ws2, kwd in itertools.product(

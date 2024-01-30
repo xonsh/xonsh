@@ -1,4 +1,5 @@
 """Tests the xonsh main function."""
+
 import builtins
 import gc
 import os

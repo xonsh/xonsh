@@ -1,4 +1,5 @@
 """Aliases for the xonsh shell."""
+
 import argparse
 import collections.abc as cabc
 import functools
@@ -85,8 +86,7 @@ class Aliases(cabc.MutableMapping):
     @tp.overload
     def register(
         self, name: str, *, dash_case: bool = True
-    ) -> tp.Callable[[types.FunctionType], types.FunctionType]:
-        ...
+    ) -> tp.Callable[[types.FunctionType], types.FunctionType]: ...
 
     def register(self, func_or_name, name=None, dash_case=True):
         """Decorator to register the given function by name."""

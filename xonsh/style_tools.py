@@ -1,4 +1,5 @@
 """Xonsh color styling tools that simulate pygments, when it is unavailable."""
+
 from collections import defaultdict
 
 from xonsh.color_tools import RE_BACKGROUND, iscolor, warn_deprecated_no_color

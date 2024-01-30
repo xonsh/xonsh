@@ -1,4 +1,5 @@
 """The main xonsh script."""
+
 import argparse
 import builtins
 import contextlib

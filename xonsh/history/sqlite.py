@@ -1,4 +1,5 @@
 """Implements the xonsh history backend via sqlite3."""
+
 import collections
 import json
 import os
