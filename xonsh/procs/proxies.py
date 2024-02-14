@@ -6,6 +6,7 @@ The contents of `subprocess.py` (and, thus, the reproduced methods) are
 Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se> and were
 licensed to the Python Software foundation under a Contributor Agreement.
 """
+
 import collections.abc as cabc
 import functools
 import inspect
@@ -512,12 +513,12 @@ class ProcProxyThread(threading.Thread):
             if self.env and self.env.get("__ALIAS_NAME"):
                 alias_stack += ":" + self.env["__ALIAS_NAME"]
 
-            with STDOUT_DISPATCHER.register(sp_stdout), STDERR_DISPATCHER.register(
-                sp_stderr
-            ), xt.redirect_stdout(STDOUT_DISPATCHER), xt.redirect_stderr(
-                STDERR_DISPATCHER
-            ), XSH.env.swap(
-                self.env, __ALIAS_STACK=alias_stack
+            with (
+                STDOUT_DISPATCHER.register(sp_stdout),
+                STDERR_DISPATCHER.register(sp_stderr),
+                xt.redirect_stdout(STDOUT_DISPATCHER),
+                xt.redirect_stderr(STDERR_DISPATCHER),
+                XSH.env.swap(self.env, __ALIAS_STACK=alias_stack),
             ):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec, spec.stack)
         except SystemExit as e:

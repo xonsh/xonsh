@@ -1,4 +1,5 @@
 """Base completer for xonsh."""
+
 import collections.abc as cabc
 
 from xonsh.completers.commands import complete_command

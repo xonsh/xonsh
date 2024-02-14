@@ -77,6 +77,7 @@ without open / close parameters.  You can also use this code::
             Portions (c) 2009 by Robert Kern.
 :license: BSD License.
 """
+
 import collections
 import contextlib
 import datetime
@@ -344,7 +345,6 @@ class RepresentationPrinter(PrettyPrinter):
         deferred_pprinters=None,
         max_seq_length=MAX_SEQ_LENGTH,
     ):
-
         PrettyPrinter.__init__(
             self, output, max_width, newline, max_seq_length=max_seq_length
         )

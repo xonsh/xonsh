@@ -1,4 +1,5 @@
 """Environment for the xonsh shell."""
+
 import collections.abc as cabc
 import contextlib
 import inspect
@@ -180,7 +181,7 @@ def locale_convert(key):
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
             msg = f"Failed to set locale {key!r} to {val!r}"
-            warnings.warn(msg, RuntimeWarning)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return val
 
     return lc_converter
@@ -407,9 +408,11 @@ class LsColors(cabc.MutableMapping):
                     + "="
                     + ";".join(
                         [
-                            LsColors.target_value
-                            if key in self._targets
-                            else ansi_color_name_to_escape_code(v, cmap=style)
+                            (
+                                LsColors.target_value
+                                if key in self._targets
+                                else ansi_color_name_to_escape_code(v, cmap=style)
+                            )
                             for v in val
                         ]
                     )
@@ -797,14 +800,14 @@ class Xettings:
     """
 
     @classmethod
-    def get_settings(cls) -> tp.Iterator[tp.Tuple[VarKeyType, Var]]:
+    def get_settings(cls) -> tp.Iterator[tuple[VarKeyType, Var]]:
         for var_name, var in vars(cls).items():
             if not var_name.startswith("__") and var_name.isupper():
                 yield var.get_key(var_name), var
 
     @staticmethod
     def _get_groups(
-        cls, _seen: tp.Optional[tp.Set["Xettings"]] = None, *bases: "Xettings"
+        cls, _seen: tp.Optional[set["Xettings"]] = None, *bases: "Xettings"
     ):
         if _seen is None:
             _seen = set()
@@ -819,9 +822,7 @@ class Xettings:
     @classmethod
     def get_groups(
         cls,
-    ) -> tp.Iterator[
-        tp.Tuple[tp.Tuple["Xettings", ...], tp.Tuple[tp.Tuple[VarKeyType, Var], ...]]
-    ]:
+    ) -> tp.Iterator[tuple[tuple["Xettings", ...], tuple[tuple[VarKeyType, Var], ...]]]:
         yield from Xettings._get_groups(cls)
 
     @classmethod
@@ -1386,6 +1387,30 @@ class PromptSetting(Xettings):
         "Prompt text for 2nd+ lines of input, may be str or function which "
         "returns a str.",
     )
+    MULTILINE_PROMPT_PRE = Var(
+        is_string_or_callable,
+        ensure_string,
+        ensure_string,
+        DefaultNotGiven,
+        "Indicator inserted before the line continuation marks set "
+        "in ``$MULTILINE_PROMPT``. Can be used to mark the start of "
+        "a semantic continuation prompt "
+        "(see `Semantic Prompts <https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md>`_ "
+        "or `WezTerm <https://wezfurlong.org/wezterm/shell-integration.html>`_ "
+        "for more details). May be str or function which returns a str.",
+    )
+    MULTILINE_PROMPT_POS = Var(
+        is_string_or_callable,
+        ensure_string,
+        ensure_string,
+        DefaultNotGiven,
+        "Indicator inserted after the line continuation marks set "
+        "in ``$MULTILINE_PROMPT``. Can be used to mark the end of "
+        "a semantic continuation prompt and the beginning of user input "
+        "(see `Semantic Prompts <https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md>`_ "
+        "or `WezTerm <https://wezfurlong.org/wezterm/shell-integration.html>`_ "
+        "for more details). May be str or function which returns a str.",
+    )
     PRETTY_PRINT_RESULTS = Var.with_default(
         True,
         'Flag for "pretty printing" return values.',
@@ -1610,7 +1635,9 @@ class PromptHistorySetting(Xettings):
         ensure_string,
         None,
         "Set a filter criteria for history items using a regular expression. "
-        "Any matching items will not be retained in the history.",
+        "Any matching items will not be retained in the history. "
+        "Example: ``$XONSH_HISTORY_IGNORE_REGEX = '(^echo|^.*\\#\\#\\#\\s*|.*\\#\\#\\#\\s*$)'``"
+        " - skip commands that start from ``echo`` or ``###``, or end from ``###``.",
     )
 
 
@@ -1665,7 +1692,14 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     )
     XONSH_COPY_ON_DELETE = Var.with_default(
         False,
-        "Whether to copy words/lines to clipboard on deletion (must be set in .xonshrc file)."
+        "Whether to copy words/lines to clipboard on deletion (must be set in the run control file)."
+        "Does not have any effect in ``vi_mode``."
+        "Only available under the prompt-toolkit shell.",
+    )
+    XONSH_USE_SYSTEM_CLIPBOARD = Var.with_default(
+        True,
+        "Whether to let the shell use the system clipboard (must be set in the run control file)."
+        "The main use-case is to fully disable clipboard integration in ``vi_mode``."
         "Only available under the prompt-toolkit shell.",
     )
     XONSH_CTRL_BKSP_DELETION = Var.with_default(

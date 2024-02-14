@@ -1,4 +1,5 @@
 """Base class of Xonsh History backends."""
+
 import functools
 import re
 import types
@@ -78,7 +79,7 @@ class History:
         self.hist_size = None
         self.hist_units = None
         self.remember_history = True
-        self.ignore_regex  # Tap the ignore regex to validate it
+        self.ignore_regex  # Tap the ignore regex to validate it # noqa
 
     def __len__(self):
         """Return the number of items in current session."""
@@ -108,8 +109,7 @@ class History:
             ]
         else:
             raise TypeError(
-                "history indices must be integers "
-                "or slices, not {}".format(type(item))
+                "history indices must be integers " f"or slices, not {type(item)}"
             )
 
     def __setitem__(self, *args):
@@ -129,6 +129,10 @@ class History:
             as instance variables in the ``HistoryEntry`` class.
         """
         pass
+
+    def pull(self, **kwargs):
+        """Pull history from other parallel sessions."""
+        raise NotImplementedError
 
     def flush(self, **kwargs):
         """Flush the history items to disk from a buffer."""
@@ -167,6 +171,22 @@ class History:
     def clear(self):
         """Clears the history of the current session from both the disk and
         memory.
+        """
+        pass
+
+    def delete(self, pattern):
+        """Deletes the history of the current session for commands that match
+        a user-provided pattern.
+
+        Parameters
+        ----------
+        pattern: str
+            The regex pattern to match commands against.
+
+        Returns
+        -------
+        int
+            The number of commands deleted from history.
         """
         pass
 

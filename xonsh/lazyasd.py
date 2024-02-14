@@ -1,4 +1,5 @@
 """Lazy and self destructive containers for speeding up module import."""
+
 # Copyright 2015-2016, the xonsh developers. All rights reserved.
 import builtins
 import collections.abc as cabc
@@ -116,6 +117,9 @@ class LazyObject:
 
     def __repr__(self):
         return repr(self._lazy_obj())
+
+    def __len__(self):
+        return len(self._lazy_obj())
 
 
 RT = tp.TypeVar("RT")

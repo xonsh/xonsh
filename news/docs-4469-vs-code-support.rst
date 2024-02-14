@@ -1,10 +1,10 @@
 **Added:**
 
-* Wheels for Python 3.11 are part of the automated release action
+* <news item>
 
 **Changed:**
 
-* <news item>
+* Updated docs to reflect VS Code support for xonsh as the user's default shell.
 
 **Deprecated:**
 

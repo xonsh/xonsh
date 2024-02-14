@@ -1,4 +1,5 @@
 """Xonsh completer tools."""
+
 import inspect
 import os
 import shlex
@@ -136,7 +137,7 @@ def RICH_COMPLETION_DEFAULTS():
 
 
 Completion = tp.Union[RichCompletion, str]
-CompleterResult = tp.Union[tp.Set[Completion], tp.Tuple[tp.Set[Completion], int], None]
+CompleterResult = tp.Union[set[Completion], tuple[set[Completion], int], None]
 ContextualCompleter = tp.Callable[[CompletionContext], CompleterResult]
 
 
@@ -158,7 +159,8 @@ def is_contextual_completer(func):
 
 def contextual_command_completer(func: tp.Callable[[CommandContext], CompleterResult]):
     """like ``contextual_completer``,
-    but will only run when completing a command and will directly receive the ``CommandContext`` object"""
+    but will only run when completing a command and will directly receive the ``CommandContext`` object
+    """
 
     @contextual_completer
     @wraps(func)

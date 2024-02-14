@@ -1,4 +1,5 @@
 """Interface for running subprocess-mode commands on posix systems."""
+
 import array
 import io
 import os

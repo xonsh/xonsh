@@ -106,8 +106,8 @@ class ModuleReMatcher(ModuleFinder):
 
     def __init__(self, *names: str):
         # list of pre-defined patterns. More can be added using the public method ``.wrap``
-        self._patterns: tp.Dict[str, str] = {}
-        self._compiled: tp.Dict[str, tp.Pattern] = {}
+        self._patterns: dict[str, str] = {}
+        self._compiled: dict[str, tp.Pattern] = {}
         super().__init__(*names)
 
     def search_completer(self, cmd: str, cleaned=False):

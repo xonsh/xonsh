@@ -1,4 +1,5 @@
 """Completer implementation to use with prompt_toolkit."""
+
 import os
 
 from prompt_toolkit.application.current import get_app

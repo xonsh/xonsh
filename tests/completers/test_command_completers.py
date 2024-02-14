@@ -40,7 +40,7 @@ def test_skipper_command(completion_context_parse):
 def test_skipper_arg(completion_context_parse, xession, monkeypatch):
     monkeypatch.setattr(xession.shell.shell, "completer", Completer(), raising=False)
     bash_completer_mock = Mock()
-    monkeypatch.setattr(xession, "completers", {"bash": bash_completer_mock})
+    monkeypatch.setattr(xession, "_completers", {"bash": bash_completer_mock})
 
     bash_completer_mock.return_value = {"--count "}
 

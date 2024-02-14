@@ -24,13 +24,13 @@ def add_one_completer(name, func, loc="end"):
         for k, v in items[first_exclusive:]:
             new[k] = v
     elif loc == "end":
-        for (k, v) in XSH.completers.items():
+        for k, v in XSH.completers.items():
             new[k] = v
         new[name] = func
     else:
         direction, rel = loc[0], loc[1:]
         found = False
-        for (k, v) in XSH.completers.items():
+        for k, v in XSH.completers.items():
             if rel == k and direction == "<":
                 new[name] = func
                 found = True

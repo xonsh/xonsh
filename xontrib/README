@@ -1,5 +1,0 @@
-xontrib is an implicit namespace package. DO NOT add an __init__.py file
-to this directory.
-
-Feel free to add both *.xsh and *.py files to the directory, they will be
-installed and available.

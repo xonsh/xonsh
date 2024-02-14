@@ -7,7 +7,6 @@ import importlib
 import os
 import sys
 import types
-import typing as tp
 from pathlib import Path
 from traceback import extract_tb, format_list
 from unittest.mock import MagicMock
@@ -129,7 +128,7 @@ def xonsh_execer_parse(xonsh_execer):
 
 @pytest.fixture
 def mock_executables_in(xession, tmp_path, monkeypatch):
-    def _factory(binaries: tp.List[str]):
+    def _factory(binaries: list[str]):
         xession.env["PATH"] = [tmp_path]
         exec_mock = MagicMock(return_value=binaries)
         monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
@@ -402,14 +401,16 @@ def load_xontrib():
     to_unload = []
 
     def wrapper(*names: str):
-        from xonsh.xontribs import xontribs_load
+        from xonsh.xontribs import xontrib_data, xontribs_load
+
+        xo_data = xontrib_data()
 
         for name in names:
-            module = f"xontrib.{name}"
+            module = xo_data[name]["module"]
             if module not in sys.modules:
                 to_unload.append(module)
 
-            _, stderr, res = xontribs_load([name])
+            _, stderr, res = xontribs_load([module], full_module=True)
             if stderr:
                 raise Exception(f"Failed to load xontrib: {stderr}")
         return

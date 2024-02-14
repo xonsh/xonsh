@@ -1,4 +1,5 @@
 """xonsh.proc is deprecated"""
+
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import print_warning
 

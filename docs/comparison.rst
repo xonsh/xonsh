@@ -82,7 +82,7 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       -
       - ✓
-      -
+      - ✓
       -
       - ✓
     * - Rich history

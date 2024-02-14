@@ -21,6 +21,7 @@ Authors are sorted by number of commits.
 * Klaus Alexander Seistrup
 * Leonardo Santagada
 * Burak Yiğit Kaya
+* pre-commit-ci[bot]
 * Matthias Bussonnier
 * Aaron Griffin
 * Rob Brewer
@@ -54,7 +55,7 @@ Authors are sorted by number of commits.
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* pre-commit-ci[bot]
+* Evgeny
 * Stephan Fitzpatrick
 * dev2718
 * Will S
@@ -64,11 +65,11 @@ Authors are sorted by number of commits.
 * Oleh Prypin
 * Brian Skinn
 * Wendell Turner
-* Evgeny
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
 * Alexander Sosedkin
+* dependabot[bot]
 * Cody Scott
 * Jake Hedman
 * traverseda
@@ -124,7 +125,8 @@ Authors are sorted by number of commits.
 * Sean Farley
 * Marduk Bolaños
 * Marius van Niekerk
-* dependabot[bot]
+* doronz88
+* Stefano Rivera
 * Lie Ryan
 * Jan Schulz
 * Samuel Dion-Girardeau
@@ -137,6 +139,7 @@ Authors are sorted by number of commits.
 * yuqing
 * Rahiel Kasim
 * SanketDG
+* Mark Bestley
 * David
 * Danmou
 * Niklas Hambüchen
@@ -148,8 +151,9 @@ Authors are sorted by number of commits.
 * Jerzy Drozdz
 * omjadas
 * Jeremy Schlatter
+* Samuel Dion-Girardeau
 * Oliver Bestwalter
-* Stefano Rivera
+* Ivan Ogasawara
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -164,7 +168,6 @@ Authors are sorted by number of commits.
 * Nicolas Avrutin
 * Kevin Yokley
 * Ollie Ford
-* Mark Bestley
 * Michał Zając
 * Emre Ates
 * Romain Bignon
@@ -181,7 +184,6 @@ Authors are sorted by number of commits.
 * anki
 * Faris A Chugthai
 * Asaf Fisher
-* Samuel Dion-Girardeau
 * Gabriele N. Tornetta
 * cmidkiff87
 * jbw3
@@ -292,7 +294,6 @@ Authors are sorted by number of commits.
 * Ganer
 * mattmc3
 * Evan Hubinger
-* doronz88
 * Italo Cunha
 * Timmy Welch
 * Hannes Römer
@@ -306,5 +307,19 @@ Authors are sorted by number of commits.
 * austin-yang
 * Marco Rubin
 * Qyriad
+* Tobias Becker
+* AkshayWarrier
+* Thomas Hess
+* kouhe3
+* HackTheOxidation
+* Cosine Chen
+* mgunyho
+* ShalokShalom
+* Wilfried Pollan
+* Jacqueline Leykam
+* Joshix-1
+* Nathan Monfils
+* JamesParrott
+* Airat Makhmutov
 * goodboy
 * Atsushi Morimoto

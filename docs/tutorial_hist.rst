@@ -255,6 +255,13 @@ may be useful to share entries between shell sessions. In such a case, one can u
 the ``flush`` action to immediately save the session history to disk and make it
 accessible from other shell sessions.
 
+``pull`` action
+================
+Tries to pull the history from parallel sessions and add to the current session.
+
+For example if there are two parallel terminal windows the run of ``history pull``
+command from the second terminal window will get the commands from the first terminal.
+
 ``clear`` action
 ================
 Deletes the history from the current session up until this point. Later commands

@@ -1,4 +1,5 @@
 """A pwd implementation for xonsh."""
+
 import os
 
 from xonsh.built_ins import XSH

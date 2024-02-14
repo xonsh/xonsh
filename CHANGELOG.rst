@@ -4,6 +4,161 @@ Xonsh Change Log
 
 .. current developments
 
+v0.14.4
+====================
+
+**Added:**
+
+* System clipboard can be fully disabled using ``$XONSH_USE_SYSTEM_CLIPBOARD``.
+
+**Authors:**
+
+* anki-code
+* pre-commit-ci[bot]
+* dependabot[bot]
+* Stefano Rivera
+* Nathan Monfils
+* JamesParrott
+* Airat Makhmutov
+
+
+
+v0.14.3
+====================
+
+**Added:**
+
+* Added ``on_pre_spec_run`` event.
+* Added ``on_post_spec_run`` event.
+
+**Fixed:**
+
+* ``xonsh`` now adds the user site packages directory to ``sys.path`` where
+  required for proper ``xontrib`` discovery
+
+**Authors:**
+
+* Gil Forsyth
+* pre-commit-ci[bot]
+* Jacqueline Leykam
+* Joshix-1
+
+
+
+v0.14.2
+====================
+
+**Fixed:**
+
+* history: fix json file permissions upon `sudo` (#5220)
+* ``cd`` with no arguments will always return to ``$HOME``
+* Correctly parse multi line foreign aliases
+* Upgrade Python version at the introduction (https://github.com/xonsh/xonsh/pull/5193)
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* dependabot[bot]
+* doronz88
+* mgunyho
+* ShalokShalom
+* Wilfried Pollan
+
+
+
+v0.14.1
+====================
+
+**Added:**
+
+* Added ``history delete`` command to both the JSON and SQLite history backends allowing users to delete commands from history that matches a pattern.
+* Now you can become a sponsor to xonsh - https://github.com/sponsors/xonsh
+* Added preliminary support for Python v3.12
+
+**Changed:**
+
+* Always load rc files except that --norc is passed.
+* Unset the default line continuation environment variables (``$MULTILINE_PROMPT_PRE`` and ``$MULTILINE_PROMPT_POS``) to allow differentiating between user setting an empty value and not setting anything
+* Dropped support for Python v3.8
+
+**Fixed:**
+
+* This change fixes issue #4855, that is, rc files will be loaded in non-interactive mode.
+* platform: fix `BASH_COMPLETIONS_DEFAULT` on M1
+* Fix wrong verification for the simple output, introduced by PR5072
+
+**Authors:**
+
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Evgeny
+* doronz88
+* Ivan Ogasawara
+* HackTheOxidation
+* Cosine Chen
+
+
+
+v0.14.0
+====================
+
+**Added:**
+
+* key_bindings: map `escape-f` as another word completer for macOS
+* Added ``history pull`` command to SQLite history backend to pull the history from parallel sessions and add to the current session.
+* Add support for `Semantic Prompt <https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md>`_ for line continuations in multiline prompts via two environment variables: ``$MULTILINE_PROMPT_PRE`` (e.g., ``\x01\x1b]133;P;k=c\x07\x02``), and ``$MULTILINE_PROMPT_POS`` (e.g., ``\x01\x1b]133;B\x07\x02``) that are inserted before/after each continuation line 'dots' block to mark input
+* Wheels for Python 3.11 are part of the automated release action
+* Added ``chdir`` to ``xonsh.tools``. This allows to use ``with chdir("dir"):`` to run commands block in the certain directory without manually cd-ing.
+* Display the current branch of Fossil VCS checkouts in the prompt,
+  similar to git and hg.
+* Added link to xonsh on Mastodon - https://mastodon.online/@xonsh
+* xontrib load: added option ``-s`` to skip warning about not installed xontribs.
+
+**Changed:**
+
+* Altered documentation for xonshrc to remove Python REPL prompts so that you can copy the code without having to edit it.
+* xonsh AppImage - bumped python to 3.11
+* The prompt end character switched to ``@``.
+* The `command not found` error will show the ``repr(cmd)`` to uncover the cases when the command name has ``\n``, ``\t`` or not visible color codes and raises the error.
+* ``abbrevs`` xontrib transferred to `xontrib-abbrevs <https://github.com/xonsh/xontrib-abbrevs>`_.
+* ``bashisms`` xontrib transferred to `xontrib-bashisms <https://github.com/xonsh/xontrib-bashisms>`_.
+* ``free_cwd`` xontrib transferred to `xontrib-free-cwd <https://github.com/xonsh/xontrib-free-cwd>`_.
+* ``whole_word_jumping`` xontrib transferred to `xontrib-whole-word-jumping <https://github.com/xonsh/xontrib-whole-word-jumping>`_.
+* ``fish_completer`` xontrib transferred to `xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_.
+* ``vox``, ``autovox``, ``voxapi`` xontribs transferred to `xontrib-vox <https://github.com/xonsh/xontrib-vox>`_.
+* ``pdb``, ``xog`` xontribs transferred to `xontrib-debug-tools <https://github.com/xonsh/xontrib-debug-tools>`_.
+
+**Fixed:**
+
+* Fixed xpip alias for xonsh AppImage.
+* Fixed missing ``webconfig/js/xonsh_sticker.svg`` in ``xonfig web``.
+* update load_xontrib pytest fixture to handle auto-loaded xontribs
+* Suppress subprocess traceback on exception in case ``$XONSH_SHOW_TRACEBACK=False`` with ``$RAISE_SUBPROC_ERROR=True``.
+* Improve the error message when ``$RAISE_SUBPROC_ERROR`` is set to True.
+* Fixed xontrib-jupyter to work in JupyterLab and terminal-based `Euporie <https://github.com/joouha/euporie>`_ environment.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Evgeny
+* Mark Bestley
+* Samuel Dion-Girardeau
+* doronz88
+* Ivan Ogasawara
+* Tobias Becker
+* AkshayWarrier
+* Thomas Hess
+* kouhe3
+
+
+
 v0.13.4
 ====================
 
@@ -355,6 +510,7 @@ v0.12.0
 
 **Changed:**
 
+* BREAKING CHANGE: ``/etc/xonshrc`` location for run control file has been deprecated in favor of ``/etc/xonsh/xonshrc``.
 * Both ``*.xsh`` and ``*.py`` files inside ``$XONSHRC_DIR`` will get loaded now.
 * Environment-variables of no predefined type or path environment variables are now represented as strings via the empty string.
 * Made stacktraces behave like in python, i.e. when something in user-provided code fails (both interactively and non-interactively), only that part is shown, and the (static) part of the stacktrace showing the location where the user code was called in xonsh remains hidden. When an unexpected exception occurs inside xonsh, everything is shown like before.

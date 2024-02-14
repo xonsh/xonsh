@@ -1,22 +1,14 @@
 """Testing dirstack"""
 
 import os
-from contextlib import contextmanager
 
 import pytest  # noqa F401
 
 from xonsh import dirstack
+from xonsh.tools import chdir
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
-
-
-@contextmanager
-def chdir(adir):
-    old_dir = os.getcwd()
-    os.chdir(adir)
-    yield
-    os.chdir(old_dir)
 
 
 def test_simple(xession):
@@ -109,3 +101,16 @@ def test_cd_autopush(xession, tmpdir):
             dirstack.popd([])
 
     assert old_dir == os.getcwd()
+
+
+def test_cd_home(xession, tmpdir):
+    target = str(tmpdir)
+
+    old_home = xession.env.get("HOME")
+
+    xession.env.update(dict(HOME=target, PWD=os.getcwd(), AUTO_PUSHD=True))
+    dirstack.cd([])
+    assert target == os.getcwd()
+    dirstack.popd([])
+
+    xession.env.update(dict(HOME=old_home))

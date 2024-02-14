@@ -1,4 +1,5 @@
 """Xonsh AST tests."""
+
 import ast as pyast
 
 import pytest

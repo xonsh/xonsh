@@ -1,7 +1,9 @@
 """Implements JSON version of xonsh history backend."""
+
 import collections
 import collections.abc as cabc
 import os
+import re
 import sys
 import threading
 import time
@@ -10,8 +12,12 @@ from xonsh.built_ins import XSH
 
 try:
     import ujson as json
+
+    JSONDecodeError = json.JSONDecodeError  # type: ignore
 except ImportError:
     import json  # type: ignore
+
+    JSONDecodeError = json.decoder.JSONDecodeError  # type: ignore
 
 import xonsh.lazyjson as xlj
 import xonsh.tools as xt
@@ -421,6 +427,10 @@ class JsonHistory(History):
                 xlj.ljdump(meta, f, sort_keys=True)
 
             try:
+                sudo_uid = os.environ.get("SUDO_UID")
+                sudo_gid = os.environ.get("SUDO_GID")
+                if None not in (sudo_uid, sudo_gid):
+                    os.chown(self.filename, int(sudo_uid), int(sudo_gid))
                 os.chmod(self.filename, 0o600)
             except Exception:  # pylint: disable=broad-except
                 pass
@@ -549,7 +559,7 @@ class JsonHistory(History):
                 continue
             try:
                 commands = json_file.load()["cmds"]
-            except (json.decoder.JSONDecodeError, ValueError):
+            except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
                 if XSH.env.get("XONSH_DEBUG") > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
@@ -596,3 +606,43 @@ class JsonHistory(History):
 
         # Flush empty history object to disk, overwriting previous data.
         self.flush()
+
+    def delete(self, pattern):
+        """Deletes all entries in history which matches a pattern."""
+        pattern = re.compile(pattern)
+
+        deleted = 0
+        # First, delete any matching commands in the in-memory buffer.
+        for i, cmd in enumerate(self.buffer):
+            if pattern.match(cmd["inp"]):
+                del self.buffer[i]
+                deleted += 1
+
+        # Then, delete any matching commands on disk.
+        while self.gc and self.gc.is_alive():
+            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
+        for f in _xhj_get_history_files():
+            try:
+                json_file = xlj.LazyJSON(f, reopen=False)
+            except ValueError:
+                # Invalid json file
+                continue
+            try:
+                file_content = json_file.load()
+                commands = file_content["cmds"]
+                for i, c in enumerate(commands):
+                    if pattern.match(c["inp"]):
+                        del commands[i]
+                        deleted += 1
+
+                file_content["cmds"] = commands
+                with open(f, "w") as fp:
+                    xlj.ljdump(file_content, fp)
+            except (JSONDecodeError, ValueError):
+                # file is corrupted somehow
+                if XSH.env.get("XONSH_DEBUG") > 0:
+                    msg = "xonsh history file {0!r} is not valid JSON"
+                    print(msg.format(f), file=sys.stderr)
+                continue
+
+        return deleted

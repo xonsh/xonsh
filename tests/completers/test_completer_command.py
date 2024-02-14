@@ -10,7 +10,7 @@ def mock_completer(monkeypatch, xsh_with_aliases):
 
     xsh = xsh_with_aliases
     monkeypatch.setattr(
-        xsh, "completers", {"one": dummy_completer, "two": complete_aliases}
+        xsh, "_completers", {"one": dummy_completer, "two": complete_aliases}
     )
     monkeypatch.setattr(xsh, "ctx", {"three": lambda: 1, "four": lambda: 2})
     return xsh

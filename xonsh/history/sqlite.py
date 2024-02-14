@@ -1,7 +1,9 @@
 """Implements the xonsh history backend via sqlite3."""
+
 import collections
 import json
 import os
+import re
 import sqlite3
 import sys
 import threading
@@ -41,8 +43,8 @@ def _xh_sqlite_create_history_table(cursor):
     """
     if not getattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False):
         cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS {}
+            f"""
+            CREATE TABLE IF NOT EXISTS {XH_SQLITE_TABLE_NAME}
                  (inp TEXT,
                   rtn INTEGER,
                   tsb REAL,
@@ -53,9 +55,7 @@ def _xh_sqlite_create_history_table(cursor):
                   frequency INTEGER default 1,
                   cwd TEXT
                  )
-        """.format(
-                XH_SQLITE_TABLE_NAME
-            )
+        """
         )
 
         # add frequency column if not exists for backward compatibility
@@ -204,6 +204,15 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
         return _xh_sqlite_delete_records(c, size_to_keep)
 
 
+def xh_sqlite_pull(filename, last_pull_time, current_sessionid):
+    sql = "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid != ? ORDER BY tsb"
+    params = [last_pull_time, current_sessionid]
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        c.execute(sql, tuple(params))
+        return c.fetchall()
+
+
 def xh_sqlite_wipe_session(sessionid=None, filename=None):
     """Wipe the current session's entries from the database."""
     sql = "DELETE FROM xonsh_history WHERE sessionid = ?"
@@ -211,6 +220,17 @@ def xh_sqlite_wipe_session(sessionid=None, filename=None):
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
         c.execute(sql, (str(sessionid),))
+
+
+def xh_sqlite_delete_input_matching(pattern, filename=None):
+    """Deletes entries from the database where the input matches a pattern."""
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        _xh_sqlite_create_history_table(c)
+        for inp, *_ in _xh_sqlite_get_records(c):
+            if pattern.match(inp):
+                sql = f"DELETE FROM xonsh_history WHERE inp = '{inp}'"
+                c.execute(sql)
 
 
 class SqliteHistoryGC(threading.Thread):
@@ -256,6 +276,7 @@ class SqliteHistory(History):
         if filename is None:
             filename = _xh_sqlite_get_file_name()
         self.filename = filename
+        self.last_pull_time = time.time()
         self.gc = SqliteHistoryGC() if gc else None
         self._last_hist_inp = None
         self.inps = []
@@ -345,6 +366,22 @@ class SqliteHistory(History):
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         return data
 
+    def pull(self, show_commands=False):
+        if not hasattr(XSH.shell.shell, "prompter"):
+            print(f"Shell type {XSH.shell.shell} is not supported.")
+            return 0
+
+        cnt = 0
+        for r in xh_sqlite_pull(
+            self.filename, self.last_pull_time, str(self.sessionid)
+        ):
+            if show_commands:
+                print(r[0])
+            XSH.shell.shell.prompter.history.append_string(r[0])
+            cnt += 1
+        self.last_pull_time = time.time()
+        return cnt
+
     def run_gc(self, size=None, blocking=True):
         self.gc = SqliteHistoryGC(wait_for_shell=False, size=size)
         if blocking:
@@ -361,3 +398,9 @@ class SqliteHistory(History):
         self.cwds = []
 
         xh_sqlite_wipe_session(sessionid=self.sessionid, filename=self.filename)
+
+    def delete(self, pattern):
+        """Deletes all entries in the database where the input matches a pattern."""
+        xh_sqlite_delete_input_matching(
+            pattern=re.compile(pattern), filename=self.filename
+        )

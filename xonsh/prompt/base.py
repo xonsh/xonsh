@@ -14,7 +14,7 @@ from xonsh.built_ins import XSH
 if tp.TYPE_CHECKING:
     from xonsh.built_ins import XonshSession
 
-    FieldType = tp.TypeVar("FieldType", bound="BasePromptField", covariant=True)
+    FieldType = tp.TypeVar("FieldType", bound="BasePromptField")
 
 
 @xt.lazyobject
@@ -30,7 +30,7 @@ class _ParsedToken(tp.NamedTuple):
 
 
 class ParsedTokens(tp.NamedTuple):
-    tokens: tp.List[_ParsedToken]
+    tokens: list[_ParsedToken]
     template: tp.Union[str, tp.Callable]
 
     def process(self) -> str:
@@ -85,7 +85,7 @@ class PromptFormatter:
 
         # some quick tests
         if isinstance(fields, dict):
-            pflds: "PromptFields[PromptField]" = PromptFields(XSH, init=False)
+            pflds: PromptFields[PromptField] = PromptFields(XSH, init=False)
             pflds.update(fields)
             self.fields = pflds
 
@@ -132,7 +132,7 @@ class PromptFormatter:
         try:
             return self.fields.pick(field)
         except Exception:  # noqa
-            print("prompt: error: on field {!r}" "".format(field), file=sys.stderr)
+            print(f"prompt: error: on field {field!r}" "", file=sys.stderr)
             xt.print_exception()
             value = f"{{BACKGROUND_RED}}{{ERROR:{field}}}{{RESET}}"
         return value
@@ -267,9 +267,9 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
     """Mapping of functions available for prompt-display."""
 
     def __init__(self, xsh: "XonshSession", init=True):
-        self._items: "dict[str, str | tp.Callable[..., str]]" = {}
+        self._items: dict[str, str | tp.Callable[..., str]] = {}
 
-        self._cache: "dict[str, str|FieldType]" = {}
+        self._cache: dict[str, str | FieldType] = {}
         """for callbacks this will catch the value and should be cleared between prompts"""
 
         self.xsh = xsh
@@ -340,7 +340,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                 user=xp.os_environ.get(
                     "USERNAME" if xp.ON_WINDOWS else "USER", "<user>"
                 ),
-                prompt_end="#" if xt.is_superuser() else "$",
+                prompt_end="#" if xt.is_superuser() else "@",
                 hostname=socket.gethostname().split(".", 1)[0],
                 cwd=_dynamically_collapsed_pwd,
                 cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),

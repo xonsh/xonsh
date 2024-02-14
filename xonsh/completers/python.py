@@ -1,4 +1,5 @@
 """Completers for Python code"""
+
 import builtins
 import collections.abc as cabc
 import inspect

@@ -24,6 +24,7 @@ docs/envvarsbody
 docs/xontribsbody
 docs/eventsbody
 xonsh/dev.githash
+xontrib/__init__.py
 
 # temporary files from vim and emacs
 *~
@@ -40,6 +41,8 @@ include/
 venv/
 .venv*/
 
+# Python project version files
+.python-version
 
 # Mac
 .DS_Store

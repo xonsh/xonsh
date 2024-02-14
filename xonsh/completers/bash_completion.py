@@ -1,6 +1,7 @@
 """This module provides the implementation for the retrieving completion results
 from bash.
 """
+
 import functools
 
 # developer note: this file should not perform any action on import.
@@ -100,7 +101,7 @@ def _bash_completion_paths_default():
     return bcd
 
 
-_BASH_COMPLETIONS_PATHS_DEFAULT: tp.Tuple[str, ...] = ()
+_BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
 
 
 def _get_bash_completions_source(paths=None):

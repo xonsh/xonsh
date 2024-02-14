@@ -1,4 +1,5 @@
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
+
 import datetime
 import difflib
 import itertools
@@ -36,15 +37,11 @@ def bold_str_diff(a, b, sm=None):
 
 
 def redline(line):
-    return "{red}- {line}{reset}\n".format(
-        red=COLORS.RED, line=line, reset=COLORS.RESET
-    )
+    return f"{COLORS.RED}- {line}{COLORS.RESET}\n"
 
 
 def greenline(line):
-    return "{green}+ {line}{reset}\n".format(
-        green=COLORS.GREEN, line=line, reset=COLORS.RESET
-    )
+    return f"{COLORS.GREEN}+ {line}{COLORS.RESET}\n"
 
 
 def highlighted_ndiff(a, b):
@@ -203,14 +200,10 @@ class HistoryDiffer:
             pass
         elif bout is None:
             aid = self.a["sessionid"]
-            s += "Note: only {red}{aid}{reset} output stored\n".format(
-                red=COLORS.RED, aid=aid, reset=COLORS.RESET
-            )
+            s += f"Note: only {COLORS.RED}{aid}{COLORS.RESET} output stored\n"
         elif aout is None:
             bid = self.b["sessionid"]
-            s += "Note: only {green}{bid}{reset} output stored\n".format(
-                green=COLORS.GREEN, bid=bid, reset=COLORS.RESET
-            )
+            s += f"Note: only {COLORS.GREEN}{bid}{COLORS.RESET} output stored\n"
         elif aout != bout:
             s += "Outputs differ\n"
             s += highlighted_ndiff(aout.splitlines(), bout.splitlines())
@@ -219,15 +212,7 @@ class HistoryDiffer:
         artn = self.a["cmds"][i]["rtn"]
         brtn = self.b["cmds"][j]["rtn"]
         if artn != brtn:
-            s += (
-                "Return vals {red}{artn}{reset} & {green}{brtn}{reset} differ\n"
-            ).format(
-                red=COLORS.RED,
-                green=COLORS.GREEN,
-                reset=COLORS.RESET,
-                artn=artn,
-                brtn=brtn,
-            )
+            s += f"Return vals {COLORS.RED}{artn}{COLORS.RESET} & {COLORS.GREEN}{brtn}{COLORS.RESET} differ\n"
         return s
 
     def _cmd_replace_diff(self, i, ainp, aid, j, binp, bid):

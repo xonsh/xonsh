@@ -1,4 +1,5 @@
 """The prompt_toolkit based xonsh shell."""
+
 import os
 import re
 import sys
@@ -7,6 +8,7 @@ from types import MethodType
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.clipboard import InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.history import ThreadedHistory
@@ -193,8 +195,11 @@ class PromptToolkitShell(BaseShell):
         ptk_args.setdefault("history", self.history)
         if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
             disable_copy_on_deletion()
-        if HAVE_SYS_CLIPBOARD:
-            ptk_args.setdefault("clipboard", PyperclipClipboard())
+        if HAVE_SYS_CLIPBOARD and (XSH.env.get("XONSH_USE_SYSTEM_CLIPBOARD", True)):
+            default_clipboard = PyperclipClipboard()
+        else:
+            default_clipboard = InMemoryClipboard()
+        ptk_args.setdefault("clipboard", default_clipboard)
         self.prompter: PromptSession = PromptSession(**ptk_args)
 
         self.prompt_formatter = PTKPromptFormatter(self)
@@ -468,10 +473,27 @@ class PromptToolkitShell(BaseShell):
         dots = dots() if callable(dots) else dots
         if not dots:
             return ""
+        prefix = XSH.env.get(
+            "MULTILINE_PROMPT_PRE", ""
+        )  # e.g.: '\x01\x1b]133;P;k=c\x07\x02'
+        suffix = XSH.env.get(
+            "MULTILINE_PROMPT_POS", ""
+        )  # e.g.: '\x01\x1b]133;B\x07\x02'
+        is_affix = any(x for x in [prefix, suffix])
+        if is_affix:
+            prefixtoks = tokenize_ansi(PygmentsTokens(self.format_color(prefix)))
+            suffixtoks = tokenize_ansi(PygmentsTokens(self.format_color(suffix)))
+            # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;P;k=c\x07')]
+            # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;B\x07')]
+
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            return [(Token, " " * (width + 1))]
+            toks = [(Token, " " * (width + 1))]
+            if is_affix:  # to convert ↓ classes to str to allow +
+                return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+            else:
+                return PygmentsTokens(toks)
         toks = basetoks * (width // baselen)
         n = width % baselen
         count = 0
@@ -488,7 +510,10 @@ class PromptToolkitShell(BaseShell):
             if n <= count:
                 break
         toks.append((Token, " "))  # final space
-        return PygmentsTokens(toks)
+        if is_affix:
+            return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+        else:
+            return PygmentsTokens(toks)
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns

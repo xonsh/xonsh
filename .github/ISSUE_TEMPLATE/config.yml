@@ -1,6 +1,6 @@
 blank_issues_enabled: true
 contact_links:
-  - name: GitHub Community Support
+  - name: Just ask the community a question
     url: https://github.com/xonsh/xonsh/discussions/categories/q-a
-    about: Please ask and answer questions here.
+    about: Community help about usage the xonsh shell.
 

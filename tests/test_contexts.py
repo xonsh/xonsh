@@ -1,4 +1,5 @@
 """Tests xonsh contexts."""
+
 from textwrap import dedent
 
 from xonsh.contexts import Block, Functor

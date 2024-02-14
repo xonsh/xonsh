@@ -16,6 +16,7 @@ Implementations:
 * indent()
 
 """
+
 import ast
 import collections
 import collections.abc as cabc
@@ -37,6 +38,7 @@ import threading
 import traceback
 import typing as tp
 import warnings
+from contextlib import contextmanager
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -51,6 +53,16 @@ from xonsh.platform import (
     os_environ,
     pygments_version_info,
 )
+
+
+@contextmanager
+def chdir(adir):
+    old_dir = os.getcwd()
+    os.chdir(adir)
+    try:
+        yield
+    finally:
+        os.chdir(old_dir)
 
 
 @functools.lru_cache(1)
@@ -1050,22 +1062,7 @@ def print_exception(msg=None, exc_info=None):
                 "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
             )
 
-        traceback_str = "".join(
-            traceback.format_exception(*exc_info, limit=limit, chain=chain)
-        )
-
-        # color the traceback if available
-        _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
-        _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
-        if interactive and color_results and HAS_PYGMENTS:
-            import pygments.lexers.python
-
-            lexer = pygments.lexers.python.PythonTracebackLexer()
-            tokens = list(pygments.lex(traceback_str, lexer=lexer))
-            # this goes to stdout, but since we are interactive it doesn't matter
-            print_color(tokens, end="")
-        else:
-            print(traceback_str, file=sys.stderr, end="")
+        display_colored_error_message(exc_info)
 
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
@@ -1079,10 +1076,50 @@ def print_exception(msg=None, exc_info=None):
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
+        if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get(
+            "RAISE_SUBPROC_ERROR"
+        ):
+            display_colored_error_message(exc_info, limit=1)
+            return
         display_error_message(exc_info)
     if msg:
         msg = msg if msg.endswith("\n") else msg + "\n"
         sys.stderr.write(msg)
+
+
+def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=None):
+    no_trace_and_raise_subproc_error = not xsh.env.get(
+        "XONSH_SHOW_TRACEBACK"
+    ) and xsh.env.get("RAISE_SUBPROC_ERROR")
+
+    if no_trace_and_raise_subproc_error:
+        limit = 1
+
+    content = traceback.format_exception(*exc_info, limit=limit)
+
+    if (
+        no_trace_and_raise_subproc_error
+        and "subprocess.CalledProcessError:" in content[-1]
+    ):
+        content = content[:-1]
+
+    traceback_str = "".join([v for v in content])
+    traceback_str += "" if traceback_str.endswith("\n") else "\n"
+
+    # color the traceback if available
+    _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
+    _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
+    if not interactive or not color_results or not HAS_PYGMENTS:
+        sys.stderr.write(traceback_str)
+        return
+
+    import pygments.lexers.python
+
+    lexer = pygments.lexers.python.PythonTracebackLexer()
+    tokens = list(pygments.lex(traceback_str, lexer=lexer))
+    # this goes to stdout, but since we are interactive it doesn't matter
+    print_color(tokens, end="\n", file=sys.stderr)
+    return
 
 
 def display_error_message(exc_info, strip_xonsh_error_types=True):
@@ -1533,19 +1570,19 @@ def ensure_slice(x):
             s = slice(x, x + 1)
         else:
             s = slice(-1, None, None)
-    except ValueError:
+    except ValueError as ex:
         x = x.strip("[]()")
         m = SLICE_REG.fullmatch(x)
         if m:
             groups = (int(i) if i else None for i in m.groups())
             s = slice(*groups)
         else:
-            raise ValueError(f"cannot convert {x!r} to slice")
+            raise ValueError(f"cannot convert {x!r} to slice") from ex
     except TypeError:
         try:
             s = slice(*(int(i) for i in x))
-        except (TypeError, ValueError):
-            raise ValueError(f"cannot convert {x!r} to slice")
+        except (TypeError, ValueError) as ex:
+            raise ValueError(f"cannot convert {x!r} to slice") from ex
     return s
 
 
@@ -1709,7 +1746,7 @@ def ptk2_color_depth_setter(x):
         x = ""
     else:
         msg = f'"{x}" is not a valid value for $PROMPT_TOOLKIT_COLOR_DEPTH. '
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = ""
     if x == "" and "PROMPT_TOOLKIT_COLOR_DEPTH" in os_environ:
         del os_environ["PROMPT_TOOLKIT_COLOR_DEPTH"]
@@ -1735,7 +1772,7 @@ def to_completions_display_value(x):
     else:
         msg = f'"{x}" is not a valid value for $COMPLETIONS_DISPLAY. '
         msg += 'Using "multi".'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = "multi"
     return x
 
@@ -1754,14 +1791,13 @@ def to_completion_mode(x):
     y = (
         "default"
         if y in ("", "d", "xonsh", "none", "def")
-        else "menu-complete"
-        if y in ("m", "menu", "menu-completion")
-        else y
+        else "menu-complete" if y in ("m", "menu", "menu-completion") else y
     )
     if y not in CANONIC_COMPLETION_MODES:
         warnings.warn(
             f"'{x}' is not valid for $COMPLETION_MODE, must be one of {CANONIC_COMPLETION_MODES}.  Using 'default'.",
             RuntimeWarning,
+            stacklevel=2,
         )
         y = "default"
     return y
@@ -1784,14 +1820,14 @@ def is_tok_color_dict(x):
             string_to_tokentype(k)
         except (TypeError, AttributeError):
             msg = f'"{k}" is not a valid Token.'
-            warnings.warn(msg, RuntimeWarning)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
             return False
     """Check each str is a valid style"""
     try:
         _style_from_pygments_dict(x)
     except (AssertionError, ValueError):
         msg = f'"{x}" contains an invalid style.'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return False
     return True
 
@@ -1804,7 +1840,7 @@ def to_dict(x):
         x = ast.literal_eval(x)
     except (ValueError, SyntaxError):
         msg = f'"{x}" can not be converted to Python dictionary.'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = dict()
     return x
 
@@ -1816,7 +1852,7 @@ def to_tok_color_dict(x):
     x = to_dict(x)
     if not is_tok_color_dict(x):
         msg = f'"{x}" can not be converted to Token:str dictionary.'
-        warnings.warn(msg, RuntimeWarning)
+        warnings.warn(msg, RuntimeWarning, stacklevel=2)
         x = dict()
     return x
 
@@ -2081,8 +2117,8 @@ def _token_attr_from_stylemap(stylemap):
     else:
         style = ptk.styles.style_from_pygments_dict(stylemap)
         for token in stylemap:
-            style_str = "class:{}".format(
-                ptk.styles.pygments.pygments_token_to_classname(token)
+            style_str = (
+                f"class:{ptk.styles.pygments.pygments_token_to_classname(token)}"
             )
             yield (token, style.get_attrs_for_style_str(style_str))
 
@@ -2671,7 +2707,7 @@ def columnize(elems, width=80, newline="\n"):
     data = [elems[i * nrows : (i + 1) * nrows] for i in range(ncols)]
     colwidths = [max(map(len, d)) + pad for d in data]
     colwidths[-1] -= pad
-    row_t = "".join(["{{row[{i}]: <{{w[{i}]}}}}".format(i=i) for i in range(ncols)])
+    row_t = "".join([f"{{row[{i}]: <{{w[{i}]}}}}" for i in range(ncols)])
     row_t += newline
     lines = [
         row_t.format(row=row, w=colwidths)
@@ -2739,7 +2775,7 @@ def deprecated(deprecated_in=None, removed_in=None):
         def wrapped(*args, **kwargs):
             _deprecated_error_on_expiration(func.__name__, removed_in)
             func(*args, **kwargs)
-            warnings.warn(warning_message, DeprecationWarning)
+            warnings.warn(warning_message, DeprecationWarning, stacklevel=2)
 
         wrapped.__doc__ = (
             f"{wrapped.__doc__}\n\n{warning_message}"
@@ -2754,8 +2790,8 @@ def deprecated(deprecated_in=None, removed_in=None):
 
 def _deprecated_message_suffix(deprecated_in, removed_in):
     if deprecated_in and removed_in:
-        message_suffix = " in version {} and will be removed in version {}".format(
-            deprecated_in, removed_in
+        message_suffix = (
+            f" in version {deprecated_in} and will be removed in version {removed_in}"
         )
     elif deprecated_in and not removed_in:
         message_suffix = f" in version {deprecated_in}"

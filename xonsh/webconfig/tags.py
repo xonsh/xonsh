@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from collections.abc import Iterable
 import xml.etree.ElementTree as etree
 from functools import partial
 
@@ -129,9 +129,7 @@ def to_str(elems: "Iterable[Elem]|Elem", debug=False) -> str:
 
 
 if __name__ == "__main__":
-    nav = nav_item()[
-        nav_link(href="/")["Colors"],
-    ]
+    nav = nav_item()[nav_link(href="/")["Colors"],]
     gen = to_str(nav, debug=True)
     print(gen)
     assert gen.splitlines() == [

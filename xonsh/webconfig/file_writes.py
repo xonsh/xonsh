@@ -1,9 +1,10 @@
 """functions to update rc files"""
+
 import os
 import re
 import typing as tp
 
-RENDERERS: tp.List[tp.Callable] = []
+RENDERERS: list[tp.Callable] = []
 
 
 def renderer(f):

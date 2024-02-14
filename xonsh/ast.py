@@ -1,4 +1,5 @@
 """Abstract Syntax Tree handler"""
+
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
 import itertools
@@ -25,7 +26,6 @@ from ast import (
     BitXor,
     BoolOp,
     Break,
-    Bytes,
     Call,
     ClassDef,
     Compare,
@@ -36,9 +36,6 @@ from ast import (
     Dict,
     DictComp,
     Div,
-)
-from ast import Ellipsis as EllipsisNode
-from ast import (
     Eq,
     ExceptHandler,
     Expr,
@@ -75,13 +72,12 @@ from ast import (
     Module,
     Mult,
     Name,
-    NameConstant,
+    NamedExpr,
     NodeTransformer,
     Nonlocal,
     Not,
     NotEq,
     NotIn,
-    Num,
     Or,
     Pass,
     Pow,
@@ -93,7 +89,6 @@ from ast import (
     Slice,
     Starred,
     Store,
-    Str,
     Sub,
     Subscript,
     Try,
@@ -118,11 +113,7 @@ from ast import (
 )
 
 from xonsh.built_ins import XSH
-from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tools import find_next_break, get_logical_line, subproc_toks
-
-if PYTHON_VERSION_INFO > (3, 8):
-    from ast import NamedExpr  # type:ignore
 
 STATEMENTS = (
     FunctionDef,
@@ -150,6 +141,38 @@ STATEMENTS = (
 )
 
 
+def const_str(s: str, **kwargs):
+    return Constant(value=s, kind="str", **kwargs)
+
+
+def is_const_str(node):
+    return isinstance(node, Constant) and node.kind == "str"
+
+
+def const_bytes(s: str, **kwargs):
+    return Constant(value=s, kind="bytes", **kwargs)
+
+
+def is_const_bytes(node):
+    return isinstance(node, Constant) and node.kind == "bytes"
+
+
+def const_num(n, **kwargs):
+    return Constant(value=n, kind="num", **kwargs)
+
+
+def is_const_num(node):
+    return isinstance(node, Constant) and node.kind == "num"
+
+
+def const_name(value, **kwargs):
+    return Constant(value=value, kind="name", **kwargs)
+
+
+def is_const_name(node):
+    return isinstance(node, Constant) and node.kind == "name"
+
+
 def leftmostname(node):
     """Attempts to find the first name in the tree."""
     if isinstance(node, Name):
@@ -168,7 +191,7 @@ def leftmostname(node):
         rtn = leftmostname(node.targets[0])
     elif isinstance(node, AnnAssign):
         rtn = leftmostname(node.target)
-    elif isinstance(node, (Str, Bytes, JoinedStr)):
+    elif isinstance(node, JoinedStr) or is_const_str(node) or is_const_bytes(node):
         # handles case of "./my executable"
         rtn = leftmostname(node.s)
     elif isinstance(node, Tuple) and len(node.elts) > 0:
@@ -672,8 +695,8 @@ def _getblockattr(name, lineno, col):
         "getattr",
         args=[
             Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
-            Str(s="__xonsh_block__", lineno=lineno, col_offset=col),
-            NameConstant(value=False, lineno=lineno, col_offset=col),
+            const_str(s="__xonsh_block__", lineno=lineno, col_offset=col),
+            const_name(value=False, lineno=lineno, col_offset=col),
         ],
         lineno=lineno,
         col=col,

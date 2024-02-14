@@ -9,6 +9,7 @@ are included from the IPython project.  The IPython project is:
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 
 """
+
 import cmd
 import collections
 import importlib

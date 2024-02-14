@@ -2,6 +2,7 @@
 
 This module registers the hooks it defines when it is imported.
 """
+
 import contextlib
 import importlib
 import os

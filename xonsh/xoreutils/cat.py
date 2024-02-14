@@ -1,4 +1,5 @@
 """Implements a cat command for xonsh."""
+
 import os
 import sys
 import time

@@ -11,7 +11,7 @@ from xonsh.completers.tools import RichCompletion, contextual_command_completer
 from xonsh.parsers.completion_context import CommandContext
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_man_completions_path() -> Path:
     env = XSH.env or {}
     datadir = Path(env["XONSH_DATA_DIR"]) / "generated_completions" / "man"
@@ -32,7 +32,7 @@ def _get_man_page(cmd: str):
     return subprocess.check_output(["col", "-b"], stdin=manpage.stdout, env=env)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _man_option_string_regex():
     return re.compile(
         r"(?:(,\s?)|^|(\sor\s))(?P<option>-[\w]|--[\w-]+)(?=\[?(\s|,|=\w+|$))"

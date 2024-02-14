@@ -19,7 +19,7 @@ def completer():
 @pytest.fixture
 def completers_mock(xession, monkeypatch):
     completers = {}
-    monkeypatch.setattr(xession, "completers", completers)
+    monkeypatch.setattr(xession, "_completers", completers)
     return completers
 
 

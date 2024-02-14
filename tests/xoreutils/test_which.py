@@ -1,14 +1,15 @@
 import os
 import tempfile
+from unittest import TestCase
 
 from xonsh.tools import ON_WINDOWS
 from xonsh.xoreutils import _which
 
 
-class TestWhich:
+class TestWhich(TestCase):
     # Tests for the _whichgen function which is the only thing we
     # use from the _which.py module.
-    def setup(self):
+    def setUp(self):
         # Setup two folders with some test files.
         self.testdirs = [tempfile.TemporaryDirectory(), tempfile.TemporaryDirectory()]
         if ON_WINDOWS:
@@ -24,7 +25,7 @@ class TestWhich:
                     f.write(b"")
                 os.chmod(path, 0o755)
 
-    def teardown_module(self):
+    def tearDown(self):
         for d in self.testdirs:
             d.cleanup()
 

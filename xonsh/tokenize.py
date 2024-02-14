@@ -30,6 +30,7 @@ from token import (
     CIRCUMFLEX,
     CIRCUMFLEXEQUAL,
     COLON,
+    COLONEQUAL,
     COMMA,
     DEDENT,
     DOT,
@@ -83,10 +84,6 @@ from token import (
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 
-HAS_WALRUS = PYTHON_VERSION_INFO > (3, 8)
-if HAS_WALRUS:
-    from token import COLONEQUAL  # type:ignore
-
 cookie_re = LazyObject(
     lambda: re.compile(r"^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)", re.ASCII),
     globals(),
@@ -126,10 +123,7 @@ else:
     ADDSPACE_TOKS = (NAME, NUMBER)  # type:ignore
 del token  # must clean up token
 
-if HAS_WALRUS:
-    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>:]=?"
-else:
-    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
+AUGASSIGN_OPS = r"[+\-*/%&@|^=<>:]=?"
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = "COMMENT"
@@ -187,7 +181,7 @@ for v in _xonsh_tokens.values():
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES: tp.Dict[str, tp.Union[str, int]] = {
+EXACT_TOKEN_TYPES: dict[str, tp.Union[str, int]] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,
@@ -231,9 +225,8 @@ EXACT_TOKEN_TYPES: tp.Dict[str, tp.Union[str, int]] = {
     "//": DOUBLESLASH,
     "//=": DOUBLESLASHEQUAL,
     "@": AT,
+    ":=": COLONEQUAL,
 }
-if HAS_WALRUS:
-    EXACT_TOKEN_TYPES[":="] = COLONEQUAL
 
 EXACT_TOKEN_TYPES.update(_xonsh_tokens)
 
@@ -242,8 +235,9 @@ class TokenInfo(collections.namedtuple("TokenInfo", "type string start end line"
     def __repr__(self):
         annotated_type = "%d (%s)" % (self.type, tok_name[self.type])
         return (
-            "TokenInfo(type=%s, string=%r, start=%r, end=%r, line=%r)"
-            % self._replace(type=annotated_type)
+            "TokenInfo(type={}, string={!r}, start={!r}, end={!r}, line={!r})".format(
+                *self._replace(type=annotated_type)
+            )
         )
 
     @property
@@ -633,9 +627,7 @@ class Untokenizer:
         row, col = start
         if row < self.prev_row or row == self.prev_row and col < self.prev_col:
             raise ValueError(
-                "start ({},{}) precedes previous end ({},{})".format(
-                    row, col, self.prev_row, self.prev_col
-                )
+                f"start ({row},{col}) precedes previous end ({self.prev_row},{self.prev_col})"
             )
         row_offset = row - self.prev_row
         if row_offset:

@@ -1,4 +1,5 @@
 """The base class for xonsh shell"""
+
 import io
 import os
 import sys

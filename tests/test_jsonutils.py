@@ -1,4 +1,5 @@
 """Testing xonsh json hooks"""
+
 import json
 
 import pytest

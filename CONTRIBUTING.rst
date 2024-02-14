@@ -43,7 +43,7 @@ to avoid excessive merge conflicts, please follow the following procedure:
 2. Copy the ``TEMPLATE.rst`` file to another file in the ``news/`` directory.
    We suggest using the branchname::
 
-        $ cp TEMPLATE.rst branch.rst
+        @ cp TEMPLATE.rst branch.rst
 
 3. Add your entries as a bullet pointed lists in your ``branch.rst`` file in
    the appropriate category. It is OK to leave the ``None`` entries for later
@@ -108,20 +108,20 @@ as misspelled variable names, using `flake8 <https://flake8.pycqa.org/>`_. If yo
 need to run "conda install flake8" once. You can easily run flake8 on
 the edited files in your uncommitted git change::
 
-    $ git status -s | awk '/\.py$$/ { print $2 }' | xargs flake8
+    @ git status -s | awk '/\.py$$/ { print $2 }' | xargs flake8
 
 If you want to lint the entire code base run::
 
-    $ flake8
+    @ flake8
 
 We also use `black <https://github.com/psf/black>`_ for formatting the code base (which includes running in
 our tests)::
 
-    $ black --check xonsh/ xontrib/
+    @ black --check xonsh/ xontrib/
 
 To add this as a git pre-commit hook::
 
-    $ pre-commit install
+    @ pre-commit install
 
 *******
 Imports
@@ -142,7 +142,7 @@ If you want to run your "work in progress version" without installing
 and in a fresh environment you can use Docker. If Docker is installed
 you just have to run this::
 
-  $ python xonsh-in-docker.py
+  @ python xonsh-in-docker.py
 
 This will build and run the current state of the repository in an isolated
 container (it may take a while the first time you run it). There are two
@@ -153,7 +153,7 @@ additional arguments you can pass this script.
 
 Example::
 
-  $ python docker.py 3.4 0.57
+  @ python docker.py 3.4 0.57
 
 Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
@@ -164,7 +164,7 @@ Dependencies
 
 Prep your environment for running the tests::
 
-    $ pip install -e '.[dev]'
+    @ pip install -e '.[dev]'
 
 
 -------------------------
@@ -173,7 +173,7 @@ Running the Tests - Basic
 
 Run all the tests using pytest::
 
-    $ pytest -q
+    @ pytest -q
 
 Use "-q" to keep pytest from outputting a bunch of info for every test.
 
@@ -183,16 +183,16 @@ Running the Tests - Advanced
 
 To perform all unit tests::
 
-    $ pytest
+    @ pytest
 
 If you want to run specific tests you can specify the test names to
 execute. For example to run test_aliases::
 
-    $ pytest test_aliases.py
+    @ pytest test_aliases.py
 
 Note that you can pass multiple test names in the above examples::
 
-    $ pytest test_aliases.py test_environ.py
+    @ pytest test_aliases.py test_environ.py
 
 ----------------------------
 Writing the Tests - Advanced
@@ -210,7 +210,7 @@ has to be prefixed with `test_`::
 The conftest.py in tests directory defines fixtures for mocking various
 parts of xonsh for more test isolation. For a list of the various fixtures::
 
-    $ pytest --fixtures
+    @ pytest --fixtures
 
 when writing tests it's best to use pytest features i.e. parametrization::
 
@@ -260,7 +260,7 @@ and then you may run the following command from the ``docs`` dir:
 
 .. code-block:: console
 
-    ~/xonsh/docs $ make html
+    ~/xonsh/docs @ make html
 
 For each new
 module, you will have to supply the appropriate hooks. This should be done the
@@ -293,7 +293,7 @@ Note that xonsh itself needs to be installed too.
 If you have cloned the git repository, you can install all of the doc-related
 dependencies by running::
 
-    $ pip install -e ".[doc]"
+    @ pip install -e ".[doc]"
 
 
 -----------------------------------
@@ -303,18 +303,18 @@ The xonsh website source files are located in the ``docs`` directory.
 A developer first makes necessary changes, then rebuilds the website locally
 by executing the command::
 
-    $ make html
+    @ make html
 
 This will generate html files for the website in the ``_build/html/`` folder.
 
 There is also a helper utility in the ``docs/`` folder that will watch for changes and automatically rebuild the documentation.  You can use this instead of running ``make html`` manually::
 
-    $ python docs/serve_docs.py
+    @ python docs/serve_docs.py
 
 The developer may view the local changes by opening these files with their
 favorite browser, e.g.::
 
-    $ firefox _build/html/index.html
+    @ firefox _build/html/index.html
 
 Once the developer is satisfied with the changes, the changes should be
 committed and pull-requested per usual. The docs are built and deployed using
@@ -337,9 +337,9 @@ Maintenance Tasks
 You can cleanup your local repository of transient files such as \*.pyc files
 created by unit testing by running::
 
-    $ rm -f xonsh/parser_table.py xonsh/completion_parser_table.py
-    $ rm -f xonsh/*.pyc tests/*.pyc
-    $ rm -fr build
+    @ rm -f xonsh/parser_table.py xonsh/completion_parser_table.py
+    @ rm -f xonsh/*.pyc tests/*.pyc
+    @ rm -fr build
 
 ----------------------
 Performing the Release
@@ -347,12 +347,12 @@ Performing the Release
 This is done through the `rever <https://github.com/regro/rever>`_. To get a list of the
 valid options use::
 
-    $ pip install re-ver
+    @ pip install re-ver
 
 You can perform a full release::
 
-    $ rever check
-    $ rever <version-number>
+    @ rever check
+    @ rever <version-number>
 
 
 ----------------------

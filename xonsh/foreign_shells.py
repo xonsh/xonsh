@@ -1,4 +1,5 @@
 """Tools to help interface with foreign shells, such as Bash."""
+
 import collections.abc as cabc
 import functools
 import os
@@ -313,6 +314,7 @@ def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
     if m is None:
         return {}
     g1 = m.group(1)
+    g1 = g1.replace("\\\n", " ")
     items = [
         line.split("=", 1)
         for line in g1.splitlines()
@@ -344,6 +346,7 @@ def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
             warnings.warn(
                 f'could not parse alias "{key}": {exc!r}',
                 RuntimeWarning,
+                stacklevel=2,
             )
             continue
         aliases[key] = value

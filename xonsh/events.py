@@ -7,6 +7,7 @@ The best way to "declare" an event is something like::
 
     events.doc('on_spam', "Comes with eggs")
 """
+
 import abc
 import collections.abc
 import inspect

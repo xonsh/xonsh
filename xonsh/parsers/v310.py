@@ -214,7 +214,6 @@ class Parser(ThreeNineParser):
 
         match p[1]:
             case ast.JoinedStr():
-
                 raise AssertionError("patterns may not match formatted string literals")
                 # TODO: raise SyntaxError instead
                 # (doing so currently somehow causes an IndexError in tools.py:get_logical_line)

@@ -1,4 +1,5 @@
 """Tests sample inputs to PTK multiline and checks parser response"""
+
 from collections import namedtuple
 from unittest.mock import MagicMock, patch
 

@@ -1,4 +1,5 @@
 """Testing for ``xonsh.shell.Shell``"""
+
 import os
 
 from xonsh.history.dummy import DummyHistory

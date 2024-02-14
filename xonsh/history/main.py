@@ -1,4 +1,5 @@
 """Main entry points of the xonsh history."""
+
 import datetime
 import json
 import os
@@ -191,7 +192,7 @@ class HistoryAlias(xcli.ArgParserAlias):
     def show(
         self,
         session: xcli.Annotated[str, xcli.Arg(nargs="?")] = "session",
-        slices: xcli.Annotated[tp.List[int], xcli.Arg(nargs="*")] = None,
+        slices: xcli.Annotated[list[int], xcli.Arg(nargs="*")] = None,
         datetime_format: tp.Optional[str] = None,
         start_time: tp.Optional[str] = None,
         end_time: tp.Optional[str] = None,
@@ -282,6 +283,31 @@ class HistoryAlias(xcli.ArgParserAlias):
         print(str(hist.sessionid), file=_stdout)
 
     @staticmethod
+    def pull(show_commands=False, _stdout=None):
+        """Pull history from other parallel sessions.
+
+        Parameters
+        ----------
+        show_commands: -c, --show-commands
+            show pulled commands
+        """
+
+        hist = XSH.history
+
+        if hist.pull.__module__ == "xonsh.history.base":
+            backend = XSH.env.get("XONSH_HISTORY_BACKEND", "unknown")
+            print(
+                f"Pull method is not supported in {backend} history backend.",
+                file=_stdout,
+            )
+
+        lines_added = hist.pull(show_commands)
+        if lines_added:
+            print(f"Added {lines_added} records!", file=_stdout)
+        else:
+            print("No records found!", file=_stdout)
+
+    @staticmethod
     def flush(_stdout):
         """Flush the current history to disk"""
 
@@ -315,6 +341,19 @@ class HistoryAlias(xcli.ArgParserAlias):
         print("History cleared", file=sys.stderr)
 
     @staticmethod
+    def delete(pattern):
+        """Delete all commands matching a pattern
+
+        Parameters
+        ----------
+        pattern:
+            regex pattern to match against command history
+        """
+        hist = XSH.history
+        deleted = hist.delete(pattern)
+        print(f"Deleted {deleted} entries from history")
+
+    @staticmethod
     def file(_stdout):
         """Display the current history filename"""
         hist = XSH.history
@@ -346,7 +385,7 @@ class HistoryAlias(xcli.ArgParserAlias):
 
     @staticmethod
     def gc(
-        size: xcli.Annotated[tp.Tuple[int, str], xcli.Arg(nargs=2)] = None,
+        size: xcli.Annotated[tuple[int, str], xcli.Arg(nargs=2)] = None,
         force=False,
         blocking=True,
     ):
@@ -428,7 +467,7 @@ class HistoryAlias(xcli.ArgParserAlias):
 
         dest.flush()
 
-        self.out("done.")
+        self.out("Done")
 
     def build(self):
         parser = self.create_parser(prog="history")
@@ -436,10 +475,12 @@ class HistoryAlias(xcli.ArgParserAlias):
         parser.add_command(self.id_cmd, prog="id")
         parser.add_command(self.file)
         parser.add_command(self.info)
+        parser.add_command(self.pull)
         parser.add_command(self.flush)
         parser.add_command(self.off)
         parser.add_command(self.on)
         parser.add_command(self.clear)
+        parser.add_command(self.delete)
         parser.add_command(self.gc)
         parser.add_command(self.transfer)
 

@@ -1,4 +1,5 @@
 """Aliases for the xonsh shell."""
+
 import argparse
 import collections.abc as cabc
 import functools
@@ -85,8 +86,7 @@ class Aliases(cabc.MutableMapping):
     @tp.overload
     def register(
         self, name: str, *, dash_case: bool = True
-    ) -> tp.Callable[[types.FunctionType], types.FunctionType]:
-        ...
+    ) -> tp.Callable[[types.FunctionType], types.FunctionType]: ...
 
     def register(self, func_or_name, name=None, dash_case=True):
         """Decorator to register the given function by name."""
@@ -219,9 +219,7 @@ class Aliases(cabc.MutableMapping):
         return str(self._raw)
 
     def __repr__(self):
-        return "{}.{}({})".format(
-            self.__class__.__module__, self.__class__.__name__, self._raw
-        )
+        return f"{self.__class__.__module__}.{self.__class__.__name__}({self._raw})"
 
     _repr_pretty_ = to_repr_pretty_
 
@@ -287,9 +285,7 @@ class PartialEvalAliasBase:
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
     def __repr__(self):
-        return "{name}({f!r}, acc_args={acc_args!r})".format(
-            name=self.__class__.__name__, f=self.f, acc_args=self.acc_args
-        )
+        return f"{self.__class__.__name__}({self.f!r}, acc_args={self.acc_args!r})"
 
 
 class PartialEvalAlias0(PartialEvalAliasBase):
@@ -409,7 +405,7 @@ def xonsh_reset(args, stdin=None):
 
 def source_foreign_fn(
     shell: str,
-    files_or_code: Annotated[tp.List[str], Arg(nargs="+")],
+    files_or_code: Annotated[list[str], Arg(nargs="+")],
     interactive=True,
     login=False,
     envcmd=None,
@@ -481,7 +477,7 @@ def source_foreign_fn(
         if not suppress_skip_message
         else suppress_skip_message
     )
-    files: tp.Tuple[str, ...] = ()
+    files: tuple[str, ...] = ()
     if prevcmd:
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(files_or_code[0]):
@@ -607,7 +603,7 @@ def source_alias(args, stdin=None):
 
 
 def source_cmd_fn(
-    files: Annotated[tp.List[str], Arg(nargs="+")],
+    files: Annotated[list[str], Arg(nargs="+")],
     login=False,
     aliascmd=None,
     extra_args="",
@@ -690,7 +686,7 @@ source_cmd = ArgParserAlias(func=source_cmd_fn, has_args=True, prog="source-cmd"
 
 
 def xexec_fn(
-    command: Annotated[tp.List[str], Arg(nargs=argparse.REMAINDER)],
+    command: Annotated[list[str], Arg(nargs=argparse.REMAINDER)],
     login=False,
     clean=False,
     name="",
@@ -751,7 +747,7 @@ def xexec_fn(
     except FileNotFoundError as e:
         return (
             None,
-            "xonsh: exec: file not found: {}: {}" "\n".format(e.args[1], command[0]),
+            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}" "\n",
             1,
         )
 
@@ -812,9 +808,16 @@ def detect_xpip_alias():
 
     basecmd = [sys.executable, "-m", "pip"]
     try:
-        if ON_WINDOWS or IN_APPIMAGE:
+        if ON_WINDOWS:
             # XXX: Does windows have an installation mode that requires UAC?
             return basecmd
+        elif IN_APPIMAGE:
+            # In AppImage `sys.executable` is equal to path to xonsh.AppImage file and the real python executable is in $_
+            return [
+                XSH.env.get("_", "APPIMAGE_PYTHON_EXECUTABLE_NOT_FOUND"),
+                "-m",
+                "pip",
+            ]
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
             return (
                 sys.executable
@@ -891,7 +894,7 @@ def make_default_aliases():
             "vol",
         }
         for alias in windows_cmd_aliases:
-            default_aliases[alias] = ["cmd", "/c", alias]
+            default_aliases[alias] = [os.getenv("COMSPEC"), "/c", alias]
         default_aliases["call"] = ["source-cmd"]
         default_aliases["source-bat"] = ["source-cmd"]
         default_aliases["clear"] = "cls"

@@ -1,4 +1,5 @@
 """Context management tools for xonsh."""
+
 import sys
 import textwrap
 from collections.abc import Mapping

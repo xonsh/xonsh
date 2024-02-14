@@ -1,5 +1,4 @@
 import cgi
-import inspect
 import sys
 from typing import TYPE_CHECKING
 
@@ -9,7 +8,7 @@ from ..built_ins import XonshSession
 from .file_writes import insert_into_xonshrc
 
 if TYPE_CHECKING:
-    from typing import Type
+    pass
 
 import logging
 from urllib import parse
@@ -20,7 +19,7 @@ from . import xonsh_data
 
 class Routes:
     path: str
-    registry: "dict[str, Type[Routes]]" = {}
+    registry: "dict[str, type[Routes]]" = {}
     navbar = False
     nav_title: "str|None" = None
     err_msgs: "list" = []
@@ -34,7 +33,7 @@ class Routes:
     ):
         self.url = url
         self.params = params
-        self.env: "Env" = xsh.env
+        self.env: Env = xsh.env
         self.xsh = xsh
 
     def __init_subclass__(cls, **kwargs):
@@ -53,9 +52,7 @@ class Routes:
 
             title = page.nav_title() if callable(page.nav_title) else page.nav_title
             if title:
-                yield t.nav_item(*klass)[
-                    t.nav_link(href=page.path)[title],
-                ]
+                yield t.nav_item(*klass)[t.nav_link(href=page.path)[title],]
 
     def get_err_msgs(self):
         if not self.err_msgs:
@@ -103,9 +100,7 @@ class ColorsPage(Routes):
 
     def get_cols(self):
         for name, display in self.colors.items():
-            yield t.col_sm()[
-                self.to_card(name, display),
-            ]
+            yield t.col_sm()[self.to_card(name, display),]
 
     def _get_selected_header(self):
         selected = self.params.get("selected")
@@ -131,9 +126,7 @@ class ColorsPage(Routes):
             t.card_body()[self.get_display(display)],
         ]
 
-        return t.row()[
-            t.col()[card],
-        ]
+        return t.row()[t.col()[card],]
 
     def get(self):
         # banner
@@ -210,23 +203,13 @@ class PromptsPage(Routes):
                 ],
                 self.get_display(display),
             ],
-            t.card_footer("py-1")[
-                t.btn_primary("py-1", type="submit")[
-                    "Set",
-                ],
-            ],
+            t.card_footer("py-1")[t.btn_primary("py-1", type="submit")["Set",],],
         ]
-        return t.row()[
-            t.col()[t.form(method="post")[card]],
-        ]
+        return t.row()[t.col()[t.form(method="post")[card]],]
 
     def get_cols(self):
         for name, prompt in self.prompts.items():
-            yield t.row()[
-                t.col()[
-                    self.to_card(name, prompt["display"]),
-                ]
-            ]
+            yield t.row()[t.col()[self.to_card(name, prompt["display"]),]]
 
     def get(self):
         # banner
@@ -269,27 +252,19 @@ class XontribsPage(Routes):
             if self.is_loaded(name):
                 act_label = "Remove"
             action = t.inline_form(method="post")[
-                t.btn_primary("ml-2", "p-1", type="submit", name=name)[
-                    act_label,
-                ],
+                t.btn_primary("ml-2", "p-1", type="submit", name=name)[act_label,],
             ]
         else:
             title = title("stretched-link")  # add class
             action = ""
         return t.card()[
             t.card_header()[title, action],
-            t.card_body()[
-                self.get_display(data["display"]),
-            ],
+            t.card_body()[self.get_display(data["display"]),],
         ]
 
     def get(self):
         for name, data in self.xontribs.items():
-            yield t.row()[
-                t.col()[
-                    self.xontrib_card(name, data),
-                ]
-            ]
+            yield t.row()[t.col()[self.xontrib_card(name, data),]]
             yield t.br()
 
     def post(self, data: "cgi.FieldStorage"):
@@ -368,59 +343,7 @@ class AliasesPage(Routes):
 
             yield t.tr()[
                 t.td("text-right")[str(name)],
-                t.td()[
-                    t.p()[repr(alias)],
-                ],
-            ]
-
-    def get_table(self):
-        rows = list(self.get_rows())
-        yield t.tbl("table-sm", "table-striped")[
-            self.get_header(),
-            rows,
-        ]
-
-    def get(self):
-        yield t.div("table-responsive")[self.get_table()]
-
-
-class AbbrevsPage(Routes):
-    path = "/abbrevs"
-    mod_name = XontribsPage.mod_name("abbrevs")
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # lazy import as to not load by accident
-        from xontrib.abbrevs import abbrevs  # type: ignore
-
-        self.abbrevs: "dict[str, str]" = abbrevs
-
-    @classmethod
-    def nav_title(cls):
-        if cls.mod_name in sys.modules:
-            return "Abbrevs"
-
-    def get_header(self):
-        yield t.tr()[
-            t.th("text-right")["Name"],
-            t.th()["Value"],
-        ]
-
-    def get_rows(self):
-        for name in sorted(self.abbrevs.keys()):
-            alias = self.abbrevs[name]
-            if callable(alias):
-                display = inspect.getsource(alias)
-            else:
-                display = str(alias)
-            # todo:
-            #  2. way to update
-
-            yield t.tr()[
-                t.td("text-right")[str(name)],
-                t.td()[
-                    t.p()[repr(display)],
-                ],
+                t.td()[t.p()[repr(alias)],],
             ]
 
     def get_table(self):

@@ -1,6 +1,5 @@
 """Test XonshLexer for pygments"""
 
-
 import pytest
 from pygments.token import (
     Error,
@@ -65,7 +64,7 @@ _cases = {
             (Literal.String.Double, "hello"),
             (Literal.String.Double, '"'),
             (Punctuation, ")"),
-            (Text, "\n"),
+            (Text.Whitespace, "\n"),
         ]
     },
     "invalid-cmd": {
@@ -111,7 +110,7 @@ _cases = {
             (Name.Builtin, "cd"),
             (Punctuation, ")"),
             (Punctuation, ")"),
-            (Text, "\n"),
+            (Text.Whitespace, "\n"),
         ],
         r'print(![echo "])\""])': [
             (Name.Builtin, "print"),
@@ -123,7 +122,7 @@ _cases = {
             (Literal.String.Double, '"])\\""'),
             (Punctuation, "]"),
             (Punctuation, ")"),
-            (Text, "\n"),
+            (Text.Whitespace, "\n"),
         ],
     },
     "subproc-args": {

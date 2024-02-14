@@ -1,4 +1,5 @@
 """The xonsh configuration (xonfig) utility."""
+
 import ast
 import collections
 import contextlib
@@ -50,7 +51,7 @@ from xonsh.tools import (
 from xonsh.xontribs import Xontrib, find_xontrib, get_xontribs, xontribs_loaded
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
-WIZARD_HEAD = """
+WIZARD_HEAD = f"""
           {{BOLD_WHITE}}Welcome to the xonsh configuration wizard!{{RESET}}
           {{YELLOW}}------------------------------------------{{RESET}}
 This will present a guided tour through setting up the xonsh static
@@ -69,13 +70,11 @@ variable setup. Each phase may be skipped in its entirety.
 
 For the configuration to take effect, you will need to restart xonsh.
 
-{hr}
-""".format(
-    hr=HR
-)
+{HR}
+"""
 
-WIZARD_FS = """
-{hr}
+WIZARD_FS = f"""
+{HR}
 
                       {{BOLD_WHITE}}Foreign Shell Setup{{RESET}}
                       {{YELLOW}}-------------------{{RESET}}
@@ -87,12 +86,10 @@ aliases, and functions specified in the config files of these shells.
 Naturally, these shells must be available on the system to work.
 Being able to share configuration (and source) from foreign shells
 makes it easier to transition to and from xonsh.
-""".format(
-    hr=HR
-)
+"""
 
-WIZARD_ENV = """
-{hr}
+WIZARD_ENV = f"""
+{HR}
 
                   {{BOLD_WHITE}}Environment Variable Setup{{RESET}}
                   {{YELLOW}}--------------------------{{RESET}}
@@ -108,14 +105,12 @@ values are presented as pretty repr strings of their Python types.
 
 {{BOLD_GREEN}}Note:{{RESET}} Simply hitting enter for any environment variable
 will accept the default value for that entry.
-""".format(
-    hr=HR
-)
+"""
 
 WIZARD_ENV_QUESTION = "Would you like to set env vars now, " + wiz.YN
 
-WIZARD_XONTRIB = """
-{hr}
+WIZARD_XONTRIB = f"""
+{HR}
 
                            {{BOLD_WHITE}}Xontribs{{RESET}}
                            {{YELLOW}}--------{{RESET}}
@@ -128,9 +123,7 @@ This allows the xontrib to be used immediately in your xonshrc files.
 
 The following describes all xontribs that have been registered with xonsh.
 These come from users, 3rd party developers, or xonsh itself!
-""".format(
-    hr=HR
-)
+"""
 
 WIZARD_XONTRIB_QUESTION = "Would you like to enable xontribs now, " + wiz.YN
 
@@ -138,7 +131,7 @@ WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
 
 
-_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND: tp.Dict[str, str] = collections.defaultdict(
+_XONFIG_SOURCE_FOREIGN_SHELL_COMMAND: dict[str, str] = collections.defaultdict(
     lambda: "source-foreign", bash="source-bash", cmd="source-cmd", zsh="source-zsh"
 )
 
@@ -363,7 +356,7 @@ def _xontrib_path(visitor=None, node=None, val=None):
     return ("xontribs", len(visitor.state.get("xontribs", ())))
 
 
-def make_xontrib(xon_item: tp.Tuple[str, Xontrib]):
+def make_xontrib(xon_item: tuple[str, Xontrib]):
     """Makes a message and StoreNonEmpty node for a xontrib."""
     name, xontrib = xon_item
     name = name or "<unknown-xontrib-name>"
@@ -526,7 +519,7 @@ def _info(
         reports results as json
     """
     env = XSH.env
-    data: tp.List[tp.Any] = [("xonsh", XONSH_VERSION)]
+    data: list[tp.Any] = [("xonsh", XONSH_VERSION)]
     hash_, date_ = githash()
     if hash_:
         data.append(("Git SHA", hash_))

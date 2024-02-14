@@ -1,4 +1,5 @@
 """The main xonsh script."""
+
 import argparse
 import builtins
 import contextlib
@@ -23,7 +24,12 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.pretty import pretty
 from xonsh.shell import Shell
 from xonsh.timings import setup_timings
-from xonsh.tools import display_error_message, print_color, to_bool_or_int
+from xonsh.tools import (
+    display_error_message,
+    print_color,
+    print_exception,
+    to_bool_or_int,
+)
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
 
@@ -179,7 +185,8 @@ def parser():
     )
     p.add_argument(
         "--no-rc",
-        help="Do not load any xonsh RC files.",
+        help="Do not load any xonsh RC files. Argument --rc will "
+        "be ignored if --no-rc is set.",
         dest="norc",
         action="store_true",
         default=False,
@@ -275,18 +282,13 @@ class XonshMode(enum.Enum):
 
 
 def _get_rc_files(shell_kwargs: dict, args, env):
+    if shell_kwargs.get("norc"):
+        # if --no-rc was passed, then disable loading RC files and dirs
+        return (), ()
+
     # determine which RC files to load, including whether any RC directories
     # should be scanned for such files
     rc_cli = shell_kwargs.get("rc")
-    if shell_kwargs.get("norc") or (
-        args.mode != XonshMode.interactive
-        and not args.force_interactive
-        and not args.login
-    ):
-        # if --no-rc was passed, or we're not in an interactive shell and
-        # interactive mode was not forced, then disable loading RC files and dirs
-        return (), ()
-
     if rc_cli:
         # if an explicit --rc was passed, then we should load only that RC
         # file, and nothing else (ignore both XONSHRC and XONSHRC_DIR)
@@ -557,9 +559,8 @@ def main_xonsh(args):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
                 raise err
-            else:
-                traceback.print_exception(*exc_info)
-                exit_code = 1
+            print_exception(None, exc_info)
+            exit_code = 1
         events.on_exit.fire()
         postmain(args)
     return exit_code
@@ -630,5 +631,6 @@ def setup(
     XSH.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
-    tp = XSH.commands_cache.threadable_predictors
-    tp.update(threadable_predictors)
+
+    if threadable_predictors:
+        XSH.commands_cache.threadable_predictors.update(threadable_predictors)

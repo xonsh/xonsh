@@ -1,4 +1,5 @@
 """Tests the xonsh lexer."""
+
 import os
 
 import pytest  # noqa F401

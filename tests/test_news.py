@@ -1,4 +1,5 @@
 """Testing that news entries are well formed."""
+
 import os
 import re
 
@@ -32,9 +33,9 @@ def check_news_file(fname):
             cat = l[2:].rsplit(":")[0]
             if cat not in CATEGORIES:
                 pytest.fail(
-                    "{}:{}: {!r} not a proper category "
-                    "must be one of {}"
-                    "".format(name, i + 1, cat, list(CATEGORIES)),
+                    f"{name}:{i + 1}: {cat!r} not a proper category "
+                    f"must be one of {list(CATEGORIES)}"
+                    "",
                     pytrace=True,
                 )
             if l.endswith("None"):

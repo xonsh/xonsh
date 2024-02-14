@@ -1,4 +1,5 @@
 """script for compiling elm source and dumping it to the js folder."""
+
 import functools
 import io
 import logging

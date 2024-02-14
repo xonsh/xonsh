@@ -1,4 +1,5 @@
 """Tests the json history backend."""
+
 # pylint: disable=protected-access
 
 import shlex
@@ -528,7 +529,6 @@ assert MAX_RUNTIME < MIN_DIFF / 2
     ],
 )
 def test__xhj_gc_xx_to_rmfiles(fn, hsize, in_files, exp_size, exp_files, xession):
-
     act_size, act_files = fn(hsize, in_files)
 
     assert act_files == exp_files

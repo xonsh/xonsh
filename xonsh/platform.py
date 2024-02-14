@@ -2,6 +2,7 @@
 compatibility layers to make use of the 'best' implementation available
 on a platform.
 """
+
 import collections.abc as cabc
 import ctypes  # noqa
 import functools
@@ -496,6 +497,7 @@ def BASH_COMPLETIONS_DEFAULT():
             "/usr/local/share/bash-completion/bash_completion",  # v2.x
             "/usr/local/etc/bash_completion",  # v1.x
             "/opt/homebrew/share/bash-completion/bash_completion",  # v2.x on M1
+            "/opt/homebrew/etc/bash_completion",  # v1.x on M1
         )
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (

@@ -2,6 +2,8 @@ import ast
 import collections
 import keyword
 
+from xonsh import ast as xast
+
 _all_keywords = frozenset(keyword.kwlist)
 
 
@@ -20,7 +22,14 @@ def _not_assignable(x, augassign=False):
             res = _not_assignable(i)
             if res is not None:
                 return res
-    elif isinstance(x, (ast.Set, ast.Dict, ast.Num, ast.Str, ast.Bytes)):
+    elif any(
+        [
+            isinstance(x, (ast.Set, ast.Dict)),
+            xast.is_const_num(x),
+            xast.is_const_str(x),
+            xast.is_const_bytes(x),
+        ]
+    ):
         return "literal"
     elif isinstance(x, ast.Call):
         return "function call"
@@ -42,7 +51,7 @@ def _not_assignable(x, augassign=False):
         return "comparison"
     elif isinstance(x, ast.Name) and x.id in _all_keywords:
         return "keyword"
-    elif isinstance(x, ast.NameConstant):
+    elif xast.is_const_name(x):
         return "keyword"
 
 

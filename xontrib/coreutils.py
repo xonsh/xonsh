@@ -14,6 +14,7 @@ posix command line utility with the same name. This is because these
 tools avoid the need for a full subprocess call. Additionally, these
 tools are cross-platform.
 """
+
 from xonsh.built_ins import XonshSession
 from xonsh.platform import ON_POSIX
 from xonsh.xoreutils.cat import cat

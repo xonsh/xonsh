@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Xonsh docs to gh-pages
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: "pip"
@@ -30,7 +30,7 @@ jobs:
       - run: pip install -e '.[doc]'
       - name: Build Docs
         run: cd docs && make html
-      - uses: tibdex/github-app-token@v1
+      - uses: tibdex/github-app-token@v2
         if: ${{ github.event_name != 'pull_request' }}
         id: generate-token
         with:

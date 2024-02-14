@@ -2,6 +2,7 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
+
 import io
 
 # 'keyword' interferes with ast.keyword
@@ -21,7 +22,6 @@ from xonsh.tokenize import (
     ENDMARKER,
     ERRORTOKEN,
     GREATER,
-    HAS_WALRUS,
     INDENT,
     IOREDIRECT,
     LESS,
@@ -97,8 +97,9 @@ def token_map():
         "??": "DOUBLE_QUESTION",
         "@$": "ATDOLLAR",
         "&": "AMPERSAND",
+        ":=": "COLONEQUAL",
     }
-    for (op, typ) in _op_map.items():
+    for op, typ in _op_map.items():
         tm[(OP, op)] = typ
     tm[IOREDIRECT] = "IOREDIRECT"
     tm[STRING] = "STRING"
@@ -108,8 +109,6 @@ def token_map():
     tm[NEWLINE] = "NEWLINE"
     tm[INDENT] = "INDENT"
     tm[DEDENT] = "DEDENT"
-    if HAS_WALRUS:
-        tm[(OP, ":=")] = "COLONEQUAL"
     # python 3.10 (backwards and name token compatible) tokens
     tm[MATCH] = "MATCH"
     tm[CASE] = "CASE"
@@ -284,11 +283,7 @@ def _make_matcher_handler(tok, typ, pymode, ender, handlers):
     matcher = (
         ")"
         if tok.endswith("(")
-        else "}"
-        if tok.endswith("{")
-        else "]"
-        if tok.endswith("[")
-        else None
+        else "}" if tok.endswith("{") else "]" if tok.endswith("[") else None
     )
 
     def _inner_handler(state, token):
@@ -427,7 +422,7 @@ def _new_token(type, value, pos):
 class Lexer:
     """Implements a lexer for the xonsh language."""
 
-    _tokens: tp.Optional[tp.Tuple[str, ...]] = None
+    _tokens: tp.Optional[tuple[str, ...]] = None
 
     def __init__(self, tolerant=False, pymode=True):
         """

@@ -1,4 +1,5 @@
 """Tests lazy json functionality."""
+
 from io import StringIO
 
 from xonsh.lazyjson import LazyJSON, LJNode, index, ljdump

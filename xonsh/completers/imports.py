@@ -10,7 +10,6 @@ import inspect
 import os
 import re
 import sys
-import typing as tp
 from importlib import import_module
 from importlib.machinery import all_suffixes
 from time import time
@@ -127,7 +126,7 @@ def is_possible_submodule(module, attr):
     return inspect.ismodule(obj)
 
 
-def try_import(mod: str, only_modules=False) -> tp.List[str]:
+def try_import(mod: str, only_modules=False) -> list[str]:
     """
     Try to import given module and return list of potential completions.
     """

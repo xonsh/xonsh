@@ -1,4 +1,5 @@
 """Tests color tools."""
+
 import pytest
 
 from xonsh.color_tools import iscolor

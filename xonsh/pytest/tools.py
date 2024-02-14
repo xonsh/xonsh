@@ -1,4 +1,5 @@
 """Tests the xonsh lexer."""
+
 import ast
 import copy
 import os
@@ -86,7 +87,6 @@ class DummyShell:
 
 
 class DummyHistory:
-
     last_cmd_rtn = 0
     last_cmd_out = ""
 
@@ -106,10 +106,7 @@ def nodes_equal(x, y):
     __tracebackhide__ = True
     assert type(x) == type(
         y
-    ), "Ast nodes do not have the same type: '{}' != '{}' ".format(
-        type(x),
-        type(y),
-    )
+    ), f"Ast nodes do not have the same type: '{type(x)}' != '{type(y)}' "
     if isinstance(x, ast.Constant):
         assert (
             x.value == y.value
@@ -117,33 +114,19 @@ def nodes_equal(x, y):
     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
         assert (
             x.lineno == y.lineno
-        ), "Ast nodes do not have the same line number : {} != {}".format(
-            x.lineno,
-            y.lineno,
-        )
+        ), f"Ast nodes do not have the same line number : {x.lineno} != {y.lineno}"
         assert (
             x.col_offset == y.col_offset
-        ), "Ast nodes do not have the same column offset number : {} != {}".format(
-            x.col_offset,
-            y.col_offset,
-        )
+        ), f"Ast nodes do not have the same column offset number : {x.col_offset} != {y.col_offset}"
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x), ast.iter_fields(y)):
         assert (
             xname == yname
-        ), "Ast nodes fields differ : {} (of type {}) != {} (of type {})".format(
-            xname,
-            type(xval),
-            yname,
-            type(yval),
-        )
+        ), f"Ast nodes field names differ : {xname} (of type {type(xval)}) != {yname} (of type {type(yval)})"
+        if isinstance(x, ast.Constant) and xname == "kind":
+            continue
         assert type(xval) == type(
             yval
-        ), "Ast nodes fields differ : {} (of type {}) != {} (of type {})".format(
-            xname,
-            type(xval),
-            yname,
-            type(yval),
-        )
+        ), f"Ast nodes fields differ : {xname} (of type {type(xval)}) != {yname} (of type {type(yval)})"
     for xchild, ychild in zip(ast.iter_child_nodes(x), ast.iter_child_nodes(y)):
         assert nodes_equal(xchild, ychild), "Ast node children differs"
     return True

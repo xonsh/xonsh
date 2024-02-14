@@ -1,4 +1,5 @@
 """A tty implementation for xonsh"""
+
 import os
 import sys
 

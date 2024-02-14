@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import subprocess
-import os
 import argparse
+import os
+import subprocess
 
 program_description = """Build and run Xonsh in a fresh, controlled
     environment using docker """

@@ -1,4 +1,5 @@
 """Tests the xonsh.procs.specs"""
+
 import itertools
 import sys
 from subprocess import Popen
@@ -144,7 +145,6 @@ def test_capture_always(
     ],
 )
 def test_run_subproc_background(captured, exp_is_none):
-
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
@@ -202,7 +202,7 @@ def test_on_command_not_found_fires(xession):
     subproc = SubprocSpec.build(["xonshcommandnotfound"])
     with pytest.raises(XonshError) as expected:
         subproc.run()
-    assert "command not found: xonshcommandnotfound" in str(expected.value)
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
     assert fired
 
 
@@ -224,5 +224,5 @@ def test_on_command_not_found_doesnt_fire_in_non_interactive_mode(xession):
     subproc = SubprocSpec.build(["xonshcommandnotfound"])
     with pytest.raises(XonshError) as expected:
         subproc.run()
-    assert "command not found: xonshcommandnotfound" in str(expected.value)
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
     assert not fired

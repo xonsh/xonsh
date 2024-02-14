@@ -1,5 +1,6 @@
 """Tools for creating command-line and web-based wizards from a tree of nodes.
 """
+
 import ast
 import collections.abc as cabc
 import fnmatch
@@ -21,7 +22,7 @@ from xonsh.tools import backup_file, print_color, to_bool, to_bool_or_break
 class Node:
     """Base type of all nodes."""
 
-    attrs: tp.Union[tp.Tuple[str, ...], str] = ()
+    attrs: tp.Union[tuple[str, ...], str] = ()
 
     def __str__(self):
         return PrettyFormatter(self).visit()
@@ -81,7 +82,7 @@ class Question(Node):
 class Input(Node):
     """Gets input from the user."""
 
-    attrs: tp.Tuple[str, ...] = (
+    attrs: tuple[str, ...] = (
         "prompt",
         "converter",
         "show_conversion",
@@ -257,7 +258,7 @@ class StateFile(Input):
     given file name. This node type is likely not useful on its own.
     """
 
-    attrs: tp.Tuple[str, ...] = ("default_file", "check", "ask_filename")
+    attrs: tuple[str, ...] = ("default_file", "check", "ask_filename")
 
     def __init__(self, default_file=None, check=True, ask_filename=True):
         """
@@ -508,7 +509,7 @@ class PrettyFormatter(Visitor):
         if node.path is None:
             s += "\n])"
         else:
-            s += "{0}],\n{0}path={1!r}\n)".format(self.indent, node.path)
+            s += f"{self.indent}],\n{self.indent}path={node.path!r}\n)"
         return s
 
     def visit_message(self, node):
@@ -829,11 +830,7 @@ class PromptVisitor(StateVisitor):
                 self.state = json.load(f)
             print_color(f"{{GREEN}}{fname!r} loaded.{{RESET}}")
         else:
-            print_color(
-                ("{{RED}}{0!r} could not be found, " "continuing.{{RESET}}").format(
-                    fname
-                )
-            )
+            print_color(f"{{RED}}{fname!r} could not be found, " "continuing.{{RESET}}")
         return fname
 
     def visit_fileinserter(self, node):

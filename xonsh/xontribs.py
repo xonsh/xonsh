@@ -1,8 +1,10 @@
 """Tools for helping manage xontributions."""
+
 import contextlib
 import importlib
 import importlib.util
 import json
+import os
 import sys
 import typing as tp
 from enum import IntEnum
@@ -76,13 +78,27 @@ def get_module_docstring(module: str) -> str:
     return ""
 
 
-def get_xontribs() -> tp.Dict[str, Xontrib]:
+def get_xontribs() -> dict[str, Xontrib]:
     """Return xontrib definitions lazily."""
     return dict(_get_installed_xontribs())
 
 
+def _patch_in_userdir():
+    """
+    Patch in user site packages directory.
+
+    If xonsh is installed in non-writeable location, then xontribs will end up
+    there, so we make them accessible."""
+    if not os.access(os.path.dirname(sys.executable), os.W_OK):
+        from site import getusersitepackages
+
+        if (user_site_packages := getusersitepackages()) not in set(sys.path):
+            sys.path.append(user_site_packages)
+
+
 def _get_installed_xontribs(pkg_name="xontrib"):
     """List all core packages + newly installed xontribs"""
+    _patch_in_userdir()
     spec = importlib.util.find_spec(pkg_name)
 
     def iter_paths():
@@ -111,6 +127,7 @@ def _get_installed_xontribs(pkg_name="xontrib"):
 
 def find_xontrib(name, full_module=False):
     """Finds a xontribution from its name."""
+    _patch_in_userdir()
 
     # here the order is important. We try to run the correct cases first and then later trial cases
     # that will likely fail
@@ -160,7 +177,7 @@ def xontrib_context(name, full_module=False):
     return ctx
 
 
-def prompt_xontrib_install(names: tp.List[str]):
+def prompt_xontrib_install(names: list[str]):
     """Returns a formatted string with name of xontrib package to prompt user"""
     return (
         "The following xontribs are enabled but not installed: \n"
@@ -202,6 +219,7 @@ def xontribs_load(
     ] = (),
     verbose=False,
     full_module=False,
+    suppress_warnings=False,
 ):
     """Load xontribs from a list of names
 
@@ -213,6 +231,8 @@ def xontribs_load(
         verbose output
     full_module : -f, --full
         indicates that the names are fully qualified module paths and not inside ``xontrib`` package
+    suppress_warnings : -s, --suppress-warnings
+        no warnings about missing xontribs and return code 0
     """
     ctx = {} if XSH.ctx is None else XSH.ctx
     res = ExitCode.OK
@@ -225,7 +245,8 @@ def xontribs_load(
         try:
             update_context(name, ctx=ctx, full_module=full_module)
         except XontribNotInstalled:
-            bad_imports.append(name)
+            if not suppress_warnings:
+                bad_imports.append(name)
         except Exception:
             res = ExitCode.INIT_FAILED
             print_exception(f"Failed to load xontrib {name}.")
@@ -298,6 +319,7 @@ def xontrib_data():
             "name": xo_name,
             "loaded": xontrib.is_loaded,
             "auto": xontrib.is_auto_loaded,
+            "module": xontrib.module,
         }
 
     return dict(sorted(data.items()))

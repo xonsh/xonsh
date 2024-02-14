@@ -193,12 +193,12 @@ def test_bash_completer_empty_prefix():
             3,
             False,
         ),
-        # date --da  ->  date --date=
+        # date --u  ->  date --utc
         (
-            CommandContext(args=(CommandArg("date"),), arg_index=1, prefix="--da"),
-            {"--date="},
-            4,
-            False,
+            CommandContext(args=(CommandArg("date"),), arg_index=1, prefix="--u"),
+            {"--utc"},
+            3,
+            True,
         ),
         # dd status=pr -> dd status=progress
         (

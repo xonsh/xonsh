@@ -1,9 +1,9 @@
 """Hooks for pygments syntax highlighting."""
+
 import os
 import re
 import stat
 import sys
-import typing as tp
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
@@ -66,7 +66,7 @@ from xonsh.tools import (
 Color = Token.Color  # alias to new color token namespace
 
 # style rules that are not supported by pygments are stored here
-NON_PYGMENTS_RULES: tp.Dict[str, tp.Dict[str, str]] = {}
+NON_PYGMENTS_RULES: dict[str, dict[str, str]] = {}
 
 # style modifiers not handled by pygments (but supported by ptk)
 PTK_SPECIFIC_VALUES = frozenset(
@@ -556,12 +556,16 @@ def register_custom_pygments_style(
         (Style,),
         {
             "styles": custom_styles,
-            "highlight_color": highlight_color
-            if highlight_color is not None
-            else base_style.highlight_color,
-            "background_color": background_color
-            if background_color is not None
-            else base_style.background_color,
+            "highlight_color": (
+                highlight_color
+                if highlight_color is not None
+                else base_style.highlight_color
+            ),
+            "background_color": (
+                background_color
+                if background_color is not None
+                else base_style.background_color
+            ),
         },
     )
 
@@ -1343,7 +1347,6 @@ def _monkey_patch_pygments_codes():
 
 @lazyobject
 def XonshTerminal256Formatter():
-
     if (
         ptk_version_info()
         and ptk_version_info() > (2, 0)
@@ -1491,7 +1494,7 @@ def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
 events.on_lscolors_change(on_lscolors_change)
 
 
-def color_file(file_path: str, path_stat: os.stat_result) -> tp.Tuple[_TokenType, str]:
+def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, str]:
     """Determine color to use for file *approximately* as ls --color would,
        given lstat() results and its path.
 
@@ -1595,7 +1598,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tp.Tuple[_TokenType
 def _command_is_valid(cmd):
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (OSError):
+    except OSError:
         return False
     return (cmd in XSH.commands_cache and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
@@ -1607,7 +1610,7 @@ def _command_is_autocd(cmd):
         return False
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except (OSError):
+    except OSError:
         return False
     return os.path.isdir(cmd_abspath)
 
@@ -1628,7 +1631,7 @@ def subproc_arg_callback(_, match):
         path = os.path.expanduser(text)
         path_stat = os.lstat(path)  # lstat() will raise FNF if not a real file
         yieldVal, _ = color_file(path, path_stat)
-    except (OSError):
+    except OSError:
         pass
 
     yield (match.start(), yieldVal, text)
@@ -1751,7 +1754,7 @@ class XonshConsoleLexer(XonshLexer):
 
     name = "Xonsh console lexer"
     aliases = ["xonshcon"]
-    filenames: tp.List[str] = []
+    filenames: list[str] = []
 
     tokens = {
         "root": [

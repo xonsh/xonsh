@@ -145,15 +145,15 @@ def _cull(potential, matches, verbose=0):
     for match in matches:  # don't yield duplicates
         if _samefile(potential[0], match[0]):
             if verbose:
-                sys.stderr.write("duplicate: %s (%s)\n" % potential)
+                sys.stderr.write("duplicate: {} ({})\n".format(*potential))
             return None
     else:
         if not stat.S_ISREG(os.stat(potential[0]).st_mode):
             if verbose:
-                sys.stderr.write("not a regular file: %s (%s)\n" % potential)
+                sys.stderr.write("not a regular file: {} ({})\n".format(*potential))
         elif sys.platform != "win32" and not os.access(potential[0], os.X_OK):
             if verbose:
-                sys.stderr.write("no executable access: %s (%s)\n" % potential)
+                sys.stderr.write("no executable access: {} ({})\n".format(*potential))
         else:
             matches.append(potential)
             return potential
@@ -270,8 +270,8 @@ def which(command, path=None, verbose=0, exts=None):
     """
     try:
         absName, fromWhere = next(whichgen(command, path, verbose, exts))
-    except StopIteration:
-        raise WhichError("Could not find '%s' on the path." % command)
+    except StopIteration as ex:
+        raise WhichError("Could not find '%s' on the path." % command) from ex
     if verbose:
         return absName, fromWhere
     else:
