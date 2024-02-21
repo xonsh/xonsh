@@ -1,10 +1,15 @@
-<!--- Thanks for opening a PR on xonsh! Please include a news entry with your PR
-to help keep our changelog up to date! There are instructions available here:
-https://xon.sh/devguide.html#changelog -->
+<!--- 
 
-<!--- If there is specific issue / feature request that this PR is addressing,
-please link to the corresponding issue by using the `#issuenumber` syntax.
-Thanks again! -->
+Thanks for opening a PR on xonsh! 
+
+Please do this:
+
+1. Include a news file with your PR (https://xon.sh/devguide.html#changelog).
+2. Add the documentation for your feature into `/docs`. 
+3. Add the example of usage or before-after behavior.
+4. Mention the issue that this PR is addressing e.g. `#1234`.
+
+-->
 
 ## For community
 ⬇️  **Please click the 👍 reaction instead of leaving a `+1` or 👍  comment**
