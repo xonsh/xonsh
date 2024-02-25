@@ -4,6 +4,28 @@ Xonsh Change Log
 
 .. current developments
 
+v0.15.0
+====================
+
+**Added:**
+
+* `Atuin <https://atuin.sh/>`_ now has official support for xonsh. (Related PR: https://github.com/atuinsh/atuin/pull/1375)
+
+**Changed:**
+
+* Updated docs to reflect VS Code support for xonsh as the user's default shell.
+* Pinned prompt-toolkit version 3.0.29-3.0.40 to workaround upstream issue. More info in issue 5241.
+
+**Authors:**
+
+* anki-code
+* pre-commit-ci[bot]
+* Jason R. Coombs
+* dependabot[bot]
+* Matthieu LAURENT
+
+
+
 v0.14.4
 ====================
 
