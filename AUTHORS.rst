@@ -20,8 +20,8 @@ Authors are sorted by number of commits.
 * christopher
 * Klaus Alexander Seistrup
 * Leonardo Santagada
-* Burak Yiğit Kaya
 * pre-commit-ci[bot]
+* Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
 * Rob Brewer
@@ -47,11 +47,11 @@ Authors are sorted by number of commits.
 * cryzed
 * Frank Sachsenheim
 * Kurtis Rader
+* Jason R. Coombs
 * Brian Visel
 * cafehaine
 * Andrew Hundt
 * Jonathan Slenders
-* Jason R. Coombs
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
@@ -65,11 +65,11 @@ Authors are sorted by number of commits.
 * Oleh Prypin
 * Brian Skinn
 * Wendell Turner
+* dependabot[bot]
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
 * Alexander Sosedkin
-* dependabot[bot]
 * Cody Scott
 * Jake Hedman
 * traverseda
@@ -321,5 +321,6 @@ Authors are sorted by number of commits.
 * Nathan Monfils
 * JamesParrott
 * Airat Makhmutov
+* Matthieu LAURENT
 * goodboy
 * Atsushi Morimoto

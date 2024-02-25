@@ -8,7 +8,6 @@ $ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
                'tag', 'push_tag',
                'ghrelease',
                'sphinx',
-               'conda_forge',
                ]
 $PYPI_SIGN = False
 $PYPI_BUILD_COMMANDS = ("sdist")
