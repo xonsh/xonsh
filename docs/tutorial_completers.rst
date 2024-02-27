@@ -203,7 +203,7 @@ active completers via the ``completer add`` command or ``xonsh.completers.comple
 * ``">KEY"``, where ``KEY`` is a pre-existing name, indicates that this should be added after the completer named ``KEY``
 * ``"<KEY"``, where ``KEY`` is a pre-existing name, indicates that this should be added before the completer named ``KEY``
 
-If ``POS`` is not provided, it defaults to ``"start"``.
+If ``POS`` is not provided, it defaults to ``"end"``.
 
 .. note:: It is also possible to manipulate ``__xonsh__.completers`` directly,
           but this is the preferred method.
