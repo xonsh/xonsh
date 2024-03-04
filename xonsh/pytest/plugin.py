@@ -56,7 +56,7 @@ def _limited_traceback(excinfo):
         return format_list(tb)
 
 
-def pytest_collect_file(file_path: Path, path, parent):
+def pytest_collect_file(file_path: Path, parent):
     if file_path.suffix.lower() == ".xsh" and file_path.name.startswith("test_"):
         return XshFile.from_parent(parent, path=file_path)
 
