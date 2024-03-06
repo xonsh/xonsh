@@ -69,6 +69,8 @@ Projects that use xonsh or compatible
 - `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the SSH.
 - `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
 - `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
+- `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
+- `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
 
 Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
 
