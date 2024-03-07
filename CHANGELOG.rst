@@ -4,6 +4,21 @@ Xonsh Change Log
 
 .. current developments
 
+v0.15.1
+====================
+
+**Fixed:**
+
+* pytest: Fix pytest collection starting at pytest>=8.1.0
+
+**Authors:**
+
+* doronz88
+* Daniel Saunders
+* Andrew
+
+
+
 v0.15.0
 ====================
 
