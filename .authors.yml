@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 641
+  num_commits: 644
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1430,7 +1430,7 @@
   first_commit: 2021-11-18 18:42:29
 - name: doronz88
   email: doron88@gmail.com
-  num_commits: 4
+  num_commits: 5
   first_commit: 2022-04-27 12:41:13
 - name: Stefano Rivera
   email: github@rivera.za.net
@@ -1580,3 +1580,11 @@
   email: matthieu.laurent69@protonmail.com
   num_commits: 1
   first_commit: 2024-01-30 06:24:36
+- name: Daniel Saunders
+  email: dsaunders410@gmail.com
+  num_commits: 1
+  first_commit: 2024-02-27 10:22:12
+- name: Andrew
+  email: andrew222651@fastmail.com
+  num_commits: 1
+  first_commit: 2024-03-06 04:37:19

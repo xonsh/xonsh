@@ -95,6 +95,7 @@ Authors are sorted by number of commits.
 * Jay Tuckey
 * Alexander Steffen
 * Achim Herwig
+* doronz88
 * Randy Syring
 * Lucas Inojosa
 * adam j hartz
@@ -125,7 +126,6 @@ Authors are sorted by number of commits.
 * Sean Farley
 * Marduk Bolaños
 * Marius van Niekerk
-* doronz88
 * Stefano Rivera
 * Lie Ryan
 * Jan Schulz
@@ -322,5 +322,7 @@ Authors are sorted by number of commits.
 * JamesParrott
 * Airat Makhmutov
 * Matthieu LAURENT
+* Daniel Saunders
+* Andrew
 * goodboy
 * Atsushi Morimoto
