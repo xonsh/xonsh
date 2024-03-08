@@ -475,10 +475,11 @@ def os_environ():
         return os.environ
 
 
-@functools.lru_cache(1)
 def bash_command():
     """Determines the command for Bash on the current platform."""
-    if ON_WINDOWS:
+    if (bc := os.getenv("XONSH_BASH_PATH_OVERRIDE", None)) is not None:
+        bc = str(bc)  # for pathlib Paths
+    elif ON_WINDOWS:
         bc = windows_bash_command()
     else:
         bc = "bash"

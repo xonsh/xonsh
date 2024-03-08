@@ -1812,6 +1812,15 @@ This is to reduce the noise in generated completions.""",
         "Toggles subsequence matching of paths for tab completion. "
         "If ``True``, then, e.g., ``~/u/ro`` can match ``~/lou/carcolh``.",
     )
+    XONSH_BASH_PATH_OVERRIDE = Var.with_default(
+        None,
+        doc="Override the path used to call bash externally. This allows "
+        "a user to choose which bash executable to call for ``source-bash`` "
+        "and any bash completions that are configured. "
+        "This variable overrides the default settings in "
+        "``xonsh.platform.bash_command``.",
+        doc_default="None",
+    )
 
 
 class PTKCompletionSetting(AutoCompletionSetting):
