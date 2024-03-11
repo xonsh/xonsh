@@ -485,7 +485,7 @@ class LsColors(cabc.MutableMapping):
             out = subprocess.check_output(
                 cmd, env=denv, text=True, stderr=subprocess.DEVNULL
             )
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except (subprocess.CalledProcessError, FileNotFoundError, NotADirectoryError):
             return cls(cls.default_settings)
         except OSError:
             # necessary to catch OSError: [WinError 740] The requested operation requires elevation
