@@ -10,7 +10,7 @@ def write_value(value: str, _) -> str:
 
 
 def append_to_list(value: list[str], existing: str) -> str:
-    vals = set(existing.split(" "))
+    vals = set(existing.split(" ")) if existing else set()
     vals.update(value)
     return " ".join(vals)
 
