@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import cgi
 import contextlib
 import json
 import os
@@ -8,6 +7,7 @@ import string
 import sys
 import typing as tp
 from argparse import ArgumentParser
+from email.message import EmailMessage
 from http import HTTPStatus, server
 from pathlib import Path
 from pprint import pprint
@@ -90,24 +90,26 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def _read_form(self):
-        ctype, pdict = cgi.parse_header(self.headers.get("content-type"))
-        # if ctype == "multipart/form-data":
-        # postvars = cgi.parse_multipart(self.rfile, pdict)
-        if ctype == "application/x-www-form-urlencoded":
-            return parse.parse_qs(self._read(), keep_blank_values=True)
-        return {}
+        msg = EmailMessage()
+        msg["Content-Type"] = self.headers.get("content-type")
+        if msg.get_content_type() == "application/x-www-form-urlencoded":
+            data = parse.parse_qs(self._read(), keep_blank_values=True)
+            for name, values in data.items():
+                value = None
+                if isinstance(name, bytes):
+                    name = name.decode(encoding="utf-8")
+                if isinstance(values, list) and values:
+                    if isinstance(values[0], bytes):
+                        value = values[0].decode(encoding="utf-8")
+                yield name, value
 
     def do_POST(self):
         """Reads post request body"""
         route = self._get_route("post")
         if route is not None:
             # redirect after form submission
-            data = cgi.FieldStorage(
-                self.rfile,
-                headers=self.headers,
-                environ={"REQUEST_METHOD": "POST"},
-                keep_blank_values=True,
-            )
+            data = dict(self._read_form())
+
             new_route = route.post(data) or route
             return self._send(redirect=new_route.path)
         post_body = self._read()
