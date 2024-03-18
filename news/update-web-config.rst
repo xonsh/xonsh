@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed a bug that caused ``xonfig web`` to overwrite its own configuration file. See https://github.com/xonsh/xonsh/issues/5297
 
 **Security:**
 

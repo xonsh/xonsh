@@ -4,44 +4,50 @@ import os
 import re
 import typing as tp
 
-RENDERERS: list[tp.Callable] = []
+
+def write_value(value: str, _) -> str:
+    return f"{value!r}"
 
 
-def renderer(f):
-    """Adds decorated function to renderers list."""
-    RENDERERS.append(f)
+def append_to_list(value: list[str], existing: str) -> str:
+    vals = set(existing.split(" "))
+    vals.update(value)
+    return " ".join(vals)
 
 
-@renderer
-def prompt(config):
-    prompt = config.get("prompt")
-    if prompt:
-        yield f"$PROMPT = {prompt!r}"
-
-
-@renderer
-def colors(config):
-    style = config.get("color")
-    if style:
-        yield f"$XONSH_COLOR_STYLE = {style!r}"
-
-
-@renderer
-def xontribs(config):
-    xtribs = config.get("xontribs")
-    if xtribs:
-        yield "xontrib load " + " ".join(xtribs)
+RENDERERS: dict[str, tuple[str, tp.Callable[[tp.Any, str], str]]] = {
+    "$PROMPT = ": ("prompt", write_value),
+    "$XONSH_COLOR_STYLE = ": ("color", write_value),
+    "xontrib load ": ("xontribs", append_to_list),
+}
 
 
 def config_to_xonsh(
-    config, prefix="# XONSH WEBCONFIG START", suffix="# XONSH WEBCONFIG END"
+    config: dict,
+    prefix="# XONSH WEBCONFIG START",
+    current_lines: "tp.Iterable[str]" = (),
+    suffix="# XONSH WEBCONFIG END",
 ):
     """Turns config dict into xonsh code (str)."""
-    lines = [prefix]
-    for func in RENDERERS:
-        lines.extend(func(config))
-    lines.append(suffix)
-    return re.sub(r"\\r", "", "\n".join(lines))
+    yield prefix
+    renderers = set(RENDERERS)
+    for existing in current_lines:
+        if start := next(filter(lambda x: existing.startswith(x), renderers), None):
+            renderers.remove(start)
+            key, func = RENDERERS[start]
+            if value := config.get(key):
+                yield start + func(value, existing.strip(start))
+            else:
+                yield existing
+        else:
+            yield existing
+
+    for start in renderers:
+        key, func = RENDERERS[start]
+        if value := config.get(key):
+            yield start + func(value, "")
+
+    yield suffix
 
 
 RC_FILE = "~/.xonshrc"
@@ -56,21 +62,28 @@ def insert_into_xonshrc(
     """Places a config dict into the xonshrc."""
     if xonshrc is None:
         xonshrc = RC_FILE
+    current_lines = []
     # get current contents
     fname = os.path.expanduser(xonshrc)
     if os.path.isfile(fname):
         with open(fname) as f:
             s = f.read()
         before, _, s = s.partition(prefix)
-        _, _, after = s.partition(suffix)
+        current, _, after = s.partition(suffix)
+        current_lines = current.strip().splitlines(keepends=False)
     else:
         before = after = ""
         dname = os.path.dirname(fname)
         if dname:
             os.makedirs(dname, exist_ok=True)
     # compute new values
-    new = config_to_xonsh(config, prefix=prefix, suffix=suffix)
+    lines = config_to_xonsh(
+        config,
+        prefix=prefix,
+        current_lines=current_lines,
+        suffix=suffix,
+    )
     # write out the file
     with open(fname, "w", encoding="utf-8") as f:
-        f.write(before + new + after)
+        f.write(before + re.sub(r"\\r", "", "\n".join(lines)) + after)
     return fname
