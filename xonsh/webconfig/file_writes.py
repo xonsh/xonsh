@@ -45,7 +45,7 @@ def config_to_xonsh(
 
 
 def insert_into_xonshrc(
-    config,
+    config: dict,
     xonshrc="~/.xonshrc",
     prefix="# XONSH WEBCONFIG START",
     suffix="# XONSH WEBCONFIG END",

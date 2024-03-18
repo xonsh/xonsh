@@ -1,4 +1,3 @@
-import cgi
 import sys
 from typing import TYPE_CHECKING
 
@@ -220,9 +219,9 @@ class PromptsPage(Routes):
         # rest
         yield from self.get_cols()
 
-    def post(self, data: "cgi.FieldStorage"):
-        if data:
-            prompt = data.getvalue(self.var_name).replace("\r", "")
+    def post(self, data: dict[str, str]):
+        if prompt := data.get(self.var_name):
+            prompt = prompt.replace("\r", "")
             self.env[self.var_name] = prompt
             self.update_rc(prompt=prompt)
 
@@ -267,10 +266,10 @@ class XontribsPage(Routes):
             yield t.row()[t.col()[self.xontrib_card(name, data),]]
             yield t.br()
 
-    def post(self, data: "cgi.FieldStorage"):
-        if not data.keys():
+    def post(self, data: dict[str, str]):
+        if not data:
             return
-        name = data.keys()[0]
+        name = list(data)[0]
         if self.is_loaded(name):
             # todo: update rc file
             del sys.modules[self.mod_name(name)]
