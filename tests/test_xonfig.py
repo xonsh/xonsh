@@ -133,6 +133,36 @@ class TestXonfigWeb:
         resp = request_factory("/prompts").get()
         assert "Prompts" in resp
 
+    def test_prompts_post(self, request_factory, rc_file):
+        resp = request_factory("/prompts").post(PROMPT="custom")
+        assert "$PROMPT = 'custom'" in rc_file.read_text()
+        assert "302" in resp
+
+    def test_it_rewrites_correctly(self, request_factory, rc_file):
+        rc_file.write_text(
+            """
+pre-lines
+# XONSH WEBCONFIG START
+$XONSH_COLOR_STYLE = 'abap'
+# XONSH WEBCONFIG END
+post
+lines
+"""
+        )
+        request_factory("/prompts").post(PROMPT="custom")
+        assert (
+            rc_file.read_text()
+            == """
+pre-lines
+# XONSH WEBCONFIG START
+$XONSH_COLOR_STYLE = 'abap'
+$PROMPT = 'custom'
+# XONSH WEBCONFIG END
+post
+lines
+"""
+        )
+
 
 @pytest.mark.parametrize(
     "args",
