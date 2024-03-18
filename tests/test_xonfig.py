@@ -10,12 +10,14 @@ import io
 import re
 
 import pytest  # noqa F401
+import requests
 
+from xonsh.webconfig import file_writes
 from xonsh.webconfig import main as web_main
 from xonsh.xonfig import xonfig_main
 
 
-def test_xonfg_help(capsys, xession):
+def test_xonfig_help(capsys, xession):
     """verify can invoke it, and usage knows about all the options"""
     with pytest.raises(SystemExit):
         xonfig_main(["-h"])
@@ -34,62 +36,101 @@ def test_xonfg_help(capsys, xession):
     }
 
 
+class MockRequest:
+    """Mock socket.socket for testing request handler"""
+
+    def __init__(self, path: str):
+        self._path = path
+        self.data = b""
+        self.content = []
+        self.method = None
+        self.handler = None
+
+    def getsockname(self):
+        return ("sockname",)
+
+    def _request(self):
+        web_main.XonshConfigHTTPRequestHandler(self, (0, 0), None)
+        return self
+
+    def get(self):
+        self.method = "GET"
+        self._request()
+        return self.data.decode()
+
+    def post(self, **data):
+        self.method = "POST"
+        if data:
+            req = requests.Request(
+                method=self.method, url=f"http://localhost{self._path}", data=data
+            ).prepare()
+            self.content = [f"{k}: {v}".encode() for k, v in req.headers.items()] + [
+                b"",  # empty line to show end of headers
+                (
+                    req.body.encode()
+                    if isinstance(req.body, str)
+                    else b"" if req.body is None else req.body
+                ),
+            ]
+        self._request()
+        return self.data.decode()
+
+    def makefile(self, *args, **kwargs):
+        if args[0] == "rb":
+            body = f"{self.method} {self._path} HTTP/1.0".encode()
+            if self.content:
+                body = b"\n".join([body, *self.content])
+            return io.BytesIO(body)
+        elif args[0] == "wb":
+            return io.BytesIO(b"")
+        else:
+            raise ValueError("Unknown file type to make", args, kwargs)
+
+    def sendall(self, data):
+        self.data = data
+
+
 @pytest.fixture
 def request_factory():
-    class MockSocket:
-        def getsockname(self):
-            return ("sockname",)
-
-        def sendall(self, data):
-            self.data = data
-
-    class MockRequest:
-        _sock = MockSocket()
-
-        def __init__(self, path: str, method: str):
-            self._path = path
-            self.data = b""
-            self.method = method.upper()
-
-        def makefile(self, *args, **kwargs):
-            if args[0] == "rb":
-                return io.BytesIO(f"{self.method} {self._path} HTTP/1.0".encode())
-            elif args[0] == "wb":
-                return io.BytesIO(b"")
-            else:
-                raise ValueError("Unknown file type to make", args, kwargs)
-
-        def sendall(self, data):
-            self.data = data
-
-    return MockRequest
-
-
-@pytest.fixture
-def get_req(request_factory):
     from urllib import parse
 
-    def factory(path, data: "dict[str, str]|None" = None):
-        if data:
-            path = path + "?" + parse.urlencode(data)
-        request = request_factory(path, "get")
-        handle = web_main.XonshConfigHTTPRequestHandler(request, (0, 0), None)
-        return request, handle, request.data.decode()
+    def factory(path, **params):
+        if params:
+            path = path + "?" + parse.urlencode(params)
+        return MockRequest(path)
 
     return factory
 
 
+@pytest.fixture
+def rc_file(tmp_path, monkeypatch):
+    file = tmp_path / "xonshrc"
+    monkeypatch.setattr(file_writes, "RC_FILE", str(file))
+    return file
+
+
 class TestXonfigWeb:
-    def test_colors_get(self, get_req):
-        _, _, resp = get_req("/")
+    def test_colors_get(self, request_factory):
+        resp = request_factory("/").get()
         assert "Colors" in resp
 
-    def test_xontribs_get(self, get_req):
-        _, _, resp = get_req("/xontribs")
+    def test_colors_post(self, request_factory, rc_file):
+        resp = request_factory("/", selected="default").post()
+        assert "$XONSH_COLOR_STYLE = 'default'" in rc_file.read_text()
+        assert "302" in resp  # redirect
+
+    def test_xontribs_get(self, request_factory):
+        resp = request_factory("/xontribs").get()
         assert "Xontribs" in resp
 
-    def test_prompts_get(self, get_req):
-        _, _, resp = get_req("/prompts")
+    def test_xontribs_post(self, request_factory, rc_file, mocker):
+        mocker.patch("xonsh.xontribs.xontribs_load", return_value=(None, None, None))
+        resp = request_factory("/xontribs").post(xontrib1="")
+        assert "xontrib load xontrib1" in rc_file.read_text()
+        assert "302" in resp
+
+    def test_prompts_get(self, request_factory):
+        resp = request_factory("/prompts").get()
         assert "Prompts" in resp
 
 

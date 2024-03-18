@@ -44,13 +44,18 @@ def config_to_xonsh(
     return re.sub(r"\\r", "", "\n".join(lines))
 
 
+RC_FILE = "~/.xonshrc"
+
+
 def insert_into_xonshrc(
     config: dict,
-    xonshrc="~/.xonshrc",
+    xonshrc=None,
     prefix="# XONSH WEBCONFIG START",
     suffix="# XONSH WEBCONFIG END",
 ):
     """Places a config dict into the xonshrc."""
+    if xonshrc is None:
+        xonshrc = RC_FILE
     # get current contents
     fname = os.path.expanduser(xonshrc)
     if os.path.isfile(fname):
