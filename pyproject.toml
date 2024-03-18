@@ -115,6 +115,7 @@ test = [
     "coverage>=5.3.1",
     "pyte>=0.8.0",
     "virtualenv>=20.16.2",
+    "requests",
 ]
 dev = [
     "xonsh[test,doc]",
