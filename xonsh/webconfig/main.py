@@ -6,7 +6,6 @@ import socketserver
 import string
 import sys
 import typing as tp
-from argparse import ArgumentParser
 from email.message import EmailMessage
 from http import HTTPStatus, server
 from pathlib import Path
@@ -22,6 +21,10 @@ RENDERERS: list[tp.Callable] = []
 
 
 class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("directory", os.path.dirname(__file__))
+        super().__init__(*args, **kwargs)
+
     def _write_headers(self, *headers: "tuple[str, str]"):
         for name, val in headers:
             self.send_header(name, val)
@@ -121,19 +124,6 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         self._send(b"received post request:<br>" + post_body)
 
 
-def make_parser():
-    p = ArgumentParser("xonfig web")
-    p.add_argument(
-        "--no-browser",
-        "-n",
-        action="store_false",
-        dest="browser",
-        default=True,
-        help="don't open browser",
-    )
-    return p
-
-
 def bind_server_to(
     port: int = 8421, handler_cls=XonshConfigHTTPRequestHandler, browser=False
 ):
@@ -171,18 +161,12 @@ def serve(browser=False):
             httpd.serve_forever()
 
 
-def main(args=None):
+def main(browser=False):
+    """standalone entry point for webconfig."""
     from xonsh.main import setup
 
     setup()
-
-    p = make_parser()
-    ns = p.parse_args(args=args)
-
-    webconfig_dir = os.path.dirname(__file__)
-    if webconfig_dir:
-        os.chdir(webconfig_dir)
-    serve(ns.browser)
+    serve(browser)
 
 
 if __name__ == "__main__":

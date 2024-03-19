@@ -693,7 +693,7 @@ def _web(
 
     from xonsh.webconfig import main
 
-    main.main(_args[1:])
+    main.serve(browser)
 
 
 class XonfigAlias(ArgParserAlias):
