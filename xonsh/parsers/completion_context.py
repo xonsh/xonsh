@@ -350,7 +350,7 @@ class CompletionContextParser:
 
         self.error = None
         self.debug = debug
-        self.lexer = Lexer(tolerant=True)
+        self.lexer = Lexer(tolerant=True, pymode=False)
         self.tokens = tuple(self.used_tokens | self.artificial_tokens)
 
         yacc_kwargs = dict(

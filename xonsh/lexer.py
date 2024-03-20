@@ -253,9 +253,25 @@ def handle_redirect(state, token):
     typ = token.type
     st = token.string
     key = (typ, st) if (typ, st) in token_map else typ
-    yield _new_token(token_map[key], st, token.start)
+    new_tok = _new_token(token_map[key], st, token.start)
     if state["pymode"][-1][0]:
+        if typ == IOREDIRECT:
+            # Fix Python mode code that was incorrectly recognized as an
+            # IOREDIRECT by the tokenizer (see issue #4994).
+            # The tokenizer does not know when the code should be tokenized in
+            # Python mode. By default, when it sees code like `2>`, it produces
+            # an IOREDIRECT token. This call to `get_tokens` makes the
+            # tokenizer run over the code again, knowing that it is *not* an
+            # IOREDIRECT token.
+            lineno, lexpos = token.start
+            for tok in get_tokens(
+                token.string, state["tolerant"], tokenize_ioredirects=False
+            ):
+                yield _new_token(tok.type, tok.value, (lineno, lexpos + tok.lexpos))
+        else:
+            yield new_tok
         return
+    yield new_tok
     # add a whitespace token after a redirection, if we need to
     next_tok = next(state["stream"])
     if next_tok.start == token.end:
@@ -358,7 +374,7 @@ def handle_token(state, token):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def get_tokens(s, tolerant):
+def get_tokens(s, tolerant, pymode=True, tokenize_ioredirects=True):
     """
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
@@ -366,8 +382,10 @@ def get_tokens(s, tolerant):
     state = {
         "indents": [0],
         "last": None,
-        "pymode": [(True, "", "", (0, 0))],
-        "stream": tokenize(io.BytesIO(s.encode("utf-8")).readline, tolerant),
+        "pymode": [(pymode, "", "", (0, 0))],
+        "stream": tokenize(
+            io.BytesIO(s.encode("utf-8")).readline, tolerant, tokenize_ioredirects
+        ),
         "tolerant": tolerant,
     }
     while True:
@@ -406,7 +424,7 @@ class Lexer:
 
     _tokens: tp.Optional[tuple[str, ...]] = None
 
-    def __init__(self, tolerant=False):
+    def __init__(self, tolerant=False, pymode=True):
         """
         Attributes
         ----------
@@ -419,12 +437,15 @@ class Lexer:
         tolerant : bool
             Tokenize without extra checks (e.g. paren matching).
             When True, ERRORTOKEN contains the erroneous string instead of an error msg.
+        pymode : bool
+            Start the lexer in Python mode.
 
         """
         self.fname = ""
         self.last = None
         self.beforelast = None
         self._tolerant = tolerant
+        self._pymode = pymode
         self._token_stream = iter(())
 
     @property
@@ -442,7 +463,7 @@ class Lexer:
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self._token_stream = get_tokens(s, self._tolerant)
+        self._token_stream = get_tokens(s, self._tolerant, self._pymode)
 
     def token(self):
         """Retrieves the next token."""

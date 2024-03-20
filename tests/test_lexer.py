@@ -477,3 +477,36 @@ def test_tolerant_lexer(s):
     lexer.input(s)
     error_tokens = list(tok for tok in lexer if tok.type == "ERRORTOKEN")
     assert all(tok.value in s for tok in error_tokens)  # no error messages
+
+
+@pytest.mark.parametrize(
+    "s, exp",
+    [
+        ("2>1", [("NUMBER", "2", 0), ("GT", ">", 1), ("NUMBER", "1", 2)]),
+        ("a>b", [("NAME", "a", 0), ("GT", ">", 1), ("NAME", "b", 2)]),
+        (
+            "3>2>1",
+            [
+                ("NUMBER", "3", 0),
+                ("GT", ">", 1),
+                ("NUMBER", "2", 2),
+                ("GT", ">", 3),
+                ("NUMBER", "1", 4),
+            ],
+        ),
+        (
+            "36+2>>3",
+            [
+                ("NUMBER", "36", 0),
+                ("PLUS", "+", 2),
+                ("NUMBER", "2", 3),
+                ("RSHIFT", ">>", 4),
+                ("NUMBER", "3", 6),
+            ],
+        ),
+    ],
+)
+def test_pymode_not_ioredirect(s, exp):
+    # test that Python code like `2>1` is lexed correctly
+    # as opposed to being recognized as an IOREDIRECT token (issue #4994)
+    assert check_tokens(s, exp)
