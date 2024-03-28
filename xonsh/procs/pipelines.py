@@ -8,6 +8,7 @@ import subprocess
 import sys
 import threading
 import time
+import typing as tp
 
 import xonsh.jobs as xj
 import xonsh.lazyasd as xl
@@ -16,9 +17,13 @@ import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.procs.readers import ConsoleParallelReader, NonBlockingFDReader, safe_fdclose
 
+if tp.TYPE_CHECKING:
+    from xonsh.procs.specs import SubprocSpec
+
 
 @xl.lazyobject
 def STDOUT_CAPTURE_KINDS():
+    # todo: remove this and use the Literal
     return frozenset(["stdout", "object"])
 
 
@@ -112,7 +117,7 @@ class CommandPipeline:
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
 
-    def __init__(self, specs):
+    def __init__(self, specs: "list[SubprocSpec]"):
         """
         Parameters
         ----------
@@ -138,11 +143,11 @@ class CommandPipeline:
         starttime : floats or None
             Pipeline start timestamp.
         """
-        self.starttime = None
+        self.starttime: "float | None" = None
         self.ended = False
-        self.procs = []
+        self.procs: "list[subprocess.Popen]" = []
         self.specs = specs
-        self.spec = specs[-1]
+        self.spec: "SubprocSpec" = specs[-1]
         self.captured = specs[-1].captured
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
@@ -184,7 +189,7 @@ class CommandPipeline:
 
     def __repr__(self):
         s = self.__class__.__name__ + "(\n  "
-        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
+        # s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
         s += "\n)"
         return s
 
@@ -222,6 +227,39 @@ class CommandPipeline:
         else:
             yield from self.tee_stdout()
 
+    @staticmethod
+    def _readlines(stream) -> "list[bytes]":
+        timeout = XSH.env.get("XONSH_PROC_FREQUENCY")
+        if hasattr(stream, "readlines"):
+            return safe_readlines(stream, 1024)
+        if hasattr(stream, "read"):
+            return stream.read(timeout).splitlines(keepends=True)
+        return []
+
+    def _get_corr_std_stream(self, stream: "tp.Literal['stdout', 'stderr']"):
+        """get the correct stdout"""
+        timeout = XSH.env.get("XONSH_PROC_FREQUENCY")
+        stdx = getattr(self.proc, stream)
+        spec_stdx = getattr(self.spec, stream)
+        is_stream_handler = False
+        if stdx is None or spec_stdx is None or not safe_readable(stdx):
+            capt_stdx = getattr(self.spec, f"captured_{stream}")
+            if capt_stdx is None:
+                if hasattr(spec_stdx, "reader"):  # a StreamHandler
+                    stdx = spec_stdx.reader
+                    is_stream_handler = True
+            else:
+                stdx = capt_stdx
+        if hasattr(stdx, "buffer"):
+            stdx = stdx.buffer
+        if (
+            stdx is not None
+            and (not isinstance(stdx, self.nonblocking))
+            and (not is_stream_handler)
+        ):
+            stdx = NonBlockingFDReader(stdx.fileno(), timeout=timeout)
+        return stdx
+
     def iterraw(self):
         """Iterates through the last stdout, and returns the lines
         exactly as found.
@@ -232,55 +270,13 @@ class CommandPipeline:
         if proc is None:
             return
         timeout = XSH.env.get("XONSH_PROC_FREQUENCY")
-        # get the correct stdout
-        stdout = proc.stdout
-        if (
-            stdout is None or spec.stdout is None or not safe_readable(stdout)
-        ) and spec.captured_stdout is not None:
-            stdout = spec.captured_stdout
-        if hasattr(stdout, "buffer"):
-            stdout = stdout.buffer
-        if stdout is not None and not isinstance(stdout, self.nonblocking):
-            stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
-        if (
-            not stdout
-            or self.captured == "stdout"
-            or not safe_readable(stdout)
-            or not spec.threadable
-        ):
-            # we get here if the process is not threadable or the
-            # class is the real Popen
-            PrevProcCloser(pipeline=self)
-            task = xj.wait_for_active_job()
-            if task is None or task["status"] != "stopped":
-                proc.wait()
-                self._endtime()
-                if self.captured == "object":
-                    self.end(tee_output=False)
-                elif self.captured == "hiddenobject" and stdout:
-                    b = stdout.read()
-                    lines = b.splitlines(keepends=True)
-                    yield from lines
-                    self.end(tee_output=False)
-                elif self.captured == "stdout":
-                    b = stdout.read()
-                    s = self._decode_uninew(b, universal_newlines=True)
-                    self.lines = s.splitlines(keepends=True)
-            return
-        # get the correct stderr
-        stderr = proc.stderr
-        if (
-            stderr is None or spec.stderr is None or not safe_readable(stderr)
-        ) and spec.captured_stderr is not None:
-            stderr = spec.captured_stderr
-        if hasattr(stderr, "buffer"):
-            stderr = stderr.buffer
-        if stderr is not None and not isinstance(stderr, self.nonblocking):
-            stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
+
+        stdout = self._get_corr_std_stream("stdout")
+        stderr = self._get_corr_std_stream("stderr")
         # read from process while it is running
         check_prev_done = len(self.procs) == 1
         prev_end_time = None
-        i = j = cnt = 1
+        cnt = 1
         while proc.poll() is None:
             if getattr(proc, "suspended", False):
                 return
@@ -297,13 +293,14 @@ class CommandPipeline:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            stdout_lines = safe_readlines(stdout, 1024)
+
+            stdout_lines = self._readlines(stdout)
             i = len(stdout_lines)
-            if i != 0:
+            if i:
                 yield from stdout_lines
-            stderr_lines = safe_readlines(stderr, 1024)
+            stderr_lines = self._readlines(stderr)
             j = len(stderr_lines)
-            if j != 0:
+            if j:
                 self.stream_stderr(stderr_lines)
             if not check_prev_done:
                 # if we are piping...
@@ -328,12 +325,12 @@ class CommandPipeline:
                 cnt = 1
             time.sleep(timeout * cnt)
         # read from process now that it is over
-        yield from safe_readlines(stdout)
-        self.stream_stderr(safe_readlines(stderr))
+        yield from self._readlines(stdout)
+        self.stream_stderr(self._readlines(stderr))
         proc.wait()
         self._endtime()
-        yield from safe_readlines(stdout)
-        self.stream_stderr(safe_readlines(stderr))
+        yield from self._readlines(stdout)
+        self.stream_stderr(self._readlines(stderr))
         if self.captured == "object":
             self.end(tee_output=False)
 
@@ -366,6 +363,7 @@ class CommandPipeline:
         nl = b"\n"
         cr = b"\r"
         crnl = b"\r\n"
+
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
@@ -540,18 +538,19 @@ class CommandPipeline:
 
     def _close_proc(self):
         """Closes last proc's stdout."""
-        s = self.spec
-        p = self.proc
-        self._safe_close(s.stdin)
-        self._safe_close(s.stdout)
-        self._safe_close(s.stderr)
-        self._safe_close(s.captured_stdout)
-        self._safe_close(s.captured_stderr)
-        if p is None:
+        spec = self.spec
+        self._safe_close(spec.stdin)
+        self._safe_close(spec.stdout)
+        self._safe_close(spec.stderr)
+        # self._safe_close(spec.captured_stdout)
+        self._safe_close(spec.captured_stderr)
+
+        proc = self.proc
+        if proc is None:
             return
-        self._safe_close(p.stdin)
-        self._safe_close(p.stdout)
-        self._safe_close(p.stderr)
+        self._safe_close(proc.stdin)
+        self._safe_close(proc.stdout)
+        self._safe_close(proc.stderr)
 
     def _set_input(self):
         """Sets the input variable."""
@@ -637,6 +636,7 @@ class CommandPipeline:
                 self._output = "".join(self.lines)
             return self._output
         else:
+            self._readlines("stdout")
             return "".join(self.lines)
 
     @property
@@ -725,35 +725,29 @@ class CommandPipeline:
         """The resolve and executed command."""
         return self.spec.cmd
 
+    @staticmethod
+    def _get_prepost_fix(key: str) -> bytes:
+        env = XSH.env
+        t = env.get(key)
+        s = xt.format_std_prepost(t, env=env)
+        return s.encode(
+            encoding=env.get("XONSH_ENCODING"),
+            errors=env.get("XONSH_ENCODING_ERRORS"),
+        )
+
     @property
     def stderr_prefix(self):
         """Prefix to print in front of stderr, as bytes."""
-        p = self._stderr_prefix
-        if p is None:
-            env = XSH.env
-            t = env.get("XONSH_STDERR_PREFIX")
-            s = xt.format_std_prepost(t, env=env)
-            p = s.encode(
-                encoding=env.get("XONSH_ENCODING"),
-                errors=env.get("XONSH_ENCODING_ERRORS"),
-            )
-            self._stderr_prefix = p
-        return p
+        if self._stderr_prefix is None:
+            self._stderr_prefix = self._get_prepost_fix("XONSH_STDERR_PREFIX")
+        return self._stderr_prefix
 
     @property
     def stderr_postfix(self):
         """Postfix to print after stderr, as bytes."""
-        p = self._stderr_postfix
-        if p is None:
-            env = XSH.env
-            t = env.get("XONSH_STDERR_POSTFIX")
-            s = xt.format_std_prepost(t, env=env)
-            p = s.encode(
-                encoding=env.get("XONSH_ENCODING"),
-                errors=env.get("XONSH_ENCODING_ERRORS"),
-            )
-            self._stderr_postfix = p
-        return p
+        if self._stderr_postfix is None:
+            self._stderr_postfix = self._get_prepost_fix("XONSH_STDERR_POSTFIX")
+        return self._stderr_postfix
 
 
 class HiddenCommandPipeline(CommandPipeline):
