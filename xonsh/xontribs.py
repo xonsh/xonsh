@@ -13,7 +13,7 @@ from pathlib import Path
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
-from xonsh.tools import print_exception, format_color
+from xonsh.tools import print_color, print_exception
 
 if tp.TYPE_CHECKING:
     from importlib.metadata import Distribution, EntryPoint
@@ -330,7 +330,7 @@ def xontribs_loaded():
     return [k for k, xontrib in get_xontribs().items() if xontrib.is_loaded]
 
 
-def xontribs_list(to_json=False):
+def xontribs_list(to_json=False, _stdout=None):
     """List installed xontribs and show whether they are loaded or not
 
     Parameters
@@ -356,7 +356,7 @@ def xontribs_list(to_json=False):
             else:
                 s += "{RED}not-loaded{RESET}"
             s += "\n"
-        return format_color(s[:-1])
+        print_color(s[:-1], file=_stdout)
 
 
 def _get_xontrib_entrypoints() -> "tp.Iterable[EntryPoint]":
@@ -399,4 +399,4 @@ class XontribAlias(ArgParserAlias):
         return parser
 
 
-xontribs_main = XontribAlias(threadable=True)
+xontribs_main = XontribAlias(threadable=False)
