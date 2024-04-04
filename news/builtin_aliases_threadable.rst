@@ -4,8 +4,7 @@
 
 **Changed:**
 
-* xonfig now threadable.
-* xontrib now threadable.
+* Builtin aliases (xonfig, xontrib, history) switched to threadable mode.
 
 **Deprecated:**
 

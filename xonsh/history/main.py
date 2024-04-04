@@ -507,4 +507,4 @@ class HistoryAlias(xcli.ArgParserAlias):
         return super().__call__(args, *rest, **kwargs)
 
 
-history_main = HistoryAlias()
+history_main = HistoryAlias(threadable=True)
