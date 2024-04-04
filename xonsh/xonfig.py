@@ -722,7 +722,7 @@ class XonfigAlias(ArgParserAlias):
         return parser
 
 
-xonfig_main = XonfigAlias(threadable=False)
+xonfig_main = XonfigAlias(threadable=True)
 
 
 @lazyobject
