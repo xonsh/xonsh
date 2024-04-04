@@ -3432,12 +3432,20 @@ class BaseParser:
 
     def p_subproc_atom_redirect(self, p):
         """
-        subproc_atom : GT
-                     | LT
-                     | RSHIFT
-                     | IOREDIRECT
+        subproc_atom : GT WS subproc_atom
+                     | LT WS subproc_atom
+                     | RSHIFT WS subproc_atom
+                     | IOREDIRECT1 WS subproc_atom
+                     | IOREDIRECT2
         """
-        p0 = ast.const_str(s=p[1], lineno=self.lineno, col_offset=self.col)
+        operator = ast.const_str(s=p[1], lineno=self.lineno, col_offset=self.col)
+        elts = [operator] if len(p) == 2 else [operator, p[3]]
+        p0 = ast.Tuple(
+            elts=elts,
+            ctx=ast.Load(),
+            lineno=self.lineno,
+            col_offset=self.col,
+        )
         p0._cliarg_action = "append"
         p[0] = p0
 
@@ -3523,7 +3531,8 @@ class BaseParser:
             "LT",
             "LSHIFT",
             "RSHIFT",
-            "IOREDIRECT",
+            "IOREDIRECT1",
+            "IOREDIRECT2",
             "SEARCHPATH",
             "INDENT",
             "DEDENT",

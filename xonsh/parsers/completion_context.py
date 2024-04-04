@@ -330,7 +330,8 @@ class CompletionContextParser:
         "LT",
         "GT",
         "RSHIFT",
-        "IOREDIRECT",
+        "IOREDIRECT1",
+        "IOREDIRECT2",
     }
     used_tokens |= io_redir_tokens
     artificial_tokens = {"ANY"}

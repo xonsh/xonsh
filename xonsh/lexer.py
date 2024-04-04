@@ -23,7 +23,8 @@ from xonsh.tokenize import (
     ERRORTOKEN,
     GREATER,
     INDENT,
-    IOREDIRECT,
+    IOREDIRECT1,
+    IOREDIRECT2,
     LESS,
     MATCH,
     NAME,
@@ -101,7 +102,8 @@ def token_map():
     }
     for op, typ in _op_map.items():
         tm[(OP, op)] = typ
-    tm[IOREDIRECT] = "IOREDIRECT"
+    tm[IOREDIRECT1] = "IOREDIRECT1"
+    tm[IOREDIRECT2] = "IOREDIRECT2"
     tm[STRING] = "STRING"
     tm[DOLLARNAME] = "DOLLAR_NAME"
     tm[NUMBER] = "NUMBER"
@@ -255,7 +257,7 @@ def handle_redirect(state, token):
     key = (typ, st) if (typ, st) in token_map else typ
     new_tok = _new_token(token_map[key], st, token.start)
     if state["pymode"][-1][0]:
-        if typ == IOREDIRECT:
+        if typ in (IOREDIRECT1, IOREDIRECT2):
             # Fix Python mode code that was incorrectly recognized as an
             # IOREDIRECT by the tokenizer (see issue #4994).
             # The tokenizer does not know when the code should be tokenized in
@@ -310,7 +312,8 @@ def special_handlers():
         LESS: handle_redirect,
         GREATER: handle_redirect,
         RIGHTSHIFT: handle_redirect,
-        IOREDIRECT: handle_redirect,
+        IOREDIRECT1: handle_redirect,
+        IOREDIRECT2: handle_redirect,
         (OP, "<"): handle_redirect,
         (OP, ">"): handle_redirect,
         (OP, ">>"): handle_redirect,

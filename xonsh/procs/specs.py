@@ -172,10 +172,6 @@ def _O2E_MAP():
     return frozenset({f"{o}>{e}" for e in _REDIR_ERR for o in _REDIR_OUT if o != ""})
 
 
-def _is_redirect(x):
-    return isinstance(x, str) and _REDIR_REGEX.match(x)
-
-
 def safe_open(fname, mode, buffering=-1):
     """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
@@ -579,8 +575,7 @@ class SubprocSpec:
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
         # perform initial redirects
-        spec.redirect_leading()
-        spec.redirect_trailing()
+        spec.resolve_redirects()
         # apply aliases
         spec.resolve_alias()
         spec.resolve_binary_loc()
@@ -590,26 +585,16 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
-    def redirect_leading(self):
-        """Manage leading redirects such as with '< input.txt COMMAND'."""
-        while len(self.cmd) >= 3 and self.cmd[0] == "<":
-            self.stdin = safe_open(self.cmd[1], "r")
-            self.cmd = self.cmd[2:]
-
-    def redirect_trailing(self):
-        """Manages trailing redirects."""
-        while True:
-            cmd = self.cmd
-            if len(cmd) >= 3 and _is_redirect(cmd[-2]):
-                streams = _redirect_streams(cmd[-2], cmd[-1])
+    def resolve_redirects(self):
+        """Manages redirects."""
+        new_cmd = []
+        for c in self.cmd:
+            if isinstance(c, tuple):
+                streams = _redirect_streams(*c)
                 self.stdin, self.stdout, self.stderr = streams
-                self.cmd = cmd[:-2]
-            elif len(cmd) >= 2 and _is_redirect(cmd[-1]):
-                streams = _redirect_streams(cmd[-1])
-                self.stdin, self.stdout, self.stderr = streams
-                self.cmd = cmd[:-1]
             else:
-                break
+                new_cmd.append(c)
+        self.cmd = new_cmd
 
     def resolve_alias(self):
         """Sets alias in command, if applicable."""
@@ -667,8 +652,7 @@ class SubprocSpec:
         else:
             self.cmd = alias + self.cmd[1:]
             # resolve any redirects the aliases may have applied
-            self.redirect_leading()
-            self.redirect_trailing()
+            self.resolve_redirects()
         if self.binary_loc is None:
             return
         try:

@@ -110,7 +110,8 @@ __all__ = token.__all__ + [  # type:ignore
     "ATDOLLAR",
     "ATEQUAL",
     "DOLLARNAME",
-    "IOREDIRECT",
+    "IOREDIRECT1",
+    "IOREDIRECT2",
     "MATCH",
     "CASE",
 ]
@@ -135,8 +136,11 @@ N_TOKENS += 3
 SEARCHPATH = N_TOKENS
 tok_name[N_TOKENS] = "SEARCHPATH"
 N_TOKENS += 1
-IOREDIRECT = N_TOKENS
-tok_name[N_TOKENS] = "IOREDIRECT"
+IOREDIRECT1 = N_TOKENS
+tok_name[N_TOKENS] = "IOREDIRECT1"
+N_TOKENS += 1
+IOREDIRECT2 = N_TOKENS
+tok_name[N_TOKENS] = "IOREDIRECT2"
 N_TOKENS += 1
 DOLLARNAME = N_TOKENS
 tok_name[N_TOKENS] = "DOLLARNAME"
@@ -335,10 +339,11 @@ _redir_map = (
 )
 IORedirect = group(group(*_redir_map), f"{group(*_redir_names)}>>?")
 
-_redir_check_0 = set(_redir_map)
-_redir_check_1 = {f"{i}>" for i in _redir_names}.union(_redir_check_0)
+_redir_check_map = frozenset(_redir_map)
+
+_redir_check_1 = {f"{i}>" for i in _redir_names}
 _redir_check_2 = {f"{i}>>" for i in _redir_names}.union(_redir_check_1)
-_redir_check = frozenset(_redir_check_2)
+_redir_check_single = frozenset(_redir_check_2)
 
 Operator = group(
     r"\*\*=?",
@@ -1004,8 +1009,10 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                     continue
                 token, initial = line[start:end], line[start]
 
-                if token in _redir_check:
-                    yield TokenInfo(IOREDIRECT, token, spos, epos, line)
+                if token in _redir_check_single:
+                    yield TokenInfo(IOREDIRECT1, token, spos, epos, line)
+                elif token in _redir_check_map:
+                    yield TokenInfo(IOREDIRECT2, token, spos, epos, line)
                 elif initial in numchars or (  # ordinary number
                     initial == "." and token != "." and token != "..."
                 ):
