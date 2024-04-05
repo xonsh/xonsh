@@ -3,9 +3,11 @@
 import itertools
 import sys
 from subprocess import Popen
+from typing import NamedTuple
 
 import pytest
 
+from xonsh.procs.pipelines import CommandPipeline, HiddenCommandPipeline
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import SubprocSpec, cmds_to_specs, run_subproc
@@ -148,6 +150,63 @@ def test_run_subproc_background(captured, exp_is_none):
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
+
+
+class Cmd(NamedTuple):
+    cmds: tuple
+    out: "str|None" = None
+    err: "str|None" = None
+
+
+samples = [
+    Cmd((["echo", "hello"],), out="hello"),  # working
+    Cmd((["echo", "hello"], "|", ["wc", "-c"]), out="6"),  # failing
+]
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("cmd", samples)
+@pytest.mark.parametrize(
+    "captured",
+    [
+        "object",
+        "hiddenobject",
+        "stdout",
+        False,
+    ],
+)
+def test_run_subproc(captured, cmd, xession, capfdbinary):
+    # todo:
+    #  1. parameterize backgrounding
+    #   2. make windows compatible version
+
+    return_val = run_subproc(cmd.cmds, captured)
+    out, err = capfdbinary.readouterr()
+
+    def compare(lhs, rhs: str):
+        if rhs:
+            lhs = (
+                lhs.decode().splitlines()
+                if isinstance(lhs, bytes)
+                else lhs.splitlines()
+            )
+            assert [l.strip() for l in lhs] == rhs.splitlines()
+
+    with capfdbinary.disabled():
+        if isinstance(return_val, HiddenCommandPipeline):
+            assert return_val.returncode == 0
+            compare(out, cmd.out)
+            compare(err, cmd.err)
+        elif isinstance(return_val, CommandPipeline):
+            compare(return_val.out, cmd.out)
+            compare(return_val.err, cmd.err)
+        elif isinstance(return_val, str):
+            compare(return_val, cmd.out)
+            compare(err, cmd.err)
+        else:
+            compare(out, cmd.out)
+            compare(err, cmd.err)
+            assert return_val is None
 
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])

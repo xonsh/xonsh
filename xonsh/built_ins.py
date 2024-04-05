@@ -551,8 +551,11 @@ class XonshSession:
 
         # Session attributes
         self.exit = None
+
+        # todo: these two attributes seems not used
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
+
         self._py_exit = None
         self._py_quit = None
         self.commands_cache = None
