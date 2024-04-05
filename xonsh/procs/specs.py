@@ -397,7 +397,7 @@ class SubprocSpec:
         else:
             safe_close(value)
             msg = "Multiple inputs for stdin for {0!r}"
-            msg = msg.format(" ".join(self.args))
+            msg = msg.format(self.get_command_str())
             raise xt.XonshError(msg)
 
     @property
@@ -413,7 +413,7 @@ class SubprocSpec:
         else:
             safe_close(value)
             msg = "Multiple redirections for stdout for {0!r}"
-            msg = msg.format(" ".join(self.args))
+            msg = msg.format(self.get_command_str())
             raise xt.XonshError(msg)
 
     @property
@@ -429,8 +429,13 @@ class SubprocSpec:
         else:
             safe_close(value)
             msg = "Multiple redirections for stderr for {0!r}"
-            msg = msg.format(" ".join(self.args))
+            msg = msg.format(self.get_command_str())
             raise xt.XonshError(msg)
+
+    def get_command_str(self):
+        return " ".join(
+            " ".join(arg) if isinstance(arg, tuple) else arg for arg in self.args
+        )
 
     #
     # Execution methods
