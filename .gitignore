@@ -88,6 +88,7 @@ xonsh/webconfig/js/app.js
 
 # testmon pytest-plugin
 .testmondata
+.testmondata-*
 
 # pdm
 .pdm.toml
