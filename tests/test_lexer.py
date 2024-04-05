@@ -415,11 +415,14 @@ def test_float_literals(case):
     assert check_token(case, ["NUMBER", case, 0])
 
 
-@pytest.mark.parametrize(
-    "case", ["2>1", "err>out", "o>", "all>", "e>o", "e>", "out>", "2>&1"]
-)
-def test_ioredir(case):
-    assert check_tokens_subproc(case, [("IOREDIRECT", case, 2)], stop=-2)
+@pytest.mark.parametrize("case", ["o>", "all>", "e>", "out>"])
+def test_ioredir1(case):
+    assert check_tokens_subproc(case, [("IOREDIRECT1", case, 2)], stop=-2)
+
+
+@pytest.mark.parametrize("case", ["2>1", "err>out", "e>o", "2>&1"])
+def test_ioredir2(case):
+    assert check_tokens_subproc(case, [("IOREDIRECT2", case, 2)], stop=-2)
 
 
 @pytest.mark.parametrize("case", [">", ">>", "<", "e>", "> ", ">>   ", "<  ", "e> "])

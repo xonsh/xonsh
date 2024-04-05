@@ -886,6 +886,27 @@ aliases['echo'] = _echo
     assert out == exp
 
 
+@skip_if_no_xonsh
+@pytest.mark.parametrize(
+    "cmd, exp",
+    [
+        ("echo '>'", ">\n"),
+        ("echo '2>'", "2>\n"),
+        ("echo '2>1'", "2>1\n"),
+    ],
+)
+def test_redirect_argument(cmd, exp):
+    script = f"""
+#!/usr/bin/env xonsh
+def _echo(args):
+    print(' '.join(args))
+aliases['echo'] = _echo
+{cmd}
+"""
+    out, _, _ = run_xonsh(script)
+    assert out == exp
+
+
 # issue 3402
 @skip_if_no_xonsh
 @skip_if_on_windows
