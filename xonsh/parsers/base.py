@@ -1,5 +1,6 @@
 """Implements the base xonsh parser."""
 
+import itertools
 import os
 import re
 import textwrap
@@ -3496,27 +3497,43 @@ class BaseParser:
         """subproc_arg : subproc_arg_part"""
         p[0] = p[1]
 
+    def _arg_part_combine(self, *arg_parts):
+        """Combines arg_parts. If all arg_parts are strings, concatenate the strings.
+        Otherwise, return a list of arg_parts."""
+        if all(ast.is_const_str(ap) for ap in arg_parts):
+            return ast.const_str(
+                "".join(ap.value for ap in arg_parts),
+                lineno=arg_parts[0].lineno,
+                col_offset=arg_parts[0].col_offset,
+            )
+        else:
+            return list(
+                itertools.chain.from_iterable(
+                    ap if isinstance(ap, list) else [ap] for ap in arg_parts
+                )
+            )
+
     def p_subproc_arg_many(self, p):
         """subproc_arg : subproc_arg subproc_arg_part"""
         # This glues the string together after parsing
+        p[0] = self._arg_part_combine(p[1], p[2])
+
+    def p_subproc_arg_part_brackets(self, p):
+        """subproc_arg_part : lbracket_tok subproc_arg rbracket_tok"""
         p1 = p[1]
         p2 = p[2]
-        if ast.is_const_str(p1) and ast.is_const_str(p2):
-            p0 = ast.const_str(
-                p1.value + p2.value, lineno=p1.lineno, col_offset=p1.col_offset
-            )
-        elif isinstance(p1, list):
-            if isinstance(p2, list):
-                p1.extend(p2)
-            else:
-                p1.append(p2)
-            p0 = p1
-        elif isinstance(p2, list):
-            p2.insert(0, p1)
-            p0 = p2
-        else:
-            p0 = [p1, p2]
-        p[0] = p0
+        p3 = p[3]
+        p1 = ast.const_str(s=p1.value, lineno=p1.lineno, col_offset=p1.lexpos)
+        p3 = ast.const_str(s=p3.value, lineno=p3.lineno, col_offset=p3.lexpos)
+        p[0] = self._arg_part_combine(p1, p2, p3)
+
+    def p_subproc_arg_part_brackets_empty(self, p):
+        """subproc_arg_part : lbracket_tok rbracket_tok"""
+        p1 = p[1]
+        p2 = p[2]
+        p1 = ast.const_str(s=p1.value, lineno=p1.lineno, col_offset=p1.lexpos)
+        p2 = ast.const_str(s=p2.value, lineno=p2.lineno, col_offset=p2.lexpos)
+        p[0] = self._arg_part_combine(p1, p2)
 
     def _attach_subproc_arg_part_rules(self):
         toks = set(self.tokens)
