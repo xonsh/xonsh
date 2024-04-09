@@ -2649,6 +2649,25 @@ def test_echo_slash_question(check_xonsh_ast):
     check_xonsh_ast({}, "![echo /?]", False)
 
 
+@pytest.mark.parametrize(
+    "case",
+    [
+        "[]",
+        "[[]]",
+        "[a]",
+        "[a][b]",
+        "a[b]",
+        "[a]b",
+        "a[b]c",
+        "a[b[c]]",
+        "[a]b[[]c[d,e]f[]g,h]",
+        "[a@([1,2])]@([3,4])",
+    ],
+)
+def test_echo_brackets(case, check_xonsh_ast):
+    check_xonsh_ast({}, f"![echo {case}]")
+
+
 def test_bad_quotes(check_xonsh_ast):
     with pytest.raises(SyntaxError):
         check_xonsh_ast({}, '![echo """hello]', False)
