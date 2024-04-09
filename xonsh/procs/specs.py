@@ -250,6 +250,17 @@ def _redirect_streams(r, loc=None):
     return stdin, stdout, stderr
 
 
+def _flatten_cmd_redirects(cmd):
+    """Transforms a command like ['ls', ('>', '/dev/null')] into ['ls', '>', '/dev/null']."""
+    new_cmd = []
+    for c in cmd:
+        if isinstance(c, tuple):
+            new_cmd.extend(c)
+        else:
+            new_cmd.append(c)
+    return new_cmd
+
+
 def default_signal_pauser(n, f):
     """Pauses a signal, as needed."""
     signal.pause()
@@ -352,7 +363,7 @@ class SubprocSpec:
         else:
             self.env = None
         # pure attrs
-        self.args = list(cmd)
+        self.args = _flatten_cmd_redirects(cmd)
         self.alias = None
         self.alias_name = None
         self.alias_stack = XSH.env.get("__ALIAS_STACK", "").split(":")
@@ -433,9 +444,7 @@ class SubprocSpec:
             raise xt.XonshError(msg)
 
     def get_command_str(self):
-        return " ".join(
-            " ".join(arg) if isinstance(arg, tuple) else arg for arg in self.args
-        )
+        return " ".join(arg for arg in self.args)
 
     #
     # Execution methods
@@ -883,6 +892,9 @@ def run_subproc(cmds, captured=False, envs=None):
             print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
+    cmds = [
+        _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
+    ]
     if _should_set_title():
         # context manager updates the command information that gets
         # accessed by CurrentJobField when setting the terminal's title
