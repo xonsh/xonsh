@@ -506,6 +506,7 @@ def source_foreign_fn(
         seterrpostcmd=seterrpostcmd,
         show=show,
         dryrun=dryrun,
+        no_rc=True,
         files=files,
     )
     if fsenv is None:

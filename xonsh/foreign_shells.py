@@ -61,6 +61,11 @@ def CANON_SHELL_NAMES():
 
 
 @lazyobject
+def DEFAULT_NORCCMDS():
+    return {"bash": "--norc", "zsh": "--no-rcs", "cmd": ""}
+
+
+@lazyobject
 def DEFAULT_ENVCMDS():
     return {"bash": "env", "zsh": "env", "cmd": "set"}
 
@@ -121,6 +126,8 @@ def foreign_shell_data(
     seterrpostcmd=None,
     show=False,
     dryrun=False,
+    no_rc=False,
+    norccmd=None,
     files=(),
 ):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
@@ -183,6 +190,12 @@ def foreign_shell_data(
         Whether or not to display the script that will be run.
     dryrun : bool, optional
         Whether or not to actually run and process the command.
+    no_rc : bool, optional
+        Whether or not to read and execute the personal initialization file, such as
+        ~/.bashrc for Bash and ~/.zshrc for zsh.
+    norccmd : str or None, optional
+        Command that disables reading and executing the personal initialization file, such as
+        --norc for Bash and --no-rcs for zsh.
     files : tuple of str, optional
         Paths to source.
 
@@ -196,11 +209,13 @@ def foreign_shell_data(
     """
     cmd = [shell]
     cmd.extend(extra_args)  # needs to come here for GNU long options
+    shkey = CANON_SHELL_NAMES[shell]
+    if no_rc:
+        cmd.append(DEFAULT_NORCCMDS.get(shkey, "") if norccmd is None else norccmd)
     if interactive:
         cmd.append("-i")
     if login:
         cmd.append("-l")
-    shkey = CANON_SHELL_NAMES[shell]
     envcmd = DEFAULT_ENVCMDS.get(shkey, "env") if envcmd is None else envcmd
     aliascmd = DEFAULT_ALIASCMDS.get(shkey, "alias") if aliascmd is None else aliascmd
     funcscmd = DEFAULT_FUNCSCMDS.get(shkey, "echo {}") if funcscmd is None else funcscmd
