@@ -114,7 +114,7 @@ def generate_options_of(cmd: str):
 
 @functools.lru_cache(maxsize=10)
 def _parse_man_page_options(cmd: str) -> "dict[str, tuple[str, ...]]":
-    path = get_man_completions_path() / f"{cmd}.json"
+    path = get_man_completions_path() / Path(cmd).with_suffix(".json").name
     if path.exists():
         return json.loads(path.read_text())
     options = dict(generate_options_of(cmd))
