@@ -1109,7 +1109,8 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
     # color the traceback if available
     _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
     _, color_results = _get_manual_env_var("COLOR_RESULTS", 0)
-    if not interactive or not color_results or not HAS_PYGMENTS:
+    shell_loaded = hasattr(xsh.shell, "shell")  # do not color traceback in xonshrc file
+    if not interactive or not color_results or not shell_loaded or not HAS_PYGMENTS:
         sys.stderr.write(traceback_str)
         return
 
