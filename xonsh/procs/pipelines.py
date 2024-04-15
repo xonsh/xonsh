@@ -29,7 +29,7 @@ def RE_HIDDEN_BYTES():
 
 @xl.lazyobject
 def RE_VT100_ESCAPE():
-    return re.compile(b"(\x9B|\x1B\\[)[0-?]*[ -\\/]*[@-~]")
+    return re.compile(b"(\x9b|\x1b\\[)[0-?]*[ -\\/]*[@-~]")
 
 
 @xl.lazyobject

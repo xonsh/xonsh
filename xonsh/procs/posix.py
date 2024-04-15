@@ -357,9 +357,9 @@ class PopenThread(threading.Thread):
             return
         try:
             mode = xli.termios.tcgetattr(0)  # only makes sense for stdin
-            mode[xp.CC][
-                xli.termios.VSUSP
-            ] = self._tc_cc_vsusp  # set ^Z (ie SIGSTOP) to original
+            mode[xp.CC][xli.termios.VSUSP] = (
+                self._tc_cc_vsusp
+            )  # set ^Z (ie SIGSTOP) to original
             # this usually doesn't work in interactive mode,
             # but we should try it anyway.
             xli.termios.tcsetattr(0, xli.termios.TCSANOW, mode)

@@ -1,8 +1,8 @@
 """Tests the xonfig command.
-   Actually, just a down payment on a full test.
-   Currently exercises only these options:
-   - xonfig info
-   - xonfig jupyter_kernel
+Actually, just a down payment on a full test.
+Currently exercises only these options:
+- xonfig info
+- xonfig jupyter_kernel
 
 """
 
@@ -69,7 +69,9 @@ class MockRequest:
                 (
                     req.body.encode()
                     if isinstance(req.body, str)
-                    else b"" if req.body is None else req.body
+                    else b""
+                    if req.body is None
+                    else req.body
                 ),
             ]
         self._request()

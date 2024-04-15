@@ -464,8 +464,7 @@ class CompletionContextParser:
                 if self.cursor_in_span(inner_span) or (
                     # the cursor is in a space-separated multi keyword.
                     # even if the cursor's at the edge, the keyword should be considered as a normal arg
-                    tok.value in ("and", "or")
-                    and self.cursor_in_span(outer_span)
+                    tok.value in ("and", "or") and self.cursor_in_span(outer_span)
                 ):
                     tok.type = "ANY"
 
@@ -934,7 +933,9 @@ class CompletionContextParser:
             sub_expr = cast(ArgContext, arg.expansion_obj)
 
             # this arg is a subcommand or multiple subcommands, e.g. `$(a && b)`
-            expanded_obj: Optional[ArgContext] = self.try_expand_span(sub_expr, new_span)  # type: ignore
+            expanded_obj: Optional[ArgContext] = self.try_expand_span(  # type: ignore
+                sub_expr, new_span
+            )
             if expanded_obj is None:
                 return None
             return self.sub_expression_arg(expanded_obj)
@@ -964,7 +965,9 @@ class CompletionContextParser:
             # the last command is expandable
             # if it were an `ExpansionOperation`, `try_expand` would caught it instead
             expandable = cast(ExpandableObject, python_context.expansion_obj)
-            expanded_command: Optional[ExpandableObject] = self.try_expand_right(expandable, new_span.stop)  # type: ignore
+            expanded_command: Optional[ExpandableObject] = self.try_expand_right(
+                expandable, new_span.stop
+            )  # type: ignore
 
             if (
                 expanded_command is not None

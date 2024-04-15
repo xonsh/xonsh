@@ -365,7 +365,11 @@ def _get_xontrib_entrypoints() -> "tp.Iterable[EntryPoint]":
     name = "xonsh.xontribs"
     entries = metadata.entry_points()
     # for some reason, on CI (win py3.8) atleast, returns dict
-    group = entries.select(group=name) if hasattr(entries, "select") else entries.get(name, [])  # type: ignore
+    group = (
+        entries.select(group=name)
+        if hasattr(entries, "select")
+        else entries.get(name, [])  # type: ignore
+    )
     yield from group
 
 
