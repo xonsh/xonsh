@@ -168,10 +168,13 @@ def render_prompts(env):
     yield get_initial(env, prompt_format, fields)
     for name, template in get_named_prompts():
         display = html_format(prompt_format(template, fields=fields))
-        yield name, {
-            "value": template,
-            "display": escape(display),
-        }
+        yield (
+            name,
+            {
+                "value": template,
+                "display": escape(display),
+            },
+        )
 
 
 def render_colors():

@@ -21,21 +21,7 @@ repos:
     rev: 'v1.9.0'  # Use the sha / tag you want to point at
     hooks:
       - id: mypy
-        name: mypy xonsh
         pass_filenames: false
-        entry: mypy xonsh
-        additional_dependencies:
-          - types-ujson
-      - id: mypy
-        name: mypy xontrib
-        pass_filenames: false
-        entry: mypy xontrib --namespace-packages --explicit-package-bases
-        additional_dependencies:
-          - types-ujson
-      - id: mypy
-        name: mypy xompletions
-        pass_filenames: false
-        entry: mypy xompletions --namespace-packages --explicit-package-bases
         additional_dependencies:
           - types-ujson
   - repo: https://github.com/pre-commit/pre-commit-hooks

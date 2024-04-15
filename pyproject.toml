@@ -168,7 +168,7 @@ extend-exclude = [
     ".venv*/",
     ".local.out*/",
 ]
-line-length = 180
+line-length = 88
 
 [tool.ruff.lint]
 ignore = [
@@ -196,6 +196,7 @@ ignore = [
     "D411", # Missing blank line before section
     "D418", # Function decorated with `@overload` shouldn't contain a docstring
     "E402", # Module level import not at top of file
+    "E501", # line length
     "E731", # Do not assign a lambda expression, use a def
 ]
 select = [
