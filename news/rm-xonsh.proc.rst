@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* Replaced black formatter with `ruff-format <https://docs.astral.sh/ruff/>`_
 
 **Deprecated:**
 
