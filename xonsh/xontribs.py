@@ -330,7 +330,7 @@ def xontribs_loaded():
     return [k for k, xontrib in get_xontribs().items() if xontrib.is_loaded]
 
 
-def xontribs_list(to_json=False):
+def xontribs_list(to_json=False, _stdout=None):
     """List installed xontribs and show whether they are loaded or not
 
     Parameters
@@ -341,7 +341,7 @@ def xontribs_list(to_json=False):
     data = xontrib_data()
     if to_json:
         s = json.dumps(data)
-        print(s)
+        return s
     else:
         nname = max([6] + [len(x) for x in data])
         s = ""
@@ -356,7 +356,7 @@ def xontribs_list(to_json=False):
             else:
                 s += "{RED}not-loaded{RESET}"
             s += "\n"
-        print_color(s[:-1])
+        print_color(s[:-1], file=_stdout)
 
 
 def _get_xontrib_entrypoints() -> "tp.Iterable[EntryPoint]":
