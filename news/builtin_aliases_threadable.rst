@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Builtin aliases (xonfig, xontrib, history) switched to threadable mode.
+* Builtin aliases (xontrib, history) switched to threadable mode.
 
 **Deprecated:**
 
