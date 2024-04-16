@@ -285,7 +285,11 @@ def _make_matcher_handler(tok, typ, pymode, ender, handlers):
     matcher = (
         ")"
         if tok.endswith("(")
-        else "}" if tok.endswith("{") else "]" if tok.endswith("[") else None
+        else "}"
+        if tok.endswith("{")
+        else "]"
+        if tok.endswith("[")
+        else None
     )
 
     def _inner_handler(state, token):

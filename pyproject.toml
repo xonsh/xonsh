@@ -146,43 +146,7 @@ xonsh-uname = "xonsh.xoreutils.uname:main"
 xonsh-uptime = "xonsh.xoreutils.uptime:main"
 
 
-[tool.black]
-# better to keep default line-length than to match flake8
-exclude = '''
-(   # exclude entire contents of these top level directories...
-    /(  \.eggs
-     |  \.git
-     |  \.hg
-     |  \.mypy
-     |  _cache
-     |  \.nox
-     |  \.tox
-     |  \.venv
-     |  _build
-     |  buck-out
-     |  build
-     |  dist
-     )/
-
-)
-|
-(   # and these additional random rules
-    /(  __pycache__
-     |  \.circleci
-     |  \.github
-     |  \.vscode
-     |  \.pytest_cache
-     |  ply
-     )/
-)
-'''
-
-extend_exclude = '''
-((xonsh/parser_table.py)|(xonsh/completion_parser_table.py))
-'''
-
-
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["xonsh", "xontrib", "xompletions", "tests"]
 known-third-party = ["ply", "pytest"]
 
@@ -190,7 +154,7 @@ known-third-party = ["ply", "pytest"]
 src = [
     "xonsh", "xontrib", "xompletions", "tests"
 ]
-exclude = [
+extend-exclude = [
     "docs/",
     "*/ply/",
     "parser*_table.py",
@@ -204,6 +168,9 @@ exclude = [
     ".venv*/",
     ".local.out*/",
 ]
+line-length = 88
+
+[tool.ruff.lint]
 ignore = [
     "D100", # Missing docstring in public module
     "D101", # Missing docstring in public class
@@ -229,9 +196,9 @@ ignore = [
     "D411", # Missing blank line before section
     "D418", # Function decorated with `@overload` shouldn't contain a docstring
     "E402", # Module level import not at top of file
+    "E501", # line length
     "E731", # Do not assign a lambda expression, use a def
 ]
-line-length = 180
 select = [
     "B", # https://beta.ruff.rs/docs/rules/#flake8-bugbear-b
     "D", # https://beta.ruff.rs/docs/rules/#pydocstyle-d
@@ -239,15 +206,16 @@ select = [
     "F", # https://beta.ruff.rs/docs/rules/#pyflakes-f
     "I", # https://beta.ruff.rs/docs/rules/#isort-i
     "T10", # https://beta.ruff.rs/docs/rules/#flake8-debugger-t10
+    "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
     "YTT", # https://beta.ruff.rs/docs/rules/#flake8-2020-ytt
     "W", # https://beta.ruff.rs/docs/rules/#pycodestyle-e-w
     "UP", # https://beta.ruff.rs/docs/rules/#pyupgrade-up
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "xonsh/timings.py" = ["F401"]
 "xonsh/history.py" = ["F821"]
 "xonsh/lexer.py" = ["E741"]

@@ -56,9 +56,7 @@ def shares_setup(tmpdir_factory):
         s,
         d,
         l,
-    ) in (
-        shares
-    ):  # set up some shares on local machine.  dirs already exist test case must invoke wd_setup.
+    ) in shares:  # set up some shares on local machine.  dirs already exist test case must invoke wd_setup.
         rtn = subprocess.call(
             ["NET", "SHARE", s, "/delete"], universal_newlines=True
         )  # clean up from previous run after good, long wait.

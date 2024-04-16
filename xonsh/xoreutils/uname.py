@@ -7,6 +7,7 @@ This version of uname was written in Python for the xonsh project: http://xon.sh
 
 Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
 """
+
 import platform
 import sys
 

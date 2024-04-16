@@ -640,7 +640,7 @@ def xonfig_color_completer(*_, **__):
 
 
 def _colors(
-    style: Annotated[str, Arg(nargs="?", completer=xonfig_color_completer)] = None
+    style: Annotated[str, Arg(nargs="?", completer=xonfig_color_completer)] = None,
 ):
     """Preview color style
 

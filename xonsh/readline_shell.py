@@ -64,7 +64,13 @@ _RL_PREV_CASE_SENSITIVE_COMPLETIONS = "to-be-set"
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline, RL_COMPLETION_QUERY_ITEMS
+    global \
+        RL_COMPLETION_SUPPRESS_APPEND, \
+        RL_LIB, \
+        RL_CAN_RESIZE, \
+        RL_STATE, \
+        readline, \
+        RL_COMPLETION_QUERY_ITEMS
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     for _rlmod_name in ("gnureadline", "readline"):

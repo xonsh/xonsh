@@ -1,19 +1,13 @@
-import sys
-from typing import TYPE_CHECKING
-
-from xonsh.environ import Env
-
-from ..built_ins import XonshSession
-from .file_writes import insert_into_xonshrc
-
-if TYPE_CHECKING:
-    pass
-
 import logging
+import sys
 from urllib import parse
+
+from xonsh.built_ins import XonshSession
+from xonsh.environ import Env
 
 from . import tags as t
 from . import xonsh_data
+from .file_writes import insert_into_xonshrc
 
 
 class Routes:
