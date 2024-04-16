@@ -86,7 +86,8 @@ class Aliases(cabc.MutableMapping):
     @tp.overload
     def register(
         self, name: str, *, dash_case: bool = True
-    ) -> tp.Callable[[types.FunctionType], types.FunctionType]: ...
+    ) -> tp.Callable[[types.FunctionType], types.FunctionType]:
+        ...
 
     def register(self, func_or_name, name=None, dash_case=True):
         """Decorator to register the given function by name."""
@@ -406,7 +407,7 @@ def xonsh_reset(args, stdin=None):
 def source_foreign_fn(
     shell: str,
     files_or_code: Annotated[list[str], Arg(nargs="+")],
-    interactive=True,
+    interactive=False,
     login=False,
     envcmd=None,
     aliascmd=None,
@@ -433,7 +434,7 @@ def source_foreign_fn(
         Name or path to the foreign shell
     files_or_code
         file paths to source or code in the target language.
-    interactive : -n, --non-interactive
+    interactive : -i, --interactive
         whether the sourced shell should be interactive
     login : -l, --login
         whether the sourced shell should be login
@@ -549,6 +550,9 @@ def source_foreign_fn(
 
 source_foreign = ArgParserAlias(
     func=source_foreign_fn, has_args=True, prog="source-foreign"
+)
+source_foreign.parser.add_argument(
+    "-n", "--non-interactive", action="store_false", dest="interactive"
 )
 
 
@@ -830,6 +834,25 @@ def detect_xpip_alias():
         return basecmd
 
 
+source_zsh = ArgParserAlias(
+    func=functools.partial(source_foreign_fn, "zsh", sourcer="source"),
+    has_args=True,
+    prog="source-zsh",
+)
+source_zsh.parser.add_argument(
+    "-n", "--non-interactive", action="store_false", dest="interactive"
+)
+
+source_bash = ArgParserAlias(
+    func=functools.partial(source_foreign_fn, "bash", sourcer="source"),
+    has_args=True,
+    prog="source-bash",
+)
+source_bash.parser.add_argument(
+    "-n", "--non-interactive", action="store_false", dest="interactive"
+)
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -847,16 +870,8 @@ def make_default_aliases():
         "exec": xexec,
         "xexec": xexec,
         "source": source_alias,
-        "source-zsh": ArgParserAlias(
-            func=functools.partial(source_foreign_fn, "zsh", sourcer="source"),
-            has_args=True,
-            prog="source-zsh",
-        ),
-        "source-bash": ArgParserAlias(
-            func=functools.partial(source_foreign_fn, "bash", sourcer="source"),
-            has_args=True,
-            prog="source-bash",
-        ),
+        "source-zsh": source_zsh,
+        "source-bash": source_bash,
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
