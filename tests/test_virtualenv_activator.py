@@ -1,10 +1,11 @@
 import sys
+import pytest
 from pathlib import Path
 from subprocess import check_output
 
 from xonsh.pytest.tools import ON_WINDOWS
 
-
+@pytest.mark.skip(reason="https://github.com/xonsh/xonsh/issues/2663#issuecomment-986984906")
 def test_xonsh_activator(tmp_path):
     # Create virtualenv
     venv_dir = tmp_path / "venv"
