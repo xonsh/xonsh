@@ -8,7 +8,9 @@ from xonsh.pytest.tools import ON_WINDOWS
 def test_xonsh_activator(tmp_path):
     # Create virtualenv
     venv_dir = tmp_path / "venv"
-    check_output([sys.executable, "-m", "venv", str(venv_dir)])
+    assert b"XonshActivator" in check_output(
+        [sys.executable, "-m", "virtualenv", str(venv_dir)]
+    )
     assert venv_dir.is_dir()
 
     # Check activation script created
