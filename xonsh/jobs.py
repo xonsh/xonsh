@@ -344,9 +344,9 @@ def format_job_string(num: int) -> str:
     pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
     status = job["status"]
     cmd = " ".join([" ".join(i) if isinstance(i, list) else i for i in job["cmds"]])
-    pid = job["pids"][-1]
+    pid = f"({job['pids'][-1]})" if job["pids"] else ""
     bg = " &" if job["bg"] else ""
-    return f"[{num}]{pos} {status}: {cmd}{bg} ({pid})"
+    return f"[{num}]{pos} {status}: {cmd}{bg} {pid}"
 
 
 def print_one_job(num, outfile=sys.stdout):
