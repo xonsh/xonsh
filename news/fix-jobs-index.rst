@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* jobs: fixed "index out of range" exception.
+* Jobs: fixed "index out of range" exception.
 
 **Security:**
 
