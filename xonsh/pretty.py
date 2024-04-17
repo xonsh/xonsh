@@ -677,7 +677,6 @@ def _re_pattern_pprint(obj, p, cycle):
         p.breakable()
         done_one = False
         for flag in (
-            "TEMPLATE",
             "IGNORECASE",
             "LOCALE",
             "MULTILINE",
