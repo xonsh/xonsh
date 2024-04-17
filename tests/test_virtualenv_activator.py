@@ -2,18 +2,13 @@ import sys
 from pathlib import Path
 from subprocess import check_output
 
-import pytest
-
 from xonsh.pytest.tools import ON_WINDOWS
 
 
-@pytest.mark.skip(
-    reason="https://github.com/xonsh/xonsh/issues/2663#issuecomment-986984906"
-)
 def test_xonsh_activator(tmp_path):
     # Create virtualenv
     venv_dir = tmp_path / "venv"
-    assert b"" in check_output([sys.executable, "-m", "venv", str(venv_dir)])
+    check_output([sys.executable, "-m", "venv", str(venv_dir)])
     assert venv_dir.is_dir()
 
     # Check activation script created
