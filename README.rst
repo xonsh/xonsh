@@ -82,12 +82,12 @@ The xonsh shell community
 
 The xonsh shell is developed by a community of volunteers. There are few ways to help the xonsh shell:
 
-- `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
-- `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
-- Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_.
+- Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_. You can start with the `Developer guide <https://xon.sh/devguide.html>`_.
 - Solve a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_.
 - Get the `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
 - Become xonsh core by deep diving into xonsh and improve the threading and subprocess logic.
+- `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
+- `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
 - Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
 
 We welcome new contributors!
