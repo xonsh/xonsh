@@ -78,4 +78,5 @@ def test_source_foreign_fn_parser(alias, xession):
         "suppress_skip_message",
         "show",
         "dryrun",
+        "interactive",
     ]
