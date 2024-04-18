@@ -406,7 +406,7 @@ def xonsh_reset(args, stdin=None):
 def source_foreign_fn(
     shell: str,
     files_or_code: Annotated[list[str], Arg(nargs="+")],
-    interactive=True,
+    interactive=False,
     login=False,
     envcmd=None,
     aliascmd=None,
@@ -433,7 +433,7 @@ def source_foreign_fn(
         Name or path to the foreign shell
     files_or_code
         file paths to source or code in the target language.
-    interactive : -n, --non-interactive
+    interactive : -i, --interactive
         whether the sourced shell should be interactive
     login : -l, --login
         whether the sourced shell should be login
@@ -547,7 +547,21 @@ def source_foreign_fn(
             print(msg.format(k, shell), file=_stderr)
 
 
-source_foreign = ArgParserAlias(
+class SourceForeignAlias(ArgParserAlias):
+    def build(self):
+        parser = self.create_parser(**self.kwargs)
+        # for backwards compatibility
+        parser.add_argument(
+            "-n",
+            "--non-interactive",
+            action="store_false",
+            dest="interactive",
+            help="Deprecated: The default mode runs in non-interactive mode.",
+        )
+        return parser
+
+
+source_foreign = SourceForeignAlias(
     func=source_foreign_fn, has_args=True, prog="source-foreign"
 )
 
@@ -847,12 +861,12 @@ def make_default_aliases():
         "exec": xexec,
         "xexec": xexec,
         "source": source_alias,
-        "source-zsh": ArgParserAlias(
+        "source-zsh": SourceForeignAlias(
             func=functools.partial(source_foreign_fn, "zsh", sourcer="source"),
             has_args=True,
             prog="source-zsh",
         ),
-        "source-bash": ArgParserAlias(
+        "source-bash": SourceForeignAlias(
             func=functools.partial(source_foreign_fn, "bash", sourcer="source"),
             has_args=True,
             prog="source-bash",
