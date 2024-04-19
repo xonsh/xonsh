@@ -220,9 +220,13 @@ def add_args(
             action.help += " (type: %(type)s)"
 
 
+def empty_help_func(_parser, _stdout):
+    _parser.print_help(file=_stdout)
+
+
 def make_parser(
     func: tp.Union[tp.Callable, str],
-    empty_help=True,
+    empty_help=False,
     **kwargs,
 ) -> "ArgParser":
     """A bare-bones argparse builder from functions"""
@@ -234,9 +238,7 @@ def make_parser(
             kwargs["epilog"] = doc.epilog
     parser = ArgParser(**kwargs)
     if empty_help:
-        parser.set_defaults(
-            **{_FUNC_NAME: lambda stdout=None: parser.print_help(file=stdout)}
-        )
+        parser.set_defaults(**{_FUNC_NAME: empty_help_func})
     return parser
 
 
@@ -317,9 +319,14 @@ class ArgParser(ap.ArgumentParser):
 
         super().__init__(**kwargs)
         self.commands = None
+        self.default_command = None
 
     def add_command(
-        self, func: tp.Callable, args: tp.Optional[tp.Iterable[str]] = None, **kwargs
+        self,
+        func: tp.Callable,
+        default=False,
+        args: "tuple[str, ...] | None" = None,
+        **kwargs,
     ):
         """
             create a sub-parser and call this function during dispatch
@@ -333,6 +340,8 @@ class ArgParser(ap.ArgumentParser):
             Use _parser to get the generated parser instance.
             Use _args to get what is passed from sys.argv
             Use _parsed to get result of ``parser.parse_args``
+        default
+            Marks this sub-command as the default command for this parser.
         args
             if given only add these arguments to the parser.
             Otherwise all parameters to the function without `_` prefixed
@@ -353,9 +362,24 @@ class ArgParser(ap.ArgumentParser):
         name = kwargs.pop("prog", None)
         if not name:
             name = func.__name__.lstrip("_").replace("_", "-")
+
+        if default:
+            self.default_command = name
+
         parser = self.commands.add_parser(name, **kwargs)
-        add_args(parser, func, allowed_params=args)
+        add_args(parser, func, allowed_params=args, doc=doc)
         return parser
+
+    def _parse_known_args(self, arg_strings: list[str], namespace: ap.Namespace):
+        arg_set = set(arg_strings)
+        if (
+            self.commands
+            and self.default_command
+            and ({"-h", "--help"}.isdisjoint(arg_set))
+            and (set(self.commands.choices).isdisjoint(arg_set))
+        ):
+            arg_strings = [self.default_command] + arg_strings
+        return super()._parse_known_args(arg_strings, namespace)
 
 
 def _dispatch_func(func: tp.Callable, ns: dict[str, tp.Any]):
@@ -387,6 +411,8 @@ def dispatch(parser: ap.ArgumentParser, args=None, lenient=False, **ns):
     ns
         a dict that will be passed to underlying function
     """
+    ns.setdefault("_parser", parser)
+    ns.setdefault("_args", args)
 
     if lenient:
         parsed, unparsed = parser.parse_known_args(args)
@@ -575,7 +601,7 @@ class ArgParserAlias:
         self.stdout = None
         self.stderr = None
 
-    def build(self):
+    def build(self) -> "ArgParser":
         """Sub-classes should return constructed ArgumentParser"""
         if self.kwargs:
             return self.create_parser(**self.kwargs)
@@ -605,7 +631,9 @@ class ArgParserAlias:
             self._parser = self.build()
         return self._parser
 
-    def create_parser(self, func=None, has_args=False, allowed_params=None, **kwargs):
+    def create_parser(
+        self, func=None, has_args=False, allowed_params=None, **kwargs
+    ) -> "ArgParser":
         """create root parser"""
         func = func or self
         has_args = has_args or bool(allowed_params)
@@ -651,8 +679,6 @@ class ArgParserAlias:
             result = dispatch(
                 self.parser,
                 args,
-                _parser=self.parser,
-                _args=args,
                 _stdin=stdin,
                 _stdout=stdout,
                 _stderr=stderr,
