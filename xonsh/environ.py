@@ -865,12 +865,12 @@ class GeneralSetting(Xettings):
 
     ENABLE_COMMANDS_CACHE = Var(
         default=True,
-        doc="command names in a directory are cached when enabled.",
-        doc_default="True"
+        doc="command names in a directory are cached when enabled. "
         "On some platforms it may not be accurate enough"
         "(e.g. Windows, Linux save mtime in seconds). "
-        "setting it to False would disable the caching mechanism "
+        "Setting it to False would disable the caching mechanism "
         "and may slow down the shell",
+        doc_default="True",
     )
 
     HOSTNAME = Var.with_default(
