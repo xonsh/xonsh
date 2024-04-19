@@ -1,5 +1,6 @@
 """Main entry points of the xonsh history."""
 
+import argparse as ap
 import datetime
 import json
 import os
@@ -181,17 +182,25 @@ _XH_HISTORY_SESSIONS = {
 }
 
 
+class SessionAction(ap.Action):
+    """Set the choices lazily"""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("choices", tuple(_XH_HISTORY_SESSIONS))
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string: "str | None" = None):
+        setattr(namespace, self.dest, values)
+
+
 class HistoryAlias(xcli.ArgParserAlias):
     """Try 'history <command> --help' for more info"""
 
-    def hook_post_add_argument(self, action, param, func, **_):
-        if func.__name__ in {"show", "transfer"}:
-            if param in {"session", "source", "target"}:
-                action.choices = tuple(_XH_HISTORY_SESSIONS)
-
     def show(
         self,
-        session: xcli.Annotated[str, xcli.Arg(nargs="?")] = "session",
+        session: xcli.Annotated[
+            str, xcli.Arg(nargs="?", action=SessionAction)
+        ] = "session",
         slices: xcli.Annotated[list[int], xcli.Arg(nargs="*")] = None,
         datetime_format: tp.Optional[str] = None,
         start_time: tp.Optional[str] = None,
@@ -432,9 +441,9 @@ class HistoryAlias(xcli.ArgParserAlias):
 
     def transfer(
         self,
-        source: str,
+        source: tp.Annotated[str, xcli.Arg(action=SessionAction)],
         source_file: "str|None" = None,
-        target: "str|None" = None,
+        target: tp.Annotated["str | None", xcli.Arg(action=SessionAction)] = None,
         target_file: "str|None" = None,
     ):
         """Transfer entries between history backends.
@@ -456,8 +465,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         """
 
         if source == target:
-            self.err("source and target backend can't be the same")
-            return
+            raise self.Error("source and target backend can't be the same")
 
         src = construct_history(backend=source, filename=source_file, gc=False)
         dest = construct_history(backend=target, filename=target_file, gc=False)

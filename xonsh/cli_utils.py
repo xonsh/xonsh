@@ -189,22 +189,10 @@ def add_args(
         kwargs.setdefault("help", doc.params.get(name))
 
         completer = kwargs.pop("completer", None)
-        cls_inst = getattr(func, "__self__", None)
-
-        if cls_inst and isinstance(cls_inst, ArgParserAlias):
-            flags, kwargs = cls_inst.hook_pre_add_argument(
-                param=name, func=func, flags=flags, kwargs=kwargs
-            )
-
         action = parser.add_argument(*flags, **kwargs)
 
         if completer:
             action.completer = completer  # type: ignore
-
-        if cls_inst and isinstance(cls_inst, ArgParserAlias):
-            cls_inst.hook_post_add_argument(
-                parser=parser, action=action, param=name, func=func
-            )
 
         action.help = action.help or ""
         # Don't show default when
@@ -606,24 +594,6 @@ class ArgParserAlias:
         if self.kwargs:
             return self.create_parser(**self.kwargs)
         raise NotImplementedError
-
-    def hook_pre_add_argument(self, param: str, func, flags, kwargs):
-        """Hook to update arguments that are passed to parser.add_argument"""
-        return flags, kwargs
-
-    def hook_post_add_argument(
-        self,
-        *,
-        parser: "ArgParser|ap.ArgumentParser",
-        action: "ap.Action",
-        param: str,
-        func: "tp.Callable",
-    ):
-        """Hook into parser.add_argument step.
-
-        Can be used to update action's attributes
-        """
-        return
 
     @property
     def parser(self):
