@@ -92,6 +92,7 @@ xonsh/webconfig/js/app.js
 
 # pdm
 .pdm.toml
+.pdm-python
 __pypackages__
 
 # one can use pip or pdm during development
