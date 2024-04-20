@@ -2,9 +2,12 @@ import sys
 from pathlib import Path
 from subprocess import check_output
 
+import pytest
+
 from xonsh.pytest.tools import ON_WINDOWS
 
 
+@pytest.mark.xfail(reason="upstream error from virtualenv project")
 def test_xonsh_activator(tmp_path):
     # Create virtualenv
     venv_dir = tmp_path / "venv"
