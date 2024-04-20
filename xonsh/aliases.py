@@ -864,25 +864,6 @@ def xexec_fn(
 xexec = ArgParserAlias(func=xexec_fn, has_args=True, prog="xexec")
 
 
-@lazyobject
-def xonfig():
-    """Runs the xonsh configuration utility."""
-    from xonsh.xonfig import xonfig_main  # lazy import
-
-    return xonfig_main
-
-
-@unthreadable
-def trace(args, stdin=None, stdout=None, stderr=None, spec=None):
-    """Runs the xonsh tracer utility."""
-    from xonsh.tracer import tracermain  # lazy import
-
-    try:
-        return tracermain(args, stdin=stdin, stdout=stdout, stderr=stderr, spec=spec)
-    except SystemExit:
-        pass
-
-
 def showcmd(args, stdin=None):
     """usage: showcmd [-h|--help|cmd args]
 
@@ -969,9 +950,9 @@ def make_default_aliases():
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,
-        "trace": trace,
+        "trace": LazyAlias("xonsh.tracer:tracermain"),
         "timeit": timeit_alias,
-        "xonfig": xonfig,
+        "xonfig": LazyAlias("xonsh.xonfig:xonfig_main"),
         "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
         "showcmd": showcmd,
         "ipynb": ["jupyter", "notebook", "--no-browser"],
