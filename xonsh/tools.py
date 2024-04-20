@@ -228,8 +228,28 @@ class EnvPath(cabc.MutableSequence):
     def __delitem__(self, key):
         self._l.__delitem__(key)
 
+    @staticmethod
+    def _prepare_path(p):
+        return str(expand_path(p))
+
+    @staticmethod
+    def _check_path(p):
+        if not pathlib.Path(p).exists():
+            print(f"EnvPath warning: path {repr(p)} does not exists.", file=sys.stderr)
+
     def insert(self, index, value):
-        self._l.insert(index, value)
+        self._l.insert(index, self._prepare_path(value))
+        self._check_path(value)
+
+    def append(self, value):
+        self._l.append(self._prepare_path(value))
+        self._check_path(value)
+
+    def remove(self, value):
+        try:
+            self._l.remove(self._prepare_path(value))
+        except ValueError:
+            print(f"EnvPath warning: path {repr(value)} not found.", file=sys.stderr)
 
     @property
     def paths(self):
@@ -292,13 +312,14 @@ class EnvPath(cabc.MutableSequence):
         None
 
         """
-        data = str(expand_path(data))
+        data = self._prepare_path(data)
         if data not in self._l:
             self._l.insert(0 if front else len(self._l), data)
         elif replace:
             # https://stackoverflow.com/a/25251306/1621381
             self._l = list(filter(lambda x: x != data, self._l))
             self._l.insert(0 if front else len(self._l), data)
+        self._check_path(data)
 
 
 class FlexibleFormatter(string.Formatter):
