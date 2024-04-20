@@ -1013,6 +1013,7 @@ def test_env_path_add_pathlib():
         os.pathsep.join(["home", "wakka", "bin"]),
     ]
 
+
 def test_env_path_append_remove_pathlib_path():
     path = EnvPath()
 
@@ -1029,7 +1030,9 @@ def test_env_path_append_remove_pathlib_path():
     path.append(pathlib.Path(os.sep.join(["~", "dino"])))
     path.remove(os.sep.join(["~", "dino"]))
 
-    path.append(pathlib.Path(os.sep.join([str(pathlib.Path("~").expanduser()), "dino"])))
+    path.append(
+        pathlib.Path(os.sep.join([str(pathlib.Path("~").expanduser()), "dino"]))
+    )
     path.remove(os.sep.join(["~", "dino"]))
 
     path.append(pathlib.Path(os.sep.join(["~", "dino"])))
