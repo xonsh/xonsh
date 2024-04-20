@@ -281,6 +281,8 @@ class Aliases(cabc.MutableMapping):
 class ExecAlias:
     """Provides an exec alias for xonsh source code."""
 
+    __slots__ = ("src", "filename")
+
     def __init__(self, src, filename="<exec-alias>"):
         """
         Parameters
@@ -313,6 +315,45 @@ class ExecAlias:
 
     def __repr__(self):
         return f"ExecAlias({self.src!r}, filename={self.filename!r})"
+
+
+class LazyAlias:
+    __slots__ = ("name", "_func")
+
+    def __init__(self, name: str):
+        """Represents a callable alias function
+
+        Parameters
+        ----------
+        name
+            module path and name of the alias function in the form of ``parent.module.name:func_name``
+        """
+        self.name = name
+        self._func = None
+
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
+        if self._func is None:
+            import importlib
+
+            path, func = self.name.rsplit(":", 1)
+            module = importlib.import_module(path)
+            self._func = getattr(module, func)
+
+        from xonsh.cli_utils import _dispatch_func
+
+        _dispatch_func(
+            self._func,
+            dict(
+                args=args,
+                stdin=stdin,
+                stdout=stdout,
+                stderr=stderr,
+                spec=spec,
+                stack=stack,
+            ),
+        )
 
 
 class PartialEvalAliasBase:
