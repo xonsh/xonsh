@@ -143,6 +143,9 @@ doc = [
     "livereload",
     "myst-parser",
 ]
+bench = [
+    "asv>=0.6.3",
+]
 
 
 [project.scripts]
