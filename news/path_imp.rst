@@ -1,6 +1,6 @@
 **Added:**
 
-* EnvPath shows warning if path that added does not exists.
+* <news item>
 
 **Changed:**
 
