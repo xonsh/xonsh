@@ -94,12 +94,10 @@ def showcmd_fn(cmd: Annotated[list[str], Arg(nargs="...")]):
     ----------
     cmd
         program to launch along its arguments
-    args
-        argument that will normally be passed to the command
 
     Examples
     --------
-      >>> showcmd echo $USER "can't" hear "the sea"
+      $ showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
     """
     sys.displayhook(cmd)
