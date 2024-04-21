@@ -6,7 +6,7 @@ from xonsh.tools import print_color, swap_values, unthreadable
 
 
 @unthreadable
-def alias(args, stdin=None, stdout=None, stderr=None):
+def source(args, stdin=None, stdout=None, stderr=None):
     """Executes the contents of the provided files in the current context.
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.

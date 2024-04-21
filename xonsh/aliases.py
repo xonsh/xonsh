@@ -13,7 +13,6 @@ import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import cd, dirs, popd, pushd
 from xonsh.environ import locate_binary
 from xonsh.lib.lazyasd import lazyobject
@@ -35,10 +34,8 @@ from xonsh.tools import (
     ALIAS_KWARG_NAMES,
     XonshError,
     _get_cwd,
-    adjust_shlvl,
     strip_simple_quotes,
     to_repr_pretty_,
-    to_shlvl,
 )
 from xonsh.xontribs import xontribs_main
 
@@ -348,6 +345,9 @@ class LazyAlias:
             ),
         )
 
+    def __repr__(self):
+        return f"LazyAlias({self.name})"
+
 
 class PartialEvalAliasBase:
     """Partially evaluated alias."""
@@ -486,105 +486,6 @@ def xonsh_exit(args, stdin=None):
     return None, None
 
 
-def xonsh_reset(args, stdin=None):
-    """Clears __xonsh__.ctx"""
-    XSH.ctx.clear()
-
-
-def xexec_fn(
-    command: Annotated[list[str], Arg(nargs="*")],
-    login=False,
-    clean=False,
-    name="",
-    _stdin=None,
-):
-    """exec (also aliased as xexec) uses the os.execvpe() function to
-    replace the xonsh process with the specified program.
-
-    This provides the functionality of the bash 'exec' builtin::
-
-        >>> exec bash -l -i
-        bash $
-
-    Parameters
-    ----------
-    command
-        program to launch along its arguments
-    login : -l, --login
-        the shell places a dash at the
-        beginning of the zeroth argument passed to command to simulate login
-        shell.
-    clean : -c, --clean
-        causes command to be executed with an empty environment.
-    name : -a, --name
-        the shell passes name as the zeroth argument
-        to the executed command.
-
-    Notes
-    -----
-    This command **is not** the same as the Python builtin function
-    exec(). That function is for running Python code. This command,
-    which shares the same name as the sh-lang statement, is for launching
-    a command directly in the same process. In the event of a name conflict,
-    please use the xexec command directly or dive into subprocess mode
-    explicitly with ![exec command]. For more details, please see
-    http://xon.sh/faq.html#exec.
-    """
-    if len(command) == 0:
-        return (None, "xonsh: exec: no command specified\n", 1)
-
-    cmd = command[0]
-    if name:
-        command[0] = name
-    if login:
-        command[0] = f"-{command[0]}"
-
-    denv = {}
-    if not clean:
-        denv = XSH.env.detype()
-
-        # decrement $SHLVL to mirror bash's behaviour
-        if "SHLVL" in denv:
-            old_shlvl = to_shlvl(denv["SHLVL"])
-            denv["SHLVL"] = str(adjust_shlvl(old_shlvl, -1))
-
-    try:
-        os.execvpe(cmd, command, denv)
-    except FileNotFoundError as e:
-        return (
-            None,
-            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}" "\n",
-            1,
-        )
-
-
-xexec = ArgParserAlias(func=xexec_fn, has_args=True, prog="xexec")
-
-
-def showcmd_fn(cmd: Annotated[list[str], Arg(nargs="*")]):
-    """
-    Displays the command and arguments as a list of strings that xonsh would
-    run in subprocess mode. Useful determining how xonsh evaluates
-    your commands and arguments prior to running these commands.
-
-    Parameters
-    ----------
-    cmd
-        program to launch along its arguments
-    args
-        argument that will normally be passed to the command
-
-    Examples
-    --------
-      >>> showcmd echo $USER "can't" hear "the sea"
-      ['echo', 'I', "can't", 'hear', 'the sea']
-    """
-    sys.displayhook(cmd)
-
-
-showcmd = ArgParserAlias(func=showcmd_fn, has_args=True, prog="showcmd")
-
-
 def detect_xpip_alias():
     """
     Determines the correct invocation to get xonsh's pip
@@ -622,6 +523,7 @@ def detect_xpip_alias():
 
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
+    xexec = LazyAlias("xonsh.xaliases.xsh:xexec")
     default_aliases = {
         "cd": cd,
         "pushd": pushd,
@@ -636,23 +538,23 @@ def make_default_aliases():
         "quit": xonsh_exit,
         "exec": xexec,
         "xexec": xexec,
-        "source": LazyAlias("xonsh.xaliases.source.alias"),
-        "source-zsh": LazyAlias("xonsh.xaliases.source_foreign.zsh"),
-        "source-bash": LazyAlias("xonsh.xaliases.source_foreign.bash"),
-        "source-cmd": LazyAlias("xonsh.xaliases.source_foreign.cmd"),
-        "source-foreign": LazyAlias("xonsh.xaliases.source_foreign.alias"),
+        "source": LazyAlias("xonsh.xaliases.source:source"),
+        "source-zsh": LazyAlias("xonsh.xaliases.source_foreign:zsh"),
+        "source-bash": LazyAlias("xonsh.xaliases.source_foreign:bash"),
+        "source-cmd": LazyAlias("xonsh.xaliases.source_foreign:cmd"),
+        "source-foreign": LazyAlias("xonsh.xaliases.source_foreign:alias"),
         "history": xhm.history_main,
         "trace": LazyAlias("xonsh.tracer:tracermain"),
         "timeit": timeit_alias,
         "xonfig": LazyAlias("xonsh.xonfig:xonfig_main"),
         "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
-        "showcmd": showcmd,
+        "showcmd": LazyAlias("xonsh.xaliases.xsh:showcmd"),
         "ipynb": ["jupyter", "notebook", "--no-browser"],
         "which": xxw.which,
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
-        "xonsh-reset": xonsh_reset,
+        "xonsh-reset": LazyAlias("xonsh.xaliases.xsh:xonsh_reset"),
         "xthread": SpecAttrModifierAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
