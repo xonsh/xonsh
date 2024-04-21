@@ -238,6 +238,9 @@ class EnvPath(cabc.MutableSequence):
     def append(self, value):
         self._l.append(self._prepare_path(value))
 
+    def prepend(self, value):
+        self._l.insert(0, self._prepare_path(value))
+
     def remove(self, value):
         try:
             self._l.remove(self._prepare_path(value))

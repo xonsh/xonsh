@@ -1048,7 +1048,7 @@ def test_env_path_append_remove_pathlib_path():
     path.insert(0, pathlib.Path(os.sep.join(["~", "dino"])))
     path.remove(pathlib.Path(os.sep.join(["~", "dino"])))
 
-    path.insert(0, pathlib.Path(os.sep.join(["~", "dino"])))
+    path.prepend(pathlib.Path(os.sep.join(["~", "dino"])))
     path.remove(os.sep.join(["~", "dino"]))
 
     assert path == []
