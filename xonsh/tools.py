@@ -115,6 +115,13 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
         self.completed_command = completed_command
 
 
+def _get_cwd():
+    try:
+        return os.getcwd()
+    except OSError:
+        return None
+
+
 def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""

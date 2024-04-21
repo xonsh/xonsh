@@ -148,13 +148,6 @@ Fires when the current directory is changed for any reason.
 )
 
 
-def _get_cwd():
-    try:
-        return os.getcwd()
-    except OSError:
-        return None
-
-
 def _change_working_directory(newdir, follow_symlinks=False):
     env = XSH.env
     old = env["PWD"]
