@@ -9,7 +9,6 @@ import sys
 import types
 import typing as tp
 
-import xonsh.completers._aliases as xca
 from xonsh.built_ins import XSH
 from xonsh.dirstack import cd, dirs, popd, pushd
 from xonsh.environ import locate_binary
@@ -550,7 +549,7 @@ def make_default_aliases():
         "ipynb": ["jupyter", "notebook", "--no-browser"],
         "which": LazyAlias("xonsh.xoreutils.which:which"),
         "xontrib": xontribs_main,
-        "completer": xca.completer_alias,
+        "completer": LazyAlias("xonsh.completers._aliases:completer_alias"),
         "xpip": detect_xpip_alias(),
         "xonsh-reset": LazyAlias("xonsh.xaliases.xsh:xonsh_reset"),
         "xthread": SpecAttrModifierAlias(
