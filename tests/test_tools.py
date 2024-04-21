@@ -1014,6 +1014,46 @@ def test_env_path_add_pathlib():
     ]
 
 
+def test_env_path_append_remove_pathlib_path():
+    path = EnvPath()
+
+    # Append-remove
+    path.append(os.sep.join(["home", "dino"]))
+    path.remove(os.sep.join(["home", "dino"]))
+
+    path.append(os.sep.join(["~", "dino"]))
+    path.remove(pathlib.Path(os.sep.join(["~", "dino"])))
+
+    path.append(pathlib.Path(os.sep.join(["~", "dino"])))
+    path.remove(pathlib.Path(os.sep.join(["~", "dino"])))
+
+    path.append(pathlib.Path(os.sep.join(["~", "dino"])))
+    path.remove(os.sep.join(["~", "dino"]))
+
+    path.append(
+        pathlib.Path(os.sep.join([str(pathlib.Path("~").expanduser()), "dino"]))
+    )
+    path.remove(os.sep.join(["~", "dino"]))
+
+    path.append(pathlib.Path(os.sep.join(["~", "dino"])))
+    path.remove(os.sep.join([str(pathlib.Path("~").expanduser()), "dino"]))
+
+    # Insert-remove
+    path.insert(0, os.sep.join(["home", "dino"]))
+    path.remove(os.sep.join(["home", "dino"]))
+
+    path.insert(0, os.sep.join(["~", "dino"]))
+    path.remove(pathlib.Path(os.sep.join(["~", "dino"])))
+
+    path.insert(0, pathlib.Path(os.sep.join(["~", "dino"])))
+    path.remove(pathlib.Path(os.sep.join(["~", "dino"])))
+
+    path.prepend(pathlib.Path(os.sep.join(["~", "dino"])))
+    path.remove(os.sep.join(["~", "dino"]))
+
+    assert path == []
+
+
 # helper
 def expand(path):
     return os.path.expanduser(os.path.expandvars(path))
