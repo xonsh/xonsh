@@ -232,18 +232,11 @@ class EnvPath(cabc.MutableSequence):
     def _prepare_path(p):
         return str(expand_path(p))
 
-    @staticmethod
-    def _check_path(p):
-        if not pathlib.Path(p).exists():
-            print(f"EnvPath warning: path {repr(p)} does not exists.", file=sys.stderr)
-
     def insert(self, index, value):
         self._l.insert(index, self._prepare_path(value))
-        self._check_path(value)
 
     def append(self, value):
         self._l.append(self._prepare_path(value))
-        self._check_path(value)
 
     def remove(self, value):
         try:
@@ -319,7 +312,6 @@ class EnvPath(cabc.MutableSequence):
             # https://stackoverflow.com/a/25251306/1621381
             self._l = list(filter(lambda x: x != data, self._l))
             self._l.insert(0 if front else len(self._l), data)
-        self._check_path(data)
 
 
 class FlexibleFormatter(string.Formatter):
