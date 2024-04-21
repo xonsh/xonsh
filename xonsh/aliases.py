@@ -10,7 +10,6 @@ import types
 import typing as tp
 
 import xonsh.completers._aliases as xca
-import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 from xonsh.built_ins import XSH
 from xonsh.dirstack import cd, dirs, popd, pushd
@@ -543,7 +542,7 @@ def make_default_aliases():
         "source-bash": LazyAlias("xonsh.xaliases.source_foreign:bash"),
         "source-cmd": LazyAlias("xonsh.xaliases.source_foreign:cmd"),
         "source-foreign": LazyAlias("xonsh.xaliases.source_foreign:alias"),
-        "history": xhm.history_main,
+        "history": LazyAlias("xonsh.xaliases.history:alias"),
         "trace": LazyAlias("xonsh.tracer:tracermain"),
         "timeit": timeit_alias,
         "xonfig": LazyAlias("xonsh.xonfig:xonfig_main"),

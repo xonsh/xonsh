@@ -56,6 +56,9 @@ class History:
     is the newest.
     """
 
+    supports_diff = False
+    """Support for ``history diff``"""
+
     def __init__(self, sessionid=None, **kwargs):
         """Represents a xonsh session's history.
 
