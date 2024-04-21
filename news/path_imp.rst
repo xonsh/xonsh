@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* EnvPath methods (append, remove, add, insert) prepare the path before add.
+* EnvPath methods (append, remove, add, insert) prepare the path before action.
 
 **Deprecated:**
 
