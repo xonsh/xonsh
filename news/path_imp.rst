@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* Added PATH.prepend(path) to add path to the beginning.
 
 **Changed:**
 
