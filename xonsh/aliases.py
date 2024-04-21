@@ -10,7 +10,6 @@ import types
 import typing as tp
 
 import xonsh.completers._aliases as xca
-import xonsh.xoreutils.which as xxw
 from xonsh.built_ins import XSH
 from xonsh.dirstack import cd, dirs, popd, pushd
 from xonsh.environ import locate_binary
@@ -549,7 +548,7 @@ def make_default_aliases():
         "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
         "showcmd": LazyAlias("xonsh.xaliases.xsh:showcmd"),
         "ipynb": ["jupyter", "notebook", "--no-browser"],
-        "which": xxw.which,
+        "which": LazyAlias("xonsh.xoreutils.which:which"),
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
