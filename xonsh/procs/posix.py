@@ -463,7 +463,7 @@ class PopenThread(threading.Thread):
         """Process signal, or None."""
         s = getattr(self.proc, "signal", None)
         if s is None:
-            rtn = self.returncode
+            rtn = self.proc.returncode
             if rtn is not None and rtn != 0:
                 s = (-1 * rtn, rtn < 0 if xp.ON_WINDOWS else os.WCOREDUMP(rtn))
         return s
