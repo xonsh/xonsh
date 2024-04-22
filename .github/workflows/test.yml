@@ -24,6 +24,8 @@ permissions:
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
+    env:
+      UV_CACHE_DIR: .cache/uv
     strategy:
       fail-fast: false
       matrix:
@@ -43,12 +45,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+      - uses: yezz123/setup-uv@v4
+        with:
+          uv-venv: "venv"
+      - name: set current week
+        uses: mathiasvr/command-output@v2.0.0
+        id: current_week
+        with:
+         run: python -c "from datetime import date; print(date.today().isocalendar().week)"
+      - name: Cache uv pip for a week
+        id: cache-uv
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}-${{ steps.current_week.outputs.stdout }}
+          restore-keys: ${{ runner.os }}-uv-
       - name: Install dependencies
-        run: |
-          python -m pip --version
-          python -m pip install -e ".[test]"
+        run: uv pip install -e ".[test]"
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tmate_debug_enabled }}
