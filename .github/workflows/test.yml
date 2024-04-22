@@ -46,8 +46,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - uses: yezz123/setup-uv@v4
-        with:
-          uv-venv: "venv"
       - name: set current week
         uses: mathiasvr/command-output@v2.0.0
         id: current_week
@@ -61,7 +59,7 @@ jobs:
           key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}-${{ steps.current_week.outputs.stdout }}
           restore-keys: ${{ runner.os }}-uv-
       - name: Install dependencies
-        run: uv pip install -e ".[test]"
+        run: uv pip install --system -e ".[test]"
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tmate_debug_enabled }}
