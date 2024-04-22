@@ -47,9 +47,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: yezz123/setup-uv@v4
       - name: set current week
-        with:
-         run: echo WEEK=$(date +%V) >>$GITHUB_ENV
-         shell: bash
+        run: echo WEEK=$(date +%V) >>$GITHUB_ENV
+        shell: bash
       - name: Cache uv pip for a week
         id: cache-uv
         uses: actions/cache@v4

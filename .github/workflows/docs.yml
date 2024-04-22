@@ -29,15 +29,14 @@ jobs:
           python-version: "3.10"
       - uses: yezz123/setup-uv@v4
       - name: set current week
-        with:
-          run: echo WEEK=$(date +%V) >>$GITHUB_ENV
-          shell: bash
+        run: echo WEEK=$(date +%V) >>$GITHUB_ENV
+        shell: bash
       - name: Cache uv pip for a week
         id: cache-uv
         uses: actions/cache@v4
         with:
           path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}-${{ steps.current_week.outputs.stdout }}
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}-${{ env.WEEK }}
           restore-keys: ${{ runner.os }}-uv-
       - run: uv pip install --system -e '.[doc]'
       - name: Build Docs
