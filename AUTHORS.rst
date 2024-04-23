@@ -6,30 +6,30 @@ Authors are sorted by number of commits.
 * Gil Forsyth
 * Morten Enemark Lund
 * Konstantinos Tsakiltzidis
-* Jamie Bliss
 * Noortheen Raja
+* Jamie Bliss
 * a
 * Hugo Wang
 * David Strobach
 * Bob Hyman
-* BlahGeek
 * anki-code
+* BlahGeek
 * Daniel Shimon
 * Gyuri Horak
 * Jean-Benoist Leger
 * christopher
+* pre-commit-ci[bot]
 * Klaus Alexander Seistrup
 * Leonardo Santagada
-* pre-commit-ci[bot]
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
 * Rob Brewer
 * virus
+* Peter Ye
 * Sagar Tewari
 * Gordon Ball
 * Eadaen1
-* Peter Ye
 * Konstantin Molchanov
 * Guillaume Leclerc
 * Travis Shirk
@@ -59,13 +59,13 @@ Authors are sorted by number of commits.
 * Stephan Fitzpatrick
 * dev2718
 * Will S
+* dependabot[bot]
 * K.-Michael Aye
 * halloleo
 * Will Wykeham
 * Oleh Prypin
 * Brian Skinn
 * Wendell Turner
-* dependabot[bot]
 * Alessio Bogon
 * Yohei Tamura
 * Maximilian Köhl
@@ -324,5 +324,6 @@ Authors are sorted by number of commits.
 * Matthieu LAURENT
 * Daniel Saunders
 * Andrew
+* l-no
 * goodboy
 * Atsushi Morimoto
