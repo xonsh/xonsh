@@ -4,6 +4,56 @@ Xonsh Change Log
 
 .. current developments
 
+v0.16.0
+====================
+
+**Added:**
+
+* Square brackets can now be used in command arguments without quotes (e.g. `echo a[b]`)
+* Add ``XONSH_BASH_PATH_OVERRIDE`` option (off-by-default) to override what is
+  returned by `xonsh.platform.bash_command`.
+* Added PATH.prepend(path) to add path to the beginning.
+
+**Changed:**
+
+* Xonsh AppImage now on Python 3.12 that works faster.
+* Xonsh AppImage: pinned prompt-toolkit version until fix upstream issue.
+* Builtin aliases (xontrib, history) switched to threadable mode.
+* EnvPath methods (append, remove, add, insert) prepare the path before action.
+* Replaced black formatter with `ruff-format <https://docs.astral.sh/ruff/>`_
+* ``source_foreign_fn`` now does not run subshells in interactive mode, so
+  associated RC files like ``zshrc`` and ``bashrc`` will not be auto-loaded on
+  sourcing.
+* Removed usage of deprecated ``cgi`` module
+
+**Removed:**
+
+* Removed ``ArgParserAlias.hook_pre_add_argument``, ``ArgParserAlias.hook_post_add_argument``.
+  Please use custom action instead to modify the argument options.
+* Removed deprecated module ``xonsh.proc``
+
+**Fixed:**
+
+* Fixed an issue with completions when using absolute paths to commands and having $UPDATE_COMPLETIONS_ON_KEYPRESS set to True. https://github.com/xonsh/xonsh/issues/5127
+* Jobs: fixed "index out of range" exception.
+* Expressions like ``2>1`` are now parsed correctly as Python code instead of being treated like special io-redirection operators.
+* Redirect tokens in quotes (e.g. ">", "2>", "2>1") are now correctly passed to commands as regular arguments.
+* Fixed NotADirectoryError during load dircolors.
+* Fixed a bug that caused ``xonfig web`` to overwrite its own configuration file. See https://github.com/xonsh/xonsh/issues/5297
+* If an error is encountered while loading the xonshrc file, the traceback is now output as plain text rather than as a list of Tokens
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Peter Ye
+* dependabot[bot]
+* l-no
+
+
+
 v0.15.1
 ====================
 
