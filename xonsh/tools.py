@@ -1070,7 +1070,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         show_trace = to_bool(show_trace)
 
     if source_msg:
-        sys.stderr.write(source_msg + '\n')
+        sys.stderr.write(source_msg + "\n")
     # if the trace option has been set, print all traceback info to stderr
     if show_trace:
         # notify user about XONSH_TRACEBACK_LOGFILE if it has

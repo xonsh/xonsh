@@ -352,7 +352,14 @@ def get_proc_proxy_name(cls):
     func_name = cls.f
     if type(cls.f) is functools.partial:
         func_name = getattr(cls.f.args[0], "__name__", cls.f)
-    return repr({"name": getattr(cls, 'name', None), "func": func_name, "alias": cls.env.get("__ALIAS_NAME", None), "pid": cls.pid})
+    return repr(
+        {
+            "name": getattr(cls, "name", None),
+            "func": func_name,
+            "alias": cls.env.get("__ALIAS_NAME", None),
+            "pid": cls.pid,
+        }
+    )
 
 
 class ProcProxyThread(threading.Thread):
@@ -535,7 +542,9 @@ class ProcProxyThread(threading.Thread):
             if status:
                 # stdout and stderr are still writable, so error must
                 # come from function itself.
-                xt.print_exception(source_msg="Exception in thread " + get_proc_proxy_name(self))
+                xt.print_exception(
+                    source_msg="Exception in thread " + get_proc_proxy_name(self)
+                )
                 r = 1
             else:
                 # stdout and stderr are no longer writable, so error must
@@ -545,7 +554,9 @@ class ProcProxyThread(threading.Thread):
                 # is not truly an error and we should exit gracefully.
                 r = 0
         except Exception:
-            xt.print_exception(source_msg="Exception in thread " + get_proc_proxy_name(self))
+            xt.print_exception(
+                source_msg="Exception in thread " + get_proc_proxy_name(self)
+            )
             r = 1
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
@@ -827,7 +838,7 @@ class ProcProxy:
             with XSH.env.swap(self.env):
                 r = self.f(self.args, stdin, stdout, stderr, spec, spec.stack)
         except Exception:
-            xt.print_exception(source_msg='Exception in ' + get_proc_proxy_name(self))
+            xt.print_exception(source_msg="Exception in " + get_proc_proxy_name(self))
             r = 1
         self.returncode = parse_proxy_return(r, stdout, stderr)
         safe_flush(stdout)
