@@ -54,6 +54,16 @@ def EXEC_ALIAS_RE():
     return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
 
 
+def alias_display(obj):
+    attr = {
+        "name":getattr(obj, "__name__", None),
+        "body":obj,
+        "__xonsh_threadable__":getattr(obj, "__xonsh_threadable__", None),
+        "__xonsh_capturable__": getattr(obj, "__xonsh_threadable__", None)
+    }
+    return f"Alias({attr})"
+
+
 class Aliases(cabc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
@@ -183,6 +193,8 @@ class Aliases(cabc.MutableMapping):
                 # need to exec alias
                 self._raw[key] = ExecAlias(val, filename=f)
         else:
+            if callable(val):
+                val.xonsh_display = lambda obj: alias_display(obj)
             self._raw[key] = val
 
     def _common_or(self, other):

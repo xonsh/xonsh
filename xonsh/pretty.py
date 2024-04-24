@@ -120,7 +120,7 @@ def pretty(
     Pretty print the object's representation.
     """
     if _safe_getattr(obj, "xonsh_display"):
-        return obj.xonsh_display()
+        return obj.xonsh_display(obj)
 
     stream = io.StringIO()
     printer = RepresentationPrinter(
