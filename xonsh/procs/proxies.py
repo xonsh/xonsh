@@ -534,7 +534,7 @@ class ProcProxyThread(threading.Thread):
             if status:
                 # stdout and stderr are still writable, so error must
                 # come from function itself.
-                xt.print_exception(source_msg="Exception from " + self.get_name() + ":")
+                xt.print_exception(source_msg="Exception in thread " + self.get_name())
                 r = 1
             else:
                 # stdout and stderr are no longer writable, so error must
@@ -544,7 +544,7 @@ class ProcProxyThread(threading.Thread):
                 # is not truly an error and we should exit gracefully.
                 r = 0
         except Exception:
-            xt.print_exception(source_msg="Exception from " + self.get_name() + ":")
+            xt.print_exception(source_msg="Exception in thread " + self.get_name())
             r = 1
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
