@@ -168,6 +168,22 @@ class PopenThread(threading.Thread):
         # loop over reads while process is running.
         i = j = cnt = 1
         while proc.poll() is None:
+            try:
+                # The command that is waiting for input can be suspended by OS in case there is no terminal attached
+                # because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals.
+                # In this case we try to stop the command carefully by sending SIGINT and SIGCONT to process the INT signal.
+                # Some commands will not stop immediately and iterations of polling is needed to read final stdout/stderr.
+
+                pid, proc_status = os.waitpid(self.pid, os.WUNTRACED)
+                if os.WIFSTOPPED(proc_status) and os.WSTOPSIG(proc_status) in [signal.SIGTTOU, signal.SIGTTIN]:
+                    try:
+                        self.proc.send_signal(signal.SIGINT)
+                        self.proc.send_signal(signal.SIGCONT)
+                    except ProcessLookupError:
+                        pass
+            except ChildProcessError:
+                pass
+
             # this is here for CPU performance reasons.
             if i + j == 0:
                 cnt = min(cnt + 1, 1000)
