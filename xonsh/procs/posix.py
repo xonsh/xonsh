@@ -103,7 +103,14 @@ class PopenThread(threading.Thread):
             raise
 
         self.pid = proc.pid
-        self.name = repr({"cls": self.__class__.__name__, "name": self.name, "cmd": args, "pid": self.pid})
+        self.name = repr(
+            {
+                "cls": self.__class__.__name__,
+                "name": self.name,
+                "cmd": args,
+                "pid": self.pid,
+            }
+        )
         self.universal_newlines = uninew = proc.universal_newlines
         if uninew:
             self.encoding = enc = env.get("XONSH_ENCODING")
