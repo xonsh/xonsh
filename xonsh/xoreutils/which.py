@@ -106,7 +106,7 @@ def print_alias(arg, stdout, verbose=False):
             print(" ".join(alias), file=stdout)
         elif isinstance(alias, xonsh.aliases.ExecAlias):
             print(alias.src, file=stdout)
-        elif hasattr(alias, 'xonsh_display'):
+        elif hasattr(alias, "xonsh_display"):
             print(alias.xonsh_display(alias), file=stdout)
         else:
             print(alias, file=stdout)

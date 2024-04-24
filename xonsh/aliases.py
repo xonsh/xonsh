@@ -56,10 +56,10 @@ def EXEC_ALIAS_RE():
 
 def alias_display(obj):
     attr = {
-        "name":getattr(obj, "__name__", None),
-        "body":obj,
-        "__xonsh_threadable__":getattr(obj, "__xonsh_threadable__", None),
-        "__xonsh_capturable__": getattr(obj, "__xonsh_threadable__", None)
+        "name": getattr(obj, "__name__", None),
+        "body": obj,
+        "__xonsh_threadable__": getattr(obj, "__xonsh_threadable__", None),
+        "__xonsh_capturable__": getattr(obj, "__xonsh_threadable__", None),
     }
     return f"Alias({attr})"
 
