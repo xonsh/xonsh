@@ -458,6 +458,12 @@ class ProcProxyThread(threading.Thread):
     def __del__(self):
         self._restore_sigint()
 
+    def get_name(self):
+        func_name = self.f
+        if type(self.f) is functools.partial:
+            func_name = getattr(self.f.args[0], "__name__", self.f)
+        return repr({"name": self.name, "func": func_name, "alias": self.env.get("__ALIAS_NAME", None), "pid": self.pid})
+
     def run(self):
         """Set up input/output streams and execute the child function in a new
         thread.  This is part of the `threading.Thread` interface and should
@@ -528,7 +534,7 @@ class ProcProxyThread(threading.Thread):
             if status:
                 # stdout and stderr are still writable, so error must
                 # come from function itself.
-                xt.print_exception()
+                xt.print_exception(source_msg="Exception from " + self.get_name() + ":")
                 r = 1
             else:
                 # stdout and stderr are no longer writable, so error must
@@ -538,7 +544,7 @@ class ProcProxyThread(threading.Thread):
                 # is not truly an error and we should exit gracefully.
                 r = 0
         except Exception:
-            xt.print_exception()
+            xt.print_exception(source_msg="Exception from " + self.get_name() + ":")
             r = 1
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
