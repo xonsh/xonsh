@@ -176,7 +176,10 @@ class PopenThread(threading.Thread):
                     # Some commands will not stop immediately and iterations of polling is needed to read final stdout/stderr.
 
                     pid, proc_status = os.waitpid(self.pid, os.WUNTRACED)
-                    if os.WIFSTOPPED(proc_status) and os.WSTOPSIG(proc_status) in [signal.SIGTTOU, signal.SIGTTIN]:
+                    if os.WIFSTOPPED(proc_status) and os.WSTOPSIG(proc_status) in [
+                        signal.SIGTTOU,
+                        signal.SIGTTIN,
+                    ]:
                         try:
                             self.proc.send_signal(signal.SIGINT)
                             self.proc.send_signal(signal.SIGCONT)
