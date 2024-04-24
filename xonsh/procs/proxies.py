@@ -355,7 +355,6 @@ def get_proc_proxy_name(cls):
     return repr({"name": getattr(cls, 'name', None), "func": func_name, "alias": cls.env.get("__ALIAS_NAME", None), "pid": cls.pid})
 
 
-
 class ProcProxyThread(threading.Thread):
     """
     Class representing a function to be run as a subprocess-mode command.
