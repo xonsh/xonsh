@@ -1024,7 +1024,7 @@ def print_warning(msg):
     sys.stderr.write(msg)
 
 
-def print_exception(msg=None, exc_info=None):
+def print_exception(msg=None, exc_info=None, source_msg=None):
     """Print given exception (or current if None) with/without traceback and set sys.last_type, sys.last_value, sys.last_traceback accordingly."""
 
     # is no exec_info() triple is given, use the exception beeing handled at the moment
@@ -1068,6 +1068,9 @@ def print_exception(msg=None, exc_info=None):
     # convert show_trace to bool if necessary
     if not is_bool(show_trace):
         show_trace = to_bool(show_trace)
+
+    if source_msg:
+        sys.stderr.write(source_msg + "\n")
     # if the trace option has been set, print all traceback info to stderr
     if show_trace:
         # notify user about XONSH_TRACEBACK_LOGFILE if it has
