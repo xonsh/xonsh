@@ -904,7 +904,7 @@ def run_subproc(cmds, captured=False, envs=None):
                     "thread": s.threadable,
                     "bg": s.background,
                 }
-                p = {k:v for k,v in p.items() if v is not None}
+                p = {k: v for k, v in p.items() if v is not None}
                 print(f"{i}: {repr(p)}")
 
     cmds = [
