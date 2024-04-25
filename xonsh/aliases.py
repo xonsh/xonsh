@@ -56,7 +56,7 @@ def EXEC_ALIAS_RE():
 
 def alias_display(obj):
     attr = {
-        "name": getattr(obj, "__name__", None),
+        "name": getattr(obj, "__alias_name__", None),
         "body": obj,
         "__xonsh_threadable__": getattr(obj, "__xonsh_threadable__", None),
         "__xonsh_capturable__": getattr(obj, "__xonsh_threadable__", None),
@@ -194,6 +194,7 @@ class Aliases(cabc.MutableMapping):
                 self._raw[key] = ExecAlias(val, filename=f)
         else:
             if callable(val):
+                val.__alias_name__ = key
                 val.xonsh_display = lambda obj: alias_display(obj)
             self._raw[key] = val
 
