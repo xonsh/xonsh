@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* CommandPipeline repr will not show descriptors by default. Use XONSH_DEBUG mode to see them.
+* The CommandPipeline repr will not show descriptors by default. Use XONSH_DEBUG mode to see them.
 
 **Deprecated:**
 
