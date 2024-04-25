@@ -56,6 +56,8 @@ def EXEC_ALIAS_RE():
 
 
 class FuncAlias:
+    """Provides a callable alias for xonsh commands."""
+
     attributes = ["__xonsh_threadable__", "__xonsh_capturable__"]
 
     def __init__(self, name, func):
