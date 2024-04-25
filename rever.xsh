@@ -48,4 +48,4 @@ $DOCKER_GIT_EMAIL = 'xonsh@googlegroups.com'
 
 $GHRELEASE_ASSETS = [git_archive_asset, 'xonsh-x86_64.AppImage']
 
-$APPIMAGE_PYTHON_VERSION = '3.12'
+$APPIMAGE_PYTHON_VERSION = '3.11'
