@@ -1188,6 +1188,7 @@ The file should contain a function with the signature
     )
     XONSH_TRACE_SUBPROC = Var(
         default=always_false,
+        convert=to_bool_or_int,
         doc="Set to ``True`` or ``1`` to show arguments list of every executed subprocess command. "
         "Use ``2`` to have full specification.",
     )

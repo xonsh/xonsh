@@ -887,14 +887,14 @@ def run_subproc(cmds, captured=False, envs=None):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
 
-    if trace := XSH.env.get("XONSH_TRACE_SUBPROC", False):
+    if tr := XSH.env.get("XONSH_TRACE_SUBPROC", False):
         tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
         if callable(tracer):
             tracer(cmds, captured=captured)
         else:
             r = {"cmds": cmds, "captured": captured}
             print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
-            if int(trace) == 2:
+            if tr == 2:
                 for i, s in enumerate(specs):
                     pcls = s.cls.__module__ + "." + s.cls.__name__
                     pcmd = (
