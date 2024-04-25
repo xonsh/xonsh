@@ -215,6 +215,7 @@ def parser():
         default=None,
     )
     p.add_argument(
+        "-st",
         "--shell-type",
         help="What kind of shell should be used. "
         "Possible options: "
