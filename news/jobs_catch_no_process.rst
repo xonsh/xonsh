@@ -1,6 +1,6 @@
 **Added:**
 
-* Added catching ChildProcessError in jobs. No hanging aliases in some cases.
+* Added catching ChildProcessError in jobs. Avoiding hanging aliases in some cases.
 
 **Changed:**
 
