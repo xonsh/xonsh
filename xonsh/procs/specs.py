@@ -895,12 +895,11 @@ def run_subproc(cmds, captured=False, envs=None):
             r = {"cmds": cmds, "captured": captured}
             print(f"Trace run_subproc({repr(r)}):", file=sys.stderr)
             for i, s in enumerate(specs):
-                cls = s.cls.__module__ + "." + s.cls.__name__
+                pcls = s.cls.__module__ + "." + s.cls.__name__
+                pcmd = [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
                 p = {
-                    "cmd": [s.args[0].__name__] + s.args[1:]
-                    if callable(s.args[0])
-                    else s.args,
-                    "cls": cls,
+                    "cmd": pcmd,
+                    "cls": pcls,
                     "alias": s.alias_name,
                     "bin": s.binary_loc,
                     "thread": s.threadable,
