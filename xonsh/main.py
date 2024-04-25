@@ -493,6 +493,7 @@ def main_xonsh(args):
     events.on_post_init.fire()
 
     from xonsh.environ import Env
+
     XSH.env = Env([])
 
     env = XSH.env
