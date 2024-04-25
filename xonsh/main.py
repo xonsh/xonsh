@@ -192,6 +192,13 @@ def parser():
         default=False,
     )
     p.add_argument(
+        "--no-env",
+        help="Do not load parent environment.",
+        dest="noenv",
+        action="store_true",
+        default=False,
+    )
+    p.add_argument(
         "--no-script-cache",
         help="Do not cache scripts as they are run.",
         dest="scriptcache",
@@ -386,6 +393,7 @@ def premain(argv=None):
         shell_kwargs["norc"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
+    shell_kwargs["noenv"] = args.norc
     sys.displayhook = _pprint_displayhook
     if args.command is not None:
         args.mode = XonshMode.single_command
@@ -483,6 +491,10 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
     events.on_post_init.fire()
+
+    from xonsh.environ import Env
+    XSH.env = Env([])
+
     env = XSH.env
     shell = XSH.shell
     history = XSH.history
