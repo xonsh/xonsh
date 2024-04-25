@@ -897,7 +897,7 @@ def run_subproc(cmds, captured=False, envs=None):
             for i, s in enumerate(specs):
                 cls = s.cls.__module__ + "." + s.cls.__name__
                 p = {
-                    "cmd": s.args,
+                    "cmd": [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args,
                     "cls": cls,
                     "alias": s.alias_name,
                     "bin": s.binary_loc,
