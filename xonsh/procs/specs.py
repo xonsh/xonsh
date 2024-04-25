@@ -911,7 +911,7 @@ def run_subproc(cmds, captured=False, envs=None):
                         "bg": s.background,
                     }
                     p = {k: v for k, v in p.items() if v is not None}
-                    print(f"{i}: {repr(p)}")
+                    print(f"{i}: {repr(p)}", file=sys.stderr)
 
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
