@@ -887,28 +887,29 @@ def run_subproc(cmds, captured=False, envs=None):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
 
-    if XSH.env.get("XONSH_TRACE_SUBPROC", False):
-        tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC")
+    if (trace := XSH.env.get("XONSH_TRACE_SUBPROC", False)):
+        tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
         if callable(tracer):
             tracer(cmds, captured=captured)
         else:
             r = {"cmds": cmds, "captured": captured}
-            print(f"Trace run_subproc({repr(r)}):", file=sys.stderr)
-            for i, s in enumerate(specs):
-                pcls = s.cls.__module__ + "." + s.cls.__name__
-                pcmd = (
-                    [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
-                )
-                p = {
-                    "cmd": pcmd,
-                    "cls": pcls,
-                    "alias": s.alias_name,
-                    "bin": s.binary_loc,
-                    "thread": s.threadable,
-                    "bg": s.background,
-                }
-                p = {k: v for k, v in p.items() if v is not None}
-                print(f"{i}: {repr(p)}")
+            print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
+            if int(trace) == 2:
+                for i, s in enumerate(specs):
+                    pcls = s.cls.__module__ + "." + s.cls.__name__
+                    pcmd = (
+                        [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
+                    )
+                    p = {
+                        "cmd": pcmd,
+                        "cls": pcls,
+                        "alias": s.alias_name,
+                        "bin": s.binary_loc,
+                        "thread": s.threadable,
+                        "bg": s.background,
+                    }
+                    p = {k: v for k, v in p.items() if v is not None}
+                    print(f"{i}: {repr(p)}")
 
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds

@@ -1186,9 +1186,11 @@ The file should contain a function with the signature
         "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
         "(The rules above are all have the same effect.)",
     )
-    XONSH_TRACE_SUBPROC = Var.with_default(
-        False,
-        "Set to ``True`` to show arguments list of every executed subprocess command.",
+    XONSH_TRACE_SUBPROC = Var(
+        default=always_false,
+        convert=to_bool_or_int,
+        doc="Set to ``True`` or ``1`` to show arguments list of every executed subprocess command. "
+        "Use ``2`` to have full specification.",
     )
     XONSH_TRACE_COMPLETIONS = Var.with_default(
         False,
