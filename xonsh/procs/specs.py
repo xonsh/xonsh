@@ -884,14 +884,22 @@ def run_subproc(cmds, captured=False, envs=None):
 
     Lastly, the captured argument affects only the last real command.
     """
+
+    specs = cmds_to_specs(cmds, captured=captured, envs=envs)
+
     if XSH.env.get("XONSH_TRACE_SUBPROC", False):
         tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC")
         if callable(tracer):
             tracer(cmds, captured=captured)
         else:
-            print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
+            r = {"cmds":cmds, "captured": captured}
+            print(f"Trace run_subproc({repr(r)}):", file=sys.stderr)
+            for i, s in enumerate(specs):
+                cls = s.cls.__module__ + '.' + s.cls.__name__
+                p = {"cmd": s.args, "cls":cls, "alias":s.alias_name, "bin":s.binary_loc, "bg":s.background, "threadable": s.threadable}
+                print(f'{i}: {repr(p)}')
 
-    specs = cmds_to_specs(cmds, captured=captured, envs=envs)
+
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
     ]
