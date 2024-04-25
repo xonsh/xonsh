@@ -887,7 +887,7 @@ def run_subproc(cmds, captured=False, envs=None):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
 
-    if (trace := XSH.env.get("XONSH_TRACE_SUBPROC", False)):
+    if trace := XSH.env.get("XONSH_TRACE_SUBPROC", False):
         tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
         if callable(tracer):
             tracer(cmds, captured=captured)
@@ -898,7 +898,9 @@ def run_subproc(cmds, captured=False, envs=None):
                 for i, s in enumerate(specs):
                     pcls = s.cls.__module__ + "." + s.cls.__name__
                     pcmd = (
-                        [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
+                        [s.args[0].__name__] + s.args[1:]
+                        if callable(s.args[0])
+                        else s.args
                     )
                     p = {
                         "cmd": pcmd,
