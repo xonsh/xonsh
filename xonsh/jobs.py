@@ -268,6 +268,7 @@ else:
         backgrounded = False
         try:
             if obj.pid is None:
+                # When the process stopped before os.waitpid it has no pid.
                 raise ChildProcessError
             _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         except ChildProcessError as e:  # No child processes
