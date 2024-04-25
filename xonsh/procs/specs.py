@@ -892,13 +892,19 @@ def run_subproc(cmds, captured=False, envs=None):
         if callable(tracer):
             tracer(cmds, captured=captured)
         else:
-            r = {"cmds":cmds, "captured": captured}
+            r = {"cmds": cmds, "captured": captured}
             print(f"Trace run_subproc({repr(r)}):", file=sys.stderr)
             for i, s in enumerate(specs):
-                cls = s.cls.__module__ + '.' + s.cls.__name__
-                p = {"cmd": s.args, "cls":cls, "alias":s.alias_name, "bin":s.binary_loc, "bg":s.background, "threadable": s.threadable}
-                print(f'{i}: {repr(p)}')
-
+                cls = s.cls.__module__ + "." + s.cls.__name__
+                p = {
+                    "cmd": s.args,
+                    "cls": cls,
+                    "alias": s.alias_name,
+                    "bin": s.binary_loc,
+                    "bg": s.background,
+                    "threadable": s.threadable,
+                }
+                print(f"{i}: {repr(p)}")
 
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
