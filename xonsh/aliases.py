@@ -40,6 +40,7 @@ from xonsh.tools import (
     argvquote,
     escape_windows_cmd_string,
     print_color,
+    print_exception,
     strip_simple_quotes,
     swap_values,
     to_repr_pretty_,
@@ -52,6 +53,62 @@ from xonsh.xontribs import xontribs_main
 @lazyobject
 def EXEC_ALIAS_RE():
     return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
+
+
+class FuncAlias:
+    attributes = ['__xonsh_threadable__', '__xonsh_capturable__']
+
+    def __init__(self, name, func):
+        self.__name__ = self.name = name
+        self.func = func
+        for attr in self.attributes:
+            if (val := getattr(func, attr, None)) is not None:
+                self.__setattr__(attr, val)
+
+    def run(self, *args, **kwargs):
+        try:
+            return self.func(*args, **kwargs)
+        except Exception as e:
+            print_exception(f'Exception in {repr(self)}')
+
+    def __repr__(self):
+        r = {"name": self.name, "func": self.func}
+        for attr in self.attributes:
+            if (val := getattr(self, attr, None)) is not None:
+                r[attr] = val
+        return f"FuncAlias({repr(r)})"
+
+
+class FuncAlias0(FuncAlias):
+    def __call__(self):
+        return self.run()
+
+class FuncAlias1(FuncAlias):
+    def __call__(self, args=None):
+        return self.run(args)
+
+class FuncAlias2(FuncAlias):
+    def __call__(self, args=None, stdin=None):
+        return self.run(args, stdin)
+
+class FuncAlias3(FuncAlias):
+    def __call__(self, args=None, stdin=None, stdout=None):
+        return self.run(args, stdin, stdout)
+
+class FuncAlias4(FuncAlias):
+    def __call__(self, args=None, stdin=None, stdout=None, stderr=None):
+        return self.run(args, stdin, stdout, stderr)
+
+class FuncAlias5(FuncAlias):
+    def __call__(self, args=None, stdin=None, stdout=None, stderr=None, spec=None):
+        return self.run(args, stdin, stdout, stderr, spec)
+
+class FuncAlias6(FuncAlias):
+    def __call__(self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+        return self.run(args, stdin, stdout, stderr, spec, stack)
+
+
+FUNC_ALIAS_CLASSES = [FuncAlias0, FuncAlias1, FuncAlias2, FuncAlias3, FuncAlias4, FuncAlias5, FuncAlias6]
 
 
 class Aliases(cabc.MutableMapping):
@@ -182,6 +239,9 @@ class Aliases(cabc.MutableMapping):
             else:
                 # need to exec alias
                 self._raw[key] = ExecAlias(val, filename=f)
+        elif isinstance(val, types.FunctionType):
+            nargs = len(inspect.signature(val).parameters.items())
+            self._raw[key] = FUNC_ALIAS_CLASSES[nargs](key, val)
         else:
             self._raw[key] = val
 
@@ -225,7 +285,7 @@ class Aliases(cabc.MutableMapping):
 
 
 class ExecAlias:
-    """Provides a callable alias for xonsh source code."""
+    """Provides an exec alias for xonsh source code."""
 
     def __init__(self, src, filename="<exec-alias>"):
         """
