@@ -56,7 +56,7 @@ def EXEC_ALIAS_RE():
 
 
 class FuncAlias:
-    attributes = ['__xonsh_threadable__', '__xonsh_capturable__']
+    attributes = ["__xonsh_threadable__", "__xonsh_capturable__"]
 
     def __init__(self, name, func):
         self.__name__ = self.name = name
@@ -68,8 +68,8 @@ class FuncAlias:
     def run(self, *args, **kwargs):
         try:
             return self.func(*args, **kwargs)
-        except Exception as e:
-            print_exception(f'Exception in {repr(self)}')
+        except Exception:
+            print_exception(f"Exception in {repr(self)}")
 
     def __repr__(self):
         r = {"name": self.name, "func": self.func}
@@ -83,32 +83,48 @@ class FuncAlias0(FuncAlias):
     def __call__(self):
         return self.run()
 
+
 class FuncAlias1(FuncAlias):
     def __call__(self, args=None):
         return self.run(args)
+
 
 class FuncAlias2(FuncAlias):
     def __call__(self, args=None, stdin=None):
         return self.run(args, stdin)
 
+
 class FuncAlias3(FuncAlias):
     def __call__(self, args=None, stdin=None, stdout=None):
         return self.run(args, stdin, stdout)
+
 
 class FuncAlias4(FuncAlias):
     def __call__(self, args=None, stdin=None, stdout=None, stderr=None):
         return self.run(args, stdin, stdout, stderr)
 
+
 class FuncAlias5(FuncAlias):
     def __call__(self, args=None, stdin=None, stdout=None, stderr=None, spec=None):
         return self.run(args, stdin, stdout, stderr, spec)
 
+
 class FuncAlias6(FuncAlias):
-    def __call__(self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    def __call__(
+        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
         return self.run(args, stdin, stdout, stderr, spec, stack)
 
 
-FUNC_ALIAS_CLASSES = [FuncAlias0, FuncAlias1, FuncAlias2, FuncAlias3, FuncAlias4, FuncAlias5, FuncAlias6]
+FUNC_ALIAS_CLASSES = [
+    FuncAlias0,
+    FuncAlias1,
+    FuncAlias2,
+    FuncAlias3,
+    FuncAlias4,
+    FuncAlias5,
+    FuncAlias6,
+]
 
 
 class Aliases(cabc.MutableMapping):

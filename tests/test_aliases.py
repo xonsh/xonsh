@@ -30,11 +30,11 @@ def test_imports(xession):
         "o": ["omg", "lala"],
         "ls": ["ls", "-  -"],
         "color_ls": ["ls", "--color=true"],
-        "cd": 'FuncAlias2',
+        "cd": "FuncAlias2",
         "indirect_cd": ["cd", ".."],
     }
     raw = ales._raw
-    raw['cd'] = type(ales['cd']).__name__
+    raw["cd"] = type(ales["cd"]).__name__
     assert raw == expected
 
 
