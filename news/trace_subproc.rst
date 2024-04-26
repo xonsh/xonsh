@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* XONSH_TRACE_SUBPROC returns more useful details.
+* ``$XONSH_TRACE_SUBPROC=2`` returns more useful details.
 
 **Deprecated:**
 

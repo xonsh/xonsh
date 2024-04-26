@@ -75,6 +75,7 @@ from xonsh.tools import (
     is_string_set,
     is_tok_color_dict,
     is_valid_shlvl,
+    is_bool_or_int,
     logfile_opt_to_str,
     path_to_str,
     pathsep_to_upper_seq,
@@ -1186,8 +1187,9 @@ The file should contain a function with the signature
         "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
         "(The rules above are all have the same effect.)",
     )
-    XONSH_TRACE_SUBPROC = Var.with_default(
-        default=always_false,
+    XONSH_TRACE_SUBPROC = Var(
+        default=False,
+        validate=is_bool_or_int,
         convert=to_bool_or_int,
         doc="Set to ``True`` or ``1`` to show arguments list of every executed subprocess command. "
         "Use ``2`` to have full specification.",
