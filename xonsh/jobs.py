@@ -335,23 +335,33 @@ def _clear_dead_jobs():
         del get_jobs()[job]
 
 
-def format_job_string(num: int) -> str:
+def format_job_string(num: int, format="dict") -> str:
     try:
         job = get_jobs()[num]
     except KeyError:
         return ""
     tasks = get_tasks()
-    pos = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
-    status = job["status"]
-    cmd = " ".join([" ".join(i) if isinstance(i, list) else i for i in job["cmds"]])
-    pid = f"({job['pids'][-1]})" if job["pids"] else ""
-    bg = " &" if job["bg"] else ""
-    return f"[{num}]{pos} {status}: {cmd}{bg} {pid}"
+    r = {
+        "num": num,
+        "status": job["status"],
+        "cmd": " ".join(
+            [" ".join(i) if isinstance(i, list) else i for i in job["cmds"]]
+        ),
+        "pid": int(job["pids"][-1]) if job["pids"] else None,
+    }
+
+    if format == "posix":
+        r["pos"] = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
+        r["bg"] = " &" if job["bg"] else ""
+        r["pid"] = f"({r['pid']})" if r["pid"] else ""
+        return "[{num}]{pos} {status}: {cmd}{bg} {pid}".format(**r)
+    else:
+        return repr(r)
 
 
-def print_one_job(num, outfile=sys.stdout):
+def print_one_job(num, outfile=sys.stdout, format="dict"):
     """Print a line describing job number ``num``."""
-    info = format_job_string(num)
+    info = format_job_string(num, format)
     if info:
         print(info, file=outfile)
 
@@ -445,8 +455,9 @@ def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     Display a list of all current jobs.
     """
     _clear_dead_jobs()
+    format = "posix" if "--posix" in args else "dict"
     for j in get_tasks():
-        print_one_job(j, outfile=stdout)
+        print_one_job(j, outfile=stdout, format=format)
     return None, None
 
 
