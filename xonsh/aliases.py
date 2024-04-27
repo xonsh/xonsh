@@ -69,9 +69,7 @@ class FuncAlias:
 
     def __repr__(self):
         r = {"name": self.name, "func": self.func}
-        for attr in self.attributes:
-            if (val := getattr(self, attr, None)) is not None:
-                r[attr] = val
+        r |= {attr: val for attr in self.attributes if (val := getattr(self, attr, None)) is not None}
         return f"FuncAlias({repr(r)})"
 
     def __call__(
