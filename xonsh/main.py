@@ -193,7 +193,7 @@ def parser():
     )
     p.add_argument(
         "--no-env",
-        help="Do not load parent environment.",
+        help="Do not load parent environment variables.",
         dest="noenv",
         action="store_true",
         default=False,
@@ -350,7 +350,8 @@ def start_services(shell_kwargs, args, pre_env=None):
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    XSH.load(ctx=ctx, execer=execer)
+    is_load_env = not shell_kwargs['noenv']
+    XSH.load(ctx=ctx, execer=execer, load_env=is_load_env)
     events.on_timingprobe.fire(name="post_execer_init")
 
     install_import_hooks(execer)
@@ -394,7 +395,7 @@ def premain(argv=None):
         shell_kwargs["norc"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
-    shell_kwargs["noenv"] = args.norc
+    shell_kwargs["noenv"] = args.noenv
     sys.displayhook = _pprint_displayhook
     if args.command is not None:
         args.mode = XonshMode.single_command
@@ -492,10 +493,6 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
     events.on_post_init.fire()
-
-    from xonsh.environ import Env
-
-    XSH.env = Env([])
 
     env = XSH.env
     shell = XSH.shell

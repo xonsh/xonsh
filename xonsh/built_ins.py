@@ -593,7 +593,7 @@ class XonshSession:
         if self._py_quit is not None:
             builtins.quit = self._py_quit
 
-    def load(self, execer=None, ctx=None, **kwargs):
+    def load(self, execer=None, ctx=None, load_env=True, **kwargs):
         """Loads the session with default values.
 
         Parameters
@@ -611,7 +611,7 @@ class XonshSession:
         if ctx is not None:
             self.ctx = ctx
 
-        self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env())
+        self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env() if load_env else {'XONSH_NO_ENV': True})
 
         self.exit = False
         self.stdout_uncaptured = None

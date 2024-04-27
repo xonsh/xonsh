@@ -897,6 +897,12 @@ class GeneralSetting(Xettings):
     if hasattr(locale, "LC_MESSAGES"):
         LC_MESSAGES = Var.for_locale("LC_MESSAGES")
 
+    PWD = Var.with_default(
+        _get_cwd() or ".",
+        "Current working directory.",
+        "os.getcwd()",
+        is_configurable=False,
+    )
     OLDPWD = Var.with_default(
         ".",
         "Used to represent a previous present working directory.",
