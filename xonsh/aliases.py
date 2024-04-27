@@ -78,7 +78,9 @@ class FuncAlias:
         self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
         try:
-            func_args = [args, stdin, stdout, stderr, spec, stack][:len(inspect.signature(self.func).parameters)]
+            func_args = [args, stdin, stdout, stderr, spec, stack][
+                : len(inspect.signature(self.func).parameters)
+            ]
             return self.func(*func_args)
         except Exception:
             print_exception(f"Exception in {repr(self)}")
