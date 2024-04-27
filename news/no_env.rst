@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``xonsh --no-env`` option to run xonsh with default environment. Now by running ``xonsh --no-rc --no-env`` you have clean xonsh session.
+* Added ``xonsh --no-env`` option to run xonsh with default environment. Now by running ``xonsh --no-rc --no-env`` you have pure xonsh session.
 
 **Changed:**
 
