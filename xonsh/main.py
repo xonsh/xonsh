@@ -350,8 +350,7 @@ def start_services(shell_kwargs, args, pre_env=None):
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    is_load_env = not shell_kwargs["noenv"]
-    XSH.load(ctx=ctx, execer=execer, load_env=is_load_env)
+    XSH.load(ctx=ctx, execer=execer, load_env=shell_kwargs["load_env"])
     events.on_timingprobe.fire(name="post_execer_init")
 
     install_import_hooks(execer)
@@ -395,7 +394,7 @@ def premain(argv=None):
         shell_kwargs["norc"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
-    shell_kwargs["noenv"] = args.noenv
+    shell_kwargs["load_env"] = not args.noenv
     sys.displayhook = _pprint_displayhook
     if args.command is not None:
         args.mode = XonshMode.single_command
