@@ -183,16 +183,25 @@ class PopenThread(threading.Thread):
                     ]:
                         try:
                             if XSH.env.get("XONSH_DEBUG", False):
-                                print(f"Process pid {self.pid} suspended. Send SIGINT.", file=sys.stderr)
+                                print(
+                                    f"Process pid {self.pid} suspended. Send SIGINT.",
+                                    file=sys.stderr,
+                                )
                             self.proc.send_signal(signal.SIGINT)
                             self.proc.send_signal(signal.SIGCONT)
                         except ProcessLookupError:
                             if XSH.env.get("XONSH_DEBUG", False):
-                                print(f"Process pid {self.pid} suspended. Sending SIGINT raises ProcessLookupError.", file=sys.stderr)
+                                print(
+                                    f"Process pid {self.pid} suspended. Sending SIGINT raises ProcessLookupError.",
+                                    file=sys.stderr,
+                                )
                             pass
                 except ChildProcessError:
                     if XSH.env.get("XONSH_DEBUG", False):
-                        print(f"Process pid {self.pid} raises ChildProcessError.", file=sys.stderr)
+                        print(
+                            f"Process pid {self.pid} raises ChildProcessError.",
+                            file=sys.stderr,
+                        )
                     pass
 
             # this is here for CPU performance reasons.
