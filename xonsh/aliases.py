@@ -67,12 +67,6 @@ class FuncAlias:
             if (val := getattr(func, attr, None)) is not None:
                 self.__setattr__(attr, val)
 
-    def run(self, *args, **kwargs):
-        try:
-            return self.func(*args, **kwargs)
-        except Exception:
-            print_exception(f"Exception in {repr(self)}")
-
     def __repr__(self):
         r = {"name": self.name, "func": self.func}
         for attr in self.attributes:
@@ -80,53 +74,14 @@ class FuncAlias:
                 r[attr] = val
         return f"FuncAlias({repr(r)})"
 
-
-class FuncAlias0(FuncAlias):
-    def __call__(self):
-        return self.run()
-
-
-class FuncAlias1(FuncAlias):
-    def __call__(self, args=None):
-        return self.run(args)
-
-
-class FuncAlias2(FuncAlias):
-    def __call__(self, args=None, stdin=None):
-        return self.run(args, stdin)
-
-
-class FuncAlias3(FuncAlias):
-    def __call__(self, args=None, stdin=None, stdout=None):
-        return self.run(args, stdin, stdout)
-
-
-class FuncAlias4(FuncAlias):
-    def __call__(self, args=None, stdin=None, stdout=None, stderr=None):
-        return self.run(args, stdin, stdout, stderr)
-
-
-class FuncAlias5(FuncAlias):
-    def __call__(self, args=None, stdin=None, stdout=None, stderr=None, spec=None):
-        return self.run(args, stdin, stdout, stderr, spec)
-
-
-class FuncAlias6(FuncAlias):
     def __call__(
         self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
-        return self.run(args, stdin, stdout, stderr, spec, stack)
-
-
-FUNC_ALIAS_CLASSES = [
-    FuncAlias0,
-    FuncAlias1,
-    FuncAlias2,
-    FuncAlias3,
-    FuncAlias4,
-    FuncAlias5,
-    FuncAlias6,
-]
+        try:
+            func_args = [args, stdin, stdout, stderr, spec, stack][:len(inspect.signature(self.func).parameters)]
+            return self.func(*func_args)
+        except Exception:
+            print_exception(f"Exception in {repr(self)}")
 
 
 class Aliases(cabc.MutableMapping):
@@ -258,8 +213,7 @@ class Aliases(cabc.MutableMapping):
                 # need to exec alias
                 self._raw[key] = ExecAlias(val, filename=f)
         elif isinstance(val, types.FunctionType):
-            nargs = len(inspect.signature(val).parameters.items())
-            self._raw[key] = FUNC_ALIAS_CLASSES[nargs](key, val)
+            self._raw[key] = FuncAlias(key, val)
         else:
             self._raw[key] = val
 
