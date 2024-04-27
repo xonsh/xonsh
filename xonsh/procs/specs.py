@@ -699,7 +699,7 @@ class SubprocSpec:
         if not callable(self.alias):
             return
         # check that we actual need the stack
-        sig = inspect.signature(self.alias)
+        sig = inspect.signature(getattr(self.alias, 'func', self.alias))
         if len(sig.parameters) <= 5 and "stack" not in sig.parameters:
             return
         # compute the stack, and filter out these build methods
