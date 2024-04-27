@@ -30,7 +30,7 @@ def test_imports(xession):
         "o": ["omg", "lala"],
         "ls": ["ls", "-  -"],
         "color_ls": ["ls", "--color=true"],
-        "cd": "FuncAlias2",
+        "cd": "FuncAlias",
         "indirect_cd": ["cd", ".."],
     }
     raw = ales._raw
