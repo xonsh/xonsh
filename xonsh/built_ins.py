@@ -611,7 +611,11 @@ class XonshSession:
         if ctx is not None:
             self.ctx = ctx
 
-        self.env = kwargs.pop("env") if "env" in kwargs else Env(default_env() if load_env else {'XONSH_NO_ENV': True})
+        self.env = (
+            kwargs.pop("env")
+            if "env" in kwargs
+            else Env(default_env() if load_env else {"XONSH_NO_ENV": True})
+        )
 
         self.exit = False
         self.stdout_uncaptured = None

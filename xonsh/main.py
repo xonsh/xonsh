@@ -350,7 +350,7 @@ def start_services(shell_kwargs, args, pre_env=None):
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    is_load_env = not shell_kwargs['noenv']
+    is_load_env = not shell_kwargs["noenv"]
     XSH.load(ctx=ctx, execer=execer, load_env=is_load_env)
     events.on_timingprobe.fire(name="post_execer_init")
 
