@@ -171,7 +171,8 @@ class PopenThread(threading.Thread):
             if not xp.ON_WINDOWS and not self.suspended:
                 try:
                     # The command that is waiting for input can be suspended by OS in case there is no terminal attached
-                    # because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals.
+                    # because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals
+                    # (https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html).
                     # In this case we try to stop the command carefully by sending SIGINT and SIGCONT to process the INT signal.
                     # Some commands will not stop immediately and iterations of polling is needed to read final stdout/stderr.
 
@@ -181,11 +182,17 @@ class PopenThread(threading.Thread):
                         signal.SIGTTIN,
                     ]:
                         try:
+                            if XSH.env.get("XONSH_DEBUG", False):
+                                print(f"Process pid {self.pid} suspended. Send SIGINT.", file=sys.stderr)
                             self.proc.send_signal(signal.SIGINT)
                             self.proc.send_signal(signal.SIGCONT)
                         except ProcessLookupError:
+                            if XSH.env.get("XONSH_DEBUG", False):
+                                print(f"Process pid {self.pid} suspended. Sending SIGINT raises ProcessLookupError.", file=sys.stderr)
                             pass
                 except ChildProcessError:
+                    if XSH.env.get("XONSH_DEBUG", False):
+                        print(f"Process pid {self.pid} raises ChildProcessError.", file=sys.stderr)
                     pass
 
             # this is here for CPU performance reasons.
