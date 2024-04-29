@@ -193,10 +193,10 @@ def parser():
     )
     p.add_argument(
         "--no-env",
-        help="Do not load parent environment variables.",
-        dest="noenv",
-        action="store_true",
-        default=False,
+        help="Do not inherit parent environment variables.",
+        dest="inherit_env",
+        action="store_false",
+        default=True,
     )
     p.add_argument(
         "--no-script-cache",
@@ -394,7 +394,7 @@ def premain(argv=None):
         shell_kwargs["norc"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
-    shell_kwargs["load_env"] = not args.noenv
+    shell_kwargs["load_env"] = args.inherit_env
     sys.displayhook = _pprint_displayhook
     if args.command is not None:
         args.mode = XonshMode.single_command
