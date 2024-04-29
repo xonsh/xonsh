@@ -350,7 +350,7 @@ def start_services(shell_kwargs, args, pre_env=None):
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs["inherit_env"])
+    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
     events.on_timingprobe.fire(name="post_execer_init")
 
     install_import_hooks(execer)
