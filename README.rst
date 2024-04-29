@@ -16,9 +16,9 @@ xonsh
 
     If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
 
-    .. image:: https://badges.gitter.im/xonsh/xonsh.svg
-            :target: https://gitter.im/xonsh/xonsh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-            :alt: Join the chat at https://gitter.im/xonsh/xonsh
+    .. image:: https://img.shields.io/badge/Zulip%20Community-xonsh-green
+            :target: https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/
+            :alt: Join to xonsh.zulipchat.com
 
     .. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=main
             :target: https://travis-ci.org/xonsh/xonsh
@@ -93,3 +93,8 @@ The xonsh shell is developed by a community of volunteers. There are few ways to
 We welcome new contributors!
 
 .. _write a tweet: https://twitter.com/intent/tweet?text=xonsh%20is%20a%20Python-powered,%20cross-platform,%20Unix-gazing%20shell%20language%20and%20command%20prompt.&url=https://github.com/xonsh/xonsh
+
+Credits
+*******
+
+- Thanks to `Zulip <https://zulip.com/>`_ for supporting xonsh community!
