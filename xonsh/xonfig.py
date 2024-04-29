@@ -562,7 +562,15 @@ def _info(
     data.extend([("RC file", XSH.rc_files)])
 
     # Show sensitive env variables that could affect the shell behavior.
-    envs = {'UPDATE_OS_ENVIRON': None, 'XONSH_CAPTURE_ALWAYS': None, 'THREAD_SUBPROCS': None, 'ENABLE_ASYNC_PROMPT': True, 'ENABLE_COMMANDS_CACHE': False, 'XONSH_CACHE_EVERYTHING': True, 'XONSH_CACHE_SCRIPTS':None}
+    envs = {
+        "UPDATE_OS_ENVIRON": None,
+        "XONSH_CAPTURE_ALWAYS": None,
+        "THREAD_SUBPROCS": None,
+        "ENABLE_ASYNC_PROMPT": True,
+        "ENABLE_COMMANDS_CACHE": False,
+        "XONSH_CACHE_EVERYTHING": True,
+        "XONSH_CACHE_SCRIPTS": None,
+    }
     for e, show_if in envs.items():
         if (val := XSH.env.get(e)) is not None and (show_if is None or val == show_if):
             data.extend([(e, val)])
