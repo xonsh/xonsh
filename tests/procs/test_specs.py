@@ -66,7 +66,7 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs, xonsh_session)
 @pytest.mark.parametrize(
     "thread_subprocs, capture_always", list(itertools.product((True, False), repeat=2))
 )
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
+# @pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_capture_always(
     capfd, thread_subprocs, capture_always, alias_type, pipe, monkeypatch, xonsh_session
 ):
@@ -135,6 +135,20 @@ def test_capture_always(
 
 
 @skip_if_on_windows
+def test_capture_universal_newlines(xonsh_session):
+    exp = "1\n2\n3\n"
+    cmds = [["echo", "-n", exp]]
+
+    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "stream"
+    output = run_subproc(cmds, "stdout")
+    assert output == exp
+
+    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "universal_newlines"
+    output = run_subproc(cmds, "stdout")
+    assert output == ['1', '2', '3']
+
+
+@skip_if_on_windows
 @pytest.mark.parametrize(
     "captured, exp_is_none",
     [
@@ -168,9 +182,11 @@ def test_callable_alias_cls(thread_subprocs, xession):
     proc = spec.run()
     assert proc.f == obj
 
+
 def test_specs_resolve_args_list():
-    spec = cmds_to_specs([['echo', ['1','2','3']]], captured="stdout")[0]
-    assert spec.cmd == ['echo', '1','2','3']
+    spec = cmds_to_specs([['echo', ['1', '2', '3']]], captured="stdout")[0]
+    assert spec.cmd == ['echo', '1', '2', '3']
+
 
 @pytest.mark.parametrize("captured", ["hiddenobject", False])
 def test_procproxy_not_captured(xession, captured):
