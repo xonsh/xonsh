@@ -192,6 +192,13 @@ def parser():
         default=False,
     )
     p.add_argument(
+        "--no-env",
+        help="Do not inherit parent environment variables.",
+        dest="inherit_env",
+        action="store_false",
+        default=True,
+    )
+    p.add_argument(
         "--no-script-cache",
         help="Do not cache scripts as they are run.",
         dest="scriptcache",
@@ -343,7 +350,7 @@ def start_services(shell_kwargs, args, pre_env=None):
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    XSH.load(ctx=ctx, execer=execer)
+    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
     events.on_timingprobe.fire(name="post_execer_init")
 
     install_import_hooks(execer)
@@ -387,6 +394,7 @@ def premain(argv=None):
         shell_kwargs["norc"] = True
     elif args.rc:
         shell_kwargs["rc"] = args.rc
+    shell_kwargs["inherit_env"] = args.inherit_env
     sys.displayhook = _pprint_displayhook
     if args.command is not None:
         args.mode = XonshMode.single_command
@@ -484,6 +492,7 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
     events.on_post_init.fire()
+
     env = XSH.env
     shell = XSH.shell
     history = XSH.history
