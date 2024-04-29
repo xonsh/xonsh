@@ -139,11 +139,11 @@ def test_subproc_output_format(xonsh_session):
     exp = "1\n2\n3\n"
     cmds = [["echo", "-n", exp]]
 
-    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "stream"
+    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "stream_lines"
     output = run_subproc(cmds, "stdout")
     assert output == exp
 
-    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "universal_newlines"
+    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "list_lines"
     output = run_subproc(cmds, "stdout")
     assert output == ["1", "2", "3"]
 
