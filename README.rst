@@ -20,20 +20,14 @@ xonsh
             :target: https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/
             :alt: Join to xonsh.zulipchat.com
 
-    .. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=main
-            :target: https://travis-ci.org/xonsh/xonsh
-            :alt: Travis
+    .. image:: https://github.com/xonsh/xonsh/actions/workflows/test.yml/badge.svg
+            :target: https://github.com/xonsh/xonsh/actions/workflows/test.yml
+            :alt: GitHub Actions
 
-    .. image:: https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true
-            :target: https://ci.appveyor.com/project/xonsh/xonsh
-            :alt: Appveyor
-
-    .. image:: https://img.shields.io/badge/Google%20Cloud%20Shell-xonsh-green
-            :target: https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/xonsh/xonsh.git
-            :alt: Open in Google Cloud Shell
     .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graphs/badge.svg?branch=main
             :target: https://codecov.io/github/xonsh/xonsh?branch=main
             :alt: codecov.io
+
     .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
             :target: https://repology.org/project/xonsh/versions
             :alt: repology.org
@@ -55,7 +49,7 @@ And visit https://xon.sh for more information:
 Extensions
 **********
 
-Xonsh has the certain term for extensions and additional materials - xontrib - the short version of "contribution" word.
+Xonsh has an extension/plugin system.  We call these additions ``xontribs``.
 
 - `Xontribs on Github <https://github.com/topics/xontrib>`_
 - `Awesome xontribs <https://github.com/xonsh/awesome-xontribs>`_
@@ -80,11 +74,11 @@ Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xon
 The xonsh shell community
 *************************
 
-The xonsh shell is developed by a community of volunteers. There are few ways to help the xonsh shell:
+The xonsh shell is developed by a community of volunteers. There are a few ways to help out:
 
 - Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_. You can start with the `Developer guide <https://xon.sh/devguide.html>`_.
 - Solve a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_.
-- Get the `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
+- Take an `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create a new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
 - Become xonsh core by deep diving into xonsh and improve the threading and subprocess logic.
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 - `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
@@ -97,4 +91,4 @@ We welcome new contributors!
 Credits
 *******
 
-- Thanks to `Zulip <https://zulip.com/>`_ for supporting xonsh community!
+- Thanks to `Zulip <https://zulip.com/>`_ for supporting the xonsh community!
