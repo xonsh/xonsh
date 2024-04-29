@@ -632,10 +632,14 @@ class CommandPipeline:
     def get_formatted_lines(self, lines):
         """Format output lines."""
         format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream")
-        if format == 'stream':
+        if format == "stream":
             return "".join(lines)
-        elif format == 'universal_newlines':
-            return [l.rstrip('\n') for l in lines] if len(lines) > 1 else lines[0].rstrip('\n')
+        elif format == "universal_newlines":
+            return (
+                [l.rstrip("\n") for l in lines]
+                if len(lines) > 1
+                else lines[0].rstrip("\n")
+            )
         elif callable(format):
             return format(lines)
 

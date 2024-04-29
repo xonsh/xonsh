@@ -145,7 +145,7 @@ def test_subproc_output_format(xonsh_session):
 
     xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "universal_newlines"
     output = run_subproc(cmds, "stdout")
-    assert output == ['1', '2', '3']
+    assert output == ["1", "2", "3"]
 
 
 @skip_if_on_windows
@@ -184,8 +184,8 @@ def test_callable_alias_cls(thread_subprocs, xession):
 
 
 def test_specs_resolve_args_list():
-    spec = cmds_to_specs([['echo', ['1', '2', '3']]], captured="stdout")[0]
-    assert spec.cmd == ['echo', '1', '2', '3']
+    spec = cmds_to_specs([["echo", ["1", "2", "3"]]], captured="stdout")[0]
+    assert spec.cmd == ["echo", "1", "2", "3"]
 
 
 @pytest.mark.parametrize("captured", ["hiddenobject", False])
