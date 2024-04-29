@@ -629,15 +629,25 @@ class CommandPipeline:
         """Creates normalized input string from args."""
         return " ".join(self.args)
 
+    def get_formatted_lines(self, lines):
+        """Format output lines."""
+        format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream")
+        if format == 'stream':
+            return "".join(lines)
+        elif format == 'universal_newlines':
+            return [l.rstrip('\n') for l in lines] if len(lines) > 1 else lines[0].rstrip('\n')
+        elif callable(format):
+            return format(lines)
+
     @property
     def output(self):
         """Non-blocking, lazy access to output"""
         if self.ended:
             if self._output is None:
-                self._output = "".join(self.lines)
+                self._output = self.get_formatted_lines(self.lines)
             return self._output
         else:
-            return "".join(self.lines)
+            return self.get_formatted_lines(self.lines)
 
     @property
     def out(self):

@@ -591,6 +591,7 @@ class SubprocSpec:
         # perform initial redirects
         spec.resolve_redirects()
         # apply aliases
+        spec.resolve_args_list()
         spec.resolve_alias()
         spec.resolve_binary_loc()
         spec.resolve_auto_cd()
@@ -598,6 +599,13 @@ class SubprocSpec:
         spec.resolve_alias_cls()
         spec.resolve_stack()
         return spec
+
+    def resolve_args_list(self):
+        """Weave a list of arguments into a command."""
+        resolved_cmd = []
+        for c in self.cmd:
+            resolved_cmd += c if type(c) is list else [c]
+        self.cmd = resolved_cmd
 
     def resolve_redirects(self):
         """Manages redirects."""
