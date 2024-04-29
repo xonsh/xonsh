@@ -588,10 +588,10 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        spec.resolve_args_list()
         # perform initial redirects
         spec.resolve_redirects()
         # apply aliases
-        spec.resolve_args_list()
         spec.resolve_alias()
         spec.resolve_binary_loc()
         spec.resolve_auto_cd()
