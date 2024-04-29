@@ -602,7 +602,7 @@ class XonshSession:
             Xonsh execution object, may be None to start
         ctx : Mapping, optional
             Context to start xonsh session with.
-        load_env : bool
+        inherit_env : bool
             If ``True``: inherit environment variable values from ``os.environ``.
             If ``False``: use default values for environment variables and
             set ``$XONSH_ENV_INHERITED = False``.
