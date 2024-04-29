@@ -636,7 +636,7 @@ class CommandPipeline:
             return "".join(lines)
         elif format == "universal_newlines":
             return (
-                [l.rstrip("\n") for l in lines]
+                [line.rstrip("\n") for line in lines]
                 if len(lines) > 1
                 else lines[0].rstrip("\n")
             )
