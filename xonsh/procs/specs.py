@@ -491,15 +491,15 @@ class SubprocSpec:
                 cmdq = cmd0.rstrip("?")
                 if cmdq in XSH.aliases:
                     alias = XSH.aliases[cmdq]
-                    descr = repr(alias) + (':\n'+ doc) if (doc := getattr(alias, '__doc__', '')) else ''
-                    return self.cls(
-                            ['echo', descr], bufsize=bufsize, **kwargs
-                        )
+                    descr = (
+                        repr(alias) + (":\n" + doc)
+                        if (doc := getattr(alias, "__doc__", ""))
+                        else ""
+                    )
+                    return self.cls(["echo", descr], bufsize=bufsize, **kwargs)
                 else:
                     with contextlib.suppress(OSError):
-                        return self.cls(
-                            ["man", cmdq], bufsize=bufsize, **kwargs
-                        )
+                        return self.cls(["man", cmdq], bufsize=bufsize, **kwargs)
             e = f"xonsh: subprocess mode: command not found: {repr(cmd0)}"
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)
