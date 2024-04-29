@@ -135,7 +135,7 @@ def test_capture_always(
 
 
 @skip_if_on_windows
-def test_capture_universal_newlines(xonsh_session):
+def test_subproc_output_format(xonsh_session):
     exp = "1\n2\n3\n"
     cmds = [["echo", "-n", exp]]
 
