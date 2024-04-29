@@ -635,11 +635,12 @@ class CommandPipeline:
         if format == "stream_lines":
             return "".join(lines)
         elif format == "list_lines":
-            return (
-                [line.rstrip("\n") for line in lines]
-                if len(lines) > 1
-                else lines[0].rstrip("\n")
-            )
+            if not lines:
+                return lines
+            elif len(lines) == 1:
+                return lines[0].rstrip("\n")
+            else:
+                return [line.rstrip("\n") for line in lines]
         elif callable(format):
             return format(lines)
 
