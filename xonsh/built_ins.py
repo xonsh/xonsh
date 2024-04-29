@@ -602,6 +602,10 @@ class XonshSession:
             Xonsh execution object, may be None to start
         ctx : Mapping, optional
             Context to start xonsh session with.
+        load_env : bool
+            If ``True``: inherit environment variable values from ``os.environ``.
+            If ``False``: use default values for environment variables and
+            set ``$XONSH_ENV_INHERITED = False``.
         """
         from xonsh.commands_cache import CommandsCache
         from xonsh.environ import Env, default_env
@@ -611,11 +615,12 @@ class XonshSession:
         if ctx is not None:
             self.ctx = ctx
 
-        self.env = (
-            kwargs.pop("env")
-            if "env" in kwargs
-            else Env(default_env() if load_env else {"XONSH_NO_ENV": True})
-        )
+        if "env" in kwargs:
+            self.env = kwargs.pop("env")
+        elif load_env:
+            self.env = Env(default_env())
+        else:
+            self.env = Env({"XONSH_ENV_INHERITED": False})
 
         self.exit = False
         self.stdout_uncaptured = None
