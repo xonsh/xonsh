@@ -593,7 +593,7 @@ class XonshSession:
         if self._py_quit is not None:
             builtins.quit = self._py_quit
 
-    def load(self, execer=None, ctx=None, load_env=True, **kwargs):
+    def load(self, execer=None, ctx=None, inherit_env=True, **kwargs):
         """Loads the session with default values.
 
         Parameters
@@ -617,7 +617,7 @@ class XonshSession:
 
         if "env" in kwargs:
             self.env = kwargs.pop("env")
-        elif load_env:
+        elif inherit_env:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
