@@ -58,12 +58,13 @@ def EXEC_ALIAS_RE():
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
-    attributes = ["__xonsh_threadable__", "__xonsh_capturable__"]
+    attributes_inherit = ["__xonsh_threadable__", "__xonsh_capturable__", "__doc__"]
+    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
 
     def __init__(self, name, func):
         self.__name__ = self.name = name
         self.func = func
-        for attr in self.attributes:
+        for attr in self.attributes_inherit:
             if (val := getattr(func, attr, None)) is not None:
                 self.__setattr__(attr, val)
 
@@ -71,7 +72,7 @@ class FuncAlias:
         r = {"name": self.name, "func": self.func}
         r |= {
             attr: val
-            for attr in self.attributes
+            for attr in self.attributes_show
             if (val := getattr(self, attr, None)) is not None
         }
         return f"FuncAlias({repr(r)})"

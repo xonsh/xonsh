@@ -488,10 +488,18 @@ class SubprocSpec:
         except FileNotFoundError as ex:
             cmd0 = self.cmd[0]
             if len(self.cmd) == 1 and cmd0.endswith("?"):
-                with contextlib.suppress(OSError):
+                cmdq = cmd0.rstrip("?")
+                if cmdq in XSH.aliases:
+                    alias = XSH.aliases[cmdq]
+                    descr = repr(alias) + (':\n'+ doc) if (doc := getattr(alias, '__doc__', '')) else ''
                     return self.cls(
-                        ["man", cmd0.rstrip("?")], bufsize=bufsize, **kwargs
-                    )
+                            ['echo', descr], bufsize=bufsize, **kwargs
+                        )
+                else:
+                    with contextlib.suppress(OSError):
+                        return self.cls(
+                            ["man", cmdq], bufsize=bufsize, **kwargs
+                        )
             e = f"xonsh: subprocess mode: command not found: {repr(cmd0)}"
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)
