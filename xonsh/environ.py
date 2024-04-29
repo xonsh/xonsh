@@ -977,7 +977,7 @@ class GeneralSetting(Xettings):
     )
     XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
         "stream_lines",
-        "Set output format for subprocess e.g. ``$(ls)``. "
+        "Set output format for subprocess e.g. ``du $(ls)``. "
         "By default (``stream_lines``) subprocess operator returns text output. "
         "Set ``list_lines`` to have list of lines.",
     )
