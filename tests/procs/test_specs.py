@@ -168,6 +168,9 @@ def test_callable_alias_cls(thread_subprocs, xession):
     proc = spec.run()
     assert proc.f == obj
 
+def test_specs_resolve_args_list():
+    spec = cmds_to_specs([['echo', ['1','2','3']]], captured="stdout")[0]
+    assert spec.cmd == ['echo', '1','2','3']
 
 @pytest.mark.parametrize("captured", ["hiddenobject", False])
 def test_procproxy_not_captured(xession, captured):
