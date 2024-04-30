@@ -143,6 +143,7 @@ def test_capture_always(
         ([["echo", "-n", "1\n2\n3\n"]], "1\n2\n3\n", ["1", "2", "3"]),
         ([["echo", "-n", "1\r\n2\r3\r\n"]], "1\n2\n3\n", ["1", "2", "3"]),
         ([["echo", "-n", "1\n2\n3"]], "1\n2\n3", ["1", "2", "3"]),
+        ([["echo", "-n", "1\n2 3"]], "1\n2 3", ["1", "2 3"]),
     ],
 )
 def test_subproc_output_format(cmds, exp_stream_lines, exp_list_lines, xonsh_session):
