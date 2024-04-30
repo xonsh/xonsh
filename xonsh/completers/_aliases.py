@@ -90,7 +90,7 @@ def _register_completer(
                     func = frame.f_globals[func_name]
                     break
             else:
-                err = "No such function: %s" % func_name
+                err = f"No such function: {func_name}"
     if err is None:
         _add_one_completer(name, func, pos)
     else:

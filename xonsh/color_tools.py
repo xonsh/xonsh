@@ -445,7 +445,7 @@ def rgb_to_256(rgb):
                 res.append(closest)
                 break
             i += 1
-    res = "".join([("%02.x" % i) for i in res])
+    res = "".join([(f"{i:02}.x") for i in res])
     equiv = RGB_TO_SHORT[res]
     return equiv, res
 
