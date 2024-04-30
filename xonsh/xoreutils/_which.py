@@ -206,7 +206,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
     else:
         if exts is not None:
             raise WhichError(
-                "'exts' argument is not supported on " "platform '%s'" % sys.platform
+                f"'exts' argument is not supported on platform {sys.platform!r}"
             )
         exts = []
 
@@ -271,7 +271,7 @@ def which(command, path=None, verbose=0, exts=None):
     try:
         absName, fromWhere = next(whichgen(command, path, verbose, exts))
     except StopIteration as ex:
-        raise WhichError("Could not find '%s' on the path." % command) from ex
+        raise WhichError(f"Could not find {command!r} on the path.") from ex
     if verbose:
         return absName, fromWhere
     else:
@@ -324,7 +324,7 @@ def main(argv):
             print(_cmdlnUsage)
             return 0
         elif opt in ("-V", "--version"):
-            print("which %s" % __version__)
+            print(f"which {__version__}")
             return 0
         elif opt in ("-a", "--all"):
             all = 1

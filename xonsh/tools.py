@@ -208,8 +208,8 @@ class EnvPath(cabc.MutableSequence):
                 self._l = args
             else:
                 raise TypeError(
-                    "EnvPath cannot be initialized with items "
-                    "of type %s" % type(args)
+                    f"EnvPath cannot be initialized with items "
+                    f"of type {type(args)}"
                 )
 
     def __getitem__(self, item):
