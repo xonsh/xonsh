@@ -135,17 +135,24 @@ def test_capture_always(
 
 
 @skip_if_on_windows
-def test_subproc_output_format(xonsh_session):
-    exp = "1\n2\n3\n"
-    cmds = [["echo", "-n", exp]]
-
+@pytest.mark.parametrize(
+    "cmds, exp_stream_lines, exp_list_lines",
+    [
+        ([["echo", "-n", "1"]], "1", "1"),
+        ([["echo", "-n", "1\n"]], "1\n", "1"),
+        ([["echo", "-n", "1\n2\n3\n"]], "1\n2\n3\n", ["1", "2", "3"]),
+        ([["echo", "-n", "1\r\n2\r3\r\n"]], "1\n2\n3\n", ["1", "2", "3"]),
+        ([["echo", "-n", "1\n2\n3"]], "1\n2\n3", ["1", "2", "3"]),
+    ],
+)
+def test_subproc_output_format(cmds, exp_stream_lines, exp_list_lines, xonsh_session):
     xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "stream_lines"
     output = run_subproc(cmds, "stdout")
-    assert output == exp
+    assert output == exp_stream_lines
 
     xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "list_lines"
     output = run_subproc(cmds, "stdout")
-    assert output == ["1", "2", "3"]
+    assert output == exp_list_lines
 
 
 @skip_if_on_windows
