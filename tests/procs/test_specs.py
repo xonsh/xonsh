@@ -134,6 +134,7 @@ def test_capture_always(
     assert exp in capfd.readouterr().out
 
 
+@skip_if_on_windows
 @pytest.mark.parametrize(
     "cmds, exp_stream_lines, exp_list_lines",
     [
