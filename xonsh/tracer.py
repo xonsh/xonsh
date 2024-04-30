@@ -216,7 +216,7 @@ class TracerAlias(ArgParserAlias):
     """Tool for tracing xonsh code as it runs."""
 
     def build(self):
-        parser = self.create_parser(prog="trace")
+        parser = self.create_parser(prog="trace", empty_help=True)
         parser.add_command(tracer.on_files, prog="on", aliases=["start", "add"])
         parser.add_command(tracer.off_files, prog="off", aliases=["stop", "del", "rm"])
         parser.add_command(tracer.toggle_color, prog="color", aliases=["ls"])
