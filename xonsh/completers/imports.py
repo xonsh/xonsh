@@ -36,7 +36,7 @@ def IMPORT_RE():
     return re.compile(
         r"(?P<name>[^\W\d]\w*?)"
         r"(?P<package>[/\\]__init__)?"
-        r"(?P<suffix>%s)$".format()
+        r"(?P<suffix>%s)$".format(r"|".join(re.escape(s) for s in _suffixes))
     )
 
 

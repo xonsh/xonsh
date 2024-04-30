@@ -519,7 +519,7 @@ def _default_pprint(obj, p, cycle):
         return
     p.begin_group(1, "<")
     p.pretty(klass)
-    p.text(" at 0x%x".format())
+    p.text(" at 0x%x".format(id(obj)))
     if cycle:
         p.text(" ...")
     elif p.verbose:
