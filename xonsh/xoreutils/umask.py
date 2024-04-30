@@ -91,7 +91,7 @@ def single_symbolic_arg(arg, old=None):
 
     match = symbolic_matcher.match(arg)
     if not match:
-        raise ValueError("could not parse argument %r" % arg)
+        raise ValueError(f"could not parse argument {arg!r}")
 
     class_, op, mask = match.groups()
 
@@ -100,7 +100,7 @@ def single_symbolic_arg(arg, old=None):
 
     invalid_chars = [i for i in mask if i not in name_to_value]
     if invalid_chars:
-        raise ValueError("invalid mask %r" % mask)
+        raise ValueError(f"invalid mask {mask!r}")
 
     digits = get_oct_digits(old)
     new_num = get_numeric_rep_single(mask)
@@ -134,7 +134,7 @@ def umask(args, stdin, stdout, stderr):
         else:
             to_print = oct(cur)[2:]
             while len(to_print) < 3:
-                to_print = "0%s" % to_print
+                to_print = f"0{to_print}"
         print(to_print, file=stdout)
         return 0
     else:
@@ -158,7 +158,7 @@ def umask(args, stdin, stdout, stderr):
                         cur = single_symbolic_arg(subarg, cur)
                     except:
                         print(
-                            "error: could not parse argument: %r" % subarg, file=stderr
+                            f"error: could not parse argument: {subarg!r}", file=stderr
                         )
                         return 1
                 cur = invert(cur)

@@ -192,7 +192,7 @@ def _bash_quote_paths(paths, start, end):
         else:
             _tail = ""
         if start != "" and "r" not in start and backslash in s:
-            start = "r%s" % start
+            start = f"r{start}"
         s = s + _tail
         if end != "":
             if "r" not in start.lower():
@@ -200,7 +200,7 @@ def _bash_quote_paths(paths, start, end):
             if s.endswith(backslash) and not s.endswith(double_backslash):
                 s += backslash
         if end in s:
-            s = s.replace(end, "".join("\\%s" % i for i in end))
+            s = s.replace(end, "".join(f"\\{i}" for i in end))
         out.add(start + s + end)
     return out, need_quotes
 
