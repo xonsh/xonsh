@@ -33,7 +33,7 @@ TIMEOUT_GIVEUP = 2
 @lazyobject
 def IMPORT_RE():
     # Regular expression for the python import statement
-    suffixes = r"|".join(re.escape(s) for s in _suffixes
+    suffixes = r"|".join(re.escape(s) for s in _suffixes)
     return re.compile(
         r"(?P<name>[^\W\d]\w*?)"
         r"(?P<package>[/\\]__init__)?"
