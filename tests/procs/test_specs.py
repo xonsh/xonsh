@@ -4,8 +4,8 @@ import itertools
 import os
 import signal
 import sys
-import time
 import threading
+import time
 from subprocess import Popen
 
 import pytest
@@ -141,8 +141,8 @@ def test_capture_always(
 @skip_if_on_windows
 def test_interrupted_process_returncode(xonsh_session):
     def async_job(event, xonsh_session):
-        xonsh_session.env['RAISE_SUBPROC_ERROR'] = False
-        run_subproc([['sleep', '2']], "stdout")
+        xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+        run_subproc([["sleep", "2"]], "stdout")
         event.set()
 
     event = threading.Event()
