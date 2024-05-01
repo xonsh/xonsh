@@ -562,7 +562,7 @@ class XonshSession:
         self.builtins = None
         self._initial_builtin_names = None
 
-        # Special attributes
+        # Temporary
         self.wait_proc = None  # Current process that ``xonsh.jobs`` is waiting.
 
     @property
