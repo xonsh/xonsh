@@ -1,7 +1,11 @@
 """Tests the xonsh.procs.specs"""
 
 import itertools
+import os
+import signal
 import sys
+import time
+import threading
 from subprocess import Popen
 
 import pytest
@@ -132,6 +136,24 @@ def test_capture_always(
     # Explicitly non-captured commands are never captured (/always printed)
     run_subproc(cmds, captured=False)  # $[]
     assert exp in capfd.readouterr().out
+
+
+@skip_if_on_windows
+def test_capture_always(xonsh_session):
+    def async_job(event, xonsh_session):
+        xonsh_session.env['RAISE_SUBPROC_ERROR'] = False
+        run_subproc([['sleep', '2']], "stdout")
+        event.set()
+
+    event = threading.Event()
+    thread = threading.Thread(target=async_job, args=(event, xonsh_session))
+    thread.start()
+    time.sleep(0.5)
+    proc = xonsh_session.wait_proc
+    os.kill(proc.pid, signal.SIGINT)
+    event.wait(timeout=3)
+    rtn = proc.returncode
+    assert rtn == -signal.SIGINT
 
 
 @skip_if_on_windows

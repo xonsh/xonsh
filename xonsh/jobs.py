@@ -284,7 +284,9 @@ else:
             if obj.pid is None:
                 # When the process stopped before os.waitpid it has no pid.
                 raise ChildProcessError("The process PID not found.")
+            XSH.wait_proc = obj
             _, wcode = waitpid(obj.pid, os.WUNTRACED)
+            XSH.wait_proc = None
         except ChildProcessError as e:  # No child processes
             if return_error:
                 return e
