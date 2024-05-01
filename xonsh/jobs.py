@@ -39,6 +39,20 @@ _jobs_thread_local = threading.local()
 _tasks_main: collections.deque[int] = collections.deque()
 
 
+def waitpid(pid, opt):
+    """
+    Transparent wrapper on `os.waitpid` to make notes about undocumented subprocess behavior.
+    Basically ``p = subprocess.Popen()`` populates ``p.returncode`` after ``p.wait()``, ``p.poll()``
+    or ``p.communicate()`` (https://docs.python.org/3/library/os.html#os.waitpid).
+    But if you're using `os.waitpid()` BEFORE these functions you're capturing return code
+    from a signal subsystem and ``p.returncode`` will be ``0``.
+    After ``os.waitid`` call you need to set return code manually
+    ``p.returncode = -os.WTERMSIG(status)`` like in Popen.
+    See also ``xonsh.tools.describe_waitpid_status()``.
+    """
+    return os.waitpid(pid, opt)
+
+
 @contextlib.contextmanager
 def use_main_jobs():
     """Context manager that replaces a thread's task queue and job dictionary
@@ -270,7 +284,7 @@ else:
             if obj.pid is None:
                 # When the process stopped before os.waitpid it has no pid.
                 raise ChildProcessError("The process PID not found.")
-            _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
+            _, wcode = waitpid(obj.pid, os.WUNTRACED)
         except ChildProcessError as e:  # No child processes
             if return_error:
                 return e
@@ -284,7 +298,7 @@ else:
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
             obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
-            obj.returncode = None
+            obj.returncode = -os.WTERMSIG(wcode)  # Default Popen
         else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None

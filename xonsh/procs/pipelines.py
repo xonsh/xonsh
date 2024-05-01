@@ -253,7 +253,7 @@ class CommandPipeline:
             PrevProcCloser(pipeline=self)
             task = xj.wait_for_active_job()
             if task is None or task["status"] != "stopped":
-                proc.wait()
+                wait_rtn = proc.wait()
                 self._endtime()
                 if self.captured == "object":
                     self.end(tee_output=False)

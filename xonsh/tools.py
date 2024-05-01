@@ -2841,3 +2841,10 @@ def to_repr_pretty_(inst, p, cycle):
         elif len(inst):
             p.break_()
             p.pretty(dict(inst))
+
+
+def describe_waitpid_status(status):
+    """Describes ``pid, status = os.waitpid(pid, opt)`` status."""
+    funcs = [os.WIFEXITED, os.WEXITSTATUS, os.WIFSIGNALED, os.WTERMSIG, os.WIFSTOPPED, os.WSTOPSIG]
+    for f in funcs:
+        print(f.__name__, '-', f(status), '-', f.__doc__)
