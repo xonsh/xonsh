@@ -92,7 +92,7 @@ def update_process_group(pipeline_group, background):
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
-    attrnames_short = (
+    attrnames = (
         "returncode",
         "pid",
         "args",
@@ -104,22 +104,13 @@ class CommandPipeline:
         "errors",
     )
 
-    attrnames_full = (
+    attrnames_ext = (
         "stdin",
         "stdout",
         "stderr",
-        "pid",
-        "returncode",
-        "args",
-        "alias",
         "stdin_redirect",
         "stdout_redirect",
         "stderr_redirect",
-        "timestamps",
-        "executed_cmd",
-        "input",
-        "output",
-        "errors",
     )
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
@@ -195,11 +186,7 @@ class CommandPipeline:
         self.proc = self.procs[-1]
 
     def __repr__(self):
-        attrs = (
-            self.attrnames_full
-            if XSH.env.get("XONSH_DEBUG", False)
-            else self.attrnames_short
-        )
+        attrs = self.attrnames + (self.attrnames_ext if XSH.env.get("XONSH_DEBUG", False) else ())
         s = self.__class__.__name__ + "(\n  "
         s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in attrs)
         s += "\n)"
