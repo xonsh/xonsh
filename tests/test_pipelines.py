@@ -36,14 +36,15 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
 
 
 @pytest.mark.parametrize(
-    "cmdline, stdout, stderr",
+    "cmdline, stdout, stderr, raw_stdout",
     (
-        ("!(echo hi)", "hi\n", ""),
-        ("!(echo hi o>e)", "", "hi\n"),
+        ("!(echo hi)", "hi", "", "hi\n"),
+        ("!(echo hi o>e)", "", "hi\n", ""),
         pytest.param(
             "![echo hi]",
-            "hi\n",
+            "hi",
             "",
+            "hi\n",
             marks=pytest.mark.xfail(
                 ON_WINDOWS,
                 reason="ConsoleParallelReader doesn't work without a real console",
@@ -53,26 +54,27 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
             "![echo hi o>e]",
             "",
             "hi\n",
+            "",
             marks=pytest.mark.xfail(
                 ON_WINDOWS, reason="stderr isn't captured in ![] on windows"
             ),
         ),
         pytest.param(
-            r"!(echo 'hi\nho')", "hi\nho\n", "", marks=skip_if_on_windows
+            r"!(echo 'hi\nho')", "hi\nho\n", "", "hi\nho\n", marks=skip_if_on_windows
         ),  # won't work with cmd
         # for some reason cmd's echo adds an extra space:
         pytest.param(
-            r"!(cmd /c 'echo hi && echo ho')", "hi \nho\n", "", marks=skip_if_on_unix
+            r"!(cmd /c 'echo hi && echo ho')", "hi \nho\n", "", "hi \nho\n", marks=skip_if_on_unix
         ),
-        ("!(echo hi | grep h)", "hi\n", ""),
-        ("!(echo hi | grep x)", "", ""),
+        ("!(echo hi | grep h)", "hi", "", "hi\n"),
+        ("!(echo hi | grep x)", "", "", ""),
     ),
 )
-def test_command_pipeline_capture(cmdline, stdout, stderr, xonsh_execer):
+def test_command_pipeline_capture(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
     pipeline: CommandPipeline = xonsh_execer.eval(cmdline)
     assert pipeline.out == stdout
     assert pipeline.err == (stderr or None)
-    assert pipeline.raw_out == stdout.replace("\n", os.linesep).encode()
+    assert pipeline.raw_out == raw_stdout.replace("\n", os.linesep).encode()
     assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()
 
 

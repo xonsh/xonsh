@@ -80,7 +80,7 @@ def test_capture_always(
     exp = "HELLO\nBYE\n"
     cmds = [["echo", "-n", exp]]
     if pipe:
-        exp = exp.splitlines()[1] + "\n"  # second line
+        exp = exp.splitlines()[1]  # second line
         cmds += ["|", ["grep", "--color=never", exp.strip()]]
 
     if alias_type:
