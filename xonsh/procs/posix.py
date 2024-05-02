@@ -177,14 +177,14 @@ class PopenThread(threading.Thread):
                     # Some commands will not stop immediately and iterations of polling is needed to read final stdout/stderr.
 
                     pid, proc_status = os.waitpid(self.pid, os.WUNTRACED)
-                    if os.WIFSTOPPED(proc_status) and os.WSTOPSIG(proc_status) in [
+                    if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [
                         signal.SIGTTOU,
                         signal.SIGTTIN,
                     ]:
                         try:
                             if XSH.env.get("XONSH_DEBUG", False):
                                 print(
-                                    f"Process pid {self.pid} suspended. Send SIGINT.",
+                                    f"Process {self.name} suspended with signal {stopsig}. Sending SIGINT to stop the process.",
                                     file=sys.stderr,
                                 )
                             self.proc.send_signal(signal.SIGINT)
@@ -192,14 +192,13 @@ class PopenThread(threading.Thread):
                         except ProcessLookupError:
                             if XSH.env.get("XONSH_DEBUG", False):
                                 print(
-                                    f"Process pid {self.pid} suspended. Sending SIGINT raises ProcessLookupError.",
+                                    f"Process {self.name} suspended with signal {stopsig}. Sending SIGINT raises ProcessLookupError.",
                                     file=sys.stderr,
                                 )
-                            pass
                 except ChildProcessError:
                     if XSH.env.get("XONSH_DEBUG", False):
                         print(
-                            f"Process pid {self.pid} raises ChildProcessError.",
+                            f"Process {self.name} raises ChildProcessError.",
                             file=sys.stderr,
                         )
                     pass
