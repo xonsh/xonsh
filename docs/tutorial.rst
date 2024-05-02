@@ -482,7 +482,7 @@ or inject Python values with the ``@()`` operator:
 .. code-block:: xonshcon
 
     >>> $(echo $HOME)
-    '/home/snail\n'
+    '/home/snail'
 
 Uncaptured Subprocess with ``$[]`` and ``![]``
 ===============================================
@@ -551,7 +551,7 @@ be used to generate any of the tokens in the subprocess command list.
 
     >>> out = $(echo @(x + ' ' + y))
     >>> out
-    'xonsh party\n'
+    'xonsh party'
     >>> @("ech" + "o") "hey"
     hey
 
@@ -599,11 +599,11 @@ Consider the following example:
 
     >>> # this returns a string representing stdout
     >>> $(which ls)
-    'ls --color=auto\n'
+    'ls --color=auto'
 
     >>> # this attempts to run the command, but as one argument
-    >>> # (looks for 'ls --color=auto\n' with spaces and newline)
-    >>> @($(which ls).strip())
+    >>> # (looks for 'ls --color=auto' with spaces)
+    >>> @($(which ls))
     xonsh: subprocess mode: command not found: ls --color=auto
 
     >>> # this actually executes the intended command
