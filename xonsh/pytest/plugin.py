@@ -34,14 +34,7 @@ def pytest_collection_modifyitems(items):
     """Move xsh test first to work around a bug in normal
     pytest cleanup. The order of tests are otherwise preserved.
     """
-    xsh_items = []
-    other_items = []
-    for item in items:
-        if isinstance(item, XshFunction):
-            xsh_items.append(item)
-        else:
-            other_items.append(item)
-    items[:] = xsh_items + other_items
+    items.sort(key=lambda item: -isinstance(item, XshFunction))
 
 
 def _limited_traceback(excinfo):

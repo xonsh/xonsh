@@ -897,6 +897,12 @@ class GeneralSetting(Xettings):
     if hasattr(locale, "LC_MESSAGES"):
         LC_MESSAGES = Var.for_locale("LC_MESSAGES")
 
+    PWD = Var.with_default(
+        _get_cwd() or ".",
+        "Current working directory.",
+        "os.getcwd()",
+        is_configurable=False,
+    )
     OLDPWD = Var.with_default(
         ".",
         "Used to represent a previous present working directory.",
@@ -968,6 +974,12 @@ class GeneralSetting(Xettings):
         "Ideally, your terminal emulator will set this correctly but that does "
         "not always happen.",
         is_configurable=False,
+    )
+    XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
+        "stream_lines",
+        "Set output format for subprocess e.g. ``du $(ls)``. "
+        "By default (``stream_lines``) subprocess operator returns text output. "
+        "Set ``list_lines`` to have list of lines.",
     )
     XONSH_CAPTURE_ALWAYS = Var.with_default(
         False,

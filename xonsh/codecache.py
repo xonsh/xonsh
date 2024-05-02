@@ -23,7 +23,7 @@ def _splitpath(path, sofar=()):
 
 @lazyobject
 def _CHARACTER_MAP():
-    cmap = {chr(o): "_%s" % chr(o + 32) for o in range(65, 91)}
+    cmap = {chr(o): "_" + chr(o + 32) for o in range(65, 91)}
     cmap.update({".": "_.", "_": "__"})
     return cmap
 
