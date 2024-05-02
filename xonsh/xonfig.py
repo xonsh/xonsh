@@ -565,6 +565,7 @@ def _info(
     envs = {
         "UPDATE_OS_ENVIRON": None,
         "XONSH_CAPTURE_ALWAYS": None,
+        "XONSH_SUBPROC_OUTPUT_FORMAT": None,
         "THREAD_SUBPROCS": None,
         "ENABLE_ASYNC_PROMPT": True,
         "ENABLE_COMMANDS_CACHE": False,
