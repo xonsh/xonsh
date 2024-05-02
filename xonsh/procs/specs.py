@@ -591,7 +591,6 @@ class SubprocSpec:
         spec.resolve_args_list()
         # perform initial redirects
         spec.resolve_redirects()
-        # apply aliases
         spec.resolve_alias()
         spec.resolve_binary_loc()
         spec.resolve_auto_cd()
@@ -691,16 +690,11 @@ class SubprocSpec:
         if not callable(alias):
             return
         self.is_proxy = True
-        env = XSH.env
-        thable = env.get("THREAD_SUBPROCS") and getattr(
+        self.threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
             alias, "__xonsh_threadable__", True
         )
-        cls = ProcProxyThread if thable else ProcProxy
-        self.cls = cls
-        self.threadable = thable
-        # also check capturability, while we are here
-        cpable = getattr(alias, "__xonsh_capturable__", self.captured)
-        self.captured = cpable
+        self.cls = ProcProxyThread if self.threadable else ProcProxy
+        self.captured = getattr(alias, "__xonsh_capturable__", self.captured)
 
     def resolve_stack(self):
         """Computes the stack for a callable alias's call-site, if needed."""

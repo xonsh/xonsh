@@ -264,13 +264,13 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        obj = active_task["obj"]
+        thread = active_task["obj"]
         backgrounded = False
         try:
-            if obj.pid is None:
+            if thread.pid is None:
                 # When the process stopped before os.waitpid it has no pid.
                 raise ChildProcessError("The process PID not found.")
-            _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
+            _, wcode = os.waitpid(thread.pid, os.WUNTRACED)
         except ChildProcessError as e:  # No child processes
             if return_error:
                 return e
@@ -283,11 +283,11 @@ else:
             backgrounded = True
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
-            obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
-            obj.returncode = None
+            thread.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
+            thread.returncode = None
         else:
-            obj.returncode = os.WEXITSTATUS(wcode)
-            obj.signal = None
+            thread.returncode = os.WEXITSTATUS(wcode)
+            thread.signal = None
         return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
 
 
