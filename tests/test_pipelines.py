@@ -64,7 +64,11 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
         ),  # won't work with cmd
         # for some reason cmd's echo adds an extra space:
         pytest.param(
-            r"!(cmd /c 'echo hi && echo ho')", "hi \nho\n", "", "hi \nho\n", marks=skip_if_on_unix
+            r"!(cmd /c 'echo hi && echo ho')",
+            "hi \nho\n",
+            "",
+            "hi \nho\n",
+            marks=skip_if_on_unix,
         ),
         ("!(echo hi | grep h)", "hi", "", "hi\n"),
         ("!(echo hi | grep x)", "", "", ""),
