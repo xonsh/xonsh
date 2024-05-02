@@ -942,25 +942,32 @@ def run_subproc(cmds, captured=False, envs=None):
         return _run_specs(specs, cmds)
 
 
-def _run_specs(specs, cmds):
+def _run_command_pipeline(specs, cmds):
     captured = specs[-1].captured
     if captured == "hiddenobject":
-        command = HiddenCommandPipeline(specs)
+        cp = HiddenCommandPipeline(specs)
     else:
-        command = CommandPipeline(specs)
-    proc = command.proc
-    background = command.spec.background
+        cp = CommandPipeline(specs)
+    proc = cp.proc
+    background = cp.spec.background
     if not all(x.is_proxy for x in specs):
         xj.add_job(
             {
                 "cmds": cmds,
-                "pids": [i.pid for i in command.procs],
+                "pids": [i.pid for i in cp.procs],
                 "obj": proc,
                 "bg": background,
-                "pipeline": command,
-                "pgrp": command.term_pgid,
+                "pipeline": cp,
+                "pgrp": cp.term_pgid,
             }
         )
+    return cp
+
+
+def _run_specs(specs, cmds):
+    cp = _run_command_pipeline(specs, cmds)
+    proc, captured, background = cp.proc, specs[-1].captured, cp.spec.background
+
     # For some reason, some programs are in a stopped state when the flow
     # reaches this point, hence a SIGCONT should be sent to `proc` to make
     # sure that the shell doesn't hang.
@@ -969,16 +976,16 @@ def _run_specs(specs, cmds):
 
     # now figure out what we should return
     if captured == "object":
-        return command  # object can be returned even if backgrounding
+        return cp  # object can be returned even if backgrounding
     elif captured == "hiddenobject":
         if not background:
-            command.end()
-        return command
+            cp.end()
+        return cp
     elif background:
         return
     elif captured == "stdout":
-        command.end()
-        return command.output
+        cp.end()
+        return cp.output
     else:
-        command.end()
+        cp.end()
         return
