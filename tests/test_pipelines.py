@@ -36,14 +36,15 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
 
 
 @pytest.mark.parametrize(
-    "cmdline, stdout, stderr",
+    "cmdline, stdout, stderr, raw_stdout",
     (
-        ("!(echo hi)", "hi\n", ""),
-        ("!(echo hi o>e)", "", "hi\n"),
+        ("!(echo hi)", "hi", "", "hi\n"),
+        ("!(echo hi o>e)", "", "hi\n", ""),
         pytest.param(
             "![echo hi]",
-            "hi\n",
+            "hi",
             "",
+            "hi\n",
             marks=pytest.mark.xfail(
                 ON_WINDOWS,
                 reason="ConsoleParallelReader doesn't work without a real console",
@@ -53,34 +54,39 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
             "![echo hi o>e]",
             "",
             "hi\n",
+            "",
             marks=pytest.mark.xfail(
                 ON_WINDOWS, reason="stderr isn't captured in ![] on windows"
             ),
         ),
         pytest.param(
-            r"!(echo 'hi\nho')", "hi\nho\n", "", marks=skip_if_on_windows
+            r"!(echo 'hi\nho')", "hi\nho\n", "", "hi\nho\n", marks=skip_if_on_windows
         ),  # won't work with cmd
         # for some reason cmd's echo adds an extra space:
         pytest.param(
-            r"!(cmd /c 'echo hi && echo ho')", "hi \nho\n", "", marks=skip_if_on_unix
+            r"!(cmd /c 'echo hi && echo ho')",
+            "hi \nho\n",
+            "",
+            "hi \nho\n",
+            marks=skip_if_on_unix,
         ),
-        ("!(echo hi | grep h)", "hi\n", ""),
-        ("!(echo hi | grep x)", "", ""),
+        ("!(echo hi | grep h)", "hi", "", "hi\n"),
+        ("!(echo hi | grep x)", "", "", ""),
     ),
 )
-def test_command_pipeline_capture(cmdline, stdout, stderr, xonsh_execer):
+def test_command_pipeline_capture(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
     pipeline: CommandPipeline = xonsh_execer.eval(cmdline)
     assert pipeline.out == stdout
     assert pipeline.err == (stderr or None)
-    assert pipeline.raw_out == stdout.replace("\n", os.linesep).encode()
+    assert pipeline.raw_out == raw_stdout.replace("\n", os.linesep).encode()
     assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()
 
 
 @pytest.mark.parametrize(
     "cmdline, output",
     (
-        ("echo hi", "hi\n"),
-        ("echo hi | grep h", "hi\n"),
+        ("echo hi", "hi"),
+        ("echo hi | grep h", "hi"),
         ("echo hi | grep x", ""),
         pytest.param("echo -n hi", "hi", marks=skip_if_on_windows),
     ),
@@ -90,7 +96,7 @@ def test_simple_capture(cmdline, output, xonsh_execer):
 
 
 def test_raw_substitution(xonsh_execer):
-    assert xonsh_execer.eval("$(echo @(b'bytes!'))") == "bytes!\n"
+    assert xonsh_execer.eval("$(echo @(b'bytes!'))") == "bytes!"
 
 
 @pytest.mark.parametrize(
@@ -102,7 +108,7 @@ def test_raw_substitution(xonsh_execer):
         ("int(!(nocommand))", 1),
         ("hash(!(echo 1))", 0),
         ("hash(!(nocommand))", 1),
-        ("str(!(echo 1))", "1\n"),
+        ("str(!(echo 1))", "1"),
         ("str(!(nocommand))", ""),
         ("!(echo 1) == 0", True),
         ("!(nocommand) == 1", True),

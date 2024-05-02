@@ -93,21 +93,24 @@ class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
     attrnames = (
-        "stdin",
-        "stdout",
-        "stderr",
-        "pid",
         "returncode",
+        "pid",
         "args",
         "alias",
-        "stdin_redirect",
-        "stdout_redirect",
-        "stderr_redirect",
-        "timestamps",
         "executed_cmd",
+        "timestamps",
         "input",
         "output",
         "errors",
+    )
+
+    attrnames_ext = (
+        "stdin",
+        "stdout",
+        "stderr",
+        "stdin_redirect",
+        "stdout_redirect",
+        "stderr_redirect",
     )
 
     nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
@@ -183,8 +186,11 @@ class CommandPipeline:
         self.proc = self.procs[-1]
 
     def __repr__(self):
+        attrs = self.attrnames + (
+            self.attrnames_ext if XSH.env.get("XONSH_DEBUG", False) else ()
+        )
         s = self.__class__.__name__ + "(\n  "
-        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in self.attrnames)
+        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in attrs)
         s += "\n)"
         return s
 
@@ -629,15 +635,33 @@ class CommandPipeline:
         """Creates normalized input string from args."""
         return " ".join(self.args)
 
+    def get_formatted_lines(self, lines):
+        """Format output lines."""
+        format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
+        if format == "stream_lines":
+            if len(lines) == 1:
+                return lines[0].rstrip("\n")
+            else:
+                return "".join(lines)
+        elif format == "list_lines":
+            if not lines:
+                return lines
+            elif len(lines) == 1:
+                return lines[0].rstrip("\n")
+            else:
+                return [line.rstrip("\n") for line in lines]
+        elif callable(format):
+            return format(lines)
+
     @property
     def output(self):
         """Non-blocking, lazy access to output"""
         if self.ended:
             if self._output is None:
-                self._output = "".join(self.lines)
+                self._output = self.get_formatted_lines(self.lines)
             return self._output
         else:
-            return "".join(self.lines)
+            return self.get_formatted_lines(self.lines)
 
     @property
     def out(self):

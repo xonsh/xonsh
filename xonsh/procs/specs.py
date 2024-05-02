@@ -588,9 +588,9 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        spec.resolve_args_list()
         # perform initial redirects
         spec.resolve_redirects()
-        # apply aliases
         spec.resolve_alias()
         spec.resolve_binary_loc()
         spec.resolve_auto_cd()
@@ -598,6 +598,13 @@ class SubprocSpec:
         spec.resolve_alias_cls()
         spec.resolve_stack()
         return spec
+
+    def resolve_args_list(self):
+        """Weave a list of arguments into a command."""
+        resolved_cmd = []
+        for c in self.cmd:
+            resolved_cmd += c if isinstance(c, list) else [c]
+        self.cmd = resolved_cmd
 
     def resolve_redirects(self):
         """Manages redirects."""
@@ -683,16 +690,11 @@ class SubprocSpec:
         if not callable(alias):
             return
         self.is_proxy = True
-        env = XSH.env
-        thable = env.get("THREAD_SUBPROCS") and getattr(
+        self.threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
             alias, "__xonsh_threadable__", True
         )
-        cls = ProcProxyThread if thable else ProcProxy
-        self.cls = cls
-        self.threadable = thable
-        # also check capturability, while we are here
-        cpable = getattr(alias, "__xonsh_capturable__", self.captured)
-        self.captured = cpable
+        self.cls = ProcProxyThread if self.threadable else ProcProxy
+        self.captured = getattr(alias, "__xonsh_capturable__", self.captured)
 
     def resolve_stack(self):
         """Computes the stack for a callable alias's call-site, if needed."""

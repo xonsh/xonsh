@@ -975,6 +975,12 @@ class GeneralSetting(Xettings):
         "not always happen.",
         is_configurable=False,
     )
+    XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
+        "stream_lines",
+        "Set output format for subprocess e.g. ``du $(ls)``. "
+        "By default (``stream_lines``) subprocess operator returns text output. "
+        "Set ``list_lines`` to have list of lines.",
+    )
     XONSH_CAPTURE_ALWAYS = Var.with_default(
         False,
         "Try to capture output of commands run without explicit capturing.\n"

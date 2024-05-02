@@ -86,7 +86,7 @@ def test_capture_always(
     exp = "HELLO\nBYE\n"
     cmds = [["echo", "-n", exp]]
     if pipe:
-        exp = exp.splitlines()[1] + "\n"  # second line
+        exp = exp.splitlines()[1]  # second line
         cmds += ["|", ["grep", "--color=never", exp.strip()]]
 
     if alias_type:
@@ -151,6 +151,28 @@ def test_interrupted_process_returncode(xonsh_session):
 
 @skip_if_on_windows
 @pytest.mark.parametrize(
+    "cmds, exp_stream_lines, exp_list_lines",
+    [
+        ([["echo", "-n", "1"]], "1", "1"),
+        ([["echo", "-n", "1\n"]], "1", "1"),
+        ([["echo", "-n", "1\n2\n3\n"]], "1\n2\n3\n", ["1", "2", "3"]),
+        ([["echo", "-n", "1\r\n2\r3\r\n"]], "1\n2\n3\n", ["1", "2", "3"]),
+        ([["echo", "-n", "1\n2\n3"]], "1\n2\n3", ["1", "2", "3"]),
+        ([["echo", "-n", "1\n2 3"]], "1\n2 3", ["1", "2 3"]),
+    ],
+)
+def test_subproc_output_format(cmds, exp_stream_lines, exp_list_lines, xonsh_session):
+    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "stream_lines"
+    output = run_subproc(cmds, "stdout")
+    assert output == exp_stream_lines
+
+    xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "list_lines"
+    output = run_subproc(cmds, "stdout")
+    assert output == exp_list_lines
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
     "captured, exp_is_none",
     [
         ("object", False),
@@ -182,6 +204,11 @@ def test_callable_alias_cls(thread_subprocs, xession):
     spec = cmds_to_specs(cmds, captured="stdout")[0]
     proc = spec.run()
     assert proc.f == obj
+
+
+def test_specs_resolve_args_list():
+    spec = cmds_to_specs([["echo", ["1", "2", "3"]]], captured="stdout")[0]
+    assert spec.cmd[-3:] == ["1", "2", "3"]
 
 
 @pytest.mark.parametrize("captured", ["hiddenobject", False])
