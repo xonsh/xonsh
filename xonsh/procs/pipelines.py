@@ -633,7 +633,10 @@ class CommandPipeline:
         """Format output lines."""
         format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         if format == "stream_lines":
-            return "".join(lines)
+            if len(lines) == 1:
+                return lines[0].rstrip("\n")
+            else:
+                return "".join(lines)
         elif format == "list_lines":
             if not lines:
                 return lines
