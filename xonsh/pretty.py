@@ -519,7 +519,7 @@ def _default_pprint(obj, p, cycle):
         return
     p.begin_group(1, "<")
     p.pretty(klass)
-    p.text(" at 0x%x" % id(obj))
+    p.text(f" at 0x{id(obj):x}")
     if cycle:
         p.text(" ...")
     elif p.verbose:
@@ -738,7 +738,7 @@ def _function_pprint(obj, p, cycle):
     mod = obj.__module__
     if mod and mod not in ("__builtin__", "builtins", "exceptions"):
         name = mod + "." + name
-    p.text("<function %s>" % name)
+    p.text(f"<function {name}>")
 
 
 def _exception_pprint(obj, p, cycle):

@@ -343,9 +343,9 @@ class Inspector:
 
     def noinfo(self, msg, oname):
         """Generic message when no information is found."""
-        print("No %s found" % msg, end=" ")
+        print(f"No {msg} found", end=" ")
         if oname:
-            print("for %s" % oname)
+            print(f"for {oname}")
         else:
             print()
 
@@ -425,9 +425,9 @@ class Inspector:
         # is defined, as long as the file isn't binary and is actually on the
         # filesystem.
         if ofile.endswith((".so", ".dll", ".pyd")):
-            print("File %r is binary, not printing." % ofile)
+            print(f"File {ofile!r} is binary, not printing.")
         elif not os.path.isfile(ofile):
-            print("File %r does not exist, not printing." % ofile)
+            print(f"File {ofile!r} does not exist, not printing.")
         else:
             # Print only text files, not extension binaries.  Note that
             # getsourcelines returns lineno with 1-offset and page() uses

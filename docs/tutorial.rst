@@ -356,13 +356,20 @@ The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* some information about that command.
 
 The ``$()`` syntax captures and returns the standard output stream of the
-command as a Python string.  This is similar to how ``$()`` performs in Bash.
+command as a Python string. This is similar to how ``$()`` performs in Bash.
 For example,
 
 .. code-block:: xonshcon
 
     >>> $(ls -l)
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
+
+
+.. note::
+
+    By default the output is represented as one single block of output with new
+    line characters. You can set ``$XONSH_SUBPROC_OUTPUT_FORMAT`` to ``list_lines``
+    to have a list of distinct lines in the commands like ``du -h $(ls)``.
 
 The ``!()`` syntax captured more information about the command, as an instance
 of a class called ``CommandPipeline``.  This object contains more information
@@ -475,7 +482,7 @@ or inject Python values with the ``@()`` operator:
 .. code-block:: xonshcon
 
     >>> $(echo $HOME)
-    '/home/snail\n'
+    '/home/snail'
 
 Uncaptured Subprocess with ``$[]`` and ``![]``
 ===============================================
@@ -544,7 +551,7 @@ be used to generate any of the tokens in the subprocess command list.
 
     >>> out = $(echo @(x + ' ' + y))
     >>> out
-    'xonsh party\n'
+    'xonsh party'
     >>> @("ech" + "o") "hey"
     hey
 
@@ -592,11 +599,11 @@ Consider the following example:
 
     >>> # this returns a string representing stdout
     >>> $(which ls)
-    'ls --color=auto\n'
+    'ls --color=auto'
 
     >>> # this attempts to run the command, but as one argument
-    >>> # (looks for 'ls --color=auto\n' with spaces and newline)
-    >>> @($(which ls).strip())
+    >>> # (looks for 'ls --color=auto' with spaces)
+    >>> @($(which ls))
     xonsh: subprocess mode: command not found: ls --color=auto
 
     >>> # this actually executes the intended command
