@@ -562,7 +562,6 @@ class XonshSession:
         self.builtins = None
         self._initial_builtin_names = None
 
-
     @property
     def aliases(self):
         if self.commands_cache is None:

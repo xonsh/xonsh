@@ -9,7 +9,12 @@ import pytest
 
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
-from xonsh.procs.specs import SubprocSpec, cmds_to_specs, run_subproc, _run_command_pipeline
+from xonsh.procs.specs import (
+    SubprocSpec,
+    _run_command_pipeline,
+    cmds_to_specs,
+    run_subproc,
+)
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
 
@@ -139,7 +144,7 @@ def test_capture_always(
 def test_interrupted_process_returncode(xonsh_session):
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
     cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGINT)"]]
-    specs = cmds_to_specs(cmd, captured='stdout')
+    specs = cmds_to_specs(cmd, captured="stdout")
     (p := _run_command_pipeline(specs, cmd)).end()
     assert p.proc.returncode == -signal.SIGINT
 

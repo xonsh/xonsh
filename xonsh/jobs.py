@@ -284,7 +284,7 @@ else:
             if obj.pid is None:
                 # When the process stopped before os.waitpid it has no pid.
                 raise ChildProcessError("The process PID not found.")
-            prev_status, active_task["status"] = active_task["status"], 'waitpid'
+            prev_status, active_task["status"] = active_task["status"], "waitpid"
             _, wcode = waitpid(obj.pid, os.WUNTRACED)
             active_task["status"] = prev_status
         except ChildProcessError as e:  # No child processes

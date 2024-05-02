@@ -955,7 +955,6 @@ def _run_command_pipeline(specs, cmds):
 
 
 def _run_specs(specs, cmds):
-
     cp = _run_command_pipeline(specs, cmds)
     proc, captured, background = cp.proc, specs[-1].captured, cp.spec.background
 
