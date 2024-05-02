@@ -356,13 +356,20 @@ The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* some information about that command.
 
 The ``$()`` syntax captures and returns the standard output stream of the
-command as a Python string.  This is similar to how ``$()`` performs in Bash.
+command as a Python string. This is similar to how ``$()`` performs in Bash.
 For example,
 
 .. code-block:: xonshcon
 
     >>> $(ls -l)
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
+
+
+.. note::
+
+    By default the output is represented as one single block of output with new
+    line characters. You can set ``$XONSH_SUBPROC_OUTPUT_FORMAT`` to ``list_lines``
+    to have a list of distinct lines in the commands like ``du -h $(ls)``.
 
 The ``!()`` syntax captured more information about the command, as an instance
 of a class called ``CommandPipeline``.  This object contains more information
