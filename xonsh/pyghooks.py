@@ -1393,7 +1393,7 @@ def XonshHtmlFormatter():
             return ""
         elif text.startswith("var") or text.startswith("calc"):
             return text
-        raise AssertionError("wrong color format %r" % text)
+        raise AssertionError(f"wrong color format {text!r}")
 
     class XonshHtmlFormatterProxy(html.HtmlFormatter):
         """Proxy class for xonsh HTML formatting that understands.

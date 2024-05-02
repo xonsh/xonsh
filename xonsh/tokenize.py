@@ -1198,7 +1198,7 @@ def tokenize_main():
         elif filename:
             perror(f"{filename}: error: {message}")
         else:
-            perror("error: %s" % message)
+            perror(f"error: {message}")
         sys.exit(1)
 
     # Parse the arguments and options
@@ -1248,5 +1248,5 @@ def tokenize_main():
     except KeyboardInterrupt:
         print("interrupted\n")
     except Exception as err:
-        perror("unexpected error: %s" % err)
+        perror(f"unexpected error: {err}")
         raise

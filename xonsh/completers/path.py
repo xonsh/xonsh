@@ -190,13 +190,13 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         else:
             _tail = ""
         if start != "" and "r" not in start and backslash in s:
-            start = "r%s" % start
+            start = f"r{start}"
         s = s + _tail
         if end != "":
             if "r" not in start.lower():
                 s = s.replace(backslash, double_backslash)
         if end in s:
-            s = s.replace(end, "".join("\\%s" % i for i in end))
+            s = s.replace(end, "".join(f"\\{i}" for i in end))
         s = start + s + end if append_end else start + s
         out.add(s)
     return out, need_quotes

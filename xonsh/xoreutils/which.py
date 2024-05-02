@@ -162,7 +162,10 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         original_os_path = xp.os_environ["PATH"]
         xp.os_environ["PATH"] = XSH.env.detype()["PATH"]
         matches = _which.whichgen(arg, exts=exts, verbose=verbose)
-        for abs_name, from_where in matches:
+        for match in matches:
+            if match is None:
+                continue
+            abs_name, from_where = match
             print_path(abs_name, from_where, stdout, verbose, captured)
             nmatches += 1
             if not pargs.all:
