@@ -81,8 +81,8 @@ def test_command_pipeline_capture(cmdline, stdout, stderr, raw_stdout, xonsh_exe
 @pytest.mark.parametrize(
     "cmdline, output",
     (
-        ("echo hi", "hi\n"),
-        ("echo hi | grep h", "hi\n"),
+        ("echo hi", "hi"),
+        ("echo hi | grep h", "hi"),
         ("echo hi | grep x", ""),
         pytest.param("echo -n hi", "hi", marks=skip_if_on_windows),
     ),
@@ -92,7 +92,7 @@ def test_simple_capture(cmdline, output, xonsh_execer):
 
 
 def test_raw_substitution(xonsh_execer):
-    assert xonsh_execer.eval("$(echo @(b'bytes!'))") == "bytes!\n"
+    assert xonsh_execer.eval("$(echo @(b'bytes!'))") == "bytes!"
 
 
 @pytest.mark.parametrize(
@@ -104,7 +104,7 @@ def test_raw_substitution(xonsh_execer):
         ("int(!(nocommand))", 1),
         ("hash(!(echo 1))", 0),
         ("hash(!(nocommand))", 1),
-        ("str(!(echo 1))", "1\n"),
+        ("str(!(echo 1))", "1"),
         ("str(!(nocommand))", ""),
         ("!(echo 1) == 0", True),
         ("!(nocommand) == 1", True),
