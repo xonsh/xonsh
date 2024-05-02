@@ -1,18 +1,15 @@
 """Tests the xonsh.procs.specs"""
 
 import itertools
-import os
 import signal
 import sys
-import threading
-import time
 from subprocess import Popen
 
 import pytest
 
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
-from xonsh.procs.specs import SubprocSpec, cmds_to_specs, run_subproc
+from xonsh.procs.specs import SubprocSpec, cmds_to_specs, run_subproc, _run_command_pipeline
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
 
@@ -140,20 +137,11 @@ def test_capture_always(
 
 @skip_if_on_windows
 def test_interrupted_process_returncode(xonsh_session):
-    def async_job(event, xonsh_session):
-        xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
-        run_subproc([["sleep", "2"]], "stdout")
-        event.set()
-
-    event = threading.Event()
-    thread = threading.Thread(target=async_job, args=(event, xonsh_session))
-    thread.start()
-    time.sleep(0.5)
-    proc = xonsh_session.wait_proc
-    os.kill(proc.pid, signal.SIGINT)
-    event.wait(timeout=3)
-    rtn = proc.returncode
-    assert rtn == -signal.SIGINT
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGINT)"]]
+    specs = cmds_to_specs(cmd, captured='stdout')
+    (p := _run_command_pipeline(specs, cmd)).end()
+    assert p.proc.returncode == -signal.SIGINT
 
 
 @skip_if_on_windows

@@ -562,8 +562,6 @@ class XonshSession:
         self.builtins = None
         self._initial_builtin_names = None
 
-        # Temporary
-        self.wait_proc = None  # Current process that ``xonsh.jobs`` is waiting.
 
     @property
     def aliases(self):
