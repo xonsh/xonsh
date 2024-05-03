@@ -29,12 +29,11 @@ def complete_environment_vars(context: CompletionContext):
     env = XSH.env
 
     vars = [k for k, v in env.items() if key.lower() in k.lower()]
-    vars = [
+    return (
         RichCompletion(
             "$" + k,
             display=f"${k} [{type(env[k]).__name__}]",
             description=env.get_docs(k).doc,
         )
         for k in vars
-    ]
-    return vars, lprefix
+    ), lprefix
