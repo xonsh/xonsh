@@ -289,7 +289,7 @@ class Completer:
             prefix = prefix[1:]
 
         def sortkey(s):
-            # todo: should sort with prefix > substring > fuzzy
+            """Sort values by prefix position and then alphabetically."""
             return (s.lower().find(prefix.lower()), s.lower())
 
         # the last completer's lprefix is returned. other lprefix values are inside the RichCompletions.
