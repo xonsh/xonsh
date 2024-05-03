@@ -285,8 +285,9 @@ class Completer:
                 break
 
         prefix = completion_context.command.prefix
-        if prefix.startswith('$'):
+        if prefix.startswith("$"):
             prefix = prefix[1:]
+
         def sortkey(s):
             # todo: should sort with prefix > substring > fuzzy
             return (s.lower().find(prefix.lower()), s.lower())
