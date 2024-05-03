@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Env variable completion now uses substring.
+* Env variables completion: now use substring for search and then sort results by the position of substring and then alphabetically. PR 5388.
 
 **Deprecated:**
 
