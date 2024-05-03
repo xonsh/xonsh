@@ -289,6 +289,7 @@ class Completer:
             prefix = completion_context.command.prefix
             if prefix.startswith("$"):
                 prefix = prefix[1:]
+
             def sortkey(s):
                 """Sort values by prefix position and then alphabetically."""
                 return (s.lower().find(prefix.lower()), s.lower())
