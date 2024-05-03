@@ -32,10 +32,10 @@ def test_simple(cmd, xession, monkeypatch, parser):
 
 
 def test_rich_completions(xession, monkeypatch, parser):
-    xession.env.update({"WOW": 1})
-    xession.env.register("WOW", type=int, doc="Nice Docs!")
+    xession.env.update({"WOWZER": 1})
+    xession.env.register("WOWZER", type=int, doc="Nice Docs!")
 
-    context = parser.parse("$WO", 3)
+    context = parser.parse("$WOW", 4)
     completion = next(complete_environment_vars(context)[0])
-    assert completion.display == "$WOW [int]"
+    assert completion.display == "$WOWZER [int]"
     assert completion.description == "Nice Docs!"
