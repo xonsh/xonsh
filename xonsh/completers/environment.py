@@ -2,7 +2,6 @@ from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
     RichCompletion,
     contextual_completer,
-    get_filter_function,
     non_exclusive_completer,
 )
 from xonsh.parsers.completion_context import CompletionContext
@@ -27,7 +26,6 @@ def complete_environment_vars(context: CompletionContext):
     lprefix = len(key) + 1
     if context.command is not None and context.command.is_after_closing_quote:
         lprefix += 1
-    filter_func = get_filter_function()
     env = XSH.env
 
     vars = [k for k, v in env.items() if key.lower() in k.lower()]
