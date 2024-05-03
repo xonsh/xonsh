@@ -30,12 +30,14 @@ def complete_environment_vars(context: CompletionContext):
     filter_func = get_filter_function()
     env = XSH.env
 
-    return (
+    vars = [k for k, v in env.items() if key.lower() in k.lower()]
+    vars = sorted(vars, key=lambda x: (x.lower().find(key.lower()), x.lower()) )
+    vars = (
         RichCompletion(
             "$" + k,
-            display=f"${k} [{type(v).__name__}]",
+            display=f"${k} [{type(env[k]).__name__}]",
             description=env.get_docs(k).doc,
         )
-        for k, v in env.items()
-        if filter_func(k, key)
-    ), lprefix
+        for k in vars
+    )
+    return vars, lprefix
