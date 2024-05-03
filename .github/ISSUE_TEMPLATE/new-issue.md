@@ -7,14 +7,12 @@ assignees: ''
 
 ---
 
-Hi! Thank you for xonsh! I faced with issue.
-
 ## Current Behavior
-<!--- 
-Try to repeat your issue in `xonsh --no-rc --no-env`.
-Provide step by step repeatable description with commands and output.
-Use `$XONSH_SHOW_TRACEBACK=1`, `$XONSH_TRACE_SUBPROC=2` or `$XONSH_DEBUG=1`
-to have more info.
+<!---
+For general xonsh issues, please try to replicate the failure using `xonsh --no-rc --no-env`.
+Short, reproducible code snippets are highly appreciated.
+You can use `$XONSH_SHOW_TRACEBACK=1`, `$XONSH_TRACE_SUBPROC=2`, or `$XONSH_DEBUG=1`
+to collect more information about the failure.
 -->
 
 Traceback (if applicable):
@@ -22,7 +20,7 @@ Traceback (if applicable):
 <details>
 
 ```xsh
-# Put here the long traceback.
+# Please paste the traceback here.
 ```
 
 </details>
@@ -35,7 +33,7 @@ Traceback (if applicable):
 <details>
 
 ```xsh
-# Put here the output of `xonfig` command.
+# Please paste the output of the `xonfig` command here.
 ```
 
 </details>
