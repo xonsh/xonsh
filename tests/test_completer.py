@@ -155,3 +155,16 @@ def test_non_exclusive(completer, completers_mock, middle_result, exp):
     completers_mock["c"] = non_exclusive_completer(lambda *a: {"c1", "c2"})
 
     assert completer.complete("", "", 0, 0, {})[0] == exp
+
+
+def test_env_completer_sort(completer, completers_mock):
+    @contextual_command_completer
+    def comp(context: CommandContext):
+        return {"$SUPER_WOW", "$WOW1", "$WOW0", "$MID_WOW"}
+
+    completers_mock["a"] = comp
+
+    comps = completer.complete(
+        "$WOW", "$WOW", 4, 0, {}, multiline_text="'$WOW'", cursor_index=4
+    )
+    assert set(comps[0]) == {"$WOW0", "$WOW1", "$MID_WOW", "$SUPER_WOW"}
