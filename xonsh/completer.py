@@ -284,9 +284,12 @@ class Completer:
                     )
                 break
 
+        prefix = completion_context.command.prefix
+        if prefix.startswith('$'):
+            prefix = prefix[1:]
         def sortkey(s):
             # todo: should sort with prefix > substring > fuzzy
-            return s.lstrip(''''"''').lower()
+            return (s.lower().find(prefix.lower()), s.lower())
 
         # the last completer's lprefix is returned. other lprefix values are inside the RichCompletions.
         return tuple(sorted(completions, key=sortkey)), lprefix

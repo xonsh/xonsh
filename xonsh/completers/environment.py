@@ -29,7 +29,6 @@ def complete_environment_vars(context: CompletionContext):
     env = XSH.env
 
     vars = [k for k, v in env.items() if key.lower() in k.lower()]
-    vars = sorted(vars, key=lambda x: (x.lower().find(key.lower()), x.lower()))
     vars = [
         RichCompletion(
             "$" + k,
