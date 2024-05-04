@@ -998,6 +998,7 @@ def test_run_fail_not_on_path():
     assert out != "Hello world"
 
 
+@skip_if_on_windows
 @pytest.mark.parametrize("interactive", [True, False])
 def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
     out, err, ret = run_xonsh(
