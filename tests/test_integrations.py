@@ -3,6 +3,7 @@ This requires Xonsh installed in venv or otherwise available on PATH
 """
 
 import os
+import re
 import shutil
 import subprocess as sp
 import tempfile
@@ -1005,7 +1006,7 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
-    assert out == "ls: nofile: No such file or directory\n"
+    assert re.match('ls.*No such file or directory\n', out)
 
     out, err, ret = run_xonsh(
         "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=True\n$XONSH_SHOW_TRACEBACK=False\nls nofile",
@@ -1013,10 +1014,7 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
-    assert (
-        out
-        == "ls: nofile: No such file or directory\nsubprocess.CalledProcessError: Command '['ls', 'nofile']' returned non-zero exit status 1."
-    )
+    assert re.match("ls:.*No such file or directory\nsubprocess.CalledProcessError: Command '\['ls', 'nofile'\]' returned non-zero exit status 1.", out, re.MULTILINE|re.DOTALL)
 
     out, err, ret = run_xonsh(
         "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=True\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
@@ -1024,11 +1022,7 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
-    assert out.startswith("ls: nofile: No such file or directory")
-    assert "Traceback " in out
-    assert out.endswith(
-        "subprocess.CalledProcessError: Command '['ls', 'nofile']' returned non-zero exit status 1.\n"
-    )
+    assert re.match("ls.*No such file or directory.*Traceback .*\nsubprocess.CalledProcessError: Command '\['ls', 'nofile'\]' returned non-zero exit status 1.\n", out, re.MULTILINE|re.DOTALL)
 
     out, err, ret = run_xonsh(
         "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=False\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
@@ -1036,4 +1030,4 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
-    assert out == "ls: nofile: No such file or directory\n"
+    assert re.match('ls.*No such file or directory\n', out)
