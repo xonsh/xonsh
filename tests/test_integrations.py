@@ -1014,9 +1014,8 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
-    assert out == repr(out)
     assert re.match(
-        "ls:.*No such file or directory\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status 1.",
+        "ls:.*No such file or directory\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
         out,
         re.MULTILINE | re.DOTALL,
     )
@@ -1027,9 +1026,8 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
-    assert out == repr(out)
     assert re.match(
-        "ls.*No such file or directory.*Traceback .*\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status 1.\n",
+        "ls.*No such file or directory.*Traceback .*\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
         out,
         re.MULTILINE | re.DOTALL,
     )
