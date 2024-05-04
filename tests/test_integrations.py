@@ -998,6 +998,7 @@ def test_run_fail_not_on_path():
     assert out != "Hello world"
 
 
+@skip_if_on_windows
 @pytest.mark.parametrize("interactive", [True, False])
 def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
     out, err, ret = run_xonsh(
@@ -1014,6 +1015,7 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
+    assert out == '123'
     assert re.match("ls:.*No such file or directory\nsubprocess.CalledProcessError: Command '\['ls', 'nofile'\]' returned non-zero exit status 1.", out, re.MULTILINE|re.DOTALL)
 
     out, err, ret = run_xonsh(
@@ -1022,6 +1024,7 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
+    assert out == '123'
     assert re.match("ls.*No such file or directory.*Traceback .*\nsubprocess.CalledProcessError: Command '\['ls', 'nofile'\]' returned non-zero exit status 1.\n", out, re.MULTILINE|re.DOTALL)
 
     out, err, ret = run_xonsh(
