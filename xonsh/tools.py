@@ -25,12 +25,12 @@ import ctypes
 import datetime
 import functools
 import glob
+import io
 import itertools
 import operator
 import os
 import pathlib
 import re
-import io
 import shlex
 import string
 import subprocess
@@ -1116,10 +1116,7 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
 
     content = traceback.format_exception(*exc_info, limit=limit)
 
-    if (
-        no_trace_and_raise_subproc_error
-        and "Error:" in content[-1]
-    ):
+    if no_trace_and_raise_subproc_error and "Error:" in content[-1]:
         content = [content[-1].rstrip()]
 
     traceback_str = "".join([v for v in content])
@@ -2859,6 +2856,7 @@ def describe_waitpid_status(status):
 
 class CaptureStderr:
     """Context manager for capturing stderr."""
+
     def __enter__(self):
         self.stderr_capture = io.StringIO()
         self.original_stderr = sys.stderr
