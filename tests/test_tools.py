@@ -2100,8 +2100,9 @@ def test_print_exception_msg(xession):
 
     with CaptureStderr() as cap:
         try:
-            1 / 0
-        except:
+            a = 1 / 0
+            a += 1
+        except Exception as e:
             print_exception("MSG")
 
     assert cap.captured_stderr.endswith(
