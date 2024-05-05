@@ -2103,7 +2103,7 @@ def test_print_exception_msg(xession):
             a = 1 / 0
             a += 1
         except ZeroDivisionError:
-            print_exception("MSG")
+            print_exception(msg="MSG")
 
     assert cap.captured_stderr.endswith(
         "MSG\n"
