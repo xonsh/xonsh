@@ -1098,8 +1098,8 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
             "RAISE_SUBPROC_ERROR"
         ):
             display_colored_error_message(exc_info, limit=1)
-            return
-        display_error_message(exc_info)
+        else:
+            display_error_message(exc_info)
     if msg:
         msg = msg if msg.endswith("\n") else msg + "\n"
         sys.stderr.write(msg)
@@ -1117,7 +1117,7 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
 
     if (
         no_trace_and_raise_subproc_error
-        and "subprocess.CalledProcessError:" in content[-1]
+        and "Error:" in content[-1]
     ):
         content = content[:-1]
 
