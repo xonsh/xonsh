@@ -2,9 +2,11 @@
 
 import datetime as dt
 import os
+import re
 import pathlib
 import stat
 import warnings
+import subprocess
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -2107,4 +2109,33 @@ def test_print_exception_msg(xession):
 
     assert cap.captured_stderr.endswith(
         "MSG\n"
-    ), f"captured_stderr = {repr(cap.captured_stderr)}"
+    ), f"captured_stderr = {cap.captured_stderr!r}"
+
+def test_print_exception_error(xession):
+    xession.env["COLOR_INPUT"] = False
+
+    with xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=False), CaptureStderr() as cap:
+        try:
+            raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
+        except subprocess.CalledProcessError:
+            print_exception(msg="MSG")
+    out = cap.captured_stderr
+    match = "subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
+    assert re.match(
+        match,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Assert: {out!r} not matched with {match!r}"
+
+    with xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=True), CaptureStderr() as cap:
+        try:
+            raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
+        except subprocess.CalledProcessError:
+            print_exception(msg="MSG")
+    out = cap.captured_stderr
+    match = ".*Traceback.*subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
+    assert re.match(
+        match,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Assert: {out!r} not matched with {match!r}"
