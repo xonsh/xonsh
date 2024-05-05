@@ -1119,10 +1119,9 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
         no_trace_and_raise_subproc_error
         and "Error:" in content[-1]
     ):
-        content = content[:-1]
+        content = [content[-1].rstrip()]
 
     traceback_str = "".join([v for v in content])
-    traceback_str += "" if traceback_str.endswith("\n") else "\n"
 
     # color the traceback if available
     _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
@@ -1137,7 +1136,7 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
     lexer = pygments.lexers.python.PythonTracebackLexer()
     tokens = list(pygments.lex(traceback_str, lexer=lexer))
     # this goes to stdout, but since we are interactive it doesn't matter
-    print_color(tokens, end="\n", file=sys.stderr)
+    print_color(tokens, end="", file=sys.stderr)
     return
 
 
