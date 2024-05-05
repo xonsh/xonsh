@@ -2116,7 +2116,7 @@ def test_print_exception_error(xession):
     xession.env["COLOR_INPUT"] = False
 
     with (
-        xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=False),
+        xession.env.swap(XONSH_SHOW_TRACEBACK=False),
         CaptureStderr() as cap,
     ):
         try:
@@ -2132,7 +2132,7 @@ def test_print_exception_error(xession):
     ), f"Assert: {out!r} not matched with {match!r}"
 
     with (
-        xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=True),
+        xession.env.swap(XONSH_SHOW_TRACEBACK=True),
         CaptureStderr() as cap,
     ):
         try:
