@@ -2,11 +2,11 @@
 
 import datetime as dt
 import os
-import re
 import pathlib
+import re
 import stat
-import warnings
 import subprocess
+import warnings
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -2111,10 +2111,14 @@ def test_print_exception_msg(xession):
         "MSG\n"
     ), f"captured_stderr = {cap.captured_stderr!r}"
 
+
 def test_print_exception_error(xession):
     xession.env["COLOR_INPUT"] = False
 
-    with xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=False), CaptureStderr() as cap:
+    with (
+        xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=False),
+        CaptureStderr() as cap,
+    ):
         try:
             raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
         except subprocess.CalledProcessError:
@@ -2127,7 +2131,10 @@ def test_print_exception_error(xession):
         re.MULTILINE | re.DOTALL,
     ), f"Assert: {out!r} not matched with {match!r}"
 
-    with xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=True), CaptureStderr() as cap:
+    with (
+        xession.env.swap(RAISE_SUBPROC_ERROR=True, XONSH_SHOW_TRACEBACK=True),
+        CaptureStderr() as cap,
+    ):
         try:
             raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
         except subprocess.CalledProcessError:
