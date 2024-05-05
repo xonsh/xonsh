@@ -30,6 +30,7 @@ import operator
 import os
 import pathlib
 import re
+import io
 import shlex
 import string
 import subprocess
@@ -2854,3 +2855,17 @@ def describe_waitpid_status(status):
     ]
     for f in funcs:
         print(f.__name__, "-", f(status), "-", f.__doc__)
+
+
+class CaptureStderr:
+    """Context manager for capturing stderr."""
+    def __enter__(self):
+        self.stderr_capture = io.StringIO()
+        self.original_stderr = sys.stderr
+        sys.stderr = self.stderr_capture
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.captured_stderr = self.stderr_capture.getvalue()
+        sys.stderr = self.original_stderr
+        self.stderr_capture.close()

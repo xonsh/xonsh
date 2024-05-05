@@ -2,6 +2,8 @@
 
 import datetime as dt
 import os
+import io
+import sys
 import pathlib
 import stat
 import warnings
@@ -89,6 +91,8 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple,
     to_int_or_none,
     to_logfile_opt,
+    CaptureStderr,
+    print_exception,
 )
 
 LEXER = Lexer()
@@ -2091,3 +2095,15 @@ from xonsh.style_tools import Token
 )
 def test_is_tok_color_dict(val, exp):
     assert is_tok_color_dict(val) == exp
+
+
+def test_print_exception_msg(xession):
+    xession.env['COLOR_INPUT'] = False
+
+    with CaptureStderr() as cap:
+        try:
+            1 / 0
+        except:
+            print_exception('MSG')
+
+    assert cap.captured_stderr.endswith('MSG\n'), f"captured_stderr = {repr(cap.captured_stderr)}"
