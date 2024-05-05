@@ -2,8 +2,6 @@
 
 import datetime as dt
 import os
-import io
-import sys
 import pathlib
 import stat
 import warnings
@@ -16,6 +14,7 @@ from xonsh.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
+    CaptureStderr,
     EnvPath,
     all_permutations,
     always_false,
@@ -71,6 +70,7 @@ from xonsh.tools import (
     pathsep_to_seq,
     pathsep_to_set,
     pathsep_to_upper_seq,
+    print_exception,
     register_custom_style,
     replace_logical_line,
     seq_to_pathsep,
@@ -91,8 +91,6 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple,
     to_int_or_none,
     to_logfile_opt,
-    CaptureStderr,
-    print_exception,
 )
 
 LEXER = Lexer()
@@ -2098,12 +2096,14 @@ def test_is_tok_color_dict(val, exp):
 
 
 def test_print_exception_msg(xession):
-    xession.env['COLOR_INPUT'] = False
+    xession.env["COLOR_INPUT"] = False
 
     with CaptureStderr() as cap:
         try:
             1 / 0
         except:
-            print_exception('MSG')
+            print_exception("MSG")
 
-    assert cap.captured_stderr.endswith('MSG\n'), f"captured_stderr = {repr(cap.captured_stderr)}"
+    assert cap.captured_stderr.endswith(
+        "MSG\n"
+    ), f"captured_stderr = {repr(cap.captured_stderr)}"
