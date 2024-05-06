@@ -415,9 +415,18 @@ def premain(argv=None):
         "XONSH_INTERACTIVE": args.force_interactive
         or (args.mode == XonshMode.interactive),
     }
-    env = start_services(shell_kwargs, args, pre_env=pre_env)
+
+    # Load -DVAR=VAL arguments.
     if args.defines is not None:
-        env.update([x.split("=", 1) for x in args.defines])
+        for x in args.defines:
+            try:
+                var, val = x.split("=", 1)
+                pre_env[var] = val
+            except Exception as e:
+                print(f"Wrong format for -D{x} argument. Use -DVAR=VAL form.", file=sys.stderr)
+                sys.exit(1)
+
+    start_services(shell_kwargs, args, pre_env=pre_env)
     return args
 
 
