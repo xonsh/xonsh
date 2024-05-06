@@ -234,7 +234,7 @@ class Shell:
         env = XSH.env
 
         # build history backend before creating shell
-        if env.get("XONSH_INTERACTIVE"):
+        if env.get("XONSH_INTERACTIVE") and env.get("XONSH_HISTORY_BACKEND") != 'dummy':
             XSH.history = hist = xhm.construct_history(
                 env=env.detype(),
                 ts=[time.time(), None],
