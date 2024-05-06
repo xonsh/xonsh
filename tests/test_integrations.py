@@ -1049,7 +1049,7 @@ def test_main_d():
     assert out == "json\n"
 
     out, err, ret = run_xonsh(
-        add_args=["-DXONSH_HISTORY_BACKEND=dummy"],
+        add_args=["-DXONSH_HISTORY_BACKEND='dummy'"],
         cmd="print($XONSH_HISTORY_BACKEND)",
         single_command=True,
     )
