@@ -2115,10 +2115,7 @@ def test_print_exception_msg(xession):
 def test_print_exception_error(xession, capsys):
     xession.env["COLOR_INPUT"] = False
 
-    with (
-        xession.env.swap(XONSH_SHOW_TRACEBACK=False)
-    ):
-
+    with xession.env.swap(XONSH_SHOW_TRACEBACK=False):
         try:
             raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
         except subprocess.CalledProcessError:
@@ -2131,10 +2128,7 @@ def test_print_exception_error(xession, capsys):
         re.MULTILINE | re.DOTALL,
     ), f"Assert: {cap.err!r} not matched with {match!r}"
 
-    with (
-        xession.env.swap(XONSH_SHOW_TRACEBACK=True)
-    ):
-
+    with xession.env.swap(XONSH_SHOW_TRACEBACK=True):
         try:
             raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
         except subprocess.CalledProcessError:
