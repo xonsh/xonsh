@@ -2105,9 +2105,7 @@ def test_print_exception_msg(xession, capsys):
     except ZeroDivisionError:
         print_exception(msg="MSG")
     cap = capsys.readouterr()
-    assert cap.err.endswith(
-        "MSG\n"
-    ), f"captured_stderr = {cap.captured_stderr!r}"
+    assert cap.err.endswith("MSG\n"), f"captured_stderr = {cap.captured_stderr!r}"
 
 
 def test_print_exception_error(xession, capsys):
