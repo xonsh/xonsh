@@ -16,7 +16,6 @@ from xonsh.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
-    CaptureStderr,
     EnvPath,
     all_permutations,
     always_false,
@@ -2097,17 +2096,16 @@ def test_is_tok_color_dict(val, exp):
     assert is_tok_color_dict(val) == exp
 
 
-def test_print_exception_msg(xession):
+def test_print_exception_msg(xession, capsys):
     xession.env["COLOR_INPUT"] = False
 
-    with CaptureStderr() as cap:
-        try:
-            a = 1 / 0
-            a += 1
-        except ZeroDivisionError:
-            print_exception(msg="MSG")
-
-    assert cap.captured_stderr.endswith(
+    try:
+        a = 1 / 0
+        a += 1
+    except ZeroDivisionError:
+        print_exception(msg="MSG")
+    cap = capsys.readouterr()
+    assert cap.err.endswith(
         "MSG\n"
     ), f"captured_stderr = {cap.captured_stderr!r}"
 
