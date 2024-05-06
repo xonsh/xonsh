@@ -49,7 +49,7 @@ def run_xonsh(
     single_command=False,
     interactive=False,
     path=None,
-    add_args=[],
+    add_args=None,
 ):
     env = dict(os.environ)
     if path is None:
@@ -70,7 +70,8 @@ def run_xonsh(
         input = None
     else:
         input = cmd
-    args += add_args
+    if add_args:
+        args += add_args
     proc = sp.Popen(
         args,
         env=env,
