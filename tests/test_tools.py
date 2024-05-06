@@ -2112,37 +2112,37 @@ def test_print_exception_msg(xession):
     ), f"captured_stderr = {cap.captured_stderr!r}"
 
 
-def test_print_exception_error(xession):
+def test_print_exception_error(xession, capsys):
     xession.env["COLOR_INPUT"] = False
 
     with (
-        xession.env.swap(XONSH_SHOW_TRACEBACK=False),
-        CaptureStderr() as cap,
+        xession.env.swap(XONSH_SHOW_TRACEBACK=False)
     ):
+
         try:
             raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
         except subprocess.CalledProcessError:
             print_exception(msg="MSG")
-    out = cap.captured_stderr
+    cap = capsys.readouterr()
     match = "subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
     assert re.match(
         match,
-        out,
+        cap.err,
         re.MULTILINE | re.DOTALL,
-    ), f"Assert: {out!r} not matched with {match!r}"
+    ), f"Assert: {cap.err!r} not matched with {match!r}"
 
     with (
-        xession.env.swap(XONSH_SHOW_TRACEBACK=True),
-        CaptureStderr() as cap,
+        xession.env.swap(XONSH_SHOW_TRACEBACK=True)
     ):
+
         try:
             raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
         except subprocess.CalledProcessError:
             print_exception(msg="MSG")
-    out = cap.captured_stderr
+    cap = capsys.readouterr()
     match = ".*Traceback.*subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
     assert re.match(
         match,
-        out,
+        cap.err,
         re.MULTILINE | re.DOTALL,
-    ), f"Assert: {out!r} not matched with {match!r}"
+    ), f"Assert: {cap.err!r} not matched with {match!r}"
