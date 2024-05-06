@@ -2856,7 +2856,7 @@ def describe_waitpid_status(status):
         print(f.__name__, "-", f(status), "-", f.__doc__)
 
 
-def unquote(s:str, chars="'\""):
+def unquote(s: str, chars="'\""):
     """Strip paired quotes from string once."""
     if len(s) >= 2 and s[0] == s[-1] and s[0] in chars:
         return s[1:-1]

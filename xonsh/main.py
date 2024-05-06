@@ -29,7 +29,7 @@ from xonsh.tools import (
     print_color,
     print_exception,
     to_bool_or_int,
-    unquote
+    unquote,
 )
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
