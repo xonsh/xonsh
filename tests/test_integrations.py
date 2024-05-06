@@ -49,7 +49,7 @@ def run_xonsh(
     single_command=False,
     interactive=False,
     path=None,
-    add_args=None,
+    add_args:list=None,
 ):
     env = dict(os.environ)
     if path is None:
