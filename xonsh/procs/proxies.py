@@ -274,7 +274,7 @@ def parse_proxy_return(r, stdout, stderr):
             stdout.write(str(r[0]))
             stdout.flush()
         if rlen > 1 and r[1] is not None:
-            stderr.write(str(r[1])+"\n")
+            stderr.write(xt.endswith_newline(str(r[1])))
             stderr.flush()
         if rlen > 2 and isinstance(r[2], int):
             cmd_result = r[2]

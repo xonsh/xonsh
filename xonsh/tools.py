@@ -2858,3 +2858,8 @@ def unquote(s: str, chars="'\""):
     if len(s) >= 2 and s[0] == s[-1] and s[0] in chars:
         return s[1:-1]
     return s
+
+
+def endswith_newline(s : str):
+    """Add new line character to string if needed."""
+    return s if s.endswith("\n") else (s + "\n")
