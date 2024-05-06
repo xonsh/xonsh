@@ -49,6 +49,7 @@ def run_xonsh(
     single_command=False,
     interactive=False,
     path=None,
+    add_args: list = None,
 ):
     env = dict(os.environ)
     if path is None:
@@ -69,7 +70,8 @@ def run_xonsh(
         input = None
     else:
         input = cmd
-
+    if add_args:
+        args += add_args
     proc = sp.Popen(
         args,
         env=env,
@@ -1040,3 +1042,15 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
     )
     assert ret != 0
     assert re.match("ls.*No such file or directory\n", out)
+
+
+def test_main_d():
+    out, err, ret = run_xonsh(cmd="print($XONSH_HISTORY_BACKEND)", single_command=True)
+    assert out == "json\n"
+
+    out, err, ret = run_xonsh(
+        add_args=["-DXONSH_HISTORY_BACKEND='dummy'"],
+        cmd="print($XONSH_HISTORY_BACKEND)",
+        single_command=True,
+    )
+    assert out == "dummy\n"
