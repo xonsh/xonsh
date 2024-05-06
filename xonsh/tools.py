@@ -2860,6 +2860,6 @@ def unquote(s: str, chars="'\""):
     return s
 
 
-def endswith_newline(s : str):
+def endswith_newline(s: str):
     """Add new line character to string if needed."""
     return s if s.endswith("\n") else (s + "\n")
