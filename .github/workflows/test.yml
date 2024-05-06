@@ -31,8 +31,8 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macOS-latest
-          - windows-latest
+#          - macOS-latest
+#          - windows-latest
         python-version:
           - "3.11"
     name: Test Python ${{ matrix.python-version }} ${{ matrix.os }}
@@ -55,6 +55,8 @@ jobs:
           restore-keys: ${{ runner.os }}-uv-
       - name: Install dependencies
         run: uv pip install --system -e ".[test]"
+      - name: Install expect
+        run: apt update && apt install -y expect
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tmate_debug_enabled }}
