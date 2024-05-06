@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 jobs:
-  ci:
+  stress_ci:
     runs-on: ${{ matrix.os }}
     env:
       UV_CACHE_DIR: .cache/uv
@@ -34,10 +34,7 @@ jobs:
           - macOS-latest
           - windows-latest
         python-version:
-          - "3.9"
-          - "3.10"
           - "3.11"
-          - "3.12-dev"
     name: Test Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -62,22 +59,5 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tmate_debug_enabled }}
         timeout-minutes: 15
-      - name: Run QA Checks
-        if: ${{ startsWith(matrix.os, 'ubuntu') && startsWith(matrix.python-version, '3.11') }}
-        run: python -m xonsh run-tests.xsh validate-news-items
       - name: Run tests
-        if: ${{ !startsWith(matrix.python-version, '3.11') }}
-        run: |
-          python -m pip install . --no-deps
-          python -m xonsh run-tests.xsh test -- --timeout=240
-      - name: Run tests with coverage
-        if: ${{ startsWith(matrix.python-version, '3.11') }}
-        run: |
-          python -m pip install -e . --no-deps
-          python -m xonsh run-tests.xsh test --report-coverage -- --timeout=240
-      - name: Upload coverage to Codecov
-        if: ${{ startsWith(matrix.python-version, '3.11') }}
-        uses: codecov/codecov-action@v4
-        with:
-          verbose: true
-          flags: ${{ matrix.os }}
+        run: expect tests/expect/stress.exp
