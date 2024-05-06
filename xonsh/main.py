@@ -29,6 +29,7 @@ from xonsh.tools import (
     print_color,
     print_exception,
     to_bool_or_int,
+    unquote
 )
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
@@ -421,7 +422,7 @@ def premain(argv=None):
         for x in args.defines:
             try:
                 var, val = x.split("=", 1)
-                pre_env[var] = val.strip(''''"''')
+                pre_env[var] = unquote(val)
             except Exception:
                 print(
                     f"Wrong format for -D{x} argument. Use -DVAR=VAL form.",
