@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+
+set timeout 10
+
+spawn xonsh --no-rc --no-env -DCOLOR_INPUT=0 -DCOLOR_RESULTS=0 -DPROMPT=@@ -DXONSH_HISTORY_BACKEND=dummy
+
+set iterations 5
+
+for {set i 0} {$i < $iterations} {incr i} {
+
+    expect "@@"
+    send "\$XONSH_SHOW_TRACEBACK=False\r"
+
+    expect "@@"
+    send "@aliases.register(\'f\')\r"
+    send "def _fff():\r"
+    send "    1/0\r\r\r"
+
+    expect "@@"
+    send "f\r"
+
+
+
+    expect "@@"
+    send "\$XONSH_SHOW_TRACEBACK=True\r"
+
+    expect "@@"
+    send "@aliases.register(\'f\')\r"
+    send "def _fff():\r"
+    send "    1/0\r\r\r"
+
+    expect "@@"
+    send "f\r"
+
+}
+
+expect {
+    "Bad file descriptor" {
+        send "echo BAD!\r"
+        exit 100
+    }
+}
+
+
+expect "@@"
+send "exit\r"
+
+expect eof
+
