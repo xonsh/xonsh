@@ -3,7 +3,9 @@
 import datetime as dt
 import os
 import pathlib
+import re
 import stat
+import subprocess
 import warnings
 from tempfile import TemporaryDirectory
 
@@ -69,6 +71,7 @@ from xonsh.tools import (
     pathsep_to_seq,
     pathsep_to_set,
     pathsep_to_upper_seq,
+    print_exception,
     register_custom_style,
     replace_logical_line,
     seq_to_pathsep,
@@ -2091,3 +2094,45 @@ from xonsh.style_tools import Token
 )
 def test_is_tok_color_dict(val, exp):
     assert is_tok_color_dict(val) == exp
+
+
+def test_print_exception_msg(xession, capsys):
+    xession.env["COLOR_INPUT"] = False
+
+    try:
+        a = 1 / 0
+        a += 1
+    except ZeroDivisionError:
+        print_exception(msg="MSG")
+    cap = capsys.readouterr()
+    assert cap.err.endswith("MSG\n"), f"captured_stderr = {cap.captured_stderr!r}"
+
+
+def test_print_exception_error(xession, capsys):
+    xession.env["COLOR_INPUT"] = False
+
+    with xession.env.swap(XONSH_SHOW_TRACEBACK=False):
+        try:
+            raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
+        except subprocess.CalledProcessError:
+            print_exception(msg="MSG")
+    cap = capsys.readouterr()
+    match = "subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
+    assert re.match(
+        match,
+        cap.err,
+        re.MULTILINE | re.DOTALL,
+    ), f"Assert: {cap.err!r} not matched with {match!r}"
+
+    with xession.env.swap(XONSH_SHOW_TRACEBACK=True):
+        try:
+            raise subprocess.CalledProcessError(1, ["ls", "nofile"], output="nooutput")
+        except subprocess.CalledProcessError:
+            print_exception(msg="MSG")
+    cap = capsys.readouterr()
+    match = ".*Traceback.*subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
+    assert re.match(
+        match,
+        cap.err,
+        re.MULTILINE | re.DOTALL,
+    ), f"Assert: {cap.err!r} not matched with {match!r}"
