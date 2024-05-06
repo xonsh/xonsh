@@ -421,7 +421,7 @@ def premain(argv=None):
         for x in args.defines:
             try:
                 var, val = x.split("=", 1)
-                pre_env[var] = val
+                pre_env[var] = val.strip(''''"''')
             except Exception:
                 print(
                     f"Wrong format for -D{x} argument. Use -DVAR=VAL form.",
