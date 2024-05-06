@@ -306,7 +306,7 @@ def write_cache(filename):
     d = os.path.dirname(filename)
     os.makedirs(d, exist_ok=True)
     s = pformat(CACHE)
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(s)
 
 
