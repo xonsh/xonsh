@@ -422,8 +422,11 @@ def premain(argv=None):
             try:
                 var, val = x.split("=", 1)
                 pre_env[var] = val
-            except Exception as e:
-                print(f"Wrong format for -D{x} argument. Use -DVAR=VAL form.", file=sys.stderr)
+            except Exception:
+                print(
+                    f"Wrong format for -D{x} argument. Use -DVAR=VAL form.",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
 
     start_services(shell_kwargs, args, pre_env=pre_env)
