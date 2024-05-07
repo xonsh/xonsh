@@ -1075,7 +1075,7 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
 ]
 
-
+@skip_if_on_windows
 @pytest.mark.parametrize("case", ALIASES_PRINT_CASES)
 def test_aliases_print(case):
     cmd, match = case
