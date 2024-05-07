@@ -1072,3 +1072,12 @@ def test_catching_system_exit():
         assert ret == 1
     else:
         assert ret == 2
+
+
+@skip_if_on_windows
+def test_catching_system_exit():
+    stdin_cmd = "kill -SIGHUP @(__import__('os').getpid())\n"
+    out, err, ret = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
+    )
+    assert ret == 1
