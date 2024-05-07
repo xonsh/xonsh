@@ -1038,42 +1038,43 @@ echo f1f1f1 ; f ; echo f2f2f2
         "f1f1f1\n.*\nTraceback.*\nZeroDivisionError: .*\nException in FuncAlias(.*)\nf2f2f2\n$",
     ),
     (
-"""
+        """
 $RAISE_SUBPROC_ERROR = False
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-"^f1f1f1\nI failed\nf2f2f2\n$"
+        "^f1f1f1\nI failed\nf2f2f2\n$",
     ),
     (
-"""
+        """
 $RAISE_SUBPROC_ERROR = True
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-"f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$"
+        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
     ),
     (
-"""
+        """
 $RAISE_SUBPROC_ERROR = True
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-"f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$"
+        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
     ),
     (
-"""
+        """
 $RAISE_SUBPROC_ERROR = False
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-"f1f1f1\nI failed\nf2f2f2\n$"
+        "f1f1f1\nI failed\nf2f2f2\n$",
     ),
 ]
+
 
 @pytest.mark.parametrize("case", ALIASES_PRINT_CASES)
 def test_aliases_print(case):
