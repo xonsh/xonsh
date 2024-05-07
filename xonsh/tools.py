@@ -1129,6 +1129,7 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
         return
 
     import pygments.lexers.python
+
     lexer = pygments.lexers.python.PythonTracebackLexer()
     tokens = list(pygments.lex(traceback_str, lexer=lexer))
     # this goes to stdout, but since we are interactive it doesn't matter
