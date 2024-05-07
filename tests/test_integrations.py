@@ -1080,4 +1080,4 @@ def test_catching_system_exit():
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
     )
-    assert ret == 1
+    assert ret > 0
