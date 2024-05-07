@@ -51,7 +51,7 @@ def run_xonsh(
     interactive=False,
     path=None,
     add_args: list = None,
-    timeout=20
+    timeout=20,
 ):
     env = dict(os.environ)
     if path is None:
@@ -1065,5 +1065,7 @@ def test_main_d():
 
 def test_catching_system_exit():
     stdin_cmd = "__import__('sys').exit(100)\n"
-    out, err, ret = run_xonsh(cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3)
+    out, err, ret = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
+    )
     assert ret == 100
