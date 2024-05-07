@@ -1064,8 +1064,8 @@ def test_main_d():
 
 
 def test_catching_system_exit():
-    stdin_cmd = "__import__('sys').exit(100)\n"
+    stdin_cmd = "__import__('sys').exit(2)\n"
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
     )
-    assert ret == 100
+    assert ret == 2
