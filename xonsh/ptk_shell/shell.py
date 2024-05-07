@@ -412,7 +412,7 @@ class PromptToolkitShell(BaseShell):
                     self.default(line, raw_line)
             except KeyboardInterrupt:
                 self.reset_buffer()
-            except SystemExit as e:
+            except SystemExit:
                 self.reset_buffer()
                 raise
             except EOFError:
