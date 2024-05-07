@@ -1075,7 +1075,7 @@ def test_catching_system_exit():
 
 
 @skip_if_on_windows
-def test_catching_system_exit():
+def test_catching_exit_signal():
     stdin_cmd = "kill -SIGHUP @(__import__('os').getpid())\n"
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
