@@ -86,7 +86,10 @@ class FuncAlias:
             ]
             return self.func(*func_args)
         except Exception:
-            print_exception(f"Exception in {repr(self)}")
+            if XSH.env.get("RAISE_SUBPROC_ERROR", True):
+                raise
+            else:
+                print_exception(f"Exception in {repr(self)}")
 
 
 class Aliases(cabc.MutableMapping):
