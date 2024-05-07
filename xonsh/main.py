@@ -577,6 +577,8 @@ def main_xonsh(args):
         else:
             # pass error to finally clause
             exc_info = sys.exc_info()
+    except SystemExit:
+        exc_info = sys.exc_info()
     finally:
         if exc_info != (None, None, None):
             err_type, err, _ = exc_info

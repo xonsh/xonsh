@@ -53,15 +53,20 @@ def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
     once the new handle is finished.
     """
-    oldh = signal.getsignal(sig)
+    prev_signal_handler = signal.getsignal(sig)
 
-    def newh(s=None, frame=None):
+    def current_signal_handler(s=None, frame=None):
         f(s, frame)
-        signal.signal(sig, oldh)
+        signal.signal(sig, prev_signal_handler)
         if sig != 0:
+            """
+            There is no immediate exiting here.
+            The ``sys.exit()`` function raises a ``SystemExit`` exception.
+            This exception must be caught and processed in the downstream code e.g. ``shell.cmdloop()``.
+            """
             sys.exit(sig)
 
-    signal.signal(sig, newh)
+    signal.signal(sig, current_signal_handler)
 
 
 def helper(x, name=""):

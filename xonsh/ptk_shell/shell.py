@@ -410,8 +410,11 @@ class PromptToolkitShell(BaseShell):
                     raw_line = line
                     line = self.precmd(line)
                     self.default(line, raw_line)
-            except (KeyboardInterrupt, SystemExit):
+            except KeyboardInterrupt:
                 self.reset_buffer()
+            except SystemExit as e:
+                self.reset_buffer()
+                raise
             except EOFError:
                 if XSH.env.get("IGNOREEOF"):
                     print('Use "exit" to leave the shell.', file=sys.stderr)
