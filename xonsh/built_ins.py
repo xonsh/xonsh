@@ -62,7 +62,7 @@ def resetting_signal_handle(sig, f):
             """
             There is no immediate exiting here.
             The ``sys.exit()`` function raises a ``SystemExit`` exception.
-            This exception must be caught and processed in the downstream code e.g. ``shell.cmdloop()``.
+            This exception must be caught and processed in the downstream code.
             """
             sys.exit(sig)
 
