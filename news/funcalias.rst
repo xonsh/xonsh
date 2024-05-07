@@ -1,6 +1,7 @@
 **Added:**
 
 * Added FuncAlias to process callable aliases.
+* Added alias name printing in case of exception in alias.
 
 **Changed:**
 
@@ -16,7 +17,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed showing alias description using superhelp e.g. ``which?``.
 
 **Security:**
 
