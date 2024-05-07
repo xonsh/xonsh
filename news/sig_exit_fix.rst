@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed processing exit signals (e.g. SIGHUP).
+* Fixed processing exit signals and exceptions (e.g. SIGHUP in #5381) to provide careful exiting with right exit code.
 
 **Security:**
 
