@@ -55,7 +55,7 @@ def resetting_signal_handle(sig, f):
     """
     prev_signal_handler = signal.getsignal(sig)
 
-    def current_signal_handler(s=None, frame=None):
+    def new_signal_handler(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, prev_signal_handler)
         if sig != 0:
@@ -66,7 +66,7 @@ def resetting_signal_handle(sig, f):
             """
             sys.exit(sig)
 
-    signal.signal(sig, current_signal_handler)
+    signal.signal(sig, new_signal_handler)
 
 
 def helper(x, name=""):
