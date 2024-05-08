@@ -1,6 +1,6 @@
 **Added:**
 
-* Added xonsh support into Jupytext project! Jupytext is to store Jupyter notebooks as a plain text documents.
+* <news item>
 
 **Changed:**
 
@@ -21,3 +21,7 @@
 **Security:**
 
 * <news item>
+
+**Xonsh world:**
+
+* Added xonsh support into Jupytext project! Jupytext is to store Jupyter notebooks as a plain text documents.
