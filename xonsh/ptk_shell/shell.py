@@ -414,8 +414,8 @@ class PromptToolkitShell(BaseShell):
             except (KeyboardInterrupt, SystemExit) as e:
                 self.reset_buffer()
                 if isinstance(e, SystemExit):
-                    get_app().reset()  # Reset mouse handlers.
-                    self.restore_tty_sanity()  # Reset SIGINT handlers.
+                    get_app().reset()  # Reset TTY mouse and keys handlers.
+                    self.restore_tty_sanity()  # Reset TTY SIGINT handlers.
                     raise
             except EOFError:
                 if XSH.env.get("IGNOREEOF"):
