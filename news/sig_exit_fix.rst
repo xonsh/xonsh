@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed processing exit signals and exceptions (e.g. SIGHUP in #5381) to provide careful exiting with right exit code.
+* Fixed processing exit signals and exceptions (e.g. SIGHUP in #5381) to provide careful exiting with right exit code and TTY cleaning.
 
 **Security:**
 
