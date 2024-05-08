@@ -588,8 +588,9 @@ class PromptToolkitShell(BaseShell):
 
     def restore_tty_sanity(self):
         """An interface for resetting the TTY stdin mode. This is highly
-        dependent on the shell backend. Also it is mostly optional since
-        it only affects ^Z backgrounding behaviour.
+        dependent on the shell backend.
+        For prompt-toolkit it allows to fix case when terminal lost
+        SIGINT catching and Ctrl+C is not working after abnormal exiting.
         """
         # PTK does not seem to need any specialization here. However,
         # if it does for some reason in the future...
