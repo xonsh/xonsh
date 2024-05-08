@@ -8,7 +8,7 @@ import pytest
 NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "news")
 
 CATEGORIES = frozenset(
-    ["Added", "Changed", "Deprecated", "Removed", "Fixed", "Security", "Xonsh world"]
+    ["Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"]
 )
 
 single_grave_reg = re.compile(r"[^`]`[^`]+`[^`_]")
