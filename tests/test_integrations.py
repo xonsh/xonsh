@@ -1000,7 +1000,7 @@ def test_run_fail_not_on_path():
     assert out != "Hello world"
 
 
-ALIASES_PRINT_CASES = [
+ALIASES_THREADABLE_PRINT_CASES = [
     (
         """
 $RAISE_SUBPROC_ERROR = False
@@ -1075,9 +1075,91 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
 ]
 
+ALIASES_UNTHREADABLE_PRINT_CASES = [
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "^f1f1f1\nException in.*FuncAlias.*\nZeroDivisionError.*\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in.*\nTraceback.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in.*FuncAlias.*\nTraceback.*\nZeroDivisionError.*\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "^f1f1f1\nI failed\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed\nf2f2f2\n$",
+    ),
+]
 
 @skip_if_on_windows
-@pytest.mark.parametrize("case", ALIASES_PRINT_CASES)
+@pytest.mark.parametrize("case", ALIASES_THREADABLE_PRINT_CASES + ALIASES_UNTHREADABLE_PRINT_CASES)
 def test_aliases_print(case):
     cmd, match = case
     out, err, ret = run_xonsh(cmd=cmd, single_command=False)
