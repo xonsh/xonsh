@@ -60,7 +60,6 @@ class FuncAlias:
     attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
     attributes_inherit = attributes_show + ["__doc__"]
 
-
     def __init__(self, name, func):
         self.__name__ = self.name = name
         self.func = func
