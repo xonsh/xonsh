@@ -69,7 +69,7 @@ class FuncAlias:
                 self.__setattr__(attr, val)
 
     def __repr__(self):
-        r = {"name": self.name, "func": self.func}
+        r = {"name": self.name, "func": self.func.__name__}
         r |= {
             attr: val
             for attr in self.attributes_show
