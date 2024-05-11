@@ -40,7 +40,6 @@ from xonsh.tools import (
     argvquote,
     escape_windows_cmd_string,
     print_color,
-    print_exception,
     strip_simple_quotes,
     swap_values,
     to_repr_pretty_,
