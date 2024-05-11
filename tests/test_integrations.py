@@ -1008,7 +1008,7 @@ $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "^f1f1f1\nZeroDivisionError: .*\nException in FuncAlias(.*)\nf2f2f2\n$",
+        "^f1f1f1\nException in thread.*FuncAlias.*\nZeroDivisionError.*\nf2f2f2\n$",
     ),
     (
         """
@@ -1035,7 +1035,7 @@ $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\n.*\nTraceback.*\nZeroDivisionError: .*\nException in FuncAlias(.*)\nf2f2f2\n$",
+        "f1f1f1\nException in thread.*FuncAlias.*\nTraceback.*\nZeroDivisionError.*\nf2f2f2\n$",
     ),
     (
         """
