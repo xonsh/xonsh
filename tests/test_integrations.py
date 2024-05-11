@@ -1158,8 +1158,11 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
 ]
 
+
 @skip_if_on_windows
-@pytest.mark.parametrize("case", ALIASES_THREADABLE_PRINT_CASES + ALIASES_UNTHREADABLE_PRINT_CASES)
+@pytest.mark.parametrize(
+    "case", ALIASES_THREADABLE_PRINT_CASES + ALIASES_UNTHREADABLE_PRINT_CASES
+)
 def test_aliases_print(case):
     cmd, match = case
     out, err, ret = run_xonsh(cmd=cmd, single_command=False)
