@@ -80,16 +80,10 @@ class FuncAlias:
     def __call__(
         self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
-        try:
-            func_args = [args, stdin, stdout, stderr, spec, stack][
-                : len(inspect.signature(self.func).parameters)
-            ]
-            return self.func(*func_args)
-        except Exception:
-            if XSH.env.get("RAISE_SUBPROC_ERROR", True):
-                raise
-            else:
-                print_exception(f"Exception in {repr(self)}")
+        func_args = [args, stdin, stdout, stderr, spec, stack][
+            : len(inspect.signature(self.func).parameters)
+        ]
+        return self.func(*func_args)
 
 
 class Aliases(cabc.MutableMapping):
