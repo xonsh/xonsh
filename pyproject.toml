@@ -83,7 +83,7 @@ changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst"
 
 [project.optional-dependencies]
 ptk = [
-    "prompt-toolkit>=3.0.29,<3.0.41",
+    "prompt-toolkit>=3.0.29,<3.0.40",
     "pyperclip",
 ]
 pygments = ["pygments>=2.2"]
@@ -98,7 +98,7 @@ full = [
     "ujson",
 ]
 bestshell = [
-    "prompt_toolkit>=3.0.29",
+    "prompt-toolkit>=3.0.29,<3.0.40",
     "pygments>=2.2",
 ]
 test = [
@@ -110,7 +110,7 @@ test = [
     "pytest-timeout",
     "pytest-subprocess",
     "pytest-rerunfailures",
-    "prompt-toolkit>=3.0.29,<3.0.41",
+    "prompt-toolkit>=3.0.29,<3.0.40",
     "pygments>=2.2",
     "coverage>=5.3.1",
     "pyte>=0.8.0",
