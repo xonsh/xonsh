@@ -29,6 +29,7 @@ from xonsh.tools import (
     print_color,
     print_exception,
     to_bool_or_int,
+    unquote,
 )
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
@@ -415,9 +416,21 @@ def premain(argv=None):
         "XONSH_INTERACTIVE": args.force_interactive
         or (args.mode == XonshMode.interactive),
     }
-    env = start_services(shell_kwargs, args, pre_env=pre_env)
+
+    # Load -DVAR=VAL arguments.
     if args.defines is not None:
-        env.update([x.split("=", 1) for x in args.defines])
+        for x in args.defines:
+            try:
+                var, val = x.split("=", 1)
+                pre_env[var] = unquote(val)
+            except Exception:
+                print(
+                    f"Wrong format for -D{x} argument. Use -DVAR=VAL form.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+    start_services(shell_kwargs, args, pre_env=pre_env)
     return args
 
 

@@ -3,6 +3,7 @@ This requires Xonsh installed in venv or otherwise available on PATH
 """
 
 import os
+import re
 import shutil
 import subprocess as sp
 import tempfile
@@ -48,6 +49,7 @@ def run_xonsh(
     single_command=False,
     interactive=False,
     path=None,
+    add_args: list = None,
 ):
     env = dict(os.environ)
     if path is None:
@@ -68,7 +70,8 @@ def run_xonsh(
         input = None
     else:
         input = cmd
-
+    if add_args:
+        args += add_args
     proc = sp.Popen(
         args,
         env=env,
@@ -410,7 +413,7 @@ from xonsh.lib.subprocess import check_output
 
 print(check_output(["echo", "hello"]).decode("utf8"))
 """,
-        "hello\n\n",
+        "hello\n",
         0,
     ),
     #
@@ -995,3 +998,59 @@ def test_run_fail_not_on_path():
     cmd = "hello_world.bat"
     out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
     assert out != "Hello world"
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("interactive", [True, False])
+def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
+    out, err, ret = run_xonsh(
+        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=False\n$XONSH_SHOW_TRACEBACK=False\nls nofile",
+        interactive=interactive,
+        single_command=True,
+    )
+    assert ret != 0
+    assert re.match("ls.*No such file or directory\n", out)
+
+    out, err, ret = run_xonsh(
+        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=True\n$XONSH_SHOW_TRACEBACK=False\nls nofile",
+        interactive=interactive,
+        single_command=True,
+    )
+    assert ret != 0
+    assert re.match(
+        "ls:.*No such file or directory\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
+        out,
+        re.MULTILINE | re.DOTALL,
+    )
+
+    out, err, ret = run_xonsh(
+        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=True\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
+        interactive=interactive,
+        single_command=True,
+    )
+    assert ret != 0
+    assert re.match(
+        "ls.*No such file or directory.*Traceback .*\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
+        out,
+        re.MULTILINE | re.DOTALL,
+    )
+
+    out, err, ret = run_xonsh(
+        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=False\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
+        interactive=interactive,
+        single_command=True,
+    )
+    assert ret != 0
+    assert re.match("ls.*No such file or directory\n", out)
+
+
+def test_main_d():
+    out, err, ret = run_xonsh(cmd="print($XONSH_HISTORY_BACKEND)", single_command=True)
+    assert out == "json\n"
+
+    out, err, ret = run_xonsh(
+        add_args=["-DXONSH_HISTORY_BACKEND='dummy'"],
+        cmd="print($XONSH_HISTORY_BACKEND)",
+        single_command=True,
+    )
+    assert out == "dummy\n"

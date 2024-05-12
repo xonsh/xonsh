@@ -588,9 +588,9 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        spec.resolve_args_list()
         # perform initial redirects
         spec.resolve_redirects()
-        # apply aliases
         spec.resolve_alias()
         spec.resolve_binary_loc()
         spec.resolve_auto_cd()
@@ -598,6 +598,13 @@ class SubprocSpec:
         spec.resolve_alias_cls()
         spec.resolve_stack()
         return spec
+
+    def resolve_args_list(self):
+        """Weave a list of arguments into a command."""
+        resolved_cmd = []
+        for c in self.cmd:
+            resolved_cmd += c if isinstance(c, list) else [c]
+        self.cmd = resolved_cmd
 
     def resolve_redirects(self):
         """Manages redirects."""
@@ -683,16 +690,11 @@ class SubprocSpec:
         if not callable(alias):
             return
         self.is_proxy = True
-        env = XSH.env
-        thable = env.get("THREAD_SUBPROCS") and getattr(
+        self.threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
             alias, "__xonsh_threadable__", True
         )
-        cls = ProcProxyThread if thable else ProcProxy
-        self.cls = cls
-        self.threadable = thable
-        # also check capturability, while we are here
-        cpable = getattr(alias, "__xonsh_capturable__", self.captured)
-        self.captured = cpable
+        self.cls = ProcProxyThread if self.threadable else ProcProxy
+        self.captured = getattr(alias, "__xonsh_capturable__", self.captured)
 
     def resolve_stack(self):
         """Computes the stack for a callable alias's call-site, if needed."""
@@ -932,25 +934,32 @@ def run_subproc(cmds, captured=False, envs=None):
         return _run_specs(specs, cmds)
 
 
-def _run_specs(specs, cmds):
+def _run_command_pipeline(specs, cmds):
     captured = specs[-1].captured
     if captured == "hiddenobject":
-        command = HiddenCommandPipeline(specs)
+        cp = HiddenCommandPipeline(specs)
     else:
-        command = CommandPipeline(specs)
-    proc = command.proc
-    background = command.spec.background
+        cp = CommandPipeline(specs)
+    proc = cp.proc
+    background = cp.spec.background
     if not all(x.is_proxy for x in specs):
         xj.add_job(
             {
                 "cmds": cmds,
-                "pids": [i.pid for i in command.procs],
+                "pids": [i.pid for i in cp.procs],
                 "obj": proc,
                 "bg": background,
-                "pipeline": command,
-                "pgrp": command.term_pgid,
+                "pipeline": cp,
+                "pgrp": cp.term_pgid,
             }
         )
+    return cp
+
+
+def _run_specs(specs, cmds):
+    cp = _run_command_pipeline(specs, cmds)
+    proc, captured, background = cp.proc, specs[-1].captured, cp.spec.background
+
     # For some reason, some programs are in a stopped state when the flow
     # reaches this point, hence a SIGCONT should be sent to `proc` to make
     # sure that the shell doesn't hang.
@@ -959,16 +968,16 @@ def _run_specs(specs, cmds):
 
     # now figure out what we should return
     if captured == "object":
-        return command  # object can be returned even if backgrounding
+        return cp  # object can be returned even if backgrounding
     elif captured == "hiddenobject":
         if not background:
-            command.end()
-        return command
+            cp.end()
+        return cp
     elif background:
         return
     elif captured == "stdout":
-        command.end()
-        return command.output
+        cp.end()
+        return cp.output
     else:
-        command.end()
+        cp.end()
         return

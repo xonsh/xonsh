@@ -39,6 +39,20 @@ _jobs_thread_local = threading.local()
 _tasks_main: collections.deque[int] = collections.deque()
 
 
+def waitpid(pid, opt):
+    """
+    Transparent wrapper on `os.waitpid` to make notes about undocumented subprocess behavior.
+    Basically ``p = subprocess.Popen()`` populates ``p.returncode`` after ``p.wait()``, ``p.poll()``
+    or ``p.communicate()`` (https://docs.python.org/3/library/os.html#os.waitpid).
+    But if you're using `os.waitpid()` BEFORE these functions you're capturing return code
+    from a signal subsystem and ``p.returncode`` will be ``0``.
+    After ``os.waitid`` call you need to set return code manually
+    ``p.returncode = -os.WTERMSIG(status)`` like in Popen.
+    See also ``xonsh.tools.describe_waitpid_status()``.
+    """
+    return os.waitpid(pid, opt)
+
+
 @contextlib.contextmanager
 def use_main_jobs():
     """Context manager that replaces a thread's task queue and job dictionary
@@ -264,13 +278,13 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        obj = active_task["obj"]
+        thread = active_task["obj"]
         backgrounded = False
         try:
-            if obj.pid is None:
+            if thread.pid is None:
                 # When the process stopped before os.waitpid it has no pid.
                 raise ChildProcessError("The process PID not found.")
-            _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
+            _, wcode = waitpid(thread.pid, os.WUNTRACED)
         except ChildProcessError as e:  # No child processes
             if return_error:
                 return e
@@ -283,11 +297,11 @@ else:
             backgrounded = True
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
-            obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
-            obj.returncode = None
+            thread.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
+            thread.returncode = -os.WTERMSIG(wcode)  # Default Popen
         else:
-            obj.returncode = os.WEXITSTATUS(wcode)
-            obj.signal = None
+            thread.returncode = os.WEXITSTATUS(wcode)
+            thread.signal = None
         return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
 
 

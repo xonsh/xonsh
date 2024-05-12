@@ -1098,8 +1098,8 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
             "RAISE_SUBPROC_ERROR"
         ):
             display_colored_error_message(exc_info, limit=1)
-            return
-        display_error_message(exc_info)
+        else:
+            display_error_message(exc_info)
     if msg:
         msg = msg if msg.endswith("\n") else msg + "\n"
         sys.stderr.write(msg)
@@ -1115,14 +1115,10 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
 
     content = traceback.format_exception(*exc_info, limit=limit)
 
-    if (
-        no_trace_and_raise_subproc_error
-        and "subprocess.CalledProcessError:" in content[-1]
-    ):
-        content = content[:-1]
+    if no_trace_and_raise_subproc_error and "Error:" in content[-1]:
+        content = [content[-1].rstrip()]
 
     traceback_str = "".join([v for v in content])
-    traceback_str += "" if traceback_str.endswith("\n") else "\n"
 
     # color the traceback if available
     _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
@@ -2841,3 +2837,24 @@ def to_repr_pretty_(inst, p, cycle):
         elif len(inst):
             p.break_()
             p.pretty(dict(inst))
+
+
+def describe_waitpid_status(status):
+    """Describes ``pid, status = os.waitpid(pid, opt)`` status."""
+    funcs = [
+        os.WIFEXITED,
+        os.WEXITSTATUS,
+        os.WIFSIGNALED,
+        os.WTERMSIG,
+        os.WIFSTOPPED,
+        os.WSTOPSIG,
+    ]
+    for f in funcs:
+        print(f.__name__, "-", f(status), "-", f.__doc__)
+
+
+def unquote(s: str, chars="'\""):
+    """Strip paired quotes from string once."""
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in chars:
+        return s[1:-1]
+    return s

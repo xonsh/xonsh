@@ -31,6 +31,9 @@ line is ``#!/usr/bin/env xonsh``.
         There is no notion of an escaping character in xonsh like the backslash (``\``) in bash.
         Single or double quotes can be used to remove the special meaning of certain
         characters, words or brackets.
+    * - ``IFS``
+      - ``$XONSH_SUBPROC_OUTPUT_FORMAT``
+      - Changing the output representation and splitting.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.

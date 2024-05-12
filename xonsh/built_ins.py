@@ -162,7 +162,7 @@ def pathsearch(func, s, pymode=False, pathobj=False):
 
 def subproc_captured_stdout(*cmds, envs=None):
     """Runs a subprocess, capturing the output. Returns the stdout
-    that was produced as a str.
+    that was produced as a str or list based on ``$XONSH_SUBPROC_OUTPUT_FORMAT``.
     """
 
     import xonsh.procs.specs
