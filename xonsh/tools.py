@@ -33,6 +33,7 @@ import re
 import shlex
 import string
 import subprocess
+import signal
 import sys
 import threading
 import traceback
@@ -2851,6 +2852,14 @@ def describe_waitpid_status(status):
     ]
     for f in funcs:
         print(f.__name__, "-", f(status), "-", f.__doc__)
+
+
+def get_signal_name(signum):
+    """Return a signal name by the signal number."""
+    for name in dir(signal):
+        if name.startswith('SIG') and getattr(signal, name) == signum:
+            return name
+    return ''
 
 
 def unquote(s: str, chars="'\""):

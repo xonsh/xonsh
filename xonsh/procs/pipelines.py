@@ -153,6 +153,7 @@ class CommandPipeline:
         self._raw_output = self._raw_error = b""
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
+        self.suspended = None
 
         background = self.spec.background
         pipeline_group = None
@@ -289,6 +290,8 @@ class CommandPipeline:
         i = j = cnt = 1
         while proc.poll() is None:
             if getattr(proc, "suspended", False):
+                self.suspended = True
+                xj.set_job_attr(proc.pid, "status", "suspended")
                 return
             elif getattr(proc, "in_alt_mode", False):
                 time.sleep(0.1)  # probably not leaving any time soon

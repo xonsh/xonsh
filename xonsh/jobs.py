@@ -364,7 +364,7 @@ def format_job_string(num: int, format="dict") -> str:
         "cmd": " ".join(
             [" ".join(i) if isinstance(i, list) else i for i in job["cmds"]]
         ),
-        "pid": int(job["pids"][-1]) if job["pids"] else None,
+        "pids": job["pids"] if "pids" in job else None,
     }
 
     if format == "posix":
@@ -396,12 +396,19 @@ def add_job(info):
     """Add a new job to the jobs dictionary."""
     num = get_next_job_number()
     info["started"] = time.time()
-    info["status"] = "running"
+    info["status"] = info["status"] if "status" in info else "running"
     get_tasks().appendleft(num)
     get_jobs()[num] = info
     if info["bg"] and XSH.env.get("XONSH_INTERACTIVE"):
         print_one_job(num)
 
+
+def set_job_attr(pid, name, value):
+    """Set job attribute."""
+    jobs = get_jobs()
+    for num, job in get_jobs().items():
+        if "pids" in job and pid in job["pids"]:
+            jobs[num][name] = value
 
 def clean_jobs():
     """Clean up jobs for exiting shell

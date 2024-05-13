@@ -173,9 +173,6 @@ class PopenThread(threading.Thread):
                     # The command that is waiting for input can be suspended by OS in case there is no terminal attached
                     # because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals
                     # (https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html).
-                    # In this case we try to stop the command carefully by sending SIGINT and SIGCONT to process the INT signal.
-                    # Some commands will not stop immediately and iterations of polling is needed to read final stdout/stderr.
-
                     pid, proc_status = os.waitpid(self.pid, os.WUNTRACED)
                     if os.WIFSTOPPED(proc_status) and (
                         stopsig := os.WSTOPSIG(proc_status)
@@ -183,20 +180,14 @@ class PopenThread(threading.Thread):
                         signal.SIGTTOU,
                         signal.SIGTTIN,
                     ]:
-                        try:
-                            if XSH.env.get("XONSH_DEBUG", False):
-                                print(
-                                    f"Process {self.name} suspended with signal {stopsig}. Sending SIGINT to stop the process.",
-                                    file=sys.stderr,
-                                )
-                            self.proc.send_signal(signal.SIGINT)
-                            self.proc.send_signal(signal.SIGCONT)
-                        except ProcessLookupError:
-                            if XSH.env.get("XONSH_DEBUG", False):
-                                print(
-                                    f"Process {self.name} suspended with signal {stopsig}. Sending SIGINT raises ProcessLookupError.",
-                                    file=sys.stderr,
-                                )
+                        signame = f"{stopsig} {xt.get_signal_name(stopsig)}".strip()
+                        print(
+                            f"Process {self.name} suspended with signal {signame} and stay in `jobs`.\n"
+                            f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
+                            file=sys.stderr,
+                        )
+                        self.suspended = True
+
                 except ChildProcessError:
                     if XSH.env.get("XONSH_DEBUG", False):
                         print(
