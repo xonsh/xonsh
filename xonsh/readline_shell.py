@@ -618,11 +618,13 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         while not XSH.exit:
             try:
                 self._cmdloop(intro=intro)
-            except (KeyboardInterrupt, SystemExit):
+            except (KeyboardInterrupt, SystemExit) as e:
                 print(file=self.stdout)  # Gives a newline
                 fix_readline_state_after_ctrl_c()
                 self.reset_buffer()
                 intro = None
+                if isinstance(e, SystemExit):
+                    raise
 
     @property
     def prompt(self):
