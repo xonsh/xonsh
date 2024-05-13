@@ -185,8 +185,12 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         if not XSH.env.get("XONSH_DEBUG", False):
-            __import__('warnings').filterwarnings('ignore', 'There is no current event loop', DeprecationWarning,
-                                                  module='prompt_toolkit.application.application')
+            __import__("warnings").filterwarnings(
+                "ignore",
+                "There is no current event loop",
+                DeprecationWarning,
+                module="prompt_toolkit.application.application",
+            )
 
         ptk_args = kwargs.pop("ptk_args", {})
         super().__init__(**kwargs)
