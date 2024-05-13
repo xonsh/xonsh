@@ -144,7 +144,7 @@ if ON_WINDOWS:
 
     def _kill(job):
         subprocess.check_output(
-            ["taskkill", "/F", "/T", "/PID", str(job["obj"].pid)],
+            ["taskkill", "/F", "/T", "/PID", str(job["proc"].pid)],
             stderr=subprocess.STDOUT,
         )
 
@@ -165,7 +165,7 @@ if ON_WINDOWS:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        obj = active_task["obj"]
+        obj = active_task["proc"]
         _continue(active_task)
         while obj.returncode is None:
             try:
@@ -278,13 +278,13 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        thread = active_task["obj"]
+        proc = active_task["proc"]
         backgrounded = False
         try:
-            if thread.pid is None:
+            if proc.pid is None:
                 # When the process stopped before os.waitpid it has no pid.
                 raise ChildProcessError("The process PID not found.")
-            _, wcode = waitpid(thread.pid, os.WUNTRACED)
+            _, wcode = waitpid(proc.pid, os.WUNTRACED)
         except ChildProcessError as e:  # No child processes
             if return_error:
                 return e
@@ -297,11 +297,11 @@ else:
             backgrounded = True
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
-            thread.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
-            thread.returncode = -os.WTERMSIG(wcode)  # Default Popen
+            proc.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
+            proc.returncode = -os.WTERMSIG(wcode)  # Default Popen
         else:
-            thread.returncode = os.WEXITSTATUS(wcode)
-            thread.signal = None
+            proc.returncode = os.WEXITSTATUS(wcode)
+            proc.signal = None
         return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
 
 
@@ -344,7 +344,7 @@ def _clear_dead_jobs():
     to_remove = set()
     tasks = get_tasks()
     for tid in tasks:
-        obj = get_task(tid)["obj"]
+        obj = get_task(tid)["proc"]
         if obj is None or obj.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
