@@ -7,6 +7,7 @@ from functools import wraps
 from types import MethodType
 
 from prompt_toolkit import ANSI
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.clipboard import InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
@@ -410,8 +411,12 @@ class PromptToolkitShell(BaseShell):
                     raw_line = line
                     line = self.precmd(line)
                     self.default(line, raw_line)
-            except (KeyboardInterrupt, SystemExit):
+            except (KeyboardInterrupt, SystemExit) as e:
                 self.reset_buffer()
+                if isinstance(e, SystemExit):
+                    get_app().reset()  # Reset TTY mouse and keys handlers.
+                    self.restore_tty_sanity()  # Reset TTY SIGINT handlers.
+                    raise
             except EOFError:
                 if XSH.env.get("IGNOREEOF"):
                     print('Use "exit" to leave the shell.', file=sys.stderr)
@@ -583,8 +588,9 @@ class PromptToolkitShell(BaseShell):
 
     def restore_tty_sanity(self):
         """An interface for resetting the TTY stdin mode. This is highly
-        dependent on the shell backend. Also it is mostly optional since
-        it only affects ^Z backgrounding behaviour.
+        dependent on the shell backend.
+        For prompt-toolkit it allows to fix case when terminal lost
+        SIGINT catching and Ctrl+C is not working after abnormal exiting.
         """
         # PTK does not seem to need any specialization here. However,
         # if it does for some reason in the future...

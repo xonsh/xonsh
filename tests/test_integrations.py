@@ -44,12 +44,14 @@ skip_if_no_sleep = pytest.mark.skipif(
 def run_xonsh(
     cmd,
     stdin=sp.PIPE,
+    stdin_cmd=None,
     stdout=sp.PIPE,
     stderr=sp.STDOUT,
     single_command=False,
     interactive=False,
     path=None,
     add_args: list = None,
+    timeout=20,
 ):
     env = dict(os.environ)
     if path is None:
@@ -72,6 +74,7 @@ def run_xonsh(
         input = cmd
     if add_args:
         args += add_args
+
     proc = sp.Popen(
         args,
         env=env,
@@ -81,8 +84,12 @@ def run_xonsh(
         universal_newlines=True,
     )
 
+    if stdin_cmd:
+        proc.stdin.write(stdin_cmd)
+        proc.stdin.flush()
+
     try:
-        out, err = proc.communicate(input=input, timeout=20)
+        out, err = proc.communicate(input=input, timeout=timeout)
     except sp.TimeoutExpired:
         proc.kill()
         raise
@@ -1225,3 +1232,23 @@ def test_main_d():
         single_command=True,
     )
     assert out == "dummy\n"
+
+
+def test_catching_system_exit():
+    stdin_cmd = "__import__('sys').exit(2)\n"
+    out, err, ret = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
+    )
+    if ON_WINDOWS:
+        assert ret == 1
+    else:
+        assert ret == 2
+
+
+@skip_if_on_windows
+def test_catching_exit_signal():
+    stdin_cmd = "kill -SIGHUP @(__import__('os').getpid())\n"
+    out, err, ret = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
+    )
+    assert ret > 0
