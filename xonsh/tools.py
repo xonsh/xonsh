@@ -31,9 +31,9 @@ import os
 import pathlib
 import re
 import shlex
+import signal
 import string
 import subprocess
-import signal
 import sys
 import threading
 import traceback
@@ -2857,9 +2857,9 @@ def describe_waitpid_status(status):
 def get_signal_name(signum):
     """Return a signal name by the signal number."""
     for name in dir(signal):
-        if name.startswith('SIG') and getattr(signal, name) == signum:
+        if name.startswith("SIG") and getattr(signal, name) == signum:
             return name
-    return ''
+    return ""
 
 
 def unquote(s: str, chars="'\""):

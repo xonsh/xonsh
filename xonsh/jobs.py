@@ -410,6 +410,7 @@ def set_job_attr(pid, name, value):
         if "pids" in job and pid in job["pids"]:
             jobs[num][name] = value
 
+
 def clean_jobs():
     """Clean up jobs for exiting shell
 
