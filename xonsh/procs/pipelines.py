@@ -294,7 +294,9 @@ class CommandPipeline:
         prev_end_time = None
         i = j = cnt = 1
         while proc.poll() is None:
-            if getattr(proc, "suspended", False) or (suspended_proc := self._procs_suspended()):
+            if getattr(proc, "suspended", False) or (
+                suspended_proc := self._procs_suspended()
+            ):
                 self.suspended = suspended_proc.suspended = True
                 xj.update_job_attr(proc.pid, "status", "suspended")
                 return
