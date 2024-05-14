@@ -523,7 +523,7 @@ class CommandPipeline:
 
     def _procs_suspended(self):
         for p in self.procs:
-            if (sigtt := xj.waitpid_sigtt(p.pid)):
+            if sigtt := xj.waitpid_sigtt(p.pid):
                 proc = getattr(p, "proc", p)
                 procname = f"{getattr(proc, 'args', '')} with pid {p.pid}".strip()
                 signame = f"{sigtt} {xt.get_signal_name(sigtt)}".strip()
