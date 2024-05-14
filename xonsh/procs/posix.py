@@ -14,12 +14,12 @@ import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.jobs import waitpid_sigtt
 from xonsh.procs.readers import (
     BufferedFDParallelReader,
     NonBlockingFDReader,
     safe_fdclose,
 )
-from xonsh.jobs import waitpid_sigtt
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
@@ -169,7 +169,7 @@ class PopenThread(threading.Thread):
         # loop over reads while process is running.
         i = j = cnt = 1
         while proc.poll() is None:
-            if (sigtt := waitpid_sigtt(proc.pid)):
+            if sigtt := waitpid_sigtt(proc.pid):
                 self.suspended = True
                 if XSH.env.get("XONSH_DEBUG", False):
                     procname = f"{getattr(proc, 'args', '')} {proc.pid}".strip()
