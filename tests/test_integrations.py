@@ -1256,10 +1256,13 @@ def test_catching_exit_signal():
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_catching_exit_signal():
-    stdin_cmd = "!(python -c 'import os, signal; os.kill(os.getpid(), signal.SIGTTIN)')\n"
+    stdin_cmd = (
+        "!(python -c 'import os, signal; os.kill(os.getpid(), signal.SIGTTIN)')\n"
+    )
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
     )
     match = ".*suspended=True.*"
-    assert re.match(match, out, re.MULTILINE | re.DOTALL), f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
-
+    assert re.match(
+        match, out, re.MULTILINE | re.DOTALL
+    ), f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
