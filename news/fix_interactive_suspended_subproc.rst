@@ -1,6 +1,6 @@
 **Added:**
 
-* Added processing the case where interactive command was suspended by OS in full captured mode (#5361).
+* Processing the suspended process in capture mode (#5361).
 
 **Changed:**
 
