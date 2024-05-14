@@ -62,7 +62,7 @@ def waitpid_sigtt(pid):
      * https://www.linusakesson.net/programming/tty/
      * http://curiousthing.org/sigttin-sigttou-deep-dive-linux
      * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
-    Maybe we need to use `psutil` here to have strong confirmation of process state.
+    Maybe we need to use ``psutil`` here to have strong confirmation of process state.
     """
     if ON_WINDOWS:
         return 0
