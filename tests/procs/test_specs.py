@@ -191,8 +191,6 @@ def test_suspended_captured_process_pipeline(xonsh_session):
     assert len(jobs) == 3
     for j in jobs:
         assert j["status"] == "suspended"
-        for pid in j["pids"]:
-            os.kill(pid, signal.SIGKILL)
 
 
 @skip_if_on_windows
