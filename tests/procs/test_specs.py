@@ -1,7 +1,6 @@
 """Tests the xonsh.procs.specs"""
 
 import itertools
-import os
 import signal
 import sys
 from subprocess import Popen
