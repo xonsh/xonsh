@@ -94,6 +94,7 @@ class CommandPipeline:
 
     attrnames = (
         "returncode",
+        "suspended",
         "pid",
         "args",
         "alias",
@@ -102,7 +103,6 @@ class CommandPipeline:
         "input",
         "output",
         "errors",
-        "suspended",
     )
 
     attrnames_ext = (
