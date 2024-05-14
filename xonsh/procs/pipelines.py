@@ -296,7 +296,7 @@ class CommandPipeline:
             elif getattr(proc, "in_alt_mode", False):
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
-            elif self._prev_procs_suspended():
+            elif self._procs_suspended():
                 self.suspended = True
                 xj.update_job_attr(proc.pid, "status", "suspended")
                 return
@@ -521,34 +521,16 @@ class CommandPipeline:
     def _safe_close(self, handle):
         safe_fdclose(handle, cache=self._closed_handle_cache)
 
-    def _check_pid_suspended(self, pid):
-        """
-        The command that is waiting for input can be suspended by OS in case there is no terminal attached
-        because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals:
-         * https://www.linusakesson.net/programming/tty/
-         * http://curiousthing.org/sigttin-sigttou-deep-dive-linux
-         * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
-        Maybe we need to use `psutil` here to have strong confirmation of process state.
-        """
-        try:
-            pid, proc_status = os.waitpid(pid, os.WUNTRACED)
-            if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [signal.SIGTTOU, signal.SIGTTIN]:
-                return stopsig
-        except ChildProcessError:
-            return 0
-        return 0
 
-    def _prev_procs_suspended(self):
-        if xp.ON_WINDOWS:
-            # Windows just not supported. PR is welcome.
-            return False
-
-        for s, p in zip(self.specs[:-1], self.procs[:-1]):
-            stopsig = self._check_pid_suspended(p.pid)
-            if stopsig:
-                signame = f"{stopsig} {xt.get_signal_name(stopsig)}".strip()
+    def _procs_suspended(self):
+        for s, p in zip(self.specs, self.procs):
+            sigtt = xj.waitpid_sigtt(p.pid)
+            if sigtt:
+                proc = getattr(p, 'proc', p)
+                procname = f"{getattr(proc, 'args', '')} with pid {p.pid}".strip()
+                signame = f"{sigtt} {xt.get_signal_name(sigtt)}".strip()
                 print(
-                    f"Process p.name suspended with signal {signame} and stay in `jobs`.\n"
+                    f"Process {procname} suspended with signal {signame} and stay in `jobs`.\n"
                     f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
                     file=sys.stderr,
                 )

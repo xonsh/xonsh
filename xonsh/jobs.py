@@ -53,6 +53,30 @@ def waitpid(pid, opt):
     return os.waitpid(pid, opt)
 
 
+def waitpid_sigtt(pid):
+    """
+    Check pid for SIGTTOU or SIGTTIN signals and return them. Return 0 otherwise.
+
+    The command that is waiting for input can be suspended by OS in case there is no terminal attached
+    because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals:
+     * https://www.linusakesson.net/programming/tty/
+     * http://curiousthing.org/sigttin-sigttou-deep-dive-linux
+     * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
+    Maybe we need to use `psutil` here to have strong confirmation of process state.
+    """
+    if ON_WINDOWS:
+        return 0
+
+    try:
+        pid, proc_status = os.waitpid(pid, os.WUNTRACED)
+        if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [signal.SIGTTOU, signal.SIGTTIN]:
+            return stopsig
+    except ChildProcessError:
+        # Process could be already stopped.
+        pass
+    return 0
+
+
 @contextlib.contextmanager
 def use_main_jobs():
     """Context manager that replaces a thread's task queue and job dictionary
