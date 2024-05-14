@@ -64,7 +64,7 @@ def run_xonsh(
     env["FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE"] = "1"
     env["PROMPT"] = ""
     xonsh = shutil.which("xonsh", path=PATH)
-    args = [xonsh, "--no-rc", "-DPROMPT='@'"]
+    args = [xonsh, "--no-rc"]
     if interactive:
         args.append("-i")
     if single_command:
