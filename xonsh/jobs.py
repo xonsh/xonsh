@@ -64,7 +64,7 @@ def waitpid_sigtt(pid):
      * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
     Maybe we need to use ``psutil`` here to have strong confirmation of process state.
     """
-    if ON_WINDOWS:
+    if pid is None or ON_WINDOWS:
         return 0
 
     try:
