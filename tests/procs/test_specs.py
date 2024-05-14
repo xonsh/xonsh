@@ -152,6 +152,7 @@ def test_interrupted_process_returncode(xonsh_session):
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
+@pytest.mark.timeout(2)
 def test_suspended_captured_process_pipeline(xonsh_session):
     cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"]]
     specs = cmds_to_specs(cmd, captured="object")
@@ -186,7 +187,9 @@ def test_suspended_captured_process_pipeline(xonsh_session):
 
     from xonsh import jobs
 
-    for j in jobs.get_jobs().values():
+    jobs = jobs.get_jobs().values()
+    assert len(jobs) == 3
+    for j in jobs:
         assert j["status"] == "suspended"
 
 
