@@ -523,6 +523,7 @@ class CommandPipeline:
         safe_fdclose(handle, cache=self._closed_handle_cache)
 
     def _procs_suspended(self):
+        """Check procs and return suspended proc."""
         for p in self.procs:
             if sigtt := xj.waitpid_sigtt(p.pid):
                 proc = getattr(p, "proc", p)
