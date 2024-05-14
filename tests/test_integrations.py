@@ -64,7 +64,7 @@ def run_xonsh(
     env["FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE"] = "1"
     env["PROMPT"] = ""
     xonsh = shutil.which("xonsh", path=PATH)
-    args = [xonsh, "--no-rc"]
+    args = [xonsh, "--no-rc", "-DPROMPT='@'"]
     if interactive:
         args.append("-i")
     if single_command:
@@ -90,6 +90,7 @@ def run_xonsh(
 
     try:
         out, err = proc.communicate(input=input, timeout=timeout)
+        out = out.replace("Warning: Input is not a terminal (fd=0).", "").strip()
     except sp.TimeoutExpired:
         proc.kill()
         raise

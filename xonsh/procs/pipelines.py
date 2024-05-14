@@ -102,6 +102,7 @@ class CommandPipeline:
         "input",
         "output",
         "errors",
+        "suspended"
     )
 
     attrnames_ext = (
