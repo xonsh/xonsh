@@ -532,7 +532,10 @@ class CommandPipeline:
         """
         try:
             pid, proc_status = os.waitpid(pid, os.WUNTRACED)
-            if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [signal.SIGTTOU, signal.SIGTTIN]:
+            if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [
+                signal.SIGTTOU,
+                signal.SIGTTIN,
+            ]:
                 return stopsig
         except ChildProcessError:
             return 0
