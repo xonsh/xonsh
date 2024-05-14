@@ -186,7 +186,7 @@ def test_suspended_captured_process_pipeline(xonsh_session):
 
     from xonsh import jobs
 
-    for n, j in jobs.get_jobs().items():
+    for j in jobs.get_jobs().values():
         assert j["status"] == "suspended"
 
 
