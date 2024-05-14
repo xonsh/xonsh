@@ -294,17 +294,13 @@ class CommandPipeline:
         prev_end_time = None
         i = j = cnt = 1
         while proc.poll() is None:
-            if getattr(proc, "suspended", False):
-                self.suspended = True
+            if getattr(proc, "suspended", False) or (suspended_proc := self._procs_suspended()):
+                self.suspended = suspended_proc.suspended = True
                 xj.update_job_attr(proc.pid, "status", "suspended")
                 return
             elif getattr(proc, "in_alt_mode", False):
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
-            elif self._procs_suspended():
-                self.suspended = True
-                xj.update_job_attr(proc.pid, "status", "suspended")
-                return
             elif not check_prev_done:
                 # In the case of pipelines with more than one command
                 # we should give the commands a little time
@@ -537,7 +533,7 @@ class CommandPipeline:
                     f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
                     file=sys.stderr,
                 )
-                return True
+                return p
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
