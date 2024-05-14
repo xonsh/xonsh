@@ -160,14 +160,24 @@ def test_suspended_captured_process_pipeline(xonsh_session):
     p.end()
     assert p.suspended
 
-    cmd = [["echo", "1"], "|", ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"]]
+    cmd = [
+        ["echo", "1"],
+        "|",
+        ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"],
+    ]
     specs = cmds_to_specs(cmd, captured="object")
     p = _run_command_pipeline(specs, cmd)
     p.proc.send_signal(signal.SIGCONT)
     p.end()
     assert p.suspended
 
-    cmd = [["echo", "1"], "|", ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"], "|", ["head"]]
+    cmd = [
+        ["echo", "1"],
+        "|",
+        ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"],
+        "|",
+        ["head"],
+    ]
     specs = cmds_to_specs(cmd, captured="object")
     p = _run_command_pipeline(specs, cmd)
     p.proc.send_signal(signal.SIGCONT)
@@ -175,10 +185,9 @@ def test_suspended_captured_process_pipeline(xonsh_session):
     assert p.suspended
 
     from xonsh import jobs
+
     for n, j in jobs.get_jobs().items():
-        assert j['status'] == 'suspended'
-
-
+        assert j["status"] == "suspended"
 
 
 @skip_if_on_windows
