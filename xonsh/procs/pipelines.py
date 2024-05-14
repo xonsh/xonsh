@@ -192,7 +192,7 @@ class CommandPipeline:
             self.attrnames_ext if XSH.env.get("XONSH_DEBUG", False) else ()
         )
         s = self.__class__.__name__ + "(\n  "
-        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in attrs)
+        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in attrs if getattr(self, a) is not None)
         s += "\n)"
         return s
 
