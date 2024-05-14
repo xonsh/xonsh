@@ -90,7 +90,7 @@ def run_xonsh(
 
     try:
         out, err = proc.communicate(input=input, timeout=timeout)
-        out = out.replace("Warning: Input is not a terminal (fd=0).", "").strip()
+        out = out.replace("Warning: Input is not a terminal (fd=0).", "")
     except sp.TimeoutExpired:
         proc.kill()
         raise
