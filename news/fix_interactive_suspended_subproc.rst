@@ -1,6 +1,6 @@
 **Added:**
 
-* Processing the suspended process in capture mode (#5361).
+* Processing a suspended process in the captured mode (#5361).
 
 **Changed:**
 
