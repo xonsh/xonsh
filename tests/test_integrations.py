@@ -1255,7 +1255,7 @@ def test_catching_exit_signal():
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_suspended_captured_process_pipeline():
-    """See also test_specs.py:test_suspended_captured_process_pipeline"""
+    """See also test_specs.py:test_specs_with_suspended_captured_process_pipeline"""
     stdin_cmd = (
         "!(python -c 'import os, signal; os.kill(os.getpid(), signal.SIGTTIN)')\n"
     )
