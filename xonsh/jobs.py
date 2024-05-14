@@ -68,7 +68,7 @@ def waitpid_sigtt(pid):
         return 0
 
     try:
-        pid, proc_status = os.waitpid(pid, os.WUNTRACED)
+        pid, proc_status = os.waitpid(pid, os.WUNTRACED | os.WNOHANG)
         if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [
             signal.SIGTTOU,
             signal.SIGTTIN,

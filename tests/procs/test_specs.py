@@ -151,6 +151,48 @@ def test_interrupted_process_returncode(xonsh_session):
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_suspended_captured_process_pipeline(xonsh_session):
+    cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"]]
+    specs = cmds_to_specs(cmd, captured="object")
+    p = _run_command_pipeline(specs, cmd)
+    p.proc.send_signal(signal.SIGCONT)
+    p.end()
+    assert p.suspended
+
+    cmd = [
+        ["echo", "1"],
+        "|",
+        ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"],
+    ]
+    specs = cmds_to_specs(cmd, captured="object")
+    p = _run_command_pipeline(specs, cmd)
+    p.proc.send_signal(signal.SIGCONT)
+    p.end()
+    assert p.suspended
+
+    cmd = [
+        ["echo", "1"],
+        "|",
+        ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"],
+        "|",
+        ["head"],
+    ]
+    specs = cmds_to_specs(cmd, captured="object")
+    p = _run_command_pipeline(specs, cmd)
+    p.proc.send_signal(signal.SIGCONT)
+    p.end()
+    assert p.suspended
+
+    from xonsh import jobs
+
+    jobs = jobs.get_jobs().values()
+    assert len(jobs) == 3
+    for j in jobs:
+        assert j["status"] == "suspended"
+
+
+@skip_if_on_windows
 @pytest.mark.parametrize(
     "cmds, exp_stream_lines, exp_list_lines",
     [
