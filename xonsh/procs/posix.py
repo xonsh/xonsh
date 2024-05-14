@@ -168,33 +168,33 @@ class PopenThread(threading.Thread):
         # loop over reads while process is running.
         i = j = cnt = 1
         while proc.poll() is None:
-            if not xp.ON_WINDOWS and not self.suspended:
-                try:
-                    # The command that is waiting for input can be suspended by OS in case there is no terminal attached
-                    # because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals
-                    # (https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html).
-                    pid, proc_status = os.waitpid(self.pid, os.WUNTRACED)
-                    if os.WIFSTOPPED(proc_status) and (
-                        stopsig := os.WSTOPSIG(proc_status)
-                    ) in [
-                        signal.SIGTTOU,
-                        signal.SIGTTIN,
-                    ]:
-                        signame = f"{stopsig} {xt.get_signal_name(stopsig)}".strip()
-                        print(
-                            f"Process {self.name} suspended with signal {signame} and stay in `jobs`.\n"
-                            f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
-                            file=sys.stderr,
-                        )
-                        self.suspended = True
-
-                except ChildProcessError:
-                    if XSH.env.get("XONSH_DEBUG", False):
-                        print(
-                            f"Process {self.name} raises ChildProcessError.",
-                            file=sys.stderr,
-                        )
-                    pass
+            # if not xp.ON_WINDOWS and not self.suspended:
+            #     try:
+            #         # The command that is waiting for input can be suspended by OS in case there is no terminal attached
+            #         # because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals
+            #         # (https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html).
+            #         pid, proc_status = os.waitpid(self.pid, os.WUNTRACED)
+            #         if os.WIFSTOPPED(proc_status) and (
+            #             stopsig := os.WSTOPSIG(proc_status)
+            #         ) in [
+            #             signal.SIGTTOU,
+            #             signal.SIGTTIN,
+            #         ]:
+            #             signame = f"{stopsig} {xt.get_signal_name(stopsig)}".strip()
+            #             print(
+            #                 f"Process {self.name} suspended with signal {signame} and stay in `jobs`.\n"
+            #                 f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
+            #                 file=sys.stderr,
+            #             )
+            #             self.suspended = True
+            #
+            #     except ChildProcessError:
+            #         if XSH.env.get("XONSH_DEBUG", False):
+            #             print(
+            #                 f"Process {self.name} raises ChildProcessError.",
+            #                 file=sys.stderr,
+            #             )
+            #         pass
 
             # this is here for CPU performance reasons.
             if i + j == 0:

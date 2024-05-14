@@ -291,11 +291,15 @@ class CommandPipeline:
         while proc.poll() is None:
             if getattr(proc, "suspended", False):
                 self.suspended = True
-                xj.set_job_attr(proc.pid, "status", "suspended")
+                xj.update_job_attr(proc.pid, "status", "suspended")
                 return
             elif getattr(proc, "in_alt_mode", False):
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
+            elif self._prev_procs_suspended():
+                self.suspended = True
+                xj.update_job_attr(proc.pid, "status", "suspended")
+                return
             elif not check_prev_done:
                 # In the case of pipelines with more than one command
                 # we should give the commands a little time
@@ -306,6 +310,7 @@ class CommandPipeline:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
+
             stdout_lines = safe_readlines(stdout, 1024)
             i = len(stdout_lines)
             if i != 0:
@@ -515,6 +520,39 @@ class CommandPipeline:
 
     def _safe_close(self, handle):
         safe_fdclose(handle, cache=self._closed_handle_cache)
+
+    def _check_pid_suspended(self, pid):
+        """
+        The command that is waiting for input can be suspended by OS in case there is no terminal attached
+        because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals:
+         * https://www.linusakesson.net/programming/tty/
+         * http://curiousthing.org/sigttin-sigttou-deep-dive-linux
+         * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
+        Maybe we need to use `psutil` here to have strong confirmation of process state.
+        """
+        try:
+            pid, proc_status = os.waitpid(pid, os.WUNTRACED)
+            if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [signal.SIGTTOU, signal.SIGTTIN]:
+                return stopsig
+        except ChildProcessError:
+            return 0
+        return 0
+
+    def _prev_procs_suspended(self):
+        if xp.ON_WINDOWS:
+            # Windows just not supported. PR is welcome.
+            return False
+
+        for s, p in zip(self.specs[:-1], self.procs[:-1]):
+            stopsig = self._check_pid_suspended(p.pid)
+            if stopsig:
+                signame = f"{stopsig} {xt.get_signal_name(stopsig)}".strip()
+                print(
+                    f"Process p.name suspended with signal {signame} and stay in `jobs`.\n"
+                    f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
+                    file=sys.stderr,
+                )
+                return True
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there

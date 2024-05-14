@@ -403,8 +403,8 @@ def add_job(info):
         print_one_job(num)
 
 
-def set_job_attr(pid, name, value):
-    """Set job attribute."""
+def update_job_attr(pid, name, value):
+    """Update job attribute."""
     jobs = get_jobs()
     for num, job in get_jobs().items():
         if "pids" in job and pid in job["pids"]:
