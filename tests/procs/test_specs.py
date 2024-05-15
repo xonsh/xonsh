@@ -157,12 +157,17 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
 
 
 @skip_if_on_windows
-@pytest.mark.parametrize("suspended_pipeline", [
-    [cmd_sig("SIGTTIN")],
-    [["echo", "1"],"|",cmd_sig("SIGTTIN")],
-    [["echo", "1"],"|",cmd_sig("SIGTTIN"),"|",["head"]]
-])
-def test_specs_with_suspended_captured_process_pipeline(xonsh_session, suspended_pipeline):
+@pytest.mark.parametrize(
+    "suspended_pipeline",
+    [
+        [cmd_sig("SIGTTIN")],
+        [["echo", "1"], "|", cmd_sig("SIGTTIN")],
+        [["echo", "1"], "|", cmd_sig("SIGTTIN"), "|", ["head"]],
+    ],
+)
+def test_specs_with_suspended_captured_process_pipeline(
+    xonsh_session, suspended_pipeline
+):
     xonsh_session.env["XONSH_INTERACTIVE"] = True
     specs = cmds_to_specs(suspended_pipeline, captured="object")
     p = _run_command_pipeline(specs, suspended_pipeline)
