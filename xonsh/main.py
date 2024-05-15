@@ -528,7 +528,7 @@ def main_xonsh(args):
             ignore_sigtstp()
             if (
                 env["XONSH_INTERACTIVE"]
-                and sys.stdin.isatty()
+                and sys.stdin.isatty()  # In case the interactive mode is forced but no tty (input from pipe).
                 and not any(os.path.isfile(i) for i in env["XONSHRC"])
                 and not any(os.path.isdir(i) for i in env["XONSHRC_DIR"])
             ):
