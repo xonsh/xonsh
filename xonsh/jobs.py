@@ -341,6 +341,7 @@ else:
         if active_task is None:
             return last_task
         proc = active_task["proc"]
+        info = {"backgrounded": False}
 
         try:
             info = proc_untraced_waitpid(proc, hang=True, task=active_task, raise_child_process_error=True)
