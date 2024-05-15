@@ -1,6 +1,6 @@
 **Added:**
 
-* Processing a suspended process in the captured mode (#5361).
+* Reading stop signals from the process and update the process state (#5361).
 
 **Changed:**
 
