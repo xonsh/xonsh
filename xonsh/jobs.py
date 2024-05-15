@@ -41,7 +41,7 @@ _tasks_main: collections.deque[int] = collections.deque()
 
 def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False):
     """
-    Read stop signals from the process and update the process state.
+    Read a stop signals from the process and update the process state.
 
     Return code
     ===========
