@@ -528,6 +528,7 @@ def main_xonsh(args):
             ignore_sigtstp()
             if (
                 env["XONSH_INTERACTIVE"]
+                and sys.stdin.isatty()  # In case the interactive mode is forced but no tty (input from pipe).
                 and not any(os.path.isfile(i) for i in env["XONSHRC"])
                 and not any(os.path.isdir(i) for i in env["XONSHRC_DIR"])
             ):
@@ -577,13 +578,18 @@ def main_xonsh(args):
         else:
             # pass error to finally clause
             exc_info = sys.exc_info()
+    except SystemExit:
+        exc_info = sys.exc_info()
     finally:
         if exc_info != (None, None, None):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
-                raise err
-            print_exception(None, exc_info)
-            exit_code = 1
+                XSH.exit = True
+                code = getattr(exc_info[1], "code", 0)
+                exit_code = int(code) if code is not None else 0
+            else:
+                exit_code = 1
+                print_exception(None, exc_info)
         events.on_exit.fire()
         postmain(args)
     return exit_code

@@ -54,6 +54,37 @@ def EXEC_ALIAS_RE():
     return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
 
 
+class FuncAlias:
+    """Provides a callable alias for xonsh commands."""
+
+    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
+    attributes_inherit = attributes_show + ["__doc__"]
+
+    def __init__(self, name, func):
+        self.__name__ = self.name = name
+        self.func = func
+        for attr in self.attributes_inherit:
+            if (val := getattr(func, attr, None)) is not None:
+                self.__setattr__(attr, val)
+
+    def __repr__(self):
+        r = {"name": self.name, "func": self.func.__name__}
+        r |= {
+            attr: val
+            for attr in self.attributes_show
+            if (val := getattr(self, attr, None)) is not None
+        }
+        return f"FuncAlias({repr(r)})"
+
+    def __call__(
+        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+    ):
+        func_args = [args, stdin, stdout, stderr, spec, stack][
+            : len(inspect.signature(self.func).parameters)
+        ]
+        return self.func(*func_args)
+
+
 class Aliases(cabc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
@@ -182,6 +213,8 @@ class Aliases(cabc.MutableMapping):
             else:
                 # need to exec alias
                 self._raw[key] = ExecAlias(val, filename=f)
+        elif isinstance(val, types.FunctionType):
+            self._raw[key] = FuncAlias(key, val)
         else:
             self._raw[key] = val
 
@@ -225,7 +258,7 @@ class Aliases(cabc.MutableMapping):
 
 
 class ExecAlias:
-    """Provides a callable alias for xonsh source code."""
+    """Provides an exec alias for xonsh source code."""
 
     def __init__(self, src, filename="<exec-alias>"):
         """

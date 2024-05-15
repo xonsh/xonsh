@@ -2122,7 +2122,7 @@ def test_print_exception_error(xession, capsys):
         match,
         cap.err,
         re.MULTILINE | re.DOTALL,
-    ), f"Assert: {cap.err!r} not matched with {match!r}"
+    ), f"\nAssert: {cap.err!r},\nexpected: {match!r}"
 
     with xession.env.swap(XONSH_SHOW_TRACEBACK=True):
         try:
@@ -2130,9 +2130,9 @@ def test_print_exception_error(xession, capsys):
         except subprocess.CalledProcessError:
             print_exception(msg="MSG")
     cap = capsys.readouterr()
-    match = ".*Traceback.*subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
+    match = ".*Traceback.*subprocess.CalledProcessError: Command .* returned non-zero exit status .*MSG\n"
     assert re.match(
         match,
         cap.err,
         re.MULTILINE | re.DOTALL,
-    ), f"Assert: {cap.err!r} not matched with {match!r}"
+    ), f"\nAssert: {cap.err!r},\nexpected {match!r}"
