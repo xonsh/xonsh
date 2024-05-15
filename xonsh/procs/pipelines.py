@@ -188,14 +188,15 @@ class CommandPipeline:
         self.proc = self.procs[-1]
 
     def __repr__(self):
+        debug = XSH.env.get("XONSH_DEBUG", False)
         attrs = self.attrnames + (
-            self.attrnames_ext if XSH.env.get("XONSH_DEBUG", False) else ()
+            self.attrnames_ext if debug else ()
         )
         s = self.__class__.__name__ + "(\n  "
         s += ",\n  ".join(
             a + "=" + repr(getattr(self, a))
             for a in attrs
-            if getattr(self, a) is not None
+            if debug or getattr(self, a) is not None
         )
         s += "\n)"
         return s
