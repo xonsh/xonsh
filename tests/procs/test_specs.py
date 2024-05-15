@@ -143,7 +143,6 @@ def test_capture_always(
 @skip_if_on_windows
 @pytest.mark.parametrize("captured", ["stdout", "object"])
 @pytest.mark.parametrize("interactive", [True, False])
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_interrupted_process_returncode(xonsh_session, captured, interactive):
     xonsh_session.env["XONSH_INTERACTIVE"] = interactive
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
@@ -154,7 +153,6 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
 
 
 @skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_specs_with_suspended_captured_process_pipeline(xonsh_session):
     xonsh_session.env["XONSH_INTERACTIVE"] = True
 
