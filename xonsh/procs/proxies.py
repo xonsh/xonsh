@@ -8,7 +8,6 @@ licensed to the Python Software foundation under a Contributor Agreement.
 """
 
 import collections.abc as cabc
-import functools
 import io
 import os
 import signal
