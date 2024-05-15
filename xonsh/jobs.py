@@ -227,11 +227,11 @@ if ON_WINDOWS:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        obj = active_task["proc"]
+        proc = active_task["proc"]
         _continue(active_task)
-        while obj.returncode is None:
+        while proc.returncode is None:
             try:
-                obj.wait(0.01)
+                proc.wait(0.01)
             except subprocess.TimeoutExpired:
                 pass
             except KeyboardInterrupt:
@@ -398,8 +398,8 @@ def _clear_dead_jobs():
     to_remove = set()
     tasks = get_tasks()
     for tid in tasks:
-        obj = get_task(tid)["proc"]
-        if obj is None or obj.poll() is not None:
+        proc = get_task(tid)["proc"]
+        if proc is None or proc.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
