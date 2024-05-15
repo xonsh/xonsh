@@ -687,7 +687,7 @@ class XonshSession:
         if not self.builtins_loaded:
             return
 
-        if self.history:
+        if self.history is not None:
             self.history.flush(at_exit=True)
 
         self.unlink_builtins()
