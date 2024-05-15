@@ -16,7 +16,7 @@ from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
-from xonsh.tools import on_main_thread, unthreadable
+from xonsh.tools import on_main_thread, unthreadable, get_signal_name
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
@@ -39,45 +39,80 @@ _jobs_thread_local = threading.local()
 _tasks_main: collections.deque[int] = collections.deque()
 
 
-def waitpid(pid, opt):
+def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False):
     """
-    Transparent wrapper on `os.waitpid` to make notes about undocumented subprocess behavior.
+    Read signals from the process and update the process state.
+
+    Return code
+    ===========
+
     Basically ``p = subprocess.Popen()`` populates ``p.returncode`` after ``p.wait()``, ``p.poll()``
     or ``p.communicate()`` (https://docs.python.org/3/library/os.html#os.waitpid).
     But if you're using `os.waitpid()` BEFORE these functions you're capturing return code
     from a signal subsystem and ``p.returncode`` will be ``0``.
-    After ``os.waitid`` call you need to set return code manually
-    ``p.returncode = -os.WTERMSIG(status)`` like in Popen.
+    After ``os.waitid`` call you need to set return code and process signal manually.
     See also ``xonsh.tools.describe_waitpid_status()``.
-    """
-    return os.waitpid(pid, opt)
 
-
-def waitpid_sigtt(pid):
-    """
-    Check pid for SIGTTOU or SIGTTIN signals and return them. Return 0 otherwise.
+    Signals
+    =======
 
     The command that is waiting for input can be suspended by OS in case there is no terminal attached
     because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals:
      * https://www.linusakesson.net/programming/tty/
      * http://curiousthing.org/sigttin-sigttou-deep-dive-linux
      * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
-    Maybe we need to use ``psutil`` here to have strong confirmation of process state.
     """
-    if pid is None or ON_WINDOWS:
-        return 0
+
+    info = {"backgrounded": False, "signal": None, "signal_name": None}
+
+    if ON_WINDOWS:
+        return info
+
+    if proc is not None and getattr(proc, 'pid', None) is None:
+        # When the process stopped before os.waitpid it has no pid.
+        if raise_child_process_error:
+            raise ChildProcessError("The process PID not found.")
+        else:
+            return info
 
     try:
-        pid, proc_status = waitpid(pid, os.WUNTRACED | os.WNOHANG)
-        if os.WIFSTOPPED(proc_status) and (stopsig := os.WSTOPSIG(proc_status)) in [
-            signal.SIGTTOU,
-            signal.SIGTTIN,
-        ]:
-            return stopsig
+        """
+        The WUNTRACED flag indicates that the caller wishes to wait for stopped or terminated 
+        child processes, but doesn't want to return information about them. A stopped process is one 
+        that has been suspended and is waiting to be resumed or terminated.
+        """
+        opt = os.WUNTRACED if hang else (os.WUNTRACED | os.WNOHANG)
+        wpid, wcode = os.waitpid(proc.pid, opt)
     except ChildProcessError:
-        # Process could be already stopped.
+        wpid, wcode = 0, 0
+        if raise_child_process_error:
+            raise
+
+    if wpid == 0:
+        # Process has no changes in state.
         pass
-    return 0
+
+    elif os.WIFSTOPPED(wcode):
+        if task is not None:
+            task["status"] = "stopped"
+        info["backgrounded"] = True
+        proc.signal = (os.WSTOPSIG(wcode), os.WCOREDUMP(wcode))
+        info["signal"] = os.WSTOPSIG(wcode)
+        proc.suspended = True
+
+    elif os.WIFSIGNALED(wcode):
+        print()  # get a newline because ^C will have been printed
+        proc.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
+        proc.returncode = -os.WTERMSIG(wcode)  # Popen default.
+        info["signal"] = os.WTERMSIG(wcode)
+
+    else:
+        proc.returncode = os.WEXITSTATUS(wcode)
+        proc.signal = None
+        info["signal"] = None
+
+    info["signal_name"] = f'{info["signal"]} {get_signal_name(info["signal"])}'.strip()
+    return info
 
 
 @contextlib.contextmanager
@@ -306,30 +341,17 @@ else:
         if active_task is None:
             return last_task
         proc = active_task["proc"]
-        backgrounded = False
+
         try:
-            if proc.pid is None:
-                # When the process stopped before os.waitpid it has no pid.
-                raise ChildProcessError("The process PID not found.")
-            _, wcode = waitpid(proc.pid, os.WUNTRACED)
-        except ChildProcessError as e:  # No child processes
+            info = proc_untraced_waitpid(proc, hang=True, task=active_task, raise_child_process_error=True)
+        except ChildProcessError as e:
             if return_error:
                 return e
             else:
                 return _safe_wait_for_active_job(
-                    last_task=active_task, backgrounded=backgrounded
+                    last_task=active_task, backgrounded=info["backgrounded"]
                 )
-        if os.WIFSTOPPED(wcode):
-            active_task["status"] = "stopped"
-            backgrounded = True
-        elif os.WIFSIGNALED(wcode):
-            print()  # get a newline because ^C will have been printed
-            proc.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
-            proc.returncode = -os.WTERMSIG(wcode)  # Default Popen
-        else:
-            proc.returncode = os.WEXITSTATUS(wcode)
-            proc.signal = None
-        return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
+        return wait_for_active_job(last_task=active_task, backgrounded=info["backgrounded"])
 
 
 def _safe_wait_for_active_job(last_task=None, backgrounded=False):

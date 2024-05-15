@@ -524,17 +524,17 @@ class CommandPipeline:
 
     def _procs_suspended(self):
         """Check procs and return suspended proc."""
-        for p in self.procs:
-            if sigtt := xj.waitpid_sigtt(p.pid):
-                proc = getattr(p, "proc", p)
-                procname = f"{getattr(proc, 'args', '')} with pid {p.pid}".strip()
-                signame = f"{sigtt} {xt.get_signal_name(sigtt)}".strip()
+        for proc in self.procs:
+            info = xj.proc_untraced_waitpid(proc, hang=False)
+            if getattr(proc, 'suspended', False):
+                proc = getattr(proc, "proc", proc)
+                procname = f"{getattr(proc, 'args', '')} with pid {proc.pid}".strip()
                 print(
-                    f"Process {procname} suspended with signal {signame} and stay in `jobs`.\n"
+                    f"Process {procname} suspended with signal {info['signal_name']} and stay in `jobs`.\n"
                     f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
                     file=sys.stderr,
                 )
-                return p
+                return proc
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there

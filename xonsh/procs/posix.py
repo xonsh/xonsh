@@ -14,7 +14,7 @@ import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.jobs import waitpid_sigtt
+from xonsh.jobs import proc_untraced_waitpid
 from xonsh.procs.readers import (
     BufferedFDParallelReader,
     NonBlockingFDReader,
@@ -169,12 +169,13 @@ class PopenThread(threading.Thread):
         # loop over reads while process is running.
         i = j = cnt = 1
         while proc.poll() is None:
-            if sigtt := waitpid_sigtt(proc.pid):
+            info = proc_untraced_waitpid(proc, hang=False)
+            if getattr(proc, 'suspended', False):
                 self.suspended = True
                 if XSH.env.get("XONSH_DEBUG", False):
                     procname = f"{getattr(proc, 'args', '')} {proc.pid}".strip()
                     print(
-                        f"Process {procname} suspended with signal {sigtt} {xt.get_signal_name(sigtt)}.",
+                        f"Process {procname} suspended with signal {info['signal_name']}.",
                         file=sys.stderr,
                     )
 

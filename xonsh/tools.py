@@ -2857,6 +2857,7 @@ def describe_waitpid_status(status):
         os.WTERMSIG,
         os.WIFSTOPPED,
         os.WSTOPSIG,
+        os.WCOREDUMP,
     ]
     for f in funcs:
         s = f(status)
