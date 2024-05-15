@@ -170,7 +170,7 @@ class PopenThread(threading.Thread):
         i = j = cnt = 1
         while proc.poll() is None:
             info = proc_untraced_waitpid(proc, hang=False)
-            if getattr(proc, 'suspended', False):
+            if getattr(proc, "suspended", False):
                 self.suspended = True
                 if XSH.env.get("XONSH_DEBUG", False):
                     procname = f"{getattr(proc, 'args', '')} {proc.pid}".strip()
