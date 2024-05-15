@@ -141,8 +141,10 @@ def test_capture_always(
 
 
 @skip_if_on_windows
+@pytest.mark.parametrize("captured", ["stdout", "object"])
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
-def test_interrupted_process_returncode(xonsh_session):
+def test_interrupted_process_returncode(xonsh_session, captured):
+    xonsh_session.env["XONSH_INTERACTIVE"] = True
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
     cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGINT)"]]
     specs = cmds_to_specs(cmd, captured="stdout")
