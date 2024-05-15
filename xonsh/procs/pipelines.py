@@ -526,7 +526,7 @@ class CommandPipeline:
         """Check procs and return suspended proc."""
         for proc in self.procs:
             info = xj.proc_untraced_waitpid(proc, hang=False)
-            if getattr(proc, 'suspended', False):
+            if getattr(proc, "suspended", False):
                 proc = getattr(proc, "proc", proc)
                 procname = f"{getattr(proc, 'args', '')} with pid {proc.pid}".strip()
                 print(

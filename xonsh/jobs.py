@@ -16,7 +16,7 @@ from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
-from xonsh.tools import on_main_thread, unthreadable, get_signal_name
+from xonsh.tools import get_signal_name, on_main_thread, unthreadable
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
@@ -68,7 +68,7 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
     if ON_WINDOWS:
         return info
 
-    if proc is not None and getattr(proc, 'pid', None) is None:
+    if proc is not None and getattr(proc, "pid", None) is None:
         # When the process stopped before os.waitpid it has no pid.
         if raise_child_process_error:
             raise ChildProcessError("The process PID not found.")
@@ -77,8 +77,8 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
 
     try:
         """
-        The WUNTRACED flag indicates that the caller wishes to wait for stopped or terminated 
-        child processes, but doesn't want to return information about them. A stopped process is one 
+        The WUNTRACED flag indicates that the caller wishes to wait for stopped or terminated
+        child processes, but doesn't want to return information about them. A stopped process is one
         that has been suspended and is waiting to be resumed or terminated.
         """
         opt = os.WUNTRACED if hang else (os.WUNTRACED | os.WNOHANG)
@@ -343,7 +343,9 @@ else:
         proc = active_task["proc"]
 
         try:
-            info = proc_untraced_waitpid(proc, hang=True, task=active_task, raise_child_process_error=True)
+            info = proc_untraced_waitpid(
+                proc, hang=True, task=active_task, raise_child_process_error=True
+            )
         except ChildProcessError as e:
             if return_error:
                 return e
@@ -351,7 +353,9 @@ else:
                 return _safe_wait_for_active_job(
                     last_task=active_task, backgrounded=info["backgrounded"]
                 )
-        return wait_for_active_job(last_task=active_task, backgrounded=info["backgrounded"])
+        return wait_for_active_job(
+            last_task=active_task, backgrounded=info["backgrounded"]
+        )
 
 
 def _safe_wait_for_active_job(last_task=None, backgrounded=False):
