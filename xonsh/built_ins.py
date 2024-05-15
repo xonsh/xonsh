@@ -686,6 +686,10 @@ class XonshSession:
 
         if not self.builtins_loaded:
             return
+
+        if self.history:
+            self.history.flush(at_exit=True)
+
         self.unlink_builtins()
         delattr(builtins, "__xonsh__")
         self.builtins_loaded = False

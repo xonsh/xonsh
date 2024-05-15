@@ -70,6 +70,18 @@ def test_hist_flush(hist, xession):
         assert not cmd.get("out", None)
 
 
+def test_hist_flush_on_xonsh_unload(hist, xession):
+    hf = hist.flush()
+    assert hf is None
+    xession.env["HISTCONTROL"] = set()
+    hist.append({"inp": "save me if you unload", "rtn": 0, "out": "yes"})
+    xession.unload()
+    with LazyJSON(hist.filename) as lj:
+        assert len(lj["cmds"]) == 1
+        cmd = lj["cmds"][0]
+        assert cmd["inp"] == "save me if you unload"
+
+
 def test_hist_flush_with_store_stdout(hist, xession):
     """Verify explicit flushing of the history works."""
     hf = hist.flush()
