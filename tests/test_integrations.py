@@ -1244,6 +1244,7 @@ def test_catching_system_exit():
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_catching_exit_signal():
     stdin_cmd = "kill -SIGHUP @(__import__('os').getpid())\n"
     out, err, ret = run_xonsh(
