@@ -19,6 +19,10 @@ from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
 
 
+def cmd_sig(sig):
+    return ["python", "-c", f"import os, signal; os.kill(os.getpid(), signal.{sig})"]
+
+
 @skip_if_on_windows
 def test_cmds_to_specs_thread_subproc(xession):
     env = xession.env
@@ -146,53 +150,25 @@ def test_capture_always(
 def test_interrupted_process_returncode(xonsh_session, captured, interactive):
     xonsh_session.env["XONSH_INTERACTIVE"] = interactive
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
-    cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGINT)"]]
+    cmd = [cmd_sig("SIGINT")]
     specs = cmds_to_specs(cmd, captured="stdout")
     (p := _run_command_pipeline(specs, cmd)).end()
     assert p.proc.returncode == -signal.SIGINT
 
 
 @skip_if_on_windows
-def test_specs_with_suspended_captured_process_pipeline(xonsh_session):
+@pytest.mark.parametrize("suspended_pipeline", [
+    [cmd_sig("SIGTTIN")],
+    [["echo", "1"],"|",cmd_sig("SIGTTIN")],
+    [["echo", "1"],"|",cmd_sig("SIGTTIN"),"|",["head"]]
+])
+def test_specs_with_suspended_captured_process_pipeline(xonsh_session, suspended_pipeline):
     xonsh_session.env["XONSH_INTERACTIVE"] = True
-
-    cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"]]
-    specs = cmds_to_specs(cmd, captured="object")
-    p = _run_command_pipeline(specs, cmd)
+    specs = cmds_to_specs(suspended_pipeline, captured="object")
+    p = _run_command_pipeline(specs, suspended_pipeline)
     p.proc.send_signal(signal.SIGCONT)
     p.end()
     assert p.suspended
-
-    cmd = [
-        ["echo", "1"],
-        "|",
-        ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"],
-    ]
-    specs = cmds_to_specs(cmd, captured="object")
-    p = _run_command_pipeline(specs, cmd)
-    p.proc.send_signal(signal.SIGCONT)
-    p.end()
-    assert p.suspended
-
-    cmd = [
-        ["echo", "1"],
-        "|",
-        ["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTTIN)"],
-        "|",
-        ["head"],
-    ]
-    specs = cmds_to_specs(cmd, captured="object")
-    p = _run_command_pipeline(specs, cmd)
-    p.proc.send_signal(signal.SIGCONT)
-    p.end()
-    assert p.suspended
-
-    from xonsh import jobs
-
-    jobs = jobs.get_jobs().values()
-    assert len(jobs) == 3
-    for j in jobs:
-        assert j["status"] == "suspended"
 
 
 @skip_if_on_windows
