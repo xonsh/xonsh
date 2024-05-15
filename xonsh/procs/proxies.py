@@ -8,7 +8,6 @@ licensed to the Python Software foundation under a Contributor Agreement.
 """
 
 import collections.abc as cabc
-import functools
 import io
 import os
 import signal
@@ -285,16 +284,11 @@ def parse_proxy_return(r, stdout, stderr):
 
 
 def get_proc_proxy_name(cls):
-    func_name = cls.f
-    if type(cls.f) is functools.partial:
-        func_name = getattr(
-            cls.f.args[0], "__name__", getattr(cls.f, "__name__", cls.f)
-        )
     return repr(
         {
             "cls": cls.__class__.__name__,
             "name": getattr(cls, "name", None),
-            "func": func_name,
+            "func": cls.f,
             "alias": cls.env.get("__ALIAS_NAME", None),
             "pid": cls.pid,
         }
