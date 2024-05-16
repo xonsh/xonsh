@@ -23,11 +23,10 @@ permissions:
 
 jobs:
   ci:
-    env:
-      DEFAULT_PYTHON_VERSION: 3.12
     runs-on: ${{ matrix.os }}
     env:
       UV_CACHE_DIR: .cache/uv
+      DEFAULT_PYTHON_VERSION: 3.12
     strategy:
       fail-fast: false
       matrix:
