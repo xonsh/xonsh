@@ -1254,9 +1254,7 @@ def test_catching_exit_signal():
 @skip_if_on_windows
 def test_suspended_captured_process_pipeline():
     """See also test_specs.py:test_specs_with_suspended_captured_process_pipeline"""
-    stdin_cmd = (
-        "!(python -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
-    )
+    stdin_cmd = "!(python -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
     )
