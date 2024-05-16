@@ -23,7 +23,7 @@ def cmd_sig(sig):
     return [
         "python",
         "-c",
-        f"import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.{sig})",
+        f"import os, signal; os.kill(os.getpid(), signal.{sig})",
     ]
 
 
