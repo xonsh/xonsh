@@ -566,6 +566,7 @@ class XonshSession:
         self._completers = None
         self.builtins = None
         self._initial_builtin_names = None
+        self.last = None  # Last executed CommandPipeline.
 
     @property
     def aliases(self):
