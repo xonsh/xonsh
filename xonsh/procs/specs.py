@@ -274,6 +274,24 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
+class SpecModifier:
+    """Spec modifier base class."""
+    def modify_spec(self, spec):
+        pass
+
+
+class SpecModifierThreadable(SpecModifier):
+    """Switch spec to threadable."""
+    def modify_spec(self, spec):
+        spec.threadable = True
+
+
+class SpecModifierUnthreadable(SpecModifier):
+    """Switch spec to unthreadable."""
+    def modify_spec(self, spec):
+        spec.threadable = False
+
+
 class SubprocSpec:
     """A container for specifying how a subprocess command should be
     executed.
@@ -376,6 +394,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
+        self.pre_run_modifiers = []  # Functions that can transform spec before run.
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
@@ -454,6 +473,8 @@ class SubprocSpec:
         """Launches the subprocess and returns the object."""
         event_name = self._cmd_event_name()
         self._pre_run_event_fire(event_name)
+        for spec_modifier in self.pre_run_modifiers:
+            spec_modifier(self)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         if callable(self.alias):
             kwargs["env"] = self.env or {}
@@ -596,6 +617,7 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        spec.resolve_spec_modifiers()
         spec.resolve_args_list()
         # perform initial redirects
         spec.resolve_redirects()
@@ -606,6 +628,15 @@ class SubprocSpec:
         spec.resolve_alias_cls()
         spec.resolve_stack()
         return spec
+
+
+    def resolve_spec_modifiers(self):
+        """Save and remove spec modifier."""
+        c = self.cmd[0]
+        if c in XSH.aliases and (modifier := getattr(XSH.aliases[c], 'modify_spec', False)):
+            self.pre_run_modifiers.append(modifier)
+            self.cmd = self.cmd[1:]
+
 
     def resolve_args_list(self):
         """Weave a list of arguments into a command."""

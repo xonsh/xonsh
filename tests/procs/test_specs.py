@@ -14,6 +14,7 @@ from xonsh.procs.specs import (
     _run_command_pipeline,
     cmds_to_specs,
     run_subproc,
+    SpecModifier
 )
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
@@ -186,6 +187,12 @@ def test_run_subproc_background(captured, exp_is_none):
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
+
+
+def test_spec_build_modifier(xession):
+    xession.aliases['mod'] = SpecModifier()
+    spec = SubprocSpec.build(["mod", "echo", "hello"])
+    assert spec.cmd == ["echo", "hello"]
 
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])
