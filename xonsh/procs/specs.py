@@ -614,7 +614,11 @@ class SubprocSpec:
         """Weave a list of arguments into a command."""
         resolved_cmd = []
         for c in self.cmd:
-            resolved_cmd += c if isinstance(c, list) else [c]
+            if isinstance(c, tuple) and len(c) == 2 and isinstance(c[1], list) and len(c[1]) == 1:
+                # Redirect case e.g. `> file`
+                resolved_cmd.append( (c[0], c[1][0],) )
+            else:
+                resolved_cmd += c if isinstance(c, list) else [c]
         self.cmd = resolved_cmd
 
     def resolve_redirects(self):
@@ -622,8 +626,6 @@ class SubprocSpec:
         new_cmd = []
         for c in self.cmd:
             if isinstance(c, tuple):
-                if len(c) == 2 and isinstance(c[1], list):
-                    c = (c[0], c[1][0])
                 streams = _redirect_streams(*c)
                 self.stdin, self.stdout, self.stderr = streams
             else:
