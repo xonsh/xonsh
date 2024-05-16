@@ -224,7 +224,7 @@ def _parse_redirects(r, loc=None):
 def _redirect_streams(r, loc=None):
     """Returns stdin, stdout, stderr tuple of redirections."""
     if isinstance(loc, list):
-        raise Exception(f'Unsupported redirect: {r!r} {loc!r}')
+        raise Exception(f"Unsupported redirect: {r!r} {loc!r}")
 
     stdin = stdout = stderr = None
     no_ampersand = r.replace("&", "")
