@@ -104,7 +104,7 @@ def test_complete_python_ctx():
         ("from pathlib import PosixPath PurePa", {"PurePath"}),
     ],
 )
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 def test_complete_import(command, exp, completer_obj):
     result = complete_import(completer_obj.parse(command))
     if isinstance(result, tuple):

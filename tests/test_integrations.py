@@ -659,7 +659,7 @@ if not ON_WINDOWS:
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
     out, err, rtn = run_xonsh(script)

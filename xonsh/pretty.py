@@ -677,7 +677,6 @@ def _re_pattern_pprint(obj, p, cycle):
         p.breakable()
         done_one = False
         for flag in (
-            "TEMPLATE",
             "IGNORECASE",
             "LOCALE",
             "MULTILINE",
@@ -769,13 +768,16 @@ def _type_pprinters():
         set: _set_pprinter_factory("{", "}", set),
         frozenset: _set_pprinter_factory("frozenset({", "})", frozenset),
         super: _super_pprint,
-        type(re.compile("")): _re_pattern_pprint,
+        re.Pattern: _re_pattern_pprint,
         type: _type_pprint,
         types.FunctionType: _function_pprint,
         types.BuiltinFunctionType: _function_pprint,
         types.MethodType: _repr_pprint,
         datetime.datetime: _repr_pprint,
         datetime.timedelta: _repr_pprint,
+        slice: _repr_pprint,
+        range: _repr_pprint,
+        bytes: _repr_pprint,
     }
     #: the exception base
     try:
@@ -783,19 +785,6 @@ def _type_pprinters():
     except NameError:
         _exception_base = Exception
     tp[_exception_base] = _exception_pprint
-    try:
-        tp[types.DictProxyType] = _dict_pprinter_factory("<dictproxy {", "}>")
-        tp[types.ClassType] = _type_pprint
-        tp[types.SliceType] = _repr_pprint
-    except AttributeError:  # Python 3
-        tp[slice] = _repr_pprint
-    try:
-        tp[xrange] = _repr_pprint
-        tp[long] = _repr_pprint
-        tp[unicode] = _repr_pprint
-    except NameError:
-        tp[range] = _repr_pprint
-        tp[bytes] = _repr_pprint
     return tp
 
 

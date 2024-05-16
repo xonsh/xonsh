@@ -83,8 +83,6 @@ def call_split_lines(x, lineno=None, col=None):
         ),
         args=[],
         keywords=[],
-        starargs=None,
-        kwargs=None,
         lineno=lineno,
         col_offset=col,
     )
@@ -104,8 +102,6 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
             ),
             args=[x, ast.Name(id="str", ctx=ast.Load(), lineno=lineno, col_offset=col)],
             keywords=[],
-            starargs=None,
-            kwargs=None,
             lineno=lineno,
             col_offset=col,
         ),
@@ -820,8 +816,6 @@ class BaseParser:
                 func=name,
                 args=[],
                 keywords=[],
-                starargs=None,
-                kwargs=None,
                 lineno=lineno,
                 col_offset=col,
             )
@@ -2688,7 +2682,7 @@ class BaseParser:
 
     def p_trailer_lparen(self, p):
         """trailer : LPAREN arglist_opt RPAREN"""
-        p[0] = [p[2] or dict(args=[], keywords=[], starargs=None, kwargs=None)]
+        p[0] = [p[2] or dict(args=[], keywords=[])]
 
     def p_trailer_bang_lparen(self, p):
         """
@@ -3027,8 +3021,6 @@ class BaseParser:
             name=p[2],
             bases=b,
             keywords=kw,
-            starargs=None,
-            kwargs=None,
             body=p[5],
             decorator_list=[],
             lineno=p1.lineno,
@@ -3171,8 +3163,6 @@ class BaseParser:
                 ast.const_str(s="", lineno=lineno, col_offset=col),
             ],
             keywords=[],
-            starargs=None,
-            kwargs=None,
             lineno=lineno,
             col_offset=col,
         )
@@ -3377,8 +3367,6 @@ class BaseParser:
             func=func,
             args=[p[2], ast.const_str(s="", lineno=lineno, col_offset=col)],
             keywords=[],
-            starargs=None,
-            kwargs=None,
             lineno=lineno,
             col_offset=col,
         )
