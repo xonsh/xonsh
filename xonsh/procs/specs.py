@@ -276,18 +276,21 @@ def no_pg_xonsh_preexec_fn():
 
 class SpecModifier:
     """Spec modifier base class."""
+
     def modify_spec(self, spec):
         pass
 
 
 class SpecModifierThreadable(SpecModifier):
     """Switch spec to threadable."""
+
     def modify_spec(self, spec):
         spec.threadable = True
 
 
 class SpecModifierUnthreadable(SpecModifier):
     """Switch spec to unthreadable."""
+
     def modify_spec(self, spec):
         spec.threadable = False
 
@@ -629,14 +632,14 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
-
     def resolve_spec_modifiers(self):
         """Save and remove spec modifier."""
         c = self.cmd[0]
-        if c in XSH.aliases and (modifier := getattr(XSH.aliases[c], 'modify_spec', False)):
+        if c in XSH.aliases and (
+            modifier := getattr(XSH.aliases[c], "modify_spec", False)
+        ):
             self.pre_run_modifiers.append(modifier)
             self.cmd = self.cmd[1:]
-
 
     def resolve_args_list(self):
         """Weave a list of arguments into a command."""

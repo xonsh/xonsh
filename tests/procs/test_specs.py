@@ -10,11 +10,11 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
+    SpecModifier,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
     run_subproc,
-    SpecModifier
 )
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
@@ -190,7 +190,7 @@ def test_run_subproc_background(captured, exp_is_none):
 
 
 def test_spec_build_modifier(xession):
-    xession.aliases['mod'] = SpecModifier()
+    xession.aliases["mod"] = SpecModifier()
     spec = SubprocSpec.build(["mod", "echo", "hello"])
     assert spec.cmd == ["echo", "hello"]
 

@@ -18,7 +18,6 @@ from xonsh.ast import isexpression
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
-from xonsh.procs.specs import SpecModifierThreadable, SpecModifierUnthreadable
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import bg, clean_jobs, disown, fg, jobs
@@ -33,6 +32,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
+from xonsh.procs.specs import SpecModifierThreadable, SpecModifierUnthreadable
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -920,7 +920,7 @@ def make_default_aliases():
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
         "threadable": SpecModifierThreadable(),
-        "unthreadable": SpecModifierUnthreadable()
+        "unthreadable": SpecModifierUnthreadable(),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
