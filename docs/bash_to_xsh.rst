@@ -116,7 +116,7 @@ line is ``#!/usr/bin/env xonsh``.
       - ``$ARGS``
       - List of all command line argument and parameter strings.
     * - ``while getopts``
-      - Use `argparse <https://docs.python.org/3/library/argparse.html>`_ or `click <https://click.palletsprojects.com>`_
+      - Use `argparse <https://docs.python.org/3/library/argparse.html>`_ or `click <https://click.palletsprojects.com>`_.
       - See also `awesome-cli-app <https://github.com/anki-code/xonsh-awesome-cli-app>`_ and
         `xontrib-argcomplete <https://github.com/anki-code/xontrib-argcomplete>`_ .
     * - ``complete``
