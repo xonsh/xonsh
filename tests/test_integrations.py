@@ -1244,7 +1244,7 @@ def test_catching_system_exit():
 
 @skip_if_on_windows
 def test_catching_exit_signal():
-    stdin_cmd = "kill -SIGHUP @(__import__('os').getpid())\n"
+    stdin_cmd = "sleep 0.2; kill -SIGHUP @(__import__('os').getpid())\n"
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
     )
@@ -1255,7 +1255,7 @@ def test_catching_exit_signal():
 def test_suspended_captured_process_pipeline():
     """See also test_specs.py:test_specs_with_suspended_captured_process_pipeline"""
     stdin_cmd = (
-        "!(python -c 'import os, signal; os.kill(os.getpid(), signal.SIGTTIN)')\n"
+        "!(python -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
     )
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5

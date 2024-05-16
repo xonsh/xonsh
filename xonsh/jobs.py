@@ -69,7 +69,11 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
         return info
 
     if proc is not None and getattr(proc, "pid", None) is None:
-        # When the process stopped before os.waitpid it has no pid.
+        """
+        When the process stopped before os.waitpid it has no pid.
+        Note that in this case there is high probability 
+        that we will have return code 0 instead of real return code.
+        """
         if raise_child_process_error:
             raise ChildProcessError("The process PID not found.")
         else:
