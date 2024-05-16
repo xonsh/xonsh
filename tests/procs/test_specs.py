@@ -269,3 +269,8 @@ def test_on_command_not_found_doesnt_fire_in_non_interactive_mode(xession):
         subproc.run()
     assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
     assert not fired
+
+
+def test_redirect_to_substitution(xession):
+    s = SubprocSpec.build(['echo', 'hello', ('>', ['/tmp/file'])])  # `echo hello > @('/tmp/file')`
+    assert s.stdout.name == '/tmp/file'
