@@ -728,15 +728,11 @@ class SubprocSpec:
 
     def resolve_alias_cls(self):
         """Determine which proxy class to run an alias with."""
-        alias = self.alias
-        if not callable(alias):
-            return
-        self.is_proxy = True
-        self.threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
-            alias, "__xonsh_threadable__", True
-        )
-        self.cls = ProcProxyThread if self.threadable else ProcProxy
-        self.captured = getattr(alias, "__xonsh_capturable__", self.captured)
+        if callable(self.alias):
+            self.is_proxy = True
+            _update_proc_alias_threadable(self)
+            _update_proc_alias_captured(self)
+
 
     def resolve_stack(self):
         """Computes the stack for a callable alias's call-site, if needed."""
@@ -787,23 +783,16 @@ def _update_last_spec(last):
     if not last.captured:
         return
 
-    if (decide_threading := _last_spec_decide_threading(last)) is None:
-        pass
-    elif decide_threading:
-        _last_spec_update_spec_threaded(last)
-    else:
-        _last_spec_update_spec_unthreaded(last)
-
-    if _last_spec_decide_capturing(last):
-        _make_last_spec_captured(last)
+    _last_spec_update_threading(last)
+    _last_spec_update_captured(last)
 
 
-def _last_spec_decide_threading(last):
+def _last_spec_update_threading(last: SubprocSpec):
     if callable(last.alias):
         return
 
     captured, env, cmds_cache = last.captured, XSH.env, XSH.commands_cache
-    return (
+    threadable = (
         captured
         and env.get("THREAD_SUBPROCS")
         and (captured != "hiddenobject" or env.get("XONSH_CAPTURE_ALWAYS"))
@@ -811,28 +800,15 @@ def _last_spec_decide_threading(last):
         and cmds_cache.predict_threadable(last.cmd)
     )
 
-
-def _last_spec_update_spec_threaded(last):
-    """
-    This function was created during refactoring.
-    It is short because the algorithm leaves default SubprocSpec behavior unchanged.
-    Maybe we need to set it here explicitly and rename from "update" to "make".
-    """
-    if last.captured:
-        last.cls = PopenThread
+    if threadable:
+        if last.captured:
+            last.cls = PopenThread
+    else:
+        last.threadable = False
 
 
-def _last_spec_update_spec_unthreaded(last):
-    """
-    This function was created during refactoring.
-    It is short because the algorithm leaves default SubprocSpec behavior unchanged.
-    Maybe we need to set it here explicitly and rename from "update" to "make".
-    """
-    last.threadable = False
-
-
-def _last_spec_decide_capturing(last: SubprocSpec):
-    return (
+def _last_spec_update_captured(last : SubprocSpec):
+    captured = (
         (captured := last.captured)
         and not (captured in ["object", "hiddenobject"] and not last.threadable)
         # a ProcProxy run using ![] should not be captured
@@ -843,6 +819,8 @@ def _last_spec_decide_capturing(last: SubprocSpec):
         )
     )
 
+    if captured:
+        _make_last_spec_captured(last)
 
 def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
@@ -903,6 +881,17 @@ def _make_last_spec_captured(last: SubprocSpec):
     if callable_alias and last.stderr == subprocess.STDOUT:
         last._stderr = last.stdout
         last.captured_stderr = last.captured_stdout
+
+
+def _update_proc_alias_threadable(proc):
+    proc.threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
+        proc.alias, "__xonsh_threadable__", True
+    )
+    proc.cls = ProcProxyThread if proc.threadable else ProcProxy
+
+
+def _update_proc_alias_captured(proc):
+        proc.captured = getattr(proc.alias, "__xonsh_capturable__", proc.captured)
 
 
 def cmds_to_specs(cmds, captured=False, envs=None):
