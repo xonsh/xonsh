@@ -831,7 +831,7 @@ def _update_spec_unthreaded(last):
     last.threadable = False
 
 
-def _decide_capturing(last : SubprocSpec):
+def _decide_capturing(last: SubprocSpec):
     if not (captured := last.captured):
         return False
     if callable(last.alias):
@@ -843,8 +843,7 @@ def _decide_capturing(last : SubprocSpec):
     return True
 
 
-
-def _make_spec_captured(last : SubprocSpec):
+def _make_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
     # cannot used PTY pipes for aliases, for some dark reason,
