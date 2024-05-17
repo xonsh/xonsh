@@ -789,11 +789,10 @@ def _update_last_spec(last):
 
     if (decide_threading := _last_spec_decide_threading(last)) is None:
         pass
+    elif decide_threading:
+        _last_spec_update_spec_threaded(last)
     else:
-        if decide_threading:
-            _last_spec_update_spec_threaded(last)
-        else:
-            _last_spec_update_spec_unthreaded(last)
+        _last_spec_update_spec_unthreaded(last)
 
     if _last_spec_decide_capturing(last):
         _make_last_spec_captured(last)
