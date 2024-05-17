@@ -427,7 +427,7 @@ class PromptToolkitShell(BaseShell):
                     This is the last chance to save history in this case.
                     """
                     if XSH.env.get("XONSH_DEBUG", False):
-                        print('Flushing history after SIGINT.', file=sys.stderr)
+                        print("Flushing history after SIGINT.", file=sys.stderr)
                     XSH.history.flush()
                 if isinstance(e, SystemExit):
                     get_app().reset()  # Reset TTY mouse and keys handlers.
