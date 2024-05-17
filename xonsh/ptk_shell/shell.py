@@ -422,13 +422,14 @@ class PromptToolkitShell(BaseShell):
             except (KeyboardInterrupt, SystemExit) as e:
                 self.reset_buffer()
                 if isinstance(e, KeyboardInterrupt):
-                    """
-                    Development tools like PyCharm send SIGINT before SIGKILL.
-                    This is the last chance to save history in this case.
-                    """
-                    if XSH.env.get("XONSH_DEBUG", False):
-                        print('Flushing history after SIGINT.', file=sys.stderr)
-                    XSH.history.flush()
+                    if XSH.env.get("XONSH_HISTORY_SIGINT_FLUSH", True):
+                        """
+                        Development tools like PyCharm send SIGINT before SIGKILL.
+                        This is the last chance to save history in this case.
+                        """
+                        if XSH.env.get("XONSH_DEBUG", False):
+                            print('Flushing history after SIGINT.', file=sys.stderr)
+                        XSH.history.flush()
                 if isinstance(e, SystemExit):
                     get_app().reset()  # Reset TTY mouse and keys handlers.
                     self.restore_tty_sanity()  # Reset TTY SIGINT handlers.
