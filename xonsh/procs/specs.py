@@ -894,6 +894,34 @@ def _update_proc_alias_captured(proc):
         proc.captured = getattr(proc.alias, "__xonsh_capturable__", proc.captured)
 
 
+def _trace_specs(trace_mode, specs, cmds, captured):
+    """Show information about specs."""
+    tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
+    if callable(tracer):
+        tracer(cmds, captured=captured)
+    else:
+        r = {"cmds": cmds, "captured": captured}
+        print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
+        if trace_mode == 2:
+            for i, s in enumerate(specs):
+                pcls = s.cls.__module__ + "." + s.cls.__name__
+                pcmd = (
+                    [s.args[0].__name__] + s.args[1:]
+                    if callable(s.args[0])
+                    else s.args
+                )
+                p = {
+                    "cmd": pcmd,
+                    "cls": pcls,
+                    "alias": s.alias_name,
+                    "bin": s.binary_loc,
+                    "thread": s.threadable,
+                    "bg": s.background,
+                }
+                p = {k: v for k, v in p.items() if v is not None}
+                print(f"{i}: {repr(p)}", file=sys.stderr)
+
+
 def cmds_to_specs(cmds, captured=False, envs=None):
     """Converts a list of cmds to a list of SubprocSpec objects that are
     ready to be executed.
@@ -939,8 +967,17 @@ def cmds_to_specs(cmds, captured=False, envs=None):
     return specs
 
 
-def _should_set_title():
-    return XSH.env.get("XONSH_INTERACTIVE") and XSH.shell is not None
+def _shell_set_title(cmds):
+    if XSH.env.get("XONSH_INTERACTIVE") and XSH.shell is not None:
+        # context manager updates the command information that gets
+        # accessed by CurrentJobField when setting the terminal's title
+        with XSH.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
+            # remove current_job from prompt level cache
+            XSH.env["PROMPT_FIELDS"].reset_key("current_job")
+            # The terminal's title needs to be set before starting the
+            # subprocess to avoid accidentally answering interactive questions
+            # from commands such as `rm -i` (see #1436)
+            XSH.shell.settitle()
 
 
 def run_subproc(cmds, captured=False, envs=None):
@@ -959,49 +996,14 @@ def run_subproc(cmds, captured=False, envs=None):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
 
-    if tr := XSH.env.get("XONSH_TRACE_SUBPROC", False):
-        tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
-        if callable(tracer):
-            tracer(cmds, captured=captured)
-        else:
-            r = {"cmds": cmds, "captured": captured}
-            print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
-            if tr == 2:
-                for i, s in enumerate(specs):
-                    pcls = s.cls.__module__ + "." + s.cls.__name__
-                    pcmd = (
-                        [s.args[0].__name__] + s.args[1:]
-                        if callable(s.args[0])
-                        else s.args
-                    )
-                    p = {
-                        "cmd": pcmd,
-                        "cls": pcls,
-                        "alias": s.alias_name,
-                        "bin": s.binary_loc,
-                        "thread": s.threadable,
-                        "bg": s.background,
-                    }
-                    p = {k: v for k, v in p.items() if v is not None}
-                    print(f"{i}: {repr(p)}", file=sys.stderr)
+    if trace_mode := XSH.env.get("XONSH_TRACE_SUBPROC", False):
+        _trace_specs(trace_mode, specs, cmds, captured)
 
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
     ]
-    if _should_set_title():
-        # context manager updates the command information that gets
-        # accessed by CurrentJobField when setting the terminal's title
-        with XSH.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
-            # remove current_job from prompt level cache
-            XSH.env["PROMPT_FIELDS"].reset_key("current_job")
-            # The terminal's title needs to be set before starting the
-            # subprocess to avoid accidentally answering interactive questions
-            # from commands such as `rm -i` (see #1436)
-            XSH.shell.settitle()
-            # run the subprocess
-            return _run_specs(specs, cmds)
-    else:
-        return _run_specs(specs, cmds)
+    _shell_set_title(cmds)
+    return _run_specs(specs, cmds)
 
 
 def _run_command_pipeline(specs, cmds):
