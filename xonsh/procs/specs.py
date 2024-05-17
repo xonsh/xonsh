@@ -906,9 +906,7 @@ def _trace_specs(trace_mode, specs, cmds, captured):
             for i, s in enumerate(specs):
                 pcls = s.cls.__module__ + "." + s.cls.__name__
                 pcmd = (
-                    [s.args[0].__name__] + s.args[1:]
-                    if callable(s.args[0])
-                    else s.args
+                    [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
                 )
                 p = {
                     "cmd": pcmd,
