@@ -61,7 +61,7 @@ class FuncAlias:
     attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
     attributes_inherit = attributes_show + ["__doc__"]
 
-    def __init__(self, name, func):
+    def __init__(self, name, func=None):
         self.__name__ = self.name = name
         self.func = func
         for attr in self.attributes_inherit:
@@ -919,8 +919,8 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "xth": SpecAttrModifier({"threadable": True, "force_threadable": True}),
-        "xunth": SpecAttrModifier({"threadable": False, "force_threadable": False}),
+        "xth": SpecAttrModifier({"threadable": True, "force_threadable": True}, "Mark command as threadable."),
+        "xunth": SpecAttrModifier({"threadable": False, "force_threadable": False}, "Mark command as unthreadable."),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

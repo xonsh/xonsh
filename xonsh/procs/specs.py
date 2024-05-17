@@ -276,6 +276,10 @@ def no_pg_xonsh_preexec_fn():
 
 class SpecModifier:
     """Spec modifier base class."""
+    descr = "Spec modifier base class."
+
+    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, **kwargs):
+        print(f"{self.descr}", file=stdout)
 
     def modify_spec(self, spec):
         pass
@@ -284,8 +288,10 @@ class SpecModifier:
 class SpecAttrModifier(SpecModifier):
     """Modifier for spec attributes."""
 
-    def __init__(self, set_attributes: dict):
+    def __init__(self, set_attributes: dict, descr):
         self.set_attributes = set_attributes
+        self.descr = descr
+        super().__init__()
 
     def modify_spec(self, spec):
         for a, v in self.set_attributes.items():
@@ -636,7 +642,9 @@ class SubprocSpec:
 
     def resolve_spec_modifiers(self):
         """Save and remove spec modifier."""
-        for i in range(len(self.cmd)):
+        if (ln := len(self.cmd)) == 1:
+            return
+        for i in range(ln):
             c = self.cmd[i]
             if c in XSH.aliases and (
                 mod := getattr(XSH.aliases[c], "modify_spec", False)
