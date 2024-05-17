@@ -919,8 +919,8 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "threadable": SpecModifierThreadable(),
-        "unthreadable": SpecModifierUnthreadable(),
+        "xth": SpecModifierThreadable(),
+        "xunth": SpecModifierUnthreadable(),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
