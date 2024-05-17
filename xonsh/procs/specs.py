@@ -733,7 +733,6 @@ class SubprocSpec:
             _update_proc_alias_threadable(self)
             _update_proc_alias_captured(self)
 
-
     def resolve_stack(self):
         """Computes the stack for a callable alias's call-site, if needed."""
         if not callable(self.alias):
@@ -807,7 +806,7 @@ def _last_spec_update_threading(last: SubprocSpec):
         last.threadable = False
 
 
-def _last_spec_update_captured(last : SubprocSpec):
+def _last_spec_update_captured(last: SubprocSpec):
     captured = (
         (captured := last.captured)
         and not (captured in ["object", "hiddenobject"] and not last.threadable)
@@ -821,6 +820,7 @@ def _last_spec_update_captured(last : SubprocSpec):
 
     if captured:
         _make_last_spec_captured(last)
+
 
 def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
@@ -891,7 +891,7 @@ def _update_proc_alias_threadable(proc):
 
 
 def _update_proc_alias_captured(proc):
-        proc.captured = getattr(proc.alias, "__xonsh_capturable__", proc.captured)
+    proc.captured = getattr(proc.alias, "__xonsh_capturable__", proc.captured)
 
 
 def _trace_specs(trace_mode, specs, cmds, captured):
