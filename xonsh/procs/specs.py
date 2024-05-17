@@ -795,14 +795,20 @@ def _update_last_spec(last):
         else:
             _update_spec_unthreaded(last)
 
-        if _decide_capturing(last):
-            _make_spec_captured(last)
-        else:
-            _make_spec_uncaptured(last)
+    if _decide_capturing(last):
+        _make_spec_captured(last)
+    else:
+        _make_spec_uncaptured(last)
 
 
 def _decide_threading(last):
-    if (captured := last.captured) and not callable(last.alias):
+    captured = last.captured
+    if callable(last.alias):
+        if last.cls is ProcProxy and captured == "hiddenobject":
+            # a ProcProxy run using ![] should not be captured
+            return
+
+    elif captured:
         env, cmds_cache = XSH.env, XSH.commands_cache
         return (
             env.get("THREAD_SUBPROCS")
