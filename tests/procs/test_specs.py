@@ -190,7 +190,9 @@ def test_run_subproc_background(captured, exp_is_none):
 
 
 def test_cmds_to_specs_modifier(xession):
-    xession.aliases["xth"] = SpecAttrModifier({"threadable": True, "force_threadable": True})
+    xession.aliases["xth"] = SpecAttrModifier(
+        {"threadable": True, "force_threadable": True}
+    )
     cmds = [["xth", "echo", "hello"]]
     specs = cmds_to_specs(cmds, captured="object")
     spec = specs[-1]
