@@ -10,7 +10,7 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    SpecModifier,
+    SpecAttrModifier,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
@@ -189,10 +189,14 @@ def test_run_subproc_background(captured, exp_is_none):
     assert (return_val is None) == exp_is_none
 
 
-def test_spec_build_modifier(xession):
-    xession.aliases["mod"] = SpecModifier()
-    spec = SubprocSpec.build(["mod", "echo", "hello"])
+def test_cmds_to_specs_modifier(xession):
+    xession.aliases["xth"] = SpecAttrModifier({"threadable": True, "force_threadable": True})
+    cmds = [["xth", "echo", "hello"]]
+    specs = cmds_to_specs(cmds, captured="object")
+    spec = specs[-1]
     assert spec.cmd == ["echo", "hello"]
+    assert spec.threadable is True
+    assert spec.force_threadable is True
 
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])

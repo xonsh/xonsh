@@ -276,16 +276,18 @@ def no_pg_xonsh_preexec_fn():
 
 class SpecModifier:
     """Spec modifier base class."""
-
     def modify_spec(self, spec):
         pass
 
 
-class SpecModifierThreadable(SpecModifier):
-    """Switch spec to threadable."""
+class SpecAttrModifier(SpecModifier):
+    """Modifier for spec attributes."""
+    def __init__(self, set_attributes:dict):
+        self.set_attributes = set_attributes
 
     def modify_spec(self, spec):
-        spec.threadable = True
+        for a,v in self.set_attributes.items():
+            setattr(spec, a, v)
 
 
 class SpecModifierUnthreadable(SpecModifier):
@@ -392,12 +394,12 @@ class SubprocSpec:
         self.is_proxy = False
         self.background = False
         self.threadable = True
+        self.force_threadable = None  # Set this value to ignore threadable prediction.
         self.pipeline_index = None
         self.last_in_pipeline = False
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
-        self.pre_run_modifiers = []  # Functions that can transform spec before run.
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
@@ -476,8 +478,6 @@ class SubprocSpec:
         """Launches the subprocess and returns the object."""
         event_name = self._cmd_event_name()
         self._pre_run_event_fire(event_name)
-        for spec_modifier in self.pre_run_modifiers:
-            spec_modifier(self)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         if callable(self.alias):
             kwargs["env"] = self.env or {}
@@ -634,12 +634,13 @@ class SubprocSpec:
 
     def resolve_spec_modifiers(self):
         """Save and remove spec modifier."""
-        c = self.cmd[0]
-        if c in XSH.aliases and (
-            modifier := getattr(XSH.aliases[c], "modify_spec", False)
-        ):
-            self.pre_run_modifiers.append(modifier)
-            self.cmd = self.cmd[1:]
+        for i in range(len(self.cmd)):
+            c = self.cmd[i]
+            if c in XSH.aliases and (mod :=getattr(XSH.aliases[c], "modify_spec", False)):
+                mod(self)
+            else:
+                break
+        self.cmd = self.cmd[i:]
 
     def resolve_args_list(self):
         """Weave a list of arguments into a command."""
@@ -798,6 +799,8 @@ def _last_spec_update_threading(last: SubprocSpec):
         and cmds_cache.predict_threadable(last.args)
         and cmds_cache.predict_threadable(last.cmd)
     )
+    if last.force_threadable is not None:
+        threadable = last.force_threadable
 
     if threadable:
         if last.captured:
@@ -817,7 +820,6 @@ def _last_spec_update_captured(last: SubprocSpec):
             and captured == "hiddenobject"
         )
     )
-
     if captured:
         _make_last_spec_captured(last)
 
@@ -884,9 +886,12 @@ def _make_last_spec_captured(last: SubprocSpec):
 
 
 def _update_proc_alias_threadable(proc):
-    proc.threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
+    threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
         proc.alias, "__xonsh_threadable__", True
     )
+    if proc.force_threadable is not None:
+        threadable = proc.force_threadable
+    proc.threadable = threadable
     proc.cls = ProcProxyThread if proc.threadable else ProcProxy
 
 
@@ -913,7 +918,7 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                     "cls": pcls,
                     "alias": s.alias_name,
                     "bin": s.binary_loc,
-                    "thread": s.threadable,
+                    "threadable": s.threadable,
                     "bg": s.background,
                 }
                 p = {k: v for k, v in p.items() if v is not None}

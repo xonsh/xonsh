@@ -32,7 +32,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
-from xonsh.procs.specs import SpecModifierThreadable, SpecModifierUnthreadable
+from xonsh.procs.specs import SpecAttrModifier
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -919,8 +919,8 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "xth": SpecModifierThreadable(),
-        "xunth": SpecModifierUnthreadable(),
+        "xth": SpecAttrModifier({"threadable": True, "force_threadable": True}),
+        "xunth": SpecAttrModifier({"threadable": False, "force_threadable": False}),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
