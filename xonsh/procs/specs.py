@@ -276,9 +276,19 @@ def no_pg_xonsh_preexec_fn():
 
 class SpecModifier:
     """Spec modifier base class."""
+
     descr = "Spec modifier base class."
 
-    def __call__(self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, **kwargs):
+    def __call__(
+        self,
+        args,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        **kwargs,
+    ):
         print(f"{self.descr}", file=stdout)
 
     def modify_spec(self, spec):
