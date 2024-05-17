@@ -837,7 +837,11 @@ def _last_spec_decide_capturing(last: SubprocSpec):
         (captured := last.captured)
         and not (captured in ["object", "hiddenobject"] and not last.threadable)
         # a ProcProxy run using ![] should not be captured
-        and not (callable(last.alias) and last.cls is ProcProxy and captured == "hiddenobject")
+        and not (
+            callable(last.alias)
+            and last.cls is ProcProxy
+            and captured == "hiddenobject"
+        )
     )
 
 
