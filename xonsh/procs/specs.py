@@ -787,38 +787,33 @@ def _update_last_spec(last):
     if not last.captured:
         return
 
-    if (decide_threading := _decide_threading(last)) is None:
+    if (decide_threading := _last_spec_decide_threading(last)) is None:
         pass
     else:
         if decide_threading:
-            _update_spec_threaded(last)
+            _last_spec_update_spec_threaded(last)
         else:
-            _update_spec_unthreaded(last)
+            _last_spec_update_spec_unthreaded(last)
 
-    if _decide_capturing(last):
-        _make_spec_captured(last)
-    else:
-        _make_spec_uncaptured(last)
+    if _last_spec_decide_capturing(last):
+        _make_last_spec_captured(last)
 
 
-def _decide_threading(last):
-    captured = last.captured
+def _last_spec_decide_threading(last):
     if callable(last.alias):
-        if last.cls is ProcProxy and captured == "hiddenobject":
-            # a ProcProxy run using ![] should not be captured
-            return
+        return
 
-    elif captured:
-        env, cmds_cache = XSH.env, XSH.commands_cache
-        return (
-            env.get("THREAD_SUBPROCS")
-            and (captured != "hiddenobject" or env.get("XONSH_CAPTURE_ALWAYS"))
-            and cmds_cache.predict_threadable(last.args)
-            and cmds_cache.predict_threadable(last.cmd)
-        )
+    captured, env, cmds_cache = last.captured, XSH.env, XSH.commands_cache
+    return (
+        captured
+        and env.get("THREAD_SUBPROCS")
+        and (captured != "hiddenobject" or env.get("XONSH_CAPTURE_ALWAYS"))
+        and cmds_cache.predict_threadable(last.args)
+        and cmds_cache.predict_threadable(last.cmd)
+    )
 
 
-def _update_spec_threaded(last):
+def _last_spec_update_spec_threaded(last):
     """
     This function was created during refactoring.
     It is short because the algorithm leaves default SubprocSpec behavior unchanged.
@@ -828,7 +823,7 @@ def _update_spec_threaded(last):
         last.cls = PopenThread
 
 
-def _update_spec_unthreaded(last):
+def _last_spec_update_spec_unthreaded(last):
     """
     This function was created during refactoring.
     It is short because the algorithm leaves default SubprocSpec behavior unchanged.
@@ -837,19 +832,16 @@ def _update_spec_unthreaded(last):
     last.threadable = False
 
 
-def _decide_capturing(last: SubprocSpec):
-    if not (captured := last.captured):
-        return False
-    if callable(last.alias):
-        if last.cls is ProcProxy and captured == "hiddenobject":
-            return False  # a ProcProxy run using ![] should not be captured
-    else:
-        if not last.threadable and captured in ["object", "hiddenobject"]:
-            return False
-    return True
+def _last_spec_decide_capturing(last: SubprocSpec):
+    return (
+        (captured := last.captured)
+        and not (captured in ["object", "hiddenobject"] and not last.threadable)
+        # a ProcProxy run using ![] should not be captured
+        and not (callable(last.alias) and last.cls is ProcProxy and captured == "hiddenobject")
+    )
 
 
-def _make_spec_captured(last: SubprocSpec):
+def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
     # cannot used PTY pipes for aliases, for some dark reason,
@@ -908,15 +900,6 @@ def _make_spec_captured(last: SubprocSpec):
     if callable_alias and last.stderr == subprocess.STDOUT:
         last._stderr = last.stdout
         last.captured_stderr = last.captured_stdout
-
-
-def _make_spec_uncaptured(spec):
-    """
-    This function was created during refactoring.
-    It is short because the algorithm leaves default SubprocSpec behavior unchanged.
-    Maybe we need to set it here explicitly.
-    """
-    pass
 
 
 def cmds_to_specs(cmds, captured=False, envs=None):
