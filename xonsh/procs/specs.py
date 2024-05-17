@@ -1032,15 +1032,15 @@ def _run_specs(specs, cmds):
     cp = _run_command_pipeline(specs, cmds)
     proc, captured, background = cp.proc, specs[-1].captured, cp.spec.background
 
-    # For some reason, some programs are in a stopped state when the flow
-    # reaches this point, hence a SIGCONT should be sent to `proc` to make
-    # sure that the shell doesn't hang.
-    # See issue #2999 and the fix in PR #3000
+    """
+    For some reason, some programs are in a stopped state when the flow
+    reaches this point, hence a SIGCONT should be sent to `proc` to make
+    sure that the shell doesn't hang. See issue #2999 and the fix in PR #3000
+    """
     resume_process(proc)
 
-    # now figure out what we should return
     if captured == "object":
-        return cp  # object can be returned even if backgrounding
+        return cp
     elif captured == "hiddenobject":
         if not background:
             cp.end()
