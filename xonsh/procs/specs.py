@@ -656,7 +656,9 @@ class SubprocSpec:
             return
         for i in range(ln):
             c = self.cmd[i]
-            if c in XSH.aliases and isinstance(mod := XSH.aliases[c], SpecModifierAlias):
+            if c in XSH.aliases and isinstance(
+                mod := XSH.aliases[c], SpecModifierAlias
+            ):
                 mod.on_pre_resolve_cmd(self)
                 self.spec_modifiers.append(mod)
             else:
