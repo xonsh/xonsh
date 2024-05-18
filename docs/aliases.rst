@@ -157,6 +157,13 @@ Manages xonsh configuration information.
 
 .. command-help:: xonsh.xonfig.xonfig_main
 
+``xth`` and ``xunth``
+=================
+Use ``xth`` and ``xunth`` to run command as threadable or unthreadable e.g.
+
+.. code-block:: console
+
+    @ !(xth ssh host -T "echo 1")
 
 Windows cmd Aliases
 =======================
