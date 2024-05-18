@@ -298,7 +298,7 @@ class SpecModifierAlias:
 class SpecAttrModifierAlias(SpecModifierAlias):
     """Modifier for spec attributes."""
 
-    def __init__(self, set_attributes: dict, descr=''):
+    def __init__(self, set_attributes: dict, descr=""):
         self.set_attributes = set_attributes
         self.descr = descr
         super().__init__()

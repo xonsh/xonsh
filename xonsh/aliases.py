@@ -919,8 +919,14 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "xth": SpecAttrModifierAlias({"threadable": True, "force_threadable": True}, "Mark command as threadable."),
-        "xunth": SpecAttrModifierAlias({"threadable": False, "force_threadable": False}, "Mark command as unthreadable."),
+        "xth": SpecAttrModifierAlias(
+            {"threadable": True, "force_threadable": True},
+            "Mark command as threadable.",
+        ),
+        "xunth": SpecAttrModifierAlias(
+            {"threadable": False, "force_threadable": False},
+            "Mark command as unthreadable.",
+        ),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
