@@ -274,7 +274,7 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
-class SpecModifier:
+class SpecModifierAlias:
     """Spec modifier base class."""
     descr = "Spec modifier base class."
 
@@ -285,10 +285,10 @@ class SpecModifier:
         pass
 
 
-class SpecAttrModifier(SpecModifier):
+class SpecAttrModifierAlias(SpecModifierAlias):
     """Modifier for spec attributes."""
 
-    def __init__(self, set_attributes: dict, descr):
+    def __init__(self, set_attributes: dict, descr=''):
         self.set_attributes = set_attributes
         self.descr = descr
         super().__init__()
@@ -296,13 +296,6 @@ class SpecAttrModifier(SpecModifier):
     def modify_spec(self, spec):
         for a, v in self.set_attributes.items():
             setattr(spec, a, v)
-
-
-class SpecModifierUnthreadable(SpecModifier):
-    """Switch spec to unthreadable."""
-
-    def modify_spec(self, spec):
-        spec.threadable = False
 
 
 class SubprocSpec:

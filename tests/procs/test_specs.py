@@ -10,7 +10,7 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    SpecAttrModifier,
+    SpecAttrModifierAlias,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
@@ -190,7 +190,7 @@ def test_run_subproc_background(captured, exp_is_none):
 
 
 def test_cmds_to_specs_modifier(xession):
-    xession.aliases["xth"] = SpecAttrModifier(
+    xession.aliases["xth"] = SpecAttrModifierAlias(
         {"threadable": True, "force_threadable": True}
     )
     cmds = [["xth", "echo", "hello"]]
