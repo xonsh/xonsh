@@ -289,9 +289,14 @@ class SpecModifierAlias:
         stack=None,
         **kwargs,
     ):
-        print(f"{self.descr}", file=stdout)
+        print(self.descr, file=stdout)
 
-    def modify_spec(self, spec):
+    def on_pre_resolve_cmd(self, spec):
+        """Modify spec before resolving cmd."""
+        pass
+
+    def on_pre_run(self, spec):
+        """Modify spec before run."""
         pass
 
 
@@ -303,7 +308,7 @@ class SpecAttrModifierAlias(SpecModifierAlias):
         self.descr = descr
         super().__init__()
 
-    def modify_spec(self, spec):
+    def on_pre_resolve_cmd(self, spec):
         for a, v in self.set_attributes.items():
             setattr(spec, a, v)
 
@@ -411,6 +416,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
+        self.spec_modifiers = []  # List of SpecModifierAlias objects that applied to spec.
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
@@ -489,6 +495,8 @@ class SubprocSpec:
         """Launches the subprocess and returns the object."""
         event_name = self._cmd_event_name()
         self._pre_run_event_fire(event_name)
+        for mod in self.spec_modifiers:
+            mod.on_pre_run(self)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         if callable(self.alias):
             kwargs["env"] = self.env or {}
@@ -631,9 +639,8 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
-        spec.resolve_spec_modifiers()
+        spec.resolve_spec_modifiers()  # keep this first
         spec.resolve_args_list()
-        # perform initial redirects
         spec.resolve_redirects()
         spec.resolve_alias()
         spec.resolve_binary_loc()
@@ -644,15 +651,14 @@ class SubprocSpec:
         return spec
 
     def resolve_spec_modifiers(self):
-        """Save and remove spec modifier."""
+        """Apply spec modifier."""
         if (ln := len(self.cmd)) == 1:
             return
         for i in range(ln):
             c = self.cmd[i]
-            if c in XSH.aliases and (
-                mod := getattr(XSH.aliases[c], "modify_spec", False)
-            ):
-                mod(self)
+            if c in XSH.aliases and isinstance(mod := XSH.aliases[c], SpecModifierAlias):
+                mod.on_pre_resolve_cmd(self)
+                self.spec_modifiers.append(mod)
             else:
                 break
         self.cmd = self.cmd[i:]
