@@ -295,7 +295,7 @@ class SpecModifierAlias:
         """Modify spec before resolving cmd."""
         pass
 
-    def on_pre_run(self, spec):
+    def on_pre_run(self, pipeline, spec, spec_num):
         """Modify spec before run."""
         pass
 
@@ -495,8 +495,6 @@ class SubprocSpec:
         """Launches the subprocess and returns the object."""
         event_name = self._cmd_event_name()
         self._pre_run_event_fire(event_name)
-        for mod in self.spec_modifiers:
-            mod.on_pre_run(self)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         if callable(self.alias):
             kwargs["env"] = self.env or {}

@@ -163,7 +163,9 @@ class CommandPipeline:
             # taking the terminal away from the `less` command, causing `less`
             # to stop.
             pipeline_group = os.getpgid(0)
-        for spec in specs:
+        for i, spec in enumerate(specs):
+            for mod in spec.spec_modifiers:
+                mod.on_pre_run(self, spec, i)
             if self.starttime is None:
                 self.starttime = time.time()
             try:
