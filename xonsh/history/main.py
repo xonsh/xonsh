@@ -39,8 +39,10 @@ def construct_history(backend=None, **kwargs) -> "History":
 
     try:
         return kls_history(**kwargs)
-    except (PermissionError, IOError) as e:
-        print(f"Error during load {kls_history}: {e}\nHistory disabled.", file=sys.stderr)
+    except (OSError, PermissionError) as e:
+        print(
+            f"Error during load {kls_history}: {e}\nHistory disabled.", file=sys.stderr
+        )
         return DummyHistory()
 
 
