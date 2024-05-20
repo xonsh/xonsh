@@ -36,7 +36,12 @@ def construct_history(backend=None, **kwargs) -> "History":
             file=sys.stderr,
         )
         kls_history = JsonHistory
-    return kls_history(**kwargs)
+
+    try:
+        return kls_history(**kwargs)
+    except (PermissionError, IOError) as e:
+        print(f"Error during load {kls_history}: {e}\nHistory disabled.", file=sys.stderr)
+        return DummyHistory()
 
 
 def _xh_session_parser(hist=None, newest_first=False, **kwargs):
