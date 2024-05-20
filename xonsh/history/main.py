@@ -40,7 +40,9 @@ def construct_history(backend=None, **kwargs) -> "History":
     try:
         return kls_history(**kwargs)
     except Exception as e:
-        xt.print_exception(f"Error during load {kls_history}: {e}\nHistory disabled.")
+        xt.print_exception(f"Error during load {kls_history}: {e}\n"
+                           f"Set $XONSH_HISTORY_BACKEND='dummy' to disable history.\n"
+                           f"History disabled.")
         return DummyHistory()
 
 
