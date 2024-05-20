@@ -61,8 +61,6 @@ def run_xonsh(
     env["XONSH_DEBUG"] = "0"  # was "1"
     env["XONSH_SHOW_TRACEBACK"] = "1"
     env["RAISE_SUBPROC_ERROR"] = "0"
-    env["XONSH_CACHE_SCRIPTS"] = "0"
-    env["XONSH_CACHE_EVERYTHING"] = "0"
     env["FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE"] = "1"
     env["PROMPT"] = ""
     xonsh = shutil.which("xonsh", path=PATH)
