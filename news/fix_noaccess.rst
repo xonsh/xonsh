@@ -1,6 +1,6 @@
 **Added:**
 
-* Added catching exceptions during load a history backend to avoid shell exiting e.g. on permission error.
+* Added catching an exceptions during load a history backend to avoid shell exiting e.g. on permission error.
 * Added catching an exception when cache file is not writable.
 
 **Changed:**
