@@ -9,7 +9,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO_BYTES
-
+from xonsh.tools import is_writable_file, print_warning
 
 def _splitpath(path, sofar=()):
     folder, path = os.path.split(path)
@@ -94,6 +94,10 @@ def update_cache(ccode, cache_file_name):
     represented by ``ccode``.
     """
     if cache_file_name is not None:
+        if not is_writable_file(cache_file_name):
+            print_warning(f'update_cache: Cache file is not writable: {cache_file_name}\n'
+                          f'Set $XONSH_CACHE_SCRIPTS=0, $XONSH_CACHE_EVERYTHING=0 to disable cache.')
+            return
         os.makedirs(os.path.dirname(cache_file_name), exist_ok=True)
         with open(cache_file_name, "wb") as cfile:
             cfile.write(XONSH_VERSION.encode() + b"\n")
@@ -166,7 +170,8 @@ def run_script_with_cache(filename, execer, glb=None, loc=None, mode="exec"):
         with open(filename, encoding="utf-8") as f:
             code = f.read()
         ccode = compile_code(filename, code, execer, glb, loc, mode)
-        update_cache(ccode, cachefname)
+        if use_cache:
+            update_cache(ccode, cachefname)
     return run_compiled_code(ccode, glb, loc, mode)
 
 
