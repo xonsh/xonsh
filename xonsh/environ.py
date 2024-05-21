@@ -1987,7 +1987,6 @@ class Env(cabc.MutableMapping):
         detyped = self.detype()
         return detyped.get(key)
 
-
     def detype(self):
         """
         Returns a dict of detyped variables.
@@ -2012,8 +2011,7 @@ class Env(cabc.MutableMapping):
         self._detyped = ctx
         return ctx
 
-
-    def detype_all(self, exclude=[]): #__getitem__
+    def detype_all(self, exclude=[]):  # __getitem__
         """Returns a dict of all available detyped env variables."""
         if self._detyped is not None:
             return self._detyped
@@ -2035,7 +2033,6 @@ class Env(cabc.MutableMapping):
             ctx[key] = val
         self._detyped = ctx
         return ctx
-
 
     def replace_env(self):
         """Replaces the contents of os_environ with a detyped version
