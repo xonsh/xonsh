@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed ``TypeError`` in ``which`` completer.
+* Fixed ``TypeError`` in xoreutils.
 
 **Security:**
 
