@@ -77,7 +77,7 @@ def test_env_detype_no_dict():
 
 def test_env_detype_all():
     env = Env()
-    env._vars['DEFAULT'] = Var.with_default(1)
+    env._vars["DEFAULT"] = Var.with_default(1)
     env._detyped, det = None, env.detype()
     env._detyped, det_all = None, env.detype_all()
     assert "DEFAULT" not in det
