@@ -2011,7 +2011,7 @@ class Env(cabc.MutableMapping):
         self._detyped = ctx
         return ctx
 
-    def detype_all(self, exclude=[]):  # __getitem__
+    def detype_all(self):  # __getitem__
         """Returns a dict of all available detyped env variables."""
         if self._detyped is not None:
             return self._detyped
@@ -2019,15 +2019,10 @@ class Env(cabc.MutableMapping):
         for key in self.rawkeys():
             if not isinstance(key, str):
                 key = str(key)
-            if key in exclude:
-                continue
             val = self.__getitem__(key)
             detyper = self.get_detyper(key)
             if detyper is not None:
-                try:
-                    val = detyper(val)
-                except Exception as e:
-                    raise Exception(f"Env: detype({key=:}, {val=:}): {e}")
+                val = detyper(val)
             if not isinstance(val, str):
                 continue
             ctx[key] = val
