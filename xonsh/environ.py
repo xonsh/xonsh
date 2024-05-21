@@ -478,7 +478,7 @@ class LsColors(cabc.MutableMapping):
             cmd.append(filename)
         # get env
         if XSH.env:
-            denv = XSH.env.detype(exclude="LS_COLORS")
+            denv = XSH.env.detype()
         else:
             denv = None
         # run dircolors
