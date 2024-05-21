@@ -478,7 +478,7 @@ class LsColors(cabc.MutableMapping):
             cmd.append(filename)
         # get env
         if XSH.env:
-            denv = XSH.env.detype()
+            denv = XSH.env.detype(exclude="LS_COLORS")
         else:
             denv = None
         # run dircolors
@@ -1987,8 +1987,13 @@ class Env(cabc.MutableMapping):
         detyped = self.detype()
         return detyped.get(key)
 
+
     def detype(self):
-        """return a dict that can be used as ``os.environ``"""
+        """
+        Returns a dict of detyped variables.
+        Note! If env variable wasn't explicitly set (e.g. the value has default value in ``Xettings``)
+        it will be not in this list.
+        """
         if self._detyped is not None:
             return self._detyped
         ctx = {}
@@ -2006,6 +2011,31 @@ class Env(cabc.MutableMapping):
             ctx[key] = deval
         self._detyped = ctx
         return ctx
+
+
+    def detype_all(self, exclude=[]): #__getitem__
+        """Returns a dict of all available detyped env variables."""
+        if self._detyped is not None:
+            return self._detyped
+        ctx = {}
+        for key in self.rawkeys():
+            if not isinstance(key, str):
+                key = str(key)
+            if key in exclude:
+                continue
+            val = self.__getitem__(key)
+            detyper = self.get_detyper(key)
+            if detyper is not None:
+                try:
+                    val = detyper(val)
+                except Exception as e:
+                    raise Exception(f"Env: detype({key=:}, {val=:}): {e}")
+            if not isinstance(val, str):
+                continue
+            ctx[key] = val
+        self._detyped = ctx
+        return ctx
+
 
     def replace_env(self):
         """Replaces the contents of os_environ with a detyped version
