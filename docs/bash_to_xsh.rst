@@ -101,10 +101,10 @@ line is ``#!/usr/bin/env xonsh``.
       - ``os.getpid()``
       - Get PID of the current shell.
     * - ``$?``
-      - ``_.rtn``
+      - ``__xonsh__.last.rtn`` anywhere or ``_.rtn`` in prompt mode
       - Returns the exit code, or status, of the previous command. The underscore ``_`` is working
         in the prompt mode. To get the exit code of the command in xonsh script
-        use captured subprocess ``!().rtn``.
+        use ``!().rtn`` for not interactive processes.
     * - ``!$``
       - ``__xonsh__.history[-1, -1]``
       - Get the last argument of the last command
@@ -116,17 +116,15 @@ line is ``#!/usr/bin/env xonsh``.
       - ``$ARGS``
       - List of all command line argument and parameter strings.
     * - ``while getopts``
-      - ``import argparse``
-      - Start from `argparse <https://docs.python.org/3/library/argparse.html>`_ library to describe
-        the command line arguments in your script. Next try
-        `xontrib-argcomplete <https://github.com/anki-code/xontrib-argcomplete>`_ to activate
-        tab completion for your script.
+      - Use `argparse <https://docs.python.org/3/library/argparse.html>`_ or `click <https://click.palletsprojects.com>`_.
+      - See also `awesome-cli-app <https://github.com/anki-code/xonsh-awesome-cli-app>`_ and
+        `xontrib-argcomplete <https://github.com/anki-code/xontrib-argcomplete>`_ .
     * - ``complete``
       - ``completer list``
       - As with many other shells, xonsh ships with the ability to complete partially-specified arguments
         upon hitting the “tab” key.
     * - OhMyBash or BashIt
-      - `Xontribs <https://xon.sh/xontribs.html>`_
+      - `awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_
       - Xontributions, or ``xontribs``, are a set of tools and conventions for extending the functionality
         of xonsh beyond what is provided by default.
     * - Display completions as list
