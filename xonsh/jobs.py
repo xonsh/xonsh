@@ -428,7 +428,7 @@ def format_job_string(num: int, format="dict") -> str:
     if format == "posix":
         r["pos"] = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
         r["bg"] = " &" if job["bg"] else ""
-        r["pid"] = f"({",".join(str(pid) for pid in r['pids'])})" if r["pids"] else ""
+        r["pid"] = f"({','.join(str(pid) for pid in r['pids'])})" if r["pids"] else ""
         return "[{num}]{pos} {status}: {cmd}{bg} {pid}".format(**r)
     else:
         return repr(r)
