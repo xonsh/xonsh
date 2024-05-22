@@ -97,3 +97,6 @@ __pypackages__
 
 # one can use pip or pdm during development
 pdm.lock
+
+# asv benchmarks
+.asv/
