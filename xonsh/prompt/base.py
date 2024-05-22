@@ -338,9 +338,10 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
         self.update(
             dict(
                 user=xp.os_environ.get(
-                    "USERNAME" if xp.ON_WINDOWS else "USER", "<user>"
+                    "USERNAME" if xp.ON_WINDOWS else "USER",
+                    "root" if xt.is_superuser() else "<user>",
                 ),
-                prompt_end="#" if xt.is_superuser() else "@",
+                prompt_end="@#" if xt.is_superuser() else "@",
                 hostname=socket.gethostname().split(".", 1)[0],
                 cwd=_dynamically_collapsed_pwd,
                 cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),

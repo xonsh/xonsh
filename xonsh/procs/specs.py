@@ -967,7 +967,12 @@ def _run_command_pipeline(specs, cmds):
 
 def _run_specs(specs, cmds):
     cp = _run_command_pipeline(specs, cmds)
-    proc, captured, background = cp.proc, specs[-1].captured, cp.spec.background
+    XSH.last, proc, captured, background = (
+        cp,
+        cp.proc,
+        specs[-1].captured,
+        cp.spec.background,
+    )
 
     # For some reason, some programs are in a stopped state when the flow
     # reaches this point, hence a SIGCONT should be sent to `proc` to make
