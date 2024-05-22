@@ -1988,7 +1988,11 @@ class Env(cabc.MutableMapping):
         return detyped.get(key)
 
     def detype(self):
-        """return a dict that can be used as ``os.environ``"""
+        """
+        Returns a dict of detyped variables.
+        Note! If env variable wasn't explicitly set (e.g. the value has default value in ``Xettings``)
+        it will be not in this list.
+        """
         if self._detyped is not None:
             return self._detyped
         ctx = {}
@@ -2004,6 +2008,24 @@ class Env(cabc.MutableMapping):
                 # cannot be detyped
                 continue
             ctx[key] = deval
+        self._detyped = ctx
+        return ctx
+
+    def detype_all(self):  # __getitem__
+        """Returns a dict of all available detyped env variables."""
+        if self._detyped is not None:
+            return self._detyped
+        ctx = {}
+        for key in self.rawkeys():
+            if not isinstance(key, str):
+                key = str(key)
+            val = self.__getitem__(key)
+            detyper = self.get_detyper(key)
+            if detyper is not None:
+                val = detyper(val)
+            if not isinstance(val, str):
+                continue
+            ctx[key] = val
         self._detyped = ctx
         return ctx
 
