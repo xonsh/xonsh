@@ -72,7 +72,7 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs, xonsh_session)
 @pytest.mark.parametrize(
     "thread_subprocs, capture_always", list(itertools.product((True, False), repeat=2))
 )
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_capture_always(
     capfd, thread_subprocs, capture_always, alias_type, pipe, monkeypatch, xonsh_session
 ):
@@ -141,6 +141,7 @@ def test_capture_always(
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_interrupted_process_returncode(xonsh_session):
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
     cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGINT)"]]

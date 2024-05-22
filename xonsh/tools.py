@@ -208,7 +208,7 @@ class EnvPath(cabc.MutableSequence):
                 self._l = args
             else:
                 raise TypeError(
-                    f"EnvPath cannot be initialized with items " f"of type {type(args)}"
+                    f"EnvPath cannot be initialized with items of type {type(args)}: {args!r}"
                 )
 
     def __getitem__(self, item):
@@ -1116,7 +1116,7 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
     content = traceback.format_exception(*exc_info, limit=limit)
 
     if no_trace_and_raise_subproc_error and "Error:" in content[-1]:
-        content = [content[-1].rstrip()]
+        content = [content[-1]]
 
     traceback_str = "".join([v for v in content])
 
@@ -1133,7 +1133,7 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
     lexer = pygments.lexers.python.PythonTracebackLexer()
     tokens = list(pygments.lex(traceback_str, lexer=lexer))
     # this goes to stdout, but since we are interactive it doesn't matter
-    print_color(tokens, end="\n", file=sys.stderr)
+    print_color(tokens, end="", file=sys.stderr)
     return
 
 
@@ -2858,3 +2858,8 @@ def unquote(s: str, chars="'\""):
     if len(s) >= 2 and s[0] == s[-1] and s[0] in chars:
         return s[1:-1]
     return s
+
+
+def endswith_newline(s: str):
+    """Force one new line character end to string."""
+    return s.rstrip("\n") + "\n"

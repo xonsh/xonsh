@@ -44,12 +44,14 @@ skip_if_no_sleep = pytest.mark.skipif(
 def run_xonsh(
     cmd,
     stdin=sp.PIPE,
+    stdin_cmd=None,
     stdout=sp.PIPE,
     stderr=sp.STDOUT,
     single_command=False,
     interactive=False,
     path=None,
     add_args: list = None,
+    timeout=20,
 ):
     env = dict(os.environ)
     if path is None:
@@ -72,6 +74,7 @@ def run_xonsh(
         input = cmd
     if add_args:
         args += add_args
+
     proc = sp.Popen(
         args,
         env=env,
@@ -81,8 +84,12 @@ def run_xonsh(
         universal_newlines=True,
     )
 
+    if stdin_cmd:
+        proc.stdin.write(stdin_cmd)
+        proc.stdin.flush()
+
     try:
-        out, err = proc.communicate(input=input, timeout=20)
+        out, err = proc.communicate(input=input, timeout=timeout)
     except sp.TimeoutExpired:
         proc.kill()
         raise
@@ -652,7 +659,7 @@ if not ON_WINDOWS:
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
     out, err, rtn = run_xonsh(script)
@@ -1000,6 +1007,177 @@ def test_run_fail_not_on_path():
     assert out != "Hello world"
 
 
+ALIASES_THREADABLE_PRINT_CASES = [
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: 1/0
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "^f1f1f1\nException in thread.*FuncAlias.*\nZeroDivisionError.*\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: 1/0
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in thread.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: 1/0
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in thread.*\nTraceback.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: 1/0
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in thread.*FuncAlias.*\nTraceback.*\nZeroDivisionError.*\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: (None, "I failed", 2)
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "^f1f1f1\nI failed\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: (None, "I failed", 2)
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: (None, "I failed", 2)
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: (None, "I failed", 2)
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed\nf2f2f2\n$",
+    ),
+]
+
+ALIASES_UNTHREADABLE_PRINT_CASES = [
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "^f1f1f1\nException in.*FuncAlias.*\nZeroDivisionError.*\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in.*\nTraceback.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: 1/0
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nException in.*FuncAlias.*\nTraceback.*\nZeroDivisionError.*\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "^f1f1f1\nI failed\nf2f2f2\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = False
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
+    ),
+    (
+        """
+$RAISE_SUBPROC_ERROR = False
+$XONSH_SHOW_TRACEBACK = True
+aliases['f'] = lambda: (None, "I failed", 2)
+aliases['f'].__xonsh_threadable__ = False
+echo f1f1f1 ; f ; echo f2f2f2
+""",
+        "f1f1f1\nI failed\nf2f2f2\n$",
+    ),
+]
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "case", ALIASES_THREADABLE_PRINT_CASES + ALIASES_UNTHREADABLE_PRINT_CASES
+)
+def test_aliases_print(case):
+    cmd, match = case
+    out, err, ret = run_xonsh(cmd=cmd, single_command=False)
+    assert re.match(
+        match, out, re.MULTILINE | re.DOTALL
+    ), f"\nFailed:\n```\n{cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+
+
 @skip_if_on_windows
 @pytest.mark.parametrize("interactive", [True, False])
 def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
@@ -1054,3 +1232,24 @@ def test_main_d():
         single_command=True,
     )
     assert out == "dummy\n"
+
+
+def test_catching_system_exit():
+    stdin_cmd = "__import__('sys').exit(2)\n"
+    out, err, ret = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
+    )
+    if ON_WINDOWS:
+        assert ret == 1
+    else:
+        assert ret == 2
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_catching_exit_signal():
+    stdin_cmd = "kill -SIGHUP @(__import__('os').getpid())\n"
+    out, err, ret = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
+    )
+    assert ret > 0
