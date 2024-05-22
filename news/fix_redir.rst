@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed redirect with python substitution e.g. ``echo 1 > @('/tmp/file')`` is working.
+* Fixed redirect with python substitution e.g. ``echo 1 > @('/tmp/file')`` is working now.
 
 **Security:**
 
