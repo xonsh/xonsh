@@ -1655,6 +1655,12 @@ class PromptHistorySetting(Xettings):
         "Example: ``$XONSH_HISTORY_IGNORE_REGEX = '(^echo|^.*\\#\\#\\#\\s*|.*\\#\\#\\#\\s*$)'``"
         " - skip commands that start from ``echo`` or ``###``, or end from ``###``.",
     )
+    XONSH_HISTORY_SIGINT_FLUSH = Var.with_default(
+        True,
+        "Save history after getting SIGINT (Ctrl+C).",
+        doc_default="True",
+    )
+
 
 
 class PTKSetting(PromptSetting):  # sub-classing -> sub-group
