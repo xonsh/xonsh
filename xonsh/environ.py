@@ -1662,7 +1662,6 @@ class PromptHistorySetting(Xettings):
     )
 
 
-
 class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     """Prompt Toolkit shell
     Only usable with ``$SHELL_TYPE=prompt_toolkit.``
