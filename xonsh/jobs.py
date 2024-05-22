@@ -16,7 +16,7 @@ from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
-from xonsh.tools import on_main_thread, unthreadable
+from xonsh.tools import get_signal_name, on_main_thread, unthreadable
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
@@ -39,18 +39,84 @@ _jobs_thread_local = threading.local()
 _tasks_main: collections.deque[int] = collections.deque()
 
 
-def waitpid(pid, opt):
+def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False):
     """
-    Transparent wrapper on `os.waitpid` to make notes about undocumented subprocess behavior.
+    Read a stop signals from the process and update the process state.
+
+    Return code
+    ===========
+
     Basically ``p = subprocess.Popen()`` populates ``p.returncode`` after ``p.wait()``, ``p.poll()``
     or ``p.communicate()`` (https://docs.python.org/3/library/os.html#os.waitpid).
     But if you're using `os.waitpid()` BEFORE these functions you're capturing return code
     from a signal subsystem and ``p.returncode`` will be ``0``.
-    After ``os.waitid`` call you need to set return code manually
-    ``p.returncode = -os.WTERMSIG(status)`` like in Popen.
+    After ``os.waitid`` call you need to set return code and process signal manually.
     See also ``xonsh.tools.describe_waitpid_status()``.
+
+    Signals
+    =======
+
+    The command that is waiting for input can be suspended by OS in case there is no terminal attached
+    because without terminal command will never end. Read more about SIGTTOU and SIGTTIN signals:
+     * https://www.linusakesson.net/programming/tty/
+     * http://curiousthing.org/sigttin-sigttou-deep-dive-linux
+     * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
     """
-    return os.waitpid(pid, opt)
+
+    info = {"backgrounded": False, "signal": None, "signal_name": None}
+
+    if ON_WINDOWS:
+        return info
+
+    if proc is not None and getattr(proc, "pid", None) is None:
+        """
+        When the process stopped before os.waitpid it has no pid.
+        Note that in this case there is high probability
+        that we will have return code 0 instead of real return code.
+        """
+        if raise_child_process_error:
+            raise ChildProcessError("Process Identifier (PID) not found.")
+        else:
+            return info
+
+    try:
+        """
+        The WUNTRACED flag indicates that the caller wishes to wait for stopped or terminated
+        child processes, but doesn't want to return information about them. A stopped process is one
+        that has been suspended and is waiting to be resumed or terminated.
+        """
+        opt = os.WUNTRACED if hang else (os.WUNTRACED | os.WNOHANG)
+        wpid, wcode = os.waitpid(proc.pid, opt)
+    except ChildProcessError:
+        wpid, wcode = 0, 0
+        if raise_child_process_error:
+            raise
+
+    if wpid == 0:
+        # Process has no changes in state.
+        pass
+
+    elif os.WIFSTOPPED(wcode):
+        if task is not None:
+            task["status"] = "stopped"
+        info["backgrounded"] = True
+        proc.signal = (os.WSTOPSIG(wcode), os.WCOREDUMP(wcode))
+        info["signal"] = os.WSTOPSIG(wcode)
+        proc.suspended = True
+
+    elif os.WIFSIGNALED(wcode):
+        print()  # get a newline because ^C will have been printed
+        proc.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
+        proc.returncode = -os.WTERMSIG(wcode)  # Popen default.
+        info["signal"] = os.WTERMSIG(wcode)
+
+    else:
+        proc.returncode = os.WEXITSTATUS(wcode)
+        proc.signal = None
+        info["signal"] = None
+
+    info["signal_name"] = f'{info["signal"]} {get_signal_name(info["signal"])}'.strip()
+    return info
 
 
 @contextlib.contextmanager
@@ -144,7 +210,7 @@ if ON_WINDOWS:
 
     def _kill(job):
         subprocess.check_output(
-            ["taskkill", "/F", "/T", "/PID", str(job["obj"].pid)],
+            ["taskkill", "/F", "/T", "/PID", str(job["proc"].pid)],
             stderr=subprocess.STDOUT,
         )
 
@@ -165,11 +231,11 @@ if ON_WINDOWS:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        obj = active_task["obj"]
+        proc = active_task["proc"]
         _continue(active_task)
-        while obj.returncode is None:
+        while proc.returncode is None:
             try:
-                obj.wait(0.01)
+                proc.wait(0.01)
             except subprocess.TimeoutExpired:
                 pass
             except KeyboardInterrupt:
@@ -278,31 +344,23 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        thread = active_task["obj"]
-        backgrounded = False
+        proc = active_task["proc"]
+        info = {"backgrounded": False}
+
         try:
-            if thread.pid is None:
-                # When the process stopped before os.waitpid it has no pid.
-                raise ChildProcessError("The process PID not found.")
-            _, wcode = waitpid(thread.pid, os.WUNTRACED)
-        except ChildProcessError as e:  # No child processes
+            info = proc_untraced_waitpid(
+                proc, hang=True, task=active_task, raise_child_process_error=True
+            )
+        except ChildProcessError as e:
             if return_error:
                 return e
             else:
                 return _safe_wait_for_active_job(
-                    last_task=active_task, backgrounded=backgrounded
+                    last_task=active_task, backgrounded=info["backgrounded"]
                 )
-        if os.WIFSTOPPED(wcode):
-            active_task["status"] = "stopped"
-            backgrounded = True
-        elif os.WIFSIGNALED(wcode):
-            print()  # get a newline because ^C will have been printed
-            thread.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
-            thread.returncode = -os.WTERMSIG(wcode)  # Default Popen
-        else:
-            thread.returncode = os.WEXITSTATUS(wcode)
-            thread.signal = None
-        return wait_for_active_job(last_task=active_task, backgrounded=backgrounded)
+        return wait_for_active_job(
+            last_task=active_task, backgrounded=info["backgrounded"]
+        )
 
 
 def _safe_wait_for_active_job(last_task=None, backgrounded=False):
@@ -344,8 +402,8 @@ def _clear_dead_jobs():
     to_remove = set()
     tasks = get_tasks()
     for tid in tasks:
-        obj = get_task(tid)["obj"]
-        if obj is None or obj.poll() is not None:
+        proc = get_task(tid)["proc"]
+        if proc is None or proc.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
         tasks.remove(job)
@@ -364,13 +422,13 @@ def format_job_string(num: int, format="dict") -> str:
         "cmd": " ".join(
             [" ".join(i) if isinstance(i, list) else i for i in job["cmds"]]
         ),
-        "pid": int(job["pids"][-1]) if job["pids"] else None,
+        "pids": job["pids"] if "pids" in job else None,
     }
 
     if format == "posix":
         r["pos"] = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
         r["bg"] = " &" if job["bg"] else ""
-        r["pid"] = f"({r['pid']})" if r["pid"] else ""
+        r["pid"] = f"({','.join(str(pid) for pid in r['pids'])})" if r["pids"] else ""
         return "[{num}]{pos} {status}: {cmd}{bg} {pid}".format(**r)
     else:
         return repr(r)
@@ -396,11 +454,19 @@ def add_job(info):
     """Add a new job to the jobs dictionary."""
     num = get_next_job_number()
     info["started"] = time.time()
-    info["status"] = "running"
+    info["status"] = info["status"] if "status" in info else "running"
     get_tasks().appendleft(num)
     get_jobs()[num] = info
     if info["bg"] and XSH.env.get("XONSH_INTERACTIVE"):
         print_one_job(num)
+
+
+def update_job_attr(pid, name, value):
+    """Update job attribute."""
+    jobs = get_jobs()
+    for num, job in get_jobs().items():
+        if "pids" in job and pid in job["pids"]:
+            jobs[num][name] = value
 
 
 def clean_jobs():
