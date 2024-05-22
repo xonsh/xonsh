@@ -208,10 +208,6 @@ def add_args(
             action.help += " (type: %(type)s)"
 
 
-def empty_help_func(_parser, _stdout):
-    _parser.print_help(file=_stdout)
-
-
 def make_parser(
     func: tp.Union[tp.Callable, str],
     empty_help=False,
@@ -226,7 +222,7 @@ def make_parser(
             kwargs["epilog"] = doc.epilog
     parser = ArgParser(**kwargs)
     if empty_help:
-        parser.set_defaults(**{_FUNC_NAME: empty_help_func})
+        parser.default_command = "--help"
     return parser
 
 
@@ -410,8 +406,9 @@ def dispatch(parser: ap.ArgumentParser, args=None, lenient=False, **ns):
     ns["_parsed"] = parsed
     ns.update(vars(parsed))
 
-    func = ns[_FUNC_NAME]
-    return _dispatch_func(func, ns)
+    if _FUNC_NAME in ns:
+        func = ns[_FUNC_NAME]
+        return _dispatch_func(func, ns)
 
 
 class ArgparseCompleter:

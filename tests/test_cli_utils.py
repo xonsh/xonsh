@@ -77,3 +77,15 @@ def test_parser_hooking():
         "zsh",
         "bash",
     )
+
+
+def test_parser_default_func(mocker):
+    import xonsh.xontribs as xx
+
+    alias = xx.XontribAlias()
+
+    def func():
+        return True
+
+    mocker.patch.object(xx, "xontribs_list", func)
+    assert alias([]) is True

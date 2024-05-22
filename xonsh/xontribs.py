@@ -399,7 +399,7 @@ class XontribAlias(ArgParserAlias):
         parser.add_command(xontribs_load, prog="load")
         parser.add_command(xontribs_unload, prog="unload")
         parser.add_command(xontribs_reload, prog="reload")
-        parser.add_command(xontribs_list, prog="list")
+        parser.add_command(xontribs_list, prog="list", default=True)
         return parser
 
 
