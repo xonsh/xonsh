@@ -529,8 +529,8 @@ class CommandPipeline:
                 proc = getattr(proc, "proc", proc)
                 procname = f"{getattr(proc, 'args', '')} with pid {proc.pid}".strip()
                 print(
-                    f"Process {procname} suspended with signal {info['signal_name']} and stay in `jobs`.\n"
-                    f"This happends when process start waiting for input but there is no terminal attached in captured mode.",
+                    f"Process {procname} was suspended with signal {info['signal_name']} and placed in `jobs`.\n"
+                    f"This happens when a process starts waiting for input but there is no terminal attached in captured mode.",
                     file=sys.stderr,
                 )
                 return proc
