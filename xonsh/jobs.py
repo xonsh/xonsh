@@ -75,7 +75,7 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
         that we will have return code 0 instead of real return code.
         """
         if raise_child_process_error:
-            raise ChildProcessError("The process PID not found.")
+            raise ChildProcessError("Process Identifier (PID) not found.")
         else:
             return info
 
