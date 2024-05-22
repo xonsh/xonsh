@@ -19,6 +19,14 @@ from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
 
 
+def cmd_sig(sig):
+    return [
+        "python",
+        "-c",
+        f"import os, signal; os.kill(os.getpid(), signal.{sig})",
+    ]
+
+
 @skip_if_on_windows
 def test_cmds_to_specs_thread_subproc(xession):
     env = xession.env
@@ -141,13 +149,35 @@ def test_capture_always(
 
 
 @skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
-def test_interrupted_process_returncode(xonsh_session):
+@pytest.mark.parametrize("captured", ["stdout", "object"])
+@pytest.mark.parametrize("interactive", [True, False])
+def test_interrupted_process_returncode(xonsh_session, captured, interactive):
+    xonsh_session.env["XONSH_INTERACTIVE"] = interactive
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
-    cmd = [["python", "-c", "import os, signal; os.kill(os.getpid(), signal.SIGINT)"]]
+    cmd = [cmd_sig("SIGINT")]
     specs = cmds_to_specs(cmd, captured="stdout")
     (p := _run_command_pipeline(specs, cmd)).end()
     assert p.proc.returncode == -signal.SIGINT
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "suspended_pipeline",
+    [
+        [cmd_sig("SIGTTIN")],
+        [["echo", "1"], "|", cmd_sig("SIGTTIN")],
+        [["echo", "1"], "|", cmd_sig("SIGTTIN"), "|", ["head"]],
+    ],
+)
+def test_specs_with_suspended_captured_process_pipeline(
+    xonsh_session, suspended_pipeline
+):
+    xonsh_session.env["XONSH_INTERACTIVE"] = True
+    specs = cmds_to_specs(suspended_pipeline, captured="object")
+    p = _run_command_pipeline(specs, suspended_pipeline)
+    p.proc.send_signal(signal.SIGCONT)
+    p.end()
+    assert p.suspended
 
 
 @skip_if_on_windows
@@ -162,6 +192,7 @@ def test_interrupted_process_returncode(xonsh_session):
         ([["echo", "-n", "1\n2 3"]], "1\n2 3", ["1", "2 3"]),
     ],
 )
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_subproc_output_format(cmds, exp_stream_lines, exp_list_lines, xonsh_session):
     xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "stream_lines"
     output = run_subproc(cmds, "stdout")
