@@ -94,6 +94,7 @@ class CommandPipeline:
 
     attrnames = (
         "returncode",
+        "suspended",
         "pid",
         "args",
         "alias",
@@ -153,6 +154,7 @@ class CommandPipeline:
         self._raw_output = self._raw_error = b""
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
+        self.suspended = None
 
         background = self.spec.background
         pipeline_group = None
@@ -186,11 +188,14 @@ class CommandPipeline:
         self.proc = self.procs[-1]
 
     def __repr__(self):
-        attrs = self.attrnames + (
-            self.attrnames_ext if XSH.env.get("XONSH_DEBUG", False) else ()
-        )
+        debug = XSH.env.get("XONSH_DEBUG", False)
+        attrs = self.attrnames + (self.attrnames_ext if debug else ())
         s = self.__class__.__name__ + "(\n  "
-        s += ",\n  ".join(a + "=" + repr(getattr(self, a)) for a in attrs)
+        s += ",\n  ".join(
+            a + "=" + repr(getattr(self, a))
+            for a in attrs
+            if debug or getattr(self, a) is not None
+        )
         s += "\n)"
         return s
 
@@ -288,7 +293,9 @@ class CommandPipeline:
         prev_end_time = None
         i = j = cnt = 1
         while proc.poll() is None:
-            if getattr(proc, "suspended", False):
+            if getattr(proc, "suspended", False) or self._procs_suspended() is not None:
+                self.suspended = True
+                xj.update_job_attr(proc.pid, "status", "suspended")
                 return
             elif getattr(proc, "in_alt_mode", False):
                 time.sleep(0.1)  # probably not leaving any time soon
@@ -303,6 +310,7 @@ class CommandPipeline:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
+
             stdout_lines = safe_readlines(stdout, 1024)
             i = len(stdout_lines)
             if i != 0:
@@ -512,6 +520,20 @@ class CommandPipeline:
 
     def _safe_close(self, handle):
         safe_fdclose(handle, cache=self._closed_handle_cache)
+
+    def _procs_suspended(self):
+        """Check procs and return suspended proc."""
+        for proc in self.procs:
+            info = xj.proc_untraced_waitpid(proc, hang=False)
+            if getattr(proc, "suspended", False):
+                proc = getattr(proc, "proc", proc)
+                procname = f"{getattr(proc, 'args', '')} with pid {proc.pid}".strip()
+                print(
+                    f"Process {procname} was suspended with signal {info['signal_name']} and placed in `jobs`.\n"
+                    f"This happens when a process starts waiting for input but there is no terminal attached in captured mode.",
+                    file=sys.stderr,
+                )
+                return proc
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
