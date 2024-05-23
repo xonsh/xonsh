@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* Unpin prompt-toolkit version.
+* Unpin prompt-toolkit version (#5438).
 
 **Fixed:**
 
