@@ -1,1 +1,1 @@
-from xonsh.procs import proxies
+from xonsh.procs import proxies  # noqa
