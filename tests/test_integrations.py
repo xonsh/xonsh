@@ -1273,7 +1273,11 @@ def test_alias_stability():
         "tst\ntst\ntst\n"
     )
     out, err, ret = run_xonsh(
-        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=10
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
     )
     assert re.match(".*sleep.*sleep.*sleep.*", out, re.MULTILINE | re.DOTALL)
 
