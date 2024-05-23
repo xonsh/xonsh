@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed ``Bad file descriptor`` error after running callable alias (#5435).
+* Fixed ``Bad file descriptor`` and I/O errors after running callable alias (#5435).
 
 **Security:**
 
