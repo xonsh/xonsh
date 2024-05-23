@@ -1292,7 +1292,15 @@ def test_alias_stability_exception():
         "tst1\ntst2\ntst1\ntst2\n"
     )
     out, err, ret = run_xonsh(
-        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=10
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
     )
-    assert re.match(".*sleep.*ZeroDivisionError.*sleep.*ZeroDivisionError.*", out, re.MULTILINE | re.DOTALL)
-    assert 'Bad file descriptor' not in out
+    assert re.match(
+        ".*sleep.*ZeroDivisionError.*sleep.*ZeroDivisionError.*",
+        out,
+        re.MULTILINE | re.DOTALL,
+    )
+    assert "Bad file descriptor" not in out
