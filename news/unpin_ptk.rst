@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Pinned prompt-toolkit version 3.0.29-3.0.39 to workaround upstream issue. More info in issue 5393.
+* <news item>
 
 **Deprecated:**
 
@@ -12,7 +12,7 @@
 
 **Removed:**
 
-* <news item>
+* Unpin prompt-toolkit version (#5438).
 
 **Fixed:**
 
