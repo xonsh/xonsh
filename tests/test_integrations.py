@@ -1253,3 +1253,15 @@ def test_catching_exit_signal():
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
     )
     assert ret > 0
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_alias_stability():
+    """Testing alias stability after amalgamation regress that described in #5435."""
+    stdin_cmd = ("aliases['tst'] = lambda: [print('sleep'), __import__('time').sleep(1)]\n"
+                 "tst\ntst\ntst\n")
+    out, err, ret = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
+    )
+    assert re.match(".*sleep.*sleep.*sleep.*", out, re.MULTILINE | re.DOTALL)
