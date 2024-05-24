@@ -132,6 +132,12 @@ class CommandsCache(cabc.Mapping):
         self.update_cache()
         return self._cmds_cache
 
+    def readsymlink(self, path):
+        try:
+            return os.readlink(path)
+        except Exception:
+            return None
+
     def update_cache(self):
         env = self.env
         # iterate backwards so that entries at the front of PATH overwrite
@@ -382,6 +388,12 @@ class CommandsCache(cabc.Mapping):
         if fname is None:
             return failure
         if not os.path.isfile(fname):
+            return failure
+        if (link := self.readsymlink(fname)) and link.endswith('coreutils'):
+            """
+            On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file. 
+            Detect it and use the default mode.
+            """
             return failure
 
         try:
