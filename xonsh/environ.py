@@ -490,7 +490,7 @@ class LsColors(cabc.MutableMapping):
             return cls(cls.default_settings)
         except OSError:
             # necessary to catch OSError: [WinError 740] The requested operation requires elevation
-            if ON_WINDOWS:
+            if not XSH.env.get("XONSH_DEBUG", False) or ON_WINDOWS:
                 return cls(cls.default_settings)
             raise
         if not out:
