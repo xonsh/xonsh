@@ -132,11 +132,27 @@ class CommandsCache(cabc.Mapping):
         self.update_cache()
         return self._cmds_cache
 
-    def readsymlink(self, path):
-        try:
-            return os.readlink(path)
-        except Exception:
+    def resolve_symlink(self, path):
+        visited = set()
+        current_path = path
+        while os.path.islink(current_path):
+            if current_path in visited:
+                # Detected a loop while resolving symlink
+                return None
+            visited.add(current_path)
+            try:
+                current_path = os.readlink(current_path)
+            except Exception:
+                return None
+            if not os.path.isabs(current_path):
+                current_path = os.path.join(os.path.dirname(path), current_path)
+                current_path = os.path.normpath(current_path)
+
+        if current_path == path:
             return None
+
+        return current_path
+
 
     def update_cache(self):
         env = self.env
@@ -389,7 +405,7 @@ class CommandsCache(cabc.Mapping):
             return failure
         if not os.path.isfile(fname):
             return failure
-        if (link := self.readsymlink(fname)) and link.endswith("coreutils"):
+        if (link := self.resolve_symlink(fname)) and link.endswith("coreutils"):
             """
             On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file.
             Detect it and use the default mode.

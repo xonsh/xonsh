@@ -209,14 +209,23 @@ def test_nixos_coreutils(tmp_path):
     path = tmp_path / "core"
     coreutils = path / "coreutils"
     echo = path / "echo"
+    echo2 = path / "echo2"
+    echo3 = path / "echo3"
     cat = path / "cat"
 
     path.mkdir()
-    coreutils.touch()
-    echo.symlink_to(coreutils)
+    coreutils.write_bytes(b"Binary with isatty, tcgetattr, tcsetattr.")
+    echo.symlink_to(echo2)
+    echo2.symlink_to(echo3)
+    echo3.symlink_to(coreutils)
     cat.symlink_to(coreutils)
+
+    for toolpath in [coreutils, echo, echo2, echo3, cat]:
+        # chmod a+x toolpath
+        current_permissions = toolpath.stat().st_mode
+        toolpath.chmod(current_permissions | 0o111)
 
     cache = CommandsCache({"PATH": [path]})
 
-    assert cache.predict_threadable(["echo"]) is True
-    assert cache.predict_threadable(["cat"]) is False
+    assert cache.predict_threadable(["echo", "1"]) is True
+    assert cache.predict_threadable(["cat", "file"]) is False
