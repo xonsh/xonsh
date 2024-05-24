@@ -203,7 +203,7 @@ def test_update_cache(xession, tmp_path):
 
     assert file2.samefile(cached[basename][0])
 
-
+@skip_if_on_windows
 def test_nixos_coreutils(tmp_path):
     """On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file."""
     path = tmp_path / "core"
