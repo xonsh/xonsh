@@ -153,7 +153,6 @@ class CommandsCache(cabc.Mapping):
 
         return current_path
 
-
     def update_cache(self):
         env = self.env
         # iterate backwards so that entries at the front of PATH overwrite
