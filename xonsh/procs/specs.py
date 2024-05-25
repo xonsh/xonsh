@@ -956,7 +956,7 @@ def _run_command_pipeline(specs, cmds):
                 "cmds": cmds,
                 "pids": [i.pid for i in cp.procs],
                 "status": "suspended" if cp.suspended else "running",
-                "proc": proc,
+                "obj": proc,
                 "bg": background,
                 "pipeline": cp,
                 "pgrp": cp.term_pgid,
