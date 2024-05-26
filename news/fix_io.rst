@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Pinned prompt-toolkit version 3.0.29-3.0.39 to workaround upstream issue. More info in issue 5393.
+* <news item>
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed ``Bad file descriptor`` and I/O errors after running callable alias (#5435).
 
 **Security:**
 
