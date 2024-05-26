@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``xth`` (x-threadable) and ``xunth`` (x-unthreadable) aliases to force command running in thread or not.
+* Added ``xth`` (x-threadable) and ``xunth`` (x-unthreadable) aliases to force command running as threaded or unthreaded.
 * Added ``SpecModifier`` class to have an ability to create alias that modifies spec before run e.g. ``xth`` alias.
 
 **Changed:**
