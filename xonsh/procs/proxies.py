@@ -9,6 +9,7 @@ licensed to the Python Software foundation under a Contributor Agreement.
 
 import collections.abc as cabc
 import io
+import inspect
 import os
 import signal
 import subprocess
@@ -283,6 +284,69 @@ def parse_proxy_return(r, stdout, stderr):
     return cmd_result
 
 
+def proxy_zero(f, args, stdin, stdout, stderr, spec, stack):
+    """Calls a proxy function which takes no parameters."""
+    return f()
+
+
+def proxy_one(f, args, stdin, stdout, stderr, spec, stack):
+    """Calls a proxy function which takes one parameter: args"""
+    return f(args)
+
+
+def proxy_two(f, args, stdin, stdout, stderr, spec, stack):
+    """Calls a proxy function which takes two parameter: args and stdin."""
+    return f(args, stdin)
+
+
+def proxy_three(f, args, stdin, stdout, stderr, spec, stack):
+    """Calls a proxy function which takes three parameter: args, stdin, stdout."""
+    return f(args, stdin, stdout)
+
+
+def proxy_four(f, args, stdin, stdout, stderr, spec, stack):
+    """Calls a proxy function which takes four parameter: args, stdin, stdout,
+    and stderr.
+    """
+    return f(args, stdin, stdout, stderr)
+
+
+def proxy_five(f, args, stdin, stdout, stderr, spec, stack):
+    """Calls a proxy function which takes four parameter: args, stdin, stdout,
+    stderr, and spec.
+    """
+    return f(args, stdin, stdout, stderr, spec)
+
+
+PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four, proxy_five)
+
+
+def partial_proxy(f):
+    """Dispatches the appropriate proxy function based on the number of args."""
+    numargs = 0
+
+    for name, param in inspect.signature(f).parameters.items():
+        # handle *args/**kwargs signature
+        if param.kind in {param.VAR_KEYWORD, param.VAR_POSITIONAL}:
+            numargs = 6
+            break
+        if (
+            param.kind == param.POSITIONAL_ONLY
+            or param.kind == param.POSITIONAL_OR_KEYWORD
+        ):
+            numargs += 1
+        elif name in xt.ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
+            numargs += 1
+    if numargs < 6:
+        return functools.partial(PROXIES[numargs], f)
+    elif numargs == 6:
+        # don't need to partial.
+        return f
+    else:
+        e = "Expected proxy with 6 or fewer arguments for {}, not {}"
+        raise xt.XonshError(e.format(", ".join(xt.ALIAS_KWARG_NAMES), numargs))
+
+
 def get_proc_proxy_name(cls):
     return repr(
         {
@@ -339,7 +403,8 @@ class ProcProxyThread(threading.Thread):
         env : Mapping, optional
             Environment mapping.
         """
-        self.f = f
+        self.orig_f = f
+        self.f = partial_proxy(f)
         self.args = args
         self.pid = None
         self.returncode = None
@@ -728,7 +793,8 @@ class ProcProxy:
         close_fds=False,
         env=None,
     ):
-        self.f = f
+        self.orig_f = f
+        self.f = partial_proxy(f)
         self.args = args
         self.pid = os.getpid()
         self.returncode = None
