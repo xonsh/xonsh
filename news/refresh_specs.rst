@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Cleaning logic and functions around threading and capturing in ``procs/specs.py``.
+* Cleaning logic and functions around threading and capturing in ``procs/specs.py`` file.
 
 **Deprecated:**
 
