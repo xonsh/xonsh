@@ -378,7 +378,6 @@ class SubprocSpec:
         self.captured_stderr = None
         self.stack = None
 
-
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
         s += self.cls.__name__ + ", "
@@ -607,7 +606,6 @@ class SubprocSpec:
         spec.resolve_alias_cls()
         spec.resolve_stack()
         return spec
-
 
     def resolve_args_list(self):
         """Weave a list of arguments into a command."""
