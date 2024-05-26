@@ -223,6 +223,9 @@ def _parse_redirects(r, loc=None):
 
 def _redirect_streams(r, loc=None):
     """Returns stdin, stdout, stderr tuple of redirections."""
+    if isinstance(loc, list):
+        raise Exception(f"Unsupported redirect: {r!r} {loc!r}")
+
     stdin = stdout = stderr = None
     no_ampersand = r.replace("&", "")
     # special case of redirecting stderr to stdout
@@ -371,6 +374,7 @@ class SubprocSpec:
         self.is_proxy = False
         self.background = False
         self.threadable = True
+        self.force_threadable = None  # Set this value to ignore threadable prediction.
         self.pipeline_index = None
         self.last_in_pipeline = False
         self.captured_stdout = None
@@ -597,7 +601,6 @@ class SubprocSpec:
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
         spec.resolve_args_list()
-        # perform initial redirects
         spec.resolve_redirects()
         spec.resolve_alias()
         spec.resolve_binary_loc()
@@ -611,7 +614,21 @@ class SubprocSpec:
         """Weave a list of arguments into a command."""
         resolved_cmd = []
         for c in self.cmd:
-            resolved_cmd += c if isinstance(c, list) else [c]
+            if (
+                isinstance(c, tuple)
+                and len(c) == 2
+                and isinstance(c[1], list)
+                and len(c[1]) == 1
+            ):
+                # Redirect case e.g. `> file`
+                resolved_cmd.append(
+                    (
+                        c[0],
+                        c[1][0],
+                    )
+                )
+            else:
+                resolved_cmd += c if isinstance(c, list) else [c]
         self.cmd = resolved_cmd
 
     def resolve_redirects(self):
@@ -694,15 +711,10 @@ class SubprocSpec:
 
     def resolve_alias_cls(self):
         """Determine which proxy class to run an alias with."""
-        alias = self.alias
-        if not callable(alias):
-            return
-        self.is_proxy = True
-        self.threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
-            alias, "__xonsh_threadable__", True
-        )
-        self.cls = ProcProxyThread if self.threadable else ProcProxy
-        self.captured = getattr(alias, "__xonsh_capturable__", self.captured)
+        if callable(self.alias):
+            self.is_proxy = True
+            _update_proc_alias_threadable(self)
+            _update_proc_alias_captured(self)
 
     def resolve_stack(self):
         """Computes the stack for a callable alias's call-site, if needed."""
@@ -748,32 +760,55 @@ def _safe_pipe_properties(fd, use_tty=False):
 
 
 def _update_last_spec(last):
-    env = XSH.env
-    captured = last.captured
     last.last_in_pipeline = True
-    if not captured:
+
+    if not last.captured:
         return
-    callable_alias = callable(last.alias)
-    if callable_alias:
-        if last.cls is ProcProxy and captured == "hiddenobject":
-            # a ProcProxy run using ![] should not be captured
-            return
-    else:
-        cmds_cache = XSH.commands_cache
-        thable = (
-            env.get("THREAD_SUBPROCS")
-            and (captured != "hiddenobject" or env.get("XONSH_CAPTURE_ALWAYS"))
-            and cmds_cache.predict_threadable(last.args)
-            and cmds_cache.predict_threadable(last.cmd)
-        )
-        if captured and thable:
+
+    _last_spec_update_threading(last)
+    _last_spec_update_captured(last)
+
+
+def _last_spec_update_threading(last: SubprocSpec):
+    if callable(last.alias):
+        return
+
+    captured, env, cmds_cache = last.captured, XSH.env, XSH.commands_cache
+    threadable = (
+        captured
+        and env.get("THREAD_SUBPROCS")
+        and (captured != "hiddenobject" or env.get("XONSH_CAPTURE_ALWAYS"))
+        and cmds_cache.predict_threadable(last.args)
+        and cmds_cache.predict_threadable(last.cmd)
+    )
+    if last.force_threadable is not None:
+        threadable = last.force_threadable
+
+    if threadable:
+        if last.captured:
             last.cls = PopenThread
-        elif not thable:
-            # foreground processes should use Popen
-            last.threadable = False
-            if captured == "object" or captured == "hiddenobject":
-                # CommandPipeline objects should not pipe stdout, stderr
-                return
+    else:
+        last.threadable = False
+
+
+def _last_spec_update_captured(last: SubprocSpec):
+    captured = (
+        (captured := last.captured)
+        and not (captured in ["object", "hiddenobject"] and not last.threadable)
+        # a ProcProxy run using ![] should not be captured
+        and not (
+            callable(last.alias)
+            and last.cls is ProcProxy
+            and captured == "hiddenobject"
+        )
+    )
+    if captured:
+        _make_last_spec_captured(last)
+
+
+def _make_last_spec_captured(last: SubprocSpec):
+    captured = last.captured
+    callable_alias = callable(last.alias)
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = xp.ON_POSIX and not callable_alias
@@ -832,6 +867,46 @@ def _update_last_spec(last):
         last.captured_stderr = last.captured_stdout
 
 
+def _update_proc_alias_threadable(proc):
+    threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
+        proc.alias, "__xonsh_threadable__", True
+    )
+    if proc.force_threadable is not None:
+        threadable = proc.force_threadable
+    proc.threadable = threadable
+    proc.cls = ProcProxyThread if proc.threadable else ProcProxy
+
+
+def _update_proc_alias_captured(proc):
+    proc.captured = getattr(proc.alias, "__xonsh_capturable__", proc.captured)
+
+
+def _trace_specs(trace_mode, specs, cmds, captured):
+    """Show information about specs."""
+    tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
+    if callable(tracer):
+        tracer(cmds, captured=captured)
+    else:
+        r = {"cmds": cmds, "captured": captured}
+        print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
+        if trace_mode == 2:
+            for i, s in enumerate(specs):
+                pcls = s.cls.__module__ + "." + s.cls.__name__
+                pcmd = (
+                    [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
+                )
+                p = {
+                    "cmd": pcmd,
+                    "cls": pcls,
+                    "alias": s.alias_name,
+                    "bin": s.binary_loc,
+                    "threadable": s.threadable,
+                    "bg": s.background,
+                }
+                p = {k: v for k, v in p.items() if v is not None}
+                print(f"{i}: {repr(p)}", file=sys.stderr)
+
+
 def cmds_to_specs(cmds, captured=False, envs=None):
     """Converts a list of cmds to a list of SubprocSpec objects that are
     ready to be executed.
@@ -877,8 +952,17 @@ def cmds_to_specs(cmds, captured=False, envs=None):
     return specs
 
 
-def _should_set_title():
-    return XSH.env.get("XONSH_INTERACTIVE") and XSH.shell is not None
+def _shell_set_title(cmds):
+    if XSH.env.get("XONSH_INTERACTIVE") and XSH.shell is not None:
+        # context manager updates the command information that gets
+        # accessed by CurrentJobField when setting the terminal's title
+        with XSH.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
+            # remove current_job from prompt level cache
+            XSH.env["PROMPT_FIELDS"].reset_key("current_job")
+            # The terminal's title needs to be set before starting the
+            # subprocess to avoid accidentally answering interactive questions
+            # from commands such as `rm -i` (see #1436)
+            XSH.shell.settitle()
 
 
 def run_subproc(cmds, captured=False, envs=None):
@@ -897,49 +981,14 @@ def run_subproc(cmds, captured=False, envs=None):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
 
-    if tr := XSH.env.get("XONSH_TRACE_SUBPROC", False):
-        tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
-        if callable(tracer):
-            tracer(cmds, captured=captured)
-        else:
-            r = {"cmds": cmds, "captured": captured}
-            print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
-            if tr == 2:
-                for i, s in enumerate(specs):
-                    pcls = s.cls.__module__ + "." + s.cls.__name__
-                    pcmd = (
-                        [s.args[0].__name__] + s.args[1:]
-                        if callable(s.args[0])
-                        else s.args
-                    )
-                    p = {
-                        "cmd": pcmd,
-                        "cls": pcls,
-                        "alias": s.alias_name,
-                        "bin": s.binary_loc,
-                        "thread": s.threadable,
-                        "bg": s.background,
-                    }
-                    p = {k: v for k, v in p.items() if v is not None}
-                    print(f"{i}: {repr(p)}", file=sys.stderr)
+    if trace_mode := XSH.env.get("XONSH_TRACE_SUBPROC", False):
+        _trace_specs(trace_mode, specs, cmds, captured)
 
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
     ]
-    if _should_set_title():
-        # context manager updates the command information that gets
-        # accessed by CurrentJobField when setting the terminal's title
-        with XSH.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
-            # remove current_job from prompt level cache
-            XSH.env["PROMPT_FIELDS"].reset_key("current_job")
-            # The terminal's title needs to be set before starting the
-            # subprocess to avoid accidentally answering interactive questions
-            # from commands such as `rm -i` (see #1436)
-            XSH.shell.settitle()
-            # run the subprocess
-            return _run_specs(specs, cmds)
-    else:
-        return _run_specs(specs, cmds)
+    _shell_set_title(cmds)
+    return _run_specs(specs, cmds)
 
 
 def _run_command_pipeline(specs, cmds):
@@ -974,15 +1023,15 @@ def _run_specs(specs, cmds):
         cp.spec.background,
     )
 
-    # For some reason, some programs are in a stopped state when the flow
-    # reaches this point, hence a SIGCONT should be sent to `proc` to make
-    # sure that the shell doesn't hang.
-    # See issue #2999 and the fix in PR #3000
+    """
+    For some reason, some programs are in a stopped state when the flow
+    reaches this point, hence a SIGCONT should be sent to `proc` to make
+    sure that the shell doesn't hang. See issue #2999 and the fix in PR #3000
+    """
     resume_process(proc)
 
-    # now figure out what we should return
     if captured == "object":
-        return cp  # object can be returned even if backgrounding
+        return cp
     elif captured == "hiddenobject":
         if not background:
             cp.end()
