@@ -8,9 +8,9 @@ licensed to the Python Software foundation under a Contributor Agreement.
 """
 
 import collections.abc as cabc
-import io
-import inspect
 import functools
+import inspect
+import io
 import os
 import signal
 import subprocess
