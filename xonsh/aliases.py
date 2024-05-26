@@ -32,6 +32,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
+from xonsh.procs.specs import SpecAttrModifierAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -60,7 +61,7 @@ class FuncAlias:
     attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
     attributes_inherit = attributes_show + ["__doc__"]
 
-    def __init__(self, name, func):
+    def __init__(self, name, func=None):
         self.__name__ = self.name = name
         self.func = func
         for attr in self.attributes_inherit:
@@ -918,6 +919,14 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
+        "xth": SpecAttrModifierAlias(
+            {"threadable": True, "force_threadable": True},
+            "Mark command as threadable.",
+        ),
+        "xunth": SpecAttrModifierAlias(
+            {"threadable": False, "force_threadable": False},
+            "Mark command as unthreadable.",
+        ),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

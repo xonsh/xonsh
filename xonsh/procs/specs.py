@@ -274,6 +274,45 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
+class SpecModifierAlias:
+    """Spec modifier base class."""
+
+    descr = "Spec modifier base class."
+
+    def __call__(
+        self,
+        args,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        **kwargs,
+    ):
+        print(self.descr, file=stdout)
+
+    def on_pre_resolve_cmd(self, spec):
+        """Modify spec before resolving cmd."""
+        pass
+
+    def on_pre_run(self, pipeline, spec, spec_num):
+        """Modify spec before run."""
+        pass
+
+
+class SpecAttrModifierAlias(SpecModifierAlias):
+    """Modifier for spec attributes."""
+
+    def __init__(self, set_attributes: dict, descr=""):
+        self.set_attributes = set_attributes
+        self.descr = descr
+        super().__init__()
+
+    def on_pre_resolve_cmd(self, spec):
+        for a, v in self.set_attributes.items():
+            setattr(spec, a, v)
+
+
 class SubprocSpec:
     """A container for specifying how a subprocess command should be
     executed.
@@ -377,6 +416,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
+        self.spec_modifiers = []  # List of SpecModifierAlias objects that applied to spec.
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
@@ -597,6 +637,7 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        spec.resolve_spec_modifiers()  # keep this first
         spec.resolve_args_list()
         spec.resolve_redirects()
         spec.resolve_alias()
@@ -606,6 +647,21 @@ class SubprocSpec:
         spec.resolve_alias_cls()
         spec.resolve_stack()
         return spec
+
+    def resolve_spec_modifiers(self):
+        """Apply spec modifier."""
+        if (ln := len(self.cmd)) == 1:
+            return
+        for i in range(ln):
+            c = self.cmd[i]
+            if c in XSH.aliases and isinstance(
+                mod := XSH.aliases[c], SpecModifierAlias
+            ):
+                mod.on_pre_resolve_cmd(self)
+                self.spec_modifiers.append(mod)
+            else:
+                break
+        self.cmd = self.cmd[i:]
 
     def resolve_args_list(self):
         """Weave a list of arguments into a command."""
