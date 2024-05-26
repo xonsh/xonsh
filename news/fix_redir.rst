@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Cleaning logic and functions around threading and capturing in ``procs/specs.py`` file.
+* <news item>
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed redirect with python substitution e.g. ``echo 1 > @('/tmp/file')`` is working now.
 
 **Security:**
 
