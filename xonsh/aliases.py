@@ -919,13 +919,13 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "xth": SpecAttrModifierAlias(
+        "xthread": SpecAttrModifierAlias(
             {"threadable": True, "force_threadable": True},
-            "Mark command as threadable.",
+            "Mark current command as threadable.",
         ),
-        "xunth": SpecAttrModifierAlias(
+        "xunthread": SpecAttrModifierAlias(
             {"threadable": False, "force_threadable": False},
-            "Mark command as unthreadable.",
+            "Mark current command as unthreadable.",
         ),
     }
     if ON_WINDOWS:
