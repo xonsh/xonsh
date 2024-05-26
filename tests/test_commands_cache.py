@@ -202,3 +202,31 @@ def test_update_cache(xession, tmp_path):
     cached = cache.update_cache()
 
     assert file2.samefile(cached[basename][0])
+
+
+@skip_if_on_windows
+def test_nixos_coreutils(tmp_path):
+    """On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file."""
+    path = tmp_path / "core"
+    coreutils = path / "coreutils"
+    echo = path / "echo"
+    echo2 = path / "echo2"
+    echo3 = path / "echo3"
+    cat = path / "cat"
+
+    path.mkdir()
+    coreutils.write_bytes(b"Binary with isatty, tcgetattr, tcsetattr.")
+    echo.symlink_to(echo2)
+    echo2.symlink_to(echo3)
+    echo3.symlink_to(coreutils)
+    cat.symlink_to(coreutils)
+
+    for toolpath in [coreutils, echo, echo2, echo3, cat]:
+        # chmod a+x toolpath
+        current_permissions = toolpath.stat().st_mode
+        toolpath.chmod(current_permissions | 0o111)
+
+    cache = CommandsCache({"PATH": [path]})
+
+    assert cache.predict_threadable(["echo", "1"]) is True
+    assert cache.predict_threadable(["cat", "file"]) is False

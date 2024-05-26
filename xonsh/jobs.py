@@ -210,7 +210,7 @@ if ON_WINDOWS:
 
     def _kill(job):
         subprocess.check_output(
-            ["taskkill", "/F", "/T", "/PID", str(job["proc"].pid)],
+            ["taskkill", "/F", "/T", "/PID", str(job["obj"].pid)],
             stderr=subprocess.STDOUT,
         )
 
@@ -231,7 +231,7 @@ if ON_WINDOWS:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        proc = active_task["proc"]
+        proc = active_task["obj"]
         _continue(active_task)
         while proc.returncode is None:
             try:
@@ -344,7 +344,7 @@ else:
         # Return when there are no foreground active task
         if active_task is None:
             return last_task
-        proc = active_task["proc"]
+        proc = active_task["obj"]
         info = {"backgrounded": False}
 
         try:
@@ -402,7 +402,7 @@ def _clear_dead_jobs():
     to_remove = set()
     tasks = get_tasks()
     for tid in tasks:
-        proc = get_task(tid)["proc"]
+        proc = get_task(tid)["obj"]
         if proc is None or proc.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
