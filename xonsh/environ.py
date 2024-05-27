@@ -80,8 +80,8 @@ from xonsh.tools import (
     path_to_str,
     pathsep_to_upper_seq,
     print_color,
-    print_warning,
     print_exception,
+    print_warning,
     ptk2_color_depth_setter,
     seq_to_upper_pathsep,
     set_to_csv,
@@ -492,7 +492,7 @@ class LsColors(cabc.MutableMapping):
         except OSError as e:
             # necessary to catch OSError: [WinError 740] The requested operation requires elevation
             if not ON_WINDOWS:
-               print_warning(f'dircolors: {e}')
+                print_warning(f"dircolors: {e}")
             return cls(cls.default_settings)
         if not out:
             return cls(cls.default_settings)
