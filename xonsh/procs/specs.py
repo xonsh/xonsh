@@ -652,6 +652,7 @@ class SubprocSpec:
         return spec
 
     def add_spec_modifier(self, mod: SpecModifierAlias):
+        """Add spec modifier to the specification."""
         mod.on_modifer_added(self)
         self.spec_modifiers.append(mod)
 
