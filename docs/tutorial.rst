@@ -373,7 +373,7 @@ For example,
 
 .. note::
 
-    You can access to any command you ran using ``__xonsh__.last``
+    You can access a subprocess command you ran using ``__xonsh__.last``
     e.g. to get the return code run ``__xonsh__.last.rtn``.
 
 
