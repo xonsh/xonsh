@@ -340,7 +340,7 @@ def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xess
     from xonsh.history import main as mod
 
     main = HistoryAlias()
-    spy = mocker.spy(mod.xcli, "_dispatch_func")
+    spy = mocker.spy(mod.xcli, "run_with_partial_args")
 
     # action
     main(shlex.split(args))

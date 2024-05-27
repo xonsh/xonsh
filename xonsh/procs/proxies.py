@@ -20,6 +20,7 @@ import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.cli_utils import run_with_partial_args
 from xonsh.procs.readers import safe_fdclose
 
 
@@ -466,7 +467,17 @@ class ProcProxyThread(threading.Thread):
                 xt.redirect_stderr(STDERR_DISPATCHER),
                 XSH.env.swap(self.env, __ALIAS_STACK=alias_stack),
             ):
-                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec, spec.stack)
+                r = run_with_partial_args(
+                    self.f,
+                    {
+                        "args": self.args,
+                        "stdin": sp_stdin,
+                        "stdout": sp_stdout,
+                        "stderr": sp_stderr,
+                        "spec": spec,
+                        "stack": spec.stack,
+                    },
+                )
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except OSError:
@@ -767,7 +778,17 @@ class ProcProxy:
         # run the actual function
         try:
             with XSH.env.swap(self.env):
-                r = self.f(self.args, stdin, stdout, stderr, spec, spec.stack)
+                r = run_with_partial_args(
+                    self.f,
+                    {
+                        "args": self.args,
+                        "stdin": stdin,
+                        "stdout": stdout,
+                        "stderr": stderr,
+                        "spec": spec,
+                        "stack": spec.stack,
+                    },
+                )
         except Exception:
             xt.print_exception(source_msg="Exception in " + get_proc_proxy_name(self))
             r = 1
