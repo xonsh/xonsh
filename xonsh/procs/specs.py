@@ -717,6 +717,7 @@ class SubprocSpec:
         else:
             spec_modifiers = []
             if isinstance(XSH.aliases, dict):
+                # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
             else:
                 alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
