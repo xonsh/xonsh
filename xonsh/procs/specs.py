@@ -718,6 +718,7 @@ class SubprocSpec:
             alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
             if alias is not None:
                 self.alias_name = cmd0
+            if spec_modifiers:
                 for mod in spec_modifiers:
                     self.add_spec_modifier(mod)
         self.alias = alias
