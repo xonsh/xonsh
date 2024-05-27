@@ -371,6 +371,12 @@ For example,
     line characters. You can set ``$XONSH_SUBPROC_OUTPUT_FORMAT`` to ``list_lines``
     to have a list of distinct lines in the commands like ``du -h $(ls)``.
 
+.. note::
+
+    You can access to any command you ran using ``__xonsh__.last``
+    e.g. to get the return code run ``__xonsh__.last.rtn``.
+
+
 The ``!()`` syntax captured more information about the command, as an instance
 of a class called ``CommandPipeline``.  This object contains more information
 about the result of the given command, including the return code, the process
