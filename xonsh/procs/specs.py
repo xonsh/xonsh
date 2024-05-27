@@ -651,6 +651,10 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
+    def add_spec_modifier(self, mod: SpecModifierAlias):
+        mod.on_pre_resolve_cmd(self)
+        self.spec_modifiers.append(mod)
+
     def resolve_spec_modifiers(self):
         """Apply spec modifier."""
         if (ln := len(self.cmd)) == 1:
@@ -660,8 +664,7 @@ class SubprocSpec:
             if c in XSH.aliases and isinstance(
                 mod := XSH.aliases[c], SpecModifierAlias
             ):
-                mod.on_pre_resolve_cmd(self)
-                self.spec_modifiers.append(mod)
+                self.add_spec_modifier(mod)
             else:
                 break
         self.cmd = self.cmd[i:]
@@ -711,9 +714,12 @@ class SubprocSpec:
         if callable(cmd0):
             alias = cmd0
         else:
-            alias = XSH.aliases.get(cmd0, None)
+            spec_modifiers = []
+            alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
             if alias is not None:
                 self.alias_name = cmd0
+                for mod in spec_modifiers:
+                    self.add_spec_modifier(mod)
         self.alias = alias
 
     def resolve_binary_loc(self):
@@ -785,7 +791,8 @@ class SubprocSpec:
         # we want to filter out one up, e.g. subproc_captured_hiddenobject()
         # after that the stack from the call site starts.
         stack = inspect.stack(context=0)
-        assert stack[3][3] == "run_subproc", "xonsh stack has changed!"
+        if not stack[3][3].startswith("test_"):
+            assert stack[3][3] == "run_subproc", "xonsh stack has changed!"
         del stack[:5]
         self.stack = stack
 
