@@ -316,6 +316,7 @@ def test_partial_args_from_classmethod(xession):
         def alias(cls, stdin, stdout):
             print("ok", file=stdout)
             return 0
+
     xession.aliases["alias_with_partial_args"] = Class.alias
     out = run_subproc([["alias_with_partial_args"]], captured="stdout")
     assert out == "ok"
