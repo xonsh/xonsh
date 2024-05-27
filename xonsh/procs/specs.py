@@ -294,8 +294,8 @@ class SpecModifierAlias:
     ):
         print(self.descr, file=stdout)
 
-    def on_pre_resolve_cmd(self, spec):
-        """Modify spec before resolving cmd."""
+    def on_modifer_added(self, spec):
+        """Modify spec immediately after modifier added."""
         pass
 
     def on_pre_run(self, pipeline, spec, spec_num):
@@ -311,7 +311,7 @@ class SpecAttrModifierAlias(SpecModifierAlias):
         self.descr = descr
         super().__init__()
 
-    def on_pre_resolve_cmd(self, spec):
+    def on_modifer_added(self, spec):
         for a, v in self.set_attributes.items():
             setattr(spec, a, v)
 
@@ -652,7 +652,7 @@ class SubprocSpec:
         return spec
 
     def add_spec_modifier(self, mod: SpecModifierAlias):
-        mod.on_pre_resolve_cmd(self)
+        mod.on_modifer_added(self)
         self.spec_modifiers.append(mod)
 
     def resolve_spec_modifiers(self):
