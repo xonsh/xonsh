@@ -221,7 +221,9 @@ def test_run_subproc_background(captured, exp_is_none):
 
 
 def test_spec_modifier_alias_alone(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias({"threadable": False, "force_threadable": False})
+    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+        {"threadable": False, "force_threadable": False}
+    )
 
     cmds = [["xunthread"]]
     spec = cmds_to_specs(cmds, captured="object")[-1]
@@ -231,7 +233,9 @@ def test_spec_modifier_alias_alone(xession):
 
 
 def test_spec_modifier_alias(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias({"threadable": False, "force_threadable": False})
+    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+        {"threadable": False, "force_threadable": False}
+    )
 
     cmds = [["xunthread", "echo", "arg0", "arg1"]]
     spec = cmds_to_specs(cmds, captured="object")[-1]
@@ -242,21 +246,28 @@ def test_spec_modifier_alias(xession):
 
 
 def test_spec_modifier_alias_tree(xession):
-    xession.aliases["xthread"] = SpecAttrModifierAlias({"threadable": True, "force_threadable": True})
-    xession.aliases["xunthread"] = SpecAttrModifierAlias({"threadable": False, "force_threadable": False})
+    xession.aliases["xthread"] = SpecAttrModifierAlias(
+        {"threadable": True, "force_threadable": True}
+    )
+    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+        {"threadable": False, "force_threadable": False}
+    )
 
     xession.aliases["foreground"] = "xthread midground f0 f1"
     xession.aliases["midground"] = "ground m0 m1"
     xession.aliases["ground"] = "xthread underground g0 g1"
     xession.aliases["underground"] = "xunthread echo u0 u1"
 
-    cmds = [["foreground"],]
+    cmds = [
+        ["foreground"],
+    ]
     spec = cmds_to_specs(cmds, captured="object")[-1]
 
     assert spec.cmd == ["echo", "u0", "u1", "g0", "g1", "m0", "m1", "f0", "f1"]
     assert spec.alias_name == "foreground"
     assert spec.threadable is False
     assert spec.force_threadable is False
+
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])
 def test_callable_alias_cls(thread_subprocs, xession):

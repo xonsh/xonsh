@@ -32,7 +32,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
-from xonsh.procs.specs import SpecModifierAlias, SpecAttrModifierAlias
+from xonsh.procs.specs import SpecAttrModifierAlias, SpecModifierAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -143,12 +143,16 @@ class Aliases(cabc.MutableMapping):
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
-            return self.eval_alias(val, seen_tokens={key}, spec_modifiers=spec_modifiers)
+            return self.eval_alias(
+                val, seen_tokens={key}, spec_modifiers=spec_modifiers
+            )
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
 
-    def eval_alias(self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=[]):
+    def eval_alias(
+        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=[]
+    ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
         token and "expanding" if it's also an alias.
@@ -161,7 +165,11 @@ class Aliases(cabc.MutableMapping):
         """
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
-        if isinstance(value, cabc.Iterable) and len(value) > 1 and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias)):
+        if (
+            isinstance(value, cabc.Iterable)
+            and len(value) > 1
+            and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias))
+        ):
             spec_modifiers.append(mod)
             value = value[1:]
 
@@ -181,7 +189,12 @@ class Aliases(cabc.MutableMapping):
             else:
                 seen_tokens = seen_tokens | {token}
                 acc_args = rest + list(acc_args)
-                return self.eval_alias(self._raw[token], seen_tokens, acc_args, spec_modifiers=spec_modifiers)
+                return self.eval_alias(
+                    self._raw[token],
+                    seen_tokens,
+                    acc_args,
+                    spec_modifiers=spec_modifiers,
+                )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
