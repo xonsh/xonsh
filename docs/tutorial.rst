@@ -487,17 +487,18 @@ or inject Python values with the ``@()`` operator:
 Threading
 =========
 
-If you want to work with captured commands closer you need to know about threading. Xonsh has threading prediction
-mechanism that allows xonsh to understand what command allows to capture everything. For example ``echo`` command
-has no interaction with the user and capturable. But some tools have mixed behavior and can be run for interactive or
-non interactive tasks. The best example for this is ``ssh`` that allows to have remote terminal and execute commands.
+If you want to work more closely with captured commands, you need to know about threading.
+Xonsh has a threading prediction mechanism that allows it to understand which commands can capture everything.
+For example, the ``echo`` command has no interaction with the user and is capturable.
+However, some tools have mixed behavior and can be run for either interactive or non-interactive tasks.
+The best example of this is ``ssh``, which allows for remote terminal sessions and executing commands.
 
-To solve different types of works xonsh has `xthread` and `xunthread` builtin aliases. If you need to capture the output
-from the interactive tool that has capturable mode:
+To handle different types of tasks, xonsh has the ``xthread`` and ``xunthread`` built-in aliases.
+If you need to capture the output from an interactive tool that has a capturable mode use ``xthread`` to run:
 
 .. code-block:: xonshcon
 
-    >>> !(ssh host -T 'echo remote')
+    >>> !(xthread ssh host -T 'echo remote')
     CommandPipeline(output="remote")
 
 
