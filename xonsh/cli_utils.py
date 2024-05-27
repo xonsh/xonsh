@@ -366,8 +366,8 @@ class ArgParser(ap.ArgumentParser):
         return super()._parse_known_args(arg_strings, namespace)
 
 
-def _dispatch_func(func: tp.Callable, ns: dict[str, tp.Any]):
-    """Final dispatch to the function based on signature."""
+def run_with_partial_args(func: tp.Callable, ns: dict[str, tp.Any]):
+    """Run function based on signature. Filling the arguments will be based on the values in ``ns``."""
     sign = inspect.signature(func)
     kwargs = {}
     for name, param in sign.parameters.items():
@@ -408,7 +408,7 @@ def dispatch(parser: ap.ArgumentParser, args=None, lenient=False, **ns):
 
     if _FUNC_NAME in ns:
         func = ns[_FUNC_NAME]
-        return _dispatch_func(func, ns)
+        return run_with_partial_args(func, ns)
 
 
 class ArgparseCompleter:

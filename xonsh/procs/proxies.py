@@ -23,7 +23,7 @@ import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.procs.readers import safe_fdclose
-
+from xonsh.cli_utils import run_with_partial_args
 
 def still_writable(fd):
     """Determines whether a file descriptor is still writable by trying to
@@ -285,69 +285,6 @@ def parse_proxy_return(r, stdout, stderr):
     return cmd_result
 
 
-def proxy_zero(f, args, stdin, stdout, stderr, spec, stack):
-    """Calls a proxy function which takes no parameters."""
-    return f()
-
-
-def proxy_one(f, args, stdin, stdout, stderr, spec, stack):
-    """Calls a proxy function which takes one parameter: args"""
-    return f(args)
-
-
-def proxy_two(f, args, stdin, stdout, stderr, spec, stack):
-    """Calls a proxy function which takes two parameter: args and stdin."""
-    return f(args, stdin)
-
-
-def proxy_three(f, args, stdin, stdout, stderr, spec, stack):
-    """Calls a proxy function which takes three parameter: args, stdin, stdout."""
-    return f(args, stdin, stdout)
-
-
-def proxy_four(f, args, stdin, stdout, stderr, spec, stack):
-    """Calls a proxy function which takes four parameter: args, stdin, stdout,
-    and stderr.
-    """
-    return f(args, stdin, stdout, stderr)
-
-
-def proxy_five(f, args, stdin, stdout, stderr, spec, stack):
-    """Calls a proxy function which takes four parameter: args, stdin, stdout,
-    stderr, and spec.
-    """
-    return f(args, stdin, stdout, stderr, spec)
-
-
-PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four, proxy_five)
-
-
-def partial_proxy(f):
-    """Dispatches the appropriate proxy function based on the number of args."""
-    numargs = 0
-
-    for name, param in inspect.signature(f).parameters.items():
-        # handle *args/**kwargs signature
-        if param.kind in {param.VAR_KEYWORD, param.VAR_POSITIONAL}:
-            numargs = 6
-            break
-        if (
-            param.kind == param.POSITIONAL_ONLY
-            or param.kind == param.POSITIONAL_OR_KEYWORD
-        ):
-            numargs += 1
-        elif name in xt.ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
-            numargs += 1
-    if numargs < 6:
-        return functools.partial(PROXIES[numargs], f)
-    elif numargs == 6:
-        # don't need to partial.
-        return f
-    else:
-        e = "Expected proxy with 6 or fewer arguments for {}, not {}"
-        raise xt.XonshError(e.format(", ".join(xt.ALIAS_KWARG_NAMES), numargs))
-
-
 def get_proc_proxy_name(cls):
     return repr(
         {
@@ -404,8 +341,7 @@ class ProcProxyThread(threading.Thread):
         env : Mapping, optional
             Environment mapping.
         """
-        self.orig_f = f
-        self.f = partial_proxy(f)
+        self.f = f
         self.args = args
         self.pid = None
         self.returncode = None
@@ -532,7 +468,7 @@ class ProcProxyThread(threading.Thread):
                 xt.redirect_stderr(STDERR_DISPATCHER),
                 XSH.env.swap(self.env, __ALIAS_STACK=alias_stack),
             ):
-                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec, spec.stack)
+                r = run_with_partial_args(self.f, {"args":self.args, "stdin":sp_stdin, "stdout":sp_stdout, "stderr":sp_stderr, "spec":spec, "stack":spec.stack})
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except OSError:
@@ -794,8 +730,7 @@ class ProcProxy:
         close_fds=False,
         env=None,
     ):
-        self.orig_f = f
-        self.f = partial_proxy(f)
+        self.f = f
         self.args = args
         self.pid = os.getpid()
         self.returncode = None
@@ -834,7 +769,8 @@ class ProcProxy:
         # run the actual function
         try:
             with XSH.env.swap(self.env):
-                r = self.f(self.args, stdin, stdout, stderr, spec, spec.stack)
+                r = run_with_partial_args(self.f, {"args": self.args, "stdin": stdin, "stdout": stdout,
+                                                   "stderr": stderr, "spec": spec, "stack": spec.stack})
         except Exception:
             xt.print_exception(source_msg="Exception in " + get_proc_proxy_name(self))
             r = 1
