@@ -131,7 +131,7 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
-    def get(self, key, default=None, spec_modifiers=[]):  # noqa
+    def get(self, key, default=None, spec_modifiers=None):
         """Returns the (possibly modified) value. If the key is not present,
         then `default` is returned.
         If the value is callable, it is returned without modification. If it
@@ -140,6 +140,7 @@ class Aliases(cabc.MutableMapping):
         callable.
         """
         val = self._raw.get(key)
+        spec_modifiers = spec_modifiers or []
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
@@ -155,7 +156,7 @@ class Aliases(cabc.MutableMapping):
         value,
         seen_tokens=frozenset(),
         acc_args=(),
-        spec_modifiers=[],  # noqa
+        spec_modifiers=None
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -167,6 +168,7 @@ class Aliases(cabc.MutableMapping):
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
         """
+        spec_modifiers = spec_modifiers or []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
