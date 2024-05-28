@@ -392,8 +392,9 @@ input and output were redirected.  For example:
         errors=None
     )
 
-The captured object ``!()`` operator implements the non-blocking concept.
-You can call the command, do tasks and read the output later:
+The captured object ``!()`` operator allows for non-blocking execution.
+You can call a long-running command, intersperse other commands and 
+read the captured output later:
 
 .. code-block:: xonshcon
 
