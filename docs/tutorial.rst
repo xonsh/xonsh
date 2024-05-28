@@ -498,7 +498,7 @@ If you need to capture the output from an interactive tool that has a capturable
 
 .. code-block:: xonshcon
 
-    >>> !(xthread ssh host -T 'echo remote')
+    @ !(xthread ssh host -T 'echo remote')
     CommandPipeline(output="remote")
 
 
