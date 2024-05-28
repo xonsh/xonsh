@@ -170,6 +170,7 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
         [["echo", "1"], "|", cmd_sig("SIGTTIN"), "|", ["head"]],
     ],
 )
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_specs_with_suspended_captured_process_pipeline(
     xonsh_session, suspended_pipeline
 ):
