@@ -393,7 +393,7 @@ input and output were redirected.  For example:
     )
 
 The captured object ``!()`` operator allows for non-blocking execution.
-You can call a long-running command, intersperse other commands and 
+You can call a long-running command, intersperse other commands and
 read the captured output later:
 
 .. code-block:: xonshcon
