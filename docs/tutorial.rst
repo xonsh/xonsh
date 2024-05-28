@@ -387,22 +387,43 @@ input and output were redirected.  For example:
 
     >>> !(ls nonexistent_directory)
     CommandPipeline(
-        stdin=<_io.BytesIO object at 0x7f1948182bf8>,
-        stdout=<_io.BytesIO object at 0x7f1948182af0>,
-        stderr=<_io.BytesIO object at 0x7f19483a6200>,
         pid=26968,
         returncode=2,
         args=['ls', 'nonexistent_directory'],
         alias=['ls', '--color=auto', '-v'],
-        stdin_redirect=['<stdin>', 'r'],
-        stdout_redirect=[9, 'wb'],
-        stderr_redirect=[11, 'w'],
         timestamps=[1485235484.5016758, None],
         executed_cmd=['ls', '--color=auto', '-v', 'nonexistent_directory'],
         input=None,
         output=,
         errors=None
     )
+
+The captured object ``!()`` operator allows for non-blocking execution.
+You can call a long-running command, intersperse other commands and
+read the captured output later:
+
+.. code-block:: xonshcon
+
+    >>> p = !(echo snail)
+    >>> p.output
+    ''
+    >>> p.end()
+    >>> p.output
+    'snail'
+
+You can force ``xonsh`` to block and wait for the command to complete by asking for the return code,
+printing the object or reading the ``out`` attribute:
+
+.. code-block:: xonshcon
+
+    >>> p = !(echo snail)
+    >>> p.out
+    'snail'
+    >>> p = !(echo party)
+    >>> p.rtn
+    0
+    >>> p.output
+    'party'
 
 This object will be "truthy" if its return code was 0, and it is equal (via
 ``==``) to its return code. It also hashes to its return code. Converting the object
