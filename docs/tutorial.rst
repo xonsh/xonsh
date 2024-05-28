@@ -404,7 +404,7 @@ You can call the command, do tasks and read the output later:
     >>> p.output
     'snail'
 
-The ending will be forced automatically in case of getting return code,
+The ending will be forced automatically in case of getting the return code,
 printing the object or reading from ``out`` attribute:
 
 .. code-block:: xonshcon
