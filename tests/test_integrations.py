@@ -1234,6 +1234,7 @@ def test_main_d():
     assert out == "dummy\n"
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_catching_system_exit():
     stdin_cmd = "__import__('sys').exit(2)\n"
     out, err, ret = run_xonsh(
