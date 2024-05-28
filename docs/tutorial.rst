@@ -405,8 +405,8 @@ read the captured output later:
     >>> p.output
     'snail'
 
-The ending will be forced automatically in case of getting the return code,
-printing the object or reading from ``out`` attribute:
+You can force ``xonsh`` to block and wait for the command to complete by asking for the return code,
+printing the object or reading the ``out`` attribute:
 
 .. code-block:: xonshcon
 
