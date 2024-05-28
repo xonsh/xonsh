@@ -139,8 +139,8 @@ class Aliases(cabc.MutableMapping):
         other aliases, resulting in a new list or a "partially applied"
         callable.
         """
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         val = self._raw.get(key)
-        spec_modifiers = spec_modifiers or []
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
@@ -168,7 +168,7 @@ class Aliases(cabc.MutableMapping):
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
         """
-        spec_modifiers = spec_modifiers or []
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
