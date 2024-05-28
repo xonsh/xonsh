@@ -32,6 +32,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
+from xonsh.procs.specs import SpecAttrModifierAlias, SpecModifierAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -60,7 +61,7 @@ class FuncAlias:
     attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
     attributes_inherit = attributes_show + ["__doc__"]
 
-    def __init__(self, name, func):
+    def __init__(self, name, func=None):
         self.__name__ = self.name = name
         self.func = func
         for attr in self.attributes_inherit:
@@ -130,7 +131,7 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
-    def get(self, key, default=None):
+    def get(self, key, default=None, spec_modifiers=None):
         """Returns the (possibly modified) value. If the key is not present,
         then `default` is returned.
         If the value is callable, it is returned without modification. If it
@@ -138,16 +139,21 @@ class Aliases(cabc.MutableMapping):
         other aliases, resulting in a new list or a "partially applied"
         callable.
         """
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         val = self._raw.get(key)
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
-            return self.eval_alias(val, seen_tokens={key})
+            return self.eval_alias(
+                val, seen_tokens={key}, spec_modifiers=spec_modifiers
+            )
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
 
-    def eval_alias(self, value, seen_tokens=frozenset(), acc_args=()):
+    def eval_alias(
+        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=None
+    ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
         token and "expanding" if it's also an alias.
@@ -158,8 +164,17 @@ class Aliases(cabc.MutableMapping):
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
         """
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
+        if (
+            isinstance(value, cabc.Iterable)
+            and len(value) > 1
+            and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias))
+        ):
+            spec_modifiers.append(mod)
+            value = value[1:]
+
         if callable(value):
             return partial_eval_alias(value, acc_args=acc_args)
         else:
@@ -176,7 +191,12 @@ class Aliases(cabc.MutableMapping):
             else:
                 seen_tokens = seen_tokens | {token}
                 acc_args = rest + list(acc_args)
-                return self.eval_alias(self._raw[token], seen_tokens, acc_args)
+                return self.eval_alias(
+                    self._raw[token],
+                    seen_tokens,
+                    acc_args,
+                    spec_modifiers=spec_modifiers,
+                )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
@@ -918,6 +938,14 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
+        "xthread": SpecAttrModifierAlias(
+            {"threadable": True, "force_threadable": True},
+            "Mark current command as threadable.",
+        ),
+        "xunthread": SpecAttrModifierAlias(
+            {"threadable": False, "force_threadable": False},
+            "Mark current command as unthreadable.",
+        ),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

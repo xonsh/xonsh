@@ -511,6 +511,24 @@ or inject Python values with the ``@()`` operator:
     >>> $(echo $HOME)
     '/home/snail'
 
+Threading
+=========
+
+If you want to work more closely with captured commands, you need to know about threading.
+Xonsh has a threading prediction mechanism that allows it to understand which commands can capture everything.
+For example, the ``echo`` command has no interaction with the user and is capturable.
+However, some tools have mixed behavior and can be run for either interactive or non-interactive tasks.
+The best example of this is ``ssh``, which allows for remote terminal sessions and executing commands.
+
+To handle different types of tasks, xonsh has the ``xthread`` and ``xunthread`` built-in aliases.
+If you need to capture the output from an interactive tool that has a capturable mode use ``xthread`` to run:
+
+.. code-block:: xonshcon
+
+    @ !(xthread ssh host -T 'echo remote')
+    CommandPipeline(output="remote")
+
+
 Uncaptured Subprocess with ``$[]`` and ``![]``
 ===============================================
 Uncaptured subprocesses are denoted with the ``$[]`` and ``![]`` operators. They are
