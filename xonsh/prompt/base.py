@@ -126,7 +126,7 @@ class PromptFormatter:
             return _format_value(val, spec, conv)
         else:
             # color or unknown field, return as is
-            return ("{" + field + "}")
+            return "{" + field + "}"
 
     def _get_field_value(self, field, **_):
         try:
