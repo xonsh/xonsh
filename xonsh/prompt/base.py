@@ -151,7 +151,7 @@ def default_prompt():
             "{YELLOW}{env_name}{RESET}"
             "{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
-            "{prompt_end_nl}{BOLD_INTENSE_CYAN}{prompt_end}{RESET} "
+            "{BOLD_INTENSE_CYAN}{prompt_end}{RESET} "
         )
     else:
         dp = (
@@ -159,7 +159,7 @@ def default_prompt():
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
             "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}"
-            "{prompt_end_nl}{BOLD_BLUE}{prompt_end}{RESET} "
+            "{BOLD_BLUE}{prompt_end}{RESET} "
         )
     return dp
 
@@ -242,19 +242,6 @@ def is_template_string(template, PROMPT_FIELDS=None):
         fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())
     return included_names <= known_names
-
-
-def prompt_end_nl():
-    """Add new line if the size of prompt is closer to the terminal width."""
-    try:
-        cols = os.get_terminal_size().columns
-        pt = XSH.env.get("PROMPT", "").replace("{prompt_end_nl}", "")
-        prompt = PromptFormatter()(template=pt, remove_unknown=True)
-        if cols and cols - len(prompt) < 10:
-            return f"\n"
-    except Exception as e:
-        pass
-    return ""
 
 
 def _format_value(val, spec, conv) -> str:
@@ -354,7 +341,6 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                     "USERNAME" if xp.ON_WINDOWS else "USER",
                     "root" if xt.is_superuser() else "<user>",
                 ),
-                prompt_end_nl=prompt_end_nl,
                 prompt_end="@#" if xt.is_superuser() else "@",
                 hostname=socket.gethostname().split(".", 1)[0],
                 cwd=_dynamically_collapsed_pwd,
