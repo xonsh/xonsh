@@ -155,7 +155,7 @@ def default_prompt():
         )
     else:
         dp = (
-            "{env_name}"
+            "{YELLOW}{env_name}{RESET}"
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
             "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}"
