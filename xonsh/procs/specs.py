@@ -969,12 +969,12 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                     "cls": pcls,
                 }
                 p |= {
-                    a: getattr(s, a)
+                    a: getattr(s, a, None)
                     for a in ["alias_name", "binary_loc", "threadable", "background"]
                 }
                 if trace_mode == 3:
                     p |= {
-                        a: getattr(s, a)
+                        a: getattr(s, a, None)
                         for a in [
                             "stdin",
                             "stdout",
