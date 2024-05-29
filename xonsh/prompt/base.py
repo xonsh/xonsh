@@ -342,7 +342,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                     "root" if xt.is_superuser() else "<user>",
                 ),
                 prompt_end="@#" if xt.is_superuser() else "@",
-                hostname="host",#socket.gethostname().split(".", 1)[0],
+                hostname=socket.gethostname().split(".", 1)[0],
                 cwd=_dynamically_collapsed_pwd,
                 cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
                 cwd_base=lambda: os.path.basename(_replace_home_cwd()),
