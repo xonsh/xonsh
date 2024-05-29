@@ -169,7 +169,7 @@ class Aliases(cabc.MutableMapping):
         # only once.
         if (
             isinstance(value, cabc.Iterable)
-            and hasattr(value, '__len__')
+            and hasattr(value, "__len__")
             and len(value) > 1
             and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias))
         ):
