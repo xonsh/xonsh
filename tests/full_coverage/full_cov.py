@@ -102,6 +102,7 @@ class CaseGen:
                        "A\n",
             "unthreadable": "from xonsh.tools import unthreadable\n"
                             "@aliases.register('A')\n"
+                            "@unthreadable\n"
                             "def _A():\n"
                             "    {body}\n"
                             "A\n",
@@ -115,7 +116,8 @@ class CaseGen:
         # "stdin": "", #xonsh --no-rc script.xsh
     }
 
-    def cases(self, atoms):
+    def gen(self, atoms):
+        """Generate test cases by the atoms specification."""
         atoms = atoms.split('.')
         cases = {atoms[0]+'='+atom: code for atom, code in self.snippets[atoms[0]].items()}
         for atom in atoms[1:]:
@@ -131,8 +133,8 @@ class CaseGen:
 if __name__ == '__main__':
     CG = CaseGen()
 
-    cases = CG.cases("sp_atom.sp_pipe.opers.alias")
-    cases |= CG.cases("sp_atom.sp_pipe.opers.callias")
+    cases = CG.gen("sp_atom.sp_pipe.opers.alias")
+    cases |= CG.gen("sp_atom.sp_pipe.opers.callias")
 
     skip = [
         'sp_atom=capturable,opers=hiddenobject,aliases=exec',  # echo @($(![echo 1]))
