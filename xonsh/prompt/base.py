@@ -75,7 +75,7 @@ class PromptFormatter:
     uses the ``PROMPT_FIELDS`` envvar (no color formatting).
     """
 
-    def __call__(self, template=DEFAULT_PROMPT, fields=None, **kwargs) -> str:
+    def __call__(self, template=DEFAULT_PROMPT, fields=None, remove_unknown=False, **kwargs) -> str:
         """Formats a xonsh prompt template string."""
 
         if fields is None:
@@ -90,7 +90,7 @@ class PromptFormatter:
             self.fields = pflds
 
         try:
-            toks = self._format_prompt(template=template, **kwargs)
+            toks = self._format_prompt(template=template, remove_unknown=remove_unknown, **kwargs)
             prompt = toks.process()
         except Exception as ex:
             # make it obvious why it has failed
@@ -103,19 +103,19 @@ class PromptFormatter:
             return _failover_template_format(template)
         return prompt
 
-    def _format_prompt(self, template=DEFAULT_PROMPT, **kwargs) -> ParsedTokens:
+    def _format_prompt(self, template=DEFAULT_PROMPT, remove_unknown=False, **kwargs) -> ParsedTokens:
         tmpl = template() if callable(template) else template
         toks = []
         for literal, field, spec, conv in xt.FORMATTER.parse(tmpl):
             if literal:
                 toks.append(_ParsedToken(literal))
-            entry = self._format_field(field, spec, conv, idx=len(toks), **kwargs)
+            entry = self._format_field(field, spec, conv, idx=len(toks), remove_unknown=remove_unknown, **kwargs)
             if entry is not None:
                 toks.append(_ParsedToken(entry, field))
 
         return ParsedTokens(toks, template)
 
-    def _format_field(self, field, spec="", conv=None, **kwargs):
+    def _format_field(self, field, spec="", conv=None, remove_unknown=False, **kwargs):
         if field is None:
             return
         elif field.startswith("$"):
@@ -126,7 +126,7 @@ class PromptFormatter:
             return _format_value(val, spec, conv)
         else:
             # color or unknown field, return as is
-            return "{" + field + "}"
+            return "" if remove_unknown else ("{" + field + "}")
 
     def _get_field_value(self, field, **_):
         try:
@@ -142,24 +142,24 @@ def default_prompt():
     """Creates a new instance of the default prompt."""
     if xp.ON_CYGWIN or xp.ON_MSYS:
         dp = (
-            "{env_name}"
+            "{YELLOW}{env_name}{RESET}"
             "{BOLD_GREEN}{user}@{hostname}"
             "{BOLD_BLUE} {cwd} {prompt_end}{RESET} "
         )
     elif xp.ON_WINDOWS and not xp.win_ansi_support():
         dp = (
-            "{env_name}"
+            "{YELLOW}{env_name}{RESET}"
             "{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
-            "{BOLD_INTENSE_CYAN}{prompt_end}{RESET} "
+            "{prompt_end_nl}{BOLD_INTENSE_CYAN}{prompt_end}{RESET} "
         )
     else:
         dp = (
-            "{env_name}"
+            "{YELLOW}{env_name}{RESET}"
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
             "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}"
-            "{BOLD_BLUE}{prompt_end}{RESET} "
+            "{prompt_end_nl}{BOLD_BLUE}{prompt_end}{RESET} "
         )
     return dp
 
@@ -242,6 +242,19 @@ def is_template_string(template, PROMPT_FIELDS=None):
         fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())
     return included_names <= known_names
+
+
+def prompt_end_nl():
+    """Add new line if the size of prompt is closer to the terminal width."""
+    try:
+        cols = os.get_terminal_size().columns
+        pt = XSH.env.get("PROMPT", "").replace("{prompt_end_nl}", "")
+        prompt = PromptFormatter()(template=pt, remove_unknown=True)
+        if cols and cols - len(prompt) < 10:
+            return f"\n"
+    except Exception as e:
+        pass
+    return ""
 
 
 def _format_value(val, spec, conv) -> str:
@@ -341,6 +354,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                     "USERNAME" if xp.ON_WINDOWS else "USER",
                     "root" if xt.is_superuser() else "<user>",
                 ),
+                prompt_end_nl=prompt_end_nl,
                 prompt_end="@#" if xt.is_superuser() else "@",
                 hostname=socket.gethostname().split(".", 1)[0],
                 cwd=_dynamically_collapsed_pwd,
