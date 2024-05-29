@@ -75,7 +75,7 @@ class PromptFormatter:
     uses the ``PROMPT_FIELDS`` envvar (no color formatting).
     """
 
-    def __call__(self, template=DEFAULT_PROMPT, fields=None, remove_unknown=False, **kwargs) -> str:
+    def __call__(self, template=DEFAULT_PROMPT, fields=None, **kwargs) -> str:
         """Formats a xonsh prompt template string."""
 
         if fields is None:
@@ -90,7 +90,7 @@ class PromptFormatter:
             self.fields = pflds
 
         try:
-            toks = self._format_prompt(template=template, remove_unknown=remove_unknown, **kwargs)
+            toks = self._format_prompt(template=template, **kwargs)
             prompt = toks.process()
         except Exception as ex:
             # make it obvious why it has failed
@@ -103,7 +103,7 @@ class PromptFormatter:
             return _failover_template_format(template)
         return prompt
 
-    def _format_prompt(self, template=DEFAULT_PROMPT, remove_unknown=False, **kwargs) -> ParsedTokens:
+    def _format_prompt(self, template=DEFAULT_PROMPT, **kwargs) -> ParsedTokens:
         tmpl = template() if callable(template) else template
         toks = []
         for literal, field, spec, conv in xt.FORMATTER.parse(tmpl):
@@ -115,7 +115,7 @@ class PromptFormatter:
 
         return ParsedTokens(toks, template)
 
-    def _format_field(self, field, spec="", conv=None, remove_unknown=False, **kwargs):
+    def _format_field(self, field, spec="", conv=None, **kwargs):
         if field is None:
             return
         elif field.startswith("$"):
@@ -155,7 +155,7 @@ def default_prompt():
         )
     else:
         dp = (
-            "{YELLOW}{env_name}{RESET}"
+            "{env_name}"
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
             "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}"
@@ -342,7 +342,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                     "root" if xt.is_superuser() else "<user>",
                 ),
                 prompt_end="@#" if xt.is_superuser() else "@",
-                hostname=socket.gethostname().split(".", 1)[0],
+                hostname="host",#socket.gethostname().split(".", 1)[0],
                 cwd=_dynamically_collapsed_pwd,
                 cwd_dir=lambda: os.path.join(os.path.dirname(_replace_home_cwd()), ""),
                 cwd_base=lambda: os.path.basename(_replace_home_cwd()),
