@@ -968,9 +968,22 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                     "cmd": pcmd,
                     "cls": pcls,
                 }
-                p |= {a: getattr(s, a) for a in ["alias_name", "binary_loc", "threadable", "background"]}
+                p |= {
+                    a: getattr(s, a)
+                    for a in ["alias_name", "binary_loc", "threadable", "background"]
+                }
                 if trace_mode == 3:
-                    p |= {a: getattr(s, a) for a in ["stdin", "stdout", "stderr", "captured", "captured_stdout", "captured_stderr"]}
+                    p |= {
+                        a: getattr(s, a)
+                        for a in [
+                            "stdin",
+                            "stdout",
+                            "stderr",
+                            "captured",
+                            "captured_stdout",
+                            "captured_stderr",
+                        ]
+                    }
                 p = {k: v for k, v in p.items() if v is not None}
                 print(f"{i}: {repr(p)}", file=sys.stderr)
 
