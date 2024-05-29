@@ -109,7 +109,7 @@ class PromptFormatter:
         for literal, field, spec, conv in xt.FORMATTER.parse(tmpl):
             if literal:
                 toks.append(_ParsedToken(literal))
-            entry = self._format_field(field, spec, conv, idx=len(toks), remove_unknown=remove_unknown, **kwargs)
+            entry = self._format_field(field, spec, conv, idx=len(toks), **kwargs)
             if entry is not None:
                 toks.append(_ParsedToken(entry, field))
 
@@ -126,7 +126,7 @@ class PromptFormatter:
             return _format_value(val, spec, conv)
         else:
             # color or unknown field, return as is
-            return "" if remove_unknown else ("{" + field + "}")
+            return ("{" + field + "}")
 
     def _get_field_value(self, field, **_):
         try:
