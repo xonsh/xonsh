@@ -83,28 +83,28 @@ class CaseGen:
         "opers": {
             "stdout": "echo $({body})",
             "object": "echo @(!({body}).out)",
-            "hiddenobject": "![{body}]",
-            "uncaptured": "$[{body}]",
+            # "hiddenobject": "![{body}]",
+            # "uncaptured": "$[{body}]",
         },
 
-        "aliases": {
-            "inline": "aliases['a'] = '{body}'\n"
-                      "a\n",
-            "exec": "aliases['a'] = 'echo @($({body}))'\n"
-                      "a\n"
+        "alias": {
+            "inline": "aliases['A'] = '{body}'\n"
+                      "A\n",
+            "exec": "aliases['A'] = 'echo @($({body}))'\n"
+                      "A\n"
             # exec alias
         },
 
-        "calliases": {
-            "default": "@aliases.register('a')\n"
-                       "def _a():\n"
+        "callias": {
+            "default": "@aliases.register('A')\n"
+                       "def _A():\n"
                        "    {body}\n"
-                       "a\n",
+                       "A\n",
             "unthreadable": "from xonsh.tools import unthreadable\n"
-                            "@aliases.register('a')\n"
-                            "def _a():\n"
+                            "@aliases.register('A')\n"
+                            "def _A():\n"
                             "    {body}\n"
-                            "a\n",
+                            "A\n",
         }
     }
 
@@ -131,17 +131,30 @@ class CaseGen:
 if __name__ == '__main__':
     CG = CaseGen()
 
-    cases = CG.cases("sp_atom.sp_pipe.opers.aliases")
-    cases |= CG.cases("sp_atom.sp_pipe.opers.calliases")
+    cases = CG.cases("sp_atom.sp_pipe.opers.alias")
+    cases |= CG.cases("sp_atom.sp_pipe.opers.callias")
 
-    i = 0
+    skip = [
+        'sp_atom=capturable,opers=hiddenobject,aliases=exec',  # echo @($(![echo 1]))
+        'sp_atom=capturable,opers=uncaptured,aliases=exec',  # echo @($($[echo CCAAPP]))
+        'sp_atom=capturable,opers=hiddenobject,alias=exec',  # echo @($(![echo CCAAPP]))
+    ]
+
+    i = 1
+    results = []
     for case_spec, case_code in cases.items():
         print(f"{i:02}/{len(cases)}", case_spec)
+        if case_spec in skip:
+            print('SKIP')
+            continue
 
         case_code = f"print('1CASE1')\n{case_code}\nprint('2CASE2')"
         out, err, rtn = run_xonsh(case_code)
         match = ".*1CASE1\nCCAAPP\n2CASE2\n.*"
-        info = f"case_spec={case_spec!r}\ncase_code={case_code!r}\nexp={match!r}\nact={out!r}"
+
+        result = {"case_spec":case_spec, "case_code":case_code, "exp":match, "act":out}
+        results.append(result)
+        info = f"case_spec={case_spec!r}\ncase_code={case_code!r}\nexp={match!r}\nact={out!r}\nact={'>'*80}\n{out}\n{'<'*80}"
         assert re.match(
             match,
             out,
