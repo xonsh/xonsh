@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Prompt: ``env_name`` will have yellow color.
+* Prompt: ``env_name`` will have yellow color by default.
 
 **Deprecated:**
 
