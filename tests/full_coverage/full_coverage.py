@@ -12,7 +12,7 @@ PATH = (
 )
 
 def run_xonsh(
-    cmd,
+    cmd=None,
     stdin=sp.PIPE,
     stdin_cmd=None,
     stdout=sp.PIPE,
@@ -37,11 +37,15 @@ def run_xonsh(
     args = [xonsh, "--no-rc"]
     if interactive:
         args.append("-i")
-    if single_command:
-        args += ["-c", cmd]
-        input = None
-    else:
-        input = cmd
+
+    input = None
+    if cmd is not None:
+        if single_command:
+            args += ["-c", cmd]
+            input = None
+        else:
+            input = cmd
+
     if add_args:
         args += add_args
 
@@ -70,7 +74,7 @@ def run_xonsh(
 class CaseGen:
     snippets = {
         "sp_atom": {
-            "capturable": "echo CCAAPP",
+            "capturable": "echo CAPME",
             # ls with colors
         },
 
@@ -112,8 +116,9 @@ class CaseGen:
     executors = {
         "command": "",
         # "prompt": "",
-        # "file": "",  #echo 'r = !(fzf)' > script.xsh
+        "file": "",  #echo 'r = !(fzf)' > script.xsh
         # "stdin": "", #xonsh --no-rc script.xsh
+        # source
     }
 
     def gen(self, atoms):
@@ -129,6 +134,11 @@ class CaseGen:
             cases |= new_case
         return cases
 
+    def tempfile(self, code):
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".xsh", delete=False) as temp_file:
+            temp_file.write(code.encode())
+        return temp_file.name
 
 if __name__ == '__main__':
     CG = CaseGen()
@@ -138,31 +148,52 @@ if __name__ == '__main__':
 
     skip = [
         'sp_atom=capturable,opers=hiddenobject,aliases=exec',  # echo @($(![echo 1]))
-        'sp_atom=capturable,opers=uncaptured,aliases=exec',  # echo @($($[echo CCAAPP]))
-        'sp_atom=capturable,opers=hiddenobject,alias=exec',  # echo @($(![echo CCAAPP]))
+        'sp_atom=capturable,opers=uncaptured,aliases=exec',  # echo @($($[echo CAPME]))
+        'sp_atom=capturable,opers=hiddenobject,alias=exec',  # echo @($(![echo CAPME]))
     ]
+
+    CODE_COPY_CNT = 3  # Stress test
+
+    executors = ["command"]
+    # executors = ["file"]
 
     i = 1
     results = []
-    for case_spec, case_code in cases.items():
-        print(f"{i:02}/{len(cases)}", case_spec)
-        if case_spec in skip:
-            print('SKIP')
-            continue
+    for executor in executors:
+        for case_spec, case_code in cases.items():
+            print(f"{i:02}/{len(cases)}", f"{executor=:}", case_spec)
+            if case_spec in skip:
+                print('SKIP')
+                continue
 
-        case_code = f"print('1CASE1')\n{case_code}\nprint('2CASE2')"
-        out, err, rtn = run_xonsh(case_code)
-        match = ".*1CASE1\nCCAAPP\n2CASE2\n.*"
+            case_code = f"print('1CASE1')\n{case_code}\nprint('2CASE2')"
+            match = ".*1CASE1\nCAPME\n2CASE2\n.*"
 
-        result = {"case_spec":case_spec, "case_code":case_code, "exp":match, "act":out}
-        results.append(result)
-        info = f"case_spec={case_spec!r}\ncase_code={case_code!r}\nexp={match!r}\nact={out!r}\nact={'>'*80}\n{out}\n{'<'*80}"
-        assert re.match(
-            match,
-            out,
-            re.MULTILINE | re.DOTALL,
-        ), info
-        i += 1
-        # print(info)
+            if CODE_COPY_CNT:
+                case_code = f"{case_code}" + f"\n\n{case_code}"*CODE_COPY_CNT
+                match = f"{match}" + f".*{match}"*CODE_COPY_CNT
+
+            if executor == 'command':
+                out, err, rtn = run_xonsh(case_code)
+            elif executor == 'file':
+                filename = CG.tempfile(case_code)
+                out, err, rtn = run_xonsh(add_args=[filename])
+            elif executor == 'prompt':
+                pass
+            elif executor == 'stdin':
+                pass
+            elif executor == 'source':
+                pass
+
+            result = {"case_spec":case_spec, "case_code":case_code, "exp":match, "act":out}
+            results.append(result)
+            info = f"case_spec={case_spec!r}\ncase_code={case_code!r}\nexp={match!r}\nact={out!r}\nact={'>'*80}\n{out}\n{'<'*80}"
+            assert re.match(
+                match,
+                out,
+                re.MULTILINE | re.DOTALL,
+            ), info
+            i += 1
+            # print(info)
 
     pprint('DONE')
