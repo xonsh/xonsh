@@ -63,6 +63,8 @@ def run_xonsh(
     env["RAISE_SUBPROC_ERROR"] = "0"
     env["FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE"] = "1"
     env["PROMPT"] = ""
+    # disable ansi escape codes
+    env["TERM"] = "linux"
     xonsh = shutil.which("xonsh", path=PATH)
     args = [xonsh, "--no-rc"]
     if interactive:
