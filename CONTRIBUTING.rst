@@ -19,6 +19,8 @@ develop xonsh.
 Making Your First Change
 ========================
 
+.. note:: xonsh requires at least `pip 24.0` for `pyproject.toml` support. You can upgrade old versions using `pip install -U pip`.
+
 First, install xonsh from source and open a xonsh shell in your favorite
 terminal application. See installation instructions for details, but it
 is recommended to do an 'editable' install via `pip'
