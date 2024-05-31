@@ -1205,7 +1205,7 @@ The file should contain a function with the signature
         validate=is_bool_or_int,
         convert=to_bool_or_int,
         doc="Set to ``True`` or ``1`` to show arguments list of every executed subprocess command. "
-        "Use ``2`` to have full specification.",
+        "Use ``2`` to have a specification. Use ``3`` to have full specification.",
     )
     XONSH_TRACE_COMPLETIONS = Var.with_default(
         False,
