@@ -223,9 +223,6 @@ def _parse_redirects(r, loc=None):
 
 def _redirect_streams(r, loc=None):
     """Returns stdin, stdout, stderr tuple of redirections."""
-    if isinstance(loc, list):
-        raise Exception(f"Unsupported redirect: {r!r} {loc!r}")
-
     stdin = stdout = stderr = None
     no_ampersand = r.replace("&", "")
     # special case of redirecting stderr to stdout
@@ -674,21 +671,7 @@ class SubprocSpec:
         """Weave a list of arguments into a command."""
         resolved_cmd = []
         for c in self.cmd:
-            if (
-                isinstance(c, tuple)
-                and len(c) == 2
-                and isinstance(c[1], list)
-                and len(c[1]) == 1
-            ):
-                # Redirect case e.g. `> file`
-                resolved_cmd.append(
-                    (
-                        c[0],
-                        c[1][0],
-                    )
-                )
-            else:
-                resolved_cmd += c if isinstance(c, list) else [c]
+            resolved_cmd += c if isinstance(c, list) else [c]
         self.cmd = resolved_cmd
 
     def resolve_redirects(self):

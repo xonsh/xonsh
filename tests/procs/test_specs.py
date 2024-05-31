@@ -353,14 +353,6 @@ def test_on_command_not_found_doesnt_fire_in_non_interactive_mode(xession):
     assert not fired
 
 
-def test_redirect_to_substitution(xession):
-    s = SubprocSpec.build(
-        # `echo hello > @('file')`
-        ["echo", "hello", (">", ["file"])]
-    )
-    assert s.stdout.name == "file"
-
-
 def test_partial_args_from_classmethod(xession):
     class Class:
         @classmethod
