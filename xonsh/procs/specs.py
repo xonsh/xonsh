@@ -958,7 +958,7 @@ def _trace_specs(trace_mode, specs, cmds, captured):
     else:
         r = {"cmds": cmds, "captured": captured}
         print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
-        if trace_mode == 2:
+        if trace_mode >= 2:
             for i, s in enumerate(specs):
                 pcls = s.cls.__module__ + "." + s.cls.__name__
                 pcmd = (
@@ -967,11 +967,23 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                 p = {
                     "cmd": pcmd,
                     "cls": pcls,
-                    "alias": s.alias_name,
-                    "bin": s.binary_loc,
-                    "threadable": s.threadable,
-                    "bg": s.background,
                 }
+                p |= {
+                    a: getattr(s, a, None)
+                    for a in ["alias_name", "binary_loc", "threadable", "background"]
+                }
+                if trace_mode == 3:
+                    p |= {
+                        a: getattr(s, a, None)
+                        for a in [
+                            "stdin",
+                            "stdout",
+                            "stderr",
+                            "captured",
+                            "captured_stdout",
+                            "captured_stderr",
+                        ]
+                    }
                 p = {k: v for k, v in p.items() if v is not None}
                 print(f"{i}: {repr(p)}", file=sys.stderr)
 
