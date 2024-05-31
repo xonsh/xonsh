@@ -705,7 +705,7 @@ class SubprocSpec:
     def resolve_alias(self):
         """Sets alias in command, if applicable."""
         cmd0 = self.cmd[0]
-
+        spec_modifiers = []
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
             # and futher using binary_loc to resolve the alias name.
@@ -715,7 +715,6 @@ class SubprocSpec:
         if callable(cmd0):
             alias = cmd0
         else:
-            spec_modifiers = []
             if isinstance(XSH.aliases, dict):
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
@@ -723,10 +722,10 @@ class SubprocSpec:
                 alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
             if alias is not None:
                 self.alias_name = cmd0
-            if spec_modifiers:
-                for mod in spec_modifiers:
-                    self.add_spec_modifier(mod)
         self.alias = alias
+        if spec_modifiers:
+            for mod in spec_modifiers:
+                self.add_spec_modifier(mod)
 
     def resolve_binary_loc(self):
         """Sets the binary location"""
