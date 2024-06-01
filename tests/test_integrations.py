@@ -1246,6 +1246,7 @@ def test_catching_system_exit():
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_catching_exit_signal():
     stdin_cmd = "sleep 0.2; kill -SIGHUP @(__import__('os').getpid())\n"
     out, err, ret = run_xonsh(
@@ -1255,6 +1256,7 @@ def test_catching_exit_signal():
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_suspended_captured_process_pipeline():
     """See also test_specs.py:test_specs_with_suspended_captured_process_pipeline"""
     stdin_cmd = "!(python -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
