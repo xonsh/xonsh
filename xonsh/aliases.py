@@ -57,6 +57,7 @@ def EXEC_ALIAS_RE():
 
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
+
     attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__", "return_command"]
     attributes_inherit = attributes_show + ["__doc__"]
     return_command = False
@@ -128,10 +129,14 @@ class Aliases(cabc.MutableMapping):
         """Decorator to register the given function by name."""
 
         if isinstance(func_or_name, types.FunctionType):
-            return self._register(func_or_name, name, dash_case, return_command=return_command)
+            return self._register(
+                func_or_name, name, dash_case, return_command=return_command
+            )
 
         def wrapper(func):
-            return self._register(func, func_or_name, dash_case, return_command=return_command)
+            return self._register(
+                func, func_or_name, dash_case, return_command=return_command
+            )
 
         return wrapper
 
