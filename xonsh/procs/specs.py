@@ -702,7 +702,9 @@ class SubprocSpec:
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
             else:
-                alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers, args=self.cmd[1:])
+                alias = XSH.aliases.get(
+                    cmd0, None, spec_modifiers=spec_modifiers, args=self.cmd[1:]
+                )
             if alias is not None:
                 self.alias_name = cmd0
         self.alias = alias
@@ -957,7 +959,13 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                 }
                 p |= {
                     a: getattr(s, a, None)
-                    for a in ["alias_name", "alias", "binary_loc", "threadable", "background"]
+                    for a in [
+                        "alias_name",
+                        "alias",
+                        "binary_loc",
+                        "threadable",
+                        "background",
+                    ]
                 }
                 if trace_mode == 3:
                     p |= {
