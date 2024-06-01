@@ -1316,10 +1316,7 @@ or by the index in ``$arg<n>`` environment variables.
     >>> aliases['piu'] = 'pip install -U @($args)'
     >>> aliases['cdls'] = 'cd $arg0 && ls'
 
-.. warning:: That means, if you need ``@()`` in your alias, you can't rely on
-             automatic argument handling anymore. Any alias involving it needs
-             to add ``$args`` at the end manually if you don't want your alias
-             to ignore supplied arguments.
+.. warning:: You need to add ``@($args)`` manually if you need arguments.
 
 .. code-block:: xonshcon
 
