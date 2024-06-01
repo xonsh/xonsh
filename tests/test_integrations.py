@@ -156,6 +156,38 @@ f e>o
         "The Truth is Out There\n",
         0,
     ),
+    # test redirecting to a python substitution
+    (
+        """
+def _f():
+    print('Wow Mom!')
+
+aliases['f'] = _f
+f > @('tttt')
+
+with open('tttt') as tttt:
+    s = tttt.read().strip()
+print('REDIRECTED OUTPUT: ' + s)
+""",
+        "REDIRECTED OUTPUT: Wow Mom!\n",
+        0,
+    ),
+    # test redirecting to a python substitution with p-string
+    (
+        """
+def _f():
+    print('Wow Mom!')
+
+aliases['f'] = _f
+f > @(p'tttt')
+
+with open('tttt') as tttt:
+    s = tttt.read().strip()
+print('REDIRECTED OUTPUT: ' + s)
+""",
+        "REDIRECTED OUTPUT: Wow Mom!\n",
+        0,
+    ),
     # test system exit in function alias
     (
         """
