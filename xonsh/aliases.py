@@ -159,7 +159,7 @@ class Aliases(cabc.MutableMapping):
                 print_exception(f"Exception inside alias {key!r}: {e}")
                 return None
             if not len(val):
-                raise ValueError('return_command alias: zero arguments.')
+                raise ValueError("return_command alias: zero arguments.")
 
         if val is None:
             return default
@@ -210,7 +210,7 @@ class Aliases(cabc.MutableMapping):
                 print_exception(f"Exception inside alias {value}: {e}")
                 return None
             if not len(value):
-                raise ValueError('return_command alias: zero arguments.')
+                raise ValueError("return_command alias: zero arguments.")
 
         if callable(value):
             return partial_eval_alias(value, acc_args=acc_args)
