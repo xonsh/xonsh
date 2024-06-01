@@ -367,7 +367,20 @@ def test_partial_args_from_classmethod(xession):
 
 def test_alias_return_command_alone(xession):
     @xession.aliases.register('wakka', return_command=True)
-    def _midground(args):
+    def _wakka(args):
+        return ['echo']
+
+    cmds = [
+        ["wakka"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo"]
+    assert spec.alias_name == "wakka"
+
+
+def test_alias_return_command_alone_args(xession):
+    @xession.aliases.register('wakka', return_command=True)
+    def _wakka(args):
         return ['echo', 'e0', 'e1']
 
     cmds = [
@@ -401,7 +414,7 @@ def test_alias_return_command_chain_args_cut(xession):
 
     @xession.aliases.register('midground', return_command=True)
     def _midground(args):
-        return ['ground', 'm0', 'm1', '{CUT_ARGS}', 'cutted', '{CUT_ARGS}']
+        return ['ground', 'm0', 'm1', '_CUT_ARGS_']
 
     xession.aliases['ground'] = "background g0 g1"
     xession.aliases['background'] = "echo b0 b1"

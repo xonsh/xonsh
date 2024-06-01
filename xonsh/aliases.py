@@ -41,6 +41,7 @@ from xonsh.tools import (
     argvquote,
     escape_windows_cmd_string,
     print_color,
+    print_exception,
     strip_simple_quotes,
     swap_values,
     to_repr_pretty_,
@@ -149,10 +150,17 @@ class Aliases(cabc.MutableMapping):
         callable.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        args = args if args is not None else []
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_command", False):
-            args = args if args is not None else []
-            val = val(args)
+            try:
+                val = val(args)
+            except Exception as e:
+                print_exception(f"Exception inside alias {key!r}: {e}")
+                return None
+            if not len(val):
+                raise ValueError('return_command alias: zero arguments.')
+
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
@@ -177,6 +185,7 @@ class Aliases(cabc.MutableMapping):
         ``["-al", "arg"]``.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        args = args if args is not None else []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
@@ -190,7 +199,13 @@ class Aliases(cabc.MutableMapping):
 
         if callable(value) and getattr(value, "return_command", False):
             args = args if args is not None else []
-            value = value(args)
+            try:
+                value = value(args)
+            except Exception as e:
+                print_exception(f"Exception inside alias {value}: {e}")
+                return None
+            if not len(value):
+                raise ValueError('return_command alias: zero arguments.')
 
         if callable(value):
             return partial_eval_alias(value, acc_args=acc_args)
