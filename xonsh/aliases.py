@@ -172,7 +172,12 @@ class Aliases(cabc.MutableMapping):
             raise TypeError(msg.format(key, val))
 
     def eval_alias(
-        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=None, args=None
+        self,
+        value,
+        seen_tokens=frozenset(),
+        acc_args=(),
+        spec_modifiers=None,
+        args=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -228,7 +233,7 @@ class Aliases(cabc.MutableMapping):
                     seen_tokens,
                     acc_args,
                     spec_modifiers=spec_modifiers,
-                    args=(acc_args+args)
+                    args=(acc_args + args),
                 )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
