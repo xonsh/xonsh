@@ -57,9 +57,9 @@ def EXEC_ALIAS_RE():
 
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
-
-    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
+    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__", "return_command"]
     attributes_inherit = attributes_show + ["__doc__"]
+    return_command = False
 
     def __init__(self, name, func=None):
         self.__name__ = self.name = name
@@ -102,11 +102,15 @@ class Aliases(cabc.MutableMapping):
             name = name[1:]
         return name
 
-    def _register(self, func, name="", dash_case=True):
+    def _register(self, func, name="", dash_case=True, return_command=False):
         name = name or self._get_func_name(func)
 
         if dash_case:
             name = name.replace("_", "-")
+
+        if return_command:
+            func = FuncAlias(name, func)
+            func.return_command = True
 
         self[name] = func
         return func
@@ -117,21 +121,21 @@ class Aliases(cabc.MutableMapping):
 
     @tp.overload
     def register(
-        self, name: str, *, dash_case: bool = True
+        self, name: str, *, dash_case: bool = True, return_command: bool = False
     ) -> tp.Callable[[types.FunctionType], types.FunctionType]: ...
 
-    def register(self, func_or_name, name=None, dash_case=True):
+    def register(self, func_or_name, name=None, dash_case=True, return_command=False):
         """Decorator to register the given function by name."""
 
         if isinstance(func_or_name, types.FunctionType):
-            return self._register(func_or_name, name, dash_case)
+            return self._register(func_or_name, name, dash_case, return_command=return_command)
 
         def wrapper(func):
-            return self._register(func, func_or_name, dash_case)
+            return self._register(func, func_or_name, dash_case, return_command=return_command)
 
         return wrapper
 
-    def get(self, key, default=None, spec_modifiers=None):
+    def get(self, key, default=None, spec_modifiers=None, args=None):
         """Returns the (possibly modified) value. If the key is not present,
         then `default` is returned.
         If the value is callable, it is returned without modification. If it
@@ -141,6 +145,9 @@ class Aliases(cabc.MutableMapping):
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         val = self._raw.get(key)
+        if callable(val) and getattr(val, "return_command", False):
+            args = args if args is not None else []
+            val = val(args)
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):

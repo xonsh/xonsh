@@ -702,7 +702,7 @@ class SubprocSpec:
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
             else:
-                alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
+                alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers, args=self.cmd[1:])
             if alias is not None:
                 self.alias_name = cmd0
         self.alias = alias
@@ -746,7 +746,12 @@ class SubprocSpec:
             self.cmd.pop(0)
             return
         else:
-            self.cmd = alias + self.cmd[1:]
+            new_cmd = alias
+            if alias[-1] == "{STOP_ARGS}":
+                new_cmd = alias[:-1]
+            else:
+                new_cmd += self.cmd[1:]
+            self.cmd = new_cmd
             # resolve any redirects the aliases may have applied
             self.resolve_redirects()
         if self.binary_loc is None:
@@ -952,7 +957,7 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                 }
                 p |= {
                     a: getattr(s, a, None)
-                    for a in ["alias_name", "binary_loc", "threadable", "background"]
+                    for a in ["alias_name", "alias", "binary_loc", "threadable", "background"]
                 }
                 if trace_mode == 3:
                     p |= {
